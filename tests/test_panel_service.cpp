@@ -22,6 +22,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 #include "panel-service.h"
+#include "panel-service-private.h"
 #include "mock_indicator_object.h"
 
 using namespace testing;
@@ -29,6 +30,8 @@ using namespace unity;
 
 namespace
 {
+typedef std::tuple<glib::Object<GtkLabel>, glib::Object<GtkImage>> EntryObjects;
+
 const std::string SYNC_ENTRY_VARIANT_FORMAT = "(ssssbbusbbi)";
 const std::string SYNC_ENTRIES_VARIANT_FORMAT = "(a"+SYNC_ENTRY_VARIANT_FORMAT+")";
 
@@ -134,6 +137,11 @@ struct TestPanelService : Test
     return entries.size();
   }
 
+  bool IsGObjectConectedTo(gpointer object, gpointer data)
+  {
+    return g_signal_handler_find(object, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, data) != 0;
+  }
+
   glib::Object<PanelService> service;
 };
 
@@ -212,7 +220,7 @@ TEST_F(TestPanelService, ManyEmptyIndicatorObjectsAddition)
   }
 }
 
-TEST_F(TestPanelService, EntryIndicatorObjectAddition)
+TEST_F(TestPanelService, EntryIndicatorObjectEntryAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
@@ -226,7 +234,7 @@ TEST_F(TestPanelService, EntryIndicatorObjectAddition)
   EXPECT_EQ(1, GetEntriesInResult(result));
 }
 
-TEST_F(TestPanelService, ManyEntriesIndicatorObjectAddition)
+TEST_F(TestPanelService, ManyEntriesIndicatorObjectEntryAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
@@ -241,32 +249,97 @@ TEST_F(TestPanelService, ManyEntriesIndicatorObjectAddition)
   }
 }
 
-TEST_F(TestPanelService, EntryIndicatorObjectRemoval)
+TEST_F(TestPanelService, EntryRemovalIndicatorObject)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
 
-  mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  auto* entry = mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
   panel_service_add_indicator(service, object);
 
   glib::Variant result(panel_service_sync(service));
   ASSERT_EQ(1, GetIndicatorsInResult(result));
   ASSERT_EQ(1, GetEntriesInResult(result));
 
-  panel_service_remove_indicator(service, object);
+  glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+  glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+  mock_indicator_object_remove_entry(mock_object, entry);
+
   result = panel_service_sync(service);
   EXPECT_EQ(1, GetIndicatorsInResult(result));
   EXPECT_EQ(0, GetEntriesInResult(result));
+
+  EXPECT_FALSE(IsGObjectConectedTo(label, object));
+  EXPECT_FALSE(IsGObjectConectedTo(icon, object));
 }
 
-TEST_F(TestPanelService, ManyEntriesIndicatorObjectRemoval)
+TEST_F(TestPanelService, ManyEntriesRemovalIndicatorObject)
 {
+  std::vector<EntryObjects> entries_objs;
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
   panel_service_add_indicator(service, object);
 
   for (unsigned i = 0; i < 20; ++i)
-    mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(i)).c_str(), "");
+  {
+    auto* entry = mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(i)).c_str(), "gtk-forward");
+    glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+    glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+    entries_objs.push_back(std::make_tuple(label, icon));
+
+    mock_indicator_object_remove_entry(mock_object, entry);
+  }
+
+  glib::Variant result(panel_service_sync(service));
+
+  ASSERT_EQ(1, GetIndicatorsInResult(result));
+  ASSERT_EQ(0, GetEntriesInResult(result));
+
+  for (auto const& entry_objs : entries_objs)
+  {
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<0>(entry_objs), object));
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<1>(entry_objs), object));
+  }
+}
+
+TEST_F(TestPanelService, EntryIndicatorObjectRemoval)
+{
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+
+  auto* entry = mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  panel_service_add_indicator(service, object);
+
+  glib::Variant result(panel_service_sync(service));
+  ASSERT_EQ(1, GetIndicatorsInResult(result));
+  ASSERT_EQ(1, GetEntriesInResult(result));
+
+  glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+  glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+
+  panel_service_remove_indicator(service, object);
+  result = panel_service_sync(service);
+  EXPECT_EQ(1, GetIndicatorsInResult(result));
+  EXPECT_EQ(0, GetEntriesInResult(result));
+
+  EXPECT_FALSE(IsGObjectConectedTo(label, object));
+  EXPECT_FALSE(IsGObjectConectedTo(icon, object));
+}
+
+TEST_F(TestPanelService, ManyEntriesIndicatorObjectRemoval)
+{
+  std::vector<EntryObjects> entries_objs;
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+  panel_service_add_indicator(service, object);
+
+  for (unsigned i = 0; i < 20; ++i)
+  {
+    auto* entry = mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(i)).c_str(), "");
+    glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+    glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+    entries_objs.push_back(std::make_tuple(label, icon));
+  }
 
   glib::Variant result(panel_service_sync(service));
   ASSERT_EQ(1, GetIndicatorsInResult(result));
@@ -276,6 +349,12 @@ TEST_F(TestPanelService, ManyEntriesIndicatorObjectRemoval)
   result = panel_service_sync(service);
   EXPECT_EQ(1, GetIndicatorsInResult(result));
   EXPECT_EQ(0, GetEntriesInResult(result));
+
+  for (auto const& entry_objs : entries_objs)
+  {
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<0>(entry_objs), object));
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<1>(entry_objs), object));
+  }
 }
 
 TEST_F(TestPanelService, ManyEntriesIndicatorsObjectAddition)
@@ -338,6 +417,136 @@ TEST_F(TestPanelService, ActivateRequest)
 
   mock_indicator_object_show_entry(mock_object, entry, 1234);
   EXPECT_TRUE(called);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, Null)
+{
+  KeyBinding kb;
+  parse_string_keybinding(NULL, &kb);
+
+  EXPECT_EQ(NoSymbol, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, Empty)
+{
+  KeyBinding kb;
+  parse_string_keybinding("", &kb);
+
+  EXPECT_EQ(NoSymbol, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, SimpleKey)
+{
+  KeyBinding kb;
+  parse_string_keybinding("U", &kb);
+
+  EXPECT_EQ(XK_U, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, ControlCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Control>F1", &kb);
+
+  EXPECT_EQ(XK_F1, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(ControlMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, AltCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Alt>F2", &kb);
+
+  EXPECT_EQ(XK_F2, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(AltMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, ShiftCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Shift>F3", &kb);
+
+  EXPECT_EQ(XK_F3, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(ShiftMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, SuperCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Super>F4", &kb);
+
+  EXPECT_EQ(XK_F4, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(SuperMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, FullCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Control><Alt><Shift><Super>Escape", &kb);
+
+  EXPECT_EQ(XK_Escape, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(ControlMask|AltMask|ShiftMask|SuperMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeyControl)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Control>", &kb);
+
+  EXPECT_EQ(XK_Control_L, kb.key);
+  EXPECT_EQ(XK_Control_R, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeyAlt)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Alt>", &kb);
+
+  EXPECT_EQ(XK_Alt_L, kb.key);
+  EXPECT_EQ(XK_Alt_R, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeyShift)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Shift>", &kb);
+
+  EXPECT_EQ(XK_Shift_L, kb.key);
+  EXPECT_EQ(XK_Shift_R, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeySuper)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Super>", &kb);
+
+  EXPECT_EQ(XK_Super_L, kb.key);
+  EXPECT_EQ(XK_Super_R, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeyMix)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Control><Alt><Super>", &kb);
+
+  EXPECT_EQ(XK_Super_L, kb.key);
+  EXPECT_EQ(XK_Super_R, kb.fallback);
+  EXPECT_EQ(ControlMask|AltMask, kb.modifiers);
 }
 
 } // anonymous namespace

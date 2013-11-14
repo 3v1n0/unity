@@ -64,6 +64,7 @@ public:
   nux::ROProperty<bool> connected;
 
   nux::ROProperty<bool> visible;
+  nux::ROProperty<bool> results_dirty;
   nux::ROProperty<bool> is_master;
   nux::ROProperty<std::string> search_hint;
   nux::RWProperty<ScopeViewType> view_type;
@@ -83,11 +84,9 @@ public:
   nux::ROProperty<std::string> query_pattern;
   nux::ROProperty<std::string> shortcut;
 
-  typedef std::function<void(std::string const&, glib::HintsMap const&, glib::Error const&)> SearchCallback;
   virtual void Search(std::string const& search_hint, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
   virtual void Search(std::string const& search_hint, glib::HintsMap const&, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
-  typedef std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
   virtual void Activate(LocalResult const& result, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
   typedef std::function<void(LocalResult const&, Preview::Ptr const&, glib::Error const&)> PreviewCallback;

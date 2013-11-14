@@ -67,7 +67,7 @@ def reset_launcher_icons ():
     '''Reset the default launcher icon and restart it.'''
     subprocess.Popen(["gsettings", "reset" ,"com.canonical.Unity.Launcher" , "favorites"]) 
 
-def process_and_start_unity (verbose, debug_mode, compiz_args, log_file):
+def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_file):
     '''launch unity under compiz (replace the current shell in any case)'''
     
     cli = []
@@ -84,8 +84,12 @@ def process_and_start_unity (verbose, debug_mode, compiz_args, log_file):
             sys.exit(1)
         else:
             cli.extend(['gdb', '--args'])
-    
-    cli.extend(['compiz', '--replace'])
+   
+    if options.compiz_path:
+        cli.extend([options.compiz_path, '--replace'])
+    else:
+        cli.extend(['compiz', '--replace'])
+
     if options.verbose:
         cli.append("--debug")
     if args:
@@ -104,12 +108,12 @@ def process_and_start_unity (verbose, debug_mode, compiz_args, log_file):
     return subprocess.Popen(" ".join(cli), env=dict(os.environ), shell=True)
     
 
-def run_unity (verbose, debug, advanced_debug, compiz_args, log_file):
+def run_unity (verbose, debug, advanced_debug, compiz_path, compiz_args, log_file):
     '''run the unity shell and handle Ctrl + C'''
 
     try:
         debug_mode = 2 if advanced_debug else 1 if debug else 0
-        unity_instance = process_and_start_unity (verbose, debug_mode, compiz_args, log_file)
+        unity_instance = process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_file)
         subprocess.Popen(["killall", "unity-panel-service"])
         unity_instance.wait()
     except KeyboardInterrupt, e:
@@ -153,6 +157,8 @@ if __name__ == '__main__':
 
     parser.add_option("--advanced-debug", action="store_true",
                       help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")
+    parser.add_option("--compiz-path", action="store", dest="compiz_path",
+                      help="Path to compiz. /!\ Only if devs ask for it.")
     parser.add_option("--debug", action="store_true",
                       help="Run unity under gdb and print a backtrace on crash. /!\ Only if devs ask for it.")
     parser.add_option("--distro", action="store_true",
@@ -184,4 +190,4 @@ if __name__ == '__main__':
 	if options.replace:
 		print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
 			
-    run_unity (options.verbose, options.debug, options.advanced_debug, args, options.log)
+    run_unity (options.verbose, options.debug, options.advanced_debug, options.compiz_path, args, options.log)

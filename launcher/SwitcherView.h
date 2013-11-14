@@ -20,11 +20,13 @@
 #ifndef SWITCHERVIEW_H
 #define SWITCHERVIEW_H
 
+#include "DeltaTracker.h"
 #include "SwitcherModel.h"
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/LayoutSystem.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/Introspectable.h"
 #include "unity-shared/UnityWindowView.h"
 
 #include <Nux/View.h>
@@ -70,13 +72,30 @@ public:
 
   // Returns the index of the icon at the given position, in window coordinates.
   // If there's no icon there, -1 is returned.
-  int IconIndexAt(int x, int y);
+  int IconIndexAt(int x, int y) const;
+  int DetailIconIdexAt(int x, int y) const;
 
+  /* void; int icon_index, int button*/
+  sigc::signal<void, int, int> switcher_mouse_down;
+  sigc::signal<void, int, int> switcher_mouse_up;
+
+  /* void; int icon_index */
+  sigc::signal<void, int> switcher_mouse_move;
+
+  /* void; */
+  sigc::signal<void> switcher_next;
+  sigc::signal<void> switcher_prev;
+  sigc::signal<void> switcher_start_detail;
+  sigc::signal<void> switcher_stop_detail;
+
+  /* void; bool visible */
+  sigc::signal<void, bool> hide_request;
 
 protected:
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList GetIntrospectableChildren();
 
   void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
@@ -88,7 +107,27 @@ protected:
   std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress);
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
+
+  virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+  virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state);
+
 private:
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void HandleDetailMouseMove(int x, int y);
+  void HandleMouseMove(int x, int y);
+
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void HandleDetailMouseDown(int x, int y, int button);
+  void HandleMouseDown(int x, int y, int button);
+
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void HandleDetailMouseUp(int x, int y, int button);
+  void HandleMouseUp(int x, int y, int button);
+
+  void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+  void HandleDetailMouseWheel(int wheel_delta);
+  void HandleMouseWheel(int wheel_delta);
+
   void OnSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& selection);
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);
@@ -103,21 +142,25 @@ private:
   nux::Size SpreadSize();
 
   double GetCurrentProgress();
-  void GetFlatIconPositions(int n_flat_icons, int size, int selection,
-                            int &first_flat, int &last_flat,
-                            int &half_fold_left, int &half_fold_right);
 
   void SaveTime();
   void ResetTimer();
   void SaveLast();
+
+  bool CheckMouseInsideBackground(int x, int y) const;
+  void MouseHandlingBackToNormal();
 
   SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   nux::ObjectPtr<StaticCairoText> text_view_;
 
+  int last_icon_selected_;
+  int last_detail_icon_selected_;
   bool target_sizes_set_;
+  bool check_mouse_first_time_;
 
+  DeltaTracker delta_tracker_;
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;

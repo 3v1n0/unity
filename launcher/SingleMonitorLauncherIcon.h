@@ -29,12 +29,11 @@ namespace launcher
 
 class SingleMonitorLauncherIcon : public SimpleLauncherIcon
 {
-
 public:
-  SingleMonitorLauncherIcon(IconType type, int monitor);
+  SingleMonitorLauncherIcon(IconType type, int monitor = -1);
 
 void SetMonitor(int monitor);
-int GetMonitor();
+int GetMonitor() const;
 
 protected:
   std::string GetName() const;

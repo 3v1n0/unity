@@ -21,8 +21,10 @@
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/UScreen.h"
 
 #include "SwitcherController.h"
 #include "SwitcherControllerImpl.h"
@@ -41,6 +43,8 @@ const std::string SHOW_TIMEOUT = "show-timeout";
 const std::string DETAIL_TIMEOUT = "detail-timeout";
 const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
 const unsigned FADE_DURATION = 80;
+const int XY_OFFSET = 100;
+const int WH_OFFSET = -200;
 
 /**
  * Helper comparison functor for sorting application icons.
@@ -78,7 +82,6 @@ Controller::Controller(WindowCreator const& create_window)
   , impl_(new Controller::Impl(this, 20, create_window))
 {}
 
-
 Controller::~Controller()
 {}
 
@@ -93,6 +96,9 @@ void Controller::Show(ShowMode show,
                       SortMode sort,
                       std::vector<AbstractLauncherIcon::Ptr> results)
 {
+  auto uscreen = UScreen::GetDefault();
+  monitor_     = uscreen->GetMonitorWithMouse();
+
   impl_->Show(show, sort, results);
 }
 
@@ -100,15 +106,6 @@ void Controller::Select(int index)
 {
   if (Visible())
     impl_->model_->Select(index);
-}
-
-void Controller::SetWorkspace(nux::Geometry geo, int monitor)
-{
-  monitor_ = monitor;
-  impl_->workarea_ = geo;
-
-  if (impl_->view_)
-    impl_->view_->monitor = monitor_;
 }
 
 void Controller::Hide(bool accept_state)
@@ -124,44 +121,44 @@ bool Controller::Visible()
   return visible_;
 }
 
-bool Controller::StartDetailMode()
+nux::Geometry Controller::GetInputWindowGeometry() const
 {
-  if (visible_)
+  if (impl_->view_window_)
+    return impl_->view_window_->GetGeometry();
+
+  return {0, 0, 0, 0};
+}
+
+void Controller::Impl::StartDetailMode()
+{
+  if (obj_->visible_)
   {
     if (IsDetailViewShown() &&
-        impl_->HasNextDetailRow())
+        HasNextDetailRow())
     {
-      impl_->NextDetailRow();
+      NextDetailRow();
     }
     else
     {
       SetDetail(true);
     }
-
-    return true;
   }
-
-  return false;
 }
 
-bool Controller::StopDetailMode()
+void Controller::Impl::StopDetailMode()
 {
-  if (visible_)
+  if (obj_->visible_)
   {
     if (IsDetailViewShown() &&
-        impl_->HasPrevDetailRow())
+        HasPrevDetailRow())
     {
-      impl_->PrevDetailRow();
+      PrevDetailRow();
     }
     else
     {
       SetDetail(false);
     }
-
-    return true;
   }
-
-  return false;
 }
 
 void Controller::Next()
@@ -224,6 +221,16 @@ void Controller::SetShowDesktopDisabled(bool disabled)
   show_desktop_disabled_ = disabled;
 }
 
+bool Controller::IsMouseDisabled() const
+{
+  return mouse_disabled_;
+}
+
+void Controller::SetMouseDisabled(bool disabled)
+{
+  mouse_disabled_ = disabled;
+}
+
 int Controller::StartIndex() const
 {
   return (IsShowDesktopDisabled() ? 0 : 1);
@@ -284,10 +291,9 @@ Controller::Impl::Impl(Controller* obj,
   ,  obj_(obj)
   ,  create_window_(create_window)
   ,  main_layout_(nullptr)
-  ,  bg_color_(0, 0, 0, 0.5)
   ,  fade_animator_(FADE_DURATION)
 {
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::Impl::OnBackgroundUpdate));
+  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &Impl::OnBackgroundUpdate));
 
   if (create_window_ == nullptr)
     create_window_ = []() {
@@ -308,14 +314,10 @@ Controller::Impl::Impl(Controller* obj,
   });
 }
 
-void Controller::Impl::OnBackgroundUpdate(GVariant* data)
+void Controller::Impl::OnBackgroundUpdate(nux::Color const& new_color)
 {
-  gdouble red, green, blue, alpha;
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  bg_color_ = nux::Color(red, green, blue, alpha);
-
   if (view_)
-    view_->background_color = bg_color_;
+    view_->background_color = new_color;
 }
 
 
@@ -333,6 +335,7 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
   obj_->AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
+  model_->request_detail_hide.connect(sigc::mem_fun(this, &Controller::Impl::DetailHide));
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
@@ -350,17 +353,23 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
     ShowView();
   }
 
-  if (obj_->detail_on_timeout)
-  {
-    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
-    sources_.AddTimeout(obj_->initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
-  }
+  nux::GetWindowCompositor().SetKeyFocusArea(view_.GetPointer());
+
+  ResetDetailTimer(obj_->initial_detail_timeout_length);
 
   ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
                             g_variant_new("(bi)", true, obj_->monitor_));
 }
 
+void Controller::Impl::ResetDetailTimer(int timeout_length)
+{
+  if (obj_->detail_on_timeout)
+  {
+    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
+    sources_.AddTimeout(timeout_length, cb_func, DETAIL_TIMEOUT);
+  }
+}
 
 bool Controller::Impl::OnDetailTimer()
 {
@@ -375,11 +384,7 @@ bool Controller::Impl::OnDetailTimer()
 
 void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (obj_->detail_on_timeout)
-  {
-    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
-    sources_.AddTimeout(obj_->detail_timeout_length, cb_func, DETAIL_TIMEOUT);
-  }
+  ResetDetailTimer(obj_->detail_timeout_length);
 
   if (icon)
   {
@@ -390,7 +395,7 @@ void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& 
     }
 
     ubus_manager_.SendMessage(UBUS_SWITCHER_SELECTION_CHANGED,
-                              g_variant_new_string(icon->tooltip_text().c_str()));
+                              glib::Variant(icon->tooltip_text()));
   }
 }
 
@@ -408,15 +413,7 @@ void Controller::Impl::ShowView()
     view_->live_background = true;
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
-
-    if (fade_animator_.CurrentState() == nux::animation::Animation::State::Running)
-    {
-      fade_animator_.Reverse();
-    }
-    else
-    {
-      fade_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    }
+    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
   }
 }
 
@@ -434,8 +431,19 @@ void Controller::Impl::ConstructWindow()
     view_window_->SetOpacity(0.0f);
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::color::Transparent);
-    view_window_->SetGeometry(workarea_);
   }
+}
+
+nux::Geometry GetSwitcherViewsGeometry()
+{
+  auto uscreen     = UScreen::GetDefault();
+  int monitor      = uscreen->GetMonitorWithMouse();
+  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
+
+  monitor_geo.OffsetPosition(XY_OFFSET, XY_OFFSET);
+  monitor_geo.OffsetSize(WH_OFFSET, WH_OFFSET);
+
+  return monitor_geo;
 }
 
 void Controller::Impl::ConstructView()
@@ -449,12 +457,29 @@ void Controller::Impl::ConstructView()
   view_ = SwitcherView::Ptr(new SwitcherView(view_window_.GetPointer()));
   obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
-  view_->background_color = bg_color_;
+  view_->background_color = WindowManager::Default().average_color();
   view_->monitor = obj_->monitor_;
+
+  view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
+
+  view_->switcher_mouse_up.connect([this] (int icon_index, int button) {
+      if (button == 3)
+        InitiateDetail(true);
+  });
+
+  view_->switcher_mouse_move.connect([this] (int icon_index) {
+      if (icon_index >= 0)
+        ResetDetailTimer(obj_->detail_timeout_length);
+  });
+
+  view_->switcher_next.connect(sigc::mem_fun(this, &Impl::Next));
+  view_->switcher_prev.connect(sigc::mem_fun(this, &Impl::Prev));
+  view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
+  view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
 
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
-  view_window_->SetGeometry(workarea_);
+  view_window_->SetGeometry(GetSwitcherViewsGeometry());
 
   view_built.emit();
 }
@@ -472,7 +497,7 @@ void Controller::Impl::Hide(bool accept_state)
     }
   }
 
-  ubus_manager_.SendMessage(UBUS_SWITCHER_END, g_variant_new_boolean(!accept_state));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_END, glib::Variant(!accept_state));
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, obj_->monitor_));
 
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
@@ -481,14 +506,15 @@ void Controller::Impl::Hide(bool accept_state)
 
   obj_->visible_ = false;
 
-  if (fade_animator_.CurrentState() == nux::animation::Animation::State::Running)
-  {
-    fade_animator_.Reverse();
-  }
-  else
-  {
-    fade_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-  }
+  animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+}
+
+void Controller::Impl::DetailHide()
+{
+  // FIXME We need to refactor SwitcherModel so we can add/remove icons without causing
+  // a crash. If you remove the last application in the list it crashes.
+  model_->detail_selection = false;
+  Hide(false);
 }
 
 void Controller::Impl::HideWindow()
@@ -579,7 +605,7 @@ void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
   }
   else
-  { 
+  {
     model_->detail_selection = false;
   }
 }
@@ -728,6 +754,10 @@ void Controller::Impl::SelectFirstItem()
   for (auto& window : first->Windows())
   {
     Window xid = window->window_id();
+    
+    if (model_->only_detail_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
+      continue;
+
     uint64_t num = wm.GetWindowActiveNumber(xid);
 
     if (num > first_highest)

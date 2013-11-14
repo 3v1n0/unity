@@ -23,7 +23,7 @@
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
 #include "MockLauncherIcon.h"
-#include "StandaloneWindowManager.h"
+#include "test_standalone_wm.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/UnitySettings.h"
 
@@ -47,10 +47,6 @@ namespace
 
 struct TestSwitcherView : testing::Test
 {
-  TestSwitcherView()
-    : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
-  {}
-
   struct MockSwitcherView : SwitcherView
   {
     public:
@@ -100,7 +96,7 @@ struct TestSwitcherView : testing::Test
       return apps[0];
     }
 
-  StandaloneWindowManager* WM;
+  testwrapper::StandaloneWM WM;
   unity::Settings settings;
   testing::NiceMock<MockSwitcherView> switcher;
 };

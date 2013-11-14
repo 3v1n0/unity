@@ -28,12 +28,12 @@ NUX_IMPLEMENT_OBJECT_TYPE(IconTextureSource);
 
 namespace
 {
-  const unsigned RENDERERS_SIZE = max_num_monitors + 1; // +1 for the switcher
+  const unsigned RENDERERS_SIZE = monitors::MAX + 1; // +1 for the switcher
 }
 
 IconTextureSource::IconTextureSource()
-  : had_emblem_(false)
-  , skip_(RENDERERS_SIZE, false)
+  : skip_(RENDERERS_SIZE, false)
+  , had_emblem_(RENDERERS_SIZE, false)
   , last_render_center_(RENDERERS_SIZE)
   , last_logical_center_(RENDERERS_SIZE)
   , last_rotation_(RENDERERS_SIZE)
@@ -81,14 +81,14 @@ bool IconTextureSource::WasSkipping(int monitor) const
   return skip_[monitor];
 }
 
-void IconTextureSource::RememberEmblem(bool has_emblem)
+void IconTextureSource::RememberEmblem(int monitor, bool has_emblem)
 {
-  had_emblem_ = has_emblem;
+  had_emblem_[monitor] = has_emblem;
 }
 
-bool IconTextureSource::HadEmblem() const
+bool IconTextureSource::HadEmblem(int monitor) const
 {
-  return had_emblem_;
+  return had_emblem_[monitor];
 }
 
 }

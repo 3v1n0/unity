@@ -22,9 +22,10 @@
 
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/XInputWindow.h>
+#include <UnityCore/DesktopUtilities.h>
 
 
-DECLARE_LOGGER(logger, "unity.appmanager.bamf");
+DECLARE_LOGGER(logger, "unity.appmanager.desktop.bamf");
 
 namespace unity
 {
@@ -55,8 +56,7 @@ std::string View::GetIcon() const
 
 std::string View::type() const
 {
-  const gchar* t = bamf_view_get_view_type(bamf_view_);
-  return (t ? t : "");
+  return glib::gchar_to_string(bamf_view_get_view_type(bamf_view_));
 }
 
 bool View::GetVisible() const
@@ -241,6 +241,7 @@ void Application::HookUpEvents()
 {
   // Hook up the property set/get functions
   using namespace std::placeholders;
+  desktop_file.SetGetterFunction(std::bind(&Application::GetDesktopFile, this));
   title.SetGetterFunction(std::bind(&View::GetTitle, this));
   icon.SetGetterFunction(std::bind(&View::GetIcon, this));
   seen.SetGetterFunction(std::bind(&Application::GetSeen, this));
@@ -252,7 +253,10 @@ void Application::HookUpEvents()
   running.SetGetterFunction(std::bind(&View::GetRunning, this));
   urgent.SetGetterFunction(std::bind(&View::GetUrgent, this));
 
-  // Use signals_.Add....
+  signals_.Add<void, BamfApplication*, const char*>(bamf_app_, "desktop-file-updated",
+  [this] (BamfApplication*, const char* new_desktop_file) {
+    this->desktop_file.changed.emit(glib::gchar_to_string(new_desktop_file));
+  });
   signals_.Add<void, BamfView*, const char*, const char*>(bamf_view_, "name-changed",
   [this] (BamfView*, const char*, const char* new_name) {
     this->title.changed.emit(glib::gchar_to_string(new_name));
@@ -309,10 +313,9 @@ void Application::HookUpEvents()
   });
 }
 
-std::string Application::desktop_file() const
+std::string Application::GetDesktopFile() const
 {
-  const gchar* file = bamf_application_get_desktop_file(bamf_app_);
-  return file ? file : "";
+  return glib::gchar_to_string(bamf_application_get_desktop_file(bamf_app_));
 }
 
 std::string Application::type() const
@@ -452,6 +455,17 @@ void Application::Quit() const
   }
 }
 
+bool Application::CreateLocalDesktopFile() const
+{
+  if (!desktop_file().empty())
+    return false;
+
+  glib::Object<BamfControl> control(bamf_control_get_default());
+  bamf_control_create_local_desktop_file(control, bamf_app_);
+
+  return true;
+}
+
 bool Application::GetSeen() const
 {
   return g_object_get_qdata(glib::object_cast<GObject>(bamf_app_),
@@ -524,7 +538,25 @@ Manager::~Manager()
   LOG_TRACE(logger) << "Manager::~Manager";
 }
 
-ApplicationWindowPtr Manager::GetActiveWindow()
+ApplicationPtr Manager::GetUnityApplication() const
+{
+  auto const& our_xids = nux::XInputWindow::NativeHandleList();
+
+  for (auto xid : our_xids)
+  {
+    auto *app_ptr = bamf_matcher_get_application_for_xid(matcher_, xid);
+
+    if (BAMF_IS_APPLICATION(app_ptr))
+    {
+      glib::Object<BamfApplication> app(app_ptr, glib::AddRef());
+      return std::make_shared<Application>(*this, app);
+    }
+  }
+
+  return GetApplicationForDesktopFile(DesktopUtilities::GetDesktopPathById("compiz.desktop"));
+}
+
+ApplicationWindowPtr Manager::GetActiveWindow() const
 {
   // No transfer of ownership for bamf_matcher_get_active_window.
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
@@ -572,7 +604,7 @@ ApplicationWindowPtr Manager::GetActiveWindow()
   return nullptr;
 }
 
-ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file)
+ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file) const
 {
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_desktop_file(
     matcher_, desktop_file.c_str(), TRUE), glib::AddRef());
@@ -583,7 +615,7 @@ ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_
   return nullptr;
 }
 
-ApplicationPtr Manager::GetApplicationForWindow(Window xid)
+ApplicationPtr Manager::GetApplicationForWindow(Window xid) const
 {
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_xid(matcher_, xid),
                                     glib::AddRef());
@@ -593,7 +625,7 @@ ApplicationPtr Manager::GetApplicationForWindow(Window xid)
   return nullptr;
 }
 
-ApplicationList Manager::GetRunningApplications()
+ApplicationList Manager::GetRunningApplications() const
 {
   ApplicationList result;
   std::shared_ptr<GList> apps(bamf_matcher_get_applications(matcher_), g_list_free);

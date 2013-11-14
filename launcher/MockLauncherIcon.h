@@ -21,6 +21,7 @@
 #ifndef MOCKLAUNCHERICON_H
 #define MOCKLAUNCHERICON_H
 
+#include <bitset>
 #include <Nux/Nux.h>
 
 #include <Nux/BaseWindow.h>
@@ -32,9 +33,11 @@
 
 #include <libdbusmenu-glib/menuitem.h>
 #include "unity-shared/ApplicationManager.h"
+#include "unity-shared/TimeUtil.h"
 #include <UnityCore/GTKWrapper.h>
 
 #include "AbstractLauncherIcon.h"
+#include "MultiMonitor.h"
 
 namespace unity
 {
@@ -69,14 +72,13 @@ public:
     : icon_(0)
     , type_(type)
     , sort_priority_(DefaultPriority(type))
+    , quirks_(monitors::MAX)
+    , quirk_progress_(monitors::MAX, decltype(quirk_progress_)::value_type(unsigned(Quirk::LAST), 0.0f))
     , remote_uri_("fake")
     , is_tooltip_visible_(false)
   {
     tooltip_text = "Mock Icon";
     position = Position::FLOATING;
-
-    for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
-      quirks_[i] = false;
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
@@ -153,11 +155,15 @@ public:
   {
   }
 
-  void SetCenter(nux::Point3 const& center, int monitor, nux::Geometry const& geo)
+  void SetCenter(nux::Point3 const& center, int monitor)
   {
     center_[monitor] = center;
-    center_[monitor].x += geo.x;
-    center_[monitor].y += geo.y;
+  }
+
+  void ResetCenters(int monitor = -1)
+  {
+    for (auto& pair : center_)
+      pair.second.Set(0, 0, 0);
   }
 
   nux::Point3 GetCenter(int monitor)
@@ -232,23 +238,61 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk) const
+  bool GetQuirk(Quirk quirk, int monitor = -1) const
   {
-    return quirks_[unsigned(quirk)];
+    if (monitor < 0)
+    {
+      for (unsigned i = 0; i < monitors::MAX; ++i)
+      {
+        if (!quirks_[i][unsigned(quirk)])
+          return false;
+      }
+
+      return true;
+    }
+
+    return quirks_[monitor][unsigned(quirk)];
   }
 
-  void SetQuirk(Quirk quirk, bool value)
+  void SetQuirk(Quirk quirk, bool value, int monitor = -1)
   {
-    quirks_[unsigned(quirk)] = value;
-    clock_gettime(CLOCK_MONOTONIC, &(quirk_times_[unsigned(quirk)]));
+    if (monitor < 0)
+    {
+      for (unsigned i = 0; i < monitors::MAX; ++i)
+      {
+        quirks_[i][unsigned(quirk)] = value;
+        quirk_progress_[i][unsigned(quirk)] = value ? 1.0f : 0.0f;
+      }
+    }
+    else
+    {
+      quirks_[monitor][unsigned(quirk)] = value;
+      quirk_progress_[monitor][unsigned(quirk)] = value ? 1.0f : 0.0f;
+    }
   }
 
-  void ResetQuirkTime(Quirk quirk) {};
-
-  struct timespec GetQuirkTime(Quirk quirk)
+  void SkipQuirkAnimation(Quirk quirk, int monitor)
   {
-    return quirk_times_[unsigned(quirk)];
+    float value = GetQuirk(quirk, monitor) ? 1.0f : 0.0f;
+
+    if (monitor < 0)
+    {
+      for (unsigned i = 0; i < monitors::MAX; ++i)
+        quirk_progress_[i][unsigned(quirk)] = value;
+    }
+    else
+    {
+      quirk_progress_[monitor][unsigned(quirk)] = value;
+    }
   }
+
+  float GetQuirkProgress(Quirk quirk, int monitor) const
+  {
+    return quirk_progress_[monitor][unsigned(quirk)];
+  }
+
+  void SetQuirkDuration(Quirk quirk, unsigned duration, int monitor = -1)
+  {}
 
   IconType GetIconType() const
   {
@@ -265,7 +309,7 @@ public:
     return nux::Color(0xFFAAAAAA);
   }
 
-  std::string RemoteUri()
+  std::string RemoteUri() const
   {
     return remote_uri_;
   }
@@ -309,7 +353,7 @@ public:
 
   void SendDndLeave() {}
 
-  std::string DesktopFile() { return std::string(""); }
+  std::string DesktopFile() const { return std::string(""); }
 
   bool IsSticky() const { return false; }
 
@@ -373,8 +417,8 @@ private:
   nux::BaseTexture* icon_;
   IconType type_;
   int sort_priority_;
-  bool quirks_[unsigned(Quirk::LAST)];
-  timespec quirk_times_[unsigned(Quirk::LAST)];
+  std::vector<std::bitset<std::size_t(Quirk::LAST)>> quirks_;
+  std::vector<std::vector<float>> quirk_progress_;
   std::map<int, nux::Point3> center_;
   std::string remote_uri_;
   bool is_tooltip_visible_;

@@ -233,8 +233,8 @@ g_mock_volume_mount (GVolume            *volume,
   mock_volume->last_mount_had_mount_op = (mount_operation != NULL);
   g_mock_volume_set_mount(mock_volume, G_MOUNT(g_mock_mount_new()));
 
-  callback(NULL,
-           G_ASYNC_RESULT (g_simple_async_result_new (NULL, NULL, NULL, NULL)),
+  callback(G_OBJECT (volume),
+           G_ASYNC_RESULT (g_simple_async_result_new (G_OBJECT (volume), callback, user_data, NULL)),
            user_data);
 }
 
@@ -253,10 +253,10 @@ g_mock_volume_eject (GVolume             *volume,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data)
 {
-  
-  callback(NULL,
-           G_ASYNC_RESULT (g_simple_async_result_new (NULL, NULL, NULL, NULL)),
-           user_data);}
+  callback(G_OBJECT (volume),
+           G_ASYNC_RESULT (g_simple_async_result_new (G_OBJECT (volume), callback, user_data, NULL)),
+           user_data);
+}
 
 static gboolean
 g_mock_volume_eject_finish (GVolume       *volume,

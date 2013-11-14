@@ -18,8 +18,8 @@
  */
 
 #include "SpacerLauncherIcon.h"
-#include "Launcher.h"
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 namespace unity
@@ -31,7 +31,6 @@ SpacerLauncherIcon::SpacerLauncherIcon(int monitor)
   : SingleMonitorLauncherIcon(IconType::SPACER, monitor)
 {
   SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, false);
 
   tooltip_text = _("Drop To Add Application");
 }

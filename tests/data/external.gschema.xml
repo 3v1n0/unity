@@ -5,15 +5,17 @@
   <schema path="/apps/indicator-session/" id="com.canonical.indicator.session">
     <key type="b" name="suppress-logout-restart-shutdown">
       <default>false</default>
-      <summary>Suppress the dialog to confirm logout, restart and shutdown action</summary>
-      <description>Whether or not to show confirmation dialogs for logout, restart and shutdown actions.</description>
     </key>
   </schema>
   <schema id="org.compiz.unityshell" gettext-domain="compiz">
     <key type="s" name="panel-first-menu">
       <default>'&lt;Alt&gt;F10'</default>
-      <summary>Key to open the first panel menu</summary>
-      <description>Opens the first indicator menu of the Panel, allowing keyboard navigation thereafter.</description>
+    </key>
+    <key type="s" name="show-launcher">
+      <default>'&lt;Super&gt;'</default>
+    </key>
+    <key type="s" name="show-hud">
+      <default>'&lt;Alt&gt;'</default>
     </key>
    </schema>
 </schemalist>

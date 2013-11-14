@@ -21,6 +21,7 @@
 #include "ShortcutView.h"
 
 #include <glib/gi18n-lib.h>
+#include <Nux/VLayout.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibWrapper.h>
 
@@ -33,8 +34,10 @@ namespace shortcut
 {
 namespace
 {
-  const unsigned SECTION_NAME_FONT_SIZE = 17/1.33;
-  const unsigned SHORTKEY_ENTRY_FONT_SIZE = 13/1.33;
+  const std::string FONT_NAME = "Ubuntu";
+  const unsigned MAIN_TITLE_FONT_SIZE = 15;
+  const unsigned SECTION_NAME_FONT_SIZE = 12;
+  const unsigned SHORTKEY_ENTRY_FONT_SIZE = 9;
   const unsigned INTER_SPACE_SHORTKEY_DESCRIPTION = 10;
   const unsigned SHORTKEY_COLUMN_WIDTH = 150;
   const unsigned DESCRIPTION_COLUMN_WIDTH = 265;
@@ -75,9 +78,9 @@ View::View(nux::BaseWindow *parent)
 
   std::string header = "<b>"+std::string(_("Keyboard Shortcuts"))+"</b>";
 
-  nux::StaticText* header_view = new nux::StaticText(header, NUX_TRACKER_LOCATION);
-  header_view->SetTextPointSize(20/1.33);
-  header_view->SetFontName("Ubuntu");
+  auto* header_view = new StaticCairoText(header, NUX_TRACKER_LOCATION);
+  header_view->SetFont(FONT_NAME+" "+std::to_string(MAIN_TITLE_FONT_SIZE));
+  header_view->SetLines(-1);
   main_layout->AddView(header_view, 1 , nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   main_layout->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -108,9 +111,9 @@ nux::LinearLayout* View::CreateSectionLayout(std::string const& section_name)
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   std::string name("<b>"+glib::String(g_markup_escape_text(section_name.c_str(), -1)).Str()+"</b>");
-  nux::StaticText* section_name_view = new nux::StaticText(name, NUX_TRACKER_LOCATION);
-  section_name_view->SetTextPointSize(SECTION_NAME_FONT_SIZE);
-  section_name_view->SetFontName("Ubuntu");
+  auto* section_name_view = new StaticCairoText(name, NUX_TRACKER_LOCATION);
+  section_name_view->SetFont(FONT_NAME+" "+std::to_string(SECTION_NAME_FONT_SIZE));
+  section_name_view->SetLines(-1);
   layout->AddView(new nux::SpaceLayout(10, 10, 10, 10), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddView(section_name_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddView(new nux::SpaceLayout(15, 15, 15, 15), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
@@ -131,19 +134,19 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
   glib::String shortkey(g_markup_escape_text(hint->shortkey().c_str(), -1));
 
   std::string skey = "<b>"+shortkey.Str()+"</b>";
-  nux::StaticText* shortkey_view = new nux::StaticText(skey, NUX_TRACKER_LOCATION);
-  shortkey_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
-  shortkey_view->SetFontName("Ubuntu");
-  shortkey_view->SetTextPointSize(SHORTKEY_ENTRY_FONT_SIZE);
+  auto* shortkey_view = new StaticCairoText(skey, NUX_TRACKER_LOCATION);
+  shortkey_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
+  shortkey_view->SetFont(FONT_NAME+" "+std::to_string(SHORTKEY_ENTRY_FONT_SIZE));
+  shortkey_view->SetLines(-1);
   shortkey_view->SetMinimumWidth(SHORTKEY_COLUMN_WIDTH);
   shortkey_view->SetMaximumWidth(SHORTKEY_COLUMN_WIDTH);
 
   glib::String es_desc(g_markup_escape_text(hint->description().c_str(), -1));
 
-  nux::StaticText* description_view = new nux::StaticText(es_desc.Value(), NUX_TRACKER_LOCATION);
-  description_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
-  shortkey_view->SetFontName("Ubuntu");
-  description_view->SetTextPointSize(SHORTKEY_ENTRY_FONT_SIZE);
+  auto* description_view = new StaticCairoText(es_desc.Str(), NUX_TRACKER_LOCATION);
+  description_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
+  description_view->SetFont(FONT_NAME+" "+std::to_string(SHORTKEY_ENTRY_FONT_SIZE));
+  description_view->SetLines(-1);
   description_view->SetMinimumWidth(DESCRIPTION_COLUMN_WIDTH);
   description_view->SetMaximumWidth(DESCRIPTION_COLUMN_WIDTH);
 

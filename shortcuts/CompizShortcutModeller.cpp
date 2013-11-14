@@ -32,7 +32,6 @@ namespace
   // Compiz' plug-in names
   const std::string CORE_PLUGIN_NAME = "core";
   const std::string EXPO_PLUGIN_NAME = "expo";
-  const std::string GRID_PLUGIN_NAME = "grid";
   const std::string MOVE_PLUGIN_NAME = "move";
   const std::string RESIZE_PLUGIN_NAME = "resize";
   const std::string SCALE_PLUGIN_NAME = "scale";
@@ -41,16 +40,13 @@ namespace
 
   // Compiz Core Options
   const std::string CORE_OPTION_SHOW_DESKTOP_KEY = "show_desktop_key";
-  const std::string CORE_OPTION_MAXIMIZE_WINDOW_KEY = "maximize_window_key";
-  const std::string CORE_OPTION_UNMAXIMIZE_OR_MINIMIZE_WINDOW_KEY = "unmaximize_or_minimize_window_key";
+  const std::string CORE_OPTION_MAXIMIZE_KEY = "maximize_window_key";
+  const std::string CORE_OPTION_RESTORE_MINIMIZE_KEY = "unmaximize_or_minimize_window_key";
   const std::string CORE_OPTION_CLOSE_WINDOW_KEY = "close_window_key";
   const std::string CORE_OPTION_WINDOW_MENU_KEY = "window_menu_key";
 
   // Compiz Expo Options
   const std::string EXPO_OPTION_EXPO_KEY = "expo_key";
-
-  // Compiz Grid Options
-  const std::string GRID_OPTION_PUT_LEFT_KEY = "put_left_key";
 
   // Compiz Move Options
   const std::string MOVE_OPTION_INITIATE_BUTTON = "initiate_button";
@@ -69,6 +65,10 @@ namespace
   const std::string UNITYSHELL_OPTION_PANEL_FIRST_MENU = "panel_first_menu";
   const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD = "alt_tab_forward";
   const std::string UNITYSHELL_OPTION_ALT_TAB_NEXT_WINDOW = "alt_tab_next_window";
+  const std::string UNITYSHELL_OPTION_MAXIMIZE = "window_maximize";
+  const std::string UNITYSHELL_OPTION_LEFT_MAXIMIZE = "window_left_maximize";
+  const std::string UNITYSHELL_OPTION_RIGHT_MAXIMIZE = "window_right_maximize";
+  const std::string UNITYSHELL_OPTION_RESTORE_MINIMIZE = "window_restore_minimize";
 
   // Compiz Wall Options
   const std::string WALL_OPTION_LEFT_KEY = "left_key";
@@ -180,6 +180,12 @@ void CompizModeller::AddDashHints(std::list<shortcut::AbstractHint::Ptr> &hints)
 
   hints.push_back(std::make_shared<shortcut::Hint>(dash, "", " + M",
                                                    _("Opens the Dash Music Lens."),
+                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   UNITYSHELL_PLUGIN_NAME,
+                                                   UNITYSHELL_OPTION_SHOW_LAUNCHER));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(dash, "", " + C",
+                                                   _("Opens the Dash Photo Lens."),
                                                    shortcut::OptionType::COMPIZ_KEY,
                                                    UNITYSHELL_PLUGIN_NAME,
                                                    UNITYSHELL_OPTION_SHOW_LAUNCHER));
@@ -298,19 +304,19 @@ void CompizModeller::AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hin
                                                    _("Maximises the current window."),
                                                    shortcut::OptionType::COMPIZ_KEY,
                                                    CORE_PLUGIN_NAME,
-                                                   CORE_OPTION_MAXIMIZE_WINDOW_KEY));
+                                                   CORE_OPTION_MAXIMIZE_KEY));
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                    _("Restores or minimises the current window."),
                                                    shortcut::OptionType::COMPIZ_KEY,
                                                    CORE_PLUGIN_NAME,
-                                                   CORE_OPTION_UNMAXIMIZE_OR_MINIMIZE_WINDOW_KEY));
+                                                   CORE_OPTION_RESTORE_MINIMIZE_KEY));
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" or Right"),
                                                    _("Semi-maximise the current window."),
                                                    shortcut::OptionType::COMPIZ_KEY,
-                                                   GRID_PLUGIN_NAME,
-                                                   GRID_OPTION_PUT_LEFT_KEY));
+                                                   UNITYSHELL_PLUGIN_NAME,
+                                                   UNITYSHELL_OPTION_LEFT_MAXIMIZE));
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                    _("Closes the current window."),
@@ -327,7 +333,7 @@ void CompizModeller::AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hin
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                    _("Places the window in corresponding position."),
                                                    shortcut::OptionType::HARDCODED,
-                                                   _("Ctrl + Alt + Num")));
+                                                   _("Ctrl + Alt + Num (keypad)")));
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"),
                                                    _("Moves the window."),

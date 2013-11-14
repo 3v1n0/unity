@@ -70,6 +70,7 @@ void PreviewNavigator::AddProperties(GVariantBuilder* builder)
     .add("button-y", texture_->GetAbsoluteY())
     .add("button-width", texture_->GetGeometry().width)
     .add("button-height", texture_->GetGeometry().height)
+    .add("button-geo", texture_->GetAbsoluteGeometry())
     .add("direction", static_cast<int>(direction_));
 }
 

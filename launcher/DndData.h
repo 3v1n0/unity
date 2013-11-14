@@ -42,22 +42,22 @@ public:
   /**
    * Returns a std::set<std::string> with all the uris.
    **/
-  std::set<std::string> const& Uris() const { return uris_; }
+  std::set<std::string> Uris() const { return uris_; }
   
   /**
    * Returns a std::set<std::string> with all the types.
    **/
-  std::set<std::string> const& Types() const { return types_; }
+  std::set<std::string> Types() const { return types_; }
   
   /**
    * Returns a std::set<std::string> with all uris of a given type.
    **/
-  std::set<std::string> const& UrisByType(const std::string& type) const { return types_to_uris_.find(type)->second; }
+  std::set<std::string> UrisByType(const std::string& type) const { return types_to_uris_.find(type)->second; }
   
   /**
    * Returns a std::set<std::string> with all types of a given uri.
    **/
-  std::string const& TypeByUri(const std::string& uris) { return uris_to_types_.find(uris)->second; }
+  std::string TypeByUri(const std::string& uris) { return uris_to_types_.find(uris)->second; }
 
 private:
   std::set<std::string> uris_;

@@ -3,7 +3,7 @@ Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
-               compiz-dev (>= 1:0.9.9~daily13.01.25bzr3586),
+               compiz-dev (>= 1:0.9.11),
                debhelper (>= 9.0.0~),
                dbus-test-runner,
                dh-migrations,
@@ -13,11 +13,12 @@ Build-Depends: cmake,
                gsettings-desktop-schemas-dev,
                intltool (>= 0.35.0),
                libatk1.0-dev,
-               libbamf3-dev (>= 0.5.0+13.10.20130626),
+               libbamf3-dev (>= 0.5.0+13.10.20130731),
                libboost-dev,
                libboost-serialization-dev,
                libcairo2-dev,
-               libcompizconfig0-dev (>= 1:0.9.9~daily12.12.05-0ubuntu2),
+               libdbus-1-dev,
+               libcompizconfig0-dev (>= 1:0.9.11),
                libdbusmenu-glib-dev (>= 0.3.91),
                libdee-dev (>= 1.2.6),
                libgee-dev (>= 0.5.0),
@@ -32,20 +33,23 @@ Build-Depends: cmake,
                libindicator3-dev (>= 0.12.2),
                libjson-glib-dev,
                libjson-perl,
+               libnih-dbus-dev,
+               libnih-dev,
                libnotify-dev,
-               libnux-4.0-dev (>= 4.0.2+13.10.20130718.1),
+               libnux-4.0-dev (>= 4.0.4),
                libpango1.0-dev,
                libsigc++-2.0-dev,
                libstartup-notification0-dev,
                libunique-dev,
-               libunity-dev (>= 7.0.8),
+               libunity-dev (>= 7.1.0),
                libunity-misc-dev (>= 4.0.4),
                libunity-scopes-json-def-desktop,
+               libupstart-dev,
                libxcb-icccm4-dev,
                libxfixes-dev (>= 1:5.0.1-1),
                libxi-dev (>= 2:1.7.1.901),
-               libxpathselect-dev (>=1.3),
-               libzeitgeist-dev (>= 0.3.18),
+               libxpathselect-dev (>=1.4),
+               libzeitgeist-2.0-dev,
                pkg-config,
                python (>= 2.7),
                python-setuptools,
@@ -63,7 +67,7 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          ${python:Depends},
-         libunity-core-6.0-7 (= ${binary:Version}),
+         libunity-core-6.0-8 (= ${binary:Version}),
          compiz,
          compiz-core, compiz-core-abiversion-${coreabiversion},
          libnux-abiversion-${nuxabiversion},
@@ -83,11 +87,13 @@ Recommends: gnome-control-center-unity,
             indicator-sound,
             indicator-bluetooth,
             indicator-datetime,
+            indicator-keyboard,
             indicator-messages,
             indicator-printers,
             indicator-power,
             indicator-session,
             indicator-sync,
+            telepathy-indicator,
             hud,
 Breaks: unity-lens-applications (<< 5.12.0-0ubuntu2),
         unity-lens-files (<< 5.10.0-0ubuntu2),
@@ -116,14 +122,14 @@ Description: Services for the Unity interface
  .
  This package contains the dbus service used for unity.
 
-Package: libunity-core-6.0-7
+Package: libunity-core-6.0-8
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          unity-services (= ${binary:Version}),
-Conflicts: unity-common, libunity-core-6.0-6
-Replaces: unity-common, libunity-core-6.0-6
+Conflicts: unity-common, libunity-core-6.0-6, libunity-core-6.0-7
+Replaces: unity-common, libunity-core-6.0-6, libunity-core-6.0-7
 Provides: unity-common, unity-common-7.0
 Description: Core library for the Unity interface.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
@@ -139,11 +145,11 @@ Package: libunity-core-6.0-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         libunity-core-6.0-7 (= ${binary:Version}),
+         libunity-core-6.0-8 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
-         libnux-4.0-dev (>= 4.0.2),
-         libunity-dev (>= 7.0.2~),
+         libnux-4.0-dev (>= 4.0.4),
+         libunity-dev (>= 7.1.0~),
          libdee-dev,
 Description: Core library for the Unity interface - development files
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
@@ -172,7 +178,7 @@ Depends: ${misc:Depends},
          python-testtools,
          python-xdg,
          python-xlib,
-         libxpathselect1.3 (>= 1.3),
+         libxpathselect1.4 (>= 1.4),
 Description: Autopiloted tests for Unity
  We test Unity automatically through autopilot, a framework which enables us
  to trigger keyboard and mouse events on the fly as well as introspecting

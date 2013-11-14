@@ -414,8 +414,9 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.unity.hud.num_buttons, Eventually(Equals(5)))
         (x,y,w,h) = self.unity.hud.view.geometry
 
-        self.mouse.move(w/2, 0)
-        self.mouse.move(w/2, h)
+        # Specify a slower rate so that HUD can register the mouse movement properly
+        self.mouse.move(w/2, 0, rate=5)
+        self.mouse.move(w/2, h, rate=5)
         self.assertThat(self.unity.hud.view.selected_button, Eventually(Equals(5)))
 
         for i in range(5):

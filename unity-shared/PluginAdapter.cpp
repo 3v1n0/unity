@@ -417,6 +417,11 @@ bool PluginAdapter::IsWallActive() const
   return m_Screen->grabExist("wall");
 }
 
+bool PluginAdapter::IsAnyWindowMoving() const
+{
+    return m_Screen->grabExist("move");
+}
+
 void PluginAdapter::InitiateExpo()
 {
   m_ExpoActionList.InitiateAll();
@@ -452,6 +457,22 @@ bool PluginAdapter::IsWindowMaximized(Window window_id) const
   {
     return ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE);
   }
+
+  return false;
+}
+
+bool PluginAdapter::IsWindowVerticallyMaximized(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return (window->state() & CompWindowStateMaximizedVertMask);
+
+  return false;
+}
+
+bool PluginAdapter::IsWindowHorizontallyMaximized(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return (window->state() & CompWindowStateMaximizedHorzMask);
 
   return false;
 }
@@ -552,7 +573,7 @@ bool PluginAdapter::IsWindowObscured(Window window_id) const
           && sibling->isMapped()
           && sibling->isViewable()
           && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE
-          && !GetWindowGeometry(sibling->id()).Intersect(win_geo).IsNull())
+          && GetWindowGeometry(sibling->id()).IsIntersecting(win_geo))
       {
         return true;
       }
@@ -690,6 +711,59 @@ void PluginAdapter::Maximize(Window window_id)
 {
   if (CompWindow* window = m_Screen->findWindow(window_id))
     window->maximize(MAXIMIZE_STATE);
+}
+
+void PluginAdapter::VerticallyMaximizeWindowAt(CompWindow* window, nux::Geometry const& geo)
+{
+  if (window && ((window->type() & CompWindowTypeNormalMask) ||
+      ((window->actions() & CompWindowActionMaximizeVertMask) &&
+        window->actions() & CompWindowActionResizeMask)))
+  {
+    /* First we unmaximize the Window */
+    if (window->state() & MAXIMIZE_STATE)
+      window->maximize(0);
+
+    /* Then we vertically maximize the it so it can be unminimized correctly */
+    if (!(window->state() & CompWindowStateMaximizedVertMask))
+      window->maximize(CompWindowStateMaximizedVertMask);
+
+    /* Then we resize and move it on the requested place */
+    MoveResizeWindow(window->id(), geo);
+  }
+}
+
+void PluginAdapter::LeftMaximize(Window window_id)
+{
+  CompWindow* window = m_Screen->findWindow(window_id);
+
+  if (!window)
+    return;
+
+  /* Let's compute the area where the window should stay */
+  CompRect workarea = m_Screen->getWorkareaForOutput(window->outputDevice());
+  nux::Geometry win_geo(workarea.x() + window->border().left,
+                        workarea.y() + window->border().top,
+                        workarea.width() / 2 - (window->border().left + window->border().right),
+                        workarea.height() - (window->border().top + window->border().bottom));
+
+  VerticallyMaximizeWindowAt(window, win_geo);
+}
+
+void PluginAdapter::RightMaximize(Window window_id)
+{
+  CompWindow* window = m_Screen->findWindow(window_id);
+
+  if (!window)
+    return;
+
+  /* Let's compute the area where the window should stay */
+  CompRect workarea = m_Screen->getWorkareaForOutput(window->outputDevice());
+  nux::Geometry win_geo(workarea.x() + workarea.width() / 2 + window->border().left,
+                        workarea.y() + window->border().top,
+                        workarea.width() / 2 - (window->border().left + window->border().right),
+                        workarea.height() - (window->border().top + window->border().bottom));
+
+  VerticallyMaximizeWindowAt(window, win_geo);
 }
 
 void PluginAdapter::Restore(Window window_id)
@@ -898,9 +972,9 @@ bool PluginAdapter::ScaleWindowGroup(std::vector<Window> const& windows, int sta
   std::size_t num_windows = windows.size();
   if (num_windows > 1 || (force && num_windows))
   {
+    _spread_windows_state = true;
     std::string const& match = MatchStringForXids(windows);
     InitiateScale(match, state);
-    _spread_windows_state = true;
     return true;
   }
   return false;

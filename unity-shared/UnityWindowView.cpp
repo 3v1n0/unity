@@ -65,6 +65,7 @@ UnityWindowView::UnityWindowView(nux::BaseWindow *parent,
   update_backbuffer_region(this, GetAbsoluteGeometry());
 
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
+  background_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
 }
 
 UnityWindowView::~UnityWindowView()

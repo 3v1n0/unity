@@ -22,9 +22,6 @@
 // Add ubus messages here so we can easily export them around the place
 // keep ordered
 
-// Signal fired when an autopilot test is finished
-#define UBUS_AUTOPILOT_TEST_FINISHED "AUTOPILOT_TEST_FINISHED"
-
 #define UBUS_DASH_EXTERNAL_ACTIVATION "DASH_EXTERNAL_ACTIVATION"
 #define UBUS_OVERLAY_CLOSE_REQUEST "OVERLAY_CLOSE_REQUEST"
 
@@ -47,38 +44,18 @@
 #define UBUS_LAUNCHER_START_KEY_SWITCHER "LAUNCHER_START_KEY_SWITCHER"
 #define UBUS_LAUNCHER_END_KEY_SWITCHER   "LAUNCHER_END_KEY_SWITCHER"
 #define UBUS_LAUNCHER_SELECTION_CHANGED  "LAUNCHER_ICON_SELECTION_CHANGED"
-#define UBUS_LAUNCHER_ICON_URGENT_CHANGED "LAUNCHER_ICON_URGENT_CHANGED"
 #define UBUS_QUICKLIST_START_KEY_NAV "QUICKLIST_START_KEY_NAV"
 #define UBUS_QUICKLIST_END_KEY_NAV   "QUICKLIST_END_KEY_NAV"
 
-// Signals that fired on various launcher dnd tasks
-#define UBUS_LAUNCHER_START_DND      "LAUNCHER_START_DRAG"
-#define UBUS_LAUNCHER_END_DND        "LAUNCHER_END_DRAG"
-#define UBUS_LAUNCHER_ICON_START_DND "LAUNCHER_ICON_START_DND"
-#define UBUS_LAUNCHER_ICON_END_DND   "LAUNCHER_ICON_END_DND"
-
 // Signal to force the launcher into locked mode, (b)
 #define UBUS_LAUNCHER_LOCK_HIDE "LAUNCHER_LOCK_HIDE"
-
-// Signal to emit changes to the launcher hide mode behaviour (b), true = locked out, false = unlocked
-#define UBUS_LAUNCHER_HIDE_MODE_CHANGE "LAUNCHER_HIDE_MODE_CHANGE"
-
-// Signal sent when a quicklist is shown.
-#define UBUS_QUICKLIST_SHOWN "QUICKLIST_SHOWN"
-
-// Signal sent when a tooltip is shown.
-#define UBUS_TOOLTIP_SHOWN "TOOLTIP_SHOWN"
-
-// Signal sent when the background changes, contains average colour in float RGB format
-#define UBUS_BACKGROUND_COLOR_CHANGED "BACKGROUND_COLOR_CHANGED"
-#define UBUS_BACKGROUND_REQUEST_COLOUR_EMIT "REQUEST_BACKGROUND_COLOUR_EMIT"
 
 #define UBUS_DASH_SIZE_CHANGED "DASH_SIZE_CHANGED"
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
 // called when previews wish to navigate left/right or close (is)
-// -1 = left, 0 = close, 1 = right, 
+// -1 = left, 0 = close, 1 = right,
 // string is the uri string that last result activated was
 #define UBUS_DASH_PREVIEW_NAVIGATION_REQUEST "DASH_PREVIEW_NAVIGATION_REQUEST"
 

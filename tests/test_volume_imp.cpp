@@ -25,46 +25,27 @@ using namespace testing;
 #include "gmockmount.h"
 #include "gmockvolume.h"
 #include "launcher/VolumeImp.h"
-#include "test_utils.h"
-#include "test_mock_filemanager.h"
 using namespace unity;
 
 namespace
 {
-
-class MockDeviceNotificationDisplay : public launcher::DeviceNotificationDisplay
+struct TestVolumeImp : Test
 {
-public:
-  typedef std::shared_ptr<MockDeviceNotificationDisplay> Ptr;
-
-  MOCK_METHOD2(Display, void(std::string const& icon_name, std::string const& device_name));
-};
-
-class TestVolumeImp : public Test
-{
-public:
-  void SetUp()
-  {
-    gvolume_ = g_mock_volume_new();
-    file_manager_.reset(new NiceMock<MockFileManager>);
-    device_notification_display_.reset(new MockDeviceNotificationDisplay);
-    volume_.reset(new launcher::VolumeImp(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
-                                          file_manager_, device_notification_display_));
-  }
+  TestVolumeImp()
+    : gvolume_(g_mock_volume_new())
+    , volume_(std::make_shared<launcher::VolumeImp>(glib::object_cast<GVolume>(gvolume_)))
+  {}
 
   glib::Object<GMockVolume> gvolume_;
-  MockFileManager::Ptr file_manager_;
-  MockDeviceNotificationDisplay::Ptr device_notification_display_;
   launcher::VolumeImp::Ptr volume_;
 };
 
-TEST_F(TestVolumeImp, TestCtor)
+TEST_F(TestVolumeImp, Ctor)
 {
   EXPECT_FALSE(volume_->IsMounted());
-  EXPECT_FALSE(volume_->IsOpened());
 }
 
-TEST_F(TestVolumeImp, TestCanBeEjected)
+TEST_F(TestVolumeImp, CanBeEjected)
 {
   EXPECT_FALSE(volume_->CanBeEjected());
 
@@ -72,7 +53,7 @@ TEST_F(TestVolumeImp, TestCanBeEjected)
   EXPECT_TRUE(volume_->CanBeEjected());
 }
 
-TEST_F(TestVolumeImp, TestGetName)
+TEST_F(TestVolumeImp, GetName)
 {
   std::string const volume_name("Test Device");
 
@@ -82,7 +63,7 @@ TEST_F(TestVolumeImp, TestGetName)
   EXPECT_EQ(volume_->GetName(), volume_name);
 }
 
-TEST_F(TestVolumeImp, TestGetIconName)
+TEST_F(TestVolumeImp, GetIconName)
 {
   std::string const icon_name("gnome-dev-cdrom");
 
@@ -90,7 +71,7 @@ TEST_F(TestVolumeImp, TestGetIconName)
   EXPECT_EQ(volume_->GetIconName(), icon_name);
 }
 
-TEST_F(TestVolumeImp, TestGetIdentifier)
+TEST_F(TestVolumeImp, GetIdentifier)
 {
   std::string const uuid = "uuid";
   std::string const label = "label";
@@ -101,7 +82,12 @@ TEST_F(TestVolumeImp, TestGetIdentifier)
   EXPECT_EQ(volume_->GetIdentifier(), uuid + "-" + label);
 }
 
-TEST_F(TestVolumeImp, TestIsMounted)
+TEST_F(TestVolumeImp, GetUriUnMounted)
+{
+  EXPECT_TRUE(volume_->GetUri().empty());
+}
+
+TEST_F(TestVolumeImp, IsMounted)
 {
   g_mock_volume_set_mount(gvolume_, nullptr);
   ASSERT_FALSE(volume_->IsMounted());
@@ -110,65 +96,26 @@ TEST_F(TestVolumeImp, TestIsMounted)
   EXPECT_TRUE(volume_->IsMounted());
 }
 
-TEST_F(TestVolumeImp, TestIsOpened)
+TEST_F(TestVolumeImp, Eject)
 {
-  volume_->MountAndOpenInFileManager(0);
-
-  EXPECT_CALL(*file_manager_, IsPrefixOpened(ROOT_FILE_URI));
-  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(true));
-  file_manager_->locations_changed.emit();
-  EXPECT_TRUE(volume_->IsOpened());
-
-  EXPECT_CALL(*file_manager_, IsPrefixOpened(ROOT_FILE_URI));
-  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(false));
-  file_manager_->locations_changed.emit();
-  EXPECT_FALSE(volume_->IsOpened());
-}
-
-TEST_F(TestVolumeImp, TestIsOpenedSignal)
-{
-  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(false));
-
-  bool opened = false;
-  volume_->opened.connect([&opened] (bool value) { opened = value; });
-  file_manager_->locations_changed.emit();
-
-  ASSERT_FALSE(opened);
-
-  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(true));
-  file_manager_->locations_changed.emit();
-  EXPECT_TRUE(opened);
-}
-
-TEST_F(TestVolumeImp, TestFilemanagerSignalDisconnection)
-{
-  ASSERT_FALSE(file_manager_->locations_changed.empty());
-  volume_.reset();
-
-  EXPECT_TRUE(file_manager_->locations_changed.empty());
-}
-
-TEST_F(TestVolumeImp, TestEjectAndShowNotification)
-{
+  bool ejected = false;
   g_mock_volume_set_can_eject(gvolume_, TRUE);
-
-  EXPECT_CALL(*device_notification_display_, Display(volume_->GetIconName(), volume_->GetName()))
-    .Times(1);
-
-  volume_->EjectAndShowNotification();
+  volume_->ejected.connect([&ejected] { ejected = true; });
+  volume_->Eject();
+  EXPECT_TRUE(ejected);
 }
 
-TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
+TEST_F(TestVolumeImp, Mount)
 {
-  uint64_t time = g_random_int();
-  EXPECT_CALL(*file_manager_, OpenActiveChild(ROOT_FILE_URI, time));
-
-  volume_->MountAndOpenInFileManager(time);
+  bool mounted = false;
+  volume_->mounted.connect([&mounted] { mounted = true; });
+  volume_->Mount();
   EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
   EXPECT_TRUE(volume_->IsMounted());
+  EXPECT_TRUE(mounted);
 }
 
-TEST_F(TestVolumeImp, TestChangedSignal)
+TEST_F(TestVolumeImp, ChangedSignal)
 {
   bool callback_called = false;
   volume_->changed.connect([&]() {
@@ -176,10 +123,10 @@ TEST_F(TestVolumeImp, TestChangedSignal)
   });
 
   g_signal_emit_by_name(gvolume_, "changed", nullptr);
-  Utils::WaitUntil(callback_called);
+  EXPECT_TRUE(callback_called);
 }
 
-TEST_F(TestVolumeImp, TestRemovedSignal)
+TEST_F(TestVolumeImp, RemovedSignal)
 {
   bool callback_called = false;
   volume_->removed.connect([&]() {
@@ -187,7 +134,7 @@ TEST_F(TestVolumeImp, TestRemovedSignal)
   });
 
   g_signal_emit_by_name(gvolume_, "removed", nullptr);
-  Utils::WaitUntil(callback_called);
+  EXPECT_TRUE(callback_called);
 }
 
 }

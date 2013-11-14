@@ -28,12 +28,12 @@
 #include "test_utils.h"
 #include "DesktopLauncherIcon.h"
 #include "SimpleLauncherIcon.h"
-#include "StandaloneWindowManager.h"
 #include "SwitcherController.h"
 #include "SwitcherView.h"
 #include "TimeUtil.h"
 #include "unity-shared/UnitySettings.h"
 #include "mock-base-window.h"
+#include "test_standalone_wm.h"
 
 using namespace std::chrono;
 
@@ -53,6 +53,7 @@ class FakeApplicationWindow : public unity::ApplicationWindow
 {
 public:
   FakeApplicationWindow(Window xid, uint64_t active_number = 0);
+  ~FakeApplicationWindow();
 
   virtual std::string type() const;
 
@@ -94,7 +95,7 @@ protected:
   // required to create hidden secret global variables before test objects
   unity::Settings unity_settings_;
 
-  unity::StandaloneWindowManager* WM;
+  unity::testwrapper::StandaloneWM WM;
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
   unity::testmocks::MockBaseWindow::Ptr mock_window_;

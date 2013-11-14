@@ -34,17 +34,26 @@ namespace unity
 class Application;
 class ApplicationManager;
 class ApplicationWindow;
+class ApplicationSubject;
 typedef std::shared_ptr<Application> ApplicationPtr;
 typedef std::shared_ptr<ApplicationWindow> ApplicationWindowPtr;
+typedef std::shared_ptr<ApplicationSubject> ApplicationSubjectPtr;
 
 typedef std::vector<ApplicationPtr> ApplicationList;
 typedef std::vector<ApplicationWindowPtr> WindowList;
 
+enum class ApplicationEventType
+{
+  CREATE,
+  DELETE,
+  ACCESS,
+  LEAVE
+};
 
 class ApplicationWindow
 {
 public:
-  virtual ~ApplicationWindow() {}
+  virtual ~ApplicationWindow() = default;
 
   virtual std::string type() const = 0; // 'window' or 'tab'
 
@@ -68,13 +77,11 @@ public:
   nux::ROProperty<bool> urgent;
 };
 
-
 class Application
 {
 public:
-  virtual ~Application() {}
+  virtual ~Application() = default;
 
-  virtual std::string desktop_file() const = 0;
   virtual std::string type() const = 0;
 
   // A string representation of the object.
@@ -90,6 +97,12 @@ public:
   // Calls quit on all the Windows for this application.
   virtual void Quit() const = 0;
 
+  virtual bool CreateLocalDesktopFile() const = 0;
+
+  virtual void LogEvent(ApplicationEventType, ApplicationSubjectPtr const&) const = 0;
+
+  virtual std::string desktop_id() const = 0;
+  nux::ROProperty<std::string> desktop_file;
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;
 
@@ -109,25 +122,55 @@ public:
   sigc::signal<void> window_closed;
 };
 
+class ApplicationSubject
+{
+public:
+  virtual ~ApplicationSubject() = default;
+
+  nux::RWProperty<std::string> uri;
+  nux::RWProperty<std::string> origin;
+  nux::RWProperty<std::string> text;
+  nux::RWProperty<std::string> storage;
+  nux::RWProperty<std::string> current_uri;
+  nux::RWProperty<std::string> current_origin;
+  nux::RWProperty<std::string> mimetype;
+  nux::RWProperty<std::string> interpretation;
+  nux::RWProperty<std::string> manifestation;
+
+  bool operator==(ApplicationSubject const& other) const
+  {
+    return uri() == other.uri() &&
+           origin() == other.origin() &&
+           text() == other.text() &&
+           storage() == other.storage() &&
+           current_uri() == other.current_uri() &&
+           current_origin() == other.current_origin() &&
+           mimetype() == other.mimetype() &&
+           interpretation() == other.interpretation() &&
+           manifestation() == other.manifestation();
+  }
+
+  bool operator!=(ApplicationSubject const& other) const
+  {
+    return !(operator==(other));
+  }
+};
+
 
 class ApplicationManager
 {
 public:
-  virtual ~ApplicationManager() {}
+  virtual ~ApplicationManager() = default;
 
   static ApplicationManager& Default();
 
-  virtual ApplicationWindowPtr GetActiveWindow() = 0;
-
-  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) = 0;
-
-  virtual ApplicationList GetRunningApplications() = 0;
-
-  virtual ApplicationPtr GetApplicationForWindow(Window xid) = 0;
-
+  virtual ApplicationPtr GetUnityApplication() const = 0;
+  virtual ApplicationWindowPtr GetActiveWindow() const = 0;
+  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const = 0;
+  virtual ApplicationList GetRunningApplications() const = 0;
+  virtual ApplicationPtr GetApplicationForWindow(Window xid) const = 0;
 
   sigc::signal<void, ApplicationPtr const&> application_started;
-
   sigc::signal<void, ApplicationPtr const&> active_application_changed;
   sigc::signal<void, ApplicationWindowPtr const&> active_window_changed;
 };

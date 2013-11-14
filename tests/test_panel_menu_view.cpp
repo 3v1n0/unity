@@ -23,7 +23,7 @@
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "UBusMessages.h"
-#include "StandaloneWindowManager.h"
+#include "test_standalone_wm.h"
 #include "test_uscreen_mock.h"
 #include "test_utils.h"
 
@@ -34,10 +34,6 @@ namespace unity
 
 struct TestPanelMenuView : public testing::Test
 {
-  TestPanelMenuView()
-    : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
-  {}
-
   struct MockPanelMenuView : public PanelMenuView
   {
     MOCK_METHOD0(QueueDraw, void());
@@ -72,7 +68,7 @@ protected:
   MockUScreen uscreen;
   Settings settings;
   panel::Style panelStyle;
-  StandaloneWindowManager* WM;
+  testwrapper::StandaloneWM WM;
   testing::NiceMock<MockPanelMenuView> menu_view;
 };
 
@@ -85,7 +81,7 @@ TEST_F(TestPanelMenuView, Escaping)
   UBusManager ubus;
   ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
   ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
-                   g_variant_new_string(escapedText));
+                   glib::Variant(escapedText));
   Utils::WaitUntilMSec([this] {return menu_view.GetCurrentTitle() == escapedText;});
 
 

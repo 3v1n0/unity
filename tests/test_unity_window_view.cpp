@@ -180,6 +180,12 @@ TEST_F(TestUnityWindowView, QueueDrawsOnCloseTextureUpdate)
   view.close_button_->texture_updated(nux::ObjectPtr<nux::BaseTexture>());
 }
 
+TEST_F(TestUnityWindowView, QueueDrawsOnBgUpdated)
+{
+  EXPECT_CALL(view, QueueDraw());
+  view.background_color = nux::color::RandomColor();
+}
+
 TEST_F(TestUnityWindowView, SetLayoutWrapsOriginalLayout)
 {
   auto* layout = new nux::VLayout();

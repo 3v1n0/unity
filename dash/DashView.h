@@ -88,7 +88,6 @@ protected:
 private:
   void SetupViews();
   void SetupUBusConnections();
-  void OnBGColorChanged(GVariant *data);
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -180,8 +179,6 @@ private:
   int opening_row_y_;
   int opening_column_width_;
   int opening_row_height_;
-
-  nux::Color background_color_;
 
   std::unique_ptr<na::AnimateValue<float>> split_animation_;
   float animate_split_value_;

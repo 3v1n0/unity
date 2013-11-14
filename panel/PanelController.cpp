@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-13 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include "PanelController.h"
@@ -39,13 +40,11 @@ const char* window_title = "unity-panel";
 class Controller::Impl
 {
 public:
-  Impl();
+  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers);
+  ~Impl();
 
   void FirstMenuShow();
   void QueueRedraw();
-
-  std::vector<nux::View*> GetPanelViews() const;
-  std::vector<nux::Geometry> GetGeometries() const;
 
   // NOTE: nux::Property maybe?
   void SetLauncherWidth(int width);
@@ -57,18 +56,17 @@ public:
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
                           int discovery_fadein, int discovery_fadeout);
 
+  nux::ObjectPtr<PanelView> CreatePanel(Introspectable *iobj);
   void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
+  void UpdatePanelGeometries();
 
   typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
 
   unity::PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
-  static void WindowConfigureCallback(int            window_width,
-                                      int            window_height,
-                                      nux::Geometry& geo,
-                                      void*          user_data);
-
-  std::vector<BaseWindowPtr> windows_;
+  ui::EdgeBarrierController::Ptr edge_barriers_;
+  PanelVector panels_;
+  std::vector<nux::Geometry> panel_geometries_;
   std::vector<Window> tray_xids_;
   float opacity_;
   bool opacity_maximized_toggle_;
@@ -81,8 +79,9 @@ public:
 };
 
 
-Controller::Impl::Impl()
-  : opacity_(1.0f)
+Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers)
+  : edge_barriers_(edge_barriers)
+  , opacity_(1.0f)
   , opacity_maximized_toggle_(false)
   , menus_fadein_(0)
   , menus_fadeout_(0)
@@ -92,32 +91,33 @@ Controller::Impl::Impl()
   , dbus_indicators_(std::make_shared<indicator::DBusIndicators>())
 {}
 
-std::vector<nux::View*> Controller::Impl::GetPanelViews() const
+Controller::Impl::~Impl()
 {
-  std::vector<nux::View*> views;
-  views.reserve(windows_.size());
-  for (auto const& window: windows_)
-    views.push_back(ViewForWindow(window));
-  return views;
+  // Since the panels are in a window which adds a reference to the
+  // panel, we need to make sure the base windows are unreferenced
+  // otherwise the pnales never die.
+  for (auto const& panel_ptr : panels_)
+  {
+    if (panel_ptr)
+      panel_ptr->GetParent()->UnReference();
+  }
 }
 
-std::vector<nux::Geometry> Controller::Impl::GetGeometries() const
+void Controller::Impl::UpdatePanelGeometries()
 {
-  std::vector<nux::Geometry> geometries;
+  panel_geometries_.reserve(panels_.size());
 
-  for (auto const& window : windows_)
+  for (auto const& panel : panels_)
   {
-    geometries.push_back(window->GetAbsoluteGeometry());
+    panel_geometries_.push_back(panel->GetAbsoluteGeometry());
   }
-
-  return geometries;
 }
 
 void Controller::Impl::FirstMenuShow()
 {
-  for (auto const& window: windows_)
+  for (auto const& panel: panels_)
   {
-    if (ViewForWindow(window)->FirstMenuShow())
+    if (panel->FirstMenuShow())
       break;
   }
 }
@@ -126,17 +126,17 @@ void Controller::Impl::SetOpacity(float opacity)
 {
   opacity_ = opacity;
 
-  for (auto const& window: windows_)
+  for (auto const& panel: panels_)
   {
-    ViewForWindow(window)->SetOpacity(opacity_);
+    panel->SetOpacity(opacity_);
   }
 }
 
 void Controller::Impl::SetLauncherWidth(int width)
 {
-  for (auto const& window: windows_)
+  for (auto const& panel: panels_)
   {
-    ViewForWindow(window)->SetLauncherWidth(width);
+    panel->SetLauncherWidth(width);
   }
 }
 
@@ -144,9 +144,9 @@ void Controller::Impl::SetOpacityMaximizedToggle(bool enabled)
 {
   opacity_maximized_toggle_ = enabled;
 
-  for (auto const& window: windows_)
+  for (auto const& panel: panels_)
   {
-    ViewForWindow(window)->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
+    panel->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
   }
 }
 
@@ -159,18 +159,18 @@ void Controller::Impl::SetMenuShowTimings(int fadein, int fadeout, int discovery
   menus_discovery_fadein_ = discovery_fadein;
   menus_discovery_fadeout_ = discovery_fadeout;
 
-  for (auto const& window: windows_)
+  for (auto const& panel: panels_)
   {
-    ViewForWindow(window)->SetMenuShowTimings(fadein, fadeout, discovery,
-                                              discovery_fadein, discovery_fadeout);
+    panel->SetMenuShowTimings(fadein, fadeout, discovery,
+                              discovery_fadein, discovery_fadeout);
   }
 }
 
 void Controller::Impl::QueueRedraw()
 {
-  for (auto const& window: windows_)
+  for (auto const& panel: panels_)
   {
-    window->QueueDraw();
+    panel->QueueDraw();
   }
 }
 
@@ -187,115 +187,88 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
                                        std::vector<nux::Geometry>& monitors,
                                        Introspectable *iobj)
 {
-  std::vector<BaseWindowPtr>::iterator it;
-  unsigned n_monitors = monitors.size();
-  unsigned int i = 0;
+  unsigned int num_monitors = monitors.size();
+  unsigned int num_panels = num_monitors;
+  unsigned int panels_size = panels_.size();
+  unsigned int last_panel = 0;
 
-  tray_xids_.resize(n_monitors);
+  tray_xids_.resize(num_panels);
 
-  for (it = windows_.begin(); it != windows_.end(); ++it)
+  for (unsigned int i = 0; i < num_panels; ++i, ++last_panel)
   {
-    if (i < n_monitors)
+    if (i >= panels_size)
     {
-      PanelView* view;
-
-      (*it)->EnableInputWindow(false);
-      (*it)->InputWindowEnableStruts(false);
-
-      nux::Geometry geo = monitors[i];
-      geo.height = panel::Style::Instance().panel_height;
-      (*it)->SetGeometry(geo);
-      (*it)->SetMinMaxSize(geo.width, geo.height);
-
-      view = ViewForWindow(*it);
-      view->SetPrimary(i == primary_monitor);
-      view->SetMonitor(i);
-      tray_xids_[i] = view->GetTrayXid();
-
-      if (nux::GetWindowThread()->IsEmbeddedWindow())
-      {
-        (*it)->EnableInputWindow(true);
-        (*it)->InputWindowEnableStruts(true);
-      }
-
-      LOG_DEBUG(logger) << "Updated Panel for Monitor " << i;
-
-      i++;
+      panels_.push_back(CreatePanel(iobj));
     }
-    else
-      break;
+    else if (!panels_[i])
+    {
+      panels_[i] = CreatePanel(iobj);
+    }
+
+    if (panels_[i]->GetMonitor() != static_cast<int>(i))
+    {
+      edge_barriers_->RemoveHorizontalSubscriber(panels_[i].GetPointer(), panels_[i]->GetMonitor());
+    }
+
+    panels_[i]->SetMonitor(i);
+    panels_[i]->geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdatePanelGeometries(); });
+    tray_xids_[i] = panels_[i]->GetTrayXid();
+
+    edge_barriers_->AddHorizontalSubscriber(panels_[i].GetPointer(), panels_[i]->GetMonitor());
   }
 
-  // Add new ones if needed
-  if (i < n_monitors)
+  for (unsigned int i = last_panel; i < panels_size; ++i)
   {
-    for (i = i; i < n_monitors; i++)
+    auto const& panel = panels_[i];
+    if (panel)
     {
-      nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-
-      PanelView* view = new PanelView(dbus_indicators_);
-      view->SetMaximumHeight(panel::Style::Instance().panel_height);
-      view->SetOpacity(opacity_);
-      view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
-      view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
-                               menus_discovery_fadein_, menus_discovery_fadeout_);
-      view->SetPrimary(i == primary_monitor);
-      view->SetMonitor(i);
-      tray_xids_[i] = view->GetTrayXid();
-
-      layout->AddView(view, 1);
-      layout->SetContentDistribution(nux::MAJOR_POSITION_START);
-      layout->SetVerticalExternalMargin(0);
-      layout->SetHorizontalExternalMargin(0);
-
-      BaseWindowPtr window(new nux::BaseWindow());
-      nux::Geometry geo = monitors[i];
-      geo.height = panel::Style::Instance().panel_height;
-
-      window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window.GetPointer());
-      window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-      window->ShowWindow(true);
-
-      if (nux::GetWindowThread()->IsEmbeddedWindow())
-        window->EnableInputWindow(true, panel::window_title, false, false);
-
-      window->SetGeometry(geo);
-      window->SetMinMaxSize(geo.width, geo.height);
-      window->SetLayout(layout);
-      window->InputWindowEnableStruts(true);
-
-      windows_.push_back(window);
-
-      // add to introspectable tree:
-      iobj->AddChild(view);
-
-      LOG_DEBUG(logger) << "Added Panel for Monitor " << i;
+      iobj->RemoveChild(panel.GetPointer());
+      panel->GetParent()->UnReference();
+      edge_barriers_->RemoveHorizontalSubscriber(panel.GetPointer(), panel->GetMonitor());
     }
   }
 
-  if (windows_.size() > n_monitors)
-  {
-    LOG_DEBUG(logger) << "Removed extra Panels";
-    windows_.erase(it, windows_.end());
-  }
+  panels_.resize(num_panels);
+  UpdatePanelGeometries();
 }
 
-void Controller::Impl::WindowConfigureCallback(int window_width,
-                                               int window_height,
-                                               nux::Geometry& geo,
-                                               void* user_data)
+
+nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel(Introspectable *iobj)
 {
-  nux::BaseWindow* window = static_cast<nux::BaseWindow*>(user_data);
-  geo = window->GetGeometry();
+  auto* panel_window = new MockableBaseWindow(TEXT("PanelWindow"));
+
+  nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+
+  PanelView* view = new PanelView(panel_window, dbus_indicators_);
+  view->SetMaximumHeight(panel::Style::Instance().panel_height);
+  view->SetOpacity(opacity_);
+  view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
+  view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
+                         menus_discovery_fadein_, menus_discovery_fadeout_);
+
+  layout->AddView(view, 1);
+  layout->SetContentDistribution(nux::MAJOR_POSITION_START);
+  layout->SetVerticalExternalMargin(0);
+  layout->SetHorizontalExternalMargin(0);
+
+  panel_window->SetLayout(layout);
+  panel_window->SetBackgroundColor(nux::color::Transparent);
+  panel_window->ShowWindow(true);
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    panel_window->EnableInputWindow(true, panel::window_title, false, false);
+
+  panel_window->InputWindowEnableStruts(true);
+  iobj->AddChild(view);
+
+  return nux::ObjectPtr<PanelView>(view);
 }
 
 bool Controller::IsMouseInsideIndicator(nux::Point const& mouse_position) const
 {
-  for (auto view : pimpl->GetPanelViews())
+  for (auto panel : pimpl->panels_)
   {
-    PanelView* panel_view = static_cast<PanelView*>(view);
-
-    if (panel_view->IsMouseInsideIndicator(mouse_position))
+    if (panel->IsMouseInsideIndicator(mouse_position))
       return true;
   }
 
@@ -307,9 +280,9 @@ float Controller::Impl::opacity() const
   return opacity_;
 }
 
-Controller::Controller()
+Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
   : launcher_width(64)
-  , pimpl(new Impl())
+  , pimpl(new Impl(edge_barriers))
 {
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
@@ -357,14 +330,14 @@ std::vector<Window> const& Controller::GetTrayXids() const
   return pimpl->tray_xids_;
 }
 
-std::vector<nux::View*> Controller::GetPanelViews() const
+Controller::PanelVector& Controller::panels() const
 {
-  return pimpl->GetPanelViews();
+  return pimpl->panels_;
 }
 
-std::vector<nux::Geometry> Controller::GetGeometries() const
+std::vector<nux::Geometry> const& Controller::GetGeometries() const
 {
-  return pimpl->GetGeometries();
+  return pimpl->panel_geometries_;
 }
 
 float Controller::opacity() const

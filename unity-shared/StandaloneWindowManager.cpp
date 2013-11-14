@@ -43,7 +43,8 @@ StandaloneWindow::StandaloneWindow(Window xid)
   , active(false)
   , mapped(true)
   , visible(true)
-  , maximized(false)
+  , v_maximized(false)
+  , h_maximized(false)
   , minimized(false)
   , decorated(true)
   , has_decorations(true)
@@ -67,6 +68,20 @@ StandaloneWindow::StandaloneWindow(Window xid)
 
     return false;
   });
+
+  maximized.SetGetterFunction([this] { return v_maximized && h_maximized; });
+  maximized.SetSetterFunction([this] (bool value) {
+    if (maximized() == value)
+      return false;
+
+    v_maximized = value;
+    h_maximized = value;
+    decorated = !value;
+    return true;
+  });
+
+  v_maximized.changed.connect([this] (bool value) { maximized.changed.emit(maximized()); });
+  h_maximized.changed.connect([this] (bool value) { maximized.changed.emit(maximized()); });
 }
 
 WindowManagerPtr create_window_manager()
@@ -79,6 +94,7 @@ StandaloneWindowManager::StandaloneWindowManager()
   , in_show_desktop_(false)
   , scale_active_(false)
   , scale_active_for_group_(false)
+  , is_any_window_moving_(false)
   , current_desktop_(0)
   , viewport_size_(2, 2)
 {}
@@ -120,6 +136,24 @@ bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
   auto window = GetWindowByXid(window_id);
   if (window)
     return window->maximized;
+
+  return false;
+}
+
+bool StandaloneWindowManager::IsWindowVerticallyMaximized(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->v_maximized;
+
+  return false;
+}
+
+bool StandaloneWindowManager::IsWindowHorizontallyMaximized(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->h_maximized;
 
   return false;
 }
@@ -248,20 +282,51 @@ void StandaloneWindowManager::Maximize(Window window_id)
 {
   auto window = GetWindowByXid(window_id);
   if (window)
-  {
     window->maximized = true;
-    Undecorate(window_id);
-  }
+}
+
+void StandaloneWindowManager::LeftMaximize(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+
+  if (!window)
+    return;
+
+  /* Let's compute the area where the window should be put */
+  auto workarea = GetWorkAreaGeometry(window_id);
+  workarea.width /= 2;
+
+  if (window->maximized)
+    window->maximized = false;
+
+  window->v_maximized = true;
+  MoveResizeWindow(window_id, workarea);
+}
+
+void StandaloneWindowManager::RightMaximize(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+
+  if (!window)
+    return;
+
+  /* Let's compute the area where the window should be put */
+  auto workarea = GetWorkAreaGeometry(window_id);
+  workarea.width /= 2;
+  workarea.x += workarea.width;
+
+  if (window->maximized)
+    window->maximized = false;
+
+  window->v_maximized = true;
+  MoveResizeWindow(window_id, workarea);
 }
 
 void StandaloneWindowManager::Restore(Window window_id)
 {
   auto window = GetWindowByXid(window_id);
   if (window)
-  {
     window->maximized = false;
-    Decorate(window_id);
-  }
 }
 
 void StandaloneWindowManager::RestoreAt(Window window_id, int x, int y)
@@ -351,21 +416,14 @@ void StandaloneWindowManager::RestackBelow(Window window_id, Window sibiling_id)
 }
 
 void StandaloneWindowManager::TerminateScale()
-{}
-
-void StandaloneWindowManager::SetScaleActive(bool scale_active)
 {
-  scale_active_ = scale_active;
+  scale_active_ = false;
+  scale_active_for_group_ = false;
 }
 
 bool StandaloneWindowManager::IsScaleActive() const
 {
   return scale_active_;
-}
-
-void StandaloneWindowManager::SetScaleActiveForGroup(bool scale_active_for_group)
-{
-  scale_active_for_group_ = scale_active_for_group;
 }
 
 bool StandaloneWindowManager::IsScaleActiveForGroup() const
@@ -375,7 +433,7 @@ bool StandaloneWindowManager::IsScaleActiveForGroup() const
 
 void StandaloneWindowManager::InitiateExpo()
 {
-  expo_state_ = !expo_state_;
+  expo_state_ = true;
 }
 
 void StandaloneWindowManager::TerminateExpo()
@@ -391,6 +449,11 @@ bool StandaloneWindowManager::IsExpoActive() const
 bool StandaloneWindowManager::IsWallActive() const
 {
   return false;
+}
+
+bool StandaloneWindowManager::IsAnyWindowMoving() const
+{
+  return is_any_window_moving_;
 }
 
 void StandaloneWindowManager::FocusWindowGroup(std::vector<Window> const& windows,
@@ -551,6 +614,41 @@ std::string StandaloneWindowManager::GetWindowName(Window window_id) const
 }
 
 // Mock functions
+
+void StandaloneWindowManager::ResetStatus()
+{
+  for (auto const& win : GetStandaloneWindows())
+    Close(win->Xid());
+
+  expo_state_ = false;
+  in_show_desktop_ = false;
+  scale_active_ = false;
+  scale_active_for_group_ = false;
+  is_any_window_moving_ = false;
+  current_desktop_ = 0;
+  viewport_size_ = {2, 2};
+  current_vp_ = {0, 0};
+}
+
+void StandaloneWindowManager::SetScaleActiveForGroup(bool scale_active_for_group)
+{
+  scale_active_for_group_ = scale_active_for_group;
+}
+
+void StandaloneWindowManager::SetScaleActive(bool scale_active)
+{
+  scale_active_ = scale_active;
+}
+
+void StandaloneWindowManager::SetExpoActive(bool expo_active)
+{
+  expo_state_ = expo_active;
+}
+
+void StandaloneWindowManager::SetIsAnyWindowMoving(bool is_any_window_moving)
+{
+  is_any_window_moving_ = is_any_window_moving;
+}
 
 void StandaloneWindowManager::SetCurrentDesktop(unsigned desktop_id)
 {

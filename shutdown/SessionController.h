@@ -30,14 +30,13 @@
 #include <UnityCore/SessionManager.h>
 
 #include "SessionView.h"
-#include "unity-shared/UBusWrapper.h"
 
 namespace unity
 {
 namespace session
 {
 
-class Controller : public debug::Introspectable
+class Controller : public debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -63,7 +62,7 @@ private:
   void ConstructView();
   void EnsureView();
   void CloseWindow();
-  void OnBackgroundUpdate(GVariant* data);
+  void OnBackgroundUpdate(nux::Color const&);
   nux::Point GetOffsetPerMonitor(int monitor);
 
   View::Ptr view_;
@@ -71,10 +70,7 @@ private:
   nux::Point adjustment_;
   session::Manager::Ptr manager_;
 
-  nux::Color bg_color_;
-
   nux::animation::AnimateValue<double> fade_animator_;
-  UBusManager ubus_manager_;
 };
 
 }

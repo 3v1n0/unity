@@ -131,7 +131,6 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
   controller = std::make_shared<Controller>();
-  controller->SetWorkspace(nux::Geometry(0, 0, 900, 600), 0);
 
   layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   layout->SetHorizontalExternalMargin (10);

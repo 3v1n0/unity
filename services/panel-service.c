@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include "panel-service.h"
+#include "panel-service-private.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,8 +30,12 @@
 #include <glib/gi18n-lib.h>
 #include <libindicator/indicator-ng.h>
 
-#include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
+#include <X11/extensions/XInput2.h>
+
+#include <upstart.h>
+#include <nih/alloc.h>
+#include <nih/error.h>
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
@@ -39,11 +44,13 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define NOTIFY_TIMEOUT 80
 #define N_TIMEOUT_SLOTS 50
-#define MAX_INDICATOR_ENTRIES 50
+#define MAX_INDICATOR_ENTRIES 100
 
 #define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
 #define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
 #define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
+#define SHOW_DASH_KEY "show-launcher"
+#define SHOW_HUD_KEY "show-hud"
 
 static PanelService *static_service = NULL;
 
@@ -59,8 +66,6 @@ struct _PanelServicePrivate
   GtkWidget *menubar;
   GtkWidget *offscreen_window;
   GtkMenu *last_menu;
-  guint32  last_menu_id;
-  guint32  last_menu_move_id;
   gint32   last_x;
   gint32   last_y;
   gint     last_left;
@@ -69,12 +74,15 @@ struct _PanelServicePrivate
   gint     last_bottom;
   guint32  last_menu_button;
 
-  KeyCode toggle_key;
-  guint32 toggle_modifiers;
   GSettings *gsettings;
+  KeyBinding menu_toggle;
+  KeyBinding show_dash;
+  KeyBinding show_hud;
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
+
+  NihDBusProxy * upstart;
 };
 
 /* Globals */
@@ -103,6 +111,7 @@ static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 static const gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},                    /* indicator-appmenu" */
   {"libapplication.so", NULL},                /* indicator-application" */
+  {"floating-indicators", NULL},              /* position-less NG indicators */
   {"libprintersmenu.so", NULL},               /* indicator-printers */
   {"libsyncindicator.so", NULL},              /* indicator-sync */
   {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
@@ -119,22 +128,13 @@ static const gchar * indicator_order[][2] = {
 };
 
 /* Forwards */
-static void load_indicator  (PanelService    *self,
-                             IndicatorObject *object,
-                             const gchar     *_name);
-static void load_indicators (PanelService    *self);
-static void load_indicators_from_indicator_files (PanelService *self);
-static void sort_indicators (PanelService    *self);
-
+static void load_indicator  (PanelService *, IndicatorObject *, const gchar *);
+static void load_indicators (PanelService *);
+static void load_indicators_from_indicator_files (PanelService *);
+static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
-
-static GdkFilterReturn event_filter (GdkXEvent    *ev,
-                                     GdkEvent     *gev,
-                                     PanelService *self);
-
-static void on_keybinding_changed (GSettings *settings,
-                                   gchar     *key,
-                                   gpointer   data);
+static void update_keybinding (GSettings *, const gchar *, gpointer);
+static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
 
 /*
  * GObject stuff
@@ -148,6 +148,22 @@ panel_service_class_dispose (GObject *self)
 
   g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
+
+  if (priv->upstart != NULL)
+    {
+      int event_sent = 0;
+      event_sent = upstart_emit_event_sync (NULL, priv->upstart,
+                                            "indicator-services-end", NULL, 0);
+      if (event_sent != 0)
+        {
+          NihError * err = nih_error_get();
+          g_warning("Unable to signal for indicator services to stop: %s", err->message);
+          nih_free(err);
+        }
+
+      nih_unref (priv->upstart, NULL);
+      priv->upstart = NULL;
+    }
 
   if (GTK_IS_WIDGET (priv->menubar) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->menubar)))
@@ -166,7 +182,8 @@ panel_service_class_dispose (GObject *self)
   if (GTK_IS_WIDGET (priv->last_menu) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->last_menu)))
     {
-      g_object_unref (priv->last_menu);
+      gtk_menu_popdown (GTK_MENU (priv->last_menu));
+      g_signal_handlers_disconnect_by_data (priv->last_menu, self);
       priv->last_menu = NULL;
     }
 
@@ -181,7 +198,8 @@ panel_service_class_dispose (GObject *self)
 
   if (G_IS_OBJECT (priv->gsettings))
     {
-      g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, self);
+      g_signal_handlers_disconnect_matched (priv->gsettings, G_SIGNAL_MATCH_FUNC,
+                                            0, 0, NULL, update_keybinding, NULL);
       g_object_unref (priv->gsettings);
       priv->gsettings = NULL;
     }
@@ -198,6 +216,8 @@ panel_service_class_finalize (GObject *object)
   g_hash_table_destroy (priv->panel2entries_hash);
 
   static_service = NULL;
+
+  G_OBJECT_CLASS (panel_service_parent_class)->finalize (object);
 }
 
 static void
@@ -339,6 +359,42 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
   return entry;
 }
 
+static void
+reinject_key_event_to_root_window (XIDeviceEvent *ev)
+{
+  XKeyEvent kev;
+  kev.display = ev->display;
+  kev.window = ev->root;
+  kev.root = ev->root;
+  kev.subwindow = None;
+  kev.time = ev->time;
+  kev.x = ev->event_x;
+  kev.y = ev->event_x;
+  kev.x_root = ev->root_x;
+  kev.y_root = ev->root_y;
+  kev.same_screen = True;
+  kev.keycode = ev->detail;
+  kev.state = ev->mods.base;
+  kev.type = ev->evtype;
+
+  XSendEvent (kev.display, kev.root, True, KeyPressMask, (XEvent*) &kev);
+  XFlush (kev.display);
+}
+
+static gboolean
+event_matches_keybinding (guint32 modifiers, KeySym key, KeyBinding *kb)
+{
+  if (modifiers == kb->modifiers && key != NoSymbol)
+    {
+      if (key == kb->key || key == kb->fallback)
+        {
+          return TRUE;
+        }
+    }
+
+  return FALSE;
+}
+
 static GdkFilterReturn
 event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 {
@@ -347,41 +403,65 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   GdkFilterReturn ret = GDK_FILTER_CONTINUE;
 
   if (!PANEL_IS_SERVICE (self))
-  {
-    g_warning ("%s: Invalid PanelService instance", G_STRLOC);
-    return ret;
-  }
+    {
+      g_warning ("%s: Invalid PanelService instance", G_STRLOC);
+      return ret;
+    }
 
   if (!GTK_IS_WIDGET (self->priv->last_menu))
     return ret;
 
   /* Use XI2 to read the event data */
   XGenericEventCookie *cookie = &e->xcookie;
-  if (cookie->type == GenericEvent)
-    {
-      XIDeviceEvent *event = cookie->data;
-      if (!event)
-        return ret;
+  if (cookie->type != GenericEvent)
+    return ret;
 
-      if (event->evtype == XI_KeyPress)
+  XIDeviceEvent *event = cookie->data;
+  if (!event)
+    return ret;
+
+  switch (event->evtype)
+    {
+      case XI_KeyPress:
         {
-          if (event->mods.base == priv->toggle_modifiers && event->detail == priv->toggle_key)
-          {
-            if (GTK_IS_MENU (priv->last_menu))
-              gtk_menu_popdown (GTK_MENU (priv->last_menu));
-          }
+          KeySym keysym = XkbKeycodeToKeysym (event->display, event->detail, 0, 0);
+
+          if (event_matches_keybinding (event->mods.base, keysym, &priv->menu_toggle) ||
+              event_matches_keybinding (event->mods.base, keysym, &priv->show_dash) ||
+              event_matches_keybinding (event->mods.base, keysym, &priv->show_hud))
+            {
+              if (GTK_IS_MENU (priv->last_menu))
+                gtk_menu_popdown (GTK_MENU (priv->last_menu));
+
+              ret = GDK_FILTER_REMOVE;
+            }
+          else if (event->mods.base != GDK_CONTROL_MASK)
+            {
+              if (!IsModifierKey (keysym) && (event->mods.base != 0 || keysym == XK_Print))
+                {
+                  if (GTK_IS_MENU (priv->last_menu))
+                    gtk_menu_popdown (GTK_MENU (priv->last_menu));
+
+                  reinject_key_event_to_root_window (event);
+                  ret = GDK_FILTER_REMOVE;
+                }
+            }
+
+          break;
         }
 
-      if (event->evtype == XI_ButtonPress)
+      case XI_ButtonPress:
         {
           priv->pressed_entry = get_entry_at (self, event->root_x, event->root_y);
           priv->use_event = (priv->pressed_entry == NULL);
 
           if (priv->pressed_entry)
             ret = GDK_FILTER_REMOVE;
+
+          break;
         }
 
-      if (event->evtype == XI_ButtonRelease)
+      case XI_ButtonRelease:
         {
           IndicatorObjectEntry *entry;
           gboolean event_is_a_click = FALSE;
@@ -451,6 +531,8 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
               ret = GDK_FILTER_REMOVE;
               g_free (entry_id);
             }
+
+          break;
         }
     }
 
@@ -467,34 +549,15 @@ initial_resync (PanelService *self)
 static gboolean
 ready_signal (PanelService *self)
 {
-  if (PANEL_IS_SERVICE (self))
+  if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL)
     {
-      GError * error = NULL;
-      gchar * argv[] = {
-        "initctl",
-        "--session",
-        "--user",
-        "emit",
-        "--no-wait",
-        "indicators-loaded",
-        NULL,
-      };
-
-      g_spawn_async (NULL, /* Working Directory */
-                     argv,
-                     NULL, /* environment */
-                     G_SPAWN_SEARCH_PATH,
-                     NULL, NULL, /* child setup function */
-                     NULL, /* Pid */
-                     &error);
-
-      if (error)
-	      {
-          /* NOTE: When we get to the point where we can start
-             assuming upstart user sessions this can be escillated
-             to a warning or higher */
-          g_debug ("Unable to signal indicators-loaded to upstart: %s", error->message);
-          g_error_free (error);
+      int event_sent = 0;
+      event_sent = upstart_emit_event_sync (NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
+      if (event_sent != 0)
+        {
+          NihError * err = nih_error_get();
+          g_warning("Unable to signal for indicator services to start: %s", err->message);
+          nih_free(err);
         }
     }
 
@@ -502,20 +565,28 @@ ready_signal (PanelService *self)
 }
 
 static void
-panel_service_update_menu_keybinding (PanelService *self)
+update_keybinding (GSettings *settings, const gchar *key, gpointer data)
 {
-  gchar *binding = g_settings_get_string (self->priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY);
+  KeyBinding *kb = data;
+  gchar *binding = g_settings_get_string (settings, key);
+  parse_string_keybinding (binding, kb);
+  g_free (binding);
+}
 
-  KeyCode keycode = 0;
-  KeySym keysym = NoSymbol;
-  guint32 modifiers = 0;
+void
+parse_string_keybinding (const char *str, KeyBinding *kb)
+{
+  kb->key = NoSymbol;
+  kb->fallback = NoSymbol;
+  kb->modifiers = 0;
 
+  gchar *binding = g_strdup (str);
   gchar *keystart = (binding) ? strrchr (binding, '>') : NULL;
 
   if (!keystart)
     keystart = binding;
 
-  while (keystart && !g_ascii_isalnum (*keystart))
+  while (keystart && *keystart != '\0' && !g_ascii_isalnum (*keystart))
     keystart++;
 
   gchar *keyend = keystart;
@@ -524,48 +595,60 @@ panel_service_update_menu_keybinding (PanelService *self)
     keyend++;
 
   if (keystart != keyend)
-  {
-    gchar *keystr = g_strndup (keystart, keyend-keystart);
-    keysym = XStringToKeysym (keystr);
-    g_free (keystr);
-  }
-
-  if (keysym != NoSymbol)
     {
-      Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
-      keycode = XKeysymToKeycode(dpy, keysym);
+      gchar *keystr = g_strndup (keystart, keyend-keystart);
+      kb->key = XStringToKeysym (keystr);
+      g_free (keystr);
+    }
+  else
+    {
+      /* Parsing the case where we only have meta-keys */
+      keyend = (binding) ? strrchr (binding, '>') : NULL;
+      keyend = keyend ? keyend - 1 : NULL;
+      keystart = keyend;
 
-      if (g_strrstr (binding, "<Shift>"))
+      while (keystart && keystart > binding && g_ascii_isalnum (*keystart))
+        keystart--;
+
+      if (keystart != keyend)
         {
-          modifiers |= GDK_SHIFT_MASK;
-        }
-      if (g_strrstr (binding, "<Control>"))
-        {
-          modifiers |= GDK_CONTROL_MASK;
-        }
-      if (g_strrstr (binding, "<Alt>") || g_strrstr (binding, "<Mod1>"))
-        {
-          modifiers |= GDK_MOD1_MASK;
-        }
-      if (g_strrstr (binding, "<Super>"))
-        {
-          modifiers |= GDK_SUPER_MASK;
+          gchar *keystr = g_strndup (keystart+1, keyend-keystart);
+          gchar *left = g_strconcat (keystr, "_L", NULL);
+          kb->key = XStringToKeysym (left);
+
+          gchar *right = g_strconcat (keystr, "_R", NULL);
+          kb->fallback = XStringToKeysym (right);
+          g_free (left);
+          g_free (right);
+          g_free (keystr);
+
+          keystr = g_strndup (binding, keystart-binding);
+          g_free (binding);
+          binding = keystr;
         }
     }
 
-  self->priv->toggle_key = keycode;
-  self->priv->toggle_modifiers = modifiers;
+  if (kb->key != NoSymbol)
+    {
+      if (g_strrstr (binding, "<Shift>"))
+        {
+          kb->modifiers |= ShiftMask;
+        }
+      if (g_strrstr (binding, "<Control>") || g_strrstr (binding, "<Primary>"))
+        {
+          kb->modifiers |= ControlMask;
+        }
+      if (g_strrstr (binding, "<Alt>") || g_strrstr (binding, "<Mod1>"))
+        {
+          kb->modifiers |= AltMask;
+        }
+      if (g_strrstr (binding, "<Super>"))
+        {
+          kb->modifiers |= SuperMask;
+        }
+    }
 
   g_free (binding);
-}
-
-static void
-on_keybinding_changed (GSettings *settings, gchar *key, gpointer data)
-{
-  g_return_if_fail (PANEL_IS_SERVICE (data));
-  PanelService *self = data;
-
-  panel_service_update_menu_keybinding (self);
 }
 
 static void
@@ -587,9 +670,38 @@ panel_service_init (PanelService *self)
 
   priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
   g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
-                    G_CALLBACK(on_keybinding_changed), self);
+                    G_CALLBACK (update_keybinding), &priv->menu_toggle);
+  g_signal_connect (priv->gsettings, "changed::"SHOW_DASH_KEY,
+                    G_CALLBACK (update_keybinding), &priv->show_dash);
+  g_signal_connect (priv->gsettings, "changed::"SHOW_HUD_KEY,
+                    G_CALLBACK (update_keybinding), &priv->show_hud);
 
-  panel_service_update_menu_keybinding (self);
+  update_keybinding (priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY, &priv->menu_toggle);
+  update_keybinding (priv->gsettings, SHOW_DASH_KEY, &priv->show_dash);
+  update_keybinding (priv->gsettings, SHOW_HUD_KEY, &priv->show_hud);
+
+  const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
+  if (upstartsession != NULL)
+    {
+      DBusConnection *conn = dbus_connection_open (upstartsession, NULL);
+      if (conn != NULL)
+        {
+          priv->upstart = nih_dbus_proxy_new (NULL, conn,
+                                              NULL,
+                                              DBUS_PATH_UPSTART,
+                                              NULL, NULL);
+          if (priv->upstart == NULL)
+            {
+              NihError * err = nih_error_get();
+              g_warning("Unable to get Upstart proxy: %s", err->message);
+              nih_free(err);
+            }
+          dbus_connection_unref (conn);
+        }
+    }
+
+  if (priv->upstart != NULL)
+    priv->upstart->auto_start = FALSE;
 }
 
 static gboolean
@@ -998,6 +1110,16 @@ on_entry_removed (IndicatorObject      *object,
   g_hash_table_remove (self->priv->id2entry_hash, entry_id);
   g_free (entry_id);
 
+  if (entry->label)
+    {
+      g_signal_handlers_disconnect_by_data (entry->label, object);
+    }
+
+  if (entry->image)
+    {
+      g_signal_handlers_disconnect_by_data (entry->image, object);
+    }
+
   notify_object (object);
 }
 
@@ -1016,11 +1138,13 @@ on_indicator_menu_show (IndicatorObject      *object,
                         PanelService         *self)
 {
   gchar *entry_id;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
-  if (entry == NULL)
+
+  if (!entry)
     {
-      g_warning ("on_indicator_menu_show() called with a NULL entry");
+      if (GTK_IS_MENU (self->priv->last_menu))
+        gtk_menu_popdown (GTK_MENU (self->priv->last_menu));
+
       return;
     }
 
@@ -1036,11 +1160,11 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
                                     PanelService         *self)
 {
   gchar *entry_id;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
-  if (entry == NULL)
+
+  if (!entry)
     {
-      g_warning ("on_indicator_menu_show_now_changed() called with a NULL entry");
+      g_warning ("%s called with a NULL entry", G_STRFUNC);
       return;
     }
 
@@ -1159,7 +1283,7 @@ load_indicators_from_indicator_files (PanelService *self)
       indicator = indicator_ng_new_for_profile (filename, "desktop", &error);
       if (indicator)
         {
-          load_indicator (self, INDICATOR_OBJECT (indicator), NULL);
+          load_indicator (self, INDICATOR_OBJECT (indicator), name);
         }
       else
         {
@@ -1189,11 +1313,23 @@ name2order (const gchar * name, const gchar * hint)
   return -1;
 }
 
+static gint
+name2priority (const gchar * name, const gchar * hint)
+{
+  gint order = name2order (name, hint);
+  if (order > -1)
+    return order * MAX_INDICATOR_ENTRIES;
+
+  return order;
+}
+
 static void
 sort_indicators (PanelService *self)
 {
   GSList *i;
   int     k = 0;
+  int     floating_indicators = 0;
+  int     max_priority = G_N_ELEMENTS(indicator_order) * MAX_INDICATOR_ENTRIES;
 
   for (i = self->priv->indicators; i; i = i->next)
     {
@@ -1207,10 +1343,20 @@ sort_indicators (PanelService *self)
        * higher position though, so that they appear to the right of the
        * indicators that return a proper position */
       if (pos < 0)
-        pos = 1000 - name2order (g_object_get_data (G_OBJECT (io), "id"), NULL);
+        {
+          gint prio = name2priority (g_object_get_data (G_OBJECT (io), "id"), NULL);
+
+          if (prio < 0)
+            {
+              prio = name2priority ("floating-indicators", NULL) + floating_indicators;
+              floating_indicators++;
+            }
+
+          pos = max_priority - prio;
+        }
 
       /* unity's concept of priorities is inverse to ours right now */
-      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (1000 - pos));
+      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (max_priority - pos));
 
       g_object_set_data (G_OBJECT (i->data), "position", GINT_TO_POINTER (k));
       self->priv->timeouts[k] = SYNC_NEUTRAL;
@@ -1263,6 +1409,10 @@ gtk_image_to_data (GtkImage *image)
         {
           ret = g_icon_to_string (icon);
         }
+    }
+  else if (type == GTK_IMAGE_EMPTY)
+    {
+      ret = g_strdup ("");
     }
   else
     {
@@ -1334,8 +1484,16 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
           IndicatorObjectEntry *entry = e->data;
           gchar *id = get_indicator_entry_id_by_entry (entry);
 
-          prio = parent_prio + index;
-          index++;
+          if (entry->name_hint)
+            {
+              prio = name2priority (indicator_id, entry->name_hint);
+            }
+
+          if (prio < 0)
+            {
+              prio = parent_prio + index;
+              index++;
+            }
 
           indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
@@ -1389,12 +1547,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_y = 0;
   priv->last_menu_button = 0;
 
-  g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
-  g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
-
   priv->last_menu = NULL;
-  priv->last_menu_id = 0;
-  priv->last_menu_move_id = 0;
   priv->last_entry = NULL;
   priv->last_left = 0;
   priv->last_right = 0;
@@ -1645,6 +1798,7 @@ activate_next_prev_menu (PanelService         *self,
     {
       gint parent_priority = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (l->data), "priority"));
       entries = indicator_object_get_entries (l->data);
+      const gchar *indicator_id = g_object_get_data (G_OBJECT (l->data), "id");
       if (entries)
         {
           int index = 0;
@@ -1657,8 +1811,16 @@ activate_next_prev_menu (PanelService         *self,
               if (!panel_service_entry_is_visible (self, new_entry))
                 continue;
 
-              prio = parent_priority + index;
-              index++;
+              if (new_entry->name_hint)
+                {
+                  prio = name2priority (indicator_id, new_entry->name_hint);
+                }
+
+              if (prio < 0)
+                {
+                  prio = parent_priority + index;
+                  index++;
+                }
 
               gpointer *values = g_new (gpointer, 2);
               values[0] = new_entry;
@@ -1683,7 +1845,7 @@ activate_next_prev_menu (PanelService         *self,
             }
           else
             {
-              values = ll->prev ? ll->prev->data : g_list_last(ordered_entries)->data;
+              values = ll->prev ? ll->prev->data : g_list_last (ordered_entries)->data;
             }
 
           new_entry = values[0];
@@ -1794,13 +1956,10 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = 0;
       priv->last_y = 0;
 
-      g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
-      g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
+      g_signal_handlers_disconnect_by_data (priv->last_menu, self);
 
       priv->last_entry = NULL;
       priv->last_menu = NULL;
-      priv->last_menu_id = 0;
-      priv->last_menu_move_id = 0;
       priv->last_menu_button = 0;
     }
 
@@ -1842,10 +2001,9 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;
-      priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
-                                             G_CALLBACK (on_active_menu_hidden), self);
-      priv->last_menu_move_id = g_signal_connect_after (priv->last_menu, "move-current",
-                                                        G_CALLBACK (on_active_menu_move_current), self);
+      g_signal_connect (priv->last_menu, "hide", G_CALLBACK (on_active_menu_hidden), self);
+      g_signal_connect_after (priv->last_menu, "move-current",
+                              G_CALLBACK (on_active_menu_move_current), self);
 
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
       gtk_menu_reposition (priv->last_menu);

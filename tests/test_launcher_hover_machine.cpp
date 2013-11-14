@@ -32,7 +32,7 @@ unity::LauncherHoverMachine::HoverQuirk QUIRKS [] {
   unity::LauncherHoverMachine::KEY_NAV_ACTIVE,
   unity::LauncherHoverMachine::LAUNCHER_IN_ACTION };
 
-struct SingleQuirk : public TestWithParam<std::tr1::tuple<unity::LauncherHoverMachine::HoverQuirk, bool, bool>> {
+struct SingleQuirk : public TestWithParam<std::tuple<unity::LauncherHoverMachine::HoverQuirk, bool, bool>> {
   unity::LauncherHoverMachine machine;
 };
 
@@ -70,8 +70,8 @@ INSTANTIATE_TEST_CASE_P(TestLauncherHoverMachine, SingleQuirk,
     Combine(ValuesIn(QUIRKS), Bool(), Bool()));
 
 
-struct MultipleQuirks : public TestWithParam<std::tr1::tuple<unity::LauncherHoverMachine::HoverQuirk, bool, bool,
-                                                             unity::LauncherHoverMachine::HoverQuirk, bool, bool>> {
+struct MultipleQuirks : public TestWithParam<std::tuple<unity::LauncherHoverMachine::HoverQuirk, bool, bool,
+                                                        unity::LauncherHoverMachine::HoverQuirk, bool, bool>> {
   unity::LauncherHoverMachine machine;
 };
 

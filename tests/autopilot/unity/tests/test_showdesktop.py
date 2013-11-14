@@ -84,12 +84,6 @@ class ShowDesktopTests(UnityTestCase):
         self.assertProperty(charmap, is_hidden=False)
         self.assertProperty(calc, is_hidden=True)
 
-        # hide desktop - now all windows should be visible:
-        self.unity.window_manager.leave_show_desktop()
-
-        for win in (charmap, calc):
-            self.assertProperty(win, is_hidden=False)
-
     @skip("Breaks following tests due to SDM bug")
     def test_showdesktop_switcher(self):
         """Show desktop item in switcher should hide all hidden apps."""

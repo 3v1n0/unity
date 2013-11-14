@@ -56,10 +56,28 @@
                     <default>&lt;Alt&gt;F2</default>
                 </option>
 
+                <option name="show_desktop_key" type="key">
+                    <_short>Show Desktop</_short>
+                    <_long>Hide all windows and focus desktop.</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;d</default>
+                </option>
+
                 <option name="panel_first_menu" type="key">
                     <_short>Key to open the first panel menu</_short>
                     <_long>Opens the first indicator menu of the Panel, allowing keyboard navigation thereafter.</_long>
                     <default>&lt;Alt&gt;F10</default>
+                </option>
+
+                <option name="window_right_maximize" type="key">
+                    <_short>Key to vertically maximize the focused window to the right</_short>
+                    <_long>Semi-maximize vertically the focused window on the half right width of the screen</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;Right</default>
+                </option>
+
+                <option name="window_left_maximize" type="key">
+                    <_short>Key to vertically maximize the focused window to the left</_short>
+                    <_long>Semi-maximize vertically the focused window to the half left width of the screen</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;Left</default>
                 </option>
 
                 <option name="panel_opacity" type="float">
@@ -452,38 +470,6 @@
                     <default>&lt;Control&gt;&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                 </option>
 
-                <option name="alt_tab_right" type="key">
-                    <_short>Key to move to the right in the Switcher</_short>
-                    <_long>Navigates one window to the right in the Switcher.</_long>
-                    <default>&lt;Alt&gt;Right</default>
-                    <passive_grab>false</passive_grab>
-                    <internal/>
-                </option>
-
-                <option name="alt_tab_left" type="key">
-                    <_short>Key to move to the left in the Switcher</_short>
-                    <_long>Navigates one window to the left in the Switcher.</_long>
-                    <default>&lt;Alt&gt;Left</default>
-                    <passive_grab>false</passive_grab>
-                    <internal/>
-                </option>
-
-                <option name="alt_tab_detail_start" type="key">
-                    <_short>Key to expose windows in the Switcher</_short>
-                    <_long>Displays a live preview of the selected window; a grid if multiple windows of the selected application are open.</_long>
-                    <default>&lt;Alt&gt;Down</default>
-                    <passive_grab>false</passive_grab>
-                    <internal/>
-                </option>
-
-                <option name="alt_tab_detail_stop" type="key">
-                    <_short>Key to collapse windows in the Switcher</_short>
-                    <_long>Closes the live previews and returns to icons in the Switcher.</_long>
-                    <default>&lt;Alt&gt;Up</default>
-                    <passive_grab>false</passive_grab>
-                    <internal/>
-                </option>
-
                 <option name="alt_tab_next_window" type="key">
                     <_short>Key to flip through windows in the Switcher</_short>
                     <_long>Flips through all the windows present in the Switcher.</_long>
@@ -517,6 +503,12 @@
                 <option name="disable_show_desktop" type="bool">
                     <_short>Disable Show Desktop in the Switcher</_short>
                     <_long>Disables the Show Desktop icon in the Switcher.</_long>
+                    <default>false</default>
+                </option>
+
+                <option name="disable_mouse" type="bool">
+                    <_short>Disable the mouse in the Switcher</_short>
+                    <_long>Disables the mouse in the Switcher.</_long>
                     <default>false</default>
                 </option>
 

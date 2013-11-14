@@ -103,7 +103,7 @@ void FilterAdaptor::MergeState(glib::HintsMap const& hints)
     current_hints[iter->first] = iter->second;
   }
 
-  dee_model_set_value(model_, iter_, FilterColumn::RENDERER_STATE, glib::Variant::FromHints(current_hints));
+  dee_model_set_value(model_, iter_, FilterColumn::RENDERER_STATE, glib::Variant(current_hints));
 }
 
 
@@ -188,7 +188,7 @@ FilterAdaptorIterator Filters::begin() const
 
 FilterAdaptorIterator Filters::end() const
 {
-  return FilterAdaptorIterator(model(), dee_model_get_last_iter(model()), GetTag());  
+  return FilterAdaptorIterator(model(), dee_model_get_last_iter(model()), GetTag());
 }
 
 void Filters::OnRowAdded(FilterAdaptor& filter)
@@ -201,11 +201,21 @@ void Filters::OnRowAdded(FilterAdaptor& filter)
 
 void Filters::OnRowChanged(FilterAdaptor& filter)
 {
+  if (filter_map_.find(filter.get_id()) == filter_map_.end())
+  {
+    filter_changed(filter.create_filter());
+    return;
+  }
   filter_changed(filter_map_[filter.get_id()]);
 }
 
 void Filters::OnRowRemoved(FilterAdaptor& filter)
 {
+  if (filter_map_.find(filter.get_id()) == filter_map_.end())
+  {
+    filter_removed(filter.create_filter());
+    return;
+  }
   filter_removed(filter_map_[filter.get_id()]);
   filter_map_.erase(filter.get_id());
 }

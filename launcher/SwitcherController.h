@@ -88,9 +88,7 @@ public:
   bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
 
   bool Visible();
-
-  bool StartDetailMode();
-  bool StopDetailMode();
+  nux::Geometry GetInputWindowGeometry() const;
 
   void Next();
   void Prev();
@@ -107,8 +105,6 @@ public:
 
   void SelectFirstItem();
 
-  void SetWorkspace(nux::Geometry geo, int monitor);
-
   nux::ObjectPtr<SwitcherView> GetView() const;
 
   ui::LayoutWindow::Vector ExternalRenderTargets();
@@ -117,6 +113,10 @@ public:
 
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
+
+  bool IsMouseDisabled() const;
+  void SetMouseDisabled(bool disabled);
+
   int StartIndex() const;
   double Opacity() const;
 
@@ -139,6 +139,7 @@ private:
   bool       visible_;
   int        monitor_;
   bool       show_desktop_disabled_;
+  bool       mouse_disabled_;
   DetailMode detail_mode_;
 
   ImplPtr    impl_;

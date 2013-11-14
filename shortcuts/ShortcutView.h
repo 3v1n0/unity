@@ -20,13 +20,8 @@
 #define UNITYSHELL_SHORTCUTVIEW_H
 
 #include <Nux/Nux.h>
-#include <Nux/GridHLayout.h>
 #include <Nux/HLayout.h>
-#include <NuxCore/ObjectPtr.h>
-#include <NuxCore/Property.h>
-#include <Nux/StaticText.h>
 #include <Nux/View.h>
-#include <Nux/VLayout.h>
 
 #include "unity-shared/UnityWindowView.h"
 #include "unity-shared/BackgroundEffectHelper.h"

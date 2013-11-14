@@ -19,6 +19,8 @@
 
 #include "LayoutSystem.h"
 
+#include <UnityCore/Variant.h>
+
 namespace unity {
 namespace ui {
 
@@ -288,6 +290,18 @@ LayoutWindow::LayoutWindow(Window xid)
     geo.height += decoration_height;
     aspect_ratio = geo.width / static_cast<float>(geo.height);
   }
+}
+
+// Introspectable methods
+std::string LayoutWindow::GetName() const
+{
+  return "LayoutWindow";
+}
+
+void LayoutWindow::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+    .add(result);
 }
 
 }

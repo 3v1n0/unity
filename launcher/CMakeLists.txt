@@ -81,6 +81,7 @@ target_link_libraries (launcher-lib unity-shared)
 add_pch(pch/launcher_pch.hh launcher-lib)
 
 set (SWITCHER_SOURCES
+      DeltaTracker.cpp
       SwitcherController.cpp
       SwitcherModel.cpp
       SwitcherView.cpp

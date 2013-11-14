@@ -171,6 +171,13 @@ void SearchBar::Init()
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
+  pango_entry_->key_up.connect([this] (unsigned int, unsigned long, unsigned long) {
+      if (get_im_preedit())
+      {
+        hint_->SetVisible(false);
+        hint_->QueueDraw();
+      }
+  });
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayout(hint_layout);
@@ -610,6 +617,7 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   .add("filter-label-y", show_filters_->GetAbsoluteY())
   .add("filter-label-width", show_filters_->GetAbsoluteWidth())
   .add("filter-label-height", show_filters_->GetAbsoluteHeight())
+  .add("filter-label-geo", show_filters_->GetAbsoluteGeometry())
   .add("im_active", pango_entry_->im_active());
 }
 

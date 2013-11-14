@@ -25,6 +25,7 @@
 #include "UnityCore/GSettingsScopes.h"
 
 #include "ApplicationStarterImp.h"
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
@@ -67,7 +68,6 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , monitor_(0)
   , visible_(false)
   , need_show_(false)
-  , view_(nullptr)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
 {
@@ -105,8 +105,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
     }
   });
 
-  auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
-  WindowManager::Default().initiate_spread.connect(spread_cb);
+  WindowManager::Default().initiate_spread.connect(sigc::mem_fun(this, &Controller::HideDash));
 
   dbus_server_.AddObjects(dbus::INTROSPECTION, dbus::PATH);
   dbus_server_.GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) {
@@ -142,10 +141,10 @@ void Controller::SetupWindow()
 void Controller::SetupDashView()
 {
   view_ = new DashView(std::make_shared<GSettingsScopes>(), std::make_shared<ApplicationStarterImp>());
-  AddChild(view_);
+  AddChild(view_.GetPointer());
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout->AddView(view_, 1);
+  layout->AddView(view_.GetPointer(), 1);
   layout->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
@@ -174,7 +173,7 @@ void Controller::RegisterUBusInterests()
     // hide if something else is coming up
     if (overlay_identity.Str() != "dash")
     {
-      HideDash(true);
+      HideDash();
     }
   });
 
@@ -276,16 +275,7 @@ void Controller::OnExternalShowDash(GVariant* variant)
 
 void Controller::OnExternalHideDash(GVariant* variant)
 {
-  EnsureDash();
-
-  if (variant)
-  {
-    HideDash(g_variant_get_boolean(variant));
-  }
-  else
-  {
-    HideDash();
-  }
+  HideDash();
 }
 
 void Controller::ShowDash()
@@ -340,14 +330,14 @@ void Controller::FocusWindow()
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 }
 
-void Controller::QuicklyHideDash(bool restore)
+void Controller::QuicklyHideDash()
 {
-  HideDash(restore);
+  HideDash();
   timeline_animator_.Stop();
   window_->ShowWindow(false);
 }
 
-void Controller::HideDash(bool restore)
+void Controller::HideDash()
 {
   if (!visible_)
    return;
@@ -362,10 +352,8 @@ void Controller::HideDash(bool restore)
   window_->EnableInputWindow(false, dash::window_title, true, false);
   visible_ = false;
 
-  nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
-
-  if (restore)
-    WindowManager::Default().RestoreInputFocus();
+  nux::GetWindowCompositor().SetKeyFocusArea(NULL, nux::KEY_NAV_NONE);
+  WindowManager::Default().RestoreInputFocus();
 
   StartShowHideTimeline();
 
@@ -378,18 +366,7 @@ void Controller::HideDash(bool restore)
 void Controller::StartShowHideTimeline()
 {
   EnsureDash();
-
-  if (timeline_animator_.CurrentState() == nux::animation::Animation::State::Running)
-  {
-    timeline_animator_.Reverse();
-  }
-  else
-  {
-    if (visible_)
-      timeline_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    else
-      timeline_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-  }
+  animation::StartOrReverseIf(timeline_animator_, visible_);
 }
 
 void Controller::OnViewShowHideFrame(double opacity)
@@ -410,9 +387,12 @@ void Controller::OnActivateRequest(GVariant* variant)
 
 gboolean Controller::CheckShortcutActivation(const char* key_string)
 {
+  if (!key_string)
+    return false;
+
   EnsureDash();
-  std::string scope_id = view_->GetIdForShortcutActivation(std::string(key_string));
-  if (scope_id != "")
+  std::string scope_id = view_->GetIdForShortcutActivation(key_string);
+  if (!scope_id.empty())
   {
     WindowManager& wm = WindowManager::Default();
     if (wm.IsScaleActive())
@@ -475,6 +455,11 @@ nux::Geometry Controller::GetInputWindowGeometry()
   geo.width += style.GetDashRightTileWidth();
   geo.height += style.GetDashBottomTileHeight();
   return geo;
+}
+
+nux::ObjectPtr<DashView> const& Controller::Dash() const
+{
+  return view_;
 }
 
 
