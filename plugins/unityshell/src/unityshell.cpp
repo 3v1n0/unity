@@ -1351,10 +1351,6 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
     ignore_redraw_request_ = true;
     compizDamageNux(CompRegionRef(output->region()));
     ignore_redraw_request_ = false;
-
-    /* Fetch all the presentation list geometries - this will have the side
-     * effect of clearing any built-up damage state */
-    std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
   }
 
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
