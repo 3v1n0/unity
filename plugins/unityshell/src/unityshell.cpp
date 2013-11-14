@@ -549,16 +549,16 @@ void UnityScreen::EnsureSuperKeybindings()
 
 void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag)
 {
-    CompActionPtr action(new CompAction());
-    const std::string key(optionGetShowLauncher().keyToString());
+  CompActionPtr action(new CompAction());
+  const std::string key(optionGetShowLauncher().keyToString());
 
-    CompAction::KeyBinding binding;
-    binding.fromString(impl::CreateActionString(key, shortcut, flag));
+  CompAction::KeyBinding binding;
+  binding.fromString(impl::CreateActionString(key, shortcut, flag));
 
-    action->setKey(binding);
+  action->setKey(binding);
 
-    screen->addAction(action.get());
-    _shortcut_actions.push_back(action);
+  screen->addAction(action.get());
+  _shortcut_actions.push_back(action);
 }
 
 void UnityScreen::nuxPrologue()
