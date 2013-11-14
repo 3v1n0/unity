@@ -76,7 +76,7 @@ void ActionButton::Init()
 {
   InitTheme();
 
-  key_nav_focus_activate.connect([&](nux::Area*)
+  key_nav_focus_activate.connect([this](nux::Area*)
   {
     if (GetInputEventSensitivity())
       activate.emit(this, action_hint_);

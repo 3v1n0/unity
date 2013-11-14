@@ -87,7 +87,7 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   ResizeBarrierList(monitors);
 
   /* FIXME: Back to c++11 lambda once we get sigc::track_obj.
-  uscreen->changed.connect(sigc::track_obj(([&](int primary, std::vector<nux::Geometry>& layout) {
+  uscreen->changed.connect(sigc::track_obj(([this](int primary, std::vector<nux::Geometry>& layout) {
     ResizeBarrierList(layout);
     SetupBarriers(layout);
   }));*/
@@ -106,9 +106,9 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     return false;
   });
 
-  parent_->options.changed.connect([&](launcher::Options::Ptr options) {
+  parent_->options.changed.connect([this](launcher::Options::Ptr options) {
     /* FIXME: Back to c++11 lambda once we get sigc::track_obj.
-    options->option_changed.connect([&]() {
+    options->option_changed.connect([this]() {
       SetupBarriers(UScreen::GetDefault()->GetMonitors());
     });*/
     options->option_changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged));

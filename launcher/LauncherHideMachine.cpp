@@ -39,7 +39,7 @@ LauncherHideMachine::LauncherHideMachine()
   , _should_hide(false)
   , _latest_emit_should_hide(false)
 {
-  decaymulator_.value.changed.connect([&](int value) { reveal_progress = value / static_cast<float>(reveal_pressure); });
+  decaymulator_.value.changed.connect([this](int value) { reveal_progress = value / static_cast<float>(reveal_pressure); });
   edge_decay_rate.changed.connect(sigc::mem_fun (this, &LauncherHideMachine::OnDecayRateChanged));
 }
 
@@ -68,7 +68,7 @@ void LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
   if (value && !skip_delay)
   {
     _hide_delay_timeout.reset(new glib::Timeout(HIDE_DELAY_TIMEOUT_LENGTH));
-    _hide_delay_timeout->Run([&] () {
+    _hide_delay_timeout->Run([this] () {
       EnsureHideState(true);
       return false;
     });

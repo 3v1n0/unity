@@ -141,7 +141,7 @@ void PreviewNavigator::SetupViews()
     AddChild(texture_);
     layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);    
 
-    texture_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { activated.emit(); });
+    texture_->mouse_click.connect([this](int, int, unsigned long, unsigned long) { activated.emit(); });
     texture_->mouse_enter.connect(sigc::mem_fun(this, &PreviewNavigator::TexRecvMouseEnter));
     texture_->mouse_leave.connect(sigc::mem_fun(this, &PreviewNavigator::TexRecvMouseLeave));
   }

@@ -288,7 +288,7 @@ Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
   OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 
-  launcher_width.changed.connect([&] (int width)
+  launcher_width.changed.connect([this] (int width)
   {
     pimpl->SetLauncherWidth(width);
   });
