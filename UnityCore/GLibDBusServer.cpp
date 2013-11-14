@@ -88,11 +88,9 @@ struct DBusObject::Impl
       {
         ret = self->method_cb_(method_name ? method_name : "", parameters);
 
-        LOG_INFO(logger_o) << "Called method: '" << method_name << " "
-                           << (parameters ? String(g_variant_print(parameters, TRUE)) : "()")
+        LOG_INFO(logger_o) << "Called method: '" << method_name << " " << parameters
                            << "' on object '" << object_path << "' with interface '"
-                           << interface_name << "' , returning: '"
-                           << (ret ? String(g_variant_print(ret, TRUE)) : "()") << "'";
+                           << interface_name << "' , returning: '" << ret << "'";
 
         const GDBusMethodInfo* info = g_dbus_method_invocation_get_method_info(invocation);
 
@@ -115,8 +113,7 @@ struct DBusObject::Impl
       }
       else
       {
-        LOG_WARN(logger_o) << "Called method: '" << method_name << " "
-                           << (parameters ? String(g_variant_print(parameters, TRUE)) : "()")
+        LOG_WARN(logger_o) << "Called method: '" << method_name << " " << parameters
                            << "' on object '" << object_path << "' with interface '"
                            << interface_name << "', but no methods handler is set";
 
@@ -136,8 +133,7 @@ struct DBusObject::Impl
         value = self->property_get_cb_(property_name ? property_name : "");
 
       LOG_INFO(logger_o) << "Getting property '" << property_name << "' on '"
-                         << interface_name << "' , returning: '"
-                         << (value ? String(g_variant_print(value, TRUE)) : "()") << "'";
+                         << interface_name << "' , returning: '" << value << "'";
 
       return value;
     };
@@ -167,8 +163,7 @@ struct DBusObject::Impl
       if (ret)
       {
         LOG_INFO(logger_o) << "Setting property '" << property_name << "' on '"
-                           << interface_name << "' , to value: '"
-                           << (value ? String(g_variant_print(value, TRUE)) : "<null>") << "'";
+                           << interface_name << "' , to value: '" << value << "'";
 
         if (old_value && !g_variant_equal(old_value, value))
           self->EmitPropertyChanged(property_name ? property_name : "");
@@ -177,9 +172,7 @@ struct DBusObject::Impl
       {
         LOG_WARN(logger_o) << "It was impossible to set the property '"
                            << property_name << "' on '" << interface_name
-                           << "' , to value: '"
-                           << (value ? String(g_variant_print(value, TRUE)) : "()")
-                           << "'";
+                           << "' , to value: '" << value << "'";
       }
 
       return ret;
