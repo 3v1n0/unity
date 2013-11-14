@@ -570,16 +570,6 @@ void UnityScreen::nuxPrologue()
    * bit, but we do that here in order to workaround a bug (?) in the NVIDIA
    * drivers (lp:703140). */
   glDisable(GL_LIGHTING);
-
-  /* reset matrices */
-  glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT |
-               GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
-
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
 #endif
 
   glGetError();
@@ -588,30 +578,18 @@ void UnityScreen::nuxPrologue()
 void UnityScreen::nuxEpilogue()
 {
 #ifndef USE_GLES
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glDepthRange(0, 1);
-  glViewport(-1, -1, 2, 2);
-  glRasterPos2f(0, 0);
-
-  gScreen->resetRasterPos();
-
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-
-  glPopAttrib();
+  /* In some unknown place inside nux drawing we change the viewport without
+   * setting it back to the default one, so we need to restore it before allowing
+   * compiz to take the scene */
+  auto* o = _last_output;
+  glViewport(o->x(), screen->height() - o->y2(), o->width(), o->height());
 
   glDepthRange(0, 1);
 #else
   glDepthRangef(0, 1);
-  gScreen->resetRasterPos();
 #endif
 
+  gScreen->resetRasterPos();
   glDisable(GL_SCISSOR_TEST);
 }
 
