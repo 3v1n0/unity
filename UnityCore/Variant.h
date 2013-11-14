@@ -79,8 +79,11 @@ public:
   bool ASVToHints(HintsMap& hints) const;
 
   template <typename T>
-  static Variant FromVector(std::vector<T> const& values)
+  static inline Variant FromVector(std::vector<T> const& values)
   {
+    if (values.empty())
+      return g_variant_new_array(G_VARIANT_TYPE_VARIANT, nullptr, 0);
+
     GVariantBuilder builder;
     g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
     for (auto const& value : values)
