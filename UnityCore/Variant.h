@@ -116,8 +116,10 @@ private:
   GVariant* variant_;
 };
 
-}
+std::ostream& operator<<(std::ostream &os, GVariant* v);
+std::ostream& operator<<(std::ostream &os, Variant const&);
 
-}
+} // glib namespace
+} // unity namespace
 
 #endif

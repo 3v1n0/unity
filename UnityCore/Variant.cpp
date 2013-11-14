@@ -20,6 +20,7 @@
 
 #include "Variant.h"
 #include <NuxCore/Logger.h>
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -370,6 +371,16 @@ HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints)
     hints.insert({static_cast<gchar*>(key), static_cast<GVariant*>(value)});
 
   return hints;
+}
+
+std::ostream& operator<<(std::ostream &os, GVariant* v)
+{
+  return os << (v ? String(g_variant_print(v, TRUE)) : "()");
+}
+
+std::ostream& operator<<(std::ostream &os, Variant const& v)
+{
+  return os << static_cast<GVariant*>(v);
 }
 
 } // namespace glib
