@@ -28,7 +28,6 @@
 
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
-#include "DevicesSettingsImp.h"
 #ifdef USE_X11
 #include "EdgeBarrierController.h"
 #endif
@@ -39,7 +38,6 @@
 #include "LauncherModel.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "unity-shared/UBusWrapper.h"
-#include "VolumeMonitorWrapper.h"
 #include "XdndManager.h"
 
 namespace unity
@@ -117,7 +115,7 @@ public:
 
   void OnDndStarted(std::string const& data, int monitor);
   void OnDndFinished();
-  void OnDndMonitorChanged(int monitor);
+  void OnDndMonitorChanged(std::string const& data, int old_monitor, int new_monitor);
   GVariant* OnDBusMethodCall(std::string const& method, GVariant *parameters);
 
   Controller* parent_;
@@ -144,7 +142,6 @@ public:
   int reactivate_index;
   bool keynav_restore_window_;
   int launcher_key_press_time_;
-  int last_dnd_monitor_;
 
   glib::DBusServer dbus_server_;
   glib::SourceManager sources_;
@@ -152,6 +149,7 @@ public:
 
   connection::Wrapper launcher_key_press_connection_;
   connection::Wrapper launcher_event_outside_connection_;
+  connection::Wrapper average_color_connection_;
 };
 
 } // launcher namespace

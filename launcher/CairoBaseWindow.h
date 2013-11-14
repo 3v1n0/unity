@@ -22,6 +22,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+#include <NuxCore/Animation.h>
 
 namespace unity
 {
@@ -30,7 +31,12 @@ class CairoBaseWindow : public nux::BaseWindow
   NUX_DECLARE_OBJECT_TYPE(CairoBaseWindow, nux::BaseWindow);
 public:
   CairoBaseWindow();
-  virtual ~CairoBaseWindow();
+  virtual ~CairoBaseWindow() = default;
+
+  virtual void Show();
+  virtual void Hide();
+
+  bool HasBlurredBackground() const;
 
 protected:
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
@@ -39,12 +45,11 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> texture_mask_;
   nux::ObjectPtr<nux::BaseTexture> texture_outline_;
 
-  bool use_blur_;
-  bool _use_blurred_background;
-  bool _compute_blur_bkg;
-
 private:
+  bool use_blurred_background_;
+  bool compute_blur_bkg_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_blur_texture_;
+  nux::animation::AnimateValue<double> fade_animator_;
 };
 }
 

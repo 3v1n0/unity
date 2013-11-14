@@ -38,6 +38,7 @@ namespace
   unsigned int const VERTICAL_PADDING = 45;
   unsigned int const SPREAD_OFFSET = 100;
   unsigned int const EXTRA_ICON_SPACE = 10;
+  unsigned int const MAX_DIRECTIONS_CHANGED = 3; 
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
@@ -205,6 +206,7 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
   text_view_->SetVisible(!detail);
 
   last_detail_icon_selected_ = -1;
+  check_mouse_first_time_ = true;
 
   if (!detail)
   {
@@ -221,6 +223,8 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
   if (selection)
     text_view_->SetText(selection->tooltip_text());
 
+  delta_tracker_.ResetState();
+
   SaveLast();
   QueueDraw();
 }
@@ -233,8 +237,33 @@ nux::Point CalculateMouseMonitorOffset(int x, int y)
   return {geo.x + x, geo.y + y};
 }
 
-void SwitcherView::RecvMouseMove(int x, int y, int /*dx*/, int /*dy*/, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
+void SwitcherView::MouseHandlingBackToNormal()
 {
+  check_mouse_first_time_ = false;
+  last_icon_selected_ = -1;
+  last_detail_icon_selected_ = -1;
+}
+
+void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
+{
+  // We just started, and want to check if we are a bump or not.
+  // Once we are no longer a bump, skip!!
+  if (check_mouse_first_time_)
+  {
+    if (CheckMouseInsideBackground(x,y))
+    {
+      delta_tracker_.HandleNewMouseDelta(dx, dy);
+      if (delta_tracker_.AmountOfDirectionsChanged() >= MAX_DIRECTIONS_CHANGED)
+      {
+        MouseHandlingBackToNormal();
+      }
+    }
+    else
+    {
+      MouseHandlingBackToNormal();
+    }
+  }
+
   if (model_->detail_selection)
   {
     HandleDetailMouseMove(x, y);
@@ -253,7 +282,6 @@ void SwitcherView::HandleDetailMouseMove(int x, int y)
   if (check_mouse_first_time_)
   {
     last_detail_icon_selected_ = detail_icon_index;
-    check_mouse_first_time_ = false;
     return;
   }
 
@@ -275,7 +303,6 @@ void SwitcherView::HandleMouseMove(int x, int y)
   if (check_mouse_first_time_)
   {
     last_icon_selected_ = icon_index;
-    check_mouse_first_time_ = false;
     return;
   }
 
@@ -363,6 +390,10 @@ void SwitcherView::HandleDetailMouseUp(int x, int y, int button)
       model_->detail_selection_index = detail_icon_index;
       hide_request.emit(true);
     }
+    else if (detail_icon_index < 0)
+    {
+      model_->detail_selection = false;
+    }
   }
   else if (button == 3)
   {
@@ -420,6 +451,38 @@ void SwitcherView::HandleMouseWheel(int wheel_delta)
   {
     model_->Prev();
   }
+}
+
+bool SwitcherView::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
+{
+  if (eventType == nux::NUX_KEYDOWN)
+  {
+    switch(keysym)
+    {
+      case NUX_VK_UP:
+        switcher_stop_detail.emit();
+        break;
+      case NUX_VK_RIGHT:
+        switcher_next.emit();
+        break;
+      case NUX_VK_LEFT:
+        switcher_prev.emit();
+        break;
+      case NUX_VK_DOWN:
+        switcher_start_detail.emit();
+        break;
+      default:
+        return false;
+        break;
+    }
+  }
+
+  return true;
+}
+
+nux::Area* SwitcherView::FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state)
+{
+  return this;
 }
 
 SwitcherModel::Ptr SwitcherView::GetModel()
@@ -557,13 +620,13 @@ nux::Size SwitcherView::SpreadSize()
   return result;
 }
 
-void SwitcherView::GetFlatIconPositions (int n_flat_icons,
-                                         int size,
-                                         int selection,
-                                         int &first_flat,
-                                         int &last_flat,
-                                         int &half_fold_left,
-                                         int &half_fold_right)
+void GetFlatIconPositions (int n_flat_icons,
+                           int size,
+                           int selection,
+                           int &first_flat,
+                           int &last_flat,
+                           int &half_fold_left,
+                           int &half_fold_right)
 {
   half_fold_left = -1;
   half_fold_right = -1;

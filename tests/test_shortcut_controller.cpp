@@ -24,6 +24,7 @@ using namespace testing;
 #include "shortcuts/BaseWindowRaiser.h"
 #include "shortcuts/ShortcutController.h"
 #include "unity-shared/UnitySettings.h"
+#include "WindowManager.h"
 #include "UBusMessages.h"
 using namespace unity;
 
@@ -67,7 +68,6 @@ class TestShortcutController : public Test
     MOCK_METHOD1(SetOpacity, void(double));
     using Controller::GetOffsetPerMonitor;
     using Controller::ConstructView;
-    using Controller::bg_color_;
     using Controller::view_;
 
     void RealSetOpacity(double value)
@@ -153,14 +153,6 @@ TEST_F(TestShortcutController, ModelIsChangedOnModellerChange)
   EXPECT_EQ(controller_.view_->GetModel(), model);
 }
 
-TEST_F(TestShortcutController, UpdateackgroundColor)
-{
-  UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
-                            g_variant_new("(dddd)", 11/255.0f, 22/255.0f, 33/255.0f, 1.0f));
-
-  Utils::WaitUntilMSec([this] { return controller_.bg_color_ == nux::Color(11, 22, 33); });
-}
-
 TEST_F(TestShortcutController, DisabledOnLauncherKeySwitcherStart)
 {
   ASSERT_TRUE(controller_.IsEnabled());
@@ -185,6 +177,15 @@ TEST_F(TestShortcutController, HideOnDashShow)
   UBusManager().SendMessage(UBUS_OVERLAY_SHOWN);
 
   Utils::WaitUntilMSec([this] { return controller_.Visible(); }, false);
+}
+
+TEST_F(TestShortcutController, DisconnectWMSignalsOnDestruction)
+{
+  auto& color_property = WindowManager::Default().average_color;
+  size_t before = color_property.changed.size();
+  { Controller dummy(base_window_raiser_, modeller_); }
+  ASSERT_EQ(before, color_property.changed.size());
+  color_property.changed.emit(nux::color::RandomColor());
 }
 
 }

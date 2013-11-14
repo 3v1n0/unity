@@ -24,7 +24,7 @@
 #include "bamf-mock-application.h"
 #include "bamf-mock-window.h"
 #include "mock-application.h"
-#include "StandaloneWindowManager.h"
+#include "test_standalone_wm.h"
 
 #include <UnityCore/GLibWrapper.h>
 
@@ -35,7 +35,7 @@ unity::StandaloneWindow::Ptr AddFakeWindowToWM(Window xid, bool mapped)
   auto fake_window = std::make_shared<unity::StandaloneWindow>(xid);
   fake_window->mapped = mapped;
 
-  unity::StandaloneWindowManager* wm = dynamic_cast<unity::StandaloneWindowManager*>(&unity::WindowManager::Default());
+  auto wm = unity::testwrapper::StandaloneWM::Get();
   wm->AddStandaloneWindow(fake_window);
 
   return fake_window;
@@ -48,6 +48,7 @@ struct TestBamfApplication : public testing::Test
     , application_(mock_manager_, unity::glib::object_cast<BamfApplication>(bamf_mock_application_))
   {}
 
+  unity::testwrapper::StandaloneWM WM;
   testmocks::MockApplicationManager::Nice mock_manager_;
   unity::glib::Object<BamfMockApplication> bamf_mock_application_;
   unity::bamf::Application application_;

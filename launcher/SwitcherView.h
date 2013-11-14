@@ -20,6 +20,7 @@
 #ifndef SWITCHERVIEW_H
 #define SWITCHERVIEW_H
 
+#include "DeltaTracker.h"
 #include "SwitcherModel.h"
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/StaticCairoText.h"
@@ -75,11 +76,17 @@ public:
   int DetailIconIdexAt(int x, int y) const;
 
   /* void; int icon_index, int button*/
-  sigc::signal<void, int, int>  switcher_mouse_down;
-  sigc::signal<void, int, int>  switcher_mouse_up;
+  sigc::signal<void, int, int> switcher_mouse_down;
+  sigc::signal<void, int, int> switcher_mouse_up;
 
   /* void; int icon_index */
-  sigc::signal<void, int>  switcher_mouse_move;
+  sigc::signal<void, int> switcher_mouse_move;
+
+  /* void; */
+  sigc::signal<void> switcher_next;
+  sigc::signal<void> switcher_prev;
+  sigc::signal<void> switcher_start_detail;
+  sigc::signal<void> switcher_stop_detail;
 
   /* void; bool visible */
   sigc::signal<void, bool> hide_request;
@@ -100,6 +107,9 @@ protected:
   std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress);
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
+
+  virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+  virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state);
 
 private:
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -132,15 +142,13 @@ private:
   nux::Size SpreadSize();
 
   double GetCurrentProgress();
-  void GetFlatIconPositions(int n_flat_icons, int size, int selection,
-                            int &first_flat, int &last_flat,
-                            int &half_fold_left, int &half_fold_right);
 
   void SaveTime();
   void ResetTimer();
   void SaveLast();
 
   bool CheckMouseInsideBackground(int x, int y) const;
+  void MouseHandlingBackToNormal();
 
   SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;
@@ -151,6 +159,8 @@ private:
   int last_detail_icon_selected_;
   bool target_sizes_set_;
   bool check_mouse_first_time_;
+
+  DeltaTracker delta_tracker_;
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;

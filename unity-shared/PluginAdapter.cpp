@@ -572,7 +572,7 @@ bool PluginAdapter::IsWindowObscured(Window window_id) const
           && sibling->isMapped()
           && sibling->isViewable()
           && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE
-          && !GetWindowGeometry(sibling->id()).Intersect(win_geo).IsNull())
+          && GetWindowGeometry(sibling->id()).IsIntersecting(win_geo))
       {
         return true;
       }
@@ -971,9 +971,9 @@ bool PluginAdapter::ScaleWindowGroup(std::vector<Window> const& windows, int sta
   std::size_t num_windows = windows.size();
   if (num_windows > 1 || (force && num_windows))
   {
+    _spread_windows_state = true;
     std::string const& match = MatchStringForXids(windows);
     InitiateScale(match, state);
-    _spread_windows_state = true;
     return true;
   }
   return false;

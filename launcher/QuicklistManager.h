@@ -39,9 +39,10 @@ public:
 
   nux::ObjectPtr<QuicklistView> Current();
 
-  bool RegisterQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist);
-  void ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist, int tip_x, int tip_y, bool hide_existing_if_open = true);
-  void HideQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist);
+  bool RegisterQuicklist(nux::ObjectPtr<QuicklistView> const&);
+  void ShowQuicklist(nux::ObjectPtr<QuicklistView> const&, int x, int y, bool hide_existing_if_open = true);
+  void HideQuicklist(nux::ObjectPtr<QuicklistView> const&);
+  void MoveQuicklist(nux::ObjectPtr<QuicklistView> const&, int x, int y);
 
   void RecvShowQuicklist(nux::BaseWindow* window);
   void RecvHideQuicklist(nux::BaseWindow* window);

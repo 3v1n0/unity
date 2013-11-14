@@ -24,9 +24,6 @@
 #include "QuicklistView.h"
 #include "QuicklistManager.h"
 
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UBusMessages.h"
-
 namespace unity
 {
 
@@ -81,11 +78,7 @@ void QuicklistManager::ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quickl
                                      int tip_y, bool hide_existing_if_open)
 {
   if (_current_quicklist == quicklist)
-  {
-    // this quicklist is already active
-    // do we want to still redraw in case the position has changed?
     return;
-  }
 
   if (hide_existing_if_open && _current_quicklist)
   {
@@ -94,6 +87,11 @@ void QuicklistManager::ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quickl
 
   quicklist->ShowQuicklistWithTipAt(tip_x, tip_y);
   nux::GetWindowCompositor().SetKeyFocusArea(quicklist.GetPointer());
+}
+
+void QuicklistManager::MoveQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist, int x, int y)
+{
+  quicklist->SetQuicklistPosition(x, y);
 }
 
 void QuicklistManager::HideQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist)
@@ -108,7 +106,6 @@ void QuicklistManager::RecvShowQuicklist(nux::BaseWindow* window)
   _current_quicklist = quicklist;
 
   quicklist_opened.emit(nux::ObjectPtr<QuicklistView>(quicklist));
-  UBusManager::SendMessage(UBUS_QUICKLIST_SHOWN);
 }
 
 void QuicklistManager::RecvHideQuicklist(nux::BaseWindow* window)

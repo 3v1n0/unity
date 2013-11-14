@@ -50,7 +50,7 @@ class LauncherTestCase(UnityTestCase):
                 old_primary_screen = self.display.get_primary_screen()
                 set_primary_monitor(self.launcher_monitor)
                 self.addCleanup(set_primary_monitor, old_primary_screen)
-            except autopilot.display.BlacklistedDriverError:
+            except Display.BlacklistedDriverError:
                 self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_monitor)
 
     def get_launcher(self):

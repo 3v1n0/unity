@@ -21,6 +21,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
 #include "test_utils.h"
 
 #include <NuxCore/AnimationController.h>
@@ -32,42 +33,32 @@ using namespace testing;
 namespace
 {
 
-class TestDashController : public Test
+struct TestDashController : Test
 {
-public:
   TestDashController()
     : animation_controller(tick_source)
-    , base_window_(new NiceMock<testmocks::MockBaseWindow>())
-  { }
-
-  virtual void SetUp()
-  {
-    ON_CALL(*base_window_, SetOpacity(_))
-      .WillByDefault(Invoke(base_window_.GetPointer(),
-                     &testmocks::MockBaseWindow::RealSetOpacity));
-
-    // Set expectations for creating the controller
-    EXPECT_CALL(*base_window_, SetOpacity(0.0f))
-      .WillOnce(Invoke(base_window_.GetPointer(),
-                       &testmocks::MockBaseWindow::RealSetOpacity));
-
-    controller_.reset(new dash::Controller([&](){ return base_window_.GetPointer();}));
-    Mock::VerifyAndClearExpectations(base_window_.GetPointer());
-  }
+    , base_window_(new testmocks::MockBaseWindow::Nice())
+    , controller_(std::make_shared<dash::Controller>([this] { return base_window_.GetPointer(); }))
+  {}
 
 protected:
   nux::animation::TickSource tick_source;
   nux::animation::AnimationController animation_controller;
 
-  dash::Controller::Ptr controller_;
-  testmocks::MockBaseWindow::Ptr base_window_;
-
   // required to create hidden secret global variables
   Settings unity_settings_;
   dash::Style dash_style_;
   panel::Style panel_style_;
+
+  testmocks::MockBaseWindow::Ptr base_window_;
+  dash::Controller::Ptr controller_;
 };
 
+TEST_F(TestDashController, Construction)
+{
+  EXPECT_CALL(*base_window_, SetOpacity(0.0f));
+  controller_ = std::make_shared<dash::Controller>([this] { return base_window_.GetPointer(); });
+}
 
 TEST_F(TestDashController, TestShowAndHideDash)
 {
@@ -100,5 +91,13 @@ TEST_F(TestDashController, TestShowAndHideDash)
   EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 }
 
+TEST_F(TestDashController, DisconnectWMSignalsOnDestruction)
+{
+  auto& signal = WindowManager::Default().initiate_spread;
+  size_t before = signal.size();
+  { auto controller = std::make_shared<dash::Controller>([this] { return base_window_.GetPointer(); }); }
+  ASSERT_EQ(before, signal.size());
+  signal.emit();
 }
 
+}

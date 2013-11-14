@@ -162,10 +162,13 @@ public:
 
   void SetScaleActive(bool scale_active);
   void SetScaleActiveForGroup(bool scale_active_for_group);
+  void SetExpoActive(bool expo_active);
   void SetCurrentDesktop(unsigned desktop_id);
 
   void SetCurrentViewport(nux::Point const& vp);
   void SetWorkareaGeometry(nux::Geometry const& geo);
+
+  void ResetStatus();
 
 protected:
   virtual void AddProperties(debug::IntrospectionData&);

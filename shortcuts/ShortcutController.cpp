@@ -23,6 +23,7 @@
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -40,11 +41,8 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
   , base_window_raiser_(base_window_raiser)
   , visible_(false)
   , enabled_(true)
-  , bg_color_(0.0, 0.0, 0.0, 0.5)
   , fade_animator_(FADE_DURATION)
 {
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
-                                 sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [this] (GVariant*)
                                  { SetEnabled(false); });
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, [this] (GVariant*)
@@ -52,8 +50,7 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN,
                                  sigc::hide(sigc::mem_fun(this, &Controller::Hide)));
 
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-
+  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
   fade_animator_.updated.connect(sigc::mem_fun(this, &Controller::SetOpacity));
   modeller_->model_changed.connect(sigc::mem_fun(this, &Controller::OnModelUpdated));
 }
@@ -61,14 +58,10 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
 Controller::~Controller()
 {}
 
-void Controller::OnBackgroundUpdate(GVariant* data)
+void Controller::OnBackgroundUpdate(nux::Color const& new_color)
 {
-  gdouble red, green, blue, alpha;
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  bg_color_ = nux::Color(red, green, blue, alpha);
-
   if (view_)
-    view_->background_color = bg_color_;
+    view_->background_color = new_color;
 }
 
 void Controller::OnModelUpdated(Model::Ptr const& model)
@@ -161,7 +154,7 @@ void Controller::ConstructView()
   view_ = View::Ptr(new View());
   AddChild(view_.GetPointer());
   view_->SetModel(modeller_->GetCurrentModel());
-  view_->background_color = bg_color_;
+  view_->background_color = WindowManager::Default().average_color();
 
   if (!view_window_)
   {
@@ -245,7 +238,7 @@ void Controller::AddProperties(debug::IntrospectionData& introspection)
   .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
   .add("enabled", IsEnabled())
   .add("about_to_show", (Visible() && animating && direction == animation::Direction::FORWARD))
-  .add("about_to_hide", (Visible() && animating && direction == animation::Direction::FORWARD))
+  .add("about_to_hide", (Visible() && animating && direction == animation::Direction::BACKWARD))
   .add("visible", (Visible() && view_window_ && view_window_->GetOpacity() == 1.0f));
 }
 

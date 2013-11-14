@@ -44,27 +44,72 @@ inline Direction GetDirection(na::AnimateValue<VALUE> const& animation)
   return Direction::FORWARD;
 }
 
+template <typename VALUE>
+inline VALUE StartValueForDirection(Direction dir)
+{
+  return (dir == Direction::FORWARD) ? 0.0f : 1.0f;
+}
+
+template <>
+inline unsigned StartValueForDirection(Direction dir)
+{
+  return (dir == Direction::FORWARD) ? 0 : 100;
+}
+
+template <>
+inline int StartValueForDirection(Direction dir)
+{
+  return StartValueForDirection<unsigned>(dir);
+}
+
+template <typename VALUE>
+inline VALUE FinishValueForDirection(Direction dir)
+{
+  return StartValueForDirection<VALUE>(dir == Direction::FORWARD ? Direction::BACKWARD : Direction::FORWARD);
+}
+
+template <class VALUE_TYPE>
+void Start(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, VALUE_TYPE finish);
+
+template <typename VALUE>
+inline void Start(na::AnimateValue<VALUE>& animation, Direction dir)
+{
+  Start<VALUE>(animation, StartValueForDirection<VALUE>(dir), FinishValueForDirection<VALUE>(dir));
+}
+
 template <class VALUE_TYPE>
 void StartOrReverse(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, VALUE_TYPE finish);
 
 template <typename VALUE>
 inline void StartOrReverse(na::AnimateValue<VALUE>& animation, Direction dir)
 {
-  StartOrReverse<VALUE>(animation, (dir == Direction::FORWARD) ? 0.0f : 1.0f,
-                                   (dir == Direction::FORWARD) ? 1.0f : 0.0f);
-}
-
-template <>
-inline void StartOrReverse(na::AnimateValue<int>& animation, Direction dir)
-{
-  StartOrReverse<int>(animation, (dir == Direction::FORWARD) ? 0 : 100,
-                                 (dir == Direction::FORWARD) ? 100 : 0);
+  StartOrReverse<VALUE>(animation, StartValueForDirection<VALUE>(dir), FinishValueForDirection<VALUE>(dir));
 }
 
 template <typename VALUE>
 inline void StartOrReverseIf(na::AnimateValue<VALUE>& animation, bool condition)
 {
   StartOrReverse(animation, condition ? Direction::FORWARD : Direction::BACKWARD);
+}
+
+template <typename VALUE>
+inline void SetValue(na::AnimateValue<VALUE>& animation, VALUE const& value)
+{
+  Start(animation, value, value);
+}
+
+template <typename VALUE>
+inline void SetValue(na::AnimateValue<VALUE>& animation, Direction dir)
+{
+  SetValue(animation, FinishValueForDirection<VALUE>(dir));
+}
+
+template <typename VALUE>
+inline void Skip(na::AnimateValue<VALUE>& animation)
+{
+  VALUE old_start = animation.GetStartValue();
+  SetValue(animation, animation.GetFinishValue());
+  animation.SetStartValue(old_start);
 }
 
 } // animation namespace

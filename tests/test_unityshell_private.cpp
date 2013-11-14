@@ -97,9 +97,11 @@ TEST(TestUnityshellPrivate, TestCreateActionString)
 
   EXPECT_EQ(impl::CreateActionString("<Alt>", 'a'), "<Alt>a");
   EXPECT_EQ(impl::CreateActionString("<Alt>", '1'), "<Alt>1");
-  
+
   EXPECT_EQ(impl::CreateActionString("<Super>", '1', impl::ActionModifiers::USE_NUMPAD), "<Super>KP_1");
 
   EXPECT_EQ(impl::CreateActionString("<Super>", '1', impl::ActionModifiers::USE_SHIFT), "<Super><Shift>1");
+
+  EXPECT_EQ(impl::CreateActionString("<Super>", '1', impl::ActionModifiers::USE_SHIFT_NUMPAD), "<Super><Shift>KP_1");
 }
 

@@ -39,7 +39,7 @@ namespace unity
 namespace shortcut
 {
 
-class Controller : public debug::Introspectable
+class Controller : public debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -66,7 +66,7 @@ protected:
 private:
   void ConstructView();
   void EnsureView();
-  void OnBackgroundUpdate(GVariant* data);
+  void OnBackgroundUpdate(nux::Color const&);
   void OnModelUpdated(Model::Ptr const&);
   bool OnShowTimer();
 
@@ -81,7 +81,6 @@ private:
 
   bool visible_;
   bool enabled_;
-  nux::Color bg_color_;
 
   nux::animation::AnimateValue<double> fade_animator_;
 

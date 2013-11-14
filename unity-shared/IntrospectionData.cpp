@@ -36,6 +36,7 @@ enum class ValueType : uint32_t
   COLOR = 4,
   DATE = 5,
   TIME = 6,
+  POINT3D = 7,
 };
 
 IntrospectionData::IntrospectionData()
@@ -145,6 +146,12 @@ IntrospectionData& IntrospectionData::add(std::string const& name, nux::Rect con
 IntrospectionData& IntrospectionData::add(std::string const& name, nux::Point const& p)
 {
   add_(builder_, name, ValueType::POINT, {Variant(p.x), Variant(p.y)});
+  return *this;
+}
+
+IntrospectionData& IntrospectionData::add(std::string const& name, nux::Point3 const& p)
+{
+  add_(builder_, name, ValueType::POINT3D, {Variant(p.x), Variant(p.y), Variant(p.z)});
   return *this;
 }
 

@@ -63,8 +63,8 @@ class LauncherScrollTests(LauncherTestCase):
         (x_fin, y_fin) = self.mouse.position()
 
         # Make sure we ended up in the center of the last icon
-        self.assertThat(x_fin, Equals(last_icon.center_x))
-        self.assertThat(y_fin, Equals(last_icon.center_y))
+        self.assertThat(x_fin, Equals(last_icon.center.x))
+        self.assertThat(y_fin, Equals(last_icon.center.y))
 
     def test_autoscrolling_from_top(self):
         """Test the autoscrolling from the top of the Launcher"""
@@ -95,5 +95,5 @@ class LauncherScrollTests(LauncherTestCase):
         (x_fin, y_fin) = self.mouse.position()
 
         # Make sure we ended up in the center of the first icon
-        self.assertThat(x_fin, Equals(first_icon.center_x))
-        self.assertThat(y_fin, Equals(first_icon.center_y))
+        self.assertThat(x_fin, Equals(first_icon.center.x))
+        self.assertThat(y_fin, Equals(first_icon.center.y))

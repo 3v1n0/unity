@@ -42,6 +42,7 @@ public:
 
   virtual void Collect() = 0;
   virtual void Deactivate() = 0;
+  virtual std::string GetData(std::string const& type) = 0;
 
   sigc::signal<void, std::vector<std::string>> collected;
 };

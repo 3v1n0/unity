@@ -42,6 +42,7 @@ public:
 
   MOCK_METHOD0(Collect, void(void));
   MOCK_METHOD0(Deactivate, void(void));
+  MOCK_METHOD1(GetData, std::string(std::string const& type));
 };
 
 class TestXdndManager : public Test {
@@ -52,19 +53,6 @@ public:
     , xdnd_manager(xdnd_start_stop_notifier_, xdnd_collection_window_)
   {}
 
-  void SetUp()
-  {
-    // Evil hack to avoid crashes.
-    XEvent xevent;
-    xevent.type = ClientMessage;
-    xevent.xany.display = nux::GetGraphicsDisplay()->GetX11Display();
-    xevent.xclient.message_type = XInternAtom(xevent.xany.display, "XdndEnter", false);
-    xevent.xclient.format = 0;
-    xevent.xclient.data.l[1] = 5 >> 24;
-
-    nux::GetGraphicsDisplay()->ProcessXEvent(xevent, true);
-  }
-
   MockXdndStartStopNotifier::Ptr xdnd_start_stop_notifier_;
   MockXdndCollectionWindow::Ptr xdnd_collection_window_;
   unity::XdndManagerImp xdnd_manager;
@@ -72,17 +60,17 @@ public:
 
 TEST_F(TestXdndManager, SignalDndStartedAndFinished)
 {
-  std::vector<std::string> mimes;
-  mimes.push_back("text/uri-list");
-  mimes.push_back("hello/world");
+  std::vector<std::string> mimes = {"text/uri-list", "hello/world"};
 
   auto emit_collected_signal = [&] () {
     xdnd_collection_window_->collected.emit(mimes);
   };
 
   EXPECT_CALL(*xdnd_collection_window_, Collect())
-    .Times(1)
     .WillOnce(Invoke(emit_collected_signal));
+
+  EXPECT_CALL(*xdnd_collection_window_, GetData("text/uri-list"))
+    .WillOnce(Return("file://dnd_file"));
 
   bool dnd_started_emitted = false;
   xdnd_manager.dnd_started.connect([&] (std::string const& /*data*/, int /*monitor*/) {
@@ -90,7 +78,7 @@ TEST_F(TestXdndManager, SignalDndStartedAndFinished)
   });
 
   xdnd_start_stop_notifier_->started.emit();
-  Utils::WaitUntil(dnd_started_emitted);
+  ASSERT_TRUE(dnd_started_emitted);
 
   EXPECT_CALL(*xdnd_collection_window_, Deactivate())
     .Times(1);
@@ -101,14 +89,12 @@ TEST_F(TestXdndManager, SignalDndStartedAndFinished)
   });
 
   xdnd_start_stop_notifier_->finished.emit();
-  Utils::WaitUntil(dnd_finished_emitted);
+  EXPECT_TRUE(dnd_finished_emitted);
 }
 
 TEST_F(TestXdndManager, SignalDndStarted_InvalidMimes)
 {
-  std::vector<std::string> mimes;
-  mimes.push_back("hello/world");
-  mimes.push_back("invalid/mimes");
+  std::vector<std::string> mimes = {"invalid/mimes", "goodbye/world"};
 
   auto emit_collected_signal = [&] () {
     xdnd_collection_window_->collected.emit(mimes);
@@ -118,6 +104,8 @@ TEST_F(TestXdndManager, SignalDndStarted_InvalidMimes)
     .Times(1)
     .WillOnce(Invoke(emit_collected_signal));
 
+  EXPECT_CALL(*xdnd_collection_window_, GetData(_)).Times(0);
+
   bool dnd_started_emitted = false;
   xdnd_manager.dnd_started.connect([&] (std::string const& /*data*/, int /*monitor*/) {
     dnd_started_emitted = true;
@@ -125,6 +113,29 @@ TEST_F(TestXdndManager, SignalDndStarted_InvalidMimes)
 
   xdnd_start_stop_notifier_->started.emit();
 
+  EXPECT_FALSE(dnd_started_emitted);
+}
+
+TEST_F(TestXdndManager, SignalDndStarted_InvalidData)
+{
+  std::vector<std::string> mimes = {"text/uri-list", "hello/world"};
+
+  auto emit_collected_signal = [&] () {
+    xdnd_collection_window_->collected.emit(mimes);
+  };
+
+  EXPECT_CALL(*xdnd_collection_window_, Collect())
+    .WillOnce(Invoke(emit_collected_signal));
+
+  EXPECT_CALL(*xdnd_collection_window_, GetData("text/uri-list"))
+    .WillOnce(Return(""));
+
+  bool dnd_started_emitted = false;
+  xdnd_manager.dnd_started.connect([&] (std::string const& /*data*/, int /*monitor*/) {
+    dnd_started_emitted = true;
+  });
+
+  xdnd_start_stop_notifier_->started.emit();
   EXPECT_FALSE(dnd_started_emitted);
 }
 

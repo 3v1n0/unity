@@ -62,7 +62,7 @@ class LauncherIconsTests(LauncherTestCase):
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
         """Tests that the bfb tooltip disappear when the dash is opened."""
         bfb = self.unity.launcher.model.get_bfb_icon()
-        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.move(bfb.center.x, bfb.center.y)
 
         self.assertThat(lambda: bfb.get_tooltip(), Eventually(NotEquals(None)))
         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(True)))
@@ -77,7 +77,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.unity.dash.ensure_hidden)
 
         bfb = self.unity.launcher.model.get_bfb_icon()
-        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.move(bfb.center.x, bfb.center.y)
 
         # Tooltips are lazy-created  in Unity, so if the BFB tooltip has never
         # been shown before, get_tooltip will return None. If that happens, then
@@ -90,11 +90,10 @@ class LauncherIconsTests(LauncherTestCase):
         """Shift+Clicking MUST open a new instance of an already-running application."""
         app = self.process_manager.start_app("Calculator")
         icon = self.unity.launcher.model.get_icon(desktop_id=app.desktop_file)
-        launcher_instance = self.unity.launcher.get_launcher_for_monitor(0)
 
         self.keyboard.press("Shift")
         self.addCleanup(self.keyboard.release, "Shift")
-        launcher_instance.click_launcher_icon(icon)
+        self.launcher_instance.click_launcher_icon(icon)
 
         self.assertNumberWinsIsEventually(app, 2)
 
@@ -269,7 +268,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.keybinding, "expo/cancel")
 
         bfb = self.unity.launcher.model.get_bfb_icon()
-        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.move(bfb.center.x, bfb.center.y)
         self.mouse.click(button=3)
 
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
@@ -325,6 +324,37 @@ class LauncherIconsTests(LauncherTestCase):
 
         self.launcher_instance.click_launcher_icon(icon)
         self.assertThat(lambda: window.x_win.get_wm_state()['state'], Eventually(Equals(Xutil.NormalState)))
+
+    def test_icon_focuses_application_window_when_dash_is_open(self):
+        """Clicking on an icon when dash is shown must focus it."""
+        win = self.process_manager.start_app_window("Calculator")
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(True)))
+
+        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(False)))
+
+        icon = self.unity.launcher.model.get_icon(desktop_id=win.application.desktop_file)
+        self.launcher_instance.click_launcher_icon(icon)
+
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(True)))
+
+    def test_icon_focuses_application_window_when_hud_is_open(self):
+        """Clicking on an icon when hud is shown must focus it."""
+        win = self.process_manager.start_app_window("Calculator")
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(True)))
+
+        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.unity.hud.ensure_visible()
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(False)))
+
+        icon = self.unity.launcher.model.get_icon(desktop_id=win.application.desktop_file)
+        self.launcher_instance.click_launcher_icon(icon)
+
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(True)))
+
 
 class LauncherDragIconsBehavior(LauncherTestCase):
     """Tests dragging icons around the Launcher."""

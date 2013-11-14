@@ -28,6 +28,7 @@ using namespace testing;
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
 #include "test_utils.h"
 using namespace unity;
 
@@ -62,35 +63,32 @@ public:
 };
 
 
-class TestHudController : public Test
+struct TestHudController : Test
 {
-public:
   TestHudController()
-  : view_(new NiceMock<MockHudView>)
-  , base_window_(new NiceMock<testmocks::MockBaseWindow>())
-  {
-    ON_CALL(*base_window_, SetOpacity(_))
-      .WillByDefault(Invoke(base_window_.GetPointer(),
-                     &testmocks::MockBaseWindow::RealSetOpacity));
-
-    // Set expectations for creating the controller
-    EXPECT_CALL(*base_window_, SetOpacity(0.0f));
-
-    controller_.reset(new hud::Controller([&](){ return view_.GetPointer(); },
-                                          [&](){ return base_window_.GetPointer();}));
-  }
+    : view_(new NiceMock<MockHudView>)
+    , base_window_(new testmocks::MockBaseWindow::Nice())
+    , controller_(std::make_shared<hud::Controller>([this] { return view_.GetPointer(); },
+                                                    [this] { return base_window_.GetPointer(); }))
+  {}
 
 protected:
-  hud::Controller::Ptr controller_;
-  MockHudView::Ptr view_;
-  testmocks::MockBaseWindow::Ptr base_window_;
-
   // required to create hidden secret global variables
   Settings unity_settings_;
   dash::Style dash_style_;
   panel::Style panel_style_;
+
+  MockHudView::Ptr view_;
+  testmocks::MockBaseWindow::Ptr base_window_;
+  hud::Controller::Ptr controller_;
 };
 
+TEST_F(TestHudController, Construction)
+{
+  EXPECT_CALL(*base_window_, SetOpacity(0.0f));
+  controller_ = std::make_shared<hud::Controller>([this] { return view_.GetPointer(); },
+                                                  [this] { return base_window_.GetPointer(); });
+}
 
 TEST_F(TestHudController, TestShowAndHideHud)
 {
@@ -139,6 +137,18 @@ TEST_F(TestHudController, TestShowAndHideHud)
   global_tick += t;
 
   EXPECT_EQ(base_window_->GetOpacity(), 0.0);
+}
+
+TEST_F(TestHudController, DisconnectWMSignalsOnDestruction)
+{
+  auto& signal = WindowManager::Default().initiate_spread;
+  size_t before = signal.size();
+  {
+    auto controller = std::make_shared<hud::Controller>([this] { return view_.GetPointer(); },
+                                                        [this] { return base_window_.GetPointer(); });
+  }
+  ASSERT_EQ(before, signal.size());
+  signal.emit();
 }
 
 }

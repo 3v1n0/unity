@@ -20,7 +20,6 @@
 #include <gtest/gtest.h>
 
 #include "SingleMonitorLauncherIcon.h"
-#include "MultiMonitor.h"
 
 using namespace unity;
 using namespace launcher;
