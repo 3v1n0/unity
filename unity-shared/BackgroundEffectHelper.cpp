@@ -17,24 +17,26 @@
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
  */
 
+#include <NuxCore/Logger.h>
 #include "BackgroundEffectHelper.h"
 
 #include "TextureCache.h"
 #include "UnitySettings.h"
 
+namespace
+{
+DECLARE_LOGGER(logger, "unity.background_effect_helper");
+
+const float sigma_high = 5.0f;
+const float sigma_med = 3.0f;
+const float sigma_low = 1.0f;
+}
 
 using namespace unity;
 
-std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
-
+nux::Property<BlurType> BackgroundEffectHelper::blur_type(BLUR_ACTIVE);
 nux::Geometry BackgroundEffectHelper::monitor_rect_;
-
-nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
-nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
-nux::Property<float> BackgroundEffectHelper::sigma_med (3.0f);
-nux::Property<float> BackgroundEffectHelper::sigma_low (1.0f);
-nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
-nux::Property<bool> BackgroundEffectHelper::detecting_occlusions (false);
+std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
 sigc::signal<void, nux::Geometry const&> BackgroundEffectHelper::blur_region_needs_update_;
 
 BackgroundEffectHelper::BackgroundEffectHelper()
@@ -72,7 +74,7 @@ void BackgroundEffectHelper::ProcessDamage(nux::Geometry const& geo)
 {
   for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
-    if (bg_effect_helper->cache_dirty || !bg_effect_helper->owner || !bg_effect_helper->enabled)
+    if (bg_effect_helper->cache_dirty || !bg_effect_helper->enabled)
       continue;
 
     if (geo.IsIntersecting(bg_effect_helper->blur_geometry_))
@@ -86,7 +88,7 @@ bool BackgroundEffectHelper::HasDamageableHelpers()
 {
   for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
-    if (bg_effect_helper->owner && bg_effect_helper->enabled && !bg_effect_helper->cache_dirty)
+    if (bg_effect_helper->enabled && !bg_effect_helper->cache_dirty)
     {
       return true;
     }
@@ -99,7 +101,7 @@ bool BackgroundEffectHelper::HasEnabledHelpers()
 {
   for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
-    if (bg_effect_helper->owner && bg_effect_helper->enabled)
+    if (bg_effect_helper->enabled)
     {
       return true;
     }
@@ -122,7 +124,7 @@ int BackgroundEffectHelper::GetBlurRadius()
 
 std::vector<nux::Geometry> BackgroundEffectHelper::GetBlurGeometries()
 {
-  std::vector <nux::Geometry> geometries;
+  std::vector<nux::Geometry> geometries;
   int radius = GetBlurRadius();
 
   for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
@@ -147,8 +149,17 @@ bool BackgroundEffectHelper::HasDirtyHelpers()
   return false;
 }
 
+void BackgroundEffectHelper::OnGeometryChanged(nux::Area*, nux::Geometry&)
+{}
+
 void BackgroundEffectHelper::Register(BackgroundEffectHelper* self)
 {
+  if (!self->owner())
+  {
+    LOG_ERROR(logger) << "Registering an invalid helper, must set an owner!";
+    return;
+  }
+
   registered_list_.push_back(self);
 }
 
@@ -159,12 +170,11 @@ void BackgroundEffectHelper::Unregister(BackgroundEffectHelper* self)
 
 void BackgroundEffectHelper::DirtyCache()
 {
-  if (cache_dirty)
+  if (cache_dirty || !owner())
     return;
 
   cache_dirty = true;
-  if (owner)
-    owner()->QueueDraw();
+  owner()->QueueDraw();
 
   blur_region_needs_update_.emit(blur_geometry_);
 }

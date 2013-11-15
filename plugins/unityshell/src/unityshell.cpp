@@ -395,8 +395,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompSize size(1, 20);
      _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
 
-     BackgroundEffectHelper::updates_enabled = true;
-
      ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * data)
      {
        unity::glib::String overlay_identity;

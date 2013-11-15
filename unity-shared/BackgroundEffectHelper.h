@@ -24,6 +24,7 @@
 
 #include <Nux/Nux.h>
 #include <NuxGraphics/GLThread.h>
+#include <UnityCore/ConnectionManager.h>
 
 namespace unity
 {
@@ -34,8 +35,6 @@ enum BlurType
   BLUR_STATIC,
   BLUR_ACTIVE
 };
-
-}
 
 class BackgroundEffectHelper
 {
@@ -62,12 +61,6 @@ public:
   static std::vector<nux::Geometry> GetBlurGeometries();
 
   static nux::Property<unity::BlurType> blur_type;
-  static nux::Property<float> sigma_high;
-  static nux::Property<float> sigma_med;
-  static nux::Property<float> sigma_low;
-  static nux::Property<bool> updates_enabled;
-  static nux::Property<bool> detecting_occlusions;
-
   static nux::Geometry monitor_rect_;
 
   static sigc::signal<void, nux::Geometry const&> blur_region_needs_update_;
@@ -84,6 +77,7 @@ private:
   static int GetBlurRadius();
 
   void OnEnabledChanged(bool value);
+  void OnGeometryChanged(nux::Area*, nux::Geometry&);
 
   nux::ObjectPtr<nux::BaseTexture> noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;
@@ -91,11 +85,14 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> noisy_tmp_;
   nux::Geometry blur_geometry_;
   nux::Geometry requested_blur_geometry_;
+  connection::Wrapper on_geo_changed_conn_;
 
   bool cache_dirty;
 
   static std::list<BackgroundEffectHelper*> registered_list_;
 };
+
+}
 
 #endif
 
