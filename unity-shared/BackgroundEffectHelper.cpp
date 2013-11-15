@@ -70,7 +70,7 @@ void BackgroundEffectHelper::OnEnabledChanged(bool enabled)
 
 void BackgroundEffectHelper::ProcessDamage(nux::Geometry const& geo)
 {
-  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
+  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
     if (bg_effect_helper->cache_dirty || !bg_effect_helper->owner || !bg_effect_helper->enabled)
       continue;
@@ -84,7 +84,7 @@ void BackgroundEffectHelper::ProcessDamage(nux::Geometry const& geo)
 
 bool BackgroundEffectHelper::HasDamageableHelpers()
 {
-  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
+  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
     if (bg_effect_helper->owner && bg_effect_helper->enabled && !bg_effect_helper->cache_dirty)
     {
@@ -97,7 +97,7 @@ bool BackgroundEffectHelper::HasDamageableHelpers()
 
 bool BackgroundEffectHelper::HasEnabledHelpers()
 {
-  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
+  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
     if (bg_effect_helper->owner && bg_effect_helper->enabled)
     {
@@ -120,12 +120,12 @@ int BackgroundEffectHelper::GetBlurRadius()
   return GetBlurSigma() * 3;
 }
 
-std::vector <nux::Geometry> BackgroundEffectHelper::GetBlurGeometries()
+std::vector<nux::Geometry> BackgroundEffectHelper::GetBlurGeometries()
 {
   std::vector <nux::Geometry> geometries;
   int radius = GetBlurRadius();
 
-  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
+  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
     if (bg_effect_helper->enabled)
     {
@@ -140,7 +140,7 @@ std::vector <nux::Geometry> BackgroundEffectHelper::GetBlurGeometries()
 
 bool BackgroundEffectHelper::HasDirtyHelpers()
 {
-  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
+  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
     if (bg_effect_helper->enabled && bg_effect_helper->cache_dirty)
       return true;
 
@@ -157,7 +157,7 @@ void BackgroundEffectHelper::Unregister(BackgroundEffectHelper* self)
   registered_list_.remove(self);
 }
 
-void BackgroundEffectHelper::DirtyCache ()
+void BackgroundEffectHelper::DirtyCache()
 {
   if (cache_dirty)
     return;
@@ -182,7 +182,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
   }
 
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-  
+
   int monitor_width = BackgroundEffectHelper::monitor_rect_.width;
   int monitor_height = BackgroundEffectHelper::monitor_rect_.height;
 
@@ -202,7 +202,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
   nux::Geometry larger_blur_geometry;
   larger_blur_geometry.x = std::max(blur_geometry_.x - radius, 0);
   larger_blur_geometry.y = std::max(blur_geometry_.y - radius, 0);
-  
+
   int xx = std::min(blur_geometry_.x + blur_geometry_.width + radius, monitor_width);
 
   larger_blur_geometry.width = xx - larger_blur_geometry.x;
@@ -250,8 +250,8 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
 
     blur_fx_struct_.src_texture = device_texture;
     graphics_engine->QRP_GLSL_GetLSBlurFx(0, 0, buffer_width, buffer_height,
-                                                  &blur_fx_struct_, texxform__bg, nux::color::White,
-                                                 gaussian_sigma);
+                                          &blur_fx_struct_, texxform__bg, nux::color::White,
+                                          gaussian_sigma);
 
     nux::TexCoordXForm texxform;
     nux::TexCoordXForm noise_texxform;
@@ -276,7 +276,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
       0, 0, blur_geometry_.width, blur_geometry_.height,
       noise_device_texture->m_Texture, noise_texxform, noise_color,
       &noise_fx_struct_, texxform, nux::color::White);
-    
+
     blur_texture_ = noise_fx_struct_.dst_texture;
   }
   else
@@ -377,7 +377,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(bool f
   }
 
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-  
+
   int monitor_width = BackgroundEffectHelper::monitor_rect_.width;
   int monitor_height = BackgroundEffectHelper::monitor_rect_.height;
 
@@ -387,7 +387,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(bool f
   blur_geometry_ =  nux::Geometry(0, 0, monitor_width, monitor_height).Intersect(temp);
 
   nux::GpuDevice* gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
-  
+
   if (blur_geometry_.IsNull() || !gpu_device->backup_texture0_.IsValid())
   {
     return nux::ObjectPtr<nux::IOpenGLBaseTexture>();
@@ -449,7 +449,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(bool f
   return blur_texture_;
 }
 
-void BackgroundEffectHelper::SetBackbufferRegion(const nux::Geometry &geo)
+void BackgroundEffectHelper::SetBackbufferRegion(nux::Geometry const& geo)
 {
   if (requested_blur_geometry_ != geo)
   {
