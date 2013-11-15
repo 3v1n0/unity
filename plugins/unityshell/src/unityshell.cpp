@@ -781,11 +781,15 @@ void UnityScreen::paintDisplay()
     CompRegion blur_region;
     auto const& blur_geometries = BackgroundEffectHelper::GetBlurGeometries();
 
-    for (auto blur_geometry : blur_geometries)
+    for (auto const& blur_geometry : blur_geometries)
     {
-      blur_geometry.y = screen->height() - (blur_geometry.y + blur_geometry.height);
-      auto const& blur_rect = CompRegionFromNuxGeo(blur_geometry);
-      blur_region += (blur_rect & CompRegionRef(output->region()));
+      auto blur_rect = CompRectFromNuxGeo(blur_geometry);
+      blur_rect.setY(screen->height() - (blur_geometry.y + blur_geometry.height));
+
+      CompRect translated_output(*output);
+      translated_output.setY(screen->height() - output->height() - output->y());
+
+      blur_region += (blur_rect & translated_output);
     }
 
     /* Copy from the read buffer into the backup texture */
