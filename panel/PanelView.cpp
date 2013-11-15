@@ -78,7 +78,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   rop.Blend = true;
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
 
-  if (Settings::Instance().GetLowGfxMode() == false)
+  if (!Settings::Instance().GetLowGfxMode())
   {
     rop.SrcBlend = GL_ZERO;
     rop.DstBlend = GL_SRC_COLOR;
@@ -150,20 +150,19 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 
   auto update_blur_geometry = [this](nux::Area*, nux::Geometry const& g) {
     nux::Geometry const& geo = GetGeometry();
-    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
+    nux::Geometry const& geo_absolute = parent_->GetAbsoluteGeometry();
     nux::Geometry blur_geo (geo_absolute.x, geo_absolute.y, geo.width, geo.height);
     bg_effect_helper_.SetBackbufferRegion(blur_geo);
   };
 
-  geometry_changed.connect(update_blur_geometry);
-
-  update_blur_geometry(this, GetGeometry());
+  parent_->geometry_changed.connect(update_blur_geometry);
+  update_blur_geometry(this, parent_->GetGeometry());
 }
 
 PanelView::~PanelView()
 {
   indicator::EntryLocationMap locations;
-  remote_->SyncGeometries(GetName() + boost::lexical_cast<std::string>(monitor_), locations);
+  remote_->SyncGeometries(GetName() + std::to_string(monitor_), locations);
 }
 
 Window PanelView::GetTrayXid() const
@@ -747,7 +746,7 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  std::string panel_id = GetName() + boost::lexical_cast<std::string>(monitor_);
+  std::string panel_id = GetName() + std::to_string(monitor_);
 
   if (menu_view_->GetControlsActive())
     menu_view_->GetGeometryForSync(locations);
