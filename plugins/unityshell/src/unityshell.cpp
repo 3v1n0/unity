@@ -782,12 +782,7 @@ void UnityScreen::paintDisplay()
     for (auto const& blur_geometry : blur_geometries)
     {
       auto blur_rect = CompRectFromNuxGeo(blur_geometry);
-      blur_rect.setY(screen->height() - (blur_geometry.y + blur_geometry.height));
-
-      CompRect translated_output(*output);
-      translated_output.setY(screen->height() - output->height() - output->y());
-
-      blur_region += (blur_rect & translated_output);
+      blur_region += (blur_rect & *output);
     }
 
     /* Copy from the read buffer into the backup texture */
@@ -801,9 +796,9 @@ void UnityScreen::paintDisplay()
     for (CompRect const& rect : blur_region.rects())
     {
       int x = nux::Clamp<int>(rect.x(), 0, screen->width());
-      int y = nux::Clamp<int>(rect.y(), 0, screen->height());
+      int y = nux::Clamp<int>(screen->height() - rect.y2(), 0, screen->height());
       int width = std::min<int>(screen->width() - rect.x(), rect.width());
-      int height = std::min<int>(screen->height() - rect.y(), rect.height());
+      int height = std::min<int>(screen->height() - y, rect.height());
 
       CHECKGL(glCopyTexSubImage2D(surface_target, 0, x, y, x, y, width, height));
     }
