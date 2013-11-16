@@ -151,6 +151,11 @@ nux::Point Controller::GetOffsetPerMonitor(int monitor)
 
 void Controller::ConstructView()
 {
+  view_ = View::Ptr(new View());
+  AddChild(view_.GetPointer());
+  view_->SetModel(modeller_->GetCurrentModel());
+  view_->background_color = WindowManager::Default().average_color();
+
   if (!view_window_)
   {
     main_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -162,11 +167,6 @@ void Controller::ConstructView()
     view_window_->SetBackgroundColor(nux::color::Transparent);
     view_window_->SetWindowSizeMatchLayout(true);
   }
-
-  view_ = View::Ptr(new View(view_window_.GetPointer()));
-  AddChild(view_.GetPointer());
-  view_->SetModel(modeller_->GetCurrentModel());
-  view_->background_color = WindowManager::Default().average_color();
 
   main_layout_->AddView(view_.GetPointer());
 

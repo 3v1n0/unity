@@ -44,12 +44,11 @@ BackgroundEffectHelper::BackgroundEffectHelper()
   , cache_dirty(true)
 {
   enabled.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
+  owner.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnOwnerChanged));
   noise_texture_ = TextureCache::GetDefault().FindTexture("dash_noise.png");
 
   if (Settings::Instance().GetLowGfxMode())
-  {
-    blur_type(BLUR_NONE);
-  }
+    blur_type = BLUR_NONE;
 }
 
 BackgroundEffectHelper::~BackgroundEffectHelper()
@@ -62,11 +61,65 @@ void BackgroundEffectHelper::OnEnabledChanged(bool enabled)
   if (enabled)
   {
     Register(this);
+    SetupOwner(owner());
     DirtyCache();
   }
   else
   {
     Unregister(this);
+  }
+}
+
+void BackgroundEffectHelper::OnOwnerChanged(nux::View* view)
+{
+  geo_getter_func_ = nullptr;
+
+  if (!view)
+  {
+    connections_.Clear();
+    Unregister(this);
+    return;
+  }
+}
+
+void BackgroundEffectHelper::SetupOwner(nux::View* view)
+{
+  if (!view || !connections_.Empty())
+    return;
+
+  auto cb = [this] (nux::Area*, nux::Geometry&) { UpdateOwnerGeometry(); };
+  connections_.Add(view->geometry_changed.connect(cb));
+
+  auto* parent = view->GetTopLevelViewWindow();
+  if (!parent)
+  {
+    LOG_ERROR(logger) << "The parent window for the owner must be set!";
+  }
+  else
+  {
+    connections_.Add(parent->geometry_changed.connect(cb));
+  }
+
+  UpdateOwnerGeometry();
+}
+
+void BackgroundEffectHelper::SetGeometryGetter(GeometryGetterFunc const& func)
+{
+  geo_getter_func_ = func;
+}
+
+void BackgroundEffectHelper::UpdateOwnerGeometry()
+{
+  auto const& geo = geo_getter_func_ ? geo_getter_func_() : owner()->GetAbsoluteGeometry();
+
+  if (requested_blur_geometry_ != geo)
+  {
+    requested_blur_geometry_ = geo;
+    DirtyCache();
+
+    int radius = GetBlurRadius();
+    auto const& emit_geometry = geo.GetExpand(radius, radius);
+    blur_region_needs_update_.emit(emit_geometry);
   }
 }
 
@@ -149,12 +202,11 @@ bool BackgroundEffectHelper::HasDirtyHelpers()
   return false;
 }
 
-void BackgroundEffectHelper::OnGeometryChanged(nux::Area*, nux::Geometry&)
-{}
-
 void BackgroundEffectHelper::Register(BackgroundEffectHelper* self)
 {
-  if (!self->owner())
+  auto* view = self->owner();
+
+  if (!view)
   {
     LOG_ERROR(logger) << "Registering an invalid helper, must set an owner!";
     return;
@@ -198,7 +250,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
 
   nux::Geometry temp = requested_blur_geometry_;
   temp.OffsetPosition(-monitor_rect_.x, -monitor_rect_.y);
-  blur_geometry_ =  nux::Geometry(0, 0, monitor_width, monitor_height).Intersect(temp);
+  blur_geometry_ = nux::Geometry(0, 0, monitor_width, monitor_height).Intersect(temp);
 
   nux::GpuDevice* gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
   if (blur_geometry_.IsNull() || blur_type == BLUR_NONE || !gpu_device->backup_texture0_.IsValid())
@@ -459,15 +511,3 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(bool f
   return blur_texture_;
 }
 
-void BackgroundEffectHelper::SetBackbufferRegion(nux::Geometry const& geo)
-{
-  if (requested_blur_geometry_ != geo)
-  {
-    requested_blur_geometry_ = geo;
-    DirtyCache();
-
-    int radius = GetBlurRadius();
-    auto const& emit_geometry = geo.GetExpand(radius, radius);
-    blur_region_needs_update_.emit(emit_geometry);
-  }
-}

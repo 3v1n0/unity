@@ -57,7 +57,7 @@ public:
   std::shared_ptr<nux::ColorLayer> bg_layer_;
   std::shared_ptr<nux::ColorLayer> bg_darken_layer_;
 
-  nux::Geometry content_geo;
+  nux::Geometry blur_geo_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
 
@@ -412,6 +412,20 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   texxform_absolute_bg.uoffset = 0.0f;
   texxform_absolute_bg.voffset = 0.0f;
   texxform_absolute_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+
+  nux::Geometry blur_geo(larger_absolute_geo.x, larger_absolute_geo.y, larger_content_geo.width, larger_content_geo.height);
+
+  if (blur_geo_ != blur_geo)
+  {
+    blur_geo_ = blur_geo;
+    auto* view = bg_effect_helper_.owner();
+
+    if (view)
+    {
+      // This notifies BackgroundEffectHelper to update the blur geo
+      view->geometry_changed.emit(view, blur_geo);
+    }
+  }
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
@@ -923,24 +937,6 @@ void OverlayRenderer::AboutToHide()
   need_redraw.emit();
 }
 
-void OverlayRenderer::UpdateBlurBackgroundSize(nux::Geometry const& content_geo,
-                                               nux::Geometry const& absolute_geo,
-                                               bool                 force_edges)
-{
-  int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
-
-  nux::Geometry larger_absolute_geo = absolute_geo;
-  larger_absolute_geo.OffsetSize(excess_border, excess_border);
-
-  nux::Geometry larger_content_geo = content_geo;
-  larger_content_geo.OffsetSize(excess_border, excess_border);
-
-  nux::Geometry blur_geo(larger_absolute_geo.x, larger_absolute_geo.y,
-                         larger_content_geo.width, larger_content_geo.height);
-
-  pimpl_->bg_effect_helper_.SetBackbufferRegion(blur_geo);
-}
-
 void OverlayRenderer::AboutToShow()
 {
   pimpl_->visible = true;
@@ -951,6 +947,7 @@ void OverlayRenderer::AboutToShow()
 void OverlayRenderer::SetOwner(nux::View* owner)
 {
   pimpl_->bg_effect_helper_.owner= owner;
+  pimpl_->bg_effect_helper_.SetGeometryGetter([this] { return pimpl_->blur_geo_; });
 }
 
 void OverlayRenderer::DisableBlur()

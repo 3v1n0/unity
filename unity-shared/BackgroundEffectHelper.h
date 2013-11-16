@@ -45,12 +45,13 @@ public:
   nux::Property<nux::View*> owner;
   nux::Property<bool> enabled;
 
-  void SetBackbufferRegion(nux::Geometry const& geo);
   nux::ObjectPtr<nux::IOpenGLBaseTexture> GetBlurRegion(bool force_update = false);
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetRegion(bool force_update = false);
   // We could add more functions here to get different types of effects based on the background texture
   // nux::ObjectPtr<nux::IOpenGLBaseTexture> GetPixelatedRegion(nux::Rect rect, int pixel_size, bool update);
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetRegion(bool force_update = false);
+  typedef std::function<nux::Geometry()> GeometryGetterFunc;
+  void SetGeometryGetter(GeometryGetterFunc const&);
 
   void DirtyCache();
 
@@ -65,9 +66,6 @@ public:
 
   static sigc::signal<void, nux::Geometry const&> blur_region_needs_update_;
 
-  nux::FxStructure blur_fx_struct_;
-  nux::FxStructure noise_fx_struct_;
-
 protected:
   static void Register   (BackgroundEffectHelper* self);
   static void Unregister (BackgroundEffectHelper* self);
@@ -77,15 +75,20 @@ private:
   static int GetBlurRadius();
 
   void OnEnabledChanged(bool value);
-  void OnGeometryChanged(nux::Area*, nux::Geometry&);
+  void OnOwnerChanged(nux::View*);
+  void SetupOwner(nux::View*);
+  void UpdateOwnerGeometry();
 
   nux::ObjectPtr<nux::BaseTexture> noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> resize_tmp_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> noisy_tmp_;
+  nux::FxStructure blur_fx_struct_;
+  nux::FxStructure noise_fx_struct_;
   nux::Geometry blur_geometry_;
   nux::Geometry requested_blur_geometry_;
-  connection::Wrapper on_geo_changed_conn_;
+  GeometryGetterFunc geo_getter_func_;
+  connection::Manager connections_;
 
   bool cache_dirty;
 

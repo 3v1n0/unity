@@ -44,9 +44,8 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
-SwitcherView::SwitcherView(nux::BaseWindow *parent)
-  : UnityWindowView(parent)
-  , render_boxes(false)
+SwitcherView::SwitcherView()
+  : render_boxes(false)
   , animate(true)
   , border_size(50)
   , flat_spacing(20)

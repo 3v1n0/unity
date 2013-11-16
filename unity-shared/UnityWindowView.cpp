@@ -29,8 +29,7 @@ namespace ui {
 
 NUX_IMPLEMENT_OBJECT_TYPE(UnityWindowView);
 
-UnityWindowView::UnityWindowView(nux::BaseWindow *parent,
-                                 NUX_FILE_LINE_DECL)
+UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , style(UnityWindowStyle::Get())
   , closable(false)
@@ -43,26 +42,12 @@ UnityWindowView::UnityWindowView(nux::BaseWindow *parent,
     if (bg_helper_.enabled() != e)
     {
       bg_helper_.enabled = e;
-      bg_helper_.SetBackbufferRegion(GetAbsoluteGeometry());
       return true;
     }
     return false;
   });
 
   live_background = false;
-
-  auto update_backbuffer_region = [this](nux::Area*, nux::Geometry const& g) {
-    nux::Geometry const& geo_abs (GetAbsoluteGeometry());
-    nux::Geometry const& geo (GetGeometry());
-    nux::Geometry blur_geo (geo_abs.x, geo_abs.y, geo.width, geo.height);
-    bg_helper_.SetBackbufferRegion(blur_geo);
-  };
-
-  geometry_changed.connect(update_backbuffer_region);
-  if (parent)
-    parent->geometry_changed.connect(update_backbuffer_region);
-
-  update_backbuffer_region(this, GetAbsoluteGeometry());
 
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
   background_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
@@ -205,9 +190,7 @@ nux::ObjectPtr<nux::InputArea> UnityWindowView::GetBoundingArea()
     bounding_area_ = new nux::InputArea();
     bounding_area_->SetParentObject(this);
     bounding_area_->SetGeometry(GetGeometry());
-    geometry_changed.connect([this](nux::Area*, nux::Geometry const& g) {
-      bounding_area_->SetGeometry(g);
-    });
+    geometry_changed.connect([this] (nux::Area*, nux::Geometry const& g) { bounding_area_->SetGeometry(g); });
   }
 
   return bounding_area_;

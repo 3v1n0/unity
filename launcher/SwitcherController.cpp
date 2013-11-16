@@ -453,8 +453,7 @@ void Controller::Impl::ConstructView()
 
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
 
-  ConstructWindow();
-  view_ = SwitcherView::Ptr(new SwitcherView(view_window_.GetPointer()));
+  view_ = SwitcherView::Ptr(new SwitcherView());
   obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = WindowManager::Default().average_color();
@@ -468,8 +467,8 @@ void Controller::Impl::ConstructView()
   });
 
   view_->switcher_mouse_move.connect([this] (int icon_index) {
-      if (icon_index >= 0)
-        ResetDetailTimer(obj_->detail_timeout_length);
+    if (icon_index >= 0)
+      ResetDetailTimer(obj_->detail_timeout_length);
   });
 
   view_->switcher_next.connect(sigc::mem_fun(this, &Impl::Next));
@@ -477,6 +476,7 @@ void Controller::Impl::ConstructView()
   view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
   view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
 
+  ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
   view_window_->SetGeometry(GetSwitcherViewsGeometry());

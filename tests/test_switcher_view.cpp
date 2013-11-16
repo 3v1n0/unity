@@ -49,12 +49,6 @@ struct TestSwitcherView : testing::Test
 {
   struct MockSwitcherView : SwitcherView
   {
-    public:
-      MockSwitcherView()
-        : SwitcherView(nullptr)
-      {
-      }
-
     MOCK_METHOD0(QueueDraw, void());
 
     using SwitcherView::UpdateRenderTargets;

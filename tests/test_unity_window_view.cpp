@@ -35,11 +35,6 @@ struct TestUnityWindowView : testing::Test
 {
   struct MockUnityWindowView : UnityWindowView
   {
-    MockUnityWindowView() :
-      UnityWindowView(nullptr)
-    {
-    }
-
     void DrawOverlay(nux::GraphicsEngine& ge, bool force, const nux::Geometry& geo) {}
     nux::Geometry GetBackgroundGeometry() { return background_geo_; }
 

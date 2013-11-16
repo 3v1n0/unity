@@ -188,17 +188,6 @@ Launcher::Launcher(MockableBaseWindow* parent,
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
 
-  auto update_blur_geometry = [this](nux::Area *area, nux::Geometry const& geo) {
-    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-    nux::Geometry const& base = GetGeometry();
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-
-    bg_effect_helper_.SetBackbufferRegion(blur_geo);
-  };
-
-  parent->geometry_changed.connect(update_blur_geometry);
-  update_blur_geometry(this, GetAbsoluteGeometry());
-
   auto_hide_animation_.updated.connect(redraw_cb);
   hover_animation_.updated.connect(redraw_cb);
   drag_over_animation_.updated.connect(redraw_cb);

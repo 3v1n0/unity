@@ -34,13 +34,7 @@ struct TestShortcutView : Test
 {
   struct MockShortcutView : View
   {
-    public:
-      MockShortcutView()
-        : View(nullptr)
-      {
-      }
-
-      using View::columns_layout_;
+    using View::columns_layout_;
   };
 
   Model::Ptr GetMockModel(std::vector<std::string> const& categories, unsigned number)

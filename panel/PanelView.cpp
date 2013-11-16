@@ -147,16 +147,6 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 
   bg_refine_single_column_layer_.reset(new nux::TextureLayer(bg_refine_single_column_tex_->GetDeviceTexture(),
                                        nux::TexCoordXForm(), nux::color::White, false, rop));
-
-  auto update_blur_geometry = [this](nux::Area*, nux::Geometry const& g) {
-    nux::Geometry const& geo = GetGeometry();
-    nux::Geometry const& geo_absolute = parent_->GetAbsoluteGeometry();
-    nux::Geometry blur_geo (geo_absolute.x, geo_absolute.y, geo.width, geo.height);
-    bg_effect_helper_.SetBackbufferRegion(blur_geo);
-  };
-
-  parent_->geometry_changed.connect(update_blur_geometry);
-  update_blur_geometry(this, parent_->GetGeometry());
 }
 
 PanelView::~PanelView()
