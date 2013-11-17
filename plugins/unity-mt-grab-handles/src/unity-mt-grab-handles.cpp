@@ -422,7 +422,7 @@ UnityMTGrabHandlesWindow::allowHandles()
 void
 UnityMTGrabHandlesWindow::getOutputExtents(CompWindowExtents& output)
 {
-  auto f = [this] (const unity::MT::GrabHandle::Ptr &h)
+  auto f = [this, &output] (const unity::MT::GrabHandle::Ptr &h)
   {
     output.left = std::max (window->borderRect().left() + h->width () / 2, static_cast <unsigned int> (output.left));
     output.right = std::max (window->borderRect().right()  + h->width () / 2, static_cast <unsigned int> (output.right));
