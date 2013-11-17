@@ -549,16 +549,16 @@ void UnityScreen::EnsureSuperKeybindings()
 
 void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag)
 {
-    CompActionPtr action(new CompAction());
-    const std::string key(optionGetShowLauncher().keyToString());
+  CompActionPtr action(new CompAction());
+  const std::string key(optionGetShowLauncher().keyToString());
 
-    CompAction::KeyBinding binding;
-    binding.fromString(impl::CreateActionString(key, shortcut, flag));
+  CompAction::KeyBinding binding;
+  binding.fromString(impl::CreateActionString(key, shortcut, flag));
 
-    action->setKey(binding);
+  action->setKey(binding);
 
-    screen->addAction(action.get());
-    _shortcut_actions.push_back(action);
+  screen->addAction(action.get());
+  _shortcut_actions.push_back(action);
 }
 
 void UnityScreen::nuxPrologue()
@@ -570,16 +570,6 @@ void UnityScreen::nuxPrologue()
    * bit, but we do that here in order to workaround a bug (?) in the NVIDIA
    * drivers (lp:703140). */
   glDisable(GL_LIGHTING);
-
-  /* reset matrices */
-  glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT |
-               GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
-
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
 #endif
 
   glGetError();
@@ -588,30 +578,18 @@ void UnityScreen::nuxPrologue()
 void UnityScreen::nuxEpilogue()
 {
 #ifndef USE_GLES
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glDepthRange(0, 1);
-  glViewport(-1, -1, 2, 2);
-  glRasterPos2f(0, 0);
-
-  gScreen->resetRasterPos();
-
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-
-  glPopAttrib();
+  /* In some unknown place inside nux drawing we change the viewport without
+   * setting it back to the default one, so we need to restore it before allowing
+   * compiz to take the scene */
+  auto* o = _last_output;
+  glViewport(o->x(), screen->height() - o->y2(), o->width(), o->height());
 
   glDepthRange(0, 1);
 #else
   glDepthRangef(0, 1);
-  gScreen->resetRasterPos();
 #endif
 
+  gScreen->resetRasterPos();
   glDisable(GL_SCISSOR_TEST);
 }
 
@@ -1017,7 +995,7 @@ bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
     }
   }
 
-  for (nux::Geometry &panel_geo : panel_controller_->GetGeometries ())
+  for (nux::Geometry const& panel_geo : panel_controller_->GetGeometries ())
   {
     if (panel_geo.IsInside(pt))
     {
@@ -1373,10 +1351,6 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
     ignore_redraw_request_ = true;
     compizDamageNux(CompRegionRef(output->region()));
     ignore_redraw_request_ = false;
-
-    /* Fetch all the presentation list geometries - this will have the side
-     * effect of clearing any built-up damage state */
-    std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
   }
 
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
@@ -1571,17 +1545,18 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 }
 
 /* Grab changed nux regions and add damage rects for them */
-void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
+void UnityScreen::determineNuxDamage(CompRegion& nux_damage)
 {
   /* Fetch all the dirty geometry from nux and aggregate it */
-  std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
+  auto const& dirty = wt->GetPresentationListGeometries();
+  auto const& panels_geometries = panel_controller_->GetGeometries();
 
   for (auto const& dirty_geo : dirty)
   {
     nux_damage += CompRegionFromNuxGeo(dirty_geo);
 
     /* Special case, we need to redraw the panel shadow on panel updates */
-    for (auto const& panel_geo : panel_controller_->GetGeometries())
+    for (auto const& panel_geo : panels_geometries)
     {
       if (!dirty_geo.IsIntersecting(panel_geo))
         continue;
