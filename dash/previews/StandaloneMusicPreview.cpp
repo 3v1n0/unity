@@ -143,14 +143,14 @@ TestRunner::TestRunner (std::string const& search_string)
   nav_iter = 0;
   nav_direction_ = previews::Navigation::RIGHT;
 
-  connected.connect([&](bool connected) {
+  connected.connect([this](bool connected) {
     if (connected)
     {
       Search(search_string_);
     } 
   });
 
-  results_->result_added.connect([&](Result const& result)
+  results_->result_added.connect([this](Result const& result)
   {
     previews::Navigation navDisabled =  previews::Navigation::BOTH;
     if (nav_iter < results_->count.Get() - 1)
@@ -177,7 +177,7 @@ void TestRunner::Init ()
   container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
   container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
   container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
-  container_->request_close.connect([&]() { exit(0); });
+  container_->request_close.connect([this]() { exit(0); });
 
   DummyView* dummyView = new DummyView(container_.GetPointer());
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -186,7 +186,7 @@ void TestRunner::Init ()
 
   container_->DisableNavButton(previews::Navigation::BOTH);
   
-  preview_ready.connect([&](std::string const& uri, dash::Preview::Ptr preview_model)
+  preview_ready.connect([this](std::string const& uri, dash::Preview::Ptr preview_model)
   {
     container_->Preview(preview_model, nav_direction_);
   });

@@ -830,7 +830,7 @@ IconLoader::Impl::Impl()
   , theme_(::gtk_icon_theme_get_default())
   , handle_counter_(0)
 {
-  theme_changed_signal_.Connect(theme_, "changed", [&] (GtkIconTheme*) {
+  theme_changed_signal_.Connect(theme_, "changed", [this] (GtkIconTheme*) {
     /* Since the theme has been changed we can clear the cache, however we
      * could include two improvements here:
      *  1) clear only the themed icons in cache

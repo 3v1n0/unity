@@ -270,7 +270,7 @@ void Track::SetupViews()
 
   mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
-  mouse_click.connect([&](int, int, unsigned long, unsigned long)
+  mouse_click.connect([this](int, int, unsigned long, unsigned long)
   {
     switch (play_state_)
     {

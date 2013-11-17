@@ -124,7 +124,7 @@ void LauncherIcon::LoadQuicklist()
   _quicklist = new QuicklistView();
   AddChild(_quicklist.GetPointer());
 
-  _quicklist->mouse_down_outside_pointer_grab_area.connect([&] (int x, int y, unsigned long button_flags, unsigned long key_flags)
+  _quicklist->mouse_down_outside_pointer_grab_area.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
     _allow_quicklist_to_show = false;
   });

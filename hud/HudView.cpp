@@ -83,7 +83,7 @@ View::View()
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionUp(false);
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionDown(false);
 
-  search_bar_->text_entry()->key_nav_focus_change.connect([&](nux::Area *area, bool receiving, nux::KeyNavDirection direction)
+  search_bar_->text_entry()->key_nav_focus_change.connect([this](nux::Area *area, bool receiving, nux::KeyNavDirection direction)
   {
     // We get here when the Hud closes.
     // The TextEntry should always have the keyboard focus as long as the hud is open.
@@ -239,7 +239,7 @@ void View::SetQueries(Hud::Queries queries)
 
     button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_START);
 
-    button->click.connect([&](nux::View* view) {
+    button->click.connect([this](nux::View* view) {
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
     });
 
@@ -390,7 +390,7 @@ void View::SetupViews()
       content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_START);
     }
 
-    content_layout_->geometry_changed.connect([&](nux::Area*, nux::Geometry& geo)
+    content_layout_->geometry_changed.connect([this](nux::Area*, nux::Geometry& geo)
     {
       if (!timeline_animating_)
       {

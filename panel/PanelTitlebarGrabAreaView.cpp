@@ -49,7 +49,7 @@ PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   mouse_up.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::OnMouseUp));
   mouse_drag.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::OnGrabMove));
 
-  mouse_double_click.connect([&] (int x, int y, unsigned long button_flags, unsigned long)
+  mouse_double_click.connect([this] (int x, int y, unsigned long button_flags, unsigned long)
   {
     if (nux::GetEventButton(button_flags) == 1)
       restore_request.emit(x, y);
@@ -102,7 +102,7 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
     mouse_down_point_.y = y;
 
     mouse_down_timer_.reset(new glib::Timeout(MOUSE_DOWN_TIMEOUT));
-    mouse_down_timer_->Run([&] () {
+    mouse_down_timer_->Run([this] () {
       if (!grab_started_)
       {
         nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();

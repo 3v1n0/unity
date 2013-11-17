@@ -72,7 +72,7 @@ void TestRunner::Init ()
   nux::GetWindowThread()->SetLayout (layout);
 
   // things the controller normally does
-  hud_service_.queries_updated.connect([&] (unity::hud::Hud::Queries queries) {
+  hud_service_.queries_updated.connect([this] (unity::hud::Hud::Queries queries) {
     hud_view_->SetQueries(queries);
     std::string icon_name = "";
     for (auto query = queries.begin(); query != queries.end(); query++)
@@ -89,19 +89,19 @@ void TestRunner::Init ()
 
   });
 
-  hud_view_->query_activated.connect([&] (unity::hud::Query::Ptr query) {
+  hud_view_->query_activated.connect([this] (unity::hud::Query::Ptr query) {
     hud_service_.ExecuteQuery(query, 0);
   });  
   
-  hud_view_->query_selected.connect([&] (unity::hud::Query::Ptr query) {
+  hud_view_->query_selected.connect([this] (unity::hud::Query::Ptr query) {
     hud_view_->SetIcon(query->icon_name, 42, 52, 0);
   });
 
-  hud_view_->search_changed.connect([&] (std::string search_string) {
+  hud_view_->search_changed.connect([this] (std::string search_string) {
     hud_service_.RequestQuery(search_string);
   });
 
-  hud_view_->search_activated.connect([&] (std::string search_string) {
+  hud_view_->search_activated.connect([this] (std::string search_string) {
     hud_service_.ExecuteQueryBySearch(search_string, 0);
   });
 

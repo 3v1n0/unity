@@ -72,7 +72,7 @@ GSettingsScopesReader::Impl::Impl(GSettingsScopesReader* owner)
 , loaded_(false)
 , settings_(g_settings_new(SETTINGS_NAME.c_str()))
 {
-  auto change_func = [&] (GSettings*, gchar*)
+  auto change_func = [this] (GSettings*, gchar*)
   {
     if (loaded_)
     {
