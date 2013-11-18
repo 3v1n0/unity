@@ -952,7 +952,7 @@ void OverlayRenderer::AboutToShow()
 void OverlayRenderer::SetOwner(nux::View* owner)
 {
   pimpl_->bg_effect_helper_.owner= owner;
-  pimpl_->bg_effect_helper_.SetGeometryGetter([this] { std::cout << "Blur geo "<< pimpl_->blur_geo_; return pimpl_->blur_geo_; });
+  pimpl_->bg_effect_helper_.SetGeometryGetter([this] { return pimpl_->blur_geo_; });
 }
 
 void OverlayRenderer::DisableBlur()
