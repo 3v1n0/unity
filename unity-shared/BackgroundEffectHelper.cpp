@@ -37,6 +37,7 @@ using namespace unity;
 nux::Property<BlurType> BackgroundEffectHelper::blur_type(BLUR_ACTIVE);
 nux::Geometry BackgroundEffectHelper::monitor_rect_;
 std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
+std::vector<nux::Geometry> BackgroundEffectHelper::blur_geometries_;
 sigc::signal<void, nux::Geometry const&> BackgroundEffectHelper::blur_region_needs_update_;
 
 BackgroundEffectHelper::BackgroundEffectHelper()
@@ -62,10 +63,10 @@ void BackgroundEffectHelper::OnEnabledChanged(bool enabled)
   {
     Register(this);
     SetupOwner(owner());
-    DirtyCache();
   }
   else
   {
+    connections_.Clear();
     Unregister(this);
   }
 }
@@ -78,13 +79,12 @@ void BackgroundEffectHelper::OnOwnerChanged(nux::View* view)
   {
     connections_.Clear();
     Unregister(this);
-    return;
   }
 }
 
 void BackgroundEffectHelper::SetupOwner(nux::View* view)
 {
-  if (!view || !connections_.Empty())
+  if (!view)
     return;
 
   auto cb = [this] (nux::Area*, nux::Geometry&) { UpdateOwnerGeometry(); };
@@ -100,7 +100,10 @@ void BackgroundEffectHelper::SetupOwner(nux::View* view)
     connections_.Add(parent->geometry_changed.connect(cb));
   }
 
-  UpdateOwnerGeometry();
+  if (requested_blur_geometry_.IsNull())
+    UpdateOwnerGeometry();
+  else
+    DirtyCache();
 }
 
 void BackgroundEffectHelper::SetGeometryGetter(GeometryGetterFunc const& func)
@@ -114,12 +117,31 @@ void BackgroundEffectHelper::UpdateOwnerGeometry()
 
   if (requested_blur_geometry_ != geo)
   {
-    requested_blur_geometry_ = geo;
-    DirtyCache();
+    // For some reason a view might have this size at show time, let's just ignore them.
+    if (geo.width != 1 && geo.height != 1)
+    {
+      requested_blur_geometry_ = geo;
 
-    int radius = GetBlurRadius();
-    auto const& emit_geometry = geo.GetExpand(radius, radius);
-    blur_region_needs_update_.emit(emit_geometry);
+      DirtyCache();
+      UpdateBlurGeometries();
+    }
+  }
+}
+
+void BackgroundEffectHelper::UpdateBlurGeometries()
+{
+  int radius = GetBlurRadius();
+  blur_geometries_.clear();
+  blur_geometries_.reserve(registered_list_.size());
+
+  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
+  {
+    /* Use the last requested region. The real region is clipped to the
+     * monitor geometry, but that is done at paint time */
+    auto const& blur_geo = bg_effect_helper->requested_blur_geometry_;
+
+    if (!blur_geo.IsNull())
+      blur_geometries_.push_back(blur_geo.GetExpand(radius, radius));
   }
 }
 
@@ -127,7 +149,7 @@ void BackgroundEffectHelper::ProcessDamage(nux::Geometry const& geo)
 {
   for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
-    if (bg_effect_helper->cache_dirty || !bg_effect_helper->enabled)
+    if (bg_effect_helper->cache_dirty)
       continue;
 
     if (geo.IsIntersecting(bg_effect_helper->blur_geometry_))
@@ -141,10 +163,8 @@ bool BackgroundEffectHelper::HasDamageableHelpers()
 {
   for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
   {
-    if (bg_effect_helper->enabled && !bg_effect_helper->cache_dirty)
-    {
+    if (!bg_effect_helper->cache_dirty)
       return true;
-    }
   }
 
   return false;
@@ -152,15 +172,7 @@ bool BackgroundEffectHelper::HasDamageableHelpers()
 
 bool BackgroundEffectHelper::HasEnabledHelpers()
 {
-  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
-  {
-    if (bg_effect_helper->enabled)
-    {
-      return true;
-    }
-  }
-
-  return false;
+  return !registered_list_.empty();
 }
 
 float BackgroundEffectHelper::GetBlurSigma()
@@ -175,28 +187,15 @@ int BackgroundEffectHelper::GetBlurRadius()
   return GetBlurSigma() * 3;
 }
 
-std::vector<nux::Geometry> BackgroundEffectHelper::GetBlurGeometries()
+std::vector<nux::Geometry> const& BackgroundEffectHelper::GetBlurGeometries()
 {
-  std::vector<nux::Geometry> geometries;
-  int radius = GetBlurRadius();
-
-  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
-  {
-    if (bg_effect_helper->enabled)
-    {
-      /* Use the last requested region. The real region is clipped to the
-       * monitor geometry, but that is done at paint time */
-      geometries.push_back(bg_effect_helper->requested_blur_geometry_.GetExpand(radius, radius));
-    }
-  }
-
-  return geometries;
+  return blur_geometries_;
 }
 
 bool BackgroundEffectHelper::HasDirtyHelpers()
 {
   for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
-    if (bg_effect_helper->enabled && bg_effect_helper->cache_dirty)
+    if (bg_effect_helper->cache_dirty)
       return true;
 
   return false;
@@ -213,22 +212,27 @@ void BackgroundEffectHelper::Register(BackgroundEffectHelper* self)
   }
 
   registered_list_.push_back(self);
+
+  if (!self->requested_blur_geometry_.IsNull())
+    UpdateBlurGeometries();
 }
 
 void BackgroundEffectHelper::Unregister(BackgroundEffectHelper* self)
 {
   registered_list_.remove(self);
+  UpdateBlurGeometries();
 }
 
 void BackgroundEffectHelper::DirtyCache()
 {
-  if (cache_dirty || !owner())
+  if ((cache_dirty && blur_geometry_ == requested_blur_geometry_) || !owner())
     return;
 
   cache_dirty = true;
   owner()->QueueDraw();
 
-  blur_region_needs_update_.emit(blur_geometry_);
+  int radius = GetBlurRadius();
+  blur_region_needs_update_.emit(requested_blur_geometry_.GetExpand(radius, radius));
 }
 
 nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bool force_update)

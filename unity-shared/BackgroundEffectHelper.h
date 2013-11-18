@@ -59,7 +59,7 @@ public:
   static bool HasDirtyHelpers();
   static bool HasEnabledHelpers();
   static bool HasDamageableHelpers();
-  static std::vector<nux::Geometry> GetBlurGeometries();
+  static std::vector<nux::Geometry> const& GetBlurGeometries();
 
   static nux::Property<unity::BlurType> blur_type;
   static nux::Geometry monitor_rect_;
@@ -73,6 +73,7 @@ protected:
 private:
   static float GetBlurSigma();
   static int GetBlurRadius();
+  static void UpdateBlurGeometries();
 
   void OnEnabledChanged(bool value);
   void OnOwnerChanged(nux::View*);
@@ -93,6 +94,7 @@ private:
   bool cache_dirty;
 
   static std::list<BackgroundEffectHelper*> registered_list_;
+  static std::vector<nux::Geometry> blur_geometries_;
 };
 
 }

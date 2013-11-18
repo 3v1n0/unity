@@ -777,9 +777,8 @@ void UnityScreen::paintDisplay()
     /* We are using a CompRegion here so that we can combine rectangles
      * where it might make sense to. Saves calls into OpenGL */
     CompRegion blur_region;
-    auto const& blur_geometries = BackgroundEffectHelper::GetBlurGeometries();
 
-    for (auto const& blur_geometry : blur_geometries)
+    for (auto const& blur_geometry : BackgroundEffectHelper::GetBlurGeometries())
     {
       auto blur_rect = CompRectFromNuxGeo(blur_geometry);
       blur_region += (blur_rect & *output);
