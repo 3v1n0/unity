@@ -70,6 +70,7 @@ public:
     layout->AddView(view, 1, nux::MINOR_POSITION_CENTER);
     SetLayout(layout);
   }
+  virtual ~DummyView() {}
 
   // Keyboard navigation
   bool AcceptKeyNavFocus()

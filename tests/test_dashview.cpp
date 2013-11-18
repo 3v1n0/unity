@@ -68,6 +68,7 @@ public:
   TestDashView()
   : application_starter_(std::make_shared<MockApplicationStarter>())
   {}
+  virtual ~TestDashView() {}
 
   virtual void SetUp() { Utils::init_gsettings_test_environment(); }
   virtual void TearDown() { Utils::reset_gsettings_test_environment(); }

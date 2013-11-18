@@ -39,6 +39,7 @@ public:
   NUX_DECLARE_OBJECT_TYPE(ResultRendererHorizontalTile, ResultRendererTile);
 
   ResultRendererHorizontalTile(NUX_FILE_LINE_PROTO);
+  virtual ~ResultRendererHorizontalTile() {}
 
   virtual void Render(nux::GraphicsEngine& GfxContext,
                       Result& row,

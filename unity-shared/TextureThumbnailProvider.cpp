@@ -36,6 +36,7 @@ public:
   GdkTextureThumbnailer(std::string const& name)
   : name(name)
   {}
+  virtual ~GdkTextureThumbnailer() {}
 
   std::string name;
 
