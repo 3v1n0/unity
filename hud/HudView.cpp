@@ -138,6 +138,7 @@ void View::ProcessGrowShrink()
 {
   float diff = g_get_monotonic_time() - start_time_;
   int target_height = content_layout_->GetGeometry().height;
+
   // only animate if we are after our defined pause time
   if (diff > pause_before_grow_length)
   {
@@ -159,11 +160,6 @@ void View::ProcessGrowShrink()
     LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")"
                      << "View height: " << GetGeometry().height;
     current_height_ = new_height;
-
-    nux::Geometry draw_content_geo(layout_->GetGeometry());
-    draw_content_geo.height = current_height_;
-
-    renderer_.UpdateBlurBackgroundSize(draw_content_geo, GetAbsoluteGeometry(), true);
   }
 
   for (auto button : buttons_)
@@ -183,7 +179,7 @@ void View::ProcessGrowShrink()
   }
   else
   {
-    timeline_idle_.reset(new glib::Timeout(0, [this]
+    timeline_idle_.reset(new glib::Idle([this]
     {
       QueueDraw();
       return false;
@@ -194,7 +190,7 @@ void View::ProcessGrowShrink()
 void View::ResetToDefault()
 {
   SetQueries(Hud::Queries());
-  current_height_ = content_layout_->GetBaseHeight();;
+  current_height_ = content_layout_->GetBaseHeight();
 
   UpdateLayoutGeometry();
 
@@ -349,7 +345,7 @@ void View::AboutToShow()
   visible_ = true;
   overlay_window_buttons_->Show();
 
-  nux::Geometry draw_content_geo(layout_->GetGeometry());
+  nux::Geometry draw_content_geo = layout_->GetGeometry();
   draw_content_geo.height = current_height_;
 
   renderer_.AboutToShow();
@@ -399,8 +395,11 @@ void View::SetupViews()
       content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_START);
     }
 
-    content_layout_->geometry_changed.connect([&](nux::Area*, nux::Geometry& geo)
+    content_layout_->geometry_changed.connect([this](nux::Area*, nux::Geometry geo)
     {
+      geo.height = std::max(geo.height, current_height_);
+      renderer_.UpdateBlurBackgroundSize(geo, GetAbsoluteGeometry(), true);
+
       if (!timeline_animating_)
       {
         timeline_animating_ = true;
