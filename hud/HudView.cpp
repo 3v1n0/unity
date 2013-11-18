@@ -159,6 +159,11 @@ void View::ProcessGrowShrink()
     LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")"
                      << "View height: " << GetGeometry().height;
     current_height_ = new_height;
+
+    nux::Geometry draw_content_geo(layout_->GetGeometry());
+    draw_content_geo.height = current_height_;
+
+    renderer_.UpdateBlurBackgroundSize(draw_content_geo, GetAbsoluteGeometry(), true);
   }
 
   for (auto button : buttons_)
@@ -344,7 +349,11 @@ void View::AboutToShow()
   visible_ = true;
   overlay_window_buttons_->Show();
 
+  nux::Geometry draw_content_geo(layout_->GetGeometry());
+  draw_content_geo.height = current_height_;
+
   renderer_.AboutToShow();
+  renderer_.UpdateBlurBackgroundSize(draw_content_geo, GetAbsoluteGeometry(), true);
 }
 
 void View::AboutToHide()
