@@ -300,7 +300,7 @@ Controller::Impl::Impl(Controller* obj,
     };
 
   // TODO We need to get actual timing data to suggest this is necessary.
-  //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
+  //sources_.AddTimeoutSeconds(construct_timeout_, [this] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 
   fade_animator_.updated.connect([this] (double opacity) {
     if (view_window_)
@@ -344,8 +344,8 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
 
   if (real_wait > 0)
   {
-    sources_.AddIdle([&] { ConstructView(); return false; }, VIEW_CONSTRUCT_IDLE);
-    sources_.AddTimeout(real_wait, [&] { ShowView(); return false; }, SHOW_TIMEOUT);
+    sources_.AddIdle([this] { ConstructView(); return false; }, VIEW_CONSTRUCT_IDLE);
+    sources_.AddTimeout(real_wait, [this] { ShowView(); return false; }, SHOW_TIMEOUT);
   }
   else
   {

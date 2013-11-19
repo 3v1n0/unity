@@ -42,6 +42,8 @@ public:
   	: MockBaseWindow([](nux::Geometry const& geo) { return geo; }, name)
   {}
 
+  virtual ~MockBaseWindow() {}
+
   MOCK_METHOD2(ShowWindow, void(bool, bool));
   MOCK_METHOD1(SetOpacity, void(float));
 };

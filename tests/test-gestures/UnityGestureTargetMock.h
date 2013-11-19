@@ -6,6 +6,7 @@
 class UnityGestureTargetMock : public nux::GestureTarget
 {
   public:
+    virtual ~UnityGestureTargetMock() {}
     virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event)
     {
       return nux::GestureDeliveryRequest::NONE;

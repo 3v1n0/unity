@@ -44,7 +44,7 @@ class CoverflowResultItem : public nux::CoverflowItem
 {
 public:
   CoverflowResultItem(Result& result, CoverflowResultView *parent, nux::CoverflowModel::Ptr model);
-  ~CoverflowResultItem();
+  virtual ~CoverflowResultItem();
 
   nux::ObjectPtr<nux::BaseTexture> GetTexture() const;
   virtual void Activate(int button);
@@ -161,7 +161,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
   coverflow_->y_offset = 0.15f;
   coverflow_->reflection_size = .5f;
 
-  ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
+  ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [this] (GVariant* data) {
     int nav_mode = 0;
     GVariant* local_result_variant = nullptr;
     glib::String proposed_unique_id;

@@ -37,6 +37,7 @@ public:
   : name(name)
   , command_line(command_line)
   {}
+  virtual ~UserThumbnailer() {}
 
   std::string name;
   std::string command_line;

@@ -22,6 +22,7 @@
 
 #include "UnityWindowView.h"
 #include <Nux/VLayout.h>
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity {
@@ -239,12 +240,24 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
+    {
+      auto temp_background_color = background_color();
+      auto blend_mode = nux::LAYER_BLEND_MODE_OVERLAY;
+
+      if (Settings::Instance().GetLowGfxMode())
+      {
+        temp_background_color.alpha = 1.0f;
+        blend_mode = nux::LAYER_BLEND_MODE_NORMAL;
+      }
+
       gPainter.PushDrawCompositionLayer(GfxContext, bg_geo,
                                         bg_texture_,
                                         texxform_blur_bg,
                                         nux::color::White,
-                                        background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                        temp_background_color,
+                                        blend_mode,
                                         true, rop);
+    }
     else
       gPainter.PushDrawTextureLayer(GfxContext, bg_geo,
                                     bg_texture_,

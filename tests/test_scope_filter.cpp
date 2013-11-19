@@ -51,6 +51,7 @@ class TestScopeFilter : public ::testing::Test
 {
 public:
   TestScopeFilter() { }
+  virtual ~TestScopeFilter() {}
 
   virtual void SetUp()
   {

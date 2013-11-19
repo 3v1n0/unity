@@ -60,6 +60,7 @@ public:
   NUX_DECLARE_OBJECT_TYPE(ResultRendererTile, ResultRenderer);
 
   ResultRendererTile(NUX_FILE_LINE_PROTO);
+  virtual ~ResultRendererTile() {}
 
   virtual void Render(nux::GraphicsEngine& GfxContext,
                       Result& row,
