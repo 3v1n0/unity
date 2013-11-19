@@ -65,89 +65,95 @@ void add_(GVariantBuilder* builder_, std::string const& name, ValueType type, st
   g_variant_builder_add(builder_, "{sv}", name.c_str(), static_cast<GVariant*>(Variant::FromVector(new_values)));
 }
 
-IntrospectionData& IntrospectionData::add(std::string const& name, bool value)
+template <typename TYPE>
+void add_simple_value_(GVariantBuilder* builder_, std::string const& name, TYPE value)
 {
   add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+}
+
+IntrospectionData& IntrospectionData::add(std::string const& name, bool value)
+{
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, char const* value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, std::string const& value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, int16_t value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, int32_t value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, int64_t value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, uint16_t value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, uint32_t value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, uint64_t value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 #if __WORDSIZE != 64
 IntrospectionData& IntrospectionData::add(std::string const& name, long value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, unsigned long value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 #endif
 
 IntrospectionData& IntrospectionData::add(std::string const& name, float value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, double value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, GVariant* value)
 {
-  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  add_simple_value_(builder_, name, value);
   return *this;
 }
 
