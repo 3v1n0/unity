@@ -353,6 +353,20 @@ class SwitcherOverlaysInteractionTests(SwitcherInteractionTests):
         """Tests if switcher shows when overlay is opened"""
         self.open_switcher_after_overlay(self.overlay)
 
+    def test_switcher_tab_key_work_after_overlay_is_closed(self):
+        """Tests that the switcher tab key work when initializing the
+        switcher after closing the overlay
+        """
+        self.open_switcher_after_overlay(self.overlay)
+
+        start = self.unity.switcher.selection_index
+        next_index = (start + 1) % len(self.unity.switcher.icons)
+        self.unity.switcher.next_icon()
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(next_index)))
+
+        self.unity.switcher.previous_icon()
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(start)))
+
     def test_switcher_arrow_keys_work_after_overlay_is_closed(self):
         """Tests that the switcher arrow keys work when initializing the
         switcher after closing the overlay
@@ -372,10 +386,12 @@ class SwitcherOverlaysInteractionTests(SwitcherInteractionTests):
         work when initializing the switcher after closing the overlay
         """
         self.open_switcher_after_overlay(self.overlay)
-        self.assertProperty(self.unity.switcher, mode=SwitcherMode.NORMAL)
 
         self.keyboard.press_and_release('Down')
         self.assertProperty(self.unity.switcher, mode=SwitcherMode.DETAIL)
+
+        self.keyboard.press_and_release('Up')
+        self.assertProperty(self.unity.switcher, mode=SwitcherMode.NORMAL)
 
 
 class SwitcherDetailsTests(SwitcherTestCase):
