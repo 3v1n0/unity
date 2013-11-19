@@ -62,6 +62,11 @@ UnityWindowView::~UnityWindowView()
     bounding_area_->UnParentObject();
 }
 
+void UnityWindowView::SetBackgroundHelperGeometryGetter(BackgroundEffectHelper::GeometryGetterFunc const& func)
+{
+  bg_helper_.SetGeometryGetter(func);
+}
+
 nux::Area* UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType etype)
 {
   if (close_button_ && close_button_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
@@ -210,7 +215,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& internal_clip = GetInternalBackground();
   GfxContext.PushClippingRectangle(internal_clip); ++push;
 
-  nux::Geometry const& blur_geo = GetAbsoluteGeometry();
+  nux::Geometry const& bg_geo = GetBackgroundGeometry();
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
@@ -226,8 +231,6 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::TexCoordXForm texxform_blur_bg;
     texxform_blur_bg.flip_v_coord = true;
     texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform_blur_bg.uoffset = base.x / static_cast<float>(blur_geo.width);
-    texxform_blur_bg.voffset = base.y / static_cast<float>(blur_geo.height);
 
     nux::ROPConfig rop;
     rop.Blend = false;
@@ -236,21 +239,21 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
-      gPainter.PushDrawCompositionLayer(GfxContext, base,
+      gPainter.PushDrawCompositionLayer(GfxContext, bg_geo,
                                         bg_texture_,
                                         texxform_blur_bg,
                                         nux::color::White,
                                         background_color, nux::LAYER_BLEND_MODE_OVERLAY,
                                         true, rop);
     else
-      gPainter.PushDrawTextureLayer(GfxContext, base,
+      gPainter.PushDrawTextureLayer(GfxContext, bg_geo,
                                     bg_texture_,
                                     texxform_blur_bg,
                                     nux::color::White,
                                     true,
                                     rop);
 #else
-      gPainter.PushDrawCompositionLayer(GfxContext, base,
+      gPainter.PushDrawCompositionLayer(GfxContext, bg_geo,
                                         bg_texture_,
                                         texxform_blur_bg,
                                         nux::color::White,
@@ -289,7 +292,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   for (unsigned i = 0; i < push; ++i)
     GfxContext.PopClippingRectangle();
 
-  DrawBackground(GfxContext, GetBackgroundGeometry());
+  DrawBackground(GfxContext, bg_geo);
 
   if (close_button_)
   {

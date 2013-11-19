@@ -61,6 +61,7 @@ protected:
   virtual void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip) = 0;
   nux::Geometry GetInternalBackground();
   virtual nux::Geometry GetBackgroundGeometry() = 0;
+  void SetBackgroundHelperGeometryGetter(BackgroundEffectHelper::GeometryGetterFunc const&);
 
   // Introspectable methods
   std::string GetName() const;
