@@ -282,7 +282,7 @@ void ScopeBar::AddProperties(debug::IntrospectionData& wrapper)
 
 std::string ScopeBar::GetActiveScopeId() const
 {
-  for (auto icon : icons_)
+  for (auto* icon : icons_)
   {
     if (icon->active)
       return icon->id;
