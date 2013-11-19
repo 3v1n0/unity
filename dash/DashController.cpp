@@ -352,7 +352,11 @@ void Controller::HideDash()
   window_->EnableInputWindow(false, dash::window_title, true, false);
   visible_ = false;
 
-  nux::GetWindowCompositor().SetKeyFocusArea(NULL, nux::KEY_NAV_NONE);
+  auto& wc = nux::GetWindowCompositor();
+  auto *key_focus_area = wc.GetKeyFocusArea();
+  if (key_focus_area && key_focus_area->IsChildOf(view_.GetPointer()))
+    wc.SetKeyFocusArea(nullptr, nux::KEY_NAV_NONE);
+
   WindowManager::Default().RestoreInputFocus();
 
   StartShowHideTimeline();
