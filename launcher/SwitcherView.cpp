@@ -19,6 +19,8 @@
 #include "config.h"
 #include "MultiMonitor.h"
 #include "SwitcherView.h"
+
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/UScreen.h"
@@ -46,7 +48,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
 SwitcherView::SwitcherView()
   : render_boxes(false)
-  , animate(true)
   , border_size(50)
   , flat_spacing(20)
   , icon_size(128)
@@ -59,6 +60,7 @@ SwitcherView::SwitcherView()
   , spread_size(3.5f)
   , icon_renderer_(std::make_shared<IconRenderer>())
   , text_view_(new StaticCairoText(""))
+  , animation_(animation_length)
   , last_icon_selected_(-1)
   , last_detail_icon_selected_(-1)
   , check_mouse_first_time_(true)
@@ -82,19 +84,10 @@ SwitcherView::SwitcherView()
 
   CaptureMouseDownAnyWhereElse(true);
   SetAcceptMouseWheelEvent(true);
-  ResetTimer();
 
-  animate.changed.connect([this] (bool enabled) {
-    if (enabled)
-    {
-      SaveTime();
-      QueueRelayout();
-      QueueDraw();
-    }
-    else
-    {
-      ResetTimer();
-    }
+  animation_.updated.connect([this] (double p) {
+    PreLayoutManagement();
+    QueueDraw();
   });
 }
 
@@ -178,15 +171,14 @@ void SwitcherView::OnTileSizeChanged (int size)
   vertical_size = tile_size + VERTICAL_PADDING * 2;
 }
 
-void SwitcherView::SaveTime()
+void SwitcherView::StartAnimation()
 {
-  clock_gettime(CLOCK_MONOTONIC, &save_time_);
+  animation::Start(animation_, animation::Direction::FORWARD);
 }
 
-void SwitcherView::ResetTimer()
+void SwitcherView::SkipAnimation()
 {
-  save_time_.tv_sec = 0;
-  save_time_.tv_nsec = 0;
+  animation::Skip(animation_);
 }
 
 void SwitcherView::SaveLast()
@@ -194,8 +186,7 @@ void SwitcherView::SaveLast()
   saved_args_ = last_args_;
   saved_background_ = last_background_;
 
-  if (animate())
-    SaveTime();
+  StartAnimation();
 }
 
 void SwitcherView::OnDetailSelectionIndexChanged(unsigned int index)
@@ -218,8 +209,6 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
   }
 
   SaveLast();
-  QueueRelayout();
-  QueueDraw();
 }
 
 void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection)
@@ -230,8 +219,6 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
   delta_tracker_.ResetState();
 
   SaveLast();
-  QueueRelayout();
-  QueueDraw();
 }
 
 nux::Point CalculateMouseMonitorOffset(int x, int y)
@@ -842,18 +829,11 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   return results;
 }
 
-double SwitcherView::GetCurrentProgress()
-{
-  clock_gettime(CLOCK_MONOTONIC, &current_);
-  DeltaTime ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
-  return std::min<double>(1.0f, ms_since_change / static_cast<double>(animation_length()));
-}
-
 void SwitcherView::PreLayoutManagement()
 {
   UnityWindowView::PreLayoutManagement();
 
-  double progress = GetCurrentProgress();
+  double progress = animation_.GetCurrentValue();
 
   nux::Geometry background_geo;
   last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), progress);
@@ -876,7 +856,6 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   nux::Geometry internal_clip = clip;
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
 
   for (auto const& arg : last_args_)
   {
@@ -929,18 +908,6 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
     text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
     text_view_->Draw(GfxContext, force_draw);
     nux::GetPainter().PopPaintLayerStack();
-  }
-
-  DeltaTime ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
-
-  if (ms_since_change < animation_length && !redraw_idle_)
-  {
-    redraw_idle_.reset(new glib::Idle([this] () {
-      QueueRelayout();
-      QueueDraw();
-      redraw_idle_.reset();
-      return false;
-    }, glib::Source::Priority::DEFAULT));
   }
 }
 

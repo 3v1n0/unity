@@ -615,20 +615,10 @@ void Controller::Impl::InitiateDetail(bool animate)
 
   if (!model_->detail_selection)
   {
-    view_->animate = animate;
-
     SetDetail(true);
 
-    if (!view_->animate())
-    {
-      // As soon as the detail selection is changed we re-enable the animations
-      auto conn = std::make_shared<sigc::connection>();
-      *conn = model_->detail_selection.changed.connect([this, conn] (bool) {
-        if (view_)
-          view_->animate = true;
-        conn->disconnect();
-      });
-    }
+    if (!animate)
+      view_->SkipAnimation();
   }
 }
 

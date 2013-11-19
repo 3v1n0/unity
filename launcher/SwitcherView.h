@@ -30,9 +30,8 @@
 #include "unity-shared/UnityWindowView.h"
 
 #include <Nux/View.h>
+#include <NuxCore/Animation.h>
 #include <NuxCore/Property.h>
-
-#include <UnityCore/GLibSource.h>
 
 
 namespace unity
@@ -69,6 +68,8 @@ public:
   nux::Property<int> animation_length;
   nux::Property<int> monitor;
   nux::Property<double> spread_size;
+
+  void SkipAnimation();
 
   // Returns the index of the icon at the given position, in window coordinates.
   // If there's no icon there, -1 is returned.
@@ -142,10 +143,7 @@ private:
 
   nux::Size SpreadSize();
 
-  double GetCurrentProgress();
-
-  void SaveTime();
-  void ResetTimer();
+  void StartAnimation();
   void SaveLast();
 
   bool CheckMouseInsideBackground(int x, int y) const;
@@ -155,6 +153,7 @@ private:
   ui::LayoutSystem layout_system_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   nux::ObjectPtr<StaticCairoText> text_view_;
+  nux::animation::AnimateValue<double> animation_;
 
   int last_icon_selected_;
   int last_detail_icon_selected_;
@@ -169,11 +168,6 @@ private:
   nux::Geometry saved_background_;
 
   ui::LayoutWindow::Vector render_targets_;
-
-  timespec current_;
-  timespec save_time_;
-
-  glib::Source::UniquePtr redraw_idle_;
 
   friend class TestSwitcherView;
 };
