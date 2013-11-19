@@ -32,7 +32,7 @@ class HudIconTextureSource : public unity::ui::IconTextureSource
 {
 public:
   HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture> texture);
-  ~HudIconTextureSource();
+  virtual ~HudIconTextureSource();
   
   virtual nux::Color BackgroundColor() const;
   virtual nux::BaseTexture* TextureForSize(int size);

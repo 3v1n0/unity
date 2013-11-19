@@ -1638,12 +1638,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   nux::Color clear_colour = nux::Color(0x00000000);
 
-  if (Settings::Instance().GetLowGfxMode())
-  {
-    clear_colour = options()->background_color;
-    clear_colour.alpha = 1.0f;
-  }
-
   // clear region
   GfxContext.PushClippingRectangle(base);
   gPainter.PushDrawColorLayer(GfxContext, base, clear_colour, true, ROP);
@@ -1775,6 +1769,12 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       color.alpha = options()->background_alpha;
       gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
     }
+  }
+  else
+  {
+    nux::Color color = options()->background_color;
+    color.alpha = 1.0f;
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
   }
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);

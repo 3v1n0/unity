@@ -85,6 +85,8 @@ MATCHER_P(AreArgsEqual, a, "")
 
 struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
 {
+  virtual ~TestApplicationLauncherIcon() {}
+
   virtual void SetUp() override
   {
     usc_app = std::make_shared<MockApplication::Nice>(USC_DESKTOP, "softwarecenter");
@@ -982,7 +984,11 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteIgnoresInvisible)
   EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "InvisibleLabel"));
 }
 
-struct QuitLabel : TestApplicationLauncherIcon, testing::WithParamInterface<std::string> {};
+struct QuitLabel : TestApplicationLauncherIcon, testing::WithParamInterface<std::string>
+{
+  virtual ~QuitLabel() {}
+};
+
 INSTANTIATE_TEST_CASE_P(TestApplicationLauncherIcon, QuitLabel, testing::Values("Quit", "Exit", "Close"));
 
 TEST_P(/*TestApplicationLauncherIcon*/QuitLabel, QuicklistMenuItemRemoteOverridesQuitByLabelNotRunning)

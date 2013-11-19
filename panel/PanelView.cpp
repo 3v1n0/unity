@@ -118,7 +118,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
-  ubus_manager_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [&] (GVariant *data) {
+  ubus_manager_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [this] (GVariant *data) {
     int width, height;
     g_variant_get(data, "(ii)", &width, &height);
     stored_dash_width_ = width;
@@ -707,7 +707,7 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
     if (enabled)
     {
       WindowManager& win_manager = WindowManager::Default();
-      auto update_bg_lambda = [&](guint32) { ForceUpdateBackground(); };
+      auto update_bg_lambda = [this](guint32) { ForceUpdateBackground(); };
       auto conn = &maximized_opacity_toggle_connections_;
 
       conn->Add(win_manager.window_minimized.connect(update_bg_lambda));

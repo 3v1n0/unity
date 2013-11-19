@@ -48,6 +48,8 @@ public:
 class TestResultViewGrid : public Test
 {
 public:
+  virtual ~TestResultViewGrid() {}
+
   virtual void SetUp()
   {
     view = new NiceMock<MockResultViewGrid>();

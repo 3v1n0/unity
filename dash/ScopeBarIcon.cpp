@@ -55,7 +55,7 @@ ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
   active.changed.connect(sigc::mem_fun(this, &ScopeBarIcon::OnActiveChanged));
-  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
+  key_nav_focus_change.connect([this](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
 }
 
 ScopeBarIcon::~ScopeBarIcon()

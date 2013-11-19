@@ -130,7 +130,7 @@ void SocialPreviewContent::SetupViews()
 {
   dash::previews::Style const& style = dash::previews::Style::Instance();
 
-  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
+  auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
   text_ = new StaticCairoText("", false, NUX_TRACKER_LOCATION);
   text_->SetLines(-8);

@@ -42,22 +42,22 @@ WindowMinimizeSpeedController::WindowMinimizeSpeedController()
   , _duration(200) // going to be overridden anyway, but at least it is initialised
 {
   _minimize_count_changed.Connect(_settings, "changed::minimize-count",
-                                  [&] (GSettings*, gchar* name) {
+                                  [this] (GSettings*, gchar* name) {
     _minimize_count = g_settings_get_int(_settings, name);
     SetDuration();
   });
   _minimize_speed_threshold_changed.Connect(_settings, "changed::minimize-speed-threshold",
-                                            [&] (GSettings*, gchar* name) {
+                                            [this] (GSettings*, gchar* name) {
     _minimize_speed_threshold = g_settings_get_int(_settings, name);
     SetDuration();
   });
   _minimize_fast_duration_changed.Connect(_settings, "changed::minimize-fast-duration",
-                                      [&] (GSettings*, gchar* name) {
+                                      [this] (GSettings*, gchar* name) {
     _minimize_fast_duration = g_settings_get_int(_settings, name);
     SetDuration();
   });
   _minimize_slow_duration_changed.Connect(_settings, "changed::minimize-slow-duration",
-                                      [&] (GSettings*, gchar* name) {
+                                      [this] (GSettings*, gchar* name) {
     _minimize_slow_duration = g_settings_get_int(_settings, name);
     SetDuration();
   });

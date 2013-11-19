@@ -47,7 +47,7 @@ public:
 
   std::vector<Window> const& GetTrayXids() const;
   PanelVector& panels() const;
-  std::vector<nux::Geometry> GetGeometries() const;
+  std::vector<nux::Geometry> const& GetGeometries() const;
 
   nux::Property<int> launcher_width;
 

@@ -49,7 +49,7 @@ RatingsButton::RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_DECL)
   mouse_move.connect(sigc::mem_fun(this, &RatingsButton::RecvMouseMove));
   mouse_drag.connect(sigc::mem_fun(this, &RatingsButton::RecvMouseDrag));
 
-  key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
+  key_nav_focus_change.connect([this](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
   {
     if (has_focus && direction != nux::KEY_NAV_NONE)
       focused_star_ = 0;
@@ -58,7 +58,7 @@ RatingsButton::RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_DECL)
 
     QueueDraw();
   });
-  key_nav_focus_activate.connect([&](nux::Area*) { SetRating(static_cast<float>(focused_star_+1)/num_stars); });
+  key_nav_focus_activate.connect([this](nux::Area*) { SetRating(static_cast<float>(focused_star_+1)/num_stars); });
   key_down.connect(sigc::mem_fun(this, &RatingsButton::OnKeyDown));
 }
 

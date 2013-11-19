@@ -215,6 +215,7 @@ struct TestLauncherController : testmocks::TestUnityAppBase
     , edge_barriers_(std::make_shared<ui::EdgeBarrierController>())
     , lc(xdnd_manager_, edge_barriers_)
   {}
+  virtual ~TestLauncherController() {}
 
   virtual void SetUp()
   {

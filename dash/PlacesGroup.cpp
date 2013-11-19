@@ -201,7 +201,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
 
-  key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
+  key_nav_focus_change.connect([this](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
   {
     if (!has_focus)
       return;
@@ -287,7 +287,7 @@ PlacesGroup::SetChildView(dash::ResultView* view)
   _child_layout->SetLeftAndRightPadding(_style.GetPlacesGroupResultLeftPadding(), 0);
   _group_layout->AddLayout(_child_layout, 1);
 
-  view->results_per_row.changed.connect([&] (int results_per_row)
+  view->results_per_row.changed.connect([this] (int results_per_row)
   {
     _n_visible_items_in_unexpand_mode = results_per_row;
     RefreshLabel();

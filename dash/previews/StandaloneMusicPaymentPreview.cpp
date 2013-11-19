@@ -70,6 +70,7 @@ public:
     layout->AddView(view, 1, nux::MINOR_POSITION_CENTER);
     SetLayout(layout);
   }
+  virtual ~DummyView() {}
 
   // Keyboard navigation
   bool AcceptKeyNavFocus()
@@ -146,7 +147,7 @@ TestRunner::~TestRunner ()
 void TestRunner::Init ()
 {
   container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
-  container_->request_close.connect([&]() { exit(0); });
+  container_->request_close.connect([this]() { exit(0); });
   container_->DisableNavButton(previews::Navigation::BOTH);
 
   DummyView* dummyView = new DummyView(container_.GetPointer());

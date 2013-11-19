@@ -48,6 +48,7 @@ class DBusIndicators::Impl
 {
 public:
   Impl(std::string const& dbus_name, DBusIndicators* owner);
+  virtual ~Impl() {}
 
   void CheckLocalService();
   void RequestSyncAll();

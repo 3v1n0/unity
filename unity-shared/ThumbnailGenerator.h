@@ -33,6 +33,8 @@ class Thumbnailer
 public:
   typedef std::shared_ptr<Thumbnailer> Ptr;
 
+  virtual ~Thumbnailer() {}
+
   virtual std::string GetName() const = 0;
 
   virtual bool Run(int size, std::string const& input_file, std::string& output_file, std::string& error_hint) = 0;

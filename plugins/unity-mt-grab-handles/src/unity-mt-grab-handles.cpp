@@ -373,7 +373,7 @@ UnityMTGrabHandlesScreen::donePaint()
     {
       if (handles->needsAnimate())
       {
-          handles->forEachHandle ([&](const unity::MT::GrabHandle::Ptr &h)
+          handles->forEachHandle ([this](const unity::MT::GrabHandle::Ptr &h)
 				  {
 				    h->damage (nux::Geometry (h->x (),
 							      h->y (),
@@ -422,7 +422,7 @@ UnityMTGrabHandlesWindow::allowHandles()
 void
 UnityMTGrabHandlesWindow::getOutputExtents(CompWindowExtents& output)
 {
-  auto f = [&] (const unity::MT::GrabHandle::Ptr &h)
+  auto f = [this, &output] (const unity::MT::GrabHandle::Ptr &h)
   {
     output.left = std::max (window->borderRect().left() + h->width () / 2, static_cast <unsigned int> (output.left));
     output.right = std::max (window->borderRect().right()  + h->width () / 2, static_cast <unsigned int> (output.right));
@@ -630,7 +630,7 @@ UnityMTGrabHandlesWindow::restackHandles()
   if (!mHandles)
     return;
 
-  mHandles->forEachHandle ([&](const unity::MT::GrabHandle::Ptr &h)
+  mHandles->forEachHandle ([this](const unity::MT::GrabHandle::Ptr &h)
                            { h->reposition (0, 0, unity::MT::PositionLock); });
 }
 

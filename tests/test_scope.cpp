@@ -49,6 +49,7 @@ class TestScope : public Test
 {
 public:
   TestScope() { }
+  virtual ~TestScope() {}
 
   virtual void SetUp()
   {

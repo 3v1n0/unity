@@ -80,8 +80,8 @@ void ScopeBar::AddScope(Scope::Ptr const& scope)
   layout_->AddView(icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(icon);
 
-  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
-  icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
+  icon->mouse_click.connect([this, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
+  icon->key_nav_focus_activate.connect([this, icon](nux::Area*){ SetActive(icon); });
 }
 
 void ScopeBar::Activate(std::string id)
@@ -282,7 +282,7 @@ void ScopeBar::AddProperties(debug::IntrospectionData& wrapper)
 
 std::string ScopeBar::GetActiveScopeId() const
 {
-  for (auto icon : icons_)
+  for (auto* icon : icons_)
   {
     if (icon->active)
       return icon->id;

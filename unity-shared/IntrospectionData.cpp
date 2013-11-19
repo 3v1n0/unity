@@ -119,6 +119,13 @@ IntrospectionData& IntrospectionData::add(std::string const& name, uint64_t valu
   return *this;
 }
 
+#if __WORDSIZE != 64
+IntrospectionData& IntrospectionData::add(std::string const& name, unsigned long)
+{
+  return add(name, static_cast<uint64_t>(value));
+}
+#endif
+
 IntrospectionData& IntrospectionData::add(std::string const& name, float value)
 {
   add_(builder_, name, ValueType::SIMPLE, {Variant(value)});

@@ -42,7 +42,7 @@ public:
   typedef std::function<void(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&)> DeferredIconRenderer;
 
   LauncherDragWindow(unsigned size, DeferredIconRenderer const&);
-  ~LauncherDragWindow();
+  virtual ~LauncherDragWindow();
 
   void SetAnimationTarget(int x, int y);
   void StartQuickAnimation();
