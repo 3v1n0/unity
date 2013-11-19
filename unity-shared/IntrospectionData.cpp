@@ -122,12 +122,12 @@ IntrospectionData& IntrospectionData::add(std::string const& name, uint64_t valu
 #if __WORDSIZE != 64
 IntrospectionData& IntrospectionData::add(std::string const& name, long value)
 {
-  return add(name, static_cast<int64_t>(value));
+  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, unsigned long value)
 {
-  return add(name, static_cast<uint64_t>(value));
+  add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
 }
 #endif
 
