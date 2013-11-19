@@ -86,6 +86,16 @@ Variant::Variant(uint64_t value)
   : Variant(g_variant_new_uint64(value))
 {}
 
+#if __WORDSIZE != 64
+Variant::Variant(long value)
+  : Variant(static_cast<int64_t>(value))
+{}
+
+Variant::Variant(unsigned long value)
+  : Variant(static_cast<uint64_t>(value))
+{}
+#endif
+
 Variant::Variant(bool value)
   : Variant(g_variant_new_boolean(value))
 {}
@@ -321,6 +331,10 @@ Variant& Variant::operator=(int32_t value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(uint32_t value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(int64_t value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(uint64_t value) { return operator=(Variant(value)); }
+#if __WORDSIZE != 64
+Variant& Variant::operator=(long value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(unsigned long value) { return operator=(Variant(value)); }
+#endif
 Variant& Variant::operator=(bool value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(double value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(float value) { return operator=(Variant(value)); }
