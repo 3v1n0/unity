@@ -93,10 +93,7 @@ SwitcherView::SwitcherView()
     return geo;
   });
 
-  animation_.updated.connect([this] (double p) {
-    PreLayoutManagement();
-    QueueDraw();
-  });
+  animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &SwitcherView::PreLayoutManagement)));
 }
 
 std::string SwitcherView::GetName() const
@@ -200,7 +197,6 @@ void SwitcherView::SaveLast()
 void SwitcherView::OnDetailSelectionIndexChanged(unsigned int index)
 {
   QueueRelayout();
-  QueueDraw();
 }
 
 void SwitcherView::OnDetailSelectionChanged(bool detail)
@@ -699,8 +695,6 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   std::list<RenderArg> results;
   nux::Geometry const& base = GetGeometry();
 
-  bool detail_selection = model_->detail_selection;
-
   background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
   background_geo.height = vertical_size;
 
@@ -709,6 +703,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
   if (model_)
   {
+    bool detail_selection = model_->detail_selection;
     int size = model_->Size();
     int padded_tile_size = tile_size + flat_spacing * 2;
     int max_width = base.width - border_size * 2;
@@ -844,7 +839,7 @@ void SwitcherView::PreLayoutManagement()
   double progress = animation_.GetCurrentValue();
 
   nux::Geometry background_geo;
-  last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), progress);
+  last_args_ = RenderArgsFlat(background_geo, model_ ? model_->SelectionIndex() : 0, progress);
 
   if (background_geo != last_background_)
   {
@@ -853,6 +848,8 @@ void SwitcherView::PreLayoutManagement()
     // Notify BackgroundEffectHelper
     geometry_changed.emit(this, last_background_);
   }
+
+  QueueDraw();
 }
 
 void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)

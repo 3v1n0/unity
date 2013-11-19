@@ -57,7 +57,6 @@ public:
   SwitcherModel::Ptr GetModel();
 
   nux::Property<bool> render_boxes;
-  nux::Property<bool> animate;
   nux::Property<int> border_size;
   nux::Property<int> flat_spacing;
   nux::Property<int> icon_size;
