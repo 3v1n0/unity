@@ -58,7 +58,6 @@ public:
   static void ProcessDamage(nux::Geometry const& geo);
   static bool HasDirtyHelpers();
   static bool HasEnabledHelpers();
-  static bool HasDamageableHelpers();
   static std::vector<nux::Geometry> const& GetBlurGeometries();
 
   static nux::Property<unity::BlurType> blur_type;
@@ -78,7 +77,7 @@ private:
   void OnEnabledChanged(bool value);
   void OnOwnerChanged(nux::View*);
   void SetupOwner(nux::View*);
-  void UpdateOwnerGeometry();
+  bool UpdateOwnerGeometry();
 
   nux::ObjectPtr<nux::BaseTexture> noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;

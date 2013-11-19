@@ -27,6 +27,7 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.background_effect_helper");
 
+const int BLUR_RADIUS = 3;
 const float sigma_high = 5.0f;
 const float sigma_med = 3.0f;
 const float sigma_low = 1.0f;
@@ -100,10 +101,11 @@ void BackgroundEffectHelper::SetupOwner(nux::View* view)
     connections_.Add(parent->geometry_changed.connect(cb));
   }
 
-  if (requested_blur_geometry_.IsNull())
-    UpdateOwnerGeometry();
-  else
+  if (!UpdateOwnerGeometry())
+  {
     DirtyCache();
+    UpdateBlurGeometries();
+  }
 }
 
 void BackgroundEffectHelper::SetGeometryGetter(GeometryGetterFunc const& func)
@@ -111,7 +113,7 @@ void BackgroundEffectHelper::SetGeometryGetter(GeometryGetterFunc const& func)
   geo_getter_func_ = func;
 }
 
-void BackgroundEffectHelper::UpdateOwnerGeometry()
+bool BackgroundEffectHelper::UpdateOwnerGeometry()
 {
   auto const& geo = geo_getter_func_ ? geo_getter_func_() : owner()->GetAbsoluteGeometry();
 
@@ -124,8 +126,12 @@ void BackgroundEffectHelper::UpdateOwnerGeometry()
 
       DirtyCache();
       UpdateBlurGeometries();
+
+      return true;
     }
   }
+
+  return false;
 }
 
 void BackgroundEffectHelper::UpdateBlurGeometries()
@@ -159,17 +165,6 @@ void BackgroundEffectHelper::ProcessDamage(nux::Geometry const& geo)
   }
 }
 
-bool BackgroundEffectHelper::HasDamageableHelpers()
-{
-  for (BackgroundEffectHelper* bg_effect_helper : registered_list_)
-  {
-    if (!bg_effect_helper->cache_dirty)
-      return true;
-  }
-
-  return false;
-}
-
 bool BackgroundEffectHelper::HasEnabledHelpers()
 {
   return !registered_list_.empty();
@@ -184,11 +179,13 @@ float BackgroundEffectHelper::GetBlurSigma()
 
 int BackgroundEffectHelper::GetBlurRadius()
 {
-  return GetBlurSigma() * 3;
+  return (blur_type != BLUR_NONE) ? GetBlurSigma() * BLUR_RADIUS : 0;
 }
 
 std::vector<nux::Geometry> const& BackgroundEffectHelper::GetBlurGeometries()
 {
+  /* TODO: to reduce useless glCopyTexSubImage2D during paint we should return
+   * here only damaged geometries */
   return blur_geometries_;
 }
 
@@ -212,9 +209,6 @@ void BackgroundEffectHelper::Register(BackgroundEffectHelper* self)
   }
 
   registered_list_.push_back(self);
-
-  if (!self->requested_blur_geometry_.IsNull())
-    UpdateBlurGeometries();
 }
 
 void BackgroundEffectHelper::Unregister(BackgroundEffectHelper* self)
