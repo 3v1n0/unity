@@ -47,6 +47,7 @@ public:
   IntrospectionData& add(std::string const& name, uint32_t);
   IntrospectionData& add(std::string const& name, uint64_t);
 #if __WORDSIZE != 64
+  IntrospectionData& add(std::string const& name, long);
   IntrospectionData& add(std::string const& name, unsigned long);
 #endif
   IntrospectionData& add(std::string const& name, float);

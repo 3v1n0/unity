@@ -56,6 +56,10 @@ public:
   explicit Variant(uint32_t);
   explicit Variant(int64_t);
   explicit Variant(uint64_t);
+#if __WORDSIZE != 64
+  explicit Variant(long);
+  explicit Variant(unsigned long);
+#endif
   explicit Variant(bool);
   explicit Variant(double);
   explicit Variant(float);
@@ -106,6 +110,10 @@ public:
   Variant& operator=(uint32_t);
   Variant& operator=(int64_t);
   Variant& operator=(uint64_t);
+#if __WORDSIZE != 64
+  Variant& operator=(long);
+  Variant& operator=(unsigned long);
+#endif
   Variant& operator=(bool);
   Variant& operator=(double);
   Variant& operator=(float);
