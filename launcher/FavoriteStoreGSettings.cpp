@@ -49,7 +49,7 @@ FavoriteStoreGSettings::FavoriteStoreGSettings()
   : ignore_signals_(false)
   , settings_(g_settings_new(SETTINGS_NAME.c_str()))
 {
-  favorites_changed_.Connect(settings_, "changed::"+SETTINGS_KEY, [&] (GSettings*, gchar*)
+  favorites_changed_.Connect(settings_, "changed::"+SETTINGS_KEY, [this] (GSettings*, gchar*)
   {
     Changed();
   });

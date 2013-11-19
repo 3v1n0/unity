@@ -36,7 +36,7 @@ class PlacesVScrollBar : public nux::VScrollBar
 {
 public:
   PlacesVScrollBar(NUX_FILE_LINE_PROTO);
-  ~PlacesVScrollBar();
+  virtual ~PlacesVScrollBar();
 
 protected:
   virtual void PreLayoutManagement();

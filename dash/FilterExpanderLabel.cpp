@@ -174,17 +174,17 @@ void FilterExpanderLabel::BuildLayout()
   SetLayout(layout_);
 
   // Lambda functions
-  auto mouse_expand = [&](int x, int y, unsigned long b, unsigned long k)
+  auto mouse_expand = [this](int x, int y, unsigned long b, unsigned long k)
   {
     expanded = !expanded;
   };
 
-  auto key_redraw = [&](nux::Area*, bool, nux::KeyNavDirection)
+  auto key_redraw = [this](nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   };
 
-  auto key_expand = [&](nux::Area*)
+  auto key_expand = [this](nux::Area*)
   {
     expanded = !expanded;
   };

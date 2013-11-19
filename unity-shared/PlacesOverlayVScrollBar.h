@@ -38,6 +38,7 @@ class PlacesOverlayVScrollBar: public PlacesVScrollBar
 {
 public:
   PlacesOverlayVScrollBar(NUX_FILE_LINE_PROTO);
+  virtual ~PlacesOverlayVScrollBar() {}
 
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);

@@ -42,6 +42,7 @@ class TmpView : public nux::View
 {
 public:
   TmpView(NUX_FILE_LINE_PROTO): View(NUX_FILE_LINE_PARAM) {}
+  virtual ~TmpView() {}
 
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -73,6 +74,7 @@ public:
   , write_alpha_(write_alpha)
   , rop_(ROP)
   {}
+  virtual ~TrackProgressLayer() {}
 
   virtual void Renderlayer(nux::GraphicsEngine& graphics_engine)
   {
@@ -270,7 +272,7 @@ void Track::SetupViews()
 
   mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
-  mouse_click.connect([&](int, int, unsigned long, unsigned long)
+  mouse_click.connect([this](int, int, unsigned long, unsigned long)
   {
     switch (play_state_)
     {

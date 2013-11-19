@@ -52,7 +52,7 @@ public:
   , parent_(parent)
   {
     LOG_DEBUG(logger) << "Hud init with name: " << dbus_name << "and path: " << dbus_path;
-    proxy_.connected.connect([&]() {
+    proxy_.connected.connect([this]() {
       LOG_DEBUG(logger) << "Hud Connected";
       parent_->connected = true;
     });

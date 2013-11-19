@@ -27,6 +27,8 @@
 
 class GestureBrokerTest : public ::testing::Test
 {
+ public:
+  virtual ~GestureBrokerTest() {}
  protected:
   virtual void SetUp()
   {

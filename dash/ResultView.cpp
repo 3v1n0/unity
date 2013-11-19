@@ -44,13 +44,13 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   , renderer_(NULL)
   , cached_result_(nullptr, nullptr, nullptr)
 {
-  expanded.changed.connect([&](bool value)
+  expanded.changed.connect([this](bool value)
   {
     QueueRelayout();
     NeedRedraw();
   });
 
-  desaturation_progress.changed.connect([&](float value)
+  desaturation_progress.changed.connect([this](float value)
   {
     NeedRedraw();
   });
@@ -80,7 +80,7 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
     renderer_->UnReference();
 
   renderer_ = renderer;
-  renderer->NeedsRedraw.connect([&]()
+  renderer->NeedsRedraw.connect([this]()
   {
     NeedRedraw();
   });

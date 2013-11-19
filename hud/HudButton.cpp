@@ -65,28 +65,28 @@ HudButton::HudButton(NUX_FILE_LINE_DECL)
 
   InitTheme();
 
-  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection)
+  key_nav_focus_change.connect([this](nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   });
 
-  fake_focused.changed.connect([&](bool)
+  fake_focused.changed.connect([this](bool)
   {
     QueueDraw();
   });
 
-  mouse_move.connect([&](int x, int y, int dx, int dy, unsigned int button, unsigned int key)
+  mouse_move.connect([this](int x, int y, int dx, int dy, unsigned int button, unsigned int key)
   {
     if (!fake_focused)
       fake_focused = true;
   });
 
-  mouse_enter.connect([&](int x, int y, unsigned int button, unsigned int key)
+  mouse_enter.connect([this](int x, int y, unsigned int button, unsigned int key)
   {
     fake_focused = true;
   });
 
-  mouse_leave.connect([&](int x, int y, unsigned int button, unsigned int key)
+  mouse_leave.connect([this](int x, int y, unsigned int button, unsigned int key)
   {
     fake_focused = false;
   });
@@ -94,7 +94,7 @@ HudButton::HudButton(NUX_FILE_LINE_DECL)
 
 void HudButton::InitTheme()
 {
-  is_rounded.changed.connect([&](bool)
+  is_rounded.changed.connect([this](bool)
   {
     nux::Geometry const& geo = GetGeometry();
     prelight_->Invalidate(geo);

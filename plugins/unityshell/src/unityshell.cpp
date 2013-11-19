@@ -395,7 +395,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompSize size(1, 20);
      _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
 
-     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * data)
+     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [this](GVariant * data)
      {
        unity::glib::String overlay_identity;
        gboolean can_maximise = FALSE;
@@ -2952,7 +2952,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       if (window->type() == CompWindowTypeDesktopMask) {
         if (!focus_desktop_timeout_)
         {
-          focus_desktop_timeout_.reset(new glib::Timeout(1000, [&] {
+          focus_desktop_timeout_.reset(new glib::Timeout(1000, [this] {
             for (CompWindow *w : screen->clientList())
             {
               if (!(w->type() & NO_FOCUS_MASK) && w->focus ())
@@ -3332,7 +3332,7 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 {
   if (!sources_.GetSource(local::RELAYOUT_TIMEOUT))
   {
-    sources_.AddTimeout(timeout, [&] {
+    sources_.AddTimeout(timeout, [this] {
       NeedsRelayout();
       Relayout();
 

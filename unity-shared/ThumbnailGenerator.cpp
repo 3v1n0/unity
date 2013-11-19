@@ -187,7 +187,7 @@ ThumbnailNotifier::Ptr ThumbnailGeneratorImpl::GetThumbnail(std::string const& u
 
   if (!thread_create_timer_ && thumbnail_thread_is_running_ == false)
   {
-    thread_create_timer_.reset(new glib::Timeout(0, [&]()
+    thread_create_timer_.reset(new glib::Timeout(0, [this]()
     {
       thumbnail_thread_is_running_ = true;
       pthread_create (&thumbnail_thread_, NULL, thumbnail_thread_start, this);
@@ -214,7 +214,7 @@ ThumbnailNotifier::Ptr ThumbnailGeneratorImpl::GetThumbnail(std::string const& u
 void ThumbnailGeneratorImpl::StartCleanupTimer()
 {
   if (!cleanup_timer_)
-      cleanup_timer_.reset(new glib::Timeout(CLEANUP_DURATION, [&]() { DoCleanup(); return false; }));
+      cleanup_timer_.reset(new glib::Timeout(CLEANUP_DURATION, [this]() { DoCleanup(); return false; }));
 }
 
 

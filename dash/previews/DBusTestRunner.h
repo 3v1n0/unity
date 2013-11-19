@@ -50,6 +50,7 @@ public:
     proxy_->connected.connect(sigc::mem_fun(this, &DBusTestRunner::OnProxyConnectionChanged));
     proxy_->disconnected.connect(sigc::mem_fun(this, &DBusTestRunner::OnProxyDisconnected));
   }
+  virtual ~DBusTestRunner() {}
 
   virtual void OnProxyConnectionChanged()
   {

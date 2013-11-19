@@ -32,6 +32,7 @@ class IMTextEntry : public nux::TextEntry
   NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntry);
 public:
   IMTextEntry();
+  virtual ~IMTextEntry() {}
   bool im_preedit();
 
 protected:

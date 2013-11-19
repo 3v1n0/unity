@@ -48,6 +48,7 @@ public:
   };
 
   ResultRenderer(NUX_FILE_LINE_PROTO);
+  virtual ~ResultRenderer() {}
 
   virtual void Render(nux::GraphicsEngine& GfxContext,
                       Result& row,

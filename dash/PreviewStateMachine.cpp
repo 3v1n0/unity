@@ -37,8 +37,8 @@ PreviewStateMachine::PreviewStateMachine()
     split_positions_[pos] = -1;
   }
 
-  left_results.changed.connect([&] (int value) { CheckPreviewRequirementsFulfilled();});
-  right_results.changed.connect([&] (int value) { CheckPreviewRequirementsFulfilled();});
+  left_results.changed.connect([this] (int value) { CheckPreviewRequirementsFulfilled();});
+  right_results.changed.connect([this] (int value) { CheckPreviewRequirementsFulfilled();});
 }
 
 PreviewStateMachine::~PreviewStateMachine()
