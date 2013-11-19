@@ -85,6 +85,14 @@ SwitcherView::SwitcherView()
   CaptureMouseDownAnyWhereElse(true);
   SetAcceptMouseWheelEvent(true);
 
+  SetBackgroundHelperGeometryGetter([this] {
+    // XXX: remove me when switcher will have a proper BaseWindow
+    auto geo = GetAbsoluteGeometry();
+    geo.OffsetPosition(last_background_.x, last_background_.y);
+    geo.SetSize(last_background_.width, last_background_.height);
+    return geo;
+  });
+
   animation_.updated.connect([this] (double p) {
     PreLayoutManagement();
     QueueDraw();
@@ -837,7 +845,14 @@ void SwitcherView::PreLayoutManagement()
 
   nux::Geometry background_geo;
   last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), progress);
-  last_background_ = background_geo;
+
+  if (background_geo != last_background_)
+  {
+    last_background_ = background_geo;
+
+    // Notify BackgroundEffectHelper
+    geometry_changed.emit(this, last_background_);
+  }
 }
 
 void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
