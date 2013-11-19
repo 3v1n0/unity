@@ -46,6 +46,8 @@ public:
     results_->end_transaction.connect(sigc::mem_fun(this, &ScopeDBusTestRunner::ResultsModelUpdated));
   }
 
+  virtual ~ScopeDBusTestRunner() {}
+
   void OnProxyConnectionChanged()
   {
     DBusTestRunner::OnProxyConnectionChanged();

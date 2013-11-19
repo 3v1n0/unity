@@ -261,17 +261,17 @@ WindowButtons::WindowButtons()
   controlled_window.changed.connect(sigc::mem_fun(this, &WindowButtons::OnControlledWindowChanged));
   focused.changed.connect(sigc::hide(sigc::mem_fun(this, &WindowButtons::QueueDraw)));
 
-  auto lambda_enter = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
+  auto lambda_enter = [this](int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
     mouse_enter.emit(x, y, button_flags, key_flags);
   };
 
-  auto lambda_leave = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
+  auto lambda_leave = [this](int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
     mouse_leave.emit(x, y, button_flags, key_flags);
   };
 
-  auto lambda_moved = [&](int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+  auto lambda_moved = [this](int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
   {
     mouse_move.emit(x, y, dx, dy, button_flags, key_flags);
   };

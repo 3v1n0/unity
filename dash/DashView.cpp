@@ -237,7 +237,7 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_displaying_ = true;
 
     // connect to nav left/right signals to request nav left/right movement.
-    preview_container_->navigate_left.connect([&] () {
+    preview_container_->navigate_left.connect([this] () {
       preview_navigation_mode_ = previews::Navigation::LEFT;
 
       // sends a message to all result views, sending the the uri of the current preview result
@@ -245,7 +245,7 @@ void DashView::BuildPreview(Preview::Ptr model)
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(ivs)", -1, g_variant_ref(last_activated_result_.Variant()), stored_activated_unique_id_.c_str()));
     });
 
-    preview_container_->navigate_right.connect([&] () {
+    preview_container_->navigate_right.connect([this] () {
       preview_navigation_mode_ = previews::Navigation::RIGHT;
 
       // sends a message to all result views, sending the the uri of the current preview result
@@ -253,7 +253,7 @@ void DashView::BuildPreview(Preview::Ptr model)
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(ivs)", 1, g_variant_ref(last_activated_result_.Variant()), stored_activated_unique_id_.c_str()));
     });
 
-    preview_container_->request_close.connect([&] () { ClosePreview(); });
+    preview_container_->request_close.connect([this] () { ClosePreview(); });
   }
   else
   {
@@ -303,7 +303,7 @@ void DashView::StartPreviewAnimation()
   split_animation_->SetStartValue(animate_split_value_);
   split_animation_->SetFinishValue(1.0f);
   split_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-  split_animation_->updated.connect([&](float const& linear_split_animate_value)
+  split_animation_->updated.connect([this](float const& linear_split_animate_value)
   {
     static na::EasingCurve split_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -319,7 +319,7 @@ void DashView::StartPreviewAnimation()
       preview_container_animation_->SetStartValue(animate_preview_container_value_);
       preview_container_animation_->SetFinishValue(1.0f);
       preview_container_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-      preview_container_animation_->updated.connect([&](float const& linear_preview_container_animate_value)
+      preview_container_animation_->updated.connect([this](float const& linear_preview_container_animate_value)
       {
         static na::EasingCurve preview_container_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -335,7 +335,7 @@ void DashView::StartPreviewAnimation()
           preview_animation_->SetStartValue(animate_preview_value_);
           preview_animation_->SetFinishValue(1.0f);
           preview_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-          preview_animation_->updated.connect([&](float const& linear_preview_animate_value)
+          preview_animation_->updated.connect([this](float const& linear_preview_animate_value)
           {
             animate_preview_value_ = linear_preview_animate_value;
             QueueDraw();
@@ -372,7 +372,7 @@ void DashView::EndPreviewAnimation()
   preview_animation_->SetStartValue(1.0f - animate_preview_value_);
   preview_animation_->SetFinishValue(1.0f);
   preview_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-  preview_animation_->updated.connect([&](float const& preview_value)
+  preview_animation_->updated.connect([this](float const& preview_value)
   {
     animate_preview_value_ = 1.0f - preview_value;
     QueueDraw();
@@ -386,7 +386,7 @@ void DashView::EndPreviewAnimation()
       preview_container_animation_->SetStartValue(1.0f - animate_preview_container_value_);
       preview_container_animation_->SetFinishValue(1.0f);
       preview_container_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-      preview_container_animation_->updated.connect([&](float const& linear_preview_container_animate_value)
+      preview_container_animation_->updated.connect([this](float const& linear_preview_container_animate_value)
       {
         static na::EasingCurve preview_container_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -401,7 +401,7 @@ void DashView::EndPreviewAnimation()
           split_animation_->SetStartValue(1.0f - animate_split_value_);
           split_animation_->SetFinishValue(1.0f);
           split_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-          split_animation_->updated.connect([&](float const& linear_split_animate_value)
+          split_animation_->updated.connect([this](float const& linear_split_animate_value)
           {
             static na::EasingCurve split_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -537,7 +537,7 @@ void DashView::SetupViews()
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
-  search_bar_->showing_filters.changed.connect([&] (bool showing)
+  search_bar_->showing_filters.changed.connect([this] (bool showing)
   {
     if (active_scope_view_)
     {
@@ -1220,10 +1220,10 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
   // set form factor used for the searches
   scope->form_factor = "desktop";
   scope->activated.connect(sigc::mem_fun(this, &DashView::OnResultActivatedReply));
-  scope->connected.changed.connect([&] (bool value) { });
+  scope->connected.changed.connect([this] (bool value) { });
 
   // Hook up to the new preview infrastructure
-  scope->preview_ready.connect([&] (LocalResult const& result, Preview::Ptr model)
+  scope->preview_ready.connect([this] (LocalResult const& result, Preview::Ptr model)
   {
     // HACK: Atm we don't support well the fact that a preview can be sent from
     // an ActionResponse and therefore transition does not work, this hack allows

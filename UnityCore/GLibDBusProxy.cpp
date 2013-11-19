@@ -136,7 +136,7 @@ void DBusProxy::Impl::StartReconnectionTimeout(unsigned timeout)
 {
   LOG_DEBUG(logger) << "Starting reconnection timeout for " << name_;
 
-  auto callback = [&]
+  auto callback = [this]
   {
     if (!proxy_)
       Connect();

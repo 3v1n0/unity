@@ -29,6 +29,8 @@ namespace performance {
 class Monitor
 {
 public:
+  virtual ~Monitor() {}
+
 	void Start();
 	GVariant* Stop();
 	virtual std::string GetName() const = 0;

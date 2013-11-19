@@ -44,7 +44,7 @@ unsigned UBusServer::RegisterInterest(std::string const& interest_name,
 void UBusServer::UnregisterInterest(unsigned connection_id)
 {
   auto it = std::find_if(interests_.begin(), interests_.end(),
-                         [&] (std::pair<std::string, UBusConnection::Ptr> const& p)
+                         [connection_id] (std::pair<std::string, UBusConnection::Ptr> const& p)
                          { return p.second->id == connection_id; });
   if (it != interests_.end()) interests_.erase(it);
 }

@@ -97,6 +97,8 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
       });
     }
 
+    virtual ~MockScrollBar() {}
+
     // ScrollDown/Up moves the mouse over the overlay scroll bar, then
     // moves it down/up by scroll_dy
     void ScrollDown(int scroll_dy)

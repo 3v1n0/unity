@@ -88,7 +88,7 @@ PanelMenuView::PanelMenuView()
   SetupWindowManagerSignals();
   SetupUBusManagerInterests();
 
-  style_changed_connection_ = panel::Style::Instance().changed.connect([&] {
+  style_changed_connection_ = panel::Style::Instance().changed.connect([this] {
     window_buttons_->ComputeContentSize();
     layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
 

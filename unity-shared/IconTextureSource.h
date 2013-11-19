@@ -46,6 +46,7 @@ public:
   };
 
   IconTextureSource();
+  virtual ~IconTextureSource() {}
 
   std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
 

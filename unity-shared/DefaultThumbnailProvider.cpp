@@ -36,6 +36,7 @@ public:
   DefaultThumbnailer(std::string const& name)
   : name(name)
   {}
+  virtual ~DefaultThumbnailer() {}
 
   std::string name;
 

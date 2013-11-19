@@ -37,6 +37,8 @@ class MockSwitcherController : public Controller::Impl
 public:
   typedef std::shared_ptr <MockSwitcherController> Ptr;
 
+  virtual ~MockSwitcherController() {}
+
   MOCK_METHOD3(Show, void(ShowMode, SortMode, std::vector<launcher::AbstractLauncherIcon::Ptr>));
   MOCK_METHOD1(Hide, void(bool));
   MOCK_METHOD0(Visible, bool());

@@ -26,6 +26,9 @@
 
 class WindowGestureTargetTest : public ::testing::Test
 {
+ public:
+  virtual ~WindowGestureTargetTest() {}
+
  protected:
   virtual void SetUp()
   {

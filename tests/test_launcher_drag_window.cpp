@@ -43,6 +43,7 @@ struct StubLauncherDragWindow : public LauncherDragWindow
 {
   struct DrawCallback
   {
+    virtual ~DrawCallback() {}
     MOCK_METHOD0(callback, void());
   };
 

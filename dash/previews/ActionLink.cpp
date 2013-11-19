@@ -80,12 +80,12 @@ void ActionLink::Init()
   font_hint.SetSetterFunction(sigc::mem_fun(this, &ActionLink::set_font_hint));
   font_hint.SetGetterFunction(sigc::mem_fun(this, &ActionLink::get_font_hint));
 
-  key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
+  key_nav_focus_change.connect([this] (nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   });
 
-  key_nav_focus_activate.connect([&](nux::Area*)
+  key_nav_focus_activate.connect([this](nux::Area*)
   {
     if (GetInputEventSensitivity())
       activate.emit(this, action_hint_);

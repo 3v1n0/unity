@@ -35,7 +35,7 @@ UScreen::UScreen()
 {
   size_changed_signal_.Connect(screen_, "size-changed", sigc::mem_fun(this, &UScreen::Changed));
   monitors_changed_signal_.Connect(screen_, "monitors-changed", sigc::mem_fun(this, &UScreen::Changed));
-  proxy_.Connect("Resuming", [&] (GVariant* data) { resuming.emit(); });
+  proxy_.Connect("Resuming", [this] (GVariant* data) { resuming.emit(); });
 
   Refresh();
 }
@@ -101,7 +101,7 @@ void UScreen::Changed(GdkScreen* screen)
   if (refresh_idle_)
     return;
 
-  refresh_idle_.reset(new glib::Idle([&] () {
+  refresh_idle_.reset(new glib::Idle([this] () {
     Refresh();
     refresh_idle_.reset();
 

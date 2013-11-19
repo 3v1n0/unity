@@ -33,7 +33,7 @@ FilterGenreButton::FilterGenreButton(std::string const& label, NUX_FILE_LINE_DEC
 {
   InitTheme();
 
-  state_change.connect([&](nux::Button* button)
+  state_change.connect([this](nux::Button* button)
   {
     if (filter_)
       filter_->active = Active();
@@ -45,7 +45,7 @@ FilterGenreButton::FilterGenreButton(NUX_FILE_LINE_DECL)
 {
   InitTheme();
 
-  state_change.connect([&](nux::Button* button)
+  state_change.connect([this](nux::Button* button)
   {
     if (filter_)
       filter_->active = Active();
@@ -59,7 +59,7 @@ void FilterGenreButton::SetFilter(FilterOption::Ptr const& filter)
 
   SetActive(filter_->active);
 
-  filter_->active.changed.connect([&](bool is_active)
+  filter_->active.changed.connect([this](bool is_active)
   {
     SetActive(is_active);
   });

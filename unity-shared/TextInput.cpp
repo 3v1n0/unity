@@ -74,7 +74,7 @@ void TextInput::Init()
   pango_entry_ = new IMTextEntry();
   pango_entry_->SetFontFamily(PANGO_ENTRY_DEFAULT_FONT_FAMILY.c_str());
   pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
-  pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
+  pango_entry_->cursor_moved.connect([this](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &TextInput::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &TextInput::OnEndKeyFocus));
 
@@ -93,7 +93,7 @@ void TextInput::Init()
   input_string.SetSetterFunction(sigc::mem_fun(this, &TextInput::set_input_string));
   im_active.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_active));
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_preedit));
-  input_hint.changed.connect([&](std::string const& s) { OnInputHintChanged(); });
+  input_hint.changed.connect([this](std::string const& s) { OnInputHintChanged(); });
 
 }
 

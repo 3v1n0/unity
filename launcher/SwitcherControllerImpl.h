@@ -44,6 +44,7 @@ struct Controller::Impl : public sigc::trackable
   Impl(Controller* obj,
        unsigned int load_timeout,
        Controller::WindowCreator const& create_window);
+  virtual ~Impl() {}
 
   void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state);

@@ -96,22 +96,22 @@ Style::Style()
   GtkSettings* settings = gtk_settings_get_default();
 
   _style_changed_signal.Connect(settings, "notify::gtk-theme-name",
-  [&] (GtkSettings*, GParamSpec*) {
+  [this] (GtkSettings*, GParamSpec*) {
     Refresh();
   });
 
   _font_changed_signal.Connect(settings, "notify::gtk-font-name",
-  [&] (GtkSettings*, GParamSpec*) {
+  [this] (GtkSettings*, GParamSpec*) {
     changed.emit();
   });
 
   _dpi_changed_signal.Connect(settings, "notify::gtk-xft-dpi",
-  [&] (GtkSettings*, GParamSpec*) {
+  [this] (GtkSettings*, GParamSpec*) {
     changed.emit();
   });
 
   _settings_changed_signal.Connect(_gsettings, "changed::" + PANEL_TITLE_FONT_KEY,
-  [&] (GSettings*, gchar*) {
+  [this] (GSettings*, gchar*) {
     changed.emit();
   });
 

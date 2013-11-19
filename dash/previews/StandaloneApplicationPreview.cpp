@@ -65,6 +65,7 @@ public:
     layout->AddView(view, 1, nux::MINOR_POSITION_CENTER);
     SetLayout(layout);
   }
+  virtual ~DummyView() {}
   
   // Keyboard navigation
   bool AcceptKeyNavFocus()
@@ -144,7 +145,7 @@ void TestRunner::Init ()
   container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
   container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
   container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
-  container_->request_close.connect([&]() { exit(0); });
+  container_->request_close.connect([this]() { exit(0); });
 
   DummyView* dummyView = new DummyView(container_.GetPointer());
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -243,7 +244,7 @@ The service allows users to communicate with peers by voice, video, and instant 
 
 void TestRunner::NavLeft()
 {
-  preview_wait_timer_.reset(new glib::Timeout(2000, [&] () {
+  preview_wait_timer_.reset(new glib::Timeout(2000, [this] () {
 
 
     std::stringstream app_name;

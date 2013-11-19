@@ -68,7 +68,7 @@ public:
   , nav_complete_(0)
   , relative_nav_index_(0)
   {
-    geometry_changed.connect([&](nux::Area*, nux::Geometry& geo)
+    geometry_changed.connect([this](nux::Area*, nux::Geometry& geo)
     {
       // Need to update the preview geometries when updating the container geo.
       UpdateAnimationProgress(progress_, curve_progress_);
@@ -229,7 +229,7 @@ public:
 
   void StartPreviewWait()
   {
-    preview_wait_timer_.reset(new glib::Timeout(PREVIEW_SPINNER_WAIT, [&] () {
+    preview_wait_timer_.reset(new glib::Timeout(PREVIEW_SPINNER_WAIT, [this] () {
 
       if (waiting_preview_)
         return false;
@@ -469,7 +469,7 @@ void PreviewContainer::SetupViews()
   AddChild(nav_left_);
   nav_left_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_left_->SetMaximumWidth(style.GetNavigatorWidth());
-  nav_left_->activated.connect([&]() { navigate_left.emit(); });
+  nav_left_->activated.connect([this]() { navigate_left.emit(); });
   layout_content_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   preview_layout_ = new PreviewContent(this);
@@ -481,13 +481,13 @@ void PreviewContainer::SetupViews()
   AddChild(nav_right_);
   nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
-  nav_right_->activated.connect([&]() { navigate_right.emit(); });
+  nav_right_->activated.connect([this]() { navigate_right.emit(); });
   layout_content_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout_content_->AddSpace(0, 1);
 
   layout->AddSpace(0, 1);
 
-  preview_layout_->start_navigation.connect([&]()
+  preview_layout_->start_navigation.connect([this]()
   {
     // reset animation clock.
     if (navigation_count_ == 0)
@@ -500,19 +500,19 @@ void PreviewContainer::SetupViews()
     QueueAnimation();
   });
 
-  preview_layout_->continue_navigation.connect([&]()
+  preview_layout_->continue_navigation.connect([this]()
   {
     QueueAnimation(); 
   });
 
-  preview_layout_->end_navigation.connect([&]()
+  preview_layout_->end_navigation.connect([this]()
   {
     navigation_count_ = 0;
     navigation_progress_speed_ = 0;
   });
 
-  navigate_right.connect( [&]() { preview_layout_->StartPreviewWait(); } );
-  navigate_left.connect( [&]() { preview_layout_->StartPreviewWait(); } );
+  navigate_right.connect( [this]() { preview_layout_->StartPreviewWait(); } );
+  navigate_left.connect( [this]() { preview_layout_->StartPreviewWait(); } );
 }
 
 void PreviewContainer::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)

@@ -28,6 +28,7 @@ class GesturalWindowSwitcherMock : public nux::GestureTarget
 {
   public:
     GesturalWindowSwitcherMock() {}
+    virtual ~GesturalWindowSwitcherMock() {}
 
     virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event)
     {

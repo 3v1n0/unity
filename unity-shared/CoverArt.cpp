@@ -160,7 +160,7 @@ void CoverArt::StartWaiting()
   rotate_matrix_.Rotate_z(0.0f);
   rotation_ = 0.0f;
 
-  spinner_timeout_.reset(new glib::TimeoutSeconds(IMAGE_TIMEOUT, [&]
+  spinner_timeout_.reset(new glib::TimeoutSeconds(IMAGE_TIMEOUT, [this]
   {
     StopWaiting();
 
