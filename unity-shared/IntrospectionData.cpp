@@ -123,11 +123,13 @@ IntrospectionData& IntrospectionData::add(std::string const& name, uint64_t valu
 IntrospectionData& IntrospectionData::add(std::string const& name, long value)
 {
   add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  return *this;
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, unsigned long value)
 {
   add_(builder_, name, ValueType::SIMPLE, {Variant(value)});
+  return *this;
 }
 #endif
 
