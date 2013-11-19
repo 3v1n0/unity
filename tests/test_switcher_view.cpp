@@ -50,11 +50,13 @@ struct TestSwitcherView : testing::Test
   struct MockSwitcherView : SwitcherView
   {
     MOCK_METHOD0(QueueDraw, void());
+    double GetCurrentProgress() const { return animation_.GetCurrentValue(); }
 
     using SwitcherView::UpdateRenderTargets;
     using SwitcherView::ResizeRenderTargets;
-    using SwitcherView::GetCurrentProgress;
     using SwitcherView::SpreadSize;
+    using SwitcherView::StartAnimation;
+    using SwitcherView::animation_;
     using SwitcherView::text_view_;
     using SwitcherView::icon_renderer_;
     using SwitcherView::model_;
@@ -99,7 +101,6 @@ TEST_F(TestSwitcherView, Initiate)
 {
   const int VERTICAL_PADDING = 45;
   EXPECT_FALSE(switcher.render_boxes);
-  EXPECT_TRUE(switcher.animate);
   EXPECT_EQ(switcher.border_size, 50);
   EXPECT_EQ(switcher.flat_spacing, 20);
   EXPECT_EQ(switcher.icon_size, 128);
@@ -113,6 +114,7 @@ TEST_F(TestSwitcherView, Initiate)
   ASSERT_NE(switcher.text_view_, nullptr);
   ASSERT_NE(switcher.icon_renderer_, nullptr);
   EXPECT_EQ(switcher.icon_renderer_->pip_style, ui::OVER_TILE);
+  EXPECT_DOUBLE_EQ(switcher.GetCurrentProgress(), 0.0f);
 }
 
 TEST_F(TestSwitcherView, SetModel)
@@ -131,17 +133,14 @@ TEST_F(TestSwitcherView, SetModel)
   EXPECT_FALSE(switcher.model_->detail_selection_index.changed.empty());
 }
 
-TEST_F(TestSwitcherView, Animate)
+TEST_F(TestSwitcherView, SkipAnimation)
 {
-  switcher.animate = false;
-  EXPECT_EQ(switcher.GetCurrentProgress(), 1.0f);
+  EXPECT_CALL(switcher, QueueDraw());
+  switcher.StartAnimation();
 
   EXPECT_CALL(switcher, QueueDraw());
-  switcher.animate = true;
-  EXPECT_EQ(switcher.GetCurrentProgress(), 0.0f);
-
-  switcher.animate = false;
-  EXPECT_EQ(switcher.GetCurrentProgress(), 1.0f);
+  switcher.SkipAnimation();
+  EXPECT_DOUBLE_EQ(switcher.GetCurrentProgress(), 1.0f);
 }
 
 

@@ -93,10 +93,7 @@ SwitcherView::SwitcherView()
     return geo;
   });
 
-  animation_.updated.connect([this] (double p) {
-    PreLayoutManagement();
-    QueueDraw();
-  });
+  animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &SwitcherView::PreLayoutManagement)));
 }
 
 std::string SwitcherView::GetName() const
@@ -200,7 +197,6 @@ void SwitcherView::SaveLast()
 void SwitcherView::OnDetailSelectionIndexChanged(unsigned int index)
 {
   QueueRelayout();
-  QueueDraw();
 }
 
 void SwitcherView::OnDetailSelectionChanged(bool detail)
@@ -694,12 +690,11 @@ void GetFlatIconPositions (int n_flat_icons,
   }
 }
 
-std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress)
+bool SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress)
 {
-  std::list<RenderArg> results;
+  bool any_changed = true;
+  last_args_.clear();
   nux::Geometry const& base = GetGeometry();
-
-  bool detail_selection = model_->detail_selection;
 
   background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
   background_geo.height = vertical_size;
@@ -709,6 +704,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
   if (model_)
   {
+    bool detail_selection = model_->detail_selection;
     int size = model_->Size();
     int padded_tile_size = tile_size + flat_spacing * 2;
     int max_width = base.width - border_size * 2;
@@ -760,6 +756,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     int i = 0;
     int y = base.y + base.height / 2;
     x += border_size;
+    auto& results = last_args_;
+
     for (auto const& icon : *model_)
     {
       RenderArg arg = CreateBaseArgForIcon(icon);
@@ -819,22 +817,39 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       ++i;
     }
 
-    if (saved_args_.size () == results.size () && progress < 1.0f)
-    {
-      std::list<RenderArg> end = results;
-      results.clear();
+    bool result_size_changed = (saved_args_.size() != results.size());
+    any_changed = result_size_changed;
 
-      std::list<RenderArg>::iterator start_it, end_it;
-      for (start_it = saved_args_.begin(), end_it = end.begin(); start_it != saved_args_.end(); ++start_it, ++end_it)
+    if (!result_size_changed && progress < 1.0f)
+    {
+      auto& end = results;
+
+      for (auto start_it = saved_args_.begin(), end_it = end.begin(); start_it != saved_args_.end(); ++start_it, ++end_it)
       {
-        results.push_back(InterpolateRenderArgs(*start_it, *end_it, progress));
+        if (*start_it != *end_it)
+        {
+          any_changed = true;
+
+          if (start_it->render_center == end_it->render_center &&
+              start_it->rotation == end_it->rotation)
+          {
+            /* If a value that we don't animate has changed, we only care about
+             * redrawing the icons once, so we return true here, but we also
+             * update the saved RenderArg so that next time this function
+             * will be called, we don't consider it changed (unless reprocessed). */
+            *start_it = *end_it;
+            continue;
+          }
+
+          *end_it = InterpolateRenderArgs(*start_it, *end_it, progress);
+        }
       }
 
       background_geo = InterpolateBackground(saved_background_, background_geo, progress);
     }
   }
 
-  return results;
+  return any_changed;
 }
 
 void SwitcherView::PreLayoutManagement()
@@ -844,7 +859,7 @@ void SwitcherView::PreLayoutManagement()
   double progress = animation_.GetCurrentValue();
 
   nux::Geometry background_geo;
-  last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), progress);
+  bool any_changed = RenderArgsFlat(background_geo, model_ ? model_->SelectionIndex() : 0, progress);
 
   if (background_geo != last_background_)
   {
@@ -852,6 +867,12 @@ void SwitcherView::PreLayoutManagement()
 
     // Notify BackgroundEffectHelper
     geometry_changed.emit(this, last_background_);
+
+    QueueDraw();
+  }
+  else if (any_changed)
+  {
+    QueueDraw();
   }
 }
 
