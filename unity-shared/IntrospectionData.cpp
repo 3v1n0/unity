@@ -120,7 +120,7 @@ IntrospectionData& IntrospectionData::add(std::string const& name, uint64_t valu
 }
 
 #if __WORDSIZE != 64
-IntrospectionData& IntrospectionData::add(std::string const& name, unsigned long)
+IntrospectionData& IntrospectionData::add(std::string const& name, unsigned long value)
 {
   return add(name, static_cast<uint64_t>(value));
 }
