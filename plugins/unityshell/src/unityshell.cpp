@@ -394,8 +394,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompSize size(1, 20);
      _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
 
-     BackgroundEffectHelper::updates_enabled = true;
-
      ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [this](GVariant * data)
      {
        unity::glib::String overlay_identity;
@@ -432,6 +430,16 @@ UnityScreen::UnityScreen(CompScreen* screen)
     wm.terminate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
 
     AddChild(&screen_introspection_);
+
+    /* Create blur backup texture */
+    auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+    gpu_device->backup_texture0_ =
+        gpu_device->CreateSystemCapableDeviceTexture(screen->width(), screen->height(),
+                                                     1, nux::BITFMT_R8G8B8A8,
+                                                     NUX_TRACKER_LOCATION);
+
+    auto const& blur_update_cb = sigc::mem_fun(this, &UnityScreen::DamageBlurUpdateRegion);
+    BackgroundEffectHelper::blur_region_needs_update_.connect(blur_update_cb);
 
     /* Track whole damage on the very first frame */
     cScreen->damageScreen();
@@ -734,6 +742,11 @@ void UnityScreen::OnPanelStyleChanged()
   }
 }
 
+void UnityScreen::DamageBlurUpdateRegion(nux::Geometry const& blur_update)
+{
+  cScreen->damageRegion(CompRegionFromNuxGeo(blur_update));
+}
+
 void UnityScreen::paintDisplay()
 {
   CompOutput *output = _last_output;
@@ -751,27 +764,49 @@ void UnityScreen::paintDisplay()
   if (old_read_binding != current_draw_binding)
     (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_BINDING_EXT, current_draw_binding);
 #else
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_draw_binding);
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old_read_binding);
+  current_draw_binding = old_read_binding;
 #endif
 
-  /* If we have dirty helpers re-copy the backbuffer
-   * into a texture
-   *
-   * TODO: Make this faster by only copying the bits we
-   * need as opposed to the whole readbuffer */
+  BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
+
+  // If we have dirty helpers re-copy the backbuffer into a texture
   if (dirty_helpers_on_this_frame_)
   {
+    /* We are using a CompRegion here so that we can combine rectangles
+     * where it might make sense to. Saves calls into OpenGL */
+    CompRegion blur_region;
+
+    for (auto const& blur_geometry : BackgroundEffectHelper::GetBlurGeometries())
+    {
+      auto blur_rect = CompRectFromNuxGeo(blur_geometry);
+      blur_region += (blur_rect & *output);
+    }
+
+    /* Copy from the read buffer into the backup texture */
     auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
-    auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-    gpu_device->backup_texture0_ =
-      graphics_engine->CreateTextureFromBackBuffer(0, 0, screen->width(), screen->height());
+    GLuint backup_texture_id = gpu_device->backup_texture0_->GetOpenGLID();
+    GLuint surface_target = gpu_device->backup_texture0_->GetSurfaceLevel(0)->GetSurfaceTarget();
+
+    CHECKGL(glEnable(surface_target));
+    CHECKGL(glBindTexture(surface_target, backup_texture_id));
+
+    for (CompRect const& rect : blur_region.rects())
+    {
+      int x = nux::Clamp<int>(rect.x(), 0, screen->width());
+      int y = nux::Clamp<int>(screen->height() - rect.y2(), 0, screen->height());
+      int width = std::min<int>(screen->width() - rect.x(), rect.width());
+      int height = std::min<int>(screen->height() - y, rect.height());
+
+      CHECKGL(glCopyTexSubImage2D(surface_target, 0, x, y, x, y, width, height));
+    }
+
+    CHECKGL(glDisable(surface_target));
+
     back_buffer_age_ = 0;
   }
 
   nux::Geometry const& outputGeo = NuxGeometryFromCompRect(*output);
-  BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
-
   wt->GetWindowCompositor().SetReferenceFramebuffer(current_draw_binding, old_read_binding, outputGeo);
 
   nuxPrologue();
@@ -3351,6 +3386,12 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
 void UnityScreen::outputChangeNotify()
 {
   screen->outputChangeNotify ();
+
+  auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+  gpu_device->backup_texture0_ =
+      gpu_device->CreateSystemCapableDeviceTexture(screen->width(), screen->height(),
+                                                   1, nux::BITFMT_R8G8B8A8,
+                                                   NUX_TRACKER_LOCATION);
 
   ScheduleRelayout(500);
 }

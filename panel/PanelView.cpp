@@ -77,7 +77,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   rop.Blend = true;
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
 
-  if (Settings::Instance().GetLowGfxMode() == false)
+  if (!Settings::Instance().GetLowGfxMode())
   {
     rop.SrcBlend = GL_ZERO;
     rop.DstBlend = GL_SRC_COLOR;
@@ -151,7 +151,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 PanelView::~PanelView()
 {
   indicator::EntryLocationMap locations;
-  remote_->SyncGeometries(GetName() + boost::lexical_cast<std::string>(monitor_), locations);
+  remote_->SyncGeometries(GetName() + std::to_string(monitor_), locations);
 }
 
 Window PanelView::GetTrayXid() const
@@ -258,15 +258,14 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (IsTransparent())
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
 
     if (BackgroundEffectHelper::blur_type != BLUR_NONE)
     {
-      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion();
     }
     else
     {
-      bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo);
+      bg_blur_texture_ = bg_effect_helper_.GetRegion();
     }
 
     if (bg_blur_texture_.IsValid())
@@ -313,7 +312,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (overlay_is_open_ && Settings::Instance().GetLowGfxMode() == false)
+    if (overlay_is_open_ && !Settings::Instance().GetLowGfxMode())
     {
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_darken_layer_.get());
 
@@ -336,7 +335,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-  if (!overlay_is_open_ || GfxContext.UsingGLSLCodePath() == false)
+  if (!overlay_is_open_ || !GfxContext.UsingGLSLCodePath())
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_layer_.get());
 
   GfxContext.PopClippingRectangle();
@@ -736,7 +735,7 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  std::string panel_id = GetName() + boost::lexical_cast<std::string>(monitor_);
+  std::string panel_id = GetName() + std::to_string(monitor_);
 
   if (menu_view_->GetControlsActive())
     menu_view_->GetGeometryForSync(locations);

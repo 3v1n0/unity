@@ -277,6 +277,8 @@ private:
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
+  void DamageBlurUpdateRegion(nux::Geometry const&);
+
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 

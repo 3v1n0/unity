@@ -108,6 +108,7 @@ protected:
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
 
+  virtual void PreLayoutManagement();
   virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state);
 
@@ -157,7 +158,6 @@ private:
 
   int last_icon_selected_;
   int last_detail_icon_selected_;
-  bool target_sizes_set_;
   bool check_mouse_first_time_;
 
   DeltaTracker delta_tracker_;

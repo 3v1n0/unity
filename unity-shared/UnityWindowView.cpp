@@ -213,11 +213,11 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
-    bg_texture_ = bg_helper_.GetBlurRegion(blur_geo);
+    bg_texture_ = bg_helper_.GetBlurRegion();
   }
   else
   {
-    bg_texture_ = bg_helper_.GetRegion(blur_geo);
+    bg_texture_ = bg_helper_.GetRegion();
   }
 
   if (bg_texture_.IsValid())

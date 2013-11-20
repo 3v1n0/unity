@@ -52,7 +52,7 @@ public:
    * Call when the interface is hiding, saves on resources
    */
   void AboutToHide();
-  
+
   /*
    * Disables the blur, if you need it disabled. can not re-enable it.
    */
@@ -62,7 +62,12 @@ public:
    * Needed internally, should be called with yourself as the owner as soon as possible
    */
   void SetOwner(nux::View *owner);
-  
+
+  /*
+   * Call this whenever the interface size changes: it should be called before the drawing loop happens.
+   */
+  void UpdateBlurBackgroundSize(nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, bool force_edges=false);
+
   /*
    * Draws the entire stack of visuals using direct rendering, use in the Draw() call, not DrawContent()
    * 

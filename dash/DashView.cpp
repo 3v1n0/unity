@@ -478,6 +478,7 @@ void DashView::AboutToShow()
 
   overlay_window_buttons_->Show();
 
+  renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
   renderer_.AboutToShow();
 }
 
@@ -592,6 +593,8 @@ void DashView::Relayout()
   if (preview_displaying_)
     preview_container_->SetGeometry(layout_->GetGeometry());
 
+  renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
+
   QueueDraw();
 }
 
@@ -639,12 +642,9 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   panel::Style &panel_style = panel::Style::Instance();
-
-  nux::Geometry renderer_geo_abs(GetAbsoluteGeometry());
-  renderer_geo_abs.y += panel_style.panel_height;
-  renderer_geo_abs.height -= panel_style.panel_height;
-
+  nux::Geometry const& renderer_geo_abs(GetRenderAbsoluteGeometry());
   nux::Geometry renderer_geo(GetGeometry());
+
   renderer_geo.y += panel_style.panel_height;
   renderer_geo.height += panel_style.panel_height;
 
@@ -1674,6 +1674,16 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
 nux::Geometry const& DashView::GetContentGeometry() const
 {
   return content_geo_;
+}
+
+nux::Geometry DashView::GetRenderAbsoluteGeometry() const
+{
+  panel::Style &panel_style = panel::Style::Instance();
+
+  nux::Geometry renderer_geo_abs(GetAbsoluteGeometry());
+  renderer_geo_abs.y += panel_style.panel_height;
+  renderer_geo_abs.height -= panel_style.panel_height;
+  return renderer_geo_abs;
 }
 
 }
