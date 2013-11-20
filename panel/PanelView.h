@@ -84,7 +84,7 @@ protected:
 
   // Introspectable methods
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
   void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);

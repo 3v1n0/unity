@@ -25,7 +25,6 @@
 #include <Nux/HLayout.h>
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
-#include <UnityCore/Variant.h>
 
 namespace
 {
@@ -61,9 +60,9 @@ std::string ActionButton::GetName() const
   return "ActionButton";
 }
 
-void ActionButton::AddProperties(GVariantBuilder* builder)
+void ActionButton::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("action", action_hint_)
     .add("label", label_)

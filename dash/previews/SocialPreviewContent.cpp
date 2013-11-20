@@ -309,8 +309,9 @@ std::string SocialPreviewContent::GetName() const
   return "SocialPreviewContent";
 }
 
-void SocialPreviewContent::AddProperties(GVariantBuilder* builder)
+void SocialPreviewContent::AddProperties(debug::IntrospectionData& introspection)
 {
+  introspection.add(GetAbsoluteGeometry());
 }
 
 }

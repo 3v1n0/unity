@@ -23,7 +23,6 @@
 #include "UScreen.h"
 
 #include <NuxCore/Logger.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -1544,12 +1543,11 @@ void PluginAdapter::OnWindowClosed(CompWindow *w)
     _last_focused_window = NULL;
 }
 
-void PluginAdapter::AddProperties(GVariantBuilder* builder)
+void PluginAdapter::AddProperties(debug::IntrospectionData& wrapper)
 {
-  unity::variant::BuilderWrapper wrapper(builder);
   wrapper.add(GetScreenGeometry())
          .add("workspace_count", WorkspaceCount())
-         .add("active_window", (uint64_t)GetActiveWindow())
+         .add("active_window", GetActiveWindow())
          .add("screen_grabbed", IsScreenGrabbed())
          .add("scale_active", IsScaleActive())
          .add("scale_active_for_group", IsScaleActiveForGroup())

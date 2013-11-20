@@ -680,6 +680,30 @@ TEST(TestGLibVariant, GetVariant)
   EXPECT_FALSE(v4.GetVariant());
 }
 
+TEST(TestGLibVariant, FromVector)
+{
+  std::vector<int32_t> values(g_random_int_range(1, 10));
 
+  for (unsigned i = 0; i < values.capacity(); ++i)
+    values[i] = g_random_int_range(G_MININT32, G_MAXINT32);
+
+  auto const& variant = Variant::FromVector(values);
+  ASSERT_TRUE(g_variant_is_container(variant));
+  ASSERT_EQ(values.size(), g_variant_n_children(variant));
+  ASSERT_TRUE(g_variant_is_of_type(variant, G_VARIANT_TYPE_ARRAY));
+
+  for (unsigned i = 0; i < values.size(); ++i)
+    ASSERT_EQ(values[i], g_variant_get_int32(g_variant_get_child_value(variant, i)));
+}
+
+TEST(TestGLibVariant, FromVectorEmpty)
+{
+  std::vector<string> empty;
+
+  auto const& variant = Variant::FromVector(empty);
+  ASSERT_TRUE(g_variant_is_container(variant));
+  ASSERT_EQ(0, g_variant_n_children(variant));
+  EXPECT_TRUE(g_variant_is_of_type(variant, G_VARIANT_TYPE_ARRAY));
+}
 
 } // Namespace

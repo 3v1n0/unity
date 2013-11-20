@@ -190,8 +190,9 @@ std::string SocialPreviewComments::GetName() const
   return "SocialPreviewComments";
 }
 
-void SocialPreviewComments::AddProperties(GVariantBuilder* builder)
+void SocialPreviewComments::AddProperties(debug::IntrospectionData& introspection)
 {
+  introspection.add(GetAbsoluteGeometry());
 }
 
 }

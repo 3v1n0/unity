@@ -22,7 +22,6 @@
 #include "AbstractLauncherIcon.h"
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -38,9 +37,9 @@ std::string LauncherModel::GetName() const
   return "LauncherModel";
 }
 
-void LauncherModel::AddProperties(GVariantBuilder* builder)
+void LauncherModel::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("selection", selection_);
 }
 

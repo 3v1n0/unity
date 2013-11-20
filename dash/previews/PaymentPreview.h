@@ -60,7 +60,7 @@ public:
 
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   // Create and connect an action link to OnActionLinkActivated
   nux::ObjectPtr<ActionLink> CreateLink(dash::Preview::ActionPtr action);

@@ -84,9 +84,9 @@ public:
     return "PreviewContent";
   }
 
-  void AddProperties(GVariantBuilder* builder)
+  void AddProperties(debug::IntrospectionData& introspection)
   {
-    variant::BuilderWrapper(builder)
+    introspection
       .add("animating", animating_)
       .add("animation_progress", progress_)
       .add("waiting_preview", waiting_preview_)
@@ -444,9 +444,9 @@ std::string PreviewContainer::GetName() const
   return "PreviewContainer";
 }
 
-void PreviewContainer::AddProperties(GVariantBuilder* builder)
+void PreviewContainer::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("navigate-left-enabled", !IsNavigationDisabled(Navigation::LEFT))
     .add("navigate-right-enabled", !IsNavigationDisabled(Navigation::RIGHT));

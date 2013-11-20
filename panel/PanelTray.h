@@ -51,7 +51,7 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   bool IdleSync();

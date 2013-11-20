@@ -18,7 +18,6 @@
  */
 
 #include "CoverflowResultView.h"
-#include <UnityCore/Variant.h>
 #include "unity-shared/IconLoader.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/DashStyle.h"

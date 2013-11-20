@@ -148,25 +148,20 @@ LauncherIcon::GetName() const
   return "LauncherIcon";
 }
 
-void
-LauncherIcon::AddProperties(GVariantBuilder* builder)
+void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
 {
-  GVariantBuilder monitors_builder;
-  g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
-
+  std::vector<bool> monitors;
   for (unsigned i = 0; i < monitors::MAX; ++i)
-    g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
+    monitors.push_back(IsVisibleOnMonitor(i));
 
-  unity::variant::BuilderWrapper(builder)
-  .add("center_x", _center[0].x)
-  .add("center_y", _center[0].y)
-  .add("center_z", _center[0].z)
+  introspection
+  .add("center", _center[0])
   .add("related_windows", Windows().size())
   .add("icon_type", unsigned(_icon_type))
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
   .add("shortcut", _shortcut)
-  .add("monitors_visibility", g_variant_builder_end(&monitors_builder))
+  .add("monitors_visibility", static_cast<GVariant*>(glib::Variant::FromVector(monitors)))
   .add("active", GetQuirk(Quirk::ACTIVE))
   .add("visible", GetQuirk(Quirk::VISIBLE))
   .add("urgent", GetQuirk(Quirk::URGENT))

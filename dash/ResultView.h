@@ -85,7 +85,7 @@ public:
 
   std::string GetName() const;
   ResultIterator GetIteratorAtRow(unsigned row);
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   IntrospectableList GetIntrospectableChildren();
 
   virtual int GetSelectedIndex() const;

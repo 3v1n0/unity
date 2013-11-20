@@ -34,7 +34,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
- 
+
 #include "ApplicationPreview.h"
 #include "ActionButton.h"
 #include "PreviewInfoHintWidget.h"
@@ -103,9 +103,9 @@ std::string ApplicationPreview::GetName() const
   return "ApplicationPreview";
 }
 
-void ApplicationPreview::AddProperties(GVariantBuilder* builder)
+void ApplicationPreview::AddProperties(debug::IntrospectionData& introspection)
 {
-  Preview::AddProperties(builder);
+  Preview::AddProperties(introspection);
 }
 
 void ApplicationPreview::SetupViews()

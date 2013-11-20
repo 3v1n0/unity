@@ -78,7 +78,7 @@ protected:
   bool _accept_key_nav_focus;
 
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   virtual bool DoCanFocus();
   glib::Object<GdkPixbuf> _pixbuf_cached;
 

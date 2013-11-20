@@ -62,7 +62,7 @@ class LauncherIconsTests(LauncherTestCase):
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
         """Tests that the bfb tooltip disappear when the dash is opened."""
         bfb = self.unity.launcher.model.get_bfb_icon()
-        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.move(bfb.center.x, bfb.center.y)
 
         self.assertThat(lambda: bfb.get_tooltip(), Eventually(NotEquals(None)))
         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(True)))
@@ -77,7 +77,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.unity.dash.ensure_hidden)
 
         bfb = self.unity.launcher.model.get_bfb_icon()
-        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.move(bfb.center.x, bfb.center.y)
 
         # Tooltips are lazy-created  in Unity, so if the BFB tooltip has never
         # been shown before, get_tooltip will return None. If that happens, then
@@ -268,7 +268,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.keybinding, "expo/cancel")
 
         bfb = self.unity.launcher.model.get_bfb_icon()
-        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.move(bfb.center.x, bfb.center.y)
         self.mouse.click(button=3)
 
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))

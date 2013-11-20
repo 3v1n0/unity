@@ -37,7 +37,7 @@ int GetMonitor() const;
 
 protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   void UpdateMonitor();

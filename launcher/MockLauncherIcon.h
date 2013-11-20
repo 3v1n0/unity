@@ -83,7 +83,7 @@ public:
 
   std::string GetName() const { return "MockLauncherIcon"; }
 
-  void AddProperties(GVariantBuilder* builder) {}
+  void AddProperties(debug::IntrospectionData& introspection) {}
 
   void ShowTooltip() { is_tooltip_visible_ = true; }
   void HideTooltip() { is_tooltip_visible_ = false; }

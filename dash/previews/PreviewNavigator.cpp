@@ -27,7 +27,6 @@
 #include <Nux/VLayout.h>
 #include <unity-shared/IconTexture.h>
 #include <unity-shared/PreviewStyle.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -63,9 +62,9 @@ std::string PreviewNavigator::GetName() const
   return "PreviewNavigator";
 }
 
-void PreviewNavigator::AddProperties(GVariantBuilder* builder)
+void PreviewNavigator::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("button-x", texture_->GetAbsoluteX())
     .add("button-y", texture_->GetAbsoluteY())
     .add("button-width", texture_->GetGeometry().width)

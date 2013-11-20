@@ -271,9 +271,9 @@ Controller::GetName() const
 }
 
 void
-Controller::AddProperties(GVariantBuilder* builder)
+Controller::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("detail_on_timeout", detail_on_timeout())
   .add("initial_detail_timeout_length", initial_detail_timeout_length())
   .add("detail_timeout_length", detail_timeout_length())

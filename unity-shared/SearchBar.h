@@ -95,7 +95,7 @@ private:
   bool show_filter_hint_;
 
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   bool AcceptKeyNavFocus();
 
 private:

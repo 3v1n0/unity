@@ -52,7 +52,7 @@ public:
 
 protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   void OnMouseDown(int x, int y, unsigned long button_flags, unsigned long);

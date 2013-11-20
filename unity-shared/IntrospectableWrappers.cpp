@@ -17,15 +17,13 @@
  * Authored by: Thomi Richards <thomi.richards@canonical.com>
  */
 
-#include <UnityCore/Variant.h>
-
 #include "IntrospectableWrappers.h"
 
 namespace unity
 {
 namespace debug
 {
-  
+
 ResultWrapper::ResultWrapper(dash::Result const& result, nux::Geometry const& geo)
 : uri_(result.uri),
   name_(result.name),
@@ -40,9 +38,9 @@ std::string ResultWrapper::GetName() const
   return "Result";
 }
 
-void ResultWrapper::AddProperties(GVariantBuilder* builder)
+void ResultWrapper::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
     .add("uri", uri_)
     .add("name", name_)
     .add("icon_hint", icon_hint_)

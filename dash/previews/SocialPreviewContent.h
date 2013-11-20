@@ -56,7 +56,7 @@ protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void PreLayoutManagement();
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupViews();
@@ -73,7 +73,7 @@ protected:
                    double   tailWidth);
 
   virtual std::string GetName() const;
-  virtual void AddProperties(GVariantBuilder* builder);
+  virtual void AddProperties(debug::IntrospectionData&);
 
 private:
   nux::ObjectPtr<StaticCairoText> text_;

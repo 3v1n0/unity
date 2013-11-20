@@ -1420,12 +1420,12 @@ Controller::GetName() const
 }
 
 void
-Controller::AddProperties(GVariantBuilder* builder)
+Controller::AddProperties(debug::IntrospectionData& introspection)
 {
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  variant::BuilderWrapper(builder)
+  introspection
   .add("key_nav_is_active", KeyNavIsActive())
   .add("key_nav_launcher_monitor", pimpl->keyboard_launcher_.IsValid() ?  pimpl->keyboard_launcher_->monitor : -1)
   .add("key_nav_selection", pimpl->model_->SelectionIndex())

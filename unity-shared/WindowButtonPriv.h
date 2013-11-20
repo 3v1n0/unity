@@ -49,7 +49,7 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   void UpdateSize();

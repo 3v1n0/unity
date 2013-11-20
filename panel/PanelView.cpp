@@ -38,7 +38,6 @@
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
-#include <UnityCore/Variant.h>
 
 #include "PanelIndicatorsView.h"
 
@@ -239,9 +238,9 @@ std::string PanelView::GetName() const
   return "UnityPanel";
 }
 
-void PanelView::AddProperties(GVariantBuilder* builder)
+void PanelView::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
   .add("backend", "remote")
   .add("monitor", monitor_)
   .add("active", IsActive())

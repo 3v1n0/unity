@@ -27,7 +27,6 @@
 
 #include <UnityCore/ScopeProxyInterface.h>
 #include <UnityCore/GnomeSessionManager.h>
-#include <UnityCore/Variant.h>
 
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
@@ -2553,7 +2552,7 @@ bool UnityScreen::initPluginForScreen(CompPlugin* p)
   return result;
 }
 
-void UnityScreen::AddProperties(GVariantBuilder* builder)
+void UnityScreen::AddProperties(debug::IntrospectionData& introspection)
 {}
 
 std::string UnityScreen::GetName() const
@@ -3630,14 +3629,14 @@ UnityWindow::UnityWindow(CompWindow* window)
 }
 
 
-void UnityWindow::AddProperties(GVariantBuilder* builder)
+void UnityWindow::AddProperties(debug::IntrospectionData& introspection)
 {
   Window xid = window->id();
   auto const& swins = ScaleScreen::get(screen)->getWindows();
   bool scaled = std::find(swins.begin(), swins.end(), ScaleWindow::get(window)) != swins.end();
   WindowManager& wm = WindowManager::Default();
 
-  variant::BuilderWrapper(builder)
+  introspection
     .add(scaled ? GetScaledGeometry() : wm.GetWindowGeometry(xid))
     .add("xid", (uint64_t)xid)
     .add("title", wm.GetWindowName(xid))
@@ -4136,7 +4135,7 @@ std::string ScreenIntrospection::GetName() const
   return "Screen";
 }
 
-void ScreenIntrospection::AddProperties(GVariantBuilder* builder)
+void ScreenIntrospection::AddProperties(debug::IntrospectionData& introspection)
 {}
 
 Introspectable::IntrospectableList ScreenIntrospection::GetIntrospectableChildren()

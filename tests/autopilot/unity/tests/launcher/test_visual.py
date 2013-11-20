@@ -29,7 +29,7 @@ class LauncherVisualTests(LauncherTestCase):
         Tests fix for bug #913569.
         """
         bfb = self.unity.launcher.model.get_bfb_icon()
-        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.move(bfb.center.x, bfb.center.y)
         self.unity.dash.ensure_visible()
         sleep(1)
         # We can't use 'launcher_instance.switcher_start()' since it moves the mouse.

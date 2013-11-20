@@ -41,7 +41,6 @@
 #include "unity-shared/UnitySettings.h"
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -235,9 +234,9 @@ void Launcher::OnDragFinish(const nux::GestureEvent &event)
 }
 #endif
 
-void Launcher::AddProperties(GVariantBuilder* builder)
+void Launcher::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("hover-progress", hover_animation_.GetCurrentValue())
   .add("dnd-exit-progress", drag_over_animation_.GetCurrentValue())

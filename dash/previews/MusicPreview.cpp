@@ -88,9 +88,9 @@ std::string MusicPreview::GetName() const
   return "MusicPreview";
 }
 
-void MusicPreview::AddProperties(GVariantBuilder* builder)
+void MusicPreview::AddProperties(debug::IntrospectionData& introspection)
 {
-  Preview::AddProperties(builder);
+  Preview::AddProperties(introspection);
 }
 
 bool MusicPreview::HasUbuntuOneCredentials()

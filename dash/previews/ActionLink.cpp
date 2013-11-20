@@ -22,7 +22,6 @@
 #include "ActionLink.h"
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
-#include <UnityCore/Variant.h>
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
@@ -54,9 +53,9 @@ std::string ActionLink::GetName() const
   return "ActionLink";
 }
 
-void ActionLink::AddProperties(GVariantBuilder* builder)
+void ActionLink::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("action", action_hint_)
     .add("label", label_)

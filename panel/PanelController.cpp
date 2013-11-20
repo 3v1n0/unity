@@ -23,7 +23,6 @@
 #include <vector>
 #include <NuxCore/Logger.h>
 #include <Nux/BaseWindow.h>
-#include <UnityCore/Variant.h>
 
 #include "unity-shared/UScreen.h"
 #include "PanelView.h"
@@ -350,9 +349,9 @@ std::string Controller::GetName() const
   return "PanelController";
 }
 
-void Controller::AddProperties(GVariantBuilder* builder)
+void Controller::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("opacity", pimpl->opacity());
 }
 

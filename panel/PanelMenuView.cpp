@@ -30,8 +30,6 @@
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
-#include <UnityCore/Variant.h>
-
 #include "config.h"
 #include <glib/gi18n-lib.h>
 
@@ -1502,11 +1500,11 @@ PanelMenuView::GetName() const
   return "MenuView";
 }
 
-void PanelMenuView::AddProperties(GVariantBuilder* builder)
+void PanelMenuView::AddProperties(debug::IntrospectionData& introspection)
 {
-  PanelIndicatorsView::AddProperties(builder);
+  PanelIndicatorsView::AddProperties(introspection);
 
-  variant::BuilderWrapper(builder)
+  introspection
   .add("mouse_inside", is_inside_)
   .add("grabbed", is_grabbed_)
   .add("active_win_maximized", is_maximized_)

@@ -24,7 +24,6 @@
 #include <array>
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 #include "WindowButtons.h"
 #include "WindowButtonPriv.h"
@@ -206,7 +205,7 @@ std::string WindowButton::GetName() const
   return "WindowButton";
 }
 
-void WindowButton::AddProperties(GVariantBuilder* builder)
+void WindowButton::AddProperties(debug::IntrospectionData& introspection)
 {
   std::string type_name;
   std::string state_name;
@@ -239,7 +238,7 @@ void WindowButton::AddProperties(GVariantBuilder* builder)
       state_name = "normal";
   }
 
-  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
+  introspection.add(GetAbsoluteGeometry())
                                   .add("type", type_name)
                                   .add("visible", IsVisible() && Parent()->opacity() != 0.0f)
                                   .add("sensitive", Parent()->GetInputEventSensitivity())
@@ -651,15 +650,15 @@ std::string WindowButtons::GetName() const
   return "WindowButtons";
 }
 
-void WindowButtons::AddProperties(GVariantBuilder* builder)
+void WindowButtons::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
-                                  .add("monitor", monitor())
-                                  .add("opacity", opacity())
-                                  .add("visible", opacity() != 0.0f)
-                                  .add("sensitive", GetInputEventSensitivity())
-                                  .add("focused", focused())
-                                  .add("controlled_window", (guint64)controlled_window());
+  introspection.add(GetAbsoluteGeometry())
+               .add("monitor", monitor())
+               .add("opacity", opacity())
+               .add("visible", opacity() != 0.0f)
+               .add("sensitive", GetInputEventSensitivity())
+               .add("focused", focused())
+               .add("controlled_window", controlled_window());
 }
 
 } // unity namespace

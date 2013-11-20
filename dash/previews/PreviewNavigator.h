@@ -50,7 +50,7 @@ public:
 
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder*);
+  void AddProperties(debug::IntrospectionData&);
 
   sigc::signal<void> activated;
   

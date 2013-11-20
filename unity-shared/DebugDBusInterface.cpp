@@ -151,11 +151,9 @@ namespace local
       if (name == "id")
         return glib::Variant(GetId());
 
-      GVariantBuilder properties_builder;
-      g_variant_builder_init(&properties_builder, G_VARIANT_TYPE("a{sv}"));
-      node_->AddProperties(&properties_builder);
-      glib::Variant props_dict(g_variant_builder_end(&properties_builder));
-      return g_variant_lookup_value(props_dict, name.c_str(), nullptr);
+      IntrospectionData introspection;
+      node_->AddProperties(introspection);
+      return g_variant_lookup_value(glib::Variant(introspection.Get()), name.c_str(), nullptr);
     }
 
     std::vector<xpathselect::Node::Ptr> Children() const

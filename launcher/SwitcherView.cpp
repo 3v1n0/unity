@@ -24,7 +24,6 @@
 #include "unity-shared/UScreen.h"
 
 #include <Nux/Nux.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -102,9 +101,9 @@ std::string SwitcherView::GetName() const
   return "SwitcherView";
 }
 
-void SwitcherView::AddProperties(GVariantBuilder* builder)
+void SwitcherView::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("render-boxes", render_boxes)
   .add("border-size", border_size)
   .add("flat-spacing", flat_spacing)
@@ -114,7 +113,7 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("vertical-size", vertical_size)
   .add("text-size", text_size)
   .add("animation-length", animation_length)
-  .add("spread-size", (float)spread_size)
+  .add("spread-size", spread_size)
   .add("label", text_view_->GetText())
   .add("last_icon_selected", last_icon_selected_)
   .add("spread_offset", SPREAD_OFFSET)

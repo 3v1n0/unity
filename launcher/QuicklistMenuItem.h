@@ -95,7 +95,7 @@ public:
 protected:
   // Introspection
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   static const int ITEM_INDENT_ABS = 16;
   static const int ITEM_CORNER_RADIUS_ABS = 3;

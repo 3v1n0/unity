@@ -171,7 +171,7 @@ public:
   void ResetStatus();
 
 protected:
-  virtual void AddProperties(GVariantBuilder* builder);
+  virtual void AddProperties(debug::IntrospectionData&);
 
 private:
   bool expo_state_;

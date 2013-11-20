@@ -86,9 +86,9 @@ std::string PreviewInfoHintWidget::GetName() const
   return "PreviewInfoHintWidget";
 }
 
-void PreviewInfoHintWidget::AddProperties(GVariantBuilder* builder)
+void PreviewInfoHintWidget::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry());
 }
 

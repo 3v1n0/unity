@@ -97,9 +97,9 @@ std::string GenericPreview::GetName() const
   return "GenericPreview";
 }
 
-void GenericPreview::AddProperties(GVariantBuilder* builder)
+void GenericPreview::AddProperties(debug::IntrospectionData& introspection)
 {
-  Preview::AddProperties(builder);
+  Preview::AddProperties(introspection);
 }
 
 void GenericPreview::SetupViews()

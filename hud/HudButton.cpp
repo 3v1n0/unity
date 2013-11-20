@@ -31,7 +31,6 @@
 #include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/StaticCairoText.h"
@@ -243,9 +242,9 @@ std::string HudButton::GetName() const
   return "HudButton";
 }
 
-void HudButton::AddProperties(GVariantBuilder* builder)
+void HudButton::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("label", label())
     .add("focused", fake_focused());
 }

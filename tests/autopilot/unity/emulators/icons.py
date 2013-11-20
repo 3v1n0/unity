@@ -24,7 +24,7 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
     @property
     def center_position(self):
         """Get the center point of an icon, returns a tuple with (x, y, z)."""
-        return (self.center_x, self.center_y, self.center_z)
+        return self.center
 
     def get_quicklist(self):
         """Get the quicklist for this launcher icon.

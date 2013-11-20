@@ -27,8 +27,6 @@
 #include <glib.h>
 #include "config.h"
 #include <glib/gi18n-lib.h>
-
-#include <UnityCore/Variant.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/StaticCairoText.h"
@@ -641,10 +639,8 @@ std::string PlacesGroup::GetName() const
   return "PlacesGroup";
 }
 
-void PlacesGroup::AddProperties(GVariantBuilder* builder)
+void PlacesGroup::AddProperties(debug::IntrospectionData& wrapper)
 {
-  unity::variant::BuilderWrapper wrapper(builder);
-
   wrapper.add("header-x", _header_view->GetAbsoluteX());
   wrapper.add("header-y", _header_view->GetAbsoluteY());
   wrapper.add("header-width", _header_view->GetAbsoluteWidth());

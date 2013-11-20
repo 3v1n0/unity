@@ -60,8 +60,10 @@ public:
 
   bool IsMouseInsideIndicator(nux::Point const& mouse_position) const;
 
+protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
+
 private:
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 

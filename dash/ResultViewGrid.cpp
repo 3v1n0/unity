@@ -28,7 +28,6 @@
 #include <gdk/gdk.h>
 #include <unity-protocol.h>
 
-#include <UnityCore/Variant.h>
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
 #include "unity-shared/UBusWrapper.h"
