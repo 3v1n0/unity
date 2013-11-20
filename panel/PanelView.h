@@ -138,7 +138,6 @@ private:
   int monitor_;
   int stored_dash_width_;
   int launcher_width_;
-  bool refine_is_open_;
 
   connection::Manager on_indicator_updated_connections_;
   connection::Manager maximized_opacity_toggle_connections_;

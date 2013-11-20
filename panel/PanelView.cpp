@@ -68,6 +68,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   , monitor_(0)
   , stored_dash_width_(0)
   , launcher_width_(64)
+  , bg_effect_helper_(this)
 {
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
   WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
@@ -125,8 +126,6 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
     stored_dash_width_ = width;
     QueueDraw();
   });
-
-  bg_effect_helper_.owner = this;
 
   //FIXME (gord)- replace with async loading
   TextureCache& cache = TextureCache::GetDefault();
