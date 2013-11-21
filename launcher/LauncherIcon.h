@@ -213,7 +213,7 @@ protected:
 
   std::string GetName() const;
 
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   void FullyAnimateQuirkDelayed(guint ms, Quirk quirk, int monitor = -1);
 

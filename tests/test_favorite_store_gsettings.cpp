@@ -73,6 +73,8 @@ public:
   std::unique_ptr<internal::FavoriteStoreGSettings> favorite_store;
   glib::Object<GSettings> gsettings_client;
 
+  virtual ~TestFavoriteStoreGSettings() {}
+
   virtual void SetUp()
   {
     // set the data directory so gsettings can find the schema

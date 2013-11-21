@@ -27,7 +27,6 @@
 #include <Nux/VLayout.h>
 #include <unity-shared/IconTexture.h>
 #include <unity-shared/PreviewStyle.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -63,9 +62,9 @@ std::string PreviewNavigator::GetName() const
   return "PreviewNavigator";
 }
 
-void PreviewNavigator::AddProperties(GVariantBuilder* builder)
+void PreviewNavigator::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("button-x", texture_->GetAbsoluteX())
     .add("button-y", texture_->GetAbsoluteY())
     .add("button-width", texture_->GetGeometry().width)
@@ -141,7 +140,7 @@ void PreviewNavigator::SetupViews()
     AddChild(texture_);
     layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);    
 
-    texture_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { activated.emit(); });
+    texture_->mouse_click.connect([this](int, int, unsigned long, unsigned long) { activated.emit(); });
     texture_->mouse_enter.connect(sigc::mem_fun(this, &PreviewNavigator::TexRecvMouseEnter));
     texture_->mouse_leave.connect(sigc::mem_fun(this, &PreviewNavigator::TexRecvMouseLeave));
   }

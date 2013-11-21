@@ -62,7 +62,7 @@ protected:
 
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder*);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   RatingsButton* ratings_;

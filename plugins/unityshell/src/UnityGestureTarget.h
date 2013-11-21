@@ -34,6 +34,7 @@ class UnityGestureTarget : public nux::GestureTarget
 {
   public:
     UnityGestureTarget();
+    virtual ~UnityGestureTarget() {}
 
     virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
 

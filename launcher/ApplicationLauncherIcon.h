@@ -24,6 +24,7 @@
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/ConnectionManager.h>
+#include <UnityCore/Variant.h>
 
 #include <libindicator/indicator-desktop-shortcuts.h>
 
@@ -79,7 +80,7 @@ protected:
   void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> const& centers);
   void OnCenterStabilized(std::vector<nux::Point3> const& centers);
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   void OnAcceptDrop(DndData const& dnd_data);
   void OnDndEnter();
   void OnDndHovered();

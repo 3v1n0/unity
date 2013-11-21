@@ -81,7 +81,7 @@ public:
 protected:
   // Introspectable methods
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   friend class TestLauncherController;

@@ -63,7 +63,7 @@ protected:
  
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   
   virtual bool AcceptKeyNavFocus() { return false; }
   

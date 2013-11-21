@@ -84,9 +84,9 @@ std::string MusicPaymentPreview::GetName() const
   return "MusicPaymentPreview";
 }
 
-void MusicPaymentPreview::AddProperties(GVariantBuilder* builder)
+void MusicPaymentPreview::AddProperties(debug::IntrospectionData& introspection)
 {
-  PaymentPreview::AddProperties(builder);
+  PaymentPreview::AddProperties(introspection);
 }
 
 void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string const& id)

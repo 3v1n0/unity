@@ -31,7 +31,6 @@
 #include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/StaticCairoText.h"
@@ -65,28 +64,28 @@ HudButton::HudButton(NUX_FILE_LINE_DECL)
 
   InitTheme();
 
-  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection)
+  key_nav_focus_change.connect([this](nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   });
 
-  fake_focused.changed.connect([&](bool)
+  fake_focused.changed.connect([this](bool)
   {
     QueueDraw();
   });
 
-  mouse_move.connect([&](int x, int y, int dx, int dy, unsigned int button, unsigned int key)
+  mouse_move.connect([this](int x, int y, int dx, int dy, unsigned int button, unsigned int key)
   {
     if (!fake_focused)
       fake_focused = true;
   });
 
-  mouse_enter.connect([&](int x, int y, unsigned int button, unsigned int key)
+  mouse_enter.connect([this](int x, int y, unsigned int button, unsigned int key)
   {
     fake_focused = true;
   });
 
-  mouse_leave.connect([&](int x, int y, unsigned int button, unsigned int key)
+  mouse_leave.connect([this](int x, int y, unsigned int button, unsigned int key)
   {
     fake_focused = false;
   });
@@ -94,7 +93,7 @@ HudButton::HudButton(NUX_FILE_LINE_DECL)
 
 void HudButton::InitTheme()
 {
-  is_rounded.changed.connect([&](bool)
+  is_rounded.changed.connect([this](bool)
   {
     nux::Geometry const& geo = GetGeometry();
     prelight_->Invalidate(geo);
@@ -243,9 +242,9 @@ std::string HudButton::GetName() const
   return "HudButton";
 }
 
-void HudButton::AddProperties(GVariantBuilder* builder)
+void HudButton::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("label", label())
     .add("focused", fake_focused());
 }

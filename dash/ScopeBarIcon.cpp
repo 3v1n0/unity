@@ -16,8 +16,6 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include <UnityCore/Variant.h>
-
 #include "unity-shared/DashStyle.h"
 #include "ScopeBarIcon.h"
 
@@ -57,7 +55,7 @@ ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
   active.changed.connect(sigc::mem_fun(this, &ScopeBarIcon::OnActiveChanged));
-  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
+  key_nav_focus_change.connect([this](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
 }
 
 ScopeBarIcon::~ScopeBarIcon()
@@ -120,10 +118,8 @@ std::string ScopeBarIcon::GetName() const
   return "ScopeBarIcon";
 }
 
-void ScopeBarIcon::AddProperties(GVariantBuilder* builder)
+void ScopeBarIcon::AddProperties(debug::IntrospectionData& wrapper)
 {
-  unity::variant::BuilderWrapper wrapper(builder);
-
   wrapper.add(GetAbsoluteGeometry());
   wrapper.add("name", id);
 }

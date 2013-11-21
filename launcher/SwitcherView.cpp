@@ -24,7 +24,6 @@
 #include "unity-shared/UScreen.h"
 
 #include <Nux/Nux.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -39,7 +38,7 @@ namespace
   unsigned int const VERTICAL_PADDING = 45;
   unsigned int const SPREAD_OFFSET = 100;
   unsigned int const EXTRA_ICON_SPACE = 10;
-  unsigned int const MAX_DIRECTIONS_CHANGED = 3; 
+  unsigned int const MAX_DIRECTIONS_CHANGED = 3;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
@@ -61,11 +60,11 @@ SwitcherView::SwitcherView()
   , text_view_(new StaticCairoText(""))
   , last_icon_selected_(-1)
   , last_detail_icon_selected_(-1)
-  , target_sizes_set_(false)
   , check_mouse_first_time_(true)
 {
   icon_renderer_->pip_style = OVER_TILE;
   icon_renderer_->monitor = monitors::MAX;
+  icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
 
   text_view_->SetMaximumWidth(tile_size * spread_size);
   text_view_->SetLines(1);
@@ -88,6 +87,7 @@ SwitcherView::SwitcherView()
     if (enabled)
     {
       SaveTime();
+      QueueRelayout();
       QueueDraw();
     }
     else
@@ -102,9 +102,9 @@ std::string SwitcherView::GetName() const
   return "SwitcherView";
 }
 
-void SwitcherView::AddProperties(GVariantBuilder* builder)
+void SwitcherView::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("render-boxes", render_boxes)
   .add("border-size", border_size)
   .add("flat-spacing", flat_spacing)
@@ -114,7 +114,7 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("vertical-size", vertical_size)
   .add("text-size", text_size)
   .add("animation-length", animation_length)
-  .add("spread-size", (float)spread_size)
+  .add("spread-size", spread_size)
   .add("label", text_view_->GetText())
   .add("last_icon_selected", last_icon_selected_)
   .add("spread_offset", SPREAD_OFFSET)
@@ -199,7 +199,8 @@ void SwitcherView::SaveLast()
 
 void SwitcherView::OnDetailSelectionIndexChanged(unsigned int index)
 {
-  QueueDraw ();
+  QueueRelayout();
+  QueueDraw();
 }
 
 void SwitcherView::OnDetailSelectionChanged(bool detail)
@@ -216,6 +217,7 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
   }
 
   SaveLast();
+  QueueRelayout();
   QueueDraw();
 }
 
@@ -227,6 +229,7 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
   delta_tracker_.ResetState();
 
   SaveLast();
+  QueueRelayout();
   QueueDraw();
 }
 
@@ -845,20 +848,19 @@ double SwitcherView::GetCurrentProgress()
   return std::min<double>(1.0f, ms_since_change / static_cast<double>(animation_length()));
 }
 
-void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void SwitcherView::PreLayoutManagement()
 {
-  double progress = GetCurrentProgress();
+  UnityWindowView::PreLayoutManagement();
 
-  if (!target_sizes_set_)
-  {
-    icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
-    target_sizes_set_ = true;
-  }
+  double progress = GetCurrentProgress();
 
   nux::Geometry background_geo;
   last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), progress);
   last_background_ = background_geo;
+}
 
+void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
   icon_renderer_->PreprocessIcons(last_args_, GetGeometry());
 }
 
@@ -933,6 +935,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   if (ms_since_change < animation_length && !redraw_idle_)
   {
     redraw_idle_.reset(new glib::Idle([this] () {
+      QueueRelayout();
       QueueDraw();
       redraw_idle_.reset();
       return false;

@@ -26,9 +26,6 @@
 #include <vector>
 #include <map>
 
-#include <NuxCore/Rect.h>
-#include <NuxCore/Color.h>
-
 namespace unity
 {
 namespace glib
@@ -59,6 +56,10 @@ public:
   explicit Variant(uint32_t);
   explicit Variant(int64_t);
   explicit Variant(uint64_t);
+#if __WORDSIZE != 64
+  explicit Variant(long);
+  explicit Variant(unsigned long);
+#endif
   explicit Variant(bool);
   explicit Variant(double);
   explicit Variant(float);
@@ -81,6 +82,20 @@ public:
 
   bool ASVToHints(HintsMap& hints) const;
 
+  template <typename T>
+  static inline Variant FromVector(std::vector<T> const& values)
+  {
+    if (values.empty())
+      return g_variant_new_array(G_VARIANT_TYPE_VARIANT, nullptr, 0);
+
+    GVariantBuilder builder;
+    g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+    for (auto const& value : values)
+      g_variant_builder_add_value(&builder, Variant(value));
+
+    return g_variant_builder_end(&builder);
+  }
+
   void swap(Variant&);
   Variant& operator=(GVariant*);
   Variant& operator=(Variant);
@@ -95,6 +110,10 @@ public:
   Variant& operator=(uint32_t);
   Variant& operator=(int64_t);
   Variant& operator=(uint64_t);
+#if __WORDSIZE != 64
+  Variant& operator=(long);
+  Variant& operator=(unsigned long);
+#endif
   Variant& operator=(bool);
   Variant& operator=(double);
   Variant& operator=(float);
@@ -105,55 +124,10 @@ private:
   GVariant* variant_;
 };
 
-}
+std::ostream& operator<<(std::ostream &os, GVariant* v);
+std::ostream& operator<<(std::ostream &os, Variant const&);
 
-namespace variant
-{
-
-class BuilderWrapper
-{
-// XXX: Move this to Introspectable
-public:
-  enum class ValueType : uint32_t
-  {
-    // This should match the Autopilot Type IDs
-    SIMPLE = 0,
-    RECTANGLE = 1,
-    POINT = 2,
-    SIZE = 3,
-    COLOR = 4,
-    DATE = 5,
-    TIME = 6,
-  };
-
-  BuilderWrapper(GVariantBuilder* builder);
-
-  BuilderWrapper& add(std::string const& name, bool);
-  BuilderWrapper& add(std::string const& name, const char*);
-  BuilderWrapper& add(std::string const& name, std::string const&);
-  BuilderWrapper& add(std::string const& name, int16_t);
-  BuilderWrapper& add(std::string const& name, int32_t);
-  BuilderWrapper& add(std::string const& name, int64_t);
-  BuilderWrapper& add(std::string const& name, uint16_t);
-  BuilderWrapper& add(std::string const& name, uint32_t);
-  BuilderWrapper& add(std::string const& name, uint64_t);
-  BuilderWrapper& add(std::string const& name, float);
-  BuilderWrapper& add(std::string const& name, double);
-  BuilderWrapper& add(std::string const& name, glib::Variant const&);
-  BuilderWrapper& add(std::string const& name, GVariant*);
-
-  BuilderWrapper& add(std::string const& name, nux::Rect const&);
-  BuilderWrapper& add(std::string const& name, nux::Point const&);
-  BuilderWrapper& add(std::string const& name, nux::Size const&);
-  BuilderWrapper& add(std::string const& name, nux::Color const&);
-  BuilderWrapper& add(nux::Rect const&);
-
-private:
-  BuilderWrapper& add(std::string const& name, ValueType, std::vector<glib::Variant> const&);
-  GVariantBuilder* builder_;
-};
-
-}
-}
+} // glib namespace
+} // unity namespace
 
 #endif

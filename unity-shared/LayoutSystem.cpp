@@ -19,8 +19,6 @@
 
 #include "LayoutSystem.h"
 
-#include <UnityCore/Variant.h>
-
 namespace unity {
 namespace ui {
 
@@ -298,10 +296,9 @@ std::string LayoutWindow::GetName() const
   return "LayoutWindow";
 }
 
-void LayoutWindow::AddProperties(GVariantBuilder* builder)
+void LayoutWindow::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
-    .add(result);
+  introspection.add(result);
 }
 
 }

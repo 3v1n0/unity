@@ -80,9 +80,9 @@ std::string CoverArt::GetName() const
   return "CoverArt";
 }
 
-void CoverArt::AddProperties(GVariantBuilder* builder)
+void CoverArt::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("image-hint", image_hint_)
     .add("waiting", waiting_)
@@ -90,7 +90,7 @@ void CoverArt::AddProperties(GVariantBuilder* builder)
 }
 
 void CoverArt::SetImage(std::string const& image_hint)
-{ 
+{
   StopWaiting();
 
   if (slot_handle_ > 0)
@@ -160,7 +160,7 @@ void CoverArt::StartWaiting()
   rotate_matrix_.Rotate_z(0.0f);
   rotation_ = 0.0f;
 
-  spinner_timeout_.reset(new glib::TimeoutSeconds(IMAGE_TIMEOUT, [&]
+  spinner_timeout_.reset(new glib::TimeoutSeconds(IMAGE_TIMEOUT, [this]
   {
     StopWaiting();
 

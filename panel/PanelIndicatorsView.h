@@ -71,7 +71,7 @@ public:
 
 protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   typedef std::vector<indicator::Indicator::Ptr> Indicators;
   Indicators GetIndicators();

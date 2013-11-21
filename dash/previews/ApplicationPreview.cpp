@@ -34,7 +34,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
- 
+
 #include "ApplicationPreview.h"
 #include "ActionButton.h"
 #include "PreviewInfoHintWidget.h"
@@ -103,9 +103,9 @@ std::string ApplicationPreview::GetName() const
   return "ApplicationPreview";
 }
 
-void ApplicationPreview::AddProperties(GVariantBuilder* builder)
+void ApplicationPreview::AddProperties(debug::IntrospectionData& introspection)
 {
-  Preview::AddProperties(builder);
+  Preview::AddProperties(introspection);
 }
 
 void ApplicationPreview::SetupViews()
@@ -119,7 +119,7 @@ void ApplicationPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
+  auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
 
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());

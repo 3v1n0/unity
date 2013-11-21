@@ -59,7 +59,7 @@ public:
   {
     SetVScrollBar(scroll_bar);
 
-    OnVisibleChanged.connect([&] (nux::Area* /*area*/, bool visible) {
+    OnVisibleChanged.connect([this] (nux::Area* /*area*/, bool visible) {
       if (m_horizontal_scrollbar_enable)
         _hscrollbar->SetVisible(visible);
       if (m_vertical_scrollbar_enable)
@@ -178,7 +178,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
     conn_manager_.Add(scope_->filters.changed.connect(sigc::mem_fun(this, &ScopeView::SetupFilters)));
     SetupFilters(scope->filters);
 
-    scope_->connected.changed.connect([&](bool is_connected)
+    scope_->connected.changed.connect([this](bool is_connected)
     {
       // We need to search again if we were reconnected after being connected before.
       if (scope_connected_ && !is_connected)
@@ -193,7 +193,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
     });
   }
 
-  ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
+  ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [this] (GVariant* data) {
     // we get this signal when a result view keynav changes,
     // its a bad way of doing this but nux ABI needs to be broken
     // to do it properly
@@ -220,7 +220,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
     }
   });
 
-  OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {
+  OnVisibleChanged.connect([this] (nux::Area* area, bool visible) {
     scroll_view_->SetVisible(visible);
 
     if ((filters_expanded && visible) || !visible)
@@ -757,7 +757,7 @@ void ScopeView::QueueCategoryCountsCheck()
 {
   if (!model_updated_timeout_)
   {
-    model_updated_timeout_.reset(new glib::Idle([&] () {
+    model_updated_timeout_.reset(new glib::Idle([this] () {
       // Check if all results so far are from one category
       // If so, then expand that category.
       CheckCategoryCounts();
@@ -830,7 +830,7 @@ bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback co
   if (scope_)
   {
     // 150ms to hide the no reults message if its take a while to return results
-    hide_message_delay_.reset(new glib::Timeout(150, [&] () {
+    hide_message_delay_.reset(new glib::Timeout(150, [this] () {
       HideResultsMessage();
       return false;
     }));
@@ -1142,9 +1142,9 @@ std::string ScopeView::GetName() const
   return "ScopeView";
 }
 
-void ScopeView::AddProperties(GVariantBuilder* builder)
+void ScopeView::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
     .add("name", scope_->id)
     .add("scope-name", scope_->name)
     .add("visible", IsVisible())

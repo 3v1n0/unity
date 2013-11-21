@@ -80,8 +80,8 @@ void ScopeBar::AddScope(Scope::Ptr const& scope)
   layout_->AddView(icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(icon);
 
-  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
-  icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
+  icon->mouse_click.connect([this, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
+  icon->key_nav_focus_activate.connect([this, icon](nux::Area*){ SetActive(icon); });
 }
 
 void ScopeBar::Activate(std::string id)
@@ -268,25 +268,21 @@ std::string ScopeBar::GetName() const
   return "ScopeBar";
 }
 
-void ScopeBar::AddProperties(GVariantBuilder* builder)
+void ScopeBar::AddProperties(debug::IntrospectionData& wrapper)
 {
-  unity::variant::BuilderWrapper wrapper(builder);
-
-  wrapper.add("focused-scope-icon", "");
-
-  for( auto icon : icons_)
+  for (auto icon : icons_)
   {
     if (icon->active)
-      wrapper.add("active-scope", icon->id.Get());
+      wrapper.add("active-scope", icon->id());
 
     if (icon->HasKeyFocus())
-      wrapper.add("focused-scope-icon", icon->id.Get());
+      wrapper.add("focused-scope-icon", icon->id());
   }
 }
 
 std::string ScopeBar::GetActiveScopeId() const
 {
-  for (auto icon : icons_)
+  for (auto* icon : icons_)
   {
     if (icon->active)
       return icon->id;

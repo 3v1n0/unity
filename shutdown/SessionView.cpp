@@ -22,7 +22,6 @@
 
 #include <Nux/VLayout.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 #include <glib/gi18n-lib.h>
 
 namespace unity
@@ -327,10 +326,10 @@ std::string View::GetName() const
   return "SessionView";
 }
 
-void View::AddProperties(GVariantBuilder* builder)
+void View::AddProperties(debug::IntrospectionData& introspection)
 {
-  UnityWindowView::AddProperties(builder);
-  variant::BuilderWrapper(builder)
+  UnityWindowView::AddProperties(introspection);
+  introspection
     .add("mode", static_cast<int>(mode()))
     .add("inhibitors", have_inhibitors())
     .add("title",title_->GetText())

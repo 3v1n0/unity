@@ -20,6 +20,7 @@
 
 #include "Variant.h"
 #include <NuxCore/Logger.h>
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -84,6 +85,16 @@ Variant::Variant(int64_t value)
 Variant::Variant(uint64_t value)
   : Variant(g_variant_new_uint64(value))
 {}
+
+#if __WORDSIZE != 64
+Variant::Variant(long value)
+  : Variant(static_cast<int64_t>(value))
+{}
+
+Variant::Variant(unsigned long value)
+  : Variant(static_cast<uint64_t>(value))
+{}
+#endif
 
 Variant::Variant(bool value)
   : Variant(g_variant_new_boolean(value))
@@ -320,6 +331,10 @@ Variant& Variant::operator=(int32_t value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(uint32_t value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(int64_t value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(uint64_t value) { return operator=(Variant(value)); }
+#if __WORDSIZE != 64
+Variant& Variant::operator=(long value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(unsigned long value) { return operator=(Variant(value)); }
+#endif
 Variant& Variant::operator=(bool value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(double value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(float value) { return operator=(Variant(value)); }
@@ -367,136 +382,20 @@ HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints)
   gpointer key, value;
   g_hash_table_iter_init(&hints_iter, hashtable);
   while (g_hash_table_iter_next(&hints_iter, &key, &value))
-  {
-    std::string hint_key(static_cast<gchar*>(key));
-    glib::Variant hint_value(static_cast<GVariant*>(value));
+    hints.insert({static_cast<gchar*>(key), static_cast<GVariant*>(value)});
 
-    hints.insert({hint_key, hint_value});
-  }
   return hints;
 }
 
+std::ostream& operator<<(std::ostream &os, GVariant* v)
+{
+  return os << (v ? String(g_variant_print(v, TRUE)) : "()");
+}
+
+std::ostream& operator<<(std::ostream &os, Variant const& v)
+{
+  return os << static_cast<GVariant*>(v);
+}
+
 } // namespace glib
-
-namespace variant
-{
-using namespace glib;
-
-BuilderWrapper::BuilderWrapper(GVariantBuilder* builder)
-  : builder_(builder)
-{}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, ValueType type, std::vector<Variant> const& values)
-{
-  GVariantBuilder array;
-  g_variant_builder_init(&array, G_VARIANT_TYPE("av"));
-  g_variant_builder_add(&array, "v", g_variant_new_uint32(static_cast<uint32_t>(type)));
-
-  for (auto const& value : values)
-    g_variant_builder_add(&array, "v", static_cast<GVariant*>(value));
-
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_builder_end(&array));
-
-  return *this;
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, bool value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, char const* value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, std::string const& value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, int16_t value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, int32_t value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, int64_t value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, uint16_t value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, uint32_t value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, uint64_t value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, float value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, double value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, GVariant* value)
-{
-  return add(name, ValueType::SIMPLE, {Variant(value)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, glib::Variant const& value)
-{
-  return add(name, ValueType::SIMPLE, {value});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Rect const& r)
-{
-  return add(name, ValueType::RECTANGLE, {Variant(r.x), Variant(r.y), Variant(r.width), Variant(r.height)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Point const& p)
-{
-  return add(name, ValueType::POINT, {Variant(p.x), Variant(p.y)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Size const& s)
-{
-  return add(name, ValueType::SIZE, {Variant(s.width), Variant(s.height)});
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Color const& c)
-{
-  int32_t r = c.red * 255.0f, g = c.green * 255.0f, b = c.blue * 255.0f, a = c.alpha * 255.0f;
-  return add(name, ValueType::COLOR, {Variant(r), Variant(g), Variant(b), Variant(a)});
-}
-
-BuilderWrapper& BuilderWrapper::add(nux::Rect const& value)
-{
-  add("globalRect", value);
-  // Legacy support
-  add("x", value.x);
-  add("y", value.y);
-  add("width", value.width);
-  add("height", value.height);
-  return *this;
-}
-
-
-}
-}
+} // namespace unity

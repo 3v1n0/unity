@@ -28,7 +28,6 @@
 #include <gdk/gdk.h>
 #include <unity-protocol.h>
 
-#include <UnityCore/Variant.h>
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
 #include "unity-shared/UBusWrapper.h"
@@ -81,16 +80,16 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   EnableDoubleClick(true);
   SetAcceptKeyNavFocusOnMouseDown(false);
 
-  auto needredraw_lambda = [&](int value) { NeedRedraw(); };
+  auto needredraw_lambda = [this](int value) { NeedRedraw(); };
   horizontal_spacing.changed.connect(needredraw_lambda);
   vertical_spacing.changed.connect(needredraw_lambda);
   padding.changed.connect(needredraw_lambda);
   selected_index_.changed.connect(needredraw_lambda);
-  expanded.changed.connect([&](bool value) { if (value) all_results_preloaded_ = false; });
-  results_per_row.changed.connect([&](int value) { if (value > 0) all_results_preloaded_ = false; });
+  expanded.changed.connect([this](bool value) { if (value) all_results_preloaded_ = false; });
+  results_per_row.changed.connect([this](int value) { if (value > 0) all_results_preloaded_ = false; });
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
-  key_nav_focus_activate.connect([&] (nux::Area *area)
+  key_nav_focus_activate.connect([this] (nux::Area *area)
   {
     Activate(focused_result_, selected_index_, ResultView::ActivateType::DIRECT);
   });
@@ -99,7 +98,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
   mouse_double_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseDoubleClick));
 
-  mouse_down.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
+  mouse_down.connect([this](int x, int y, unsigned long mouse_state, unsigned long button_state)
   {
     last_mouse_down_x_ = x;
     last_mouse_down_y_ = y;
@@ -107,7 +106,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     mouse_over_index_ = index;
   });
 
-  mouse_leave.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
+  mouse_leave.connect([this](int x, int y, unsigned long mouse_state, unsigned long button_state)
   {
     mouse_over_index_ = -1;
     mouse_last_x_ = -1;
@@ -123,7 +122,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
   });
 
-  ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
+  ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [this] (GVariant* data) {
     int nav_mode = 0;
     GVariant* local_result_variant = NULL;
     glib::String proposed_unique_id;

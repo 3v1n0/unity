@@ -24,6 +24,7 @@
 #include <boost/algorithm/string.hpp>
 #include <NuxCore/Logger.h>
 #include <NuxCore/LoggingWriter.h>
+#include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/Variant.h>
 #include <xpathselect/xpathselect.h>
 #include <dlfcn.h>
@@ -33,19 +34,17 @@
 
 namespace unity
 {
-
 namespace debug
 {
-DECLARE_LOGGER(logger, "unity.debug.interface");
 namespace
 {
+
+DECLARE_LOGGER(logger, "unity.debug.interface");
+
 namespace local
 {
   const std::string PROTOCOL_VERSION = "1.4";
   const std::string XPATH_SELECT_LIB = "libxpathselect.so.1.4";
-
-  std::ofstream output_file;
-  void* xpathselect_driver_ = nullptr;
 
   class IntrospectableAdapter : public std::enable_shared_from_this<IntrospectableAdapter>, public xpathselect::Node
   {
@@ -151,11 +150,9 @@ namespace local
       if (name == "id")
         return glib::Variant(GetId());
 
-      GVariantBuilder properties_builder;
-      g_variant_builder_init(&properties_builder, G_VARIANT_TYPE("a{sv}"));
-      node_->AddProperties(&properties_builder);
-      glib::Variant props_dict(g_variant_builder_end(&properties_builder));
-      return g_variant_lookup_value(props_dict, name.c_str(), nullptr);
+      IntrospectionData introspection;
+      node_->AddProperties(introspection);
+      return g_variant_lookup_value(glib::Variant(introspection.Get()), name.c_str(), nullptr);
     }
 
     std::vector<xpathselect::Node::Ptr> Children() const
@@ -180,51 +177,53 @@ namespace local
     std::string full_path_;
   };
 
-  xpathselect::NodeVector select_nodes(IntrospectableAdapter::Ptr const& root, std::string const& query)
+  namespace xpathselect
   {
-    if (!xpathselect_driver_)
-      xpathselect_driver_ = dlopen(XPATH_SELECT_LIB.c_str(), RTLD_LAZY);
 
-    if (xpathselect_driver_)
+  struct NodeSelector
+  {
+    NodeSelector()
+      : driver_(dlopen(XPATH_SELECT_LIB.c_str(), RTLD_LAZY))
+      , node_selector_(driver_ ? reinterpret_cast<select_nodes_t>(dlsym(driver_, "SelectNodes")) : nullptr)
     {
-      typedef decltype(&xpathselect::SelectNodes) select_nodes_t;
-      dlerror();
-      auto SelectNodes = reinterpret_cast<select_nodes_t>(dlsym(xpathselect_driver_, "SelectNodes"));
-      const char* err = dlerror();
-      if (err)
+      if (const char* err = dlerror())
       {
         LOG_ERROR(logger) << "Unable to load entry point in libxpathselect: " << err;
-      }
-      else
-      {
-        return SelectNodes(root, query);
+        Close();
       }
     }
-    else
+
+    ~NodeSelector() { Close(); }
+    bool IsAvailable() const { return driver_; }
+    operator bool() const { return IsAvailable(); }
+
+    ::xpathselect::NodeVector SelectNodes(::xpathselect::Node::Ptr const& root, std::string const& query)
     {
-      LOG_WARNING(logger) << "Cannot complete introspection request because libxpathselect is not installed.";
+      if (!IsAvailable())
+        return ::xpathselect::NodeVector();
+
+      return node_selector_(root, query);
     }
 
-    // Fallen through here as we've hit an error
-    return xpathselect::NodeVector();
-  }
+    private:
+      void Close()
+      {
+        if (driver_)
+        {
+          dlclose(driver_);
+          driver_ = nullptr;
+        }
+      }
 
-  // This needs to be called at destruction to cleanup the dlopen
-  void cleanup_xpathselect()
-  {
-    if (xpathselect_driver_)
-      dlclose(xpathselect_driver_);
-  }
+      void* driver_;
+      typedef decltype(&::xpathselect::SelectNodes) select_nodes_t;
+      select_nodes_t node_selector_;
+  };
 
-}
-}
+  } // xpathselect namespace
 
-bool TryLoadXPathImplementation();
-GVariant* GetState(std::string const& query);
-void StartLogToFile(std::string const& file_path);
-void ResetLogging();
-void SetLogSeverity(std::string const& log_component, std::string const& severity);
-void LogMessage(std::string const& severity, std::string const& message);
+} // local namespace
+} // anonymous namespace
 
 namespace dbus
 {
@@ -269,25 +268,45 @@ const std::string INTROSPECTION_XML =
   " </node>";
 }
 
-static Introspectable* _parent_introspectable;
-
-DebugDBusInterface::DebugDBusInterface(Introspectable* parent)
-  : server_(dbus::BUS_NAME)
+struct DebugDBusInterface::Impl
 {
-  _parent_introspectable = parent;
+  Impl(Introspectable*);
 
-  server_.AddObjects(dbus::INTROSPECTION_XML, dbus::OBJECT_PATH);
+  GVariant* HandleDBusMethodCall(std::string const&, GVariant*);
+  GVariant* GetState(std::string const&);
 
-  for (auto const& obj : server_.GetObjects())
-    obj->SetMethodsCallsHandler(&DebugDBusInterface::HandleDBusMethodCall);
-}
+  void StartLogToFile(std::string const&);
+  void ResetLogging();
+  void SetLogSeverity(std::string const& log_component, std::string const& severity);
+  void LogMessage(std::string const& severity, std::string const& message);
+
+  Introspectable* introspection_root_;
+  local::xpathselect::NodeSelector xns_;
+  glib::DBusServer::Ptr server_;
+  std::ofstream output_file_;
+};
+
+DebugDBusInterface::DebugDBusInterface(Introspectable* root)
+  : impl_(new DebugDBusInterface::Impl(root))
+{}
 
 DebugDBusInterface::~DebugDBusInterface()
+{}
+
+DebugDBusInterface::Impl::Impl(Introspectable* root)
+  : introspection_root_(root)
+  , server_((introspection_root_ && xns_) ? std::make_shared<glib::DBusServer>(dbus::BUS_NAME) : nullptr)
 {
-  local::cleanup_xpathselect();
+  if (server_)
+  {
+    server_->AddObjects(dbus::INTROSPECTION_XML, dbus::OBJECT_PATH);
+
+    for (auto const& obj : server_->GetObjects())
+      obj->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::HandleDBusMethodCall));
+  }
 }
 
-GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GVariant* parameters)
+GVariant* DebugDBusInterface::Impl::HandleDBusMethodCall(std::string const& method, GVariant* parameters)
 {
   if (method == "GetState")
   {
@@ -331,13 +350,13 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
   return nullptr;
 }
 
-GVariant* GetState(std::string const& query)
+GVariant* DebugDBusInterface::Impl::GetState(std::string const& query)
 {
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
 
-  auto root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable);
-  for (auto const& n : local::select_nodes(root_node, query))
+  auto root_node = std::make_shared<local::IntrospectableAdapter>(introspection_root_);
+  for (auto const& n : xns_.SelectNodes(root_node, query))
   {
     auto p = std::static_pointer_cast<local::IntrospectableAdapter const>(n);
     if (p)
@@ -347,30 +366,30 @@ GVariant* GetState(std::string const& query)
   return g_variant_new("(a(sv))", &builder);
 }
 
-void StartLogToFile(std::string const& file_path)
+void DebugDBusInterface::Impl::StartLogToFile(std::string const& file_path)
 {
-  if (local::output_file.is_open())
-    local::output_file.close();
-  local::output_file.open(file_path);
-  nux::logging::Writer::Instance().SetOutputStream(local::output_file);
+  if (output_file_.is_open())
+    output_file_.close();
+
+  output_file_.open(file_path);
+  nux::logging::Writer::Instance().SetOutputStream(output_file_);
 }
 
-void ResetLogging()
+void DebugDBusInterface::Impl::ResetLogging()
 {
-  if (local::output_file.is_open())
-    local::output_file.close();
+  if (output_file_.is_open())
+    output_file_.close();
+
   nux::logging::Writer::Instance().SetOutputStream(std::cout);
   nux::logging::reset_logging();
 }
 
-void SetLogSeverity(std::string const& log_component,
-                    std::string const& severity)
+void DebugDBusInterface::Impl::SetLogSeverity(std::string const& log_component, std::string const& severity)
 {
   nux::logging::Logger(log_component).SetLogLevel(nux::logging::get_logging_level(severity));
 }
 
-void LogMessage(std::string const& severity,
-                std::string const& message)
+void DebugDBusInterface::Impl::LogMessage(std::string const& severity, std::string const& message)
 {
   nux::logging::Level level = nux::logging::get_logging_level(severity);
   nux::logging::Logger const& log_ref = Unwrap(logger);
@@ -381,5 +400,5 @@ void LogMessage(std::string const& severity,
   }
 }
 
-}
-}
+} // debug namepsace
+} // unity namespace

@@ -24,7 +24,6 @@
 #include "ResultView.h"
 
 #include <Nux/Layout.h>
-#include <UnityCore/Variant.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/GraphicsUtils.h"
@@ -44,13 +43,13 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   , renderer_(NULL)
   , cached_result_(nullptr, nullptr, nullptr)
 {
-  expanded.changed.connect([&](bool value)
+  expanded.changed.connect([this](bool value)
   {
     QueueRelayout();
     NeedRedraw();
   });
 
-  desaturation_progress.changed.connect([&](float value)
+  desaturation_progress.changed.connect([this](float value)
   {
     NeedRedraw();
   });
@@ -80,7 +79,7 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
     renderer_->UnReference();
 
   renderer_ = renderer;
-  renderer->NeedsRedraw.connect([&]()
+  renderer->NeedsRedraw.connect([this]()
   {
     NeedRedraw();
   });
@@ -271,13 +270,13 @@ std::string ResultView::GetName() const
 
 void ResultView::GetResultDimensions(int& rows, int& columns)
 {
-  columns = results_per_row;  
+  columns = results_per_row;
   rows = result_model_ ? ceil(static_cast<double>(result_model_->count()) / static_cast<double>(std::max(1, columns))) : 0.0;
 }
 
-void ResultView::AddProperties(GVariantBuilder* builder)
+void ResultView::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
     .add("expanded", expanded);
 }
 

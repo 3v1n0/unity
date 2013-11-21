@@ -86,9 +86,9 @@ std::string PreviewInfoHintWidget::GetName() const
   return "PreviewInfoHintWidget";
 }
 
-void PreviewInfoHintWidget::AddProperties(GVariantBuilder* builder)
+void PreviewInfoHintWidget::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry());
 }
 
@@ -148,7 +148,7 @@ void PreviewInfoHintWidget::SetupViews()
 
   previews::Style& style = previews::Style::Instance();
 
-  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
+  auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
   nux::VLayout* layout = new nux::VLayout();
   layout->SetSpaceBetweenChildren(6);

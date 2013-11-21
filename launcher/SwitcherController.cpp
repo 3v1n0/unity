@@ -44,7 +44,6 @@ const std::string DETAIL_TIMEOUT = "detail-timeout";
 const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
 const unsigned FADE_DURATION = 80;
 const int XY_OFFSET = 100;
-const int WH_OFFSET = -200;
 
 /**
  * Helper comparison functor for sorting application icons.
@@ -271,9 +270,9 @@ Controller::GetName() const
 }
 
 void
-Controller::AddProperties(GVariantBuilder* builder)
+Controller::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("detail_on_timeout", detail_on_timeout())
   .add("initial_detail_timeout_length", initial_detail_timeout_length())
   .add("detail_timeout_length", detail_timeout_length())
@@ -301,7 +300,7 @@ Controller::Impl::Impl(Controller* obj,
     };
 
   // TODO We need to get actual timing data to suggest this is necessary.
-  //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
+  //sources_.AddTimeoutSeconds(construct_timeout_, [this] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 
   fade_animator_.updated.connect([this] (double opacity) {
     if (view_window_)
@@ -345,8 +344,8 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
 
   if (real_wait > 0)
   {
-    sources_.AddIdle([&] { ConstructView(); return false; }, VIEW_CONSTRUCT_IDLE);
-    sources_.AddTimeout(real_wait, [&] { ShowView(); return false; }, SHOW_TIMEOUT);
+    sources_.AddIdle([this] { ConstructView(); return false; }, VIEW_CONSTRUCT_IDLE);
+    sources_.AddTimeout(real_wait, [this] { ShowView(); return false; }, SHOW_TIMEOUT);
   }
   else
   {
@@ -440,8 +439,7 @@ nux::Geometry GetSwitcherViewsGeometry()
   int monitor      = uscreen->GetMonitorWithMouse();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
 
-  monitor_geo.OffsetPosition(XY_OFFSET, XY_OFFSET);
-  monitor_geo.OffsetSize(WH_OFFSET, WH_OFFSET);
+  monitor_geo.Expand(-XY_OFFSET, -XY_OFFSET);
 
   return monitor_geo;
 }
@@ -462,13 +460,13 @@ void Controller::Impl::ConstructView()
   view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
 
   view_->switcher_mouse_up.connect([this] (int icon_index, int button) {
-      if (button == 3)
-        InitiateDetail(true);
+    if (button == 3)
+      InitiateDetail(true);
   });
 
   view_->switcher_mouse_move.connect([this] (int icon_index) {
-      if (icon_index >= 0)
-        ResetDetailTimer(obj_->detail_timeout_length);
+    if (icon_index >= 0)
+      ResetDetailTimer(obj_->detail_timeout_length);
   });
 
   view_->switcher_next.connect(sigc::mem_fun(this, &Impl::Next));

@@ -74,7 +74,7 @@ protected:
  
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;

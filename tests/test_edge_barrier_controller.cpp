@@ -71,6 +71,8 @@ namespace ui {
 class TestEdgeBarrierController : public Test
 {
 public:
+  virtual ~TestEdgeBarrierController() {}
+
   virtual void SetUp()
   {
     bc.options = std::make_shared<launcher::Options>();

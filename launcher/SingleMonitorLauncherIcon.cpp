@@ -17,8 +17,6 @@
  * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#include <UnityCore/Variant.h>
-
 #include "SingleMonitorLauncherIcon.h"
 
 namespace unity
@@ -58,11 +56,10 @@ std::string SingleMonitorLauncherIcon::GetName() const
   return "SingleMonitorLauncherIcon";
 }
 
-void SingleMonitorLauncherIcon::AddProperties(GVariantBuilder* builder)
+void SingleMonitorLauncherIcon::AddProperties(debug::IntrospectionData& introspection)
 {
-  SimpleLauncherIcon::AddProperties(builder);
-
-  variant::BuilderWrapper(builder).add("monitor", monitor_);
+  SimpleLauncherIcon::AddProperties(introspection);
+  introspection.add("monitor", monitor_);
 }
 
 } // namespace launcher

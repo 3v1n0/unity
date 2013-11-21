@@ -52,10 +52,6 @@ public:
 
   Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
 
-  // From debug::Introspectable
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);  
-
 protected:
   virtual bool AcceptKeyNavFocus() { return false; }
 
@@ -64,6 +60,10 @@ protected:
   void OnTrackUpdated(dash::Track const& track);
   void OnTrackAdded(dash::Track const& track);
   void OnTrackRemoved(dash::Track const&track);
+
+  // From debug::Introspectable
+  std::string GetName() const;
+  void AddProperties(debug::IntrospectionData&);
 
 protected:
   dash::Tracks::Ptr tracks_;

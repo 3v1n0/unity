@@ -183,7 +183,7 @@ class SpreadTests(UnityTestCase):
         """Tests that the screen spread hides the active tooltip."""
         [win] = self.start_test_application_windows("Calculator", 1)
         icon = self.unity.launcher.model.get_icon(desktop_id=win.application.desktop_file)
-        self.mouse.move(icon.center_x, icon.center_y)
+        self.mouse.move(icon.center.x, icon.center.y)
 
         self.assertThat(lambda: icon.get_tooltip(), Eventually(NotEquals(None)))
         self.assertThat(icon.get_tooltip().active, Eventually(Equals(True)))

@@ -36,6 +36,7 @@ struct EdgeBarrierSubscriber
     NEEDS_RELEASE
   };
 
+  virtual ~EdgeBarrierSubscriber() {}
   virtual Result HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) = 0;
 };
 

@@ -24,7 +24,6 @@
 #include <array>
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 #include "WindowButtons.h"
 #include "WindowButtonPriv.h"
@@ -206,7 +205,7 @@ std::string WindowButton::GetName() const
   return "WindowButton";
 }
 
-void WindowButton::AddProperties(GVariantBuilder* builder)
+void WindowButton::AddProperties(debug::IntrospectionData& introspection)
 {
   std::string type_name;
   std::string state_name;
@@ -239,7 +238,7 @@ void WindowButton::AddProperties(GVariantBuilder* builder)
       state_name = "normal";
   }
 
-  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
+  introspection.add(GetAbsoluteGeometry())
                                   .add("type", type_name)
                                   .add("visible", IsVisible() && Parent()->opacity() != 0.0f)
                                   .add("sensitive", Parent()->GetInputEventSensitivity())
@@ -262,17 +261,17 @@ WindowButtons::WindowButtons()
   controlled_window.changed.connect(sigc::mem_fun(this, &WindowButtons::OnControlledWindowChanged));
   focused.changed.connect(sigc::hide(sigc::mem_fun(this, &WindowButtons::QueueDraw)));
 
-  auto lambda_enter = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
+  auto lambda_enter = [this](int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
     mouse_enter.emit(x, y, button_flags, key_flags);
   };
 
-  auto lambda_leave = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
+  auto lambda_leave = [this](int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
     mouse_leave.emit(x, y, button_flags, key_flags);
   };
 
-  auto lambda_moved = [&](int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+  auto lambda_moved = [this](int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
   {
     mouse_move.emit(x, y, dx, dy, button_flags, key_flags);
   };
@@ -651,15 +650,15 @@ std::string WindowButtons::GetName() const
   return "WindowButtons";
 }
 
-void WindowButtons::AddProperties(GVariantBuilder* builder)
+void WindowButtons::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
-                                  .add("monitor", monitor())
-                                  .add("opacity", opacity())
-                                  .add("visible", opacity() != 0.0f)
-                                  .add("sensitive", GetInputEventSensitivity())
-                                  .add("focused", focused())
-                                  .add("controlled_window", (guint64)controlled_window());
+  introspection.add(GetAbsoluteGeometry())
+               .add("monitor", monitor())
+               .add("opacity", opacity())
+               .add("visible", opacity() != 0.0f)
+               .add("sensitive", GetInputEventSensitivity())
+               .add("focused", focused())
+               .add("controlled_window", controlled_window());
 }
 
 } // unity namespace

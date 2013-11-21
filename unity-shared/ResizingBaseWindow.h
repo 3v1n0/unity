@@ -50,6 +50,8 @@ public:
   ResizingBaseWindow(char const* window_name,
                      GeometryAdjuster const& input_adjustment);
 
+  virtual ~ResizingBaseWindow() {}
+
   /**
    * Recalculates the input window geometry.
    *

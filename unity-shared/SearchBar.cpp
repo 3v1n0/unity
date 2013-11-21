@@ -24,8 +24,6 @@
 #include <Nux/VLayout.h>
 #include <NuxCore/Logger.h>
 
-#include <UnityCore/Variant.h>
-
 #include <glib/gi18n-lib.h>
 
 #include "SearchBar.h"
@@ -167,8 +165,8 @@ void SearchBar::Init()
   pango_entry_->SetFontFamily(PANGO_ENTRY_DEFAULT_FONT_FAMILY.c_str());
   pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
   pango_entry_->text_changed.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
-  pango_entry_->activated.connect([&]() { activated.emit(); });
-  pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
+  pango_entry_->activated.connect([this]() { activated.emit(); });
+  pango_entry_->cursor_moved.connect([this](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
   pango_entry_->key_up.connect([this] (unsigned int, unsigned long, unsigned long) {
@@ -234,17 +232,17 @@ void SearchBar::Init()
     show_filters_->SetMaximumWidth(style.GetFilterBarWidth() - arrow_layout_->GetBaseWidth() - 8);
 
     // Lambda functions
-    auto mouse_expand = [&](int, int, unsigned long, unsigned long)
+    auto mouse_expand = [this](int, int, unsigned long, unsigned long)
     {
       showing_filters = !showing_filters;
     };
 
-    auto key_redraw = [&](nux::Area*, bool, nux::KeyNavDirection)
+    auto key_redraw = [this](nux::Area*, bool, nux::KeyNavDirection)
     {
       QueueDraw();
     };
 
-    auto key_expand = [&](nux::Area*)
+    auto key_expand = [this](nux::Area*)
     {
       showing_filters = !showing_filters;
     };
@@ -261,13 +259,13 @@ void SearchBar::Init()
                                                     sigc::mem_fun(this, &SearchBar::OnFontChanged));
   OnFontChanged(gtk_settings_get_default());
 
-  search_hint.changed.connect([&](std::string const& s) { OnSearchHintChanged(); });
+  search_hint.changed.connect([this](std::string const& s) { OnSearchHintChanged(); });
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
   im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_preedit));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
-  can_refine_search.changed.connect([&] (bool can_refine)
+  can_refine_search.changed.connect([this] (bool can_refine)
   {
     if (show_filter_hint_)
     {
@@ -605,9 +603,9 @@ std::string SearchBar::GetName() const
   return "SearchBar";
 }
 
-void SearchBar::AddProperties(GVariantBuilder* builder)
+void SearchBar::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("has_focus", pango_entry_->HasKeyFocus())
   .add("search_string", pango_entry_->GetText())

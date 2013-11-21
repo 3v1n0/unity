@@ -38,7 +38,6 @@
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
-#include <UnityCore/Variant.h>
 
 #include "PanelIndicatorsView.h"
 
@@ -78,7 +77,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   rop.Blend = true;
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
 
-  if (Settings::Instance().GetLowGfxMode() == false)
+  if (!Settings::Instance().GetLowGfxMode())
   {
     rop.SrcBlend = GL_ZERO;
     rop.DstBlend = GL_SRC_COLOR;
@@ -119,7 +118,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
-  ubus_manager_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [&] (GVariant *data) {
+  ubus_manager_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [this] (GVariant *data) {
     int width, height;
     g_variant_get(data, "(ii)", &width, &height);
     stored_dash_width_ = width;
@@ -152,7 +151,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 PanelView::~PanelView()
 {
   indicator::EntryLocationMap locations;
-  remote_->SyncGeometries(GetName() + boost::lexical_cast<std::string>(monitor_), locations);
+  remote_->SyncGeometries(GetName() + std::to_string(monitor_), locations);
 }
 
 Window PanelView::GetTrayXid() const
@@ -239,9 +238,9 @@ std::string PanelView::GetName() const
   return "UnityPanel";
 }
 
-void PanelView::AddProperties(GVariantBuilder* builder)
+void PanelView::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
   .add("backend", "remote")
   .add("monitor", monitor_)
   .add("active", IsActive())
@@ -259,15 +258,14 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (IsTransparent())
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
 
     if (BackgroundEffectHelper::blur_type != BLUR_NONE)
     {
-      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion();
     }
     else
     {
-      bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo);
+      bg_blur_texture_ = bg_effect_helper_.GetRegion();
     }
 
     if (bg_blur_texture_.IsValid())
@@ -314,7 +312,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (overlay_is_open_ && Settings::Instance().GetLowGfxMode() == false)
+    if (overlay_is_open_ && !Settings::Instance().GetLowGfxMode())
     {
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_darken_layer_.get());
 
@@ -337,7 +335,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-  if (!overlay_is_open_ || GfxContext.UsingGLSLCodePath() == false)
+  if (!overlay_is_open_ || !GfxContext.UsingGLSLCodePath())
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_layer_.get());
 
   GfxContext.PopClippingRectangle();
@@ -708,7 +706,7 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
     if (enabled)
     {
       WindowManager& win_manager = WindowManager::Default();
-      auto update_bg_lambda = [&](guint32) { ForceUpdateBackground(); };
+      auto update_bg_lambda = [this](guint32) { ForceUpdateBackground(); };
       auto conn = &maximized_opacity_toggle_connections_;
 
       conn->Add(win_manager.window_minimized.connect(update_bg_lambda));
@@ -737,7 +735,7 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  std::string panel_id = GetName() + boost::lexical_cast<std::string>(monitor_);
+  std::string panel_id = GetName() + std::to_string(monitor_);
 
   if (menu_view_->GetControlsActive())
     menu_view_->GetGeometryForSync(locations);

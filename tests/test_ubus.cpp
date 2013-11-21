@@ -43,6 +43,8 @@ struct TestUBusServer : public testing::Test
   unsigned callback_call_count;
   glib::Variant last_msg_variant;
 
+  virtual ~TestUBusServer() {}
+
   virtual void SetUp()
   {
     callback_called = false;
@@ -73,6 +75,7 @@ struct TestUBusManager : public testing::Test
   unsigned callback_call_count;
   glib::Variant last_msg_variant;
 
+  virtual ~TestUBusManager() {}
   virtual void SetUp()
   {
     callback_called = false;

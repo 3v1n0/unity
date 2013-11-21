@@ -552,8 +552,8 @@ class SwitcherDetailsMouseTests(SwitcherTestCase):
 
         # Must collect the cords before moving mouse
         for args in icon_args:
-            x = args.logical_center_x + offset
-            y = args.logical_center_y + offset
+            x = args.logical_center.x + offset
+            y = args.logical_center.y + offset
             icon_cords.append((x,y))
 
         self.unity.switcher.view.break_mouse_bump_detection()

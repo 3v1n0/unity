@@ -48,6 +48,7 @@ const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 
 namespace dbus
 {
+const std::string BUS_NAME = "com.canonical.Unity";
 const std::string PATH = "/com/canonical/Unity/Dash";
 const std::string INTROSPECTION =\
   "<node>"
@@ -68,18 +69,19 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , monitor_(0)
   , visible_(false)
   , need_show_(false)
+  , dbus_server_(dbus::BUS_NAME)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
 {
   RegisterUBusInterests();
 
-  ensure_timeout_.Run([&]() { EnsureDash(); return false; });
+  ensure_timeout_.Run([this]() { EnsureDash(); return false; });
   timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   // As a default. the create_window_ function should just create a base window.
   if (create_window_ == nullptr)
   {
-    create_window_ = [&]() {
+    create_window_ = [this]() {
       return new ResizingBaseWindow(dash::window_title,
                                     [this](nux::Geometry const& geo) {
                                       if (view_)
@@ -90,7 +92,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   }
 
   SetupWindow();
-  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
+  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry>&) { Relayout(true); });
 
   Settings::Instance().form_factor.changed.connect([this](FormFactor)
   {
@@ -160,8 +162,8 @@ void Controller::RegisterUBusInterests()
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST,
                                  sigc::mem_fun(this, &Controller::OnExternalHideDash));
   ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
-                                 [&] (GVariant*) { EnsureDash(); });
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data)
+                                 [this] (GVariant*) { EnsureDash(); });
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [this] (GVariant *data)
   {
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
@@ -418,11 +420,11 @@ std::string Controller::GetName() const
   return "DashController";
 }
 
-void Controller::AddProperties(GVariantBuilder* builder)
+void Controller::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder).add("visible", visible_)
-                                  .add("ideal_monitor", GetIdealMonitor())
-                                  .add("monitor", monitor_);
+  introspection.add("visible", visible_)
+               .add("ideal_monitor", GetIdealMonitor())
+               .add("monitor", monitor_);
 }
 
 void Controller::ReFocusKeyInput()

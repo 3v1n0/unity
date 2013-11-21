@@ -20,7 +20,6 @@
 
 #include "SwitcherModel.h"
 #include "unity-shared/WindowManager.h"
-
 #include <UnityCore/Variant.h>
 
 namespace unity
@@ -68,12 +67,13 @@ std::string SwitcherModel::GetName() const
   return "SwitcherModel";
 }
 
-void SwitcherModel::AddProperties(GVariantBuilder* builder)
+void SwitcherModel::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("detail-selection", detail_selection)
   .add("detail-selection-index", (int)detail_selection_index)
   .add("detail-current-count", DetailXids().size())
+  .add("detail-windows", static_cast<GVariant*>(glib::Variant::FromVector(DetailXids())))
   .add("only-detail-on-viewport", only_detail_on_viewport)
   .add("selection-index", SelectionIndex())
   .add("last-selection-index", LastSelectionIndex());

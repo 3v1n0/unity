@@ -292,7 +292,7 @@ int main(int argc, char** argv)
   nux::NuxInitialize(0);
 
   unity::Settings settings;
-  BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
+  unity::BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 1200, 600, 0, &ThreadWidgetInit, 0);
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller(tick_source);

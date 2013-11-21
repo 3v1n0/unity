@@ -23,7 +23,6 @@
 #include "unity-shared/PanelStyle.h"
 
 #include <NuxCore/Logger.h>
-#include <UnityCore/Variant.h>
 
 DECLARE_LOGGER(logger, "unity.panel.tray");
 namespace
@@ -220,9 +219,9 @@ std::string PanelTray::GetName() const
   return "Tray";
 }
 
-void PanelTray::AddProperties(GVariantBuilder* builder)
+void PanelTray::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("children_count", children_.size());
 }

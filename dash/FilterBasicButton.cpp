@@ -75,12 +75,12 @@ void FilterBasicButton::Init()
 
   clear_before_draw_ = true;
 
-  key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
+  key_nav_focus_change.connect([this] (nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   });
 
-  key_nav_focus_activate.connect([&](nux::Area*)
+  key_nav_focus_activate.connect([this](nux::Area*)
   {
     if (GetInputEventSensitivity())
       Active() ? Deactivate() : Activate();

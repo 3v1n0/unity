@@ -195,7 +195,7 @@ public:
 
 protected:
   std::string GetName() const;
-  virtual void AddProperties(GVariantBuilder* builder) = 0;
+  virtual void AddProperties(debug::IntrospectionData& introspection) = 0;
 
 };
 

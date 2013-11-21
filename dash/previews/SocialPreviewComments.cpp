@@ -128,7 +128,7 @@ void SocialPreviewComments::SetupViews()
 
   previews::Style& style = previews::Style::Instance();
 
-  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
+  auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
   nux::VLayout* layout = new nux::VLayout();
   layout->SetSpaceBetweenChildren(6);
@@ -190,8 +190,9 @@ std::string SocialPreviewComments::GetName() const
   return "SocialPreviewComments";
 }
 
-void SocialPreviewComments::AddProperties(GVariantBuilder* builder)
+void SocialPreviewComments::AddProperties(debug::IntrospectionData& introspection)
 {
+  introspection.add(GetAbsoluteGeometry());
 }
 
 }

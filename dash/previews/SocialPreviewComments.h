@@ -67,7 +67,7 @@ protected:
   void SetupViews();
 
   virtual std::string GetName() const;
-  virtual void AddProperties(GVariantBuilder* builder);
+  virtual void AddProperties(debug::IntrospectionData&);
 
 private:
 

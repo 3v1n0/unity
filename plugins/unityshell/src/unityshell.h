@@ -221,7 +221,7 @@ public:
 
 protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   enum CancelActionTarget
@@ -286,6 +286,8 @@ private:
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
   bool getMipmap () override { return false; }
+
+  void DamageBlurUpdateRegion(nux::Geometry const&);
 
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
@@ -458,7 +460,7 @@ public:
 
 protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>

@@ -25,7 +25,6 @@
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Logger.h>
 
-#include <UnityCore/Variant.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DesktopUtilities.h>
 
@@ -596,22 +595,20 @@ std::string ApplicationLauncherIcon::DesktopFile() const
   return app_->desktop_file();
 }
 
-void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
+void ApplicationLauncherIcon::AddProperties(debug::IntrospectionData& introspection)
 {
-  SimpleLauncherIcon::AddProperties(builder);
+  SimpleLauncherIcon::AddProperties(introspection);
 
-  GVariantBuilder xids_builder;
-  g_variant_builder_init(&xids_builder, G_VARIANT_TYPE ("au"));
-
+  std::vector<Window> xids;
   for (auto const& window : GetWindows())
-    g_variant_builder_add(&xids_builder, "u", window->window_id());
+    xids.push_back(window->window_id());
 
-  variant::BuilderWrapper(builder)
+  introspection
     .add("desktop_file", DesktopFile())
     .add("desktop_id", app_->desktop_id())
-    .add("xids", g_variant_builder_end(&xids_builder))
+    .add("xids", static_cast<GVariant*>(glib::Variant::FromVector(xids)))
     .add("sticky", IsSticky())
-    .add("startup_notification_timestamp", (uint64_t)_startup_notification_timestamp);
+    .add("startup_notification_timestamp", _startup_notification_timestamp);
 }
 
 void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp)

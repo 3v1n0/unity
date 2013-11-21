@@ -27,13 +27,13 @@
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/Scopes.h>
 #include <UnityCore/GLibSource.h>
+#include <UnityCore/Preview.h>
 
 #include "ScopeBar.h"
 #include "ScopeView.h"
 #include "ApplicationStarter.h"
 #include "previews/PreviewContainer.h"
 #include "PreviewStateMachine.h"
-#include "UnityCore/Preview.h"
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/BGHash.h"
@@ -125,7 +125,10 @@ private:
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
+
+  nux::Geometry GetRenderAbsoluteGeometry() const;
+
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 

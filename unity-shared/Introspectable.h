@@ -20,7 +20,7 @@
 #ifndef _INTROSPECTABLE_H
 #define _INTROSPECTABLE_H
 
-#include <glib.h>
+#include "IntrospectionData.h"
 #include <list>
 #include <string>
 
@@ -39,7 +39,7 @@ public:
   virtual std::string GetName() const = 0;
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
-  virtual void AddProperties(GVariantBuilder* builder) = 0;
+  virtual void AddProperties(debug::IntrospectionData&) = 0;
   virtual IntrospectableList GetIntrospectableChildren();
   int32_t GetIntrospectionId() const;
 

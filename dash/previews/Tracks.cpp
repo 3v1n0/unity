@@ -27,7 +27,6 @@
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/PreviewStyle.h"
 #include <UnityCore/Track.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -62,9 +61,9 @@ std::string Tracks::GetName() const
   return "Tracks";
 }
 
-void Tracks::AddProperties(GVariantBuilder* builder)
+void Tracks::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("track-count", m_tracks.size());
 }
 

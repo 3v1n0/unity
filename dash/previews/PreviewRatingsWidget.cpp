@@ -29,7 +29,6 @@
 #include "unity-shared/RatingsButton.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PreviewStyle.h"
-#include <UnityCore/Variant.h>
 #include "PreviewRatingsWidget.h"
 
 namespace unity
@@ -49,7 +48,7 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
 
   previews::Style& style = previews::Style::Instance();
 
-  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
+  auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
   ratings_ = new RatingsButton(18,2);
   ratings_->SetEditable(false);
@@ -109,9 +108,9 @@ std::string PreviewRatingsWidget::GetName() const
   return "PreviewRatingsWidget";
 }
 
-void PreviewRatingsWidget::AddProperties(GVariantBuilder* builder)
+void PreviewRatingsWidget::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry());
 }
 

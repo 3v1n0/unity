@@ -358,9 +358,9 @@ std::string LauncherEntryRemote::GetName() const
   return "LauncherEntry";
 }
 
-void LauncherEntryRemote::AddProperties(GVariantBuilder* builder)
+void LauncherEntryRemote::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("count", Count())
     .add("progress", Progress())
     .add("emblem_visible", EmblemVisible())

@@ -22,7 +22,6 @@
 #include "ActionLink.h"
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
-#include <UnityCore/Variant.h>
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
@@ -54,9 +53,9 @@ std::string ActionLink::GetName() const
   return "ActionLink";
 }
 
-void ActionLink::AddProperties(GVariantBuilder* builder)
+void ActionLink::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("action", action_hint_)
     .add("label", label_)
@@ -81,12 +80,12 @@ void ActionLink::Init()
   font_hint.SetSetterFunction(sigc::mem_fun(this, &ActionLink::set_font_hint));
   font_hint.SetGetterFunction(sigc::mem_fun(this, &ActionLink::get_font_hint));
 
-  key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
+  key_nav_focus_change.connect([this] (nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   });
 
-  key_nav_focus_activate.connect([&](nux::Area*)
+  key_nav_focus_activate.connect([this](nux::Area*)
   {
     if (GetInputEventSensitivity())
       activate.emit(this, action_hint_);

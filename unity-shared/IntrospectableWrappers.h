@@ -38,7 +38,7 @@ class ResultWrapper: public Introspectable
 public:
   ResultWrapper(const dash::Result& result, nux::Geometry const& geo = nux::Geometry());
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   void UpdateGeometry(nux::Geometry const& geo);
 

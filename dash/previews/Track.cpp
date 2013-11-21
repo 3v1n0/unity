@@ -29,7 +29,6 @@
 #include <unity-shared/IconTexture.h>
 #include <unity-shared/DashStyle.h>
 #include <unity-shared/PreviewStyle.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -42,6 +41,7 @@ class TmpView : public nux::View
 {
 public:
   TmpView(NUX_FILE_LINE_PROTO): View(NUX_FILE_LINE_PARAM) {}
+  virtual ~TmpView() {}
 
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -73,6 +73,7 @@ public:
   , write_alpha_(write_alpha)
   , rop_(ROP)
   {}
+  virtual ~TrackProgressLayer() {}
 
   virtual void Renderlayer(nux::GraphicsEngine& graphics_engine)
   {
@@ -138,9 +139,9 @@ std::string Track::GetName() const
   return "Track";
 }
 
-void Track::AddProperties(GVariantBuilder* builder)
+void Track::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("uri", uri_)
     .add("play-state", (int)play_state_)
     .add("progress", progress_)
@@ -270,7 +271,7 @@ void Track::SetupViews()
 
   mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
-  mouse_click.connect([&](int, int, unsigned long, unsigned long)
+  mouse_click.connect([this](int, int, unsigned long, unsigned long)
   {
     switch (play_state_)
     {

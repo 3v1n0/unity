@@ -18,10 +18,9 @@
  *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <UnityCore/Variant.h>
-
 #include "UnityWindowView.h"
 #include <Nux/VLayout.h>
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity {
@@ -214,11 +213,11 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
-    bg_texture_ = bg_helper_.GetBlurRegion(blur_geo);
+    bg_texture_ = bg_helper_.GetBlurRegion();
   }
   else
   {
-    bg_texture_ = bg_helper_.GetRegion(blur_geo);
+    bg_texture_ = bg_helper_.GetRegion();
   }
 
   if (bg_texture_.IsValid())
@@ -236,12 +235,20 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
+    {
+      auto temp_background_color = background_color();
+
+      if (Settings::Instance().GetLowGfxMode())
+        temp_background_color.alpha = 1.0f;
+
       gPainter.PushDrawCompositionLayer(GfxContext, base,
                                         bg_texture_,
                                         texxform_blur_bg,
                                         nux::color::White,
-                                        background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                        temp_background_color,
+                                        Settings::Instance().GetLowGfxMode() ? nux::LAYER_BLEND_MODE_NORMAL : nux::LAYER_BLEND_MODE_OVERLAY,
                                         true, rop);
+    }
     else
       gPainter.PushDrawTextureLayer(GfxContext, base,
                                     bg_texture_,
@@ -411,10 +418,12 @@ std::string UnityWindowView::GetName() const
   return "UnityWindowView";
 }
 
-void UnityWindowView::AddProperties(GVariantBuilder* builder)
+void UnityWindowView::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
-    .add("bg-texture-is-valid", bg_texture_.IsValid());
+  introspection
+    .add("bg-texture-is-valid", bg_texture_.IsValid())
+    .add("closable", closable())
+    .add("close_geo", close_button_ ? close_button_->GetGeometry() : nux::Geometry());
 }
 
 

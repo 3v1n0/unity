@@ -86,7 +86,7 @@ void TooltipManager::Reset()
 void TooltipManager::ResetTimer(AbstractLauncherIcon::Ptr const& icon_under_mouse)
 {
   hover_timer_.reset(new glib::Timeout(TOOLTIPS_SHOW_TIMEOUT_LENGTH));
-  hover_timer_->Run([&] () {
+  hover_timer_->Run([this, icon_under_mouse] () {
     skip_timeout_ = true;
     icon_under_mouse->ShowTooltip();
     return false;

@@ -120,9 +120,9 @@ std::string Preview::GetName() const
   return "Preview";
 }
 
-void Preview::AddProperties(GVariantBuilder* builder)
+void Preview::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("uri", preview_model_->preview_result.uri);
 }
@@ -200,7 +200,7 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
+  auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
 
   std::string image_hint;
   if (preview_model_->image.Get())

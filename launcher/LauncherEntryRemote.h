@@ -67,7 +67,7 @@ public:
 
   // from Introspectable:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   sigc::signal<void, LauncherEntryRemote*, std::string> dbus_name_changed;   // gives the old name as arg
   sigc::signal<void, LauncherEntryRemote*> emblem_changed;
