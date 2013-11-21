@@ -33,9 +33,8 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   , style(UnityWindowStyle::Get())
   , closable(false)
   , internal_layout_(nullptr)
+  , bg_helper_(this)
 {
-  bg_helper_.owner = this;
-
   live_background.SetGetterFunction([this] { return bg_helper_.enabled(); });
   live_background.SetSetterFunction([this] (bool e) {
     if (bg_helper_.enabled() != e)

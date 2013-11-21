@@ -40,6 +40,7 @@ class BackgroundEffectHelper
 {
 public:
   BackgroundEffectHelper();
+  BackgroundEffectHelper(nux::View*);
   ~BackgroundEffectHelper();
 
   nux::Property<nux::View*> owner;

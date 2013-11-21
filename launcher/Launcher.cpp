@@ -133,6 +133,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , drag_gesture_ongoing_(false)
   , last_reveal_progress_(0.0f)
   , drag_action_(nux::DNDACTION_NONE)
+  , bg_effect_helper_(this)
   , auto_hide_animation_(ANIM_DURATION_SHORT)
   , hover_animation_(ANIM_DURATION)
   , drag_over_animation_(ANIM_DURATION_LONG)
@@ -143,9 +144,6 @@ Launcher::Launcher(MockableBaseWindow* parent,
 {
   icon_renderer_->monitor = monitor();
   icon_renderer_->SetTargetSize(icon_size_, DEFAULT_ICON_SIZE, SPACE_BETWEEN_ICONS);
-
-  bg_effect_helper_.owner = this;
-  bg_effect_helper_.enabled = false;
 
   CaptureMouseDownAnyWhereElse(true);
   SetAcceptKeyNavFocusOnMouseDown(false);

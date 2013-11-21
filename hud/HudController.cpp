@@ -408,8 +408,13 @@ void Controller::HideHud()
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
 
+  auto& wc = nux::GetWindowCompositor();
+  auto *key_focus_area = wc.GetKeyFocusArea();
+  if (key_focus_area && key_focus_area->IsChildOf(view_))
+    wc.SetKeyFocusArea(nullptr, nux::KEY_NAV_NONE);
+
   WindowManager::Default().RestoreInputFocus();
-  nux::GetWindowCompositor().SetKeyFocusArea(NULL, nux::KEY_NAV_NONE);
+
   StartShowHideTimeline();
   hud_service_.CloseQuery();
 

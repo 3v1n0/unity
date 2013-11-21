@@ -41,8 +41,9 @@ std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
 std::vector<nux::Geometry> BackgroundEffectHelper::blur_geometries_;
 sigc::signal<void, nux::Geometry const&> BackgroundEffectHelper::blur_region_needs_update_;
 
-BackgroundEffectHelper::BackgroundEffectHelper()
-  : enabled(false)
+BackgroundEffectHelper::BackgroundEffectHelper(nux::View* view)
+  : owner(view)
+  , enabled(false)
   , cache_dirty(true)
 {
   enabled.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
@@ -52,6 +53,10 @@ BackgroundEffectHelper::BackgroundEffectHelper()
   if (Settings::Instance().GetLowGfxMode())
     blur_type = BLUR_NONE;
 }
+
+BackgroundEffectHelper::BackgroundEffectHelper()
+  : BackgroundEffectHelper(nullptr)
+{}
 
 BackgroundEffectHelper::~BackgroundEffectHelper()
 {
@@ -158,7 +163,7 @@ void BackgroundEffectHelper::ProcessDamage(nux::Geometry const& geo)
     if (bg_effect_helper->cache_dirty)
       continue;
 
-    if (geo.IsIntersecting(bg_effect_helper->blur_geometry_))
+    if (geo.IsIntersecting(bg_effect_helper->requested_blur_geometry_))
     {
       bg_effect_helper->DirtyCache();
     }
