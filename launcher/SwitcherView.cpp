@@ -88,8 +88,8 @@ SwitcherView::SwitcherView()
   SetBackgroundHelperGeometryGetter([this] {
     // XXX: remove me when switcher will have a proper BaseWindow
     auto geo = GetAbsoluteGeometry();
-    geo.OffsetPosition(last_background_.x, last_background_.y);
-    geo.SetSize(last_background_.width, last_background_.height);
+    geo.OffsetPosition(blur_geometry_.x, blur_geometry_.y);
+    geo.SetSize(blur_geometry_.width, blur_geometry_.height);
     return geo;
   });
 
@@ -817,6 +817,22 @@ bool SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, 
       ++i;
     }
 
+    if (background_geo != blur_geometry_)
+    {
+      /* Update the blurred area geometry only if the final background is
+       * bigger than the previous blur geometry or if we've finished the
+       * animation; in this way we update the blurred area before growing
+       * and after that we've resized the view to the smaller size */
+      if ((background_geo.width >= blur_geometry_.width &&
+           background_geo.height >= blur_geometry_.height) || progress >= 1.0f)
+      {
+        blur_geometry_ = background_geo;
+
+        // Notify BackgroundEffectHelper
+        geometry_changed.emit(this, blur_geometry_);
+      }
+    }
+
     bool result_size_changed = (saved_args_.size() != results.size());
     any_changed = result_size_changed;
 
@@ -861,17 +877,9 @@ void SwitcherView::PreLayoutManagement()
   nux::Geometry background_geo;
   bool any_changed = RenderArgsFlat(background_geo, model_ ? model_->SelectionIndex() : 0, progress);
 
-  if (background_geo != last_background_)
+  if (background_geo != last_background_ || any_changed)
   {
     last_background_ = background_geo;
-
-    // Notify BackgroundEffectHelper
-    geometry_changed.emit(this, last_background_);
-
-    QueueDraw();
-  }
-  else if (any_changed)
-  {
     QueueDraw();
   }
 }
@@ -884,6 +892,11 @@ void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 nux::Geometry SwitcherView::GetBackgroundGeometry()
 {
   return last_background_;
+}
+
+nux::Geometry SwitcherView::GetBlurredBackgroundGeometry()
+{
+  return blur_geometry_;
 }
 
 void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip)

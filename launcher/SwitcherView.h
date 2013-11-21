@@ -99,7 +99,9 @@ protected:
 
   void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
+
   nux::Geometry GetBackgroundGeometry();
+  nux::Geometry GetBlurredBackgroundGeometry();
 
   ui::RenderArg InterpolateRenderArgs(ui::RenderArg const& start, ui::RenderArg const& end, float progress);
   nux::Geometry InterpolateBackground(nux::Geometry const& start, nux::Geometry const& end, float progress);
@@ -165,6 +167,7 @@ private:
 
   nux::Geometry last_background_;
   nux::Geometry saved_background_;
+  nux::Geometry blur_geometry_;
 
   ui::LayoutWindow::Vector render_targets_;
 
