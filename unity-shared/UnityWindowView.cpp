@@ -187,6 +187,11 @@ nux::Geometry UnityWindowView::GetInternalBackground()
   return GetBackgroundGeometry().GetExpand(-offset, -offset);
 }
 
+nux::Geometry UnityWindowView::GetBlurredBackgroundGeometry()
+{
+  return GetBackgroundGeometry();
+}
+
 nux::ObjectPtr<nux::InputArea> UnityWindowView::GetBoundingArea()
 {
   if (!bounding_area_)
@@ -216,8 +221,6 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& internal_clip = GetInternalBackground();
   GfxContext.PushClippingRectangle(internal_clip); ++push;
 
-  nux::Geometry const& bg_geo = GetBackgroundGeometry();
-
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
     bg_texture_ = bg_helper_.GetBlurRegion();
@@ -229,6 +232,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (bg_texture_.IsValid())
   {
+    nux::Geometry const& bg_geo = GetBlurredBackgroundGeometry();
     nux::TexCoordXForm texxform_blur_bg;
     texxform_blur_bg.flip_v_coord = true;
     texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -305,7 +309,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   for (unsigned i = 0; i < push; ++i)
     GfxContext.PopClippingRectangle();
 
-  DrawBackground(GfxContext, bg_geo);
+  DrawBackground(GfxContext, GetBackgroundGeometry());
 
   if (close_button_)
   {
