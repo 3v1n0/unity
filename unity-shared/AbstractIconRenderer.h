@@ -93,6 +93,41 @@ public:
   int           window_indicators;
   char          shortcut_label;
 
+  bool operator==(RenderArg const& other) const
+  {
+    return (icon == other.icon &&
+            render_center == other.render_center &&
+            logical_center == other.logical_center &&
+            rotation == other.rotation &&
+            colorify == other.colorify &&
+            alpha == other.alpha &&
+            saturation == other.saturation &&
+            backlight_intensity == other.backlight_intensity &&
+            glow_intensity == other.glow_intensity &&
+            shimmer_progress == other.shimmer_progress &&
+            progress == other.progress &&
+            progress_bias == other.progress_bias &&
+            running_arrow == other.running_arrow &&
+            running_colored == other.running_colored &&
+            running_on_viewport == other.running_on_viewport &&
+            draw_edge_only == other.draw_edge_only &&
+            active_arrow == other.active_arrow &&
+            active_colored == other.active_colored &&
+            skip == other.skip &&
+            stick_thingy == other.stick_thingy &&
+            keyboard_nav_hl == other.keyboard_nav_hl &&
+            draw_shortcut == other.draw_shortcut &&
+            system_item == other.system_item &&
+            colorify_background == other.colorify_background &&
+            window_indicators == other.window_indicators &&
+            shortcut_label == other.shortcut_label);
+  }
+
+  bool operator!=(RenderArg const& other) const
+  {
+    return !operator==(other);
+  }
+
 protected:
   // Introspectable methods
   std::string GetName() const { return "RenderArgs"; }
