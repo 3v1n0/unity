@@ -17,69 +17,70 @@
 * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 */
 
-#ifndef UNITY_DECORATION_MANAGER
-#define UNITY_DECORATION_MANAGER
+#ifndef UNITY_DECORATION_MANAGER_PRIV
+#define UNITY_DECORATION_MANAGER_PRIV
 
-#include <memory>
+#include "DecorationsManager.h"
+#include "unityshell.h"
 #include <X11/Xlib.h>
 
 class CompRegion;
 
 namespace unity
 {
-class UnityWindow;
-class UnityScreen;
-
 namespace decoration
 {
-class Manager;
 
-class Window
+struct Window::Impl
 {
-public:
-  typedef std::shared_ptr<Window> Ptr;
-
-  Window(UnityWindow*);
-  virtual ~Window();
+  Impl(decoration::Window*, UnityWindow*);
+  ~Impl();
 
   void Update();
-  void UpdateFrameRegion(CompRegion*);
+  bool FullyDecorated() const;
 
 private:
-  Window(Window const&) = delete;
-  Window& operator=(Window const&) = delete;
+  void UnsetExtents();
+  void SetupExtents();
+  void UnsetFrame();
+  void UpdateFrame();
+  void SyncXShapeWithFrameRegion();
+  bool ShouldBeDecorated() const;
 
-  friend class Manager;
+  friend class Window;
+  friend struct Manager::Impl;
 
-  struct Impl;
-  std::unique_ptr<Impl> impl_;
+  decoration::Window *parent_;
+  ::UnityWindow* uwin_;
+  ::Window frame_;
+  bool undecorated_;
+
+  nux::Geometry frame_geo_;
+  CompRegion frame_region_;
 };
 
-class Manager
+struct Manager::Impl
 {
-public:
-  typedef std::shared_ptr<Manager> Ptr;
+  Impl(UnityScreen*);
+  ~Impl();
 
-  Manager(UnityScreen*);
-  virtual ~Manager();
+private:
+  friend class Manager;
+  friend struct Window::Impl;
 
-  void AddSupportedAtoms(std::vector<Atom>& atoms) const;
   bool HandleEventBefore(XEvent*);
   bool HandleEventAfter(XEvent*);
 
-  Window::Ptr HandleWindow(UnityWindow*);
-  void UnHandleWindow(UnityWindow*);
-
   Window::Ptr GetWindowByXid(::Window);
+  Window::Ptr GetWindowByFrame(::Window);
 
-private:
-  Manager(Manager const&) = delete;
-  Manager& operator=(Manager const&) = delete;
+  bool UpdateWindow(::Window);
 
-  friend class Window;
+  ::UnityScreen* uscreen_;
+  ::CompScreen* cscreen_;
+  ::Window active_window_;
 
-  struct Impl;
-  std::unique_ptr<Impl> impl_;
+  std::map<UnityWindow*, decoration::Window::Ptr> windows_;
 };
 
 } // decoration namespace
