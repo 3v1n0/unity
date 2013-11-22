@@ -1620,7 +1620,7 @@ void UnityScreen::handleEvent(XEvent* event)
   bool skip_other_plugins = false;
   PluginAdapter& wm = PluginAdapter::Default();
 
-  if (deco_manager_->HandleEvent(event))
+  if (deco_manager_->HandleEventBefore(event))
     return;
 
   switch (event->type)
@@ -1853,6 +1853,10 @@ void UnityScreen::handleEvent(XEvent* event)
   // avoid further propagation (key conflict for instance)
   if (!skip_other_plugins)
     screen->handleEvent(event);
+
+
+  if (deco_manager_->HandleEventAfter(event))
+    return;
 
   switch (event->type)
   {
@@ -2960,6 +2964,26 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   switch (n)
   {
     case CompWindowNotifyMap:
+    {
+      deco_win_->Update();
+      break;
+    }
+    case CompWindowNotifyUnmap:
+    {
+      deco_win_->Update();
+      break;
+    }
+    case CompWindowNotifyReparent:
+      /* Always update decorations when a window gets reparented */
+      deco_win_->Update();
+      break;
+    default:
+      break;
+  }
+
+  switch (n)
+  {
+    case CompWindowNotifyMap:
       if (window->type() == CompWindowTypeDesktopMask) {
         if (!focus_desktop_timeout_)
         {
@@ -3064,6 +3088,7 @@ void UnityWindow::stateChangeNotify(unsigned int lastState)
      !(window->state () & CompWindowStateFullscreenMask))
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
 
+  deco_win_->Update();
   PluginAdapter::Default().NotifyStateChange(window, window->state(), lastState);
   window->stateChangeNotify(lastState);
 }
@@ -3079,7 +3104,18 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
   else if (mShowdesktopHandler)
     mShowdesktopHandler->UpdateFrameRegion (region);
   else
+  {
     window->updateFrameRegion (region);
+    deco_win_->UpdateFrameRegion(&region);
+  }
+}
+
+void UnityWindow::getOutputExtents(CompWindowExtents& output)
+{
+  window->getOutputExtents(output);
+
+  CompWindowExtents border(15, 15, 38, 15);
+  output = border;
 }
 
 void UnityWindow::moveNotify(int x, int y, bool immediate)
@@ -3153,6 +3189,7 @@ bool UnityWindow::place(CompPoint& pos)
 
   if (!was_maximized)
   {
+    deco_win_->Update();
     bool result = window->place(pos);
 
     if (window->type() & NO_FOCUS_MASK)
@@ -3622,6 +3659,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , window(window)
   , cWindow(CompositeWindow::get(window))
   , gWindow(GLWindow::get(window))
+  , deco_win_(uScreen->deco_manager_->HandleWindow(this))
   , is_nux_window_(isNuxWindow(window))
 {
   WindowInterface::setHandler(window);
@@ -4125,6 +4163,8 @@ UnityWindow::~UnityWindow()
 {
   if (uScreen->newFocusedWindow && UnityWindow::get(uScreen->newFocusedWindow) == this)
     uScreen->newFocusedWindow = NULL;
+
+  uScreen->deco_manager_->UnHandleWindow(this);
 
   if (!window->destroyed ())
   {

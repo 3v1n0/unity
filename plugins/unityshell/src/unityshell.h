@@ -51,7 +51,6 @@
 #include "unityshell_options.h"
 
 #include "Introspectable.h"
-#include "DecorationsManager.h"
 #include "DashController.h"
 #include "UnitySettings.h"
 #include "DashStyle.h"
@@ -88,7 +87,7 @@ class UnityWindow;
 namespace decoration
 {
 class Manager;
-typedef std::shared_ptr<Manager> ManagerPtr;
+class Window;
 }
 
 /* base screen class */
@@ -302,7 +301,7 @@ private:
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
 
-  decoration::ManagerPtr deco_manager_;
+  std::shared_ptr<decoration::Manager> deco_manager_;
 
   /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;
@@ -426,6 +425,7 @@ public:
   void activate();
 
   void updateFrameRegion(CompRegion &region);
+  void getOutputExtents(CompWindowExtents& output);
 
   /* occlusion detection
    * and window hiding */
@@ -534,11 +534,14 @@ private:
   compiz::WindowInputRemoverLock::Weak input_remover_;
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;
+  std::shared_ptr<decoration::Window> deco_win_;
   bool middle_clicked_;
   bool is_nux_window_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 
   friend class UnityScreen;
+  friend class decoration::Window;
+  friend class decoration::Manager;
 };
 
 
