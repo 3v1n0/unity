@@ -30,9 +30,8 @@
 #include "unity-shared/UnityWindowView.h"
 
 #include <Nux/View.h>
+#include <NuxCore/Animation.h>
 #include <NuxCore/Property.h>
-
-#include <UnityCore/GLibSource.h>
 
 
 namespace unity
@@ -58,7 +57,6 @@ public:
   SwitcherModel::Ptr GetModel();
 
   nux::Property<bool> render_boxes;
-  nux::Property<bool> animate;
   nux::Property<int> border_size;
   nux::Property<int> flat_spacing;
   nux::Property<int> icon_size;
@@ -69,6 +67,8 @@ public:
   nux::Property<int> animation_length;
   nux::Property<int> monitor;
   nux::Property<double> spread_size;
+
+  void SkipAnimation();
 
   // Returns the index of the icon at the given position, in window coordinates.
   // If there's no icon there, -1 is returned.
@@ -99,12 +99,14 @@ protected:
 
   void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
+
   nux::Geometry GetBackgroundGeometry();
+  nux::Geometry GetBlurredBackgroundGeometry();
 
   ui::RenderArg InterpolateRenderArgs(ui::RenderArg const& start, ui::RenderArg const& end, float progress);
   nux::Geometry InterpolateBackground(nux::Geometry const& start, nux::Geometry const& end, float progress);
 
-  std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress);
+  bool RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress);
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
 
@@ -142,10 +144,7 @@ private:
 
   nux::Size SpreadSize();
 
-  double GetCurrentProgress();
-
-  void SaveTime();
-  void ResetTimer();
+  void StartAnimation();
   void SaveLast();
 
   bool CheckMouseInsideBackground(int x, int y) const;
@@ -155,6 +154,7 @@ private:
   ui::LayoutSystem layout_system_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   nux::ObjectPtr<StaticCairoText> text_view_;
+  nux::animation::AnimateValue<double> animation_;
 
   int last_icon_selected_;
   int last_detail_icon_selected_;
@@ -167,13 +167,9 @@ private:
 
   nux::Geometry last_background_;
   nux::Geometry saved_background_;
+  nux::Geometry blur_geometry_;
 
   ui::LayoutWindow::Vector render_targets_;
-
-  timespec current_;
-  timespec save_time_;
-
-  glib::Source::UniquePtr redraw_idle_;
 
   friend class TestSwitcherView;
 };
