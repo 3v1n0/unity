@@ -209,25 +209,31 @@ std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, 
   static const std::array<std::string, 7> states = {{ "", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                       "_unfocused", "_unfocused_prelight", "_unfocused_pressed" }};
 
-  std::string subpath = "unity/" + names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
+  auto filename = names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
+  glib::String subpath(g_build_filename(_theme_name.c_str(), "unity", filename.c_str(), nullptr));
 
   // Look in home directory
   const char* home_dir = g_get_home_dir();
   if (home_dir)
   {
-    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.c_str(), NULL));
+    glib::String local_file(g_build_filename(home_dir, ".local", "share", "themes", subpath.Value(), nullptr));
 
-    if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
-      files.push_back (filename.Value());
+    if (g_file_test(local_file, G_FILE_TEST_EXISTS))
+      files.push_back(local_file);
+
+    glib::String home_file(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.Value(), nullptr));
+
+    if (g_file_test(home_file, G_FILE_TEST_EXISTS))
+      files.push_back(home_file);
   }
 
   const char* var = g_getenv("GTK_DATA_PREFIX");
   if (!var)
     var = "/usr";
 
-  glib::String filename(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.c_str(), NULL));
-  if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
-    files.push_back (filename.Value());
+  glib::String path(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.Value(), nullptr));
+  if (g_file_test(path, G_FILE_TEST_EXISTS))
+    files.push_back(path);
 
   return files;
 }
