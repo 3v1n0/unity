@@ -57,21 +57,16 @@ UnityWindow::paintGlow(GLMatrix const& transform, GLWindowPaintAttrib const& att
   {
     /* Using precalculated quads here */
     glow::Quads::Quad const& quad = glow_quads[static_cast<glow::QuadPos>(i)];
-    CompRegion reg(quad.box);
 
-    if (reg.boundingRect().x1() < reg.boundingRect().x2() &&
-        reg.boundingRect().y1() < reg.boundingRect().y2())
+    if (quad.box.x1() < quad.box.x2() && quad.box.y1() < quad.box.y2())
     {
-      GLTexture::MatrixList matl;
-      reg = CompRegion(reg.boundingRect().x1(), reg.boundingRect().y1(),
-                       reg.boundingRect().width(), reg.boundingRect().height());
-
-      matl.push_back(quad.matrix);
+      GLTexture::MatrixList matl = { quad.matrix };
 
       /* Add color data for all 6 vertices of the quad */
       for (int n = 0; n < 6; n++)
         gWindow->vertexBuffer()->addColors(1, colorData);
 
+      CompRegion reg(quad.box);
       gWindow->glAddGeometry(matl, reg, reg);
     }
   }
