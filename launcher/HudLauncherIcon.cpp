@@ -35,6 +35,7 @@ DECLARE_LOGGER(logger, "unity.launcher.icon.hud");
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
  : SingleMonitorLauncherIcon(IconType::HUD)
  , launcher_hide_mode_(hide_mode)
+ , overlay_monitor_(0)
 {
   tooltip_text = _("HUD");
   tooltip_enabled = false;
@@ -110,7 +111,7 @@ nux::Color HudLauncherIcon::GlowColor()
 
 void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  if (IsVisible())
+  if (IsVisibleOnMonitor(overlay_monitor_))
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
