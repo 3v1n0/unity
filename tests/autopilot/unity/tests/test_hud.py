@@ -578,7 +578,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
         self.unity.hud.ensure_visible()
 
-        self.assertThat(hud_icon.visible, Eventually(Equals(True)))
+        self.assertTrue(hud_icon.monitors_visibility[self.hud_monitor])
         self.assertTrue(hud_icon.is_on_monitor(self.hud_monitor))
         # For some reason the BFB icon is always visible :-/
         #bfb_icon.visible, Eventually(Equals(False)
