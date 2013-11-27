@@ -2853,6 +2853,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->paintPanelShadow(region);
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
+  deco_win_->Draw(matrix, attrib, region, mask);
 
   if (draw_panel_shadow == DrawPanelShadow::OVER_WINDOW)
     uScreen->paintPanelShadow(region);
@@ -3105,17 +3106,15 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
     mShowdesktopHandler->UpdateFrameRegion (region);
   else
   {
-    window->updateFrameRegion (region);
-    deco_win_->UpdateFrameRegion(&region);
+    window->updateFrameRegion(region);
+    deco_win_->UpdateFrameRegion(region);
   }
 }
 
 void UnityWindow::getOutputExtents(CompWindowExtents& output)
 {
   window->getOutputExtents(output);
-
-  CompWindowExtents border(15, 15, 38, 15);
-  output = border;
+  deco_win_->UpdateOutputExtents(output);
 }
 
 void UnityWindow::moveNotify(int x, int y, bool immediate)
