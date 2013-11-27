@@ -23,6 +23,7 @@
 #include "DecorationsManager.h"
 #include "unityshell.h"
 #include <X11/Xlib.h>
+#include <Nux/BaseWindow.h>
 
 class CompRegion;
 
@@ -31,6 +32,32 @@ namespace unity
 namespace decoration
 {
 
+class PixmapTexture;
+
+struct Quads
+{
+  struct Quad
+  {
+    CompRect box;
+    GLTexture::Matrix matrix;
+  };
+
+  enum class Pos
+  {
+    TOP_LEFT = 0,
+    TOP_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_RIGHT,
+    LAST
+  };
+
+  Quad& operator[](Pos position) { return inner_vector_[unsigned(position)]; }
+  Quad const& operator[](Pos position) const { return inner_vector_[unsigned(position)]; }
+
+private:
+  Quad inner_vector_[unsigned(Pos::LAST)];
+};
+
 struct Window::Impl
 {
   Impl(decoration::Window*, UnityWindow*);
@@ -38,6 +65,7 @@ struct Window::Impl
 
   void Update();
   bool FullyDecorated() const;
+  bool ShadowDecorated() const;
 
 private:
   void UnsetExtents();
@@ -47,13 +75,16 @@ private:
   void SyncXShapeWithFrameRegion();
   bool ShouldBeDecorated() const;
 
+  void ComputeShadowQuads();
+  void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
+
   friend class Window;
   friend struct Manager::Impl;
 
   decoration::Window *parent_;
   ::UnityWindow* uwin_;
   ::Window frame_;
-  bool undecorated_;
+  Quads shadow_quads_;
 
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
@@ -61,7 +92,7 @@ private:
 
 struct Manager::Impl
 {
-  Impl(UnityScreen*);
+  Impl(decoration::Manager*, UnityScreen*);
   ~Impl();
 
 private:
@@ -79,6 +110,7 @@ private:
   ::UnityScreen* uscreen_;
   ::CompScreen* cscreen_;
   ::Window active_window_;
+  std::shared_ptr<PixmapTexture> shadow_pixmap_;
 
   std::map<UnityWindow*, decoration::Window::Ptr> windows_;
 };

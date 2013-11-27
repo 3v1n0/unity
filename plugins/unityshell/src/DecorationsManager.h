@@ -20,10 +20,13 @@
 #ifndef UNITY_DECORATION_MANAGER
 #define UNITY_DECORATION_MANAGER
 
+#include <NuxCore/Property.h>
 #include <memory>
-#include <X11/Xlib.h>
 
 class CompRegion;
+class GLWindowPaintAttrib;
+class GLMatrix;
+namespace compiz { namespace window { namespace extents { class Extents; } } }
 
 namespace unity
 {
@@ -43,7 +46,9 @@ public:
   virtual ~Window();
 
   void Update();
-  void UpdateFrameRegion(CompRegion*);
+  void UpdateFrameRegion(CompRegion&);
+  void UpdateOutputExtents(compiz::window::extents::Extents&);
+  void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 private:
   Window(Window const&) = delete;
@@ -62,6 +67,10 @@ public:
 
   Manager(UnityScreen*);
   virtual ~Manager();
+
+  nux::Property<nux::Color> shadow_color;
+  nux::Property<nux::Point> shadow_offset;
+  nux::Property<unsigned> shadow_radius;
 
   void AddSupportedAtoms(std::vector<Atom>& atoms) const;
   bool HandleEventBefore(XEvent*);

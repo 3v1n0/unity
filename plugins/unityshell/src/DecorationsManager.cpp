@@ -19,6 +19,7 @@
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include <cairo-xlib-xrender.h>
 
 #include "DecorationsManagerPriv.h"
 #include "WindowManager.h"
@@ -44,15 +45,98 @@ Atom _NET_FRAME_EXTENTS = 0;
 }
 }
 
-Manager::Impl::Impl(UnityScreen* uscreen)
+struct PixmapTexture
+{
+  PixmapTexture(unsigned width, unsigned height)
+    : w_(width)
+    , h_(height)
+    , pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w_, h_, 32))
+    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32))
+  {}
+
+  ~PixmapTexture()
+  {
+    texture_.clear();
+
+    if (pixmap_)
+      XFreePixmap(screen->dpy(), pixmap_);
+  }
+
+  unsigned w_;
+  unsigned h_;
+  Pixmap pixmap_;
+  GLTexture::List texture_;
+};
+
+struct CairoContext
+{
+  CairoContext(unsigned width, unsigned height)
+    : w_(width)
+    , h_(height)
+    , pixmap_texture_(std::make_shared<PixmapTexture>(w_, h_))
+    , surface_(nullptr)
+    , cr_(nullptr)
+  {
+    Screen *xscreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
+    XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
+    surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
+                                                             pixmap_texture_->pixmap_,
+                                                             xscreen, format,
+                                                             w_, h_);
+    cr_ = cairo_create(surface_);
+
+    cairo_save(cr_);
+    cairo_set_operator(cr_, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr_);
+    cairo_restore(cr_);
+  }
+
+  ~CairoContext()
+  {
+    if (cr_)
+      cairo_destroy(cr_);
+
+    if (surface_)
+      cairo_surface_destroy(surface_);
+  }
+
+  operator cairo_t*() const { return cr_; }
+  operator std::shared_ptr<PixmapTexture>() const { return pixmap_texture_; }
+
+private:
+  unsigned w_;
+  unsigned h_;
+  std::shared_ptr<PixmapTexture> pixmap_texture_;
+  cairo_surface_t* surface_;
+  cairo_t *cr_;
+};
+
+Manager::Impl::Impl(decoration::Manager* parent, UnityScreen* uscreen)
   : uscreen_(uscreen)
   , cscreen_(uscreen_->screen)
   , active_window_(0)
 {
+  manager_ = parent;
   dpy = cscreen_->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   atom::_NET_FRAME_EXTENTS = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
   cscreen_->updateSupportedWmHints();
+
+  auto const& color = manager_->shadow_color();
+  const unsigned radius = manager_->shadow_radius();
+  int tex_size = radius * 4;
+
+  nux::CairoGraphics dummy(CAIRO_FORMAT_ARGB32, tex_size, tex_size);
+  auto* dummy_ctx = dummy.GetInternalContext();
+  cairo_rectangle(dummy_ctx, radius*2, radius*2, tex_size, tex_size);
+  cairo_set_source_rgba(dummy_ctx, color.red, color.green, color.blue, color.alpha);
+  cairo_fill(dummy_ctx);
+  dummy.BlurSurface(radius);
+
+  CairoContext shadow_ctx(tex_size, tex_size);
+  cairo_set_source_surface(shadow_ctx, dummy.GetSurface(), 0, 0);
+  cairo_paint(shadow_ctx);
+  shadow_pixmap_ = shadow_ctx;
 }
 
 Manager::Impl::~Impl()
@@ -103,7 +187,10 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
   {
     case ClientMessage:
       if (event->xclient.message_type == atom::_NET_REQUEST_FRAME_EXTENTS)
+      {
         UpdateWindow(event->xclient.window);
+        // return true;
+      }
       break;
   }
 
@@ -121,18 +208,6 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 
   switch (event->type)
   {
-    case ClientMessage:
-      if (event->xclient.message_type == atom::_NET_REQUEST_FRAME_EXTENTS)
-      {
-        // return true;
-      }
-      break;
-    case EnterNotify:
-      break;
-    case LeaveNotify:
-      break;
-    case MotionNotify:
-      break;
     case PropertyNotify:
       if (event->xproperty.atom == Atoms::mwmHints)
       {
@@ -161,10 +236,11 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 }
 
 Manager::Manager(UnityScreen *screen)
-  : impl_(new Manager::Impl(screen))
-{
-  manager_ = this;
-}
+  : shadow_color(nux::color::Black * 0.5 * 0.8)
+  , shadow_offset(nux::Point(1, 1))
+  , shadow_radius(8)
+  , impl_(new Impl(this, screen))
+{}
 
 Manager::~Manager()
 {}
@@ -209,11 +285,10 @@ Window::Impl::Impl(Window* parent, UnityWindow* uwin)
   : parent_(parent)
   , uwin_(uwin)
   , frame_(0)
-  , undecorated_(false)
 {
   auto* window = uwin_->window;
 
-  if (window->shaded() || window->isViewable())
+  if (window->isViewable() || window->shaded())
   {
     window->resizeNotifySetEnabled(uwin_, false);
     Update();
@@ -234,7 +309,7 @@ void Window::Impl::Update()
     SetupExtents();
     UpdateFrame();
   }
-  else/* if (frame_ || !undecorated_)*/
+  else
   {
     UnsetExtents();
     UnsetFrame();
@@ -243,31 +318,45 @@ void Window::Impl::Update()
 
 void Window::Impl::UnsetExtents()
 {
-  if (uwin_->window->destroyed() || uwin_->window->hasUnmapReference())
+  auto* window = uwin_->window;
+
+  if (window->hasUnmapReference())
     return;
 
   CompWindowExtents empty(0, 0, 0, 0);
-  uwin_->window->setWindowFrameExtents(&empty, &empty);
-  uwin_->window->updateWindowOutputExtents();
+
+  if (window->border() != empty || window->input() != empty)
+  {
+    window->setWindowFrameExtents(&empty, &empty);
+  }
+
+  ComputeShadowQuads();
+  window->updateWindowOutputExtents();
+  uwin_->cWindow->damageOutputExtents();
 }
 
 void Window::Impl::SetupExtents()
 {
   auto* window = uwin_->window;
 
-  if (!window->hasUnmapReference())
-  {
-    CompWindowExtents border(5, 5, 28, 5);
-    CompWindowExtents input(border);
-    input.left += GRAB_BORDER;
-    input.right += GRAB_BORDER;
-    input.top += GRAB_BORDER;
-    input.bottom += GRAB_BORDER;
+  if (window->hasUnmapReference())
+    return;
 
+  CompWindowExtents border(5, 5, 28, 5);
+  CompWindowExtents input(border);
+
+  input.left += GRAB_BORDER;
+  input.right += GRAB_BORDER;
+  input.top += GRAB_BORDER;
+  input.bottom += GRAB_BORDER;
+
+  if (window->border() != border || window->input() != input)
+  {
     window->setWindowFrameExtents(&border, &input);
-    uwin_->window->updateWindowOutputExtents();
+    ComputeShadowQuads();
   }
 
+  window->updateWindowOutputExtents();
   uwin_->cWindow->damageOutputExtents();
 }
 
@@ -286,8 +375,7 @@ void Window::Impl::UpdateFrame()
   auto* window = uwin_->window;
   auto const& input = window->input();
   auto const& server = window->serverGeometry();
-  nux::Geometry frame_geo(0, 0,/*input.left, input.top,*/
-                          server.widthIncBorders() + input.left + input.right,
+  nux::Geometry frame_geo(0, 0, server.widthIncBorders() + input.left + input.right,
                           server.heightIncBorders() + input.top  + input.bottom);
 
   if (window->shaded())
@@ -297,9 +385,8 @@ void Window::Impl::UpdateFrame()
   {
     /* Since we're reparenting windows here, we need to grab the server
      * which sucks, but its necessary */
-    XGrabServer (screen->dpy ());
+    XGrabServer(dpy);
 
-    std::cout << "WIndow frame " << window->frame () << " for " << window->id() << " " << WindowManager::Default().GetWindowName(window->id()) << std::endl;
     XSetWindowAttributes attr;
     attr.event_mask = StructureNotifyMask;
     // attr.event_mask = ButtonPressMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
@@ -340,7 +427,7 @@ void Window::Impl::UpdateFrame()
     rects[i].height = input.top;
 
     if (rects[i].width && rects[i].height)
-        i++;
+      i++;
 
     rects[i].x = 0;
     rects[i].y = input.top;
@@ -348,7 +435,7 @@ void Window::Impl::UpdateFrame()
     rects[i].height = frame_geo.height - input.top - input.bottom;
 
     if (rects[i].width && rects[i].height)
-        i++;
+      i++;
 
     rects[i].x = frame_geo.width - input.right;
     rects[i].y = input.top;
@@ -356,7 +443,7 @@ void Window::Impl::UpdateFrame()
     rects[i].height = frame_geo.height - input.top - input.bottom;
 
     if (rects[i].width && rects[i].height)
-        i++;
+      i++;
 
     rects[i].x = 0;
     rects[i].y = frame_geo.height - input.bottom;
@@ -364,13 +451,15 @@ void Window::Impl::UpdateFrame()
     rects[i].height = input.bottom;
 
     if (rects[i].width && rects[i].height)
-        i++;
+      i++;
 
     XShapeCombineRectangles(dpy, frame_, ShapeBounding, 0, 0, rects, i, ShapeSet, YXBanded);
 
     frame_geo_ = frame_geo;
     SyncXShapeWithFrameRegion();
   }
+
+  // uwin_->cWindow->damageOutputExtents();
 }
 
 void Window::Impl::SyncXShapeWithFrameRegion()
@@ -396,30 +485,44 @@ void Window::Impl::SyncXShapeWithFrameRegion()
   uwin_->window->updateFrameRegion();
 }
 
-bool Window::Impl::FullyDecorated() const
+bool Window::Impl::ShadowDecorated() const
 {
   auto* window = uwin_->window;
 
-  if (!window->isViewable()) // Check me!
+  if (!window->isViewable())
     return false;
 
   if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
     return false;
 
-  if (window->overrideRedirect())
-    return false;
-
   if (window->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
     return false;
 
-  switch (window->type())
+  if (window->region().numRects() != 1) // Non rectangular windows
+    return false;
+
+  if (window->overrideRedirect() && window->alpha())
+    return false;
+
+  return true;
+}
+
+bool Window::Impl::FullyDecorated() const
+{
+  if (!ShadowDecorated())
+    return false;
+
+  if (uwin_->window->overrideRedirect())
+    return false;
+
+  switch (uwin_->window->type())
   {
     case CompWindowTypeDialogMask:
     case CompWindowTypeModalDialogMask:
     case CompWindowTypeUtilMask:
     case CompWindowTypeMenuMask:
     case CompWindowTypeNormalMask:
-      if (window->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
+      if (uwin_->window->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
         return true;
   }
 
@@ -431,6 +534,125 @@ bool Window::Impl::ShouldBeDecorated() const
   auto* window = uwin_->window;
 
   return (window->frame() || window->hasUnmapReference()) && FullyDecorated();
+}
+
+void Window::Impl::ComputeShadowQuads()
+{
+  if (!ShadowDecorated())
+    return;
+
+  Quads& quads = shadow_quads_;
+  auto *window = uwin_->window;
+  auto const& texture = manager_->impl_->shadow_pixmap_->texture_[0];
+  auto const& tex_matrix = texture->matrix();
+  auto const& border = window->borderRect();
+  auto const& offset = manager_->shadow_offset();
+  int texture_offset = manager_->shadow_radius() * 2;
+
+  /* Top left quad */
+  auto* quad = &quads[Quads::Pos::TOP_LEFT];
+  quad->box.setGeometry(border.x() + offset.x - texture_offset,
+                        border.y() + offset.y - texture_offset,
+                        border.width() + offset.x + texture_offset * 2 - texture->width(),
+                        border.height() + offset.y + texture_offset * 2 - texture->height());
+
+  quad->matrix = tex_matrix;
+  quad->matrix.x0 -= COMP_TEX_COORD_X(quad->matrix, quad->box.x1());
+  quad->matrix.y0 -= COMP_TEX_COORD_Y(quad->matrix, quad->box.y1());
+
+  /* Top right quad */
+  quad = &quads[Quads::Pos::TOP_RIGHT];
+  quad->box.setGeometry(quads[Quads::Pos::TOP_LEFT].box.x2(),
+                        quads[Quads::Pos::TOP_LEFT].box.y1(),
+                        texture->width(),
+                        quads[Quads::Pos::TOP_LEFT].box.height());
+
+  quad->matrix = tex_matrix;
+  quad->matrix.xx = -1.0f / texture->width();
+  quad->matrix.x0 = 1.0 - COMP_TEX_COORD_X(quad->matrix, quad->box.x1());
+  quad->matrix.y0 -= COMP_TEX_COORD_Y(quad->matrix, quad->box.y1());
+
+  /* Bottom left */
+  quad = &quads[Quads::Pos::BOTTOM_LEFT];
+  quad->box.setGeometry(quads[Quads::Pos::TOP_LEFT].box.x1(),
+                        quads[Quads::Pos::TOP_LEFT].box.y2(),
+                        quads[Quads::Pos::TOP_LEFT].box.width(),
+                        texture->height());
+
+  quad->matrix = tex_matrix;
+  quad->matrix.yy = -1.0f / texture->height();
+  quad->matrix.x0 -= COMP_TEX_COORD_X(quad->matrix, quad->box.x1());
+  quad->matrix.y0 = 1.0 - COMP_TEX_COORD_Y(quad->matrix, quad->box.y1());
+
+  /* Bottom right */
+  quad = &quads[Quads::Pos::BOTTOM_RIGHT];
+  quad->box.setGeometry(quads[Quads::Pos::BOTTOM_LEFT].box.x2(),
+                        quads[Quads::Pos::TOP_RIGHT].box.y2(),
+                        texture->width(),
+                        texture->height());
+
+  quad->matrix = tex_matrix;
+  quad->matrix.xx = -1.0f / texture->width();
+  quad->matrix.yy = -1.0f / texture->height();
+  quad->matrix.x0 = 1.0f - COMP_TEX_COORD_X(quad->matrix, quad->box.x1());
+  quad->matrix.y0 = 1.0f - COMP_TEX_COORD_Y(quad->matrix, quad->box.y1());
+
+  /* Fix the quads if the texture is actually bigger than the area */
+  if (texture->width() > border.width())
+  {
+    int half = window->x() + window->width() / 2.0f;
+    quads[Quads::Pos::TOP_LEFT].box.setRight(half);
+    quads[Quads::Pos::TOP_RIGHT].box.setLeft(half);
+    quads[Quads::Pos::BOTTOM_LEFT].box.setRight(half);
+    quads[Quads::Pos::BOTTOM_RIGHT].box.setLeft(half);
+  }
+
+  if (texture->height() > border.height())
+  {
+    int half = window->y() + window->height() / 2.0f;
+    quads[Quads::Pos::TOP_LEFT].box.setBottom(half);
+    quads[Quads::Pos::TOP_RIGHT].box.setBottom(half);
+    quads[Quads::Pos::BOTTOM_LEFT].box.setTop(half);
+    quads[Quads::Pos::BOTTOM_RIGHT].box.setTop(half);
+  }
+}
+
+void Window::Impl::Draw(GLMatrix const& transformation,
+                        GLWindowPaintAttrib const& attrib,
+                        CompRegion const& region, unsigned mask)
+{
+  if (!ShadowDecorated())
+    return;
+
+  auto* window = uwin_->window;
+  auto* gWindow = uwin_->gWindow;
+  mask |= PAINT_WINDOW_BLEND_MASK;
+
+  ComputeShadowQuads();
+
+  for (auto const& texture : manager_->impl_->shadow_pixmap_->texture_)
+  {
+    if (!texture)
+      continue;
+
+    gWindow->vertexBuffer()->begin();
+
+    if (texture->width() && texture->height())
+    {
+      for (unsigned i = 0; i < unsigned(Quads::Pos::LAST); ++i)
+      {
+        auto& quad = shadow_quads_[Quads::Pos(i)];
+        GLTexture::MatrixList ml = { quad.matrix };
+        gWindow->glAddGeometry(ml, CompRegion(quad.box) - window->region(), region); // infiniteRegion
+      }
+    }
+
+    if (gWindow->vertexBuffer()->end())
+    {
+      GLMatrix wTransform(transformation);
+      gWindow->glDrawTexture(texture, wTransform, attrib, mask);
+    }
+  }
 }
 
 Window::Window(UnityWindow* uwin)
@@ -445,7 +667,7 @@ void Window::Update()
   impl_->Update();
 }
 
-void Window::UpdateFrameRegion(CompRegion* r)
+void Window::UpdateFrameRegion(CompRegion& r)
 {
   if (impl_->frame_region_.isEmpty())
     return;
@@ -454,7 +676,28 @@ void Window::UpdateFrameRegion(CompRegion* r)
   auto const& geo = window->geometry();
   auto const& input = window->input();
 
-  *r += impl_->frame_region_.translated(geo.x() - input.left, geo.y() - input.top);
+  r += impl_->frame_region_.translated(geo.x() - input.left, geo.y() - input.top);
+}
+
+void Window::UpdateOutputExtents(compiz::window::extents::Extents& output)
+{
+  CompRegion shadows;
+  for (unsigned i = 0; i < unsigned(Quads::Pos::LAST); ++i)
+    shadows += impl_->shadow_quads_[Quads::Pos(i)].box;
+
+  auto* window = impl_->uwin_->window;
+  auto const& shadows_rect = shadows.boundingRect();
+
+  output.top = std::max(output.top, window->y() - shadows_rect.y1());
+  output.left = std::max(output.left, window->x() - shadows_rect.x1());
+  output.right = std::max(output.right, shadows_rect.x2() - window->width() - window->x());
+  output.bottom = std::max(output.bottom, shadows_rect.y2() - window->height() - window->y());
+}
+
+void Window::Draw(GLMatrix const& matrix, GLWindowPaintAttrib const& attrib,
+                  CompRegion const& region, unsigned mask)
+{
+  impl_->Draw(matrix, attrib, region, mask);
 }
 
 } // decoration namespace
