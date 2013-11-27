@@ -150,14 +150,23 @@ LauncherIcon::GetName() const
 
 void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
 {
-  std::vector<bool> monitors,
-                    visible_on_monitor,
-                    desaturated_on_monitor;
+  std::vector<bool> monitors_active,
+                    monitors_visible,
+                    monitors_urgent,
+                    monitors_running,
+                    monitors_starting,
+                    monitors_desaturated,
+                    monitors_presented;
+
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
-    monitors.push_back(IsVisibleOnMonitor(i));
-    visible_on_monitor.push_back(GetQuirk(Quirk::VISIBLE, i));
-    desaturated_on_monitor.push_back(GetQuirk(Quirk::DESAT, i));
+    monitors_active.push_back(GetQuirk(Quirk::ACTIVE, i));
+    monitors_visible.push_back(IsVisibleOnMonitor(i));
+    monitors_urgent.push_back(GetQuirk(Quirk::URGENT, i));
+    monitors_running.push_back(GetQuirk(Quirk::RUNNING, i));
+    monitors_starting.push_back(GetQuirk(Quirk::STARTING, i));
+    monitors_desaturated.push_back(GetQuirk(Quirk::DESAT, i));
+    monitors_presented.push_back(GetQuirk(Quirk::PRESENTED, i));
   }
 
   introspection
@@ -167,15 +176,19 @@ void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
   .add("shortcut", _shortcut)
-  .add("monitors_visibility", static_cast<GVariant*>(glib::Variant::FromVector(monitors)))
+  .add("monitors_active", static_cast<GVariant*>(glib::Variant::FromVector(monitors_active)))
+  .add("monitors_visibility", static_cast<GVariant*>(glib::Variant::FromVector(monitors_visible)))
+  .add("monitors_urgent", static_cast<GVariant*>(glib::Variant::FromVector(monitors_urgent)))
+  .add("monitors_running", static_cast<GVariant*>(glib::Variant::FromVector(monitors_running)))
+  .add("monitors_starting", static_cast<GVariant*>(glib::Variant::FromVector(monitors_starting)))
+  .add("monitors_desaturated", static_cast<GVariant*>(glib::Variant::FromVector(monitors_desaturated)))
+  .add("monitors_presented", static_cast<GVariant*>(glib::Variant::FromVector(monitors_presented)))
   .add("active", GetQuirk(Quirk::ACTIVE))
   .add("visible", GetQuirk(Quirk::VISIBLE))
-  .add("visible_on_monitor", static_cast<GVariant*>(glib::Variant::FromVector(visible_on_monitor)))
   .add("urgent", GetQuirk(Quirk::URGENT))
   .add("running", GetQuirk(Quirk::RUNNING))
   .add("starting", GetQuirk(Quirk::STARTING))
   .add("desaturated", GetQuirk(Quirk::DESAT))
-  .add("desaturated_on_monitor", static_cast<GVariant*>(glib::Variant::FromVector(desaturated_on_monitor)))
   .add("presented", GetQuirk(Quirk::PRESENTED));
 }
 
