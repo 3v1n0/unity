@@ -590,9 +590,9 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
         for icon in self.unity.launcher.model.get_launcher_icons_for_monitor(self.hud_monitor):
             if isinstance(icon, HudLauncherIcon):
-                self.assertThat(icon.desaturated, Eventually(Equals(False)))
+                self.assertFalse(icon.desaturated_on_monitor[self.hud_monitor])
             else:
-                self.assertThat(icon.desaturated, Eventually(Equals(True)))
+                self.assertTrue(icon.desaturated_on_monitor[self.hud_monitor])
 
     def test_hud_launcher_icon_click_hides_hud(self):
         """Clicking the Hud Icon should hide the HUD"""
@@ -664,7 +664,7 @@ class HudVisualTests(HudTestsBase):
         hud_embedded_icon = self.unity.hud.get_embedded_icon()
 
         if self.unity.hud.is_locked_launcher:
-            self.assertThat(hud_launcher_icon.visible, Eventually(Equals(True)))
+            self.assertTrue(hud_launcher_icon.visible_on_monitor[self.hud_monitor])
             self.assertTrue(hud_launcher_icon.is_on_monitor(self.hud_monitor))
             self.assertTrue(hud_launcher_icon.active)
             self.assertThat(hud_launcher_icon.monitor, Equals(self.hud_monitor))

@@ -94,6 +94,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
+    SetQuirk(Quirk::ACTIVE, visible);
     SetMonitor(visible ? overlay_monitor : -1);
     SkipQuirkAnimation(Quirk::VISIBLE, overlay_monitor);
   }

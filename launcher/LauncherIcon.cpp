@@ -150,9 +150,15 @@ LauncherIcon::GetName() const
 
 void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
 {
-  std::vector<bool> monitors;
+  std::vector<bool> monitors,
+                    visible_on_monitor,
+                    desaturated_on_monitor;
   for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
     monitors.push_back(IsVisibleOnMonitor(i));
+    visible_on_monitor.push_back(GetQuirk(Quirk::VISIBLE, i));
+    desaturated_on_monitor.push_back(GetQuirk(Quirk::DESAT, i));
+  }
 
   introspection
   .add("center", _center[0])
@@ -164,10 +170,12 @@ void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
   .add("monitors_visibility", static_cast<GVariant*>(glib::Variant::FromVector(monitors)))
   .add("active", GetQuirk(Quirk::ACTIVE))
   .add("visible", GetQuirk(Quirk::VISIBLE))
+  .add("visible_on_monitor", static_cast<GVariant*>(glib::Variant::FromVector(visible_on_monitor)))
   .add("urgent", GetQuirk(Quirk::URGENT))
   .add("running", GetQuirk(Quirk::RUNNING))
   .add("starting", GetQuirk(Quirk::STARTING))
   .add("desaturated", GetQuirk(Quirk::DESAT))
+  .add("desaturated_on_monitor", static_cast<GVariant*>(glib::Variant::FromVector(desaturated_on_monitor)))
   .add("presented", GetQuirk(Quirk::PRESENTED));
 }
 
