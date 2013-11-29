@@ -273,15 +273,23 @@ struct TestGnomeSessionManager : testing::Test
 
   bool SettingsAvailable()
   {
-    const gchar* const* schemas = g_settings_list_schemas();
+    bool available = false;
+    gchar** schemas = nullptr;
+
+    g_settings_schema_source_list_schemas(g_settings_schema_source_get_default(), TRUE, &schemas, nullptr);
 
     for (unsigned i = 0; schemas[i]; ++i)
     {
       if (g_strcmp0(schemas[i], SESSION_OPTIONS.c_str()) == 0)
-        return true;
+      {
+        available = true;
+        break;
+      }
     }
 
-    return false;
+    g_strfreev(schemas);
+
+    return available;
   }
 
   void EnableInteractiveShutdown(bool enable)
