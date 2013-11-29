@@ -46,6 +46,8 @@ public:
   virtual ~Window();
 
   void Update();
+  void Undecorate();
+  void UpdateDecorationPosition();
   void UpdateFrameRegion(CompRegion&);
   void UpdateOutputExtents(compiz::window::extents::Extents&);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);

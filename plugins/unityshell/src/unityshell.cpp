@@ -2965,27 +2965,11 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   switch (n)
   {
     case CompWindowNotifyMap:
-    {
       deco_win_->Update();
-      break;
-    }
-    case CompWindowNotifyUnmap:
-    {
-      deco_win_->Update();
-      break;
-    }
-    case CompWindowNotifyReparent:
-      /* Always update decorations when a window gets reparented */
-      deco_win_->Update();
-      break;
-    default:
-      break;
-  }
+      deco_win_->UpdateDecorationPosition();
 
-  switch (n)
-  {
-    case CompWindowNotifyMap:
-      if (window->type() == CompWindowTypeDesktopMask) {
+      if (window->type() == CompWindowTypeDesktopMask)
+      {
         if (!focus_desktop_timeout_)
         {
           focus_desktop_timeout_.reset(new glib::Timeout(1000, [this] {
@@ -3007,6 +2991,9 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       }
     /* Fall through an re-evaluate wraps on map and unmap too */
     case CompWindowNotifyUnmap:
+      deco_win_->Update();
+      deco_win_->UpdateDecorationPosition();
+
       if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
           window->mapNum () &&
           !window->pendingUnmaps())
@@ -3039,6 +3026,12 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         /* Updating the count in dconf will trigger a "changed" signal to which
          * the method setting the new animation speed is attached */
         UnityScreen::get(screen)->minimize_speed_controller_.UpdateCount();
+        break;
+      case CompWindowNotifyUnreparent:
+        deco_win_->Undecorate();
+        break;
+      case CompWindowNotifyReparent:
+        deco_win_->Update();
         break;
       default:
         break;
@@ -3119,12 +3112,14 @@ void UnityWindow::getOutputExtents(CompWindowExtents& output)
 
 void UnityWindow::moveNotify(int x, int y, bool immediate)
 {
+  deco_win_->UpdateDecorationPosition();
   PluginAdapter::Default().NotifyMoved(window, x, y);
   window->moveNotify(x, y, immediate);
 }
 
 void UnityWindow::resizeNotify(int x, int y, int w, int h)
 {
+  deco_win_->UpdateDecorationPosition();
   PluginAdapter::Default().NotifyResized(window, x, y, w, h);
   window->resizeNotify(x, y, w, h);
 }

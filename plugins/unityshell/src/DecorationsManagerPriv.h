@@ -64,6 +64,7 @@ struct Window::Impl
   ~Impl();
 
   void Update();
+  void Undecorate();
   bool FullyDecorated() const;
   bool ShadowDecorated() const;
 
@@ -84,8 +85,9 @@ private:
   decoration::Window *parent_;
   ::UnityWindow* uwin_;
   ::Window frame_;
-  Quads shadow_quads_;
 
+  CompRect last_shadow_rect_;
+  Quads shadow_quads_;
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
 };
@@ -106,9 +108,9 @@ private:
   Window::Ptr GetWindowByFrame(::Window);
 
   bool UpdateWindow(::Window);
+  void BuildShadowTexture();
 
   ::UnityScreen* uscreen_;
-  ::CompScreen* cscreen_;
   ::Window active_window_;
   std::shared_ptr<PixmapTexture> shadow_pixmap_;
 
