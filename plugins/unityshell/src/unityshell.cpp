@@ -2873,6 +2873,14 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   return ret;
 }
 
+bool UnityWindow::damageRect(bool initial, CompRect const& rect)
+{
+  if (initial)
+    deco_win_->Update();
+
+  return cWindow->damageRect(initial, rect);
+}
+
 void
 UnityScreen::OnMinimizeDurationChanged ()
 {

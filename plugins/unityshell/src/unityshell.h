@@ -434,6 +434,8 @@ public:
   /* basic window draw function */
   bool glDraw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
+  bool damageRect(bool initial, CompRect const&);
+
   void updateIconPos (int &wx, int &wy, int x, int y, float width, float height);
   void windowNotify(CompWindowNotify n);
   void moveNotify(int x, int y, bool immediate);
