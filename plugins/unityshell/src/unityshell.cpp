@@ -121,6 +121,11 @@ inline nux::Geometry NuxGeometryFromCompRect(CompRect const& rect)
   return nux::Geometry(rect.x(), rect.y(), rect.width(), rect.height());
 }
 
+inline nux::Color NuxColorFromCompizColor(unsigned short * color)
+{
+  return nux::Color(color[0]/65535.0f, color[1]/65535.0f, color[2]/65535.0f, color[3]/65535.0f);
+}
+
 namespace local
 {
 // Tap duration in milliseconds.
@@ -303,6 +308,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->Run(NULL);
      uScreen = this;
+
+     optionSetShadowXOffsetNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetShadowYOffsetNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetActiveShadowRadiusNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetInactiveShadowRadiusNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetActiveShadowColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetInactiveShadowColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
@@ -3234,23 +3246,35 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::BackgroundColor:
     {
-      nux::Color override_color (optionGetBackgroundColorRed() / 65535.0f,
-                                 optionGetBackgroundColorGreen() / 65535.0f,
-                                 optionGetBackgroundColorBlue() / 65535.0f,
-                                 optionGetBackgroundColorAlpha() / 65535.0f);
-
+      auto override_color = NuxColorFromCompizColor(optionGetBackgroundColor());
       override_color.red = override_color.red / override_color.alpha;
       override_color.green = override_color.green / override_color.alpha;
       override_color.blue = override_color.blue / override_color.alpha;
       bghash_->OverrideColor(override_color);
       break;
     }
+    case UnityshellOptions::ActiveShadowColor:
+      deco_manager_->shadow_color = NuxColorFromCompizColor(optionGetActiveShadowColor());
+      break;
+    case UnityshellOptions::InactiveShadowColor:
+      //TODO
+      break;
+    case UnityshellOptions::ActiveShadowRadius:
+      deco_manager_->shadow_radius = optionGetActiveShadowRadius();
+      break;
+    case UnityshellOptions::InactiveShadowRadius:
+      //TODO
+      break;
+    case UnityshellOptions::ShadowXOffset:
+      deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
+      break;
+    case UnityshellOptions::ShadowYOffset:
+      deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
+      break;
     case UnityshellOptions::LauncherHideMode:
-    {
       launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
       hud_controller_->launcher_locked_out = (launcher_options->hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
       break;
-    }
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
       break;
