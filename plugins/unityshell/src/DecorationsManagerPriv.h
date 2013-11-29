@@ -21,6 +21,7 @@
 #define UNITY_DECORATION_MANAGER_PRIV
 
 #include "DecorationsManager.h"
+#include "CompizUtils.h"
 #include "unityshell.h"
 #include <X11/Xlib.h>
 #include <Nux/BaseWindow.h>
@@ -31,8 +32,6 @@ namespace unity
 {
 namespace decoration
 {
-
-class PixmapTexture;
 
 struct Quads
 {
@@ -113,7 +112,7 @@ private:
 
   ::UnityScreen* uscreen_;
   ::Window active_window_;
-  std::shared_ptr<PixmapTexture> shadow_pixmap_;
+  compiz_utils::PixmapTexture::Ptr shadow_pixmap_;
 
   std::map<UnityWindow*, decoration::Window::Ptr> windows_;
 };

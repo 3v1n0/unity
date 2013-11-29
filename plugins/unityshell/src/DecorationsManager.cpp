@@ -45,76 +45,6 @@ Atom _NET_FRAME_EXTENTS = 0;
 }
 }
 
-struct PixmapTexture
-{
-  PixmapTexture(unsigned width, unsigned height)
-    : w_(width)
-    , h_(height)
-    , pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w_, h_, 32))
-    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32))
-  {}
-
-  ~PixmapTexture()
-  {
-    texture_.clear();
-
-    if (pixmap_)
-      XFreePixmap(screen->dpy(), pixmap_);
-  }
-
-  GLTexture::List const& texture() const { return texture_; }
-  Pixmap pixmap() const { return pixmap_; }
-
-private:
-  unsigned w_;
-  unsigned h_;
-  Pixmap pixmap_;
-  GLTexture::List texture_;
-};
-
-struct CairoContext
-{
-  CairoContext(unsigned width, unsigned height)
-    : w_(width)
-    , h_(height)
-    , pixmap_texture_(std::make_shared<PixmapTexture>(w_, h_))
-    , surface_(nullptr)
-    , cr_(nullptr)
-  {
-    Screen *xscreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
-    XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
-    surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
-                                                             pixmap_texture_->pixmap(),
-                                                             xscreen, format,
-                                                             w_, h_);
-    cr_ = cairo_create(surface_);
-
-    cairo_save(cr_);
-    cairo_set_operator(cr_, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(cr_);
-    cairo_restore(cr_);
-  }
-
-  ~CairoContext()
-  {
-    if (cr_)
-      cairo_destroy(cr_);
-
-    if (surface_)
-      cairo_surface_destroy(surface_);
-  }
-
-  operator cairo_t*() const { return cr_; }
-  operator std::shared_ptr<PixmapTexture>() const { return pixmap_texture_; }
-
-private:
-  unsigned w_;
-  unsigned h_;
-  std::shared_ptr<PixmapTexture> pixmap_texture_;
-  cairo_surface_t* surface_;
-  cairo_t *cr_;
-};
-
 Manager::Impl::Impl(decoration::Manager* parent, UnityScreen* uscreen)
   : uscreen_(uscreen)
   , active_window_(0)
@@ -151,7 +81,7 @@ void Manager::Impl::BuildShadowTexture()
   cairo_fill(dummy_ctx);
   dummy.BlurSurface(radius);
 
-  CairoContext shadow_ctx(tex_size, tex_size);
+  compiz_utils::CairoContext shadow_ctx(tex_size, tex_size);
   cairo_set_source_surface(shadow_ctx, dummy.GetSurface(), 0, 0);
   cairo_paint(shadow_ctx);
   shadow_pixmap_ = shadow_ctx;
@@ -557,9 +487,9 @@ void Window::Impl::ComputeShadowQuads()
   if (!ShadowDecorated())
     return;
 
-  auto const& texture = manager_->impl_->shadow_pixmap_->texture()[0];
+  auto* texture = manager_->impl_->shadow_pixmap_->texture();
 
-  if (!texture->width() || !texture->height())
+  if (!texture || !texture->width() || !texture->height())
     return;
 
   Quads& quads = shadow_quads_;
@@ -660,7 +590,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   auto* gWindow = uwin_->gWindow;
   mask |= PAINT_WINDOW_BLEND_MASK;
 
-  for (auto const& texture : manager_->impl_->shadow_pixmap_->texture())
+  for (auto const& texture : manager_->impl_->shadow_pixmap_->texture_list())
   {
     if (!texture)
       continue;
