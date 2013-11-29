@@ -90,6 +90,12 @@ class Manager;
 class Window;
 }
 
+namespace compiz_utils
+{
+struct CairoContext;
+struct PixmapTexture;
+}
+
 /* base screen class */
 class UnityScreen :
   public debug::Introspectable,
@@ -465,11 +471,8 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
 private:
-  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
-          UnityMinimizedHandler;
-  struct PixmapTexture;
-  typedef std::shared_ptr<PixmapTexture> PixmapTexturePtr;
-  struct CairoContext;
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> UnityMinimizedHandler;
+  typedef std::shared_ptr<compiz_utils::PixmapTexture> PixmapTexturePtr;
 
   void DoEnableFocus ();
   void DoDisableFocus ();
@@ -504,8 +507,8 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
-  void RenderDecoration(CairoContext const&, double aspect = 1.0f);
-  void RenderText(CairoContext const&, int x, int y, int width, int height);
+  void RenderDecoration(compiz_utils::CairoContext const&, double aspect = 1.0f);
+  void RenderText(compiz_utils::CairoContext const&, int x, int y, int width, int height);
   void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
                    GLMatrix const&, unsigned mask, int x, int y, double aspect = 1.0f);
 

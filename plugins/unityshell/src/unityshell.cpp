@@ -28,6 +28,7 @@
 #include <UnityCore/ScopeProxyInterface.h>
 #include <UnityCore/GnomeSessionManager.h>
 
+#include "CompizUtils.h"
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
 #include "Launcher.h"
@@ -3597,69 +3598,6 @@ GLTexture::List UnityWindow::close_prelight_tex_;
 GLTexture::List UnityWindow::close_pressed_tex_;
 GLTexture::List UnityWindow::glow_texture_;
 
-struct UnityWindow::PixmapTexture
-{
-  PixmapTexture(unsigned width, unsigned height)
-    : w_(width)
-    , h_(height)
-    , pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w_, h_, 32))
-    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32))
-  {}
-
-  ~PixmapTexture()
-  {
-    texture_.clear();
-
-    if (pixmap_)
-      XFreePixmap(screen->dpy(), pixmap_);
-  }
-
-  unsigned w_;
-  unsigned h_;
-  Pixmap pixmap_;
-  GLTexture::List texture_;
-};
-
-struct UnityWindow::CairoContext
-{
-  CairoContext(unsigned width, unsigned height)
-    : w_(width)
-    , h_(height)
-    , pixmap_texture_(std::make_shared<PixmapTexture>(w_, h_))
-    , surface_(nullptr)
-    , cr_(nullptr)
-  {
-    Screen *xscreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
-    XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
-    surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
-                                                             pixmap_texture_->pixmap_,
-                                                             xscreen, format,
-                                                             w_, h_);
-    cr_ = cairo_create(surface_);
-
-    // clear
-    cairo_save(cr_);
-    cairo_set_operator(cr_, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(cr_);
-    cairo_restore(cr_);
-  }
-
-  ~CairoContext()
-  {
-    if (cr_)
-      cairo_destroy(cr_);
-
-    if (surface_)
-      cairo_surface_destroy(surface_);
-  }
-
-  unsigned w_;
-  unsigned h_;
-  PixmapTexturePtr pixmap_texture_;
-  cairo_surface_t* surface_;
-  cairo_t *cr_;
-};
-
 namespace
 {
 bool WindowHasInconsistentShapeRects (Display *d,
@@ -3809,39 +3747,41 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures,
   }
 }
 
-void UnityWindow::RenderDecoration(CairoContext const& context, double aspect)
+void UnityWindow::RenderDecoration(compiz_utils::CairoContext const& context, double aspect)
 {
-  cairo_save(context.cr_);
+  cairo_save(context);
 
   // Draw window decoration based on gtk style
-  cairo_push_group(context.cr_);
+  cairo_push_group(context);
   auto& style = panel::Style::Instance();
-  gtk_render_background(style.GetStyleContext(), context.cr_, 0, 0, context.w_, context.h_);
-  gtk_render_frame(style.GetStyleContext(), context.cr_, 0, 0, context.w_, context.h_);
-  cairo_pop_group_to_source(context.cr_);
+  int w = context.width();
+  int h = context.height();
+  gtk_render_background(style.GetStyleContext(), context, 0, 0, w, h);
+  gtk_render_frame(style.GetStyleContext(), context, 0, 0, w, h);
+  cairo_pop_group_to_source(context);
 
   // Round window decoration top border
   const double radius = win::decoration::RADIUS * aspect;
 
-  cairo_new_sub_path(context.cr_);
-  cairo_line_to(context.cr_, 0, context.h_);
-  cairo_arc(context.cr_, radius, radius, radius, M_PI, -M_PI * 0.5f);
-  cairo_line_to(context.cr_, context.w_ - radius, 0);
-  cairo_arc(context.cr_, context.w_ - radius, radius, radius, M_PI * 0.5f, 0);
-  cairo_line_to(context.cr_, context.w_, context.h_);
-  cairo_close_path(context.cr_);
+  cairo_new_sub_path(context);
+  cairo_line_to(context, 0, h);
+  cairo_arc(context, radius, radius, radius, M_PI, -M_PI * 0.5f);
+  cairo_line_to(context, w - radius, 0);
+  cairo_arc(context, w - radius, radius, radius, M_PI * 0.5f, 0);
+  cairo_line_to(context, w, h);
+  cairo_close_path(context);
 
-  cairo_fill(context.cr_);
+  cairo_fill(context);
 
-  cairo_restore(context.cr_);
+  cairo_restore(context);
 }
 
-void UnityWindow::RenderText(CairoContext const& context, int x, int y, int width, int height)
+void UnityWindow::RenderText(compiz_utils::CairoContext const& context, int x, int y, int width, int height)
 {
   panel::Style& style = panel::Style::Instance();
   std::string const& font_desc = style.GetFontDescription(panel::PanelItem::TITLE);
 
-  glib::Object<PangoLayout> layout(pango_cairo_create_layout(context.cr_));
+  glib::Object<PangoLayout> layout(pango_cairo_create_layout(context));
   std::shared_ptr<PangoFontDescription> font(pango_font_description_from_string(font_desc.c_str()),
                                              pango_font_description_free);
 
@@ -3863,7 +3803,7 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   pango_layout_set_text(layout, decoration_title_.c_str(), -1);
 
   /* update the size of the pango layout */
-  pango_cairo_update_layout(context.cr_, layout);
+  pango_cairo_update_layout(context, layout);
 
   GtkStyleContext* style_context = style.GetStyleContext();
   gtk_style_context_save(style_context);
@@ -3884,19 +3824,19 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
     const int fading_pixels = 35;
     int fading_width = (out_pixels < fading_pixels) ? out_pixels : fading_pixels;
 
-    cairo_push_group(context.cr_);
-    gtk_render_layout(style_context, context.cr_, x, y, layout);
-    cairo_pop_group_to_source(context.cr_);
+    cairo_push_group(context);
+    gtk_render_layout(style_context, context, x, y, layout);
+    cairo_pop_group_to_source(context);
 
     std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(width - fading_width, y, width, y),
                                             cairo_pattern_destroy);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 0, 0, 0, 0, 1);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 1, 0, 0, 0, 0);
-    cairo_mask(context.cr_, linpat.get());
+    cairo_mask(context, linpat.get());
   }
   else
   {
-    gtk_render_layout(style_context, context.cr_, x, y, layout);
+    gtk_render_layout(style_context, context, x, y, layout);
   }
 
   gtk_style_context_restore(style_context);
@@ -3912,9 +3852,9 @@ void UnityWindow::BuildDecorationTexture()
 
   if (deco_size.height)
   {
-    CairoContext context(deco_size.width, deco_size.height);
+    compiz_utils::CairoContext context(deco_size.width, deco_size.height);
     RenderDecoration(context);
-    decoration_tex_ = context.pixmap_texture_;
+    decoration_tex_ = context;
   }
 }
 
@@ -3987,7 +3927,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     BuildDecorationTexture();
 
     if (decoration_tex_)
-      DrawTexture(decoration_tex_->texture_, attrib, transform, mask, geo.x, geo.y, scale);
+      DrawTexture(decoration_tex_->texture_list(), attrib, transform, mask, geo.x, geo.y, scale);
 
     close_button_geo_.Set(0, 0, 0, 0);
   }
@@ -3996,13 +3936,14 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     Window xid = window->id();
     auto& wm = WindowManager::Default();
     auto const& deco_top = wm.GetWindowDecorationSize(xid, WindowManager::Edge::TOP);
-    unsigned width = geo.width;
-    unsigned height = deco_top.height;
+    int width = geo.width;
+    int height = deco_top.height;
     bool redraw_decoration = true;
 
     if (decoration_selected_tex_)
     {
-      if (decoration_selected_tex_->w_ == width && decoration_selected_tex_->h_ == height)
+      auto* texture = decoration_selected_tex_->texture();
+      if (texture && texture->width() == width && texture->height() == height)
       {
         if (decoration_title_ == wm.GetWindowName(xid))
           redraw_decoration = false;
@@ -4013,13 +3954,13 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     {
       if (width != 0 && height != 0)
       {
-        CairoContext context(width, height);
+        compiz_utils::CairoContext context(width, height);
         RenderDecoration(context, scale);
 
         // Draw window title
         int text_x = win::decoration::ITEMS_PADDING * 2 + win::decoration::CLOSE_SIZE;
         RenderText(context, text_x, 0.0, width - win::decoration::ITEMS_PADDING, height);
-        decoration_selected_tex_ = context.pixmap_texture_;
+        decoration_selected_tex_ = context;
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
       }
       else
@@ -4030,7 +3971,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     }
 
     if (decoration_selected_tex_)
-      DrawTexture(decoration_selected_tex_->texture_, attrib, transform, mask, geo.x, geo.y);
+      DrawTexture(decoration_selected_tex_->texture_list(), attrib, transform, mask, geo.x, geo.y);
 
     int x = geo.x + win::decoration::ITEMS_PADDING;
     int y = geo.y + (height - win::decoration::CLOSE_SIZE) / 2.0f;
