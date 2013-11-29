@@ -125,9 +125,10 @@ Manager::Impl::Impl(decoration::Manager* parent, UnityScreen* uscreen)
   atom::_NET_FRAME_EXTENTS = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
   screen->updateSupportedWmHints();
 
-  auto rebuild_cb = sigc::hide(sigc::mem_fun(this, &Impl::BuildShadowTexture));
+  auto rebuild_cb = sigc::hide(sigc::mem_fun(this, &Impl::OnShadowOptionsChanged));
   manager_->shadow_color.changed.connect(rebuild_cb);
   manager_->shadow_radius.changed.connect(rebuild_cb);
+  manager_->shadow_offset.changed.connect(rebuild_cb);
   BuildShadowTexture();
 }
 
@@ -140,7 +141,7 @@ Manager::Impl::~Impl()
 void Manager::Impl::BuildShadowTexture()
 {
   auto const& color = manager_->shadow_color();
-  const unsigned radius = manager_->shadow_radius();
+  const unsigned radius = color.alpha != 0 ? manager_->shadow_radius() : 1;
   int tex_size = radius * 4;
 
   nux::CairoGraphics dummy(CAIRO_FORMAT_ARGB32, tex_size, tex_size);
@@ -154,6 +155,17 @@ void Manager::Impl::BuildShadowTexture()
   cairo_set_source_surface(shadow_ctx, dummy.GetSurface(), 0, 0);
   cairo_paint(shadow_ctx);
   shadow_pixmap_ = shadow_ctx;
+}
+
+void Manager::Impl::OnShadowOptionsChanged()
+{
+  BuildShadowTexture();
+
+  for (auto const& win : windows_)
+  {
+    win.second->UpdateDecorationPosition();
+    win.first->cWindow->damageOutputExtents();
+  }
 }
 
 bool Manager::Impl::UpdateWindow(::Window xid)

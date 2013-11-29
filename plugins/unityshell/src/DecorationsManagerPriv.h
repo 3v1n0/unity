@@ -109,6 +109,7 @@ private:
 
   bool UpdateWindow(::Window);
   void BuildShadowTexture();
+  void OnShadowOptionsChanged();
 
   ::UnityScreen* uscreen_;
   ::Window active_window_;
