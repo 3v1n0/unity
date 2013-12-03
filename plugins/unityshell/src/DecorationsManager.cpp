@@ -55,11 +55,15 @@ Manager::Impl::Impl(decoration::Manager* parent, UnityScreen* uscreen)
   atom::_NET_FRAME_EXTENTS = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
   screen->updateSupportedWmHints();
 
-  auto rebuild_cb = sigc::hide(sigc::mem_fun(this, &Impl::OnShadowOptionsChanged));
-  manager_->shadow_color.changed.connect(rebuild_cb);
-  manager_->shadow_radius.changed.connect(rebuild_cb);
-  manager_->shadow_offset.changed.connect(rebuild_cb);
-  BuildShadowTexture();
+  auto rebuild_cb = sigc::mem_fun(this, &Impl::OnShadowOptionsChanged);
+  manager_->active_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, true)));
+  manager_->active_shadow_radius.changed.connect(sigc::hide(sigc::bind(rebuild_cb, true)));
+  manager_->inactive_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
+  manager_->inactive_shadow_radius.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
+  manager_->shadow_offset.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateWindowsExtents)));
+
+  BuildInactiveShadowTexture();
+  BuildActiveShadowTexture();
 }
 
 Manager::Impl::~Impl()
@@ -68,10 +72,8 @@ Manager::Impl::~Impl()
   screen->updateSupportedWmHints();
 }
 
-void Manager::Impl::BuildShadowTexture()
+cu::PixmapTexture::Ptr Manager::Impl::BuildShadowTexture(unsigned radius, nux::Color const& color)
 {
-  auto const& color = manager_->shadow_color();
-  const unsigned radius = color.alpha != 0 ? manager_->shadow_radius() : 1;
   int tex_size = radius * 4;
 
   nux::CairoGraphics dummy(CAIRO_FORMAT_ARGB32, tex_size, tex_size);
@@ -84,13 +86,31 @@ void Manager::Impl::BuildShadowTexture()
   compiz_utils::CairoContext shadow_ctx(tex_size, tex_size);
   cairo_set_source_surface(shadow_ctx, dummy.GetSurface(), 0, 0);
   cairo_paint(shadow_ctx);
-  shadow_pixmap_ = shadow_ctx;
+  return shadow_ctx;
 }
 
-void Manager::Impl::OnShadowOptionsChanged()
+void Manager::Impl::BuildActiveShadowTexture()
 {
-  BuildShadowTexture();
+  active_shadow_pixmap_ = BuildShadowTexture(manager_->active_shadow_radius(), manager_->active_shadow_color());
+}
 
+void Manager::Impl::BuildInactiveShadowTexture()
+{
+  inactive_shadow_pixmap_ = BuildShadowTexture(manager_->inactive_shadow_radius(), manager_->inactive_shadow_color());
+}
+
+void Manager::Impl::OnShadowOptionsChanged(bool active)
+{
+  if (active)
+    BuildActiveShadowTexture();
+  else
+    BuildInactiveShadowTexture();
+
+  UpdateWindowsExtents();
+}
+
+void Manager::Impl::UpdateWindowsExtents()
+{
   for (auto const& win : windows_)
   {
     win.second->UpdateDecorationPosition();
@@ -153,9 +173,17 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 {
   if (screen->activeWindow() != active_window_)
   {
-    UpdateWindow(active_window_);
+    auto const& old_active = GetWindowByXid(active_window_);
+
+    if (old_active)
+      old_active->impl_->active = false;
+
     active_window_ = screen->activeWindow();
-    UpdateWindow(active_window_);
+
+    auto const& new_active = GetWindowByXid(active_window_);
+
+    if (new_active)
+      new_active->impl_->active = true;
   }
 
   switch (event->type)
@@ -190,9 +218,11 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 }
 
 Manager::Manager(UnityScreen *screen)
-  : shadow_color(nux::color::Black * 0.5 * 0.8)
-  , shadow_offset(nux::Point(1, 1))
-  , shadow_radius(8)
+  : shadow_offset(nux::Point(1, 1))
+  , active_shadow_color(nux::color::Black * 0.4)
+  , active_shadow_radius(8)
+  , inactive_shadow_color(nux::color::Black * 0.4)
+  , inactive_shadow_radius(5)
   , impl_(new Impl(this, screen))
 {}
 
@@ -236,7 +266,8 @@ Window::Ptr Manager::GetWindowByXid(::Window xid)
 
 
 Window::Impl::Impl(Window* parent, UnityWindow* uwin)
-  : parent_(parent)
+  : active(false)
+  , parent_(parent)
   , uwin_(uwin)
   , frame_(0)
 {
@@ -248,6 +279,12 @@ Window::Impl::Impl(Window* parent, UnityWindow* uwin)
     Update();
     window->resizeNotifySetEnabled(uwin_, true);
   }
+
+  active.changed.connect([this] (bool) {
+    // Update();
+    ComputeShadowQuads();
+    uwin_->cWindow->damageOutputExtents();
+  });
 }
 
 Window::Impl::~Impl()
@@ -478,8 +515,18 @@ bool Window::Impl::FullyDecorated() const
 bool Window::Impl::ShouldBeDecorated() const
 {
   auto* window = uwin_->window;
-
   return (window->frame() || window->hasUnmapReference()) && FullyDecorated();
+}
+
+GLTexture* Window::Impl::ShadowTexture() const
+{
+  auto const& mi = manager_->impl_;
+  return active() ? mi->active_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
+}
+
+unsigned Window::Impl::ShadowRadius() const
+{
+  return active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
 }
 
 void Window::Impl::ComputeShadowQuads()
@@ -487,7 +534,7 @@ void Window::Impl::ComputeShadowQuads()
   if (!ShadowDecorated())
     return;
 
-  auto* texture = manager_->impl_->shadow_pixmap_->texture();
+  auto* texture = ShadowTexture();
 
   if (!texture || !texture->width() || !texture->height())
     return;
@@ -497,7 +544,7 @@ void Window::Impl::ComputeShadowQuads()
   auto const& tex_matrix = texture->matrix();
   auto const& border = window->borderRect();
   auto const& offset = manager_->shadow_offset();
-  int texture_offset = manager_->shadow_radius() * 2;
+  int texture_offset = ShadowRadius() * 2;
 
   /* Top left quad */
   auto* quad = &quads[Quads::Pos::TOP_LEFT];
@@ -590,22 +637,16 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   auto* gWindow = uwin_->gWindow;
   mask |= PAINT_WINDOW_BLEND_MASK;
 
-  for (auto const& texture : manager_->impl_->shadow_pixmap_->texture_list())
+  gWindow->vertexBuffer()->begin();
+
+  for (unsigned i = 0; i < unsigned(Quads::Pos::LAST); ++i)
   {
-    if (!texture)
-      continue;
-
-    gWindow->vertexBuffer()->begin();
-
-    for (unsigned i = 0; i < unsigned(Quads::Pos::LAST); ++i)
-    {
-      auto& quad = shadow_quads_[Quads::Pos(i)];
-      gWindow->glAddGeometry({quad.matrix}, CompRegion(quad.box) - window->region(), region); // infiniteRegion
-    }
-
-    if (gWindow->vertexBuffer()->end())
-      gWindow->glDrawTexture(texture, transformation, attrib, mask);
+    auto& quad = shadow_quads_[Quads::Pos(i)];
+    gWindow->glAddGeometry({quad.matrix}, CompRegion(quad.box) - window->region(), region); // infiniteRegion
   }
+
+  if (gWindow->vertexBuffer()->end())
+    gWindow->glDrawTexture(ShadowTexture(), transformation, attrib, mask);
 }
 
 Window::Window(UnityWindow* uwin)

@@ -70,9 +70,11 @@ public:
   Manager(UnityScreen*);
   virtual ~Manager();
 
-  nux::Property<nux::Color> shadow_color;
   nux::Property<nux::Point> shadow_offset;
-  nux::Property<unsigned> shadow_radius;
+  nux::Property<nux::Color> active_shadow_color;
+  nux::Property<unsigned> active_shadow_radius;
+  nux::Property<nux::Color> inactive_shadow_color;
+  nux::Property<unsigned> inactive_shadow_radius;
 
   void AddSupportedAtoms(std::vector<Atom>& atoms) const;
   bool HandleEventBefore(XEvent*);

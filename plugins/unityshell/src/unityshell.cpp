@@ -3263,16 +3263,16 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     }
     case UnityshellOptions::ActiveShadowColor:
-      deco_manager_->shadow_color = NuxColorFromCompizColor(optionGetActiveShadowColor());
+      deco_manager_->active_shadow_color = NuxColorFromCompizColor(optionGetActiveShadowColor());
       break;
     case UnityshellOptions::InactiveShadowColor:
-      //TODO
+      deco_manager_->inactive_shadow_color = NuxColorFromCompizColor(optionGetInactiveShadowColor());
       break;
     case UnityshellOptions::ActiveShadowRadius:
-      deco_manager_->shadow_radius = optionGetActiveShadowRadius();
+      deco_manager_->active_shadow_radius = optionGetActiveShadowRadius();
       break;
     case UnityshellOptions::InactiveShadowRadius:
-      //TODO
+      deco_manager_->inactive_shadow_radius = optionGetInactiveShadowRadius();
       break;
     case UnityshellOptions::ShadowXOffset:
       deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());

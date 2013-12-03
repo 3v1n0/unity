@@ -32,6 +32,7 @@ namespace unity
 {
 namespace decoration
 {
+namespace cu = compiz_utils;
 
 struct Quads
 {
@@ -62,6 +63,8 @@ struct Window::Impl
   Impl(decoration::Window*, UnityWindow*);
   ~Impl();
 
+  nux::Property<bool> active;
+
   void Update();
   void Undecorate();
   bool FullyDecorated() const;
@@ -74,6 +77,8 @@ private:
   void UpdateFrame();
   void SyncXShapeWithFrameRegion();
   bool ShouldBeDecorated() const;
+  GLTexture* ShadowTexture() const;
+  unsigned ShadowRadius() const;
 
   void ComputeShadowQuads();
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
@@ -107,12 +112,17 @@ private:
   Window::Ptr GetWindowByFrame(::Window);
 
   bool UpdateWindow(::Window);
-  void BuildShadowTexture();
-  void OnShadowOptionsChanged();
+  void UpdateWindowsExtents();
+
+  void BuildActiveShadowTexture();
+  void BuildInactiveShadowTexture();
+  cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
+  void OnShadowOptionsChanged(bool active);
 
   ::UnityScreen* uscreen_;
   ::Window active_window_;
-  compiz_utils::PixmapTexture::Ptr shadow_pixmap_;
+  cu::PixmapTexture::Ptr active_shadow_pixmap_;
+  cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
 
   std::map<UnityWindow*, decoration::Window::Ptr> windows_;
 };
