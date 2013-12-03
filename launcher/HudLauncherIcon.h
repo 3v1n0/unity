@@ -52,6 +52,7 @@ private:
   nux::Color background_color_;
   LauncherHideMode launcher_hide_mode_;
   UBusManager ubus_manager_;
+  gint32 overlay_monitor_; 
 };
 
 }

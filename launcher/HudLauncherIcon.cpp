@@ -35,6 +35,7 @@ DECLARE_LOGGER(logger, "unity.launcher.icon.hud");
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
  : SingleMonitorLauncherIcon(IconType::HUD)
  , launcher_hide_mode_(hide_mode)
+ , overlay_monitor_(0)
 {
   tooltip_text = _("HUD");
   tooltip_enabled = false;
@@ -84,17 +85,16 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
 {
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
-  gint32 overlay_monitor = 0;
   int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
+                &overlay_identity, &can_maximise, &overlay_monitor_, &width, &height);
 
   // If the hud is open, we show the HUD button if we have a locked launcher
   if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
-    SetMonitor(visible ? overlay_monitor : -1);
-    SkipQuirkAnimation(Quirk::VISIBLE, overlay_monitor);
+    SetMonitor(visible ? overlay_monitor_ : -1);
+    SkipQuirkAnimation(Quirk::VISIBLE, overlay_monitor_);
   }
 }
 
@@ -110,7 +110,7 @@ nux::Color HudLauncherIcon::GlowColor()
 
 void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  if (IsVisible())
+  if (IsVisibleOnMonitor(overlay_monitor_))
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
