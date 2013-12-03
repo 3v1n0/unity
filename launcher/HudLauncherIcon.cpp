@@ -77,7 +77,10 @@ void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
     launcher_hide_mode_ = hide_mode;
 
     if (launcher_hide_mode_ == LAUNCHER_HIDE_AUTOHIDE)
+    {
+      SetQuirk(Quirk::ACTIVE, false);
       SetQuirk(Quirk::VISIBLE, false);
+    }
   }
 }
 
@@ -94,6 +97,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
     SetMonitor(visible ? overlay_monitor_ : -1);
+    SetQuirk(Quirk::ACTIVE, visible, overlay_monitor_);
     SkipQuirkAnimation(Quirk::VISIBLE, overlay_monitor_);
   }
 }
