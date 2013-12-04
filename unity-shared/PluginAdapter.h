@@ -130,8 +130,6 @@ public:
 
   // WindowManager implementation
   bool IsWindowMaximized(Window window_id) const;
-  bool IsWindowVerticallyMaximized(Window window_id) const;
-  bool IsWindowHorizontallyMaximized(Window window_id) const;
   bool IsWindowDecorated(Window window_id) const;
   bool IsWindowOnCurrentDesktop(Window window_id) const;
   bool IsWindowObscured(Window window_id) const;
@@ -145,8 +143,6 @@ public:
   bool HasWindowDecorations(Window window_id) const;
 
   void Maximize(Window window_id);
-  void LeftMaximize(Window window_id);
-  void RightMaximize(Window window_id);
   void Restore(Window window_id);
   void RestoreAt(Window window_id, int x, int y);
   void Minimize(Window window_id);
@@ -200,8 +196,6 @@ public:
 
   Window GetTopWindowAbove(Window xid) const;
 
-  void MoveResizeWindow(guint32 xid, nux::Geometry geometry);
-
 protected:
   PluginAdapter(CompScreen* screen);
   void AddProperties(debug::IntrospectionData&);
@@ -220,8 +214,6 @@ private:
   std::string GetTextProperty(Window xid, Atom atom) const;
   std::string GetUtf8Property(Window xid, Atom atom) const;
   std::vector<long> GetCardinalProperty(Window xid, Atom atom) const;
-
-  void VerticallyMaximizeWindowAt(CompWindow* window, nux::Geometry const& geo);
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;
