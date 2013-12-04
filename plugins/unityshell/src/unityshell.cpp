@@ -1564,9 +1564,7 @@ void redraw_view_if_damaged(nux::ObjectPtr<CairoBaseWindow> const& view, CompReg
 
   auto const& geo = view->GetAbsoluteGeometry();
 
-  CompRegion region(geo.x, geo.y, geo.width, geo.height);
-
-  if (damage.intersects(region))
+  if (damage.intersects(CompRectFromNuxGeo(geo)))
     view->RedrawBlur();
 }
 
