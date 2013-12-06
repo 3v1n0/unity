@@ -32,6 +32,7 @@ namespace
   // Compiz' plug-in names
   const std::string CORE_PLUGIN_NAME = "core";
   const std::string EXPO_PLUGIN_NAME = "expo";
+  const std::string GRID_PLUGIN_NAME = "grid";
   const std::string MOVE_PLUGIN_NAME = "move";
   const std::string RESIZE_PLUGIN_NAME = "resize";
   const std::string SCALE_PLUGIN_NAME = "scale";
@@ -47,6 +48,9 @@ namespace
 
   // Compiz Expo Options
   const std::string EXPO_OPTION_EXPO_KEY = "expo_key";
+
+  // Compiz Grid Options
+  const std::string GRID_OPTION_LEFT_MAXIMIZE = "left_maximize";
 
   // Compiz Move Options
   const std::string MOVE_OPTION_INITIATE_BUTTON = "initiate_button";
@@ -65,10 +69,6 @@ namespace
   const std::string UNITYSHELL_OPTION_PANEL_FIRST_MENU = "panel_first_menu";
   const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD = "alt_tab_forward";
   const std::string UNITYSHELL_OPTION_ALT_TAB_NEXT_WINDOW = "alt_tab_next_window";
-  const std::string UNITYSHELL_OPTION_MAXIMIZE = "window_maximize";
-  const std::string UNITYSHELL_OPTION_LEFT_MAXIMIZE = "window_left_maximize";
-  const std::string UNITYSHELL_OPTION_RIGHT_MAXIMIZE = "window_right_maximize";
-  const std::string UNITYSHELL_OPTION_RESTORE_MINIMIZE = "window_restore_minimize";
 
   // Compiz Wall Options
   const std::string WALL_OPTION_LEFT_KEY = "left_key";
@@ -315,8 +315,8 @@ void CompizModeller::AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hin
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" or Right"),
                                                    _("Semi-maximise the current window."),
                                                    shortcut::OptionType::COMPIZ_KEY,
-                                                   UNITYSHELL_PLUGIN_NAME,
-                                                   UNITYSHELL_OPTION_LEFT_MAXIMIZE));
+                                                   GRID_PLUGIN_NAME,
+                                                   GRID_OPTION_LEFT_MAXIMIZE));
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                    _("Closes the current window."),

@@ -77,9 +77,6 @@ public:
   virtual std::vector<Window> GetWindowsInStackingOrder() const = 0;
 
   virtual bool IsWindowMaximized(Window window_id) const = 0;
-  virtual bool IsWindowVerticallyMaximized(Window window_id) const = 0;
-  virtual bool IsWindowHorizontallyMaximized(Window window_id) const = 0;
-  virtual bool IsWindowMaximizable(Window window_id) const = 0;
   virtual bool IsWindowDecorated(Window window_id) const = 0;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const = 0;
   virtual bool IsWindowObscured(Window window_id) const = 0;
@@ -89,14 +86,13 @@ public:
   virtual bool IsWindowClosable(Window window_id) const = 0;
   virtual bool IsWindowMinimized(Window window_id) const = 0;
   virtual bool IsWindowMinimizable(Window window_id) const = 0;
+  virtual bool IsWindowMaximizable(Window window_id) const = 0;
   virtual bool HasWindowDecorations(Window window_id) const = 0;
 
   virtual void ShowDesktop() = 0;
   virtual bool InShowDesktop() const = 0;
 
   virtual void Maximize(Window window_id) = 0;
-  virtual void LeftMaximize(Window window_id) = 0;
-  virtual void RightMaximize(Window window_id) = 0;
   virtual void Restore(Window window_id) = 0;
   virtual void RestoreAt(Window window_id, int x, int y) = 0;
   virtual void Minimize(Window window_id) = 0;
