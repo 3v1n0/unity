@@ -368,9 +368,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
 
-     optionSetWindowRightMaximizeInitiate(boost::bind(&UnityScreen::rightMaximizeKeyInitiate, this, _1, _2, _3));
-     optionSetWindowLeftMaximizeInitiate(boost::bind(&UnityScreen::leftMaximizeKeyInitiate, this, _1, _2, _3));
-
      optionSetStopVelocityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetRevealPressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetEdgeResponsivenessNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2303,20 +2300,6 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   return true;
 }
 
-bool UnityScreen::rightMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  auto& WM = WindowManager::Default();
-  WM.RightMaximize(WM.GetActiveWindow());
-  return true;
-}
-
-bool UnityScreen::leftMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  auto& WM = WindowManager::Default();
-  WM.LeftMaximize(WM.GetActiveWindow());
-  return true;
-}
-
 void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
 {
   // Put the launcher BaseWindow at the top of the BaseWindow stack. The
@@ -3696,10 +3679,6 @@ void UnityWindow::AddProperties(debug::IntrospectionData& introspection)
     .add("xid", (uint64_t)xid)
     .add("title", wm.GetWindowName(xid))
     .add("fake_decorated", uScreen->fake_decorated_windows_.find(this) != uScreen->fake_decorated_windows_.end())
-    .add("maximized", wm.IsWindowVerticallyMaximized(xid))
-    .add("horizontally_maximized", wm.IsWindowHorizontallyMaximized(xid))
-    .add("vertically_maximized", wm.IsWindowVerticallyMaximized(xid))
-    .add("minimized", wm.IsWindowMinimized(xid))
     .add("scaled", scaled)
     .add("scaled_close_geo", close_button_geo_)
     .add("scaled_close_x", close_button_geo_.x)

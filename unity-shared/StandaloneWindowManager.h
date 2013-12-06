@@ -48,9 +48,7 @@ public:
   nux::Property<bool> active;
   nux::Property<bool> mapped;
   nux::Property<bool> visible;
-  nux::RWProperty<bool> maximized;
-  nux::Property<bool> v_maximized;
-  nux::Property<bool> h_maximized;
+  nux::Property<bool> maximized;
   nux::Property<bool> minimized;
   nux::Property<bool> decorated;
   nux::Property<bool> has_decorations;
@@ -72,8 +70,6 @@ public:
   std::vector<Window> GetWindowsInStackingOrder() const override;
 
   virtual bool IsWindowMaximized(Window window_id) const;
-  virtual bool IsWindowVerticallyMaximized(Window window_id) const;
-  virtual bool IsWindowHorizontallyMaximized(Window window_id) const;
   virtual bool IsWindowDecorated(Window window_id) const;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const;
   virtual bool IsWindowObscured(Window window_id) const;
@@ -90,8 +86,6 @@ public:
   virtual bool InShowDesktop() const;
 
   virtual void Maximize(Window window_id);
-  virtual void LeftMaximize(Window window_id);
-  virtual void RightMaximize(Window window_id);
   virtual void Restore(Window window_id);
   virtual void RestoreAt(Window window_id, int x, int y);
   virtual void Minimize(Window window_id);

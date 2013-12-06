@@ -498,8 +498,8 @@ class HudBehaviorTests(HudTestsBase):
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
-    launcher_modes = [('Launcher autohide', {'launcher_autohide': False}),
-                      ('Launcher never hide', {'launcher_autohide': True})]
+    launcher_modes = [('Launcher never hide', {'launcher_autohide': False}),
+                      ('Launcher autohide', {'launcher_autohide': True})]
 
     scenarios = multiply_scenarios(_make_monitor_scenarios(), launcher_modes)
 
@@ -578,7 +578,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
         self.unity.hud.ensure_visible()
 
-        self.assertThat(hud_icon.visible, Eventually(Equals(True)))
+        self.assertTrue(hud_icon.monitors_visibility[self.hud_monitor])
         self.assertTrue(hud_icon.is_on_monitor(self.hud_monitor))
         # For some reason the BFB icon is always visible :-/
         #bfb_icon.visible, Eventually(Equals(False)
@@ -590,9 +590,9 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
         for icon in self.unity.launcher.model.get_launcher_icons_for_monitor(self.hud_monitor):
             if isinstance(icon, HudLauncherIcon):
-                self.assertThat(icon.desaturated, Eventually(Equals(False)))
+                self.assertFalse(icon.monitors_desaturated[self.hud_monitor])
             else:
-                self.assertThat(icon.desaturated, Eventually(Equals(True)))
+                self.assertTrue(icon.monitors_desaturated[self.hud_monitor])
 
     def test_hud_launcher_icon_click_hides_hud(self):
         """Clicking the Hud Icon should hide the HUD"""
@@ -609,11 +609,11 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
 class HudVisualTests(HudTestsBase):
 
-    launcher_modes = [('Launcher autohide', {'launcher_autohide': False}),
-                      ('Launcher never hide', {'launcher_autohide': True})]
+    launcher_modes = [('Launcher never hide', {'launcher_autohide': False}),
+                      ('Launcher autohide', {'launcher_autohide': True})]
 
-    launcher_screen = [('Launcher on primary monitor', {'launcher_primary_only': False}),
-                       ('Launcher on all monitors', {'launcher_primary_only': True})]
+    launcher_screen = [('Launcher on all monitors', {'launcher_primary_only': False}),
+                       ('Launcher on primary monitor', {'launcher_primary_only': True})]
 
     scenarios = multiply_scenarios(_make_monitor_scenarios(), launcher_modes, launcher_screen)
 
@@ -664,15 +664,15 @@ class HudVisualTests(HudTestsBase):
         hud_embedded_icon = self.unity.hud.get_embedded_icon()
 
         if self.unity.hud.is_locked_launcher:
-            self.assertThat(hud_launcher_icon.visible, Eventually(Equals(True)))
+            self.assertTrue(hud_launcher_icon.monitors_visibility[self.hud_monitor])
             self.assertTrue(hud_launcher_icon.is_on_monitor(self.hud_monitor))
-            self.assertTrue(hud_launcher_icon.active)
+            self.assertTrue(hud_launcher_icon.monitors_active[self.hud_monitor])
             self.assertThat(hud_launcher_icon.monitor, Equals(self.hud_monitor))
             self.assertFalse(hud_launcher_icon.desaturated)
             self.assertThat(hud_embedded_icon, Equals(None))
         else:
             self.assertThat(hud_launcher_icon.visible, Eventually(Equals(False)))
-            self.assertFalse(hud_launcher_icon.active)
+            self.assertFalse(hud_launcher_icon.monitors_active[self.hud_monitor])
             # the embedded icon has no visible property.
             self.assertThat(hud_embedded_icon, NotEquals(None))
 
