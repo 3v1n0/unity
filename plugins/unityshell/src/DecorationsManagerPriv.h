@@ -55,7 +55,7 @@ struct Quads
   Quad const& operator[](Pos position) const { return inner_vector_[unsigned(position)]; }
 
 private:
-  Quad inner_vector_[unsigned(Pos::LAST)];
+  std::array<Quad, unsigned(Pos::LAST)> inner_vector_;
 };
 
 struct Window::Impl
