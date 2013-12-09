@@ -22,6 +22,7 @@
 #include <cairo-xlib-xrender.h>
 
 #include "DecorationsManagerPriv.h"
+#include "DecorationStyle.h"
 #include "WindowManager.h"
 
 namespace unity
@@ -331,9 +332,13 @@ void Window::Impl::SetupExtents()
   if (window->hasUnmapReference())
     return;
 
-  CompWindowExtents border(5, 5, 28, 5);
-  CompWindowExtents input(border);
+  auto const& style = Style::Get();
+  CompWindowExtents border(style->BorderWidth(Side::LEFT),
+                           style->BorderWidth(Side::RIGHT),
+                           style->BorderWidth(Side::TOP),
+                           style->BorderWidth(Side::BOTTOM));
 
+  CompWindowExtents input(border);
   input.left += GRAB_BORDER;
   input.right += GRAB_BORDER;
   input.top += GRAB_BORDER;
