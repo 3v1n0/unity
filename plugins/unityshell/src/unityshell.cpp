@@ -1554,6 +1554,17 @@ void UnityScreen::donePaint()
   cScreen->donePaint();
 }
 
+void redraw_view_if_damaged(nux::ObjectPtr<CairoBaseWindow> const& view, CompRegion const& damage)
+{
+  if (!view || view->IsRedrawNeeded())
+    return;
+
+  auto const& geo = view->GetAbsoluteGeometry();
+
+  if (damage.intersects(CompRectFromNuxGeo(geo)))
+    view->RedrawBlur();
+}
+
 void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
   /* Ask nux to present anything in our damage region
@@ -1572,6 +1583,21 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   {
     auto const& geo = NuxGeometryFromCompRect(r);
     wt->PresentWindowsIntersectingGeometryOnThisFrame(geo);
+  }
+  
+  auto const& launchers = launcher_controller_->launchers();
+
+  for (auto const& launcher : launchers)
+  {
+    if (!launcher->Hidden())
+    {
+      redraw_view_if_damaged(launcher->GetActiveTooltip(), damage);
+    }
+  }
+
+  if (QuicklistManager* qm = QuicklistManager::Default())
+  {
+    redraw_view_if_damaged(qm->Current(), damage);
   }
 }
 
