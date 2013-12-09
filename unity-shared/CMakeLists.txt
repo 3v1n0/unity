@@ -23,6 +23,7 @@ set (UNITY_SHARED_SOURCES
      BackgroundEffectHelper.cpp
      DashStyle.cpp
      DebugDBusInterface.cpp
+     DecorationStyle.cpp
      DefaultThumbnailProvider.cpp
      DeltaRestrainment.cpp
      DesktopApplicationManager.cpp
@@ -122,4 +123,8 @@ add_dependencies (unity-shared-standalone unity-shared)
 add_executable (app-manager StandaloneAppManager.cpp)
 add_dependencies (app-manager  unity-shared unity-shared-bamf unity-shared-standalone)
 target_link_libraries (app-manager  unity-shared unity-shared-bamf  unity-shared-standalone)
+
+add_executable (decorations-style StandaloneDecorationStyle.cpp)
+add_dependencies (decorations-style unity-shared)
+target_link_libraries (decorations-style unity-shared)
 
