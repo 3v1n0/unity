@@ -270,6 +270,7 @@ Window::Impl::Impl(Window* parent, UnityWindow* uwin)
   , parent_(parent)
   , uwin_(uwin)
   , frame_(0)
+  , dirty_geo_(true)
 {
   auto* window = uwin_->window;
 
@@ -283,7 +284,7 @@ Window::Impl::Impl(Window* parent, UnityWindow* uwin)
   active.changed.connect([this] (bool) {
     // Update();
     deco_textures_.clear();
-    ComputeShadowQuads();
+    parent_->UpdateDecorationPosition();
     uwin_->cWindow->damageOutputExtents();
   });
 }
@@ -573,8 +574,6 @@ void Window::Impl::ComputeShadowQuads()
   if (!ShadowDecorated())
     return;
 
-  BuildDecorationTextures(); // remove meeee!
-
   auto* texture = ShadowTexture();
 
   if (!texture || !texture->width() || !texture->height())
@@ -679,6 +678,9 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   auto const& clip_region = (mask & PAINT_WINDOW_TRANSFORMED_MASK) ? infiniteRegion : region;
   mask |= PAINT_WINDOW_BLEND_MASK;
 
+  if (dirty_geo_)
+    parent_->UpdateDecorationPosition();
+
   gWindow->vertexBuffer()->begin();
 
   for (unsigned i = 0; i < shadow_quads_.size(); ++i)
@@ -722,7 +724,7 @@ void Window::UpdateFrameRegion(CompRegion& r)
   auto const& input = window->input();
 
   r += impl_->frame_region_.translated(geo.x() - input.left, geo.y() - input.top);
-  impl_->ComputeShadowQuads();
+  impl_->dirty_geo_ = true;
 }
 
 void Window::UpdateOutputExtents(compiz::window::extents::Extents& output)
@@ -749,6 +751,13 @@ void Window::Undecorate()
 void Window::UpdateDecorationPosition()
 {
   impl_->ComputeShadowQuads();
+  impl_->BuildDecorationTextures();
+  impl_->dirty_geo_ = false;
+}
+
+void Window::UpdateDecorationPositionDelayed()
+{
+  impl_->dirty_geo_ = true;
 }
 
 } // decoration namespace

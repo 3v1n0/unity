@@ -86,6 +86,7 @@ private:
   decoration::Window *parent_;
   ::UnityWindow* uwin_;
   ::Window frame_;
+  bool dirty_geo_;
 
   CompRect last_shadow_rect_;
   Quads shadow_quads_;
