@@ -282,6 +282,7 @@ Window::Impl::Impl(Window* parent, UnityWindow* uwin)
 
   active.changed.connect([this] (bool) {
     // Update();
+    deco_textures_.clear();
     ComputeShadowQuads();
     uwin_->cWindow->damageOutputExtents();
   });
@@ -535,12 +536,13 @@ unsigned Window::Impl::ShadowRadius() const
 
 void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
 {
-  auto& deco_tex = active_deco_textures_[unsigned(s)];
+  auto& deco_tex = deco_textures_[unsigned(s)];
 
   if (deco_tex.quad.box.width() != geo.width || deco_tex.quad.box.height() != geo.height)
   {
     cu::CairoContext ctx(geo.width, geo.height);
-    Style::Get()->DrawSide(s, ctx, geo.width, geo.height);
+    auto ws = active() ? WidgetState::NORMAL : WidgetState::BACKDROP;
+    Style::Get()->DrawSide(s, ws, ctx, geo.width, geo.height);
     deco_tex.SetTexture(ctx);
   }
 
@@ -551,7 +553,7 @@ void Window::Impl::BuildDecorationTextures()
 {
   if (!FullyDecorated())
   {
-    active_deco_textures_.clear();
+    deco_textures_.clear();
     return;
   }
 
@@ -559,7 +561,7 @@ void Window::Impl::BuildDecorationTextures()
   auto const& geo = window->borderRect();
   auto const& border = window->border();
 
-  active_deco_textures_.resize(4);
+  deco_textures_.resize(4);
   RenderDecorationTexture(Side::TOP, {geo.x(), geo.y(), geo.width(), window->border().top});
   RenderDecorationTexture(Side::LEFT, {geo.x(), geo.y() + border.top, border.left, geo.height() - border.top - border.bottom});
   RenderDecorationTexture(Side::RIGHT, {geo.x2() - border.right, geo.y() + border.top, border.right, geo.height() - border.top - border.bottom});
@@ -688,7 +690,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   if (gWindow->vertexBuffer()->end())
     gWindow->glDrawTexture(ShadowTexture(), transformation, attrib, mask);
 
-  for (auto const& dtex : active_deco_textures_)
+  for (auto const& dtex : deco_textures_)
   {
     gWindow->vertexBuffer()->begin();
     gWindow->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);

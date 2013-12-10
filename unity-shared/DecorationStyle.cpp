@@ -100,10 +100,34 @@ struct Style::Impl
     return value;
   }
 
-  void DrawSide(Side s, cairo_t* cr, int w, int h)
+  inline GtkStateFlags GtkStateFromWidgetState(WidgetState ws)
+  {
+    switch (ws)
+    {
+      case WidgetState::NORMAL:
+        return GTK_STATE_FLAG_NORMAL;
+      case WidgetState::PRELIGHT:
+        return GTK_STATE_FLAG_PRELIGHT;
+      case WidgetState::PRESSED:
+        return GTK_STATE_FLAG_ACTIVE;
+      case WidgetState::DISABLED:
+        return GTK_STATE_FLAG_INSENSITIVE;
+      case WidgetState::BACKDROP:
+        return GTK_STATE_FLAG_BACKDROP;
+      case WidgetState::BACKDROP_PRELIGHT:
+        return static_cast<GtkStateFlags>(GTK_STATE_FLAG_BACKDROP|GTK_STATE_FLAG_PRELIGHT);
+      case WidgetState::BACKDROP_PRESSED:
+        return static_cast<GtkStateFlags>(GTK_STATE_FLAG_BACKDROP|GTK_STATE_FLAG_ACTIVE);
+    }
+
+    return GTK_STATE_FLAG_NORMAL;
+  }
+
+  void DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
   {
     gtk_style_context_save(ctx_);
     gtk_style_context_add_class(ctx_, GetBorderClass(s).c_str());
+    gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
     gtk_render_background(ctx_, cr, 0, 0, w, h);
     gtk_render_frame(ctx_, cr, 0, 0, w, h);
     gtk_style_context_restore(ctx_);
@@ -151,9 +175,9 @@ float Style::TitleAlignmentValue() const
   return impl_->title_alignment_;
 }
 
-void Style::DrawSide(Side s, cairo_t* cr, int w, int h)
+void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
 {
-  impl_->DrawSide(s, cr, w, h);
+  impl_->DrawSide(s, ws, cr, w, h);
 }
 
 } // decoration namespace

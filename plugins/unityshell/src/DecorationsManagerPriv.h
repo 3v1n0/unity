@@ -91,7 +91,7 @@ private:
   Quads shadow_quads_;
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
-  std::vector<cu::PixmapTextureQuad> active_deco_textures_;
+  std::vector<cu::PixmapTextureQuad> deco_textures_;
 };
 
 struct Manager::Impl

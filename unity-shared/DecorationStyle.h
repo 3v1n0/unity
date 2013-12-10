@@ -44,6 +44,17 @@ enum class Alignment
   FLOATING
 };
 
+enum class WidgetState
+{
+  NORMAL,
+  PRELIGHT,
+  PRESSED,
+  DISABLED,
+  BACKDROP,
+  BACKDROP_PRELIGHT,
+  BACKDROP_PRESSED
+};
+
 class Style
 {
 public:
@@ -56,7 +67,7 @@ public:
   float TitleAlignmentValue() const;
   int BorderWidth(Side) const;
 
-  void DrawSide(Side, cairo_t*, int width, int height);
+  void DrawSide(Side, WidgetState, cairo_t*, int width, int height);
 
 private:
   Style();
