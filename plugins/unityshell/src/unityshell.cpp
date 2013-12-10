@@ -3116,14 +3116,14 @@ void UnityWindow::getOutputExtents(CompWindowExtents& output)
 
 void UnityWindow::moveNotify(int x, int y, bool immediate)
 {
-  deco_win_->UpdateDecorationPosition();
+  deco_win_->UpdateDecorationPositionDelayed();
   PluginAdapter::Default().NotifyMoved(window, x, y);
   window->moveNotify(x, y, immediate);
 }
 
 void UnityWindow::resizeNotify(int x, int y, int w, int h)
 {
-  deco_win_->UpdateDecorationPosition();
+  deco_win_->UpdateDecorationPositionDelayed();
   PluginAdapter::Default().NotifyResized(window, x, y, w, h);
   window->resizeNotify(x, y, w, h);
 }
@@ -3676,7 +3676,7 @@ void UnityWindow::AddProperties(debug::IntrospectionData& introspection)
 
   introspection
     .add(scaled ? GetScaledGeometry() : wm.GetWindowGeometry(xid))
-    .add("xid", (uint64_t)xid)
+    .add("xid", xid)
     .add("title", wm.GetWindowName(xid))
     .add("fake_decorated", uScreen->fake_decorated_windows_.find(this) != uScreen->fake_decorated_windows_.end())
     .add("scaled", scaled)

@@ -51,7 +51,7 @@ private:
 
 struct PixmapTextureQuad
 {
-  void Init(PixmapTexture::Ptr const& pixmap_texture)
+  void SetTexture(PixmapTexture::Ptr const& pixmap_texture)
   {
     pt = pixmap_texture;
 
