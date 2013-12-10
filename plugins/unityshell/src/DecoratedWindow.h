@@ -17,46 +17,46 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#ifndef UNITY_DECORATION_MANAGER
-#define UNITY_DECORATION_MANAGER
+#ifndef UNITY_DECORATED_WINDOW
+#define UNITY_DECORATED_WINDOW
 
 #include <NuxCore/Property.h>
-#include "DecoratedWindow.h"
+#include <memory>
+
+class CompRegion;
+class GLWindowPaintAttrib;
+class GLMatrix;
+namespace compiz { namespace window { namespace extents { class Extents; } } }
 
 namespace unity
 {
-class UnityScreen;
+class UnityWindow;
 
 namespace decoration
 {
-class Manager
+class Manager;
+
+class Window
 {
 public:
-  typedef std::shared_ptr<Manager> Ptr;
+  typedef std::shared_ptr<Window> Ptr;
 
-  Manager(UnityScreen*);
-  virtual ~Manager();
+  Window(UnityWindow*);
+  virtual ~Window();
 
-  nux::Property<nux::Point> shadow_offset;
-  nux::Property<nux::Color> active_shadow_color;
-  nux::Property<unsigned> active_shadow_radius;
-  nux::Property<nux::Color> inactive_shadow_color;
-  nux::Property<unsigned> inactive_shadow_radius;
-
-  void AddSupportedAtoms(std::vector<Atom>& atoms) const;
-  bool HandleEventBefore(XEvent*);
-  bool HandleEventAfter(XEvent*);
-
-  Window::Ptr HandleWindow(UnityWindow*);
-  void UnHandleWindow(UnityWindow*);
-
-  Window::Ptr GetWindowByXid(::Window);
+  void Update();
+  void Undecorate();
+  void UpdateDecorationPosition();
+  void UpdateDecorationPositionDelayed();
+  void UpdateFrameRegion(CompRegion&);
+  void UpdateOutputExtents(compiz::window::extents::Extents&);
+  void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 private:
-  Manager(Manager const&) = delete;
-  Manager& operator=(Manager const&) = delete;
+  Window(Window const&) = delete;
+  Window& operator=(Window const&) = delete;
 
-  friend class Window;
+  friend class Manager;
 
   struct Impl;
   std::unique_ptr<Impl> impl_;
