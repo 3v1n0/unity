@@ -22,7 +22,6 @@
 #include <cairo-xlib-xrender.h>
 
 #include "DecorationsManagerPriv.h"
-#include "DecorationStyle.h"
 #include "WindowManager.h"
 
 namespace unity
@@ -84,7 +83,7 @@ cu::PixmapTexture::Ptr Manager::Impl::BuildShadowTexture(unsigned radius, nux::C
   cairo_fill(dummy_ctx);
   dummy.BlurSurface(radius);
 
-  compiz_utils::CairoContext shadow_ctx(tex_size, tex_size);
+  cu::CairoContext shadow_ctx(tex_size, tex_size);
   cairo_set_source_surface(shadow_ctx, dummy.GetSurface(), 0, 0);
   cairo_paint(shadow_ctx);
   return shadow_ctx;
@@ -380,7 +379,7 @@ void Window::Impl::UpdateFrame()
     // attr.event_mask = ButtonPressMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
     attr.override_redirect = True;
 
-    auto parent = window->frame(); // id()?
+    auto parent = window->frame();
     frame_ = XCreateWindow(dpy, parent, frame_geo.x, frame_geo.y,
                            frame_geo.width, frame_geo.height, 0, CopyFromParent,
                            InputOnly, CopyFromParent, CWOverrideRedirect | CWEventMask, &attr);
@@ -534,10 +533,45 @@ unsigned Window::Impl::ShadowRadius() const
   return active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
 }
 
+void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
+{
+  auto& deco_tex = active_deco_textures_[unsigned(s)];
+
+  if (deco_tex.quad.box.width() != geo.width || deco_tex.quad.box.height() != geo.height)
+  {
+    cu::CairoContext ctx(geo.width, geo.height);
+    Style::Get()->DrawSide(s, ctx, geo.width, geo.height);
+    deco_tex.SetTexture(ctx);
+  }
+
+  deco_tex.SetCoords(geo.x, geo.y);
+}
+
+void Window::Impl::BuildDecorationTextures()
+{
+  if (!FullyDecorated())
+  {
+    active_deco_textures_.clear();
+    return;
+  }
+
+  auto *window = uwin_->window;
+  auto const& geo = window->borderRect();
+  auto const& border = window->border();
+
+  active_deco_textures_.resize(4);
+  RenderDecorationTexture(Side::TOP, {geo.x(), geo.y(), geo.width(), window->border().top});
+  RenderDecorationTexture(Side::LEFT, {geo.x(), geo.y() + border.top, border.left, geo.height() - border.top - border.bottom});
+  RenderDecorationTexture(Side::RIGHT, {geo.x2() - border.right, geo.y() + border.top, border.right, geo.height() - border.top - border.bottom});
+  RenderDecorationTexture(Side::BOTTOM, {geo.x(), geo.y2() - border.bottom, geo.width(), border.bottom});
+}
+
 void Window::Impl::ComputeShadowQuads()
 {
   if (!ShadowDecorated())
     return;
+
+  BuildDecorationTextures(); // remove meeee!
 
   auto* texture = ShadowTexture();
 
@@ -645,7 +679,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   gWindow->vertexBuffer()->begin();
 
-  for (unsigned i = 0; i < unsigned(Quads::Pos::LAST); ++i)
+  for (unsigned i = 0; i < shadow_quads_.size(); ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
     gWindow->glAddGeometry({quad.matrix}, CompRegion(quad.box) - window->region(), clip_region);
@@ -653,6 +687,15 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   if (gWindow->vertexBuffer()->end())
     gWindow->glDrawTexture(ShadowTexture(), transformation, attrib, mask);
+
+  for (auto const& dtex : active_deco_textures_)
+  {
+    gWindow->vertexBuffer()->begin();
+    gWindow->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
+
+    if (gWindow->vertexBuffer()->end())
+      gWindow->glDrawTexture(dtex.pt->texture(), transformation, attrib, mask);
+  }
 }
 
 Window::Window(UnityWindow* uwin)
