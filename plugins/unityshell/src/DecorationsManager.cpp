@@ -282,9 +282,8 @@ Window::Impl::Impl(Window* parent, UnityWindow* uwin)
   }
 
   active.changed.connect([this] (bool) {
-    // Update();
-    deco_textures_.clear();
-    parent_->UpdateDecorationPosition();
+    bg_textures_.clear();
+    parent_->UpdateDecorationPositionDelayed();
     uwin_->cWindow->damageOutputExtents();
   });
 }
@@ -537,7 +536,7 @@ unsigned Window::Impl::ShadowRadius() const
 
 void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
 {
-  auto& deco_tex = deco_textures_[unsigned(s)];
+  auto& deco_tex = bg_textures_[unsigned(s)];
 
   if (deco_tex.quad.box.width() != geo.width || deco_tex.quad.box.height() != geo.height)
   {
@@ -554,7 +553,7 @@ void Window::Impl::BuildDecorationTextures()
 {
   if (!FullyDecorated())
   {
-    deco_textures_.clear();
+    bg_textures_.clear();
     return;
   }
 
@@ -562,7 +561,7 @@ void Window::Impl::BuildDecorationTextures()
   auto const& geo = window->borderRect();
   auto const& border = window->border();
 
-  deco_textures_.resize(4);
+  bg_textures_.resize(4);
   RenderDecorationTexture(Side::TOP, {geo.x(), geo.y(), geo.width(), window->border().top});
   RenderDecorationTexture(Side::LEFT, {geo.x(), geo.y() + border.top, border.left, geo.height() - border.top - border.bottom});
   RenderDecorationTexture(Side::RIGHT, {geo.x2() - border.right, geo.y() + border.top, border.right, geo.height() - border.top - border.bottom});
@@ -692,7 +691,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   if (gWindow->vertexBuffer()->end())
     gWindow->glDrawTexture(ShadowTexture(), transformation, attrib, mask);
 
-  for (auto const& dtex : deco_textures_)
+  for (auto const& dtex : bg_textures_)
   {
     gWindow->vertexBuffer()->begin();
     gWindow->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
