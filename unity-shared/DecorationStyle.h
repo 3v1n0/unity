@@ -21,13 +21,14 @@
 #define UNITY_DECORATION_STYLE
 
 #include <memory>
+#include <cairo/cairo.h>
 
 namespace unity
 {
 namespace decoration
 {
 
-enum class Side
+enum class Side : unsigned
 {
   TOP = 0,
   LEFT,
@@ -54,6 +55,8 @@ public:
   Alignment TitleAlignment() const;
   float TitleAlignmentValue() const;
   int BorderWidth(Side) const;
+
+  void DrawSide(Side, cairo_t*, int width, int height);
 
 private:
   Style();

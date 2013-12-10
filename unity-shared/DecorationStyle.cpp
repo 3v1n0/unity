@@ -100,6 +100,15 @@ struct Style::Impl
     return value;
   }
 
+  void DrawSide(Side s, cairo_t* cr, int w, int h)
+  {
+    gtk_style_context_save(ctx_);
+    gtk_style_context_add_class(ctx_, GetBorderClass(s).c_str());
+    gtk_render_background(ctx_, cr, 0, 0, w, h);
+    gtk_render_frame(ctx_, cr, 0, 0, w, h);
+    gtk_style_context_restore(ctx_);
+  }
+
   glib::Object<GtkStyleContext> ctx_;
   std::array<int, 4> border_size_;
   float title_alignment_;
@@ -140,6 +149,11 @@ Alignment Style::TitleAlignment() const
 float Style::TitleAlignmentValue() const
 {
   return impl_->title_alignment_;
+}
+
+void Style::DrawSide(Side s, cairo_t* cr, int w, int h)
+{
+  impl_->DrawSide(s, cr, w, h);
 }
 
 } // decoration namespace
