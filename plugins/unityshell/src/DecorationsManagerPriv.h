@@ -92,10 +92,10 @@ private:
   Quads shadow_quads_;
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
-  std::vector<cu::PixmapTextureQuad> deco_textures_;
+  std::vector<cu::PixmapTextureQuad> bg_textures_;
 };
 
-struct Manager::Impl
+struct Manager::Impl : sigc::trackable
 {
   Impl(decoration::Manager*, UnityScreen*);
   ~Impl();
