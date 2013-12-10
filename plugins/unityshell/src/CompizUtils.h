@@ -27,6 +27,12 @@ namespace unity
 namespace compiz_utils
 {
 
+struct TextureQuad
+{
+  CompRect box;
+  GLTexture::Matrix matrix;
+};
+
 struct PixmapTexture
 {
   typedef std::shared_ptr<PixmapTexture> Ptr;
@@ -41,6 +47,33 @@ struct PixmapTexture
 private:
   Pixmap pixmap_;
   GLTexture::List texture_;
+};
+
+struct PixmapTextureQuad
+{
+  void Init(PixmapTexture::Ptr const& pixmap_texture)
+  {
+    pt = pixmap_texture;
+
+    if (pt && pt->texture())
+    {
+      auto* tex = pt->texture();
+      quad.box.setWidth(tex->width());
+      quad.box.setHeight(tex->height());
+    }
+  }
+
+  void SetCoords(int x, int y)
+  {
+    quad.box.setX(x);
+    quad.box.setY(y);
+    quad.matrix = (pt && pt->texture()) ? pt->texture()->matrix() : GLTexture::Matrix();
+    quad.matrix.x0 = 0.0f - COMP_TEX_COORD_X(quad.matrix, x);
+    quad.matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad.matrix, y);
+  }
+
+  PixmapTexture::Ptr pt;
+  TextureQuad quad;
 };
 
 struct CairoContext
