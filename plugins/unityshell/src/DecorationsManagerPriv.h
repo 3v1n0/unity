@@ -76,7 +76,7 @@ private:
   unsigned ShadowRadius() const;
 
   void ComputeShadowQuads();
-  void BuildDecorationTextures();
+  void UpdateDecorationTextures();
   void RenderDecorationTexture(Side, nux::Geometry const&);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 

@@ -19,10 +19,8 @@
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <cairo-xlib-xrender.h>
 
 #include "DecorationsManagerPriv.h"
-#include "WindowManager.h"
 
 namespace unity
 {
@@ -310,6 +308,7 @@ void Window::Impl::Undecorate()
 {
   UnsetExtents();
   UnsetFrame();
+  bg_textures_.clear();
 }
 
 void Window::Impl::UnsetExtents()
@@ -549,7 +548,7 @@ void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
   deco_tex.SetCoords(geo.x, geo.y);
 }
 
-void Window::Impl::BuildDecorationTextures()
+void Window::Impl::UpdateDecorationTextures()
 {
   if (!FullyDecorated())
   {
@@ -750,7 +749,7 @@ void Window::Undecorate()
 void Window::UpdateDecorationPosition()
 {
   impl_->ComputeShadowQuads();
-  impl_->BuildDecorationTextures();
+  impl_->UpdateDecorationTextures();
   impl_->dirty_geo_ = false;
 }
 
