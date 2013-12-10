@@ -33,52 +33,50 @@ struct TextureQuad
   GLTexture::Matrix matrix;
 };
 
-struct PixmapTexture
+struct SimpleTexture
 {
-  typedef std::shared_ptr<PixmapTexture> Ptr;
+  typedef std::shared_ptr<SimpleTexture> Ptr;
 
-  PixmapTexture(unsigned width, unsigned height);
-  ~PixmapTexture();
+  SimpleTexture() = default;
+  SimpleTexture(GLTexture::List const&);
+  virtual ~SimpleTexture() = default;
 
   GLTexture::List const& texture_list() const { return texture_; }
   GLTexture* texture() const { return texture_[0]; }
+
+protected:
+  GLTexture::List texture_;
+};
+
+struct SimpleTextureQuad
+{
+  void SetTexture(SimpleTexture::Ptr const&);
+  void SetCoords(int x, int y);
+
+  operator SimpleTexture::Ptr() const { return st; }
+  operator GLTexture*() const { return st ? st->texture() : nullptr; }
+  operator GLTexture::List() const { return st ? st->texture_list() : GLTexture::List(); }
+
+  SimpleTexture::Ptr st;
+  TextureQuad quad;
+};
+
+struct PixmapTexture : SimpleTexture
+{
+  typedef std::shared_ptr<PixmapTexture> Ptr;
+
+  PixmapTexture(int width, int height);
+  ~PixmapTexture();
+
   Pixmap pixmap() const { return pixmap_; }
 
 private:
   Pixmap pixmap_;
-  GLTexture::List texture_;
-};
-
-struct PixmapTextureQuad
-{
-  void SetTexture(PixmapTexture::Ptr const& pixmap_texture)
-  {
-    pt = pixmap_texture;
-
-    if (pt && pt->texture())
-    {
-      auto* tex = pt->texture();
-      quad.box.setWidth(tex->width());
-      quad.box.setHeight(tex->height());
-    }
-  }
-
-  void SetCoords(int x, int y)
-  {
-    quad.box.setX(x);
-    quad.box.setY(y);
-    quad.matrix = (pt && pt->texture()) ? pt->texture()->matrix() : GLTexture::Matrix();
-    quad.matrix.x0 = 0.0f - COMP_TEX_COORD_X(quad.matrix, x);
-    quad.matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad.matrix, y);
-  }
-
-  PixmapTexture::Ptr pt;
-  TextureQuad quad;
 };
 
 struct CairoContext
 {
-  CairoContext(unsigned width, unsigned height);
+  CairoContext(int width, int height);
   ~CairoContext();
 
   int width() const;
@@ -89,6 +87,7 @@ struct CairoContext
 
   operator cairo_t*() const { return cr_; }
   operator PixmapTexture::Ptr() const { return pixmap_texture_; }
+  operator SimpleTexture::Ptr() const { return pixmap_texture_; }
 
 private:
   PixmapTexture::Ptr pixmap_texture_;

@@ -697,7 +697,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
     gWindow->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
 
     if (gWindow->vertexBuffer()->end())
-      gWindow->glDrawTexture(dtex.pt->texture(), transformation, attrib, mask);
+      gWindow->glDrawTexture(dtex, transformation, attrib, mask);
   }
 }
 

@@ -31,10 +31,40 @@ namespace
   const unsigned PIXMAP_DEPTH = 32;
 }
 
-PixmapTexture::PixmapTexture(unsigned w, unsigned h)
-  : pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w, h, PIXMAP_DEPTH))
-  , texture_(GLTexture::bindPixmapToTexture(pixmap_, w, h, PIXMAP_DEPTH))
+SimpleTexture::SimpleTexture(GLTexture::List const& tex)
+  : texture_(tex)
 {}
+
+//
+
+void SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
+{
+  st = simple_texture;
+
+  if (st && st->texture())
+  {
+    auto* tex = st->texture();
+    quad.box.setWidth(tex->width());
+    quad.box.setHeight(tex->height());
+  }
+}
+
+void SimpleTextureQuad::SetCoords(int x, int y)
+{
+  quad.box.setX(x);
+  quad.box.setY(y);
+  quad.matrix = (st && st->texture()) ? st->texture()->matrix() : GLTexture::Matrix();
+  quad.matrix.x0 = 0.0f - COMP_TEX_COORD_X(quad.matrix, x);
+  quad.matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad.matrix, y);
+}
+
+//
+
+PixmapTexture::PixmapTexture(int w, int h)
+  : pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w, h, PIXMAP_DEPTH))
+{
+  texture_ = GLTexture::bindPixmapToTexture(pixmap_, w, h, PIXMAP_DEPTH);
+}
 
 PixmapTexture::~PixmapTexture()
 {
@@ -46,7 +76,7 @@ PixmapTexture::~PixmapTexture()
 
 //
 
-CairoContext::CairoContext(unsigned w, unsigned h)
+CairoContext::CairoContext(int w, int h)
   : pixmap_texture_(std::make_shared<PixmapTexture>(w, h))
   , surface_(nullptr)
   , cr_(nullptr)

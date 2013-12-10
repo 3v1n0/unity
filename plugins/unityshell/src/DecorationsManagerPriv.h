@@ -92,7 +92,7 @@ private:
   Quads shadow_quads_;
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
-  std::vector<cu::PixmapTextureQuad> bg_textures_;
+  std::vector<cu::SimpleTextureQuad> bg_textures_;
 };
 
 struct Manager::Impl : sigc::trackable
