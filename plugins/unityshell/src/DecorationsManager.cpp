@@ -20,7 +20,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
-#include "DecorationsManagerPriv.h"
+#include "DecorationsPriv.h"
 
 namespace unity
 {
@@ -211,6 +211,8 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 
   return false;
 }
+
+// Public APIs
 
 Manager::Manager(UnityScreen *screen)
   : shadow_offset(nux::Point(1, 1))

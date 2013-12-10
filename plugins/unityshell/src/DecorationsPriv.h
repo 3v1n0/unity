@@ -20,12 +20,12 @@
 #ifndef UNITY_DECORATION_MANAGER_PRIV
 #define UNITY_DECORATION_MANAGER_PRIV
 
+#include <X11/Xlib.h>
+#include <Nux/BaseWindow.h>
 #include "DecorationsManager.h"
 #include "DecorationStyle.h"
 #include "CompizUtils.h"
 #include "unityshell.h"
-#include <X11/Xlib.h>
-#include <Nux/BaseWindow.h>
 
 class CompRegion;
 

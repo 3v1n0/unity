@@ -20,7 +20,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
-#include "DecorationsManagerPriv.h"
+#include "DecorationsPriv.h"
 
 namespace unity
 {
@@ -469,6 +469,8 @@ void Window::Impl::Draw(GLMatrix const& transformation,
       gWindow->glDrawTexture(dtex, transformation, attrib, mask);
   }
 }
+
+// Public APIs
 
 Window::Window(UnityWindow* uwin)
   : impl_(new Impl(this, uwin))
