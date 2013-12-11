@@ -155,10 +155,10 @@ void WindowButton::LoadImages()
   normal_tex_ = style.GetWindowButton(type_, panel::WindowState::NORMAL);
   prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::PRELIGHT);
   pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::PRESSED);
-  unfocused_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED);
+  unfocused_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP);
   disabled_tex_ = style.GetWindowButton(type_, panel::WindowState::DISABLED);
-  unfocused_prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRELIGHT);
-  unfocused_pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRESSED);
+  unfocused_prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP_PRELIGHT);
+  unfocused_pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP_PRESSED);
   normal_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::NORMAL);
   prelight_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRELIGHT);
   pressed_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRESSED);

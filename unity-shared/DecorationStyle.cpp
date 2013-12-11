@@ -27,8 +27,8 @@ namespace decoration
 {
 namespace
 {
-const std::array<std::string, 4> BORDER_CLASSES = {"top", "left", "right", "bottom"};
-const std::array<int, 4> DEFAULT_BORDERS = {28, 1, 1, 1};
+const std::array<std::string, sizeof(Side)> BORDER_CLASSES = {"top", "left", "right", "bottom"};
+const std::array<int, sizeof(Side)> DEFAULT_BORDERS = {28, 1, 1, 1};
 
 typedef struct _UnityDecorationPrivate UnityDecorationPrivate;
 struct UnityDecoration

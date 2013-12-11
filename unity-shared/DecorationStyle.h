@@ -55,6 +55,14 @@ enum class WidgetState
   BACKDROP_PRESSED
 };
 
+enum class WindowButtonType
+{
+  CLOSE,
+  MINIMIZE,
+  UNMAXIMIZE,
+  MAXIMIZE
+};
+
 class Style
 {
 public:

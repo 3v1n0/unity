@@ -28,30 +28,14 @@
 #include <gtk/gtk.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+#include "DecorationStyle.h"
 
 namespace unity
 {
 namespace panel
 {
-
-enum class WindowButtonType
-{
-  CLOSE,
-  MINIMIZE,
-  UNMAXIMIZE,
-  MAXIMIZE
-};
-
-enum class WindowState
-{
-  NORMAL,
-  PRELIGHT,
-  PRESSED,
-  DISABLED,
-  UNFOCUSED,
-  UNFOCUSED_PRELIGHT,
-  UNFOCUSED_PRESSED
-};
+using WindowButtonType = decoration::WindowButtonType;
+using WindowState = decoration::WidgetState;
 
 enum class PanelItem
 {
