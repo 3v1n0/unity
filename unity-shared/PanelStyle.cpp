@@ -52,10 +52,7 @@ const std::string HIGH_CONTRAST_THEME_PREFIX("HighContrast");
 
 nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {
-  return nux::Color(color.red,
-                    color.green,
-                    color.blue,
-                    color.alpha);
+  return nux::Color(color.red, color.green, color.blue, color.alpha);
 }
 
 }
@@ -183,11 +180,8 @@ BaseTexturePtr Style::GetBackground()
 
   // Use the internal context as we know it is good and shiny new.
   cairo_t* cr = context.GetInternalContext();
-  cairo_push_group(cr);
   gtk_render_background(_style_context, cr, 0, 0, width, height);
   gtk_render_frame(_style_context, cr, 0, 0, width, height);
-  cairo_pop_group_to_source(cr);
-  cairo_paint(cr);
 
   _bg_texture = texture_ptr_from_cairo_graphics(context);
 
