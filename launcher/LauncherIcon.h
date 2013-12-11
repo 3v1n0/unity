@@ -94,6 +94,8 @@ public:
 
   int SortPriority();
 
+  void SetOrder(int order);
+
   virtual WindowList Windows() { return WindowList(); }
 
   virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
@@ -326,6 +328,7 @@ private:
   float _present_urgency;
   float _progress;
   int _sort_priority;
+  int _order;
   int _last_monitor;
   nux::Color _background_color;
   nux::Color _glow_color;
