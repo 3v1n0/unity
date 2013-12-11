@@ -22,6 +22,7 @@ class SpreadTests(UnityTestCase):
 
     def setUp(self):
         super(SpreadTests, self).setUp()
+        self.monitor = self.display.get_primary_screen()
         self.launcher = self.unity.launcher.get_launcher_for_monitor(self.display.get_primary_screen())
 
     def start_test_application_windows(self, app_name, num_windows=2):
@@ -67,14 +68,14 @@ class SpreadTests(UnityTestCase):
 
     def assertLauncherIconsSaturated(self):
         for icon in self.unity.launcher.model.get_launcher_icons():
-            self.assertThat(icon.desaturated, Eventually(Equals(False)))
+            self.assertFalse(icon.monitors_desaturated[self.monitor])
 
     def assertLauncherIconsDesaturated(self, also_active=True):
         for icon in self.unity.launcher.model.get_launcher_icons():
             if isinstance(icon, BFBLauncherIcon) or (not also_active and icon.active):
-                self.assertThat(icon.desaturated, Eventually(Equals(False)))
+                self.assertFalse(icon.monitors_desaturated[self.monitor])
             else:
-                self.assertThat(icon.desaturated, Eventually(Equals(True)))
+                self.assertTrue(icon.monitors_desaturated[self.monitor])
 
     def test_scale_application_windows(self):
         """All the windows of an application must be scaled when application

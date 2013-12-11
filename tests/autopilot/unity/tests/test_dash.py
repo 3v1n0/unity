@@ -310,7 +310,7 @@ class DashKeyNavTests(DashTestCase):
         self.assertThat(scopebar.active_scope, Eventually(Equals(focused_icon)))
 
         # scopebar should lose focus after activation.
-        self.assertThat(scopebar.focused_scope_icon, Eventually(Equals("")))
+        self.assertFalse(hasattr(scopebar, 'focused_scope_icon'))
 
     def test_focus_returns_to_searchbar(self):
         """This test makes sure that the focus is returned to the searchbar of the newly
@@ -326,7 +326,7 @@ class DashKeyNavTests(DashTestCase):
         self.keyboard.press_and_release("Enter")
 
         self.assertThat(scopebar.active_scope, Eventually(Equals(focused_icon)))
-        self.assertThat(scopebar.focused_scope_icon, Eventually(Equals("")))
+        self.assertFalse(hasattr(scopebar, 'focused_scope_icon'))
 
         # Now we make sure if the newly activated scope searchbar have the focus.
         self.keyboard.type("HasFocus")

@@ -77,7 +77,7 @@ class LauncherTooltipTests(LauncherTestCase):
         self.assertEqual(self.get_reveal_behavior(bfb), self.NEVER)
 
         # ... nor did it timeout instant tooltips for other icons
-        self.assertEqual(self.get_reveal_behavior(other), self.DELAYED)
+        self.assertEqual(self.get_reveal_behavior(other), self.INSTANT)
 
     # Tooltip reveal types
     (INSTANT, DELAYED, NEVER) = range(3)
