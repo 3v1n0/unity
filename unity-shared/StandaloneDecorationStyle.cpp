@@ -51,4 +51,34 @@ int main(int argc, char* argv[])
   std::cout << "Border bottom: " << style->BorderWidth(Side::BOTTOM) << std::endl;
   std::cout << "---" << std::endl;
   std::cout << "Title alignment: " << AlignementString(style) << std::endl;
+  std::cout << "---" << std::endl;
+
+  std::cout << "Button 'close' state 'normal' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::NORMAL) << std::endl;
+  std::cout << "Button 'close' state 'prelight' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::PRELIGHT) << std::endl;
+  std::cout << "Button 'close' state 'pressed' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::PRESSED) << std::endl;
+  std::cout << "Button 'close' state 'disabled' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::DISABLED) << std::endl;
+  std::cout << "Button 'close' state 'backdrop' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::BACKDROP) << std::endl;
+  std::cout << "Button 'close' state 'backdrop_prelight' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::BACKDROP_PRELIGHT) << std::endl;
+  std::cout << "Button 'close' state 'backdrop_pressed' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::BACKDROP_PRESSED) << std::endl;
+  std::cout << "Button 'minimize' state 'normal' " << style->WindowButtonFile(WindowButtonType::MINIMIZE, WidgetState::NORMAL) << std::endl;
+  std::cout << "Button 'minimize' state 'prelight' " << style->WindowButtonFile(WindowButtonType::MINIMIZE, WidgetState::PRELIGHT) << std::endl;
+  std::cout << "Button 'minimize' state 'pressed' " << style->WindowButtonFile(WindowButtonType::MINIMIZE, WidgetState::PRESSED) << std::endl;
+  std::cout << "Button 'minimize' state 'disabled' " << style->WindowButtonFile(WindowButtonType::MINIMIZE, WidgetState::DISABLED) << std::endl;
+  std::cout << "Button 'minimize' state 'backdrop' " << style->WindowButtonFile(WindowButtonType::MINIMIZE, WidgetState::BACKDROP) << std::endl;
+  std::cout << "Button 'minimize' state 'backdrop_prelight' " << style->WindowButtonFile(WindowButtonType::MINIMIZE, WidgetState::BACKDROP_PRELIGHT) << std::endl;
+  std::cout << "Button 'minimize' state 'backdrop_pressed' " << style->WindowButtonFile(WindowButtonType::MINIMIZE, WidgetState::BACKDROP_PRESSED) << std::endl;
+  std::cout << "Button 'unmaximize' state 'normal' " << style->WindowButtonFile(WindowButtonType::UNMAXIMIZE,WidgetState::NORMAL) << std::endl;
+  std::cout << "Button 'unmaximize' state 'prelight' " << style->WindowButtonFile(WindowButtonType::UNMAXIMIZE, WidgetState::PRELIGHT) << std::endl;
+  std::cout << "Button 'unmaximize' state 'pressed' " << style->WindowButtonFile(WindowButtonType::UNMAXIMIZE, WidgetState::PRESSED) << std::endl;
+  std::cout << "Button 'unmaximize' state 'disabled' " << style->WindowButtonFile(WindowButtonType::UNMAXIMIZE, WidgetState::DISABLED) << std::endl;
+  std::cout << "Button 'unmaximize' state 'backdrop' " << style->WindowButtonFile(WindowButtonType::UNMAXIMIZE, WidgetState::BACKDROP) << std::endl;
+  std::cout << "Button 'unmaximize' state 'backdrop_prelight' " << style->WindowButtonFile(WindowButtonType::UNMAXIMIZE, WidgetState::BACKDROP_PRELIGHT) << std::endl;
+  std::cout << "Button 'unmaximize' state 'backdrop_pressed' " << style->WindowButtonFile(WindowButtonType::UNMAXIMIZE, WidgetState::BACKDROP_PRESSED) << std::endl;
+  std::cout << "Button 'maximize' state 'normal' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::NORMAL) << std::endl;
+  std::cout << "Button 'maximize' state 'prelight' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::PRELIGHT) << std::endl;
+  std::cout << "Button 'maximize' state 'pressed' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::PRESSED) << std::endl;
+  std::cout << "Button 'maximize' state 'disabled' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::DISABLED) << std::endl;
+  std::cout << "Button 'maximize' state 'backdrop' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP) << std::endl;
+  std::cout << "Button 'maximize' state 'backdrop_prelight' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP_PRELIGHT) << std::endl;
+  std::cout << "Button 'maximize' state 'backdrop_pressed' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP_PRESSED) << std::endl;
 }

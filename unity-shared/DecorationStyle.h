@@ -33,7 +33,8 @@ enum class Side : unsigned
   TOP = 0,
   LEFT,
   RIGHT,
-  BOTTOM
+  BOTTOM,
+  Size
 };
 
 enum class Alignment
@@ -44,7 +45,7 @@ enum class Alignment
   FLOATING
 };
 
-enum class WidgetState
+enum class WidgetState : unsigned
 {
   NORMAL,
   PRELIGHT,
@@ -52,15 +53,17 @@ enum class WidgetState
   DISABLED,
   BACKDROP,
   BACKDROP_PRELIGHT,
-  BACKDROP_PRESSED
+  BACKDROP_PRESSED,
+  Size
 };
 
-enum class WindowButtonType
+enum class WindowButtonType : unsigned
 {
   CLOSE,
   MINIMIZE,
   UNMAXIMIZE,
-  MAXIMIZE
+  MAXIMIZE,
+  Size
 };
 
 class Style
@@ -74,6 +77,7 @@ public:
   Alignment TitleAlignment() const;
   float TitleAlignmentValue() const;
   int BorderWidth(Side) const;
+  std::string WindowButtonFile(WindowButtonType, WidgetState) const;
 
   void DrawSide(Side, WidgetState, cairo_t*, int width, int height);
 

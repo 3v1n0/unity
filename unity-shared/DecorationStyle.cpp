@@ -27,8 +27,12 @@ namespace decoration
 {
 namespace
 {
-const std::array<std::string, sizeof(Side)> BORDER_CLASSES = {"top", "left", "right", "bottom"};
-const std::array<int, sizeof(Side)> DEFAULT_BORDERS = {28, 1, 1, 1};
+const std::array<std::string, size_t(Side::Size)> BORDER_CLASSES = {"top", "left", "right", "bottom"};
+const std::array<int, size_t(Side::Size)> DEFAULT_BORDERS = {28, 1, 1, 1};
+
+const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };
+const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
+                                                                   "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
 
 typedef struct _UnityDecorationPrivate UnityDecorationPrivate;
 struct UnityDecoration
@@ -72,6 +76,7 @@ struct Style::Impl
     border_size_[unsigned(Side::BOTTOM)] = b ? b->bottom : DEFAULT_BORDERS[unsigned(Side::BOTTOM)];
 
     title_alignment_ = GetProperty<gfloat>("title-alignment");
+    theme_name_ = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
   }
 
   inline std::string const& GetBorderClass(Side side)
@@ -100,6 +105,14 @@ struct Style::Impl
     return value;
   }
 
+  template <typename TYPE>
+  inline TYPE GetSettingValue(std::string const& name)
+  {
+    TYPE value;
+    g_object_get(gtk_settings_get_default(), name.c_str(), &value, nullptr);
+    return value;
+  }
+
   inline GtkStateFlags GtkStateFromWidgetState(WidgetState ws)
   {
     switch (ws)
@@ -118,6 +131,8 @@ struct Style::Impl
         return static_cast<GtkStateFlags>(GTK_STATE_FLAG_BACKDROP|GTK_STATE_FLAG_PRELIGHT);
       case WidgetState::BACKDROP_PRESSED:
         return static_cast<GtkStateFlags>(GTK_STATE_FLAG_BACKDROP|GTK_STATE_FLAG_ACTIVE);
+      case WidgetState::Size:
+        break;
     }
 
     return GTK_STATE_FLAG_NORMAL;
@@ -133,8 +148,41 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
+  std::string WindowButtonFile(WindowButtonType type, WidgetState state) const
+  {
+    auto filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)] + ".png";
+    glib::String subpath(g_build_filename(theme_name_.c_str(), "unity", filename.c_str(), nullptr));
+
+    // Look in home directory
+    const char* home_dir = g_get_home_dir();
+    if (home_dir)
+    {
+      glib::String local_file(g_build_filename(home_dir, ".local", "share", "themes", subpath.Value(), nullptr));
+
+      if (g_file_test(local_file, G_FILE_TEST_EXISTS))
+        return local_file.Str();
+
+      glib::String home_file(g_build_filename(home_dir, ".themes", theme_name_.c_str(), subpath.Value(), nullptr));
+
+      if (g_file_test(home_file, G_FILE_TEST_EXISTS))
+        return home_file.Str();
+    }
+
+    const char* var = g_getenv("GTK_DATA_PREFIX");
+    if (!var)
+      var = "/usr";
+
+    glib::String path(g_build_filename(var, "share", "themes", theme_name_.c_str(), subpath.Value(), nullptr));
+
+    if (g_file_test(path, G_FILE_TEST_EXISTS))
+      return path.Str();
+
+    return "";
+  }
+
   glib::Object<GtkStyleContext> ctx_;
-  std::array<int, 4> border_size_;
+  std::string theme_name_;
+  std::array<int, size_t(Side::Size)> border_size_;
   float title_alignment_;
 };
 
@@ -178,6 +226,11 @@ float Style::TitleAlignmentValue() const
 void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
 {
   impl_->DrawSide(s, ws, cr, w, h);
+}
+
+std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const
+{
+  return impl_->WindowButtonFile(type, state);
 }
 
 } // decoration namespace
