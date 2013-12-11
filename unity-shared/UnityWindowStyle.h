@@ -33,7 +33,7 @@ public:
   typedef std::shared_ptr<UnityWindowStyle> Ptr;
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  static UnityWindowStyle::Ptr Get();
+  static UnityWindowStyle::Ptr const& Get();
 
   BaseTexturePtr GetCloseIcon();
   BaseTexturePtr GetCloseIconHighligted();
