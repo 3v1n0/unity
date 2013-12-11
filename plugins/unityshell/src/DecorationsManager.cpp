@@ -59,6 +59,7 @@ Manager::Impl::Impl(decoration::Manager* parent, UnityScreen* uscreen)
 
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
+  SetupButtonsTextures();
 }
 
 Manager::Impl::~Impl()
@@ -104,6 +105,38 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
   UpdateWindowsExtents();
 }
 
+void Manager::Impl::SetupButtonsTextures()
+{
+  CompSize size;
+  auto const& style = Style::Get();
+  CompString plugin_name("unityshell");
+
+  for (unsigned button = 0; button < window_buttons_.size(); ++button)
+  {
+    for (unsigned state = 0; state < window_buttons_[button].size(); ++state)
+    {
+      auto file = style->WindowButtonFile(WindowButtonType(button), WidgetState(state));
+      auto const& tex_list = GLTexture::readImageToTexture(file, plugin_name, size);
+
+      if (!tex_list.empty())
+      {
+        LOG_DEBUG(logger) << "Loading texture " << file;
+        window_buttons_[button][state] = std::make_shared<cu::SimpleTexture>(tex_list);
+      }
+      else
+      {
+        LOG_WARN(logger) << "Impossible to load button texture " << file;
+        // Generate cairo texture!
+      }
+    }
+  }
+}
+
+cu::SimpleTexture::Ptr const& Manager::Impl::GetButtonTexture(WindowButtonType wbt, WidgetState ws) const
+{
+  return window_buttons_[unsigned(wbt)][unsigned(ws)];
+}
+
 void Manager::Impl::UpdateWindowsExtents()
 {
   for (auto const& win : windows_)
@@ -126,7 +159,7 @@ bool Manager::Impl::UpdateWindow(::Window xid)
   return false;
 }
 
-Window::Ptr Manager::Impl::GetWindowByXid(::Window xid)
+Window::Ptr Manager::Impl::GetWindowByXid(::Window xid) const
 {
   for (auto const& pair : windows_)
   {
@@ -137,7 +170,7 @@ Window::Ptr Manager::Impl::GetWindowByXid(::Window xid)
   return nullptr;
 }
 
-Window::Ptr Manager::Impl::GetWindowByFrame(::Window xid)
+Window::Ptr Manager::Impl::GetWindowByFrame(::Window xid) const
 {
   for (auto const& pair : windows_)
   {

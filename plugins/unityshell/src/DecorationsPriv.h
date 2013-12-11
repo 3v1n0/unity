@@ -45,7 +45,8 @@ struct Quads
     TOP_LEFT = 0,
     TOP_RIGHT,
     BOTTOM_LEFT,
-    BOTTOM_RIGHT
+    BOTTOM_RIGHT,
+    Size
   };
 
   cu::TextureQuad& operator[](Pos position) { return inner_vector_[unsigned(position)]; }
@@ -53,7 +54,7 @@ struct Quads
   std::size_t size() const { return inner_vector_.size(); }
 
 private:
-  std::array<cu::TextureQuad, 4> inner_vector_;
+  std::array<cu::TextureQuad, size_t(Pos::Size)> inner_vector_;
 };
 
 struct Window::Impl
@@ -103,15 +104,12 @@ struct Manager::Impl : sigc::trackable
   Impl(decoration::Manager*, UnityScreen*);
   ~Impl();
 
-private:
-  friend class Manager;
-  friend struct Window::Impl;
-
   bool HandleEventBefore(XEvent*);
   bool HandleEventAfter(XEvent*);
 
-  Window::Ptr GetWindowByXid(::Window);
-  Window::Ptr GetWindowByFrame(::Window);
+private:
+  Window::Ptr GetWindowByXid(::Window) const;
+  Window::Ptr GetWindowByFrame(::Window) const;
 
   bool UpdateWindow(::Window);
   void UpdateWindowsExtents();
@@ -121,10 +119,17 @@ private:
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
   void OnShadowOptionsChanged(bool active);
 
+  void SetupButtonsTextures();
+  cu::SimpleTexture::Ptr const& GetButtonTexture(WindowButtonType, WidgetState) const;
+
+  friend class Manager;
+  friend struct Window::Impl;
+
   ::UnityScreen* uscreen_;
   ::Window active_window_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;
   cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
+  std::array<std::array<cu::SimpleTexture::Ptr, size_t(WidgetState::Size)>, size_t(WindowButtonType::Size)> window_buttons_;
 
   std::map<UnityWindow*, decoration::Window::Ptr> windows_;
 };
