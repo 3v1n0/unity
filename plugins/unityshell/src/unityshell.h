@@ -80,6 +80,8 @@
 
 #include "unityshell_glow.h"
 
+#include "GnomeKeyGrabber.h"
+
 namespace unity
 {
 class UnityWindow;
@@ -93,6 +95,7 @@ class UnityScreen :
   public GLScreenInterface,
   public BaseSwitchScreen,
   public PluginClassHandler <UnityScreen, CompScreen>,
+  public CompAction::Class,
   public UnityshellOptions
 {
 public:
@@ -208,6 +211,8 @@ public:
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
 
   ui::LayoutWindow::Ptr GetSwitcherDetailLayoutWindow(Window window) const;
+
+  CompAction::Vector& getActions();
 
 protected:
   std::string GetName() const;
@@ -379,6 +384,8 @@ private:
   unsigned int back_buffer_age_;
 
   bool is_desktop_active_;
+
+  grabber::GnomeKeyGrabber grabber_;
 
   friend class UnityWindow;
 };

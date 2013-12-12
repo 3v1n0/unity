@@ -174,6 +174,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dirty_helpers_on_this_frame_(false)
   , back_buffer_age_(0)
   , is_desktop_active_(false)
+  , grabber_(screen)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -3523,6 +3524,11 @@ void UnityScreen::InitGesturesSupport()
   gestures_sub_windows_->SetNumTouches(3);
   gestures_sub_windows_->SetWindowId(GDK_ROOT_WINDOW());
   gestures_sub_windows_->Activate();
+}
+
+CompAction::Vector& UnityScreen::getActions()
+{
+  return grabber_.getActions();
 }
 
 /* Window init */
