@@ -186,7 +186,7 @@ struct Style::Impl
   float title_alignment_;
 };
 
-Style::Ptr Style::Get()
+Style::Ptr const& Style::Get()
 {
   static Style::Ptr style(new Style());
   return style;

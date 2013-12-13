@@ -71,7 +71,7 @@ class Style
 public:
   typedef std::shared_ptr<Style> Ptr;
 
-  static Style::Ptr Get();
+  static Style::Ptr const& Get();
   virtual ~Style();
 
   Alignment TitleAlignment() const;
