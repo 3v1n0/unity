@@ -17,8 +17,11 @@
 * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 */
 
+#ifndef UNITY_COMPIZ_UTILS
+#define UNITY_COMPIZ_UTILS
+
 #include <Nux/Nux.h>
-#include <opengl/texture.h>
+#include <opengl/opengl.h>
 #include <cairo.h>
 #include <memory>
 
@@ -43,6 +46,8 @@ struct SimpleTexture
 
   GLTexture::List const& texture_list() const { return texture_; }
   GLTexture* texture() const { return texture_[0]; }
+  int width() const { return texture_.empty() ? 0 : texture_[0]->width(); }
+  int height() const { return texture_.empty() ? 0 : texture_[0]->height(); }
 
 protected:
   GLTexture::List texture_;
@@ -52,6 +57,8 @@ struct SimpleTextureQuad
 {
   void SetTexture(SimpleTexture::Ptr const&);
   void SetCoords(int x, int y);
+  void SetX(int x);
+  void SetY(int y);
 
   operator SimpleTexture::Ptr() const { return st; }
   operator GLTexture*() const { return st ? st->texture() : nullptr; }
@@ -97,3 +104,5 @@ private:
 
 } // compiz_utils namespace
 } // unity namespace
+
+#endif // UNITY_COMPIZ_UTILS

@@ -58,6 +58,16 @@ void SimpleTextureQuad::SetCoords(int x, int y)
   quad.matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad.matrix, y);
 }
 
+void SimpleTextureQuad::SetX(int x)
+{
+  SetCoords(x, quad.box.y());
+}
+
+void SimpleTextureQuad::SetY(int y)
+{
+  SetCoords(quad.box.x(), y);
+}
+
 //
 
 PixmapTexture::PixmapTexture(int w, int h)
