@@ -73,6 +73,16 @@ protected:
 };
 
 
+class SimpleItem : public Item
+{
+public:
+  CompRect const& Geometry() const { return rect_; }
+
+protected:
+  CompRect rect_;
+};
+
+
 class TexturedItem : public Item
 {
 public:
@@ -91,14 +101,6 @@ protected:
   cu::SimpleTextureQuad texture_;
 };
 
-class SimpleItem : public Item
-{
-public:
-  CompRect const& Geometry() const { return rect_; }
-
-protected:
-  CompRect rect_;
-};
 
 class Layout : public SimpleItem
 {
@@ -106,6 +108,8 @@ public:
   typedef std::shared_ptr<Layout> Ptr;
 
   Layout();
+
+  nux::Property<int> inner_padding;
 
   void Append(Item::Ptr const&);
 
@@ -117,7 +121,6 @@ public:
   std::list<Item::Ptr> const& Items() const;
 
 private:
-  int inner_padding_;
   std::list<Item::Ptr> items_;
 };
 

@@ -183,9 +183,11 @@ void TexturedItem::SetCoords(int x, int y)
 //
 
 Layout::Layout()
-  : inner_padding_(0)
+  : inner_padding(0)
 {
-  geo_parameters_changed.connect(sigc::mem_fun(this, &Layout::Relayout));
+  auto relayout_cb = sigc::mem_fun(this, &Layout::Relayout);
+  inner_padding.changed.connect(sigc::hide(relayout_cb));
+  geo_parameters_changed.connect(relayout_cb);
 }
 
 void Layout::Append(Item::Ptr const& item)
@@ -230,11 +232,11 @@ void Layout::Relayout()
       item->SetX(rect_.x() + content.width);
 
       if (item_geo.width() > 0)
-        content.width += item_geo.width() + inner_padding_;
+        content.width += item_geo.width() + inner_padding;
     }
 
-    if (!items_.empty() && content.width > inner_padding_)
-      content.width -= inner_padding_;
+    if (!items_.empty() && content.width > inner_padding)
+      content.width -= inner_padding;
 
     if (content.width < min_.width)
       content.width = min_.width;
@@ -242,7 +244,7 @@ void Layout::Relayout()
     if (content.height < min_.height)
       content.height = min_.height;
 
-    int exceeding_width = content.width - max_.width;
+    int exceeding_width = content.width - max_.width + inner_padding;
 
     for (auto const& item : boost::adaptors::reverse(items_))
     {
@@ -252,9 +254,12 @@ void Layout::Relayout()
       auto const& item_geo = item->Geometry();
 
       if (exceeding_width > 0)
+        exceeding_width -= inner_padding;
+
+      if (exceeding_width > 0 && item_geo.width() > 0)
       {
         int old_width = item_geo.width();
-        int max_item_width = std::max<int>(0, old_width - exceeding_width);
+        int max_item_width = std::max(0, old_width - exceeding_width);
         item->SetMaxWidth(max_item_width);
         exceeding_width -= (old_width - max_item_width);
       }
