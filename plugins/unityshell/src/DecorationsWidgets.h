@@ -38,7 +38,6 @@ public:
   virtual ~Item() = default;
 
   nux::Property<bool> visible;
-  sigc::signal<void> geo_changed;
 
   virtual CompRect const& Geometry() const = 0;
   virtual int GetNaturalWidth() const;
@@ -51,10 +50,10 @@ public:
   virtual void SetWidth(int width) { SetSize(width, Geometry().height()); }
   virtual void SetHeight(int height)  { SetSize(Geometry().width(), height); };
 
-  virtual bool SetMaxWidth(int max_width);
-  virtual bool SetMaxHeight(int max_height);
-  virtual bool SetMinWidth(int min_width);
-  virtual bool SetMinHeight(int min_height);
+  virtual void SetMaxWidth(int max_width);
+  virtual void SetMaxHeight(int max_height);
+  virtual void SetMinWidth(int min_width);
+  virtual void SetMinHeight(int min_height);
 
   int GetMaxWidth() const { return max_.width; };
   int GetMaxHeight() const { return max_.height; };
@@ -66,6 +65,7 @@ public:
 
 protected:
   CompRect& InternalGeo();
+  sigc::signal<void> geo_parameters_changed;
 
   nux::Size max_;
   nux::Size min_;
@@ -110,13 +110,8 @@ public:
   void Append(Item::Ptr const&);
 
   CompRect const& Geometry() const;
-  bool SetMaxWidth(int max_width);
-  bool SetMaxHeight(int max_height);
-  bool SetMinWidth(int min_width);
-  bool SetMinHeight(int min_height);
-
-  void SetCoords(int x, int y);
   void Relayout();
+
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
   std::list<Item::Ptr> const& Items() const;

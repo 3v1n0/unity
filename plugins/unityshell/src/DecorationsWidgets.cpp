@@ -36,21 +36,24 @@ Item::Item()
 
 void Item::SetSize(int width, int height)
 {
+  natural_.width = width;
+  natural_.height = height;
   SetMinWidth(width);
   SetMaxWidth(width);
   SetMinHeight(height);
   SetMaxHeight(height);
-  natural_.width = width;
-  natural_.height = height;
 }
 
 void Item::SetCoords(int x, int y)
 {
-  if (Geometry().x() == x || Geometry.y() == y)
+  auto& geo = InternalGeo();
+
+  if (geo.x() == x && geo.y() == y)
     return;
 
-  InternalGeo().setX(x);
-  InternalGeo().setY(y);
+  geo.setX(x);
+  geo.setY(y);
+  geo_parameters_changed.emit();
 }
 
 int Item::GetNaturalWidth() const
@@ -63,12 +66,12 @@ int Item::GetNaturalHeight() const
   return natural_.height;
 }
 
-bool Item::SetMaxWidth(int value)
+void Item::SetMaxWidth(int value)
 {
   int clamped = std::max(0, value);
 
   if (max_.width == clamped)
-    return false;
+    return;
 
   max_.width = clamped;
   min_.width = std::min(min_.width, max_.width);
@@ -76,15 +79,15 @@ bool Item::SetMaxWidth(int value)
   if (Geometry().width() > max_.width)
     InternalGeo().setWidth(std::min(GetNaturalWidth(), max_.width));
 
-  return true;
+  geo_parameters_changed.emit();
 }
 
-bool Item::SetMinWidth(int value)
+void Item::SetMinWidth(int value)
 {
   int clamped = std::max(0, value);
 
   if (min_.width == clamped)
-    return false;
+    return;
 
   min_.width = clamped;
   max_.width = std::max(min_.width, max_.width);
@@ -92,15 +95,15 @@ bool Item::SetMinWidth(int value)
   if (Geometry().width() < min_.width)
     InternalGeo().setWidth(min_.width);
 
-  return true;
+  geo_parameters_changed.emit();
 }
 
-bool Item::SetMaxHeight(int value)
+void Item::SetMaxHeight(int value)
 {
   int clamped = std::max(0, value);
 
   if (max_.height == clamped)
-    return false;
+    return;
 
   max_.height = clamped;
   min_.height = std::min(min_.height, max_.height);
@@ -108,15 +111,15 @@ bool Item::SetMaxHeight(int value)
   if (Geometry().height() > max_.height)
     InternalGeo().setHeight(std::min(GetNaturalWidth(), max_.height));
 
-  return true;
+  geo_parameters_changed.emit();
 }
 
-bool Item::SetMinHeight(int value)
+void Item::SetMinHeight(int value)
 {
   int clamped = std::max(0, value);
 
   if (min_.height == clamped)
-    return false;
+    return;
 
   min_.height = clamped;
   max_.height = std::max(min_.height, max_.height);
@@ -124,7 +127,7 @@ bool Item::SetMinHeight(int value)
   if (Geometry().height() < min_.height)
     InternalGeo().setHeight(min_.height);
 
-  return true;
+  geo_parameters_changed.emit();
 }
 
 void Item::Damage()
@@ -181,7 +184,9 @@ void TexturedItem::SetCoords(int x, int y)
 
 Layout::Layout()
   : inner_padding_(0)
-{}
+{
+  geo_parameters_changed.connect(sigc::mem_fun(this, &Layout::Relayout));
+}
 
 void Layout::Append(Item::Ptr const& item)
 {
@@ -197,53 +202,6 @@ void Layout::Append(Item::Ptr const& item)
 CompRect const& Layout::Geometry() const
 {
   return rect_;
-}
-
-bool Layout::SetMaxWidth(int max_width)
-{
-  if (!Item::SetMaxWidth(max_width))
-    return false;
-
-  Relayout();
-  return true;
-}
-
-bool Layout::SetMaxHeight(int max_height)
-{
-  if (!Item::SetMaxHeight(max_height))
-    return false;
-
-  Relayout();
-  return true;
-}
-
-bool Layout::SetMinWidth(int min_width)
-{
-  if (!Item::SetMinWidth(min_width))
-    return false;
-
-  Relayout();
-  return true;
-}
-
-bool Layout::SetMinHeight(int min_height)
-{
-  if (!Item::SetMinHeight(min_height))
-    return false;
-
-  Relayout();
-  return true;
-}
-
-
-void Layout::SetCoords(int x, int y)
-{
-  if (x == rect_.x() && y == rect_.y())
-    return;
-
-  rect_.setX(x);
-  rect_.setY(y);
-  Relayout();
 }
 
 void Layout::Relayout()
