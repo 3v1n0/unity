@@ -475,7 +475,6 @@ void DashView::AboutToShow()
     ClosePreview();
   }
 
-
   overlay_window_buttons_->Show();
 
   renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
@@ -484,6 +483,9 @@ void DashView::AboutToShow()
 
 void DashView::AboutToHide()
 {
+  content_geo_ = {0, 0, 0, 0};
+  renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
+
   visible_ = false;
   renderer_.AboutToHide();
 
