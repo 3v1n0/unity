@@ -38,23 +38,38 @@ public:
   virtual ~Item() = default;
 
   nux::Property<bool> visible;
-  nux::Property<bool> resizable;
-  // sigc::signal<void> geo_changed;
+  sigc::signal<void> geo_changed;
 
   virtual CompRect const& Geometry() const = 0;
-  virtual void SetCoords(int x, int y) = 0;
+  virtual int GetNaturalWidth() const;
+  virtual int GetNaturalHeight() const;
+
+  virtual void SetCoords(int x, int y);
   virtual void SetX(int x) { SetCoords(x, Geometry().y()); }
   virtual void SetY(int y) { SetCoords(Geometry().x(), y); }
-  // virtual void SetSize(int width, int height);
-  // virtual void SetWidth(int width) { SetSize(width, Geometry().height()); }
-  // virtual void SetHeight(int height)  { SetSize(Geometry().width(), height); };
-  virtual bool SetMaximumWidth(int max_width);
+  virtual void SetSize(int width, int height);
+  virtual void SetWidth(int width) { SetSize(width, Geometry().height()); }
+  virtual void SetHeight(int height)  { SetSize(Geometry().width(), height); };
+
+  virtual bool SetMaxWidth(int max_width);
+  virtual bool SetMaxHeight(int max_height);
+  virtual bool SetMinWidth(int min_width);
+  virtual bool SetMinHeight(int min_height);
+
+  int GetMaxWidth() const { return max_.width; };
+  int GetMaxHeight() const { return max_.height; };
+  int GetMinWidth() const { return min_.width; };
+  int GetMinHeight() const { return min_.height; };
 
   void Damage();
   virtual void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask) {}
 
 protected:
-  int max_width_;
+  CompRect& InternalGeo();
+
+  nux::Size max_;
+  nux::Size min_;
+  nux::Size natural_;
 };
 
 
@@ -64,22 +79,28 @@ public:
   typedef std::shared_ptr<TexturedItem> Ptr;
 
   TexturedItem();
-  virtual void UpdateTexture() = 0;
 
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
-  CompRect const& Geometry() const;
   void SetCoords(int x, int y);
-  void SetX(int x);
-  void SetY(int y);
-  bool SetMaximumWidth(int max_width);
-  void SetSize(int width, int height);
+
+  CompRect const& Geometry() const;
+  int GetNaturalWidth() const;
+  int GetNaturalHeight() const;
 
 protected:
   cu::SimpleTextureQuad texture_;
 };
 
+class SimpleItem : public Item
+{
+public:
+  CompRect const& Geometry() const { return rect_; }
 
-class Layout : public Item
+protected:
+  CompRect rect_;
+};
+
+class Layout : public SimpleItem
 {
 public:
   typedef std::shared_ptr<Layout> Ptr;
@@ -89,7 +110,10 @@ public:
   void Append(Item::Ptr const&);
 
   CompRect const& Geometry() const;
-  bool SetMaximumWidth(int max_width);
+  bool SetMaxWidth(int max_width);
+  bool SetMaxHeight(int max_height);
+  bool SetMinWidth(int min_width);
+  bool SetMinHeight(int min_height);
 
   void SetCoords(int x, int y);
   void Relayout();
@@ -99,7 +123,6 @@ public:
 
 private:
   int inner_padding_;
-  CompRect rect_;
   std::list<Item::Ptr> items_;
 };
 

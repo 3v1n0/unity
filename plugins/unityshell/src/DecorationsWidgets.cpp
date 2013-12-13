@@ -18,6 +18,7 @@
  */
 
 #include <composite/composite.h>
+#include <boost/range/adaptor/reversed.hpp>
 #include "DecorationsWidgets.h"
 
 namespace unity
@@ -30,17 +31,99 @@ CompositeScreen* cscreen_ = CompositeScreen::get(screen);
 }
 
 Item::Item()
-  : max_width_(std::numeric_limits<int>::max())
+  : max_(std::numeric_limits<int>::max(), std::numeric_limits<int>::max())
 {}
 
-bool Item::SetMaximumWidth(int max_width)
+void Item::SetSize(int width, int height)
 {
-  int clamped = std::max(0, max_width);
+  SetMinWidth(width);
+  SetMaxWidth(width);
+  SetMinHeight(height);
+  SetMaxHeight(height);
+  natural_.width = width;
+  natural_.height = height;
+}
 
-  if (max_width_ == clamped)
+void Item::SetCoords(int x, int y)
+{
+  if (Geometry().x() == x || Geometry.y() == y)
+    return;
+
+  InternalGeo().setX(x);
+  InternalGeo().setY(y);
+}
+
+int Item::GetNaturalWidth() const
+{
+  return natural_.width;
+}
+
+int Item::GetNaturalHeight() const
+{
+  return natural_.height;
+}
+
+bool Item::SetMaxWidth(int value)
+{
+  int clamped = std::max(0, value);
+
+  if (max_.width == clamped)
     return false;
 
-  max_width_ = clamped;
+  max_.width = clamped;
+  min_.width = std::min(min_.width, max_.width);
+
+  if (Geometry().width() > max_.width)
+    InternalGeo().setWidth(std::min(GetNaturalWidth(), max_.width));
+
+  return true;
+}
+
+bool Item::SetMinWidth(int value)
+{
+  int clamped = std::max(0, value);
+
+  if (min_.width == clamped)
+    return false;
+
+  min_.width = clamped;
+  max_.width = std::max(min_.width, max_.width);
+
+  if (Geometry().width() < min_.width)
+    InternalGeo().setWidth(min_.width);
+
+  return true;
+}
+
+bool Item::SetMaxHeight(int value)
+{
+  int clamped = std::max(0, value);
+
+  if (max_.height == clamped)
+    return false;
+
+  max_.height = clamped;
+  min_.height = std::min(min_.height, max_.height);
+
+  if (Geometry().height() > max_.height)
+    InternalGeo().setHeight(std::min(GetNaturalWidth(), max_.height));
+
+  return true;
+}
+
+bool Item::SetMinHeight(int value)
+{
+  int clamped = std::max(0, value);
+
+  if (min_.height == clamped)
+    return false;
+
+  min_.height = clamped;
+  max_.height = std::max(min_.height, max_.height);
+
+  if (Geometry().height() < min_.height)
+    InternalGeo().setHeight(min_.height);
+
   return true;
 }
 
@@ -49,10 +132,10 @@ void Item::Damage()
   cscreen_->damageRegion(Geometry());
 }
 
-// void Item::SetSize(int width, int height)
-// {
-//   SetMaximumWidth(width);
-// }
+CompRect& Item::InternalGeo()
+{
+  return const_cast<CompRect&>(Geometry());
+}
 
 //
 
@@ -67,14 +150,21 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
   if (!visible)
     return;
 
-  if (!static_cast<GLTexture*>(texture_))
-    UpdateTexture();
-
   ctx->vertexBuffer()->begin();
   ctx->glAddGeometry({texture_.quad.matrix}, texture_.quad.box, clip);
 
   if (ctx->vertexBuffer()->end())
     ctx->glDrawTexture(texture_, transformation, attrib, mask);
+}
+
+int TexturedItem::GetNaturalWidth() const
+{
+  return (texture_.st) ? texture_.st->width() : Item::GetNaturalWidth();
+}
+
+int TexturedItem::GetNaturalHeight() const
+{
+  return (texture_.st) ? texture_.st->height() : Item::GetNaturalHeight();
 }
 
 CompRect const& TexturedItem::Geometry() const
@@ -85,29 +175,6 @@ CompRect const& TexturedItem::Geometry() const
 void TexturedItem::SetCoords(int x, int y)
 {
   texture_.SetCoords(x, y);
-}
-
-void TexturedItem::SetX(int x)
-{
-  texture_.SetX(x);
-}
-
-void TexturedItem::SetY(int y)
-{
-  texture_.SetY(y);
-}
-
-bool TexturedItem::SetMaximumWidth(int max_width)
-{
-  if (!Item::SetMaximumWidth(max_width))
-    return false;
-
-  if (!resizable() && texture_.st && max_width > texture_.st->width())
-    max_width = texture_.st->width();
-
-  texture_.quad.box.setWidth(max_width);
-
-  return true;
 }
 
 //
@@ -124,7 +191,6 @@ void Layout::Append(Item::Ptr const& item)
   items_.push_back(item);
   auto relayout_cb = sigc::hide(sigc::mem_fun(this, &Layout::Relayout));
   item->visible.changed.connect(relayout_cb);
-  item->resizable.changed.connect(relayout_cb);
   Relayout();
 }
 
@@ -133,14 +199,42 @@ CompRect const& Layout::Geometry() const
   return rect_;
 }
 
-bool Layout::SetMaximumWidth(int max_width)
+bool Layout::SetMaxWidth(int max_width)
 {
-  if (!Item::SetMaximumWidth(max_width))
+  if (!Item::SetMaxWidth(max_width))
     return false;
 
   Relayout();
   return true;
 }
+
+bool Layout::SetMaxHeight(int max_height)
+{
+  if (!Item::SetMaxHeight(max_height))
+    return false;
+
+  Relayout();
+  return true;
+}
+
+bool Layout::SetMinWidth(int min_width)
+{
+  if (!Item::SetMinWidth(min_width))
+    return false;
+
+  Relayout();
+  return true;
+}
+
+bool Layout::SetMinHeight(int min_height)
+{
+  if (!Item::SetMinHeight(min_height))
+    return false;
+
+  Relayout();
+  return true;
+}
+
 
 void Layout::SetCoords(int x, int y)
 {
@@ -158,9 +252,7 @@ void Layout::Relayout()
 
   do
   {
-    rect_.setWidth(0);
-    rect_.setHeight(0);
-    size_t resizable_items = 0;
+    nux::Size content;
 
     for (auto const& item : items_)
     {
@@ -168,74 +260,56 @@ void Layout::Relayout()
         continue;
 
       if (first_loop)
-        item->SetMaximumWidth(max_width_);
+      {
+        item->SetMinWidth(item->GetNaturalWidth());
+        item->SetMaxWidth(max_.width);
+        item->SetMinHeight(std::min(max_.height, item->GetNaturalHeight()));
+        item->SetMaxHeight(max_.height);
+      }
 
       auto const& item_geo = item->Geometry();
-      item->SetX(rect_.x2());
-      rect_.setHeight(std::max(rect_.height(), item_geo.height()));
+      content.height = std::max(content.height, item_geo.height());
+      item->SetX(rect_.x() + content.width);
 
       if (item_geo.width() > 0)
-      {
-        rect_.setWidth(rect_.width() + item_geo.width() + inner_padding_);
-
-        if (item->resizable())
-          ++resizable_items;
-      }
+        content.width += item_geo.width() + inner_padding_;
     }
 
-    if (!items_.empty())
-      rect_.setWidth(std::max(0, rect_.width() - inner_padding_));
+    if (!items_.empty() && content.width > inner_padding_)
+      content.width -= inner_padding_;
 
-    bool too_big = (rect_.width() > max_width_);
-    bool has_resizables = (resizable_items > 0);
-    int exceeding_width = rect_.width() - max_width_;
+    if (content.width < min_.width)
+      content.width = min_.width;
 
-    if (first_loop)
+    if (content.height < min_.height)
+      content.height = min_.height;
+
+    int exceeding_width = content.width - max_.width;
+
+    for (auto const& item : boost::adaptors::reverse(items_))
     {
-      for (auto const& item : items_)
+      if (!item->visible())
+        continue;
+
+      auto const& item_geo = item->Geometry();
+
+      if (exceeding_width > 0)
       {
-        if (!item->visible())
-          continue;
-
-        auto const& item_geo = item->Geometry();
-        item->SetY(rect_.y1() + (rect_.height() - item_geo.height()) / 2);
-
-        if (too_big && has_resizables)
-        {
-          if (item->resizable() && item_geo.width() > 0 && resizable_items > 0)
-          {
-            int max_item_width = std::max<int>(0, (exceeding_width - item_geo.width()) / resizable_items);
-            item->SetMaximumWidth(max_item_width);
-            exceeding_width -= item_geo.width();
-            --resizable_items;
-          }
-        }
-      }
-    }
-
-    if (too_big && (!first_loop || !has_resizables))
-    {
-      exceeding_width = rect_.width() - max_width_;
-
-      for (auto it = items_.rbegin(); it != items_.rend(); ++it)
-      {
-        auto const& item = *it;
-        if (!item->visible())
-          continue;
-
-        int old_width = item->Geometry().width();
+        int old_width = item_geo.width();
         int max_item_width = std::max<int>(0, old_width - exceeding_width);
-        item->SetMaximumWidth(max_item_width);
+        item->SetMaxWidth(max_item_width);
         exceeding_width -= (old_width - max_item_width);
-
-        if (exceeding_width <= 0)
-          break;
       }
+
+      item->SetY(rect_.y() + (content.height - item_geo.height()) / 2);
     }
+
+    rect_.setWidth(content.width);
+    rect_.setHeight(content.height);
 
     first_loop = false;
   }
-  while (rect_.width() > max_width_);
+  while (rect_.width() > max_.width || rect_.height() > max_.height);
 }
 
 void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
