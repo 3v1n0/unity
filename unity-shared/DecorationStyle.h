@@ -34,7 +34,6 @@ enum class Side : unsigned
   LEFT,
   RIGHT,
   BOTTOM,
-  Size
 };
 
 enum class Alignment
@@ -66,6 +65,25 @@ enum class WindowButtonType : unsigned
   Size
 };
 
+struct Border
+{
+  Border(int top, int left, int right, int bottom)
+    : top(top)
+    , left(left)
+    , right(right)
+    , bottom(bottom)
+  {}
+
+  Border()
+    : Border(0, 0, 0, 0)
+  {}
+
+  int top;
+  int left;
+  int right;
+  int bottom;
+};
+
 class Style
 {
 public:
@@ -76,6 +94,7 @@ public:
 
   Alignment TitleAlignment() const;
   float TitleAlignmentValue() const;
+  decoration::Border const& Border() const;
   int BorderWidth(Side) const;
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
 

@@ -27,12 +27,12 @@ namespace decoration
 {
 namespace
 {
-const std::array<std::string, size_t(Side::Size)> BORDER_CLASSES = {"top", "left", "right", "bottom"};
-const std::array<int, size_t(Side::Size)> DEFAULT_BORDERS = {28, 1, 1, 1};
+const std::array<std::string, 4> BORDER_CLASSES = {"top", "left", "right", "bottom"};
+const Border DEFAULT_BORDER = {28, 1, 1, 1};
 
 const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
-                                                                   "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
+                                                                           "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
 
 typedef struct _UnityDecorationPrivate UnityDecorationPrivate;
 struct UnityDecoration
@@ -70,10 +70,10 @@ struct Style::Impl
     gtk_style_context_set_path(ctx_, widget_path.get());
 
     std::shared_ptr<GtkBorder> b(GetProperty<GtkBorder*>("extents"), gtk_border_free);
-    border_size_[unsigned(Side::TOP)] = b ? b->top : DEFAULT_BORDERS[unsigned(Side::TOP)];
-    border_size_[unsigned(Side::LEFT)] = b ? b->left : DEFAULT_BORDERS[unsigned(Side::LEFT)];
-    border_size_[unsigned(Side::RIGHT)] = b ? b->right : DEFAULT_BORDERS[unsigned(Side::RIGHT)];
-    border_size_[unsigned(Side::BOTTOM)] = b ? b->bottom : DEFAULT_BORDERS[unsigned(Side::BOTTOM)];
+    border_.top = b ? b->top : DEFAULT_BORDER.top;
+    border_.left = b ? b->left : DEFAULT_BORDER.left;
+    border_.right = b ? b->right : DEFAULT_BORDER.right;
+    border_.bottom = b ? b->bottom : DEFAULT_BORDER.bottom;
 
     title_alignment_ = GetProperty<gfloat>("title-alignment");
     theme_name_ = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
@@ -182,7 +182,7 @@ struct Style::Impl
 
   glib::Object<GtkStyleContext> ctx_;
   std::string theme_name_;
-  std::array<int, size_t(Side::Size)> border_size_;
+  decoration::Border border_;
   float title_alignment_;
 };
 
@@ -201,7 +201,19 @@ Style::~Style()
 
 int Style::BorderWidth(Side side) const
 {
-  return impl_->border_size_[unsigned(side)];
+  switch (side)
+  {
+    case Side::TOP:
+      return impl_->border_.top;
+    case Side::LEFT:
+      return impl_->border_.left;
+    case Side::RIGHT:
+      return impl_->border_.right;
+    case Side::BOTTOM:
+      return impl_->border_.bottom;
+  }
+
+  return 0;
 }
 
 Alignment Style::TitleAlignment() const
@@ -231,6 +243,11 @@ void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
 std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const
 {
   return impl_->WindowButtonFile(type, state);
+}
+
+Border const& Style::Border() const
+{
+  return impl_->border_;
 }
 
 } // decoration namespace
