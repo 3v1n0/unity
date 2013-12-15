@@ -110,17 +110,20 @@ public:
   Layout();
 
   nux::Property<int> inner_padding;
+  nux::Property<int> left_padding;
+  nux::Property<int> right_padding;
+  nux::Property<int> top_padding;
+  nux::Property<int> bottom_padding;
 
   void Append(Item::Ptr const&);
-
-  CompRect const& Geometry() const;
-  void Relayout();
-
-  void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
-
   std::list<Item::Ptr> const& Items() const;
 
+  CompRect const& Geometry() const;
+  void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
+
 private:
+  void Relayout();
+  bool SetPadding(int& target, int new_value);
   std::list<Item::Ptr> items_;
 };
 

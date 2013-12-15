@@ -183,11 +183,13 @@ void TexturedItem::SetCoords(int x, int y)
 //
 
 Layout::Layout()
-  : inner_padding(0)
+  : inner_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
+  , left_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
+  , right_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
+  , top_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
+  , bottom_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
 {
-  auto relayout_cb = sigc::mem_fun(this, &Layout::Relayout);
-  inner_padding.changed.connect(sigc::hide(relayout_cb));
-  geo_parameters_changed.connect(relayout_cb);
+  geo_parameters_changed.connect(sigc::mem_fun(this, &Layout::Relayout));
 }
 
 void Layout::Append(Item::Ptr const& item)
@@ -196,8 +198,7 @@ void Layout::Append(Item::Ptr const& item)
     return;
 
   items_.push_back(item);
-  auto relayout_cb = sigc::hide(sigc::mem_fun(this, &Layout::Relayout));
-  item->visible.changed.connect(relayout_cb);
+  item->visible.changed.connect(sigc::hide(sigc::mem_fun(this, &Layout::Relayout)));
   Relayout();
 }
 
@@ -210,9 +211,12 @@ void Layout::Relayout()
 {
   bool first_loop = true;
 
+  nux::Size available_space(std::max(0, max_.width - left_padding - right_padding),
+                            std::max(0, max_.height - top_padding - bottom_padding));
+
   do
   {
-    nux::Size content;
+    nux::Size content(std::min(left_padding(), max_.width), 0);
 
     for (auto const& item : items_)
     {
@@ -222,9 +226,9 @@ void Layout::Relayout()
       if (first_loop)
       {
         item->SetMinWidth(item->GetNaturalWidth());
-        item->SetMaxWidth(max_.width);
-        item->SetMinHeight(std::min(max_.height, item->GetNaturalHeight()));
-        item->SetMaxHeight(max_.height);
+        item->SetMaxWidth(available_space.width);
+        item->SetMinHeight(std::min(available_space.height, item->GetNaturalHeight()));
+        item->SetMaxHeight(available_space.height);
       }
 
       auto const& item_geo = item->Geometry();
@@ -238,13 +242,20 @@ void Layout::Relayout()
     if (!items_.empty() && content.width > inner_padding)
       content.width -= inner_padding;
 
+    int actual_right_padding = std::max(0, std::min(right_padding(), max_.width - content.width));
+    int vertical_padding = top_padding + bottom_padding;
+
+    content.width += actual_right_padding;
+    content.height += std::min(vertical_padding, max_.height);
+
     if (content.width < min_.width)
       content.width = min_.width;
 
     if (content.height < min_.height)
       content.height = min_.height;
 
-    int exceeding_width = content.width - max_.width + inner_padding;
+    int exceeding_width = content.width - max_.width + inner_padding + right_padding - actual_right_padding;
+    int content_y = rect_.y() + top_padding;
 
     for (auto const& item : boost::adaptors::reverse(items_))
     {
@@ -264,7 +275,7 @@ void Layout::Relayout()
         exceeding_width -= (old_width - max_item_width);
       }
 
-      item->SetY(rect_.y() + (content.height - item_geo.height()) / 2);
+      item->SetY(content_y + (content.height - vertical_padding - item_geo.height()) / 2);
     }
 
     rect_.setWidth(content.width);
@@ -288,6 +299,19 @@ void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAt
 std::list<Item::Ptr> const& Layout::Items() const
 {
   return items_;
+}
+
+bool Layout::SetPadding(int& target, int new_value)
+{
+  int padding = std::max(0, new_value);
+
+  if (padding == target)
+    return false;
+
+  target = padding;
+  Relayout();
+
+  return true;
 }
 
 } // decoration namespace
