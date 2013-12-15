@@ -23,21 +23,26 @@
 
 using namespace unity::decoration;
 
-std::string AlignementString(Style::Ptr const& style)
+std::ostream& operator<<(std::ostream &os, Alignment const& a)
 {
-  switch (style->TitleAlignment())
+  switch (a)
   {
     case Alignment::LEFT:
-      return "Left";
+      return os << "Left";
     case Alignment::CENTER:
-      return "Center";
+      return os << "Center";
     case Alignment::RIGHT:
-      return "Right";
+      return os << "Right";
     case Alignment::FLOATING:
-      return "Floating at " + std::to_string(style->TitleAlignmentValue());
+      return os << "Floating at " + std::to_string(Style::Get()->TitleAlignmentValue());
   }
 
-  return "";
+  return os;
+}
+
+std::ostream& operator<<(std::ostream &os, Border const& b)
+{
+  return os << "top " << b.top << ", left " << b.left << ", right " << b.right << ", bottom " << b.bottom;
 }
 
 int main(int argc, char* argv[])
@@ -50,7 +55,12 @@ int main(int argc, char* argv[])
   std::cout << "Border right: " << style->BorderWidth(Side::RIGHT) << std::endl;
   std::cout << "Border bottom: " << style->BorderWidth(Side::BOTTOM) << std::endl;
   std::cout << "---" << std::endl;
-  std::cout << "Title alignment: " << AlignementString(style) << std::endl;
+  std::cout << "Title alignment: " << style->TitleAlignment() << std::endl;
+  std::cout << "---" << std::endl;
+  std::cout << "Top padding, top: " << style->Padding(Side::TOP) << std::endl;
+  std::cout << "Top padding, left: " << style->Padding(Side::LEFT) << std::endl;
+  std::cout << "Top padding, right: " << style->Padding(Side::RIGHT) << std::endl;
+  std::cout << "Top padding, bottom: " << style->Padding(Side::BOTTOM) << std::endl;
   std::cout << "---" << std::endl;
 
   std::cout << "Button 'close' state 'normal' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::NORMAL) << std::endl;

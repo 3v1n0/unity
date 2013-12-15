@@ -57,6 +57,14 @@ static void unity_decoration_class_init(UnityDecorationClass* klass)
   param = g_param_spec_float("title-alignment", "Title Alignment", "", 0.0, 1.0, 0.0, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 }
+
+Border BorderFromGtkBorder(GtkBorder* b, Border fallback = Border())
+{
+  if (!b)
+    return fallback;
+
+  return Border(b->top, b->left, b->right, b->bottom);
+}
 }
 
 struct Style::Impl
@@ -70,10 +78,7 @@ struct Style::Impl
     gtk_style_context_set_path(ctx_, widget_path.get());
 
     std::shared_ptr<GtkBorder> b(GetProperty<GtkBorder*>("extents"), gtk_border_free);
-    border_.top = b ? b->top : DEFAULT_BORDER.top;
-    border_.left = b ? b->left : DEFAULT_BORDER.left;
-    border_.right = b ? b->right : DEFAULT_BORDER.right;
-    border_.bottom = b ? b->bottom : DEFAULT_BORDER.bottom;
+    border_ = BorderFromGtkBorder(b.get(), DEFAULT_BORDER);
 
     title_alignment_ = GetProperty<gfloat>("title-alignment");
     theme_name_ = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
@@ -93,13 +98,13 @@ struct Style::Impl
   }
 
   template <typename TYPE>
-  inline TYPE GetBorderProperty(Side s, GtkStateFlags flags, std::string const& property)
+  inline TYPE GetBorderProperty(Side s, WidgetState ws, std::string const& property)
   {
     TYPE value;
 
     gtk_style_context_save(ctx_);
     gtk_style_context_add_class(ctx_, GetBorderClass(s).c_str());
-    gtk_style_context_get(ctx_, flags, property.c_str(), &value, nullptr);
+    gtk_style_context_get(ctx_, GtkStateFromWidgetState(ws), property.c_str(), &value, nullptr);
     gtk_style_context_restore(ctx_);
 
     return value;
@@ -248,6 +253,14 @@ std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) co
 Border const& Style::Border() const
 {
   return impl_->border_;
+}
+
+Border Style::Padding(Side s, WidgetState ws) const
+{
+  return decoration::Border(impl_->GetBorderProperty<int>(s, ws, "padding-top"),
+                            impl_->GetBorderProperty<int>(s, ws, "padding-left"),
+                            impl_->GetBorderProperty<int>(s, ws, "padding-right"),
+                            impl_->GetBorderProperty<int>(s, ws, "padding-bottom"));
 }
 
 } // decoration namespace

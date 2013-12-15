@@ -96,6 +96,7 @@ public:
   float TitleAlignmentValue() const;
   decoration::Border const& Border() const;
   int BorderWidth(Side) const;
+  decoration::Border Padding(Side, WidgetState ws = WidgetState::NORMAL) const;
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
 
   void DrawSide(Side, WidgetState, cairo_t*, int width, int height);
