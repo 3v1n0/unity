@@ -28,20 +28,22 @@ using namespace testing;
 
 int random_positive_int()
 {
-  return g_random_int_range(0, G_MAXSHORT);
+  return g_random_int_range(0, G_MAXSHORT/2);
 }
 
 int random_int()
 {
-  return g_random_int_range(G_MINSHORT, G_MAXSHORT);
+  return g_random_int_range(G_MINSHORT/2, G_MAXSHORT/2);
 }
 
 struct MockItem : public SimpleItem
 {
   typedef NiceMock<MockItem> Nice;
+  typedef std::shared_ptr<MockItem> Ptr;
 
   MockItem()
   {
+    visible = true;
     ON_CALL(*this, GetNaturalWidth()).WillByDefault(Invoke([this] { return SimpleItem::GetNaturalWidth(); }));
     ON_CALL(*this, GetNaturalHeight()).WillByDefault(Invoke([this] { return SimpleItem::GetNaturalHeight(); }));
     ON_CALL(*this, SetCoords(_, _)).WillByDefault(Invoke([this] (int x, int y) { SimpleItem::SetCoords(x, y); }));
@@ -99,6 +101,24 @@ struct TestDecorationItem : Test
   MockItem::Nice item;
   SigReceiver::Nice sig_receiver;
 };
+
+TEST_F(TestDecorationItem, DefaultMaxSize)
+{
+  MockItem item;
+  EXPECT_EQ(item.max_, nux::Size(std::numeric_limits<int>::max(), std::numeric_limits<int>::max()));
+}
+
+TEST_F(TestDecorationItem, DefaultMinSize)
+{
+  MockItem item;
+  EXPECT_EQ(item.min_, nux::Size(0, 0));
+}
+
+TEST_F(TestDecorationItem, DefaultNaturalSize)
+{
+  MockItem item;
+  EXPECT_EQ(item.natural_, nux::Size(0, 0));
+}
 
 TEST_F(TestDecorationItem, Geometry)
 {
@@ -192,6 +212,134 @@ TEST_F(TestDecorationItem, SetY)
   item.SetY(y);
 
   EXPECT_EQ(item.Geometry().y(), y);
+}
+
+//
+
+struct TestDecorationLayout : Test
+{
+  MockItem::Ptr SizedMockItem(int w, int h)
+  {
+    auto item = std::make_shared<MockItem::Nice>();
+    item->SetSize(w, h);
+    return item;
+  }
+
+  MockItem::Ptr RandomMockItem()
+  {
+    return SizedMockItem(g_random_int_range(10, 100), g_random_int_range(10, 100));
+  }
+
+  Layout layout;
+};
+
+TEST_F(TestDecorationLayout, AppendUnlimited)
+{
+  layout.SetCoords(random_int(), random_int());
+  auto expected_geo = layout.Geometry();
+
+  for (int i = 0; i < 100; ++i)
+  {
+    auto item = RandomMockItem();
+    auto const& item_geo = item->Geometry();
+    expected_geo.setWidth(expected_geo.width() + item_geo.width());
+    expected_geo.setHeight(std::max(expected_geo.height(), item_geo.height()));
+
+    layout.Append(item);
+    ASSERT_EQ(expected_geo, layout.Geometry());
+    ASSERT_EQ(layout.Geometry().x2() - item_geo.width(), item_geo.x());
+    ASSERT_EQ(layout.Geometry().y() + (layout.Geometry().height() - item_geo.height()) / 2, item_geo.y());
+  }
+
+  EXPECT_EQ(100, layout.Items().size());
+}
+
+TEST_F(TestDecorationLayout, AppendInvisible)
+{
+  CompRect expected_geo;
+  for (int i = 0; i < 100; ++i)
+  {
+    auto item = RandomMockItem();
+    item->visible = false;
+    layout.Append(item);
+    ASSERT_EQ(expected_geo, layout.Geometry());
+  }
+
+  EXPECT_EQ(100, layout.Items().size());
+  EXPECT_EQ(CompRect(), layout.Geometry());
+}
+
+TEST_F(TestDecorationLayout, AppendUnlimitedInternalPadding)
+{
+  layout.inner_padding = g_random_int_range(10, 50);
+  layout.SetCoords(random_int(), random_int());
+  auto expected_geo = layout.Geometry();
+
+  for (int i = 0; i < 100; ++i)
+  {
+    auto item = RandomMockItem();
+    auto const& item_geo = item->Geometry();
+    expected_geo.setWidth(expected_geo.width() + item_geo.width() + layout.inner_padding() * ((i > 0) ? 1 : 0));
+    expected_geo.setHeight(std::max(expected_geo.height(), item_geo.height()));
+
+    layout.Append(item);
+    ASSERT_EQ(expected_geo, layout.Geometry());
+    ASSERT_EQ(layout.Geometry().x2() - item_geo.width(), item_geo.x());
+    ASSERT_EQ(layout.Geometry().y() + (layout.Geometry().height() - item_geo.height()) / 2, item_geo.y());
+  }
+
+  EXPECT_EQ(100, layout.Items().size());
+}
+
+TEST_F(TestDecorationLayout, AppendWithMaxWidth)
+{
+  layout.SetCoords(random_int(), random_int());
+
+  for (int i = 0; i < 100; ++i)
+    layout.Append(RandomMockItem());
+
+  ASSERT_EQ(100, layout.Items().size());
+
+  auto const& layout_geo = layout.Geometry();
+  int new_width = layout_geo.width()/2;
+  layout.SetMaxWidth(new_width);
+
+  ASSERT_EQ(new_width, layout.GetMaxWidth());
+  ASSERT_EQ(new_width, layout_geo.width());
+
+  for (auto const& item : layout.Items())
+  {
+    auto const& item_geo = item->Geometry();
+
+    if (item_geo.x2() < layout_geo.x2())
+    {
+      ASSERT_EQ(item->GetNaturalWidth(), item_geo.width());
+      ASSERT_EQ(item->GetNaturalHeight(), item_geo.height());
+    }
+    else
+    {
+      ASSERT_EQ(std::max(0, layout_geo.x2() - item_geo.x1()), item_geo.width());
+    }
+  }
+}
+
+TEST_F(TestDecorationLayout, ExpandWithMaxWidth)
+{
+  layout.SetCoords(random_int(), random_int());
+
+  for (int i = 0; i < 100; ++i)
+    layout.Append(RandomMockItem());
+
+  ASSERT_EQ(100, layout.Items().size());
+
+  auto const& layout_geo = layout.Geometry();
+  int full_width = layout_geo.width();
+
+  layout.SetMaxWidth(full_width/2);
+  ASSERT_EQ(full_width/2, layout_geo.width());
+
+  layout.SetMaxWidth(std::numeric_limits<int>::max());
+  EXPECT_EQ(full_width, layout_geo.width());
 }
 
 }
