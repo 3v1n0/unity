@@ -339,7 +339,10 @@ TEST_F(TestDecorationLayout, ExpandWithMaxWidth)
   ASSERT_EQ(full_width/2, layout_geo.width());
 
   layout.SetMaxWidth(std::numeric_limits<int>::max());
-  EXPECT_EQ(full_width, layout_geo.width());
+  ASSERT_EQ(full_width, layout_geo.width());
+
+  for (auto const& item : layout.Items())
+    ASSERT_EQ(item->GetNaturalWidth(), item->Geometry().width());
 }
 
 }
