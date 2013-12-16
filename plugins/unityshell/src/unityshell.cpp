@@ -52,7 +52,7 @@
 #include "launcher/XdndStartStopNotifierImp.h"
 #include "CompizShortcutModeller.h"
 
-#include "DecorationsManager.h"
+#include "decorations/DecorationsManager.h"
 
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
