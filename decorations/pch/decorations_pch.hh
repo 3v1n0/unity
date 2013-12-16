@@ -25,6 +25,6 @@
 #include <memory>
 #include <cairo/cairo.h>
 
-#include <Nux/NuxCore.h>
-#include <Nux/Rect.h>
-
+#include <NuxCore/NuxCore.h>
+#include <NuxCore/Rect.h>
+#include <NuxCore/Size.h>
