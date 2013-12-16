@@ -135,9 +135,9 @@ void Item::Damage()
   cscreen_->damageRegion(Geometry());
 }
 
-CompRect& Item::InternalGeo()
+CompRect const& Item::Geometry() const
 {
-  return const_cast<CompRect&>(Geometry());
+  return const_cast<Item*>(this)->InternalGeo();
 }
 
 //
@@ -170,7 +170,7 @@ int TexturedItem::GetNaturalHeight() const
   return (texture_.st) ? texture_.st->height() : Item::GetNaturalHeight();
 }
 
-CompRect const& TexturedItem::Geometry() const
+CompRect& TexturedItem::InternalGeo()
 {
   return texture_.quad.box;
 }
@@ -200,11 +200,6 @@ void Layout::Append(Item::Ptr const& item)
   items_.push_back(item);
   item->visible.changed.connect(sigc::hide(sigc::mem_fun(this, &Layout::Relayout)));
   Relayout();
-}
-
-CompRect const& Layout::Geometry() const
-{
-  return rect_;
 }
 
 void Layout::Relayout()

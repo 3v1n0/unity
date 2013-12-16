@@ -41,7 +41,7 @@ public:
 
   nux::Property<bool> visible;
 
-  virtual CompRect const& Geometry() const = 0;
+  CompRect const& Geometry() const;
   virtual int GetNaturalWidth() const;
   virtual int GetNaturalHeight() const;
 
@@ -66,7 +66,7 @@ public:
   virtual void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask) {}
 
 protected:
-  CompRect& InternalGeo();
+  virtual CompRect& InternalGeo() = 0;
   sigc::signal<void> geo_parameters_changed;
 
   nux::Size max_;
@@ -77,10 +77,8 @@ protected:
 
 class SimpleItem : public Item
 {
-public:
-  CompRect const& Geometry() const { return rect_; }
-
 protected:
+  CompRect& InternalGeo() { return rect_; }
   CompRect rect_;
 };
 
@@ -95,11 +93,11 @@ public:
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void SetCoords(int x, int y);
 
-  CompRect const& Geometry() const;
   int GetNaturalWidth() const;
   int GetNaturalHeight() const;
 
 protected:
+  CompRect& InternalGeo();
   cu::SimpleTextureQuad texture_;
 };
 
@@ -120,7 +118,6 @@ public:
   void Append(Item::Ptr const&);
   std::list<Item::Ptr> const& Items() const;
 
-  CompRect const& Geometry() const;
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 private:
