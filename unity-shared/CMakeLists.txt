@@ -93,12 +93,16 @@ add_pch(pch/unity-shared_pch.hh unity-shared)
 
 if (ENABLE_X_SUPPORT)
   # compiz
+
   set (UNITY_SHARED_COMPIZ_SOURCES
+    CompizUtils.cpp
     PluginAdapter.cpp
     )
-  add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
-  target_link_libraries (unity-shared-compiz ${LIBS})
 
+  find_package (PkgConfig)
+  pkg_check_modules (COMPIZ_OPENGL REQUIRED "compiz-opengl")
+  add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
+  target_link_libraries (unity-shared-compiz ${LIBS} ${COMPIZ_OPENGL_LDFLAGS})
   add_dependencies (unity-shared-compiz unity-shared)
 
   # bamf application manager
