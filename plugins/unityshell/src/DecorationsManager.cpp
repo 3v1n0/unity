@@ -17,9 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-
 #include "DecorationsPriv.h"
 
 namespace unity
@@ -40,9 +38,9 @@ Atom _NET_FRAME_EXTENTS = 0;
 }
 }
 
-Manager::Impl::Impl(decoration::Manager* parent, UnityScreen* uscreen)
-  : uscreen_(uscreen)
-  , active_window_(0)
+Manager::Impl::Impl(decoration::Manager* parent)
+  : active_window_(0)
+  , enable_add_supported_atoms_(true)
 {
   manager_ = parent;
   dpy = screen->dpy();
@@ -64,7 +62,7 @@ Manager::Impl::Impl(decoration::Manager* parent, UnityScreen* uscreen)
 
 Manager::Impl::~Impl()
 {
-  screen->addSupportedAtomsSetEnabled(uscreen_, false);
+  enable_add_supported_atoms_ = false;
   screen->updateSupportedWmHints();
 }
 
@@ -108,8 +106,8 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
 void Manager::Impl::SetupButtonsTextures()
 {
   CompSize size;
-  auto const& style = Style::Get();
   CompString plugin_name("unityshell");
+  auto const& style = Style::Get();
 
   for (unsigned button = 0; button < window_buttons_.size(); ++button)
   {
@@ -142,7 +140,7 @@ void Manager::Impl::UpdateWindowsExtents()
   for (auto const& win : windows_)
   {
     win.second->UpdateDecorationPosition();
-    win.first->cWindow->damageOutputExtents();
+    CompositeWindow::get(win.first)->damageOutputExtents();
   }
 }
 
@@ -163,7 +161,7 @@ Window::Ptr Manager::Impl::GetWindowByXid(::Window xid) const
 {
   for (auto const& pair : windows_)
   {
-    if (pair.first->window->id() == xid)
+    if (pair.first->id() == xid)
       return pair.second;
   }
 
@@ -201,6 +199,7 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 {
   if (screen->activeWindow() != active_window_)
   {
+    // Do this when _NET_ACTIVE_WINDOW changes on root!
     auto const& old_active = GetWindowByXid(active_window_);
 
     if (old_active)
@@ -218,9 +217,7 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
   {
     case PropertyNotify:
       if (event->xproperty.atom == Atoms::mwmHints)
-      {
         UpdateWindow(event->xproperty.window);
-      }
       break;
     case ConfigureNotify:
       UpdateWindow(event->xconfigure.window);
@@ -247,13 +244,13 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 
 // Public APIs
 
-Manager::Manager(UnityScreen *screen)
+Manager::Manager()
   : shadow_offset(nux::Point(1, 1))
   , active_shadow_color(nux::color::Black * 0.4)
   , active_shadow_radius(8)
   , inactive_shadow_color(nux::color::Black * 0.4)
   , inactive_shadow_radius(5)
-  , impl_(new Impl(this, screen))
+  , impl_(new Impl(this))
 {}
 
 Manager::~Manager()
@@ -261,7 +258,8 @@ Manager::~Manager()
 
 void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
 {
-  atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
+  if (impl_->enable_add_supported_atoms_)
+    atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
 }
 
 bool Manager::HandleEventBefore(XEvent* xevent)
@@ -274,16 +272,16 @@ bool Manager::HandleEventAfter(XEvent* xevent)
   return impl_->HandleEventAfter(xevent);
 }
 
-Window::Ptr Manager::HandleWindow(UnityWindow* uwin)
+Window::Ptr Manager::HandleWindow(CompWindow* cwin)
 {
-  auto win = std::make_shared<Window>(uwin);
-  impl_->windows_[uwin] = win;
+  auto win = std::make_shared<Window>(UnityWindow::get(cwin));
+  impl_->windows_[cwin] = win;
   return win;
 }
 
-void Manager::UnHandleWindow(UnityWindow* uwin)
+void Manager::UnHandleWindow(CompWindow* cwin)
 {
-  impl_->windows_.erase(uwin);
+  impl_->windows_.erase(cwin);
 }
 
 Window::Ptr Manager::GetWindowByXid(::Window xid)

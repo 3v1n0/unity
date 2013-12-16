@@ -159,7 +159,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
-  , deco_manager_(std::make_shared<decoration::Manager>(this))
+  , deco_manager_(std::make_shared<decoration::Manager>())
   , debugger_(this)
   , needsRelayout(false)
   , super_keypressed_(false)
@@ -3606,7 +3606,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , window(window)
   , cWindow(CompositeWindow::get(window))
   , gWindow(GLWindow::get(window))
-  , deco_win_(uScreen->deco_manager_->HandleWindow(this))
+  , deco_win_(uScreen->deco_manager_->HandleWindow(window))
   , is_nux_window_(isNuxWindow(window))
 {
   WindowInterface::setHandler(window);
@@ -4110,7 +4110,7 @@ UnityWindow::~UnityWindow()
   if (uScreen->newFocusedWindow && UnityWindow::get(uScreen->newFocusedWindow) == this)
     uScreen->newFocusedWindow = NULL;
 
-  uScreen->deco_manager_->UnHandleWindow(this);
+  uScreen->deco_manager_->UnHandleWindow(window);
 
   if (!window->destroyed ())
   {

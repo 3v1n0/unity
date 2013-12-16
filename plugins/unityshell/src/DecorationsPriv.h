@@ -105,7 +105,7 @@ private:
 
 struct Manager::Impl : sigc::trackable
 {
-  Impl(decoration::Manager*, UnityScreen*);
+  Impl(decoration::Manager*);
   ~Impl();
 
   bool HandleEventBefore(XEvent*);
@@ -129,13 +129,13 @@ private:
   friend class Manager;
   friend struct Window::Impl;
 
-  ::UnityScreen* uscreen_;
   ::Window active_window_;
+  bool enable_add_supported_atoms_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;
   cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
   std::array<std::array<cu::SimpleTexture::Ptr, size_t(WidgetState::Size)>, size_t(WindowButtonType::Size)> window_buttons_;
 
-  std::map<UnityWindow*, decoration::Window::Ptr> windows_;
+  std::map<CompWindow*, decoration::Window::Ptr> windows_;
 };
 
 } // decoration namespace

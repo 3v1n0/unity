@@ -23,10 +23,11 @@
 #include <NuxCore/Property.h>
 #include "DecoratedWindow.h"
 
+class CompWindow;
+class CompManager;
+
 namespace unity
 {
-class UnityScreen;
-
 namespace decoration
 {
 class Manager
@@ -34,7 +35,7 @@ class Manager
 public:
   typedef std::shared_ptr<Manager> Ptr;
 
-  Manager(UnityScreen*);
+  Manager();
   virtual ~Manager();
 
   nux::Property<nux::Point> shadow_offset;
@@ -47,8 +48,8 @@ public:
   bool HandleEventBefore(XEvent*);
   bool HandleEventAfter(XEvent*);
 
-  Window::Ptr HandleWindow(UnityWindow*);
-  void UnHandleWindow(UnityWindow*);
+  Window::Ptr HandleWindow(CompWindow*);
+  void UnHandleWindow(CompWindow*);
 
   Window::Ptr GetWindowByXid(::Window);
 
