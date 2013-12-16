@@ -31,13 +31,13 @@ TEST(TestUnityWindowStyle, Get)
   ASSERT_NE(style, nullptr);
 
   {
-  auto const& style_copy = UnityWindowStyle::Get();
+  auto style_copy = UnityWindowStyle::Get();
   ASSERT_EQ(style, style_copy);
 
-  EXPECT_EQ(style.use_count(), 3);
+  EXPECT_EQ(style.use_count(), 2);
   }
 
-  EXPECT_EQ(style.use_count(), 2);
+  EXPECT_EQ(style.use_count(), 1);
 }
 
 }
