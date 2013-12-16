@@ -104,4 +104,6 @@ private:
 } // compiz_utils namespace
 } // unity namespace
 
+std::ostream& operator<<(std::ostream &os, CompRect const& r);
+
 #endif // UNITY_COMPIZ_UTILS

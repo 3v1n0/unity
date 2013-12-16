@@ -124,3 +124,8 @@ int CairoContext::height() const
 
 } // compiz_utils namespace
 } // unity namespace
+
+std::ostream& operator<<(std::ostream &os, CompRect const& r)
+{
+  return os << "CompRect: coords = " << r.x() << "x" << r.y() << ", size = " << r.width() << "x" << r.height();
+}
