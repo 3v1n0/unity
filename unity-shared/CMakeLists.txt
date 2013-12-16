@@ -100,9 +100,13 @@ if (ENABLE_X_SUPPORT)
     )
 
   find_package (PkgConfig)
-  pkg_check_modules (COMPIZ_OPENGL REQUIRED "compiz-opengl")
+  pkg_check_modules (COMPIZ_OPENGL REQUIRED compiz-opengl)
+
   add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
-  target_link_libraries (unity-shared-compiz ${LIBS} ${COMPIZ_OPENGL_LDFLAGS})
+
+  # This makes linker to include library dir in RUNPATH
+  find_library (COMPIZ_OPENGL_LIB opengl ${COMPIZ_OPENGL_LIBDIR})
+  target_link_libraries (unity-shared-compiz ${LIBS} ${COMPIZ_OPENGL_LIB} ${COMPIZ_OPENGL_LDFLAGS})
   add_dependencies (unity-shared-compiz unity-shared)
 
   # bamf application manager
