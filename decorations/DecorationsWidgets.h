@@ -88,8 +88,6 @@ class TexturedItem : public Item
 public:
   typedef std::shared_ptr<TexturedItem> Ptr;
 
-  TexturedItem();
-
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void SetCoords(int x, int y);
 

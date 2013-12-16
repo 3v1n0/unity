@@ -31,7 +31,8 @@ CompositeScreen* cscreen_ = CompositeScreen::get(screen);
 }
 
 Item::Item()
-  : max_(std::numeric_limits<int>::max(), std::numeric_limits<int>::max())
+  : visible(true)
+  , max_(std::numeric_limits<int>::max(), std::numeric_limits<int>::max())
 {}
 
 void Item::SetSize(int width, int height)
@@ -141,11 +142,6 @@ CompRect const& Item::Geometry() const
 }
 
 //
-
-TexturedItem::TexturedItem()
-{
-  visible = true;
-}
 
 void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
                         CompRegion const& clip, unsigned mask)
