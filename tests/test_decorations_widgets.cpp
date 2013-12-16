@@ -28,12 +28,12 @@ using namespace testing;
 
 int random_positive_int()
 {
-  return g_random_int_range(0, G_MAXINT);
+  return g_random_int_range(0, G_MAXSHORT);
 }
 
 int random_int()
 {
-  return g_random_int_range(G_MININT, G_MAXINT);
+  return g_random_int_range(G_MINSHORT, G_MAXSHORT);
 }
 
 struct MockItem : public SimpleItem
@@ -69,21 +69,35 @@ struct MockItem : public SimpleItem
   MOCK_METHOD1(SetMinWidth, void(int));
   MOCK_METHOD1(SetMinHeight, void(int));
 
+  using SimpleItem::geo_parameters_changed;
   using SimpleItem::rect_;
   using SimpleItem::natural_;
   using SimpleItem::max_;
   using SimpleItem::min_;
 };
 
+struct SigReceiver : sigc::trackable
+{
+  typedef NiceMock<SigReceiver> Nice;
+
+  SigReceiver(MockItem const& item)
+  {
+    const_cast<MockItem&>(item).geo_parameters_changed.connect(sigc::mem_fun(this, &SigReceiver::GeoChanged));
+  }
+
+  MOCK_METHOD0(GeoChanged, void());
+};
+
 struct TestDecorationItem : Test
 {
   TestDecorationItem()
+   : sig_receiver(item)
   {
     item.SetSize(g_random_int_range(10, 100), g_random_int_range(10, 30));
-    g_print("New item %p %dx%d - %dx%d\n",&item,item.Geometry().x(),item.Geometry().y(),item.Geometry().width(),item.Geometry().height());
   }
 
   MockItem::Nice item;
+  SigReceiver::Nice sig_receiver;
 };
 
 TEST_F(TestDecorationItem, Geometry)
@@ -111,6 +125,7 @@ TEST_F(TestDecorationItem, SetSize)
   EXPECT_CALL(item, SetMaxWidth(w));
   EXPECT_CALL(item, SetMinHeight(h));
   EXPECT_CALL(item, SetMaxHeight(h));
+  EXPECT_CALL(sig_receiver, GeoChanged()).Times(AtLeast(1));
 
   item.SetSize(w, h);
 
@@ -146,6 +161,37 @@ TEST_F(TestDecorationItem, SetHeight)
 
   EXPECT_EQ(item.Geometry().width(), item.GetNaturalWidth());
   EXPECT_EQ(h, item.GetNaturalHeight());
+}
+
+TEST_F(TestDecorationItem, SetCoords)
+{
+  int x = random_int(), y = random_int();
+
+  EXPECT_CALL(sig_receiver, GeoChanged());
+  item.SetCoords(x, y);
+
+  EXPECT_EQ(item.Geometry().x(), x);
+  EXPECT_EQ(item.Geometry().y(), y);
+}
+
+TEST_F(TestDecorationItem, SetX)
+{
+  int x = random_int();
+
+  EXPECT_CALL(item, SetCoords(x, item.Geometry().y()));
+  item.SetX(x);
+
+  EXPECT_EQ(item.Geometry().x(), x);
+}
+
+TEST_F(TestDecorationItem, SetY)
+{
+  int y = random_int();
+
+  EXPECT_CALL(item, SetCoords(item.Geometry().x(), y));
+  item.SetY(y);
+
+  EXPECT_EQ(item.Geometry().y(), y);
 }
 
 }
