@@ -21,9 +21,10 @@
 #define UNITY_DECORATION_MANAGER_PRIV
 
 #include <X11/Xlib.h>
-#include <Nux/BaseWindow.h>
-#include "DecorationsManager.h"
+#include <NuxCore/Rect.h>
 #include "DecorationStyle.h"
+#include "DecorationsManager.h"
+#include "DecorationsWidgets.h"
 #include "CompizUtils.h"
 #include "unityshell.h"
 
@@ -74,6 +75,7 @@ private:
   void SetupExtents();
   void UnsetFrame();
   void UpdateFrame();
+  void SetupTopLayout();
   void SyncXShapeWithFrameRegion();
   bool ShouldBeDecorated() const;
   GLTexture* ShadowTexture() const;
@@ -84,6 +86,7 @@ private:
   void RenderDecorationTexture(Side, nux::Geometry const&);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
+  class WindowButton;
   friend class Window;
   friend struct Manager::Impl;
 
@@ -97,6 +100,7 @@ private:
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
+  Layout::Ptr top_layout_;
 };
 
 struct Manager::Impl : sigc::trackable
@@ -106,6 +110,8 @@ struct Manager::Impl : sigc::trackable
 
   bool HandleEventBefore(XEvent*);
   bool HandleEventAfter(XEvent*);
+
+  cu::SimpleTexture::Ptr const& GetButtonTexture(WindowButtonType, WidgetState) const;
 
 private:
   Window::Ptr GetWindowByXid(::Window) const;
@@ -118,9 +124,7 @@ private:
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
   void OnShadowOptionsChanged(bool active);
-
   void SetupButtonsTextures();
-  cu::SimpleTexture::Ptr const& GetButtonTexture(WindowButtonType, WidgetState) const;
 
   friend class Manager;
   friend struct Window::Impl;

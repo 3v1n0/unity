@@ -17,9 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-
 #include "DecorationsPriv.h"
 
 namespace unity
@@ -32,6 +30,15 @@ namespace
 DECLARE_LOGGER(logger, "unity.decoration.window");
 const unsigned GRAB_BORDER = 10;
 }
+
+class Window::Impl::WindowButton : public TexturedItem
+{
+public:
+  WindowButton(WindowButtonType type)
+  {
+    texture_.SetTexture(manager_->impl_->GetButtonTexture(type, WidgetState::NORMAL));
+  }
+};
 
 Window::Impl::Impl(Window* parent, UnityWindow* uwin)
   : active(false)
@@ -67,6 +74,7 @@ void Window::Impl::Update()
   {
     SetupExtents();
     UpdateFrame();
+    SetupTopLayout();
   }
   else
   {
@@ -78,6 +86,7 @@ void Window::Impl::Undecorate()
 {
   UnsetExtents();
   UnsetFrame();
+  top_layout_.reset();
   bg_textures_.clear();
 }
 
@@ -242,6 +251,21 @@ void Window::Impl::SyncXShapeWithFrameRegion()
   uwin_->window->updateFrameRegion();
 }
 
+void Window::Impl::SetupTopLayout()
+{
+  if (top_layout_)
+    return;
+
+  auto padding = Style::Get()->Padding(Side::TOP);
+  top_layout_ = std::make_shared<Layout>();
+  top_layout_->left_padding = padding.left;
+  top_layout_->right_padding = padding.right;
+  top_layout_->top_padding = padding.top;
+  top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::CLOSE));
+  top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::MINIMIZE));
+  top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::MAXIMIZE));
+}
+
 bool Window::Impl::ShadowDecorated() const
 {
   auto* window = uwin_->window;
@@ -331,10 +355,13 @@ void Window::Impl::UpdateDecorationTextures()
   auto const& border = window->border();
 
   bg_textures_.resize(4);
-  RenderDecorationTexture(Side::TOP, {geo.x(), geo.y(), geo.width(), window->border().top});
+  RenderDecorationTexture(Side::TOP, {geo.x(), geo.y(), geo.width(), border.top});
   RenderDecorationTexture(Side::LEFT, {geo.x(), geo.y() + border.top, border.left, geo.height() - border.top - border.bottom});
   RenderDecorationTexture(Side::RIGHT, {geo.x2() - border.right, geo.y() + border.top, border.right, geo.height() - border.top - border.bottom});
   RenderDecorationTexture(Side::BOTTOM, {geo.x(), geo.y2() - border.bottom, geo.width(), border.bottom});
+
+  top_layout_->SetCoords(geo.x(), geo.y());
+  top_layout_->SetSize(geo.width(), border.top);
 }
 
 void Window::Impl::ComputeShadowQuads()
@@ -468,6 +495,9 @@ void Window::Impl::Draw(GLMatrix const& transformation,
     if (gWindow->vertexBuffer()->end())
       gWindow->glDrawTexture(dtex, transformation, attrib, mask);
   }
+
+  if (top_layout_)
+    top_layout_->Draw(gWindow, transformation, attrib, region, mask);
 }
 
 // Public APIs
@@ -494,7 +524,7 @@ void Window::UpdateFrameRegion(CompRegion& r)
   auto const& input = window->input();
 
   r += impl_->frame_region_.translated(geo.x() - input.left, geo.y() - input.top);
-  impl_->dirty_geo_ = true;
+  UpdateDecorationPositionDelayed();
 }
 
 void Window::UpdateOutputExtents(compiz::window::extents::Extents& output)

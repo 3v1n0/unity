@@ -34,11 +34,9 @@ const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { 
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
 
-typedef struct _UnityDecorationPrivate UnityDecorationPrivate;
 struct UnityDecoration
 {
   GtkWidget parent_instance;
-  UnityDecorationPrivate* priv;
 };
 
 struct UnityDecorationClass
