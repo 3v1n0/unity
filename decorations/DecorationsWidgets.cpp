@@ -17,6 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include <NuxCore/Logger.h>
 #include <composite/composite.h>
 #include <boost/range/adaptor/reversed.hpp>
 #include "DecorationsWidgets.h"
@@ -27,6 +28,7 @@ namespace decoration
 {
 namespace
 {
+DECLARE_LOGGER(logger, "unity.decoration.widgets");
 CompositeScreen* cscreen_ = CompositeScreen::get(screen);
 }
 
@@ -200,7 +202,7 @@ void Layout::Append(Item::Ptr const& item)
 
 void Layout::Relayout()
 {
-  bool first_loop = true;
+  int loop = 0;
 
   nux::Size available_space(std::max(0, max_.width - left_padding - right_padding),
                             std::max(0, max_.height - top_padding - bottom_padding));
@@ -214,7 +216,7 @@ void Layout::Relayout()
       if (!item->visible())
         continue;
 
-      if (first_loop)
+      if (loop == 0)
       {
         item->SetMinWidth(item->GetNaturalWidth());
         item->SetMaxWidth(available_space.width);
@@ -272,7 +274,13 @@ void Layout::Relayout()
     rect_.setWidth(content.width);
     rect_.setHeight(content.height);
 
-    first_loop = false;
+    if (loop > 1)
+    {
+      LOG_ERROR(logger) << "Relayouting is taking more than expected, process should be completed in maximum two loops!";
+      break;
+    }
+
+    ++loop;
   }
   while (rect_.width() > max_.width || rect_.height() > max_.height);
 }
