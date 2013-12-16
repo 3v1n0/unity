@@ -21,6 +21,8 @@
 #define UNITY_DECORATION_WIDGETS
 
 #include <list>
+#include <NuxCore/Size.h>
+#include <NuxCore/Property.h>
 #include "CompizUtils.h"
 
 namespace unity

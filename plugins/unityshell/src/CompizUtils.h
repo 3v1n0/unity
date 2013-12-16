@@ -20,7 +20,6 @@
 #ifndef UNITY_COMPIZ_UTILS
 #define UNITY_COMPIZ_UTILS
 
-#include <Nux/Nux.h>
 #include <opengl/opengl.h>
 #include <cairo.h>
 #include <memory>

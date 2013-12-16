@@ -20,13 +20,16 @@
 #ifndef UNITY_DECORATION_MANAGER_PRIV
 #define UNITY_DECORATION_MANAGER_PRIV
 
-#include <X11/Xlib.h>
+#include <NuxCore/NuxCore.h>
 #include <NuxCore/Rect.h>
+#include <core/core.h>
+#include <opengl/opengl.h>
+#include <composite/composite.h>
+#include <X11/extensions/shape.h>
+
 #include "DecorationStyle.h"
 #include "DecorationsManager.h"
 #include "DecorationsWidgets.h"
-#include "CompizUtils.h"
-#include "unityshell.h"
 
 class CompRegion;
 
@@ -60,7 +63,7 @@ private:
 
 struct Window::Impl
 {
-  Impl(decoration::Window*, UnityWindow*);
+  Impl(decoration::Window*, CompWindow*);
   ~Impl();
 
   nux::Property<bool> active;
@@ -91,7 +94,9 @@ private:
   friend struct Manager::Impl;
 
   decoration::Window *parent_;
-  ::UnityWindow* uwin_;
+  ::CompWindow* win_;
+  ::CompositeWindow* cwin_;
+  ::GLWindow* glwin_;
   ::Window frame_;
   bool dirty_geo_;
 

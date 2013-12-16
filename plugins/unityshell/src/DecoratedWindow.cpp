@@ -40,27 +40,23 @@ public:
   }
 };
 
-Window::Impl::Impl(Window* parent, UnityWindow* uwin)
+Window::Impl::Impl(Window* parent, CompWindow* win)
   : active(false)
   , parent_(parent)
-  , uwin_(uwin)
+  , win_(win)
+  , cwin_(CompositeWindow::get(win_))
+  , glwin_(GLWindow::get(win_))
   , frame_(0)
   , dirty_geo_(true)
 {
-  auto* window = uwin_->window;
-
-  if (window->isViewable() || window->shaded())
-  {
-    window->resizeNotifySetEnabled(uwin_, false);
-    Update();
-    window->resizeNotifySetEnabled(uwin_, true);
-  }
-
   active.changed.connect([this] (bool) {
     bg_textures_.clear();
     parent_->UpdateDecorationPositionDelayed();
-    uwin_->cWindow->damageOutputExtents();
+    cwin_->damageOutputExtents();
   });
+
+  if (win_->isViewable() || win_->shaded())
+    Update();
 }
 
 Window::Impl::~Impl()
@@ -92,22 +88,18 @@ void Window::Impl::Undecorate()
 
 void Window::Impl::UnsetExtents()
 {
-  auto* window = uwin_->window;
-
-  if (window->hasUnmapReference())
+  if (win_->hasUnmapReference())
     return;
 
   CompWindowExtents empty(0, 0, 0, 0);
 
-  if (window->border() != empty || window->input() != empty)
-    window->setWindowFrameExtents(&empty, &empty);
+  if (win_->border() != empty || win_->input() != empty)
+    win_->setWindowFrameExtents(&empty, &empty);
 }
 
 void Window::Impl::SetupExtents()
 {
-  auto* window = uwin_->window;
-
-  if (window->hasUnmapReference())
+  if (win_->hasUnmapReference())
     return;
 
   auto const& style = Style::Get();
@@ -122,8 +114,8 @@ void Window::Impl::SetupExtents()
   input.top += GRAB_BORDER;
   input.bottom += GRAB_BORDER;
 
-  if (window->border() != border || window->input() != input)
-    window->setWindowFrameExtents(&border, &input);
+  if (win_->border() != border || win_->input() != input)
+    win_->setWindowFrameExtents(&border, &input);
 }
 
 void Window::Impl::UnsetFrame()
@@ -138,13 +130,12 @@ void Window::Impl::UnsetFrame()
 
 void Window::Impl::UpdateFrame()
 {
-  auto* window = uwin_->window;
-  auto const& input = window->input();
-  auto const& server = window->serverGeometry();
+  auto const& input = win_->input();
+  auto const& server = win_->serverGeometry();
   nux::Geometry frame_geo(0, 0, server.widthIncBorders() + input.left + input.right,
                           server.heightIncBorders() + input.top  + input.bottom);
 
-  if (window->shaded())
+  if (win_->shaded())
     frame_geo.height = input.top + input.bottom;
 
   if (!frame_)
@@ -158,7 +149,7 @@ void Window::Impl::UpdateFrame()
     // attr.event_mask = ButtonPressMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
     attr.override_redirect = True;
 
-    auto parent = window->frame();
+    auto parent = win_->frame();
     frame_ = XCreateWindow(dpy, parent, frame_geo.x, frame_geo.y,
                            frame_geo.width, frame_geo.height, 0, CopyFromParent,
                            InputOnly, CopyFromParent, CWOverrideRedirect | CWEventMask, &attr);
@@ -224,8 +215,6 @@ void Window::Impl::UpdateFrame()
     frame_geo_ = frame_geo;
     SyncXShapeWithFrameRegion();
   }
-
-  // uwin_->cWindow->damageOutputExtents();
 }
 
 void Window::Impl::SyncXShapeWithFrameRegion()
@@ -248,7 +237,7 @@ void Window::Impl::SyncXShapeWithFrameRegion()
 
   XFree(rects);
 
-  uwin_->window->updateFrameRegion();
+  win_->updateFrameRegion();
 }
 
 void Window::Impl::SetupTopLayout()
@@ -268,21 +257,19 @@ void Window::Impl::SetupTopLayout()
 
 bool Window::Impl::ShadowDecorated() const
 {
-  auto* window = uwin_->window;
-
-  if (!window->isViewable())
+  if (!win_->isViewable())
     return false;
 
-  if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+  if ((win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
     return false;
 
-  if (window->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
+  if (win_->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
     return false;
 
-  if (window->region().numRects() != 1) // Non rectangular windows
+  if (win_->region().numRects() != 1) // Non rectangular windows
     return false;
 
-  if (window->overrideRedirect() && window->alpha())
+  if (win_->overrideRedirect() && win_->alpha())
     return false;
 
   return true;
@@ -293,17 +280,17 @@ bool Window::Impl::FullyDecorated() const
   if (!ShadowDecorated())
     return false;
 
-  if (uwin_->window->overrideRedirect())
+  if (win_->overrideRedirect())
     return false;
 
-  switch (uwin_->window->type())
+  switch (win_->type())
   {
     case CompWindowTypeDialogMask:
     case CompWindowTypeModalDialogMask:
     case CompWindowTypeUtilMask:
     case CompWindowTypeMenuMask:
     case CompWindowTypeNormalMask:
-      if (uwin_->window->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
+      if (win_->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
         return true;
   }
 
@@ -312,8 +299,7 @@ bool Window::Impl::FullyDecorated() const
 
 bool Window::Impl::ShouldBeDecorated() const
 {
-  auto* window = uwin_->window;
-  return (window->frame() || window->hasUnmapReference()) && FullyDecorated();
+  return (win_->frame() || win_->hasUnmapReference()) && FullyDecorated();
 }
 
 GLTexture* Window::Impl::ShadowTexture() const
@@ -350,9 +336,8 @@ void Window::Impl::UpdateDecorationTextures()
     return;
   }
 
-  auto *window = uwin_->window;
-  auto const& geo = window->borderRect();
-  auto const& border = window->border();
+  auto const& geo = win_->borderRect();
+  auto const& border = win_->border();
 
   bg_textures_.resize(4);
   RenderDecorationTexture(Side::TOP, {geo.x(), geo.y(), geo.width(), border.top});
@@ -375,9 +360,8 @@ void Window::Impl::ComputeShadowQuads()
     return;
 
   Quads& quads = shadow_quads_;
-  auto *window = uwin_->window;
   auto const& tex_matrix = texture->matrix();
-  auto const& border = window->borderRect();
+  auto const& border = win_->borderRect();
   auto const& offset = manager_->shadow_offset();
   int texture_offset = ShadowRadius() * 2;
 
@@ -432,7 +416,7 @@ void Window::Impl::ComputeShadowQuads()
   /* Fix the quads if the texture is actually bigger than the area */
   if (texture->width() > border.width())
   {
-    int half = window->x() + window->width() / 2.0f;
+    int half = win_->x() + win_->width() / 2.0f;
     quads[Quads::Pos::TOP_LEFT].box.setRight(half);
     quads[Quads::Pos::TOP_RIGHT].box.setLeft(half);
     quads[Quads::Pos::BOTTOM_LEFT].box.setRight(half);
@@ -441,7 +425,7 @@ void Window::Impl::ComputeShadowQuads()
 
   if (texture->height() > border.height())
   {
-    int half = window->y() + window->height() / 2.0f;
+    int half = win_->y() + win_->height() / 2.0f;
     quads[Quads::Pos::TOP_LEFT].box.setBottom(half);
     quads[Quads::Pos::TOP_RIGHT].box.setBottom(half);
     quads[Quads::Pos::BOTTOM_LEFT].box.setTop(half);
@@ -457,7 +441,7 @@ void Window::Impl::ComputeShadowQuads()
   if (shadows_rect != last_shadow_rect_)
   {
     last_shadow_rect_ = shadows_rect;
-    window->updateWindowOutputExtents();
+    win_->updateWindowOutputExtents();
   }
 }
 
@@ -468,42 +452,40 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   if (!ShadowDecorated())
     return;
 
-  auto* window = uwin_->window;
-  auto* gWindow = uwin_->gWindow;
   auto const& clip_region = (mask & PAINT_WINDOW_TRANSFORMED_MASK) ? infiniteRegion : region;
   mask |= PAINT_WINDOW_BLEND_MASK;
 
   if (dirty_geo_)
     parent_->UpdateDecorationPosition();
 
-  gWindow->vertexBuffer()->begin();
+  glwin_->vertexBuffer()->begin();
 
   for (unsigned i = 0; i < shadow_quads_.size(); ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
-    gWindow->glAddGeometry({quad.matrix}, CompRegion(quad.box) - window->region(), clip_region);
+    glwin_->glAddGeometry({quad.matrix}, CompRegion(quad.box) - win_->region(), clip_region);
   }
 
-  if (gWindow->vertexBuffer()->end())
-    gWindow->glDrawTexture(ShadowTexture(), transformation, attrib, mask);
+  if (glwin_->vertexBuffer()->end())
+    glwin_->glDrawTexture(ShadowTexture(), transformation, attrib, mask);
 
   for (auto const& dtex : bg_textures_)
   {
-    gWindow->vertexBuffer()->begin();
-    gWindow->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
+    glwin_->vertexBuffer()->begin();
+    glwin_->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
 
-    if (gWindow->vertexBuffer()->end())
-      gWindow->glDrawTexture(dtex, transformation, attrib, mask);
+    if (glwin_->vertexBuffer()->end())
+      glwin_->glDrawTexture(dtex, transformation, attrib, mask);
   }
 
   if (top_layout_)
-    top_layout_->Draw(gWindow, transformation, attrib, region, mask);
+    top_layout_->Draw(glwin_, transformation, attrib, region, mask);
 }
 
 // Public APIs
 
-Window::Window(UnityWindow* uwin)
-  : impl_(new Impl(this, uwin))
+Window::Window(CompWindow* cwin)
+  : impl_(new Impl(this, cwin))
 {}
 
 Window::~Window()
@@ -519,9 +501,8 @@ void Window::UpdateFrameRegion(CompRegion& r)
   if (impl_->frame_region_.isEmpty())
     return;
 
-  auto* window = impl_->uwin_->window;
-  auto const& geo = window->geometry();
-  auto const& input = window->input();
+  auto const& geo = impl_->win_->geometry();
+  auto const& input = impl_->win_->input();
 
   r += impl_->frame_region_.translated(geo.x() - input.left, geo.y() - input.top);
   UpdateDecorationPositionDelayed();
@@ -529,12 +510,12 @@ void Window::UpdateFrameRegion(CompRegion& r)
 
 void Window::UpdateOutputExtents(compiz::window::extents::Extents& output)
 {
-  auto* window = impl_->uwin_->window;
+  auto* win = impl_->win_;
   auto const& shadow = impl_->last_shadow_rect_;
-  output.top = std::max(output.top, window->y() - shadow.y1());
-  output.left = std::max(output.left, window->x() - shadow.x1());
-  output.right = std::max(output.right, shadow.x2() - window->width() - window->x());
-  output.bottom = std::max(output.bottom, shadow.y2() - window->height() - window->y());
+  output.top = std::max(output.top, win->y() - shadow.y1());
+  output.left = std::max(output.left, win->x() - shadow.x1());
+  output.right = std::max(output.right, shadow.x2() - win->width() - win->x());
+  output.bottom = std::max(output.bottom, shadow.y2() - win->height() - win->y());
 }
 
 void Window::Draw(GLMatrix const& matrix, GLWindowPaintAttrib const& attrib,

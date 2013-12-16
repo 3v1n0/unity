@@ -24,24 +24,21 @@
 #include <memory>
 
 class CompRegion;
+class CompWindow;
 class GLWindowPaintAttrib;
 class GLMatrix;
 namespace compiz { namespace window { namespace extents { class Extents; } } }
 
 namespace unity
 {
-class UnityWindow;
-
 namespace decoration
 {
-class Manager;
-
 class Window
 {
 public:
   typedef std::shared_ptr<Window> Ptr;
 
-  Window(UnityWindow*);
+  Window(CompWindow*);
   virtual ~Window();
 
   void Update();

@@ -17,8 +17,11 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <NuxCore/Logger.h>
 #include "DecorationsPriv.h"
+
+#include <core/atoms.h>
+#include <NuxCore/Logger.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 namespace unity
 {
@@ -140,7 +143,7 @@ void Manager::Impl::UpdateWindowsExtents()
   for (auto const& win : windows_)
   {
     win.second->UpdateDecorationPosition();
-    CompositeWindow::get(win.first)->damageOutputExtents();
+    win.second->impl_->cwin_->damageOutputExtents();
   }
 }
 
@@ -274,7 +277,7 @@ bool Manager::HandleEventAfter(XEvent* xevent)
 
 Window::Ptr Manager::HandleWindow(CompWindow* cwin)
 {
-  auto win = std::make_shared<Window>(UnityWindow::get(cwin));
+  auto win = std::make_shared<Window>(cwin);
   impl_->windows_[cwin] = win;
   return win;
 }
