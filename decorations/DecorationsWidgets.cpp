@@ -36,8 +36,8 @@ Item::Item()
 
 void Item::SetSize(int width, int height)
 {
-  natural_.width = width;
-  natural_.height = height;
+  natural_.width = std::max(0, width);
+  natural_.height = std::max(0, height);
   SetMinWidth(width);
   SetMaxWidth(width);
   SetMinHeight(height);
