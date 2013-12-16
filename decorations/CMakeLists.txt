@@ -12,7 +12,9 @@ string (REPLACE ";" " " CFLAGS "${CFLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS}")
 include_directories (.. ../UnityCore ../unity-shared ${CMAKE_BINARY_DIR})
 
-set (LIBS ${CACHED_UNITY_DEPS_LDFLAGS} ${UNITY_STANDALONE_LADD} ${COMPIZ_COMPOSITE_LDFLAGS} unity-shared-compiz)
+# This makes linker to include library dir in RUNPATH
+find_library (COMPIZ_COMPOSITE_LIB composite ${COMPIZ_COMPOSITE_LIBDIR})
+set (LIBS ${CACHED_UNITY_DEPS_LDFLAGS} ${COMPIZ_COMPOSITE_LIB} ${COMPIZ_COMPOSITE_LDFLAGS} unity-shared-compiz)
 
 #
 # Headers & Sources
