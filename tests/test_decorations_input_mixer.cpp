@@ -199,4 +199,142 @@ TEST_F(TestDecorationInputMixer, MotionEvent)
   }
 }
 
+TEST_F(TestDecorationInputMixer, LeaveEvent)
+{
+  auto item1 = SizedMockItem(30, 30);
+  mixer.PushToFront(item1);
+
+  auto item2 = SizedMockItem(20, 20);
+  mixer.PushToFront(item2);
+
+  auto item3 = SizedMockItem(10, 10);
+  mixer.PushToFront(item3);
+
+  {
+  mixer.EnterEvent(CompPoint(item1->Geometry().x2(), item1->Geometry().y2()));
+  SigReceiver::Nice sig1(*item1);
+  SigReceiver::Nice sig2(*item2);
+  SigReceiver::Nice sig3(*item3);
+
+  EXPECT_CALL(sig1, MouseOwnerChanged(false));
+  EXPECT_CALL(sig2, MouseOwnerChanged(_)).Times(0);
+  EXPECT_CALL(sig3, MouseOwnerChanged(_)).Times(0);
+
+  mixer.LeaveEvent(CompPoint());
+
+  ASSERT_FALSE(item1->mouse_owner());
+  ASSERT_EQ(nullptr, mixer.GetMouseOwner());
+  }
+
+  {
+  mixer.EnterEvent(CompPoint(item2->Geometry().x2(), item2->Geometry().y2()));
+  SigReceiver::Nice sig1(*item1);
+  SigReceiver::Nice sig2(*item2);
+  SigReceiver::Nice sig3(*item3);
+
+  EXPECT_CALL(sig1, MouseOwnerChanged(_)).Times(0);
+  EXPECT_CALL(sig2, MouseOwnerChanged(false));
+  EXPECT_CALL(sig3, MouseOwnerChanged(_)).Times(0);
+
+  mixer.LeaveEvent(CompPoint());
+
+  ASSERT_FALSE(item2->mouse_owner());
+  ASSERT_EQ(nullptr, mixer.GetMouseOwner());
+  }
+
+  {
+  mixer.EnterEvent(CompPoint(item3->Geometry().x2(), item3->Geometry().y2()));
+  SigReceiver::Nice sig1(*item1);
+  SigReceiver::Nice sig2(*item2);
+  SigReceiver::Nice sig3(*item3);
+
+  EXPECT_CALL(sig1, MouseOwnerChanged(_)).Times(0);
+  EXPECT_CALL(sig2, MouseOwnerChanged(_)).Times(0);
+  EXPECT_CALL(sig3, MouseOwnerChanged(false));
+
+  mixer.LeaveEvent(CompPoint());
+
+  ASSERT_FALSE(item3->mouse_owner());
+  ASSERT_EQ(nullptr, mixer.GetMouseOwner());
+  }
+}
+
+TEST_F(TestDecorationInputMixer, ButtonDownEvent)
+{
+  auto item1 = SizedMockItem(30, 30);
+  mixer.PushToFront(item1);
+
+  auto item2 = SizedMockItem(20, 20);
+  mixer.PushToFront(item2);
+
+  auto item3 = SizedMockItem(10, 10);
+  mixer.PushToFront(item3);
+
+  {
+  EXPECT_CALL(*item1, ButtonDownEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonDownEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonDownEvent(CompPoint(5, 5), 1));
+
+  mixer.EnterEvent(CompPoint(5, 5));
+  mixer.ButtonDownEvent(CompPoint(5, 5), 1);
+  }
+
+  {
+  EXPECT_CALL(*item1, ButtonDownEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonDownEvent(CompPoint(15, 15), 2));
+  EXPECT_CALL(*item3, ButtonDownEvent(_, _)).Times(0);
+
+  mixer.EnterEvent(CompPoint(15, 15));
+  mixer.ButtonDownEvent(CompPoint(15, 15), 2);
+  }
+
+  {
+  EXPECT_CALL(*item1, ButtonDownEvent(CompPoint(25, 25), 3));
+  EXPECT_CALL(*item2, ButtonDownEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonDownEvent(_, _)).Times(0);
+
+  mixer.EnterEvent(CompPoint(25, 25));
+  mixer.ButtonDownEvent(CompPoint(25, 25), 3);
+  }
+}
+
+TEST_F(TestDecorationInputMixer, ButtonUpEvent)
+{
+  auto item1 = SizedMockItem(30, 30);
+  mixer.PushToFront(item1);
+
+  auto item2 = SizedMockItem(20, 20);
+  mixer.PushToFront(item2);
+
+  auto item3 = SizedMockItem(10, 10);
+  mixer.PushToFront(item3);
+
+  {
+  EXPECT_CALL(*item1, ButtonUpEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonUpEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonUpEvent(CompPoint(5, 5), 1));
+
+  mixer.EnterEvent(CompPoint(5, 5));
+  mixer.ButtonUpEvent(CompPoint(5, 5), 1);
+  }
+
+  {
+  EXPECT_CALL(*item1, ButtonUpEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonUpEvent(CompPoint(15, 15), 2));
+  EXPECT_CALL(*item3, ButtonUpEvent(_, _)).Times(0);
+
+  mixer.EnterEvent(CompPoint(15, 15));
+  mixer.ButtonUpEvent(CompPoint(15, 15), 2);
+  }
+
+  {
+  EXPECT_CALL(*item1, ButtonUpEvent(CompPoint(25, 25), 3));
+  EXPECT_CALL(*item2, ButtonUpEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonUpEvent(_, _)).Times(0);
+
+  mixer.EnterEvent(CompPoint(25, 25));
+  mixer.ButtonUpEvent(CompPoint(25, 25), 3);
+  }
+}
+
 }
