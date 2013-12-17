@@ -240,6 +240,7 @@ if (ENABLE_X_SUPPORT)
                  test_application_launcher_icon.cpp
                  test_bamf_application.cpp
                  test_bfb_launcher_icon.cpp
+                 test_decorations_input_mixer.cpp
                  test_decorations_widgets.cpp
                  test_dashview.cpp
                  test_dashview_impl.cpp
