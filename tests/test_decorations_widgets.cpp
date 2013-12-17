@@ -17,13 +17,10 @@
  * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
  */
 
-#include <gmock/gmock.h>
-#include <glib.h>
-#include "DecorationsWidgets.h"
+#include "decoration_mock_item.h"
 
 namespace
 {
-using namespace unity::decoration;
 using namespace testing;
 
 int random_positive_int()
@@ -34,60 +31,6 @@ int random_positive_int()
 int random_int()
 {
   return g_random_int_range(G_MINSHORT/2, G_MAXSHORT/2);
-}
-
-struct MockItem : public SimpleItem
-{
-  typedef NiceMock<MockItem> Nice;
-  typedef std::shared_ptr<MockItem> Ptr;
-
-  MockItem()
-  {
-    visible = true;
-    ON_CALL(*this, GetNaturalWidth()).WillByDefault(Invoke([this] { return SimpleItem::GetNaturalWidth(); }));
-    ON_CALL(*this, GetNaturalHeight()).WillByDefault(Invoke([this] { return SimpleItem::GetNaturalHeight(); }));
-    ON_CALL(*this, SetCoords(_, _)).WillByDefault(Invoke([this] (int x, int y) { SimpleItem::SetCoords(x, y); }));
-    ON_CALL(*this, SetX(_)).WillByDefault(Invoke([this] (int x) { SimpleItem::SetX(x); }));
-    ON_CALL(*this, SetY(_)).WillByDefault(Invoke([this] (int y) { SimpleItem::SetY(y); }));
-    ON_CALL(*this, SetSize(_, _)).WillByDefault(Invoke([this] (int w, int h) { SimpleItem::SetSize(w, h); }));
-    ON_CALL(*this, SetWidth(_)).WillByDefault(Invoke([this] (int w) { SimpleItem::SetWidth(w); }));
-    ON_CALL(*this, SetHeight(_)).WillByDefault(Invoke([this] (int h) { SimpleItem::SetHeight(h); }));
-    ON_CALL(*this, SetMaxWidth(_)).WillByDefault(Invoke([this] (int mw) { SimpleItem::SetMaxWidth(mw); }));
-    ON_CALL(*this, SetMaxHeight(_)).WillByDefault(Invoke([this] (int mh) { SimpleItem::SetMaxHeight(mh); }));
-    ON_CALL(*this, SetMinWidth(_)).WillByDefault(Invoke([this] (int mw) { SimpleItem::SetMinWidth(mw); }));
-    ON_CALL(*this, SetMinHeight(_)).WillByDefault(Invoke([this] (int mh) { SimpleItem::SetMinHeight(mh); }));
-  }
-
-  MOCK_CONST_METHOD0(GetNaturalWidth, int());
-  MOCK_CONST_METHOD0(GetNaturalHeight, int());
-  MOCK_METHOD2(SetCoords, void(int, int));
-  MOCK_METHOD1(SetX, void(int));
-  MOCK_METHOD1(SetY, void(int));
-  MOCK_METHOD2(SetSize, void(int, int));
-  MOCK_METHOD1(SetWidth, void(int));
-  MOCK_METHOD1(SetHeight, void(int));
-  MOCK_METHOD1(SetMaxWidth, void(int));
-  MOCK_METHOD1(SetMaxHeight, void(int));
-  MOCK_METHOD1(SetMinWidth, void(int));
-  MOCK_METHOD1(SetMinHeight, void(int));
-
-  using SimpleItem::geo_parameters_changed;
-  using SimpleItem::rect_;
-  using SimpleItem::natural_;
-  using SimpleItem::max_;
-  using SimpleItem::min_;
-};
-
-MockItem::Ptr SizedMockItem(int w, int h)
-{
-  auto item = std::make_shared<MockItem::Nice>();
-  item->SetSize(w, h);
-  return item;
-}
-
-MockItem::Ptr RandomMockItem()
-{
-  return SizedMockItem(g_random_int_range(10, 100), g_random_int_range(10, 100));
 }
 
 struct SigReceiver : sigc::trackable
