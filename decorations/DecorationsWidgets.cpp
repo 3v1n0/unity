@@ -34,6 +34,8 @@ CompositeScreen* cscreen_ = CompositeScreen::get(screen);
 
 Item::Item()
   : visible(true)
+  , sensitive(true)
+  , mouse_owner(false)
   , max_(std::numeric_limits<int>::max(), std::numeric_limits<int>::max())
 {}
 

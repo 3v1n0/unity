@@ -40,6 +40,8 @@ public:
   virtual ~Item() = default;
 
   nux::Property<bool> visible;
+  nux::Property<bool> sensitive;
+  nux::Property<bool> mouse_owner;
 
   CompRect const& Geometry() const;
   virtual int GetNaturalWidth() const;
@@ -50,7 +52,7 @@ public:
   virtual void SetY(int y) { SetCoords(Geometry().x(), y); }
   virtual void SetSize(int width, int height);
   virtual void SetWidth(int width) { SetSize(width, Geometry().height()); }
-  virtual void SetHeight(int height)  { SetSize(Geometry().width(), height); };
+  virtual void SetHeight(int height) { SetSize(Geometry().width(), height); };
 
   virtual void SetMaxWidth(int max_width);
   virtual void SetMaxHeight(int max_height);
@@ -65,15 +67,23 @@ public:
   void Damage();
   virtual void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask) {}
 
+  virtual void MotionEvent(CompPoint const& p) {}
+  virtual void ButtonDownEvent(CompPoint const& p, unsigned button) {}
+  virtual void ButtonUpEvent(CompPoint const& p, unsigned button) {}
+
 protected:
   virtual CompRect& InternalGeo() = 0;
   sigc::signal<void> geo_parameters_changed;
 
+private:
+  Item(Item const&) = delete;
+  Item& operator=(Item const&) = delete;
+
+protected:
   nux::Size max_;
   nux::Size min_;
   nux::Size natural_;
 };
-
 
 class SimpleItem : public Item
 {
