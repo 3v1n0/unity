@@ -23,6 +23,7 @@ set (DECORATION_SOURCES
      DecorationsManager.cpp
      DecoratedWindow.cpp
      DecorationsWidgets.cpp
+     DecorationsWindowButton.cpp
      DecorationsInputMixer.cpp
      )
 

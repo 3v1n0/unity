@@ -19,6 +19,7 @@
 
 #include <NuxCore/Logger.h>
 #include "DecorationsPriv.h"
+#include "DecorationsWindowButton.h"
 
 namespace unity
 {
@@ -31,19 +32,6 @@ DECLARE_LOGGER(logger, "unity.decoration.window");
 const unsigned GRAB_BORDER = 10;
 }
 
-class Window::Impl::WindowButton : public TexturedItem
-{
-public:
-  WindowButton(WindowButtonType type)
-  {
-    texture_.SetTexture(manager_->impl_->GetButtonTexture(type, mouse_owner() ? WidgetState::PRELIGHT : WidgetState::NORMAL));
-    mouse_owner.changed.connect([this, type] (bool v) {
-      texture_.SetTexture(manager_->impl_->GetButtonTexture(type, v ? WidgetState::PRELIGHT : WidgetState::NORMAL));
-      Damage();
-    });
-  }
-};
-
 Window::Impl::Impl(Window* parent, CompWindow* win)
   : active(false)
   , parent_(parent)
@@ -53,8 +41,9 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , frame_(0)
   , dirty_geo_(true)
 {
-  active.changed.connect([this] (bool) {
+  active.changed.connect([this] (bool active) {
     bg_textures_.clear();
+    if (top_layout_) top_layout_->focused = active;
     parent_->UpdateDecorationPositionDelayed();
     cwin_->damageOutputExtents();
   });
@@ -258,9 +247,9 @@ void Window::Impl::SetupTopLayout()
   top_layout_->left_padding = padding.left;
   top_layout_->right_padding = padding.right;
   top_layout_->top_padding = padding.top;
-  top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::CLOSE));
-  top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::MINIMIZE));
-  top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::MAXIMIZE));
+  top_layout_->Append(std::make_shared<Button>(WindowButtonType::CLOSE));
+  top_layout_->Append(std::make_shared<Button>(WindowButtonType::MINIMIZE));
+  top_layout_->Append(std::make_shared<Button>(WindowButtonType::MAXIMIZE));
 
   input_mixer_->PushToFront(top_layout_);
 }

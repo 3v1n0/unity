@@ -29,7 +29,7 @@
 
 #include "DecorationStyle.h"
 #include "DecorationsManager.h"
-#include "DecorationsWidgets.h"
+#include "DecorationsInputMixer.h"
 
 class CompRegion;
 
@@ -89,7 +89,7 @@ private:
   void RenderDecorationTexture(Side, nux::Geometry const&);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
-  class WindowButton;
+  class Button;
   friend class Window;
   friend struct Manager::Impl;
 
@@ -105,7 +105,9 @@ private:
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
+  InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
+  Item::Ptr top_area_;
 };
 
 struct Manager::Impl : sigc::trackable
@@ -115,6 +117,7 @@ struct Manager::Impl : sigc::trackable
 
   bool HandleEventBefore(XEvent*);
   bool HandleEventAfter(XEvent*);
+  bool HandleFrameEvent(XEvent*);
 
   cu::SimpleTexture::Ptr const& GetButtonTexture(WindowButtonType, WidgetState) const;
 
