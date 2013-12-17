@@ -78,6 +78,18 @@ struct MockItem : public SimpleItem
   using SimpleItem::min_;
 };
 
+MockItem::Ptr SizedMockItem(int w, int h)
+{
+  auto item = std::make_shared<MockItem::Nice>();
+  item->SetSize(w, h);
+  return item;
+}
+
+MockItem::Ptr RandomMockItem()
+{
+  return SizedMockItem(g_random_int_range(10, 100), g_random_int_range(10, 100));
+}
+
 struct SigReceiver : sigc::trackable
 {
   typedef NiceMock<SigReceiver> Nice;
@@ -101,6 +113,21 @@ struct TestDecorationItem : Test
   MockItem::Nice item;
   SigReceiver::Nice sig_receiver;
 };
+
+TEST_F(TestDecorationItem, DefaultVisibilty)
+{
+  EXPECT_TRUE(item.visible());
+}
+
+TEST_F(TestDecorationItem, DefaultSensitivity)
+{
+  EXPECT_TRUE(item.sensitive());
+}
+
+TEST_F(TestDecorationItem, DefaultMouseOwnership)
+{
+  EXPECT_FALSE(item.mouse_owner());
+}
 
 TEST_F(TestDecorationItem, DefaultMaxSize)
 {
@@ -218,18 +245,6 @@ TEST_F(TestDecorationItem, SetY)
 
 struct TestDecorationLayout : Test
 {
-  MockItem::Ptr SizedMockItem(int w, int h)
-  {
-    auto item = std::make_shared<MockItem::Nice>();
-    item->SetSize(w, h);
-    return item;
-  }
-
-  MockItem::Ptr RandomMockItem()
-  {
-    return SizedMockItem(g_random_int_range(10, 100), g_random_int_range(10, 100));
-  }
-
   Layout layout;
 };
 
@@ -344,5 +359,7 @@ TEST_F(TestDecorationLayout, ExpandWithMaxWidth)
   for (auto const& item : layout.Items())
     ASSERT_EQ(item->GetNaturalWidth(), item->Geometry().width());
 }
+
+//
 
 }
