@@ -72,6 +72,11 @@ TEST_F(TestDecorationItem, DefaultMouseOwnership)
   EXPECT_FALSE(item.mouse_owner());
 }
 
+TEST_F(TestDecorationItem, DefaultFocused)
+{
+  EXPECT_FALSE(item.focused());
+}
+
 TEST_F(TestDecorationItem, DefaultMaxSize)
 {
   MockItem item;
@@ -302,6 +307,33 @@ TEST_F(TestDecorationLayout, ExpandWithMaxWidth)
   for (auto const& item : layout.Items())
     ASSERT_EQ(item->GetNaturalWidth(), item->Geometry().width());
 }
+
+TEST_F(TestDecorationLayout, Focused)
+{
+  for (int i = 0; i < 100; ++i)
+  {
+    auto const& item = RandomMockItem();
+    layout.Append(item);
+    ASSERT_FALSE(item->focused());
+  }
+
+  layout.focused = true;
+
+  for (auto const& item : layout.Items())
+    ASSERT_TRUE(item->focused());
+}
+
+TEST_F(TestDecorationLayout, AddToFocused)
+{
+  auto const& item = RandomMockItem();
+  layout.focused = true;
+  ASSERT_FALSE(item->focused());
+
+  layout.Append(item);
+  ASSERT_TRUE(item->focused());
+}
+
+
 
 //
 
