@@ -36,7 +36,11 @@ class Window::Impl::WindowButton : public TexturedItem
 public:
   WindowButton(WindowButtonType type)
   {
-    texture_.SetTexture(manager_->impl_->GetButtonTexture(type, WidgetState::NORMAL));
+    texture_.SetTexture(manager_->impl_->GetButtonTexture(type, mouse_owner() ? WidgetState::PRELIGHT : WidgetState::NORMAL));
+    mouse_owner.changed.connect([this, type] (bool v) {
+      texture_.SetTexture(manager_->impl_->GetButtonTexture(type, v ? WidgetState::PRELIGHT : WidgetState::NORMAL));
+      Damage();
+    });
   }
 };
 
@@ -245,6 +249,10 @@ void Window::Impl::SetupTopLayout()
   if (top_layout_)
     return;
 
+  top_area_ = std::make_shared<SimpleItem>();
+  input_mixer_ = std::make_shared<InputMixer>();
+  input_mixer_->PushToFront(top_area_);
+
   auto padding = Style::Get()->Padding(Side::TOP);
   top_layout_ = std::make_shared<Layout>();
   top_layout_->left_padding = padding.left;
@@ -253,6 +261,8 @@ void Window::Impl::SetupTopLayout()
   top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::CLOSE));
   top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::MINIMIZE));
   top_layout_->Append(std::make_shared<WindowButton>(WindowButtonType::MAXIMIZE));
+
+  input_mixer_->PushToFront(top_layout_);
 }
 
 bool Window::Impl::ShadowDecorated() const
@@ -347,6 +357,10 @@ void Window::Impl::UpdateDecorationTextures()
 
   top_layout_->SetCoords(geo.x(), geo.y());
   top_layout_->SetSize(geo.width(), border.top);
+
+  auto const& input = win_->inputRect();
+  top_area_->SetCoords(input.x(), input.y());
+  top_area_->SetSize(input.width(), input.height() / 2);
 }
 
 void Window::Impl::ComputeShadowQuads()
