@@ -31,7 +31,7 @@ class InputMixer
 {
 public:
   typedef std::shared_ptr<InputMixer> Ptr;
-  InputMixer() = default;
+  InputMixer();
 
   void PushToFront(Item::Ptr const&);
   void PushToBack(Item::Ptr const&);
@@ -57,6 +57,7 @@ private:
 
   Item::List items_;
   Item::Ptr last_mouse_owner_;
+  bool mouse_down_;
 };
 
 } // decoration namespace

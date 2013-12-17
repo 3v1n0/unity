@@ -29,6 +29,10 @@ namespace
 DECLARE_LOGGER(logger, "unity.decorations.inputmixer");
 }
 
+InputMixer::InputMixer()
+  : mouse_down_(false)
+{}
+
 void InputMixer::PushToFront(Item::Ptr const& item)
 {
   if (!item)
@@ -125,17 +129,20 @@ Item::Ptr const& InputMixer::GetMouseOwner() const
 
 void InputMixer::EnterEvent(CompPoint const& point)
 {
-  UpdateMouseOwner(point);
+  if (!mouse_down_)
+    UpdateMouseOwner(point);
 }
 
 void InputMixer::LeaveEvent(CompPoint const& point)
 {
-  UnsetMouseOwner();
+  if (!mouse_down_)
+    UnsetMouseOwner();
 }
 
 void InputMixer::MotionEvent(CompPoint const& point)
 {
-  UpdateMouseOwner(point);
+  if (!mouse_down_)
+    UpdateMouseOwner(point);
 
   if (last_mouse_owner_)
     last_mouse_owner_->MotionEvent(point);
@@ -143,14 +150,23 @@ void InputMixer::MotionEvent(CompPoint const& point)
 
 void InputMixer::ButtonDownEvent(CompPoint const& point, unsigned button)
 {
+  mouse_down_ = true;
+
   if (last_mouse_owner_)
     last_mouse_owner_->ButtonDownEvent(point, button);
 }
 
 void InputMixer::ButtonUpEvent(CompPoint const& point, unsigned button)
 {
+  mouse_down_ = false;
+
   if (last_mouse_owner_)
+  {
     last_mouse_owner_->ButtonUpEvent(point, button);
+
+    if (!last_mouse_owner_->Geometry().contains(point))
+      UpdateMouseOwner(point);
+  }
 }
 
 } // decoration namespace
