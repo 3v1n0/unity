@@ -41,6 +41,7 @@ public:
   virtual ~Item() = default;
 
   nux::Property<bool> visible;
+  nux::Property<bool> focused;
   nux::Property<bool> sensitive;
   nux::Property<bool> mouse_owner;
 

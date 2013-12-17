@@ -34,6 +34,7 @@ CompositeScreen* cscreen_ = CompositeScreen::get(screen);
 
 Item::Item()
   : visible(true)
+  , focused(false)
   , sensitive(true)
   , mouse_owner(false)
   , max_(std::numeric_limits<int>::max(), std::numeric_limits<int>::max())
@@ -190,6 +191,10 @@ Layout::Layout()
   , bottom_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
 {
   geo_parameters_changed.connect(sigc::mem_fun(this, &Layout::Relayout));
+  focused.changed.connect([this] (bool focused) {
+    for (auto const& item : items_)
+      item->focused = focused;
+  });
 }
 
 void Layout::Append(Item::Ptr const& item)
@@ -198,6 +203,7 @@ void Layout::Append(Item::Ptr const& item)
     return;
 
   items_.push_back(item);
+  item->focused = focused();
   item->visible.changed.connect(sigc::hide(sigc::mem_fun(this, &Layout::Relayout)));
   Relayout();
 }
