@@ -225,6 +225,14 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
     case ConfigureNotify:
       UpdateWindow(event->xconfigure.window);
       break;
+    case MotionNotify:
+    case EnterNotify:
+    case LeaveNotify:
+    case ButtonPress:
+    case ButtonRelease:
+      if (HandleFrameEvent(event))
+        return true;
+      break;
     default:
       if (screen->XShape() && event->type == screen->shapeEvent() + ShapeNotify)
       {
@@ -243,6 +251,50 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
   }
 
   return false;
+}
+
+bool Manager::Impl::HandleFrameEvent(XEvent* event)
+{
+  auto const& win = GetWindowByFrame(event->xany.window);
+
+  if (!win)
+    return false;
+
+  auto const& input_mixer = win->impl_->input_mixer_;
+
+  if (!input_mixer)
+    return false;
+
+  switch (event->type)
+  {
+    case MotionNotify:
+    {
+      input_mixer->MotionEvent(CompPoint(event->xmotion.x_root, event->xmotion.y_root));
+      break;
+    }
+    case EnterNotify:
+    {
+      input_mixer->EnterEvent(CompPoint(event->xcrossing.x_root, event->xcrossing.y_root));
+      break;
+    }
+    case LeaveNotify:
+    {
+      input_mixer->LeaveEvent(CompPoint(event->xcrossing.x_root, event->xcrossing.y_root));
+      break;
+    }
+    case ButtonPress:
+    {
+      input_mixer->ButtonDownEvent(CompPoint(event->xbutton.x_root, event->xbutton.y_root), event->xbutton.button);
+      break;
+    }
+    case ButtonRelease:
+    {
+      input_mixer->ButtonUpEvent(CompPoint(event->xbutton.x_root, event->xbutton.y_root), event->xbutton.button);
+      break;
+    }
+  }
+
+  return true;
 }
 
 // Public APIs
