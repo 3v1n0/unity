@@ -28,6 +28,7 @@
 #include "HudIcon.h"
 #include "HudButton.h"
 #include "HudAbstractView.h"
+#include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/OverlayRenderer.h"
 #include "unity-shared/OverlayWindowButtons.h"
 #include "unity-shared/SearchBar.h"

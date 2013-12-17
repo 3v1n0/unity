@@ -353,8 +353,11 @@ void View::AboutToShow()
 
 void View::AboutToHide()
 {
-  nux::Geometry geo = {0, 0, 0, 0};
-  renderer_.UpdateBlurBackgroundSize(geo, GetAbsoluteGeometry(), true);
+  if (BackgroundEffectHelper::blur_type == BLUR_STATIC)
+  {
+    nux::Geometry geo = {0, 0, 0, 0};
+    renderer_.UpdateBlurBackgroundSize(geo, GetAbsoluteGeometry(), true);
+  }
 
   visible_ = false;
   overlay_window_buttons_->Hide();
