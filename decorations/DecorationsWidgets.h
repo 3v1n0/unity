@@ -35,6 +35,7 @@ class Item : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Item> Ptr;
+  typedef std::list<Item::Ptr> List;
 
   Item();
   virtual ~Item() = default;
@@ -124,14 +125,14 @@ public:
   nux::Property<int> bottom_padding;
 
   void Append(Item::Ptr const&);
-  std::list<Item::Ptr> const& Items() const;
+  Item::List const& Items() const;
 
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 private:
   void Relayout();
   bool SetPadding(int& target, int new_value);
-  std::list<Item::Ptr> items_;
+  Item::List items_;
 };
 
 } // decoration namespace

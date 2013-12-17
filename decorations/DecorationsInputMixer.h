@@ -37,6 +37,7 @@ public:
   void PushToBack(Item::Ptr const&);
   void Remove(Item::Ptr const&);
 
+  Item::List const& Items() const;
   Item::Ptr const& GetMouseOwner() const;
 
   void EnterEvent(CompPoint const&);
@@ -52,9 +53,9 @@ private:
   void UpdateMouseOwner(CompPoint const&);
   void UnsetMouseOwner();
   Item::Ptr GetMatchingItem(CompPoint const&);
-  Item::Ptr GetMatchingItemRecursive(std::list<Item::Ptr> const&, CompPoint const&);
+  Item::Ptr GetMatchingItemRecursive(Item::List const&, CompPoint const&);
 
-  std::list<Item::Ptr> items_;
+  Item::List items_;
   Item::Ptr last_mouse_owner_;
 };
 

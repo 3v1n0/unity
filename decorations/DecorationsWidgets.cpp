@@ -297,7 +297,7 @@ void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAt
   }
 }
 
-std::list<Item::Ptr> const& Layout::Items() const
+Item::List const& Layout::Items() const
 {
   return items_;
 }

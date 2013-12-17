@@ -61,7 +61,12 @@ void InputMixer::Remove(Item::Ptr const& item)
   items_.remove(item);
 }
 
-Item::Ptr InputMixer::GetMatchingItemRecursive(std::list<Item::Ptr> const& items, CompPoint const& point)
+Item::List const& InputMixer::Items() const
+{
+  return items_;
+}
+
+Item::Ptr InputMixer::GetMatchingItemRecursive(Item::List const& items, CompPoint const& point)
 {
   for (auto const& item : items)
   {

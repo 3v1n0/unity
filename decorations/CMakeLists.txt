@@ -23,6 +23,7 @@ set (DECORATION_SOURCES
      DecorationsManager.cpp
      DecoratedWindow.cpp
      DecorationsWidgets.cpp
+     DecorationsInputMixer.cpp
      )
 
 add_library (decorations-lib STATIC ${DECORATION_SOURCES})
