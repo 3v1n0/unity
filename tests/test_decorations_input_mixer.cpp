@@ -271,30 +271,36 @@ TEST_F(TestDecorationInputMixer, ButtonDownEvent)
   mixer.PushToFront(item3);
 
   {
+  CompPoint point(5, 5);
   EXPECT_CALL(*item1, ButtonDownEvent(_, _)).Times(0);
   EXPECT_CALL(*item2, ButtonDownEvent(_, _)).Times(0);
-  EXPECT_CALL(*item3, ButtonDownEvent(CompPoint(5, 5), 1));
+  EXPECT_CALL(*item3, ButtonDownEvent(point, 1));
 
-  mixer.EnterEvent(CompPoint(5, 5));
-  mixer.ButtonDownEvent(CompPoint(5, 5), 1);
+  mixer.EnterEvent(point);
+  mixer.ButtonDownEvent(point, 1);
+  mixer.ButtonUpEvent(point, 1);
   }
 
   {
+  CompPoint point(15, 15);
   EXPECT_CALL(*item1, ButtonDownEvent(_, _)).Times(0);
-  EXPECT_CALL(*item2, ButtonDownEvent(CompPoint(15, 15), 2));
+  EXPECT_CALL(*item2, ButtonDownEvent(point, 2));
   EXPECT_CALL(*item3, ButtonDownEvent(_, _)).Times(0);
 
-  mixer.EnterEvent(CompPoint(15, 15));
-  mixer.ButtonDownEvent(CompPoint(15, 15), 2);
+  mixer.EnterEvent(point);
+  mixer.ButtonDownEvent(point, 2);
+  mixer.ButtonUpEvent(point, 2);
   }
 
   {
-  EXPECT_CALL(*item1, ButtonDownEvent(CompPoint(25, 25), 3));
+  CompPoint point(25, 25);
+  EXPECT_CALL(*item1, ButtonDownEvent(point, 3));
   EXPECT_CALL(*item2, ButtonDownEvent(_, _)).Times(0);
   EXPECT_CALL(*item3, ButtonDownEvent(_, _)).Times(0);
 
-  mixer.EnterEvent(CompPoint(25, 25));
-  mixer.ButtonDownEvent(CompPoint(25, 25), 3);
+  mixer.EnterEvent(point);
+  mixer.ButtonDownEvent(point, 3);
+  mixer.ButtonUpEvent(point, 3);
   }
 }
 
