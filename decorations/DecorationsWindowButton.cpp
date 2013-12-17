@@ -26,6 +26,7 @@ namespace decoration
 
 Window::Impl::Button::Button(WindowButtonType type)
   : type_(type)
+  , pressed_(false)
 {
   auto cb = sigc::hide(sigc::mem_fun(this, &Button::UpdateTexture));
   mouse_owner.changed.connect(cb);
@@ -43,11 +44,51 @@ WidgetState Window::Impl::Button::GetCurrentState() const
 {
   if (focused())
   {
-    return mouse_owner() ? WidgetState::PRELIGHT : WidgetState::NORMAL;
+    if (mouse_owner() && pressed_)
+    {
+      return WidgetState::PRESSED;
+    }
+    else if (mouse_owner())
+    {
+      return WidgetState::PRELIGHT;
+    }
+    else
+    {
+      return WidgetState::NORMAL;
+    }
   }
   else
   {
-    return mouse_owner() ? WidgetState::BACKDROP_PRELIGHT : WidgetState::BACKDROP;
+    if (mouse_owner() && pressed_)
+    {
+      return WidgetState::BACKDROP_PRESSED;
+    }
+    else if (mouse_owner())
+    {
+      return WidgetState::BACKDROP_PRELIGHT;
+    }
+    else
+    {
+      return WidgetState::BACKDROP;
+    }
+  }
+}
+
+void Window::Impl::Button::ButtonDownEvent(CompPoint const& p, unsigned button)
+{
+  if (!pressed_ && button <= 3)
+  {
+    pressed_ = true;
+    UpdateTexture();
+  }
+}
+
+void Window::Impl::Button::ButtonUpEvent(CompPoint const& p, unsigned button)
+{
+  if (pressed_ && button <= 3)
+  {
+    pressed_ = false;
+    UpdateTexture();
   }
 }
 

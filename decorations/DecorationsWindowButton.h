@@ -34,9 +34,14 @@ public:
 
   WidgetState GetCurrentState() const;
 
+  void ButtonDownEvent(CompPoint const&, unsigned button);
+  void ButtonUpEvent(CompPoint const&, unsigned button);
+
 private:
   void UpdateTexture();
+
   WindowButtonType type_;
+  bool pressed_;
 };
 
 } // decoration namespace
