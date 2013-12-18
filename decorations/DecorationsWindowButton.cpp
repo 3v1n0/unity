@@ -102,7 +102,7 @@ void Window::Impl::Button::ButtonUpEvent(CompPoint const& p, unsigned button)
     {
       case WindowButtonType::CLOSE:
         if (win_->actions() & CompWindowActionCloseMask)
-        win_->close(CurrentTime);
+          win_->close(CurrentTime);
         break;
       case WindowButtonType::MINIMIZE:
         if (win_->actions() & CompWindowActionMinimizeMask)
@@ -112,7 +112,10 @@ void Window::Impl::Button::ButtonUpEvent(CompPoint const& p, unsigned button)
         switch (button)
         {
           case Button1:
-            if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
+            if ((win_->state() & CompWindowStateMaximizedVertMask) ||
+                (win_->state() & CompWindowStateMaximizedHorzMask))
+              win_->maximize(0);
+            else if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
               win_->maximize(MAXIMIZE_STATE);
             break;
           case Button2:
