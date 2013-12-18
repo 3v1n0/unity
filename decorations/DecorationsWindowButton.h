@@ -30,7 +30,7 @@ namespace decoration
 class Window::Impl::Button : public TexturedItem
 {
 public:
-  Button(WindowButtonType type);
+  Button(CompWindow*, WindowButtonType type);
 
   WidgetState GetCurrentState() const;
 
@@ -45,6 +45,7 @@ private:
   WindowButtonType type_;
   bool pressed_;
   bool was_pressed_;
+  CompWindow* win_;
 };
 
 } // decoration namespace

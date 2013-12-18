@@ -239,9 +239,9 @@ void Window::Impl::SetupTopLayout()
   top_layout_->left_padding = padding.left;
   top_layout_->right_padding = padding.right;
   top_layout_->top_padding = padding.top;
-  top_layout_->Append(std::make_shared<Button>(WindowButtonType::CLOSE));
-  top_layout_->Append(std::make_shared<Button>(WindowButtonType::MINIMIZE));
-  top_layout_->Append(std::make_shared<Button>(WindowButtonType::MAXIMIZE));
+  top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::CLOSE));
+  top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MINIMIZE));
+  top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MAXIMIZE));
 
   input_mixer_->PushToFront(top_layout_);
 }

@@ -24,10 +24,11 @@ namespace unity
 namespace decoration
 {
 
-Window::Impl::Button::Button(WindowButtonType type)
+Window::Impl::Button::Button(CompWindow* win, WindowButtonType type)
   : type_(type)
   , pressed_(false)
   , was_pressed_(false)
+  , win_(win)
 {
   auto cb = sigc::hide(sigc::mem_fun(this, &Button::UpdateTexture));
   mouse_owner.changed.connect(cb);
@@ -82,7 +83,7 @@ WidgetState Window::Impl::Button::GetCurrentState() const
 
 void Window::Impl::Button::ButtonDownEvent(CompPoint const& p, unsigned button)
 {
-  if (!pressed_ && button <= 3)
+  if (!pressed_ && button <= Button3)
   {
     pressed_ = true;
     was_pressed_ = true;
@@ -92,10 +93,51 @@ void Window::Impl::Button::ButtonDownEvent(CompPoint const& p, unsigned button)
 
 void Window::Impl::Button::ButtonUpEvent(CompPoint const& p, unsigned button)
 {
-  if (pressed_ && button <= 3)
+  if (pressed_ && button <= Button3)
   {
     pressed_ = false;
     UpdateTexture();
+
+    switch (type_)
+    {
+      case WindowButtonType::CLOSE:
+        if (win_->actions() & CompWindowActionCloseMask)
+        win_->close(CurrentTime);
+        break;
+      case WindowButtonType::MINIMIZE:
+        if (win_->actions() & CompWindowActionMinimizeMask)
+          win_->minimize();
+        break;
+      case WindowButtonType::MAXIMIZE:
+        switch (button)
+        {
+          case Button1:
+            if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
+              win_->maximize(MAXIMIZE_STATE);
+            break;
+          case Button2:
+            if (win_->actions() & CompWindowActionMaximizeVertMask)
+            {
+              if (!(win_->state() & CompWindowStateMaximizedVertMask))
+                win_->maximize(CompWindowStateMaximizedVertMask);
+              else
+                win_->maximize(0);
+            }
+            break;
+          case Button3:
+            if (win_->actions() & CompWindowActionMaximizeHorzMask)
+            {
+              if (!(win_->state() & CompWindowStateMaximizedHorzMask))
+                win_->maximize(CompWindowStateMaximizedHorzMask);
+              else
+                win_->maximize(0);
+            }
+            break;
+        }
+        break;
+      default:
+        break;
+    }
   }
 
   was_pressed_ = false;
