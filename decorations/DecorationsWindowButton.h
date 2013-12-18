@@ -34,6 +34,7 @@ public:
 
   WidgetState GetCurrentState() const;
 
+protected:
   void ButtonDownEvent(CompPoint const&, unsigned button);
   void ButtonUpEvent(CompPoint const&, unsigned button);
   void MotionEvent(CompPoint const&);

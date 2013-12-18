@@ -69,13 +69,14 @@ public:
   void Damage();
   virtual void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask) {}
 
-  virtual void MotionEvent(CompPoint const&) {}
-  virtual void ButtonDownEvent(CompPoint const&, unsigned button) {}
-  virtual void ButtonUpEvent(CompPoint const&, unsigned button) {}
-
 protected:
   virtual CompRect& InternalGeo() = 0;
   sigc::signal<void> geo_parameters_changed;
+
+  friend class InputMixer;
+  virtual void MotionEvent(CompPoint const&) {}
+  virtual void ButtonDownEvent(CompPoint const&, unsigned button) {}
+  virtual void ButtonUpEvent(CompPoint const&, unsigned button) {}
 
 private:
   Item(Item const&) = delete;
