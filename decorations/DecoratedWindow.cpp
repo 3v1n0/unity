@@ -138,8 +138,8 @@ void Window::Impl::UpdateFrame()
     XGrabServer(dpy);
 
     XSetWindowAttributes attr;
-    attr.event_mask = StructureNotifyMask;
-    // attr.event_mask = ButtonPressMask | EnterWindowMask | LeaveWindowMask | ExposureMask;
+    attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask |
+                      EnterWindowMask | LeaveWindowMask | PointerMotionMask;
     attr.override_redirect = True;
 
     auto parent = win_->frame();
@@ -151,14 +151,6 @@ void Window::Impl::UpdateFrame()
       XShapeSelectInput(dpy, frame_, ShapeNotifyMask);
 
     XMapWindow(dpy, frame_);
-
-    XGrabButton(dpy, AnyButton, AnyModifier, frame_, True,
-                ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeSync,
-                GrabModeSync, None, None);
-
-    XSelectInput(dpy, frame_, ButtonPressMask | ButtonReleaseMask | EnterWindowMask |
-                              LeaveWindowMask | PointerMotionMask | ButtonMotionMask |
-                              PropertyChangeMask /*| FocusChangeMask*/);
 
     XUngrabServer(dpy);
   }
