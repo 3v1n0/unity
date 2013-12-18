@@ -20,7 +20,7 @@
 #ifndef UNITY_DECORATION_WIDGETS
 #define UNITY_DECORATION_WIDGETS
 
-#include <list>
+#include <deque>
 #include <NuxCore/Size.h>
 #include <NuxCore/Property.h>
 #include "CompizUtils.h"
@@ -35,7 +35,7 @@ class Item : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Item> Ptr;
-  typedef std::list<Item::Ptr> List;
+  typedef std::deque<Item::Ptr> List;
 
   Item();
   virtual ~Item() = default;
@@ -118,6 +118,7 @@ protected:
 class BasicContainer : public SimpleItem
 {
 public:
+  BasicContainer();
   Item::List const& Items() const { return items_; }
 
 protected:

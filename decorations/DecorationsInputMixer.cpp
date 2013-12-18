@@ -62,7 +62,9 @@ void InputMixer::Remove(Item::Ptr const& item)
   if (item == last_mouse_owner_)
     UnsetMouseOwner();
 
-  items_.remove(item);
+  auto it = std::find(items_.begin(), items_.end(), item);
+  if (it != items_.end())
+    items_.erase(it);
 }
 
 Item::List const& InputMixer::Items() const
