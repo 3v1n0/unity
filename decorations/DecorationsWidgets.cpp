@@ -185,6 +185,7 @@ void TexturedItem::SetCoords(int x, int y)
 
 BasicContainer::BasicContainer()
 {
+  geo_parameters_changed.connect(sigc::mem_fun(this, &BasicContainer::Relayout));
   focused.changed.connect([this] (bool focused) {
     for (auto const& item : items_)
       item->focused = focused;
@@ -199,9 +200,7 @@ Layout::Layout()
   , right_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
   , top_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
   , bottom_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
-{
-  geo_parameters_changed.connect(sigc::mem_fun(this, &Layout::Relayout));
-}
+{}
 
 void Layout::Append(Item::Ptr const& item)
 {

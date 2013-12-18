@@ -122,6 +122,7 @@ public:
   Item::List const& Items() const { return items_; }
 
 protected:
+  virtual void Relayout() = 0;
   bool IsContainer() const { return true; }
 
   Item::List items_;

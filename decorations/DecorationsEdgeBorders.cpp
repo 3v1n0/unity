@@ -67,7 +67,6 @@ EdgeBorders::EdgeBorders(CompWindow* win)
   items_[unsigned(Edge::Type::BOTTOM_RIGHT)] = item;
 
   Relayout();
-  geo_parameters_changed.connect(sigc::mem_fun(this, &EdgeBorders::Relayout));
 }
 
 void EdgeBorders::Relayout()
