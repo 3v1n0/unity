@@ -57,10 +57,10 @@ int main(int argc, char* argv[])
   std::cout << "---" << std::endl;
   std::cout << "Title alignment: " << style->TitleAlignment() << std::endl;
   std::cout << "---" << std::endl;
-  std::cout << "Top padding, top: " << style->Padding(Side::TOP) << std::endl;
-  std::cout << "Top padding, left: " << style->Padding(Side::LEFT) << std::endl;
-  std::cout << "Top padding, right: " << style->Padding(Side::RIGHT) << std::endl;
-  std::cout << "Top padding, bottom: " << style->Padding(Side::BOTTOM) << std::endl;
+  std::cout << "Top border padding, top: " << style->Padding(Side::TOP) << std::endl;
+  std::cout << "Left border padding, left: " << style->Padding(Side::LEFT) << std::endl;
+  std::cout << "Right border padding, right: " << style->Padding(Side::RIGHT) << std::endl;
+  std::cout << "Bottom border padding, bottom: " << style->Padding(Side::BOTTOM) << std::endl;
   std::cout << "---" << std::endl;
 
   std::cout << "Button 'close' state 'normal' " << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::NORMAL) << std::endl;
