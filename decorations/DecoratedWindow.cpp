@@ -76,6 +76,7 @@ void Window::Impl::Undecorate()
   UnsetExtents();
   UnsetFrame();
   top_layout_.reset();
+  // input_mixer_.reset();
   bg_textures_.clear();
 }
 
@@ -239,6 +240,7 @@ void Window::Impl::SetupTopLayout()
   top_layout_->left_padding = padding.left;
   top_layout_->right_padding = padding.right;
   top_layout_->top_padding = padding.top;
+  top_layout_->focused = active();
   top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::CLOSE));
   top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MINIMIZE));
   top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MAXIMIZE));
