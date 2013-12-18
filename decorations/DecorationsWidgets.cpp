@@ -115,7 +115,7 @@ void Item::SetMaxHeight(int value)
   min_.height = std::min(min_.height, max_.height);
 
   if (Geometry().height() > max_.height)
-    InternalGeo().setHeight(std::min(GetNaturalWidth(), max_.height));
+    InternalGeo().setHeight(std::min(GetNaturalHeight(), max_.height));
 
   geo_parameters_changed.emit();
 }
