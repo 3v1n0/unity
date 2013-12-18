@@ -20,7 +20,6 @@
 #ifndef UNITY_DECORATED_WINDOW
 #define UNITY_DECORATED_WINDOW
 
-#include <NuxCore/Property.h>
 #include <memory>
 
 class CompRegion;

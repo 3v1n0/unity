@@ -29,6 +29,7 @@ namespace
 {
 const std::array<std::string, 4> BORDER_CLASSES = {"top", "left", "right", "bottom"};
 const Border DEFAULT_BORDER = {28, 1, 1, 1};
+const Border DEFAULT_INPUT_EDGES = {10, 10, 10, 10};
 
 const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
@@ -50,6 +51,9 @@ static void unity_decoration_init(UnityDecoration*) {}
 static void unity_decoration_class_init(UnityDecorationClass* klass)
 {
   auto* param = g_param_spec_boxed("extents", "Border extents", "", GTK_TYPE_BORDER, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_boxed("input-extents", "Input Border extents", "", GTK_TYPE_BORDER, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 
   param = g_param_spec_float("title-alignment", "Title Alignment", "", 0.0, 1.0, 0.0, G_PARAM_READABLE);
@@ -77,6 +81,9 @@ struct Style::Impl
 
     std::shared_ptr<GtkBorder> b(GetProperty<GtkBorder*>("extents"), gtk_border_free);
     border_ = BorderFromGtkBorder(b.get(), DEFAULT_BORDER);
+
+    b.reset(GetProperty<GtkBorder*>("input-extents"), gtk_border_free);
+    input_edges_ = BorderFromGtkBorder(b.get(), DEFAULT_INPUT_EDGES);
 
     title_alignment_ = GetProperty<gfloat>("title-alignment");
     theme_name_ = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
@@ -186,6 +193,7 @@ struct Style::Impl
   glib::Object<GtkStyleContext> ctx_;
   std::string theme_name_;
   decoration::Border border_;
+  decoration::Border input_edges_;
   float title_alignment_;
 };
 
@@ -201,23 +209,6 @@ Style::Style()
 
 Style::~Style()
 {}
-
-int Style::BorderWidth(Side side) const
-{
-  switch (side)
-  {
-    case Side::TOP:
-      return impl_->border_.top;
-    case Side::LEFT:
-      return impl_->border_.left;
-    case Side::RIGHT:
-      return impl_->border_.right;
-    case Side::BOTTOM:
-      return impl_->border_.bottom;
-  }
-
-  return 0;
-}
 
 Alignment Style::TitleAlignment() const
 {
@@ -251,6 +242,11 @@ std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) co
 Border const& Style::Border() const
 {
   return impl_->border_;
+}
+
+Border const& Style::InputBorder() const
+{
+  return impl_->input_edges_;
 }
 
 Border Style::Padding(Side s, WidgetState ws) const

@@ -29,7 +29,6 @@ namespace decoration
 namespace
 {
 DECLARE_LOGGER(logger, "unity.decoration.window");
-const unsigned GRAB_BORDER = 10;
 }
 
 Window::Impl::Impl(Window* parent, CompWindow* win)
@@ -75,8 +74,8 @@ void Window::Impl::Undecorate()
 {
   UnsetExtents();
   UnsetFrame();
-  input_mixer_.reset();
   top_layout_.reset();
+  input_mixer_.reset();
   bg_textures_.clear();
 }
 
@@ -96,17 +95,12 @@ void Window::Impl::SetupExtents()
   if (win_->hasUnmapReference())
     return;
 
-  auto const& style = Style::Get();
-  CompWindowExtents border(style->BorderWidth(Side::LEFT),
-                           style->BorderWidth(Side::RIGHT),
-                           style->BorderWidth(Side::TOP),
-                           style->BorderWidth(Side::BOTTOM));
+  auto const& sb = Style::Get()->Border();
+  CompWindowExtents border(sb.left, sb.right, sb.top, sb.bottom);
 
-  CompWindowExtents input(border);
-  input.left += GRAB_BORDER;
-  input.right += GRAB_BORDER;
-  input.top += GRAB_BORDER;
-  input.bottom += GRAB_BORDER;
+  auto const& ib = Style::Get()->Border();
+  CompWindowExtents input(sb.left + ib.left, sb.right + ib.right,
+                          sb.top + ib.top, sb.bottom + ib.bottom);
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
@@ -241,9 +235,15 @@ void Window::Impl::SetupTopLayout()
   top_layout_->right_padding = padding.right;
   top_layout_->top_padding = padding.top;
   top_layout_->focused = active();
-  top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::CLOSE));
-  top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MINIMIZE));
-  top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MAXIMIZE));
+
+  if (win_->actions() & CompWindowActionCloseMask)
+    top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::CLOSE));
+
+  if (win_->actions() & CompWindowActionMinimizeMask)
+    top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MINIMIZE));
+
+  if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
+    top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MAXIMIZE));
 
   input_mixer_->PushToFront(top_layout_);
 }

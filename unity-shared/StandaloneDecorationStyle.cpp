@@ -50,10 +50,14 @@ int main(int argc, char* argv[])
   gtk_init(&argc, &argv);
   auto const& style = Style::Get();
 
-  std::cout << "Border top: " << style->BorderWidth(Side::TOP) << std::endl;
-  std::cout << "Border left: " << style->BorderWidth(Side::LEFT) << std::endl;
-  std::cout << "Border right: " << style->BorderWidth(Side::RIGHT) << std::endl;
-  std::cout << "Border bottom: " << style->BorderWidth(Side::BOTTOM) << std::endl;
+  std::cout << "Border top: " << style->Border().top << std::endl;
+  std::cout << "Border left: " << style->Border().left << std::endl;
+  std::cout << "Border right: " << style->Border().right << std::endl;
+  std::cout << "Border bottom: " << style->Border().bottom << std::endl;
+  std::cout << "Input border top: " << style->InputBorder().top << std::endl;
+  std::cout << "Input border left: " << style->InputBorder().left << std::endl;
+  std::cout << "Input border right: " << style->InputBorder().right << std::endl;
+  std::cout << "Input border bottom: " << style->InputBorder().bottom << std::endl;
   std::cout << "---" << std::endl;
   std::cout << "Title alignment: " << style->TitleAlignment() << std::endl;
   std::cout << "---" << std::endl;

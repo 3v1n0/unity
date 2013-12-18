@@ -95,7 +95,7 @@ public:
   Alignment TitleAlignment() const;
   float TitleAlignmentValue() const;
   decoration::Border const& Border() const;
-  int BorderWidth(Side) const;
+  decoration::Border const& InputBorder() const;
   decoration::Border Padding(Side, WidgetState ws = WidgetState::NORMAL) const;
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
 
