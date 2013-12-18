@@ -75,8 +75,8 @@ void Window::Impl::Undecorate()
 {
   UnsetExtents();
   UnsetFrame();
+  input_mixer_.reset();
   top_layout_.reset();
-  // input_mixer_.reset();
   bg_textures_.clear();
 }
 
