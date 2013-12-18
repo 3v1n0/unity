@@ -18,7 +18,7 @@
  */
 
 #include <glib.h>
-#include <sstream>
+#include <gdk/gdkx.h>
 #include "PluginAdapter.h"
 #include "UScreen.h"
 

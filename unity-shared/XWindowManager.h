@@ -20,10 +20,6 @@
 #ifndef UNITYSHARED_XWINDOW_MANAGER_H
 #define UNITYSHARED_XWINDOW_MANAGER_H
 
-#include <Nux/Nux.h>
-#include <gdk/gdkx.h>
-#include <core/core.h>
-
 #include "unity-shared/WindowManager.h"
 
 namespace unity
@@ -32,12 +28,7 @@ namespace unity
 class XWindowManager : public WindowManager
 {
 public:
-  XWindowManager();
-
   virtual void StartMove(Window window_id, int x, int y);
-
-private:
-  Atom move_resize_atom_;
 };
 
 }

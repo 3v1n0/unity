@@ -17,13 +17,14 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include <Nux/Nux.h>
+#include <core/core.h>
+#include <core/atoms.h>
 #include "XWindowManager.h"
 
-
-unity::XWindowManager::XWindowManager()
-  : move_resize_atom_(XInternAtom(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
-                                 "_NET_WM_MOVERESIZE", FALSE))
+namespace
 {
+const long NET_WM_MOVERESIZE_MOVE = 8;
 }
 
 void unity::XWindowManager::StartMove(Window window_id, int x, int y)
@@ -67,10 +68,8 @@ void unity::XWindowManager::StartMove(Window window_id, int x, int y)
   ev.xclient.send_event = true;
 
   ev.xclient.window     = window_id;
-  ev.xclient.message_type = move_resize_atom_;
+  ev.xclient.message_type = Atoms::wmMoveResize;
   ev.xclient.format     = 32;
-
-  const long NET_WM_MOVERESIZE_MOVE = 8;
 
   ev.xclient.data.l[0] = x; // x_root
   ev.xclient.data.l[1] = y; // y_root
