@@ -36,12 +36,14 @@ public:
 
   void ButtonDownEvent(CompPoint const&, unsigned button);
   void ButtonUpEvent(CompPoint const&, unsigned button);
+  void MotionEvent(CompPoint const&);
 
 private:
   void UpdateTexture();
 
   WindowButtonType type_;
   bool pressed_;
+  bool was_pressed_;
 };
 
 } // decoration namespace

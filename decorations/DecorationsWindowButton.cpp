@@ -27,6 +27,7 @@ namespace decoration
 Window::Impl::Button::Button(WindowButtonType type)
   : type_(type)
   , pressed_(false)
+  , was_pressed_(false)
 {
   auto cb = sigc::hide(sigc::mem_fun(this, &Button::UpdateTexture));
   mouse_owner.changed.connect(cb);
@@ -79,6 +80,7 @@ void Window::Impl::Button::ButtonDownEvent(CompPoint const& p, unsigned button)
   if (!pressed_ && button <= 3)
   {
     pressed_ = true;
+    was_pressed_ = true;
     UpdateTexture();
   }
 }
@@ -89,6 +91,28 @@ void Window::Impl::Button::ButtonUpEvent(CompPoint const& p, unsigned button)
   {
     pressed_ = false;
     UpdateTexture();
+  }
+
+  was_pressed_ = false;
+}
+
+void Window::Impl::Button::MotionEvent(CompPoint const& p)
+{
+  if (pressed_)
+  {
+    if (!Geometry().contains(p))
+    {
+      pressed_ = false;
+      UpdateTexture();
+    }
+  }
+  else if (was_pressed_)
+  {
+    if (Geometry().contains(p))
+    {
+      pressed_ = true;
+      UpdateTexture();
+    }
   }
 }
 
