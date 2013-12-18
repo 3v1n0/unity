@@ -37,8 +37,13 @@ Window::Impl::Button::Button(WindowButtonType type)
 
 void Window::Impl::Button::UpdateTexture()
 {
-  texture_.SetTexture(manager_->impl_->GetButtonTexture(type_, GetCurrentState()));
-  Damage();
+  auto const& new_tex = manager_->impl_->GetButtonTexture(type_, GetCurrentState());
+
+  if (texture_.st != new_tex)
+  {
+    texture_.SetTexture(new_tex);
+    Damage();
+  }
 }
 
 WidgetState Window::Impl::Button::GetCurrentState() const
@@ -49,7 +54,7 @@ WidgetState Window::Impl::Button::GetCurrentState() const
     {
       return WidgetState::PRESSED;
     }
-    else if (mouse_owner())
+    else if (mouse_owner() && !was_pressed_)
     {
       return WidgetState::PRELIGHT;
     }
@@ -64,7 +69,7 @@ WidgetState Window::Impl::Button::GetCurrentState() const
     {
       return WidgetState::BACKDROP_PRESSED;
     }
-    else if (mouse_owner())
+    else if (mouse_owner() && !was_pressed_)
     {
       return WidgetState::BACKDROP_PRELIGHT;
     }
