@@ -20,12 +20,12 @@
 #include <NuxCore/Logger.h>
 #include "DecorationsPriv.h"
 #include "DecorationsWindowButton.h"
+#include "DecorationsEdgeBorders.h"
 
 namespace unity
 {
 namespace decoration
 {
-
 namespace
 {
 DECLARE_LOGGER(logger, "unity.decoration.window");
@@ -76,6 +76,7 @@ void Window::Impl::Undecorate()
   UnsetFrame();
   top_layout_.reset();
   input_mixer_.reset();
+  edge_borders_.reset();
   bg_textures_.clear();
 }
 
@@ -98,7 +99,7 @@ void Window::Impl::SetupExtents()
   auto const& sb = Style::Get()->Border();
   CompWindowExtents border(sb.left, sb.right, sb.top, sb.bottom);
 
-  auto const& ib = Style::Get()->Border();
+  auto const& ib = Style::Get()->InputBorder();
   CompWindowExtents input(sb.left + ib.left, sb.right + ib.right,
                           sb.top + ib.top, sb.bottom + ib.bottom);
 
@@ -225,9 +226,10 @@ void Window::Impl::SetupTopLayout()
   if (top_layout_)
     return;
 
-  top_area_ = std::make_shared<SimpleItem>();
   input_mixer_ = std::make_shared<InputMixer>();
-  input_mixer_->PushToFront(top_area_);
+
+  edge_borders_ = std::make_shared<EdgeBorders>(win_);
+  input_mixer_->PushToFront(edge_borders_);
 
   auto padding = Style::Get()->Padding(Side::TOP);
   top_layout_ = std::make_shared<Layout>();
@@ -330,6 +332,7 @@ void Window::Impl::UpdateDecorationTextures()
   }
 
   auto const& geo = win_->borderRect();
+  auto const& input = win_->inputRect();
   auto const& border = win_->border();
 
   bg_textures_.resize(4);
@@ -341,9 +344,8 @@ void Window::Impl::UpdateDecorationTextures()
   top_layout_->SetCoords(geo.x(), geo.y());
   top_layout_->SetSize(geo.width(), border.top);
 
-  auto const& input = win_->inputRect();
-  top_area_->SetCoords(input.x(), input.y());
-  top_area_->SetSize(input.width(), input.height() / 2);
+  edge_borders_->SetCoords(input.x(), input.y());
+  edge_borders_->SetSize(input.width(), input.height());
 }
 
 void Window::Impl::ComputeShadowQuads()

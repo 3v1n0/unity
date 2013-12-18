@@ -107,7 +107,7 @@ private:
   std::vector<cu::SimpleTextureQuad> bg_textures_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
-  Item::Ptr top_area_;
+  Item::Ptr edge_borders_;
 };
 
 struct Manager::Impl : sigc::trackable
