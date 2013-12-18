@@ -46,9 +46,6 @@ struct MockItem : public SimpleItem
     ON_CALL(*this, SetMaxHeight(_)).WillByDefault(Invoke([this] (int mh) { SimpleItem::SetMaxHeight(mh); }));
     ON_CALL(*this, SetMinWidth(_)).WillByDefault(Invoke([this] (int mw) { SimpleItem::SetMinWidth(mw); }));
     ON_CALL(*this, SetMinHeight(_)).WillByDefault(Invoke([this] (int mh) { SimpleItem::SetMinHeight(mh); }));
-    ON_CALL(*this, MotionEvent(_)).WillByDefault(Invoke([this] (CompPoint const& p) { SimpleItem::MotionEvent(p); }));
-    ON_CALL(*this, ButtonDownEvent(_, _)).WillByDefault(Invoke([this] (CompPoint const& p, unsigned b) { SimpleItem::ButtonDownEvent(p, b); }));
-    ON_CALL(*this, ButtonUpEvent(_, _)).WillByDefault(Invoke([this] (CompPoint const& p, unsigned b) { SimpleItem::ButtonUpEvent(p, b); }));
   }
 
   MOCK_CONST_METHOD0(GetNaturalWidth, int());

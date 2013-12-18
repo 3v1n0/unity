@@ -76,12 +76,11 @@ Item::Ptr InputMixer::GetMatchingItemRecursive(Item::List const& items, CompPoin
   {
     if (item->visible() && item->Geometry().contains(point))
     {
-      auto layout = std::dynamic_pointer_cast<Layout>(item);
-
-      if (!layout)
+      if (!item->IsContainer())
         return item->sensitive() ? item : nullptr;
 
-      auto const& child = GetMatchingItemRecursive(layout->Items(), point);
+      auto const& container = std::static_pointer_cast<BasicContainer>(item);
+      auto const& child = GetMatchingItemRecursive(container->Items(), point);
 
       if (child)
         return child;
