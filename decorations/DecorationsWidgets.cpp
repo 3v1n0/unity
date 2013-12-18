@@ -303,11 +303,6 @@ void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAt
   }
 }
 
-Item::List const& Layout::Items() const
-{
-  return items_;
-}
-
 bool Layout::SetPadding(int& target, int new_value)
 {
   int padding = std::max(0, new_value);

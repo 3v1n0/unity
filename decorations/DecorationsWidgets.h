@@ -73,6 +73,8 @@ protected:
   virtual CompRect& InternalGeo() = 0;
   sigc::signal<void> geo_parameters_changed;
 
+  virtual bool IsContainer() const { return false; }
+
   friend class InputMixer;
   virtual void MotionEvent(CompPoint const&) {}
   virtual void ButtonDownEvent(CompPoint const&, unsigned button) {}
@@ -113,7 +115,19 @@ protected:
 };
 
 
-class Layout : public SimpleItem
+class BasicContainer : public SimpleItem
+{
+public:
+  Item::List const& Items() const { return items_; }
+
+protected:
+  bool IsContainer() const { return true; }
+
+  Item::List items_;
+};
+
+
+class Layout : public BasicContainer
 {
 public:
   typedef std::shared_ptr<Layout> Ptr;
@@ -127,14 +141,12 @@ public:
   nux::Property<int> bottom_padding;
 
   void Append(Item::Ptr const&);
-  Item::List const& Items() const;
 
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 private:
   void Relayout();
   bool SetPadding(int& target, int new_value);
-  Item::List items_;
 };
 
 } // decoration namespace
