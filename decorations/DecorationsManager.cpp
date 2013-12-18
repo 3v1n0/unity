@@ -193,6 +193,14 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
         UpdateWindow(event->xclient.window);
       }
       break;
+    case MotionNotify:
+    case EnterNotify:
+    case LeaveNotify:
+    case ButtonPress:
+    case ButtonRelease:
+      if (HandleFrameEvent(event))
+        return true;
+      break;
   }
 
   return false;
@@ -224,14 +232,6 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
       break;
     case ConfigureNotify:
       UpdateWindow(event->xconfigure.window);
-      break;
-    case MotionNotify:
-    case EnterNotify:
-    case LeaveNotify:
-    case ButtonPress:
-    case ButtonRelease:
-      if (HandleFrameEvent(event))
-        return true;
       break;
     default:
       if (screen->XShape() && event->type == screen->shapeEvent() + ShapeNotify)
