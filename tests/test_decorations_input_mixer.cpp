@@ -89,6 +89,36 @@ TEST_F(TestDecorationInputMixer, PushToBackItem)
   EXPECT_EQ(item2, *std::next(items.begin(), 2));
 }
 
+TEST_F(TestDecorationInputMixer, RemoveItem)
+{
+  auto item1 = RandomMockItem();
+  mixer.PushToFront(item1);
+
+  auto item2 = RandomMockItem();
+  mixer.PushToFront(item2);
+
+  auto item3 = RandomMockItem();
+  mixer.PushToFront(item3);
+
+  auto const& items = mixer.Items();
+  ASSERT_EQ(3, items.size());
+
+  mixer.Remove(item2);
+  ASSERT_EQ(2, items.size());
+  EXPECT_EQ(item3, *std::next(items.begin(), 0));
+  EXPECT_EQ(item1, *std::next(items.begin(), 1));
+
+  mixer.Remove(item1);
+  ASSERT_EQ(1, items.size());
+  EXPECT_EQ(item3, *std::next(items.begin(), 0));
+
+  mixer.EnterEvent(CompPoint(item3->Geometry().x2(), item3->Geometry().y1()));
+  ASSERT_EQ(item3, mixer.GetMouseOwner());
+
+  mixer.Remove(item3);
+  ASSERT_TRUE(items.empty());
+  ASSERT_EQ(nullptr, mixer.GetMouseOwner());
+}
 
 TEST_F(TestDecorationInputMixer, EnterEvent)
 {
