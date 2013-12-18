@@ -24,6 +24,7 @@ set (DECORATION_SOURCES
      DecoratedWindow.cpp
      DecorationsWidgets.cpp
      DecorationsWindowButton.cpp
+     DecorationsEdge.cpp
      DecorationsInputMixer.cpp
      )
 
