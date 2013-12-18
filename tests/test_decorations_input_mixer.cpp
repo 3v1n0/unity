@@ -155,28 +155,30 @@ TEST_F(TestDecorationInputMixer, MotionEvent)
   mixer.PushToFront(item3);
 
   {
+  CompPoint point(5, 5);
   EXPECT_CALL(sig1, MouseOwnerChanged(_)).Times(0);
   EXPECT_CALL(sig2, MouseOwnerChanged(_)).Times(0);
   EXPECT_CALL(sig3, MouseOwnerChanged(true));
   EXPECT_CALL(*item1, MotionEvent(_)).Times(0);
   EXPECT_CALL(*item2, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item3, MotionEvent(CompPoint(5, 5)));
+  EXPECT_CALL(*item3, MotionEvent(point));
 
-  mixer.MotionEvent(CompPoint(5, 5));
+  mixer.MotionEvent(point);
 
   ASSERT_TRUE(item3->mouse_owner());
   ASSERT_EQ(item3, mixer.GetMouseOwner());
   }
 
   {
+  CompPoint point(15, 15);
   EXPECT_CALL(sig1, MouseOwnerChanged(_)).Times(0);
   EXPECT_CALL(sig2, MouseOwnerChanged(true));
   EXPECT_CALL(sig3, MouseOwnerChanged(false));
   EXPECT_CALL(*item1, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item2, MotionEvent(CompPoint(15, 15)));
+  EXPECT_CALL(*item2, MotionEvent(point));
   EXPECT_CALL(*item3, MotionEvent(_)).Times(0);
 
-  mixer.MotionEvent(CompPoint(15, 15));
+  mixer.MotionEvent(point);
 
   ASSERT_FALSE(item3->mouse_owner());
   ASSERT_TRUE(item2->mouse_owner());
@@ -184,14 +186,15 @@ TEST_F(TestDecorationInputMixer, MotionEvent)
   }
 
   {
+  CompPoint point(25, 25);
   EXPECT_CALL(sig1, MouseOwnerChanged(true));
   EXPECT_CALL(sig2, MouseOwnerChanged(false));
   EXPECT_CALL(sig3, MouseOwnerChanged(_)).Times(0);
-  EXPECT_CALL(*item1, MotionEvent(CompPoint(25, 25)));
+  EXPECT_CALL(*item1, MotionEvent(point));
   EXPECT_CALL(*item2, MotionEvent(_)).Times(0);
   EXPECT_CALL(*item3, MotionEvent(_)).Times(0);
 
-  mixer.MotionEvent(CompPoint(25, 25));
+  mixer.MotionEvent(point);
 
   ASSERT_FALSE(item2->mouse_owner());
   ASSERT_TRUE(item1->mouse_owner());
@@ -316,30 +319,85 @@ TEST_F(TestDecorationInputMixer, ButtonUpEvent)
   mixer.PushToFront(item3);
 
   {
+  CompPoint point(5, 5);
   EXPECT_CALL(*item1, ButtonUpEvent(_, _)).Times(0);
   EXPECT_CALL(*item2, ButtonUpEvent(_, _)).Times(0);
-  EXPECT_CALL(*item3, ButtonUpEvent(CompPoint(5, 5), 1));
+  EXPECT_CALL(*item3, ButtonUpEvent(point, 1));
 
-  mixer.EnterEvent(CompPoint(5, 5));
-  mixer.ButtonUpEvent(CompPoint(5, 5), 1);
+  mixer.EnterEvent(point);
+  mixer.ButtonUpEvent(point, 1);
   }
 
   {
+  CompPoint point(15, 15);
   EXPECT_CALL(*item1, ButtonUpEvent(_, _)).Times(0);
-  EXPECT_CALL(*item2, ButtonUpEvent(CompPoint(15, 15), 2));
+  EXPECT_CALL(*item2, ButtonUpEvent(point, 2));
   EXPECT_CALL(*item3, ButtonUpEvent(_, _)).Times(0);
 
-  mixer.EnterEvent(CompPoint(15, 15));
-  mixer.ButtonUpEvent(CompPoint(15, 15), 2);
+  mixer.EnterEvent(point);
+  mixer.ButtonUpEvent(point, 2);
   }
 
   {
-  EXPECT_CALL(*item1, ButtonUpEvent(CompPoint(25, 25), 3));
+  CompPoint point(25, 25);
+  EXPECT_CALL(*item1, ButtonUpEvent(point, 3));
   EXPECT_CALL(*item2, ButtonUpEvent(_, _)).Times(0);
   EXPECT_CALL(*item3, ButtonUpEvent(_, _)).Times(0);
 
-  mixer.EnterEvent(CompPoint(25, 25));
-  mixer.ButtonUpEvent(CompPoint(25, 25), 3);
+  mixer.EnterEvent(point);
+  mixer.ButtonUpEvent(point, 3);
+  }
+}
+
+TEST_F(TestDecorationInputMixer, ButtonDownEventGrab)
+{
+  auto item1 = SizedMockItem(30, 30);
+  mixer.PushToFront(item1);
+
+  auto item2 = SizedMockItem(20, 20);
+  mixer.PushToFront(item2);
+
+  auto item3 = SizedMockItem(10, 10);
+  mixer.PushToFront(item3);
+
+  {
+  CompPoint point(5, 5);
+  EXPECT_CALL(*item1, ButtonDownEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonDownEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonDownEvent(point, 1));
+
+  mixer.EnterEvent(point);
+  mixer.ButtonDownEvent(point, 1);
+  ASSERT_TRUE(item3->mouse_owner());
+  }
+
+  {
+  CompPoint point(15, 15);
+  EXPECT_CALL(*item1, MotionEvent(_)).Times(0);
+  EXPECT_CALL(*item2, MotionEvent(_)).Times(0);
+  EXPECT_CALL(*item3, MotionEvent(point));
+  mixer.MotionEvent(point);
+  ASSERT_TRUE(item3->mouse_owner());
+  }
+
+  {
+  CompPoint point(25, 25);
+  EXPECT_CALL(*item1, MotionEvent(_)).Times(0);
+  EXPECT_CALL(*item2, MotionEvent(_)).Times(0);
+  EXPECT_CALL(*item3, MotionEvent(point));
+  mixer.MotionEvent(point);
+  ASSERT_TRUE(item3->mouse_owner());
+  }
+
+  {
+  CompPoint point(15, 15);
+  EXPECT_CALL(*item1, ButtonUpEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonUpEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonUpEvent(point, 1));
+  mixer.ButtonUpEvent(point, 1);
+
+  EXPECT_FALSE(item3->mouse_owner());
+  EXPECT_TRUE(item2->mouse_owner());
   }
 }
 
