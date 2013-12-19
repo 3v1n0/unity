@@ -32,15 +32,17 @@ class Edge : public SimpleItem
 public:
   enum class Type
   {
-    TOP = 0,
+    // The order of this enum is important to define the priority of each Edge
+    // when parsing the input events (in case two areas overlap)
+    CENTER = 0,
     TOP_LEFT,
     TOP_RIGHT,
-    LEFT,
-    RIGHT,
-    BOTTOM,
+    TOP,
     BOTTOM_LEFT,
     BOTTOM_RIGHT,
-    CENTER,
+    BOTTOM,
+    LEFT,
+    RIGHT,
     Size
   };
 
