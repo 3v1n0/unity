@@ -20,6 +20,7 @@
 #include "DecorationStyle.h"
 #include "DecorationsEdgeBorders.h"
 #include "DecorationsEdge.h"
+#include "DecorationsGrabEdge.h"
 
 namespace unity
 {
@@ -58,7 +59,7 @@ EdgeBorders::EdgeBorders(CompWindow* win)
   item = std::make_shared<Edge>(win, Edge::Type::BOTTOM_RIGHT);
   items_[unsigned(Edge::Type::BOTTOM_RIGHT)] = item;
 
-  item = std::make_shared<Edge>(win, Edge::Type::CENTER);
+  item = std::make_shared<GrabEdge>(win);
   items_[unsigned(Edge::Type::CENTER)] = item;
 
   Relayout();
