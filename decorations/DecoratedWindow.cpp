@@ -58,16 +58,14 @@ Window::Impl::~Impl()
 
 void Window::Impl::Update()
 {
-  if (ShouldBeDecorated())
-  {
-    SetupExtents();
-    UpdateFrame();
-    SetupTopLayout();
-  }
-  else
-  {
-    Undecorate();
-  }
+  ShouldBeDecorated() ? Decorate() : Undecorate();
+}
+
+void Window::Impl::Decorate()
+{
+  SetupExtents();
+  UpdateFrame();
+  SetupTopLayout();
 }
 
 void Window::Impl::Undecorate()

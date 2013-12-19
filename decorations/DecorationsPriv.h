@@ -69,6 +69,7 @@ struct Window::Impl
   nux::Property<bool> active;
 
   void Update();
+  void Decorate();
   void Undecorate();
   bool FullyDecorated() const;
   bool ShadowDecorated() const;

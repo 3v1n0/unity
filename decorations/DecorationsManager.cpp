@@ -190,7 +190,8 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
     case ClientMessage:
       if (event->xclient.message_type == atom::_NET_REQUEST_FRAME_EXTENTS)
       {
-        UpdateWindow(event->xclient.window);
+        if (Window::Ptr const& win = GetWindowByXid(event->xclient.window))
+          win->impl_->Decorate();
       }
       break;
     case MotionNotify:
