@@ -232,6 +232,12 @@ void Layout::Append(Item::Ptr const& item)
   if (!item || std::find(items_.begin(), items_.end(), item) != items_.end())
     return;
 
+  if (item->GetParent())
+  {
+    LOG_ERROR(logger) << "Impossible to add an item that has already a parent";
+    return;
+  }
+
   items_.push_back(item);
   item->focused = focused();
   item->SetParent(shared_from_this());

@@ -271,6 +271,19 @@ TEST_F(TestDecorationLayout, AppendParentsItem)
   EXPECT_EQ(layout, item->GetParent());
 }
 
+TEST_F(TestDecorationLayout, AppendDontAddParentedItems)
+{
+  auto item = RandomMockItem();
+  layout->Append(item);
+
+  auto layout2 = std::make_shared<Layout>();
+  layout2->Append(item);
+
+  EXPECT_EQ(layout, item->GetParent());
+  EXPECT_THAT(layout->Items(), Contains(item));
+  EXPECT_THAT(layout2->Items(), Not(Contains(item)));
+}
+
 TEST_F(TestDecorationLayout, RemoveUnParentsItem)
 {
   auto item = RandomMockItem();
