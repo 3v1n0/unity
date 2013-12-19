@@ -111,6 +111,7 @@ void Window::Impl::UnsetFrame()
     return;
 
   XDestroyWindow(dpy, frame_);
+  framed.emit(false, frame_);
   frame_ = 0;
   frame_geo_.Set(0, 0, 0, 0);
 }
@@ -145,6 +146,7 @@ void Window::Impl::UpdateFrame()
       XShapeSelectInput(dpy, frame_, ShapeNotifyMask);
 
     XMapWindow(dpy, frame_);
+    framed.emit(true, frame_);
 
     XUngrabServer(dpy);
   }

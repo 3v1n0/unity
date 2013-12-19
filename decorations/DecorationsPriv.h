@@ -20,6 +20,7 @@
 #ifndef UNITY_DECORATION_MANAGER_PRIV
 #define UNITY_DECORATION_MANAGER_PRIV
 
+#include <unordered_map>
 #include <NuxCore/NuxCore.h>
 #include <NuxCore/Rect.h>
 #include <core/core.h>
@@ -67,6 +68,7 @@ struct Window::Impl
   ~Impl();
 
   nux::Property<bool> active;
+  sigc::signal<void, bool, ::Window> framed;
 
   void Update();
   void Decorate();
@@ -115,6 +117,7 @@ struct Manager::Impl : sigc::trackable
   Impl(decoration::Manager*);
   ~Impl();
 
+  Window::Ptr HandleWindow(CompWindow* cwin);
   bool HandleEventBefore(XEvent*);
   bool HandleEventAfter(XEvent*);
   bool HandleFrameEvent(XEvent*);
@@ -130,6 +133,7 @@ private:
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
   void OnShadowOptionsChanged(bool active);
+  void OnWindowFrameChanged(bool, ::Window, std::weak_ptr<decoration::Window> const&);
 
   friend class Manager;
   friend struct Window::Impl;
@@ -143,6 +147,7 @@ private:
 
   std::weak_ptr<InputMixer> last_mouse_owner_;
   std::map<CompWindow*, decoration::Window::Ptr> windows_;
+  std::unordered_map<::Window, std::weak_ptr<decoration::Window>> framed_windows_;
 };
 
 } // decoration namespace

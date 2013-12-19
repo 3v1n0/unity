@@ -37,7 +37,7 @@ DECLARE_LOGGER(logger, "unity.decoration.manager");
 namespace atom
 {
 Atom _NET_REQUEST_FRAME_EXTENTS = 0;
-Atom _NET_FRAME_EXTENTS = 0;
+// Atom _NET_FRAME_EXTENTS = 0;
 }
 }
 
@@ -49,7 +49,7 @@ Manager::Impl::Impl(decoration::Manager* parent)
   manager_ = parent;
   dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
-  atom::_NET_FRAME_EXTENTS = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
+  // atom::_NET_FRAME_EXTENTS = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
   screen->updateSupportedWmHints();
 
   auto rebuild_cb = sigc::mem_fun(this, &Impl::OnShadowOptionsChanged);
@@ -141,13 +141,11 @@ Window::Ptr Manager::Impl::GetWindowByXid(::Window xid) const
 
 Window::Ptr Manager::Impl::GetWindowByFrame(::Window xid) const
 {
-  for (auto const& pair : windows_)
-  {
-    if (pair.second->impl_->frame_ == xid)
-      return pair.second;
-  }
+  auto it = framed_windows_.find(xid);
+  if (it == framed_windows_.end())
+    return nullptr;
 
-  return nullptr;
+  return it->second.lock();
 }
 
 bool Manager::Impl::HandleEventBefore(XEvent* event)
@@ -273,6 +271,29 @@ bool Manager::Impl::HandleFrameEvent(XEvent* event)
   return false;
 }
 
+Window::Ptr Manager::Impl::HandleWindow(CompWindow* cwin)
+{
+  auto win = std::make_shared<Window>(cwin);
+  auto* wimpl = win->impl_.get();
+
+  std::weak_ptr<decoration::Window> weak_win(win);
+  wimpl->framed.connect(sigc::bind(sigc::mem_fun(this, &Impl::OnWindowFrameChanged), weak_win));
+  windows_[cwin] = win;
+
+  if (wimpl->frame_)
+    framed_windows_[wimpl->frame_] = win;
+
+  return win;
+}
+
+void Manager::Impl::OnWindowFrameChanged(bool framed, ::Window frame, std::weak_ptr<decoration::Window> const& window)
+{
+  if (!framed || !frame)
+    framed_windows_.erase(frame);
+  else
+    framed_windows_[frame] = window;
+}
+
 // Public APIs
 
 Manager::Manager()
@@ -305,9 +326,7 @@ bool Manager::HandleEventAfter(XEvent* xevent)
 
 Window::Ptr Manager::HandleWindow(CompWindow* cwin)
 {
-  auto win = std::make_shared<Window>(cwin);
-  impl_->windows_[cwin] = win;
-  return win;
+  return impl_->HandleWindow(cwin);
 }
 
 void Manager::UnHandleWindow(CompWindow* cwin)
