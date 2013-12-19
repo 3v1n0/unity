@@ -57,6 +57,11 @@ struct TestDecorationItem : Test
   SigReceiver::Nice sig_receiver;
 };
 
+struct MockBasicContainer : BasicContainer
+{
+  MOCK_METHOD0(Relayout, void());
+};
+
 TEST_F(TestDecorationItem, DefaultVisibilty)
 {
   EXPECT_TRUE(item.visible());
@@ -93,6 +98,44 @@ TEST_F(TestDecorationItem, DefaultNaturalSize)
 {
   MockItem item;
   EXPECT_EQ(item.natural_, nux::Size(0, 0));
+}
+
+TEST_F(TestDecorationItem, DefaultParent)
+{
+  EXPECT_EQ(nullptr, item.GetParent());
+}
+
+TEST_F(TestDecorationItem, SetParent)
+{
+  auto parent = std::make_shared<MockBasicContainer>();
+  item.SetParent(parent);
+  EXPECT_EQ(parent, item.GetParent());
+}
+
+TEST_F(TestDecorationItem, WeakParent)
+{
+  auto parent = std::make_shared<MockBasicContainer>();
+  item.SetParent(parent);
+  parent.reset();
+  EXPECT_EQ(nullptr, item.GetParent());
+}
+
+TEST_F(TestDecorationItem, RelayoutParentOnGeometryChanges)
+{
+  auto parent = std::make_shared<MockBasicContainer>();
+  item.SetParent(parent);
+
+  EXPECT_CALL(*parent, Relayout());
+  item.geo_parameters_changed.emit();
+}
+
+TEST_F(TestDecorationItem, RelayoutParentOnVisibilityChanges)
+{
+  auto parent = std::make_shared<MockBasicContainer>();
+  item.SetParent(parent);
+
+  EXPECT_CALL(*parent, Relayout());
+  item.visible.changed.emit(false);
 }
 
 TEST_F(TestDecorationItem, Geometry)
@@ -219,6 +262,23 @@ TEST_F(TestDecorationLayout, AppendUnlimited)
   }
 
   EXPECT_EQ(100, layout->Items().size());
+}
+
+TEST_F(TestDecorationLayout, AppendParentsItem)
+{
+  auto item = RandomMockItem();
+  layout->Append(item);
+  EXPECT_EQ(layout, item->GetParent());
+}
+
+TEST_F(TestDecorationLayout, RemoveUnParentsItem)
+{
+  auto item = RandomMockItem();
+  layout->Append(item);
+  ASSERT_EQ(layout, item->GetParent());
+
+  layout->Remove(item);
+  EXPECT_EQ(nullptr, item->GetParent());
 }
 
 TEST_F(TestDecorationLayout, AppendInvisible)
