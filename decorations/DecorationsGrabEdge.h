@@ -20,6 +20,7 @@
 #ifndef UNITY_DECORATIONS_GRAB_EDGE
 #define UNITY_DECORATIONS_GRAB_EDGE
 
+#include <UnityCore/GLibSource.h>
 #include "DecorationsEdge.h"
 
 namespace unity
@@ -31,11 +32,16 @@ class GrabEdge : public Edge
 {
 public:
   GrabEdge(CompWindow* win);
+
   void ButtonDownEvent(CompPoint const&, unsigned button);
+  void ButtonUpEvent(CompPoint const&, unsigned button);
+  void MotionEvent(CompPoint const&);
 
 private:
   Time last_click_time_;
   CompPoint last_click_pos_;
+  int button_down_;
+  glib::Source::UniquePtr button_down_timer_;
 };
 
 } // decoration namespace

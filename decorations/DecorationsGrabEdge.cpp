@@ -24,10 +24,15 @@ namespace unity
 {
 namespace decoration
 {
+namespace
+{
+const int MOUSE_DOWN_TIMEOUT = 150;
+}
 
 GrabEdge::GrabEdge(CompWindow* win)
   : Edge(win, Edge::Type::CENTER)
   , last_click_time_(0)
+  , button_down_(-1)
 {}
 
 void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
@@ -36,8 +41,8 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
     return;
 
   auto const& style = Style::Get();
-  bool maximized = false;
   unsigned max_time_delta = std::max(0, style->DoubleClickMaxTimeDelta());
+  bool maximized = false;
 
   if (screen->getCurrentTime() - last_click_time_ < max_time_delta)
   {
@@ -48,14 +53,37 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
     {
       win_->maximize(MAXIMIZE_STATE);
       maximized = true;
+      button_down_timer_.reset();
     }
   }
 
   if (!maximized)
-    Edge::ButtonDownEvent(p, button);
+  {
+    button_down_timer_.reset(new glib::Timeout(MOUSE_DOWN_TIMEOUT));
+    button_down_timer_->Run([this] {
+      Edge::ButtonDownEvent(CompPoint(pointerX, pointerY), button_down_);
+      button_down_timer_.reset();
+      return false;
+    });
+  }
 
+  button_down_ = button;
   last_click_pos_ = p;
   last_click_time_ = screen->getCurrentTime();
+}
+
+void GrabEdge::MotionEvent(CompPoint const& p)
+{
+  if (button_down_timer_)
+  {
+    button_down_timer_.reset();
+    Edge::ButtonDownEvent(p, button_down_);
+  }
+}
+
+void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button)
+{
+  button_down_timer_.reset();
 }
 
 } // decoration namespace
