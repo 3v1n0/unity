@@ -257,10 +257,12 @@ bool Manager::Impl::HandleFrameEvent(XEvent* event)
 {
   auto const& win = GetWindowByFrame(event->xany.window);
 
-  if (!win)
+  // ButtonRelease events might happen also outside the frame window, in this
+  // case we must unset the mouse owner, wherever the event happens.
+  if (!win && event->type != ButtonRelease)
     return false;
 
-  auto const& input_mixer = win->impl_->input_mixer_;
+  auto const& input_mixer = win ? win->impl_->input_mixer_ : last_mouse_owner_.lock();
 
   if (!input_mixer)
     return false;
@@ -285,16 +287,21 @@ bool Manager::Impl::HandleFrameEvent(XEvent* event)
     case ButtonPress:
     {
       input_mixer->ButtonDownEvent(CompPoint(event->xbutton.x_root, event->xbutton.y_root), event->xbutton.button);
+      if (input_mixer->GetMouseOwner())
+        last_mouse_owner_ = input_mixer;
       break;
     }
     case ButtonRelease:
     {
       input_mixer->ButtonUpEvent(CompPoint(event->xbutton.x_root, event->xbutton.y_root), event->xbutton.button);
+      last_mouse_owner_.reset();
       break;
     }
   }
 
-  return true;
+  // This causes the Alt+Move not to work, we should probably return this value based on the actual handled state
+  // return true;
+  return false;
 }
 
 // Public APIs

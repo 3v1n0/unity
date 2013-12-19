@@ -141,6 +141,7 @@ private:
   bool enable_add_supported_atoms_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;
   cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
+  std::weak_ptr<InputMixer> last_mouse_owner_;
   std::array<std::array<cu::SimpleTexture::Ptr, size_t(WidgetState::Size)>, size_t(WindowButtonType::Size)> window_buttons_;
 
   std::map<CompWindow*, decoration::Window::Ptr> windows_;
