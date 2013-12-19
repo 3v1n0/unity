@@ -27,6 +27,7 @@ set (DECORATION_SOURCES
      DecorationsEdge.cpp
      DecorationsEdgeBorders.cpp
      DecorationsInputMixer.cpp
+     DecorationsDataPool.cpp
      )
 
 add_library (decorations-lib STATIC ${DECORATION_SOURCES})

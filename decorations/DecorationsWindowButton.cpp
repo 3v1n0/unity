@@ -38,7 +38,7 @@ Window::Impl::Button::Button(CompWindow* win, WindowButtonType type)
 
 void Window::Impl::Button::UpdateTexture()
 {
-  auto const& new_tex = manager_->impl_->GetButtonTexture(type_, GetCurrentState());
+  auto const& new_tex = DataPool::Get()->GetButtonTexture(type_, GetCurrentState());
 
   if (texture_.st != new_tex)
   {

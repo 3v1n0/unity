@@ -44,6 +44,7 @@ Atom _NET_FRAME_EXTENTS = 0;
 Manager::Impl::Impl(decoration::Manager* parent)
   : active_window_(0)
   , enable_add_supported_atoms_(true)
+  , data_pool_(DataPool::Get())
 {
   manager_ = parent;
   dpy = screen->dpy();
@@ -60,7 +61,6 @@ Manager::Impl::Impl(decoration::Manager* parent)
 
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
-  SetupButtonsTextures();
 }
 
 Manager::Impl::~Impl()
@@ -104,38 +104,6 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
     BuildInactiveShadowTexture();
 
   UpdateWindowsExtents();
-}
-
-void Manager::Impl::SetupButtonsTextures()
-{
-  CompSize size;
-  CompString plugin_name("unityshell");
-  auto const& style = Style::Get();
-
-  for (unsigned button = 0; button < window_buttons_.size(); ++button)
-  {
-    for (unsigned state = 0; state < window_buttons_[button].size(); ++state)
-    {
-      auto file = style->WindowButtonFile(WindowButtonType(button), WidgetState(state));
-      auto const& tex_list = GLTexture::readImageToTexture(file, plugin_name, size);
-
-      if (!tex_list.empty())
-      {
-        LOG_DEBUG(logger) << "Loading texture " << file;
-        window_buttons_[button][state] = std::make_shared<cu::SimpleTexture>(tex_list);
-      }
-      else
-      {
-        LOG_WARN(logger) << "Impossible to load button texture " << file;
-        // Generate cairo texture!
-      }
-    }
-  }
-}
-
-cu::SimpleTexture::Ptr const& Manager::Impl::GetButtonTexture(WindowButtonType wbt, WidgetState ws) const
-{
-  return window_buttons_[unsigned(wbt)][unsigned(ws)];
 }
 
 void Manager::Impl::UpdateWindowsExtents()

@@ -27,7 +27,7 @@
 #include <composite/composite.h>
 #include <X11/extensions/shape.h>
 
-#include "DecorationStyle.h"
+#include "DecorationsDataPool.h"
 #include "DecorationsManager.h"
 #include "DecorationsInputMixer.h"
 
@@ -120,8 +120,6 @@ struct Manager::Impl : sigc::trackable
   bool HandleEventAfter(XEvent*);
   bool HandleFrameEvent(XEvent*);
 
-  cu::SimpleTexture::Ptr const& GetButtonTexture(WindowButtonType, WidgetState) const;
-
 private:
   Window::Ptr GetWindowByXid(::Window) const;
   Window::Ptr GetWindowByFrame(::Window) const;
@@ -133,18 +131,18 @@ private:
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
   void OnShadowOptionsChanged(bool active);
-  void SetupButtonsTextures();
 
   friend class Manager;
   friend struct Window::Impl;
 
   ::Window active_window_;
   bool enable_add_supported_atoms_;
+
+  DataPool::Ptr data_pool_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;
   cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
-  std::weak_ptr<InputMixer> last_mouse_owner_;
-  std::array<std::array<cu::SimpleTexture::Ptr, size_t(WidgetState::Size)>, size_t(WindowButtonType::Size)> window_buttons_;
 
+  std::weak_ptr<InputMixer> last_mouse_owner_;
   std::map<CompWindow*, decoration::Window::Ptr> windows_;
 };
 
