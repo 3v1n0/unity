@@ -47,7 +47,9 @@ public:
   ~Edge();
 
   Type GetType() const;
+  void ButtonDownEvent(CompPoint const&, unsigned button);
 
+  static unsigned TypeToDirection(Type);
   static unsigned TypeToCursorShape(Type);
 
 private:
