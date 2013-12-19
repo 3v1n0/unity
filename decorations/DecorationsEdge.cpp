@@ -95,8 +95,8 @@ void Edge::ButtonDownEvent(CompPoint const& p, unsigned button)
   ev.xclient.data.l[3] = button;
   ev.xclient.data.l[4] = 1;
 
-  XUngrabPointer(dpy, CurrentTime);
-  XUngrabKeyboard(dpy, CurrentTime);
+  XUngrabPointer(dpy, screen->getCurrentTime());
+  XUngrabKeyboard(dpy, screen->getCurrentTime());
 
   auto mask = SubstructureRedirectMask | SubstructureNotifyMask;
   XSendEvent(dpy, screen->root(), False, mask, &ev);

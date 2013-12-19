@@ -104,7 +104,7 @@ void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button)
     {
       case WindowButtonType::CLOSE:
         if (win_->actions() & CompWindowActionCloseMask)
-          win_->close(CurrentTime);
+          win_->close(screen->getCurrentTime());
         break;
       case WindowButtonType::MINIMIZE:
         if (win_->actions() & CompWindowActionMinimizeMask)
