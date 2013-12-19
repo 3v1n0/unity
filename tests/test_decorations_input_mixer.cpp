@@ -431,4 +431,63 @@ TEST_F(TestDecorationInputMixer, ButtonDownEventGrab)
   }
 }
 
+TEST_F(TestDecorationInputMixer, ParentRemovalFromChildrenButtonDown)
+{
+  struct BadItem : SimpleItem
+  {
+    void ButtonDownEvent(CompPoint const&, unsigned button) { mx_->reset(); }
+    InputMixer::Ptr* mx_;
+  };
+
+  auto mx = std::make_shared<InputMixer>();
+  std::weak_ptr<InputMixer> weak_mixer(mx);
+  std::weak_ptr<BadItem> weak_bad_item;
+
+  {
+  auto bad_item = std::make_shared<BadItem>();
+  weak_bad_item = bad_item;
+  bad_item->SetSize(10, 10);
+  bad_item->mx_ = &mx;
+  mx->PushToFront(bad_item);
+  }
+
+  ASSERT_FALSE(weak_bad_item.expired());
+  CompPoint point(1, 1);
+  mx->EnterEvent(point);
+  mx->ButtonDownEvent(point, 1);
+
+  EXPECT_TRUE(weak_bad_item.expired());
+  EXPECT_TRUE(weak_mixer.expired());
+}
+
+TEST_F(TestDecorationInputMixer, ParentRemovalFromChildrenButtonUp)
+{
+  struct BadItem : SimpleItem
+  {
+    void ButtonUpEvent(CompPoint const&, unsigned button) { mx_->reset(); }
+    InputMixer::Ptr* mx_;
+  };
+
+  auto mx = std::make_shared<InputMixer>();
+  std::weak_ptr<InputMixer> weak_mixer(mx);
+  std::weak_ptr<BadItem> weak_bad_item;
+
+  {
+  auto bad_item = std::make_shared<BadItem>();
+  weak_bad_item = bad_item;
+  bad_item->SetSize(10, 10);
+  bad_item->mx_ = &mx;
+  mx->PushToFront(bad_item);
+  }
+
+  ASSERT_FALSE(weak_bad_item.expired());
+  CompPoint point(1, 1);
+  mx->EnterEvent(point);
+  mx->ButtonDownEvent(point, 1);
+  mx->ButtonUpEvent(point, 1);
+
+  EXPECT_TRUE(weak_bad_item.expired());
+  EXPECT_TRUE(weak_mixer.expired());
+}
+
 }
