@@ -18,6 +18,7 @@
  */
 
 #include <NuxCore/Logger.h>
+#include <X11/cursorfont.h>
 #include "DecorationsDataPool.h"
 
 namespace unity
@@ -28,17 +29,61 @@ namespace
 {
 const std::string PLUGIN_NAME = "unityshell";
 DECLARE_LOGGER(logger, "unity.decoration.datapool");
+
+unsigned EdgeTypeToCursorShape(Edge::Type type)
+{
+  switch (type)
+  {
+    case Edge::Type::TOP:
+      return XC_top_side;
+    case Edge::Type::TOP_LEFT:
+      return XC_top_left_corner;
+    case Edge::Type::TOP_RIGHT:
+      return XC_top_right_corner;
+    case Edge::Type::LEFT:
+      return XC_left_side;
+    case Edge::Type::RIGHT:
+      return XC_right_side;
+    case Edge::Type::BOTTOM:
+      return XC_bottom_side;
+    case Edge::Type::BOTTOM_LEFT:
+      return XC_bottom_left_corner;
+    case Edge::Type::BOTTOM_RIGHT:
+      return XC_bottom_right_corner;
+    default:
+      return XC_arrow;
+  }
+}
+
 }
 
 DataPool::DataPool()
 {
+  SetupCursors();
   SetupButtonsTextures();
+}
+
+DataPool::~DataPool()
+{
+  for (auto cursor : edge_cursors_)
+    XFreeCursor(screen->dpy(), cursor);
 }
 
 DataPool::Ptr const& DataPool::Get()
 {
   static DataPool::Ptr data_pool(new DataPool());
   return data_pool;
+}
+
+void DataPool::SetupCursors()
+{
+  for (unsigned c = 0; c < edge_cursors_.size(); ++c)
+    edge_cursors_[c] = XCreateFontCursor(screen->dpy(), EdgeTypeToCursorShape(Edge::Type(c)));
+}
+
+Cursor DataPool::EdgeCursor(Edge::Type type) const
+{
+  return edge_cursors_[unsigned(type)];
 }
 
 void DataPool::SetupButtonsTextures()
@@ -68,7 +113,7 @@ void DataPool::SetupButtonsTextures()
   }
 }
 
-cu::SimpleTexture::Ptr const& DataPool::GetButtonTexture(WindowButtonType wbt, WidgetState ws) const
+cu::SimpleTexture::Ptr const& DataPool::ButtonTexture(WindowButtonType wbt, WidgetState ws) const
 {
   return window_buttons_[unsigned(wbt)][unsigned(ws)];
 }

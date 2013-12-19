@@ -44,18 +44,13 @@ public:
   };
 
   Edge(CompWindow* win, Type t);
-  ~Edge();
 
   Type GetType() const;
   void ButtonDownEvent(CompPoint const&, unsigned button);
 
-  static unsigned TypeToDirection(Type);
-  static unsigned TypeToCursorShape(Type);
-
 private:
   CompWindow* win_;
   Type type_;
-  Cursor cursor_;
 };
 
 } // decoration namespace

@@ -17,31 +17,54 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <X11/cursorfont.h>
 #include <core/atoms.h>
 #include "DecorationsEdge.h"
+#include "DecorationsDataPool.h"
 
 namespace unity
 {
 namespace decoration
 {
+namespace
+{
+
+unsigned TypeToDirection(Edge::Type type)
+{
+  switch (type)
+  {
+    case Edge::Type::TOP:
+      return WmMoveResizeSizeTop;
+    case Edge::Type::TOP_LEFT:
+      return WmMoveResizeSizeTopLeft;
+    case Edge::Type::TOP_RIGHT:
+      return WmMoveResizeSizeTopRight;
+    case Edge::Type::LEFT:
+      return WmMoveResizeSizeLeft;
+    case Edge::Type::RIGHT:
+      return WmMoveResizeSizeRight;
+    case Edge::Type::BOTTOM:
+      return WmMoveResizeSizeBottom;
+    case Edge::Type::BOTTOM_LEFT:
+      return WmMoveResizeSizeBottomLeft;
+    case Edge::Type::BOTTOM_RIGHT:
+      return WmMoveResizeSizeBottomRight;
+    default:
+      return WmMoveResizeCancel;
+  }
+}
+
+}
 
 Edge::Edge(CompWindow* win, Type t)
   : win_(win)
   , type_(t)
-  , cursor_(XCreateFontCursor(screen->dpy(), TypeToCursorShape(type_)))
 {
   mouse_owner.changed.connect([this] (bool over) {
     if (over)
-      XDefineCursor(screen->dpy(), win_->frame(), cursor_);
+      XDefineCursor(screen->dpy(), win_->frame(), DataPool::Get()->EdgeCursor(type_));
     else
       XUndefineCursor(screen->dpy(), win_->frame());
   });
-}
-
-Edge::~Edge()
-{
-  XFreeCursor(screen->dpy(), cursor_);
 }
 
 Edge::Type Edge::GetType() const
@@ -77,56 +100,6 @@ void Edge::ButtonDownEvent(CompPoint const& p, unsigned button)
   XSendEvent(dpy, screen->root(), False, mask, &ev);
 
   XSync(dpy, False);
-}
-
-unsigned Edge::TypeToCursorShape(Edge::Type type)
-{
-  switch (type)
-  {
-    case Edge::Type::TOP:
-      return XC_top_side;
-    case Edge::Type::TOP_LEFT:
-      return XC_top_left_corner;
-    case Edge::Type::TOP_RIGHT:
-      return XC_top_right_corner;
-    case Edge::Type::LEFT:
-      return XC_left_side;
-    case Edge::Type::RIGHT:
-      return XC_right_side;
-    case Edge::Type::BOTTOM:
-      return XC_bottom_side;
-    case Edge::Type::BOTTOM_LEFT:
-      return XC_bottom_left_corner;
-    case Edge::Type::BOTTOM_RIGHT:
-      return XC_bottom_right_corner;
-    default:
-      return XC_arrow;
-  }
-}
-
-unsigned Edge::TypeToDirection(Edge::Type type)
-{
-  switch (type)
-  {
-    case Edge::Type::TOP:
-      return WmMoveResizeSizeTop;
-    case Edge::Type::TOP_LEFT:
-      return WmMoveResizeSizeTopLeft;
-    case Edge::Type::TOP_RIGHT:
-      return WmMoveResizeSizeTopRight;
-    case Edge::Type::LEFT:
-      return WmMoveResizeSizeLeft;
-    case Edge::Type::RIGHT:
-      return WmMoveResizeSizeRight;
-    case Edge::Type::BOTTOM:
-      return WmMoveResizeSizeBottom;
-    case Edge::Type::BOTTOM_LEFT:
-      return WmMoveResizeSizeBottomLeft;
-    case Edge::Type::BOTTOM_RIGHT:
-      return WmMoveResizeSizeBottomRight;
-    default:
-      return WmMoveResizeCancel;
-  }
 }
 
 } // decoration namespace

@@ -34,17 +34,20 @@ public:
   typedef std::shared_ptr<DataPool> Ptr;
 
   static DataPool::Ptr const& Get();
-  virtual ~DataPool() = default;
+  virtual ~DataPool();
 
-  cu::SimpleTexture::Ptr const& GetButtonTexture(WindowButtonType, WidgetState) const;
+  Cursor EdgeCursor(Edge::Type) const;
+  cu::SimpleTexture::Ptr const& ButtonTexture(WindowButtonType, WidgetState) const;
 
 private:
   DataPool();
   DataPool(DataPool const&) = delete;
   DataPool& operator=(DataPool const&) = delete;
 
+  void SetupCursors();
   void SetupButtonsTextures();
 
+  std::array<Cursor, size_t(Edge::Type::Size)> edge_cursors_;
   std::array<std::array<cu::SimpleTexture::Ptr, size_t(WidgetState::Size)>, size_t(WindowButtonType::Size)> window_buttons_;
 };
 

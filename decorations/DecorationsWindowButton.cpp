@@ -40,7 +40,7 @@ WindowButton::WindowButton(CompWindow* win, WindowButtonType type)
 
 void WindowButton::UpdateTexture()
 {
-  auto const& new_tex = DataPool::Get()->GetButtonTexture(type_, GetCurrentState());
+  auto const& new_tex = DataPool::Get()->ButtonTexture(type_, GetCurrentState());
 
   if (texture_.st != new_tex)
   {
