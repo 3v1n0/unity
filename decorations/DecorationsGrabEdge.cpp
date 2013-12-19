@@ -18,6 +18,7 @@
  */
 
 #include "DecorationsGrabEdge.h"
+#include "DecorationStyle.h"
 
 namespace unity
 {
@@ -26,7 +27,36 @@ namespace decoration
 
 GrabEdge::GrabEdge(CompWindow* win)
   : Edge(win, Edge::Type::CENTER)
+  , last_click_time_(0)
 {}
+
+void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
+{
+  if (button != 1)
+    return;
+
+  auto const& style = Style::Get();
+  bool maximized = false;
+  unsigned max_time_delta = std::max(0, style->DoubleClickMaxTimeDelta());
+
+  if (screen->getCurrentTime() - last_click_time_ < max_time_delta)
+  {
+    int max_distance = style->DoubleClickMaxDistance();
+
+    if (std::abs(p.x() - last_click_pos_.x()) < max_distance &&
+        std::abs(p.y() - last_click_pos_.y()) < max_distance)
+    {
+      win_->maximize(MAXIMIZE_STATE);
+      maximized = true;
+    }
+  }
+
+  if (!maximized)
+    Edge::ButtonDownEvent(p, button);
+
+  last_click_pos_ = p;
+  last_click_time_ = screen->getCurrentTime();
+}
 
 } // decoration namespace
 } // unity namespace

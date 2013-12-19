@@ -31,6 +31,11 @@ class GrabEdge : public Edge
 {
 public:
   GrabEdge(CompWindow* win);
+  void ButtonDownEvent(CompPoint const&, unsigned button);
+
+private:
+  Time last_click_time_;
+  CompPoint last_click_pos_;
 };
 
 } // decoration namespace

@@ -51,7 +51,7 @@ public:
   Type GetType() const;
   void ButtonDownEvent(CompPoint const&, unsigned button);
 
-private:
+protected:
   CompWindow* win_;
   Type type_;
 };
