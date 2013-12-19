@@ -237,13 +237,13 @@ void Window::Impl::SetupTopLayout()
   top_layout_->focused = active();
 
   if (win_->actions() & CompWindowActionCloseMask)
-    top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::CLOSE));
+    top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::CLOSE));
 
   if (win_->actions() & CompWindowActionMinimizeMask)
-    top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MINIMIZE));
+    top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MINIMIZE));
 
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
-    top_layout_->Append(std::make_shared<Button>(win_, WindowButtonType::MAXIMIZE));
+    top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE));
 
   input_mixer_->PushToFront(top_layout_);
 }

@@ -90,7 +90,6 @@ private:
   void RenderDecorationTexture(Side, nux::Geometry const&);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
-  class Button;
   friend class Window;
   friend struct Manager::Impl;
 

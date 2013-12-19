@@ -20,17 +20,18 @@
 #ifndef UNITY_DECORATION_WINDOW_BUTTON
 #define UNITY_DECORATION_WINDOW_BUTTON
 
-#include "DecorationsPriv.h"
+#include "DecorationStyle.h"
+#include "DecorationsWidgets.h"
 
 namespace unity
 {
 namespace decoration
 {
 
-class Window::Impl::Button : public TexturedItem
+class WindowButton : public TexturedItem
 {
 public:
-  Button(CompWindow*, WindowButtonType type);
+  WindowButton(CompWindow*, WindowButtonType type);
 
   WidgetState GetCurrentState() const;
 

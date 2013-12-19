@@ -18,25 +18,27 @@
  */
 
 #include "DecorationsWindowButton.h"
+#include "DecorationsDataPool.h"
+#include <sigc++/sigc++.h>
 
 namespace unity
 {
 namespace decoration
 {
 
-Window::Impl::Button::Button(CompWindow* win, WindowButtonType type)
+WindowButton::WindowButton(CompWindow* win, WindowButtonType type)
   : type_(type)
   , pressed_(false)
   , was_pressed_(false)
   , win_(win)
 {
-  auto cb = sigc::hide(sigc::mem_fun(this, &Button::UpdateTexture));
+  auto cb = sigc::hide(sigc::mem_fun(this, &WindowButton::UpdateTexture));
   mouse_owner.changed.connect(cb);
   focused.changed.connect(cb);
   UpdateTexture();
 }
 
-void Window::Impl::Button::UpdateTexture()
+void WindowButton::UpdateTexture()
 {
   auto const& new_tex = DataPool::Get()->GetButtonTexture(type_, GetCurrentState());
 
@@ -47,7 +49,7 @@ void Window::Impl::Button::UpdateTexture()
   }
 }
 
-WidgetState Window::Impl::Button::GetCurrentState() const
+WidgetState WindowButton::GetCurrentState() const
 {
   if (focused())
   {
@@ -81,7 +83,7 @@ WidgetState Window::Impl::Button::GetCurrentState() const
   }
 }
 
-void Window::Impl::Button::ButtonDownEvent(CompPoint const& p, unsigned button)
+void WindowButton::ButtonDownEvent(CompPoint const& p, unsigned button)
 {
   if (!pressed_ && button <= Button3)
   {
@@ -91,7 +93,7 @@ void Window::Impl::Button::ButtonDownEvent(CompPoint const& p, unsigned button)
   }
 }
 
-void Window::Impl::Button::ButtonUpEvent(CompPoint const& p, unsigned button)
+void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button)
 {
   if (pressed_ && button <= Button3)
   {
@@ -146,7 +148,7 @@ void Window::Impl::Button::ButtonUpEvent(CompPoint const& p, unsigned button)
   was_pressed_ = false;
 }
 
-void Window::Impl::Button::MotionEvent(CompPoint const& p)
+void WindowButton::MotionEvent(CompPoint const& p)
 {
   if (pressed_)
   {
