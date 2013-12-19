@@ -38,7 +38,15 @@ Item::Item()
   , sensitive(true)
   , mouse_owner(false)
   , max_(std::numeric_limits<int>::max(), std::numeric_limits<int>::max())
-{}
+{
+  auto parent_relayout_cb = [this] {
+    if (BasicContainer::Ptr const& parent = parent_.lock())
+      parent->Relayout();
+  };
+
+  visible.changed.connect(sigc::hide(parent_relayout_cb));
+  geo_parameters_changed.connect(parent_relayout_cb);
+}
 
 void Item::SetSize(int width, int height)
 {
@@ -146,6 +154,22 @@ CompRect const& Item::Geometry() const
   return const_cast<Item*>(this)->InternalGeo();
 }
 
+void Item::SetParent(BasicContainer::Ptr const& parent)
+{
+  if (parent && !parent_.expired())
+  {
+    LOG_ERROR(logger) << "This item has already a parent!";
+    return;
+  }
+
+  parent_ = parent;
+}
+
+BasicContainer::Ptr Item::GetParent() const
+{
+  return parent_.lock();
+}
+
 //
 
 void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
@@ -200,6 +224,7 @@ Layout::Layout()
   , right_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
   , top_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
   , bottom_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
+  , relayouting_(false)
 {}
 
 void Layout::Append(Item::Ptr const& item)
@@ -209,12 +234,28 @@ void Layout::Append(Item::Ptr const& item)
 
   items_.push_back(item);
   item->focused = focused();
-  item->visible.changed.connect(sigc::hide(sigc::mem_fun(this, &Layout::Relayout)));
+  item->SetParent(shared_from_this());
+  Relayout();
+}
+
+void Layout::Remove(Item::Ptr const& item)
+{
+  auto it = std::find(items_.begin(), items_.end(), item);
+
+  if (it == items_.end())
+    return;
+
+  item->SetParent(nullptr);
+  items_.erase(it);
   Relayout();
 }
 
 void Layout::Relayout()
 {
+  if (relayouting_)
+    return;
+
+  relayouting_ = true;
   int loop = 0;
 
   nux::Size available_space(std::max(0, max_.width - left_padding - right_padding),
@@ -296,6 +337,8 @@ void Layout::Relayout()
     ++loop;
   }
   while (rect_.width() > max_.width || rect_.height() > max_.height);
+
+  relayouting_ = false;
 }
 
 void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,

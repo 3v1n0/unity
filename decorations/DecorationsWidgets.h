@@ -31,6 +31,8 @@ namespace decoration
 {
 namespace cu = compiz_utils;
 
+class BasicContainer;
+
 class Item : public sigc::trackable
 {
 public:
@@ -66,6 +68,9 @@ public:
   int GetMinWidth() const { return min_.width; };
   int GetMinHeight() const { return min_.height; };
 
+  void SetParent(std::shared_ptr<BasicContainer> const&);
+  std::shared_ptr<BasicContainer> GetParent() const;
+
   void Damage();
   virtual void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask) {}
 
@@ -88,6 +93,9 @@ protected:
   nux::Size max_;
   nux::Size min_;
   nux::Size natural_;
+
+private:
+  std::weak_ptr<BasicContainer> parent_;
 };
 
 class SimpleItem : public Item
@@ -118,10 +126,13 @@ protected:
 class BasicContainer : public SimpleItem
 {
 public:
+  typedef std::shared_ptr<BasicContainer> Ptr;
+
   BasicContainer();
   Item::List const& Items() const { return items_; }
 
 protected:
+  friend class Item;
   virtual void Relayout() = 0;
   bool IsContainer() const { return true; }
 
@@ -129,7 +140,7 @@ protected:
 };
 
 
-class Layout : public BasicContainer
+class Layout : public std::enable_shared_from_this<Layout>, public BasicContainer
 {
 public:
   typedef std::shared_ptr<Layout> Ptr;
@@ -143,12 +154,14 @@ public:
   nux::Property<int> bottom_padding;
 
   void Append(Item::Ptr const&);
+  void Remove(Item::Ptr const&);
 
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 private:
   void Relayout();
   bool SetPadding(int& target, int new_value);
+  bool relayouting_;
 };
 
 } // decoration namespace
