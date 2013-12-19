@@ -92,12 +92,17 @@ public:
   static Style::Ptr const& Get();
   virtual ~Style();
 
-  Alignment TitleAlignment() const;
-  float TitleAlignmentValue() const;
   decoration::Border const& Border() const;
   decoration::Border const& InputBorder() const;
   decoration::Border Padding(Side, WidgetState ws = WidgetState::NORMAL) const;
+
+  Alignment TitleAlignment() const;
+  float TitleAlignmentValue() const;
+
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
+
+  int DoubleClickMaxDistance() const;
+  int DoubleClickMaxTimeDelta() const;
 
   void DrawSide(Side, WidgetState, cairo_t*, int width, int height);
 

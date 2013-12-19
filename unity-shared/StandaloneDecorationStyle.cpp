@@ -59,8 +59,10 @@ int main(int argc, char* argv[])
   std::cout << "Input border right: " << style->InputBorder().right << std::endl;
   std::cout << "Input border bottom: " << style->InputBorder().bottom << std::endl;
   std::cout << "---" << std::endl;
+
   std::cout << "Title alignment: " << style->TitleAlignment() << std::endl;
   std::cout << "---" << std::endl;
+
   std::cout << "Top border padding, top: " << style->Padding(Side::TOP) << std::endl;
   std::cout << "Left border padding, left: " << style->Padding(Side::LEFT) << std::endl;
   std::cout << "Right border padding, right: " << style->Padding(Side::RIGHT) << std::endl;
@@ -95,4 +97,8 @@ int main(int argc, char* argv[])
   std::cout << "Button 'maximize' state 'backdrop' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP) << std::endl;
   std::cout << "Button 'maximize' state 'backdrop_prelight' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP_PRELIGHT) << std::endl;
   std::cout << "Button 'maximize' state 'backdrop_pressed' " << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP_PRESSED) << std::endl;
+  std::cout << "---" << std::endl;
+
+  std::cout << "Maximum Double click distance " << style->DoubleClickMaxDistance() << "px" << std::endl;
+  std::cout << "Maximum Double click Time delta " << style->DoubleClickMaxTimeDelta() << "ms " << std::endl;
 }

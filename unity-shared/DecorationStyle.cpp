@@ -257,5 +257,15 @@ Border Style::Padding(Side s, WidgetState ws) const
                             impl_->GetBorderProperty<int>(s, ws, "padding-bottom"));
 }
 
+int Style::DoubleClickMaxDistance() const
+{
+  return impl_->GetSettingValue<int>("gtk-double-click-distance");
+}
+
+int Style::DoubleClickMaxTimeDelta() const
+{
+  return impl_->GetSettingValue<int>("gtk-double-click-time");
+}
+
 } // decoration namespace
 } // unity namespace
