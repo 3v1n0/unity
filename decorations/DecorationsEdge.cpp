@@ -48,6 +48,8 @@ unsigned TypeToDirection(Edge::Type type)
       return WmMoveResizeSizeBottomLeft;
     case Edge::Type::BOTTOM_RIGHT:
       return WmMoveResizeSizeBottomRight;
+    case Edge::Type::CENTER:
+      return WmMoveResizeMove;
     default:
       return WmMoveResizeCancel;
   }

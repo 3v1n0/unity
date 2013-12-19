@@ -35,36 +35,31 @@ EdgeBorders::EdgeBorders(CompWindow* win)
   items_.resize(size_t(Edge::Type::Size));
 
   auto item = std::make_shared<Edge>(win, Edge::Type::TOP);
-  item->focused = focused();
   items_[unsigned(Edge::Type::TOP)] = item;
 
   item = std::make_shared<Edge>(win, Edge::Type::TOP_LEFT);
-  item->focused = focused();
   items_[unsigned(Edge::Type::TOP_LEFT)] = item;
 
   item = std::make_shared<Edge>(win, Edge::Type::TOP_RIGHT);
-  item->focused = focused();
   items_[unsigned(Edge::Type::TOP_RIGHT)] = item;
 
   item = std::make_shared<Edge>(win, Edge::Type::LEFT);
-  item->focused = focused();
   items_[unsigned(Edge::Type::LEFT)] = item;
 
   item = std::make_shared<Edge>(win, Edge::Type::RIGHT);
-  item->focused = focused();
   items_[unsigned(Edge::Type::RIGHT)] = item;
 
   item = std::make_shared<Edge>(win, Edge::Type::BOTTOM);
-  item->focused = focused();
   items_[unsigned(Edge::Type::BOTTOM)] = item;
 
   item = std::make_shared<Edge>(win, Edge::Type::BOTTOM_LEFT);
-  item->focused = focused();
   items_[unsigned(Edge::Type::BOTTOM_LEFT)] = item;
 
   item = std::make_shared<Edge>(win, Edge::Type::BOTTOM_RIGHT);
-  item->focused = focused();
   items_[unsigned(Edge::Type::BOTTOM_RIGHT)] = item;
+
+  item = std::make_shared<Edge>(win, Edge::Type::CENTER);
+  items_[unsigned(Edge::Type::CENTER)] = item;
 
   Relayout();
 }
@@ -110,6 +105,10 @@ void EdgeBorders::Relayout()
   item = items_[unsigned(Edge::Type::BOTTOM_RIGHT)];
   item->SetCoords(rect_.x2() - edges.right, rect_.y2() - edges.bottom);
   item->SetSize(edges.right, edges.bottom);
+
+  item = items_[unsigned(Edge::Type::CENTER)];
+  item->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top);
+  item->SetSize(rect_.width() - ib.left - ib.right, b.top);
 }
 
 } // decoration namespace

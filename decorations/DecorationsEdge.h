@@ -40,6 +40,7 @@ public:
     BOTTOM,
     BOTTOM_LEFT,
     BOTTOM_RIGHT,
+    CENTER,
     Size
   };
 

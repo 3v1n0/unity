@@ -51,7 +51,7 @@ unsigned EdgeTypeToCursorShape(Edge::Type type)
     case Edge::Type::BOTTOM_RIGHT:
       return XC_bottom_right_corner;
     default:
-      return XC_arrow;
+      return XC_left_ptr;
   }
 }
 
