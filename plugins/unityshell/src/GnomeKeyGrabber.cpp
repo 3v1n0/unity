@@ -126,7 +126,7 @@ bool GnomeKeyGrabber::Impl::removeAction(unsigned int action_id)
   return false;
 }
 
-GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(std::string const& method, GVariant* parameters)
+GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(const std::string& method, GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Called method '" << method << "'";
 
@@ -188,16 +188,24 @@ GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(std::string const& method, GV
 
 unsigned int GnomeKeyGrabber::Impl::grabAccelerator(const char *accelerator, unsigned int flags)
 {
-  /* XXX: What is flags? */
-
   CompAction action;
   action.keyFromString(accelerator);
-  action.setInitiate(boost::bind(&GnomeKeyGrabber::Impl::actionInitiated, this, _1, _2, _3));
-  action.setTerminate(boost::bind(&GnomeKeyGrabber::Impl::actionTerminated, this, _1, _2, _3));
+
+  if (!isActionPostponed(action))
+  {
+    action.setInitiate(boost::bind(&GnomeKeyGrabber::Impl::actionInitiated, this, _1, _2, _3));
+    action.setState(CompAction::StateInitKey);
+  }
+  else
+  {
+    action.setTerminate(boost::bind(&GnomeKeyGrabber::Impl::actionTerminated, this, _1, _2, _3));
+    action.setState(CompAction::StateTermKey);
+  }
+
   return addAction(action);
 }
 
-void GnomeKeyGrabber::Impl::activateAction(const CompAction* action, unsigned int device)
+void GnomeKeyGrabber::Impl::activateAction(const CompAction* action, unsigned int device) const
 {
   unsigned int action_id(-1);
   unsigned int closest_action_id(-1);
@@ -214,29 +222,32 @@ void GnomeKeyGrabber::Impl::activateAction(const CompAction* action, unsigned in
       closest_action_id = i->first;
   }
 
-  if (action_id < 0)
-    action_id = closest_action_id;
-
-  if (action_id < 0)
-    return;
-
-  shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_id, device));
+  if (action_id >= 0)
+    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_id, device));
+  else if (closest_action_id >= 0)
+    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", closest_action_id, device));
 }
 
-bool GnomeKeyGrabber::Impl::actionInitiated(CompAction* action, CompAction::State state, CompOption::Vector& options)
+bool GnomeKeyGrabber::Impl::actionInitiated(CompAction* action, CompAction::State state, CompOption::Vector& options) const
 {
-  /* XXX: Do this only once per initiate/terminate pair. */
-
   activateAction(action, 0);
   return true;
 }
 
-bool GnomeKeyGrabber::Impl::actionTerminated(CompAction* action, CompAction::State state, CompOption::Vector& options)
+bool GnomeKeyGrabber::Impl::actionTerminated(CompAction* action, CompAction::State state, CompOption::Vector& options) const
 {
-  /* XXX: Do this only once per initiate/terminate pair. */
+  if (state & CompAction::StateTermTapped)
+  {
+    activateAction(action, 0);
+    return true;
+  }
 
-  activateAction(action, 1);
-  return true;
+  return false;
+}
+
+bool GnomeKeyGrabber::Impl::isActionPostponed(CompAction& action)
+{
+  return !action.key().keycode() || modHandler->keycodeToModifiers(action.key().keycode());
 }
 
 // Public implementation

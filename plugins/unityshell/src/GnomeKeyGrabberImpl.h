@@ -39,12 +39,14 @@ struct GnomeKeyGrabber::Impl
   bool removeAction(const CompAction& action);
   bool removeAction(unsigned int action_id);
 
-  GVariant* onShellMethodCall(std::string const& method, GVariant* parameters);
+  GVariant* onShellMethodCall(const std::string& method, GVariant* parameters);
   unsigned int grabAccelerator(const char *accelerator, unsigned int flags);
-  void activateAction(const CompAction* action, unsigned int device);
+  void activateAction(const CompAction* action, unsigned int device) const;
 
-  bool actionInitiated(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool actionTerminated(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool actionInitiated(CompAction* action, CompAction::State state, CompOption::Vector& options) const;
+  bool actionTerminated(CompAction* action, CompAction::State state, CompOption::Vector& options) const;
+
+  bool isActionPostponed(CompAction& action);
 
   GnomeKeyGrabber* grabber_;
   glib::DBusServer shell_server_;
