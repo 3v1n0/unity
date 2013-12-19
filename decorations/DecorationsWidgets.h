@@ -111,6 +111,7 @@ class TexturedItem : public Item
 public:
   typedef std::shared_ptr<TexturedItem> Ptr;
 
+  void SetTexture(cu::SimpleTexture::Ptr const&);
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void SetCoords(int x, int y);
 

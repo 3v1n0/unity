@@ -172,6 +172,20 @@ BasicContainer::Ptr Item::GetParent() const
 
 //
 
+void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
+{
+  if (texture_.st == tex)
+    return;
+
+  auto prev_geo = Geometry();
+  texture_.SetTexture(tex);
+
+  if (prev_geo != Geometry())
+    geo_parameters_changed.emit();
+
+  Damage();
+}
+
 void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
                         CompRegion const& clip, unsigned mask)
 {
