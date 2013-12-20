@@ -40,6 +40,12 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
   if (button != 1)
     return;
 
+  if (!(win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask)))
+  {
+    Edge::ButtonDownEvent(p, button);
+    return;
+  }
+
   auto const& style = Style::Get();
   unsigned max_time_delta = std::max(0, style->DoubleClickMaxTimeDelta());
   bool maximized = false;
