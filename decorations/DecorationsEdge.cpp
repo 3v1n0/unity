@@ -61,6 +61,8 @@ Edge::Edge(CompWindow* win, Type t)
   : win_(win)
   , type_(t)
 {
+  unsigned mask = (t == Type::CENTER) ? CompWindowActionMoveMask : CompWindowActionResizeMask;
+  sensitive = (win_->actions() & mask);
   mouse_owner.changed.connect([this] (bool over) {
     if (over)
       XDefineCursor(screen->dpy(), win_->frame(), DataPool::Get()->EdgeCursor(type_));
