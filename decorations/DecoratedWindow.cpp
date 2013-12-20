@@ -21,6 +21,7 @@
 #include "DecorationsPriv.h"
 #include "DecorationsWindowButton.h"
 #include "DecorationsEdgeBorders.h"
+#include "DecorationsGrabEdge.h"
 
 namespace unity
 {
@@ -228,7 +229,13 @@ void Window::Impl::SetupTopLayout()
 
   input_mixer_ = std::make_shared<InputMixer>();
 
-  edge_borders_ = std::make_shared<EdgeBorders>(win_);
+  if (win_->actions() & CompWindowActionResizeMask)
+    edge_borders_ = std::make_shared<EdgeBorders>(win_);
+  else if (win_->actions() & CompWindowActionMoveMask)
+    edge_borders_ = std::make_shared<GrabEdge>(win_);
+  else
+    edge_borders_.reset();
+
   input_mixer_->PushToFront(edge_borders_);
 
   auto padding = Style::Get()->Padding(Side::TOP);
@@ -344,8 +351,11 @@ void Window::Impl::UpdateDecorationTextures()
   top_layout_->SetCoords(geo.x(), geo.y());
   top_layout_->SetSize(geo.width(), border.top);
 
-  edge_borders_->SetCoords(input.x(), input.y());
-  edge_borders_->SetSize(input.width(), input.height());
+  if (edge_borders_)
+  {
+    edge_borders_->SetCoords(input.x(), input.y());
+    edge_borders_->SetSize(input.width(), input.height());
+  }
 }
 
 void Window::Impl::ComputeShadowQuads()
