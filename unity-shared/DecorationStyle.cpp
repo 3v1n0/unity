@@ -35,6 +35,9 @@ const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { 
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
 
+const std::string SETTINGS_NAME = "org.gnome.desktop.wm.preferences";
+const std::string FONT_KEY = "titlebar-font";
+
 struct UnityDecoration
 {
   GtkWidget parent_instance;
@@ -73,6 +76,7 @@ struct Style::Impl
 {
   Impl()
     : ctx_(gtk_style_context_new())
+    , settings_(g_settings_new(SETTINGS_NAME.c_str()))
     , title_alignment_(0)
   {
     std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
@@ -190,7 +194,32 @@ struct Style::Impl
     return "";
   }
 
+  std::string GetFont()
+  {
+    return glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
+  }
+
+  nux::Size TitleNaturalSize(std::string const& text)
+  {
+    glib::Object<PangoContext> context(gdk_pango_context_get_for_screen(gdk_screen_get_default()));
+    pango_context_set_language(context, gtk_get_default_language());
+
+    std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(GetFont().c_str()), pango_font_description_free);
+    pango_context_set_font_description(context, desc.get());
+    // Cache pango context for all decorations..
+
+    glib::Object<PangoLayout> layout(pango_layout_new(context));
+    pango_layout_set_text(layout, text.c_str(), -1);
+    pango_layout_context_changed(layout);
+
+    nux::Size extents;
+    pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
+
+    return extents;
+  }
+
   glib::Object<GtkStyleContext> ctx_;
+  glib::Object<GSettings> settings_;
   std::string theme_name_;
   decoration::Border border_;
   decoration::Border input_edges_;
@@ -265,6 +294,11 @@ int Style::DoubleClickMaxDistance() const
 int Style::DoubleClickMaxTimeDelta() const
 {
   return impl_->GetSettingValue<int>("gtk-double-click-time");
+}
+
+nux::Size Style::TitleNaturalSize(std::string const& text)
+{
+  return impl_->TitleNaturalSize(text);
 }
 
 } // decoration namespace

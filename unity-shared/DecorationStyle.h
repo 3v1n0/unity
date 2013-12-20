@@ -20,6 +20,7 @@
 #ifndef UNITY_DECORATION_STYLE
 #define UNITY_DECORATION_STYLE
 
+#include <NuxCore/Size.h>
 #include <memory>
 #include <cairo/cairo.h>
 
@@ -98,6 +99,7 @@ public:
 
   Alignment TitleAlignment() const;
   float TitleAlignmentValue() const;
+  nux::Size TitleNaturalSize(std::string const&);
 
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
 

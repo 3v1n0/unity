@@ -19,7 +19,7 @@
 
 #include <iostream>
 #include <gtk/gtk.h>
-#include "unity-shared/DecorationStyle.h"
+#include "DecorationStyle.h"
 
 using namespace unity::decoration;
 
@@ -101,4 +101,13 @@ int main(int argc, char* argv[])
 
   std::cout << "Maximum Double click distance " << style->DoubleClickMaxDistance() << "px" << std::endl;
   std::cout << "Maximum Double click Time delta " << style->DoubleClickMaxTimeDelta() << "ms " << std::endl;
+  std::cout << "---" << std::endl;
+
+  std::string text = "Unity is cool!";
+  auto text_size = style->TitleNaturalSize(text);
+  std::cout << "'" << text << "' text size: " << text_size.width << "x" << text_size.height << std::endl;
+
+  text = "Unity is cool indeed, and this is a very, very very very looooooooooooong TEEEEEEEEEEXXXXXXXXXXXXTTTTTTTT!!!!!";
+  text_size = style->TitleNaturalSize(text);
+  std::cout << "'" << text << "' text size: " << text_size.width << "x" << text_size.height << std::endl;
 }
