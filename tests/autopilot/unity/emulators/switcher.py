@@ -250,8 +250,8 @@ class SwitcherView(UnityIntrospectionObject):
         offset = self.spread_offset
         icon_arg = self.icon_args[index]
 
-        x = icon_arg.logical_center_x + offset
-        y = icon_arg.logical_center_y + offset
+        x = icon_arg.logical_center.x + offset
+        y = icon_arg.logical_center.y + offset
 
         self._mouse.move(x,y)
 

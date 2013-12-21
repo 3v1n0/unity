@@ -55,7 +55,7 @@ class LauncherScrollTests(LauncherTestCase):
 
         # Make sure the last icon is off the screen or else there is no
         # scrolling.
-        self.assertThat(last_icon.center_y, Eventually(GreaterThan(h)))
+        self.assertThat(last_icon.center.y, GreaterThan(h))
 
         # Autoscroll to the last icon
         launcher_instance.move_mouse_to_icon(last_icon, autoscroll_offset)
@@ -87,7 +87,7 @@ class LauncherScrollTests(LauncherTestCase):
 
         # Make sure the first icon is off the screen or else there is no
         # scrolling.
-        self.assertThat(first_icon.center_y, Eventually(LessThan(y)))
+        self.assertThat(first_icon.center.y, LessThan(y))
         
         # Autoscroll to the first icon
         launcher_instance.move_mouse_to_icon(first_icon, autoscroll_offset)
