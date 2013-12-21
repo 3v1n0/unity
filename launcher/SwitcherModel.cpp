@@ -42,9 +42,12 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
   // When using Webapps, there are more than one active icon, so let's just pick
   // up the first one found which is the web browser.
   bool found = false;
+  int order = 0;
 
   for (auto const& application : applications_)
   {
+    application->SetOrder(++order);
+
     AddChild(application.GetPointer());
     if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) && !found)
     {

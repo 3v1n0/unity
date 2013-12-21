@@ -291,4 +291,5 @@ class SwitcherModel(UnityIntrospectionObject):
 
     @property
     def icons(self):
-        return self.get_children_by_type(SimpleLauncherIcon)
+        icons = self.get_children_by_type(SimpleLauncherIcon)
+        return sorted(icons, key=lambda icon: icon.order)

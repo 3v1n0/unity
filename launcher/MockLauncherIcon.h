@@ -146,6 +146,8 @@ public:
 
   void SetSortPriority(int priority) { sort_priority_ = priority; }
 
+  void SetOrder(int order) { order_ = order; }
+
   bool OpenQuicklist(bool select_first_item = false, int monitor = -1)
   {
     return false;
@@ -417,6 +419,7 @@ private:
   nux::BaseTexture* icon_;
   IconType type_;
   int sort_priority_;
+  int order_;
   std::vector<std::bitset<std::size_t(Quirk::LAST)>> quirks_;
   std::vector<std::vector<float>> quirk_progress_;
   std::map<int, nux::Point3> center_;

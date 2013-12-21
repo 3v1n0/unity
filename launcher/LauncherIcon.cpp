@@ -71,6 +71,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _present_urgency(0)
   , _progress(0.0f)
   , _sort_priority(DefaultPriority(type))
+  , _order(0)
   , _last_monitor(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
@@ -176,6 +177,7 @@ void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
   .add("shortcut", _shortcut)
+  .add("order", _order)
   .add("monitors_active", static_cast<GVariant*>(glib::Variant::FromVector(monitors_active)))
   .add("monitors_visibility", static_cast<GVariant*>(glib::Variant::FromVector(monitors_visible)))
   .add("monitors_urgent", static_cast<GVariant*>(glib::Variant::FromVector(monitors_urgent)))
@@ -817,6 +819,11 @@ void LauncherIcon::SetSortPriority(int priority)
 int LauncherIcon::SortPriority()
 {
   return _sort_priority;
+}
+
+void LauncherIcon::SetOrder(int order)
+{
+  _order = order;
 }
 
 LauncherIcon::IconType
