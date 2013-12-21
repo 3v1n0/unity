@@ -1888,7 +1888,7 @@ on_active_menu_move_current (GtkMenu              *menu,
           GtkWidget *item = (GtkWidget *)c->data;
 
           if (GTK_IS_MENU_ITEM (item)
-              && gtk_widget_get_state (item) == GTK_STATE_PRELIGHT
+              && gtk_widget_get_state_flags (item) & GTK_STATE_FLAG_PRELIGHT
               && gtk_menu_item_get_submenu (GTK_MENU_ITEM (item)))
             {
               /* Skip direction due to there being a submenu,
