@@ -99,6 +99,7 @@ public:
 
   Alignment TitleAlignment() const;
   float TitleAlignmentValue() const;
+  int TitleIndent() const;
   nux::Size TitleNaturalSize(std::string const&);
 
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
@@ -107,6 +108,7 @@ public:
   int DoubleClickMaxTimeDelta() const;
 
   void DrawSide(Side, WidgetState, cairo_t*, int width, int height);
+  void DrawTitle(std::string const&, WidgetState, cairo_t*, int width, int height);
 
 private:
   Style();

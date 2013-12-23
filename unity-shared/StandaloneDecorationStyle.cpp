@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
   std::cout << "---" << std::endl;
 
   std::cout << "Title alignment: " << style->TitleAlignment() << std::endl;
+  std::cout << "Title indent: " << style->TitleIndent() << std::endl;
   std::cout << "---" << std::endl;
 
   std::cout << "Top border padding, top: " << style->Padding(Side::TOP) << std::endl;

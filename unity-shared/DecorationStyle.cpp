@@ -61,6 +61,9 @@ static void unity_decoration_class_init(UnityDecorationClass* klass)
 
   param = g_param_spec_float("title-alignment", "Title Alignment", "", 0.0, 1.0, 0.0, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_int("title-indent", "Title Indent", "", 0, G_MAXINT, 10, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 }
 
 Border BorderFromGtkBorder(GtkBorder* b, Border fallback = Border())
@@ -77,8 +80,14 @@ struct Style::Impl
   Impl()
     : ctx_(gtk_style_context_new())
     , settings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , pango_context_(gdk_pango_context_get_for_screen(gdk_screen_get_default()))
     , title_alignment_(0)
+    , title_indent_(0)
   {
+    std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(GetFont().c_str()), pango_font_description_free);
+    pango_context_set_font_description(pango_context_, desc.get());
+    pango_context_set_language(pango_context_, gtk_get_default_language());
+
     std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
     gtk_widget_path_append_type(widget_path.get(), unity_decoration_get_type());
     gtk_style_context_set_path(ctx_, widget_path.get());
@@ -89,7 +98,8 @@ struct Style::Impl
     b.reset(GetProperty<GtkBorder*>("input-extents"), gtk_border_free);
     input_edges_ = BorderFromGtkBorder(b.get(), DEFAULT_INPUT_EDGES);
 
-    title_alignment_ = GetProperty<gfloat>("title-alignment");
+    title_alignment_ = std::min(1.0f, std::max(0.0f, GetProperty<gfloat>("title-alignment")));
+    title_indent_ = std::max(0, GetProperty<gint>("title-indent"));
     theme_name_ = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
   }
 
@@ -199,31 +209,46 @@ struct Style::Impl
     return glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
   }
 
+  glib::Object<PangoLayout> BuildPangoLayout(std::string const& text)
+  {
+    glib::Object<PangoLayout> layout(pango_layout_new(pango_context_));
+    pango_layout_set_height(layout, -1); //avoid wrap lines
+    pango_layout_set_text(layout, text.c_str(), -1);
+    return layout;
+  }
+
   nux::Size TitleNaturalSize(std::string const& text)
   {
-    glib::Object<PangoContext> context(gdk_pango_context_get_for_screen(gdk_screen_get_default()));
-    pango_context_set_language(context, gtk_get_default_language());
-
-    std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(GetFont().c_str()), pango_font_description_free);
-    pango_context_set_font_description(context, desc.get());
-    // Cache pango context for all decorations..
-
-    glib::Object<PangoLayout> layout(pango_layout_new(context));
-    pango_layout_set_text(layout, text.c_str(), -1);
-    pango_layout_context_changed(layout);
-
     nux::Size extents;
+    auto const& layout = BuildPangoLayout(text);
+    pango_layout_context_changed(layout);
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
 
     return extents;
   }
 
+  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, int w, int h)
+  {
+    gtk_style_context_save(ctx_);
+    gtk_style_context_add_class(ctx_, GetBorderClass(Side::TOP).c_str());
+    gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
+
+    auto const& layout = BuildPangoLayout(text);
+    pango_layout_set_width(layout, w * PANGO_SCALE);
+    pango_layout_set_height(layout, h * PANGO_SCALE);
+    gtk_render_layout(ctx_, cr, 0, 0, layout);
+
+    gtk_style_context_restore(ctx_);
+  }
+
   glib::Object<GtkStyleContext> ctx_;
   glib::Object<GSettings> settings_;
+  glib::Object<PangoContext> pango_context_;
   std::string theme_name_;
   decoration::Border border_;
   decoration::Border input_edges_;
   float title_alignment_;
+  int title_indent_;
 };
 
 Style::Ptr const& Style::Get()
@@ -258,9 +283,19 @@ float Style::TitleAlignmentValue() const
   return impl_->title_alignment_;
 }
 
+int Style::TitleIndent() const
+{
+  return impl_->title_indent_;
+}
+
 void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
 {
   impl_->DrawSide(s, ws, cr, w, h);
+}
+
+void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, int w, int h)
+{
+  impl_->DrawTitle(t, ws, cr, w, h);
 }
 
 std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const
