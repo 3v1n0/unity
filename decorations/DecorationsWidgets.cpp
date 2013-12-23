@@ -30,6 +30,8 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.decoration.widgets");
 CompositeScreen* cscreen_ = CompositeScreen::get(screen);
+
+inline int clamp_size(int value) { return std::min<int>(std::max(0, value), std::numeric_limits<short>::max()); }
 }
 
 Item::Item()
@@ -37,7 +39,7 @@ Item::Item()
   , focused(false)
   , sensitive(true)
   , mouse_owner(false)
-  , max_(std::numeric_limits<int>::max(), std::numeric_limits<int>::max())
+  , max_(std::numeric_limits<short>::max(), std::numeric_limits<short>::max())
 {
   auto parent_relayout_cb = [this] {
     if (BasicContainer::Ptr const& parent = parent_.lock())
@@ -50,8 +52,8 @@ Item::Item()
 
 void Item::SetSize(int width, int height)
 {
-  natural_.width = std::max(0, width);
-  natural_.height = std::max(0, height);
+  natural_.width = clamp_size(width);
+  natural_.height = clamp_size(height);
   SetMinWidth(width);
   SetMaxWidth(width);
   SetMinHeight(height);
@@ -82,7 +84,7 @@ int Item::GetNaturalHeight() const
 
 void Item::SetMaxWidth(int value)
 {
-  int clamped = std::max(0, value);
+  int clamped = clamp_size(value);
 
   if (max_.width == clamped)
     return;
@@ -98,7 +100,7 @@ void Item::SetMaxWidth(int value)
 
 void Item::SetMinWidth(int value)
 {
-  int clamped = std::max(0, value);
+  int clamped = clamp_size(value);
 
   if (min_.width == clamped)
     return;
@@ -114,7 +116,7 @@ void Item::SetMinWidth(int value)
 
 void Item::SetMaxHeight(int value)
 {
-  int clamped = std::max(0, value);
+  int clamped = clamp_size(value);
 
   if (max_.height == clamped)
     return;
@@ -130,7 +132,7 @@ void Item::SetMaxHeight(int value)
 
 void Item::SetMinHeight(int value)
 {
-  int clamped = std::max(0, value);
+  int clamped = clamp_size(value);
 
   if (min_.height == clamped)
     return;
@@ -230,6 +232,11 @@ BasicContainer::BasicContainer()
   });
 }
 
+CompRect BasicContainer::ContentGeometry() const
+{
+  return Geometry();
+}
+
 //
 
 Layout::Layout()
@@ -270,6 +277,14 @@ void Layout::Remove(Item::Ptr const& item)
   Relayout();
 }
 
+CompRect Layout::ContentGeometry() const
+{
+  return CompRect(rect_.x() + std::min(left_padding(), rect_.width()),
+                  rect_.y() + std::min(top_padding(), rect_.height()),
+                  clamp_size(rect_.width() - left_padding - right_padding),
+                  clamp_size(rect_.height() - top_padding - bottom_padding));
+}
+
 void Layout::Relayout()
 {
   if (relayouting_)
@@ -278,8 +293,8 @@ void Layout::Relayout()
   relayouting_ = true;
   int loop = 0;
 
-  nux::Size available_space(std::max(0, max_.width - left_padding - right_padding),
-                            std::max(0, max_.height - top_padding - bottom_padding));
+  nux::Size available_space(clamp_size(max_.width - left_padding - right_padding),
+                            clamp_size(max_.height - top_padding - bottom_padding));
 
   do
   {
@@ -337,7 +352,7 @@ void Layout::Relayout()
       if (exceeding_width > 0 && item_geo.width() > 0)
       {
         int old_width = item_geo.width();
-        int max_item_width = std::max(0, old_width - exceeding_width);
+        int max_item_width = clamp_size(old_width - exceeding_width);
         item->SetMaxWidth(max_item_width);
         exceeding_width -= (old_width - max_item_width);
       }
@@ -373,7 +388,7 @@ void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAt
 
 bool Layout::SetPadding(int& target, int new_value)
 {
-  int padding = std::max(0, new_value);
+  int padding = clamp_size(new_value);
 
   if (padding == target)
     return false;

@@ -132,6 +132,8 @@ public:
   BasicContainer();
   Item::List const& Items() const { return items_; }
 
+  virtual CompRect ContentGeometry() const;
+
 protected:
   friend class Item;
   virtual void Relayout() = 0;
@@ -157,6 +159,7 @@ public:
   void Append(Item::Ptr const&);
   void Remove(Item::Ptr const&);
 
+  CompRect ContentGeometry() const;
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 private:

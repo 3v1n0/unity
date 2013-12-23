@@ -25,12 +25,12 @@ using namespace testing;
 
 int random_positive_int()
 {
-  return g_random_int_range(0, G_MAXSHORT/2);
+  return g_random_int_range(0, std::numeric_limits<short>::max()/2);
 }
 
 int random_int()
 {
-  return g_random_int_range(G_MINSHORT/2, G_MAXSHORT/2);
+  return g_random_int_range(std::numeric_limits<short>::min()/2, std::numeric_limits<short>::max()/2);
 }
 
 struct SigReceiver : sigc::trackable
@@ -85,7 +85,7 @@ TEST_F(TestDecorationItem, DefaultFocused)
 TEST_F(TestDecorationItem, DefaultMaxSize)
 {
   MockItem item;
-  EXPECT_EQ(item.max_, nux::Size(std::numeric_limits<int>::max(), std::numeric_limits<int>::max()));
+  EXPECT_EQ(item.max_, nux::Size(std::numeric_limits<short>::max(), std::numeric_limits<short>::max()));
 }
 
 TEST_F(TestDecorationItem, DefaultMinSize)
@@ -410,7 +410,26 @@ TEST_F(TestDecorationLayout, AddToFocused)
   ASSERT_TRUE(item->focused());
 }
 
+TEST_F(TestDecorationLayout, ContentGeo)
+{
+  layout->Append(RandomMockItem());
+  EXPECT_EQ(layout->Geometry(), layout->ContentGeometry());
+}
 
+TEST_F(TestDecorationLayout, ContentGeoWithPadding)
+{
+  layout->Append(RandomMockItem());
+  layout->top_padding = random_positive_int();
+  layout->left_padding = random_positive_int();
+  layout->right_padding = random_positive_int();
+  layout->bottom_padding = random_positive_int();
+
+  CompRect expected_geo(layout->Geometry().x() + layout->left_padding,
+                        layout->Geometry().y() + layout->top_padding,
+                        layout->Geometry().width() - layout->left_padding - layout->right_padding,
+                        layout->Geometry().height() - layout->top_padding - layout->bottom_padding);
+  EXPECT_EQ(expected_geo, layout->ContentGeometry());
+}
 
 //
 
