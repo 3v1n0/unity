@@ -70,6 +70,7 @@ public:
 
   void SetParent(std::shared_ptr<BasicContainer> const&);
   std::shared_ptr<BasicContainer> GetParent() const;
+  std::shared_ptr<BasicContainer> GetTopParent() const;
 
   void Damage();
   virtual void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask) {}

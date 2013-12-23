@@ -174,6 +174,21 @@ BasicContainer::Ptr Item::GetParent() const
   return parent_.lock();
 }
 
+BasicContainer::Ptr Item::GetTopParent() const
+{
+  BasicContainer::Ptr parent = GetParent();
+
+  while (parent)
+  {
+    if (parent->parent_.expired())
+      return parent;
+
+    parent = parent->GetParent();
+  }
+
+  return parent;
+}
+
 //
 
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
