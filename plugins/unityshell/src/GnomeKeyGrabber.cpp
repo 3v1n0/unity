@@ -253,7 +253,7 @@ unsigned int GnomeKeyGrabber::Impl::grabAccelerator(const char* accelerator,
   }
   else
   {
-    action.setState(CompAction::StateTermKey);
+    action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
     action.setTerminate(boost::bind(&GnomeKeyGrabber::Impl::actionTerminated,
                                     this, _1, _2, _3));
   }
