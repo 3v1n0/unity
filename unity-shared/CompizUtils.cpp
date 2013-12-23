@@ -44,13 +44,18 @@ void SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
   if (st && st->texture())
   {
     auto* tex = st->texture();
-    quad.box.setWidth(tex->width());
-    quad.box.setHeight(tex->height());
+    CompPoint old_coords(quad.box.x(), quad.box.y());
+    short invalid = std::numeric_limits<short>::min();
+    quad.box.setGeometry(invalid, invalid, tex->width(), tex->height());
+    SetCoords(old_coords.x(), old_coords.y());
   }
 }
 
 void SimpleTextureQuad::SetCoords(int x, int y)
 {
+  if (x == quad.box.x() && y == quad.box.y())
+    return;
+
   quad.box.setX(x);
   quad.box.setY(y);
   quad.matrix = (st && st->texture()) ? st->texture()->matrix() : GLTexture::Matrix();
