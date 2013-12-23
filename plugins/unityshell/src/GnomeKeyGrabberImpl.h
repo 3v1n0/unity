@@ -32,32 +32,56 @@ namespace grabber
 
 struct GnomeKeyGrabber::Impl
 {
-  Impl(GnomeKeyGrabber* parent, CompScreen* screen, bool test_mode = false);
-  ~Impl();
+  struct Info
+  {
+    CompAction* action_;
+    const CompAction* address_;
 
-  unsigned int addAction(const CompAction& action);
-  bool removeAction(const CompAction& action);
-  bool removeAction(unsigned int action_id);
+    explicit Info(CompAction* action = nullptr,
+                  const CompAction* address = nullptr);
+  };
 
-  GVariant* onShellMethodCall(const std::string& method, GVariant* parameters);
-  unsigned int grabAccelerator(const char *accelerator, unsigned int flags);
-  void activateAction(const CompAction* action, unsigned int device) const;
+  class BindingLess
+  {
+  public:
 
-  bool actionInitiated(CompAction* action, CompAction::State state, CompOption::Vector& options) const;
-  bool actionTerminated(CompAction* action, CompAction::State state, CompOption::Vector& options) const;
+    bool operator()(const CompAction::KeyBinding& first,
+                    const CompAction::KeyBinding& second) const;
+  };
 
-  bool isActionPostponed(CompAction& action);
+  bool test_mode_;
 
-  GnomeKeyGrabber* grabber_;
   glib::DBusServer shell_server_;
   glib::DBusObject::Ptr shell_object_;
 
   CompScreen* screen_;
   CompAction::Vector actions_;
+  std::vector<unsigned int> action_ids_;
   unsigned int current_action_id_;
-  std::map<unsigned int, CompAction*> action_for_id_;
 
-  bool test_mode_;
+  std::map<unsigned int, Info> info_by_action_id_;
+  std::map<const CompAction*, unsigned int> action_ids_by_action_;
+  std::map<const CompAction*, unsigned int> action_ids_by_address_;
+  std::map<CompAction::KeyBinding, unsigned int, BindingLess> grabs_by_binding_;
+
+  explicit Impl(CompScreen* screen, bool test_mode = false);
+
+  unsigned int addAction(const CompAction& action, bool addressable = true);
+  bool removeAction(const CompAction& action);
+  bool removeAction(unsigned int action_id);
+
+  GVariant* onShellMethodCall(const std::string& method, GVariant* parameters);
+  unsigned int grabAccelerator(const char* accelerator, unsigned int flags);
+  void activateAction(const CompAction* action, unsigned int device) const;
+
+  bool actionInitiated(CompAction* action,
+                       CompAction::State state,
+                       CompOption::Vector& options) const;
+  bool actionTerminated(CompAction* action,
+                        CompAction::State state,
+                        CompOption::Vector& options) const;
+
+  bool isActionPostponed(const CompAction& action) const;
 };
 
 } // namespace grabber

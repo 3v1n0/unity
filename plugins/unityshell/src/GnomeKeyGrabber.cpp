@@ -62,71 +62,123 @@ namespace testing
 const std::string DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 }
 
-GnomeKeyGrabber::Impl::Impl(GnomeKeyGrabber* grabber, CompScreen* screen, bool test_mode)
-  : grabber_(grabber)
-  , shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
+bool GnomeKeyGrabber::Impl::BindingLess::operator()
+  (const CompAction::KeyBinding& first,
+   const CompAction::KeyBinding& second) const
+{
+  return first.keycode() < second.keycode() ||
+        (first.keycode() == second.keycode() &&
+         first.modifiers() < second.modifiers());
+}
+
+GnomeKeyGrabber::Impl::Info::Info(CompAction* action,
+                                  const CompAction* address)
+  : action_(action)
+  , address_(address)
+{
+}
+
+GnomeKeyGrabber::Impl::Impl(CompScreen* screen, bool test_mode)
+  : test_mode_(test_mode)
+  , shell_server_(test_mode_ ? testing::DBUS_NAME : shell::DBUS_NAME)
   , screen_(screen)
   , current_action_id_(0)
-  , test_mode_(test_mode)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
-  shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::onShellMethodCall));
+  shell_object_->SetMethodsCallsHandler(
+    sigc::mem_fun(this, &Impl::onShellMethodCall));
 }
 
-GnomeKeyGrabber::Impl::~Impl()
+unsigned int GnomeKeyGrabber::Impl::addAction(const CompAction& action,
+                                              bool addressable)
 {
-}
+  bool resize(actions_.size() == actions_.capacity());
 
-unsigned int GnomeKeyGrabber::Impl::addAction(const CompAction& action)
-{
   current_action_id_++;
   actions_.push_back(action);
-  action_for_id_[current_action_id_] = &actions_.back();
-  screen_->addAction(&actions_.back());
+  CompAction& added(actions_.back());
+  action_ids_.push_back(current_action_id_);
+  Info& info(info_by_action_id_[current_action_id_]);
+
+  if (addressable)
+  {
+    action_ids_by_address_[&action] = current_action_id_;
+    info.address_ = &action;
+  }
+
+  if (!resize)
+  {
+    action_ids_by_action_[&added] = current_action_id_;
+    info.action_ = &added;
+  }
+  else
+  {
+    action_ids_by_action_.clear();
+
+    for (unsigned int i(0); i < actions_.size(); i++)
+    {
+      action_ids_by_action_[&actions_[i]] = action_ids_[i];
+      info_by_action_id_[action_ids_[i]].action_ = &actions_[i];
+    }
+  }
+
+  std::map<CompAction::KeyBinding, unsigned int>::iterator
+  i(grabs_by_binding_.find(added.key()));
+
+  if (i == grabs_by_binding_.end())
+  {
+    grabs_by_binding_[added.key()] = 0;
+    i = grabs_by_binding_.find(added.key());
+  }
+
+  if (i->second++ == 0)
+    screen_->addAction(&added);
+
   return current_action_id_;
 }
 
 bool GnomeKeyGrabber::Impl::removeAction(const CompAction& action)
 {
-  bool removed(false);
+  std::map<const CompAction*, unsigned int>::const_iterator
+  i(action_ids_by_address_.find(&action));
 
-  std::list<unsigned int> action_ids;
-
-  for (std::map<unsigned int, CompAction*>::const_iterator i(action_for_id_.begin()); i != action_for_id_.end(); ++i)
-    if (*i->second == action)
-      action_ids.push_front(i->first);
-
-  for (std::list<unsigned int>::const_iterator i(action_ids.begin()); i != action_ids.end(); ++i)
-    removed = removeAction(*i) || removed;
-
-  return removed;
+  return i != action_ids_by_address_.end() && removeAction(i->second);
 }
 
 bool GnomeKeyGrabber::Impl::removeAction(unsigned int action_id)
 {
-  std::map<unsigned int, CompAction*>::iterator i(action_for_id_.find(action_id));
+  std::map<unsigned int, Info>::iterator
+  i(info_by_action_id_.find(action_id));
 
-  if (i != action_for_id_.end())
+  if (i != info_by_action_id_.end())
   {
-    CompAction* action = i->second;
+    CompAction* action(i->second.action_);
+    const CompAction* address(i->second.address_);
 
-    screen_->removeAction(action);
-    action_for_id_.erase(i);
+    if (--grabs_by_binding_[action->key()] == 0)
+      screen->removeAction(action);
 
-    for (CompAction::Vector::iterator j(actions_.begin()); j != actions_.end(); ++j)
+    std::vector<unsigned int>::iterator
+    j(std::find(action_ids_.begin(), action_ids_.end(), action_id));
+
+    if (j != action_ids_.end())
     {
-      if (&*j == action) {
-        actions_.erase(j);
-        return true;
-      }
+      actions_.erase(actions_.begin() + (j - action_ids_.begin()));
+      action_ids_.erase(j);
     }
+
+    action_ids_by_action_.erase(action);
+    action_ids_by_address_.erase(address);
+    info_by_action_id_.erase(i);
+    return true;
   }
 
   return false;
 }
 
-GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(const std::string& method, GVariant* parameters)
+GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(const std::string& method,
+                                                   GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Called method '" << method << "'";
 
@@ -144,7 +196,8 @@ GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(const std::string& method, GV
       g_variant_get(parameters, "(a(su))", &iterator);
 
       while (g_variant_iter_next(iterator, "(&su)", &accelerator, &flags))
-        g_variant_builder_add(&builder, "u", grabAccelerator(accelerator, flags));
+        g_variant_builder_add(&builder, "u", grabAccelerator(accelerator,
+                                                             flags));
 
       g_variant_iter_free(iterator);
       variant = g_variant_builder_end(&builder);
@@ -186,55 +239,50 @@ GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(const std::string& method, GV
   return nullptr;
 }
 
-unsigned int GnomeKeyGrabber::Impl::grabAccelerator(const char *accelerator, unsigned int flags)
+unsigned int GnomeKeyGrabber::Impl::grabAccelerator(const char* accelerator,
+                                                    unsigned int flags)
 {
   CompAction action;
   action.keyFromString(accelerator);
 
   if (!isActionPostponed(action))
   {
-    action.setInitiate(boost::bind(&GnomeKeyGrabber::Impl::actionInitiated, this, _1, _2, _3));
     action.setState(CompAction::StateInitKey);
+    action.setInitiate(boost::bind(&GnomeKeyGrabber::Impl::actionInitiated,
+                                   this, _1, _2, _3));
   }
   else
   {
-    action.setTerminate(boost::bind(&GnomeKeyGrabber::Impl::actionTerminated, this, _1, _2, _3));
     action.setState(CompAction::StateTermKey);
+    action.setTerminate(boost::bind(&GnomeKeyGrabber::Impl::actionTerminated,
+                                    this, _1, _2, _3));
   }
 
-  return addAction(action);
+  return addAction(action, false);
 }
 
-void GnomeKeyGrabber::Impl::activateAction(const CompAction* action, unsigned int device) const
+void GnomeKeyGrabber::Impl::activateAction(const CompAction* action,
+                                           unsigned int device) const
 {
-  unsigned int action_id(-1);
-  unsigned int closest_action_id(-1);
+  std::map<const CompAction*, unsigned int>::const_iterator
+  i(action_ids_by_action_.find(action));
 
-  for (std::map<unsigned int, CompAction*>::const_iterator i(action_for_id_.begin()); i != action_for_id_.end(); ++i)
-  {
-    if (i->second == action)
-    {
-      action_id = i->first;
-      break;
-    }
-
-    if (*i->second == *action && (closest_action_id < 0 || i->first < closest_action_id))
-      closest_action_id = i->first;
-  }
-
-  if (action_id >= 0)
-    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_id, device));
-  else if (closest_action_id >= 0)
-    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", closest_action_id, device));
+  if (i != action_ids_by_action_.end())
+    shell_object_->EmitSignal("AcceleratorActivated",
+                              g_variant_new("(uu)", i->second, device));
 }
 
-bool GnomeKeyGrabber::Impl::actionInitiated(CompAction* action, CompAction::State state, CompOption::Vector& options) const
+bool GnomeKeyGrabber::Impl::actionInitiated(CompAction* action,
+                                            CompAction::State state,
+                                            CompOption::Vector& options) const
 {
   activateAction(action, 0);
   return true;
 }
 
-bool GnomeKeyGrabber::Impl::actionTerminated(CompAction* action, CompAction::State state, CompOption::Vector& options) const
+bool GnomeKeyGrabber::Impl::actionTerminated(CompAction* action,
+                                             CompAction::State state,
+                                             CompOption::Vector& options) const
 {
   if (state & CompAction::StateTermTapped)
   {
@@ -245,20 +293,21 @@ bool GnomeKeyGrabber::Impl::actionTerminated(CompAction* action, CompAction::Sta
   return false;
 }
 
-bool GnomeKeyGrabber::Impl::isActionPostponed(CompAction& action)
+bool GnomeKeyGrabber::Impl::isActionPostponed(const CompAction& action) const
 {
-  return !action.key().keycode() || modHandler->keycodeToModifiers(action.key().keycode());
+  int keycode(action.key().keycode());
+  return keycode == 0 || modHandler->keycodeToModifiers(keycode) != 0;
 }
 
 // Public implementation
 
 GnomeKeyGrabber::GnomeKeyGrabber(CompScreen* screen)
-  : impl_(new GnomeKeyGrabber::Impl(this, screen))
+  : impl_(new Impl(screen))
 {
 }
 
-GnomeKeyGrabber::GnomeKeyGrabber(CompScreen* screen, GnomeKeyGrabber::TestMode const& tm)
-  : impl_(new GnomeKeyGrabber::Impl(this, screen, true))
+GnomeKeyGrabber::GnomeKeyGrabber(CompScreen* screen, const TestMode& dummy)
+  : impl_(new Impl(screen, true))
 {
 }
 

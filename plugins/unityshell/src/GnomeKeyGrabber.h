@@ -32,7 +32,7 @@ class GnomeKeyGrabber
 public:
 
   explicit GnomeKeyGrabber(CompScreen* screen);
-  ~GnomeKeyGrabber();
+  virtual ~GnomeKeyGrabber();
 
   CompAction::Vector& getActions();
   void addAction(const CompAction& action);
@@ -43,7 +43,7 @@ public:
 protected:
 
   struct TestMode {};
-  GnomeKeyGrabber(CompScreen* screen, TestMode const&);
+  GnomeKeyGrabber(CompScreen* screen, const TestMode& dummy);
 
 private:
 
