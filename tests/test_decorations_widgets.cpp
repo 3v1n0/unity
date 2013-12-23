@@ -120,6 +120,38 @@ TEST_F(TestDecorationItem, WeakParent)
   EXPECT_EQ(nullptr, item.GetParent());
 }
 
+TEST_F(TestDecorationItem, DefaultTopParent)
+{
+  EXPECT_EQ(nullptr, item.GetTopParent());
+}
+
+TEST_F(TestDecorationItem, SimpleTopParent)
+{
+  auto parent = std::make_shared<MockBasicContainer>();
+  item.SetParent(parent);
+  EXPECT_EQ(parent, item.GetTopParent());
+}
+
+TEST_F(TestDecorationItem, TopParent)
+{
+  Item::List containers;
+  auto parent = std::make_shared<MockBasicContainer>();
+  auto top = parent;
+
+  for (int i = 0; i < 10; ++i)
+  {
+    auto c = std::make_shared<MockBasicContainer>();
+    containers.push_back(c);
+    c->SetParent(parent);
+    parent = c;
+    ASSERT_EQ(top, c->GetTopParent());
+  }
+
+  item.SetParent(parent);
+  ASSERT_EQ(parent, item.GetParent());
+  EXPECT_EQ(top, item.GetTopParent());
+}
+
 TEST_F(TestDecorationItem, RelayoutParentOnGeometryChanges)
 {
   auto parent = std::make_shared<MockBasicContainer>();
