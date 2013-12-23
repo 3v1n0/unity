@@ -31,7 +31,9 @@ namespace
 DECLARE_LOGGER(logger, "unity.decoration.widgets");
 CompositeScreen* cscreen_ = CompositeScreen::get(screen);
 
-inline int clamp_size(int value) { return std::min<int>(std::max(0, value), std::numeric_limits<short>::max()); }
+template <typename T> constexpr T max(T a, T b) { return (a > b) ? a : b; }
+template <typename T> constexpr T min(T a, T b) { return (a < b) ? a : b; }
+constexpr int clamp_size(int v) { return min<int>(max(0, v), std::numeric_limits<short>::max()); }
 }
 
 Item::Item()
@@ -90,10 +92,10 @@ void Item::SetMaxWidth(int value)
     return;
 
   max_.width = clamped;
-  min_.width = std::min(min_.width, max_.width);
+  min_.width = min(min_.width, max_.width);
 
   if (Geometry().width() > max_.width)
-    InternalGeo().setWidth(std::min(GetNaturalWidth(), max_.width));
+    InternalGeo().setWidth(min(GetNaturalWidth(), max_.width));
 
   geo_parameters_changed.emit();
 }
@@ -106,7 +108,7 @@ void Item::SetMinWidth(int value)
     return;
 
   min_.width = clamped;
-  max_.width = std::max(min_.width, max_.width);
+  max_.width = max(min_.width, max_.width);
 
   if (Geometry().width() < min_.width)
     InternalGeo().setWidth(min_.width);
@@ -122,10 +124,10 @@ void Item::SetMaxHeight(int value)
     return;
 
   max_.height = clamped;
-  min_.height = std::min(min_.height, max_.height);
+  min_.height = min(min_.height, max_.height);
 
   if (Geometry().height() > max_.height)
-    InternalGeo().setHeight(std::min(GetNaturalHeight(), max_.height));
+    InternalGeo().setHeight(min(GetNaturalHeight(), max_.height));
 
   geo_parameters_changed.emit();
 }
@@ -138,7 +140,7 @@ void Item::SetMinHeight(int value)
     return;
 
   min_.height = clamped;
-  max_.height = std::max(min_.height, max_.height);
+  max_.height = max(min_.height, max_.height);
 
   if (Geometry().height() < min_.height)
     InternalGeo().setHeight(min_.height);
@@ -279,8 +281,8 @@ void Layout::Remove(Item::Ptr const& item)
 
 CompRect Layout::ContentGeometry() const
 {
-  return CompRect(rect_.x() + std::min(left_padding(), rect_.width()),
-                  rect_.y() + std::min(top_padding(), rect_.height()),
+  return CompRect(rect_.x() + min(left_padding(), rect_.width()),
+                  rect_.y() + min(top_padding(), rect_.height()),
                   clamp_size(rect_.width() - left_padding - right_padding),
                   clamp_size(rect_.height() - top_padding - bottom_padding));
 }
@@ -298,7 +300,7 @@ void Layout::Relayout()
 
   do
   {
-    nux::Size content(std::min(left_padding(), max_.width), 0);
+    nux::Size content(min(left_padding(), max_.width), 0);
 
     for (auto const& item : items_)
     {
@@ -309,12 +311,12 @@ void Layout::Relayout()
       {
         item->SetMinWidth(item->GetNaturalWidth());
         item->SetMaxWidth(available_space.width);
-        item->SetMinHeight(std::min(available_space.height, item->GetNaturalHeight()));
+        item->SetMinHeight(min(available_space.height, item->GetNaturalHeight()));
         item->SetMaxHeight(available_space.height);
       }
 
       auto const& item_geo = item->Geometry();
-      content.height = std::max(content.height, item_geo.height());
+      content.height = max(content.height, item_geo.height());
       item->SetX(rect_.x() + content.width);
 
       if (item_geo.width() > 0)
@@ -324,11 +326,11 @@ void Layout::Relayout()
     if (!items_.empty() && content.width > inner_padding)
       content.width -= inner_padding;
 
-    int actual_right_padding = std::max(0, std::min(right_padding(), max_.width - content.width));
+    int actual_right_padding = max(0, min(right_padding(), max_.width - content.width));
     int vertical_padding = top_padding + bottom_padding;
 
     content.width += actual_right_padding;
-    content.height += std::min(vertical_padding, max_.height);
+    content.height += min(vertical_padding, max_.height);
 
     if (content.width < min_.width)
       content.width = min_.width;
