@@ -313,6 +313,7 @@ if (ENABLE_X_SUPPORT)
                  test_unity_settings.cpp
                  test_unity_window_style.cpp
                  test_unity_window_view.cpp
+                 test_user_authenticator_pam.cpp
                  test_volume_launcher_icon.cpp
                  test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
@@ -337,6 +338,7 @@ if (ENABLE_X_SUPPORT)
                         unity-shared
                         ${LIBS}
                         launcher-lib
+                        lockscreen-lib
                         unity-shared-bamf
                         unity-shared-standalone
                         shortcuts-lib
@@ -345,7 +347,8 @@ if (ENABLE_X_SUPPORT)
                         switcher-lib
                         shutdown-lib
                         dash-lib
-                        panel-lib)
+                        panel-lib
+                        pam)
   add_test(UnityGTest test-gtest)
 endif (ENABLE_X_SUPPORT)
 endif (GMOCK_LIB AND
