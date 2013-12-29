@@ -167,6 +167,8 @@ public:
 
   virtual int SortPriority() = 0;
 
+  virtual void SetOrder(int order) = 0;
+
   virtual WindowList Windows() = 0;
 
   virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
