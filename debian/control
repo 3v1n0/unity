@@ -36,7 +36,7 @@ Build-Depends: cmake,
                libnih-dbus-dev,
                libnih-dev,
                libnotify-dev,
-               libnux-4.0-dev (>= 4.0.4+14.04.20131203.0-0ubuntu2)
+               libnux-4.0-dev (>= 4.0.4+14.04.20131203.0-0ubuntu2),
                libpango1.0-dev,
                libsigc++-2.0-dev,
                libstartup-notification0-dev,
