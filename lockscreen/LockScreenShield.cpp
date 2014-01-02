@@ -19,21 +19,36 @@
 
 #include "LockScreenShield.h"
 
-#include <NuxCore/Color.h> // FIXME: remove this
+#include "BackgroundSettingsGnome.h" // FIXME: remove this
+
+#include <Nux/PaintLayer.h>
+#include <Nux/Nux.h> // FIXME: remove this
 
 namespace unity 
 {
 namespace lockscreen
 {
+namespace
+{
+
+}
 
 Shield::Shield(bool is_primary)
   : primary(is_primary)
+  , bg_settings_(new BackgroundSettingsGnome) // FIXME (andy) inject it!
 {
-  SetBackgroundColor(is_primary ?  nux::color::Red : nux::color::Yellow);
+  UpdateBackgroundTexture();
 
   mouse_enter.connect(sigc::mem_fun(this, &Shield::OnMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Shield::OnMouseLeave));
   primary.changed.connect(sigc::mem_fun(this, &Shield::OnPrimaryChanged));
+}
+
+void Shield::UpdateBackgroundTexture()
+{
+  // FIXME (andy): free new texture layer
+  auto background_texture = bg_settings_->GetBackgroundTexture(nux::Size(GetBaseWidth(), GetBaseHeight()));
+  SetBackgroundLayer(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
 }
 
 void Shield::OnMouseEnter(int /*x*/, int /*y*/, unsigned long /**/, unsigned long /**/)
@@ -48,7 +63,7 @@ void Shield::OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long
 
 void Shield::OnPrimaryChanged(bool value)
 {
-  SetBackgroundColor(value ?  nux::color::Red : nux::color::Yellow);
+  //SetBackgroundColor(value ?  nux::color::Red : nux::color::Yellow);
   QueueDraw();
 }
 

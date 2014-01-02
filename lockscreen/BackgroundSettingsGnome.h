@@ -17,39 +17,35 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-#ifndef UNITY_LOCKSCREEN_SHIELD_H
-#define UNITY_LOCKSCREEN_SHIELD_H
+#ifndef UNITY_BACKGROUND_SETTINGS_GNOME_H
+#define UNITY_BACKGROUND_SETTINGS_GNOME_H
 
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Property.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
-namespace unity
+#include "BackgroundSettings.h"
+
+class _GnomeBG;
+
+namespace unity 
 {
 namespace lockscreen
 {
 
-class BackgroundSettings;
-
-class Shield : public nux::BaseWindow
+class BackgroundSettingsGnome : public BackgroundSettings
 {
 public:
-  Shield(bool is_primary);
-  ~Shield() {};
+  BackgroundSettingsGnome();
 
-  nux::Property<bool> primary;
+  BaseTexturePtr GetBackgroundTexture(nux::Size const& size) override;
 
 private:
-  void UpdateBackgroundTexture();
-  void OnMouseEnter(int /*x*/, int /*y*/, unsigned long /**/, unsigned long /**/);
-  void OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long /**/);
-  void OnPrimaryChanged(bool value);
-
-  std::shared_ptr<BackgroundSettings> bg_settings_; 
+  glib::Object<_GnomeBG> gnome_bg_;
+  glib::Object<GSettings> settings_;
+  glib::Signal<void, _GnomeBG*> bg_changed_; // FIXME (andy) : change name!
 };
 
-}
-}
+} // lockscreen
+} // unity
 
-#endif
+#endif // UNITY_BACKGROUND_SETTINGS_GNOME_H
