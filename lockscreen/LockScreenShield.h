@@ -46,7 +46,8 @@ private:
   void OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long /**/);
   void OnPrimaryChanged(bool value);
 
-  std::shared_ptr<BackgroundSettings> bg_settings_; 
+  std::shared_ptr<BackgroundSettings> bg_settings_;
+  std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
 };
 
 }

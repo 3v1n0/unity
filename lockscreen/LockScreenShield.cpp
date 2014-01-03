@@ -42,13 +42,19 @@ Shield::Shield(bool is_primary)
   mouse_enter.connect(sigc::mem_fun(this, &Shield::OnMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Shield::OnMouseLeave));
   primary.changed.connect(sigc::mem_fun(this, &Shield::OnPrimaryChanged));
+
+  // Move in a method
+  bg_settings_->bg_changed.connect([this](){
+    UpdateBackgroundTexture();
+    QueueDraw();
+  });
 }
 
 void Shield::UpdateBackgroundTexture()
 {
-  // FIXME (andy): free new texture layer
   auto background_texture = bg_settings_->GetBackgroundTexture(nux::Size(GetBaseWidth(), GetBaseHeight()));
-  SetBackgroundLayer(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
+  background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
+  SetBackgroundLayer(background_layer_.get());
 }
 
 void Shield::OnMouseEnter(int /*x*/, int /*y*/, unsigned long /**/, unsigned long /**/)
@@ -63,7 +69,6 @@ void Shield::OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long
 
 void Shield::OnPrimaryChanged(bool value)
 {
-  //SetBackgroundColor(value ?  nux::color::Red : nux::color::Yellow);
   QueueDraw();
 }
 

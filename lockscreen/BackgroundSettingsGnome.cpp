@@ -38,7 +38,8 @@ BackgroundSettingsGnome::BackgroundSettingsGnome()
 {
   gnome_bg_load_from_preferences(gnome_bg_, settings_);
 
-  bg_changed_.Connect(gnome_bg_, "changed::", [this] (GnomeBG*) {
+  // FIXME: does not work. Investigate!
+  bg_changed_.Connect(gnome_bg_, "changed", [this] (GnomeBG*) {
     bg_changed.emit();
   });
 }
