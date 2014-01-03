@@ -22,6 +22,7 @@
 #include "DecorationsWindowButton.h"
 #include "DecorationsEdgeBorders.h"
 #include "DecorationsGrabEdge.h"
+#include "WindowManager.h"
 
 namespace unity
 {
@@ -253,6 +254,16 @@ void Window::Impl::SetupTopLayout()
 
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE));
+
+  title_ = std::make_shared<Title>();
+  title_->text = WindowManager::Default().GetWindowName(win_->id());
+  title_->sensitive = false;
+
+  auto title_layout = std::make_shared<Layout>();
+  title_layout->left_padding = Style::Get()->TitleIndent();
+  title_layout->Append(title_);
+
+  top_layout_->Append(title_layout);
 
   input_mixer_->PushToFront(top_layout_);
 }
