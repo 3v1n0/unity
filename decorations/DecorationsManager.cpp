@@ -119,7 +119,7 @@ bool Manager::Impl::UpdateWindow(::Window xid)
 {
   auto const& win = GetWindowByXid(xid);
 
-  if (win /* && !window->hasUnmapReference()*/)
+  if (win && !win->impl_->win_->hasUnmapReference())
   {
     win->Update();
     return true;
@@ -298,9 +298,9 @@ void Manager::Impl::OnWindowFrameChanged(bool framed, ::Window frame, std::weak_
 
 Manager::Manager()
   : shadow_offset(nux::Point(1, 1))
-  , active_shadow_color(nux::color::Black * 0.4)
+  , active_shadow_color(nux::color::Black * 0.647)
   , active_shadow_radius(8)
-  , inactive_shadow_color(nux::color::Black * 0.4)
+  , inactive_shadow_color(nux::color::Black * 0.647)
   , inactive_shadow_radius(5)
   , impl_(new Impl(this))
 {}
