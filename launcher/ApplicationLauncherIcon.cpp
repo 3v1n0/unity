@@ -606,7 +606,7 @@ void ApplicationLauncherIcon::AddProperties(debug::IntrospectionData& introspect
   introspection
     .add("desktop_file", DesktopFile())
     .add("desktop_id", app_->desktop_id())
-    .add("xids", static_cast<GVariant*>(glib::Variant::FromVector(xids)))
+    .add("xids", glib::Variant::FromVector(xids))
     .add("sticky", IsSticky())
     .add("startup_notification_timestamp", _startup_notification_timestamp);
 }
