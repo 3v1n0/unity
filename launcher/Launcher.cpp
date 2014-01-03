@@ -1395,8 +1395,9 @@ void Launcher::HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon)
 
     // If the Launcher is hidden, then add a timer to wiggle the urgent icons at
     // certain intervals (1m, 2m, 4m, 8m, 16m, & 32m).
-    if (!urgent_timer_running && !animating)
+    if (!urgent_timer_running)
     {
+      urgent_animation_period_ = 0;
       urgent_ack_needed_ = true;
       SetUrgentTimer(BASE_URGENT_ANIMATION_PERIOD);
     }
