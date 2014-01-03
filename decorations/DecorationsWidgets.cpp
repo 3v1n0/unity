@@ -200,7 +200,12 @@ void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
   texture_.SetTexture(tex);
 
   if (prev_geo != Geometry())
+  {
     geo_parameters_changed.emit();
+
+    if (!Geometry().contains(prev_geo))
+      cscreen_->damageRegion(prev_geo);
+  }
 
   Damage();
 }
