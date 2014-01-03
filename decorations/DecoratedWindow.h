@@ -40,6 +40,8 @@ public:
   Window(CompWindow*);
   virtual ~Window();
 
+  nux::RWProperty<std::string> title;
+
   void Update();
   void Undecorate();
   void UpdateDecorationPosition();
