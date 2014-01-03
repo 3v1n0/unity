@@ -18,6 +18,9 @@
  */
 
 #include "IntrospectionData.h"
+#include <NuxCore/Rect.h>
+#include <NuxCore/Color.h>
+#include <NuxCore/Math/Point3D.h>
 #include <UnityCore/Variant.h>
 
 namespace unity
@@ -146,6 +149,12 @@ IntrospectionData& IntrospectionData::add(std::string const& name, float value)
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, double value)
+{
+  add_simple_value_(builder_, name, value);
+  return *this;
+}
+
+IntrospectionData& IntrospectionData::add(std::string const& name, Variant const& value)
 {
   add_simple_value_(builder_, name, value);
   return *this;
