@@ -36,7 +36,7 @@ Build-Depends: cmake,
                libnih-dbus-dev,
                libnih-dev,
                libnotify-dev,
-               libnux-4.0-dev (>= 4.0.5)
+               libnux-4.0-dev (>= 4.0.5),
                libpango1.0-dev,
                libsigc++-2.0-dev,
                libstartup-notification0-dev,
@@ -148,7 +148,7 @@ Depends: ${misc:Depends},
          libunity-core-6.0-8 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
-         libnux-4.0-dev (>= 4.0.5)
+         libnux-4.0-dev (>= 4.0.5),
          libunity-dev (>= 7.1.0~),
          libdee-dev,
 Description: Core library for the Unity interface - development files
