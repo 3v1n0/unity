@@ -301,6 +301,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
 
+     optionSetLockScreenInitiate(boost::bind(&UnityScreen::LockScreenInitiate, this, _1, _2, _3));
+
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2434,6 +2436,15 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
 
   return ShowHud();
 }
+
+bool UnityScreen::LockScreenInitiate(CompAction* action,
+                                     CompAction::State state,
+                                     CompOption::Vector& options)
+{
+  session_controller_->LockScreen();
+  return true;
+}
+
 
 unsigned UnityScreen::CompizModifiersToNux(unsigned input) const
 {
