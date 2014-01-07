@@ -18,6 +18,9 @@
  */
 
 #include <gmock/gmock.h>
+#include <NuxCore/Rect.h>
+#include <NuxCore/Color.h>
+#include <NuxCore/Math/Point3D.h>
 #include "IntrospectionData.h"
 
 namespace
@@ -202,7 +205,7 @@ TEST(TestIntrospectionData, AddVariant)
 TEST(TestIntrospectionData, AddRect)
 {
   IntrospectionData data;
-  nux::Rect value(g_random_int(),g_random_int(), g_random_int(), g_random_int());
+  nux::Rect value(g_random_int(), g_random_int(), g_random_int(), g_random_int());
   data.add("Rect", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Rect", nullptr);
   ASSERT_THAT(variant, NotNull());
@@ -218,7 +221,7 @@ TEST(TestIntrospectionData, AddRect)
 TEST(TestIntrospectionData, AddRectDefault)
 {
   IntrospectionData data;
-  nux::Rect value(g_random_int(),g_random_int(), g_random_int(), g_random_int());
+  nux::Rect value(g_random_int(), g_random_int(), g_random_int(), g_random_int());
   data.add(value);
   GVariant* data_variant = data.Get();
   GVariant* variant = g_variant_lookup_value(data_variant, "globalRect", nullptr);
