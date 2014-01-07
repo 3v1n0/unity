@@ -721,6 +721,28 @@ TEST_F(TestLauncher, UrgentIconTimerTimeout)
   EXPECT_THAT(launcher_->sources_.GetSource("urgent-timeout"), NotNull());
 }
 
+TEST_F(TestLauncher, UrgentIconTimerReset)
+{
+  auto icon = AddMockIcons(1).front();
+  launcher_->SetHidden(true);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+  ASSERT_EQ(launcher_->urgent_animation_period_, 0);
+
+  launcher_->HandleUrgentIcon(icon);
+  launcher_->OnUrgentTimeout();
+
+  ASSERT_THAT(launcher_->urgent_animation_period_, Gt(0));
+
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
+  launcher_->HandleUrgentIcon(icon);
+
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+  launcher_->HandleUrgentIcon(icon);
+
+  EXPECT_EQ(launcher_->urgent_animation_period_, 0);
+}
+
+  
 TEST_F(TestLauncher, UrgentIconsAnimateAfterLauncherIsRevealed)
 {
   auto icons = AddMockIcons(5);

@@ -74,6 +74,11 @@ void Controller::Show(View::Mode mode)
   Show(mode, false);
 }
 
+void Controller::LockScreen() const
+{
+  manager_->LockScreen();
+}
+
 void Controller::Show(View::Mode mode, bool inhibitors)
 {
   EnsureView();
