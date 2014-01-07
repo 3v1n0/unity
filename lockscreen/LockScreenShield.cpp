@@ -17,9 +17,15 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
+#include "config.h"
+
 #include "LockScreenShield.h"
 
 #include "BackgroundSettingsGnome.h" // FIXME: remove this
+#include "CofView.h"
+
+#include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
 
 #include <Nux/PaintLayer.h>
 #include <Nux/Nux.h> // FIXME: remove this
@@ -38,6 +44,8 @@ Shield::Shield(bool is_primary)
   , bg_settings_(new BackgroundSettingsGnome) // FIXME (andy) inject it!
 {
   UpdateBackgroundTexture();
+
+  SetLayout(new nux::VLayout());
 
   mouse_enter.connect(sigc::mem_fun(this, &Shield::OnMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Shield::OnMouseLeave));
@@ -69,7 +77,28 @@ void Shield::OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long
 
 void Shield::OnPrimaryChanged(bool value)
 {
+  if (primary)
+    ShowPrimaryView();
+  else
+    ShowSecondaryView();
+
   QueueDraw();
+  QueueRelayout();
+}
+
+void Shield::ShowPrimaryView()
+{
+  nux::Layout* main_layout = GetLayout();
+  main_layout->Clear();
+}
+
+void Shield::ShowSecondaryView()
+{
+  nux::Layout* main_layout = GetLayout();
+  main_layout->Clear();
+
+  CofView* cof_view = new CofView();
+  main_layout->AddView(cof_view);
 }
 
 }

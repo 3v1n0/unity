@@ -17,43 +17,25 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-#ifndef UNITY_LOCKSCREEN_SHIELD_H
-#define UNITY_LOCKSCREEN_SHIELD_H
+#include "CofView.h"
 
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Property.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
+#include "config.h"
 
 namespace unity
 {
 namespace lockscreen
 {
 
-class BackgroundSettings;
+CofView::CofView()
+  // FIXME (andy) if we get an svg cof we can make it fullscreen independent.
+  : IconTexture(PKGDATADIR"/cof.png", 66)
+{}
 
-class Shield : public nux::BaseWindow
+nux::Area* CofView::FindAreaUnderMouse(nux::Point const& mouse_position,
+	                                   nux::NuxEventType event_type)
 {
-public:
-  Shield(bool is_primary);
-  ~Shield() {};
-
-  nux::Property<bool> primary;
-
-private:
-  void UpdateBackgroundTexture();
-  void ShowPrimaryView();
-  void ShowSecondaryView();
-
-  void OnMouseEnter(int /*x*/, int /*y*/, unsigned long /**/, unsigned long /**/);
-  void OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long /**/);
-  void OnPrimaryChanged(bool value);
-
-  std::shared_ptr<BackgroundSettings> bg_settings_;
-  std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
-};
+	return nullptr;
+}
 
 }
 }
-
-#endif

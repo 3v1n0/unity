@@ -18,6 +18,7 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 #
 set (LOCKSCREEN_SOURCES
      BackgroundSettingsGnome.cpp
+     CofView.cpp
      LockScreenController.cpp
      LockScreenShield.cpp
      UserAuthenticatorPam.cpp
