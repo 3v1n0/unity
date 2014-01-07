@@ -37,7 +37,7 @@ class BackgroundSettingsGnome : public BackgroundSettings
 public:
   BackgroundSettingsGnome();
 
-  BaseTexturePtr GetBackgroundTexture(nux::Size const& size) override;
+  BaseTexturePtr GetBackgroundTexture(nux::Size const& size, bool draw_grid) override;
 
 private:
   glib::Object<_GnomeBG> gnome_bg_;

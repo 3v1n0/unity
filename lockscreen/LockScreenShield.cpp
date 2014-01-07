@@ -60,7 +60,7 @@ Shield::Shield(bool is_primary)
 
 void Shield::UpdateBackgroundTexture()
 {
-  auto background_texture = bg_settings_->GetBackgroundTexture(nux::Size(GetBaseWidth(), GetBaseHeight()));
+  auto background_texture = bg_settings_->GetBackgroundTexture(nux::Size(GetBaseWidth(), GetBaseHeight()), true);
   background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
   SetBackgroundLayer(background_layer_.get());
 }

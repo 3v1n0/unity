@@ -35,7 +35,7 @@ class BackgroundSettings
 public:
   virtual ~BackgroundSettings() {};
 
-  virtual BaseTexturePtr GetBackgroundTexture(nux::Size const& size) = 0;
+  virtual BaseTexturePtr GetBackgroundTexture(nux::Size const& size, bool draw_grid) = 0;
 
   sigc::signal<void> bg_changed;
 };
