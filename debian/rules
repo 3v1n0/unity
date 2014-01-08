@@ -9,7 +9,8 @@ gles2_architectures := armel armhf
 
 DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
 
-CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
+export CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//') -Wno-error=deprecated-declarations
+export CXXFLAGS=$(shell echo $$CXXFLAGS | sed -e 's/\-Wall//') -Wno-error=deprecated-declarations
 
 # http://ccache.samba.org/manual.html#_precompiled_headers
 CCACHE_SLOPPINESS=time_macros
