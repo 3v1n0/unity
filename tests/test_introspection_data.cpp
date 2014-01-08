@@ -21,12 +21,14 @@
 #include <NuxCore/Rect.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Math/Point3D.h>
+#include <UnityCore/Variant.h>
 #include "IntrospectionData.h"
 
 namespace
 {
 
 using namespace testing;
+using namespace unity;
 using namespace unity::debug;
 
 GVariant* get_variant_child(GVariant *container, std::size_t index)
@@ -195,6 +197,19 @@ TEST(TestIntrospectionData, AddVariant)
   GVariant* value = g_variant_new_int64(g_random_int());
   data.add("Variant", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Variant", nullptr);
+  ASSERT_THAT(variant, NotNull());
+  ASSERT_EQ(2, g_variant_n_children(variant));
+
+  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_TRUE(g_variant_equal(value, get_variant_child(variant, 1)));
+}
+
+TEST(TestIntrospectionData, AddGlibVariant)
+{
+  IntrospectionData data;
+  glib::Variant value(static_cast<uint64_t>(g_random_int()));
+  data.add("GLibVariant", value);
+  GVariant* variant = g_variant_lookup_value(data.Get(), "GLibVariant", nullptr);
   ASSERT_THAT(variant, NotNull());
   ASSERT_EQ(2, g_variant_n_children(variant));
 
