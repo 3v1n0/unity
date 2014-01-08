@@ -156,6 +156,14 @@ class DashRevealTests(DashTestCase):
 
         self.assertProperty(char_win, is_active=True)
 
+    def test_dash_does_not_open_when_fullscreen_window(self):
+        """ The Dash must not open if a window is fullscreen. """
+        gedit = self.process_manager.start_app("Text Editor")
+        self.keyboard.press_and_release('F11')
+        self.keybinding("dash/reveal")
+
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+
 
 class DashRevealWithSpreadTests(DashTestCase):
     """Test the interaction of the Dash with the Spead/Scale
