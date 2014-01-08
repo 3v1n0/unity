@@ -213,7 +213,7 @@ void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
                         CompRegion const& clip, unsigned mask)
 {
-  if (!visible)
+  if (!visible || Geometry().isEmpty())
     return;
 
   ctx->vertexBuffer()->begin();
@@ -314,6 +314,7 @@ void Layout::Relayout()
 
   relayouting_ = true;
   int loop = 0;
+  CompRect old_geo(rect_);
 
   nux::Size available_space(clamp_size(max_.width - left_padding - right_padding),
                             clamp_size(max_.height - top_padding - bottom_padding));
@@ -394,6 +395,9 @@ void Layout::Relayout()
     ++loop;
   }
   while (rect_.width() > max_.width || rect_.height() > max_.height);
+
+  if (old_geo != rect_)
+    geo_parameters_changed.emit();
 
   relayouting_ = false;
 }
