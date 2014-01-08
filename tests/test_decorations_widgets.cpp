@@ -266,13 +266,27 @@ TEST_F(TestDecorationItem, SetY)
 
 //
 
+struct MockLayout : Layout
+{
+  typedef std::shared_ptr<MockLayout> Ptr;
+  typedef NiceMock<MockLayout> Nice;
+
+  MockLayout()
+  {
+    ON_CALL(*this, Relayout()).WillByDefault(Invoke(this, &MockLayout::LocalRelayout));
+  }
+
+  void LocalRelayout() { Layout::Relayout(); }
+  MOCK_METHOD0(Relayout, void());
+};
+
 struct TestDecorationLayout : Test
 {
   TestDecorationLayout()
-    : layout(std::make_shared<Layout>())
+    : layout(std::make_shared<MockLayout::Nice>())
   {}
 
-  Layout::Ptr layout;
+  MockLayout::Ptr layout;
 };
 
 TEST_F(TestDecorationLayout, AppendUnlimited)
@@ -463,6 +477,27 @@ TEST_F(TestDecorationLayout, ContentGeoWithPadding)
   EXPECT_EQ(expected_geo, layout->ContentGeometry());
 }
 
-//
+TEST_F(TestDecorationLayout, RecursivelyRelayoutsOnGeometryChanges)
+{
+  std::vector<MockLayout::Ptr> containers;
+  auto parent = layout;
+  containers.push_back(parent);
+
+  for (int i = 0; i < 10; ++i)
+  {
+    auto c = std::make_shared<MockLayout::Nice>();
+    containers.push_back(c);
+    parent->Append(c);
+    parent = c;
+  }
+
+  auto item = RandomMockItem();
+  parent->Append(item);
+
+  for (auto const& c : containers)
+    EXPECT_CALL(*c, Relayout()).Times(AtLeast(1));
+
+  item->SetSize(item->Geometry().width()+1, item->Geometry().height()+1);
+}
 
 }

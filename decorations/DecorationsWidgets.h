@@ -163,8 +163,10 @@ public:
   CompRect ContentGeometry() const;
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
-private:
+protected:
   void Relayout();
+
+private:
   bool SetPadding(int& target, int new_value);
   bool relayouting_;
 };
