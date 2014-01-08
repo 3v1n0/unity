@@ -22,12 +22,27 @@
 
 #include <string>
 #include <glib.h>
-#include <NuxCore/Rect.h>
-#include <NuxCore/Color.h>
-#include <NuxCore/Math/Point3D.h>
+
+namespace nux
+{
+template <class T> class Point3D;
+template <class T> class Point2D;
+class Rect;
+class Size;
+namespace color { class Color; }
+
+using Color = color::Color;
+using Point = Point2D<int>;
+using Point3 = Point3D<float>;
+}
 
 namespace unity
 {
+namespace glib
+{
+class Variant;
+}
+
 namespace debug
 {
 
@@ -53,6 +68,7 @@ public:
   IntrospectionData& add(std::string const& name, float);
   IntrospectionData& add(std::string const& name, double);
   IntrospectionData& add(std::string const& name, GVariant*);
+  IntrospectionData& add(std::string const& name, glib::Variant const&);
   IntrospectionData& add(std::string const& name, nux::Rect const&);
   IntrospectionData& add(std::string const& name, nux::Point const&);
   IntrospectionData& add(std::string const& name, nux::Point3 const&);
