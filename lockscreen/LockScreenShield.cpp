@@ -17,8 +17,6 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-#include "config.h"
-
 #include "LockScreenShield.h"
 
 #include "BackgroundSettingsGnome.h" // FIXME: remove this
@@ -59,7 +57,7 @@ Shield::Shield(bool is_primary)
 
 void Shield::UpdateBackgroundTexture()
 {
-  auto background_texture = bg_settings_->GetBackgroundTexture(nux::Size(GetBaseWidth(), GetBaseHeight()), true);
+  auto background_texture = bg_settings_->GetBackgroundTexture(nux::Size(GetBaseWidth(), GetBaseHeight()), true, true);
   background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
   SetBackgroundLayer(background_layer_.get());
 }

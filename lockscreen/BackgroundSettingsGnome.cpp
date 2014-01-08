@@ -21,6 +21,7 @@
 
 #include <libgnome-desktop/gnome-bg.h>
 
+#include "config.h"
 #include "unity-shared/GtkTexture.h"
 
 namespace unity 
@@ -51,11 +52,32 @@ int get_grid_offset (int size)
 }
 
 
-BaseTexturePtr BackgroundSettingsGnome::GetBackgroundTexture(nux::Size const& size, bool draw_grid)
+BaseTexturePtr BackgroundSettingsGnome::GetBackgroundTexture(nux::Size const& size,
+                                                             bool draw_grid,
+                                                             bool draw_logo)
 {
   cairo_surface_t* cairo_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(),
                                                            size.width, size.height, FALSE);
   cairo_t* c = cairo_create(cairo_surface);
+
+  if (draw_logo)
+  {
+    int grid_x_offset = get_grid_offset(size.width);
+    int grid_y_offset = get_grid_offset(size.height);
+
+    cairo_save(c);
+
+    int height = 22;
+    int padding = 10;
+    int x = grid_x_offset + GRID_SIZE + padding;
+    int y = grid_y_offset + GRID_SIZE * (size.height / GRID_SIZE - 1) - height - padding;
+    cairo_translate (c, x, y);
+
+    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png (PKGDATADIR"/logo.png");
+    cairo_set_source_surface(c, logo_surface, 0, 0);
+    cairo_paint_with_alpha(c, 0.5);
+    cairo_restore(c);
+  }
 
   if (draw_grid)
   {

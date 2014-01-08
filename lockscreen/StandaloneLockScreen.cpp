@@ -52,7 +52,7 @@ public:
 struct LockScreenWindow
 {
   LockScreenWindow()
-    : wt(nux::CreateGUIThread("Unity LockScreen Controller", 1024, 300, 0, &LockScreenWindow::ThreadWidgetInit, this))
+    : wt(nux::CreateGUIThread("Unity LockScreen Controller", 1400, 600, 0, &LockScreenWindow::ThreadWidgetInit, this))
     , animation_controller(tick_source)
   {}
 

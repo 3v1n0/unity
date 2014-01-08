@@ -86,9 +86,9 @@ nux::Geometry& UScreen::GetMonitorGeometry(int monitor)
 
 std::vector<nux::Geometry>& UScreen::GetMonitors()
 {
-  /*monitors_.clear();
-  monitors_.push_back(nux::Geometry(0,0,800,500));
-  monitors_.push_back(nux::Geometry(800,200,500,300));*/
+  //monitors_.clear();
+  //monitors_.push_back(nux::Geometry(0,0,700,500));
+  //monitors_.push_back(nux::Geometry(700,200,500,300));
   return monitors_;
 }
 
