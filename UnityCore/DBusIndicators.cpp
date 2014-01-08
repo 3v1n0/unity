@@ -36,7 +36,8 @@ DECLARE_LOGGER(logger, "unity.indicator.dbus");
 
 namespace
 {
-const std::string SERVICE_NAME("com.canonical.Unity.Panel.Service");
+const std::string SERVICE_NAME_DESKTOP("com.canonical.Unity.Panel.ServiceDesktop");
+const std::string SERVICE_NAME_LOCKSCREEN("com.canonical.Unity.Panel.ServiceLockscreen");
 const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
 const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 } // anonymous namespace
@@ -81,7 +82,7 @@ public:
 
 
 // Public Methods
-DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
+DBusIndicators::Impl::Impl(std::string const& dbus_name ,DBusIndicators* owner)
   : owner_(owner)
   , gproxy_(dbus_name, SERVICE_PATH, SERVICE_IFACE,
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
@@ -389,8 +390,8 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
   cached_locations = locations;
 }
 
-DBusIndicators::DBusIndicators()
-  : pimpl(new Impl(SERVICE_NAME, this))
+DBusIndicators::DBusIndicators(bool lockscreen_mode)
+  : pimpl(new Impl(lockscreen_mode ? SERVICE_NAME_LOCKSCREEN : SERVICE_NAME_DESKTOP, this))
 {}
 
 DBusIndicators::DBusIndicators(std::string const& dbus_name)

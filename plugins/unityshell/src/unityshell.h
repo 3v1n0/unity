@@ -58,6 +58,7 @@
 #include "FontSettings.h"
 #include "ShortcutController.h"
 #include "LauncherController.h"
+#include "LockScreenController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "UScreen.h"
@@ -301,6 +302,7 @@ private:
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
   session::Controller::Ptr  session_controller_;
+  std::shared_ptr<lockscreen::Controller> lockscreen_controller_;
   debug::DebugDBusInterface debugger_;
   std::unique_ptr<BGHash>   bghash_;
 

@@ -25,11 +25,11 @@ set (LOCKSCREEN_SOURCES
      )
 
 add_library (lockscreen-lib STATIC ${LOCKSCREEN_SOURCES})
-add_dependencies (lockscreen-lib unity-core-${UNITY_API_VERSION} unity-shared)
+add_dependencies (lockscreen-lib unity-core-${UNITY_API_VERSION} unity-shared panel-lib)
 add_pch(pch/lockscreen_pch.hh lockscreen-lib)
 
 #
 # Standalone variant
 #
 add_executable (lockscreen StandaloneLockScreen.cpp)
-target_link_libraries (lockscreen lockscreen-lib unity-shared unity-shared-standalone)
+target_link_libraries (lockscreen lockscreen-lib panel-lib unity-shared unity-shared-standalone)

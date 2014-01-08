@@ -35,7 +35,7 @@ class DBusIndicators : public Indicators
 public:
   typedef std::shared_ptr<DBusIndicators> Ptr;
 
-  DBusIndicators();
+  DBusIndicators(bool lockscreen_mode = false);
   ~DBusIndicators();
 
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);

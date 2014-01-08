@@ -53,6 +53,7 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define SHOW_HUD_KEY "show-hud"
 
 static PanelService *static_service = NULL;
+static gboolean lockscreen_mode = FALSE;
 
 struct _PanelServicePrivate
 {
@@ -826,7 +827,11 @@ initial_load_default_or_custom_indicators (PanelService *self, GList *indicators
 
   if (!indicators)
     {
-      load_indicators (self);
+      if (!lockscreen_mode)
+        {
+          load_indicators (self);
+        }
+
       load_indicators_from_indicator_files (self);
       sort_indicators (self);
     }
@@ -873,6 +878,12 @@ panel_service_get_default_with_indicators (GList *indicators)
     }
 
   return self;
+}
+
+void
+panel_service_set_lockscreen_mode (gboolean enable)
+{
+  lockscreen_mode = enable;
 }
 
 guint
@@ -1280,7 +1291,7 @@ load_indicators_from_indicator_files (PanelService *self)
       IndicatorNg *indicator;
 
       filename = g_build_filename (INDICATOR_SERVICE_DIR, name, NULL);
-      indicator = indicator_ng_new_for_profile (filename, "desktop", &error);
+      indicator = indicator_ng_new_for_profile (filename, !lockscreen_mode ? "desktop" : "desktop_greeter", &error);
       if (indicator)
         {
           load_indicator (self, INDICATOR_OBJECT (indicator), name);

@@ -91,7 +91,8 @@ static const gchar introspection_xml[] =
   "  </interface>"
   "</node>";
 
-#define S_NAME  "com.canonical.Unity.Panel.Service"
+#define S_NAME_DESKTOP "com.canonical.Unity.Panel.ServiceDesktop"
+#define S_NAME_LOCKSCREEN "com.canonical.Unity.Panel.ServiceLockscreen"
 #define S_PATH  "/com/canonical/Unity/Panel/Service"
 #define S_IFACE "com.canonical.Unity.Panel.Service"
 
@@ -381,6 +382,13 @@ main (gint argc, gchar **argv)
 {
   PanelService *service;
   guint         owner_id;
+  gboolean      lockscreen_mode = FALSE;
+  GError *error = NULL;
+  GOptionContext *context;
+  GOptionEntry entries[] = {
+    { "lockscreen-mode", 0, 0, G_OPTION_ARG_NONE, &lockscreen_mode, "Average over N repetitions", NULL },
+    { NULL }};
+
 
   g_unsetenv ("UBUNTU_MENUPROXY");
   g_setenv ("NO_AT_BRIDGE", "1", TRUE);
@@ -390,6 +398,17 @@ main (gint argc, gchar **argv)
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 				     INDICATORICONDIR);
   ido_init ();
+
+  context = g_option_context_new ("- Unity Panel Service");
+  g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
+  if (!g_option_context_parse (context, &argc, &argv, &error))
+    {
+      g_print ("unity-panel-service: %s\n", error->message);
+      g_print ("Try --help for more information.\n");
+      return 1;
+    }
+
+  panel_service_set_lockscreen_mode (lockscreen_mode);
 
   if (g_getenv ("SILENT_PANEL_SERVICE") != NULL)
   {
@@ -404,7 +423,7 @@ main (gint argc, gchar **argv)
   service = panel_service_get_default ();
 
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
-                             S_NAME,
+                             !lockscreen_mode ? S_NAME_DESKTOP : S_NAME_LOCKSCREEN,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
                              on_bus_acquired,
                              on_name_acquired,

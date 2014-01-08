@@ -236,6 +236,10 @@ set(UNITY_PLUGIN_SHARED_DEPS
     unity-misc>=0.4.0
     xpathselect=1.4
     zeitgeist-2.0
+    libupstart
+    libnih
+    libnih-dbus
+    dbus-1
 )
 
 set(UNITY_PLUGIN_DEPS ${UNITY_PLUGIN_SHARED_DEPS})

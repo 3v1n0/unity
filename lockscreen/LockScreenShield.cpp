@@ -23,6 +23,8 @@
 
 #include "BackgroundSettingsGnome.h" // FIXME: remove this
 #include "CofView.h"
+#include "unity-shared/PanelStyle.h"
+#include "panel/PanelView.h"
 
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
@@ -34,18 +36,15 @@ namespace unity
 {
 namespace lockscreen
 {
-namespace
-{
-
-}
 
 Shield::Shield(bool is_primary)
   : primary(is_primary)
   , bg_settings_(new BackgroundSettingsGnome) // FIXME (andy) inject it!
 {
-  UpdateBackgroundTexture();
-
   SetLayout(new nux::VLayout());
+
+  UpdateBackgroundTexture();
+  primary ? ShowPrimaryView() : ShowSecondaryView();
 
   mouse_enter.connect(sigc::mem_fun(this, &Shield::OnMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Shield::OnMouseLeave));
@@ -67,12 +66,13 @@ void Shield::UpdateBackgroundTexture()
 
 void Shield::OnMouseEnter(int /*x*/, int /*y*/, unsigned long /**/, unsigned long /**/)
 {
-  primary = true;
+  // FIXME: does not work well!
+  //primary = true;
 }
 
 void Shield::OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long /**/)
 {
-  primary = false;
+  //primary = false;
 }
 
 void Shield::OnPrimaryChanged(bool value)
@@ -90,6 +90,13 @@ void Shield::ShowPrimaryView()
 {
   nux::Layout* main_layout = GetLayout();
   main_layout->Clear();
+
+  PanelView* view = new PanelView(this, std::make_shared<indicator::DBusIndicators>(true));
+  view->SetMaximumHeight(panel::Style::Instance().panel_height);
+  view->SetOpacity(0.5);
+
+  main_layout->AddView(view);
+
 }
 
 void Shield::ShowSecondaryView()

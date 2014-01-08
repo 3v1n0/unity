@@ -71,6 +71,8 @@ GType             panel_service_get_type      (void) G_GNUC_CONST;
 PanelService    * panel_service_get_default   ();
 PanelService    * panel_service_get_default_with_indicators (GList *indicators);
 
+void              panel_service_set_lockscreen_mode (gboolean enable);
+
 guint             panel_service_get_n_indicators (PanelService *self);
 
 IndicatorObject * panel_service_get_indicator_nth (PanelService *self, guint position);

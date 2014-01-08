@@ -21,12 +21,13 @@
 //#include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 #include <Nux/Nux.h>
-//#include <Nux/NuxTimerTickSource.h>
+#include <Nux/NuxTimerTickSource.h>
 #include <Nux/WindowThread.h>
-//#include <NuxCore/AnimationController.h>
+#include <NuxCore/AnimationController.h>
 
 #include "LockScreenController.h"
-//#include "unity-shared/UnitySettings.h"
+#include "unity-shared/PanelStyle.h"
+#include "unity-shared/UnitySettings.h"
 
 class MockSessionManager : public unity::session::Manager
 {
@@ -52,7 +53,7 @@ struct LockScreenWindow
 {
   LockScreenWindow()
     : wt(nux::CreateGUIThread("Unity LockScreen Controller", 1024, 300, 0, &LockScreenWindow::ThreadWidgetInit, this))
-    //, animation_controller(tick_source)
+    , animation_controller(tick_source)
   {}
 
   void Show()
@@ -68,10 +69,11 @@ private:
     static_cast<LockScreenWindow*>(self)->Init();
   }
 
-  //unity::Settings settings;
+  unity::Settings settings;
+  unity::panel::Style panel_style;
   std::shared_ptr<nux::WindowThread> wt;
-  //nux::NuxTimerTickSource tick_source;
-  //nux::animation::AnimationController animation_controller;
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller;
   std::shared_ptr<unity::lockscreen::Controller> controller;
 };
 

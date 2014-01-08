@@ -20,10 +20,11 @@
 #ifndef UNITY_LOCKSCREEN_SHIELD_H
 #define UNITY_LOCKSCREEN_SHIELD_H
 
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Property.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+
+#include "unity-shared/MockableBaseWindow.h"
 
 namespace unity
 {
@@ -32,7 +33,7 @@ namespace lockscreen
 
 class BackgroundSettings;
 
-class Shield : public nux::BaseWindow
+class Shield : public MockableBaseWindow
 {
 public:
   Shield(bool is_primary);
