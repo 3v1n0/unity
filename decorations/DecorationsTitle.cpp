@@ -41,31 +41,20 @@ void Title::RebuildText(std::string const& new_text)
   SetTexture(text_ctx);
 }
 
-void Title::SetCoords(int x, int y)
+void Title::SetX(int x)
 {
-  TexturedItem::SetCoords(x, y);
-}
-
-void Title::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
-                 CompRegion const& clip, unsigned mask)
-{
-  auto const& top = GetTopParent();
   float alignment = Style::Get()->TitleAlignmentValue();
 
-  if (alignment > 0 && top)
+  if (alignment > 0)
   {
-    auto const& top_geo = top->ContentGeometry();
-    CompRect old_box(texture_.quad.box);
-    int paint_x = std::max<int>(old_box.x(), top_geo.x() + (top_geo.width() - real_size_.width) * alignment);
-    TexturedItem::SetCoords(paint_x, Geometry().y());
-    texture_.quad.box.setGeometry(paint_x, old_box.y(), std::min(real_size_.width, old_box.width()), real_size_.height);
-    TexturedItem::Draw(ctx, transformation, attrib, clip, mask);
-    TexturedItem::SetCoords(old_box.x(), old_box.y());
+    if (BasicContainer::Ptr const& top = GetTopParent())
+    {
+      auto const& top_geo = top->ContentGeometry();
+      x = std::max<int>(x, top_geo.x() + (top_geo.width() - real_size_.width) * alignment);
+    }
   }
-  else
-  {
-    TexturedItem::Draw(ctx, transformation, attrib, clip, mask);
-  }
+
+  TexturedItem::SetX(x);
 }
 
 int Title::GetNaturalWidth() const

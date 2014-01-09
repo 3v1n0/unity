@@ -36,10 +36,7 @@ public:
 
   Title();
 
-  void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
-
-  void SetCoords(int x, int y);
-
+  void SetX(int);
   int GetNaturalWidth() const;
   int GetNaturalHeight() const;
 
