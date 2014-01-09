@@ -40,8 +40,14 @@ public:
   int GetNaturalWidth() const;
   int GetNaturalHeight() const;
 
+  void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
+
 private:
-  void RebuildText(std::string const& new_text);
+  void OnTextChanged(std::string const& new_text);
+  void RenderTexture();
+
+  bool render_texture_;
+  nux::Size texture_size_;
   nux::Size real_size_;
 };
 

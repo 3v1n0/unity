@@ -35,6 +35,8 @@ const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { 
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
 
+const int TITLE_FADING_PIXELS = 35;
+
 const std::string SETTINGS_NAME = "org.gnome.desktop.wm.preferences";
 const std::string FONT_KEY = "titlebar-font";
 
@@ -234,9 +236,32 @@ struct Style::Impl
     gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
 
     auto const& layout = BuildPangoLayout(text);
-    pango_layout_set_width(layout, w * PANGO_SCALE);
+
+    nux::Size extents;
+    pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
     pango_layout_set_height(layout, h * PANGO_SCALE);
-    gtk_render_layout(ctx_, cr, 0, 0, layout);
+
+    if (extents.width > w)
+    {
+      int out_pixels = extents.width - w;
+      int fading_width = std::min(TITLE_FADING_PIXELS, out_pixels);
+
+      cairo_push_group(cr);
+      gtk_render_layout(ctx_, cr, 0, 0, layout);
+      cairo_pop_group_to_source(cr);
+
+      std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(w - fading_width, 0, w, 0),
+                                              cairo_pattern_destroy);
+
+      cairo_pattern_add_color_stop_rgba(linpat.get(), 0, 0, 0, 0, 1);
+      cairo_pattern_add_color_stop_rgba(linpat.get(), 1, 0, 0, 0, 0);
+      cairo_mask(cr, linpat.get());
+    }
+    else
+    {
+      pango_layout_set_width(layout, w * PANGO_SCALE);
+      gtk_render_layout(ctx_, cr, 0, 0, layout);
+    }
 
     gtk_style_context_restore(ctx_);
   }

@@ -27,17 +27,29 @@ namespace decoration
 
 Title::Title()
 {
-  text.changed.connect(sigc::mem_fun(this, &Title::RebuildText));
-  focused.changed.connect([this] (bool) { RebuildText(text()); });
+  text.changed.connect(sigc::mem_fun(this, &Title::OnTextChanged));
+  focused.changed.connect([this] (bool) { if (texture_) RenderTexture(); });
 }
 
-void Title::RebuildText(std::string const& new_text)
+void Title::OnTextChanged(std::string const& new_text)
 {
-  real_size_ = Style::Get()->TitleNaturalSize(new_text);
+  auto new_real_size = Style::Get()->TitleNaturalSize(new_text);
 
+  if (new_real_size != real_size_)
+  {
+    real_size_ = new_real_size;
+    RequestRelayout();
+  }
+
+  texture_size_ = nux::Size();
+  Damage();
+}
+
+void Title::RenderTexture()
+{
   auto state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
-  cu::CairoContext text_ctx(real_size_.width, real_size_.height);
-  Style::Get()->DrawTitle(new_text, state, text_ctx, real_size_.width, real_size_.height);
+  cu::CairoContext text_ctx(texture_size_.width, texture_size_.height);
+  Style::Get()->DrawTitle(text().c_str(), state, text_ctx, texture_size_.width, texture_size_.height);
   SetTexture(text_ctx);
 }
 
@@ -65,6 +77,27 @@ int Title::GetNaturalWidth() const
 int Title::GetNaturalHeight() const
 {
   return real_size_.height;
+}
+
+void Title::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
+                 CompRegion const& clip, unsigned mask)
+{
+  auto const& geo = Geometry();
+  nux::Size tex_size(geo.width(), geo.height());
+
+  if (tex_size.width > real_size_.width)
+    tex_size.width = real_size_.width;
+
+  if (tex_size.height > real_size_.height)
+    tex_size.height = real_size_.height;
+
+  if (texture_size_ != tex_size)
+  {
+    texture_size_ = tex_size;
+    RenderTexture();
+  }
+
+  TexturedItem::Draw(ctx, transformation, attrib, clip, mask);
 }
 
 } // decoration namespace
