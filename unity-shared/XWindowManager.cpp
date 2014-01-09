@@ -20,7 +20,6 @@
 #include <Nux/Nux.h>
 #include <core/core.h>
 #include <core/atoms.h>
-#include <gdk/gdkx.h>
 #include "XWindowManager.h"
 
 namespace unity
@@ -28,6 +27,16 @@ namespace unity
 namespace
 {
 const long NET_WM_MOVERESIZE_MOVE = 8;
+
+namespace atom
+{
+Atom _NET_WM_VISIBLE_NAME = 0;
+}
+}
+
+XWindowManager::XWindowManager()
+{
+  atom::_NET_WM_VISIBLE_NAME = XInternAtom(screen->dpy(), "_NET_WM_VISIBLE_NAME", False);
 }
 
 std::string XWindowManager::GetUtf8Property(Window window_id, Atom atom) const
@@ -37,9 +46,8 @@ std::string XWindowManager::GetUtf8Property(Window window_id, Atom atom) const
   unsigned long n_items, bytes_after;
   char *val = nullptr;
   std::string retval;
-  Display* dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-  result = XGetWindowProperty(dpy, window_id, atom, 0L, 65536, False,
+  result = XGetWindowProperty(screen->dpy(), window_id, atom, 0L, 65536, False,
                               Atoms::utf8String, &type, &format, &n_items,
                               &bytes_after, reinterpret_cast<unsigned char **>(&val));
 
@@ -61,9 +69,8 @@ std::string XWindowManager::GetTextProperty(Window window_id, Atom atom) const
   XTextProperty text;
   std::string retval;
   text.nitems = 0;
-  Display* dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-  if (XGetTextProperty(dpy, window_id, &text, atom))
+  if (XGetTextProperty(screen->dpy(), window_id, &text, atom))
   {
     if (text.value)
     {
@@ -81,9 +88,8 @@ std::vector<long> XWindowManager::GetCardinalProperty(Window window_id, Atom ato
   int result, format;
   unsigned long n_items, bytes_after;
   long *buf = nullptr;
-  Display* dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-  result = XGetWindowProperty(dpy, window_id, atom, 0L, 65536, False,
+  result = XGetWindowProperty(screen->dpy(), window_id, atom, 0L, 65536, False,
                               XA_CARDINAL, &type, &format, &n_items, &bytes_after,
                               reinterpret_cast<unsigned char **>(&buf));
 
@@ -104,17 +110,17 @@ std::vector<long> XWindowManager::GetCardinalProperty(Window window_id, Atom ato
 
 std::string XWindowManager::GetWindowName(Window window_id) const
 {
-  std::string name;
-  Atom visibleNameAtom;
+  std::string name = GetUtf8Property(window_id, atom::_NET_WM_VISIBLE_NAME);
 
-  visibleNameAtom = gdk_x11_get_xatom_by_name("_NET_WM_VISIBLE_NAME");
-  name = GetUtf8Property(window_id, visibleNameAtom);
+  if (!name.empty())
+    return name;
 
-  if (name.empty())
-    name = GetUtf8Property(window_id, Atoms::wmName);
+  name = GetUtf8Property(window_id, Atoms::wmName);
 
-  if (name.empty())
-    name = GetTextProperty(window_id, XA_WM_NAME);
+  if (!name.empty())
+    return name;
+
+  name = GetTextProperty(window_id, XA_WM_NAME);
 
   return name;
 }

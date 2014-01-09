@@ -28,6 +28,8 @@ namespace unity
 class XWindowManager : public WindowManager
 {
 public:
+  XWindowManager();
+
   void StartMove(Window window_id, int x, int y);
 
   std::string GetWindowName(Window window_id) const;
