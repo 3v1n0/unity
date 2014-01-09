@@ -80,6 +80,7 @@ protected:
   sigc::signal<void> geo_parameters_changed;
 
   virtual bool IsContainer() const { return false; }
+  void RequestRelayout();
 
   friend class InputMixer;
   virtual void MotionEvent(CompPoint const&) {}

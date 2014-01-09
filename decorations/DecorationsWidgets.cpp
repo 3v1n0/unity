@@ -43,11 +43,7 @@ Item::Item()
   , mouse_owner(false)
   , max_(std::numeric_limits<short>::max(), std::numeric_limits<short>::max())
 {
-  auto parent_relayout_cb = [this] {
-    if (BasicContainer::Ptr const& parent = parent_.lock())
-      parent->Relayout();
-  };
-
+  auto parent_relayout_cb = sigc::mem_fun(this, &Item::RequestRelayout);
   visible.changed.connect(sigc::hide(parent_relayout_cb));
   geo_parameters_changed.connect(parent_relayout_cb);
 }
@@ -187,6 +183,12 @@ BasicContainer::Ptr Item::GetTopParent() const
   }
 
   return parent;
+}
+
+void Item::RequestRelayout()
+{
+  if (BasicContainer::Ptr const& parent = parent_.lock())
+    parent->Relayout();
 }
 
 //
