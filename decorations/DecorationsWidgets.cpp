@@ -213,7 +213,7 @@ void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
                         CompRegion const& clip, unsigned mask)
 {
-  if (!visible || Geometry().isEmpty())
+  if (!visible || Geometry().isEmpty() || !texture_)
     return;
 
   ctx->vertexBuffer()->begin();
@@ -225,12 +225,12 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
 
 int TexturedItem::GetNaturalWidth() const
 {
-  return (texture_.st) ? texture_.st->width() : Item::GetNaturalWidth();
+  return (texture_) ? texture_.st->width() : Item::GetNaturalWidth();
 }
 
 int TexturedItem::GetNaturalHeight() const
 {
-  return (texture_.st) ? texture_.st->height() : Item::GetNaturalHeight();
+  return (texture_) ? texture_.st->height() : Item::GetNaturalHeight();
 }
 
 CompRect& TexturedItem::InternalGeo()
