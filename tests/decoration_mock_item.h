@@ -65,6 +65,7 @@ struct MockItem : public SimpleItem
   MOCK_METHOD2(ButtonDownEvent, void(CompPoint const&, unsigned));
   MOCK_METHOD2(ButtonUpEvent, void(CompPoint const&, unsigned));
 
+  using SimpleItem::RequestRelayout;
   using SimpleItem::geo_parameters_changed;
   using SimpleItem::rect_;
   using SimpleItem::natural_;

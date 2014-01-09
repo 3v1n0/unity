@@ -152,6 +152,15 @@ TEST_F(TestDecorationItem, TopParent)
   EXPECT_EQ(top, item.GetTopParent());
 }
 
+TEST_F(TestDecorationItem, RelayoutParentOnRequestRelayout)
+{
+  auto parent = std::make_shared<MockBasicContainer>();
+  item.SetParent(parent);
+
+  EXPECT_CALL(*parent, Relayout());
+  item.RequestRelayout();
+}
+
 TEST_F(TestDecorationItem, RelayoutParentOnGeometryChanges)
 {
   auto parent = std::make_shared<MockBasicContainer>();
