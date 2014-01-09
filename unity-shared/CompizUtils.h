@@ -44,7 +44,7 @@ struct SimpleTexture
   virtual ~SimpleTexture() = default;
 
   GLTexture::List const& texture_list() const { return texture_; }
-  GLTexture* texture() const { return texture_[0]; }
+  GLTexture* texture() const { return texture_.empty() ? nullptr : texture_[0]; }
   int width() const { return texture_.empty() ? 0 : texture_[0]->width(); }
   int height() const { return texture_.empty() ? 0 : texture_[0]->height(); }
 
@@ -60,6 +60,7 @@ struct SimpleTextureQuad
   void SetY(int y);
 
   operator SimpleTexture::Ptr() const { return st; }
+  operator bool() const { return st && st->texture(); }
   operator GLTexture*() const { return st ? st->texture() : nullptr; }
   operator GLTexture::List() const { return st ? st->texture_list() : GLTexture::List(); }
 
