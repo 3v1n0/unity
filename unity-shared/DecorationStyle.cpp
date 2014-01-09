@@ -35,8 +35,6 @@ const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { 
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
 
-const int TITLE_FADING_PIXELS = 35;
-
 const std::string SETTINGS_NAME = "org.gnome.desktop.wm.preferences";
 const std::string FONT_KEY = "titlebar-font";
 
@@ -64,7 +62,10 @@ static void unity_decoration_class_init(UnityDecorationClass* klass)
   param = g_param_spec_float("title-alignment", "Title Alignment", "", 0.0, 1.0, 0.0, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 
-  param = g_param_spec_int("title-indent", "Title Indent", "", 0, G_MAXINT, 10, G_PARAM_READABLE);
+  param = g_param_spec_uint("title-indent", "Title Indent", "", 0, G_MAXUINT, 10, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_uint("title-fade", "Title Fading Pixels", "", 0, G_MAXUINT, 35, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 }
 
@@ -85,6 +86,7 @@ struct Style::Impl
     , pango_context_(gdk_pango_context_get_for_screen(gdk_screen_get_default()))
     , title_alignment_(0)
     , title_indent_(0)
+    , title_fade_(0)
   {
     std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(GetFont().c_str()), pango_font_description_free);
     pango_context_set_font_description(pango_context_, desc.get());
@@ -101,7 +103,8 @@ struct Style::Impl
     input_edges_ = BorderFromGtkBorder(b.get(), DEFAULT_INPUT_EDGES);
 
     title_alignment_ = std::min(1.0f, std::max(0.0f, GetProperty<gfloat>("title-alignment")));
-    title_indent_ = std::max(0, GetProperty<gint>("title-indent"));
+    title_indent_ = std::max<unsigned>(0, GetProperty<guint>("title-indent"));
+    title_fade_ = std::max<unsigned>(0, GetProperty<guint>("title-fade"));
     theme_name_ = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
   }
 
@@ -244,7 +247,7 @@ struct Style::Impl
     if (extents.width > w)
     {
       int out_pixels = extents.width - w;
-      int fading_width = std::min(TITLE_FADING_PIXELS, out_pixels);
+      int fading_width = std::min<int>(title_fade_, out_pixels);
 
       cairo_push_group(cr);
       gtk_render_layout(ctx_, cr, 0, 0, layout);
@@ -273,7 +276,8 @@ struct Style::Impl
   decoration::Border border_;
   decoration::Border input_edges_;
   float title_alignment_;
-  int title_indent_;
+  unsigned title_indent_;
+  unsigned title_fade_;
 };
 
 Style::Ptr const& Style::Get()
