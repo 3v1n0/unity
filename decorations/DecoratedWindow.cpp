@@ -49,6 +49,15 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
     cwin_->damageOutputExtents();
   });
 
+  parent->title.SetGetterFunction([this] { return title_ ? title_->text() : ""; });
+  parent->title.SetSetterFunction([this] (std::string const& new_title) {
+    if (!title_ || new_title == title_->text())
+      return false;
+
+    title_->text = new_title;
+    return true;
+  });
+
   if (win_->isViewable() || win_->shaded())
     Update();
 }
