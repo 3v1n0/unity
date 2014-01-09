@@ -22,6 +22,8 @@
 #include <core/atoms.h>
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/CairoGraphics.h>
+#include <X11/Xatom.h>
+#include "WindowManager.h"
 
 namespace unity
 {
@@ -38,6 +40,7 @@ namespace atom
 {
 Atom _NET_REQUEST_FRAME_EXTENTS = 0;
 // Atom _NET_FRAME_EXTENTS = 0;
+Atom _NET_WM_VISIBLE_NAME = 0;
 }
 }
 
@@ -50,6 +53,7 @@ Manager::Impl::Impl(decoration::Manager* parent)
   dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   // atom::_NET_FRAME_EXTENTS = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
+  atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
   screen->updateSupportedWmHints();
 
   auto rebuild_cb = sigc::mem_fun(this, &Impl::OnShadowOptionsChanged);
@@ -194,9 +198,20 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
   switch (event->type)
   {
     case PropertyNotify:
+    {
       if (event->xproperty.atom == Atoms::mwmHints)
+      {
         UpdateWindow(event->xproperty.window);
+      }
+      else if (event->xproperty.atom == XA_WM_NAME ||
+               event->xproperty.atom == Atoms::mwmHints ||
+               event->xproperty.atom == atom::_NET_WM_VISIBLE_NAME)
+      {
+        if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
+          win->title = WindowManager::Default().GetWindowName(event->xproperty.window);
+      }
       break;
+    }
     case ConfigureNotify:
       UpdateWindow(event->xconfigure.window);
       break;
