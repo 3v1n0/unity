@@ -8,6 +8,8 @@
 
 from __future__ import absolute_import
 
+from autopilot.matchers import Eventually
+from testtools.matchers import Equals
 from testtools import skip
 from time import sleep
 
@@ -83,6 +85,26 @@ class ShowDesktopTests(UnityTestCase):
 
         self.assertProperty(charmap, is_hidden=False)
         self.assertProperty(calc, is_hidden=True)
+
+    def test_showdesktop_closes_dash(self):
+        """Show Desktop must close Dash if it's open"""
+        test_windows = self.launch_test_apps()
+        self.unity.dash.ensure_visible()
+
+        self.unity.window_manager.enter_show_desktop()
+        self.addCleanup(self.unity.window_manager.leave_show_desktop)
+
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+
+    def test_showdesktop_closes_hud(self):
+        """Show Desktop must close Hud if it's open"""
+        test_windows = self.launch_test_apps()
+        self.unity.hud.ensure_visible()
+
+        self.unity.window_manager.enter_show_desktop()
+        self.addCleanup(self.unity.window_manager.leave_show_desktop)
+
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
 
     @skip("Breaks following tests due to SDM bug")
     def test_showdesktop_switcher(self):
