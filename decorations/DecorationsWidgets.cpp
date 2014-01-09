@@ -396,10 +396,10 @@ void Layout::Relayout()
   }
   while (rect_.width() > max_.width || rect_.height() > max_.height);
 
+  relayouting_ = false;
+
   if (old_geo != rect_)
     geo_parameters_changed.emit();
-
-  relayouting_ = false;
 }
 
 void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
