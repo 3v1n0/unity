@@ -1314,7 +1314,8 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
   _last_scroll_direction = direction;
 
   auto const& windows = GetWindowsOnCurrentDesktopInStackingOrder();
-  if (windows.empty())
+
+  if (windows.size() <= 1)
     return;
 
   if (!IsActive())
@@ -1322,9 +1323,6 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
     windows.at(0)->Focus();
     return;
   }
-
-  if (windows.size() <= 1)
-    return;
 
   ++_progressive_scroll;
   _progressive_scroll %= windows.size();
