@@ -943,6 +943,12 @@ void UnityScreen::enterShowDesktopMode ()
       w->moveInputFocusTo();
   }
 
+  if (dash_controller_->IsVisible())
+    dash_controller_->HideDash();
+    
+  if (hud_controller_->IsVisible())
+    hud_controller_->HideHud();
+
   PluginAdapter::Default().OnShowDesktop();
 
   /* Disable the focus handler as we will report that
