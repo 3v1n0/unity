@@ -176,7 +176,6 @@ public:
   nux::Geometry GetScreenGeometry() const;
   nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const;
   nux::Size GetWindowDecorationSize(Window window_id, Edge) const;
-  std::string GetWindowName(Window window_id) const;
 
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
@@ -210,10 +209,6 @@ private:
 
   Window GetTopMostValidWindowInViewport() const;
   bool IsCurrentViewportEmpty() const;
-
-  std::string GetTextProperty(Window xid, Atom atom) const;
-  std::string GetUtf8Property(Window xid, Atom atom) const;
-  std::vector<long> GetCardinalProperty(Window xid, Atom atom) const;
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;

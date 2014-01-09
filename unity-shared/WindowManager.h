@@ -33,6 +33,7 @@
 #include <X11/Xlib.h>
 #else
 typedef unsigned long Window;
+typedef unsigned long Atom;
 #endif
 
 #include "unity-shared/Introspectable.h"
@@ -155,6 +156,10 @@ public:
   virtual bool RestoreInputFocus() = 0;
 
   virtual std::string GetWindowName(Window window_id) const = 0;
+
+  virtual std::string GetUtf8Property(Window, Atom) const = 0;
+  virtual std::string GetTextProperty(Window, Atom) const = 0;
+  virtual std::vector<long> GetCardinalProperty(Window, Atom) const = 0;
 
   // Nux Modifiers, Nux Keycode (= X11 KeySym)
   nux::Property<std::pair<unsigned, unsigned>> close_window_key;

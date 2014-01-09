@@ -28,7 +28,12 @@ namespace unity
 class XWindowManager : public WindowManager
 {
 public:
-  virtual void StartMove(Window window_id, int x, int y);
+  void StartMove(Window window_id, int x, int y);
+
+  std::string GetWindowName(Window window_id) const;
+  std::string GetTextProperty(Window, Atom) const;
+  std::string GetUtf8Property(Window, Atom) const;
+  std::vector<long> GetCardinalProperty(Window, Atom) const;
 };
 
 }

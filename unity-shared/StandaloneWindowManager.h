@@ -148,6 +148,9 @@ public:
   virtual bool RestoreInputFocus();
 
   virtual std::string GetWindowName(Window window_id) const;
+  virtual std::string GetUtf8Property(Window window_id, Atom) const;
+  virtual std::string GetTextProperty(Window window_id, Atom) const;
+  virtual std::vector<long> GetCardinalProperty(Window window_id, Atom) const;
 
   // Mock functions
   StandaloneWindow::Ptr GetWindowByXid(Window window_id) const;
