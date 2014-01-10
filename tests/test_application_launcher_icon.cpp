@@ -718,8 +718,8 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollInitiallyUnfocusedWindow)
   ASSERT_EQ(WM->GetActiveWindow(), 8);
 
   mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 200);
-  EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 8, 1));
-  ASSERT_EQ(WM->GetActiveWindow(), 1);
+  EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1, 8));
+  ASSERT_EQ(WM->GetActiveWindow(), 8);
 }
 
 TEST_F(TestApplicationLauncherIcon, PerformScrollSingleUnfocusedWindow)
