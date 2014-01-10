@@ -2365,6 +2365,11 @@ bool UnityScreen::ShowHud()
     return false; // early exit if the switcher is open
   }
 
+  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
+  {
+    return false;
+  }
+
   if (hud_controller_->IsVisible())
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
