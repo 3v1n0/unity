@@ -30,10 +30,6 @@ class GcinTestCase(UnityTestCase):
         if 'gcin' not in running_process:
             self.skip("gcin is not an active process, please start 'gcin' before running these tests.")
 
-        if 'ibus' in running_process:
-            self.skip("IBus is currently running, please close 'ibus-daemon' before running these tests.")
-
-
 class GcinTestHangul(GcinTestCase):
     """Tests the Dash and Hud with gcin in hangul mode."""
 

@@ -128,6 +128,8 @@ public:
   void Decorate(Window xid) const;
   void Undecorate(Window xid) const;
 
+  bool IsTopWindowFullscreenOnMonitorWithMouse() const override;
+
   // WindowManager implementation
   bool IsWindowMaximized(Window window_id) const;
   bool IsWindowDecorated(Window window_id) const;
@@ -208,6 +210,7 @@ private:
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const;
   unsigned long GetMwnDecorations(Window xid) const;
 
+  Window GetTopMostWindowInMonitor(int monitor) const;
   Window GetTopMostValidWindowInViewport() const;
   bool IsCurrentViewportEmpty() const;
 
