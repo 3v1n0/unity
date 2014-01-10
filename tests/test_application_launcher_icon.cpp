@@ -722,6 +722,23 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollInitiallyUnfocusedWindow)
   ASSERT_EQ(WM->GetActiveWindow(), 1);
 }
 
+TEST_F(TestApplicationLauncherIcon, PerformScrollSingleUnfocusedWindow)
+{
+  AddMockWindow(1, 0, 0);
+
+  auto external_window = std::make_shared<unity::StandaloneWindow>(2);
+  WM->AddStandaloneWindow(external_window);
+  mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
+
+  EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(1, 2));
+  ASSERT_EQ(WM->GetActiveWindow(), 2);
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 200);
+
+  EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(1, 2));
+  ASSERT_EQ(WM->GetActiveWindow(), 2);
+}
+
 TEST_F(TestApplicationLauncherIcon, ActiveQuirkWMCrossCheck)
 {
   auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
