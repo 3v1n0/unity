@@ -179,6 +179,7 @@ Depends: ${misc:Depends},
          python-xdg,
          python-xlib,
          libxpathselect1.4 (>= 1.4),
+         mesa-utils,
 Description: Autopiloted tests for Unity
  We test Unity automatically through autopilot, a framework which enables us
  to trigger keyboard and mouse events on the fly as well as introspecting
