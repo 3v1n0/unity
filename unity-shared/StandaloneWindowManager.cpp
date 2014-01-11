@@ -548,12 +548,7 @@ std::string StandaloneWindowManager::GetWindowName(Window window_id) const
   return "";
 }
 
-std::string StandaloneWindowManager::GetUtf8Property(Window, Atom) const
-{
-  return std::string();
-}
-
-std::string StandaloneWindowManager::GetTextProperty(Window, Atom) const
+std::string StandaloneWindowManager::GetStringProperty(Window, Atom) const
 {
   return std::string();
 }

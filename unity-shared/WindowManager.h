@@ -157,8 +157,7 @@ public:
 
   virtual std::string GetWindowName(Window window_id) const = 0;
 
-  virtual std::string GetUtf8Property(Window, Atom) const = 0;
-  virtual std::string GetTextProperty(Window, Atom) const = 0;
+  virtual std::string GetStringProperty(Window, Atom) const = 0;
   virtual std::vector<long> GetCardinalProperty(Window, Atom) const = 0;
 
   // Nux Modifiers, Nux Keycode (= X11 KeySym)
