@@ -495,6 +495,15 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("e")
         self.assertThat(self.unity.hud.view.selected_button, Eventually(Equals(1)))
 
+    def test_hud_does_not_open_when_fullscreen_window(self):
+        """ The Hud must not open if a window is fullscreen. """
+        gedit = self.process_manager.start_app("Text Editor")
+        self.keyboard.press_and_release('F11')
+        self.keybinding("hud/reveal")
+        self.addCleanup(self.unity.hud.ensure_hidden)
+
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
@@ -811,3 +820,17 @@ class HudCrossMonitorsTests(HudTestsBase):
             self.mouse.click()
 
             self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+
+    def test_hud_opens_on_second_monitor_if_first_has_fullscreen_window(self):
+        """ The Hud must open if the mouse is over the second monitor while the
+            first monitor has a fullscreen window. """
+
+        gedit = self.process_manager.start_app("Text Editor")
+        monitor = gedit.get_windows()[0].monitor
+        self.keyboard.press_and_release('F11')
+
+        move_mouse_to_screen((monitor + 1) % self.display.get_num_screens())
+        self.keybinding("hud/reveal")
+        self.addCleanup(self.unity.hud.ensure_hidden)
+
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))

@@ -1,3 +1,10 @@
+unity (7.1.2+14.04.20131106.1-0ubuntu2) trusty; urgency=medium
+
+  * Disable errors upon deprecated-warnings.
+  * No change rebuild against nux with libglew1.10.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Thu, 02 Jan 2014 16:14:05 +0000
+
 unity (7.1.2+14.04.20131106.1-0ubuntu1) trusty; urgency=low
 
   [ Ted Gould ]
