@@ -425,6 +425,9 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     {
       case XI_KeyPress:
         {
+          if (lockscreen_mode)
+            break;
+
           KeySym keysym = XkbKeycodeToKeysym (event->display, event->detail, 0, 0);
 
           if (event_matches_keybinding (event->mods.base, keysym, &priv->menu_toggle) ||

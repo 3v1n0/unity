@@ -44,6 +44,8 @@ Shield::Shield(bool is_primary)
   UpdateBackgroundTexture();
   primary ? ShowPrimaryView() : ShowSecondaryView();
 
+  EnableInputWindow(true);
+
   mouse_enter.connect(sigc::mem_fun(this, &Shield::OnMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Shield::OnMouseLeave));
   primary.changed.connect(sigc::mem_fun(this, &Shield::OnPrimaryChanged));
@@ -86,10 +88,29 @@ void Shield::OnPrimaryChanged(bool value)
 
 void Shield::ShowPrimaryView()
 {
+  GrabPointer();
+  GrabKeyboard();
+
   nux::Layout* main_layout = GetLayout();
   main_layout->Clear();
 
-  PanelView* view = new PanelView(this, std::make_shared<indicator::DBusIndicators>(true));
+  auto indicators = std::make_shared<indicator::DBusIndicators>(true);
+
+  // Hackish but ok for the moment.
+  indicators->on_entry_show_menu.connect([this](std::string const&, unsigned, int, int, unsigned) {
+    UnGrabPointer();
+    UnGrabKeyboard();
+  });
+
+  indicators->on_entry_activated.connect([this](std::string const& entry, nux::Geometry const& geo) {
+    if (entry.empty() and geo.IsNull())
+    {
+      GrabPointer();
+      GrabKeyboard();
+    }
+  });
+
+  PanelView* view = new PanelView(this, indicators);
   view->SetMaximumHeight(panel::Style::Instance().panel_height);
   view->SetOpacity(0.5);
 
