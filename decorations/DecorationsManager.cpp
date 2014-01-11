@@ -39,7 +39,6 @@ DECLARE_LOGGER(logger, "unity.decoration.manager");
 namespace atom
 {
 Atom _NET_REQUEST_FRAME_EXTENTS = 0;
-// Atom _NET_FRAME_EXTENTS = 0;
 Atom _NET_WM_VISIBLE_NAME = 0;
 }
 }
@@ -52,7 +51,6 @@ Manager::Impl::Impl(decoration::Manager* parent)
   manager_ = parent;
   dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
-  // atom::_NET_FRAME_EXTENTS = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
   screen->updateSupportedWmHints();
 
@@ -208,7 +206,7 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
                event->xproperty.atom == atom::_NET_WM_VISIBLE_NAME)
       {
         if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
-          win->title = WindowManager::Default().GetWindowName(event->xproperty.window);
+          win->title = WindowManager::Default().GetStringProperty(event->xproperty.window, event->xproperty.atom);
       }
       break;
     }
