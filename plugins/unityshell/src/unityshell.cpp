@@ -51,6 +51,7 @@
 #include "launcher/XdndManagerImp.h"
 #include "launcher/XdndStartStopNotifierImp.h"
 #include "CompizShortcutModeller.h"
+#include "DecorationStyle.h"
 
 #include "decorations/DecorationsManager.h"
 
@@ -3726,99 +3727,35 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures,
   }
 }
 
-void UnityWindow::RenderDecoration(compiz_utils::CairoContext const& context, double aspect)
+void UnityWindow::RenderDecoration(compiz_utils::CairoContext const& ctx, double aspect)
 {
-  cairo_save(context);
+  if (aspect <= 0)
+    return;
 
-  // Draw window decoration based on gtk style
-  cairo_push_group(context);
-  auto& style = panel::Style::Instance();
-  int w = context.width();
-  int h = context.height();
-  gtk_render_background(style.GetStyleContext(), context, 0, 0, w, h);
-  gtk_render_frame(style.GetStyleContext(), context, 0, 0, w, h);
-  cairo_pop_group_to_source(context);
+  using namespace decoration;
 
-  // Round window decoration top border
-  const double radius = win::decoration::RADIUS * aspect;
-
-  cairo_new_sub_path(context);
-  cairo_line_to(context, 0, h);
-  cairo_arc(context, radius, radius, radius, M_PI, -M_PI * 0.5f);
-  cairo_line_to(context, w - radius, 0);
-  cairo_arc(context, w - radius, radius, radius, M_PI * 0.5f, 0);
-  cairo_line_to(context, w, h);
-  cairo_close_path(context);
-
-  cairo_fill(context);
-
-  cairo_restore(context);
+  cairo_save(ctx);
+  // We need to scale the cairo matrix in order to get the properly scaled
+  cairo_scale(ctx, aspect, aspect);
+  int w = std::round(ctx.width() / aspect);
+  int h = std::round(ctx.height() / aspect);
+  Style::Get()->DrawSide(Side::TOP, WidgetState::NORMAL, ctx, w, h);
+  cairo_restore(ctx);
 }
 
-void UnityWindow::RenderText(compiz_utils::CairoContext const& context, int x, int y, int width, int height)
+void UnityWindow::RenderTitle(compiz_utils::CairoContext const& ctx, int x, int y, int width, int height)
 {
-  panel::Style& style = panel::Style::Instance();
-  std::string const& font_desc = style.GetFontDescription(panel::PanelItem::TITLE);
+  using namespace decoration;
+  auto const& style = Style::Get();
+  auto const& title = deco_win_->title();
+  auto text_size = style->TitleNaturalSize(title);
+  x += style->TitleIndent();
+  y += (height - text_size.height)/2;
 
-  glib::Object<PangoLayout> layout(pango_cairo_create_layout(context));
-  std::shared_ptr<PangoFontDescription> font(pango_font_description_from_string(font_desc.c_str()),
-                                             pango_font_description_free);
-
-  pango_layout_set_font_description(layout, font.get());
-
-  GdkScreen* gdk_screen = gdk_screen_get_default();
-  PangoContext* pango_ctx = pango_layout_get_context(layout);
-  int dpi = style.GetTextDPI();
-
-  pango_cairo_context_set_font_options(pango_ctx, gdk_screen_get_font_options(gdk_screen));
-  pango_cairo_context_set_resolution(pango_ctx, dpi / static_cast<float>(PANGO_SCALE));
-  pango_layout_context_changed(layout);
-
-  decoration_title_ = WindowManager::Default().GetWindowName(window->id());
-
-  pango_layout_set_height(layout, height);
-  pango_layout_set_width(layout, -1); //avoid wrap lines
-  pango_layout_set_auto_dir(layout, false);
-  pango_layout_set_text(layout, decoration_title_.c_str(), -1);
-
-  /* update the size of the pango layout */
-  pango_cairo_update_layout(context, layout);
-
-  GtkStyleContext* style_context = style.GetStyleContext();
-  gtk_style_context_save(style_context);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
-
-  // alignment
-  PangoRectangle lRect;
-  pango_layout_get_extents(layout, nullptr, &lRect);
-  int text_width = lRect.width / PANGO_SCALE;
-  int text_height = lRect.height / PANGO_SCALE;
-  int text_space = width - x;
-  y += (height - text_height) / 2.0f;
-  if (text_width > text_space)
-  {
-    // Cut the text with fade
-    int out_pixels = text_width - text_space;
-    const int fading_pixels = 35;
-    int fading_width = (out_pixels < fading_pixels) ? out_pixels : fading_pixels;
-
-    cairo_push_group(context);
-    gtk_render_layout(style_context, context, x, y, layout);
-    cairo_pop_group_to_source(context);
-
-    std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(width - fading_width, y, width, y),
-                                            cairo_pattern_destroy);
-    cairo_pattern_add_color_stop_rgba(linpat.get(), 0, 0, 0, 0, 1);
-    cairo_pattern_add_color_stop_rgba(linpat.get(), 1, 0, 0, 0, 0);
-    cairo_mask(context, linpat.get());
-  }
-  else
-  {
-    gtk_render_layout(style_context, context, x, y, layout);
-  }
-
-  gtk_style_context_restore(style_context);
+  cairo_save(ctx);
+  cairo_translate(ctx, x, y);
+  style->DrawTitle(title, WidgetState::NORMAL, ctx, width - x, height);
+  cairo_restore(ctx);
 }
 
 void UnityWindow::BuildDecorationTexture()
@@ -3924,7 +3861,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
       auto* texture = decoration_selected_tex_->texture();
       if (texture && texture->width() == width && texture->height() == height)
       {
-        if (decoration_title_ == wm.GetWindowName(xid))
+        if (decoration_title_ == deco_win_->title())
           redraw_decoration = false;
       }
     }
@@ -3937,8 +3874,8 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         RenderDecoration(context, scale);
 
         // Draw window title
-        int text_x = win::decoration::ITEMS_PADDING * 2 + win::decoration::CLOSE_SIZE;
-        RenderText(context, text_x, 0.0, width - win::decoration::ITEMS_PADDING, height);
+        int text_x = win::decoration::CLOSE_SIZE;
+        RenderTitle(context, text_x, 0.0, width - win::decoration::ITEMS_PADDING, height);
         decoration_selected_tex_ = context;
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
       }

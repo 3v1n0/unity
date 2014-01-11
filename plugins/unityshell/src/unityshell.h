@@ -506,7 +506,7 @@ private:
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
   void RenderDecoration(compiz_utils::CairoContext const&, double aspect = 1.0f);
-  void RenderText(compiz_utils::CairoContext const&, int x, int y, int width, int height);
+  void RenderTitle(compiz_utils::CairoContext const&, int x, int y, int width, int height);
   void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
                    GLMatrix const&, unsigned mask, int x, int y, double aspect = 1.0f);
 
