@@ -19,19 +19,10 @@
  */
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
-#include <Nux/Layout.h>
-#include <Nux/WindowCompositor.h>
 
-#include <NuxGraphics/CairoGraphics.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <NuxGraphics/RenderingPipe.h>
-
-#include <glib.h>
 
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/TextureCache.h"
