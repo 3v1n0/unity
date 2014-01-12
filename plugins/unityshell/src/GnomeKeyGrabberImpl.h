@@ -32,15 +32,6 @@ namespace grabber
 
 struct GnomeKeyGrabber::Impl
 {
-  struct Info
-  {
-    CompAction* action_;
-    const CompAction* address_;
-
-    explicit Info(CompAction* action = nullptr,
-                  const CompAction* address = nullptr);
-  };
-
   class BindingLess
   {
   public:
@@ -59,9 +50,8 @@ struct GnomeKeyGrabber::Impl
   std::vector<unsigned int> action_ids_;
   unsigned int current_action_id_;
 
-  std::map<unsigned int, Info> info_by_action_id_;
   std::map<const CompAction*, unsigned int> action_ids_by_action_;
-  std::map<const CompAction*, unsigned int> action_ids_by_address_;
+  std::map<unsigned int, const CompAction*> actions_by_action_id_;
   std::map<CompAction::KeyBinding, unsigned int, BindingLess> grabs_by_binding_;
 
   explicit Impl(CompScreen* screen, bool test_mode = false);
