@@ -98,8 +98,8 @@ PanelMenuView::PanelMenuView()
 
   opacity = 0.0f;
 
-  Refresh();
-  FullRedraw();
+  if (Refresh())
+    FullRedraw();
 }
 
 PanelMenuView::~PanelMenuView()
@@ -827,40 +827,36 @@ std::string PanelMenuView::GetCurrentTitle() const
   }
 }
 
-void PanelMenuView::Refresh(bool force)
+bool PanelMenuView::Refresh(bool force)
 {
   nux::Geometry const& geo = GetGeometry();
 
   // We can get into a race that causes the geometry to be wrong as there hasn't been a
   // layout cycle before the first callback. This is to protect from that.
   if (geo.width > monitor_geo_.width)
-    return;
+    return false;
 
   const std::string& new_title = GetCurrentTitle();
   if (new_title == panel_title_ && !force && last_geo_ == geo && title_texture_)
   {
     // No need to redraw the title, let's save some CPU time!
-    return;
+    return false;
   }
+
   panel_title_ = new_title;
 
   if (panel_title_.empty())
   {
     title_texture_ = nullptr;
-    return;
+    return true;
   }
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
-  cairo_t* cr = cairo_graphics.GetContext();
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cr);
-
+  cairo_t* cr = cairo_graphics.GetInternalContext();
   UpdateTitleTexture(cr, geo, panel_title_);
-
-  cairo_destroy(cr);
-
   title_texture_ = texture_ptr_from_cairo_graphics(cairo_graphics);
+
+  return true;
 }
 
 void PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view, bool is_active)
@@ -877,8 +873,8 @@ void PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view, bool is_activ
     }
   }
 
-  Refresh();
-  FullRedraw();
+  if (Refresh())
+    FullRedraw();
 }
 
 void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
@@ -906,8 +902,8 @@ void PanelMenuView::NotifyAllMenusClosed()
 
 void PanelMenuView::OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name)
 {
-  Refresh();
-  FullRedraw();
+  if (Refresh())
+    FullRedraw();
 }
 
 bool PanelMenuView::OnNewAppShow()
@@ -1061,32 +1057,32 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher, BamfView* old_vi
     window_buttons_->controlled_window = (is_maximized_) ? active_xid_ : 0;
   }
 
-  Refresh();
-  FullRedraw();
+  if (Refresh())
+    FullRedraw();
 }
 
 void PanelMenuView::OnSpreadInitiate()
 {
-  Refresh();
-  QueueDraw();
+  if (Refresh())
+    QueueDraw();
 }
 
 void PanelMenuView::OnSpreadTerminate()
 {
-  Refresh();
-  QueueDraw();
+  if (Refresh())
+    QueueDraw();
 }
 
 void PanelMenuView::OnExpoInitiate()
 {
-  Refresh();
-  QueueDraw();
+  if (Refresh())
+    QueueDraw();
 }
 
 void PanelMenuView::OnExpoTerminate()
 {
-  Refresh();
-  QueueDraw();
+  if (Refresh())
+    QueueDraw();
 }
 
 void PanelMenuView::OnWindowMinimized(Window xid)
@@ -1095,8 +1091,8 @@ void PanelMenuView::OnWindowMinimized(Window xid)
 
   if (xid == active_xid_)
   {
-    Refresh();
-    QueueDraw();
+    if (Refresh())
+      QueueDraw();
   }
 }
 
@@ -1107,8 +1103,8 @@ void PanelMenuView::OnWindowUnminimized(Window xid)
 
   if (xid == active_xid_)
   {
-    Refresh();
-    QueueDraw();
+    if (Refresh())
+      QueueDraw();
   }
 }
 
@@ -1120,8 +1116,8 @@ void PanelMenuView::OnWindowUnmapped(Window xid)
 
   if (xid == active_xid_)
   {
-    Refresh();
-    QueueDraw();
+    if (Refresh())
+      QueueDraw();
   }
 }
 
@@ -1133,8 +1129,8 @@ void PanelMenuView::OnWindowMapped(Window xid)
 
     if (xid == active_xid_)
     {
-      Refresh();
-      QueueDraw();
+      if (Refresh())
+        QueueDraw();
     }
   }
 }
@@ -1150,8 +1146,8 @@ void PanelMenuView::OnWindowMaximized(Window xid)
     is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
     is_maximized_ = true;
 
-    Refresh();
-    FullRedraw();
+    if (Refresh())
+      FullRedraw();
   }
 }
 
@@ -1164,8 +1160,8 @@ void PanelMenuView::OnWindowRestored(Window xid)
     is_maximized_ = false;
     is_grabbed_ = false;
 
-    Refresh();
-    FullRedraw();
+    if (Refresh())
+      FullRedraw();
   }
 }
 
@@ -1177,8 +1173,8 @@ bool PanelMenuView::UpdateActiveWindowPosition()
   {
     we_control_active_ = we_control_window;
 
-    Refresh();
-    QueueDraw();
+    if (Refresh())
+      QueueDraw();
   }
 
   return false;
@@ -1411,8 +1407,8 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
 
       is_inside_ = true;
       is_grabbed_ = true;
-      Refresh();
-      FullRedraw();
+      if (Refresh())
+        FullRedraw();
 
       /* Ungrab the pointer and start the X move, to make the decorator handle it */
       titlebar_grab_area_->SetGrabbed(false);
@@ -1432,8 +1428,8 @@ void PanelMenuView::OnMaximizedGrabEnd(int x, int y)
   if (!is_inside_)
     is_grabbed_ = false;
 
-  Refresh();
-  FullRedraw();
+  if (Refresh())
+    FullRedraw();
 }
 
 // Introspectable
@@ -1489,8 +1485,8 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
     show_now_activated_ = false;
   }
 
-  Refresh();
-  QueueDraw();
+  if (Refresh())
+    QueueDraw();
 }
 
 void PanelMenuView::OnLauncherKeyNavStarted(GVariant* data)
@@ -1515,8 +1511,8 @@ void PanelMenuView::OnLauncherKeyNavEnded(GVariant* data)
   auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
   is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
 
-  Refresh();
-  QueueDraw();
+  if (Refresh())
+    QueueDraw();
 }
 
 void PanelMenuView::OnLauncherSelectionChanged(GVariant* data)

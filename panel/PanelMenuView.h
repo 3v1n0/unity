@@ -109,7 +109,7 @@ private:
 
   void FullRedraw();
   std::string GetCurrentTitle() const;
-  void Refresh(bool force = false);
+  bool Refresh(bool force = false);
 
   void UpdateTitleTexture(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const;
 
