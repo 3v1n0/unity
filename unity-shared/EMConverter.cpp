@@ -22,8 +22,8 @@
 namespace unity
 {
 
-double const DEFAULT_PPE     = 10.0f;
-double const PIXELS_PER_INCH = 72.0f;
+double const DEFAULT_PPE     = 10.0;
+double const PIXELS_PER_INCH = 72.0;
 
 EMConverter::EMConverter(int font_size, double dpi)
   : pixels_per_em_(DEFAULT_PPE)

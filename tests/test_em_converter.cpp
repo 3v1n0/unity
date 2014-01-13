@@ -27,7 +27,7 @@ namespace unity
 
 int const PIXEL_SIZE = 24;
 int const FONT_SIZE  = 13;
-double const DPI     = 96.0f;
+double const DPI     = 96.0;
 
 class TestEMConverter : public Test
 {
@@ -56,15 +56,31 @@ TEST_F(TestEMConverter, TestSetFontSize)
 
 TEST_F(TestEMConverter, TestSetDPI)
 {
-  int const dpi = 120.0f;
+  int const dpi = 120.0;
 
   em_converter.SetDPI(dpi);
   EXPECT_EQ(dpi, em_converter.GetDPI());
 }
 
-TEST_F(TestEMConverter, TestEMToPixelFromPixelToEMGetsSamePixelSize)
+TEST_F(TestEMConverter, TestEMToPixel)
 {
-  EXPECT_EQ(PIXEL_SIZE, em_converter.EMToPixels(em_converter.PixelsToEM(PIXEL_SIZE)));
+  double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);
+  EXPECT_EQ(PIXEL_SIZE, em_converter.EMToPixels(pixel_size_em));
 }
+
+TEST_F(TestEMConverter, TestPixelToEM)
+{
+  double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);
+  EXPECT_NEAR(pixel_size_em, 1.38, 0.01);
+}
+
+TEST_F(TestEMConverter, TestSetDPIEMToPixels)
+{
+  double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);
+  em_converter.SetDPI(120.0);
+
+  EXPECT_EQ(em_converter.EMToPixels(pixel_size_em), 30);
+}
+
 
 } // namespace unity
