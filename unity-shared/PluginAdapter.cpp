@@ -1208,12 +1208,10 @@ void PluginAdapter::SetViewportSize(int horizontal, int vertical)
     return;
   }
 
-  CompOption::Value hsize;
-  hsize.set<int>(horizontal);
+  CompOption::Value hsize(horizontal);
   m_Screen->setOptionForPlugin("core", "hsize", hsize);
 
   CompOption::Value vsize(vertical);
-  vsize.set<int>(vertical);
   m_Screen->setOptionForPlugin("core", "vsize", vsize);
 
   LOG_INFO(logger) << "Setting viewport size to " << hsize.i() << "x" << vsize.i();
