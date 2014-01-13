@@ -24,6 +24,7 @@
 #include "PanelMenuView.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/DecorationStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
@@ -707,84 +708,17 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname) const
   return label;
 }
 
-void PanelMenuView::UpdateTitleTexture(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const
+void PanelMenuView::UpdateTitleTexture(cairo_t *cr, nux::Geometry const& geo, std::string const& label) const
 {
-  using namespace panel;
-  cairo_t* cr;
+  using namespace decoration;
+  auto const& style = Style::Get();
+  auto text_size = style->TitleNaturalSize(label);
   int x = MAIN_LEFT_PADDING + TITLE_PADDING + geo.x;
-  int y = geo.y;
 
-  int text_width = 0;
-  int text_height = 0;
-  int text_space = 0;
-
-  // Find out dimensions first
-  GdkScreen* screen = gdk_screen_get_default();
-  PangoContext* cxt;
-  PangoRectangle log_rect;
-  PangoFontDescription* desc;
-
-  nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
-  cr = util_cg.GetInternalContext();
-
-  int dpi = Style::Instance().GetTextDPI();
-
-  std::string font_description(Style::Instance().GetFontDescription(PanelItem::TITLE));
-  desc = pango_font_description_from_string(font_description.c_str());
-
-  glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
-  pango_layout_set_font_description(layout, desc);
-  pango_layout_set_markup(layout, label.c_str(), -1);
-
-  cxt = pango_layout_get_context(layout);
-  pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-  pango_cairo_context_set_resolution(cxt, dpi / static_cast<float>(PANGO_SCALE));
-  pango_layout_context_changed(layout);
-
-  pango_layout_get_extents(layout, nullptr, &log_rect);
-  text_width = log_rect.width / PANGO_SCALE;
-  text_height = log_rect.height / PANGO_SCALE;
-
-  pango_font_description_free(desc);
-
-  // Draw the text
-  GtkStyleContext* style_context = Style::Instance().GetStyleContext();
-  text_space = geo.width - x;
-  cr = cr_real;
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-  gtk_style_context_save(style_context);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
-
-  y += (geo.height - text_height) / 2;
-
-  pango_cairo_update_layout(cr, layout);
-
-  if (text_width > text_space)
-  {
-    cairo_pattern_t* linpat;
-    int out_pixels = text_width - text_space;
-    const int fading_pixels = 35;
-    int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
-
-    cairo_push_group(cr);
-    gtk_render_layout(style_context, cr, x, y, layout);
-    cairo_pop_group_to_source(cr);
-
-    linpat = cairo_pattern_create_linear(geo.width - fading_width, y, geo.width, y);
-    cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
-    cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
-    cairo_mask(cr, linpat);
-
-    cairo_pattern_destroy(linpat);
-  }
-  else
-  {
-    gtk_render_layout(style_context, cr, x, y, layout);
-  }
-
-  gtk_style_context_restore(style_context);
+  cairo_save(cr);
+  cairo_translate(cr, x, geo.y + (geo.height - text_size.height) / 2);
+  style->DrawTitle(label, WidgetState::NORMAL, cr, geo.width - x, geo.height);
+  cairo_restore(cr);
 }
 
 std::string PanelMenuView::GetCurrentTitle() const
@@ -807,7 +741,7 @@ std::string PanelMenuView::GetCurrentTitle() const
     }
     else if (!we_control_active_)
     {
-      new_title = "";
+      new_title.clear();
     }
     else
     {
