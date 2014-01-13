@@ -455,9 +455,10 @@ class LauncherModel(UnityIntrospectionObject):
     def get_launcher_icons(self, visible_only=True):
         """Get a list of launcher icons in this launcher."""
         if visible_only:
-            return self.get_children_by_type(SimpleLauncherIcon, visible=True)
+            icons = self.get_children_by_type(SimpleLauncherIcon, visible=True)
         else:
-            return self.get_children_by_type(SimpleLauncherIcon)
+            icons = self.get_children_by_type(SimpleLauncherIcon)
+        return sorted(icons, key=lambda icon: icon.order)
 
     def get_bamf_launcher_icons(self, visible_only=True):
         """Get a list of bamf launcher icons in this launcher."""
