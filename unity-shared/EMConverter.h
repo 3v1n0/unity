@@ -26,7 +26,7 @@ namespace unity
 class EMConverter
 {
 public:
-  EMConverter(int font_size = 11, double dpi = 96.0f);
+  EMConverter(int font_size, double dpi = 96.0f);
 
   void SetFontSize(int font_size);
   void SetDPI(double dpi);
