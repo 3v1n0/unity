@@ -242,7 +242,7 @@ struct Style::Impl
 
     nux::Size extents;
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
-    pango_layout_set_height(layout, h * PANGO_SCALE);
+    pango_layout_set_height(layout, (h > 0) ? h * PANGO_SCALE : -1);
 
     if (extents.width > w)
     {
