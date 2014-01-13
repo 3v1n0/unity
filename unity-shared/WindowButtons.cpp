@@ -645,6 +645,17 @@ void WindowButtons::OnControlledWindowChanged(Window xid)
   }
 }
 
+bool WindowButtons::IsMouseOwner()
+{
+  for (auto* area : GetChildren())
+  {
+    if (static_cast<internal::WindowButton*>(area)->IsMouseOwner())
+      return true;
+  }
+
+  return false;
+}
+
 std::string WindowButtons::GetName() const
 {
   return "WindowButtons";
