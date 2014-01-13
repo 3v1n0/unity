@@ -179,8 +179,6 @@ void PanelMenuView::SetupWindowManagerSignals()
   wm.window_mapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMapped));
   wm.window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
   wm.window_resized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
-  wm.window_decorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowDecorated));
-  wm.window_undecorated.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUndecorated));
   wm.initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
   wm.terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
   wm.initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoInitiate));
@@ -1032,9 +1030,7 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
   }
 }
 
-void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
-                                          BamfView* old_view,
-                                          BamfView* new_view)
+void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher, BamfView* old_view, BamfView* new_view)
 {
   show_now_activated_ = false;
   is_maximized_ = false;
@@ -1044,30 +1040,17 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
 
   if (BAMF_IS_WINDOW(new_view))
   {
-    WindowManager& wm = WindowManager::Default();
     BamfWindow* window = reinterpret_cast<BamfWindow*>(new_view);
-    guint32 xid = bamf_window_get_xid(window);
-    active_xid_ = xid;
-    is_maximized_ = wm.IsWindowMaximized(xid);
+    active_xid_ = bamf_window_get_xid(window);
+    is_maximized_ = (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED);
 
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
       we_control_active_ = true;
     else
-      we_control_active_ = IsWindowUnderOurControl(xid);
+      we_control_active_ = IsWindowUnderOurControl(active_xid_);
 
-    if (decor_map_.find(xid) == decor_map_.end())
-    {
-      decor_map_[xid] = true;
-
-      // if we've just started tracking this window and it is maximized, let's
-      // make sure it's undecorated just in case it slipped by us earlier
-      // (I'm looking at you, Chromium!)
-      if (is_maximized_ && wm.HasWindowDecorations(xid))
-      {
-        wm.Undecorate(xid);
-        maximized_set_.insert(xid);
-      }
-    }
+    if (is_maximized_)
+      maximized_set_.insert(active_xid_);
 
     // first see if we need to remove and old callback
     view_name_changed_signal_.Disconnect();
@@ -1106,124 +1089,84 @@ void PanelMenuView::OnExpoTerminate()
   QueueDraw();
 }
 
-void PanelMenuView::OnWindowMinimized(guint32 xid)
+void PanelMenuView::OnWindowMinimized(Window xid)
 {
-  WindowManager& wm = WindowManager::Default();
-  if (wm.IsWindowMaximized(xid))
-  {
-    wm.Decorate(xid);
-    maximized_set_.erase(xid);
+  maximized_set_.erase(xid);
 
+  if (xid == active_xid_)
+  {
     Refresh();
     QueueDraw();
   }
 }
 
-void PanelMenuView::OnWindowUnminimized(guint32 xid)
+void PanelMenuView::OnWindowUnminimized(Window xid)
 {
-  WindowManager& wm = WindowManager::Default();
-  if (wm.IsWindowMaximized(xid))
-  {
-    wm.Undecorate(xid);
+  if (WindowManager::Default().IsWindowMaximized(xid))
     maximized_set_.insert(xid);
 
+  if (xid == active_xid_)
+  {
     Refresh();
     QueueDraw();
   }
 }
 
-void PanelMenuView::OnWindowUnmapped(guint32 xid)
+void PanelMenuView::OnWindowUnmapped(Window xid)
 {
   // FIXME: compiz doesn't give us a valid xid (is always 0 on unmap)
   // we need to do this again on BamfView closed signal.
-  if (maximized_set_.find(xid) != maximized_set_.end())
-  {
-    WindowManager::Default().Decorate(xid);
-    maximized_set_.erase(xid);
-    decor_map_.erase(xid);
+  maximized_set_.erase(xid);
 
+  if (xid == active_xid_)
+  {
     Refresh();
     QueueDraw();
   }
 }
 
-void PanelMenuView::OnWindowMapped(guint32 xid)
+void PanelMenuView::OnWindowMapped(Window xid)
 {
-  WindowManager& wm = WindowManager::Default();
-  if (wm.IsWindowMaximized(xid))
+  if (WindowManager::Default().IsWindowMaximized(xid))
   {
-    wm.Undecorate(xid);
     maximized_set_.insert(xid);
 
-    Refresh();
-    QueueDraw();
+    if (xid == active_xid_)
+    {
+      Refresh();
+      QueueDraw();
+    }
   }
 }
 
-void PanelMenuView::OnWindowDecorated(guint32 xid)
+void PanelMenuView::OnWindowMaximized(Window xid)
 {
-  decor_map_[xid] = true;
+  maximized_set_.insert(xid);
 
-  if (maximized_set_.find(xid) != maximized_set_.end ())
-  {
-    WindowManager::Default().Undecorate(xid);
-  }
-}
-
-void PanelMenuView::OnWindowUndecorated(guint32 xid)
-{
-  decor_map_[xid] = false;
-}
-
-void PanelMenuView::OnWindowMaximized(guint xid)
-{
-  bool updated = false;
-  bool is_active = (active_xid_ == xid);
-
-  if (is_active)
+  if (xid == active_xid_)
   {
     // We need to update the is_inside_ state in the case of maximization by grab
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
-
     is_maximized_ = true;
-    updated = true;
-  }
 
-  // update the state of the window in the decor_map_
-  WindowManager& wm = WindowManager::Default();
-  decor_map_[xid] = wm.HasWindowDecorations(xid);
-
-  if (decor_map_[xid])
-    wm.Undecorate(xid);
-
-  maximized_set_.insert(xid);
-
-  if (updated)
-  {
     Refresh();
     FullRedraw();
   }
 }
 
-void PanelMenuView::OnWindowRestored(guint xid)
+void PanelMenuView::OnWindowRestored(Window xid)
 {
-  if (maximized_set_.find(xid) == maximized_set_.end())
-    return;
+  maximized_set_.erase(xid);
 
   if (active_xid_ == xid)
   {
     is_maximized_ = false;
     is_grabbed_ = false;
+
+    Refresh();
+    FullRedraw();
   }
-
-  if (decor_map_[xid])
-    WindowManager::Default().Decorate(xid);
-
-  maximized_set_.erase(xid);
-
-  Refresh();
-  FullRedraw();
 }
 
 bool PanelMenuView::UpdateActiveWindowPosition()
@@ -1241,7 +1184,7 @@ bool PanelMenuView::UpdateActiveWindowPosition()
   return false;
 }
 
-void PanelMenuView::OnWindowMoved(guint xid)
+void PanelMenuView::OnWindowMoved(Window xid)
 {
   if (active_xid_ == xid)
   {
@@ -1642,7 +1585,6 @@ void PanelMenuView::SetMonitor(int monitor)
   maximized_set_.clear();
   GList* windows = bamf_matcher_get_window_stack_for_monitor(matcher_, monitor_);
 
-  WindowManager& wm = WindowManager::Default();
   for (GList* l = windows; l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
@@ -1652,21 +1594,10 @@ void PanelMenuView::SetMonitor(int monitor)
     auto view = static_cast<BamfView*>(l->data);
 
     if (bamf_view_is_active(view))
-    {
       active_xid_ = bamf_window_get_xid(window);
-    }
 
     if (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED)
-    {
-      Window xid = bamf_window_get_xid(window);
-
-      decor_map_[xid] = wm.HasWindowDecorations(xid);
-
-      if (decor_map_[xid])
-        wm.Undecorate(xid);
-
-      maximized_set_.insert(xid);
-    }
+      maximized_set_.insert(bamf_window_get_xid(window));
   }
 
   Window maximized = GetMaximizedWindow();
@@ -1704,9 +1635,6 @@ void PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_butt
     FullRedraw();
   }
 }
-
-void PanelMenuView::OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state)
-{}
 
 void PanelMenuView::SetMousePosition(int x, int y)
 {

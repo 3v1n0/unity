@@ -92,15 +92,13 @@ private:
   void OnSpreadTerminate();
   void OnExpoInitiate();
   void OnExpoTerminate();
-  void OnWindowMinimized(guint32 xid);
-  void OnWindowUnminimized(guint32 xid);
-  void OnWindowUnmapped(guint32 xid);
-  void OnWindowMapped(guint32 xid);
-  void OnWindowMaximized(guint32 xid);
-  void OnWindowRestored(guint32 xid);
-  void OnWindowMoved(guint32 xid);
-  void OnWindowDecorated(guint32 xid);
-  void OnWindowUndecorated(guint32 xid);
+  void OnWindowMinimized(Window xid);
+  void OnWindowUnminimized(Window xid);
+  void OnWindowUnmapped(Window xid);
+  void OnWindowMapped(Window xid);
+  void OnWindowMaximized(Window xid);
+  void OnWindowRestored(Window xid);
+  void OnWindowMoved(Window xid);
 
   void OnMaximizedActivate(int x, int y);
   void OnMaximizedRestore(int x, int y);
@@ -120,7 +118,6 @@ private:
 
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
-  void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
 
   BamfWindow* GetBamfWindowForXid(Window xid) const;
 
@@ -163,10 +160,8 @@ private:
   bool is_maximized_;
 
   PanelIndicatorEntryView* last_active_view_;
-  glib::Object<BamfApplication> new_application_;
-
-  std::map<Window, bool> decor_map_;
   std::set<Window> maximized_set_;
+  glib::Object<BamfApplication> new_application_;
   std::list<glib::Object<BamfApplication>> new_apps_;
   std::string panel_title_;
   nux::Geometry last_geo_;
