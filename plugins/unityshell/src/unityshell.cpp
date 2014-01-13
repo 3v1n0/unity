@@ -2872,14 +2872,13 @@ UnityScreen::OnMinimizeDurationChanged ()
 {
   /* Update the compiz plugin setting with the new computed speed so that it
    * will be used in the following minimizations */
-  CompPlugin *p = CompPlugin::find("animation");
-  if (p)
+  if (CompPlugin* p = CompPlugin::find("animation"))
   {
     CompOption::Vector &opts = p->vTable->getOptions();
 
     for (CompOption &o : opts)
     {
-      if (o.name() == std::string("minimize_durations"))
+      if (o.name() == "minimize_durations")
       {
         /* minimize_durations is a list value, but minimize applies only to
          * normal windows, so there's always one value */
@@ -3303,26 +3302,24 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::IconSize:
     {
-      CompPlugin         *p = CompPlugin::find ("expo");
-
       launcher_options->icon_size = optionGetIconSize();
       launcher_options->tile_size = optionGetIconSize() + 6;
 
       hud_controller_->icon_size = launcher_options->icon_size();
       hud_controller_->tile_size = launcher_options->tile_size();
 
-      if (p)
+      if (CompPlugin* p = CompPlugin::find("expo"))
       {
         CompOption::Vector &opts = p->vTable->getOptions ();
 
         for (CompOption &o : opts)
         {
-          if (o.name () == std::string ("x_offset"))
+          if (o.name() == "x_offset")
           {
-            CompOption::Value v;
-            v.set (static_cast <int> (optionGetIconSize() + 18));
+            CompOption::Value v(optionGetIconSize() + 18);
+            // v.set(static_cast <int> ());
 
-            screen->setOptionForPlugin (p->vTable->name ().c_str (), o.name ().c_str (), v);
+            screen->setOptionForPlugin(p->vTable->name().c_str(), o.name().c_str(), v);
             break;
           }
         }
@@ -4214,7 +4211,7 @@ void capture_g_log_calls(const gchar* log_domain,
   std::string module("unity");
   if (log_domain)
   {
-    module += std::string(".") + log_domain;
+    module += '.' + log_domain;
   }
   nux::logging::Logger logger(module);
   nux::logging::Level level = glog_level_to_nux(log_level);
