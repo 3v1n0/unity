@@ -38,6 +38,9 @@
                 <plugin>scale</plugin>
                 <plugin>expo</plugin>
             </requirement>
+            <conflict>
+                <plugin>decor</plugin>
+            </conflict>
         </deps>
 
         <options>

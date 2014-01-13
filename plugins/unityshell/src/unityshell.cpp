@@ -2489,9 +2489,7 @@ bool UnityScreen::initPluginActions()
 {
   PluginAdapter& adapter = PluginAdapter::Default();
 
-  CompPlugin* p = CompPlugin::find("core");
-
-  if (p)
+  if (CompPlugin* p = CompPlugin::find("core"))
   {
     for (CompOption& option : p->vTable->getOptions())
     {
@@ -2503,9 +2501,7 @@ bool UnityScreen::initPluginActions()
     }
   }
 
-  p = CompPlugin::find("expo");
-
-  if (p)
+  if (CompPlugin* p = CompPlugin::find("expo"))
   {
     MultiActionList expoActions;
 
@@ -2531,9 +2527,7 @@ bool UnityScreen::initPluginActions()
     adapter.SetExpoAction(expoActions);
   }
 
-  p = CompPlugin::find("scale");
-
-  if (p)
+  if (CompPlugin* p = CompPlugin::find("scale"))
   {
     MultiActionList scaleActions;
 
@@ -2566,9 +2560,7 @@ bool UnityScreen::initPluginActions()
     adapter.SetScaleAction(scaleActions);
   }
 
-  p = CompPlugin::find("unitymtgrabhandles");
-
-  if (p)
+  if (CompPlugin* p = CompPlugin::find("unitymtgrabhandles"))
   {
     foreach(CompOption & option, p->vTable->getOptions())
     {
@@ -2579,6 +2571,15 @@ bool UnityScreen::initPluginActions()
       else if (option.name() == "toggle_handles_key")
         adapter.SetToggleHandlesAction(&option.value().action());
     }
+  }
+
+  if (CompPlugin* p = CompPlugin::find("decor"))
+  {
+    LOG_ERROR(logger) << "Decoration plugin is active, disabling it...";
+    screen->finiPluginForScreen(p);
+    p->vTable->finiScreen(screen);
+    CompPlugin::getPlugins().remove(p);
+    CompPlugin::unload(p);
   }
 
   return false;
