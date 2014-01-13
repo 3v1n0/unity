@@ -75,18 +75,19 @@ std::string XWindowManager::GetStringProperty(Window window_id, Atom atom) const
   if (format != 8)
   {
     LOG_ERROR(logger) << "Impossible to get the property " << gdk_x11_get_xatom_name(atom)
-                      << " for window " << window_id << ": invalid format or empty value";
+                      << " for window " << window_id << ": invalid format " << format;
     return std::string();
   }
 
   if (type != XA_STRING && type != atom::XA_COMPOUND_TEXT && type != Atoms::utf8String)
   {
     LOG_ERROR(logger) << "Impossible to get the property " << gdk_x11_get_xatom_name(atom)
-                      << " for window " << window_id << ": invalid string type";
+                      << " for window " << window_id << ": invalid string type: "
+                      << gdk_x11_get_xatom_name(Atoms::utf8String);
     return std::string();
   }
 
-  if (type == atom::XA_COMPOUND_TEXT)
+  if (type == atom::XA_COMPOUND_TEXT || (type == XA_STRING && !g_utf8_validate(val, n_items, nullptr)))
   {
     // In case we have compound text, we need to convert it to utf-8
     XTextProperty text_property;
