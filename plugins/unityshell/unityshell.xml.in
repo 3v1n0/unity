@@ -47,6 +47,12 @@
             <group>
                 <_short>General</_short>
 
+                <option name="lock_screen" type="key">
+                    <_short>Key to lock the screen.</_short>
+                    <_long>Pressing this key will lock the current session.</_long>
+                    <default>&lt;Super&gt;l</default>
+                </option>
+
                 <option name="show_hud" type="key">
                     <_short>Key to show the HUD</_short>
                     <_long>A tap on this key summons the HUD.</_long>

@@ -606,7 +606,7 @@ void ApplicationLauncherIcon::AddProperties(debug::IntrospectionData& introspect
   introspection
     .add("desktop_file", DesktopFile())
     .add("desktop_id", app_->desktop_id())
-    .add("xids", static_cast<GVariant*>(glib::Variant::FromVector(xids)))
+    .add("xids", glib::Variant::FromVector(xids))
     .add("sticky", IsSticky())
     .add("startup_notification_timestamp", _startup_notification_timestamp);
 }
@@ -1314,16 +1314,8 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
   _last_scroll_direction = direction;
 
   auto const& windows = GetWindowsOnCurrentDesktopInStackingOrder();
-  if (windows.empty())
-    return;
 
-  if (!IsActive())
-  {
-    windows.at(0)->Focus();
-    return;
-  }
-
-  if (windows.size() <= 1)
+  if (!IsActive() || windows.size() <= 1)
     return;
 
   ++_progressive_scroll;

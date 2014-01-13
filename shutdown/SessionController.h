@@ -49,6 +49,8 @@ public:
 
   bool Visible() const;
 
+  void LockScreen() const;
+
 protected:
   // Introspectable
   std::string GetName() const;

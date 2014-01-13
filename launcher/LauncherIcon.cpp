@@ -71,6 +71,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _present_urgency(0)
   , _progress(0.0f)
   , _sort_priority(DefaultPriority(type))
+  , _order(0)
   , _last_monitor(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
@@ -176,13 +177,14 @@ void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
   .add("shortcut", _shortcut)
-  .add("monitors_active", static_cast<GVariant*>(glib::Variant::FromVector(monitors_active)))
-  .add("monitors_visibility", static_cast<GVariant*>(glib::Variant::FromVector(monitors_visible)))
-  .add("monitors_urgent", static_cast<GVariant*>(glib::Variant::FromVector(monitors_urgent)))
-  .add("monitors_running", static_cast<GVariant*>(glib::Variant::FromVector(monitors_running)))
-  .add("monitors_starting", static_cast<GVariant*>(glib::Variant::FromVector(monitors_starting)))
-  .add("monitors_desaturated", static_cast<GVariant*>(glib::Variant::FromVector(monitors_desaturated)))
-  .add("monitors_presented", static_cast<GVariant*>(glib::Variant::FromVector(monitors_presented)))
+  .add("order", _order)
+  .add("monitors_active", glib::Variant::FromVector(monitors_active))
+  .add("monitors_visibility", glib::Variant::FromVector(monitors_visible))
+  .add("monitors_urgent", glib::Variant::FromVector(monitors_urgent))
+  .add("monitors_running", glib::Variant::FromVector(monitors_running))
+  .add("monitors_starting", glib::Variant::FromVector(monitors_starting))
+  .add("monitors_desaturated", glib::Variant::FromVector(monitors_desaturated))
+  .add("monitors_presented", glib::Variant::FromVector(monitors_presented))
   .add("active", GetQuirk(Quirk::ACTIVE))
   .add("visible", GetQuirk(Quirk::VISIBLE))
   .add("urgent", GetQuirk(Quirk::URGENT))
@@ -817,6 +819,11 @@ void LauncherIcon::SetSortPriority(int priority)
 int LauncherIcon::SortPriority()
 {
   return _sort_priority;
+}
+
+void LauncherIcon::SetOrder(int order)
+{
+  _order = order;
 }
 
 LauncherIcon::IconType

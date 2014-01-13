@@ -115,6 +115,12 @@ std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
   return ret;
 }
 
+bool StandaloneWindowManager::IsTopWindowFullscreenOnMonitorWithMouse() const
+{
+  // TODO
+  return false;
+}
+
 bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
 {
   auto window = GetWindowByXid(window_id);

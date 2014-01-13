@@ -373,8 +373,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             raise ValueError("'drag_type' parameter must be one of IconDragType.INSIDE, IconDragType.OUTSIDE")
 
         icon_height = get_compiz_option("unityshell", "icon_size")
-        target_y = target.center_y
-        if target_y < icon.center_y:
+        target_y = target.center.y
+        if target_y < icon.center.y:
             target_y += icon_height / 2
         if pos == IconDragType.BEFORE:
             target_y -= icon_height + (icon_height / 2)

@@ -69,6 +69,8 @@ public:
   virtual Window GetActiveWindow() const;
   std::vector<Window> GetWindowsInStackingOrder() const override;
 
+  virtual bool IsTopWindowFullscreenOnMonitorWithMouse() const override;
+
   virtual bool IsWindowMaximized(Window window_id) const;
   virtual bool IsWindowDecorated(Window window_id) const;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const;

@@ -250,8 +250,8 @@ class SwitcherView(UnityIntrospectionObject):
         offset = self.spread_offset
         icon_arg = self.icon_args[index]
 
-        x = icon_arg.logical_center_x + offset
-        y = icon_arg.logical_center_y + offset
+        x = icon_arg.logical_center.x + offset
+        y = icon_arg.logical_center.y + offset
 
         self._mouse.move(x,y)
 
@@ -291,4 +291,5 @@ class SwitcherModel(UnityIntrospectionObject):
 
     @property
     def icons(self):
-        return self.get_children_by_type(SimpleLauncherIcon)
+        icons = self.get_children_by_type(SimpleLauncherIcon)
+        return sorted(icons, key=lambda icon: icon.order)

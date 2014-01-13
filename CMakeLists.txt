@@ -230,7 +230,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     libbamf3>=0.5.0
     libnotify
     libstartup-notification-1.0
-    nux-4.0>=4.0.4
+    nux-4.0>=4.0.5
     sigc++-2.0
     unity-misc>=0.4.0
     xpathselect=1.4

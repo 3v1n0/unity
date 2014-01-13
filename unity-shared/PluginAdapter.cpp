@@ -449,6 +449,49 @@ std::vector<Window> PluginAdapter::GetWindowsInStackingOrder() const
   return ret;
 }
 
+bool PluginAdapter::IsTopWindowFullscreenOnMonitorWithMouse() const
+{
+  int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
+  Window top_win = GetTopMostWindowInMonitor(monitor);
+  CompWindow* window = m_Screen->findWindow(top_win);
+
+  if (window)
+    return (window->state() & CompWindowStateFullscreenMask);
+
+  return false;
+}
+
+Window PluginAdapter::GetTopMostWindowInMonitor(int monitor) const
+{
+  CompWindow* window = nullptr;
+  nux::Geometry const& m_geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
+
+  CompPoint screen_vp = m_Screen->vp();
+
+  auto const& windows = m_Screen->windows();
+  for (auto it = windows.rbegin(); it != windows.rend(); ++it)
+  {
+    window = *it;
+    nux::Geometry const& win_geo = GetWindowGeometry(window->id());
+    nux::Geometry const& intersect_geo = win_geo.Intersect(m_geo);
+
+    if (intersect_geo.width > 0 &&
+        intersect_geo.height > 0 &&
+        window->defaultViewport() == screen_vp &&
+        window->isViewable() && window->isMapped() &&
+        !window->minimized() && !window->inShowDesktopMode() &&
+        !(window->state() & CompWindowStateAboveMask) &&
+        !(window->type() & CompWindowTypeSplashMask) &&
+        !(window->type() & CompWindowTypeDockMask) &&
+        !window->overrideRedirect())
+    {
+      return window->id();
+    }
+  }
+
+  return 0;
+}
+
 bool PluginAdapter::IsWindowMaximized(Window window_id) const
 {
   CompWindow* window = m_Screen->findWindow(window_id);

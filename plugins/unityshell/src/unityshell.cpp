@@ -311,13 +311,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
 
+     optionSetLockScreenInitiate(boost::bind(&UnityScreen::LockScreenInitiate, this, _1, _2, _3));
      optionSetShadowXOffsetNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShadowYOffsetNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetActiveShadowRadiusNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetInactiveShadowRadiusNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetActiveShadowColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetInactiveShadowColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -958,6 +958,12 @@ void UnityScreen::enterShowDesktopMode ()
       w->moveInputFocusTo();
   }
 
+  if (dash_controller_->IsVisible())
+    dash_controller_->HideDash();
+    
+  if (hud_controller_->IsVisible())
+    hud_controller_->HideHud();
+
   PluginAdapter::Default().OnShowDesktop();
 
   /* Disable the focus handler as we will report that
@@ -1571,6 +1577,17 @@ void UnityScreen::donePaint()
   cScreen->donePaint();
 }
 
+void redraw_view_if_damaged(nux::ObjectPtr<CairoBaseWindow> const& view, CompRegion const& damage)
+{
+  if (!view || view->IsRedrawNeeded())
+    return;
+
+  auto const& geo = view->GetAbsoluteGeometry();
+
+  if (damage.intersects(CompRectFromNuxGeo(geo)))
+    view->RedrawBlur();
+}
+
 void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
   /* Ask nux to present anything in our damage region
@@ -1589,6 +1606,21 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   {
     auto const& geo = NuxGeometryFromCompRect(r);
     wt->PresentWindowsIntersectingGeometryOnThisFrame(geo);
+  }
+  
+  auto const& launchers = launcher_controller_->launchers();
+
+  for (auto const& launcher : launchers)
+  {
+    if (!launcher->Hidden())
+    {
+      redraw_view_if_damaged(launcher->GetActiveTooltip(), damage);
+    }
+  }
+
+  if (QuicklistManager* qm = QuicklistManager::Default())
+  {
+    redraw_view_if_damaged(qm->Current(), damage);
   }
 }
 
@@ -2361,6 +2393,11 @@ bool UnityScreen::ShowHud()
     return false; // early exit if the switcher is open
   }
 
+  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
+  {
+    return false;
+  }
+
   if (hud_controller_->IsVisible())
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
@@ -2438,6 +2475,15 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
 
   return ShowHud();
 }
+
+bool UnityScreen::LockScreenInitiate(CompAction* action,
+                                     CompAction::State state,
+                                     CompOption::Vector& options)
+{
+  session_controller_->LockScreen();
+  return true;
+}
+
 
 unsigned UnityScreen::CompizModifiersToNux(unsigned input) const
 {
