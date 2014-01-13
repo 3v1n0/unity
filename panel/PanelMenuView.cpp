@@ -333,15 +333,17 @@ void PanelMenuView::OnFadeAnimatorUpdated(double progress)
 
 bool PanelMenuView::ShouldDrawMenus() const
 {
-  WindowManager& wm = WindowManager::Default();
-  bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
-
-  if (we_control_active_ && !screen_grabbed &&
-      !switcher_showing_ && !launcher_keynav_ && !entries_.empty())
+  if (we_control_active_ && !switcher_showing_ && !launcher_keynav_ && !entries_.empty())
   {
-    if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_)
+    WindowManager& wm = WindowManager::Default();
+
+    if (!wm.IsExpoActive() && !wm.IsScaleActive())
     {
-      return true;
+      if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_)
+        return true;
+
+      if (is_maximized_)
+        return (window_buttons_->IsMouseOwner() || titlebar_grab_area_->IsMouseOwner());
     }
   }
 
@@ -350,15 +352,17 @@ bool PanelMenuView::ShouldDrawMenus() const
 
 bool PanelMenuView::ShouldDrawButtons() const
 {
-  WindowManager& wm = WindowManager::Default();
-  bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
-
-  if (we_control_active_ && is_maximized_ && !screen_grabbed &&
-      !launcher_keynav_ && !switcher_showing_)
+  if (we_control_active_ && is_maximized_ && !launcher_keynav_ && !switcher_showing_)
   {
-    if (is_inside_ || show_now_activated_ || new_application_)
+    WindowManager& wm = WindowManager::Default();
+
+    if (!wm.IsExpoActive() && !wm.IsScaleActive())
     {
-      return true;
+      if (is_inside_ || show_now_activated_ || new_application_)
+        return true;
+
+      if (window_buttons_->IsMouseOwner() || titlebar_grab_area_->IsMouseOwner())
+        return true;
     }
   }
 
