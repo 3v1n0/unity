@@ -3778,8 +3778,8 @@ void UnityWindow::RenderDecoration(compiz_utils::CairoContext const& ctx, double
 
   using namespace decoration;
 
-  cairo_save(ctx);
   // We need to scale the cairo matrix in order to get the properly scaled
+  cairo_save(ctx);
   cairo_scale(ctx, aspect, aspect);
   int w = std::round(ctx.width() / aspect);
   int h = std::round(ctx.height() / aspect);
@@ -4018,22 +4018,10 @@ void UnityWindow::OnInitiateSpread()
 {
   close_icon_state_ = panel::WindowState::NORMAL;
   middle_clicked_ = false;
-
-  WindowManager& wm = WindowManager::Default();
-  Window xid = window->id();
-
-  if (wm.HasWindowDecorations(xid))
-    wm.Decorate(xid);
 }
 
 void UnityWindow::OnTerminateSpread()
 {
-  WindowManager& wm = WindowManager::Default();
-  Window xid = window->id();
-
-  if (wm.IsWindowMaximized(xid))
-    wm.Undecorate(xid);
-
   CleanupCachedTextures();
 }
 
