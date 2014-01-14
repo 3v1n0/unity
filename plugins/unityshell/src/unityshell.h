@@ -278,7 +278,7 @@ private:
 
   bool SaveInputThenFocus(const guint xid);
 
-  void OnPanelStyleChanged();
+  void OnDecorationStyleChanged();
 
   void InitGesturesSupport();
 

@@ -430,7 +430,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
       force_draw_countdown_ += local::FRAMES_TO_REDRAW_ON_RESUME;
     });
 
-    panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
+    auto const& deco_style = decoration::Style::Get();
+    auto deco_style_cb = sigc::hide(sigc::mem_fun(this, &UnityScreen::OnDecorationStyleChanged));
+    deco_style->theme.changed.connect(deco_style_cb);
+    deco_style->title_font.changed.connect(deco_style_cb);
 
     minimize_speed_controller_.DurationChanged.connect(
       sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
@@ -741,18 +744,10 @@ UnityWindow::updateIconPos(int &wx, int &wy, int x, int y, float width, float he
   wy = y + (last_bound.height - height) / 2;
 }
 
-void UnityScreen::OnPanelStyleChanged()
+void UnityScreen::OnDecorationStyleChanged()
 {
-  // Reload the windows themed textures
-  UnityWindow::CleanupSharedTextures();
-
-  if (!fake_decorated_windows_.empty())
-  {
-    UnityWindow::SetupSharedTextures();
-
-    for (UnityWindow* uwin : fake_decorated_windows_)
-      uwin->CleanupCachedTextures();
-  }
+  for (UnityWindow* uwin : fake_decorated_windows_)
+    uwin->CleanupCachedTextures();
 }
 
 void UnityScreen::DamageBlurUpdateRegion(nux::Geometry const& blur_update)
@@ -2353,9 +2348,7 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
 void UnityScreen::OnSwitcherStart(GVariant* data)
 {
   if (switcher_controller_->Visible())
-  {
     UnityWindow::SetupSharedTextures();
-  }
 }
 
 void UnityScreen::OnSwitcherEnd(GVariant* data)
@@ -2363,7 +2356,11 @@ void UnityScreen::OnSwitcherEnd(GVariant* data)
   UnityWindow::CleanupSharedTextures();
 
   for (UnityWindow* uwin : fake_decorated_windows_)
+  {
+    uwin->close_icon_state_ = decoration::WidgetState::NORMAL;
+    uwin->middle_clicked_ = false;
     uwin->CleanupCachedTextures();
+  }
 }
 
 bool UnityScreen::SaveInputThenFocus(const guint xid)
@@ -3647,6 +3644,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , window(window)
   , cWindow(CompositeWindow::get(window))
   , gWindow(GLWindow::get(window))
+  , close_icon_state_(decoration::WidgetState::NORMAL)
   , deco_win_(uScreen->deco_manager_->HandleWindow(window))
   , is_nux_window_(isNuxWindow(window))
 {
@@ -3856,7 +3854,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     int width = geo.width;
     int height = deco_top.height;
     bool redraw_decoration = true;
-    auto const& close_texture = decoration::DataPool::Get()->ButtonTexture(decoration::WindowButtonType::CLOSE, close_icon_state_);
+    compiz_utils::SimpleTexture::Ptr close_texture;
 
     if (decoration_selected_tex_)
     {
@@ -3868,6 +3866,12 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
       }
     }
 
+    if (window->actions() & CompWindowActionCloseMask)
+    {
+      using namespace decoration;
+      close_texture = DataPool::Get()->ButtonTexture(WindowButtonType::CLOSE, close_icon_state_);
+    }
+
     if (redraw_decoration)
     {
       if (width != 0 && height != 0)
@@ -3876,7 +3880,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         RenderDecoration(context, scale);
 
         // Draw window title
-        int text_x = close_texture->width();
+        int text_x = close_texture ? close_texture->width() : 0;
         RenderTitle(context, text_x, 0.0, width - win::decoration::ITEMS_PADDING, height);
         decoration_selected_tex_ = context;
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
@@ -3891,11 +3895,18 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     if (decoration_selected_tex_)
       DrawTexture(decoration_selected_tex_->texture_list(), attrib, transform, mask, geo.x, geo.y);
 
-    int x = geo.x + win::decoration::ITEMS_PADDING;
-    int y = geo.y + (height - close_texture->height()) / 2.0f;
+    if (close_texture)
+    {
+      int x = geo.x + win::decoration::ITEMS_PADDING;
+      int y = geo.y + (height - close_texture->height()) / 2.0f;
 
-    close_button_geo_.Set(x, y, close_texture->width(), close_texture->height());
-    DrawTexture(close_texture->texture_list(), attrib, transform, mask, x, y);
+      close_button_geo_.Set(x, y, close_texture->width(), close_texture->height());
+      DrawTexture(close_texture->texture_list(), attrib, transform, mask, x, y);
+    }
+    else
+    {
+      close_button_geo_.Set(0, 0, 0, 0);
+    }
   }
 
   uScreen->fake_decorated_windows_.insert(this);
