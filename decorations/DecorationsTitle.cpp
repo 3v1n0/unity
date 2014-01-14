@@ -29,6 +29,7 @@ Title::Title()
 {
   text.changed.connect(sigc::mem_fun(this, &Title::OnTextChanged));
   focused.changed.connect([this] (bool) { if (texture_) RenderTexture(); });
+  Style::Get()->title_font.changed.connect(sigc::mem_fun(this, &Title::OnFontChanged));
 }
 
 void Title::OnTextChanged(std::string const& new_text)
@@ -43,6 +44,12 @@ void Title::OnTextChanged(std::string const& new_text)
 
   texture_size_ = nux::Size();
   Damage();
+}
+
+void Title::OnFontChanged(std::string const&)
+{
+  real_size_ = nux::Size();
+  text.changed.emit(text());
 }
 
 void Title::RenderTexture()

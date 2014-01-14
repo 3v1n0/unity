@@ -43,6 +43,7 @@ public:
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 private:
+  void OnFontChanged(std::string const&);
   void OnTextChanged(std::string const& new_text);
   void RenderTexture();
 
