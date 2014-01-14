@@ -224,6 +224,8 @@ void WindowButton::AddProperties(debug::IntrospectionData& introspection)
     case panel::WindowButtonType::UNMAXIMIZE:
       type_name = "Unmaximize";
       break;
+    default:
+      break;
   }
 
   switch (visual_state_)

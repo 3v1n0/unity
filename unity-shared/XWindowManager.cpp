@@ -91,7 +91,7 @@ std::string XWindowManager::GetStringProperty(Window window_id, Atom atom) const
   {
     // In case we have compound text, we need to convert it to utf-8
     XTextProperty text_property;
-    text_property.value = (unsigned char *)val;
+    text_property.value = reinterpret_cast<unsigned char*>(val);
     text_property.encoding = type;
     text_property.format = format;
     text_property.nitems = n_items;

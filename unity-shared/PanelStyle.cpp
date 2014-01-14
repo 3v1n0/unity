@@ -34,6 +34,7 @@
 #include "PanelStyle.h"
 
 #include <UnityCore/GLibWrapper.h>
+#include "unity-shared/DecorationStyle.h"
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/UnitySettings.h"
 
@@ -49,6 +50,8 @@ Style* style_instance = nullptr;
 const std::string SETTINGS_NAME("org.gnome.desktop.wm.preferences");
 const std::string PANEL_TITLE_FONT_KEY("titlebar-font");
 const std::string HIGH_CONTRAST_THEME_PREFIX("HighContrast");
+const int BUTTONS_SIZE = 16;
+const int BUTTONS_PADDING = 1;
 
 nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {
@@ -73,7 +76,7 @@ Style::Style()
 
   if (Settings::Instance().form_factor() == FormFactor::TV)
     panel_height = 0;
-  
+
   Settings::Instance().form_factor.changed.connect([this](FormFactor form_factor)
   {
     if (form_factor == FormFactor::TV)
@@ -188,62 +191,14 @@ BaseTexturePtr Style::GetBackground()
   return _bg_texture;
 }
 
-/*!
-  Return a vector with the possible file names sorted by priority
-
-  @param type The type of the button.
-  @param state The button state.
-
-  @return A vector of strings with the possible file names sorted by priority.
-*/
-std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, WindowState state)
-{
-  std::vector<std::string> files;
-  static const std::array<std::string, 4> names = {{ "close", "minimize", "unmaximize", "maximize" }};
-  static const std::array<std::string, 7> states = {{ "", "_focused_prelight", "_focused_pressed", "_unfocused",
-                                                      "_unfocused", "_unfocused_prelight", "_unfocused_pressed" }};
-
-  auto filename = names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
-  glib::String subpath(g_build_filename(_theme_name.c_str(), "unity", filename.c_str(), nullptr));
-
-  // Look in home directory
-  const char* home_dir = g_get_home_dir();
-  if (home_dir)
-  {
-    glib::String local_file(g_build_filename(home_dir, ".local", "share", "themes", subpath.Value(), nullptr));
-
-    if (g_file_test(local_file, G_FILE_TEST_EXISTS))
-      files.push_back(local_file);
-
-    glib::String home_file(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.Value(), nullptr));
-
-    if (g_file_test(home_file, G_FILE_TEST_EXISTS))
-      files.push_back(home_file);
-  }
-
-  const char* var = g_getenv("GTK_DATA_PREFIX");
-  if (!var)
-    var = "/usr";
-
-  glib::String path(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.Value(), nullptr));
-  if (g_file_test(path, G_FILE_TEST_EXISTS))
-    files.push_back(path);
-
-  return files;
-}
-
 BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
 {
   auto texture_factory = [this, type, state] (std::string const&, int, int) {
     nux::BaseTexture* texture = nullptr;
-
-    for (auto const& file : GetWindowButtonFileNames(type, state))
-    {
-      texture = nux::CreateTexture2DFromFile(file.c_str(), -1, true);
-
-      if (texture)
-        return texture;
-    }
+    auto const& file = decoration::Style::Get()->WindowButtonFile(type, state);
+    texture = nux::CreateTexture2DFromFile(file.c_str(), -1, true);
+    if (texture)
+      return texture;
 
     auto const& fallback = GetFallbackWindowButton(type, state);
     texture = fallback.GetPointer();
@@ -260,114 +215,13 @@ BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
   return cache.FindTexture(texture_id, 0, 0, texture_factory);
 }
 
-BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type,
-                                                 WindowState state)
+BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type, WindowState state)
 {
-  int width = 17, height = 17;
-  int canvas_w = 19, canvas_h = 19;
-
-  if (boost::starts_with(_theme_name, HIGH_CONTRAST_THEME_PREFIX))
-  {
-    width = 20, height = 20;
-    canvas_w = 22, canvas_h = 22;
-  }
-
-  float w = width / 3.0f;
-  float h = height / 3.0f;
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, canvas_w, canvas_h);
-  nux::Color main = (state != WindowState::BACKDROP) ? _text_color : nux::color::Gray;
-  cairo_t* cr = cairo_graphics.GetInternalContext();
-
-  if (type == WindowButtonType::CLOSE)
-  {
-    double alpha = (state != WindowState::BACKDROP) ? 0.8f : 0.5;
-    main = nux::Color(1.0f, 0.3f, 0.3f, alpha);
-  }
-
-  switch (state)
-  {
-    case WindowState::PRELIGHT:
-      main = main * 1.2f;
-      break;
-    case WindowState::BACKDROP_PRELIGHT:
-      main = main * 0.9f;
-      break;
-    case WindowState::PRESSED:
-      main = main * 0.8f;
-      break;
-    case WindowState::BACKDROP_PRESSED:
-      main = main * 0.7f;
-      break;
-    case WindowState::DISABLED:
-      main = main * 0.5f;
-      break;
-    default:
-      break;
-  }
-
-  cairo_translate(cr, 0.5, 0.5);
-  cairo_set_line_width(cr, 1.5f);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cr);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-  cairo_set_source_rgba(cr, main.red, main.green, main.blue, main.alpha);
-
-  cairo_arc(cr, width / 2.0f, height / 2.0f, (width - 2) / 2.0f, 0.0f, 360 * (M_PI / 180));
-  cairo_stroke(cr);
-
-  if (type == WindowButtonType::CLOSE)
-  {
-    cairo_move_to(cr, w, h);
-    cairo_line_to(cr, width - w, height - h);
-    cairo_move_to(cr, width - w, h);
-    cairo_line_to(cr, w, height - h);
-  }
-  else if (type == WindowButtonType::MINIMIZE)
-  {
-    cairo_move_to(cr, w, height / 2.0f);
-    cairo_line_to(cr, width - w, height / 2.0f);
-  }
-  else if (type == WindowButtonType::UNMAXIMIZE)
-  {
-    cairo_move_to(cr, w, h + h/5.0f);
-    cairo_line_to(cr, width - w, h + h/5.0f);
-    cairo_line_to(cr, width - w, height - h - h/5.0f);
-    cairo_line_to(cr, w, height - h - h/5.0f);
-    cairo_close_path(cr);
-  }
-  else // if (type == WindowButtonType::MAXIMIZE)
-  {
-    cairo_move_to(cr, w, h);
-    cairo_line_to(cr, width - w, h);
-    cairo_line_to(cr, width - w, height - h);
-    cairo_line_to(cr, w, height - h);
-    cairo_close_path(cr);
-  }
-
-  cairo_stroke(cr);
-
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, BUTTONS_SIZE + BUTTONS_PADDING*2, BUTTONS_SIZE + BUTTONS_PADDING*2);
+  cairo_t* ctx = cairo_graphics.GetInternalContext();
+  cairo_translate(ctx, BUTTONS_PADDING, BUTTONS_PADDING);
+  decoration::Style::Get()->DrawWindowButton(type, state, ctx, BUTTONS_SIZE, BUTTONS_SIZE);
   return texture_ptr_from_cairo_graphics(cairo_graphics);
-}
-
-glib::Object<GdkPixbuf> Style::GetHomeButton()
-{
-  glib::Object<GdkPixbuf> pixbuf;
-
-  pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
-                                    "start-here",
-                                    panel_height,
-                                    (GtkIconLookupFlags)0,
-                                    NULL);
-  if (!pixbuf)
-    pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
-                                      "distributor-logo",
-                                      panel_height,
-                                      (GtkIconLookupFlags)0,
-                                      NULL);
-  return pixbuf;
 }
 
 std::string Style::GetFontDescription(PanelItem item)

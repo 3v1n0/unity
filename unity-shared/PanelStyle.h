@@ -28,10 +28,15 @@
 #include <gtk/gtk.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
-#include "DecorationStyle.h"
 
 namespace unity
 {
+namespace decoration
+{
+enum class WindowButtonType : unsigned;
+enum class WidgetState : unsigned;
+}
+
 namespace panel
 {
 using WindowButtonType = decoration::WindowButtonType;
@@ -58,8 +63,6 @@ public:
   BaseTexturePtr GetBackground();
   BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
   BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state);
-  std::vector<std::string> GetWindowButtonFileNames(WindowButtonType type, WindowState state);
-  glib::Object<GdkPixbuf> GetHomeButton();
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
 
