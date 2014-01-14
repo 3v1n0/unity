@@ -83,6 +83,7 @@ void Window::Impl::Undecorate()
 {
   UnsetExtents();
   UnsetFrame();
+  theme_changed_->disconnect();
   top_layout_.reset();
   input_mixer_.reset();
   edge_borders_.reset();
@@ -237,6 +238,12 @@ void Window::Impl::SetupTopLayout()
   if (top_layout_)
     return;
 
+  auto const& style = Style::Get();
+  theme_changed_ = style->theme.changed.connect([this] (std::string const&) {
+    Undecorate();
+    Decorate();
+  });
+
   input_mixer_ = std::make_shared<InputMixer>();
 
   if (win_->actions() & CompWindowActionResizeMask)
@@ -248,7 +255,7 @@ void Window::Impl::SetupTopLayout()
 
   input_mixer_->PushToFront(edge_borders_);
 
-  auto padding = Style::Get()->Padding(Side::TOP);
+  auto padding = style->Padding(Side::TOP);
   top_layout_ = std::make_shared<Layout>();
   top_layout_->left_padding = padding.left;
   top_layout_->right_padding = padding.right;
@@ -269,7 +276,7 @@ void Window::Impl::SetupTopLayout()
   title_->sensitive = false;
 
   auto title_layout = std::make_shared<Layout>();
-  title_layout->left_padding = Style::Get()->TitleIndent();
+  title_layout->left_padding = style->TitleIndent();
   title_layout->Append(title_);
 
   top_layout_->Append(title_layout);

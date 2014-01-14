@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <NuxCore/NuxCore.h>
 #include <NuxCore/Rect.h>
+#include <UnityCore/ConnectionManager.h>
 #include <core/core.h>
 #include <opengl/opengl.h>
 #include <composite/composite.h>
@@ -107,6 +108,7 @@ private:
   Quads shadow_quads_;
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
+  connection::Wrapper theme_changed_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
