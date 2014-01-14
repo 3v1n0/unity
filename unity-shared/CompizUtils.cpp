@@ -127,6 +127,51 @@ int CairoContext::height() const
   return cairo_xlib_surface_get_height(surface_);
 }
 
+bool IsWindowShadowDecorable(CompWindow* win)
+{
+  if (!win)
+    return false;
+
+  if (!win->isViewable())
+    return false;
+
+  if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
+    return false;
+
+  if (win->region().numRects() != 1) // Non rectangular windows
+    return false;
+
+  if (win->overrideRedirect() && win->alpha())
+    return false;
+
+  return true;
+}
+
+bool IsWindowFullyDecorable(CompWindow* win)
+{
+  if (!win)
+    return false;
+
+  if (!IsWindowShadowDecorable(win))
+    return false;
+
+  if (win->overrideRedirect())
+    return false;
+
+  switch (win->type())
+  {
+    case CompWindowTypeDialogMask:
+    case CompWindowTypeModalDialogMask:
+    case CompWindowTypeUtilMask:
+    case CompWindowTypeMenuMask:
+    case CompWindowTypeNormalMask:
+      if (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
+        return true;
+  }
+
+  return false;
+}
+
 } // compiz_utils namespace
 } // unity namespace
 

@@ -286,19 +286,10 @@ void Window::Impl::SetupTopLayout()
 
 bool Window::Impl::ShadowDecorated() const
 {
-  if (!win_->isViewable())
-    return false;
-
   if ((win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
     return false;
 
-  if (win_->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
-    return false;
-
-  if (win_->region().numRects() != 1) // Non rectangular windows
-    return false;
-
-  if (win_->overrideRedirect() && win_->alpha())
+  if (!cu::IsWindowShadowDecorable(win_))
     return false;
 
   return true;
@@ -306,24 +297,13 @@ bool Window::Impl::ShadowDecorated() const
 
 bool Window::Impl::FullyDecorated() const
 {
-  if (!ShadowDecorated())
+  if ((win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
     return false;
 
-  if (win_->overrideRedirect())
+  if (!cu::IsWindowFullyDecorable(win_))
     return false;
 
-  switch (win_->type())
-  {
-    case CompWindowTypeDialogMask:
-    case CompWindowTypeModalDialogMask:
-    case CompWindowTypeUtilMask:
-    case CompWindowTypeMenuMask:
-    case CompWindowTypeNormalMask:
-      if (win_->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
-        return true;
-  }
-
-  return false;
+  return true;
 }
 
 bool Window::Impl::ShouldBeDecorated() const

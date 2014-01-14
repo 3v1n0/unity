@@ -102,6 +102,9 @@ private:
   cairo_t *cr_;
 };
 
+bool IsWindowShadowDecorable(CompWindow*);
+bool IsWindowFullyDecorable(CompWindow*);
+
 } // compiz_utils namespace
 } // unity namespace
 
