@@ -3041,8 +3041,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       deco_win_->Update();
       deco_win_->UpdateDecorationPosition();
 
-      if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
-          window->mapNum () &&
+      if (uScreen->optionGetShowMinimizedWindows() && window->mapNum() &&
           !window->pendingUnmaps())
       {
         bool wasMinimized = window->minimized ();
@@ -3072,7 +3071,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       case CompWindowNotifyMinimize:
         /* Updating the count in dconf will trigger a "changed" signal to which
          * the method setting the new animation speed is attached */
-        UnityScreen::get(screen)->minimize_speed_controller_.UpdateCount();
+        uScreen->minimize_speed_controller_.UpdateCount();
         break;
       case CompWindowNotifyUnreparent:
         deco_win_->Undecorate();
@@ -3103,31 +3102,29 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   // We do this after the notify to ensure input focus has actually been moved.
   if (n == CompWindowNotifyFocusChange)
   {
-    UnityScreen* us = UnityScreen::get(screen);
-
-    // If focus gets moved to an external program while the Dash/Hud is open, refocus key input.
-    if (us)
+    if (uScreen->dash_controller_->IsVisible())
     {
-      if (us->dash_controller_->IsVisible())
-      {
-        us->dash_controller_->ReFocusKeyInput();
-      }
-      else if (us->hud_controller_->IsVisible())
-      {
-        us->hud_controller_->ReFocusKeyInput();
-      }
+      uScreen->dash_controller_->ReFocusKeyInput();
+    }
+    else if (uScreen->hud_controller_->IsVisible())
+    {
+      uScreen->hud_controller_->ReFocusKeyInput();
     }
   }
 }
 
 void UnityWindow::stateChangeNotify(unsigned int lastState)
 {
-  if (window->state () & CompWindowStateFullscreenMask &&
+  if (window->state() & CompWindowStateFullscreenMask &&
       !(lastState & CompWindowStateFullscreenMask))
-    UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
+  {
+    uScreen->fullscreen_windows_.push_back(window);
+  }
   else if (lastState & CompWindowStateFullscreenMask &&
-     !(window->state () & CompWindowStateFullscreenMask))
-    UnityScreen::get (screen)->fullscreen_windows_.remove(window);
+           !(window->state() & CompWindowStateFullscreenMask))
+  {
+    uScreen->fullscreen_windows_.remove(window);
+  }
 
   deco_win_->Update();
   PluginAdapter::Default().NotifyStateChange(window, window->state(), lastState);
@@ -3173,8 +3170,7 @@ void UnityWindow::resizeNotify(int x, int y, int w, int h)
 
 CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 {
-  UnityScreen* us = UnityScreen::get(screen);
-  auto window_geo = window->borderRect ();
+  auto const& window_geo = window->borderRect();
   nux::Geometry target_monitor;
   nux::Point result(pos.x(), pos.y());
 
@@ -3189,7 +3185,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
     }
   }
 
-  auto const& launchers = us->launcher_controller_->launchers();
+  auto const& launchers = uScreen->launcher_controller_->launchers();
 
   for (auto const& launcher : launchers)
   {
@@ -3207,7 +3203,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
     }
   }
 
-  for (nux::Geometry const& geo : us->panel_controller_->GetGeometries())
+  for (nux::Geometry const& geo : uScreen->panel_controller_->GetGeometries())
   {
     if (geo.IsInside(result))
     {
@@ -3639,7 +3635,7 @@ bool WindowHasInconsistentShapeRects (Display *d,
 }
 
 UnityWindow::UnityWindow(CompWindow* window)
-  : BaseSwitchWindow(static_cast<BaseSwitchScreen*>(UnityScreen::get(screen)), window)
+  : BaseSwitchWindow(static_cast<BaseSwitchScreen*>(uScreen), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , cWindow(CompositeWindow::get(window))
@@ -3657,10 +3653,8 @@ UnityWindow::UnityWindow(CompWindow* window)
   /* This needs to happen before we set our wrapable functions, since we
    * need to ask core (and not ourselves) whether or not the window is
    * minimized */
-  if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
-      window->mapNum () &&
-      WindowHasInconsistentShapeRects (screen->dpy (),
-                                       window->id ()))
+  if (uScreen->optionGetShowMinimizedWindows() && window->mapNum() &&
+      WindowHasInconsistentShapeRects(screen->dpy (), window->id()))
   {
     /* Query the core function */
     window->minimizedSetEnabled (this, false);
@@ -3682,13 +3676,13 @@ UnityWindow::UnityWindow(CompWindow* window)
 
   /* Keep this after the optionGetShowMinimizedWindows branch */
 
-  if (window->state () & CompWindowStateFullscreenMask)
-    UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
+  if (window->state() & CompWindowStateFullscreenMask)
+    uScreen->fullscreen_windows_.push_back(window);
 
   /* We might be starting up so make sure that
    * we don't deref the dashcontroller that doesnt
    * exist */
-  dash::Controller::Ptr dp = UnityScreen::get(screen)->dash_controller_;
+  dash::Controller::Ptr dp = uScreen->dash_controller_;
 
   if (dp)
   {
@@ -3939,7 +3933,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
 nux::Geometry UnityWindow::GetLayoutWindowGeometry()
 {
-  auto const& layout_window = UnityScreen::get(screen)->GetSwitcherDetailLayoutWindow(window->id());
+  auto const& layout_window = uScreen->GetSwitcherDetailLayoutWindow(window->id());
 
   if (layout_window)
     return layout_window->result;
@@ -4002,7 +3996,7 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
 void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float parent_alpha, float scale_ratio, unsigned deco_height, bool selected)
 {
   GLMatrix matrix;
-  matrix.toScreenSpace(UnityScreen::get(screen)->_last_output, -DEFAULT_Z_CAMERA);
+  matrix.toScreenSpace(uScreen->_last_output, -DEFAULT_Z_CAMERA);
   last_bound = geo;
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib();
