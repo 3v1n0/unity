@@ -48,7 +48,9 @@ public:
   nux::Property<bool> active;
   nux::Property<bool> mapped;
   nux::Property<bool> visible;
-  nux::Property<bool> maximized;
+  nux::RWProperty<bool> maximized;
+  nux::Property<bool> v_maximized;
+  nux::Property<bool> h_maximized;
   nux::Property<bool> minimized;
   nux::Property<bool> decorated;
   nux::Property<bool> has_decorations;
@@ -72,6 +74,8 @@ public:
   virtual bool IsTopWindowFullscreenOnMonitorWithMouse() const override;
 
   virtual bool IsWindowMaximized(Window window_id) const;
+  virtual bool IsWindowVerticallyMaximized(Window window_id) const;
+  virtual bool IsWindowHorizontallyMaximized(Window window_id) const;
   virtual bool IsWindowDecorated(Window window_id) const;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const;
   virtual bool IsWindowObscured(Window window_id) const;
