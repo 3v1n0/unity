@@ -1150,13 +1150,14 @@ bool UnityWindow::IsMinimized ()
   return window->minimized ();
 }
 
-void UnityWindow::DoOverrideFrameRegion (CompRegion &region)
+void UnityWindow::DoOverrideFrameRegion(CompRegion &region)
 {
-  unsigned int oldUpdateFrameRegionIndex = window->updateFrameRegionGetCurrentIndex ();
+  unsigned int oldUpdateFrameRegionIndex = window->updateFrameRegionGetCurrentIndex();
 
-  window->updateFrameRegionSetCurrentIndex (MAXSHORT);
-  window->updateFrameRegion (region);
-  window->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
+  window->updateFrameRegionSetCurrentIndex(MAXSHORT);
+  window->updateFrameRegion(region);
+  deco_win_->UpdateFrameRegion(region);
+  window->updateFrameRegionSetCurrentIndex(oldUpdateFrameRegionIndex);
 }
 
 void UnityWindow::DoHide ()
@@ -1203,7 +1204,7 @@ void UnityWindow::DoDeleteHandler ()
 {
   mShowdesktopHandler.reset();
 
-  window->updateFrameRegion ();
+  window->updateFrameRegion();
 }
 
 compiz::WindowInputRemoverLock::Ptr
@@ -3038,9 +3039,6 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       }
     /* Fall through an re-evaluate wraps on map and unmap too */
     case CompWindowNotifyUnmap:
-      deco_win_->Update();
-      deco_win_->UpdateDecorationPosition();
-
       if (uScreen->optionGetShowMinimizedWindows() && window->mapNum() &&
           !window->pendingUnmaps())
       {
@@ -3063,24 +3061,27 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         window->minimizedSetEnabled (this, false);
       }
 
+      deco_win_->Update();
+      deco_win_->UpdateDecorationPosition();
+
       PluginAdapter::Default().UpdateShowDesktopState();
-        break;
-      case CompWindowNotifyBeforeDestroy:
-        being_destroyed.emit();
-        break;
-      case CompWindowNotifyMinimize:
-        /* Updating the count in dconf will trigger a "changed" signal to which
-         * the method setting the new animation speed is attached */
-        uScreen->minimize_speed_controller_.UpdateCount();
-        break;
-      case CompWindowNotifyUnreparent:
-        deco_win_->Undecorate();
-        break;
-      case CompWindowNotifyReparent:
-        deco_win_->Update();
-        break;
-      default:
-        break;
+      break;
+    case CompWindowNotifyBeforeDestroy:
+      being_destroyed.emit();
+      break;
+    case CompWindowNotifyMinimize:
+      /* Updating the count in dconf will trigger a "changed" signal to which
+       * the method setting the new animation speed is attached */
+      uScreen->minimize_speed_controller_.UpdateCount();
+      break;
+    case CompWindowNotifyUnreparent:
+      deco_win_->Undecorate();
+      break;
+    case CompWindowNotifyReparent:
+      deco_win_->Update();
+      break;
+    default:
+      break;
   }
 
 
@@ -3138,9 +3139,13 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
    * does not have a region */
 
   if (mMinimizeHandler)
-    mMinimizeHandler->updateFrameRegion (region);
+  {
+    mMinimizeHandler->updateFrameRegion(region);
+  }
   else if (mShowdesktopHandler)
-    mShowdesktopHandler->UpdateFrameRegion (region);
+  {
+    mShowdesktopHandler->UpdateFrameRegion(region);
+  }
   else
   {
     window->updateFrameRegion(region);
