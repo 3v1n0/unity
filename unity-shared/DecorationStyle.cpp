@@ -20,7 +20,9 @@
 #include "DecorationStyle.h"
 #include <gtk/gtk.h>
 #include <NuxCore/Colors.h>
+#include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 #include <math.h>
 
 namespace unity
@@ -29,6 +31,8 @@ namespace decoration
 {
 namespace
 {
+DECLARE_LOGGER(logger, "unity.decoration.style");
+
 const std::array<std::string, 4> BORDER_CLASSES = {"top", "left", "right", "bottom"};
 const Border DEFAULT_BORDER = {28, 1, 1, 1};
 const Border DEFAULT_INPUT_EDGES = {10, 10, 10, 10};
@@ -83,18 +87,15 @@ Border BorderFromGtkBorder(GtkBorder* b, Border fallback = Border())
 
 struct Style::Impl
 {
-  Impl()
-    : ctx_(gtk_style_context_new())
+  Impl(Style* parent)
+    : parent_(parent)
+    , ctx_(gtk_style_context_new())
     , settings_(g_settings_new(SETTINGS_NAME.c_str()))
     , pango_context_(gdk_pango_context_get_for_screen(gdk_screen_get_default()))
     , title_alignment_(0)
     , title_indent_(0)
     , title_fade_(0)
   {
-    std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(GetFont().c_str()), pango_font_description_free);
-    pango_context_set_font_description(pango_context_, desc.get());
-    pango_context_set_language(pango_context_, gtk_get_default_language());
-
     std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
     gtk_widget_path_append_type(widget_path.get(), unity_decoration_get_type());
     gtk_style_context_set_path(ctx_, widget_path.get());
@@ -108,7 +109,44 @@ struct Style::Impl
     title_alignment_ = std::min(1.0f, std::max(0.0f, GetProperty<gfloat>("title-alignment")));
     title_indent_ = std::max<unsigned>(0, GetProperty<guint>("title-indent"));
     title_fade_ = std::max<unsigned>(0, GetProperty<guint>("title-fade"));
-    theme_name_ = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
+    parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
+    parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+    parent_->title_font = glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
+    UpdatePangoContext(parent_->title_font);
+
+    GtkSettings* settings = gtk_settings_get_default();
+    signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*, GParamSpec*) {
+      gtk_style_context_invalidate(ctx_);
+      parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
+      LOG_INFO(logger) << "gtk-theme-name changed to " << parent_->theme();
+    });
+
+    signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-font-name", [this] (GtkSettings*, GParamSpec*) {
+      parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+      LOG_INFO(logger) << "gtk-font-name changed to " << parent_->font();
+    });
+
+    signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-dpi", [this] (GtkSettings*, GParamSpec*) {
+      pango_context_ = gdk_pango_context_get_for_screen(gdk_screen_get_default());
+      UpdatePangoContext(parent_->title_font);
+      gtk_style_context_invalidate(ctx_);
+      parent_->theme.changed.emit(parent_->theme());
+      LOG_INFO(logger) << "gtk-xft-dpi changed to " << GetSettingValue<int>("gtk-xft-dpi");
+    });
+
+    signals_.Add<void, GSettings*, gchar*>(settings_, "changed::" + FONT_KEY, [this] (GSettings*, gchar*) {
+      auto const& font = glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
+      UpdatePangoContext(font);
+      parent_->title_font = font;
+      LOG_INFO(logger) << FONT_KEY << " changed to " << font;
+    });
+  }
+
+  void UpdatePangoContext(std::string const& font)
+  {
+    std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
+    pango_context_set_font_description(pango_context_, desc.get());
+    pango_context_set_language(pango_context_, gtk_get_default_language());
   }
 
   inline std::string const& GetBorderClass(Side side)
@@ -187,8 +225,9 @@ struct Style::Impl
 
   std::string WindowButtonFile(WindowButtonType type, WidgetState state) const
   {
+    auto const& theme = parent_->theme();
     auto filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)] + ".png";
-    glib::String subpath(g_build_filename(theme_name_.c_str(), "unity", filename.c_str(), nullptr));
+    glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
 
     // Look in home directory
     const char* home_dir = g_get_home_dir();
@@ -199,7 +238,7 @@ struct Style::Impl
       if (g_file_test(local_file, G_FILE_TEST_EXISTS))
         return local_file.Str();
 
-      glib::String home_file(g_build_filename(home_dir, ".themes", theme_name_.c_str(), subpath.Value(), nullptr));
+      glib::String home_file(g_build_filename(home_dir, ".themes", theme.c_str(), subpath.Value(), nullptr));
 
       if (g_file_test(home_file, G_FILE_TEST_EXISTS))
         return home_file.Str();
@@ -209,7 +248,7 @@ struct Style::Impl
     if (!var)
       var = "/usr";
 
-    glib::String path(g_build_filename(var, "share", "themes", theme_name_.c_str(), subpath.Value(), nullptr));
+    glib::String path(g_build_filename(var, "share", "themes", theme.c_str(), subpath.Value(), nullptr));
 
     if (g_file_test(path, G_FILE_TEST_EXISTS))
       return path.Str();
@@ -303,11 +342,6 @@ struct Style::Impl
     cairo_stroke(cr);
   }
 
-  std::string GetFont()
-  {
-    return glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
-  }
-
   glib::Object<PangoLayout> BuildPangoLayout(std::string const& text)
   {
     glib::Object<PangoLayout> layout(pango_layout_new(pango_context_));
@@ -362,10 +396,11 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
+  Style* parent_;
+  glib::SignalManager signals_;
   glib::Object<GtkStyleContext> ctx_;
   glib::Object<GSettings> settings_;
   glib::Object<PangoContext> pango_context_;
-  std::string theme_name_;
   decoration::Border border_;
   decoration::Border input_edges_;
   float title_alignment_;
@@ -380,7 +415,7 @@ Style::Ptr const& Style::Get()
 }
 
 Style::Style()
-  : impl_(new Impl())
+  : impl_(new Impl(this))
 {}
 
 Style::~Style()

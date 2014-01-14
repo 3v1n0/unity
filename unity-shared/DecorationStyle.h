@@ -20,8 +20,8 @@
 #ifndef UNITY_DECORATION_STYLE
 #define UNITY_DECORATION_STYLE
 
+#include <NuxCore/Property.h>
 #include <NuxCore/Size.h>
-#include <memory>
 #include <cairo/cairo.h>
 
 namespace unity
@@ -92,6 +92,10 @@ public:
 
   static Style::Ptr const& Get();
   virtual ~Style();
+
+  nux::Property<std::string> theme;
+  nux::Property<std::string> font;
+  nux::Property<std::string> title_font;
 
   decoration::Border const& Border() const;
   decoration::Border const& InputBorder() const;

@@ -50,6 +50,11 @@ int main(int argc, char* argv[])
   gtk_init(&argc, &argv);
   auto const& style = Style::Get();
 
+  std::cout << "Theme: " << style->theme() << std::endl;
+  std::cout << "Font: " << style->font() << std::endl;
+  std::cout << "Title Font: " << style->title_font() << std::endl;
+  std::cout << "---" << std::endl;
+
   std::cout << "Border top: " << style->Border().top << std::endl;
   std::cout << "Border left: " << style->Border().left << std::endl;
   std::cout << "Border right: " << style->Border().right << std::endl;
