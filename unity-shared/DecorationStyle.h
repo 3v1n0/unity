@@ -103,6 +103,7 @@ public:
   nux::Size TitleNaturalSize(std::string const&);
 
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
+  void DrawWindowButton(WindowButtonType, WidgetState, cairo_t*, int width, int height);
 
   int DoubleClickMaxDistance() const;
   int DoubleClickMaxTimeDelta() const;

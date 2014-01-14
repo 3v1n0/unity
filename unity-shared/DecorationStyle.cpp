@@ -19,7 +19,9 @@
 
 #include "DecorationStyle.h"
 #include <gtk/gtk.h>
+#include <NuxCore/Colors.h>
 #include <UnityCore/GLibWrapper.h>
+#include <math.h>
 
 namespace unity
 {
@@ -37,6 +39,7 @@ const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "
 
 const std::string SETTINGS_NAME = "org.gnome.desktop.wm.preferences";
 const std::string FONT_KEY = "titlebar-font";
+const std::string HIGH_CONTRAST_THEME_PREFIX = "HighContrast";
 
 struct UnityDecoration
 {
@@ -126,7 +129,7 @@ struct Style::Impl
   {
     TYPE value;
     gtk_style_context_save(ctx_);
-    gtk_style_context_add_class(ctx_, GetBorderClass(s).c_str());
+    AddContextClasses(s, ws);
     gtk_style_context_get(ctx_, GtkStateFromWidgetState(ws), property.c_str(), &value, nullptr);
     gtk_style_context_restore(ctx_);
     return value;
@@ -212,6 +215,95 @@ struct Style::Impl
       return path.Str();
 
     return "";
+  }
+
+  void DrawWindowButton(WindowButtonType type, WidgetState ws, cairo_t* cr, int width, int height)
+  {
+    nux::Color color;
+    float w = width / 3.0f;
+    float h = height / 3.0f;
+
+    if (type == WindowButtonType::CLOSE)
+    {
+      double alpha = (ws != WidgetState::BACKDROP) ? 0.8f : 0.5;
+      color = nux::Color(1.0f, 0.3f, 0.3f, alpha);
+    }
+    else
+    {
+      if (ws != WidgetState::BACKDROP)
+      {
+        std::shared_ptr<GdkRGBA> rgba(GetBorderProperty<GdkRGBA*>(Side::TOP, WidgetState::NORMAL, "color"), gdk_rgba_free);
+        color = nux::Color(rgba->red, rgba->green, rgba->blue, rgba->alpha);
+      }
+      else
+      {
+        color = nux::color::Gray;
+      }
+    }
+
+    switch (ws)
+    {
+      case WidgetState::PRELIGHT:
+        color = color * 1.2f;
+        break;
+      case WidgetState::BACKDROP_PRELIGHT:
+        color = color * 0.9f;
+        break;
+      case WidgetState::PRESSED:
+        color = color * 0.8f;
+        break;
+      case WidgetState::BACKDROP_PRESSED:
+        color = color * 0.7f;
+        break;
+      case WidgetState::DISABLED:
+        color = color * 0.5f;
+        break;
+      default:
+        break;
+    }
+
+    cairo_translate(cr, 0.5, 0.5);
+    cairo_set_line_width(cr, 1.5f);
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+    cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
+
+    cairo_arc(cr, width / 2.0f, height / 2.0f, (width - 2) / 2.0f, 0.0f, 360 * (M_PI / 180));
+    cairo_stroke(cr);
+
+    if (type == WindowButtonType::CLOSE)
+    {
+      cairo_move_to(cr, w, h);
+      cairo_line_to(cr, width - w, height - h);
+      cairo_move_to(cr, width - w, h);
+      cairo_line_to(cr, w, height - h);
+    }
+    else if (type == WindowButtonType::MINIMIZE)
+    {
+      cairo_move_to(cr, w, height / 2.0f);
+      cairo_line_to(cr, width - w, height / 2.0f);
+    }
+    else if (type == WindowButtonType::UNMAXIMIZE)
+    {
+      cairo_move_to(cr, w, h + h/5.0f);
+      cairo_line_to(cr, width - w, h + h/5.0f);
+      cairo_line_to(cr, width - w, height - h - h/5.0f);
+      cairo_line_to(cr, w, height - h - h/5.0f);
+      cairo_close_path(cr);
+    }
+    else // if (type == WindowButtonType::MAXIMIZE)
+    {
+      cairo_move_to(cr, w, h);
+      cairo_line_to(cr, width - w, h);
+      cairo_line_to(cr, width - w, height - h);
+      cairo_line_to(cr, w, height - h);
+      cairo_close_path(cr);
+    }
+
+    cairo_stroke(cr);
   }
 
   std::string GetFont()
@@ -334,6 +426,11 @@ void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, int w, 
 std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const
 {
   return impl_->WindowButtonFile(type, state);
+}
+
+void Style::DrawWindowButton(WindowButtonType type, WidgetState state, cairo_t* cr, int width, int height)
+{
+  return impl_->DrawWindowButton(type, state, cr, width, height);
 }
 
 Border const& Style::Border() const
