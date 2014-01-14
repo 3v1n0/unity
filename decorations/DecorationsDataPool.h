@@ -28,7 +28,7 @@ namespace unity
 namespace decoration
 {
 
-class DataPool
+class DataPool : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<DataPool> Ptr;

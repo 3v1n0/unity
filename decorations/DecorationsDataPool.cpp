@@ -19,6 +19,7 @@
 
 #include <NuxCore/Logger.h>
 #include <X11/cursorfont.h>
+#include <sigc++/adaptors/hide.h>
 #include "DecorationsDataPool.h"
 
 namespace unity
@@ -63,6 +64,9 @@ DataPool::DataPool()
 {
   SetupCursors();
   SetupButtonsTextures();
+
+  auto cb = sigc::hide(sigc::mem_fun(this, &DataPool::SetupButtonsTextures));
+  Style::Get()->theme.changed.connect(cb);
 }
 
 DataPool::~DataPool()
