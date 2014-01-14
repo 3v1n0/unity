@@ -238,7 +238,7 @@ struct Style::Impl
       if (g_file_test(local_file, G_FILE_TEST_EXISTS))
         return local_file.Str();
 
-      glib::String home_file(g_build_filename(home_dir, ".themes", theme.c_str(), subpath.Value(), nullptr));
+      glib::String home_file(g_build_filename(home_dir, ".themes", subpath.Value(), nullptr));
 
       if (g_file_test(home_file, G_FILE_TEST_EXISTS))
         return home_file.Str();
@@ -248,12 +248,13 @@ struct Style::Impl
     if (!var)
       var = "/usr";
 
-    glib::String path(g_build_filename(var, "share", "themes", theme.c_str(), subpath.Value(), nullptr));
+    glib::String path(g_build_filename(var, "share", "themes", subpath.Value(), nullptr));
 
     if (g_file_test(path, G_FILE_TEST_EXISTS))
       return path.Str();
 
-    return "";
+    LOG_WARN(logger) << "No Window button file for '"<< subpath.Str() << "'";
+    return std::string();
   }
 
   void DrawWindowButton(WindowButtonType type, WidgetState ws, cairo_t* cr, int width, int height)
