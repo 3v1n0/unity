@@ -79,6 +79,8 @@ public:
   virtual bool IsTopWindowFullscreenOnMonitorWithMouse() const = 0;
 
   virtual bool IsWindowMaximized(Window window_id) const = 0;
+  virtual bool IsWindowVerticallyMaximized(Window window_id) const = 0;
+  virtual bool IsWindowHorizontallyMaximized(Window window_id) const = 0;
   virtual bool IsWindowDecorated(Window window_id) const = 0;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const = 0;
   virtual bool IsWindowObscured(Window window_id) const = 0;

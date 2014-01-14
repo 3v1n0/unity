@@ -503,6 +503,22 @@ bool PluginAdapter::IsWindowMaximized(Window window_id) const
   return false;
 }
 
+bool PluginAdapter::IsWindowVerticallyMaximized(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return (window->state() & CompWindowStateMaximizedVertMask);
+ 
+  return false;
+}
+ 
+bool PluginAdapter::IsWindowHorizontallyMaximized(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return (window->state() & CompWindowStateMaximizedHorzMask);
+
+  return false;
+}
+
 unsigned long PluginAdapter::GetMwnDecorations(Window window_id) const
 {
   Display* display = m_Screen->dpy();
