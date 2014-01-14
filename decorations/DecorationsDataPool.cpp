@@ -27,8 +27,10 @@ namespace decoration
 {
 namespace
 {
-const std::string PLUGIN_NAME = "unityshell";
 DECLARE_LOGGER(logger, "unity.decoration.datapool");
+const std::string PLUGIN_NAME = "unityshell";
+const int BUTTONS_SIZE = 16;
+const int BUTTONS_PADDING = 1;
 
 unsigned EdgeTypeToCursorShape(Edge::Type type)
 {
@@ -106,8 +108,13 @@ void DataPool::SetupButtonsTextures()
       }
       else
       {
-        LOG_WARN(logger) << "Impossible to load button texture " << file;
-        // Generate cairo texture!
+        LOG_WARN(logger) << "Impossible to load button texture " << file << "; "
+                         << "falling back to cairo generated one";
+
+        cu::CairoContext ctx(BUTTONS_SIZE + BUTTONS_PADDING*2, BUTTONS_SIZE + BUTTONS_PADDING*2);
+        cairo_translate(ctx, BUTTONS_PADDING, BUTTONS_PADDING);
+        style->DrawWindowButton(WindowButtonType(button), WidgetState(state), ctx, BUTTONS_SIZE, BUTTONS_SIZE);
+        window_buttons_[button][state] = ctx;
       }
     }
   }
