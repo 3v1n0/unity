@@ -32,6 +32,7 @@ DECLARE_LOGGER(logger, "unity.decoration.datapool");
 const std::string PLUGIN_NAME = "unityshell";
 const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
+const cu::SimpleTexture::Ptr EMPTY_BUTTON;
 
 unsigned EdgeTypeToCursorShape(Edge::Type type)
 {
@@ -112,7 +113,7 @@ void DataPool::SetupButtonsTextures()
       }
       else
       {
-        LOG_WARN(logger) << "Impossible to load button texture " << file << "; "
+        LOG_WARN(logger) << "Impossible to load local button texture file; "
                          << "falling back to cairo generated one";
 
         cu::CairoContext ctx(BUTTONS_SIZE + BUTTONS_PADDING*2, BUTTONS_SIZE + BUTTONS_PADDING*2);
@@ -126,6 +127,14 @@ void DataPool::SetupButtonsTextures()
 
 cu::SimpleTexture::Ptr const& DataPool::ButtonTexture(WindowButtonType wbt, WidgetState ws) const
 {
+  if (wbt >= WindowButtonType::Size || ws >= WidgetState::Size)
+  {
+    LOG_ERROR(logger) << "It has been requested an invalid button texture "
+                      << "WindowButtonType: " << unsigned(wbt) << ", WidgetState: "
+                      << unsigned(ws);
+    return EMPTY_BUTTON;
+  }
+
   return window_buttons_[unsigned(wbt)][unsigned(ws)];
 }
 
