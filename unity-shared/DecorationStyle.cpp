@@ -220,8 +220,8 @@ struct Style::Impl
   void DrawWindowButton(WindowButtonType type, WidgetState ws, cairo_t* cr, int width, int height)
   {
     nux::Color color;
-    float w = width / 3.0f;
-    float h = height / 3.0f;
+    float w = width / 3.5f;
+    float h = height / 3.5f;
 
     if (type == WindowButtonType::CLOSE)
     {
@@ -262,47 +262,44 @@ struct Style::Impl
         break;
     }
 
-    cairo_translate(cr, 0.5, 0.5);
-    cairo_set_line_width(cr, 1.5f);
-
-    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(cr);
-
-    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+    cairo_set_line_width(cr, 1);
     cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
-
     cairo_arc(cr, width / 2.0f, height / 2.0f, (width - 2) / 2.0f, 0.0f, 360 * (M_PI / 180));
+    cairo_fill_preserve(cr);
     cairo_stroke(cr);
 
-    if (type == WindowButtonType::CLOSE)
+    switch (type)
     {
-      cairo_move_to(cr, w, h);
-      cairo_line_to(cr, width - w, height - h);
-      cairo_move_to(cr, width - w, h);
-      cairo_line_to(cr, w, height - h);
-    }
-    else if (type == WindowButtonType::MINIMIZE)
-    {
-      cairo_move_to(cr, w, height / 2.0f);
-      cairo_line_to(cr, width - w, height / 2.0f);
-    }
-    else if (type == WindowButtonType::UNMAXIMIZE)
-    {
-      cairo_move_to(cr, w, h + h/5.0f);
-      cairo_line_to(cr, width - w, h + h/5.0f);
-      cairo_line_to(cr, width - w, height - h - h/5.0f);
-      cairo_line_to(cr, w, height - h - h/5.0f);
-      cairo_close_path(cr);
-    }
-    else // if (type == WindowButtonType::MAXIMIZE)
-    {
-      cairo_move_to(cr, w, h);
-      cairo_line_to(cr, width - w, h);
-      cairo_line_to(cr, width - w, height - h);
-      cairo_line_to(cr, w, height - h);
-      cairo_close_path(cr);
+      case WindowButtonType::CLOSE:
+        cairo_move_to(cr, w, h);
+        cairo_line_to(cr, width - w, height - h);
+        cairo_move_to(cr, width - w, h);
+        cairo_line_to(cr, w, height - h);
+        break;
+      case WindowButtonType::MINIMIZE:
+        cairo_move_to(cr, w, height / 2.0f);
+        cairo_line_to(cr, width - w, height / 2.0f);
+        break;
+      case WindowButtonType::UNMAXIMIZE:
+        cairo_move_to(cr, w, h + h/5.0f);
+        cairo_line_to(cr, width - w, h + h/5.0f);
+        cairo_line_to(cr, width - w, height - h - h/5.0f);
+        cairo_line_to(cr, w, height - h - h/5.0f);
+        cairo_close_path(cr);
+        break;
+      case WindowButtonType::MAXIMIZE:
+        cairo_move_to(cr, w, h);
+        cairo_line_to(cr, width - w, h);
+        cairo_line_to(cr, width - w, height - h);
+        cairo_line_to(cr, w, height - h);
+        cairo_close_path(cr);
+        break;
+      default:
+        break;
     }
 
+    cairo_set_line_width(cr, 1);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_stroke(cr);
   }
 
