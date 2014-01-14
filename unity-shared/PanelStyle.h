@@ -69,7 +69,8 @@ public:
   sigc::signal<void> changed;
 
 private:
-  void Refresh();
+  void OnThemeChanged(std::string const&);
+  void RefreshContext();
 
   glib::Object<GtkStyleContext> style_context_;
   BaseTexturePtr bg_texture_;

@@ -38,6 +38,15 @@ Style* style_instance = nullptr;
 DECLARE_LOGGER(logger, "unity.panel.style");
 const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
+
+std::string button_id(WindowButtonType type, WindowState ws)
+{
+  std::string texture_id = "window-button-";
+  texture_id += std::to_string(static_cast<int>(type));
+  texture_id += std::to_string(static_cast<int>(ws));
+  return texture_id;
+}
+
 }
 
 Style::Style()
@@ -73,12 +82,12 @@ Style::Style()
   gtk_widget_path_free(widget_path);
 
   auto const& deco_style = decoration::Style::Get();
-  auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Style::Refresh));
-  deco_style->theme.changed.connect(refresh_cb);
+  auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Style::RefreshContext));
+  deco_style->theme.changed.connect(sigc::mem_fun(this, &Style::OnThemeChanged));
   deco_style->font.changed.connect(refresh_cb);
   deco_style->title_font.changed.connect(refresh_cb);
 
-  Refresh();
+  RefreshContext();
 }
 
 Style::~Style()
@@ -97,7 +106,18 @@ Style& Style::Instance()
   return *style_instance;
 }
 
-void Style::Refresh()
+void Style::OnThemeChanged(std::string const&)
+{
+  auto& cache = TextureCache::GetDefault();
+
+  for (unsigned button = 0; button < unsigned(WindowButtonType::Size); ++button)
+    for (unsigned state = 0; state < unsigned(WindowState::Size); ++state)
+      cache.Invalidate(button_id(WindowButtonType(button), WindowState(state)));
+
+  RefreshContext();
+}
+
+void Style::RefreshContext()
 {
   gtk_style_context_invalidate(style_context_);
   bg_texture_.Release();
@@ -146,11 +166,7 @@ BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
   };
 
   auto& cache = TextureCache::GetDefault();
-  std::string texture_id = "window-button-";
-  texture_id += std::to_string(static_cast<int>(type));
-  texture_id += std::to_string(static_cast<int>(state));
-
-  return cache.FindTexture(texture_id, 0, 0, texture_factory);
+  return cache.FindTexture(button_id(type, state), 0, 0, texture_factory);
 }
 
 BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type, WindowState state)
@@ -173,7 +189,7 @@ std::string Style::GetFontDescription(PanelItem item)
       return decoration::Style::Get()->title_font();
   }
 
-  return "";
+  return std::string();
 }
 
 int Style::GetTextDPI()
