@@ -18,22 +18,11 @@
  *              Marco Trevisan <3v1n0@ubuntu.com>
  */
 
-#include "config.h"
-
-#include <math.h>
-#include <array>
-#include <gtk/gtk.h>
-#include <boost/algorithm/string/predicate.hpp>
-
-#include <Nux/Nux.h>
-#include <NuxGraphics/GraphicsEngine.h>
-#include <NuxGraphics/CairoGraphics.h>
 #include <NuxCore/Logger.h>
 
-#include "CairoTexture.h"
 #include "PanelStyle.h"
+#include "CairoTexture.h"
 
-#include <UnityCore/GLibWrapper.h>
 #include "unity-shared/DecorationStyle.h"
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/UnitySettings.h"
@@ -42,28 +31,18 @@ namespace unity
 {
 namespace panel
 {
-DECLARE_LOGGER(logger, "unity.panel.style");
 namespace
 {
 Style* style_instance = nullptr;
 
-const std::string SETTINGS_NAME("org.gnome.desktop.wm.preferences");
-const std::string PANEL_TITLE_FONT_KEY("titlebar-font");
-const std::string HIGH_CONTRAST_THEME_PREFIX("HighContrast");
+DECLARE_LOGGER(logger, "unity.panel.style");
 const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
-
-nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
-{
-  return nux::Color(color.red, color.green, color.blue, color.alpha);
-}
-
 }
 
 Style::Style()
   : panel_height(24)
-  , _style_context(gtk_style_context_new())
-  , _gsettings(g_settings_new(SETTINGS_NAME.c_str()))
+  , style_context_(gtk_style_context_new())
 {
   if (style_instance)
   {
@@ -87,33 +66,17 @@ Style::Style()
   gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
   gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
-  gtk_style_context_set_path(_style_context, widget_path);
-  gtk_style_context_add_class(_style_context, "gnome-panel-menu-bar");
-  gtk_style_context_add_class(_style_context, "unity-panel");
+  gtk_style_context_set_path(style_context_, widget_path);
+  gtk_style_context_add_class(style_context_, "gnome-panel-menu-bar");
+  gtk_style_context_add_class(style_context_, "unity-panel");
 
   gtk_widget_path_free(widget_path);
 
-  GtkSettings* settings = gtk_settings_get_default();
-
-  _style_changed_signal.Connect(settings, "notify::gtk-theme-name",
-  [this] (GtkSettings*, GParamSpec*) {
-    Refresh();
-  });
-
-  _font_changed_signal.Connect(settings, "notify::gtk-font-name",
-  [this] (GtkSettings*, GParamSpec*) {
-    changed.emit();
-  });
-
-  _dpi_changed_signal.Connect(settings, "notify::gtk-xft-dpi",
-  [this] (GtkSettings*, GParamSpec*) {
-    changed.emit();
-  });
-
-  _settings_changed_signal.Connect(_gsettings, "changed::" + PANEL_TITLE_FONT_KEY,
-  [this] (GSettings*, gchar*) {
-    changed.emit();
-  });
+  auto const& deco_style = decoration::Style::Get();
+  auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Style::Refresh));
+  deco_style->theme.changed.connect(refresh_cb);
+  deco_style->font.changed.connect(refresh_cb);
+  deco_style->title_font.changed.connect(refresh_cb);
 
   Refresh();
 }
@@ -136,45 +99,20 @@ Style& Style::Instance()
 
 void Style::Refresh()
 {
-  GdkRGBA rgba_text_color;
-  glib::String theme_name;
-  bool updated = false;
-
-  GtkSettings* settings = gtk_settings_get_default();
-  g_object_get(settings, "gtk-theme-name", &theme_name, nullptr);
-
-  if (_theme_name != theme_name.Str())
-  {
-    _theme_name = theme_name.Str();
-    updated = true;
-  }
-
-  gtk_style_context_invalidate(_style_context);
-  gtk_style_context_get_color(_style_context, GTK_STATE_FLAG_NORMAL, &rgba_text_color);
-  nux::Color const& new_text_color = ColorFromGdkRGBA(rgba_text_color);
-
-  if (_text_color != new_text_color)
-  {
-    _text_color = new_text_color;
-    updated = true;
-  }
-
-  if (updated)
-  {
-    _bg_texture.Release();
-    changed.emit();
-  }
+  gtk_style_context_invalidate(style_context_);
+  bg_texture_.Release();
+  changed.emit();
 }
 
 GtkStyleContext* Style::GetStyleContext()
 {
-  return _style_context;
+  return style_context_;
 }
 
 BaseTexturePtr Style::GetBackground()
 {
-  if (_bg_texture)
-    return _bg_texture;
+  if (bg_texture_)
+    return bg_texture_;
 
   int width = 1;
   int height = panel_height();
@@ -183,12 +121,12 @@ BaseTexturePtr Style::GetBackground()
 
   // Use the internal context as we know it is good and shiny new.
   cairo_t* cr = context.GetInternalContext();
-  gtk_render_background(_style_context, cr, 0, 0, width, height);
-  gtk_render_frame(_style_context, cr, 0, 0, width, height);
+  gtk_render_background(style_context_, cr, 0, 0, width, height);
+  gtk_render_frame(style_context_, cr, 0, 0, width, height);
 
-  _bg_texture = texture_ptr_from_cairo_graphics(context);
+  bg_texture_ = texture_ptr_from_cairo_graphics(context);
 
-  return _bg_texture;
+  return bg_texture_;
 }
 
 BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
@@ -230,16 +168,9 @@ std::string Style::GetFontDescription(PanelItem item)
   {
     case PanelItem::INDICATOR:
     case PanelItem::MENU:
-    {
-      glib::String font_name;
-      g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, nullptr);
-      return font_name.Str();
-    }
+      return decoration::Style::Get()->font();
     case PanelItem::TITLE:
-    {
-      glib::String font_name(g_settings_get_string(_gsettings, PANEL_TITLE_FONT_KEY.c_str()));
-      return font_name.Str();
-    }
+      return decoration::Style::Get()->title_font();
   }
 
   return "";
