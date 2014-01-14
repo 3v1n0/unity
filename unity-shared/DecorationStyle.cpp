@@ -125,12 +125,10 @@ struct Style::Impl
   inline TYPE GetBorderProperty(Side s, WidgetState ws, std::string const& property)
   {
     TYPE value;
-
     gtk_style_context_save(ctx_);
     gtk_style_context_add_class(ctx_, GetBorderClass(s).c_str());
     gtk_style_context_get(ctx_, GtkStateFromWidgetState(ws), property.c_str(), &value, nullptr);
     gtk_style_context_restore(ctx_);
-
     return value;
   }
 
@@ -167,11 +165,18 @@ struct Style::Impl
     return GTK_STATE_FLAG_NORMAL;
   }
 
+  void AddContextClasses(Side s, WidgetState ws)
+  {
+    gtk_style_context_add_class(ctx_, "gnome-panel-menu-bar");
+    if (s == Side::TOP) { gtk_style_context_add_class(ctx_, "header-bar"); }
+    gtk_style_context_add_class(ctx_, GetBorderClass(s).c_str());
+    gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
+  }
+
   void DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
   {
     gtk_style_context_save(ctx_);
-    gtk_style_context_add_class(ctx_, GetBorderClass(s).c_str());
-    gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
+    AddContextClasses(s, ws);
     gtk_render_background(ctx_, cr, 0, 0, w, h);
     gtk_render_frame(ctx_, cr, 0, 0, w, h);
     gtk_style_context_restore(ctx_);
@@ -235,8 +240,7 @@ struct Style::Impl
   void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, int w, int h)
   {
     gtk_style_context_save(ctx_);
-    gtk_style_context_add_class(ctx_, GetBorderClass(Side::TOP).c_str());
-    gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
+    AddContextClasses(Side::TOP, ws);
 
     auto const& layout = BuildPangoLayout(text);
 
