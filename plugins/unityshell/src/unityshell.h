@@ -88,6 +88,7 @@ namespace decoration
 {
 class Manager;
 class Window;
+enum class WidgetState : unsigned;
 }
 
 namespace compiz_utils
@@ -522,22 +523,18 @@ private:
   void CleanupCachedTextures();
   static void SetupSharedTextures();
   static void CleanupSharedTextures();
-  static void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
 
 public:
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
 
 private:
   std::unique_ptr <ShowdesktopHandler> mShowdesktopHandler;
-  static GLTexture::List close_normal_tex_;
-  static GLTexture::List close_prelight_tex_;
-  static GLTexture::List close_pressed_tex_;
   static GLTexture::List glow_texture_;
   PixmapTexturePtr decoration_tex_;
   PixmapTexturePtr decoration_selected_tex_;
   std::string decoration_title_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
-  panel::WindowState close_icon_state_;
+  decoration::WidgetState close_icon_state_;
   nux::Geometry close_button_geo_;
   std::shared_ptr<decoration::Window> deco_win_;
   bool middle_clicked_;

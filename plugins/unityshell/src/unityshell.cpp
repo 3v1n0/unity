@@ -51,8 +51,8 @@
 #include "launcher/XdndManagerImp.h"
 #include "launcher/XdndStartStopNotifierImp.h"
 #include "CompizShortcutModeller.h"
-#include "DecorationStyle.h"
 
+#include "decorations/DecorationsDataPool.h"
 #include "decorations/DecorationsManager.h"
 
 #include <glib/gi18n-lib.h>
@@ -144,7 +144,6 @@ namespace win
 {
 namespace decoration
 {
-const unsigned CLOSE_SIZE = 19;
 const unsigned ITEMS_PADDING = 5;
 const unsigned RADIUS = 8;
 const unsigned GLOW = 5;
@@ -1240,17 +1239,17 @@ bool UnityWindow::handleEvent(XEvent *event)
   switch(event->type)
   {
     case MotionNotify:
-      if (close_icon_state_ != panel::WindowState::PRESSED)
+      if (close_icon_state_ != decoration::WidgetState::PRESSED)
       {
-        panel::WindowState old_state = close_icon_state_;
+        auto old_state = close_icon_state_;
 
         if (close_button_geo_.IsPointInside(event->xmotion.x_root, event->xmotion.y_root))
         {
-          close_icon_state_ = panel::WindowState::PRELIGHT;
+          close_icon_state_ = decoration::WidgetState::PRELIGHT;
         }
         else
         {
-          close_icon_state_ = panel::WindowState::NORMAL;
+          close_icon_state_ = decoration::WidgetState::NORMAL;
         }
 
         if (old_state != close_icon_state_)
@@ -1264,7 +1263,7 @@ bool UnityWindow::handleEvent(XEvent *event)
       if (event->xbutton.button == Button1 &&
           close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
       {
-        close_icon_state_ = panel::WindowState::PRESSED;
+        close_icon_state_ = decoration::WidgetState::PRESSED;
         cWindow->addDamageRect(CompRectFromNuxGeo(close_button_geo_));
         handled = true;
       }
@@ -1279,11 +1278,11 @@ bool UnityWindow::handleEvent(XEvent *event)
 
     case ButtonRelease:
       {
-        bool was_pressed = (close_icon_state_ == panel::WindowState::PRESSED);
+        bool was_pressed = (close_icon_state_ == decoration::WidgetState::PRESSED);
 
-        if (close_icon_state_ != panel::WindowState::NORMAL)
+        if (close_icon_state_ != decoration::WidgetState::NORMAL)
         {
-          close_icon_state_ = panel::WindowState::NORMAL;
+          close_icon_state_ = decoration::WidgetState::NORMAL;
           cWindow->addDamageRect(CompRectFromNuxGeo(close_button_geo_));
         }
 
@@ -3621,9 +3620,6 @@ void UnityScreen::InitGesturesSupport()
 }
 
 /* Window init */
-GLTexture::List UnityWindow::close_normal_tex_;
-GLTexture::List UnityWindow::close_prelight_tex_;
-GLTexture::List UnityWindow::close_pressed_tex_;
 GLTexture::List UnityWindow::glow_texture_;
 
 namespace
@@ -3818,44 +3814,8 @@ void UnityWindow::BuildDecorationTexture()
   }
 }
 
-void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& texture)
-{
-  if (!texture.empty())
-    return;
-
-  CompString plugin("unityshell");
-  auto& style = panel::Style::Instance();
-  auto const& files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE, state);
-
-  for (std::string const& file : files)
-  {
-    CompString file_name = file;
-    CompSize size(win::decoration::CLOSE_SIZE, win::decoration::CLOSE_SIZE);
-    texture = GLTexture::readImageToTexture(file_name, plugin, size);
-    if (!texture.empty())
-      break;
-  }
-
-  if (texture.empty())
-  {
-    std::string suffix;
-    if (state == panel::WindowState::PRELIGHT)
-      suffix = "_prelight";
-    else if (state == panel::WindowState::PRESSED)
-      suffix = "_pressed";
-
-    CompString file_name(PKGDATADIR"/close_dash" + suffix + ".png");
-    CompSize size(win::decoration::CLOSE_SIZE, win::decoration::CLOSE_SIZE);
-    texture = GLTexture::readImageToTexture(file_name, plugin, size);
-  }
-}
-
 void UnityWindow::SetupSharedTextures()
 {
-  LoadCloseIcon(panel::WindowState::NORMAL, close_normal_tex_);
-  LoadCloseIcon(panel::WindowState::PRELIGHT, close_prelight_tex_);
-  LoadCloseIcon(panel::WindowState::PRESSED, close_pressed_tex_);
-
   if (glow_texture_.empty())
   {
     CompSize size(texture::GLOW_SIZE, texture::GLOW_SIZE);
@@ -3865,9 +3825,6 @@ void UnityWindow::SetupSharedTextures()
 
 void UnityWindow::CleanupSharedTextures()
 {
-  close_normal_tex_.clear();
-  close_prelight_tex_.clear();
-  close_pressed_tex_.clear();
   glow_texture_.clear();
 }
 
@@ -3899,6 +3856,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     int width = geo.width;
     int height = deco_top.height;
     bool redraw_decoration = true;
+    auto const& close_texture = decoration::DataPool::Get()->ButtonTexture(decoration::WindowButtonType::CLOSE, close_icon_state_);
 
     if (decoration_selected_tex_)
     {
@@ -3918,7 +3876,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         RenderDecoration(context, scale);
 
         // Draw window title
-        int text_x = win::decoration::CLOSE_SIZE;
+        int text_x = close_texture->width();
         RenderTitle(context, text_x, 0.0, width - win::decoration::ITEMS_PADDING, height);
         decoration_selected_tex_ = context;
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
@@ -3934,25 +3892,10 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
       DrawTexture(decoration_selected_tex_->texture_list(), attrib, transform, mask, geo.x, geo.y);
 
     int x = geo.x + win::decoration::ITEMS_PADDING;
-    int y = geo.y + (height - win::decoration::CLOSE_SIZE) / 2.0f;
+    int y = geo.y + (height - close_texture->height()) / 2.0f;
 
-    switch (close_icon_state_)
-    {
-      case panel::WindowState::NORMAL:
-      default:
-        DrawTexture(close_normal_tex_, attrib, transform, mask, x, y);
-        break;
-
-      case panel::WindowState::PRELIGHT:
-        DrawTexture(close_prelight_tex_, attrib, transform, mask, x, y);
-        break;
-
-      case panel::WindowState::PRESSED:
-        DrawTexture(close_pressed_tex_, attrib, transform, mask, x, y);
-        break;
-    }
-
-    close_button_geo_.Set(x, y, win::decoration::CLOSE_SIZE, win::decoration::CLOSE_SIZE);
+    close_button_geo_.Set(x, y, close_texture->width(), close_texture->height());
+    DrawTexture(close_texture->texture_list(), attrib, transform, mask, x, y);
   }
 
   uScreen->fake_decorated_windows_.insert(this);
@@ -4016,7 +3959,7 @@ nux::Geometry UnityWindow::GetScaledGeometry()
 
 void UnityWindow::OnInitiateSpread()
 {
-  close_icon_state_ = panel::WindowState::NORMAL;
+  close_icon_state_ = decoration::WidgetState::NORMAL;
   middle_clicked_ = false;
 }
 
