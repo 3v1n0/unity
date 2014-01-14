@@ -125,9 +125,6 @@ public:
   virtual bool ScaleWindowGroup(std::vector<Window> const& windows,
                                 int state, bool force) = 0;
 
-  virtual void Decorate(Window window_id) const {};
-  virtual void Undecorate(Window window_id) const {};
-
   virtual bool IsScreenGrabbed() const = 0;
   virtual bool IsViewPortSwitchStarted() const = 0;
 
@@ -180,8 +177,6 @@ public:
   sigc::signal<void, Window> window_resized;
   sigc::signal<void, Window> window_moved;
   sigc::signal<void, Window> window_focus_changed;
-  sigc::signal<void, Window> window_decorated;
-  sigc::signal<void, Window> window_undecorated;
 
   sigc::signal<void> initiate_spread;
   sigc::signal<void> terminate_spread;

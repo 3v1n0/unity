@@ -1892,18 +1892,11 @@ void UnityScreen::handleEvent(XEvent* event)
   if (!skip_other_plugins)
     screen->handleEvent(event);
 
-
   if (deco_manager_->HandleEventAfter(event))
     return;
 
   switch (event->type)
   {
-    case PropertyNotify:
-      if (event->xproperty.atom == Atoms::mwmHints)
-      {
-        PluginAdapter::Default().NotifyNewDecorationState(event->xproperty.window);
-      }
-      break;
     case MapRequest:
       ShowdesktopHandler::AllowLeaveShowdesktopMode(event->xmaprequest.window);
       break;

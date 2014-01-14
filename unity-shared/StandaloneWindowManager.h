@@ -99,9 +99,6 @@ public:
   virtual void Lower(Window window_id);
   void RestackBelow(Window window_id, Window sibiling_id) override;
 
-  virtual void Decorate(Window window_id) const;
-  virtual void Undecorate(Window window_id) const;
-
   virtual void TerminateScale();
   virtual bool IsScaleActive() const;
   virtual bool IsScaleActiveForGroup() const;
