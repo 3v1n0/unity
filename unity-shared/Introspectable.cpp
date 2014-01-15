@@ -57,8 +57,11 @@ GVariant* Introspectable::Introspect()
 
   g_variant_builder_init(&child_builder, G_VARIANT_TYPE("as"));
 
-  for (auto const& child : GetIntrospectableChildren())
+  for (auto* child : GetIntrospectableChildren())
   {
+    if (!child)
+      continue;
+
     auto const& child_name = child->GetName();
 
     if (!child_name.empty())

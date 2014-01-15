@@ -160,8 +160,13 @@ namespace local
       std::vector<xpathselect::Node::Ptr> children;
       auto const& this_ptr = shared_from_this();
 
-      for(auto const& child: node_->GetIntrospectableChildren())
+      for (auto* child : node_->GetIntrospectableChildren())
+      {
+        if (!child)
+          continue;
+
         children.push_back(std::make_shared<IntrospectableAdapter>(child, this_ptr));
+      }
 
       return children;
     }
