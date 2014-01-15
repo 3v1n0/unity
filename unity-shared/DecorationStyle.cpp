@@ -100,27 +100,16 @@ struct Style::Impl
     gtk_widget_path_append_type(widget_path.get(), unity_decoration_get_type());
     gtk_style_context_set_path(ctx_, widget_path.get());
 
-    std::shared_ptr<GtkBorder> b(GetProperty<GtkBorder*>("extents"), gtk_border_free);
-    border_ = BorderFromGtkBorder(b.get(), DEFAULT_BORDER);
-
-    b.reset(GetProperty<GtkBorder*>("input-extents"), gtk_border_free);
-    input_edges_ = BorderFromGtkBorder(b.get(), DEFAULT_INPUT_EDGES);
-
-    radius_.top = GetBorderProperty<int>(Side::TOP, WidgetState::NORMAL, "border-radius");
-    radius_.left = GetBorderProperty<int>(Side::LEFT, WidgetState::NORMAL, "border-radius");
-    radius_.right = GetBorderProperty<int>(Side::RIGHT, WidgetState::NORMAL, "border-radius");
-    radius_.bottom = GetBorderProperty<int>(Side::BOTTOM, WidgetState::NORMAL, "border-radius");
-
-    title_alignment_ = std::min(1.0f, std::max(0.0f, GetProperty<gfloat>("title-alignment")));
-    title_indent_ = std::max<unsigned>(0, GetProperty<guint>("title-indent"));
-    title_fade_ = std::max<unsigned>(0, GetProperty<guint>("title-fade"));
     parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
     parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
     parent_->title_font = glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
+
     UpdatePangoContext(parent_->title_font);
+    UpdateThemedValues();
 
     GtkSettings* settings = gtk_settings_get_default();
     signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*, GParamSpec*) {
+      UpdateThemedValues();
       gtk_style_context_invalidate(ctx_);
       parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
       LOG_INFO(logger) << "gtk-theme-name changed to " << parent_->theme();
@@ -145,6 +134,24 @@ struct Style::Impl
       parent_->title_font = font;
       LOG_INFO(logger) << FONT_KEY << " changed to " << font;
     });
+  }
+
+  void UpdateThemedValues()
+  {
+    std::shared_ptr<GtkBorder> b(GetProperty<GtkBorder*>("extents"), gtk_border_free);
+    border_ = BorderFromGtkBorder(b.get(), DEFAULT_BORDER);
+
+    b.reset(GetProperty<GtkBorder*>("input-extents"), gtk_border_free);
+    input_edges_ = BorderFromGtkBorder(b.get(), DEFAULT_INPUT_EDGES);
+
+    radius_.top = GetBorderProperty<int>(Side::TOP, WidgetState::NORMAL, "border-radius");
+    radius_.left = GetBorderProperty<int>(Side::LEFT, WidgetState::NORMAL, "border-radius");
+    radius_.right = GetBorderProperty<int>(Side::RIGHT, WidgetState::NORMAL, "border-radius");
+    radius_.bottom = GetBorderProperty<int>(Side::BOTTOM, WidgetState::NORMAL, "border-radius");
+
+    title_alignment_ = std::min(1.0f, std::max(0.0f, GetProperty<gfloat>("title-alignment")));
+    title_indent_ = std::max<unsigned>(0, GetProperty<guint>("title-indent"));
+    title_fade_ = std::max<unsigned>(0, GetProperty<guint>("title-fade"));
   }
 
   void UpdatePangoContext(std::string const& font)
