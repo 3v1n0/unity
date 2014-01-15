@@ -43,6 +43,7 @@ const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "
 
 const std::string SETTINGS_NAME = "org.gnome.desktop.wm.preferences";
 const std::string FONT_KEY = "titlebar-font";
+const std::string USE_SYSTEM_FONT_KEY = "titlebar-uses-system-font";
 const std::string HIGH_CONTRAST_THEME_PREFIX = "HighContrast";
 
 struct UnityDecoration
@@ -102,7 +103,7 @@ struct Style::Impl
 
     parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
     parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
-    parent_->title_font = glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
+    SetTitleFont();
 
     UpdatePangoContext(parent_->title_font);
     UpdateThemedValues();
@@ -117,6 +118,13 @@ struct Style::Impl
 
     signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-font-name", [this] (GtkSettings*, GParamSpec*) {
       parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+
+      if (g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str()))
+      {
+        UpdatePangoContext(parent_->font());
+        parent_->title_font = parent_->font();
+      }
+
       LOG_INFO(logger) << "gtk-font-name changed to " << parent_->font();
     });
 
@@ -129,10 +137,20 @@ struct Style::Impl
     });
 
     signals_.Add<void, GSettings*, gchar*>(settings_, "changed::" + FONT_KEY, [this] (GSettings*, gchar*) {
+      if (g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str()))
+        return;
+
       auto const& font = glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
       UpdatePangoContext(font);
       parent_->title_font = font;
       LOG_INFO(logger) << FONT_KEY << " changed to " << font;
+    });
+
+    signals_.Add<void, GSettings*, gchar*>(settings_, "changed::" + USE_SYSTEM_FONT_KEY, [this] (GSettings*, gchar*) {
+      SetTitleFont();
+      UpdatePangoContext(parent_->font());
+      parent_->title_font = parent_->font();
+      LOG_INFO(logger) << USE_SYSTEM_FONT_KEY << " changed to " << g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str());
     });
   }
 
@@ -152,6 +170,14 @@ struct Style::Impl
     title_alignment_ = std::min(1.0f, std::max(0.0f, GetProperty<gfloat>("title-alignment")));
     title_indent_ = std::max<unsigned>(0, GetProperty<guint>("title-indent"));
     title_fade_ = std::max<unsigned>(0, GetProperty<guint>("title-fade"));
+  }
+
+  void SetTitleFont()
+  {
+    if (g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str()))
+      parent_->title_font = parent_->font();
+    else
+      parent_->title_font = glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
   }
 
   void UpdatePangoContext(std::string const& font)
