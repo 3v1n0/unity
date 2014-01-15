@@ -24,11 +24,11 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
+#include <zeitgeist.h>
 
 #include "QuicklistMenuItemLabel.h"
 #include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"
-#include "unity-shared/ZeitgeistUtils.h"
 
 namespace unity
 {
