@@ -144,7 +144,6 @@ namespace win
 {
 namespace decoration
 {
-const unsigned ITEMS_PADDING = 5;
 const unsigned RADIUS = 8;
 const unsigned GLOW = 5;
 const nux::Color GLOW_COLOR(221, 72, 20);
@@ -3794,12 +3793,11 @@ void UnityWindow::BuildDecorationTexture()
   if (decoration_tex_)
     return;
 
-  auto& wm = WindowManager::Default();
-  auto const& deco_size = wm.GetWindowDecorationSize(window->id(), WindowManager::Edge::TOP);
+  auto const& border = decoration::Style::Get()->Border();
 
-  if (deco_size.height)
+  if (border.top)
   {
-    compiz_utils::CairoContext context(deco_size.width, deco_size.height);
+    compiz_utils::CairoContext context(window->borderRect().width(), border.top);
     RenderDecoration(context);
     decoration_tex_ = context;
   }
@@ -3841,11 +3839,10 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
   }
   else
   {
-    Window xid = window->id();
-    auto& wm = WindowManager::Default();
-    auto const& deco_top = wm.GetWindowDecorationSize(xid, WindowManager::Edge::TOP);
+    auto const& style = decoration::Style::Get();
     int width = geo.width;
-    int height = deco_top.height;
+    int height = style->Border().top;
+    auto const& padding = style->Padding(decoration::Side::TOP);
     bool redraw_decoration = true;
     compiz_utils::SimpleTexture::Ptr close_texture;
 
@@ -3873,8 +3870,8 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         RenderDecoration(context, scale);
 
         // Draw window title
-        int text_x = close_texture ? close_texture->width() : 0;
-        RenderTitle(context, text_x, 0.0, width - win::decoration::ITEMS_PADDING, height);
+        int text_x = padding.left + (close_texture ? close_texture->width() : 0);
+        RenderTitle(context, text_x, padding.top, width - padding.right, height);
         decoration_selected_tex_ = context;
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
       }
@@ -3890,8 +3887,8 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 
     if (close_texture)
     {
-      int x = geo.x + win::decoration::ITEMS_PADDING;
-      int y = geo.y + (height - close_texture->height()) / 2.0f;
+      int x = geo.x + padding.left;
+      int y = geo.y + padding.top + (height - close_texture->height()) / 2.0f;
 
       close_button_geo_.Set(x, y, close_texture->width(), close_texture->height());
       DrawTexture(close_texture->texture_list(), attrib, transform, mask, x, y);
