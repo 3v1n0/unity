@@ -20,6 +20,7 @@
 #ifndef UNITY_DECORATED_WINDOW
 #define UNITY_DECORATED_WINDOW
 
+#include "Introspectable.h"
 #include <memory>
 
 class CompRegion;
@@ -32,7 +33,7 @@ namespace unity
 {
 namespace decoration
 {
-class Window
+class Window : public debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Window> Ptr;
@@ -49,6 +50,11 @@ public:
   void UpdateFrameRegion(CompRegion&);
   void UpdateOutputExtents(compiz::window::extents::Extents&);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
+
+protected:
+  std::string GetName() const;
+  void AddProperties(debug::IntrospectionData&);
+  IntrospectableList GetIntrospectableChildren();
 
 private:
   Window(Window const&) = delete;

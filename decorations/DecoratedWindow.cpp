@@ -557,5 +557,42 @@ void Window::UpdateDecorationPositionDelayed()
   impl_->dirty_geo_ = true;
 }
 
+std::string Window::GetName() const
+{
+  return "DecoratedWindow";
+}
+
+void Window::AddProperties(debug::IntrospectionData& data)
+{
+  data.add(impl_->win_->borderRect())
+  .add("input_geo", impl_->win_->inputRect())
+  .add("content_geo", impl_->win_->region().boundingRect())
+  .add("title", title())
+  .add("active", impl_->active())
+  .add("xid", impl_->win_->id())
+  .add("fully_decorable", cu::IsWindowFullyDecorable(impl_->win_))
+  .add("shadow_decorable", cu::IsWindowShadowDecorable(impl_->win_))
+  .add("shadow_decorated", impl_->ShadowDecorated())
+  .add("fully_decorated", impl_->FullyDecorated())
+  .add("should_be_decorated", impl_->ShouldBeDecorated())
+  .add("framed", (impl_->frame_ != 0))
+  .add("frame_geo", impl_->frame_geo_)
+  .add("shadow_rect", impl_->last_shadow_rect_)
+  .add("maximized", (impl_->win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+  .add("v_maximized", (impl_->win_->state() & CompWindowStateMaximizedVertMask))
+  .add("h_maximized", (impl_->win_->state() & CompWindowStateMaximizedHorzMask))
+  .add("resizable", (impl_->win_->actions() & CompWindowActionResizeMask))
+  .add("movable", (impl_->win_->actions() & CompWindowActionMoveMask))
+  .add("closable", (impl_->win_->actions() & CompWindowActionCloseMask))
+  .add("minimizable", (impl_->win_->actions() & CompWindowActionMinimizeMask))
+  .add("maximizable", (impl_->win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask)));
+}
+
+debug::Introspectable::IntrospectableList Window::GetIntrospectableChildren()
+{
+  IntrospectableList children;
+  return children;
+}
+
 } // decoration namespace
 } // unity namespace

@@ -430,6 +430,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
       force_draw_countdown_ += local::FRAMES_TO_REDRAW_ON_RESUME;
     });
 
+    Introspectable::AddChild(deco_manager_.get());
     auto const& deco_style = decoration::Style::Get();
     auto deco_style_cb = sigc::hide(sigc::mem_fun(this, &UnityScreen::OnDecorationStyleChanged));
     deco_style->theme.changed.connect(deco_style_cb);

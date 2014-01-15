@@ -352,5 +352,31 @@ Window::Ptr Manager::GetWindowByXid(::Window xid)
   return impl_->GetWindowByXid(xid);
 }
 
+std::string Manager::GetName() const
+{
+  return "DecorationsManager";
+}
+
+void Manager::AddProperties(debug::IntrospectionData& data)
+{
+  data.add("shadow_offset", shadow_offset())
+  .add("active_shadow_color", active_shadow_color())
+  .add("active_shadow_radius", active_shadow_radius())
+  .add("inactive_shadow_color", inactive_shadow_color())
+  .add("inactive_shadow_radius", inactive_shadow_radius())
+  .add("active_window", impl_->active_window_);
+}
+
+debug::Introspectable::IntrospectableList Manager::GetIntrospectableChildren()
+{
+  IntrospectableList children;
+
+  for (auto const& win : impl_->windows_)
+    children.push_back(win.second.get());
+
+  return children;
+}
+
+
 } // decoration namespace
 } // unity namespace

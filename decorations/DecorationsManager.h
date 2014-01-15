@@ -30,7 +30,7 @@ namespace unity
 {
 namespace decoration
 {
-class Manager
+class Manager : public debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Manager> Ptr;
@@ -52,6 +52,11 @@ public:
   void UnHandleWindow(CompWindow*);
 
   Window::Ptr GetWindowByXid(::Window);
+
+protected:
+  std::string GetName() const;
+  void AddProperties(debug::IntrospectionData&);
+  IntrospectableList GetIntrospectableChildren();
 
 private:
   Manager(Manager const&) = delete;
