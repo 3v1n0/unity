@@ -36,6 +36,10 @@ using Point = Point2D<int>;
 using Point3 = Point3D<float>;
 }
 
+class CompRect;
+class CompPoint;
+class CompSize;
+
 namespace unity
 {
 namespace glib
@@ -74,7 +78,11 @@ public:
   IntrospectionData& add(std::string const& name, nux::Point3 const&);
   IntrospectionData& add(std::string const& name, nux::Size const&);
   IntrospectionData& add(std::string const& name, nux::Color const&);
+  IntrospectionData& add(std::string const& name, CompPoint const&);
+  IntrospectionData& add(std::string const& name, CompRect const&);
+  IntrospectionData& add(std::string const& name, CompSize const&);
   IntrospectionData& add(nux::Rect const&);
+  IntrospectionData& add(CompRect const&);
 
   GVariant* Get() const;
 
