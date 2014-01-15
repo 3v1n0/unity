@@ -32,6 +32,9 @@ class EdgeBorders : public BasicContainer
 public:
   EdgeBorders(CompWindow* win);
   void Relayout();
+
+protected:
+  std::string GetName() const { return "EdgeBorders"; }
 };
 
 } // decoration namespace

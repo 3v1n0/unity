@@ -37,6 +37,9 @@ public:
   void ButtonUpEvent(CompPoint const&, unsigned button);
   void MotionEvent(CompPoint const&);
 
+protected:
+  void AddProperties(debug::IntrospectionData&);
+
 private:
   Time last_click_time_;
   CompPoint last_click_pos_;

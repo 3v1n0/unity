@@ -34,7 +34,7 @@ public:
   {
     // The order of this enum is important to define the priority of each Edge
     // when parsing the input events (in case two areas overlap)
-    CENTER = 0,
+    GRAB = 0,
     TOP_LEFT,
     TOP_RIGHT,
     TOP,
@@ -52,6 +52,8 @@ public:
   void ButtonDownEvent(CompPoint const&, unsigned button);
 
 protected:
+  std::string GetName() const;
+
   CompWindow* win_;
   Type type_;
 };

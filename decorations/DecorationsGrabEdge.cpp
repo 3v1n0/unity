@@ -30,7 +30,7 @@ const int MOUSE_DOWN_TIMEOUT = 150;
 }
 
 GrabEdge::GrabEdge(CompWindow* win)
-  : Edge(win, Edge::Type::CENTER)
+  : Edge(win, Edge::Type::GRAB)
   , last_click_time_(0)
   , button_down_(-1)
 {}
@@ -90,6 +90,12 @@ void GrabEdge::MotionEvent(CompPoint const& p)
 void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button)
 {
   button_down_timer_.reset();
+}
+
+void GrabEdge::AddProperties(debug::IntrospectionData& data)
+{
+  Edge::AddProperties(data);
+  data.add("button_down", button_down_);
 }
 
 } // decoration namespace

@@ -48,7 +48,7 @@ unsigned TypeToDirection(Edge::Type type)
       return WmMoveResizeSizeBottomLeft;
     case Edge::Type::BOTTOM_RIGHT:
       return WmMoveResizeSizeBottomRight;
-    case Edge::Type::CENTER:
+    case Edge::Type::GRAB:
       return WmMoveResizeMove;
     default:
       return WmMoveResizeCancel;
@@ -61,7 +61,7 @@ Edge::Edge(CompWindow* win, Type t)
   : win_(win)
   , type_(t)
 {
-  unsigned mask = (t == Type::CENTER) ? CompWindowActionMoveMask : CompWindowActionResizeMask;
+  unsigned mask = (t == Type::GRAB) ? CompWindowActionMoveMask : CompWindowActionResizeMask;
   sensitive = (win_->actions() & mask);
   mouse_owner.changed.connect([this] (bool over) {
     if (over)
@@ -104,6 +104,33 @@ void Edge::ButtonDownEvent(CompPoint const& p, unsigned button)
   XSendEvent(dpy, screen->root(), False, mask, &ev);
 
   XSync(dpy, False);
+}
+
+std::string Edge::GetName() const
+{
+  switch (type_)
+  {
+    case Type::TOP:
+      return "TopEdge";
+    case Type::TOP_LEFT:
+      return "TopLeftEdge";
+    case Type::TOP_RIGHT:
+      return "TopRightEdge";
+    case Type::LEFT:
+      return "LeftEdge";
+    case Type::RIGHT:
+      return "RightEdge";
+    case Type::BOTTOM:
+      return "BottomEdge";
+    case Type::BOTTOM_LEFT:
+      return "BottomLeftEdge";
+    case Type::BOTTOM_RIGHT:
+      return "BottomRightEdge";
+    case Type::GRAB:
+      return "GrabEdge";
+    default:
+      return "Edge";
+  }
 }
 
 } // decoration namespace

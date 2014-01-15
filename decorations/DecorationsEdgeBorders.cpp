@@ -60,7 +60,7 @@ EdgeBorders::EdgeBorders(CompWindow* win)
   items_[unsigned(Edge::Type::BOTTOM_RIGHT)] = item;
 
   item = std::make_shared<GrabEdge>(win);
-  items_[unsigned(Edge::Type::CENTER)] = item;
+  items_[unsigned(Edge::Type::GRAB)] = item;
 
   Relayout();
 }
@@ -107,7 +107,7 @@ void EdgeBorders::Relayout()
   item->SetCoords(rect_.x2() - edges.right, rect_.y2() - edges.bottom);
   item->SetSize(edges.right, edges.bottom);
 
-  item = items_[unsigned(Edge::Type::CENTER)];
+  item = items_[unsigned(Edge::Type::GRAB)];
   item->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top);
   item->SetSize(rect_.width() - ib.left - ib.right, b.top);
 }
