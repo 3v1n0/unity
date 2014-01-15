@@ -42,6 +42,10 @@ public:
 
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
+protected:
+  std::string GetName() const { return "Title"; }
+  void AddProperties(debug::IntrospectionData&);
+
 private:
   void OnFontChanged(std::string const&);
   void OnTextChanged(std::string const& new_text);

@@ -107,5 +107,13 @@ void Title::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAtt
   TexturedItem::Draw(ctx, transformation, attrib, clip, mask);
 }
 
+void Title::AddProperties(debug::IntrospectionData& data)
+{
+  TexturedItem::AddProperties(data);
+  data.add("text", text())
+  .add("texture_size", texture_size_)
+  .add("real_size", real_size_);
+}
+
 } // decoration namespace
 } // unity namespace
