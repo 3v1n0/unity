@@ -191,6 +191,19 @@ void Item::RequestRelayout()
     parent->Relayout();
 }
 
+void Item::AddProperties(debug::IntrospectionData& data)
+{
+  data.add(Geometry())
+  .add("max_size", max_)
+  .add("min_size", min_)
+  .add("natural_size", nux::Size(GetNaturalWidth(), GetNaturalHeight()))
+  .add("visible", visible())
+  .add("focused", focused())
+  .add("sensitive", sensitive())
+  .add("mouse_owner", mouse_owner())
+  .add("is_container", IsContainer());
+}
+
 //
 
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
@@ -259,6 +272,22 @@ BasicContainer::BasicContainer()
 CompRect BasicContainer::ContentGeometry() const
 {
   return Geometry();
+}
+
+void BasicContainer::AddProperties(debug::IntrospectionData& data)
+{
+  Item::AddProperties(data);
+  data.add(ContentGeometry());
+}
+
+debug::Introspectable::IntrospectableList BasicContainer::GetIntrospectableChildren()
+{
+  IntrospectableList children;
+
+  for (auto const& item : items_)
+    children.push_back(item.get());
+
+  return children;
 }
 
 //
@@ -425,6 +454,16 @@ bool Layout::SetPadding(int& target, int new_value)
   Relayout();
 
   return true;
+}
+
+void Layout::AddProperties(debug::IntrospectionData& data)
+{
+  Item::AddProperties(data);
+  data.add("inner_padding", inner_padding())
+  .add("left_padding", left_padding())
+  .add("right_padding", right_padding())
+  .add("top_padding", top_padding())
+  .add("bottom_padding", bottom_padding());
 }
 
 } // decoration namespace

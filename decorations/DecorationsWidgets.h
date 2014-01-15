@@ -23,6 +23,7 @@
 #include <deque>
 #include <NuxCore/Size.h>
 #include <NuxCore/Property.h>
+#include "Introspectable.h"
 #include "CompizUtils.h"
 
 namespace unity
@@ -33,7 +34,7 @@ namespace cu = compiz_utils;
 
 class BasicContainer;
 
-class Item : public sigc::trackable
+class Item : public sigc::trackable, public debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Item> Ptr;
@@ -87,6 +88,9 @@ protected:
   virtual void ButtonDownEvent(CompPoint const&, unsigned button) {}
   virtual void ButtonUpEvent(CompPoint const&, unsigned button) {}
 
+  std::string GetName() const { return "Item"; }
+  void AddProperties(debug::IntrospectionData&);
+
 private:
   Item(Item const&) = delete;
   Item& operator=(Item const&) = delete;
@@ -121,6 +125,8 @@ public:
   int GetNaturalHeight() const;
 
 protected:
+  std::string GetName() const { return "TexturedItem"; }
+
   CompRect& InternalGeo();
   cu::SimpleTextureQuad texture_;
 };
@@ -140,6 +146,10 @@ protected:
   friend class Item;
   virtual void Relayout() = 0;
   bool IsContainer() const { return true; }
+
+  std::string GetName() const { return "BasicContainer"; }
+  void AddProperties(debug::IntrospectionData&);
+  IntrospectableList GetIntrospectableChildren();
 
   Item::List items_;
 };
@@ -166,6 +176,8 @@ public:
 
 protected:
   void Relayout();
+  std::string GetName() const { return "Layout"; }
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   bool SetPadding(int& target, int new_value);
