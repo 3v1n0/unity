@@ -33,6 +33,7 @@ const std::string PLUGIN_NAME = "unityshell";
 const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
 const cu::SimpleTexture::Ptr EMPTY_BUTTON;
+Display* dpy = nullptr;
 
 unsigned EdgeTypeToCursorShape(Edge::Type type)
 {
@@ -63,6 +64,7 @@ unsigned EdgeTypeToCursorShape(Edge::Type type)
 
 DataPool::DataPool()
 {
+  dpy = screen->dpy();
   SetupCursors();
   SetupButtonsTextures();
 
@@ -73,7 +75,7 @@ DataPool::DataPool()
 DataPool::~DataPool()
 {
   for (auto cursor : edge_cursors_)
-    XFreeCursor(screen->dpy(), cursor);
+    XFreeCursor(dpy, cursor);
 }
 
 DataPool::Ptr const& DataPool::Get()
@@ -85,7 +87,7 @@ DataPool::Ptr const& DataPool::Get()
 void DataPool::SetupCursors()
 {
   for (unsigned c = 0; c < edge_cursors_.size(); ++c)
-    edge_cursors_[c] = XCreateFontCursor(screen->dpy(), EdgeTypeToCursorShape(Edge::Type(c)));
+    edge_cursors_[c] = XCreateFontCursor(dpy, EdgeTypeToCursorShape(Edge::Type(c)));
 }
 
 Cursor DataPool::EdgeCursor(Edge::Type type) const
