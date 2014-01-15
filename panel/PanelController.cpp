@@ -239,7 +239,7 @@ nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel(Introspectable *iobj)
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   PanelView* view = new PanelView(panel_window, dbus_indicators_);
-  view->SetMaximumHeight(panel::Style::Instance().panel_height);
+  view->SetMaximumHeight(panel::Style::Instance().PanelHeight());
   view->SetOpacity(opacity_);
   view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
   view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,

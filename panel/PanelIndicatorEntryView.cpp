@@ -102,7 +102,7 @@ void PanelIndicatorEntryView::ShowMenu(int button)
   if (!wm.IsExpoActive() && !wm.IsScaleActive())
   {
     auto const& abs_geo = GetAbsoluteGeometry();
-    proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().panel_height, button);
+    proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().PanelHeight(), button);
   }
 }
 
@@ -422,7 +422,7 @@ void PanelIndicatorEntryView::Refresh()
 
   unsigned int width = 0;
   unsigned int icon_width = 0;
-  unsigned int height = panel::Style::Instance().panel_height;
+  unsigned int height = panel::Style::Instance().PanelHeight();
 
   // First lets figure out our size
   if (pixbuf && IsIconVisible())

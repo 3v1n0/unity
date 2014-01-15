@@ -79,7 +79,7 @@ public:
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
 
-  nux::Property<int> panel_height;
+  int PanelHeight(int monitor = 0) const;
 
   sigc::signal<void> changed;
 
@@ -96,6 +96,8 @@ private:
   glib::Signal<void, GtkSettings*, GParamSpec*> _font_changed_signal;
   glib::Signal<void, GtkSettings*, GParamSpec*> _dpi_changed_signal;
   glib::Signal<void, GSettings*, gchar*> _settings_changed_signal;
+
+  std::vector<int> panel_heights_;
 };
 
 }

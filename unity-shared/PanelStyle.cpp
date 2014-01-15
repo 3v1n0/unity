@@ -37,6 +37,8 @@
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/UnitySettings.h"
 
+#include "MultiMonitor.h"
+
 namespace unity
 {
 namespace panel
@@ -49,6 +51,7 @@ Style* style_instance = nullptr;
 const std::string SETTINGS_NAME("org.gnome.desktop.wm.preferences");
 const std::string PANEL_TITLE_FONT_KEY("titlebar-font");
 const std::string HIGH_CONTRAST_THEME_PREFIX("HighContrast");
+const int BASE_PANEL_HEIGHT = 24;
 
 nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {
@@ -61,9 +64,9 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 }
 
 Style::Style()
-  : panel_height(24)
-  , _style_context(gtk_style_context_new())
+  : _style_context(gtk_style_context_new())
   , _gsettings(g_settings_new(SETTINGS_NAME.c_str()))
+  , panel_heights_(monitors::MAX, BASE_PANEL_HEIGHT)
 {
   if (style_instance)
   {
@@ -73,15 +76,6 @@ Style::Style()
   {
     style_instance = this;
   }
-
-  if (Settings::Instance().form_factor() == FormFactor::TV)
-    panel_height = 0;
-  
-  Settings::Instance().form_factor.changed.connect([this](FormFactor form_factor)
-  {
-    if (form_factor == FormFactor::TV)
-      panel_height = 0;
-  });
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
   gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
@@ -134,6 +128,20 @@ Style& Style::Instance()
   return *style_instance;
 }
 
+int Style::PanelHeight(int monitor) const
+{
+  if (Settings::Instance().form_factor() == FormFactor::TV)
+    return 0;
+
+  if (monitor < 0 || monitor >= (int)monitors::MAX)
+  {
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor;
+    return 0;
+  }
+
+  return panel_heights_[monitor];
+}
+
 void Style::Refresh()
 {
   GdkRGBA rgba_text_color;
@@ -177,7 +185,7 @@ BaseTexturePtr Style::GetBackground()
     return _bg_texture;
 
   int width = 1;
-  int height = panel_height();
+  int height = panel_heights_[0];//panel_height();
 
   nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
 
@@ -358,13 +366,13 @@ glib::Object<GdkPixbuf> Style::GetHomeButton()
 
   pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
                                     "start-here",
-                                    panel_height,
+                                    panel_heights_[0],
                                     (GtkIconLookupFlags)0,
                                     NULL);
   if (!pixbuf)
     pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
                                       "distributor-logo",
-                                      panel_height,
+                                      panel_heights_[0],
                                       (GtkIconLookupFlags)0,
                                       NULL);
   return pixbuf;

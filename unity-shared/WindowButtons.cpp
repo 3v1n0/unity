@@ -133,7 +133,7 @@ void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void WindowButton::UpdateSize()
 {
-  int panel_height = panel::Style::Instance().panel_height;
+  int panel_height = panel::Style::Instance().PanelHeight();
   nux::BaseTexture* tex;
   tex = (overlay_mode()) ? normal_dash_tex_.GetPointer() : normal_tex_.GetPointer();
   int width = 0;

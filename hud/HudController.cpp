@@ -235,9 +235,9 @@ nux::Geometry Controller::GetIdealWindowGeometry()
   // outside of our window
   panel::Style &panel_style = panel::Style::Instance();
   nux::Geometry geo(monitor_geo.x,
-                    monitor_geo.y + panel_style.panel_height,
+                    monitor_geo.y + panel_style.PanelHeight(),
                     monitor_geo.width,
-                    monitor_geo.height - panel_style.panel_height);
+                    monitor_geo.height - panel_style.PanelHeight());
 
   if (IsLockedToLauncher(ideal_monitor))
   {
@@ -261,7 +261,7 @@ void Controller::Relayout(bool check_monitor)
   view_->QueueDraw();
   window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
-  view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
+  view_->SetMonitorOffset(launcher_width, panel_style.PanelHeight());
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,

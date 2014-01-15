@@ -464,8 +464,8 @@ TEST_F(TestLauncherController, MultimonitorGeometries)
     auto const& monitor_geo = uscreen.GetMonitorGeometry(i);
     auto const& launcher_geo = lc.launchers()[i]->GetAbsoluteGeometry();
     ASSERT_EQ(launcher_geo.x, monitor_geo.x);
-    ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.panel_height);
-    ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.panel_height);
+    ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.PanelHeight(i));
+    ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.PanelHeight(i));
   }
 }
 
@@ -476,15 +476,15 @@ TEST_F(TestLauncherController, MonitorResizesLauncher)
   uscreen.SetMonitors({monitor_geo});
   nux::Geometry launcher_geo = lc.launcher().GetAbsoluteGeometry();
   ASSERT_EQ(launcher_geo.x, monitor_geo.x);
-  ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.panel_height);
-  ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.panel_height);
+  ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.PanelHeight());
+  ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.PanelHeight());
 
   uscreen.Reset();
   monitor_geo = uscreen.GetMonitorGeometry(0);
   launcher_geo = lc.launcher().GetAbsoluteGeometry();
   ASSERT_EQ(launcher_geo.x, monitor_geo.x);
-  ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.panel_height);
-  ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.panel_height);
+  ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.PanelHeight());
+  ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.PanelHeight());
 }
 
 TEST_F(TestLauncherController, IconCentersResetsOnMonitorsUpdated)
