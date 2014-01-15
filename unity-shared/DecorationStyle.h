@@ -99,6 +99,7 @@ public:
 
   decoration::Border const& Border() const;
   decoration::Border const& InputBorder() const;
+  decoration::Border const& CornerRadius() const;
   decoration::Border Padding(Side, WidgetState ws = WidgetState::NORMAL) const;
 
   Alignment TitleAlignment() const;

@@ -106,6 +106,11 @@ struct Style::Impl
     b.reset(GetProperty<GtkBorder*>("input-extents"), gtk_border_free);
     input_edges_ = BorderFromGtkBorder(b.get(), DEFAULT_INPUT_EDGES);
 
+    radius_.top = GetBorderProperty<int>(Side::TOP, WidgetState::NORMAL, "border-radius");
+    radius_.left = GetBorderProperty<int>(Side::LEFT, WidgetState::NORMAL, "border-radius");
+    radius_.right = GetBorderProperty<int>(Side::RIGHT, WidgetState::NORMAL, "border-radius");
+    radius_.bottom = GetBorderProperty<int>(Side::BOTTOM, WidgetState::NORMAL, "border-radius");
+
     title_alignment_ = std::min(1.0f, std::max(0.0f, GetProperty<gfloat>("title-alignment")));
     title_indent_ = std::max<unsigned>(0, GetProperty<guint>("title-indent"));
     title_fade_ = std::max<unsigned>(0, GetProperty<guint>("title-fade"));
@@ -404,6 +409,7 @@ struct Style::Impl
   glib::Object<PangoContext> pango_context_;
   decoration::Border border_;
   decoration::Border input_edges_;
+  decoration::Border radius_;
   float title_alignment_;
   unsigned title_indent_;
   unsigned title_fade_;
@@ -474,6 +480,11 @@ Border const& Style::Border() const
 Border const& Style::InputBorder() const
 {
   return impl_->input_edges_;
+}
+
+Border const& Style::CornerRadius() const
+{
+  return impl_->radius_;
 }
 
 Border Style::Padding(Side s, WidgetState ws) const
