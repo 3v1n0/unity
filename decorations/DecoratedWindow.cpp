@@ -590,8 +590,7 @@ void Window::AddProperties(debug::IntrospectionData& data)
 
 debug::Introspectable::IntrospectableList Window::GetIntrospectableChildren()
 {
-  IntrospectableList children;
-  return children;
+  return IntrospectableList({impl_->top_layout_.get(), impl_->edge_borders_.get()});
 }
 
 } // decoration namespace
