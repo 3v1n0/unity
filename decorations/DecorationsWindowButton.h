@@ -40,6 +40,9 @@ protected:
   void ButtonUpEvent(CompPoint const&, unsigned button);
   void MotionEvent(CompPoint const&);
 
+  std::string GetName() const;
+  void AddProperties(debug::IntrospectionData&);
+
 private:
   void UpdateTexture();
 

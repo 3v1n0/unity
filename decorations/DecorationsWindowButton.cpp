@@ -162,5 +162,55 @@ void WindowButton::MotionEvent(CompPoint const& p)
   }
 }
 
+std::string WindowButton::GetName() const
+{
+  switch (type_)
+  {
+    case WindowButtonType::CLOSE:
+      return "CloseWindowButton";
+    case WindowButtonType::MINIMIZE:
+      return "MinimizeWindowButton";
+    case WindowButtonType::MAXIMIZE:
+      return "MaximizeWindowButton";
+    case WindowButtonType::UNMAXIMIZE:
+      return "UnmaximizeWindowButton";
+    default:
+      return "WindowButton";
+  }
+}
+
+void WindowButton::AddProperties(debug::IntrospectionData& data)
+{
+  TexturedItem::AddProperties(data);
+  data.add("pressed", pressed_);
+
+  switch(GetCurrentState())
+  {
+    case WidgetState::NORMAL:
+      data.add("state", "normal");
+      break;
+    case WidgetState::PRELIGHT:
+      data.add("state", "prelight");
+      break;
+    case WidgetState::PRESSED:
+      data.add("state", "pressed");
+      break;
+    case WidgetState::DISABLED:
+      data.add("state", "disabled");
+      break;
+    case WidgetState::BACKDROP:
+      data.add("state", "backdrop");
+      break;
+    case WidgetState::BACKDROP_PRELIGHT:
+      data.add("state", "backdrop_prelight");
+      break;
+    case WidgetState::BACKDROP_PRESSED:
+      data.add("state", "backdrop_pressed");
+      break;
+    default:
+      data.add("state", "unknown");
+  }
+}
+
 } // decoration namespace
 } // unity namespace
