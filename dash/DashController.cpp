@@ -250,7 +250,7 @@ void Controller::Relayout(bool check_monitor)
   view_->Relayout();
   window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
-  view_->SetMonitorOffset(launcher_width, panel_style.PanelHeight());
+  view_->SetMonitorOffset(launcher_width, panel_style.PanelHeight(monitor_));
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,

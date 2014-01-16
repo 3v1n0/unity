@@ -757,8 +757,8 @@ void PanelView::Resize(nux::Point const& offset, int width)
 {
   unity::panel::Style &panel_style = panel::Style::Instance();
   SetMaximumWidth(width);
-  SetGeometry(nux::Geometry(0, 0, width, panel_style.PanelHeight()));
-  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.PanelHeight()));
+  SetGeometry(nux::Geometry(0, 0, width, panel_style.PanelHeight(monitor_)));
+  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.PanelHeight(monitor_)));
 }
 
 int PanelView::GetMonitor() const

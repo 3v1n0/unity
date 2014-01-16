@@ -81,6 +81,8 @@ public:
 
   int PanelHeight(int monitor = 0) const;
 
+  // int height, int monitor
+  sigc::signal<void, int, int> panel_height_changed;
   sigc::signal<void> changed;
 
 private:

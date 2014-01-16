@@ -210,6 +210,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
     }
 
     panels_[i]->SetMonitor(i);
+    panels_[i]->SetMaximumHeight(panel::Style::Instance().PanelHeight(i));
     panels_[i]->geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdatePanelGeometries(); });
     tray_xids_[i] = panels_[i]->GetTrayXid();
 
@@ -239,7 +240,6 @@ nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel(Introspectable *iobj)
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   PanelView* view = new PanelView(panel_window, dbus_indicators_);
-  view->SetMaximumHeight(panel::Style::Instance().PanelHeight());
   view->SetOpacity(opacity_);
   view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
   view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
