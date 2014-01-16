@@ -102,6 +102,9 @@ public:
   decoration::Border const& CornerRadius() const;
   decoration::Border Padding(Side, WidgetState ws = WidgetState::NORMAL) const;
 
+  unsigned GlowSize() const;
+  nux::Color const& GlowColor() const;
+
   Alignment TitleAlignment() const;
   float TitleAlignmentValue() const;
   int TitleIndent() const;

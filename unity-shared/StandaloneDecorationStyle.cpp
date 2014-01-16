@@ -45,6 +45,11 @@ std::ostream& operator<<(std::ostream &os, Border const& b)
   return os << "top " << b.top << ", left " << b.left << ", right " << b.right << ", bottom " << b.bottom;
 }
 
+std::ostream& operator<<(std::ostream &os, nux::Color const& c)
+{
+  return os << "rgba (" << c.red * 255 << ", " << c.green * 255 << ", " << c.blue * 255 << ", " << c.alpha  * 255 << ")";
+}
+
 int main(int argc, char* argv[])
 {
   gtk_init(&argc, &argv);
@@ -63,6 +68,10 @@ int main(int argc, char* argv[])
   std::cout << "Input border left: " << style->InputBorder().left << std::endl;
   std::cout << "Input border right: " << style->InputBorder().right << std::endl;
   std::cout << "Input border bottom: " << style->InputBorder().bottom << std::endl;
+  std::cout << "---" << std::endl;
+
+  std::cout << "Glow size: " << style->GlowSize() << std::endl;
+  std::cout << "Glow color: " << style->GlowColor() << std::endl;
   std::cout << "---" << std::endl;
 
   std::cout << "Title alignment: " << style->TitleAlignment() << std::endl;

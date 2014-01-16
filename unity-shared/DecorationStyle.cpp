@@ -38,6 +38,13 @@ const std::array<std::string, 4> BORDER_CLASSES = {"top", "left", "right", "bott
 const Border DEFAULT_BORDER = {28, 1, 1, 1};
 const Border DEFAULT_INPUT_EDGES = {10, 10, 10, 10};
 
+const float DEFAULT_TITLE_ALIGNMENT = 0.0f;
+const int DEFAULT_TITLE_INDENT = 10;
+const int DEFAULT_TITLE_FADING_PIXELS = 35;
+
+const int DEFAULT_GLOW_SIZE = 5;
+const nux::Color DEFAULT_GLOW_COLOR(221, 72, 20);
+
 const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
@@ -68,22 +75,41 @@ static void unity_decoration_class_init(UnityDecorationClass* klass)
   param = g_param_spec_boxed("input-extents", "Input Border extents", "", GTK_TYPE_BORDER, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 
-  param = g_param_spec_float("title-alignment", "Title Alignment", "", 0.0, 1.0, 0.0, G_PARAM_READABLE);
+  param = g_param_spec_float("title-alignment", "Title Alignment", "", 0.0, 1.0, DEFAULT_TITLE_ALIGNMENT, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 
-  param = g_param_spec_uint("title-indent", "Title Indent", "", 0, G_MAXUINT, 10, G_PARAM_READABLE);
+  param = g_param_spec_uint("title-indent", "Title Indent", "", 0, G_MAXUINT, DEFAULT_TITLE_INDENT, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 
-  param = g_param_spec_uint("title-fade", "Title Fading Pixels", "", 0, G_MAXUINT, 35, G_PARAM_READABLE);
+  param = g_param_spec_uint("title-fade", "Title Fading Pixels", "", 0, G_MAXUINT, DEFAULT_TITLE_FADING_PIXELS, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_uint("glow-size", "Selected Window Glow Size", "", 0, G_MAXUINT, DEFAULT_GLOW_SIZE, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_boxed("glow-color", "Selected Window Glow Color", "", GDK_TYPE_COLOR, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 }
 
-Border BorderFromGtkBorder(GtkBorder* b, Border fallback = Border())
+Border BorderFromGtkBorder(GtkBorder* b, Border const& fallback = Border())
 {
   if (!b)
     return fallback;
 
   return Border(b->top, b->left, b->right, b->bottom);
+}
+
+nux::Color ColorFromGdkColor(GdkColor* c, nux::Color const& fallback = nux::Color())
+{
+  if (!c)
+    return fallback;
+
+  return nux::Color(c->red/65535.0f, c->green/65535.0f, c->blue/65535.0f);
+}
+
+void gdk_color_free0(GdkColor* c)
+{
+  if (c) gdk_color_free(c);
 }
 }
 
@@ -163,10 +189,14 @@ struct Style::Impl
     b.reset(GetProperty<GtkBorder*>("input-extents"), gtk_border_free);
     input_edges_ = BorderFromGtkBorder(b.get(), DEFAULT_INPUT_EDGES);
 
-    radius_.top = GetBorderProperty<int>(Side::TOP, WidgetState::NORMAL, "border-radius");
-    radius_.left = GetBorderProperty<int>(Side::LEFT, WidgetState::NORMAL, "border-radius");
-    radius_.right = GetBorderProperty<int>(Side::RIGHT, WidgetState::NORMAL, "border-radius");
-    radius_.bottom = GetBorderProperty<int>(Side::BOTTOM, WidgetState::NORMAL, "border-radius");
+    std::shared_ptr<GdkColor> c(GetProperty<GdkColor*>("glow-color"), gdk_color_free0);
+    glow_color_ = ColorFromGdkColor(c.get(), DEFAULT_GLOW_COLOR);
+    glow_size_ = std::max<unsigned>(0, GetProperty<guint>("glow-size"));
+
+    radius_.top = GetBorderProperty<gint>(Side::TOP, WidgetState::NORMAL, "border-radius");
+    radius_.left = GetBorderProperty<gint>(Side::LEFT, WidgetState::NORMAL, "border-radius");
+    radius_.right = GetBorderProperty<gint>(Side::RIGHT, WidgetState::NORMAL, "border-radius");
+    radius_.bottom = GetBorderProperty<gint>(Side::BOTTOM, WidgetState::NORMAL, "border-radius");
 
     title_alignment_ = std::min(1.0f, std::max(0.0f, GetProperty<gfloat>("title-alignment")));
     title_indent_ = std::max<unsigned>(0, GetProperty<guint>("title-indent"));
@@ -444,9 +474,11 @@ struct Style::Impl
   decoration::Border border_;
   decoration::Border input_edges_;
   decoration::Border radius_;
+  nux::Color glow_color_;
   float title_alignment_;
   unsigned title_indent_;
   unsigned title_fade_;
+  unsigned glow_size_;
 };
 
 Style::Ptr const& Style::Get()
@@ -523,10 +555,20 @@ Border const& Style::CornerRadius() const
 
 Border Style::Padding(Side s, WidgetState ws) const
 {
-  return decoration::Border(impl_->GetBorderProperty<int>(s, ws, "padding-top"),
-                            impl_->GetBorderProperty<int>(s, ws, "padding-left"),
-                            impl_->GetBorderProperty<int>(s, ws, "padding-right"),
-                            impl_->GetBorderProperty<int>(s, ws, "padding-bottom"));
+  return decoration::Border(impl_->GetBorderProperty<gint>(s, ws, "padding-top"),
+                            impl_->GetBorderProperty<gint>(s, ws, "padding-left"),
+                            impl_->GetBorderProperty<gint>(s, ws, "padding-right"),
+                            impl_->GetBorderProperty<gint>(s, ws, "padding-bottom"));
+}
+
+unsigned Style::GlowSize() const
+{
+  return impl_->glow_size_;
+}
+
+nux::Color const& Style::GlowColor() const
+{
+  return impl_->glow_color_;
 }
 
 int Style::DoubleClickMaxDistance() const
