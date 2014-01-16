@@ -42,7 +42,8 @@ StandaloneWindow::StandaloneWindow(Window xid)
   , active(false)
   , mapped(true)
   , visible(true)
-  , maximized(false)
+  , v_maximized(false)
+  , h_maximized(false)
   , minimized(false)
   , decorated(true)
   , has_decorations(true)
@@ -66,6 +67,20 @@ StandaloneWindow::StandaloneWindow(Window xid)
 
     return false;
   });
+
+  maximized.SetGetterFunction([this] { return v_maximized && h_maximized; });
+  maximized.SetSetterFunction([this] (bool value) {
+    if (maximized() == value)
+      return false;
+ 
+    v_maximized = value;
+    h_maximized = value;
+    decorated = !value;
+    return true;
+  });
+ 
+  v_maximized.changed.connect([this] (bool value) { maximized.changed.emit(maximized()); });
+  h_maximized.changed.connect([this] (bool value) { maximized.changed.emit(maximized()); });
 }
 
 WindowManagerPtr create_window_manager()
@@ -127,6 +142,24 @@ bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
   if (window)
     return window->maximized;
 
+  return false;
+}
+
+bool StandaloneWindowManager::IsWindowVerticallyMaximized(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->v_maximized;
+ 
+  return false;
+}
+ 
+bool StandaloneWindowManager::IsWindowHorizontallyMaximized(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->h_maximized;
+ 
   return false;
 }
 
