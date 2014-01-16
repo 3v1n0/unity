@@ -264,7 +264,6 @@ private:
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
 
-  void OnSwitcherStart(GVariant* data);
   void OnSwitcherEnd(GVariant* data);
 
   void OnInitiateSpread();
@@ -521,15 +520,12 @@ private:
 
   void BuildDecorationTexture();
   void CleanupCachedTextures();
-  static void SetupSharedTextures();
-  static void CleanupSharedTextures();
 
 public:
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
 
 private:
   std::unique_ptr <ShowdesktopHandler> mShowdesktopHandler;
-  static GLTexture::List glow_texture_;
   PixmapTexturePtr decoration_tex_;
   PixmapTexturePtr decoration_selected_tex_;
   std::string decoration_title_;

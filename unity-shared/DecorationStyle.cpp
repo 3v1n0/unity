@@ -42,7 +42,7 @@ const float DEFAULT_TITLE_ALIGNMENT = 0.0f;
 const int DEFAULT_TITLE_INDENT = 10;
 const int DEFAULT_TITLE_FADING_PIXELS = 35;
 
-const int DEFAULT_GLOW_SIZE = 5;
+const int DEFAULT_GLOW_SIZE = 10;
 const nux::Color DEFAULT_GLOW_COLOR(221, 72, 20);
 
 const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };

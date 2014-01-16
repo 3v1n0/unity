@@ -20,6 +20,7 @@
 #include <NuxCore/Logger.h>
 #include <X11/cursorfont.h>
 #include <sigc++/adaptors/hide.h>
+#include "glow_texture.h"
 #include "DecorationsDataPool.h"
 
 namespace unity
@@ -66,9 +67,9 @@ DataPool::DataPool()
 {
   dpy = screen->dpy();
   SetupCursors();
-  SetupButtonsTextures();
+  SetupTextures();
 
-  auto cb = sigc::hide(sigc::mem_fun(this, &DataPool::SetupButtonsTextures));
+  auto cb = sigc::hide(sigc::mem_fun(this, &DataPool::SetupTextures));
   Style::Get()->theme.changed.connect(cb);
 }
 
@@ -95,7 +96,7 @@ Cursor DataPool::EdgeCursor(Edge::Type type) const
   return edge_cursors_[unsigned(type)];
 }
 
-void DataPool::SetupButtonsTextures()
+void DataPool::SetupTextures()
 {
   CompSize size;
   CompString plugin_name(PLUGIN_NAME);
@@ -125,6 +126,14 @@ void DataPool::SetupButtonsTextures()
       }
     }
   }
+
+  CompSize glow_size(texture::GLOW_SIZE, texture::GLOW_SIZE);
+  glow_texture_ = std::make_shared<cu::SimpleTexture>(GLTexture::imageDataToTexture(texture::GLOW, glow_size, GL_RGBA, GL_UNSIGNED_BYTE));
+}
+
+cu::SimpleTexture::Ptr const& DataPool::GlowTexture() const
+{
+  return glow_texture_;
 }
 
 cu::SimpleTexture::Ptr const& DataPool::ButtonTexture(WindowButtonType wbt, WidgetState ws) const

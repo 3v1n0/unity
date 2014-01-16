@@ -42,7 +42,6 @@
 #include "StartupNotifyService.h"
 #include "Timer.h"
 #include "XKeyboardUtil.h"
-#include "glow_texture.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
@@ -380,9 +379,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_SWITCHER_START,
-                   sigc::mem_fun(this, &UnityScreen::OnSwitcherStart));
-
      ubus_manager_.RegisterInterest(UBUS_SWITCHER_END,
                    sigc::mem_fun(this, &UnityScreen::OnSwitcherEnd));
 
@@ -509,8 +505,6 @@ void UnityScreen::initAltTabNextWindow()
 
 void UnityScreen::OnInitiateSpread()
 {
-  UnityWindow::SetupSharedTextures();
-
   for (auto const& swin : ScaleScreen::get(screen)->getWindows())
     UnityWindow::get(swin->window)->OnInitiateSpread();
 }
@@ -519,8 +513,6 @@ void UnityScreen::OnTerminateSpread()
 {
   for (auto const& swin : ScaleScreen::get(screen)->getWindows())
     UnityWindow::get(swin->window)->OnTerminateSpread();
-
-  UnityWindow::CleanupSharedTextures();
 }
 
 void UnityScreen::DamagePanelShadow()
@@ -2127,7 +2119,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
       show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
   }
 
-  UnityWindow::SetupSharedTextures();
   SetUpAndShowSwitcher(show_mode);
 
   return true;
@@ -2329,16 +2320,8 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default().RestoreInputFocus();
 }
 
-void UnityScreen::OnSwitcherStart(GVariant* data)
-{
-  if (switcher_controller_->Visible())
-    UnityWindow::SetupSharedTextures();
-}
-
 void UnityScreen::OnSwitcherEnd(GVariant* data)
 {
-  UnityWindow::CleanupSharedTextures();
-
   for (UnityWindow* uwin : fake_decorated_windows_)
   {
     uwin->close_icon_state_ = decoration::WidgetState::NORMAL;
@@ -3601,7 +3584,6 @@ void UnityScreen::InitGesturesSupport()
 }
 
 /* Window init */
-GLTexture::List UnityWindow::glow_texture_;
 
 namespace
 {
@@ -3793,20 +3775,6 @@ void UnityWindow::BuildDecorationTexture()
   }
 }
 
-void UnityWindow::SetupSharedTextures()
-{
-  if (glow_texture_.empty())
-  {
-    CompSize size(texture::GLOW_SIZE, texture::GLOW_SIZE);
-    glow_texture_ = GLTexture::imageDataToTexture(texture::GLOW, size, GL_RGBA, GL_UNSIGNED_BYTE);
-  }
-}
-
-void UnityWindow::CleanupSharedTextures()
-{
-  glow_texture_.clear();
-}
-
 void UnityWindow::CleanupCachedTextures()
 {
   decoration_tex_.reset();
@@ -3823,7 +3791,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     BuildDecorationTexture();
 
     if (decoration_tex_)
-      DrawTexture(decoration_tex_->texture_list(), attrib, transform, mask, geo.x, geo.y, scale);
+      DrawTexture(*decoration_tex_, attrib, transform, mask, geo.x, geo.y, scale);
 
     close_button_geo_.Set(0, 0, 0, 0);
   }
@@ -3873,7 +3841,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     }
 
     if (decoration_selected_tex_)
-      DrawTexture(decoration_selected_tex_->texture_list(), attrib, transform, mask, geo.x, geo.y);
+      DrawTexture(*decoration_selected_tex_, attrib, transform, mask, geo.x, geo.y);
 
     if (close_texture)
     {
@@ -3881,7 +3849,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
       int y = geo.y + padding.top + (height - close_texture->height()) / 2.0f;
 
       close_button_geo_.Set(x, y, close_texture->width(), close_texture->height());
-      DrawTexture(close_texture->texture_list(), attrib, transform, mask, x, y);
+      DrawTexture(*close_texture, attrib, transform, mask, x, y);
     }
     else
     {
@@ -3961,10 +3929,12 @@ void UnityWindow::OnTerminateSpread()
 
 void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix, GLWindowPaintAttrib const& attrib, unsigned mask)
 {
-  auto const& style = decoration::Style::Get();
+  using namespace decoration;
+  auto const& style = Style::Get();
   unsigned glow_size = style->GlowSize();
+  auto const& glow_texture = DataPool::Get()->GlowTexture();
 
-  if (!glow_size)
+  if (!glow_size || !glow_texture)
     return;
 
   auto const& radius = style->CornerRadius();
@@ -3974,13 +3944,13 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
   {
     // We paint the glow below the window edges to correctly
     // render the rounded corners
-    glow_size += decoration_radius;
     int inside_glow = decoration_radius / 4;
+    glow_size += inside_glow;
     glow_geo.Expand(-inside_glow, -inside_glow);
   }
 
-  glow::Quads const& quads = computeGlowQuads(glow_geo, glow_texture_, glow_size);
-  paintGlow(matrix, attrib, quads, glow_texture_, style->GlowColor(), mask);
+  glow::Quads const& quads = computeGlowQuads(glow_geo, *glow_texture, glow_size);
+  paintGlow(matrix, attrib, quads, *glow_texture, style->GlowColor(), mask);
 }
 
 void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float parent_alpha, float scale_ratio, unsigned deco_height, bool selected)

@@ -22,8 +22,8 @@
 
 #include <Nux/Nux.h>
 #include "unityshell.h"
-#include "glow_texture.h"
 #include "unityshell_glow.h"
+#include "decorations/glow_texture.h"
 
 namespace unity
 {
