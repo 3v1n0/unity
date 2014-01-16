@@ -889,8 +889,8 @@ void UnityScreen::DrawPanelUnderDash()
 
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
-  int panel_height = panel_style_.PanelHeight();
-  auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
+  int panel_height = panel_style_.PanelHeight(overlay_monitor_);
+  auto const& texture = panel_style_.GetBackground(overlay_monitor_)->GetDeviceTexture();
   graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
 }
 
@@ -2843,8 +2843,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
             !(window->type() & CompWindowTypeFullscreenMask))
         {
           auto const& output = uScreen->screen->currentOutputDev();
+          int monitor = window->outputDevice();
 
-          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.PanelHeight())
+          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.PanelHeight(monitor))
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
           }

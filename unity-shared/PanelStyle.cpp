@@ -179,13 +179,13 @@ GtkStyleContext* Style::GetStyleContext()
   return _style_context;
 }
 
-BaseTexturePtr Style::GetBackground()
+BaseTexturePtr Style::GetBackground(int monitor)
 {
   if (_bg_texture)
     return _bg_texture;
 
   int width = 1;
-  int height = panel_heights_[0];//panel_height();
+  int height = PanelHeight(monitor);
 
   nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
 
@@ -358,24 +358,6 @@ BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type,
   cairo_stroke(cr);
 
   return texture_ptr_from_cairo_graphics(cairo_graphics);
-}
-
-glib::Object<GdkPixbuf> Style::GetHomeButton()
-{
-  glib::Object<GdkPixbuf> pixbuf;
-
-  pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
-                                    "start-here",
-                                    panel_heights_[0],
-                                    (GtkIconLookupFlags)0,
-                                    NULL);
-  if (!pixbuf)
-    pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
-                                      "distributor-logo",
-                                      panel_heights_[0],
-                                      (GtkIconLookupFlags)0,
-                                      NULL);
-  return pixbuf;
 }
 
 std::string Style::GetFontDescription(PanelItem item)
