@@ -140,16 +140,6 @@ const int FRAMES_TO_REDRAW_ON_RESUME = 10;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 } // namespace local
 
-namespace win
-{
-namespace decoration
-{
-const unsigned RADIUS = 8;
-const unsigned GLOW = 5;
-const nux::Color GLOW_COLOR(221, 72, 20);
-} // decoration namespace
-} // win namespace
-
 } // anon namespace
 
 UnityScreen::UnityScreen(CompScreen* screen)
@@ -3971,22 +3961,26 @@ void UnityWindow::OnTerminateSpread()
 
 void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix, GLWindowPaintAttrib const& attrib, unsigned mask)
 {
-  unsigned glow_size = win::decoration::GLOW;
+  auto const& style = decoration::Style::Get();
+  unsigned glow_size = style->GlowSize();
 
   if (!glow_size)
     return;
 
-  if (win::decoration::RADIUS > 0)
+  auto const& radius = style->CornerRadius();
+  int decoration_radius = std::max({radius.top, radius.left, radius.right, radius.bottom});
+
+  if (decoration_radius > 0)
   {
     // We paint the glow below the window edges to correctly
     // render the rounded corners
-    glow_size += win::decoration::RADIUS;
-    int inside_glow = win::decoration::RADIUS / 4;
+    glow_size += decoration_radius;
+    int inside_glow = decoration_radius / 4;
     glow_geo.Expand(-inside_glow, -inside_glow);
   }
 
   glow::Quads const& quads = computeGlowQuads(glow_geo, glow_texture_, glow_size);
-  paintGlow(matrix, attrib, quads, glow_texture_, win::decoration::GLOW_COLOR, mask);
+  paintGlow(matrix, attrib, quads, glow_texture_, style->GlowColor(), mask);
 }
 
 void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float parent_alpha, float scale_ratio, unsigned deco_height, bool selected)
