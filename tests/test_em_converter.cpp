@@ -74,6 +74,15 @@ TEST_F(TestEMConverter, TestPixelToEM)
   EXPECT_NEAR(pixel_size_em, 1.38, 0.01);
 }
 
+TEST_F(TestEMConverter, TestPixelToBaseEM)
+{
+  double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);
+  em_converter.SetDPI(200.0);
+  double base_pixel_size_em = em_converter.PixelsToBaseEM(PIXEL_SIZE);
+
+  EXPECT_FLOAT_EQ(pixel_size_em, base_pixel_size_em);
+}
+
 TEST_F(TestEMConverter, TestSetDPIEMToPixels)
 {
   double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);

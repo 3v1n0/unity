@@ -36,11 +36,15 @@ public:
 
   int    EMToPixels(double em) const;
   double PixelsToEM(int pixels) const;
+  double PixelsToBaseEM(int pixels) const;
 
 private:
   void UpdatePixelsPerEM();
+  void UpdateBasePixelsPerEM();
 
   double pixels_per_em_;
+  double base_pixels_per_em_;
+
   double dpi_;
   int font_size_;
 };

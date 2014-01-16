@@ -43,6 +43,7 @@
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/TimeUtil.h"
+#include "unity-shared/PanelStyle.h"
 
 namespace unity
 {
@@ -165,6 +166,19 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
     if (selected)
     {
       ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED, glib::Variant(selected->tooltip_text()));
+    }
+  });
+
+  panel::Style::Instance().panel_height_changed.connect([this, uscreen] (int height)
+  {
+    for (auto const& launcher_ptr : launchers)
+    {
+      if (launcher_ptr)
+      {
+        nux::Geometry const& parent_geo = launcher_ptr->GetParent()->GetGeometry();
+        int diff = height - parent_geo.y;
+        launcher_ptr->Resize(nux::Point(parent_geo.x, parent_geo.y + diff), parent_geo.height - diff);
+      }
     }
   });
 

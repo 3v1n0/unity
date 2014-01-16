@@ -67,6 +67,7 @@ Style::Style()
   : _style_context(gtk_style_context_new())
   , _gsettings(g_settings_new(SETTINGS_NAME.c_str()))
   , panel_heights_(monitors::MAX, BASE_PANEL_HEIGHT)
+  , em_converter_(0)
 {
   if (style_instance)
   {
@@ -96,11 +97,14 @@ Style::Style()
 
   _font_changed_signal.Connect(settings, "notify::gtk-font-name",
   [this] (GtkSettings*, GParamSpec*) {
+    UpdateFontSize();
+    UpdatePanelHeight();
     changed.emit();
   });
 
   _dpi_changed_signal.Connect(settings, "notify::gtk-xft-dpi",
   [this] (GtkSettings*, GParamSpec*) {
+    UpdatePanelHeight();
     changed.emit();
   });
 
@@ -108,6 +112,9 @@ Style::Style()
   [this] (GSettings*, gchar*) {
     changed.emit();
   });
+
+  UpdateFontSize();
+  UpdatePanelHeight();
 
   Refresh();
 }
@@ -139,7 +146,9 @@ int Style::PanelHeight(int monitor) const
     return 0;
   }
 
-  return panel_heights_[monitor];
+  double pixel_height_em = em_converter_.PixelsToBaseEM(panel_heights_[monitor]);
+
+  return em_converter_.EMToPixels(pixel_height_em);
 }
 
 void Style::Refresh()
@@ -172,6 +181,29 @@ void Style::Refresh()
     _bg_texture.Release();
     changed.emit();
   }
+}
+
+void Style::UpdateFontSize()
+{
+  glib::String font_name;
+  gint font_size;
+  PangoFontDescription* desc;
+
+  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
+  desc = pango_font_description_from_string(font_name.Value());
+  font_size = pango_font_description_get_size(desc);
+  pango_font_description_free(desc);
+
+  em_converter_.SetFontSize(font_size / 1024);
+}
+
+void Style::UpdatePanelHeight()
+{
+  int dpi = GetTextDPI() / 1024;
+  em_converter_.SetDPI(dpi);
+
+  // TODO Default monitor for now...
+  panel_height_changed.emit(PanelHeight());
 }
 
 GtkStyleContext* Style::GetStyleContext()

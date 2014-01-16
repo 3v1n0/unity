@@ -29,6 +29,8 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
+#include "unity-shared/EMConverter.h"
+
 namespace unity
 {
 namespace panel
@@ -80,12 +82,15 @@ public:
 
   int PanelHeight(int monitor = 0) const;
 
-  // int height, int monitor
-  sigc::signal<void, int, int> panel_height_changed;
+  // int height
+  sigc::signal<void, int> panel_height_changed;
   sigc::signal<void> changed;
 
 private:
   void Refresh();
+
+  void UpdateFontSize();
+  void UpdatePanelHeight();
 
   glib::Object<GtkStyleContext> _style_context;
   glib::Object<GSettings> _gsettings;
@@ -99,6 +104,7 @@ private:
   glib::Signal<void, GSettings*, gchar*> _settings_changed_signal;
 
   std::vector<int> panel_heights_;
+  EMConverter em_converter_;
 };
 
 }

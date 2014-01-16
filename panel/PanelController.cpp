@@ -287,6 +287,20 @@ Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
   OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 
+  panel::Style::Instance().panel_height_changed.connect([this, screen] (int height)
+  {
+    for (auto& panel_ptr : pimpl->panels_)
+    {
+      if (panel_ptr)
+      {
+        int monitor = panel_ptr->GetMonitor();
+
+        panel_ptr->SetMaximumHeight(height);
+        panel_ptr->SetMonitor(monitor);
+      }
+    }
+  });
+
   launcher_width.changed.connect([this] (int width)
   {
     pimpl->SetLauncherWidth(width);

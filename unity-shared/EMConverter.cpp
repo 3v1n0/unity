@@ -22,15 +22,18 @@
 namespace unity
 {
 
+double const BASE_DPI        = 96.0;
 double const DEFAULT_PPE     = 10.0;
 double const PIXELS_PER_INCH = 72.0;
 
 EMConverter::EMConverter(int font_size, double dpi)
   : pixels_per_em_(DEFAULT_PPE)
+  , base_pixels_per_em_(DEFAULT_PPE)
   , dpi_(dpi)
   , font_size_(font_size)
 {
   UpdatePixelsPerEM();
+  UpdateBasePixelsPerEM();
 }
 
 void EMConverter::UpdatePixelsPerEM()
@@ -41,12 +44,21 @@ void EMConverter::UpdatePixelsPerEM()
     pixels_per_em_ = DEFAULT_PPE;
 }
 
+void EMConverter::UpdateBasePixelsPerEM()
+{
+  base_pixels_per_em_ = font_size_ * BASE_DPI / PIXELS_PER_INCH;
+
+  if (base_pixels_per_em_ == 0)
+    base_pixels_per_em_ = DEFAULT_PPE;
+}
+
 void EMConverter::SetFontSize(int font_size)
 {
   if (font_size != font_size_)
   {
     font_size_ = font_size;
     UpdatePixelsPerEM();
+    UpdateBasePixelsPerEM();
   }
 }
 
@@ -77,6 +89,11 @@ int EMConverter::EMToPixels(double em) const
 double EMConverter::PixelsToEM(int pixels) const
 {
   return (pixels / pixels_per_em_);
+}
+
+double EMConverter::PixelsToBaseEM(int pixels) const
+{
+  return (pixels / base_pixels_per_em_);
 }
 
 } // namespace unity
