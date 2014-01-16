@@ -69,10 +69,16 @@ int main(int argc, char* argv[])
   std::cout << "Title indent: " << style->TitleIndent() << std::endl;
   std::cout << "---" << std::endl;
 
-  std::cout << "Top border padding, top: " << style->Padding(Side::TOP) << std::endl;
-  std::cout << "Left border padding, left: " << style->Padding(Side::LEFT) << std::endl;
-  std::cout << "Right border padding, right: " << style->Padding(Side::RIGHT) << std::endl;
-  std::cout << "Bottom border padding, bottom: " << style->Padding(Side::BOTTOM) << std::endl;
+  std::cout << "Top border padding: " << style->Padding(Side::TOP) << std::endl;
+  std::cout << "Left border padding: " << style->Padding(Side::LEFT) << std::endl;
+  std::cout << "Right border padding: " << style->Padding(Side::RIGHT) << std::endl;
+  std::cout << "Bottom border padding: " << style->Padding(Side::BOTTOM) << std::endl;
+  std::cout << "---" << std::endl;
+
+  std::cout << "Top border radius: " << style->CornerRadius().top << std::endl;
+  std::cout << "Left border radius: " << style->CornerRadius().left << std::endl;
+  std::cout << "Right border radius: " << style->CornerRadius().right << std::endl;
+  std::cout << "Bottom border radius: " << style->CornerRadius().bottom << std::endl;
   std::cout << "---" << std::endl;
 
   std::cout << "Button 'close' state 'normal' '" << style->WindowButtonFile(WindowButtonType::CLOSE, WidgetState::NORMAL) << "'" << std::endl;
