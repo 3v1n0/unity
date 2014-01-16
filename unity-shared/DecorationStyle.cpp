@@ -137,8 +137,8 @@ struct Style::Impl
 
     GtkSettings* settings = gtk_settings_get_default();
     signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*, GParamSpec*) {
-      UpdateThemedValues();
       gtk_style_context_invalidate(ctx_);
+      UpdateThemedValues();
       parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
       LOG_INFO(logger) << "gtk-theme-name changed to " << parent_->theme();
     });
