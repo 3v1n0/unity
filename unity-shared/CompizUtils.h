@@ -48,6 +48,9 @@ struct SimpleTexture
   int width() const { return texture_.empty() ? 0 : texture_[0]->width(); }
   int height() const { return texture_.empty() ? 0 : texture_[0]->height(); }
 
+  operator GLTexture*() const { return texture(); }
+  operator GLTexture::List() const { return texture_; }
+
 protected:
   GLTexture::List texture_;
 };
