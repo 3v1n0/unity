@@ -86,8 +86,6 @@ Style::Style()
   deco_style->theme.changed.connect(sigc::mem_fun(this, &Style::OnThemeChanged));
   deco_style->font.changed.connect(refresh_cb);
   deco_style->title_font.changed.connect(refresh_cb);
-
-  RefreshContext();
 }
 
 Style::~Style()

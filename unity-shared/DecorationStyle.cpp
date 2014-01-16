@@ -17,6 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include "config.h"
 #include "DecorationStyle.h"
 #include <gtk/gtk.h>
 #include <NuxCore/Colors.h>
@@ -284,7 +285,7 @@ struct Style::Impl
 
     const char* var = g_getenv("GTK_DATA_PREFIX");
     if (!var)
-      var = "/usr";
+      var = GTK_PREFIX;
 
     glib::String path(g_build_filename(var, "share", "themes", subpath.Value(), nullptr));
 
