@@ -3920,11 +3920,13 @@ void UnityWindow::OnInitiateSpread()
 {
   close_icon_state_ = decoration::WidgetState::NORMAL;
   middle_clicked_ = false;
+  deco_win_->scaled = true;
 }
 
 void UnityWindow::OnTerminateSpread()
 {
   CleanupCachedTextures();
+  deco_win_->scaled = false;
 }
 
 void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix, GLWindowPaintAttrib const& attrib, unsigned mask)
