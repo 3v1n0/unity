@@ -102,20 +102,4 @@ double EMConverter::DPIScale() const
   return dpi_ / BASE_DPI;
 }
 
-double EMConverter::PixelsToBaseEM(int pixels) const
-{
-  return (pixels / base_pixels_per_em_);
-}
-
-int EMConverter::ConvertPixels(int pixels) const
-{
-  double pixels_em = PixelsToBaseEM(pixels);
-  return EMToPixels(pixels_em);
-}
-
-double EMConverter::DPIScale() const
-{
-  return dpi_ / BASE_DPI;
-}
-
 } // namespace unity
