@@ -58,6 +58,8 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
     return true;
   });
 
+  parent->scaled.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Update)));
+
   if (win_->isViewable() || win_->shaded())
     Update();
 }
@@ -286,7 +288,7 @@ void Window::Impl::SetupTopLayout()
 
 bool Window::Impl::ShadowDecorated() const
 {
-  if ((win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+  if (!parent_->scaled() && (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
     return false;
 
   if (!cu::IsWindowShadowDecorable(win_))
@@ -297,7 +299,7 @@ bool Window::Impl::ShadowDecorated() const
 
 bool Window::Impl::FullyDecorated() const
 {
-  if ((win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+  if (!parent_->scaled() && (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
     return false;
 
   if (!cu::IsWindowFullyDecorable(win_))
@@ -314,12 +316,12 @@ bool Window::Impl::ShouldBeDecorated() const
 GLTexture* Window::Impl::ShadowTexture() const
 {
   auto const& mi = manager_->impl_;
-  return active() ? mi->active_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
+  return active() || parent_->scaled() ? mi->active_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
 }
 
 unsigned Window::Impl::ShadowRadius() const
 {
-  return active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
+  return active() || parent_->scaled() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
 }
 
 void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
@@ -501,7 +503,8 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 // Public APIs
 
 Window::Window(CompWindow* cwin)
-  : impl_(new Impl(this, cwin))
+  : scaled(false)
+  , impl_(new Impl(this, cwin))
 {}
 
 Window::~Window()
@@ -569,6 +572,7 @@ void Window::AddProperties(debug::IntrospectionData& data)
   .add("content_geo", impl_->win_->region().boundingRect())
   .add("title", title())
   .add("active", impl_->active())
+  .add("scaled", scaled())
   .add("xid", impl_->win_->id())
   .add("fully_decorable", cu::IsWindowFullyDecorable(impl_->win_))
   .add("shadow_decorable", cu::IsWindowShadowDecorable(impl_->win_))

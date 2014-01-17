@@ -42,6 +42,7 @@ public:
   virtual ~Window();
 
   nux::RWProperty<std::string> title;
+  nux::Property<bool> scaled;
 
   void Update();
   void Undecorate();
