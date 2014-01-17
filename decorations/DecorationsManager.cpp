@@ -202,7 +202,7 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
         UpdateWindow(event->xproperty.window);
       }
       else if (event->xproperty.atom == XA_WM_NAME ||
-               event->xproperty.atom == Atoms::mwmHints ||
+               event->xproperty.atom == Atoms::wmName ||
                event->xproperty.atom == atom::_NET_WM_VISIBLE_NAME)
       {
         if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
