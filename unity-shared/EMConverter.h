@@ -34,13 +34,19 @@ public:
   int    GetFontSize() const;
   double GetDPI() const;
 
-  int    EMToPixels(double em) const;
-  double PixelsToEM(int pixels) const;
+  int    ConvertPixels(int pixels) const;
+  double DPIScale() const;
 
 private:
   void UpdatePixelsPerEM();
+  void UpdateBasePixelsPerEM();
+
+  int    EMToPixels(double em) const;
+  double PixelsToBaseEM(int pixels) const;
 
   double pixels_per_em_;
+  double base_pixels_per_em_;
+
   double dpi_;
   int font_size_;
 };
