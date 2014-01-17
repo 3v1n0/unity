@@ -71,6 +71,10 @@ PanelTray::PanelTray()
     gtk_widget_show(GTK_WIDGET(tray_.RawPtr()));
   }
 
+  panel::Style::Instance().panel_height_changed.connect([this] (int height) {
+    SetMinMaxSize(1, height);
+  });
+
   SetMinMaxSize(1, panel_height);
 }
 
