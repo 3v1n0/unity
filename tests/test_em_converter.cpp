@@ -62,34 +62,21 @@ TEST_F(TestEMConverter, TestSetDPI)
   EXPECT_EQ(dpi, em_converter.GetDPI());
 }
 
-TEST_F(TestEMConverter, TestEMToPixel)
+TEST_F(TestEMConverter, TestConvertPixel)
 {
-  double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);
-  EXPECT_EQ(PIXEL_SIZE, em_converter.EMToPixels(pixel_size_em));
+  EXPECT_EQ(PIXEL_SIZE, em_converter.ConvertPixels(PIXEL_SIZE));
 }
 
-TEST_F(TestEMConverter, TestPixelToEM)
+TEST_F(TestEMConverter, TestDPIScale)
 {
-  double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);
-  EXPECT_NEAR(pixel_size_em, 1.38, 0.01);
+  EXPECT_FLOAT_EQ(em_converter.DPIScale(), 1.0);
 }
 
-TEST_F(TestEMConverter, TestPixelToBaseEM)
+TEST_F(TestEMConverter, TestDPIScale2)
 {
-  double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);
-  em_converter.SetDPI(200.0);
-  double base_pixel_size_em = em_converter.PixelsToBaseEM(PIXEL_SIZE);
-
-  EXPECT_FLOAT_EQ(pixel_size_em, base_pixel_size_em);
+  float scale = 2.0f;
+  em_converter.SetDPI(DPI * scale);
+  EXPECT_FLOAT_EQ(em_converter.DPIScale(), 2.0);
 }
-
-TEST_F(TestEMConverter, TestSetDPIEMToPixels)
-{
-  double pixel_size_em = em_converter.PixelsToEM(PIXEL_SIZE);
-  em_converter.SetDPI(120.0);
-
-  EXPECT_EQ(em_converter.EMToPixels(pixel_size_em), 30);
-}
-
 
 } // namespace unity
