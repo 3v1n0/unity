@@ -53,7 +53,6 @@ private:
 
   bool render_texture_;
   nux::Size texture_size_;
-  nux::Size real_size_;
 };
 
 } // decoration namespace

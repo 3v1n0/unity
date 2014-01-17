@@ -34,21 +34,24 @@ Title::Title()
 
 void Title::OnTextChanged(std::string const& new_text)
 {
-  auto new_real_size = Style::Get()->TitleNaturalSize(new_text);
+  bool damaged = false;
+  auto real_size = Style::Get()->TitleNaturalSize(new_text);
 
-  if (new_real_size != real_size_)
+  if (GetNaturalWidth() > real_size.width || GetNaturalHeight() > real_size.height)
   {
-    real_size_ = new_real_size;
-    RequestRelayout();
+    damaged = true;
+    Damage();
   }
 
+  SetSize(real_size.width, real_size.height);
   texture_size_ = nux::Size();
-  Damage();
+
+  if (!damaged)
+    Damage();
 }
 
 void Title::OnFontChanged(std::string const&)
 {
-  real_size_ = nux::Size();
   text.changed.emit(text());
 }
 
@@ -57,7 +60,7 @@ void Title::RenderTexture()
   auto state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
   cu::CairoContext text_ctx(texture_size_.width, texture_size_.height);
   Style::Get()->DrawTitle(text().c_str(), state, text_ctx, texture_size_.width, texture_size_.height);
-  SetTexture(text_ctx);
+  texture_.SetTexture(text_ctx);
 }
 
 void Title::SetX(int x)
@@ -69,7 +72,7 @@ void Title::SetX(int x)
     if (BasicContainer::Ptr const& top = GetTopParent())
     {
       auto const& top_geo = top->ContentGeometry();
-      x = std::max<int>(x, top_geo.x() + (top_geo.width() - real_size_.width) * alignment);
+      x = std::max<int>(x, top_geo.x() + (top_geo.width() - GetNaturalWidth()) * alignment);
     }
   }
 
@@ -78,12 +81,12 @@ void Title::SetX(int x)
 
 int Title::GetNaturalWidth() const
 {
-  return real_size_.width;
+  return Item::GetNaturalWidth();
 }
 
 int Title::GetNaturalHeight() const
 {
-  return real_size_.height;
+  return Item::GetNaturalHeight();
 }
 
 void Title::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
@@ -91,12 +94,6 @@ void Title::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAtt
 {
   auto const& geo = Geometry();
   nux::Size tex_size(geo.width(), geo.height());
-
-  if (tex_size.width > real_size_.width)
-    tex_size.width = real_size_.width;
-
-  if (tex_size.height > real_size_.height)
-    tex_size.height = real_size_.height;
 
   if (texture_size_ != tex_size)
   {
@@ -111,8 +108,7 @@ void Title::AddProperties(debug::IntrospectionData& data)
 {
   TexturedItem::AddProperties(data);
   data.add("text", text())
-  .add("texture_size", texture_size_)
-  .add("real_size", real_size_);
+  .add("texture_size", texture_size_);
 }
 
 } // decoration namespace
