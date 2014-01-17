@@ -38,6 +38,10 @@ public:
   double PixelsToEM(int pixels) const;
   double PixelsToBaseEM(int pixels) const;
 
+  int ConvertPixels(int pixels) const;
+
+  double DPIScale() const;
+
 private:
   void UpdatePixelsPerEM();
   void UpdateBasePixelsPerEM();

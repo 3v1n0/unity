@@ -146,9 +146,7 @@ int Style::PanelHeight(int monitor) const
     return 0;
   }
 
-  double pixel_height_em = em_converter_.PixelsToBaseEM(panel_heights_[monitor]);
-
-  return em_converter_.EMToPixels(pixel_height_em);
+  return em_converter_.ConvertPixels(panel_heights_[monitor]);
 }
 
 void Style::Refresh()
