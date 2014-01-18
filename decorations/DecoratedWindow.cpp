@@ -78,18 +78,14 @@ void Window::Impl::Decorate()
 {
   SetupExtents();
   UpdateFrame();
-  SetupTopLayout();
+  SetupWindowControls();
 }
 
 void Window::Impl::Undecorate()
 {
   UnsetExtents();
   UnsetFrame();
-  theme_changed_->disconnect();
-  top_layout_.reset();
-  input_mixer_.reset();
-  edge_borders_.reset();
-  bg_textures_.clear();
+  CleanupWindowControls();
 }
 
 void Window::Impl::UnsetExtents()
@@ -235,7 +231,7 @@ void Window::Impl::SyncXShapeWithFrameRegion()
   win_->updateFrameRegion();
 }
 
-void Window::Impl::SetupTopLayout()
+void Window::Impl::SetupWindowControls()
 {
   if (top_layout_)
     return;
@@ -284,6 +280,16 @@ void Window::Impl::SetupTopLayout()
   top_layout_->Append(title_layout);
 
   input_mixer_->PushToFront(top_layout_);
+}
+
+void Window::Impl::CleanupWindowControls()
+{
+  theme_changed_->disconnect();
+  title_.reset();
+  top_layout_.reset();
+  input_mixer_.reset();
+  edge_borders_.reset();
+  bg_textures_.clear();
 }
 
 bool Window::Impl::ShadowDecorated() const

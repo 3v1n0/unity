@@ -83,7 +83,8 @@ private:
   void SetupExtents();
   void UnsetFrame();
   void UpdateFrame();
-  void SetupTopLayout();
+  void SetupWindowControls();
+  void CleanupWindowControls();
   void SyncXShapeWithFrameRegion();
   bool ShouldBeDecorated() const;
   GLTexture* ShadowTexture() const;
