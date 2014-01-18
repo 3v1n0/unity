@@ -183,6 +183,13 @@ void Style::Refresh()
 
 void Style::UpdateFontSize()
 {
+  int font_size = GetFontSize();
+
+  em_converter_.SetFontSize(font_size / 1024);
+}
+
+int Style::GetFontSize()
+{
   glib::String font_name;
   gint font_size;
   PangoFontDescription* desc;
@@ -192,7 +199,7 @@ void Style::UpdateFontSize()
   font_size = pango_font_description_get_size(desc);
   pango_font_description_free(desc);
 
-  em_converter_.SetFontSize(font_size / 1024);
+  return font_size;
 }
 
 void Style::UpdatePanelHeight()

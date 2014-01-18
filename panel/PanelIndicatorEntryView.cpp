@@ -46,7 +46,7 @@ namespace
 const int DEFAULT_SPACING   = 3;
 const int DESIRED_ICON_SIZE = 22;
 
-const int SCLAED_IMAGE_Y = 1;
+const int SCALED_IMAGE_Y = 1;
 }
 
 using namespace indicator;
@@ -299,7 +299,7 @@ void PanelIndicatorEntryView::ScaleImageIcons(cairo_t* cr, int* x, int* y)
   {
     float aspect = em_converter_.DPIScale();
     *x = left_padding_;
-    *y = SCLAED_IMAGE_Y;
+    *y = SCALED_IMAGE_Y;
     cairo_scale(cr, aspect, aspect);
   }
 }

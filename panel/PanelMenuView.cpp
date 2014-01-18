@@ -96,6 +96,10 @@ PanelMenuView::PanelMenuView()
     FullRedraw();
   });
 
+  panel::Style::Instance().panel_height_changed.connect([this] (int height) {
+    window_buttons_->SetMaximumHeight(height);
+  });
+
   opacity = 0.0f;
 
   Refresh();

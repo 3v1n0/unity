@@ -79,6 +79,7 @@ public:
   std::vector<std::string> GetWindowButtonFileNames(WindowButtonType type, WindowState state);
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
+  int GetFontSize();
 
   int PanelHeight(int monitor = 0) const;
 

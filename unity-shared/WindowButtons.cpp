@@ -43,11 +43,19 @@ WindowButton::WindowButton(panel::WindowButtonType type)
             sigc::mem_fun(this, &WindowButton::EnabledSetter))
   , overlay_mode(false)
   , type_(type)
+  , em_converter_(0)
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
+
   LoadImages();
+}
+
+void WindowButton::UpdateEMConverter()
+{
+  em_converter_.SetFontSize(panel::Style::Instance().GetFontSize());
+  em_converter_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
 }
 
 void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
@@ -141,8 +149,10 @@ void WindowButton::UpdateSize()
 
   if (tex)
   {
-    width = std::min(panel_height, tex->GetWidth());
-    height = std::min(panel_height, tex->GetHeight());
+    int tex_w = em_converter_.ConvertPixels(tex->GetWidth());
+    int tex_h = em_converter_.ConvertPixels(tex->GetHeight());
+    width  = std::min(panel_height, tex_w);
+    height = std::min(panel_height, tex_h);
   }
 
   SetMinMaxSize(width, height);
@@ -152,18 +162,19 @@ void WindowButton::LoadImages()
 {
   panel::Style& style = panel::Style::Instance();
 
-  normal_tex_ = style.GetWindowButton(type_, panel::WindowState::NORMAL);
-  prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::PRELIGHT);
-  pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::PRESSED);
-  unfocused_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED);
-  disabled_tex_ = style.GetWindowButton(type_, panel::WindowState::DISABLED);
+  normal_tex_             = style.GetWindowButton(type_, panel::WindowState::NORMAL);
+  prelight_tex_           = style.GetWindowButton(type_, panel::WindowState::PRELIGHT);
+  pressed_tex_            = style.GetWindowButton(type_, panel::WindowState::PRESSED);
+  unfocused_tex_          = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED);
+  disabled_tex_           = style.GetWindowButton(type_, panel::WindowState::DISABLED);
   unfocused_prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRELIGHT);
-  unfocused_pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRESSED);
-  normal_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::NORMAL);
-  prelight_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRELIGHT);
-  pressed_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRESSED);
-  disabled_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::DISABLED);
+  unfocused_pressed_tex_  = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRESSED);
+  normal_dash_tex_        = GetDashWindowButton(type_, panel::WindowState::NORMAL);
+  prelight_dash_tex_      = GetDashWindowButton(type_, panel::WindowState::PRELIGHT);
+  pressed_dash_tex_       = GetDashWindowButton(type_, panel::WindowState::PRESSED);
+  disabled_dash_tex_      = GetDashWindowButton(type_, panel::WindowState::DISABLED);
 
+  UpdateEMConverter();
   UpdateSize();
   QueueDraw();
 }
