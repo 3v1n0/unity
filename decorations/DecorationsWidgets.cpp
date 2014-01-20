@@ -213,12 +213,16 @@ void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 
   auto prev_geo = Geometry();
   texture_.SetTexture(tex);
+  auto const& actual_geo = Geometry();
 
-  if (prev_geo != Geometry())
+  if (prev_geo != actual_geo)
   {
+    max_ = { actual_geo.width(), actual_geo.height() };
+    min_ = max_;
+
     geo_parameters_changed.emit();
 
-    if (!Geometry().contains(prev_geo))
+    if (!actual_geo.contains(prev_geo))
       cscreen_->damageRegion(prev_geo);
   }
 
