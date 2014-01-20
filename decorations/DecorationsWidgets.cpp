@@ -219,7 +219,6 @@ void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
   {
     max_ = { actual_geo.width(), actual_geo.height() };
     min_ = max_;
-
     geo_parameters_changed.emit();
 
     if (!actual_geo.contains(prev_geo))

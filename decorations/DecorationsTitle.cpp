@@ -35,9 +35,20 @@ Title::Title()
 
 void Title::OnTextChanged(std::string const& new_text)
 {
+  bool damaged = false;
   auto real_size = Style::Get()->TitleNaturalSize(new_text);
+
+  if (GetNaturalWidth() > real_size.width || GetNaturalHeight() > real_size.height)
+  {
+    Damage();
+    damaged = true;
+  }
+
   SetSize(real_size.width, real_size.height);
   texture_size_ = nux::Size();
+
+  if (!damaged)
+    Damage();
 }
 
 void Title::OnFontChanged(std::string const&)
