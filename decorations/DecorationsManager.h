@@ -36,7 +36,7 @@ public:
   typedef std::shared_ptr<Manager> Ptr;
 
   Manager();
-  virtual ~Manager();
+  virtual ~Manager() = default;
 
   nux::Property<nux::Point> shadow_offset;
   nux::Property<nux::Color> active_shadow_color;

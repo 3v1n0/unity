@@ -223,12 +223,8 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
         auto window = reinterpret_cast<XShapeEvent*>(event)->window;
         if (!UpdateWindow(window))
         {
-          auto const& win = GetWindowByFrame(window);
-
-          if (win)
-          {
+          if (Window::Ptr const& win = GetWindowByFrame(window))
             win->impl_->SyncXShapeWithFrameRegion();
-          }
         }
       }
       break;
@@ -320,9 +316,6 @@ Manager::Manager()
   , inactive_shadow_color(nux::color::Black * 0.647)
   , inactive_shadow_radius(5)
   , impl_(new Impl(this))
-{}
-
-Manager::~Manager()
 {}
 
 void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const

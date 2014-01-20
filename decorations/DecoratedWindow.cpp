@@ -519,9 +519,6 @@ Window::Window(CompWindow* cwin)
   , impl_(new Impl(this, cwin))
 {}
 
-Window::~Window()
-{}
-
 void Window::Update()
 {
   impl_->Update();

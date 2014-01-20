@@ -39,7 +39,7 @@ public:
   typedef std::shared_ptr<Window> Ptr;
 
   Window(CompWindow*);
-  virtual ~Window();
+  virtual ~Window() = default;
 
   nux::RWProperty<std::string> title;
   nux::Property<bool> scaled;
