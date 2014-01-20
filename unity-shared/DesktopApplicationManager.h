@@ -20,11 +20,11 @@
 #ifndef UNITYSHARED_DESKTOP_APPLICATION_MANAGER_H
 #define UNITYSHARED_DESKTOP_APPLICATION_MANAGER_H
 
+#include <zeitgeist.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
 #include "unity-shared/ApplicationManager.h"
-#include "unity-shared/ZeitgeistUtils.h"
 
 namespace unity
 {
