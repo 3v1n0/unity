@@ -111,10 +111,7 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
 void Manager::Impl::UpdateWindowsExtents()
 {
   for (auto const& win : windows_)
-  {
-    win.second->UpdateDecorationPosition();
-    win.second->impl_->cwin_->damageOutputExtents();
-  }
+    win.second->impl_->RedrawDecorations();
 }
 
 bool Manager::Impl::UpdateWindow(::Window xid)
@@ -203,8 +200,6 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
         {
           win->impl_->CleanupWindowControls();
           win->Update();
-          win->UpdateDecorationPositionDelayed();
-          win->impl_->cwin_->damageOutputExtents();
         }
       }
       else if (event->xproperty.atom == XA_WM_NAME ||
@@ -212,7 +207,10 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
                event->xproperty.atom == atom::_NET_WM_VISIBLE_NAME)
       {
         if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
-          win->title = WindowManager::Default().GetStringProperty(event->xproperty.window, event->xproperty.atom);
+        {
+          auto& wm = WindowManager::Default();
+          win->title = wm.GetStringProperty(event->xproperty.window, event->xproperty.atom);
+        }
       }
       break;
     }

@@ -77,6 +77,7 @@ struct Window::Impl
   void Undecorate();
   bool FullyDecorated() const;
   bool ShadowDecorated() const;
+  void RedrawDecorations();
 
 private:
   void UnsetExtents();

@@ -45,8 +45,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   active.changed.connect([this] (bool active) {
     bg_textures_.clear();
     if (top_layout_) top_layout_->focused = active;
-    parent_->UpdateDecorationPositionDelayed();
-    cwin_->damageOutputExtents();
+    RedrawDecorations();
   });
 
   parent->title.SetGetterFunction([this] { return title_ ? title_->text() : ""; });
@@ -280,6 +279,8 @@ void Window::Impl::SetupWindowControls()
   top_layout_->Append(title_layout);
 
   input_mixer_->PushToFront(top_layout_);
+
+  RedrawDecorations();
 }
 
 void Window::Impl::CleanupWindowControls()
@@ -503,6 +504,12 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   if (top_layout_)
     top_layout_->Draw(glwin_, transformation, attrib, region, mask);
+}
+
+void Window::Impl::RedrawDecorations()
+{
+  dirty_geo_ = true;
+  cwin_->damageOutputExtents();
 }
 
 // Public APIs
