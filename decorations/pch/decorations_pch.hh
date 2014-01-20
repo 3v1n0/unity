@@ -22,9 +22,17 @@
  * Only system header files can be listed here.
  */
 
+#include <deque>
 #include <memory>
+#include <unordered_map>
+
 #include <cairo/cairo.h>
 
+#include <core/core.h>
+#include <opengl/opengl.h>
+#include <composite/composite.h>
+
 #include <NuxCore/NuxCore.h>
+#include <NuxCore/Property.h>
 #include <NuxCore/Rect.h>
 #include <NuxCore/Size.h>
