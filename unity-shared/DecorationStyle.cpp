@@ -424,7 +424,6 @@ struct Style::Impl
   {
     nux::Size extents;
     auto const& layout = BuildPangoLayout(text);
-    pango_layout_context_changed(layout);
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
 
     return extents;
