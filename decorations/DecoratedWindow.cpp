@@ -86,6 +86,7 @@ void Window::Impl::Undecorate()
   UnsetExtents();
   UnsetFrame();
   CleanupWindowControls();
+  bg_textures_.clear();
 }
 
 void Window::Impl::UnsetExtents()
@@ -276,7 +277,6 @@ void Window::Impl::SetupWindowControls()
   auto title_layout = std::make_shared<Layout>();
   title_layout->left_padding = style->TitleIndent();
   title_layout->Append(title_);
-
   top_layout_->Append(title_layout);
 
   input_mixer_->PushToFront(top_layout_);
@@ -289,7 +289,6 @@ void Window::Impl::CleanupWindowControls()
   top_layout_.reset();
   input_mixer_.reset();
   edge_borders_.reset();
-  bg_textures_.clear();
 }
 
 bool Window::Impl::ShadowDecorated() const

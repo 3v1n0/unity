@@ -199,7 +199,13 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
     {
       if (event->xproperty.atom == Atoms::mwmHints)
       {
-        UpdateWindow(event->xproperty.window);
+        if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
+        {
+          win->impl_->CleanupWindowControls();
+          win->Update();
+          win->UpdateDecorationPositionDelayed();
+          win->impl_->cwin_->damageOutputExtents();
+        }
       }
       else if (event->xproperty.atom == XA_WM_NAME ||
                event->xproperty.atom == Atoms::wmName ||
