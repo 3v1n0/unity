@@ -17,6 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include <sigc++/adaptors/hide.h>
 #include "DecorationsTitle.h"
 #include "DecorationStyle.h"
 
@@ -28,26 +29,15 @@ namespace decoration
 Title::Title()
 {
   text.changed.connect(sigc::mem_fun(this, &Title::OnTextChanged));
-  focused.changed.connect([this] (bool) { if (texture_) RenderTexture(); });
+  focused.changed.connect(sigc::hide(sigc::mem_fun(this, &Title::RenderTexture)));
   Style::Get()->title_font.changed.connect(sigc::mem_fun(this, &Title::OnFontChanged));
 }
 
 void Title::OnTextChanged(std::string const& new_text)
 {
-  bool damaged = false;
   auto real_size = Style::Get()->TitleNaturalSize(new_text);
-
-  if (GetNaturalWidth() > real_size.width || GetNaturalHeight() > real_size.height)
-  {
-    damaged = true;
-    Damage();
-  }
-
   SetSize(real_size.width, real_size.height);
   texture_size_ = nux::Size();
-
-  if (!damaged)
-    Damage();
 }
 
 void Title::OnFontChanged(std::string const&)
@@ -59,8 +49,8 @@ void Title::RenderTexture()
 {
   auto state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
   cu::CairoContext text_ctx(texture_size_.width, texture_size_.height);
-  Style::Get()->DrawTitle(text().c_str(), state, text_ctx, texture_size_.width, texture_size_.height);
-  texture_.SetTexture(text_ctx);
+  Style::Get()->DrawTitle(text(), state, text_ctx, texture_size_.width, texture_size_.height);
+  SetTexture(text_ctx);
 }
 
 void Title::SetX(int x)
