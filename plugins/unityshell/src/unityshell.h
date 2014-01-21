@@ -95,7 +95,7 @@ class UnityScreen :
   public GLScreenInterface,
   public BaseSwitchScreen,
   public PluginClassHandler <UnityScreen, CompScreen>,
-  public CompAction::Class,
+  public CompAction::Container,
   public UnityshellOptions
 {
 public:
