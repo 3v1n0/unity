@@ -17,9 +17,9 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include <sigc++/adaptors/hide.h>
 #include "DecorationsWindowButton.h"
 #include "DecorationsDataPool.h"
-#include <sigc++/sigc++.h>
 
 namespace unity
 {

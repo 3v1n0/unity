@@ -26,6 +26,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include <sigc++/sigc++.h>
 #include <cairo/cairo.h>
 
 #include <core/core.h>
