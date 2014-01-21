@@ -310,11 +310,11 @@ void Manager::Impl::OnWindowFrameChanged(bool framed, ::Window frame, std::weak_
 // Public APIs
 
 Manager::Manager()
-  : shadow_offset(nux::Point(1, 1))
-  , active_shadow_color(nux::color::Black * 0.647)
-  , active_shadow_radius(8)
-  , inactive_shadow_color(nux::color::Black * 0.647)
-  , inactive_shadow_radius(5)
+  : shadow_offset(Style::Get()->ShadowOffset())
+  , active_shadow_color(Style::Get()->ActiveShadowColor())
+  , active_shadow_radius(Style::Get()->ActiveShadowRadius())
+  , inactive_shadow_color(Style::Get()->InactiveShadowColor())
+  , inactive_shadow_radius(Style::Get()->InactiveShadowRadius())
   , impl_(new Impl(this))
 {}
 
