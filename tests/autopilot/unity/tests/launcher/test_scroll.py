@@ -44,7 +44,7 @@ class LauncherScrollTests(LauncherTestCase):
         launcher_instance = self.get_launcher()
         (x, y, w, h) = launcher_instance.geometry
 
-        icons = self.unity.launcher.model.get_launcher_icons()
+        icons = self.unity.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor)
         num_icons = self.unity.launcher.model.num_launcher_icons()
 
         last_icon = icons[num_icons - 1]
@@ -76,11 +76,13 @@ class LauncherScrollTests(LauncherTestCase):
         launcher_instance = self.get_launcher()
         (x, y, w, h) = launcher_instance.geometry
 
-        icons = self.unity.launcher.model.get_launcher_icons()
+        icons = self.unity.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor)
         num_icons = self.unity.launcher.model.num_launcher_icons()
 
         first_icon = icons[0]
         last_icon = icons[num_icons - 1]
+
+        launcher_instance.move_mouse_over_launcher()
 
         # Move to the last icon in order to expand the top of the Launcher
         launcher_instance.move_mouse_to_icon(last_icon)

@@ -24,6 +24,12 @@ logger = logging.getLogger(__name__)
 class LauncherSwitcherTests(LauncherTestCase):
     """ Tests the functionality of the launcher's switcher capability"""
 
+    def setUp(self):
+        super(LauncherSwitcherTests, self).setUp()
+
+        if not self.launcher_instance:
+            self.skipTest("Cannot run test with no Launcher on monitor")
+
     def start_switcher_with_cleanup_cancel(self):
         """Start switcher mode safely.
 
