@@ -318,6 +318,9 @@ Manager::Manager()
   , impl_(new Impl(this))
 {}
 
+Manager::~Manager()
+{}
+
 void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
 {
   if (impl_->enable_add_supported_atoms_)
