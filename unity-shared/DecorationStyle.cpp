@@ -87,7 +87,7 @@ static void unity_decoration_class_init(UnityDecorationClass* klass)
   param = g_param_spec_uint("glow-size", "Selected Window Glow Size", "", 0, G_MAXUINT, DEFAULT_GLOW_SIZE, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 
-  param = g_param_spec_boxed("glow-color", "Selected Window Glow Color", "", GDK_TYPE_COLOR, G_PARAM_READABLE);
+  param = g_param_spec_boxed("glow-color", "Selected Window Glow Color", "", GDK_TYPE_RGBA, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 }
 
@@ -99,17 +99,12 @@ Border BorderFromGtkBorder(GtkBorder* b, Border const& fallback = Border())
   return Border(b->top, b->left, b->right, b->bottom);
 }
 
-nux::Color ColorFromGdkColor(GdkColor* c, nux::Color const& fallback = nux::Color())
+nux::Color ColorFromGdkRGBA(GdkRGBA* c, nux::Color const& fallback = nux::Color())
 {
   if (!c)
     return fallback;
 
-  return nux::Color(c->red/65535.0f, c->green/65535.0f, c->blue/65535.0f);
-}
-
-void gdk_color_free0(GdkColor* c)
-{
-  if (c) gdk_color_free(c);
+  return nux::Color(c->red, c->green, c->blue, c->alpha);
 }
 }
 
@@ -189,8 +184,8 @@ struct Style::Impl
     b.reset(GetProperty<GtkBorder*>("input-extents"), gtk_border_free);
     input_edges_ = BorderFromGtkBorder(b.get(), DEFAULT_INPUT_EDGES);
 
-    std::shared_ptr<GdkColor> c(GetProperty<GdkColor*>("glow-color"), gdk_color_free0);
-    glow_color_ = ColorFromGdkColor(c.get(), DEFAULT_GLOW_COLOR);
+    std::shared_ptr<GdkRGBA> rgba(GetProperty<GdkRGBA*>("glow-color"), gdk_rgba_free);
+    glow_color_ = ColorFromGdkRGBA(rgba.get(), DEFAULT_GLOW_COLOR);
     glow_size_ = std::max<unsigned>(0, GetProperty<guint>("glow-size"));
 
     radius_.top = GetBorderProperty<gint>(Side::TOP, WidgetState::NORMAL, "border-radius");
@@ -342,7 +337,7 @@ struct Style::Impl
       if (ws != WidgetState::BACKDROP)
       {
         std::shared_ptr<GdkRGBA> rgba(GetBorderProperty<GdkRGBA*>(Side::TOP, WidgetState::NORMAL, "color"), gdk_rgba_free);
-        color = nux::Color(rgba->red, rgba->green, rgba->blue, rgba->alpha);
+        color = ColorFromGdkRGBA(rgba.get());
       }
       else
       {
