@@ -299,6 +299,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      uScreen = this;
 
      optionSetLockScreenInitiate(boost::bind(&UnityScreen::LockScreenInitiate, this, _1, _2, _3));
+     optionSetOverrideDecorationThemeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShadowXOffsetNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShadowYOffsetNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetActiveShadowRadiusNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -730,6 +731,13 @@ void UnityScreen::OnDecorationStyleChanged()
 {
   for (UnityWindow* uwin : fake_decorated_windows_)
     uwin->CleanupCachedTextures();
+
+  auto const& style = decoration::Style::Get();
+  deco_manager_->shadow_offset = style->ShadowOffset();
+  deco_manager_->active_shadow_color = style->ActiveShadowColor();
+  deco_manager_->active_shadow_radius = style->ActiveShadowRadius();
+  deco_manager_->inactive_shadow_color = style->InactiveShadowColor();
+  deco_manager_->inactive_shadow_radius = style->InactiveShadowRadius();
 }
 
 void UnityScreen::DamageBlurUpdateRegion(nux::Geometry const& blur_update)
@@ -3255,23 +3263,43 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       bghash_->OverrideColor(override_color);
       break;
     }
+    case UnityshellOptions::OverrideDecorationTheme:
+      if (optionGetOverrideDecorationTheme())
+      {
+        deco_manager_->active_shadow_color = NuxColorFromCompizColor(optionGetActiveShadowColor());
+        deco_manager_->inactive_shadow_color = NuxColorFromCompizColor(optionGetInactiveShadowColor());
+        deco_manager_->active_shadow_radius = optionGetActiveShadowRadius();
+        deco_manager_->inactive_shadow_radius = optionGetInactiveShadowRadius();
+        deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
+      }
+      else
+      {
+        OnDecorationStyleChanged();
+      }
+      break;
     case UnityshellOptions::ActiveShadowColor:
-      deco_manager_->active_shadow_color = NuxColorFromCompizColor(optionGetActiveShadowColor());
+      if (optionGetOverrideDecorationTheme())
+        deco_manager_->active_shadow_color = NuxColorFromCompizColor(optionGetActiveShadowColor());
       break;
     case UnityshellOptions::InactiveShadowColor:
-      deco_manager_->inactive_shadow_color = NuxColorFromCompizColor(optionGetInactiveShadowColor());
+      if (optionGetOverrideDecorationTheme())
+        deco_manager_->inactive_shadow_color = NuxColorFromCompizColor(optionGetInactiveShadowColor());
       break;
     case UnityshellOptions::ActiveShadowRadius:
-      deco_manager_->active_shadow_radius = optionGetActiveShadowRadius();
+      if (optionGetOverrideDecorationTheme())
+        deco_manager_->active_shadow_radius = optionGetActiveShadowRadius();
       break;
     case UnityshellOptions::InactiveShadowRadius:
-      deco_manager_->inactive_shadow_radius = optionGetInactiveShadowRadius();
+      if (optionGetOverrideDecorationTheme())
+        deco_manager_->inactive_shadow_radius = optionGetInactiveShadowRadius();
       break;
     case UnityshellOptions::ShadowXOffset:
-      deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
+      if (optionGetOverrideDecorationTheme())
+        deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
       break;
     case UnityshellOptions::ShadowYOffset:
-      deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
+      if (optionGetOverrideDecorationTheme())
+        deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
       break;
     case UnityshellOptions::LauncherHideMode:
       launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
