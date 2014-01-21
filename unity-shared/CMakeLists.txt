@@ -27,6 +27,7 @@ set (UNITY_SHARED_SOURCES
      DefaultThumbnailProvider.cpp
      DeltaRestrainment.cpp
      DesktopApplicationManager.cpp
+     EMConverter.cpp
      GnomeFileManager.cpp
      FontSettings.cpp
      GraphicsUtils.cpp

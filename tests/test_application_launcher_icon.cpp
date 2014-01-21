@@ -21,6 +21,7 @@
 
 #include <config.h>
 #include <gmock/gmock.h>
+#include <zeitgeist.h>
 
 #include <UnityCore/GLibWrapper.h>
 
@@ -28,7 +29,6 @@
 #include "FavoriteStore.h"
 #include "UBusWrapper.h"
 #include "UBusMessages.h"
-#include "ZeitgeistUtils.h"
 #include "mock-application.h"
 #include "test_utils.h"
 #include "test_standalone_wm.h"

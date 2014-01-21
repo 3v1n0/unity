@@ -472,6 +472,22 @@ bool PluginAdapter::IsWindowMaximized(Window window_id) const
   return false;
 }
 
+bool PluginAdapter::IsWindowVerticallyMaximized(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return (window->state() & CompWindowStateMaximizedVertMask);
+
+  return false;
+}
+
+bool PluginAdapter::IsWindowHorizontallyMaximized(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return (window->state() & CompWindowStateMaximizedHorzMask);
+
+  return false;
+}
+
 bool PluginAdapter::HasWindowDecorations(Window window_id) const
 {
   return compiz_utils::IsWindowFullyDecorable(m_Screen->findWindow(window_id));

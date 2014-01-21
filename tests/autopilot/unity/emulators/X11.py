@@ -7,7 +7,9 @@ from autopilot.process import Window
 
 import logging
 import subprocess
+import os
 from Xlib import X, display, protocol
+from gi.repository import Gdk
 
 
 logger = logging.getLogger(__name__)
