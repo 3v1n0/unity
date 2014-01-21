@@ -38,6 +38,14 @@ const std::array<std::string, 4> BORDER_CLASSES = {"top", "left", "right", "bott
 const Border DEFAULT_BORDER = {28, 1, 1, 1};
 const Border DEFAULT_INPUT_EDGES = {10, 10, 10, 10};
 
+const nux::Point DEFAULT_SHADOW_OFFSET(1, 1);
+
+const nux::Color DEFAULT_ACTIVE_SHADOW_COLOR(nux::color::Black * 0.647);
+const int DEFAULT_ACTIVE_SHADOW_RADIUS = 8;
+
+const nux::Color DEFAULT_INACTIVE_SHADOW_COLOR(nux::color::Black * 0.647);
+const int DEFAULT_INACTIVE_SHADOW_RADIUS = 5;
+
 const float DEFAULT_TITLE_ALIGNMENT = 0.0f;
 const int DEFAULT_TITLE_INDENT = 10;
 const int DEFAULT_TITLE_FADING_PIXELS = 35;
@@ -73,6 +81,24 @@ static void unity_decoration_class_init(UnityDecorationClass* klass)
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 
   param = g_param_spec_boxed("input-extents", "Input Border extents", "", GTK_TYPE_BORDER, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_uint("shadow-offset-x", "Shadow Offset X", "", 0, G_MAXUINT, DEFAULT_SHADOW_OFFSET.x, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_uint("shadow-offset-y", "Shadow Offset Y", "", 0, G_MAXUINT, DEFAULT_SHADOW_OFFSET.y, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_boxed("active-shadow-color", "Active Window Shadow Color", "", GDK_TYPE_RGBA, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_uint("active-shadow-radius", "Active Window Shadow Radius", "", 0, G_MAXUINT, DEFAULT_ACTIVE_SHADOW_RADIUS, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_boxed("inactive-shadow-color", "Inactive Windows Shadow Color", "", GDK_TYPE_RGBA, G_PARAM_READABLE);
+  gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+  param = g_param_spec_uint("inactive-shadow-radius", "Inactive Windows Shadow Radius", "", 0, G_MAXUINT, DEFAULT_INACTIVE_SHADOW_RADIUS, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
 
   param = g_param_spec_float("title-alignment", "Title Alignment", "", 0.0, 1.0, DEFAULT_TITLE_ALIGNMENT, G_PARAM_READABLE);
@@ -553,6 +579,34 @@ Border Style::Padding(Side s, WidgetState ws) const
                             impl_->GetBorderProperty<gint>(s, ws, "padding-left"),
                             impl_->GetBorderProperty<gint>(s, ws, "padding-right"),
                             impl_->GetBorderProperty<gint>(s, ws, "padding-bottom"));
+}
+
+nux::Point Style::ShadowOffset() const
+{
+  return nux::Point(std::max<unsigned>(0, impl_->GetProperty<guint>("shadow-offset-x")),
+                    std::max<unsigned>(0, impl_->GetProperty<guint>("shadow-offset-y")));
+}
+
+nux::Color Style::ActiveShadowColor() const
+{
+  std::shared_ptr<GdkRGBA> rgba(impl_->GetProperty<GdkRGBA*>("active-shadow-color"), gdk_rgba_free);
+  return ColorFromGdkRGBA(rgba.get(), DEFAULT_ACTIVE_SHADOW_COLOR);
+}
+
+unsigned Style::ActiveShadowRadius() const
+{
+  return std::max<unsigned>(0, impl_->GetProperty<guint>("active-shadow-radius"));
+}
+
+nux::Color Style::InactiveShadowColor() const
+{
+  std::shared_ptr<GdkRGBA> rgba(impl_->GetProperty<GdkRGBA*>("inactive-shadow-color"), gdk_rgba_free);
+  return ColorFromGdkRGBA(rgba.get(), DEFAULT_INACTIVE_SHADOW_COLOR);
+}
+
+unsigned Style::InactiveShadowRadius() const
+{
+  return std::max<unsigned>(0, impl_->GetProperty<guint>("inactive-shadow-radius"));
 }
 
 unsigned Style::GlowSize() const

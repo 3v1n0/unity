@@ -50,6 +50,11 @@ std::ostream& operator<<(std::ostream &os, nux::Color const& c)
   return os << "rgba (" << c.red * 255 << ", " << c.green * 255 << ", " << c.blue * 255 << ", " << c.alpha  * 255 << ")";
 }
 
+std::ostream& operator<<(std::ostream &os, nux::Point const& p)
+{
+  return os << "x " << p.x << ", y " << p.y;
+}
+
 int main(int argc, char* argv[])
 {
   gtk_init(&argc, &argv);
@@ -68,6 +73,13 @@ int main(int argc, char* argv[])
   std::cout << "Input border left: " << style->InputBorder().left << std::endl;
   std::cout << "Input border right: " << style->InputBorder().right << std::endl;
   std::cout << "Input border bottom: " << style->InputBorder().bottom << std::endl;
+  std::cout << "---" << std::endl;
+
+  std::cout << "Shadow offset " << style->ShadowOffset() << std::endl;
+  std::cout << "Active Shadow Color " << style->ActiveShadowColor() << std::endl;
+  std::cout << "Active Shadow Radius " << style->ActiveShadowRadius() << std::endl;
+  std::cout << "Inactive Shadow Color " << style->InactiveShadowColor() << std::endl;
+  std::cout << "Inactive Shadow Radius " << style->InactiveShadowRadius() << std::endl;
   std::cout << "---" << std::endl;
 
   std::cout << "Glow size: " << style->GlowSize() << std::endl;

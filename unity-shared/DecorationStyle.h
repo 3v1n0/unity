@@ -21,6 +21,7 @@
 #define UNITY_DECORATION_STYLE
 
 #include <NuxCore/Property.h>
+#include <NuxCore/Point.h>
 #include <NuxCore/Size.h>
 #include <cairo/cairo.h>
 
@@ -101,6 +102,12 @@ public:
   decoration::Border const& InputBorder() const;
   decoration::Border const& CornerRadius() const;
   decoration::Border Padding(Side, WidgetState ws = WidgetState::NORMAL) const;
+
+  nux::Point ShadowOffset() const;
+  nux::Color ActiveShadowColor() const;
+  unsigned ActiveShadowRadius() const;
+  nux::Color InactiveShadowColor() const;
+  unsigned InactiveShadowRadius() const;
 
   unsigned GlowSize() const;
   nux::Color const& GlowColor() const;
