@@ -48,9 +48,29 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
     RedrawDecorations();
   });
 
-  parent->title.SetGetterFunction([this] { return title_ ? title_->text() : ""; });
+  parent->title.SetGetterFunction([this] {
+    if (title_)
+      return title_->text();
+
+    if (last_title_.empty())
+      last_title_ = WindowManager::Default().GetWindowName(win_->id());
+
+    return last_title_;
+  });
+
   parent->title.SetSetterFunction([this] (std::string const& new_title) {
-    if (!title_ || new_title == title_->text())
+    if (!title_)
+    {
+      if (last_title_ != new_title)
+      {
+        last_title_ = new_title;
+        return true;
+      }
+
+      return false;
+    }
+
+    if (new_title == title_->text())
       return false;
 
     title_->text = new_title;
@@ -270,8 +290,9 @@ void Window::Impl::SetupWindowControls()
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE));
 
   title_ = std::make_shared<Title>();
-  title_->text = WindowManager::Default().GetWindowName(win_->id());
+  title_->text = last_title_.empty() ? WindowManager::Default().GetWindowName(win_->id()) : last_title_;
   title_->sensitive = false;
+  last_title_.clear();
 
   auto title_layout = std::make_shared<Layout>();
   title_layout->left_padding = style->TitleIndent();
@@ -285,6 +306,9 @@ void Window::Impl::SetupWindowControls()
 
 void Window::Impl::CleanupWindowControls()
 {
+  if (title_)
+    last_title_ = title_->text();
+
   theme_changed_->disconnect();
   title_.reset();
   top_layout_.reset();

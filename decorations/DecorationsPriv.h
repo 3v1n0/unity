@@ -111,6 +111,7 @@ private:
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
   connection::Wrapper theme_changed_;
+  std::string last_title_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
