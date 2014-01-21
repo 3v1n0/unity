@@ -52,6 +52,31 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define SHOW_DASH_KEY "show-launcher"
 #define SHOW_HUD_KEY "show-hud"
 
+#define GRABBER_NAME "org.gnome.Shell"
+#define GRABBER_OBJECT "/org/gnome/Shell"
+#define GRABBER_INTERFACE "org.gnome.Shell"
+#define GRABBER_GRAB_ACCELERATOR "GrabAccelerator"
+#define GRABBER_UNGRAB_ACCELERATOR "UngrabAccelerator"
+#define GRABBER_ACCELERATOR_ACTIVATED "AcceleratorActivated"
+#define GRABBER_XML                                            \
+"<node>"                                                       \
+  "<interface name='org.gnome.Shell'>"                         \
+    "<method name='GrabAccelerator'>"                          \
+      "<arg type='s' direction='in' name='accelerator'/>"      \
+      "<arg type='u' direction='in' name='flags'/>"            \
+      "<arg type='u' direction='out' name='action'/>"          \
+    "</method>"                                                \
+    "<method name='UngrabAccelerator'>"                        \
+      "<arg type='u' direction='in' name='action'/>"           \
+      "<arg type='b' direction='out' name='success'/>"         \
+    "</method>"                                                \
+    "<signal name='AcceleratorActivated'>"                     \
+      "<arg type='u' name='action'/>"                          \
+      "<arg type='u' name='device'/>"                          \
+    "</signal>"                                                \
+  "</interface>"                                               \
+"</node>"
+
 static PanelService *static_service = NULL;
 
 struct _PanelServicePrivate
@@ -79,11 +104,81 @@ struct _PanelServicePrivate
   KeyBinding show_dash;
   KeyBinding show_hud;
 
+  GDBusProxy *grabber;
+  GHashTable *info_by_entry;
+  GHashTable *entries_by_action;
+  GCancellable *cancellable;
+
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
 
   NihDBusProxy * upstart;
 };
+
+struct _ActionInfo
+{
+  guint action;   /* Identifier from key grabber */
+  guint mnemonic; /* Mnemonic key value */
+};
+
+typedef struct _ActionInfo ActionInfo;
+
+static ActionInfo *
+action_info_new (guint action,
+                 guint mnemonic)
+{
+  ActionInfo *info = g_new (ActionInfo, 1);
+
+  info->action = action;
+  info->mnemonic = mnemonic;
+
+  return info;
+}
+
+static void
+action_info_free (gpointer data)
+{
+  g_free (data);
+}
+
+struct _CallbackInfo
+{
+  PanelService         *service;
+  IndicatorObjectEntry *entry;
+  guint                 mnemonic;
+};
+
+typedef struct _CallbackInfo CallbackInfo;
+
+static CallbackInfo *
+callback_info_new (PanelService         *service,
+                   IndicatorObjectEntry *entry,
+                   guint                 mnemonic)
+{
+  CallbackInfo *info = g_new (CallbackInfo, 1);
+
+  info->service = g_object_ref (service);
+  info->entry = entry;
+  info->mnemonic = mnemonic;
+
+  return info;
+}
+
+static void
+callback_info_free (gpointer data)
+{
+  if (data != NULL)
+    {
+      CallbackInfo *info = data;
+
+      if (info->service != NULL)
+        {
+          g_object_unref (info->service);
+        }
+
+      g_free (data);
+    }
+}
 
 /* Globals */
 static gboolean suppress_signals = FALSE;
@@ -128,6 +223,7 @@ static const gchar * indicator_order[][2] = {
 };
 
 /* Forwards */
+static void grabber_ready (GObject *object, GAsyncResult *result, gpointer user_data);
 static void load_indicator  (PanelService *, IndicatorObject *, const gchar *);
 static void load_indicators (PanelService *);
 static void load_indicators_from_indicator_files (PanelService *);
@@ -163,6 +259,60 @@ panel_service_class_dispose (GObject *self)
 
       nih_unref (priv->upstart, NULL);
       priv->upstart = NULL;
+    }
+
+  if (priv->cancellable != NULL)
+    {
+      g_cancellable_cancel (priv->cancellable);
+      g_object_unref (priv->cancellable);
+      priv->cancellable = NULL;
+    }
+
+  if (priv->grabber != NULL)
+    {
+      if (priv->info_by_entry != NULL)
+        {
+          GHashTableIter iter;
+          gpointer value;
+
+          g_hash_table_iter_init (&iter, priv->info_by_entry);
+          while (g_hash_table_iter_next (&iter, NULL, &value))
+            {
+              GError *error = NULL;
+              ActionInfo *info = value;
+              GVariant *variant = g_dbus_proxy_call_sync (priv->grabber,
+                                                          GRABBER_UNGRAB_ACCELERATOR,
+                                                          g_variant_new_parsed ("(%u,)", info->action),
+                                                          G_DBUS_CALL_FLAGS_NONE,
+                                                          -1,
+                                                          NULL,
+                                                          &error);
+
+              if (variant != NULL)
+                {
+                  gboolean removed;
+                  g_variant_get (variant, "(b)", &removed);
+                  g_variant_unref (variant);
+
+                  if (!removed)
+                    {
+                      g_warning ("Could not ungrab accelerator %u", info->action);
+                    }
+                }
+              else
+                {
+                  g_warning ("Failed to call UngrabAccelerator: %s", error->message);
+                  g_clear_error (&error);
+                }
+            }
+
+          g_hash_table_unref (priv->info_by_entry);
+          priv->info_by_entry = NULL;
+        }
+
+      g_signal_handlers_disconnect_by_data (priv->grabber, self);
+      g_object_unref (priv->grabber);
+      priv->grabber = NULL;
     }
 
   if (GTK_IS_WIDGET (priv->menubar) &&
@@ -211,6 +361,16 @@ static void
 panel_service_class_finalize (GObject *object)
 {
   PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
+
+  if (priv->entries_by_action != NULL)
+    {
+      g_hash_table_unref (priv->entries_by_action);
+    }
+
+  if (priv->info_by_entry != NULL)
+    {
+      g_hash_table_unref (priv->info_by_entry);
+    }
 
   g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->panel2entries_hash);
@@ -680,6 +840,39 @@ panel_service_init (PanelService *self)
   update_keybinding (priv->gsettings, SHOW_DASH_KEY, &priv->show_dash);
   update_keybinding (priv->gsettings, SHOW_HUD_KEY, &priv->show_hud);
 
+  priv->info_by_entry = g_hash_table_new_full (NULL, NULL, NULL, action_info_free);
+  priv->entries_by_action = g_hash_table_new (NULL, NULL);
+
+  GError *error = NULL;
+  GDBusNodeInfo *node = g_dbus_node_info_new_for_xml (GRABBER_XML, &error);
+
+  if (node != NULL)
+    {
+      GDBusInterfaceInfo *interface = g_dbus_node_info_lookup_interface (node, GRABBER_INTERFACE);
+
+      if (interface != NULL)
+        {
+          priv->cancellable = g_cancellable_new ();
+
+          g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                                    G_DBUS_PROXY_FLAGS_NONE,
+                                    interface,
+                                    GRABBER_NAME,
+                                    GRABBER_OBJECT,
+                                    GRABBER_INTERFACE,
+                                    priv->cancellable,
+                                    grabber_ready,
+                                    self);
+        }
+
+      g_dbus_node_info_unref (node);
+    }
+  else
+    {
+      g_warning ("Could not parse grabber XML: %s", error->message);
+      g_clear_error (&error);
+    }
+
   const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
   if (upstartsession != NULL)
     {
@@ -1032,18 +1225,141 @@ notify_object (IndicatorObject *object)
 }
 
 static void
-on_entry_property_changed (GObject        *o,
-                           GParamSpec      *pspec,
-                           IndicatorObject *object)
+grabber_grabbed (GObject      *object,
+                 GAsyncResult *result,
+                 gpointer      user_data)
 {
-  notify_object (object);
+  GDBusProxy *grabber = G_DBUS_PROXY (object);
+  CallbackInfo *info = user_data;
+  PanelService *self = info->service;
+  PanelServicePrivate *priv = self->priv;
+  IndicatorObjectEntry *entry = info->entry;
+  guint mnemonic = info->mnemonic;
+
+  GError *error = NULL;
+  GVariant *variant = g_dbus_proxy_call_finish (grabber, result, &error);
+
+  if (variant != NULL)
+    {
+      guint action;
+      g_variant_get (variant, "(u)", &action);
+      g_variant_unref (variant);
+
+      if (priv->info_by_entry != NULL)
+        {
+          g_hash_table_insert (priv->info_by_entry, entry, action_info_new (action, mnemonic));
+        }
+
+      if (priv->entries_by_action != NULL)
+        {
+          g_hash_table_insert (priv->entries_by_action, GUINT_TO_POINTER (action), entry);
+        }
+    }
+  else
+    {
+      g_warning ("Failed to call GrabAccelerator: %s", error->message);
+      g_clear_error (&error);
+    }
+
+  callback_info_free (info);
 }
 
 static void
-on_entry_changed (GObject *o,
-                  IndicatorObject *object)
+ungrab_mnemonic (PanelService         *self,
+                 IndicatorObjectEntry *entry)
 {
-  notify_object (object);
+  PanelServicePrivate *priv = self->priv;
+
+  if (priv->info_by_entry != NULL)
+    {
+      ActionInfo *info = g_hash_table_lookup (priv->info_by_entry, entry);
+
+      if (info != NULL)
+        {
+          if (priv->grabber != NULL)
+            {
+              g_dbus_proxy_call (priv->grabber,
+                                 GRABBER_UNGRAB_ACCELERATOR,
+                                 g_variant_new_parsed ("(%u,)", info->action),
+                                 G_DBUS_CALL_FLAGS_NONE,
+                                 -1,
+                                 NULL,
+                                 NULL,
+                                 NULL);
+            }
+
+          if (priv->entries_by_action != NULL)
+            {
+              g_hash_table_remove (priv->entries_by_action, GUINT_TO_POINTER (info->action));
+            }
+        }
+
+      g_hash_table_remove (priv->info_by_entry, entry);
+    }
+}
+
+static void
+grab_mnemonic (PanelService         *self,
+               IndicatorObjectEntry *entry)
+{
+  PanelServicePrivate *priv = self->priv;
+
+  ungrab_mnemonic (self, entry);
+
+  if (priv->grabber != NULL && GTK_IS_LABEL (entry->label))
+    {
+      GtkLabel *label = entry->label;
+      GtkWidget *widget = GTK_WIDGET (label);
+      guint mnemonic = gtk_label_get_mnemonic_keyval (label);
+
+      if (mnemonic != GDK_KEY_VoidSymbol && gtk_widget_get_visible (widget) && gtk_widget_get_sensitive (widget))
+        {
+          gchar *accelerator = gtk_accelerator_name (mnemonic, GDK_MOD1_MASK);
+
+          g_dbus_proxy_call (priv->grabber,
+                             GRABBER_GRAB_ACCELERATOR,
+                             g_variant_new_parsed ("(%s, @u 0)", accelerator),
+                             G_DBUS_CALL_FLAGS_NONE,
+                             -1,
+                             NULL,
+                             grabber_grabbed,
+                             callback_info_new (self, entry, mnemonic));
+
+          g_free (accelerator);
+        }
+    }
+}
+
+static void
+on_entry_label_property_changed (GObject              *object,
+                                 GParamSpec           *pspec,
+                                 IndicatorObjectEntry *entry)
+{
+  grab_mnemonic (panel_service_get_default (), entry);
+  notify_object (get_entry_parent_indicator (entry));
+}
+
+static void
+on_entry_label_changed (GObject              *object,
+                        IndicatorObjectEntry *entry)
+{
+  grab_mnemonic (panel_service_get_default (), entry);
+  notify_object (get_entry_parent_indicator (entry));
+}
+
+static void
+on_entry_image_property_changed (GObject              *object,
+                                 GParamSpec           *pspec,
+                                 IndicatorObjectEntry *entry)
+{
+  notify_object (get_entry_parent_indicator (entry));
+}
+
+static void
+on_entry_image_changed (GObject              *object,
+                        IndicatorObjectEntry *entry)
+{
+  notify_object (get_entry_parent_indicator (entry));
 }
 
 static void
@@ -1059,35 +1375,37 @@ on_entry_added (IndicatorObject      *object,
 
   if (GTK_IS_LABEL (entry->label))
     {
+      grab_mnemonic (self, entry);
+
       g_signal_connect (entry->label, "notify::label",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_label_property_changed), entry);
       g_signal_connect (entry->label, "notify::sensitive",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_label_property_changed), entry);
       g_signal_connect (entry->label, "show",
-                        G_CALLBACK (on_entry_changed), object);
+                        G_CALLBACK (on_entry_label_changed), entry);
       g_signal_connect (entry->label, "hide",
-                        G_CALLBACK (on_entry_changed), object);
+                        G_CALLBACK (on_entry_label_changed), entry);
     }
   if (GTK_IS_IMAGE (entry->image))
     {
       g_signal_connect (entry->image, "notify::storage-type",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_image_property_changed), entry);
       g_signal_connect (entry->image, "notify::file",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_image_property_changed), entry);
       g_signal_connect (entry->image, "notify::gicon",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_image_property_changed), entry);
       g_signal_connect (entry->image, "notify::icon-name",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_image_property_changed), entry);
       g_signal_connect (entry->image, "notify::pixbuf",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_image_property_changed), entry);
       g_signal_connect (entry->image, "notify::stock",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_image_property_changed), entry);
       g_signal_connect (entry->image, "notify::sensitive",
-                        G_CALLBACK (on_entry_property_changed), object);
+                        G_CALLBACK (on_entry_image_property_changed), entry);
       g_signal_connect (entry->image, "show",
-                        G_CALLBACK (on_entry_changed), object);
+                        G_CALLBACK (on_entry_image_changed), entry);
       g_signal_connect (entry->image, "hide",
-                        G_CALLBACK (on_entry_changed), object);
+                        G_CALLBACK (on_entry_image_changed), entry);
     }
 
   notify_object (object);
@@ -1113,6 +1431,8 @@ on_entry_removed (IndicatorObject      *object,
   if (entry->label)
     {
       g_signal_handlers_disconnect_by_data (entry->label, object);
+
+      ungrab_mnemonic (self, entry);
     }
 
   if (entry->image)
@@ -1171,6 +1491,63 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
   entry_id = get_indicator_entry_id_by_entry (entry);
   g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
   g_free (entry_id);
+}
+
+static void
+grabber_emitted (GDBusProxy *proxy,
+                 gchar      *sender_name,
+                 gchar      *signal_name,
+                 GVariant   *parameters,
+                 gpointer    user_data)
+{
+  PanelService *self = user_data;
+  PanelServicePrivate *priv = self->priv;
+
+  if (g_strcmp0 (signal_name, GRABBER_ACCELERATOR_ACTIVATED) == 0)
+    {
+      if (priv->entries_by_action != NULL)
+        {
+          guint action;
+          IndicatorObjectEntry *entry;
+          g_variant_get (parameters, "(uu)", &action, NULL);
+          entry = g_hash_table_lookup (priv->entries_by_action, GUINT_TO_POINTER (action));
+
+          if (entry != NULL)
+            {
+              IndicatorObject *object = get_entry_parent_indicator (entry);
+              guint32 time = gtk_get_current_event_time ();
+              on_indicator_menu_show (object, entry, time, self);
+            }
+        }
+    }
+}
+
+static void
+grabber_ready (GObject      *object,
+               GAsyncResult *result,
+               gpointer      user_data)
+{
+  PanelService *self = user_data;
+  PanelServicePrivate *priv = self->priv;
+  GError *error = NULL;
+
+  priv->grabber = g_dbus_proxy_new_for_bus_finish (result, &error);
+  g_object_unref (priv->cancellable);
+  priv->cancellable = NULL;
+
+  if (priv->grabber != NULL)
+    {
+      g_signal_connect (priv->grabber, "g-signal", G_CALLBACK (grabber_emitted), self);
+    }
+  else
+    {
+      if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        {
+          g_warning ("Could not connect to grabber: %s", error->message);
+        }
+
+      g_clear_error (&error);
+    }
 }
 
 static const gchar * indicator_environment[] = {
@@ -1559,7 +1936,6 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "", 0, 0, 0, 0);
 }
-
 
 /*
  * Public Methods
