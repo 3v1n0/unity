@@ -316,9 +316,14 @@ void Window::Impl::CleanupWindowControls()
   edge_borders_.reset();
 }
 
+bool Window::Impl::IsMaximized() const
+{
+  return (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE;
+}
+
 bool Window::Impl::ShadowDecorated() const
 {
-  if (!parent_->scaled() && (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+  if (!parent_->scaled() && IsMaximized())
     return false;
 
   if (!cu::IsWindowShadowDecorable(win_))
@@ -329,7 +334,7 @@ bool Window::Impl::ShadowDecorated() const
 
 bool Window::Impl::FullyDecorated() const
 {
-  if (!parent_->scaled() && (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+  if (!parent_->scaled() && IsMaximized())
     return false;
 
   if (!cu::IsWindowFullyDecorable(win_))
@@ -615,7 +620,7 @@ void Window::AddProperties(debug::IntrospectionData& data)
   .add("framed", (impl_->frame_ != 0))
   .add("frame_geo", impl_->frame_geo_)
   .add("shadow_rect", impl_->last_shadow_rect_)
-  .add("maximized", (impl_->win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+  .add("maximized", impl_->IsMaximized())
   .add("v_maximized", (impl_->win_->state() & CompWindowStateMaximizedVertMask))
   .add("h_maximized", (impl_->win_->state() & CompWindowStateMaximizedHorzMask))
   .add("resizable", (impl_->win_->actions() & CompWindowActionResizeMask))

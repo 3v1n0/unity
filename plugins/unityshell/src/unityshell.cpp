@@ -3354,8 +3354,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
           if (o.name() == "x_offset")
           {
             CompOption::Value v(optionGetIconSize() + 18);
-            // v.set(static_cast <int> ());
-
             screen->setOptionForPlugin(p->vTable->name().c_str(), o.name().c_str(), v);
             break;
           }

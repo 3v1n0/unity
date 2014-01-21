@@ -75,6 +75,7 @@ struct Window::Impl
   void Update();
   void Decorate();
   void Undecorate();
+  bool IsMaximized() const;
   bool FullyDecorated() const;
   bool ShadowDecorated() const;
   void RedrawDecorations();
