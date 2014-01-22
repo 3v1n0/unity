@@ -538,8 +538,6 @@ private:
   glib::Source::UniquePtr focus_desktop_timeout_;
 
   friend class UnityScreen;
-  friend class decoration::Window;
-  friend class decoration::Manager;
 };
 
 
