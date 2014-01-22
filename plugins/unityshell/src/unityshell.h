@@ -154,6 +154,8 @@ public:
   void enterShowDesktopMode ();
   void leaveShowDesktopMode (CompWindow *w);
 
+  bool showMenuBarInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showMenuBarTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showPanelFirstMenuKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);

@@ -663,6 +663,11 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
 // Useful Public Methods
 //
 
+bool PanelView::SetMenuBarVisible(bool visible)
+{
+  return (!visible || IsActive()) && menu_view_->SetMenuBarVisible(visible);
+}
+
 bool PanelView::FirstMenuShow() const
 {
   bool ret = false;

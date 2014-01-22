@@ -42,6 +42,8 @@ public:
   Controller(ui::EdgeBarrierController::Ptr const& barrier_controller);
   ~Controller();
 
+  void ShowMenuBar();
+  void HideMenuBar();
   void FirstMenuShow();
   void QueueRedraw();
 

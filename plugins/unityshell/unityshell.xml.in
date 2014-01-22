@@ -44,6 +44,12 @@
             <group>
                 <_short>General</_short>
 
+                <option name="show_menu_bar" type="key">
+                    <_short>Key to reveal the global menu bar</_short>
+                    <_long>Reveals the global menu bar while pressed.</_long>
+                    <default>&lt;Alt&gt;</default>
+                </option>
+
                 <option name="lock_screen" type="key">
                     <_short>Key to lock the screen.</_short>
                     <_long>Pressing this key will lock the current session.</_long>

@@ -302,8 +302,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
 
+     optionSetShowMenuBarInitiate(boost::bind(&UnityScreen::showMenuBarInitiate, this, _1, _2, _3));
+     optionSetShowMenuBarTerminate(boost::bind(&UnityScreen::showMenuBarTerminate, this, _1, _2, _3));
      optionSetLockScreenInitiate(boost::bind(&UnityScreen::LockScreenInitiate, this, _1, _2, _3));
-
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
      optionSetBackgroundColorNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1923,6 +1924,32 @@ void UnityScreen::handleCompizEvent(const char* plugin,
   }
 
   screen->handleCompizEvent(plugin, event, option);
+}
+
+bool UnityScreen::showMenuBarInitiate(CompAction* action,
+                                      CompAction::State state,
+                                      CompOption::Vector& options)
+{
+  if (state & CompAction::StateInitKey)
+  {
+    action->setState(action->state() | CompAction::StateTermKey);
+    panel_controller_->ShowMenuBar();
+  }
+
+  return false;
+}
+
+bool UnityScreen::showMenuBarTerminate(CompAction* action,
+                                       CompAction::State state,
+                                       CompOption::Vector& options)
+{
+  if (state & CompAction::StateTermKey)
+  {
+    action->setState(action->state() & ~CompAction::StateTermKey);
+    panel_controller_->HideMenuBar();
+  }
+
+  return false;
 }
 
 bool UnityScreen::showLauncherKeyInitiate(CompAction* action,

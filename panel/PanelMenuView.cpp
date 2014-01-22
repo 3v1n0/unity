@@ -68,6 +68,7 @@ PanelMenuView::PanelMenuView()
   , show_now_activated_(false)
   , we_control_active_(false)
   , new_app_menu_shown_(false)
+  , menu_bar_visible_(false)
   , monitor_(0)
   , active_xid_(0)
   , desktop_name_(_("Ubuntu Desktop"))
@@ -196,6 +197,13 @@ void PanelMenuView::SetupUBusManagerInterests()
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnLauncherSelectionChanged));
+}
+
+bool PanelMenuView::SetMenuBarVisible(bool visible)
+{
+  menu_bar_visible_ = visible;
+  QueueDraw();
+  return true;
 }
 
 void PanelMenuView::OverlayShown()
@@ -340,7 +348,7 @@ bool PanelMenuView::ShouldDrawMenus() const
   if (we_control_active_ && !screen_grabbed &&
       !switcher_showing_ && !launcher_keynav_ && !entries_.empty())
   {
-    if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_)
+    if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_ || menu_bar_visible_)
     {
       return true;
     }
@@ -357,7 +365,7 @@ bool PanelMenuView::ShouldDrawButtons() const
   if (we_control_active_ && is_maximized_ && !screen_grabbed &&
       !launcher_keynav_ && !switcher_showing_)
   {
-    if (is_inside_ || show_now_activated_ || new_application_)
+    if (is_inside_ || show_now_activated_ || new_application_ || menu_bar_visible_)
     {
       return true;
     }

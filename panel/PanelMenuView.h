@@ -55,6 +55,8 @@ public:
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
 
+  virtual bool SetMenuBarVisible(bool visible);
+
   virtual void OverlayShown();
   virtual void OverlayHidden();
 
@@ -177,6 +179,7 @@ private:
   bool show_now_activated_;
   bool we_control_active_;
   bool new_app_menu_shown_;
+  bool menu_bar_visible_;
 
   int monitor_;
   Window active_xid_;

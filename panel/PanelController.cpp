@@ -42,6 +42,7 @@ public:
   Impl(ui::EdgeBarrierController::Ptr const& edge_barriers);
   ~Impl();
 
+  void SetMenuBarVisible(bool visible);
   void FirstMenuShow();
   void QueueRedraw();
 
@@ -109,6 +110,15 @@ void Controller::Impl::UpdatePanelGeometries()
   for (auto const& panel : panels_)
   {
     panel_geometries_.push_back(panel->GetAbsoluteGeometry());
+  }
+}
+
+void Controller::Impl::SetMenuBarVisible(bool visible)
+{
+  for (auto const& panel: panels_)
+  {
+    if (panel->SetMenuBarVisible(visible) && visible)
+      break;
   }
 }
 
@@ -296,6 +306,16 @@ Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
 Controller::~Controller()
 {
   delete pimpl;
+}
+
+void Controller::ShowMenuBar()
+{
+  pimpl->SetMenuBarVisible(true);
+}
+
+void Controller::HideMenuBar()
+{
+  pimpl->SetMenuBarVisible(false);
 }
 
 void Controller::FirstMenuShow()
