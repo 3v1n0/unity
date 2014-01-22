@@ -234,7 +234,7 @@ void Window::Impl::SyncXShapeWithFrameRegion()
 
   int n = 0;
   int order = 0;
-  XRectangle *rects = NULL;
+  XRectangle *rects = nullptr;
 
   rects = XShapeGetRectangles(dpy, frame_, ShapeInput, &n, &order);
   if (!rects)
