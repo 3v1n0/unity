@@ -45,11 +45,15 @@ void LauncherModel::AddProperties(debug::IntrospectionData& introspection)
 
 unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectableChildren()
 {
+  int order = 0;
   introspection_results_.clear();
 
   for (auto icon : _inner)
     if (!icon->removed)
+    {
+      icon->SetOrder(++order);
       introspection_results_.push_back(icon.GetPointer());
+    }
 
   return introspection_results_;
 }
