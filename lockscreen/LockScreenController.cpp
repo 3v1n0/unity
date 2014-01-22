@@ -30,7 +30,6 @@ Controller::Controller(session::Manager::Ptr const& manager)
   , locked_(false) // FIXME unity can start in lock state!
 {
   auto* uscreen = UScreen::GetDefault();
-  EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::OnUScreenChanged));
   manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
@@ -82,8 +81,11 @@ void Controller::OnLockRequested()
   if (locked_)
     return;
 
+  auto* uscreen = UScreen::GetDefault();
+  EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
+
   std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-    shield->SetOpacity(1.0f);
+    shield->SetOpacity(0.5f);
     shield->ShowWindow(true);
   });
 

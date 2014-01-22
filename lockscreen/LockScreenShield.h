@@ -32,6 +32,7 @@ namespace lockscreen
 {
 
 class BackgroundSettings;
+class UserPromptView;
 
 class Shield : public MockableBaseWindow
 {
@@ -40,6 +41,13 @@ public:
   ~Shield() {};
 
   nux::Property<bool> primary;
+
+  nux::Area* FindKeyFocusArea(unsigned int key_symbol,
+                                   unsigned long x11_key_code,
+                                   unsigned long special_keys_state) override;
+
+  bool AcceptKeyNavFocus() override {return false;}
+
 
 private:
   void UpdateBackgroundTexture();
@@ -52,6 +60,8 @@ private:
 
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
+
+  UserPromptView* prompt_view_;
 };
 
 }

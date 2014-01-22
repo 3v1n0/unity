@@ -21,7 +21,9 @@
 
 #include "BackgroundSettingsGnome.h" // FIXME: remove this
 #include "CofView.h"
+#include "UserPromptView.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/TextInput.h"
 #include "panel/PanelView.h"
 
 #include <Nux/VLayout.h>
@@ -38,6 +40,7 @@ namespace lockscreen
 Shield::Shield(bool is_primary)
   : primary(is_primary)
   , bg_settings_(new BackgroundSettingsGnome) // FIXME (andy) inject it!
+  , prompt_view_(nullptr)
 {
   SetLayout(new nux::VLayout());
 
@@ -110,12 +113,30 @@ void Shield::ShowPrimaryView()
     }
   });
 
-  PanelView* view = new PanelView(this, indicators);
-  view->SetMaximumHeight(panel::Style::Instance().panel_height);
-  view->SetOpacity(0.5);
+  PanelView* panel_view = new PanelView(this, indicators);
+  panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
+  panel_view->SetOpacity(0.5);
 
-  main_layout->AddView(view);
+  main_layout->AddView(panel_view);
 
+  nux::HLayout* prompt_layout = new nux::HLayout();
+  prompt_layout->SetLeftAndRightPadding(2*40); // FIXME (andy)
+
+  prompt_view_ = new UserPromptView();
+
+  prompt_view_->SetMinimumWidth(8*40);
+  prompt_view_->SetMaximumWidth(8*40);
+  prompt_view_->SetMinimumHeight(3*40);
+  prompt_view_->SetMaximumHeight(3*40);
+  prompt_layout->AddView(prompt_view_);
+
+  main_layout->AddSpace(0, 10);
+  main_layout->AddLayout(prompt_layout);
+  main_layout->AddSpace(0, 10);
+
+  prompt_view_->text_entry()->activated.connect([this](){
+    std::cout << "activated" << std::endl;
+  });
 }
 
 void Shield::ShowSecondaryView()
@@ -125,6 +146,13 @@ void Shield::ShowSecondaryView()
 
   CofView* cof_view = new CofView();
   main_layout->AddView(cof_view);
+}
+
+nux::Area* Shield::FindKeyFocusArea(unsigned int key_symbol,
+                                    unsigned long x11_key_code,
+                                    unsigned long special_keys_state)
+{
+  return prompt_view_->text_entry();
 }
 
 }

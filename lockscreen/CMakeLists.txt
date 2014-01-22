@@ -22,6 +22,7 @@ set (LOCKSCREEN_SOURCES
      LockScreenController.cpp
      LockScreenShield.cpp
      UserAuthenticatorPam.cpp
+     UserPromptView.cpp
      )
 
 add_library (lockscreen-lib STATIC ${LOCKSCREEN_SOURCES})
