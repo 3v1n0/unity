@@ -3818,6 +3818,9 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 
   if (!highlighted)
   {
+    if (!compiz_utils::IsWindowFullyDecorable(window))
+      return;
+
     BuildDecorationTexture();
 
     if (decoration_tex_)
