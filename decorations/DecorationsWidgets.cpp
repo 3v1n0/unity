@@ -80,6 +80,26 @@ int Item::GetNaturalHeight() const
   return natural_.height;
 }
 
+int Item::GetMaxWidth() const
+{
+  return max_.width;
+};
+
+int Item::GetMaxHeight() const
+{
+  return max_.height;
+};
+
+int Item::GetMinWidth() const
+{
+  return min_.width;
+};
+
+int Item::GetMinHeight() const
+{
+  return min_.height;
+};
+
 void Item::SetMaxWidth(int value)
 {
   int clamped = clamp_size(value);

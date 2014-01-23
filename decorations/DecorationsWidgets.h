@@ -64,10 +64,10 @@ public:
   virtual void SetMinWidth(int min_width);
   virtual void SetMinHeight(int min_height);
 
-  int GetMaxWidth() const { return max_.width; };
-  int GetMaxHeight() const { return max_.height; };
-  int GetMinWidth() const { return min_.width; };
-  int GetMinHeight() const { return min_.height; };
+  int GetMaxWidth() const;
+  int GetMaxHeight() const;
+  int GetMinWidth() const;
+  int GetMinHeight() const;
 
   void SetParent(std::shared_ptr<BasicContainer> const&);
   std::shared_ptr<BasicContainer> GetParent() const;
