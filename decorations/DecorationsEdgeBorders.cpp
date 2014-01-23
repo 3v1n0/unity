@@ -35,32 +35,15 @@ EdgeBorders::EdgeBorders(CompWindow* win)
 {
   items_.resize(size_t(Edge::Type::Size));
 
-  auto item = std::make_shared<Edge>(win, Edge::Type::TOP);
-  items_[unsigned(Edge::Type::TOP)] = item;
+  for (unsigned i = 0; i < unsigned(Edge::Type::Size); ++i)
+  {
+    auto type = Edge::Type(i);
 
-  item = std::make_shared<Edge>(win, Edge::Type::TOP_LEFT);
-  items_[unsigned(Edge::Type::TOP_LEFT)] = item;
-
-  item = std::make_shared<Edge>(win, Edge::Type::TOP_RIGHT);
-  items_[unsigned(Edge::Type::TOP_RIGHT)] = item;
-
-  item = std::make_shared<Edge>(win, Edge::Type::LEFT);
-  items_[unsigned(Edge::Type::LEFT)] = item;
-
-  item = std::make_shared<Edge>(win, Edge::Type::RIGHT);
-  items_[unsigned(Edge::Type::RIGHT)] = item;
-
-  item = std::make_shared<Edge>(win, Edge::Type::BOTTOM);
-  items_[unsigned(Edge::Type::BOTTOM)] = item;
-
-  item = std::make_shared<Edge>(win, Edge::Type::BOTTOM_LEFT);
-  items_[unsigned(Edge::Type::BOTTOM_LEFT)] = item;
-
-  item = std::make_shared<Edge>(win, Edge::Type::BOTTOM_RIGHT);
-  items_[unsigned(Edge::Type::BOTTOM_RIGHT)] = item;
-
-  item = std::make_shared<GrabEdge>(win);
-  items_[unsigned(Edge::Type::GRAB)] = item;
+    if (type == Edge::Type::GRAB)
+      items_[i] = std::make_shared<GrabEdge>(win);
+    else
+      items_[i] = std::make_shared<Edge>(win, type);
+  }
 
   Relayout();
 }
