@@ -195,9 +195,11 @@ struct Style::Impl
     });
 
     signals_.Add<void, GSettings*, gchar*>(settings_, "changed::" + USE_SYSTEM_FONT_KEY, [this] (GSettings*, gchar*) {
+      parent_->title_font.DisableNotifications();
       SetTitleFont();
-      UpdatePangoContext(parent_->font());
-      parent_->title_font = parent_->font();
+      UpdatePangoContext(parent_->title_font());
+      parent_->title_font.EnableNotifications();
+      parent_->title_font.changed.emit(parent_->title_font());
       LOG_INFO(logger) << USE_SYSTEM_FONT_KEY << " changed to " << g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str());
     });
   }
