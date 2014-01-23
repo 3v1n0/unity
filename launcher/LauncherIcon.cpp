@@ -26,6 +26,7 @@
 #include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/UScreen.h"
 
 #include "QuicklistManager.h"
 #include "QuicklistMenuItem.h"

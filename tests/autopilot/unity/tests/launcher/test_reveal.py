@@ -25,6 +25,10 @@ class LauncherRevealTests(LauncherTestCase):
 
     def setUp(self):
         super(LauncherRevealTests, self).setUp()
+
+        if not self.launcher_instance:
+            self.skipTest("Cannot run test with no Launcher on monitor")
+
         # these automatically reset to the original value, as implemented in AutopilotTestCase
         self.set_unity_option('launcher_capture_mouse', True)
         self.set_unity_option('launcher_hide_mode', 1)
