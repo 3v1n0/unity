@@ -59,7 +59,7 @@ nux::AbstractPaintLayer* Foo(int width, int height)
                                 rop));
 }
 
-UserPromptView::UserPromptView()
+UserPromptView::UserPromptView(std::string const& name)
   : nux::View(NUX_TRACKER_LOCATION)
 {
   SetLayout(new nux::VLayout());
@@ -67,7 +67,7 @@ UserPromptView::UserPromptView()
   GetLayout()->SetLeftAndRightPadding(10);
   GetLayout()->SetTopAndBottomPadding(10);
 
-  unity::StaticCairoText* username = new unity::StaticCairoText("<b>Andrea Azzarone</b>");
+  unity::StaticCairoText* username = new unity::StaticCairoText(name);
   GetLayout()->AddView(username);
 
   text_input_ = new unity::TextInput();

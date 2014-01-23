@@ -44,7 +44,7 @@ private:
   void OnLockRequested();
   void OnUnlockRequested();
 
-  session::Manager::Ptr const& manager_;
+  session::Manager::Ptr manager_;
   std::vector<nux::ObjectPtr<Shield>> shields_;
   bool locked_;
 };

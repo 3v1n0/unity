@@ -23,6 +23,7 @@
 #include <NuxCore/Property.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/SessionManager.h>
 
 #include "unity-shared/MockableBaseWindow.h"
 
@@ -32,12 +33,13 @@ namespace lockscreen
 {
 
 class BackgroundSettings;
+class UserAuthenticator;
 class UserPromptView;
 
 class Shield : public MockableBaseWindow
 {
 public:
-  Shield(bool is_primary);
+  Shield(session::Manager::Ptr const& session_manager, bool is_primary);
   ~Shield() {};
 
   nux::Property<bool> primary;
@@ -58,8 +60,10 @@ private:
   void OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long /**/);
   void OnPrimaryChanged(bool value);
 
+  session::Manager::Ptr session_manager_;
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
+  std::shared_ptr<UserAuthenticator> user_authenticator_;
 
   UserPromptView* prompt_view_;
 };

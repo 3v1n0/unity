@@ -21,6 +21,7 @@
 
 #include "BackgroundSettingsGnome.h" // FIXME: remove this
 #include "CofView.h"
+#include "UserAuthenticatorPam.h"
 #include "UserPromptView.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/TextInput.h"
@@ -37,9 +38,11 @@ namespace unity
 namespace lockscreen
 {
 
-Shield::Shield(bool is_primary)
+Shield::Shield(session::Manager::Ptr const& session_manager, bool is_primary)
   : primary(is_primary)
+  , session_manager_(session_manager)
   , bg_settings_(new BackgroundSettingsGnome) // FIXME (andy) inject it!
+  , user_authenticator_(new UserAuthenticatorPam)
   , prompt_view_(nullptr)
 {
   SetLayout(new nux::VLayout());
@@ -122,7 +125,10 @@ void Shield::ShowPrimaryView()
   nux::HLayout* prompt_layout = new nux::HLayout();
   prompt_layout->SetLeftAndRightPadding(2*40); // FIXME (andy)
 
-  prompt_view_ = new UserPromptView();
+  auto const& real_name = session_manager_->RealName();
+  auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
+  //std::string name = "Andrea Azzarone";
+  prompt_view_ = new UserPromptView(name);
 
   prompt_view_->SetMinimumWidth(8*40);
   prompt_view_->SetMaximumWidth(8*40);
@@ -135,7 +141,12 @@ void Shield::ShowPrimaryView()
   main_layout->AddSpace(0, 10);
 
   prompt_view_->text_entry()->activated.connect([this](){
-    std::cout << "activated" << std::endl;
+    user_authenticator_->AuthenticateStart(session_manager_->UserName(), prompt_view_->text_entry()->GetText(), [this](bool authenticated) {
+      if (authenticated)
+      {
+        session_manager_->unlock_requested.emit();
+      }
+    });
   });
 }
 

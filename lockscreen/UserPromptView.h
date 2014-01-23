@@ -35,7 +35,7 @@ namespace lockscreen
 class UserPromptView : public nux::View
 {
 public:
-  UserPromptView();
+  UserPromptView(std::string const& name);
   ~UserPromptView() {};
 
   nux::TextEntry* text_entry();

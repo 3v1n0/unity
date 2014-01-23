@@ -72,7 +72,7 @@ void Controller::EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry
 
 nux::ObjectPtr<Shield> Controller::CreateShield(bool is_monitor_with_mouse)
 {
-  nux::ObjectPtr<Shield> shield(new Shield(is_monitor_with_mouse));
+  nux::ObjectPtr<Shield> shield(new Shield(manager_, is_monitor_with_mouse));
   return shield;
 }
 
@@ -85,7 +85,7 @@ void Controller::OnLockRequested()
   EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
 
   std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-    shield->SetOpacity(0.5f);
+    shield->SetOpacity(1.0f);
     shield->ShowWindow(true);
   });
 
