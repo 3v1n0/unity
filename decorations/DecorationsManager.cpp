@@ -47,7 +47,9 @@ Manager::Impl::Impl(decoration::Manager* parent)
   , enable_add_supported_atoms_(true)
   , data_pool_(DataPool::Get())
 {
-  manager_ = parent;
+  if (!manager_)
+    manager_ = parent;
+
   Display* dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
@@ -318,7 +320,10 @@ Manager::Manager()
 {}
 
 Manager::~Manager()
-{}
+{
+  if (manager_ == this)
+    manager_ = nullptr;
+}
 
 void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
 {
