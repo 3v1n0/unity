@@ -42,7 +42,6 @@ namespace decoration
 {
 namespace cu = compiz_utils;
 
-extern Display* dpy;
 extern Manager* manager_;
 
 struct Quads

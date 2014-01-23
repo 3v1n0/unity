@@ -29,7 +29,6 @@ namespace unity
 {
 namespace decoration
 {
-Display* dpy = nullptr;
 Manager* manager_ = nullptr;
 
 namespace
@@ -49,7 +48,7 @@ Manager::Impl::Impl(decoration::Manager* parent)
   , data_pool_(DataPool::Get())
 {
   manager_ = parent;
-  dpy = screen->dpy();
+  Display* dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
   screen->updateSupportedWmHints();

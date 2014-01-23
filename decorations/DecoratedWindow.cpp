@@ -140,7 +140,7 @@ void Window::Impl::UnsetFrame()
   if (!frame_)
     return;
 
-  XDestroyWindow(dpy, frame_);
+  XDestroyWindow(screen->dpy(), frame_);
   framed.emit(false, frame_);
   frame_ = 0;
   frame_geo_.Set(0, 0, 0, 0);
@@ -167,6 +167,7 @@ void Window::Impl::CreateFrame(nux::Geometry const& frame_geo)
 {
   /* Since we're reparenting windows here, we need to grab the server
    * which sucks, but its necessary */
+  Display* dpy = screen->dpy();
   XGrabServer(dpy);
 
   XSetWindowAttributes attr;
@@ -191,6 +192,7 @@ void Window::Impl::CreateFrame(nux::Geometry const& frame_geo)
 void Window::Impl::UpdateFrameGeo(nux::Geometry const& frame_geo)
 {
   auto const& input = win_->input();
+  Display* dpy = screen->dpy();
   XMoveResizeWindow(dpy, frame_, frame_geo.x, frame_geo.y, frame_geo.width, frame_geo.height);
   XLowerWindow(dpy, frame_);
 
@@ -243,7 +245,7 @@ void Window::Impl::SyncXShapeWithFrameRegion()
   int order = 0;
   XRectangle *rects = nullptr;
 
-  rects = XShapeGetRectangles(dpy, frame_, ShapeInput, &n, &order);
+  rects = XShapeGetRectangles(screen->dpy(), frame_, ShapeInput, &n, &order);
   if (!rects)
     return;
 
