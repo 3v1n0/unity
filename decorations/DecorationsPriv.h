@@ -83,8 +83,10 @@ struct Window::Impl
 private:
   void UnsetExtents();
   void SetupExtents();
-  void UnsetFrame();
   void UpdateFrame();
+  void CreateFrame(nux::Geometry const&);
+  void UpdateFrameGeo(nux::Geometry const&);
+  void UnsetFrame();
   void SetupWindowControls();
   void CleanupWindowControls();
   void SyncXShapeWithFrameRegion();

@@ -157,75 +157,82 @@ void Window::Impl::UpdateFrame()
     frame_geo.height = input.top + input.bottom;
 
   if (!frame_)
-  {
-    /* Since we're reparenting windows here, we need to grab the server
-     * which sucks, but its necessary */
-    XGrabServer(dpy);
-
-    XSetWindowAttributes attr;
-    attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask |
-                      EnterWindowMask | LeaveWindowMask | PointerMotionMask;
-    attr.override_redirect = True;
-
-    auto parent = win_->frame();
-    frame_ = XCreateWindow(dpy, parent, frame_geo.x, frame_geo.y,
-                           frame_geo.width, frame_geo.height, 0, CopyFromParent,
-                           InputOnly, CopyFromParent, CWOverrideRedirect | CWEventMask, &attr);
-
-    if (screen->XShape())
-      XShapeSelectInput(dpy, frame_, ShapeNotifyMask);
-
-    XMapWindow(dpy, frame_);
-    framed.emit(true, frame_);
-
-    XUngrabServer(dpy);
-  }
+    CreateFrame(frame_geo);
 
   if (frame_geo_ != frame_geo)
-  {
-    XMoveResizeWindow(dpy, frame_, frame_geo.x, frame_geo.y, frame_geo.width, frame_geo.height);
-    XLowerWindow(dpy, frame_);
+    UpdateFrameGeo(frame_geo);
+}
 
-    int i = 0;
-    XRectangle rects[4];
+void Window::Impl::CreateFrame(nux::Geometry const& frame_geo)
+{
+  /* Since we're reparenting windows here, we need to grab the server
+   * which sucks, but its necessary */
+  XGrabServer(dpy);
 
-    rects[i].x = 0;
-    rects[i].y = 0;
-    rects[i].width = frame_geo.width;
-    rects[i].height = input.top;
+  XSetWindowAttributes attr;
+  attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask |
+                    EnterWindowMask | LeaveWindowMask | PointerMotionMask;
+  attr.override_redirect = True;
 
-    if (rects[i].width && rects[i].height)
-      i++;
+  auto parent = win_->frame();
+  frame_ = XCreateWindow(dpy, parent, frame_geo.x, frame_geo.y,
+                         frame_geo.width, frame_geo.height, 0, CopyFromParent,
+                         InputOnly, CopyFromParent, CWOverrideRedirect | CWEventMask, &attr);
 
-    rects[i].x = 0;
-    rects[i].y = input.top;
-    rects[i].width = input.left;
-    rects[i].height = frame_geo.height - input.top - input.bottom;
+  if (screen->XShape())
+    XShapeSelectInput(dpy, frame_, ShapeNotifyMask);
 
-    if (rects[i].width && rects[i].height)
-      i++;
+  XMapWindow(dpy, frame_);
+  framed.emit(true, frame_);
 
-    rects[i].x = frame_geo.width - input.right;
-    rects[i].y = input.top;
-    rects[i].width = input.right;
-    rects[i].height = frame_geo.height - input.top - input.bottom;
+  XUngrabServer(dpy);
+}
 
-    if (rects[i].width && rects[i].height)
-      i++;
+void Window::Impl::UpdateFrameGeo(nux::Geometry const& frame_geo)
+{
+  auto const& input = win_->input();
+  XMoveResizeWindow(dpy, frame_, frame_geo.x, frame_geo.y, frame_geo.width, frame_geo.height);
+  XLowerWindow(dpy, frame_);
 
-    rects[i].x = 0;
-    rects[i].y = frame_geo.height - input.bottom;
-    rects[i].width = frame_geo.width;
-    rects[i].height = input.bottom;
+  int i = 0;
+  XRectangle rects[4];
 
-    if (rects[i].width && rects[i].height)
-      i++;
+  rects[i].x = 0;
+  rects[i].y = 0;
+  rects[i].width = frame_geo.width;
+  rects[i].height = input.top;
 
-    XShapeCombineRectangles(dpy, frame_, ShapeBounding, 0, 0, rects, i, ShapeSet, YXBanded);
+  if (rects[i].width && rects[i].height)
+    i++;
 
-    frame_geo_ = frame_geo;
-    SyncXShapeWithFrameRegion();
-  }
+  rects[i].x = 0;
+  rects[i].y = input.top;
+  rects[i].width = input.left;
+  rects[i].height = frame_geo.height - input.top - input.bottom;
+
+  if (rects[i].width && rects[i].height)
+    i++;
+
+  rects[i].x = frame_geo.width - input.right;
+  rects[i].y = input.top;
+  rects[i].width = input.right;
+  rects[i].height = frame_geo.height - input.top - input.bottom;
+
+  if (rects[i].width && rects[i].height)
+    i++;
+
+  rects[i].x = 0;
+  rects[i].y = frame_geo.height - input.bottom;
+  rects[i].width = frame_geo.width;
+  rects[i].height = input.bottom;
+
+  if (rects[i].width && rects[i].height)
+    i++;
+
+  XShapeCombineRectangles(dpy, frame_, ShapeBounding, 0, 0, rects, i, ShapeSet, YXBanded);
+
+  frame_geo_ = frame_geo;
+  SyncXShapeWithFrameRegion();
 }
 
 void Window::Impl::SyncXShapeWithFrameRegion()
