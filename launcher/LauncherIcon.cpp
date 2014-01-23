@@ -171,7 +171,7 @@ void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
   }
 
   introspection
-  .add("center", _center[0])
+  .add("center", _center[unity::UScreen::GetDefault()->GetMonitorWithMouse()])
   .add("related_windows", Windows().size())
   .add("icon_type", unsigned(_icon_type))
   .add("tooltip_text", tooltip_text())
