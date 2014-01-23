@@ -358,12 +358,18 @@ bool Window::Impl::ShouldBeDecorated() const
 GLTexture* Window::Impl::ShadowTexture() const
 {
   auto const& mi = manager_->impl_;
-  return active() || parent_->scaled() ? mi->active_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
+  if (active() || parent_->scaled())
+    return mi->active_shadow_pixmap_->texture();
+
+  return mi->inactive_shadow_pixmap_->texture();
 }
 
 unsigned Window::Impl::ShadowRadius() const
 {
-  return active() || parent_->scaled() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
+  if (active() || parent_->scaled())
+    return manager_->active_shadow_radius();
+
+  return manager_->inactive_shadow_radius();
 }
 
 void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
