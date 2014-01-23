@@ -44,13 +44,14 @@ std::string const& Indicator::name() const
   return name_;
 }
 
-Indicator::Entries Indicator::GetEntries() const
+Indicator::Entries const& Indicator::GetEntries() const
 {
   return entries_;
 }
 
 void Indicator::Sync(Indicator::Entries const& new_entries)
 {
+  bool added = false;
   Entries to_rm;
 
   if (!entries_.empty())
@@ -89,7 +90,12 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 
     entries_.push_back(new_entry);
     on_entry_added.emit(new_entry);
+
+    added = true;
   }
+
+  if (!to_rm.empty() || added)
+    updated.emit();
 }
 
 Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
