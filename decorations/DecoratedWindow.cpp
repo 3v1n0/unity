@@ -420,7 +420,7 @@ void Window::Impl::ComputeShadowQuads()
   if (!ShadowDecorated())
     return;
 
-  auto* texture = ShadowTexture();
+  const auto* texture = ShadowTexture();
 
   if (!texture || !texture->width() || !texture->height())
     return;
@@ -580,7 +580,7 @@ void Window::UpdateFrameRegion(CompRegion& r)
 
 void Window::UpdateOutputExtents(compiz::window::extents::Extents& output)
 {
-  auto* win = impl_->win_;
+  const auto* win = impl_->win_;
   auto const& shadow = impl_->last_shadow_rect_;
   output.top = std::max(output.top, win->y() - shadow.y1());
   output.left = std::max(output.left, win->x() - shadow.x1());
