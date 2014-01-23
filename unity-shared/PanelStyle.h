@@ -87,7 +87,7 @@ private:
   BaseTexturePtr bg_texture_;
 
   std::vector<int> panel_heights_;
-  EMConverter em_converter_;
+  EMConverter em_;
 };
 
 }

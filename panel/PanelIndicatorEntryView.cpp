@@ -65,7 +65,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , overlay_showing_(false)
   , disabled_(false)
   , focused_(true)
-  , em_converter_(0)
+  , em_(0)
 {
   proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -102,8 +102,8 @@ void PanelIndicatorEntryView::UpdateEMConverter()
   font_size = pango_font_description_get_size(desc);
   pango_font_description_free(desc);
 
-  em_converter_.SetFontSize(font_size / 1024);
-  em_converter_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
+  em_.SetFontSize(font_size / 1024);
+  em_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -224,14 +224,14 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   else if (image_type == GTK_IMAGE_STOCK ||
            image_type == GTK_IMAGE_ICON_NAME)
   {
-    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), em_converter_.ConvertPixels(DESIRED_ICON_SIZE),
+    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), em_.ConvertPixels(DESIRED_ICON_SIZE),
                                       (GtkIconLookupFlags)0, nullptr);
   }
   else if (image_type == GTK_IMAGE_GICON)
   {
     glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
 
-    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, em_converter_.ConvertPixels(DESIRED_ICON_SIZE),
+    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, em_.ConvertPixels(DESIRED_ICON_SIZE),
                                                       (GtkIconLookupFlags)0));
     if (info)
       pixbuf = gtk_icon_info_load_icon(info, nullptr);
@@ -245,7 +245,7 @@ int PanelIndicatorEntryView::PixbufWidth(glib::Object<GdkPixbuf> const& pixbuf) 
   int image_type = proxy_->image_type();
   if (image_type == GTK_IMAGE_PIXBUF)
   {
-    return em_converter_.ConvertPixels(gdk_pixbuf_get_width(pixbuf));
+    return em_.ConvertPixels(gdk_pixbuf_get_width(pixbuf));
   }
   else
   {
@@ -258,7 +258,7 @@ int PanelIndicatorEntryView::PixbufHeight(glib::Object<GdkPixbuf> const& pixbuf)
   int image_type = proxy_->image_type();
   if (image_type == GTK_IMAGE_PIXBUF)
   {
-    return em_converter_.ConvertPixels(gdk_pixbuf_get_height(pixbuf));
+    return em_.ConvertPixels(gdk_pixbuf_get_height(pixbuf));
   }
   else
   {
@@ -297,7 +297,7 @@ void PanelIndicatorEntryView::ScaleImageIcons(cairo_t* cr, int* x, int* y)
   int image_type = proxy_->image_type();
   if (image_type == GTK_IMAGE_PIXBUF)
   {
-    float aspect = em_converter_.DPIScale();
+    float aspect = em_.DPIScale();
     *x = left_padding_;
     *y = SCALED_IMAGE_Y;
     cairo_scale(cr, aspect, aspect);
@@ -306,7 +306,7 @@ void PanelIndicatorEntryView::ScaleImageIcons(cairo_t* cr, int* x, int* y)
 
 void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, glib::Object<PangoLayout> const& layout)
 {
-  int x = em_converter_.ConvertPixels(left_padding_);
+  int x = em_.ConvertPixels(left_padding_);
 
   if (IsActive())
     DrawEntryPrelight(cr, width, height);
@@ -378,7 +378,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
     gtk_style_context_restore(style_context);
 
-    x += icon_width + em_converter_.ConvertPixels(spacing_);
+    x += icon_width + em_.ConvertPixels(spacing_);
   }
 
   if (layout)
@@ -415,7 +415,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     int y = (height - text_height) / 2;
 
 
-    unsigned int text_space = GetMaximumWidth() - x - em_converter_.ConvertPixels(right_padding_);
+    unsigned int text_space = GetMaximumWidth() - x - em_.ConvertPixels(right_padding_);
 
     if (text_width > text_space)
     {
@@ -438,7 +438,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       }
       cairo_pop_group_to_source(cr);
 
-      int right_margin = width - em_converter_.ConvertPixels(right_padding_);
+      int right_margin = width - em_.ConvertPixels(right_padding_);
       linpat = cairo_pattern_create_linear(right_margin - fading_width, y, right_margin, y);
       cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
       cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
@@ -549,15 +549,15 @@ void PanelIndicatorEntryView::Refresh()
     unsigned int text_width = log_rect.width / PANGO_SCALE;
 
     if (icon_width)
-      width += em_converter_.ConvertPixels(spacing_);
+      width += em_.ConvertPixels(spacing_);
     width += text_width;
 
     pango_font_description_free(desc);
   }
 
   if (width)
-    width += em_converter_.ConvertPixels(left_padding_) +
-             em_converter_.ConvertPixels(right_padding_);
+    width += em_.ConvertPixels(left_padding_) +
+             em_.ConvertPixels(right_padding_);
 
   width = std::min<int>(width, GetMaximumWidth());
   SetMinimumWidth(width);

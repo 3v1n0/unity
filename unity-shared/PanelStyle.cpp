@@ -55,7 +55,7 @@ std::string button_id(WindowButtonType type, WindowState ws)
 Style::Style()
   : style_context_(gtk_style_context_new())
   , panel_heights_(monitors::MAX, BASE_PANEL_HEIGHT)
-  , em_converter_(0)
+  , em_(0)
 {
   if (style_instance)
   {
@@ -124,7 +124,7 @@ int Style::PanelHeight(int monitor) const
     return 0;
   }
 
-  return em_converter_.ConvertPixels(panel_heights_[monitor]);
+  return em_.ConvertPixels(panel_heights_[monitor]);
 }
 
 void Style::RefreshContext()
@@ -136,13 +136,6 @@ void Style::RefreshContext()
   UpdatePanelHeight();
 
   changed.emit();
-}
-
-void Style::UpdateFontSize()
-{
-  int font_size = GetFontSize();
-
-  em_converter_.SetFontSize(font_size / 1024);
 }
 
 int Style::GetFontSize()
@@ -159,10 +152,17 @@ int Style::GetFontSize()
   return font_size;
 }
 
+void Style::UpdateFontSize()
+{
+  int font_size = GetFontSize();
+
+  em_.SetFontSize(font_size / 1024);
+}
+
 void Style::UpdatePanelHeight()
 {
   int dpi = GetTextDPI() / 1024;
-  em_converter_.SetDPI(dpi);
+  em_.SetDPI(dpi);
 
   // TODO Default monitor for now...
   panel_height_changed.emit(PanelHeight());

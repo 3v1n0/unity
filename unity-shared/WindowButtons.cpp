@@ -43,7 +43,7 @@ WindowButton::WindowButton(panel::WindowButtonType type)
             sigc::mem_fun(this, &WindowButton::EnabledSetter))
   , overlay_mode(false)
   , type_(type)
-  , em_converter_(0)
+  , em_(0)
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
@@ -54,8 +54,8 @@ WindowButton::WindowButton(panel::WindowButtonType type)
 
 void WindowButton::UpdateEMConverter()
 {
-  em_converter_.SetFontSize(panel::Style::Instance().GetFontSize());
-  em_converter_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
+  em_.SetFontSize(panel::Style::Instance().GetFontSize());
+  em_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
 }
 
 void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
@@ -149,8 +149,8 @@ void WindowButton::UpdateSize()
 
   if (tex)
   {
-    int tex_w = em_converter_.ConvertPixels(tex->GetWidth());
-    int tex_h = em_converter_.ConvertPixels(tex->GetHeight());
+    int tex_w = em_.ConvertPixels(tex->GetWidth());
+    int tex_h = em_.ConvertPixels(tex->GetHeight());
     width  = std::min(panel_height, tex_w);
     height = std::min(panel_height, tex_h);
   }

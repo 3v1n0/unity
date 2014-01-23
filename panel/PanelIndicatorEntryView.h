@@ -130,7 +130,7 @@ private:
   bool disabled_;
   bool focused_;
 
-  EMConverter em_converter_;
+  EMConverter em_;
 };
 
 }
