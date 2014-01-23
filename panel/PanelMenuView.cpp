@@ -97,6 +97,10 @@ PanelMenuView::PanelMenuView()
     FullRedraw();
   });
 
+  panel::Style::Instance().panel_height_changed.connect([this] (int height) {
+    window_buttons_->SetMaximumHeight(height);
+  });
+
   opacity = 0.0f;
 
   if (Refresh())
@@ -135,7 +139,7 @@ void PanelMenuView::SetupWindowButtons()
   window_buttons_->controlled_window = active_xid_;
   window_buttons_->opacity = 0.0f;
   window_buttons_->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
-  window_buttons_->SetMaximumHeight(panel::Style::Instance().panel_height);
+  window_buttons_->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor_));
   window_buttons_->ComputeContentSize();
 
   window_buttons_->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
@@ -151,7 +155,7 @@ void PanelMenuView::SetupLayout()
 {
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-  layout_->SetBaseHeight(panel::Style::Instance().panel_height);
+  layout_->SetBaseHeight(panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void PanelMenuView::SetupTitlebarGrabArea()

@@ -43,11 +43,19 @@ WindowButton::WindowButton(panel::WindowButtonType type)
             sigc::mem_fun(this, &WindowButton::EnabledSetter))
   , overlay_mode(false)
   , type_(type)
+  , em_converter_(0)
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
+
   LoadImages();
+}
+
+void WindowButton::UpdateEMConverter()
+{
+  em_converter_.SetFontSize(panel::Style::Instance().GetFontSize());
+  em_converter_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
 }
 
 void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
@@ -133,7 +141,7 @@ void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void WindowButton::UpdateSize()
 {
-  int panel_height = panel::Style::Instance().panel_height;
+  int panel_height = panel::Style::Instance().PanelHeight();
   nux::BaseTexture* tex;
   tex = (overlay_mode()) ? normal_dash_tex_.GetPointer() : normal_tex_.GetPointer();
   int width = 0;
@@ -141,8 +149,10 @@ void WindowButton::UpdateSize()
 
   if (tex)
   {
-    width = std::min(panel_height, tex->GetWidth());
-    height = std::min(panel_height, tex->GetHeight());
+    int tex_w = em_converter_.ConvertPixels(tex->GetWidth());
+    int tex_h = em_converter_.ConvertPixels(tex->GetHeight());
+    width  = std::min(panel_height, tex_w);
+    height = std::min(panel_height, tex_h);
   }
 
   SetMinMaxSize(width, height);
@@ -164,6 +174,7 @@ void WindowButton::LoadImages()
   pressed_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRESSED);
   disabled_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::DISABLED);
 
+  UpdateEMConverter();
   UpdateSize();
   QueueDraw();
 }

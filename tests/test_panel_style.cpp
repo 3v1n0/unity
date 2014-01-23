@@ -27,6 +27,8 @@
 #include "unity-shared/UnitySettings.h"
 #include "test_utils.h"
 
+#include "MultiMonitor.h"
+
 using namespace unity;
 using namespace testing;
 
@@ -81,6 +83,16 @@ TEST_F(TestPanelStyle, TestChangedSignal)
 
   g_settings_set_string(gsettings, "titlebar-font", old_font);
   g_free (old_font);
+}
+
+TEST_F(TestPanelStyle, TestPanelHeightUnderBounds)
+{
+  ASSERT_EQ(panel_style_instance->PanelHeight(-1), 0);
+}
+
+TEST_F(TestPanelStyle, TestPanelHeightOverBounds)
+{
+  ASSERT_EQ(panel_style_instance->PanelHeight(monitors::MAX), 0);
 }
 
 }

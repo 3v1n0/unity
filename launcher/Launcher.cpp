@@ -1187,8 +1187,8 @@ void Launcher::OnMonitorChanged(int new_monitor)
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(new_monitor);
   unity::panel::Style &panel_style = panel::Style::Instance();
-  Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_style.panel_height),
-         monitor_geo.height - panel_style.panel_height);
+  Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_style.PanelHeight(new_monitor)),
+         monitor_geo.height - panel_style.PanelHeight(new_monitor));
   icon_renderer_->monitor = new_monitor;
 }
 
@@ -1752,7 +1752,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
       texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
       texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()); // TODO (gord) don't use absolute values here
-      texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel::Style::Instance().panel_height;
+      texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel::Style::Instance().PanelHeight(icon_renderer_->monitor);
       GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
                           launcher_sheen_->GetDeviceTexture(),
                           texxform,

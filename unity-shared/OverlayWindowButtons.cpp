@@ -52,7 +52,7 @@ void OverlayWindowButtons::UpdateGeometry()
 
   SetX(geo.x + MAIN_LEFT_PADDING);
   SetY(geo.y + MENUBAR_PADDING);
-  SetHeight(panel::Style::Instance().panel_height);
+  SetHeight(panel::Style::Instance().PanelHeight(monitor));
 
   window_buttons_->monitor = monitor;
 }

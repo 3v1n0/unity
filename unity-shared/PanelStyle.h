@@ -28,6 +28,8 @@
 #include <gtk/gtk.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "unity-shared/EMConverter.h"
+
 namespace unity
 {
 namespace decoration
@@ -60,20 +62,32 @@ public:
   nux::Property<int> panel_height;
 
   GtkStyleContext* GetStyleContext();
-  BaseTexturePtr GetBackground();
+  BaseTexturePtr GetBackground(int monitor = 0);
   BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
   BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state);
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
 
+  int GetFontSize();
+
+  int PanelHeight(int monitor = 0) const;
+
+  // int height
+  sigc::signal<void, int> panel_height_changed;
   sigc::signal<void> changed;
 
 private:
   void OnThemeChanged(std::string const&);
   void RefreshContext();
 
+  void UpdateFontSize();
+  void UpdatePanelHeight();
+
   glib::Object<GtkStyleContext> style_context_;
   BaseTexturePtr bg_texture_;
+
+  std::vector<int> panel_heights_;
+  EMConverter em_converter_;
 };
 
 }

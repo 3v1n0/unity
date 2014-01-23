@@ -32,6 +32,7 @@
 
 #include <gtk/gtk.h>
 
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
 
 
@@ -112,6 +113,12 @@ private:
   void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void OnActiveChanged(bool is_active);
 
+  int PixbufWidth(glib::Object<GdkPixbuf> const& pixbuf) const;
+  int PixbufHeight(glib::Object<GdkPixbuf> const& pixbuf) const;
+
+  void ScaleImageIcons(cairo_t* cr, int* x, int* y);
+  void UpdateEMConverter();
+
   glib::Object<GdkPixbuf> MakePixbuf();
 
   IndicatorEntryType type_;
@@ -122,6 +129,8 @@ private:
   bool overlay_showing_;
   bool disabled_;
   bool focused_;
+
+  EMConverter em_converter_;
 };
 
 }

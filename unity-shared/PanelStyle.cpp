@@ -27,6 +27,8 @@
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/UnitySettings.h"
 
+#include "MultiMonitor.h"
+
 namespace unity
 {
 namespace panel
@@ -38,6 +40,7 @@ Style* style_instance = nullptr;
 DECLARE_LOGGER(logger, "unity.panel.style");
 const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
+const int BASE_PANEL_HEIGHT = 24;
 
 std::string button_id(WindowButtonType type, WindowState ws)
 {
@@ -50,8 +53,9 @@ std::string button_id(WindowButtonType type, WindowState ws)
 }
 
 Style::Style()
-  : panel_height(24)
-  , style_context_(gtk_style_context_new())
+  : style_context_(gtk_style_context_new())
+  , panel_heights_(monitors::MAX, BASE_PANEL_HEIGHT)
+  , em_converter_(0)
 {
   if (style_instance)
   {
@@ -61,15 +65,6 @@ Style::Style()
   {
     style_instance = this;
   }
-
-  if (Settings::Instance().form_factor() == FormFactor::TV)
-    panel_height = 0;
-
-  Settings::Instance().form_factor.changed.connect([this](FormFactor form_factor)
-  {
-    if (form_factor == FormFactor::TV)
-      panel_height = 0;
-  });
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
   gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
@@ -86,6 +81,9 @@ Style::Style()
   deco_style->theme.changed.connect(sigc::mem_fun(this, &Style::OnThemeChanged));
   deco_style->font.changed.connect(refresh_cb);
   deco_style->title_font.changed.connect(refresh_cb);
+
+  UpdateFontSize();
+  UpdatePanelHeight();
 }
 
 Style::~Style()
@@ -115,11 +113,59 @@ void Style::OnThemeChanged(std::string const&)
   RefreshContext();
 }
 
+int Style::PanelHeight(int monitor) const
+{
+  if (Settings::Instance().form_factor() == FormFactor::TV)
+    return 0;
+
+  if (monitor < 0 || monitor >= (int)monitors::MAX)
+  {
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor;
+    return 0;
+  }
+
+  return em_converter_.ConvertPixels(panel_heights_[monitor]);
+}
+
 void Style::RefreshContext()
 {
   gtk_style_context_invalidate(style_context_);
   bg_texture_.Release();
+
+  UpdateFontSize();
+  UpdatePanelHeight();
+
   changed.emit();
+}
+
+void Style::UpdateFontSize()
+{
+  int font_size = GetFontSize();
+
+  em_converter_.SetFontSize(font_size / 1024);
+}
+
+int Style::GetFontSize()
+{
+  glib::String font_name;
+  gint font_size;
+  PangoFontDescription* desc;
+
+  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
+  desc = pango_font_description_from_string(font_name.Value());
+  font_size = pango_font_description_get_size(desc);
+  pango_font_description_free(desc);
+
+  return font_size;
+}
+
+void Style::UpdatePanelHeight()
+{
+  int dpi = GetTextDPI() / 1024;
+  em_converter_.SetDPI(dpi);
+
+  // TODO Default monitor for now...
+  panel_height_changed.emit(PanelHeight());
 }
 
 GtkStyleContext* Style::GetStyleContext()
@@ -127,13 +173,13 @@ GtkStyleContext* Style::GetStyleContext()
   return style_context_;
 }
 
-BaseTexturePtr Style::GetBackground()
+BaseTexturePtr Style::GetBackground(int monitor)
 {
   if (bg_texture_)
     return bg_texture_;
 
   int width = 1;
-  int height = panel_height();
+  int height = PanelHeight(monitor);
 
   nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
 

@@ -24,6 +24,7 @@
 #include <Nux/Button.h>
 
 #include "unity-shared/DecorationStyle.h"
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/Introspectable.h"
@@ -58,6 +59,9 @@ private:
   bool EnabledSetter(bool enabled);
   static nux::ObjectPtr<nux::BaseTexture> GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state);
 
+  void UpdateEMConverter();
+  void UpdateGeometry();
+
   inline WindowButtons* Parent() const
   {
     return static_cast<WindowButtons*>(GetParentObject());
@@ -65,6 +69,8 @@ private:
 
 private:
   panel::WindowButtonType type_;
+
+  EMConverter em_converter_;
 
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> prelight_tex_;

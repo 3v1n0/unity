@@ -609,7 +609,7 @@ void UnityScreen::FillShadowRectForOutput(CompRect& shadowRect, CompOutput const
   if (_shadow_texture.empty ())
     return;
 
-  float panel_h = static_cast<float>(panel_style_.panel_height);
+  float panel_h = static_cast<float>(panel_style_.PanelHeight());
   float shadowX = output.x();
   float shadowY = output.y() + panel_h;
   float shadowWidth = output.width();
@@ -888,7 +888,7 @@ void UnityScreen::DrawPanelUnderDash()
 
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
-  int panel_height = panel_style_.panel_height;
+  int panel_height = panel_style_.PanelHeight();
   auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
   graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
 }
@@ -2844,7 +2844,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
         {
           auto const& output = uScreen->screen->currentOutputDev();
 
-          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.panel_height)
+          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.PanelHeight())
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
           }
@@ -3567,7 +3567,7 @@ void UnityScreen::initLauncher()
     hud_controller_->launcher_width = launcher_width;
     dash_controller_->launcher_width = launcher_width;
     panel_controller_->launcher_width = launcher_width;
-    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.panel_height);
+    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight());
   });
 
   ScheduleRelayout(0);
