@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 
 #include "unity-shared/CairoTexture.h"
+#include <unity-shared/PanelStyle.h>
 #include <unity-shared/UnitySettings.h>
 
 #include "Tooltip.h"
@@ -37,30 +38,32 @@ namespace
   const int PADDING = 15;
   const int TEXT_PADDING = 8;
   const int MINIMUM_TEXT_WIDTH = 100;
-  const int TOP_SIZE = 0;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
 Tooltip::Tooltip() :
   _anchorX(0),
   _anchorY(0),
-  _cairo_text_has_changed(true)
+  _cairo_text_has_changed(true),
+  em_(0)
 {
+  UpdateEMConverter();
+
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  _left_space = new nux::SpaceLayout(PADDING + ANCHOR_WIDTH, PADDING + ANCHOR_WIDTH, 1, 1000);
-  _right_space = new nux::SpaceLayout(PADDING + CORNER_RADIUS, PADDING + CORNER_RADIUS, 1, 1000);
+  _left_space = new nux::SpaceLayout(em_.CP(PADDING + ANCHOR_WIDTH), em_.CP(PADDING + ANCHOR_WIDTH), 1, 1000);
+  _right_space = new nux::SpaceLayout(em_.CP(PADDING + CORNER_RADIUS), em_.CP(PADDING + CORNER_RADIUS), 1, 1000);
 
-  _top_space = new nux::SpaceLayout(1, 1000, PADDING, PADDING);
-  _bottom_space = new nux::SpaceLayout(1, 1000, PADDING, PADDING);
+  _top_space = new nux::SpaceLayout(1, 1000, em_.CP(PADDING), em_.CP(PADDING));
+  _bottom_space = new nux::SpaceLayout(1, 1000, em_.CP(PADDING), em_.CP(PADDING));
 
   _vlayout->AddLayout(_top_space, 0);
 
   _tooltip_text = new StaticCairoText(TEXT(""), NUX_TRACKER_LOCATION);
   _tooltip_text->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetTextVerticalAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
-  _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH);
+  _tooltip_text->SetMinimumWidth(em_.CP(MINIMUM_TEXT_WIDTH));
 
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
@@ -91,7 +94,16 @@ Tooltip::Tooltip() :
 
   SetWindowSizeMatchLayout(true);
   SetLayout(_hlayout);
+
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &Tooltip::UpdateEMConverter));
 }
+
+void Tooltip::UpdateEMConverter()
+{
+  em_.SetFontSize(panel::Style::Instance().GetFontSize());
+  em_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
+}
+
 
 nux::Area* Tooltip::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
@@ -104,8 +116,8 @@ void Tooltip::SetTooltipPosition(int tip_x, int tip_y)
   _anchorX = tip_x;
   _anchorY = tip_y;
 
-  int x = _anchorX - PADDING;
-  int y = _anchorY - ANCHOR_HEIGHT / 2 - TOP_SIZE - CORNER_RADIUS - PADDING;
+  int x = _anchorX - em_.CP(PADDING);
+  int y = _anchorY - em_.CP(ANCHOR_HEIGHT) / 2 - em_.CP(CORNER_RADIUS) - em_.CP(PADDING);
 
   SetBaseXY(x, y);
 }
@@ -129,22 +141,22 @@ void Tooltip::PreLayoutManagement()
 {
   int text_width;
   int text_height;
-  int text_min_width = MINIMUM_TEXT_WIDTH;
+  int text_min_width = em_.CP(MINIMUM_TEXT_WIDTH);
 
   _tooltip_text->GetTextExtents(text_width, text_height);
 
-  if (text_width + TEXT_PADDING * 2 > text_min_width)
+  if (text_width + em_.CP(TEXT_PADDING) * 2 > text_min_width)
   {
-    text_min_width = text_width + TEXT_PADDING * 2;
+    text_min_width = text_width + em_.CP(TEXT_PADDING) * 2;
   }
 
   _tooltip_text->SetMinimumWidth(text_min_width);
   _tooltip_text->SetMinimumHeight(text_height);
 
-  if (text_height < ANCHOR_HEIGHT)
+  if (text_height < em_.CP(ANCHOR_HEIGHT))
   {
-    _top_space->SetMinMaxSize(1, (ANCHOR_HEIGHT - text_height) / 2 + PADDING + CORNER_RADIUS);
-    _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT - text_height) / 2 + 1 + PADDING + CORNER_RADIUS);
+    _top_space->SetMinMaxSize(1, (em_.CP(ANCHOR_HEIGHT) - text_height) / 2 + em_.CP(PADDING) + em_.CP(CORNER_RADIUS));
+    _bottom_space->SetMinMaxSize(1, (em_.CP(ANCHOR_HEIGHT) - text_height) / 2 + 1 + em_.CP(PADDING) + em_.CP(CORNER_RADIUS));
   }
 
   CairoBaseWindow::PreLayoutManagement();
@@ -447,7 +459,7 @@ void Tooltip::UpdateTexture()
   int width = GetBaseWidth();
   int height = GetBaseHeight();
 
-  int x = _anchorX - PADDING;
+  int x = _anchorX - em_.CP(PADDING);
   int y = _anchorY - height / 2;
 
   float blur_coef = 6.0f;
@@ -496,14 +508,14 @@ void Tooltip::UpdateTexture()
     cairo_outline.GetSurface(),
     width,
     height,
-    ANCHOR_WIDTH,
-    ANCHOR_HEIGHT,
+    em_.CP(ANCHOR_WIDTH),
+    em_.CP(ANCHOR_HEIGHT),
     -1,
-    CORNER_RADIUS,
+    em_.CP(CORNER_RADIUS),
     blur_coef,
     shadow_color,
     1.0f,
-    PADDING,
+    em_.CP(PADDING),
     outline_color);
 
   compute_full_mask(
@@ -511,15 +523,15 @@ void Tooltip::UpdateTexture()
     cairo_mask.GetSurface(),
     width,
     height,
-    CORNER_RADIUS, // radius,
-    16,             // shadow_radius,
-    ANCHOR_WIDTH,  // anchor_width,
-    ANCHOR_HEIGHT, // anchor_height,
-    -1,             // upper_size,
-    true,           // negative,
-    false,          // outline,
-    1.0,            // line_width,
-    PADDING,       // padding_size,
+    em_.CP(CORNER_RADIUS), // radius,
+    em_.CP(16),            // shadow_radius,
+    em_.CP(ANCHOR_WIDTH),  // anchor_width,
+    em_.CP(ANCHOR_HEIGHT), // anchor_height,
+    -1,                    // upper_size,
+    true,                  // negative,
+    false,                 // outline,
+    1.0,                   // line_width,
+    em_.CP(PADDING),       // padding_size,
     mask_color);
 
   cairo_destroy(cr_bg);
