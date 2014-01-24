@@ -62,6 +62,7 @@ struct _PanelServicePrivate
 
   gint32 timeouts[N_TIMEOUT_SLOTS];
 
+  IndicatorObjectEntry *first_entry;
   IndicatorObjectEntry *last_entry;
   GtkWidget *menubar;
   GtkWidget *offscreen_window;
@@ -1781,7 +1782,6 @@ indicator_entry_compare_func (gpointer* v1, gpointer* v2)
 
 static void
 activate_next_prev_menu (PanelService         *self,
-                         IndicatorObject      *object,
                          IndicatorObjectEntry *entry,
                          GtkMenuDirectionType  direction)
 {
@@ -1869,7 +1869,7 @@ on_active_menu_move_current (GtkMenu              *menu,
                              PanelService         *self)
 {
   PanelServicePrivate *priv;
-  IndicatorObject     *object;
+  IndicatorObjectEntry *entry;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
   priv = self->priv;
@@ -1893,21 +1893,21 @@ on_active_menu_move_current (GtkMenu              *menu,
             {
               /* Skip direction due to there being a submenu,
                * and we don't want to inhibit going into that */
+              g_list_free (children);
               return;
             }
         }
       g_list_free (children);
+
+      entry = priv->last_entry;
+    }
+  else
+    {
+      entry = (priv->first_entry) ? priv->first_entry : priv->last_entry;
     }
 
   /* Find the next/prev indicator */
-  object = get_entry_parent_indicator(priv->last_entry);
-  if (object == NULL)
-    {
-      g_warning ("Unable to find IndicatorObject for entry");
-      return;
-    }
-
-  activate_next_prev_menu (self, object, priv->last_entry, direction);
+  activate_next_prev_menu (self, entry, direction);
 }
 
 static void
@@ -2061,6 +2061,118 @@ panel_service_show_entry (PanelService *self,
 
   panel_service_show_entry_common (self, object, entry, xid, x, y, button);
 }
+
+static void
+fake_entry_destroy (GtkWidget *menu, IndicatorObjectEntry *fake_entry)
+{
+  PanelService *self = panel_service_get_default();
+
+  self->priv->first_entry = NULL;
+  g_free (fake_entry);
+}
+
+void
+panel_service_show_entries (PanelService *self,
+                            const gchar **entries,
+                            guint32       xid,
+                            gint32        x,
+                            gint32        y)
+{
+  gint                  i;
+  IndicatorObject      *object;
+  IndicatorObjectEntry *entry, *fake_entry, *first_entry, *last_entry;
+  GtkWidget            *menu;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (entries && entries[0]);
+
+  object = NULL;
+  first_entry = NULL;
+  last_entry = NULL;
+  menu = gtk_menu_new ();
+
+  for (i = 0; entries[i]; ++i)
+    {
+      entry = get_indicator_entry_by_id (self, entries[i]);
+
+      if (!entry)
+        continue;
+
+      if (!object)
+        {
+          object = get_entry_parent_indicator (entry);
+
+          if (!object)
+            continue;
+        }
+      else if (object != get_entry_parent_indicator (entry))
+        {
+          g_error ("Impossible build a menu with entries from different indicators!");
+          continue;
+        }
+
+      GtkWidget *menu_item;
+      const char *label = NULL;
+
+      if (GTK_IS_LABEL (entry->label))
+        label = gtk_label_get_label (entry->label);
+
+      if (GTK_IS_IMAGE (entry->image))
+        {
+          G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+          if (label)
+            {
+              menu_item = gtk_image_menu_item_new_with_mnemonic (label);
+            }
+          else
+            {
+              menu_item = gtk_image_menu_item_new ();
+            }
+
+          gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), GTK_WIDGET (entry->image));
+          gtk_image_menu_item_set_always_show_image (GTK_IMAGE_MENU_ITEM (menu_item), TRUE);
+          G_GNUC_END_IGNORE_DEPRECATIONS
+        }
+      else if (label)
+        {
+          menu_item = gtk_menu_item_new_with_mnemonic (label);
+        }
+      else
+        {
+          continue;
+        }
+
+      gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
+      gtk_menu_item_set_submenu (GTK_MENU_ITEM (menu_item), GTK_WIDGET (entry->menu));
+      g_signal_connect (menu_item, "activate", G_CALLBACK (menuitem_activated), entry);
+      gtk_widget_show (menu_item);
+
+      if (!first_entry)
+        first_entry = entry;
+
+      last_entry = entry;
+    }
+
+  if (!last_entry)
+    {
+      g_warning ("No valid entries to show");
+      gtk_widget_destroy (menu);
+      return;
+    }
+
+  fake_entry = g_new0 (IndicatorObjectEntry, 1);
+  fake_entry->parent_object = object;
+  fake_entry->menu = GTK_MENU (menu);
+
+  g_signal_connect (menu, "deactivate", G_CALLBACK (menu_deactivated), NULL);
+  g_signal_connect (menu, "destroy", G_CALLBACK (fake_entry_destroy), fake_entry);
+  g_signal_connect (menu, "destroy", G_CALLBACK (gtk_widget_destroyed), &self->priv->last_menu);
+
+  panel_service_show_entry_common (self, object, fake_entry, xid, x, y, 1);
+  self->priv->first_entry = first_entry;
+  self->priv->last_entry = last_entry;
+}
+
 
 void
 panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y)

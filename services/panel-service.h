@@ -101,6 +101,12 @@ void              panel_service_show_entry    (PanelService *self,
                                                gint32        y,
                                                guint32       button);
 
+void              panel_service_show_entries  (PanelService *self,
+                                               const gchar **entries,
+                                               guint32       xid,
+                                               gint32        x,
+                                               gint32        y);
+
 void              panel_service_show_app_menu (PanelService *self,
                                                guint32       xid,
                                                gint32        x,
