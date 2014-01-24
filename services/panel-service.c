@@ -64,8 +64,6 @@ struct _PanelServicePrivate
 
   IndicatorObjectEntry *first_entry;
   IndicatorObjectEntry *last_entry;
-  GtkWidget *menubar;
-  GtkWidget *offscreen_window;
   GtkMenu *last_menu;
   gint32   last_x;
   gint32   last_y;
@@ -164,20 +162,6 @@ panel_service_class_dispose (GObject *self)
 
       nih_unref (priv->upstart, NULL);
       priv->upstart = NULL;
-    }
-
-  if (GTK_IS_WIDGET (priv->menubar) &&
-      gtk_widget_get_realized (GTK_WIDGET (priv->menubar)))
-    {
-      g_object_unref (priv->menubar);
-      priv->menubar = NULL;
-    }
-
-  if (GTK_IS_WIDGET (priv->offscreen_window) &&
-      gtk_widget_get_realized (GTK_WIDGET (priv->offscreen_window)))
-    {
-      g_object_unref (priv->offscreen_window);
-      priv->offscreen_window = NULL;
     }
 
   if (GTK_IS_WIDGET (priv->last_menu) &&
@@ -657,10 +641,6 @@ panel_service_init (PanelService *self)
 {
   PanelServicePrivate *priv;
   priv = self->priv = GET_PRIVATE (self);
-
-  priv->offscreen_window = gtk_offscreen_window_new ();
-  priv->menubar = gtk_menu_bar_new ();
-  gtk_container_add (GTK_CONTAINER (priv->offscreen_window), priv->menubar);
 
   gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
 
