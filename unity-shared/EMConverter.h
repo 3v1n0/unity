@@ -34,7 +34,7 @@ public:
   int    GetFontSize() const;
   double GetDPI() const;
 
-  int    ConvertPixels(int pixels) const;
+  int    CP(int pixels) const;
   double DPIScale() const;
 
 private:

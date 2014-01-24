@@ -64,7 +64,7 @@ TEST_F(TestEMConverter, TestSetDPI)
 
 TEST_F(TestEMConverter, TestConvertPixel)
 {
-  EXPECT_EQ(PIXEL_SIZE, em_converter.ConvertPixels(PIXEL_SIZE));
+  EXPECT_EQ(PIXEL_SIZE, em_converter.CP(PIXEL_SIZE));
 }
 
 TEST_F(TestEMConverter, TestDPIScale)

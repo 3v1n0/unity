@@ -149,8 +149,8 @@ void WindowButton::UpdateSize()
 
   if (tex)
   {
-    int tex_w = em_.ConvertPixels(tex->GetWidth());
-    int tex_h = em_.ConvertPixels(tex->GetHeight());
+    int tex_w = em_.CP(tex->GetWidth());
+    int tex_h = em_.CP(tex->GetHeight());
     width  = std::min(panel_height, tex_w);
     height = std::min(panel_height, tex_h);
   }

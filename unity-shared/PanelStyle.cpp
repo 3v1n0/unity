@@ -124,7 +124,7 @@ int Style::PanelHeight(int monitor) const
     return 0;
   }
 
-  return em_.ConvertPixels(panel_heights_[monitor]);
+  return em_.CP(panel_heights_[monitor]);
 }
 
 void Style::RefreshContext()
@@ -140,12 +140,10 @@ void Style::RefreshContext()
 
 int Style::GetFontSize()
 {
-  glib::String font_name;
   gint font_size;
   PangoFontDescription* desc;
 
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
-  desc = pango_font_description_from_string(font_name.Value());
+  desc = pango_font_description_from_string(decoration::Style::Get()->font().c_str());
   font_size = pango_font_description_get_size(desc);
   pango_font_description_free(desc);
 
