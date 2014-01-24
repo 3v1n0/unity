@@ -74,7 +74,7 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
   typedef std::vector<indicator::Indicator::Ptr> Indicators;
-  Indicators GetIndicators();
+  Indicators const& GetIndicators() const;
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);

@@ -78,7 +78,7 @@ void PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
   LOG_DEBUG(logger) << "IndicatorRemoved: " << indicator->name();
 }
 
-PanelIndicatorsView::Indicators PanelIndicatorsView::GetIndicators()
+PanelIndicatorsView::Indicators const& PanelIndicatorsView::GetIndicators() const
 {
   return indicators_;
 }
