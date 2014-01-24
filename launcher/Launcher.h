@@ -31,6 +31,7 @@
 
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/EMConverter.h"
 #include "DevicesSettings.h"
 #include "DndData.h"
 #include "unity-shared/Introspectable.h"
@@ -301,6 +302,8 @@ private:
   void DndHoveredIconReset();
   bool DndIsSpecialRequest(std::string const& uri) const;
 
+  void UpdateEMConverter();
+
   LauncherModel::Ptr model_;
   MockableBaseWindow* parent_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
@@ -367,6 +370,8 @@ private:
 
   UBusManager ubus_;
   glib::SourceManager sources_;
+
+  EMConverter em_;
 
   friend class TestLauncher;
 };
