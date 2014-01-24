@@ -102,7 +102,7 @@ void              panel_service_show_entry    (PanelService *self,
                                                guint32       button);
 
 void              panel_service_show_entries  (PanelService *self,
-                                               const gchar **entries,
+                                               const gchar  *entry_id,
                                                guint32       xid,
                                                gint32        x,
                                                gint32        y);
