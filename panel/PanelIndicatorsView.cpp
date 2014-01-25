@@ -30,6 +30,8 @@ DECLARE_LOGGER(logger, "unity.indicators");
 
 namespace unity
 {
+namespace panel
+{
 using namespace indicator;
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelIndicatorsView);
@@ -236,15 +238,11 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
     {
       for (auto area : layout_->GetChildren())
       {
-        auto en = dynamic_cast<PanelIndicatorEntryView*>(area);
+        auto en = static_cast<PanelIndicatorEntryView*>(area);
+        if (view->GetEntryPriority() <= en->GetEntryPriority())
+          break;
 
-        if (en)
-        {
-          if (en && view->GetEntryPriority() <= en->GetEntryPriority())
-            break;
-
-          entry_pos++;
-        }
+        entry_pos++;
       }
     }
   }
@@ -349,4 +347,5 @@ void PanelIndicatorsView::AddProperties(debug::IntrospectionData& introspection)
   .add("opacity", opacity);
 }
 
+} // namespace panel
 } // namespace unity

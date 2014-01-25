@@ -52,6 +52,8 @@ const int refine_gradient_midpoint = 959;
 
 namespace unity
 {
+namespace panel
+{
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
@@ -784,4 +786,5 @@ ui::EdgeBarrierSubscriber::Result PanelView::HandleBarrierEvent(ui::PointerBarri
   return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
 }
 
+} // namespace panel
 } // namespace unity

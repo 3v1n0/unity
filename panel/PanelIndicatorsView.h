@@ -31,6 +31,8 @@
 
 namespace unity
 {
+namespace panel
+{
 
 class PanelIndicatorsView : public nux::View, public unity::debug::Introspectable
 {
@@ -98,6 +100,7 @@ private:
   std::unordered_map<indicator::Indicator::Ptr, connection::Manager> indicators_connections_;
 };
 
-}
+} // panel namespace
+} // unity namespace
 
 #endif // PANEL_INDICATORS_VIEW_H

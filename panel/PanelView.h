@@ -43,6 +43,8 @@
 
 namespace unity
 {
+namespace panel
+{
 
 class PanelView : public unity::debug::Introspectable, 
                   public ui::EdgeBarrierSubscriber,
@@ -147,6 +149,7 @@ private:
   glib::Source::UniquePtr track_menu_pointer_timeout_;
 };
 
-}
+} // namespace panel
+} // namespace unity
 
 #endif // PANEL_VIEW_H

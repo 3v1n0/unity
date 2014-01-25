@@ -32,20 +32,22 @@
 
 namespace
 {
+using namespace unity;
+using namespace unity::panel;
 
 class TestPanelView : public testing::Test
 {
 public:
-  unity::Settings unity_settings_;
-  unity::panel::Style panel_style_;
-  unity::UBusManager ubus_manager_;
-  nux::ObjectPtr<unity::MockableBaseWindow> window_;
-  nux::ObjectPtr<unity::PanelView> panel_view_;
-  unity::testwrapper::StandaloneWM WM;
+  Settings unity_settings_;
+  Style panel_style_;
+  UBusManager ubus_manager_;
+  nux::ObjectPtr<MockableBaseWindow> window_;
+  nux::ObjectPtr<PanelView> panel_view_;
+  testwrapper::StandaloneWM WM;
 
   TestPanelView()
-    : window_(new unity::MockableBaseWindow())
-    , panel_view_(new unity::PanelView(window_.GetPointer(), std::make_shared<unity::indicator::DBusIndicators>()))
+    : window_(new MockableBaseWindow())
+    , panel_view_(new PanelView(window_.GetPointer(), std::make_shared<indicator::DBusIndicators>()))
   {}
 };
 
@@ -70,9 +72,9 @@ TEST_F(TestPanelView, StoredDashWidth)
 
 TEST_F(TestPanelView, HandleBarrierEvent)
 {
-  auto barrier = std::make_shared<unity::ui::PointerBarrierWrapper>();
+  auto barrier = std::make_shared<ui::PointerBarrierWrapper>();
   auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
- 
+
   WM->SetIsAnyWindowMoving(false);
   EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier.get(), event),
             ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE);

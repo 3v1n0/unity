@@ -36,6 +36,8 @@
 
 namespace unity
 {
+namespace panel
+{
 DECLARE_LOGGER(logger, "unity.panel.menu");
 
 namespace
@@ -1590,4 +1592,6 @@ void PanelMenuView::SetMousePosition(int x, int y)
     }
   }
 }
+
+} // namespace panel
 } // namespace unity

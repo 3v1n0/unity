@@ -25,6 +25,8 @@
 
 namespace unity
 {
+namespace panel
+{
 namespace
 {
 
@@ -63,5 +65,7 @@ TEST_F(TestPanelIndicatorsView, ChangingOpacityQueuesDraw)
   EXPECT_CALL(indicators, QueueDraw()).Times(0);
   indicators.opacity = 0.555f;
 }
-}
-}
+
+} // anonymous namespace
+} // panel namespace
+} // unity namespace
