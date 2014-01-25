@@ -71,6 +71,7 @@ public:
 protected:
   void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
+
   virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
   virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button) = 0;
   virtual void OnEntryShowDropdownMenu(std::string const& entry_id, unsigned int xid, int x, int y) = 0;

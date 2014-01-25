@@ -64,7 +64,7 @@ struct DBusIndicators::Impl
 
   void OnEntryScroll(std::string const& entry_id, int delta);
   void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button);
-  void OnEntryShowDropDownMenu(std::string const& entry_id, unsigned int xid, int x, int y);
+  void OnEntryShowDropdownMenu(std::string const& entry_id, unsigned int xid, int x, int y);
   void OnEntrySecondaryActivate(std::string const& entry_id);
   void OnShowAppMenu(unsigned int xid, int x, int y);
 
@@ -216,7 +216,7 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   });
 }
 
-void DBusIndicators::Impl::OnEntryShowDropDownMenu(std::string const& entry_id,
+void DBusIndicators::Impl::OnEntryShowDropdownMenu(std::string const& entry_id,
                                                    unsigned int xid, int x, int y)
 {
   owner_->on_entry_show_menu.emit(entry_id, xid, x, y, 0);
@@ -434,10 +434,10 @@ void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
   pimpl->OnEntryShowMenu(entry_id, xid, x, y, button);
 }
 
-void DBusIndicators::OnEntryShowDropDownMenu(std::string const& entry_id,
+void DBusIndicators::OnEntryShowDropdownMenu(std::string const& entry_id,
                                              unsigned int xid, int x, int y)
 {
-  pimpl->OnEntryShowDropDownMenu(entry_id, xid, x, y);
+  pimpl->OnEntryShowDropdownMenu(entry_id, xid, x, y);
 }
 
 void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id)
