@@ -211,7 +211,7 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   // menu not to show
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([&, entry_id, xid, x, y, button] {
+  show_entry_idle_->Run([this, entry_id, xid, x, y, button] {
     gproxy_.Call("ShowEntry", g_variant_new("(suiiu)", entry_id.c_str(), xid,
                                                        x, y, button));
     return false;
@@ -227,8 +227,8 @@ void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y)
   // menu not to show
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([&, xid, x, y] {
-    gproxy_.Call("ShowEntry", g_variant_new("(uii)", xid, x, y));
+  show_entry_idle_->Run([this, xid, x, y] {
+    gproxy_.Call("ShowAppMenu", g_variant_new("(uii)", xid, x, y));
     return false;
   });
 }
