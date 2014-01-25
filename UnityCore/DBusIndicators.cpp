@@ -330,9 +330,6 @@ void DBusIndicators::Impl::Sync(GVariant* args)
   {
     i->first->Sync(indicators[i->first]);
   }
-
-  // Notify listeners we have new data
-  owner_->on_synced.emit();
 }
 
 void DBusIndicators::Impl::SyncGeometries(std::string const& name,

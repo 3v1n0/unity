@@ -96,20 +96,11 @@ public:
   }
 
   // Redirecting protected methods
-  Indicator::Ptr GetIndicator(std::string const& name)
-  {
-    return Indicators::GetIndicator(name);
-  }
-
-  Indicator::Ptr AddIndicator(std::string const& name)
-  {
-    return Indicators::AddIndicator(name);
-  }
-
-  void RemoveIndicator(std::string const& name)
-  {
-    Indicators::RemoveIndicator(name);
-  }
+  using Indicators::GetIndicator;
+  using Indicators::ActivateEntry;
+  using Indicators::AddIndicator;
+  using Indicators::RemoveIndicator;
+  using Indicators::SetEntryShowNow;
 
   // Utility function used to fill the class with test indicators with entries
   void SetupTestChildren()

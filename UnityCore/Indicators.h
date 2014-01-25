@@ -40,37 +40,6 @@ public:
 
   IndicatorsList GetIndicators() const;
 
-  /**
-   * internal
-   */
-  void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
-
-  /**
-   * internal
-   */
-  void SetEntryShowNow(std::string const& entry_id, bool show_now);
-
-  /**
-   * internal
-   */
-  virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
-
-  /**
-   * internal
-   */
-  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button) = 0;
-
-  /**
-   * internal
-   */
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id) = 0;
-
-  /**
-   * internal
-   */
-  virtual void OnShowAppMenu(unsigned int xid, int x, int y) = 0;
-
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
   sigc::signal<void, Indicator::Ptr const&> on_object_removed;
@@ -88,11 +57,6 @@ public:
    * @param entry_id entry id
    */
   sigc::signal<void, std::string const&, nux::Rect const&> on_entry_activated;
-
-  /**
-   * internal
-   */
-  sigc::signal<void> on_synced;
 
   /**
    * The service is about to show a menu.
@@ -113,6 +77,13 @@ public:
   sigc::signal<void, unsigned, int, int> on_show_appmenu;
 
 protected:
+  void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
+  void SetEntryShowNow(std::string const& entry_id, bool show_now);
+  virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button) = 0;
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id) = 0;
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y) = 0;
+
   Indicator::Ptr GetIndicator(std::string const& name);
   Indicator::Ptr AddIndicator(std::string const& name);
   void RemoveIndicator(std::string const& name);
