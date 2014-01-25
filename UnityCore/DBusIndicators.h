@@ -41,8 +41,8 @@ public:
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
-  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button);
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button);
+  virtual void OnEntryShowDropDownMenu(std::string const& entry_id, unsigned int xid, int x, int y);
   virtual void OnEntrySecondaryActivate(std::string const& entry_id);
   virtual void OnShowAppMenu(unsigned int xid, int x, int y);
 

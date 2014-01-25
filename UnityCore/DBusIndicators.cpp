@@ -63,8 +63,8 @@ struct DBusIndicators::Impl
   void OnEntryShowNowChanged(GVariant* parameters);
 
   void OnEntryScroll(std::string const& entry_id, int delta);
-  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                       int x, int y, unsigned int button);
+  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button);
+  void OnEntryShowDropDownMenu(std::string const& entry_id, unsigned int xid, int x, int y);
   void OnEntrySecondaryActivate(std::string const& entry_id);
   void OnShowAppMenu(unsigned int xid, int x, int y);
 
@@ -216,9 +216,25 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   });
 }
 
+void DBusIndicators::Impl::OnEntryShowDropDownMenu(std::string const& entry_id,
+                                                   unsigned int xid, int x, int y)
+{
+  owner_->on_entry_show_menu.emit(entry_id, xid, x, y, 0);
+
+  // We have to do this because on certain systems X won't have time to
+  // respond to our request for XUngrabPointer and this will cause the
+  // menu not to show
+
+  show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  show_entry_idle_->Run([this, entry_id, xid, x, y] {
+    gproxy_.Call("ShowEntriesDropdown", g_variant_new("(suii)", entry_id.c_str(), xid, x, y));
+    return false;
+  });
+}
+
 void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y)
 {
-  owner_->on_show_appmenu.emit(xid, x, y);
+  owner_->on_entry_show_menu.emit("appmenu", xid, x, y, 0);
 
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
@@ -416,6 +432,12 @@ void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
                                      unsigned int button)
 {
   pimpl->OnEntryShowMenu(entry_id, xid, x, y, button);
+}
+
+void DBusIndicators::OnEntryShowDropDownMenu(std::string const& entry_id,
+                                             unsigned int xid, int x, int y)
+{
+  pimpl->OnEntryShowDropDownMenu(entry_id, xid, x, y);
 }
 
 void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id)

@@ -41,7 +41,6 @@ struct SigReceiver : sigc::trackable
     indicators.on_entry_activate_request.connect(sigc::mem_fun(this, &SigReceiver::OnEntryActivateRequest));
     indicators.on_entry_activated.connect(sigc::mem_fun(this, &SigReceiver::OnEntryActivated));
     indicators.on_entry_show_menu.connect(sigc::mem_fun(this, &SigReceiver::OnEntryShowMenu));
-    indicators.on_show_appmenu.connect(sigc::mem_fun(this, &SigReceiver::OnShowAppmenu));
   }
 
   MOCK_CONST_METHOD1(OnObjectAdded, void(Indicator::Ptr const&));
@@ -49,7 +48,6 @@ struct SigReceiver : sigc::trackable
   MOCK_CONST_METHOD1(OnEntryActivateRequest, void(std::string const&));
   MOCK_CONST_METHOD2(OnEntryActivated, void(std::string const&, nux::Rect const&));
   MOCK_CONST_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned, int, int, unsigned));
-  MOCK_CONST_METHOD3(OnShowAppmenu, void(unsigned, int, int));
 };
 
 struct MockIndicators : Indicators
@@ -62,6 +60,7 @@ struct MockIndicators : Indicators
   // Implementing Indicators virtual functions
   MOCK_METHOD2(OnEntryScroll, void(std::string const&, int delta));
   MOCK_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned xid, int x, int y, unsigned button));
+  MOCK_METHOD4(OnEntryShowDropdownMenu, void(std::string const&, unsigned xid, int x, int y));
   MOCK_METHOD1(OnEntrySecondaryActivate, void(std::string const&));
   MOCK_METHOD3(OnShowAppMenu, void(unsigned xid, int x, int y));
 
@@ -345,6 +344,21 @@ TEST(TestIndicators, EntryShowMenu)
 
   EXPECT_CALL(indicators, OnEntryShowMenu(entry13->id(), 0, 55, 68, 3));
   entry13->ShowMenu(55, 68, 3);
+}
+
+TEST(TestIndicators, EntryShowDropdownMenu)
+{
+  MockIndicators indicators;
+  indicators.SetupTestChildren();
+
+  // See if the indicators class get notified on entries actions
+  ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
+
+  Entry::Ptr entry13(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-3"));
+  ASSERT_THAT(entry13, NotNull());
+
+  EXPECT_CALL(indicators, OnEntryShowDropdownMenu(entry13->id(), 657890, 55, 353));
+  // entry13->ShowMenu(657890, 55, 353);
 }
 
 TEST(TestIndicators, EntryScroll)
