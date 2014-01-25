@@ -44,11 +44,9 @@ const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 
 /* Connects to the remote panel service (unity-panel-service) and translates
  * that into something that the panel can show */
-class DBusIndicators::Impl
+struct DBusIndicators::Impl
 {
-public:
   Impl(std::string const& dbus_name, DBusIndicators* owner);
-  virtual ~Impl() {}
 
   void CheckLocalService();
   void RequestSyncAll();
@@ -64,11 +62,11 @@ public:
   void OnEntryActivatedRequest(GVariant* parameters);
   void OnEntryShowNowChanged(GVariant* parameters);
 
-  virtual void OnEntryScroll(std::string const& entry_id, int delta);
-  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button);
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id);
-  virtual void OnShowAppMenu(unsigned int xid, int x, int y);
+  void OnEntryScroll(std::string const& entry_id, int delta);
+  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                       int x, int y, unsigned int button);
+  void OnEntrySecondaryActivate(std::string const& entry_id);
+  void OnShowAppMenu(unsigned int xid, int x, int y);
 
   DBusIndicators* owner_;
 
