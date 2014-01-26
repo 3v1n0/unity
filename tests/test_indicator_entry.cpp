@@ -155,6 +155,26 @@ TEST(TestIndicatorEntry, TestOnShowMenuXid)
   entry.ShowMenu(88492615, 15, 25, 2);
 }
 
+TEST(TestIndicatorEntry, TestOnShowMenuDropdown)
+{
+  indicator::Entry entry("id", "name_hint", "label", true, true,
+                         0, "some icon", false, true, -1);
+  SigReceiver sig_receiver(entry);
+
+  EXPECT_CALL(sig_receiver, OnShowDropdownMenu("id", 0, 10, 20));
+  entry.ShowDropdownMenu(10, 20);
+}
+
+TEST(TestIndicatorEntry, TestOnShowMenuXidDropdown)
+{
+  indicator::Entry entry("xid", "name_hint", "label", true, true,
+                         0, "some icon", false, true, -1);
+  SigReceiver sig_receiver(entry);
+
+  EXPECT_CALL(sig_receiver, OnShowDropdownMenu("xid", 88492615, 15, 25));
+  entry.ShowDropdownMenu(88492615, 15, 25);
+}
+
 TEST(TestIndicatorEntry, TestVisibility)
 {
   indicator::Entry entry("id", "name_hint", "label", true, true,
