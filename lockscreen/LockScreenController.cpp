@@ -18,28 +18,47 @@
 */
 
 #include "LockScreenController.h"
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
 namespace lockscreen
 {
+namespace
+{
+const unsigned int FADE_DURATION = 500;
+}
 
-Controller::Controller(session::Manager::Ptr const& manager)
-  : manager_(manager)
-  , locked_(false) // FIXME unity can start in lock state!
+Controller::Controller(session::Manager::Ptr const& session_manager)
+  : session_manager_(session_manager) // FIXME unity can start in lock state!
+  , fade_animator_(FADE_DURATION)
 {
   auto* uscreen = UScreen::GetDefault();
-
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::OnUScreenChanged));
-  manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
-  manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
+
+  session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
+  session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
+
+  fade_animator_.updated.connect(sigc::mem_fun(this, &Controller::SetOpacity));
+  fade_animator_.finished.connect([this](){
+    if (fade_animator_.GetCurrentValue() == 0.0f)
+      shields_.clear();
+  });
 }
 
 void Controller::OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors)
 {
   auto* uscreen = UScreen::GetDefault();
   EnsureShields(uscreen->GetMonitorWithMouse(), monitors);
+}
+
+void Controller::SetOpacity(double value)
+{
+  std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
+    shield->SetOpacity(value);
+  });
 }
 
 void Controller::EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry> const& monitors)
@@ -63,46 +82,53 @@ void Controller::EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry
     shields_[i]->SetGeometry(monitors.at(i));
   }
 
-  for (int i = last_shield; i < shields_size; ++i)
-  {
-  }
-
   shields_.resize(num_shields);
 }
 
 nux::ObjectPtr<Shield> Controller::CreateShield(bool is_monitor_with_mouse)
 {
-  nux::ObjectPtr<Shield> shield(new Shield(manager_, is_monitor_with_mouse));
+  nux::ObjectPtr<Shield> shield(new Shield(session_manager_, is_monitor_with_mouse));
   return shield;
 }
 
 void Controller::OnLockRequested()
 {
-  if (locked_)
+  if (IsLocked())
     return;
 
   auto* uscreen = UScreen::GetDefault();
   EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
 
+  WindowManager& wm = WindowManager::Default();
+  wm.SaveInputFocus();
+
   std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-    shield->SetOpacity(1.0f);
     shield->ShowWindow(true);
+    shield->SetOpacity(0.0);
   });
 
-  locked_ = true;
+  animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }
 
 void Controller::OnUnlockRequested()
 {
-  if (!locked_)
+  if (!IsLocked())
     return;
 
   std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-    shield->SetOpacity(0.0f);
-    shield->ShowWindow(false);
+    shield->UnGrabPointer();
+    shield->UnGrabKeyboard();
   });
 
-  locked_ = false;
+  WindowManager& wm = WindowManager::Default();
+  wm.RestoreInputFocus();
+
+  animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+}
+
+bool Controller::IsLocked() const
+{
+  return !shields_.empty();
 }
 
 

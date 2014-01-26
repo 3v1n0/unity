@@ -23,6 +23,8 @@
 #include <memory>
 #include <sigc++/trackable.h>
 
+#include <NuxCore/Animation.h>
+
 #include "LockScreenShield.h"
 #include <UnityCore/SessionManager.h>
 
@@ -37,16 +39,18 @@ public:
   Controller(session::Manager::Ptr const& manager);
 
 private:
+  void SetOpacity(double value);
   void EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry> const& monitors);
   nux::ObjectPtr<Shield> CreateShield(bool is_monitor_with_mouse);
+  bool IsLocked() const;
 
   void OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors);
   void OnLockRequested();
   void OnUnlockRequested();
 
-  session::Manager::Ptr manager_;
   std::vector<nux::ObjectPtr<Shield>> shields_;
-  bool locked_;
+  session::Manager::Ptr session_manager_;
+  nux::animation::AnimateValue<double> fade_animator_;
 };
 
 }

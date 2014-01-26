@@ -3529,17 +3529,20 @@ void UnityScreen::initLauncher()
           }
       }
 
-          int event_sent = 0;
-      event_sent = upstart_emit_event_sync (NULL, upstart,
-                                            "desktop-lock", NULL, 0);
-      if (event_sent != 0)
-        {
-          NihError * err = nih_error_get();
-          g_warning("Unable to signal for indicator services to stop: %s", err->message);
-          nih_free(err);
-        }
+      if (upstart != NULL)
+      {
+        int event_sent = 0;
+        event_sent = upstart_emit_event_sync (NULL, upstart,
+                                              "desktop-lock", NULL, 0);
+        if (event_sent != 0)
+          {
+            NihError * err = nih_error_get();
+            g_warning("Unable to signal for indicator services to stop: %s", err->message);
+            nih_free(err);
+          }
 
-      nih_unref (upstart, NULL);
+        nih_unref (upstart, NULL);
+      }
   }
 
   launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {

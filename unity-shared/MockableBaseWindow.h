@@ -37,7 +37,6 @@ public:
     : nux::BaseWindow(window_name, NUX_TRACKER_LOCATION)
     , struts_enabled_(false)
   {}
-  virtual ~MockableBaseWindow() {}
 
   /**
    * Sets the window opacity.

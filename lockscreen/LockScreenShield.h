@@ -40,7 +40,6 @@ class Shield : public MockableBaseWindow
 {
 public:
   Shield(session::Manager::Ptr const& session_manager, bool is_primary);
-  ~Shield() {};
 
   nux::Property<bool> primary;
 
