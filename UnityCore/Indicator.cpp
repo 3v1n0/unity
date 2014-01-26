@@ -76,17 +76,23 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
       continue;
 
     // Just add the new entry, and connect it up.
-    sigc::connection conn;
     connection::Manager& new_entry_connections = entries_connections_[new_entry];
 
-    conn = new_entry->on_show_menu.connect(sigc::mem_fun(this, &Indicator::OnEntryShowMenu));
-    new_entry_connections.Add(conn);
+    new_entry_connections.Add(new_entry->on_show_menu.connect([this] (std::string const& entry_id, unsigned xid, int x, int y, unsigned button) {
+      on_show_menu.emit(entry_id, xid, x, y, button);
+    }));
 
-    conn = new_entry->on_secondary_activate.connect(sigc::mem_fun(this, &Indicator::OnEntrySecondaryActivate));
-    new_entry_connections.Add(conn);
+    new_entry_connections.Add(new_entry->on_show_dropdown_menu.connect([this] (std::string const& entry_id, unsigned xid, int x, int y) {
+      on_show_dropdown_menu.emit(entry_id, xid, x, y);
+    }));
 
-    conn = new_entry->on_scroll.connect(sigc::mem_fun(this, &Indicator::OnEntryScroll));
-    new_entry_connections.Add(conn);
+    new_entry_connections.Add(new_entry->on_secondary_activate.connect([this] (std::string const& entry_id) {
+      on_secondary_activate.emit(entry_id);
+    }));
+
+    new_entry_connections.Add(new_entry->on_scroll.connect([this] (std::string const& entry_id, int delta) {
+      on_scroll.emit(entry_id, delta);
+    }));
 
     entries_.push_back(new_entry);
     on_entry_added.emit(new_entry);
@@ -120,22 +126,6 @@ int Indicator::EntryIndex(std::string const& entry_id) const
   }
 
   return -1;
-}
-
-void Indicator::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
-                                int x, int y, unsigned button)
-{
-  on_show_menu.emit(entry_id, xid, x, y, button);
-}
-
-void Indicator::OnEntrySecondaryActivate(std::string const& entry_id)
-{
-  on_secondary_activate.emit(entry_id);
-}
-
-void Indicator::OnEntryScroll(std::string const& entry_id, int delta)
-{
-  on_scroll.emit(entry_id, delta);
 }
 
 std::ostream& operator<<(std::ostream& out, Indicator const& i)

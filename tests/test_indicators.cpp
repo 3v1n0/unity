@@ -358,7 +358,10 @@ TEST(TestIndicators, EntryShowDropdownMenu)
   ASSERT_THAT(entry13, NotNull());
 
   EXPECT_CALL(indicators, OnEntryShowDropdownMenu(entry13->id(), 657890, 55, 353));
-  // entry13->ShowMenu(657890, 55, 353);
+  entry13->ShowDropdownMenu(657890, 55, 353);
+
+  EXPECT_CALL(indicators, OnEntryShowDropdownMenu(entry13->id(), 0, 355, 53));
+  entry13->ShowDropdownMenu(355, 53);
 }
 
 TEST(TestIndicators, EntryScroll)

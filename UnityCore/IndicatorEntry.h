@@ -87,6 +87,8 @@ public:
 
   void ShowMenu(int x, int y, unsigned button);
   void ShowMenu(unsigned int xid, int x, int y, unsigned button);
+  void ShowDropdownMenu(unsigned int xid, int x, int y);
+  void ShowDropdownMenu(int x, int y);
   void SecondaryActivate();
   void Scroll(int delta);
 
@@ -101,6 +103,7 @@ public:
   sigc::signal<void, bool> show_now_changed;
 
   sigc::signal<void, std::string const&, unsigned, int, int, unsigned> on_show_menu;
+  sigc::signal<void, std::string const&, unsigned, int, int> on_show_dropdown_menu;
   sigc::signal<void, std::string const&> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 
