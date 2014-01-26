@@ -1,13 +1,38 @@
 #include <UnityCore/IndicatorEntry.h>
-
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 using namespace std;
 using namespace unity;
+using namespace testing;
 
 namespace
 {
+struct SigReceiver : sigc::trackable
+{
+  typedef NiceMock<SigReceiver> Nice;
 
+  SigReceiver(indicator::Entry const& const_entry)
+  {
+    auto& entry = const_cast<indicator::Entry&>(const_entry);
+    entry.updated.connect(sigc::mem_fun(this, &SigReceiver::Updated));
+    entry.active_changed.connect(sigc::mem_fun(this, &SigReceiver::ActiveChanged));
+    entry.geometry_changed.connect(sigc::mem_fun(this, &SigReceiver::GeometryChanged));
+    entry.show_now_changed.connect(sigc::mem_fun(this, &SigReceiver::ShowNowChanged));
+    entry.on_show_menu.connect(sigc::mem_fun(this, &SigReceiver::OnShowMenu));
+    entry.on_show_dropdown_menu.connect(sigc::mem_fun(this, &SigReceiver::OnShowDropdownMenu));
+    entry.on_secondary_activate.connect(sigc::mem_fun(this, &SigReceiver::OnSecondaryActivate));
+    entry.on_scroll.connect(sigc::mem_fun(this, &SigReceiver::OnScroll));
+  }
+
+  MOCK_CONST_METHOD0(Updated, void());
+  MOCK_CONST_METHOD1(ActiveChanged, void(bool));
+  MOCK_CONST_METHOD1(GeometryChanged, void(nux::Rect const&));
+  MOCK_CONST_METHOD1(ShowNowChanged, void(bool));
+  MOCK_CONST_METHOD5(OnShowMenu, void(std::string const&, unsigned, int, int, unsigned));
+  MOCK_CONST_METHOD4(OnShowDropdownMenu, void(std::string const&, unsigned, int, int));
+  MOCK_CONST_METHOD1(OnSecondaryActivate, void(std::string const&));
+  MOCK_CONST_METHOD2(OnScroll, void(std::string const&, int));
+};
 
 TEST(TestIndicatorEntry, TestConstruction)
 {
@@ -30,27 +55,6 @@ TEST(TestIndicatorEntry, TestConstruction)
   EXPECT_EQ(entry.priority(), -1);
 }
 
-struct Counter : sigc::trackable
-{
-  Counter() : count(0) {}
-  void increment()
-  {
-    ++count;
-  }
-  int count;
-};
-
-template <typename T>
-struct ChangeRecorder : sigc::trackable
-{
-  void value_changed(T const& value)
-  {
-    changed_values.push_back(value);
-  }
-  typedef std::vector<T> ChangedValues;
-  ChangedValues changed_values;
-};
-
 TEST(TestIndicatorEntry, TestAssignment)
 {
 
@@ -59,9 +63,8 @@ TEST(TestIndicatorEntry, TestAssignment)
   indicator::Entry other_entry("other_id", "other_name_hint", "other_label",
                                false, false, 2, "other icon", true, false, 5);
 
-  Counter counter;
-  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
-
+  SigReceiver sig_receiver(entry);
+  EXPECT_CALL(sig_receiver, Updated());
   entry = other_entry;
 
   EXPECT_EQ(entry.id(), "other_id");
@@ -73,142 +76,87 @@ TEST(TestIndicatorEntry, TestAssignment)
   EXPECT_EQ(entry.image_data(), "other icon");
   EXPECT_TRUE(entry.image_sensitive());
   EXPECT_FALSE(entry.image_visible());
-  EXPECT_EQ(counter.count, 1);
   EXPECT_EQ(entry.priority(), 5);
 }
 
 TEST(TestIndicatorEntry, TestShowNowEvents)
 {
-
   indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
-
-  ChangeRecorder<bool> recorder;
-  Counter counter;
-  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
-  entry.show_now_changed.connect(sigc::mem_fun(recorder, &ChangeRecorder<bool>::value_changed));
+  SigReceiver sig_receiver(entry);
 
   // Setting show_now to the same value doesn't emit any events.
+  EXPECT_CALL(sig_receiver, Updated()).Times(0);
+  EXPECT_CALL(sig_receiver, ShowNowChanged(_)).Times(0);
+
   entry.set_show_now(false);
   EXPECT_FALSE(entry.show_now());
-  EXPECT_EQ(counter.count, 0);
-  EXPECT_EQ(recorder.changed_values.size(), 0);
 
   // Setting to a different value does emit the events.
+  EXPECT_CALL(sig_receiver, Updated());
+  EXPECT_CALL(sig_receiver, ShowNowChanged(true));
+
   entry.set_show_now(true);
   EXPECT_TRUE(entry.show_now());
-  EXPECT_EQ(counter.count, 1);
-  ASSERT_EQ(recorder.changed_values.size(), 1);
-  EXPECT_TRUE(recorder.changed_values[0]);
 }
 
 TEST(TestIndicatorEntry, TestActiveEvents)
 {
-
   indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
 
-  ChangeRecorder<bool> recorder;
-  Counter counter;
-  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
-  entry.active_changed.connect(sigc::mem_fun(recorder, &ChangeRecorder<bool>::value_changed));
+  SigReceiver sig_receiver(entry);
 
   // Setting to the same value doesn't emit any events.
+  EXPECT_CALL(sig_receiver, Updated()).Times(0);
+  EXPECT_CALL(sig_receiver, ActiveChanged(_)).Times(0);
+
   entry.set_active(false);
   EXPECT_FALSE(entry.active());
-  EXPECT_EQ(counter.count, 0);
-  EXPECT_EQ(recorder.changed_values.size(), 0);
 
   // Setting to a different value does emit the events.
+  EXPECT_CALL(sig_receiver, Updated());
+  EXPECT_CALL(sig_receiver, ActiveChanged(true));
+
   entry.set_active(true);
   EXPECT_TRUE(entry.active());
-  EXPECT_EQ(counter.count, 1);
-  ASSERT_EQ(recorder.changed_values.size(), 1);
-  EXPECT_TRUE(recorder.changed_values[0]);
 }
-
-struct ScrollRecorder : public ChangeRecorder<int>
-{
-  ScrollRecorder(std::string const& name) : entry_name(name) {}
-
-  void OnScroll(std::string const& name, int delta)
-  {
-    EXPECT_EQ(name, entry_name);
-    value_changed(delta);
-  }
-
-  std::string entry_name;
-};
 
 TEST(TestIndicatorEntry, TestOnScroll)
 {
-
   indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
+  SigReceiver sig_receiver(entry);
 
-  ScrollRecorder recorder("id");
-  entry.on_scroll.connect(sigc::mem_fun(recorder, &ScrollRecorder::OnScroll));
-
+  EXPECT_CALL(sig_receiver, OnScroll("id", 10));
   entry.Scroll(10);
+
+  EXPECT_CALL(sig_receiver, OnScroll("id", -20));
   entry.Scroll(-20);
-
-  ASSERT_EQ(recorder.changed_values.size(), 2);
-  EXPECT_EQ(recorder.changed_values[0], 10);
-  EXPECT_EQ(recorder.changed_values[1], -20);
 }
-
-struct ShowMenuRecorder
-{
-  void OnShowMenu(std::string const& a, unsigned b, int c, int d, unsigned e)
-  {
-    name = a;
-    xid = b;
-    x = c;
-    y = d;
-    button = e;
-  }
-  std::string name;
-  unsigned xid, button;
-  int x, y;
-};
 
 TEST(TestIndicatorEntry, TestOnShowMenu)
 {
-
   indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
+  SigReceiver sig_receiver(entry);
 
-  ShowMenuRecorder recorder;
-  entry.on_show_menu.connect(sigc::mem_fun(recorder, &ShowMenuRecorder::OnShowMenu));
-
+  EXPECT_CALL(sig_receiver, OnShowMenu("id", 0, 10, 20, 1));
   entry.ShowMenu(10, 20, 1);
-  EXPECT_EQ(recorder.name, "id");
-  EXPECT_EQ(recorder.xid, 0);
-  EXPECT_EQ(recorder.x, 10);
-  EXPECT_EQ(recorder.y, 20);
-  EXPECT_EQ(recorder.button, 1);
 }
 
 TEST(TestIndicatorEntry, TestOnShowMenuXid)
 {
-
   indicator::Entry entry("xid", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
+  SigReceiver sig_receiver(entry);
 
-  ShowMenuRecorder recorder;
-  entry.on_show_menu.connect(sigc::mem_fun(recorder, &ShowMenuRecorder::OnShowMenu));
-
+  EXPECT_CALL(sig_receiver, OnShowMenu("xid", 88492615, 15, 25, 2));
   entry.ShowMenu(88492615, 15, 25, 2);
-  EXPECT_EQ(recorder.name, "xid");
-  EXPECT_EQ(recorder.xid, 88492615);
-  EXPECT_EQ(recorder.x, 15);
-  EXPECT_EQ(recorder.y, 25);
-  EXPECT_EQ(recorder.button, 2);
 }
 
 TEST(TestIndicatorEntry, TestVisibility)
 {
-
   indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, false, -1);
 
@@ -251,31 +199,23 @@ TEST(TestIndicatorEntry, TestVisibility)
 
 TEST(TestIndicatorEntry, TestGeometry)
 {
-
   indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
-
-  Counter counter;
-  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
-  bool geo_changed = false;
-  nux::Rect new_geo;
-
-  entry.geometry_changed.connect([&] (nux::Rect const& geo) {
-    geo_changed = true;
-    new_geo = geo;
-  });
+  SigReceiver sig_receiver(entry);
 
   // Setting to the same value doesn't emit any events.
+  EXPECT_CALL(sig_receiver, Updated()).Times(0);
+  EXPECT_CALL(sig_receiver, GeometryChanged(_)).Times(0);
+
   entry.set_geometry(nux::Rect());
   EXPECT_EQ(entry.geometry(), nux::Rect());
-  EXPECT_EQ(counter.count, 0);
 
   // Setting to a different value does emit the events.
+  EXPECT_CALL(sig_receiver, Updated());
+  EXPECT_CALL(sig_receiver, GeometryChanged(nux::Rect(1, 2, 3, 4)));
+
   entry.set_geometry(nux::Rect(1, 2, 3, 4));
   EXPECT_EQ(entry.geometry(), nux::Rect(1, 2, 3, 4));
-  EXPECT_TRUE(geo_changed);
-  EXPECT_EQ(new_geo, nux::Rect(1, 2, 3, 4));
-  EXPECT_EQ(counter.count, 1);
 }
 
 }
