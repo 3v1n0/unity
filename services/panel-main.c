@@ -56,7 +56,7 @@ static const gchar introspection_xml[] =
   "    </method>"
   ""
   "    <method name='ShowEntriesDropdown'>"
-  "      <arg type='s' name='first_entry' direction='in'/>"
+  "      <arg type='as' name='entries_ids' direction='in'/>"
   "      <arg type='u' name='xid' direction='in'/>"
   "      <arg type='i' name='x' direction='in'/>"
   "      <arg type='i' name='y' direction='in'/>"
@@ -193,15 +193,15 @@ handle_method_call (GDBusConnection       *connection,
   else if (g_strcmp0 (method_name, "ShowEntriesDropdown") == 0)
     {
       guint32 xid;
-      gchar  *entry_id;
+      gchar **entries;
       gint32  x;
       gint32  y;
-      g_variant_get (parameters, "(suii)", &entry_id, &xid, &x, &y);
+      g_variant_get (parameters, "(^asuii)", &entries, &xid, &x, &y);
 
-      panel_service_show_entries (service, entry_id, xid, x, y);
+      panel_service_show_entries (service, entries, xid, x, y);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
-      g_free (entry_id);
+      g_strfreev (entries);
     }
   else if (g_strcmp0 (method_name, "ShowAppMenu") == 0)
     {

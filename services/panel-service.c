@@ -348,6 +348,16 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
         }
     }
 
+  if (!entry && g_str_has_suffix(entry_id, "-dropdown"))
+    {
+      /* For each indicator we add a list of "fake" dropdown entries that unity
+       * might use to present long menu bars (right now only for appmenu indicator) */
+      entry = g_new0 (IndicatorObjectEntry, 1);
+      entry->parent_object = panel_service_get_indicator (self, "libappmenu.so");
+      self->priv->dropdown_entries = g_slist_append (self->priv->dropdown_entries, entry);
+      g_hash_table_insert (self->priv->id2entry_hash, g_strdup (entry_id), entry);
+    }
+
   return entry;
 }
 
@@ -1204,14 +1214,6 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
     }
   g_list_free (entries);
 
-  /* For each indicator we add a list of "fake" dropdown entries that unity
-   * might use to present long menu bars (right now only for appmenu indicator) */
-  IndicatorObjectEntry* dropdown_entry = g_new0 (IndicatorObjectEntry, 1);
-  dropdown_entry->parent_object = object;
-  priv->dropdown_entries = g_slist_append (priv->dropdown_entries, dropdown_entry);
-  g_hash_table_insert (self->priv->id2entry_hash,
-                       g_strdup_printf ("%s-dropdown", name), dropdown_entry);
-
   g_free (name);
 }
 
@@ -1632,11 +1634,6 @@ panel_service_sync_geometry (PanelService *self,
   PanelServicePrivate  *priv = self->priv;
 
   entry = get_indicator_entry_by_id (self, entry_id);
-
-  if (g_strcmp0 (entry_id, "dropdown") == 0)
-  {
-    g_print("Dropdown entry is %p %dx%d, %dx%d %s\n",entry,x,y,width,height,panel_id);
-  }
 
   /* If the entry we read is not valid, maybe it has already been removed
    * or unparented, so we need to make sure that the related key on the
@@ -2088,20 +2085,20 @@ on_drop_down_menu_hidden (GtkWidget *menu)
 
 void
 panel_service_show_entries (PanelService *self,
-                            const gchar  *entry_id,
+                            gchar       **entries,
                             guint32       xid,
                             gint32        x,
                             gint32        y)
 {
-  GList                *entries, *l;
+  gint                 i;
   IndicatorObject      *object;
   IndicatorObjectEntry *entry, *first_entry, *last_entry;
   GtkWidget            *menu;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
-  g_return_if_fail (entry_id);
+  g_return_if_fail (entries && entries[0]);
 
-  first_entry = get_indicator_entry_by_id (self, entry_id);
+  first_entry = get_indicator_entry_by_id (self, entries[0]);
   object = get_entry_parent_indicator (first_entry);
 
   if (first_entry == self->priv->last_entry)
@@ -2116,11 +2113,9 @@ panel_service_show_entries (PanelService *self,
   last_entry = NULL;
   menu = gtk_menu_new ();
 
-  entries = indicator_object_get_entries (object);
-
-  for (l = entries; l; l = l->next)
+  for (i = 0; entries[i]; ++i)
     {
-      entry = l->data;
+      entry = get_indicator_entry_by_id (self, entries[i]);
 
       if (entry != first_entry && !last_entry)
         continue;
@@ -2169,8 +2164,6 @@ panel_service_show_entries (PanelService *self,
       gtk_widget_show (menu_item);
       last_entry = entry;
     }
-
-  g_list_free (entries);
 
   if (!last_entry)
     {
