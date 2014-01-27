@@ -47,7 +47,6 @@ Shield::Shield(session::Manager::Ptr const& session_manager, bool is_primary)
 {
   SetLayout(new nux::VLayout());
 
-  UpdateBackgroundTexture();
   primary ? ShowPrimaryView() : ShowSecondaryView();
 
   EnableInputWindow(true);
@@ -61,6 +60,11 @@ Shield::Shield(session::Manager::Ptr const& session_manager, bool is_primary)
     UpdateBackgroundTexture();
     QueueDraw();
   });
+
+  geometry_changed.connect([this](nux::Area*, nux::Geometry&) {
+    UpdateBackgroundTexture();
+  });
+
 }
 
 void Shield::UpdateBackgroundTexture()

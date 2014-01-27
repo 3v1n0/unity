@@ -87,6 +87,23 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
+  // TODO (andy) fallback to CK. But I need to figure out how to do that.
+  {
+    login_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.login1",
+                                                     std::string("/org/freedesktop/login1/session/") + g_getenv("XDG_SESSION_ID"),
+                                                     "org.freedesktop.login1.Session",
+                                                     G_BUS_TYPE_SYSTEM);
+
+    login_proxy_->Connect("Lock", [this](GVariant*){
+      std::cout << "lock" << std::endl;
+      manager_->lock_requested.emit();
+    });
+
+    login_proxy_->Connect("Unlock", [this](GVariant*){
+      manager_->unlock_requested.emit();
+    });
+  }
+
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {
     if (err)
     {

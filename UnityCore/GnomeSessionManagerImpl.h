@@ -69,6 +69,7 @@ struct GnomeManager::Impl
   shell::Action pending_action_;
   glib::DBusServer shell_server_;
   glib::DBusObject::Ptr shell_object_;
+  glib::DBusProxy::Ptr login_proxy_;
 };
 
 } // namespace session

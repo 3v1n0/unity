@@ -28,7 +28,7 @@ namespace lockscreen
 {
 namespace
 {
-const unsigned int FADE_DURATION = 500;
+const unsigned int FADE_DURATION = 200;
 }
 
 Controller::Controller(session::Manager::Ptr const& session_manager)
