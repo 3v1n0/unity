@@ -100,6 +100,10 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         controller = self.get_root_instance().select_single(LauncherController)
         return controller
 
+    def move_mouse_to_screen_of_current_launcher(self):
+        """Places the mouse on the screen of this launcher."""
+        move_mouse_to_screen(self.monitor)
+
     def move_mouse_to_right_of_launcher(self):
         """Places the mouse to the right of this launcher."""
         move_mouse_to_screen(self.monitor)
@@ -153,11 +157,13 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
 
-        target_x = x - 920 # this is the pressure we need to reveal the launcher.
+        target_x = x - 300 # this is the pressure we need to reveal the launcher.
         target_y = y + h / 2
         logger.debug("Revealing launcher on monitor %d with mouse.", self.monitor)
         self._mouse.move(target_x, target_y, True, 5, .002)
-        sleep(self.show_timeout)
+
+        # Move the mouse back to the launcher for multi-monitor
+        self._mouse.move(x, target_y, True, 5, .002)
 
     def keyboard_reveal_launcher(self):
         """Reveal this launcher using the keyboard."""
@@ -373,11 +379,6 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             raise ValueError("'drag_type' parameter must be one of IconDragType.INSIDE, IconDragType.OUTSIDE")
 
         icon_height = get_compiz_option("unityshell", "icon_size")
-        target_y = target.center.y
-        if target_y < icon.center.y:
-            target_y += icon_height / 2
-        if pos == IconDragType.BEFORE:
-            target_y -= icon_height + (icon_height / 2)
 
         self.move_mouse_to_icon(icon)
         self._mouse.press()
@@ -389,6 +390,13 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             sleep(0.5)
 
         self.move_mouse_to_icon(target)
+
+        target_y = target.center.y
+        if target_y < icon.center.y:
+            target_y += icon_height 
+        if pos == IconDragType.BEFORE:
+            target_y -= icon_height + (icon_height / 2)
+
         self._mouse.move(self._mouse.x, target_y)
         sleep(0.5)
         self._mouse.release()

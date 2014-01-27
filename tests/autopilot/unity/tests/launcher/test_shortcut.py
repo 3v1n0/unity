@@ -24,10 +24,6 @@ class LauncherShortcutTests(LauncherTestCase):
 
     def setUp(self):
         super(LauncherShortcutTests, self).setUp()
-
-        if not self.launcher_instance:
-            self.skipTest("Cannot run test with no Launcher on monitor")
-
         self.launcher_instance.keyboard_reveal_launcher()
         self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
         sleep(2)
