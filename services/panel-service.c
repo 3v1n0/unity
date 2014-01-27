@@ -57,6 +57,7 @@ static PanelService *static_service = NULL;
 struct _PanelServicePrivate
 {
   GSList     *indicators;
+  GSList     *dropdown_entries;
   GHashTable *id2entry_hash;
   GHashTable *panel2entries_hash;
 
@@ -187,6 +188,12 @@ panel_service_class_dispose (GObject *self)
                                             0, 0, NULL, update_keybinding, NULL);
       g_object_unref (priv->gsettings);
       priv->gsettings = NULL;
+    }
+
+  if (priv->dropdown_entries)
+    {
+      g_slist_free_full (priv->dropdown_entries, g_free);
+      priv->dropdown_entries = NULL;
     }
 
   G_OBJECT_CLASS (panel_service_parent_class)->dispose (self);
@@ -1197,6 +1204,14 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
     }
   g_list_free (entries);
 
+  /* For each indicator we add a list of "fake" dropdown entries that unity
+   * might use to present long menu bars (right now only for appmenu indicator) */
+  IndicatorObjectEntry* dropdown_entry = g_new0 (IndicatorObjectEntry, 1);
+  dropdown_entry->parent_object = object;
+  priv->dropdown_entries = g_slist_append (priv->dropdown_entries, dropdown_entry);
+  g_hash_table_insert (self->priv->id2entry_hash,
+                       g_strdup_printf ("%s-dropdown", name), dropdown_entry);
+
   g_free (name);
 }
 
@@ -1618,6 +1633,11 @@ panel_service_sync_geometry (PanelService *self,
 
   entry = get_indicator_entry_by_id (self, entry_id);
 
+  if (g_strcmp0 (entry_id, "dropdown") == 0)
+  {
+    g_print("Dropdown entry is %p %dx%d, %dx%d %s\n",entry,x,y,width,height,panel_id);
+  }
+
   /* If the entry we read is not valid, maybe it has already been removed
    * or unparented, so we need to make sure that the related key on the
    * entry2geometry_hash is correctly removed and the value is free'd */
@@ -1788,8 +1808,15 @@ activate_next_prev_menu (PanelService         *self,
               gint prio = -1;
               new_entry = ll->data;
 
-              if (!panel_service_entry_is_visible (self, new_entry))
-                continue;
+              if (priv->last_dropdown_entry && new_entry == priv->last_entry)
+                g_print("Found first drop-down!\n");
+
+              // if (!(priv->last_dropdown_entry && new_entry == priv->last_entry))
+              //   {
+              //     if (!panel_service_entry_is_visible (self, new_entry))
+              //       continue;
+              //   }
+              (void)panel_service_entry_is_visible;
 
               if (new_entry->name_hint)
                 {
@@ -1907,6 +1934,7 @@ panel_service_show_entry_common (PanelService *self,
                                  gint32        y,
                                  guint32       button)
 {
+  g_print("%s\n",G_STRFUNC);
   PanelServicePrivate *priv;
   GtkWidget           *last_menu;
 
@@ -2075,6 +2103,9 @@ panel_service_show_entries (PanelService *self,
 
   first_entry = get_indicator_entry_by_id (self, entry_id);
   object = get_entry_parent_indicator (first_entry);
+
+  if (first_entry == self->priv->last_entry)
+    return;
 
   if (!first_entry || !object)
     {
