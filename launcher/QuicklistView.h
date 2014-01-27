@@ -35,6 +35,7 @@
 #include "CairoBaseWindow.h"
 #include "QuicklistMenuItem.h"
 
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
 
 namespace unity
@@ -139,6 +140,11 @@ private:
   void SelectItem(int index);
   bool IsMenuItemSelectable(int index);
 
+  int CalculateX() const;
+  int CalculateY() const;
+
+  void UpdateEMConverter();
+
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
@@ -174,6 +180,8 @@ private:
 
   // list of introspectable children, used to return children in the correct order:
   IntrospectableList _introspectable_children;
+
+  EMConverter em_;
 };
 
 } // NAMESPACE

@@ -101,6 +101,7 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadTooltip));
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadQuicklist));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -117,7 +118,7 @@ LauncherIcon::LauncherIcon(IconType type)
 
 void LauncherIcon::LoadTooltip()
 {
-  _tooltip = new Tooltip();
+  _tooltip.Adopt(new Tooltip());
   _tooltip->SetOpacity(0.0f);
   AddChild(_tooltip.GetPointer());
 
@@ -126,7 +127,7 @@ void LauncherIcon::LoadTooltip()
 
 void LauncherIcon::LoadQuicklist()
 {
-  _quicklist = new QuicklistView();
+  _quicklist.Adopt(new QuicklistView());
   AddChild(_quicklist.GetPointer());
 
   _quicklist->mouse_down_outside_pointer_grab_area.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags)
