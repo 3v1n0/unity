@@ -61,7 +61,6 @@ struct MockIndicators : Indicators
   MOCK_METHOD4(ShowEntriesDropdown, void(Indicator::Entries const&, unsigned xid, int x, int y));
   MOCK_METHOD2(OnEntryScroll, void(std::string const&, int delta));
   MOCK_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned xid, int x, int y, unsigned button));
-  MOCK_METHOD4(OnEntryShowDropdownMenu, void(std::string const&, unsigned xid, int x, int y));
   MOCK_METHOD1(OnEntrySecondaryActivate, void(std::string const&));
   MOCK_METHOD3(OnShowAppMenu, void(unsigned xid, int x, int y));
 
@@ -345,24 +344,6 @@ TEST(TestIndicators, EntryShowMenu)
 
   EXPECT_CALL(indicators, OnEntryShowMenu(entry13->id(), 0, 55, 68, 3));
   entry13->ShowMenu(55, 68, 3);
-}
-
-TEST(TestIndicators, EntryShowDropdownMenu)
-{
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
-
-  // See if the indicators class get notified on entries actions
-  ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
-
-  Entry::Ptr entry13(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-3"));
-  ASSERT_THAT(entry13, NotNull());
-
-  EXPECT_CALL(indicators, OnEntryShowDropdownMenu(entry13->id(), 657890, 55, 353));
-  entry13->ShowDropdownMenu(657890, 55, 353);
-
-  EXPECT_CALL(indicators, OnEntryShowDropdownMenu(entry13->id(), 0, 355, 53));
-  entry13->ShowDropdownMenu(355, 53);
 }
 
 TEST(TestIndicators, EntryScroll)

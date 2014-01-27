@@ -76,7 +76,6 @@ protected:
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
   virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button) = 0;
-  virtual void OnEntryShowDropdownMenu(std::string const& entry_id, unsigned int xid, int x, int y) = 0;
   virtual void OnEntrySecondaryActivate(std::string const& entry_id) = 0;
   virtual void OnShowAppMenu(unsigned int xid, int x, int y) = 0;
 

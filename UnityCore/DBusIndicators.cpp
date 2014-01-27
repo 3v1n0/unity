@@ -65,7 +65,6 @@ struct DBusIndicators::Impl
 
   void OnEntryScroll(std::string const& entry_id, int delta);
   void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button);
-  void OnEntryShowDropdownMenu(std::string const& entry_id, unsigned int xid, int x, int y);
   void OnEntrySecondaryActivate(std::string const& entry_id);
   void OnShowAppMenu(unsigned int xid, int x, int y);
 
@@ -213,22 +212,6 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   show_entry_idle_->Run([this, entry_id, xid, x, y, button] {
     gproxy_.Call("ShowEntry", g_variant_new("(suiiu)", entry_id.c_str(), xid,
                                                        x, y, button));
-    return false;
-  });
-}
-
-void DBusIndicators::Impl::OnEntryShowDropdownMenu(std::string const& entry_id,
-                                                   unsigned int xid, int x, int y)
-{
-  owner_->on_entry_show_menu.emit(entry_id, xid, x, y, 0);
-
-  // We have to do this because on certain systems X won't have time to
-  // respond to our request for XUngrabPointer and this will cause the
-  // menu not to show
-
-  show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([this, entry_id, xid, x, y] {
-    gproxy_.Call("ShowEntriesDropdown", g_variant_new("(suii)", entry_id.c_str(), xid, x, y));
     return false;
   });
 }
@@ -457,12 +440,6 @@ void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
                                      unsigned int button)
 {
   pimpl->OnEntryShowMenu(entry_id, xid, x, y, button);
-}
-
-void DBusIndicators::OnEntryShowDropdownMenu(std::string const& entry_id,
-                                             unsigned int xid, int x, int y)
-{
-  pimpl->OnEntryShowDropdownMenu(entry_id, xid, x, y);
 }
 
 void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id)

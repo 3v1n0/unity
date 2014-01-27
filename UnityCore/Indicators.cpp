@@ -157,7 +157,6 @@ Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
 
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
-  indicator->on_show_dropdown_menu.connect(sigc::mem_fun (owner_, &Indicators::OnEntryShowDropdownMenu));
   indicator->on_secondary_activate.connect(sigc::mem_fun(owner_, &Indicators::OnEntrySecondaryActivate));
   indicator->on_scroll.connect(sigc::mem_fun(owner_, &Indicators::OnEntryScroll));
 

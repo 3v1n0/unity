@@ -19,7 +19,6 @@ struct SigReceiver : sigc::trackable
     entry.geometry_changed.connect(sigc::mem_fun(this, &SigReceiver::GeometryChanged));
     entry.show_now_changed.connect(sigc::mem_fun(this, &SigReceiver::ShowNowChanged));
     entry.on_show_menu.connect(sigc::mem_fun(this, &SigReceiver::OnShowMenu));
-    entry.on_show_dropdown_menu.connect(sigc::mem_fun(this, &SigReceiver::OnShowDropdownMenu));
     entry.on_secondary_activate.connect(sigc::mem_fun(this, &SigReceiver::OnSecondaryActivate));
     entry.on_scroll.connect(sigc::mem_fun(this, &SigReceiver::OnScroll));
   }
@@ -29,7 +28,6 @@ struct SigReceiver : sigc::trackable
   MOCK_CONST_METHOD1(GeometryChanged, void(nux::Rect const&));
   MOCK_CONST_METHOD1(ShowNowChanged, void(bool));
   MOCK_CONST_METHOD5(OnShowMenu, void(std::string const&, unsigned, int, int, unsigned));
-  MOCK_CONST_METHOD4(OnShowDropdownMenu, void(std::string const&, unsigned, int, int));
   MOCK_CONST_METHOD1(OnSecondaryActivate, void(std::string const&));
   MOCK_CONST_METHOD2(OnScroll, void(std::string const&, int));
 };
@@ -153,26 +151,6 @@ TEST(TestIndicatorEntry, TestOnShowMenuXid)
 
   EXPECT_CALL(sig_receiver, OnShowMenu("xid", 88492615, 15, 25, 2));
   entry.ShowMenu(88492615, 15, 25, 2);
-}
-
-TEST(TestIndicatorEntry, TestOnShowMenuDropdown)
-{
-  indicator::Entry entry("id", "name_hint", "label", true, true,
-                         0, "some icon", false, true, -1);
-  SigReceiver sig_receiver(entry);
-
-  EXPECT_CALL(sig_receiver, OnShowDropdownMenu("id", 0, 10, 20));
-  entry.ShowDropdownMenu(10, 20);
-}
-
-TEST(TestIndicatorEntry, TestOnShowMenuXidDropdown)
-{
-  indicator::Entry entry("xid", "name_hint", "label", true, true,
-                         0, "some icon", false, true, -1);
-  SigReceiver sig_receiver(entry);
-
-  EXPECT_CALL(sig_receiver, OnShowDropdownMenu("xid", 88492615, 15, 25));
-  entry.ShowDropdownMenu(88492615, 15, 25);
 }
 
 TEST(TestIndicatorEntry, TestVisibility)

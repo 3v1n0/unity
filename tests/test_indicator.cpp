@@ -38,7 +38,6 @@ struct SigReceiver : sigc::trackable
     indicator.on_entry_added.connect(sigc::mem_fun(this, &SigReceiver::EntryAdded));
     indicator.on_entry_removed.connect(sigc::mem_fun(this, &SigReceiver::EntryRemoved));
     indicator.on_show_menu.connect(sigc::mem_fun(this, &SigReceiver::ShowMenu));
-    indicator.on_show_dropdown_menu.connect(sigc::mem_fun(this, &SigReceiver::ShowDropdownMenu));
     indicator.on_secondary_activate.connect(sigc::mem_fun(this, &SigReceiver::SecondaryActivate));
     indicator.on_scroll.connect(sigc::mem_fun(this, &SigReceiver::Scroll));
   }
@@ -47,7 +46,6 @@ struct SigReceiver : sigc::trackable
   MOCK_CONST_METHOD1(EntryAdded, void(Entry::Ptr const&));
   MOCK_CONST_METHOD1(EntryRemoved, void(std::string const&));
   MOCK_CONST_METHOD5(ShowMenu, void(std::string const&, unsigned, int, int, unsigned));
-  MOCK_CONST_METHOD4(ShowDropdownMenu, void(std::string const&, unsigned, int, int));
   MOCK_CONST_METHOD1(SecondaryActivate, void(std::string const&));
   MOCK_CONST_METHOD2(Scroll, void(std::string const&, int));
 };
@@ -189,24 +187,6 @@ TEST(TestIndicator, ChildrenSignalShowMenu)
 
   entry->ShowMenu(123456789, 50, 100, 2);
   EXPECT_CALL(sig_receiver, ShowMenu(_, _, _, _, _)).Times(0);
-}
-
-TEST(TestIndicator, ChildrenSignalShowDropdownMenu)
-{
-  Indicator indicator("indicator-test");
-  SigReceiver::Nice sig_receiver(indicator);
-
-  auto entry = std::make_shared<Entry>("test-entry-1", "name-hint", "label", true, true, 0, "icon", true, true, -1);
-  indicator.Sync({entry});
-
-  EXPECT_CALL(sig_receiver, ShowDropdownMenu(entry->id(), 123456789, 50, 101));
-  entry->ShowDropdownMenu(123456789, 50, 101);
-
-  // Check if a removed entry still emits a signal to the old indicator
-  indicator.Sync({});
-
-  entry->ShowDropdownMenu(123456789, 50, 100);
-  EXPECT_CALL(sig_receiver, ShowDropdownMenu(_, _, _, _)).Times(0);
 }
 
 TEST(TestIndicator, ChildrenSignalSecondaryActivate)

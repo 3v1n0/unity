@@ -215,16 +215,6 @@ void Entry::ShowMenu(unsigned int xid, int x, int y, unsigned button)
   on_show_menu.emit(id_, xid, x, y, button);
 }
 
-void Entry::ShowDropdownMenu(unsigned int xid, int x, int y)
-{
-  on_show_dropdown_menu.emit(id_, xid, x, y);
-}
-
-void Entry::ShowDropdownMenu(int x, int y)
-{
-  ShowDropdownMenu(0, x, y);
-}
-
 void Entry::SecondaryActivate()
 {
   on_secondary_activate.emit(id_);

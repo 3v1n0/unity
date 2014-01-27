@@ -82,10 +82,6 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
       on_show_menu.emit(entry_id, xid, x, y, button);
     }));
 
-    new_entry_connections.Add(new_entry->on_show_dropdown_menu.connect([this] (std::string const& entry_id, unsigned xid, int x, int y) {
-      on_show_dropdown_menu.emit(entry_id, xid, x, y);
-    }));
-
     new_entry_connections.Add(new_entry->on_secondary_activate.connect([this] (std::string const& entry_id) {
       on_secondary_activate.emit(entry_id);
     }));
