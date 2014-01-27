@@ -53,6 +53,7 @@ struct DBusIndicators::Impl
   void RequestSyncIndicator(std::string const& name);
   void Sync(GVariant* args);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
+  void ShowEntriesDropdown(Indicator::Entries const&, unsigned xid, int x, int y);
 
   void OnConnected();
   void OnDisconnected();
@@ -228,6 +229,25 @@ void DBusIndicators::Impl::OnEntryShowDropdownMenu(std::string const& entry_id,
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
   show_entry_idle_->Run([this, entry_id, xid, x, y] {
     gproxy_.Call("ShowEntriesDropdown", g_variant_new("(suii)", entry_id.c_str(), xid, x, y));
+    return false;
+  });
+}
+
+void DBusIndicators::Impl::ShowEntriesDropdown(Indicator::Entries const& entries, unsigned xid, int x, int y)
+{
+  if (entries.empty())
+    return;
+
+  owner_->on_entry_show_menu.emit("dropdown", xid, x, y, 0);
+
+  show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  show_entry_idle_->Run([this, entries, xid, x, y] {
+    GVariantBuilder builder;
+    g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+    for (auto const& entry : entries)
+      g_variant_builder_add(&builder, "s", entry->id().c_str());
+
+    gproxy_.Call("ShowEntriesDropdown", g_variant_new("(asuii)", &builder, xid, x, y));
     return false;
   });
 }
@@ -420,6 +440,11 @@ void DBusIndicators::SyncGeometries(std::string const& name,
                                     EntryLocationMap const& locations)
 {
   pimpl->SyncGeometries(name, locations);
+}
+
+void DBusIndicators::ShowEntriesDropdown(Indicator::Entries const& entries, unsigned xid, int x, int y)
+{
+  pimpl->ShowEntriesDropdown(entries, xid, x, y);
 }
 
 void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)

@@ -33,12 +33,14 @@ namespace indicator
 class Indicators : public sigc::trackable, boost::noncopyable
 {
 public:
+  typedef std::shared_ptr<Indicators> Ptr;
   typedef std::list<Indicator::Ptr> IndicatorsList;
 
   Indicators();
   virtual ~Indicators();
 
   IndicatorsList GetIndicators() const;
+  virtual void ShowEntriesDropdown(Indicator::Entries const&, unsigned xid, int x, int y) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;

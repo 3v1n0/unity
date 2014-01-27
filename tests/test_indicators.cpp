@@ -58,6 +58,7 @@ struct MockIndicators : Indicators
   {}
 
   // Implementing Indicators virtual functions
+  MOCK_METHOD4(ShowEntriesDropdown, void(Indicator::Entries const&, unsigned xid, int x, int y));
   MOCK_METHOD2(OnEntryScroll, void(std::string const&, int delta));
   MOCK_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned xid, int x, int y, unsigned button));
   MOCK_METHOD4(OnEntryShowDropdownMenu, void(std::string const&, unsigned xid, int x, int y));
