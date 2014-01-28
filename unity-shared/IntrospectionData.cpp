@@ -18,6 +18,7 @@
  */
 
 #include "IntrospectionData.h"
+#include <core/rect.h>
 #include <NuxCore/Rect.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Math/Point3D.h>
@@ -197,6 +198,21 @@ IntrospectionData& IntrospectionData::add(std::string const& name, nux::Color co
   return *this;
 }
 
+IntrospectionData& IntrospectionData::add(std::string const& name, CompPoint const& p)
+{
+  return add(name, nux::Point(p.x(), p.y()));
+}
+
+IntrospectionData& IntrospectionData::add(std::string const& name, CompRect const& r)
+{
+  return add(name, nux::Rect(r.x(), r.y(), r.width(), r.height()));
+}
+
+IntrospectionData& IntrospectionData::add(std::string const& name, CompSize const& s)
+{
+  return add(name, nux::Size(s.width(), s.height()));
+}
+
 IntrospectionData& IntrospectionData::add(nux::Rect const& value)
 {
   add("globalRect", value);
@@ -206,6 +222,11 @@ IntrospectionData& IntrospectionData::add(nux::Rect const& value)
   add("width", value.width);
   add("height", value.height);
   return *this;
+}
+
+IntrospectionData& IntrospectionData::add(CompRect const& r)
+{
+  return add(nux::Rect(r.x(), r.y(), r.width(), r.height()));
 }
 
 } // debug namespace

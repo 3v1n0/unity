@@ -11,6 +11,7 @@
 #cmakedefine TESTDATADIR "@TESTDIRDIR@"
 #cmakedefine GETTEXT_PACKAGE "@GETTEXT_PACKAGE@"
 #cmakedefine LENSES_DIR "@LENSES_DIR@"
+#cmakedefine GTK_PREFIX "@GTK_PREFIX@"
 #ifndef INDICATORDIR
 #cmakedefine INDICATORDIR "@INDICATORDIR@"
 #endif

@@ -92,7 +92,7 @@ TEST(TestTextureCache, TestCallbackOnlyCalledOnce)
 
   EXPECT_THAT(cache.Size(), Eq(1));
   EXPECT_THAT(counter.count, Eq(1));
-  EXPECT_TRUE(t1 == t2);
+  EXPECT_EQ(t1, t2);
 }
 
 TEST(TestTextureCache, TestCacheRemovesDeletedObject)
@@ -118,5 +118,20 @@ TEST(TestTextureCache, TestCacheRemovesDeletedObject)
   EXPECT_THAT(cache.Size(), Eq(0));
 }
 
+TEST(TestTextureCache, Invalidate)
+{
+  TextureCallbackCounter counter;
+  TextureCache::CreateTextureCallback callback(sigc::mem_fun(counter, &TextureCallbackCounter::callback));
+
+  TextureCache& cache = TextureCache::GetDefault();
+  nux::ObjectPtr<nux::BaseTexture> t1 = cache.FindTexture("foo", 5, 7, callback);
+  cache.Invalidate("foo", 5, 7);
+  ASSERT_EQ(0, cache.Size());
+
+  nux::ObjectPtr<nux::BaseTexture> t2 = cache.FindTexture("foo", 5, 7, callback);
+  EXPECT_NE(t1, t2);
+  EXPECT_EQ(1, cache.Size());
+  EXPECT_EQ(2, counter.count);
+}
 
 }

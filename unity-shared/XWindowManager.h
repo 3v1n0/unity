@@ -20,10 +20,6 @@
 #ifndef UNITYSHARED_XWINDOW_MANAGER_H
 #define UNITYSHARED_XWINDOW_MANAGER_H
 
-#include <Nux/Nux.h>
-#include <gdk/gdkx.h>
-#include <core/core.h>
-
 #include "unity-shared/WindowManager.h"
 
 namespace unity
@@ -34,10 +30,11 @@ class XWindowManager : public WindowManager
 public:
   XWindowManager();
 
-  virtual void StartMove(Window window_id, int x, int y);
+  void StartMove(Window window_id, int x, int y);
 
-private:
-  Atom move_resize_atom_;
+  std::string GetWindowName(Window window_id) const;
+  std::string GetStringProperty(Window window_id, Atom atom) const;
+  std::vector<long> GetCardinalProperty(Window, Atom) const;
 };
 
 }
