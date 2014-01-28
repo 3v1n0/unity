@@ -317,6 +317,11 @@ get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry)
 {
   gchar *entry_id = NULL;
 
+  if (g_slist_find (static_service->priv->dropdown_entries, entry))
+    {
+      return g_strdup (entry->name_hint);
+    }
+
   if (entry)
     entry_id = g_strdup_printf ("%p", entry);
 
@@ -348,14 +353,15 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
         }
     }
 
-  if (!entry && g_str_has_suffix(entry_id, "-dropdown"))
+  if (!entry && g_str_has_suffix (entry_id, "-dropdown"))
     {
-      /* For each indicator we add a list of "fake" dropdown entries that unity
-       * might use to present long menu bars (right now only for appmenu indicator) */
+      /* Unity might register some "fake" dropdown entries that it might use to
+       * to present long menu bars (right now only for appmenu indicator) */
       entry = g_new0 (IndicatorObjectEntry, 1);
       entry->parent_object = panel_service_get_indicator (self, "libappmenu.so");
+      entry->name_hint = g_strdup (entry_id);
       self->priv->dropdown_entries = g_slist_append (self->priv->dropdown_entries, entry);
-      g_hash_table_insert (self->priv->id2entry_hash, g_strdup (entry_id), entry);
+      g_hash_table_insert (self->priv->id2entry_hash, (gpointer)entry->name_hint, entry);
     }
 
   return entry;
@@ -1788,32 +1794,41 @@ activate_next_prev_menu (PanelService         *self,
   GList  *ordered_entries = NULL;
   GList  *entries;
   gchar  *id;
-  GSList *l;
+  GSList *l, *sl;
   GList *ll;
 
   for (l = indicators; l; l = l->next)
     {
-      gint parent_priority = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (l->data), "priority"));
-      entries = indicator_object_get_entries (l->data);
-      const gchar *indicator_id = g_object_get_data (G_OBJECT (l->data), "id");
+      IndicatorObject *object = l->data;
+      gint parent_priority = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "priority"));
+      entries = indicator_object_get_entries (object);
+      const gchar *indicator_id = g_object_get_data (G_OBJECT (object), "id");
+
       if (entries)
         {
           int index = 0;
+
+          if (!priv->last_dropdown_entry)
+            {
+              for (sl = priv->dropdown_entries; sl; sl = sl->next)
+                {
+                  IndicatorObjectEntry *dropdown = sl->data;
+
+                  if (dropdown->parent_object == object)
+                    entries = g_list_append (entries, dropdown);
+                }
+            }
 
           for (ll = entries; ll; ll = ll->next)
             {
               gint prio = -1;
               new_entry = ll->data;
 
-              if (priv->last_dropdown_entry && new_entry == priv->last_entry)
-                g_print("Found first drop-down!\n");
-
-              // if (!(priv->last_dropdown_entry && new_entry == priv->last_entry))
-              //   {
-              //     if (!panel_service_entry_is_visible (self, new_entry))
-              //       continue;
-              //   }
-              (void)panel_service_entry_is_visible;
+              if (!priv->last_dropdown_entry)
+                {
+                  if (!panel_service_entry_is_visible (self, new_entry))
+                    continue;
+                }
 
               if (new_entry->name_hint)
                 {
@@ -1931,7 +1946,6 @@ panel_service_show_entry_common (PanelService *self,
                                  gint32        y,
                                  guint32       button)
 {
-  g_print("%s\n",G_STRFUNC);
   PanelServicePrivate *priv;
   GtkWidget           *last_menu;
 
@@ -2086,25 +2100,25 @@ on_drop_down_menu_hidden (GtkWidget *menu)
 void
 panel_service_show_entries (PanelService *self,
                             gchar       **entries,
+                            const gchar  *selected,
                             guint32       xid,
                             gint32        x,
                             gint32        y)
 {
   gint                 i;
   IndicatorObject      *object;
-  IndicatorObjectEntry *entry, *first_entry, *last_entry;
+  IndicatorObjectEntry *entry, *selected_entry, *first_entry, *last_entry;
   GtkWidget            *menu;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entries && entries[0]);
 
   first_entry = get_indicator_entry_by_id (self, entries[0]);
-  object = get_entry_parent_indicator (first_entry);
 
   if (first_entry == self->priv->last_entry)
     return;
 
-  if (!first_entry || !object)
+  if (!first_entry)
     {
       g_warning ("Impossible to show entries for an invalid entry or object");
       return;
@@ -2112,6 +2126,8 @@ panel_service_show_entries (PanelService *self,
 
   last_entry = NULL;
   menu = gtk_menu_new ();
+  selected_entry = get_indicator_entry_by_id (self, selected);
+  object = get_entry_parent_indicator (first_entry);
 
   for (i = 0; entries[i]; ++i)
     {
@@ -2160,9 +2176,11 @@ panel_service_show_entries (PanelService *self,
 
       gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
       gtk_menu_item_set_submenu (GTK_MENU_ITEM (menu_item), GTK_WIDGET (entry->menu));
-      g_signal_connect (menu_item, "activate", G_CALLBACK (menuitem_activated), entry);
       gtk_widget_show (menu_item);
       last_entry = entry;
+
+      if (entry == selected_entry)
+        gtk_menu_shell_select_item (GTK_MENU_SHELL (menu), menu_item);
     }
 
   if (!last_entry)

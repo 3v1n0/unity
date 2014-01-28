@@ -103,6 +103,7 @@ void              panel_service_show_entry    (PanelService *self,
 
 void              panel_service_show_entries  (PanelService *self,
                                                gchar       **entries,
+                                               const gchar  *selected,
                                                guint32       xid,
                                                gint32        x,
                                                gint32        y);
