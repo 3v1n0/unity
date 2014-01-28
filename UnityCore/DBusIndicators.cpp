@@ -337,9 +337,9 @@ void DBusIndicators::Impl::Sync(GVariant* args)
       }
       else
       {
-        e->setLabel(label, label_sensitive, label_visible);
-        e->setImage(image_type, image_data, image_sensitive, image_visible);
-        e->setPriority(priority);
+        e->set_label(label, label_sensitive, label_visible);
+        e->set_image(image_type, image_data, image_sensitive, image_visible);
+        e->set_priority(priority);
       }
 
       entries.push_back(e);

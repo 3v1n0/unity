@@ -21,6 +21,7 @@
 #include "IndicatorEntry.h"
 
 #include <iostream>
+#include <algorithm>
 
 namespace unity
 {
@@ -28,7 +29,7 @@ namespace indicator
 {
 
 Entry::Entry(std::string const& id,
-             std::string const &name_hint,
+             std::string const& name_hint,
              std::string const& label,
              bool label_sensitive,
              bool label_visible,
@@ -49,8 +50,20 @@ Entry::Entry(std::string const& id,
   , priority_(priority)
   , show_now_(false)
   , active_(false)
-{
-}
+{}
+
+Entry::Entry(std::string const& id, std::string const& name_hint)
+  : id_(id)
+  , name_hint_(name_hint)
+  , label_visible_(false)
+  , label_sensitive_(false)
+  , image_type_(0)
+  , image_visible_(false)
+  , image_sensitive_(false)
+  , priority_(-1)
+  , show_now_(false)
+  , active_(false)
+{}
 
 std::string const& Entry::name_hint() const
 {
@@ -116,6 +129,9 @@ void Entry::set_active(bool active)
   active_ = active;
   active_changed.emit(active);
   updated.emit();
+
+  for (auto const& parent : parents_)
+    parent->set_active(active_);
 }
 
 void Entry::set_geometry(nux::Rect const& geometry)
@@ -126,9 +142,12 @@ void Entry::set_geometry(nux::Rect const& geometry)
   geometry_ = geometry;
   geometry_changed.emit(geometry);
   updated.emit();
+
+  for (auto const& parent : parents_)
+    parent->set_geometry(geometry_);
 }
 
-void Entry::setLabel(std::string const& label, bool sensitive, bool visible)
+void Entry::set_label(std::string const& label, bool sensitive, bool visible)
 {
   if (label_ == label && sensitive == label_sensitive_ && visible == label_visible_)
     return;
@@ -139,7 +158,7 @@ void Entry::setLabel(std::string const& label, bool sensitive, bool visible)
   updated.emit();
 }
 
-void Entry::setImage(int type, std::string const& data, bool sensitive, bool visible)
+void Entry::set_image(int type, std::string const& data, bool sensitive, bool visible)
 {
   if (image_type_ == type && image_data_ == data &&
       image_sensitive_ == sensitive && image_visible_ == visible)
@@ -154,7 +173,7 @@ void Entry::setImage(int type, std::string const& data, bool sensitive, bool vis
   updated.emit();
 }
 
-void Entry::setPriority(int priority)
+void Entry::set_priority(int priority)
 {
   if (priority_ == priority)
     return;
@@ -175,6 +194,9 @@ nux::Rect const& Entry::geometry() const
 
 Entry& Entry::operator=(Entry const& rhs)
 {
+  if (&rhs == this)
+    return *this;
+
   id_ = rhs.id_;
   name_hint_ = rhs.name_hint_;
   label_ = rhs.label_;
@@ -185,6 +207,7 @@ Entry& Entry::operator=(Entry const& rhs)
   image_sensitive_ = rhs.image_sensitive_;
   image_visible_ = rhs.image_visible_;
   priority_ = rhs.priority_;
+  parents_ = rhs.parents_;
 
   updated.emit();
   return *this;
@@ -203,6 +226,33 @@ void Entry::set_show_now(bool show_now)
   show_now_ = show_now;
   show_now_changed.emit(show_now);
   updated.emit();
+
+  for (auto const& parent : parents_)
+    parent->set_show_now(show_now_);
+}
+
+void Entry::add_parent(Entry::Ptr const& parent)
+{
+  if (!parent || std::find(parents_.begin(), parents_.end(), parent) != parents_.end())
+    return;
+
+  parents_.push_back(parent);
+  parent->set_geometry(geometry_);
+  parent->set_show_now(show_now_);
+  parent->set_active(active_);
+}
+
+void Entry::rm_parent(Entry::Ptr const& parent)
+{
+  auto it = std::find(parents_.begin(), parents_.end(), parent);
+
+  if (it != parents_.end())
+    parents_.erase(it);
+}
+
+std::vector<Entry::Ptr> const& Entry::parents() const
+{
+  return parents_;
 }
 
 void Entry::ShowMenu(int x, int y, unsigned button)
