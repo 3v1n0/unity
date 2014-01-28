@@ -38,7 +38,7 @@ public:
   DBusIndicators();
   ~DBusIndicators();
 
-  void ShowEntriesDropdown(Indicator::Entries const&, unsigned xid, int x, int y);
+  void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
 
 protected:

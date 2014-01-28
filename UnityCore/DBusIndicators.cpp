@@ -53,7 +53,7 @@ struct DBusIndicators::Impl
   void RequestSyncIndicator(std::string const& name);
   void Sync(GVariant* args);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
-  void ShowEntriesDropdown(Indicator::Entries const&, unsigned xid, int x, int y);
+  void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
 
   void OnConnected();
   void OnDisconnected();
@@ -216,21 +216,24 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   });
 }
 
-void DBusIndicators::Impl::ShowEntriesDropdown(Indicator::Entries const& entries, unsigned xid, int x, int y)
+void DBusIndicators::Impl::ShowEntriesDropdown(Indicator::Entries const& entries, Entry::Ptr const& selected, unsigned xid, int x, int y)
 {
   if (entries.empty())
     return;
 
-  owner_->on_entry_show_menu.emit("dropdown", xid, x, y, 0);
+  auto const& selected_id = (selected) ? selected->id() : "";
+  owner_->on_entry_show_menu.emit(selected ? selected_id : "dropdown", xid, x, y, 0);
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+  for (auto const& entry : entries)
+    g_variant_builder_add(&builder, "s", entry->id().c_str());
+
+  glib::Variant parameters(g_variant_new("(assuii)", &builder, selected_id.c_str(), xid, x, y));
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([this, entries, xid, x, y] {
-    GVariantBuilder builder;
-    g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-    for (auto const& entry : entries)
-      g_variant_builder_add(&builder, "s", entry->id().c_str());
-
-    gproxy_.Call("ShowEntriesDropdown", g_variant_new("(asuii)", &builder, xid, x, y));
+  show_entry_idle_->Run([this, parameters] {
+    gproxy_.Call("ShowEntriesDropdown", parameters);
     return false;
   });
 }
@@ -425,9 +428,11 @@ void DBusIndicators::SyncGeometries(std::string const& name,
   pimpl->SyncGeometries(name, locations);
 }
 
-void DBusIndicators::ShowEntriesDropdown(Indicator::Entries const& entries, unsigned xid, int x, int y)
+void DBusIndicators::ShowEntriesDropdown(Indicator::Entries const& entries,
+                                         Entry::Ptr const& selected,
+                                         unsigned xid, int x, int y)
 {
-  pimpl->ShowEntriesDropdown(entries, xid, x, y);
+  pimpl->ShowEntriesDropdown(entries, selected, xid, x, y);
 }
 
 void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)

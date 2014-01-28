@@ -40,7 +40,7 @@ public:
   virtual ~Indicators();
 
   IndicatorsList GetIndicators() const;
-  virtual void ShowEntriesDropdown(Indicator::Entries const&, unsigned xid, int x, int y) = 0;
+  virtual void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
