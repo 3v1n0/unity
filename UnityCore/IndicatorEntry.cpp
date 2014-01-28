@@ -117,7 +117,7 @@ int Entry::priority() const
 
 bool Entry::visible() const
 {
-  return ((label_visible_ && !label_.empty()) ||
+  return parents_.empty() && ((label_visible_ && !label_.empty()) ||
           (image_type_ != 0 && image_visible_ && !image_data_.empty()));
 }
 
