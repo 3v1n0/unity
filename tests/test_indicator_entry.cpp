@@ -232,15 +232,16 @@ TEST(TestIndicatorEntry, TestGeometry)
 TEST(TestIndicatorEntry, AddParent)
 {
   Entry entry("id");
+  SigReceiver entry_receiver(entry);
 
   auto parent = std::make_shared<Entry>("parent");
-  SigReceiver sig_receiver(*parent);
+  SigReceiver parent_receiver(*parent);
 
-  // Nothing we care changed, so no signal is emitted.
-  EXPECT_CALL(sig_receiver, Updated()).Times(0);
-  EXPECT_CALL(sig_receiver, ActiveChanged(_)).Times(0);
-  EXPECT_CALL(sig_receiver, ShowNowChanged(_)).Times(0);
-  EXPECT_CALL(sig_receiver, GeometryChanged(_)).Times(0);
+  EXPECT_CALL(entry_receiver, Updated());
+  EXPECT_CALL(parent_receiver, Updated()).Times(0);
+  EXPECT_CALL(parent_receiver, ActiveChanged(_)).Times(0);
+  EXPECT_CALL(parent_receiver, ShowNowChanged(_)).Times(0);
+  EXPECT_CALL(parent_receiver, GeometryChanged(_)).Times(0);
 
   entry.add_parent(parent);
   EXPECT_EQ(entry.geometry(), parent->geometry());
@@ -277,16 +278,52 @@ TEST(TestIndicatorEntry, AddParentWithValues)
   EXPECT_FALSE(entry.visible());
 }
 
+TEST(TestIndicatorEntry, AddParentsUpdatedOnFirstOnly)
+{
+  Entry entry("id");
+  SigReceiver entry_receiver(entry);
+
+  EXPECT_CALL(entry_receiver, Updated());
+  entry.add_parent(std::make_shared<Entry>("parent-1"));
+
+  EXPECT_CALL(entry_receiver, Updated()).Times(0);
+  entry.add_parent(std::make_shared<Entry>("parent-2"));
+  entry.add_parent(std::make_shared<Entry>("parent-3"));
+}
+
+TEST(TestIndicatorEntry, RmParentsUpdatedOnLastOnly)
+{
+  Entry entry("id");
+  SigReceiver::Nice entry_receiver(entry);
+
+  auto parent_1 = std::make_shared<Entry>("parent-1");
+  auto parent_2 = std::make_shared<Entry>("parent-2");
+  auto parent_3 = std::make_shared<Entry>("parent-3");
+  entry.add_parent(parent_1);
+  entry.add_parent(parent_2);
+  entry.add_parent(parent_3);
+
+  EXPECT_CALL(entry_receiver, Updated()).Times(0);
+  entry.rm_parent(parent_1);
+  entry.rm_parent(parent_2);
+
+  ASSERT_EQ(1, entry.parents().size());
+  EXPECT_CALL(entry_receiver, Updated());
+  entry.rm_parent(parent_3);
+}
+
 TEST(TestIndicatorEntry, RmParent)
 {
   Entry entry("id");
   entry.set_label("foo", true, true);
+  SigReceiver::Nice entry_receiver(entry);
 
   auto parent = std::make_shared<Entry>("parent");
   entry.add_parent(parent);
 
   ASSERT_FALSE(entry.parents().empty());
   ASSERT_FALSE(entry.visible());
+  EXPECT_CALL(entry_receiver, Updated());
 
   entry.rm_parent(parent);
   EXPECT_TRUE(entry.parents().empty());
