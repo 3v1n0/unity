@@ -21,28 +21,33 @@
 #define UNITY_BACKGROUND_SETTINGS_H
 
 #include <NuxCore/Size.h>
-#include <sigc++/signal.h>
+#include <NuxGraphics/GLTextureResourceManager.h>
+#include <UnityCore/GLibWrapper.h>
 
-typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+class _GnomeBG;
 
 namespace unity 
 {
+
+typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
 namespace lockscreen
 {
 
 class BackgroundSettings
 {
 public:
-  virtual ~BackgroundSettings() {};
+  BackgroundSettings();
 
-  virtual BaseTexturePtr GetBackgroundTexture(nux::Size const& size, 
-  	                                          bool draw_grid,
-  	                                          bool draw_logo) = 0;
+  BaseTexturePtr GetBackgroundTexture(nux::Size const& size,
+  	                                  bool draw_grid,
+  	                                  bool draw_logo);
 
-  sigc::signal<void> bg_changed;
+private:
+  glib::Object<_GnomeBG> gnome_bg_;
 };
 
-} // lockscreen
-} // unity
+}
+}
 
-#endif // UNITY_BACKGROUND_SETTINGS_H
+#endif

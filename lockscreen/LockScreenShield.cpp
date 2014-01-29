@@ -19,7 +19,7 @@
 
 #include "LockScreenShield.h"
 
-#include "BackgroundSettingsGnome.h" // FIXME: remove this
+#include "BackgroundSettings.h" // FIXME: remove this
 #include "CofView.h"
 #include "UserAuthenticatorPam.h"
 #include "UserPromptView.h"
@@ -41,7 +41,7 @@ namespace lockscreen
 Shield::Shield(session::Manager::Ptr const& session_manager, bool is_primary)
   : primary(is_primary)
   , session_manager_(session_manager)
-  , bg_settings_(new BackgroundSettingsGnome) // FIXME (andy) inject it!
+  , bg_settings_(new BackgroundSettings) // FIXME (andy) inject it!
   , user_authenticator_(new UserAuthenticatorPam)
   , prompt_view_(nullptr)
 {
@@ -54,12 +54,6 @@ Shield::Shield(session::Manager::Ptr const& session_manager, bool is_primary)
   mouse_enter.connect(sigc::mem_fun(this, &Shield::OnMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &Shield::OnMouseLeave));
   primary.changed.connect(sigc::mem_fun(this, &Shield::OnPrimaryChanged));
-
-  // Move in a method
-  bg_settings_->bg_changed.connect([this](){
-    UpdateBackgroundTexture();
-    QueueDraw();
-  });
 
   geometry_changed.connect([this](nux::Area*, nux::Geometry&) {
     UpdateBackgroundTexture();

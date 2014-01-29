@@ -17,7 +17,7 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-#include "BackgroundSettingsGnome.h"
+#include "BackgroundSettings.h"
 
 #include <libgnome-desktop/gnome-bg.h>
 
@@ -34,16 +34,11 @@ const std::string SETTINGS_NAME = "org.gnome.desktop.background";
 const int GRID_SIZE = 40;
 }
 
-BackgroundSettingsGnome::BackgroundSettingsGnome()
+BackgroundSettings::BackgroundSettings()
   : gnome_bg_(gnome_bg_new())
-  , settings_(g_settings_new(SETTINGS_NAME.c_str()))
 {
-  gnome_bg_load_from_preferences(gnome_bg_, settings_);
-
-  // FIXME: does not work. Investigate!
-  bg_changed_.Connect(gnome_bg_, "changed", [this] (GnomeBG*) {
-    bg_changed.emit();
-  });
+  glib::Object<GSettings> settings(g_settings_new(SETTINGS_NAME.c_str()));
+  gnome_bg_load_from_preferences(gnome_bg_, settings);
 }
 
 int get_grid_offset (int size)
@@ -51,8 +46,7 @@ int get_grid_offset (int size)
     return (size % GRID_SIZE) / 2;
 }
 
-
-BaseTexturePtr BackgroundSettingsGnome::GetBackgroundTexture(nux::Size const& size,
+BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
                                                              bool draw_grid,
                                                              bool draw_logo)
 {
@@ -128,18 +122,6 @@ BaseTexturePtr BackgroundSettingsGnome::GetBackgroundTexture(nux::Size const& si
 
   return texture_ptr_from_gdk_graphics(nux::GdkGraphics(gdk_pixbuf));
 }
-
-        /*overlay.set_matrix (matrix);
-        overlay.set_extend (Cairo.Extend.REPEAT);
-
-        // Draw overlay
-        c.save ();
-        c.set_source (overlay);
-        c.rectangle (0, 0, width, height);
-        c.fill ();
-        c.restore ();
-    }
-    */
 
 } // lockscreen
 } // unity
