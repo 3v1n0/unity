@@ -31,15 +31,6 @@
 namespace unity
 {
 
-typedef struct
-{
-  unsigned long flags;
-  unsigned long functions;
-  unsigned long decorations;
-  long input_mode;
-  unsigned long status;
-} MotifWmHints, MwmHints;
-
 class MultiActionList
 {
 public:
@@ -120,13 +111,9 @@ public:
   void NotifyResized(CompWindow* window, int x, int y, int w, int h);
   void NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state);
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
-  void NotifyNewDecorationState(Window xid);
 
   Window GetActiveWindow() const;
   std::vector<Window> GetWindowsInStackingOrder() const override;
-
-  void Decorate(Window xid) const;
-  void Undecorate(Window xid) const;
 
   bool IsTopWindowFullscreenOnMonitorWithMouse() const override;
 
@@ -180,7 +167,6 @@ public:
   nux::Geometry GetScreenGeometry() const;
   nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const;
   nux::Size GetWindowDecorationSize(Window window_id, Edge) const;
-  std::string GetWindowName(Window window_id) const;
 
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
@@ -209,16 +195,10 @@ private:
   void InitiateScale(std::string const& match, int state = 0);
 
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
-  void SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const;
-  unsigned long GetMwnDecorations(Window xid) const;
 
   Window GetTopMostWindowInMonitor(int monitor) const;
   Window GetTopMostValidWindowInViewport() const;
   bool IsCurrentViewportEmpty() const;
-
-  std::string GetTextProperty(Window xid, Atom atom) const;
-  std::string GetUtf8Property(Window xid, Atom atom) const;
-  std::vector<long> GetCardinalProperty(Window xid, Atom atom) const;
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;
@@ -237,8 +217,6 @@ private:
 
   bool _in_show_desktop;
   CompWindow* _last_focused_window;
-
-  mutable std::map<Window, unsigned int> _window_decoration_state;
 };
 
 }

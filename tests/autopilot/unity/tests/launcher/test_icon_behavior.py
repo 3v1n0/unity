@@ -29,6 +29,7 @@ class LauncherIconsTests(LauncherTestCase):
 
     def setUp(self):
         super(LauncherIconsTests, self).setUp()
+
         self.set_unity_option('launcher_hide_mode', 0)
 
     def ensure_expo_launcher_icon(self):
@@ -367,6 +368,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
     def setUp(self):
         super(LauncherDragIconsBehavior, self).setUp()
+
         self.set_unity_option('launcher_hide_mode', 0)
 
     def ensure_calc_icon_not_in_launcher(self):

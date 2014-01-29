@@ -4,6 +4,7 @@
         <_short>Ubuntu Unity Plugin</_short>
         <_long>Plugin to draw the Unity Shell</_long>
         <category>Desktop</category>
+        <feature>decorations</feature>
         <feature>fadetodesktop</feature>
         <deps>
             <relation type="after">
@@ -14,7 +15,6 @@
                 <plugin>mousepoll</plugin>
                 <plugin>move</plugin>
                 <plugin>resize</plugin>
-                <plugin>decor</plugin>
                 <plugin>compiztoolbox</plugin>
                 <plugin>place</plugin>
                 <plugin>session</plugin>
@@ -38,6 +38,9 @@
                 <plugin>scale</plugin>
                 <plugin>expo</plugin>
             </requirement>
+            <conflict>
+                <plugin>decor</plugin>
+            </conflict>
         </deps>
 
         <options>
@@ -138,6 +141,71 @@
                   <_short>Enable Shortcut Hints Overlay</_short>
                   <_long>Enables possibility to display an overlay showing available mouse and keyboard shortcuts.</_long>
                   <default>true</default>
+                </option>
+
+            </group>
+
+            <group>
+                <_short>Decorations</_short>
+
+                <option name="override_decoration_theme" type="bool">
+                    <_short>Override Theme Settings</_short>
+                    <_long>Each Gtk theme can provide shadow parameters, but you can override these values here.</_long>
+                    <default>false</default>
+                </option>
+
+                <option name="shadow_x_offset" type="int">
+                    <_short>Shadow X offset</_short>
+                    <_long>Horizontal offset of the shadow.</_long>
+                    <min>-10</min>
+                    <max>10</max>
+                    <default>1</default>
+                </option>
+
+                <option name="shadow_y_offset" type="int">
+                    <_short>Shadow Y offset</_short>
+                    <_long>Vertical offset of the shadow.</_long>
+                    <min>-10</min>
+                    <max>10</max>
+                    <default>1</default>
+                </option>
+
+                <option name="active_shadow_radius" type="int">
+                    <_short>Active window shadow radius</_short>
+                    <_long>The radius of the shadow blur for the active window.</_long>
+                    <min>1</min>
+                    <max>30</max>
+                    <default>8</default>
+                </option>
+
+                <option name="active_shadow_color" type="color">
+                    <_short>Active window shadow color</_short>
+                    <_long>The color of the shadows for the active window.</_long>
+                    <default>
+                        <red>0</red>
+                        <green>0</green>
+                        <blue>0</blue>
+                        <alpha>0x6666</alpha>
+                    </default>
+                </option>
+
+                <option name="inactive_shadow_radius" type="int">
+                    <_short>Inactive windows shadow radius</_short>
+                    <_long>The radius of the shadow blur for the inactive windows.</_long>
+                    <min>1</min>
+                    <max>30</max>
+                    <default>5</default>
+                </option>
+
+                <option name="inactive_shadow_color" type="color">
+                    <_short>Inactive windows shadow color</_short>
+                    <_long>The color of the shadows for the inactive windows.</_long>
+                    <default>
+                        <red>0</red>
+                        <green>0</green>
+                        <blue>0</blue>
+                        <alpha>0xa5a1</alpha>
+                    </default>
                 </option>
 
             </group>

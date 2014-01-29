@@ -33,6 +33,7 @@
 #include <X11/Xlib.h>
 #else
 typedef unsigned long Window;
+typedef unsigned long Atom;
 #endif
 
 #include "unity-shared/Introspectable.h"
@@ -126,9 +127,6 @@ public:
   virtual bool ScaleWindowGroup(std::vector<Window> const& windows,
                                 int state, bool force) = 0;
 
-  virtual void Decorate(Window window_id) const {};
-  virtual void Undecorate(Window window_id) const {};
-
   virtual bool IsScreenGrabbed() const = 0;
   virtual bool IsViewPortSwitchStarted() const = 0;
 
@@ -160,6 +158,9 @@ public:
 
   virtual std::string GetWindowName(Window window_id) const = 0;
 
+  virtual std::string GetStringProperty(Window, Atom) const = 0;
+  virtual std::vector<long> GetCardinalProperty(Window, Atom) const = 0;
+
   // Nux Modifiers, Nux Keycode (= X11 KeySym)
   nux::Property<std::pair<unsigned, unsigned>> close_window_key;
   nux::Property<nux::Color> average_color;
@@ -178,8 +179,6 @@ public:
   sigc::signal<void, Window> window_resized;
   sigc::signal<void, Window> window_moved;
   sigc::signal<void, Window> window_focus_changed;
-  sigc::signal<void, Window> window_decorated;
-  sigc::signal<void, Window> window_undecorated;
 
   sigc::signal<void> initiate_spread;
   sigc::signal<void> terminate_spread;

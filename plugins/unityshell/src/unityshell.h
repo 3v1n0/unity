@@ -86,6 +86,19 @@ namespace unity
 {
 class UnityWindow;
 
+namespace decoration
+{
+class Manager;
+class Window;
+enum class WidgetState : unsigned;
+}
+
+namespace compiz_utils
+{
+struct CairoContext;
+struct PixmapTexture;
+}
+
 /* base screen class */
 class UnityScreen :
   public debug::Introspectable,
@@ -149,6 +162,7 @@ public:
 
   /* handle X11 events */
   void handleEvent(XEvent*);
+  void addSupportedAtoms(std::vector<Atom>&);
 
   /* handle showdesktop */
   void enterShowDesktopMode ();
@@ -257,7 +271,6 @@ private:
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
 
-  void OnSwitcherStart(GVariant* data);
   void OnSwitcherEnd(GVariant* data);
 
   void OnInitiateSpread();
@@ -271,7 +284,7 @@ private:
 
   bool SaveInputThenFocus(const guint xid);
 
-  void OnPanelStyleChanged();
+  void OnDecorationStyleChanged();
 
   void InitGesturesSupport();
 
@@ -283,6 +296,8 @@ private:
   unsigned XModifiersToNux(unsigned input) const;
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
+
+  bool getMipmap () override { return false; }
 
   void DamageBlurUpdateRegion(nux::Geometry const&);
 
@@ -298,6 +313,8 @@ private:
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
+
+  std::shared_ptr<decoration::Manager> deco_manager_;
 
   /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;
@@ -392,6 +409,7 @@ private:
   grabber::GnomeKeyGrabber grabber_;
 
   friend class UnityWindow;
+  friend class decoration::Manager;
 };
 
 class UnityWindow :
@@ -422,6 +440,7 @@ public:
   void activate();
 
   void updateFrameRegion(CompRegion &region);
+  void getOutputExtents(CompWindowExtents& output);
 
   /* occlusion detection
    * and window hiding */
@@ -429,6 +448,8 @@ public:
 
   /* basic window draw function */
   bool glDraw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
+
+  bool damageRect(bool initial, CompRect const&);
 
   void updateIconPos (int &wx, int &wy, int x, int y, float width, float height);
   void windowNotify(CompWindowNotify n);
@@ -459,11 +480,8 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
 private:
-  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
-          UnityMinimizedHandler;
-  struct PixmapTexture;
-  typedef std::shared_ptr<PixmapTexture> PixmapTexturePtr;
-  struct CairoContext;
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow> UnityMinimizedHandler;
+  typedef std::shared_ptr<compiz_utils::PixmapTexture> PixmapTexturePtr;
 
   void DoEnableFocus ();
   void DoDisableFocus ();
@@ -498,8 +516,8 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
-  void RenderDecoration(CairoContext const&, double aspect = 1.0f);
-  void RenderText(CairoContext const&, int x, int y, int width, int height);
+  void RenderDecoration(compiz_utils::CairoContext const&, double aspect = 1.0f);
+  void RenderTitle(compiz_utils::CairoContext const&, int x, int y, int width, int height);
   void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
                    GLMatrix const&, unsigned mask, int x, int y, double aspect = 1.0f);
 
@@ -511,25 +529,19 @@ private:
 
   void BuildDecorationTexture();
   void CleanupCachedTextures();
-  static void SetupSharedTextures();
-  static void CleanupSharedTextures();
-  static void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
 
 public:
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
 
 private:
   std::unique_ptr <ShowdesktopHandler> mShowdesktopHandler;
-  static GLTexture::List close_normal_tex_;
-  static GLTexture::List close_prelight_tex_;
-  static GLTexture::List close_pressed_tex_;
-  static GLTexture::List glow_texture_;
   PixmapTexturePtr decoration_tex_;
   PixmapTexturePtr decoration_selected_tex_;
   std::string decoration_title_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
-  panel::WindowState close_icon_state_;
+  decoration::WidgetState close_icon_state_;
   nux::Geometry close_button_geo_;
+  std::shared_ptr<decoration::Window> deco_win_;
   bool middle_clicked_;
   bool is_nux_window_;
   glib::Source::UniquePtr focus_desktop_timeout_;

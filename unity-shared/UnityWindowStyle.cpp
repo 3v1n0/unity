@@ -31,7 +31,7 @@ UnityWindowStyle::UnityWindowStyle()
   background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
 }
 
-UnityWindowStyle::Ptr UnityWindowStyle::Get()
+UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
 {
   // This is set only the first time;
   static UnityWindowStyle::Ptr instance(new UnityWindowStyle());

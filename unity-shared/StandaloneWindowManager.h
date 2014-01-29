@@ -103,9 +103,6 @@ public:
   virtual void Lower(Window window_id);
   void RestackBelow(Window window_id, Window sibiling_id) override;
 
-  virtual void Decorate(Window window_id) const;
-  virtual void Undecorate(Window window_id) const;
-
   virtual void TerminateScale();
   virtual bool IsScaleActive() const;
   virtual bool IsScaleActiveForGroup() const;
@@ -154,6 +151,8 @@ public:
   virtual bool RestoreInputFocus();
 
   virtual std::string GetWindowName(Window window_id) const;
+  virtual std::string GetStringProperty(Window window_id, Atom) const;
+  virtual std::vector<long> GetCardinalProperty(Window window_id, Atom) const;
 
   // Mock functions
   StandaloneWindow::Ptr GetWindowByXid(Window window_id) const;
