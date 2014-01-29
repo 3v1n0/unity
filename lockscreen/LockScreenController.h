@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2013 Canonical Ltd
+* Copyright (C) 2013-2014 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -20,14 +20,10 @@
 #ifndef UNITY_LOCKSCREEN_CONTROLLER_H
 #define UNITY_LOCKSCREEN_CONTROLLER_H
 
-#include <memory>
-#include <sigc++/trackable.h>
-
 #include <NuxCore/Animation.h>
 
 #include "LockScreenShield.h"
 #include "LockScreenShieldFactory.h"
-#include <UnityCore/SessionManager.h>
 
 namespace unity
 {
@@ -37,13 +33,12 @@ namespace lockscreen
 class Controller : public sigc::trackable
 {
 public:
-  Controller(session::Manager::Ptr const& manager,
+  Controller(session::Manager::Ptr const& session_manager,
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>());
 
 private:
   friend class TestLockScreenController;
 
-  void SetOpacity(double value);
   void EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry> const& monitors);
   bool IsLocked() const;
 

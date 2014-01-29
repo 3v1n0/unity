@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2013 Canonical Ltd
+* Copyright (C) 2013-2014 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -31,19 +31,25 @@ namespace
 const unsigned int FADE_DURATION = 200;
 }
 
-Controller::Controller(session::Manager::Ptr const& session_manager, ShieldFactoryInterface::Ptr const& shield_factory)
-  : session_manager_(session_manager) // FIXME unity can start in lock state!
+Controller::Controller(session::Manager::Ptr const& session_manager,
+                       ShieldFactoryInterface::Ptr const& shield_factory)
+  : session_manager_(session_manager)
   , shield_factory_(shield_factory)
   , fade_animator_(FADE_DURATION)
 {
   auto* uscreen = UScreen::GetDefault();
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::OnUScreenChanged));
 
-  session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
+  session_manager_->lock_requested.connect(sigc::mem_fun(this,&Controller::OnLockRequested));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
 
-  fade_animator_.updated.connect(sigc::mem_fun(this, &Controller::SetOpacity));
-  fade_animator_.finished.connect([this](){
+  fade_animator_.updated.connect([this](double value) {
+    std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
+      shield->SetOpacity(value);
+    });
+  });
+
+  fade_animator_.finished.connect([this]() {
     if (fade_animator_.GetCurrentValue() == 0.0f)
       shields_.clear();
   });
@@ -58,21 +64,12 @@ void Controller::OnUScreenChanged(int primary, std::vector<nux::Geometry> const&
   }
 }
 
-void Controller::SetOpacity(double value)
-{
-  std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
-    shield->SetOpacity(value);
-  });
-}
-
 void Controller::EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry> const& monitors)
 {
   int num_monitors = monitors.size();
-  int num_shields = num_monitors;
   int shields_size = shields_.size();
-  int last_shield = 0;
 
-  for (int i = 0; i < num_shields; ++i, ++last_shield)
+  for (int i = 0; i < num_monitors; ++i)
   {
     if (i >= shields_size)
       shields_.push_back(shield_factory_->CreateShield(session_manager_, i == monitor_with_mouse));
@@ -80,7 +77,7 @@ void Controller::EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry
     shields_[i]->SetGeometry(monitors.at(i));
   }
 
-  shields_.resize(num_shields);
+  shields_.resize(num_monitors);
 }
 
 void Controller::OnLockRequested()
@@ -88,11 +85,11 @@ void Controller::OnLockRequested()
   if (IsLocked())
     return;
 
-  auto* uscreen = UScreen::GetDefault();
-  EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
-
   WindowManager& wm = WindowManager::Default();
   wm.SaveInputFocus();
+
+  auto* uscreen = UScreen::GetDefault();
+  EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
 
   std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
     shield->ShowWindow(true);
@@ -123,5 +120,5 @@ bool Controller::IsLocked() const
   return !shields_.empty();
 }
 
-}
-}
+} // lockscreen
+} // unity
