@@ -89,8 +89,11 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
 
   // TODO (andy) fallback to CK. But I need to figure out how to do that.
   {
+    const char* session_id = g_getenv("XDG_SESSION_ID");
+    session_id = session_id ? session_id : "";
+
     login_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.login1",
-                                                     std::string("/org/freedesktop/login1/session/") + g_getenv("XDG_SESSION_ID"),
+                                                     std::string("/org/freedesktop/login1/session/") + session_id,
                                                      "org.freedesktop.login1.Session",
                                                      G_BUS_TYPE_SYSTEM);
 

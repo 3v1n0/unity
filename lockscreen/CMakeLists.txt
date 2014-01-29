@@ -21,6 +21,7 @@ set (LOCKSCREEN_SOURCES
      CofView.cpp
      LockScreenController.cpp
      LockScreenShield.cpp
+     LockScreenShieldFactory.cpp
      UserAuthenticatorPam.cpp
      UserPromptView.cpp
      )

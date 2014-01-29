@@ -26,6 +26,7 @@
 #include <NuxCore/Animation.h>
 
 #include "LockScreenShield.h"
+#include "LockScreenShieldFactory.h"
 #include <UnityCore/SessionManager.h>
 
 namespace unity
@@ -36,12 +37,14 @@ namespace lockscreen
 class Controller : public sigc::trackable
 {
 public:
-  Controller(session::Manager::Ptr const& manager);
+  Controller(session::Manager::Ptr const& manager,
+             ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>());
 
 private:
+  friend class TestLockScreenController;
+
   void SetOpacity(double value);
   void EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry> const& monitors);
-  nux::ObjectPtr<Shield> CreateShield(bool is_monitor_with_mouse);
   bool IsLocked() const;
 
   void OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors);
@@ -50,6 +53,7 @@ private:
 
   std::vector<nux::ObjectPtr<Shield>> shields_;
   session::Manager::Ptr session_manager_;
+  ShieldFactoryInterface::Ptr shield_factory_;
   nux::animation::AnimateValue<double> fade_animator_;
 };
 

@@ -31,8 +31,9 @@ namespace
 const unsigned int FADE_DURATION = 200;
 }
 
-Controller::Controller(session::Manager::Ptr const& session_manager)
+Controller::Controller(session::Manager::Ptr const& session_manager, ShieldFactoryInterface::Ptr const& shield_factory)
   : session_manager_(session_manager) // FIXME unity can start in lock state!
+  , shield_factory_(shield_factory)
   , fade_animator_(FADE_DURATION)
 {
   auto* uscreen = UScreen::GetDefault();
@@ -50,8 +51,11 @@ Controller::Controller(session::Manager::Ptr const& session_manager)
 
 void Controller::OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors)
 {
-  auto* uscreen = UScreen::GetDefault();
-  EnsureShields(uscreen->GetMonitorWithMouse(), monitors);
+  if (IsLocked())
+  {
+    auto* uscreen = UScreen::GetDefault();
+    EnsureShields(uscreen->GetMonitorWithMouse(), monitors);
+  }
 }
 
 void Controller::SetOpacity(double value)
@@ -71,24 +75,12 @@ void Controller::EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry
   for (int i = 0; i < num_shields; ++i, ++last_shield)
   {
     if (i >= shields_size)
-    {
-      shields_.push_back(CreateShield(i == monitor_with_mouse));
-    }
-    else if (!shields_.at(i))
-    {
-      shields_[i] = CreateShield(i == monitor_with_mouse);
-    }
+      shields_.push_back(shield_factory_->CreateShield(session_manager_, i == monitor_with_mouse));
 
     shields_[i]->SetGeometry(monitors.at(i));
   }
 
   shields_.resize(num_shields);
-}
-
-nux::ObjectPtr<Shield> Controller::CreateShield(bool is_monitor_with_mouse)
-{
-  nux::ObjectPtr<Shield> shield(new Shield(session_manager_, is_monitor_with_mouse));
-  return shield;
 }
 
 void Controller::OnLockRequested()
@@ -130,8 +122,6 @@ bool Controller::IsLocked() const
 {
   return !shields_.empty();
 }
-
-
 
 }
 }

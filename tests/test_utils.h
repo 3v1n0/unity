@@ -46,7 +46,7 @@ public:
     if (result == expected_result)
       g_source_remove(timeout_id);
 
-    EXPECT_EQ(result, expected_result) << (error_msg.empty() ? "" : ("Error: " + error_msg));
+    EXPECT_EQ(expected_result, result) << (error_msg.empty() ? "" : ("Error: " + error_msg));
   }
 
   static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 1, std::string const& error_msg = "")
