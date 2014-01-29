@@ -19,6 +19,7 @@ from unity.emulators.ibus import (
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 from testtools.matchers import Equals, NotEquals
+from testtools import skip
 
 from unity.tests import UnityTestCase
 
@@ -33,6 +34,7 @@ import threading
 class IBusQuery:
     """A simple class allowing string queries to the IBus engine."""
 
+    @skip("SKIPPING TEST - TO TEST! Remove me when test is done")
     def __init__(self):
         self._bus = IBus.Bus()
         self._dbusconn = dbus.connection.Connection(IBus.get_address())
@@ -146,10 +148,12 @@ class IBusTests(UnityTestCase):
         self.activate_release_binding = 'Alt+Control_L'
 
     @classmethod
+    @skip("SKIPPING TEST - TO TEST! Remove me when test is done")
     def setUpClass(cls):
         cls._old_engines = None
 
     @classmethod
+    @skip("SKIPPING TEST - TO TEST! Remove me when test is done")
     def tearDownClass(cls):
         if cls._old_engines is not None:
             set_active_engines(cls._old_engines)
