@@ -99,6 +99,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
   menu_view_ = new PanelMenuView();
+  menu_view_->EnableDropdownMenu(true, remote_);
   AddPanelView(menu_view_, 1);
 
   SetCompositionLayout(layout_);
