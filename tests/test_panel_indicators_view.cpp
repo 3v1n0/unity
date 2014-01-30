@@ -21,7 +21,11 @@
 #include <gmock/gmock.h>
 
 #include <Nux/Nux.h>
+#include <Nux/HLayout.h>
 #include "PanelIndicatorsView.h"
+#include "PanelStyle.h"
+#include "UnitySettings.h"
+#include "mock_indicators.h"
 
 namespace unity
 {
@@ -33,16 +37,30 @@ namespace
 struct MockPanelIndicatorsView : PanelIndicatorsView
 {
   MOCK_METHOD0(QueueDraw, void());
+
+  PanelIndicatorEntryDropdownView::Ptr GetDropdown() const
+  {
+    for (auto* area : layout_->GetChildren())
+    {
+      if (PanelIndicatorEntryDropdownView* dropdown = dynamic_cast<PanelIndicatorEntryDropdownView*>(area))
+        return PanelIndicatorEntryDropdownView::Ptr(dropdown);
+    }
+
+    return PanelIndicatorEntryDropdownView::Ptr();
+  }
 };
 
-struct TestPanelIndicatorsView : public testing::Test
+struct TestPanelIndicatorsView : testing::Test
 {
+  Settings settings_;
+  Style style_;
   testing::NiceMock<MockPanelIndicatorsView> indicators;
 };
 
 TEST_F(TestPanelIndicatorsView, Construction)
 {
   EXPECT_EQ(indicators.opacity(), 1.0f);
+  EXPECT_EQ(PanelIndicatorEntryDropdownView::Ptr(), indicators.GetDropdown());
 }
 
 TEST_F(TestPanelIndicatorsView, OpacitySet)
@@ -64,6 +82,24 @@ TEST_F(TestPanelIndicatorsView, ChangingOpacityQueuesDraw)
 
   EXPECT_CALL(indicators, QueueDraw()).Times(0);
   indicators.opacity = 0.555f;
+}
+
+TEST_F(TestPanelIndicatorsView, EnableDropdownMenuInvalid)
+{
+  indicators.EnableDropdownMenu(false, nullptr);
+  EXPECT_EQ(PanelIndicatorEntryDropdownView::Ptr(), indicators.GetDropdown());
+
+  indicators.EnableDropdownMenu(false, std::make_shared<indicator::MockIndicators::Nice>());
+  EXPECT_EQ(PanelIndicatorEntryDropdownView::Ptr(), indicators.GetDropdown());
+
+  indicators.EnableDropdownMenu(true, nullptr);
+  EXPECT_EQ(PanelIndicatorEntryDropdownView::Ptr(), indicators.GetDropdown());
+}
+
+TEST_F(TestPanelIndicatorsView, EnableDropdownMenu)
+{
+  indicators.EnableDropdownMenu(true, std::make_shared<indicator::MockIndicators::Nice>());
+  EXPECT_NE(PanelIndicatorEntryDropdownView::Ptr(), indicators.GetDropdown());
 }
 
 } // anonymous namespace
