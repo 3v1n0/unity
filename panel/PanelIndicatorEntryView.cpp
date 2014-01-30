@@ -315,7 +315,6 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     PangoRectangle log_rect;
     pango_layout_get_extents(layout, nullptr, &log_rect);
     unsigned int text_height = log_rect.height / PANGO_SCALE;
-    unsigned int text_width = log_rect.width / PANGO_SCALE;
 
     pango_cairo_update_layout(cr, layout);
 
@@ -343,49 +342,15 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
     int y = (height - text_height) / 2;
 
-
-    unsigned int text_space = GetMaximumWidth() - x - right_padding_;
-
-    if (text_width > text_space)
+    if (overlay_showing_)
     {
-      cairo_pattern_t* linpat;
-      int out_pixels = text_width - text_space;
-      const int fading_pixels = 15;
-
-      int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
-
-      cairo_push_group(cr);
-      if (overlay_showing_)
-      {
-        cairo_move_to(cr, x, y);
-        cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
-        pango_cairo_show_layout(cr, layout);
-      }
-      else
-      {
-        gtk_render_layout(style_context, cr, x, y, layout);
-      }
-      cairo_pop_group_to_source(cr);
-
-      int right_margin = width - right_padding_;
-      linpat = cairo_pattern_create_linear(right_margin - fading_width, y, right_margin, y);
-      cairo_pattern_add_color_stop_rgba(linpat, 0, 0, 0, 0, 1);
-      cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
-      cairo_mask(cr, linpat);
-      cairo_pattern_destroy(linpat);
+      cairo_move_to(cr, x, y);
+      cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
+      pango_cairo_show_layout(cr, layout);
     }
     else
     {
-      if (overlay_showing_)
-      {
-        cairo_move_to(cr, x, y);
-        cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
-        pango_cairo_show_layout(cr, layout);
-      }
-      else
-      {
-        gtk_render_layout(style_context, cr, x, y, layout);
-      }
+      gtk_render_layout(style_context, cr, x, y, layout);
     }
 
     gtk_widget_path_free(widget_path);
