@@ -115,7 +115,7 @@ void Controller::Impl::UpdatePanelGeometries()
 
 void Controller::Impl::SetMenuBarVisible(bool visible)
 {
-  for (auto const& panel: panels_)
+  for (auto const& panel : panels_)
   {
     if (panel->SetMenuBarVisible(visible) && visible)
       break;

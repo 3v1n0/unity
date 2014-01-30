@@ -62,8 +62,8 @@ public:
   int GetMonitor() const;
 
   bool IsActive() const;
-  bool SetMenuBarVisible(bool visible);
   bool FirstMenuShow() const;
+  bool SetMenuBarVisible(bool visible);
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);

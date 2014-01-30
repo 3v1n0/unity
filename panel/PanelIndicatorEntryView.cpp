@@ -672,6 +672,12 @@ bool PanelIndicatorEntryView::GetShowNow() const
   return proxy_.get() ? proxy_->show_now() : false;
 }
 
+void PanelIndicatorEntryView::SetShowNow(bool show)
+{
+  if (proxy_.get())
+    proxy_->set_show_now(show);
+}
+
 void PanelIndicatorEntryView::GetGeometryForSync(EntryLocationMap& locations)
 {
   if (!IsVisible())

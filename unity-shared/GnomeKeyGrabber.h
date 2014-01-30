@@ -35,15 +35,15 @@ public:
   virtual ~GnomeKeyGrabber();
 
   CompAction::Vector& getActions();
-  void addAction(const CompAction& action);
-  void removeAction(const CompAction& action);
+  void addAction(CompAction const& action);
+  void removeAction(CompAction const& action);
 
   struct Impl;
 
 protected:
 
   struct TestMode {};
-  GnomeKeyGrabber(CompScreen* screen, const TestMode& dummy);
+  GnomeKeyGrabber(CompScreen* screen, TestMode const& dummy);
 
 private:
 

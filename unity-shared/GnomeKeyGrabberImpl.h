@@ -36,8 +36,8 @@ struct GnomeKeyGrabber::Impl
   {
   public:
 
-    bool operator()(const CompAction::KeyBinding& first,
-                    const CompAction::KeyBinding& second) const;
+    bool operator()(CompAction::KeyBinding const& first,
+                    CompAction::KeyBinding const& second) const;
   };
 
   bool test_mode_;
@@ -50,28 +50,21 @@ struct GnomeKeyGrabber::Impl
   std::vector<unsigned int> action_ids_;
   unsigned int current_action_id_;
 
-  std::map<const CompAction*, unsigned int> action_ids_by_action_;
-  std::map<unsigned int, const CompAction*> actions_by_action_id_;
+  std::map<CompAction const*, unsigned int> action_ids_by_action_;
+  std::map<unsigned int, CompAction const*> actions_by_action_id_;
   std::map<CompAction::KeyBinding, unsigned int, BindingLess> grabs_by_binding_;
 
   explicit Impl(CompScreen* screen, bool test_mode = false);
 
-  unsigned int addAction(const CompAction& action, bool addressable = true);
-  bool removeAction(const CompAction& action);
+  unsigned int addAction(CompAction const& action, bool addressable = true);
+  bool removeAction(CompAction const& action);
   bool removeAction(unsigned int action_id);
 
-  GVariant* onShellMethodCall(const std::string& method, GVariant* parameters);
-  unsigned int grabAccelerator(const char* accelerator, unsigned int flags);
-  void activateAction(const CompAction* action, unsigned int device) const;
+  GVariant* onShellMethodCall(std::string const& method, GVariant* parameters);
+  unsigned int grabAccelerator(char const* accelerator, unsigned int flags);
+  void activateAction(CompAction const* action, unsigned int device) const;
 
-  bool actionInitiated(CompAction* action,
-                       CompAction::State state,
-                       CompOption::Vector& options) const;
-  bool actionTerminated(CompAction* action,
-                        CompAction::State state,
-                        CompOption::Vector& options) const;
-
-  bool isActionPostponed(const CompAction& action) const;
+  bool isActionPostponed(CompAction const& action) const;
 };
 
 } // namespace grabber

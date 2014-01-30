@@ -69,7 +69,6 @@ PanelMenuView::PanelMenuView()
   , show_now_activated_(false)
   , we_control_active_(false)
   , new_app_menu_shown_(false)
-  , menu_bar_visible_(false)
   , monitor_(0)
   , active_xid_(0)
   , desktop_name_(_("Ubuntu Desktop"))
@@ -200,9 +199,17 @@ void PanelMenuView::SetupUBusManagerInterests()
 
 bool PanelMenuView::SetMenuBarVisible(bool visible)
 {
-  menu_bar_visible_ = visible;
-  QueueDraw();
-  return true;
+  if (visible != show_now_activated_)
+  {
+    for (auto const& entry : entries_)
+      entry.second->SetShowNow(visible);
+
+    show_now_activated_ = visible;
+    QueueDraw();
+    return true;
+  }
+
+  return false;
 }
 
 void PanelMenuView::OverlayShown()
@@ -347,7 +354,7 @@ bool PanelMenuView::ShouldDrawMenus() const
 
     if (!wm.IsExpoActive() && !wm.IsScaleActive())
     {
-      if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_ || menu_bar_visible_)
+      if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_)
         return true;
 
       if (is_maximized_)
@@ -366,7 +373,7 @@ bool PanelMenuView::ShouldDrawButtons() const
 
     if (!wm.IsExpoActive() && !wm.IsScaleActive())
     {
-      if (is_inside_ || show_now_activated_ || new_application_ || menu_bar_visible_)
+      if (is_inside_ || show_now_activated_ || new_application_)
         return true;
 
       if (window_buttons_->IsMouseOwner() || titlebar_grab_area_->IsMouseOwner())

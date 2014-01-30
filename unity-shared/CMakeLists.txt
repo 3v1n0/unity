@@ -98,6 +98,7 @@ if (ENABLE_X_SUPPORT)
   set (UNITY_SHARED_COMPIZ_SOURCES
     CompizUtils.cpp
     PluginAdapter.cpp
+    GnomeKeyGrabber.cpp
     )
 
   find_package (PkgConfig)

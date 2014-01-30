@@ -48,7 +48,7 @@
                 <_short>General</_short>
 
                 <option name="show_menu_bar" type="key">
-                    <_short>Key to reveal the global menu bar</_short>
+                    <_short>Key to show the menu bar while pressed</_short>
                     <_long>Reveals the global menu bar while pressed.</_long>
                     <default>&lt;Alt&gt;</default>
                 </option>
@@ -60,7 +60,7 @@
                 </option>
 
                 <option name="show_hud" type="key">
-                    <_short>Key to show the HUD</_short>
+                    <_short>Key to show the HUD when tapped</_short>
                     <_long>A tap on this key summons the HUD.</_long>
                     <default>&lt;Alt&gt;</default>
                 </option>
