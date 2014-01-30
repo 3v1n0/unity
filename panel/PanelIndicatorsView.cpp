@@ -25,6 +25,7 @@
 #include <NuxCore/Logger.h>
 
 #include "PanelIndicatorsView.h"
+#include "PanelIndicatorEntryDropdownView.h"
 
 DECLARE_LOGGER(logger, "unity.indicators");
 
@@ -48,6 +49,20 @@ PanelIndicatorsView::PanelIndicatorsView()
   LOG_DEBUG(logger) << "Indicators View Added: ";
 }
 
+void PanelIndicatorsView::EnableDropdownMenu(bool enable, indicator::Indicators::Ptr const& indicators)
+{
+  if (enable && indicators)
+  {
+    dropdown_ = new PanelIndicatorEntryDropdownView(GetName(), indicators);
+    AddEntryView(dropdown_.GetPointer());
+  }
+  else
+  {
+    RemoveEntryView(dropdown_.GetPointer());
+    dropdown_.Release();
+  }
+}
+
 void PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
 {
   LOG_DEBUG(logger) << "IndicatorAdded: " << indicator->name();
@@ -58,7 +73,7 @@ void PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
 
   auto& conn_manager = indicators_connections_[indicator];
   conn_manager.Add(indicator->on_entry_added.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryAdded)));
-  conn_manager.Add(indicator->on_entry_removed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRemoved)));
+  conn_manager.Add(indicator->on_entry_removed.connect(sigc::mem_fun(this, &PanelIndicatorsView::RemoveEntry)));
 }
 
 void PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
@@ -66,9 +81,9 @@ void PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
   indicators_connections_.erase(indicator);
 
   for (auto const& entry : indicator->GetEntries())
-    OnEntryRemoved(entry->id());
+    RemoveEntry(entry->id());
 
-  for (auto i = indicators_.begin(); i != indicators_.end(); i++)
+  for (auto i = indicators_.begin(); i != indicators_.end(); ++i)
   {
     if (*i == indicator)
     {
@@ -96,26 +111,47 @@ void PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
 {
-  unsigned int n_entries = 0;
+  if (!dropdown_)
+    return;
 
-  for (auto const& entry : entries_)
-    if (entry.second->IsVisible())
-      n_entries++;
+  int accumolated_width = dropdown_->GetBaseWidth();
+  std::vector<PanelIndicatorEntryView::Ptr> to_hide;
 
-  if (n_entries > 0)
+  for (auto* area : layout_->GetChildren())
   {
-    for (auto const& entry : entries_)
+    auto en = static_cast<PanelIndicatorEntryView*>(area);
+    if (en == dropdown_.GetPointer())
+      continue;
+
+    accumolated_width += en->GetBaseWidth();
+
+    if (accumolated_width > max_width)
+      to_hide.push_back(PanelIndicatorEntryView::Ptr(en));
+  }
+
+  // No need to hide an item if there's space that we considered for the dropdown
+  if (!dropdown_->IsVisible() && to_hide.size() == 1)
+  {
+    if (accumolated_width - dropdown_->GetBaseWidth() < max_width)
+      to_hide.clear();
+  }
+
+  // There's just one hidden entries, it might fit in the space we have
+  if (to_hide.empty() && dropdown_->Size() == 1)
+    accumolated_width -= dropdown_->GetBaseWidth();
+
+  if (accumolated_width < max_width)
+  {
+    while (!dropdown_->Empty() && dropdown_->Top()->GetBaseWidth() < (max_width - accumolated_width))
+      AddEntryView(dropdown_->Pop().GetPointer());
+  }
+  else
+  {
+    for (auto const& hidden : to_hide)
     {
-      if (entry.second->IsVisible() && n_entries > 0)
-      {
-        int max_entry_width = max_width / n_entries;
-
-        if (entry.second->GetBaseWidth() > max_entry_width)
-          entry.second->SetMaximumWidth(max_entry_width);
-
-        max_width -= entry.second->GetBaseWidth();
-        --n_entries;
-      }
+      layout_->RemoveChildObject(hidden.GetPointer());
+      RemoveChild(hidden.GetPointer());
+      dropdown_->Push(hidden);
     }
   }
 }
@@ -129,7 +165,13 @@ PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntry(std::string const& e
     PanelIndicatorEntryView* view = entry->second;
 
     if (view->IsSensitive() && view->IsVisible())
+    {
       view->Activate(button);
+    }
+    else if (dropdown_)
+    {
+      dropdown_->ActivateChild(PanelIndicatorEntryView::Ptr(view));
+    }
 
     return view;
   }
@@ -139,14 +181,9 @@ PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntry(std::string const& e
 
 bool PanelIndicatorsView::ActivateIfSensitive()
 {
-  std::map<int, PanelIndicatorEntryView*> sorted_entries;
-
-  for (auto const& entry : entries_)
-    sorted_entries[entry.second->GetEntryPriority()] = entry.second;
-
-  for (auto const& entry : sorted_entries)
+  for (auto* area : layout_->GetChildren())
   {
-    PanelIndicatorEntryView* view = entry.second;
+    auto* view = static_cast<PanelIndicatorEntryView*>(area);
 
     if (view->IsSensitive() && view->IsVisible() && view->IsFocused())
     {
@@ -176,11 +213,14 @@ PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntryAt(int x, int y, int 
   // which causes visible lag in many cases.
   //
 
-  for (auto const& entry : entries_)
+  for (auto* area : layout_->GetChildren())
   {
-    PanelIndicatorEntryView* view = entry.second;
+    auto view = static_cast<PanelIndicatorEntryView*>(area);
 
-    if (!target && view->IsVisible() && view->IsFocused() &&
+    if (!view->IsVisible())
+      continue;
+
+    if (!target && view->IsFocused() &&
         view->IsSensitive() &&
         view->GetAbsoluteGeometry().IsPointInside(x, y))
     {
@@ -198,11 +238,11 @@ PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntryAt(int x, int y, int 
 
   if (target && !found_old_active)
   {
-    for (auto const& entry : entries_)
+    for (auto* area : layout_->GetChildren())
     {
-      PanelIndicatorEntryView* view = entry.second;
+      auto view = static_cast<PanelIndicatorEntryView*>(area);
 
-      if (view != target && view->IsActive())
+      if (view != target && view->IsVisible() && view->IsActive())
       {
         view->Unactivate();
         break;
@@ -226,9 +266,8 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
     return;
 
   int entry_pos = pos;
-
+  auto const& entry_id = view->GetEntryID();
   view->SetOpacity(opacity());
-  view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
 
   if (entry_pos == IndicatorEntryPosition::AUTO)
   {
@@ -242,20 +281,23 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
         if (view->GetEntryPriority() <= en->GetEntryPriority())
           break;
 
-        entry_pos++;
+        ++entry_pos;
       }
     }
   }
 
   layout_->AddView(view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 1.0, (nux::LayoutPosition) entry_pos);
-
-  entries_[view->GetEntryID()] = view;
-
   AddChild(view);
-  QueueRelayout();
-  QueueDraw();
 
-  on_indicator_updated.emit(view);
+  QueueRelayout();
+
+  if (entries_.find(entry_id) == entries_.end())
+  {
+    view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
+    entries_.insert({entry_id, view});
+    on_indicator_updated.emit(view);
+    entry_added.emit(view);
+  }
 }
 
 PanelIndicatorEntryView *PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, int padding, IndicatorEntryPosition pos, IndicatorEntryType type)
@@ -274,8 +316,6 @@ void PanelIndicatorsView::OnEntryAdded(Entry::Ptr const& entry)
 void PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
 {
   QueueRelayout();
-  QueueDraw();
-
   on_indicator_updated.emit(view);
 }
 
@@ -284,24 +324,22 @@ void PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
   if (!view)
     return;
 
-  std::string const& entry_id = view->GetEntryID();
+  entry_removed.emit(view);
+
+  if (dropdown_)
+    dropdown_->Remove(PanelIndicatorEntryView::Ptr(view));
+
   RemoveChild(view);
-  on_indicator_updated.emit(view);
-  entries_.erase(entry_id);
+  entries_.erase(view->GetEntryID());
   layout_->RemoveChildObject(view);
+  on_indicator_updated.emit(view);
 
   QueueRelayout();
-  QueueDraw();
 }
 
 void PanelIndicatorsView::RemoveEntry(std::string const& entry_id)
 {
   RemoveEntryView(entries_[entry_id]);
-}
-
-void PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
-{
-  RemoveEntry(entry_id);
 }
 
 void PanelIndicatorsView::OverlayShown()
