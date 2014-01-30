@@ -204,9 +204,6 @@ TEST(TestIndicatorEntry, TestVisibility)
   entry.set_label("valid-label", true, true);
   entry.set_image(1, "valid-image", true, true);
   EXPECT_TRUE(entry.visible());
-
-  entry.add_parent(std::make_shared<Entry>("parent"));
-  EXPECT_FALSE(entry.visible());
 }
 
 TEST(TestIndicatorEntry, TestGeometry)
@@ -249,7 +246,6 @@ TEST(TestIndicatorEntry, AddParent)
   EXPECT_EQ(entry.active(), parent->active());
 
   EXPECT_EQ(entry.parents(), std::vector<Entry::Ptr>({parent}));
-  EXPECT_FALSE(entry.visible());
 }
 
 TEST(TestIndicatorEntry, AddParentWithValues)
@@ -267,7 +263,6 @@ TEST(TestIndicatorEntry, AddParentWithValues)
   EXPECT_CALL(sig_receiver, ActiveChanged(true));
   EXPECT_CALL(sig_receiver, ShowNowChanged(true));
   EXPECT_CALL(sig_receiver, GeometryChanged(nux::Rect(0, 1, 2, 3)));
-  ASSERT_TRUE(entry.visible());
 
   entry.add_parent(parent);
   EXPECT_EQ(entry.geometry(), parent->geometry());
@@ -275,7 +270,6 @@ TEST(TestIndicatorEntry, AddParentWithValues)
   EXPECT_EQ(entry.active(), parent->active());
 
   EXPECT_EQ(entry.parents(), std::vector<Entry::Ptr>({parent}));
-  EXPECT_FALSE(entry.visible());
 }
 
 TEST(TestIndicatorEntry, AddParentsUpdatedOnFirstOnly)
@@ -322,12 +316,10 @@ TEST(TestIndicatorEntry, RmParent)
   entry.add_parent(parent);
 
   ASSERT_FALSE(entry.parents().empty());
-  ASSERT_FALSE(entry.visible());
   EXPECT_CALL(entry_receiver, Updated());
 
   entry.rm_parent(parent);
   EXPECT_TRUE(entry.parents().empty());
-  EXPECT_TRUE(entry.visible());
 }
 
 TEST(TestIndicatorEntry, SetActiveUpdatesParents)

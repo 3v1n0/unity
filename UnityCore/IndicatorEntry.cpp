@@ -117,7 +117,7 @@ int Entry::priority() const
 
 bool Entry::visible() const
 {
-  return parents_.empty() && ((label_visible_ && !label_.empty()) ||
+  return ((label_visible_ && !label_.empty()) ||
           (image_type_ != 0 && image_visible_ && !image_data_.empty()));
 }
 
@@ -236,10 +236,14 @@ void Entry::add_parent(Entry::Ptr const& parent)
   if (!parent || std::find(parents_.begin(), parents_.end(), parent) != parents_.end())
     return;
 
+  bool was_empty = parents_.empty();
   parents_.push_back(parent);
   parent->set_geometry(geometry_);
-  parent->set_show_now(show_now_);
-  parent->set_active(active_);
+  parent->set_show_now(was_empty ? show_now_ : (parent->show_now() || show_now_));
+  parent->set_active(was_empty ? active_ : (parent->active() || active_));
+
+  if (was_empty)
+    updated.emit();
 }
 
 void Entry::rm_parent(Entry::Ptr const& parent)
@@ -247,7 +251,12 @@ void Entry::rm_parent(Entry::Ptr const& parent)
   auto it = std::find(parents_.begin(), parents_.end(), parent);
 
   if (it != parents_.end())
+  {
     parents_.erase(it);
+
+    if (parents_.empty())
+      updated.emit();
+  }
 }
 
 std::vector<Entry::Ptr> const& Entry::parents() const
