@@ -25,6 +25,7 @@
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 
+#include "mock_indicators.h"
 #include "test_standalone_wm.h"
 
 namespace unity
@@ -33,25 +34,8 @@ namespace panel
 {
 namespace
 {
-
 using namespace testing;
 using namespace indicator;
-
-struct MockIndicators : Indicators
-{
-  typedef std::shared_ptr<MockIndicators> Ptr;
-  typedef NiceMock<MockIndicators> Nice;
-
-  MockIndicators()
-  {}
-
-  // Implementing Indicators virtual functions
-  MOCK_METHOD5(ShowEntriesDropdown, void(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y));
-  MOCK_METHOD2(OnEntryScroll, void(std::string const&, int delta));
-  MOCK_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned xid, int x, int y, unsigned button));
-  MOCK_METHOD1(OnEntrySecondaryActivate, void(std::string const&));
-  MOCK_METHOD3(OnShowAppMenu, void(unsigned xid, int x, int y));
-};
 
 struct SigReceiver : sigc::trackable
 {

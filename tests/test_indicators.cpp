@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 #include <UnityCore/Indicators.h>
 #include <UnityCore/AppmenuIndicator.h>
+#include "mock_indicators.h"
 
 using namespace std;
 using namespace unity;
@@ -50,35 +51,16 @@ struct SigReceiver : sigc::trackable
   MOCK_CONST_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned, int, int, unsigned));
 };
 
-struct MockIndicators : Indicators
+struct TestIndicators : Test
 {
-  typedef NiceMock<MockIndicators> Nice;
-
-  MockIndicators()
-  {}
-
-  // Implementing Indicators virtual functions
-  MOCK_METHOD5(ShowEntriesDropdown, void(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y));
-  MOCK_METHOD2(OnEntryScroll, void(std::string const&, int delta));
-  MOCK_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned xid, int x, int y, unsigned button));
-  MOCK_METHOD1(OnEntrySecondaryActivate, void(std::string const&));
-  MOCK_METHOD3(OnShowAppMenu, void(unsigned xid, int x, int y));
-
-  // Redirecting protected methods
-  using Indicators::GetIndicator;
-  using Indicators::ActivateEntry;
-  using Indicators::AddIndicator;
-  using Indicators::RemoveIndicator;
-  using Indicators::SetEntryShowNow;
-
   // Utility function used to fill the class with test indicators with entries
   void SetupTestChildren()
   {
-    // Adding an indicator filled with entries into the MockIndicators
+    // Adding an indicator filled with entries into the TestMockIndicators
     Indicator::Entries sync_data;
     Entry* entry;
 
-    Indicator::Ptr test_indicator_1 = AddIndicator("indicator-test-1");
+    Indicator::Ptr test_indicator_1 = indicators.AddIndicator("indicator-test-1");
 
     entry = new Entry("indicator-test-1|entry-1", "name-hint-1", "label", true, true,
                       0, "icon", true, true, -1);
@@ -97,8 +79,8 @@ struct MockIndicators : Indicators
     EXPECT_EQ(test_indicator_1->GetEntries().size(), 3);
 
 
-    // Adding another indicator filled with entries into the MockIndicators
-    Indicator::Ptr test_indicator_2 = AddIndicator("indicator-test-2");
+    // Adding another indicator filled with entries into the TestMockIndicators
+    Indicator::Ptr test_indicator_2 = indicators.AddIndicator("indicator-test-2");
     sync_data.clear();
 
     entry = new Entry("indicator-test-2|entry-1", "name-hint-1", "label", true, true,
@@ -113,30 +95,24 @@ struct MockIndicators : Indicators
     test_indicator_2->Sync(sync_data);
     EXPECT_EQ(test_indicator_2->GetEntries().size(), 2);
 
-    ASSERT_THAT(GetIndicators().size(), 2);
+    ASSERT_THAT(indicators.GetIndicators().size(), 2);
   }
+
+  MockIndicators::Nice indicators;
 };
 
-TEST(TestIndicators, Construction)
+TEST_F(TestIndicators, Construction)
 {
-  {
-    MockIndicators indicators;
-
-    EXPECT_TRUE(indicators.GetIndicators().empty());
-  }
+  EXPECT_TRUE(indicators.GetIndicators().empty());
 }
 
-TEST(TestIndicators, GetInvalidIndicator)
+TEST_F(TestIndicators, GetInvalidIndicator)
 {
-  MockIndicators indicators;
-
   ASSERT_THAT(indicators.GetIndicator("no-available-indicator"), IsNull());
 }
 
-TEST(TestIndicators, IndicatorsFactory)
+TEST_F(TestIndicators, IndicatorsFactory)
 {
-  MockIndicators indicators;
-
   Indicator::Ptr standard_indicator = indicators.AddIndicator("libapplication.so");
   EXPECT_EQ(standard_indicator->name(), "libapplication.so");
   EXPECT_FALSE(standard_indicator->IsAppmenu());
@@ -146,9 +122,8 @@ TEST(TestIndicators, IndicatorsFactory)
   EXPECT_TRUE(appmenu_indicator->IsAppmenu());
 }
 
-TEST(TestIndicators, IndicatorsHandling)
+TEST_F(TestIndicators, IndicatorsHandling)
 {
-  MockIndicators indicators;
   SigReceiver::Nice sig_receiver(indicators);
   Indicators::IndicatorsList indicators_list;
 
@@ -234,10 +209,9 @@ TEST(TestIndicators, IndicatorsHandling)
   indicators.RemoveIndicator("invalid-indicator-test-4");
 }
 
-TEST(TestIndicators, ActivateEntry)
+TEST_F(TestIndicators, ActivateEntry)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
   SigReceiver::Nice sig_receiver(indicators);
 
   // Activating Entries from the Indicators class to see if they get updated
@@ -255,10 +229,9 @@ TEST(TestIndicators, ActivateEntry)
   EXPECT_EQ(entry12->geometry(), nux::Rect(1, 2, 3, 4));
 }
 
-TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
+TEST_F(TestIndicators, ActivateEntryShouldDisactivatePrevious)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
   SigReceiver::Nice sig_receiver(indicators);
 
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
@@ -287,10 +260,9 @@ TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
   EXPECT_EQ(entry21->geometry(), nux::Rect(4, 3, 2, 1));
 }
 
-TEST(TestIndicators, ActivateEntryInvalidEmitsNullSignal)
+TEST_F(TestIndicators, ActivateEntryInvalidEmitsNullSignal)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
   SigReceiver::Nice sig_receiver(indicators);
 
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
@@ -310,10 +282,9 @@ TEST(TestIndicators, ActivateEntryInvalidEmitsNullSignal)
   EXPECT_EQ(entry13->geometry(), nux::Rect());
 }
 
-TEST(TestIndicators, SetEntryShowNow)
+TEST_F(TestIndicators, SetEntryShowNow)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
 
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
   Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-2"));
@@ -328,10 +299,9 @@ TEST(TestIndicators, SetEntryShowNow)
   EXPECT_EQ(entry22->show_now(), false);
 }
 
-TEST(TestIndicators, EntryShowMenu)
+TEST_F(TestIndicators, EntryShowMenu)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
@@ -346,10 +316,9 @@ TEST(TestIndicators, EntryShowMenu)
   entry13->ShowMenu(55, 68, 3);
 }
 
-TEST(TestIndicators, EntryScroll)
+TEST_F(TestIndicators, EntryScroll)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
@@ -361,10 +330,9 @@ TEST(TestIndicators, EntryScroll)
   entry11->Scroll(80);
 }
 
-TEST(TestIndicators, EntrySecondaryActivate)
+TEST_F(TestIndicators, EntrySecondaryActivate)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
@@ -376,10 +344,8 @@ TEST(TestIndicators, EntrySecondaryActivate)
   entry22->SecondaryActivate();
 }
 
-TEST(TestIndicators, ShowAppMenu)
+TEST_F(TestIndicators, ShowAppMenu)
 {
-  MockIndicators indicators;
-
   {
     Indicator::Ptr appmenu_indicator = indicators.AddIndicator("libappmenu.so");
     ASSERT_TRUE(appmenu_indicator->IsAppmenu());
