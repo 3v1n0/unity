@@ -290,6 +290,7 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   AddChild(view);
 
   QueueRelayout();
+  QueueDraw();
 
   if (entries_.find(entry_id) == entries_.end())
   {
@@ -316,6 +317,7 @@ void PanelIndicatorsView::OnEntryAdded(Entry::Ptr const& entry)
 void PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
 {
   QueueRelayout();
+  QueueDraw();
   on_indicator_updated.emit(view);
 }
 
@@ -335,6 +337,7 @@ void PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
   on_indicator_updated.emit(view);
 
   QueueRelayout();
+  QueueDraw();
 }
 
 void PanelIndicatorsView::RemoveEntry(std::string const& entry_id)

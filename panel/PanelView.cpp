@@ -544,6 +544,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
   }
 
   QueueRelayout();
+  QueueDraw();
 }
 
 void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
@@ -558,12 +559,14 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
   }
 
   QueueRelayout();
+  QueueDraw();
 }
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   needs_geo_sync_ = true;
   QueueRelayout();
+  QueueDraw();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)
