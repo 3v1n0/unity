@@ -17,37 +17,51 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-#ifndef UNITY_LOCKSCREEN_SETTINGS_H
-#define UNITY_LOCKSCREEN_SETTINGS_H
+#include "LockScreenSettings.h"
+
+#include <NuxCore/Logger.h>
 
 namespace unity
 {
 namespace lockscreen
 {
 
-enum class Type : int
+DECLARE_LOGGER(logger, "unity.lockscreen.settings");
+
+namespace
 {
-  NONE = 0, // Do nothing
-  LIGHTDM, // Fallback to lightdm
-  UNITY // Use custom Unity lockscreen
-};
+Settings* settings_instance = nullptr;
+}
 
-// TODO (andy) use the same options of unity-greeter
-
-class Settings
+Settings::Settings()
 {
-public:
-  Settings();
-  ~Settings();
+  if (settings_instance)
+  {
+    LOG_ERROR(logger) << "More than one lockscreen::Settings created.";
+  }
+  else
+  {
+  	lockscreen_type = Type::LIGHTDM;
 
-  static Settings& Instance();
+    settings_instance = this;
+  }
+}
 
-  nux::Property<Type> lockscreen_type;
+Settings::~Settings()
+{
+  if (settings_instance == this)
+    settings_instance = nullptr;
+}
 
-  static const int GRID_SIZE = 40;
-};
+Settings& Settings::Instance()
+{
+  if (!settings_instance)
+  {
+    LOG_ERROR(logger) << "No lockscreen::Settings created yet.";
+  }
+
+  return *settings_instance;
+}
 
 }
 }
-
-#endif

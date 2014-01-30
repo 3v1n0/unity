@@ -137,6 +137,27 @@
                   <default>true</default>
                 </option>
 
+                <option name="lock_screen_type" type="int">
+                    <_short>Lockscreen</_short>
+                    <_long>Set how Unity should handle lockscreen.</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>2</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>None</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Lightdm</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Custom lockscreen</_name>
+                    </desc>
+                </option>
+
+
             </group>
 
             <group>

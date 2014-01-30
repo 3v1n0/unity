@@ -126,7 +126,6 @@ void Shield::ShowPrimaryView()
 
   auto const& real_name = session_manager_->RealName();
   auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
-  //std::string name = "Andrea Azzarone";
   prompt_view_ = new UserPromptView(name);
 
   prompt_view_->SetMinimumWidth(8*Settings::GRID_SIZE);

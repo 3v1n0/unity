@@ -59,6 +59,7 @@
 #include "ShortcutController.h"
 #include "LauncherController.h"
 #include "LockScreenController.h"
+#include "LockScreenSettings.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "UScreen.h"
@@ -304,6 +305,7 @@ private:
   FontSettings   font_settings_;
   internal::FavoriteStoreGSettings favorite_store_;
   ThumbnailGenerator thumbnail_generator_;
+  lockscreen::Settings lockscreen_settings_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;

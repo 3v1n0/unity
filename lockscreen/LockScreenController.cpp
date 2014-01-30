@@ -18,6 +18,8 @@
 */
 
 #include "LockScreenController.h"
+
+#include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
@@ -31,11 +33,18 @@ namespace
 const unsigned int FADE_DURATION = 200;
 }
 
+namespace testing
+{
+const std::string DBUS_NAME = "com.canonical.Unity.Test.DisplayManager";
+}
+
 Controller::Controller(session::Manager::Ptr const& session_manager,
-                       ShieldFactoryInterface::Ptr const& shield_factory)
+                       ShieldFactoryInterface::Ptr const& shield_factory,
+                       bool test_mode)
   : session_manager_(session_manager)
   , shield_factory_(shield_factory)
   , fade_animator_(FADE_DURATION)
+  , test_mode_(test_mode)
 {
   auto* uscreen = UScreen::GetDefault();
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::OnUScreenChanged));
@@ -85,18 +94,54 @@ void Controller::OnLockRequested()
   if (IsLocked())
     return;
 
-  WindowManager& wm = WindowManager::Default();
-  wm.SaveInputFocus();
+  auto lockscreen_type = Settings::Instance().lockscreen_type();
 
-  auto* uscreen = UScreen::GetDefault();
-  EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
+  if (lockscreen_type == Type::NONE)
+  {
+    return;
+  }
+  else if (lockscreen_type == Type::LIGHTDM)
+  {
+    // FIXME (andy) move to a different function
+    // FIXME (andy) Move to a different function
+    auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
+                                                   "/org/freedesktop/DisplayManager/Session0",
+                                                   "org.freedesktop.DisplayManager.Session",
+                                                   test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
-  std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-    shield->ShowWindow(true);
-    shield->SetOpacity(0.0);
-  });
+    // By passing the proxy to the lambda we ensure that it will stay alive
+    // until we get the last callback.
+    proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
 
-  animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+    WindowManager& wm = WindowManager::Default();
+    wm.SaveInputFocus();
+
+    auto* uscreen = UScreen::GetDefault();
+    EnsureShields(-1, uscreen->GetMonitors());
+
+    std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
+      shield->ShowWindow(true);
+      shield->SetOpacity(0.0);
+    });
+
+    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+  }
+  else if (lockscreen_type == Type::UNITY)
+  {
+    // FIXME (andy) move to a different function
+    WindowManager& wm = WindowManager::Default();
+    wm.SaveInputFocus();
+
+    auto* uscreen = UScreen::GetDefault();
+    EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
+
+    std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
+      shield->ShowWindow(true);
+      shield->SetOpacity(0.0);
+    });
+
+    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+  }
 }
 
 void Controller::OnUnlockRequested()
@@ -104,15 +149,25 @@ void Controller::OnUnlockRequested()
   if (!IsLocked())
     return;
 
-  std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-    shield->UnGrabPointer();
-    shield->UnGrabKeyboard();
-  });
+  auto lockscreen_type = Settings::Instance().lockscreen_type();
 
-  WindowManager& wm = WindowManager::Default();
-  wm.RestoreInputFocus();
+  if (lockscreen_type == Type::NONE)
+  {
+    return;
+  }
+  else if (lockscreen_type == Type::LIGHTDM || lockscreen_type == Type::UNITY)
+  {
+    // FIXME (andy) Move to a different function
+    std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
+      shield->UnGrabPointer();
+      shield->UnGrabKeyboard();
+    });
 
-  animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+    WindowManager& wm = WindowManager::Default();
+    wm.RestoreInputFocus();
+
+    animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+  }
 }
 
 bool Controller::IsLocked() const

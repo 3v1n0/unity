@@ -98,7 +98,6 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
                                                      G_BUS_TYPE_SYSTEM);
 
     login_proxy_->Connect("Lock", [this](GVariant*){
-      std::cout << "lock" << std::endl;
       manager_->lock_requested.emit();
     });
 

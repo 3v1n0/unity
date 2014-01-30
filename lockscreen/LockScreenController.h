@@ -34,7 +34,8 @@ class Controller : public sigc::trackable
 {
 public:
   Controller(session::Manager::Ptr const& session_manager,
-             ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>());
+             ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
+             bool test_mode = false);
 
 private:
   friend class TestLockScreenController;
@@ -50,6 +51,7 @@ private:
   session::Manager::Ptr session_manager_;
   ShieldFactoryInterface::Ptr shield_factory_;
   nux::animation::AnimateValue<double> fade_animator_;
+  bool test_mode_;
 };
 
 }

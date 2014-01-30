@@ -20,6 +20,7 @@ set (LOCKSCREEN_SOURCES
      BackgroundSettings.cpp
      CofView.cpp
      LockScreenController.cpp
+     LockScreenSettings.cpp
      LockScreenShield.cpp
      LockScreenShieldFactory.cpp
      UserAuthenticatorPam.cpp
