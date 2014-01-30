@@ -83,6 +83,7 @@ private:
   void SetupUBusManagerInterests();
 
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
+  void OnEntryViewAdded(PanelIndicatorEntryView* view);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);
   void OnApplicationClosed(BamfApplication* app);
