@@ -3,38 +3,7 @@ set(UNITY_SRC ../plugins/unityshell/src)
 #
 # Data
 #
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/ubuntuone-installer.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/applications/ubuntuone-installer.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/ubuntu-software-center.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/applications/ubuntu-software-center.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/update-manager.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/applications/update-manager.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/bzr-handle-patch.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/applications/bzr-handle-patch.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
-
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/icons/go-down-symbolic.svg
-                ${CMAKE_BINARY_DIR}/tests/data/icons/go-down-symbolic.svg)
-
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope1.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope1.scope)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope2.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope2.scope)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope3.scope)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/commands.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/commands.scope)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/brownnoise.mp3
-                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/brownnoise.mp3 COPYONLY)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/pinknoise.mp3
-                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/pinknoise.mp3 COPYONLY)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/whitenoise.mp3
-                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/whitenoise.mp3 COPYONLY)
+file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_BINARY_DIR}/tests)
 
 #
 # Unit tests
