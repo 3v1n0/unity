@@ -18,7 +18,7 @@
  *
  */
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "PanelView.h"
 #include "unity-shared/MockableBaseWindow.h"
@@ -35,6 +35,21 @@ namespace
 using namespace unity;
 using namespace unity::panel;
 
+struct MockIndicators : indicator::DBusIndicators
+{
+  typedef testing::NiceMock<MockIndicators> Nice;
+
+  MockIndicators()
+  {}
+
+  // Implementing Indicators virtual functions
+  MOCK_METHOD5(ShowEntriesDropdown, void(indicator::Indicator::Entries const&, indicator::Entry::Ptr const&, unsigned xid, int x, int y));
+  MOCK_METHOD2(OnEntryScroll, void(std::string const&, int delta));
+  MOCK_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned xid, int x, int y, unsigned button));
+  MOCK_METHOD1(OnEntrySecondaryActivate, void(std::string const&));
+  MOCK_METHOD3(OnShowAppMenu, void(unsigned xid, int x, int y));
+};
+
 class TestPanelView : public testing::Test
 {
 public:
@@ -47,7 +62,7 @@ public:
 
   TestPanelView()
     : window_(new MockableBaseWindow())
-    , panel_view_(new PanelView(window_.GetPointer(), std::make_shared<indicator::DBusIndicators>()))
+    , panel_view_(new PanelView(window_.GetPointer(), std::make_shared<MockIndicators::Nice>()))
   {}
 };
 
