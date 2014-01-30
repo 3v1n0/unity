@@ -16,6 +16,9 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
 
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/icons/go-down-symbolic.svg
+                ${CMAKE_BINARY_DIR}/tests/data/icons/go-down-symbolic.svg)
+
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope1.scope
                 ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope1.scope)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope2.scope
