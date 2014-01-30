@@ -7,6 +7,7 @@
       <default>false</default>
     </key>
   </schema>
+
   <schema id="org.compiz.unityshell" gettext-domain="compiz">
     <key type="s" name="panel-first-menu">
       <default>'&lt;Alt&gt;F10'</default>
@@ -18,4 +19,37 @@
       <default>'&lt;Alt&gt;'</default>
     </key>
    </schema>
+
+  <enum id='com.canonical.desktop.interface.ScrollbarMode'>
+    <value nick='normal' value='0'/>
+    <value nick='overlay-auto' value='1'/>
+    <value nick='overlay-pointer' value='2'/>
+    <value nick='overlay-touch' value='3'/>
+  </enum>
+  <schema id='com.canonical.desktop.interface' path='/com/canonical/desktop/interface/'>
+    <key name='scrollbar-mode' enum='com.canonical.desktop.interface.ScrollbarMode'>
+      <default>'overlay-auto'</default>
+    </key>
+  </schema>
+
+  <schema id="com.canonical.unity-gtk-module" path="/com/canonical/unity-gtk-module/">
+    <key name="blacklist" type="as">
+      <default>[]</default>
+    </key>
+    <key name="whitelist" type="as">
+      <default>[]</default>
+    </key>
+  </schema>
+
+  <schema id="org.gnome.desktop.wm.preferences" path="/org/gnome/desktop/wm/preferences/">
+    <key type="s" name="theme">
+      <default>'Ambiance'</default>
+    </key>
+    <key type="s" name="titlebar-font">
+      <default>'Ubuntu Bold 11'</default>
+    </key>
+    <key type="b" name="titlebar-uses-system-font">
+      <default>false</default>
+    </key>
+  </schema>
 </schemalist>
