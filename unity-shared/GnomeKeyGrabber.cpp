@@ -23,9 +23,7 @@
 
 namespace unity
 {
-namespace grabber
-{
-DECLARE_LOGGER(logger, "unity.grabber.gnome");
+DECLARE_LOGGER(logger, "unity.gnome");
 
 // Private implementation
 namespace shell
@@ -283,5 +281,4 @@ void GnomeKeyGrabber::removeAction(CompAction const& action)
   impl_->removeAction(action);
 }
 
-} // namespace grabber
 } // namespace unity

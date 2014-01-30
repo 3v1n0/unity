@@ -674,7 +674,7 @@ bool PanelIndicatorEntryView::GetShowNow() const
 
 void PanelIndicatorEntryView::SetShowNow(bool show)
 {
-  if (proxy_.get())
+  if (proxy_)
     proxy_->set_show_now(show);
 }
 

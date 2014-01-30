@@ -27,8 +27,6 @@
 
 namespace unity
 {
-namespace grabber
-{
 
 struct GnomeKeyGrabber::Impl
 {
@@ -67,7 +65,6 @@ struct GnomeKeyGrabber::Impl
   bool isActionPostponed(CompAction const& action) const;
 };
 
-} // namespace grabber
 } // namespace unity
 
 #endif // __GNOME_KEY_GRABBER_IMPL_H__

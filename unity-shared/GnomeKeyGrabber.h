@@ -24,12 +24,12 @@
 
 namespace unity
 {
-namespace grabber
-{
 
 class GnomeKeyGrabber
 {
 public:
+
+  typedef std::shared_ptr<GnomeKeyGrabber> Ptr;
 
   explicit GnomeKeyGrabber(CompScreen* screen);
   virtual ~GnomeKeyGrabber();
@@ -38,8 +38,6 @@ public:
   void addAction(CompAction const& action);
   void removeAction(CompAction const& action);
 
-  struct Impl;
-
 protected:
 
   struct TestMode {};
@@ -47,10 +45,10 @@ protected:
 
 private:
 
+  struct Impl;
   std::unique_ptr<Impl> impl_;
 };
 
-} // namespace grabber
 } // namespace unity
 
 #endif // __GNOME_KEY_GRABBER_H__
