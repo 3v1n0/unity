@@ -22,7 +22,7 @@
 #define UNITY_TEXTURECACHE_H
 
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include <Nux/Nux.h>
 #include <sigc++/trackable.h>
@@ -49,6 +49,7 @@ public:
   static nux::BaseTexture* DefaultTexturesLoader(std::string const&, int, int);
 
   BaseTexturePtr FindTexture(std::string const& texture_id, int width = 0, int height = 0, CreateTextureCallback callback = DefaultTexturesLoader);
+  void Invalidate(std::string const& texture_id, int width = 0, int height = 0);
 
   // Return the current size of the cache.
   std::size_t Size() const;
@@ -61,7 +62,7 @@ private:
   // parameter in the slot passed to the texture on_destroy signal.
   void OnDestroyNotify(nux::Trackable* Object, std::string const& key);
 
-  std::map<std::string, nux::BaseTexture*> cache_;
+  std::unordered_map<std::string, nux::BaseTexture*> cache_;
 };
 
 }

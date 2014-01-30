@@ -23,6 +23,7 @@
 
 #include <Nux/Button.h>
 
+#include "unity-shared/DecorationStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/Introspectable.h"

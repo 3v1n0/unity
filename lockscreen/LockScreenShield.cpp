@@ -21,6 +21,7 @@
 
 #include "BackgroundSettings.h" // FIXME: remove this
 #include "CofView.h"
+#include "LockScreenSettings.h"
 #include "UserAuthenticatorPam.h"
 #include "UserPromptView.h"
 #include "unity-shared/PanelStyle.h"
@@ -121,17 +122,17 @@ void Shield::ShowPrimaryView()
   main_layout->AddView(panel_view);
 
   nux::HLayout* prompt_layout = new nux::HLayout();
-  prompt_layout->SetLeftAndRightPadding(2*40); // FIXME (andy)
+  prompt_layout->SetLeftAndRightPadding(2*Settings::GRID_SIZE); // FIXME (andy)
 
   auto const& real_name = session_manager_->RealName();
   auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
   //std::string name = "Andrea Azzarone";
   prompt_view_ = new UserPromptView(name);
 
-  prompt_view_->SetMinimumWidth(8*40);
-  prompt_view_->SetMaximumWidth(8*40);
-  prompt_view_->SetMinimumHeight(3*40);
-  prompt_view_->SetMaximumHeight(3*40);
+  prompt_view_->SetMinimumWidth(8*Settings::GRID_SIZE);
+  prompt_view_->SetMaximumWidth(8*Settings::GRID_SIZE);
+  prompt_view_->SetMinimumHeight(3*Settings::GRID_SIZE);
+  prompt_view_->SetMaximumHeight(3*Settings::GRID_SIZE);
   prompt_layout->AddView(prompt_view_);
 
   main_layout->AddSpace(0, 10);

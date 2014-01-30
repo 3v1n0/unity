@@ -269,27 +269,13 @@ bool StandaloneWindowManager::InShowDesktop() const
   return in_show_desktop_;
 }
 
-void StandaloneWindowManager::Decorate(Window window_id) const
-{
-  auto window = GetWindowByXid(window_id);
-  if (window)
-    window->decorated = window->has_decorations();
-}
-
-void StandaloneWindowManager::Undecorate(Window window_id) const
-{
-  auto window = GetWindowByXid(window_id);
-  if (window)
-    window->decorated = false;
-}
-
 void StandaloneWindowManager::Maximize(Window window_id)
 {
   auto window = GetWindowByXid(window_id);
   if (window)
   {
     window->maximized = true;
-    Undecorate(window_id);
+    window->decorated = false;
   }
 }
 
@@ -299,7 +285,7 @@ void StandaloneWindowManager::Restore(Window window_id)
   if (window)
   {
     window->maximized = false;
-    Decorate(window_id);
+    window->decorated = true;
   }
 }
 
@@ -319,7 +305,7 @@ void StandaloneWindowManager::UnMinimize(Window window_id)
     window->minimized = false;
 
     if (window->maximized)
-      Undecorate(window_id);
+      window->decorated = false;
   }
 }
 
@@ -331,7 +317,7 @@ void StandaloneWindowManager::Minimize(Window window_id)
     window->minimized = true;
 
     if (window->maximized)
-      Decorate(window_id);
+      window->decorated = true;
   }
 }
 
@@ -587,6 +573,17 @@ std::string StandaloneWindowManager::GetWindowName(Window window_id) const
   return "";
 }
 
+std::string StandaloneWindowManager::GetStringProperty(Window, Atom) const
+{
+  return std::string();
+}
+
+std::vector<long> StandaloneWindowManager::GetCardinalProperty(Window, Atom) const
+{
+  return std::vector<long>();
+}
+
+
 // Mock functions
 
 void StandaloneWindowManager::ResetStatus()
@@ -642,8 +639,6 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
   window->visible.changed.connect([this, xid] (bool v) {v ? window_shown(xid) : window_hidden(xid);});
   window->maximized.changed.connect([this, xid] (bool v) {v ? window_maximized(xid) : window_restored(xid);});
   window->minimized.changed.connect([this, xid] (bool v) {v ? window_minimized(xid) : window_unminimized(xid);});
-  window->decorated.changed.connect([this, xid] (bool v) {v ? window_decorated(xid) : window_undecorated(xid);});
-  window->has_decorations.changed.connect([this, xid] (bool v) {v ? window_decorated(xid) : window_undecorated(xid);});
   window->resized.connect([this, xid] { window_resized(xid); });
   window->moved.connect([this, xid] { window_moved(xid); });
 

@@ -22,6 +22,7 @@
 #include <libgnome-desktop/gnome-bg.h>
 
 #include "config.h"
+#include "LockScreenSettings.h"
 #include "unity-shared/GtkTexture.h"
 
 namespace unity 
@@ -31,7 +32,6 @@ namespace lockscreen
 namespace
 {
 const std::string SETTINGS_NAME = "org.gnome.desktop.background";
-const int GRID_SIZE = 40;
 }
 
 BackgroundSettings::BackgroundSettings()
@@ -43,7 +43,7 @@ BackgroundSettings::BackgroundSettings()
 
 int get_grid_offset (int size)
 {
-    return (size % GRID_SIZE) / 2;
+    return (size % Settings::GRID_SIZE) / 2;
 }
 
 BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
@@ -63,8 +63,8 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
 
     int height = 22;
     int padding = 10;
-    int x = grid_x_offset + GRID_SIZE + padding;
-    int y = grid_y_offset + GRID_SIZE * (size.height / GRID_SIZE - 1) - height - padding;
+    int x = grid_x_offset + Settings::GRID_SIZE + padding;
+    int y = grid_y_offset + Settings::GRID_SIZE * (size.height / Settings::GRID_SIZE - 1) - height - padding;
     cairo_translate (c, x, y);
 
     cairo_surface_t* logo_surface = cairo_image_surface_create_from_png (PKGDATADIR"/logo.png");
@@ -83,14 +83,14 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
     // overlay grid
     cairo_surface_t* overlay_surface = cairo_surface_create_similar(cairo_surface,
                                                                     CAIRO_CONTENT_COLOR_ALPHA,
-                                                                    GRID_SIZE,
-                                                                    GRID_SIZE);
+                                                                    Settings::GRID_SIZE,
+                                                                    Settings::GRID_SIZE);
 
     cairo_t* oc = cairo_create(overlay_surface);
     cairo_rectangle(oc, 0, 0, 1, 1);
-    cairo_rectangle(oc, GRID_SIZE - 1, 0, 1, 1);
-    cairo_rectangle(oc, 0, GRID_SIZE - 1, 1, 1);
-    cairo_rectangle(oc, GRID_SIZE - 1, GRID_SIZE - 1, 1, 1);
+    cairo_rectangle(oc, Settings::GRID_SIZE - 1, 0, 1, 1);
+    cairo_rectangle(oc, 0, Settings::GRID_SIZE - 1, 1, 1);
+    cairo_rectangle(oc, Settings::GRID_SIZE - 1, Settings::GRID_SIZE - 1, 1, 1);
     cairo_set_source_rgba(oc, 1.0, 1.0, 1.0, 0.25);
     cairo_fill(oc);
 

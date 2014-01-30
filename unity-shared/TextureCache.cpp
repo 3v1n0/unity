@@ -41,9 +41,7 @@ nux::BaseTexture* TextureCache::DefaultTexturesLoader(std::string const& name, i
 
 std::string TextureCache::Hash(std::string const& id, int width, int height)
 {
-  std::ostringstream sout;
-  sout << id << "-" << width << "x" << height;
-  return sout.str();
+  return id + "-" + std::to_string(width) + "x" + std::to_string(height);
 }
 
 TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,
@@ -89,6 +87,11 @@ TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& textur
   }
 
   return texture;
+}
+
+void TextureCache::Invalidate(std::string const& texture_id, int width, int height)
+{
+  cache_.erase(Hash(texture_id, width, height));
 }
 
 void TextureCache::OnDestroyNotify(nux::Trackable* Object, std::string const& key)

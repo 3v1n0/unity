@@ -43,6 +43,7 @@ public:
   nux::Property<double> opacity;
   nux::Property<bool> focused;
 
+  bool IsMouseOwner();
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_pos, nux::NuxEventType event_type);
 
   sigc::signal<void> close_clicked;

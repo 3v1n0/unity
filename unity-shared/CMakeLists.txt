@@ -23,6 +23,7 @@ set (UNITY_SHARED_SOURCES
      BackgroundEffectHelper.cpp
      DashStyle.cpp
      DebugDBusInterface.cpp
+     DecorationStyle.cpp
      DefaultThumbnailProvider.cpp
      DeltaRestrainment.cpp
      DesktopApplicationManager.cpp
@@ -93,12 +94,20 @@ add_pch(pch/unity-shared_pch.hh unity-shared)
 
 if (ENABLE_X_SUPPORT)
   # compiz
+
   set (UNITY_SHARED_COMPIZ_SOURCES
+    CompizUtils.cpp
     PluginAdapter.cpp
     )
-  add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
-  target_link_libraries (unity-shared-compiz ${LIBS})
 
+  find_package (PkgConfig)
+  pkg_check_modules (COMPIZ_OPENGL REQUIRED compiz-opengl)
+
+  add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
+
+  # This makes linker to include library dir in RUNPATH
+  find_library (COMPIZ_OPENGL_LIB opengl ${COMPIZ_OPENGL_LIBDIR})
+  target_link_libraries (unity-shared-compiz ${LIBS} ${COMPIZ_OPENGL_LIB} ${COMPIZ_OPENGL_LDFLAGS})
   add_dependencies (unity-shared-compiz unity-shared)
 
   # bamf application manager
@@ -123,4 +132,8 @@ add_dependencies (unity-shared-standalone unity-shared)
 add_executable (app-manager StandaloneAppManager.cpp)
 add_dependencies (app-manager  unity-shared unity-shared-bamf unity-shared-standalone)
 target_link_libraries (app-manager  unity-shared unity-shared-bamf  unity-shared-standalone)
+
+add_executable (decorations-style StandaloneDecorationStyle.cpp)
+add_dependencies (decorations-style unity-shared)
+target_link_libraries (decorations-style unity-shared)
 

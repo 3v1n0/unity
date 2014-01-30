@@ -51,6 +51,7 @@ link_directories(${TEST_UNIT_DEPS_LIBRARY_DIRS} ${COMPIZ_LIBDIR})
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 include_directories (${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src)
 include_directories (${CMAKE_SOURCE_DIR}/dash)
+include_directories (${CMAKE_SOURCE_DIR}/decorations)
 include_directories (${CMAKE_SOURCE_DIR}/launcher)
 include_directories (${CMAKE_SOURCE_DIR}/panel)
 include_directories (${CMAKE_SOURCE_DIR}/hud)
@@ -240,6 +241,8 @@ if (ENABLE_X_SUPPORT)
                  test_application_launcher_icon.cpp
                  test_bamf_application.cpp
                  test_bfb_launcher_icon.cpp
+                 test_decorations_input_mixer.cpp
+                 test_decorations_widgets.cpp
                  test_dashview.cpp
                  test_dashview_impl.cpp
                  test_dash_controller.cpp
@@ -333,24 +336,26 @@ if (ENABLE_X_SUPPORT)
               gmockmount.c
               gmockvolume.c
               )
+
   target_link_libraries(test-gtest
+                        ${LIBS}
                         test-libs-c
                         gtest
                         gmock
-                        unity-shared
-                        ${LIBS}
+                        dash-lib
+                        decorations-lib
+                        hud-lib
                         launcher-lib
                         lockscreen-lib
-                        unity-shared-bamf
-                        unity-shared-standalone
-                        shortcuts-lib
-                        previews-lib
-                        hud-lib
-                        switcher-lib
-                        shutdown-lib
-                        dash-lib
                         panel-lib
-                        pam)
+                        pam
+                        previews-lib
+                        shortcuts-lib
+                        shutdown-lib
+                        switcher-lib
+                        unity-shared
+                        unity-shared-bamf
+                        unity-shared-standalone)
   add_test(UnityGTest test-gtest)
 endif (ENABLE_X_SUPPORT)
 endif (GMOCK_LIB AND

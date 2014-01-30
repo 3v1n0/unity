@@ -17,10 +17,6 @@ class LauncherTooltipTests(LauncherTestCase):
 
     def setUp(self):
         super(LauncherTooltipTests, self).setUp()
-
-        if not self.launcher_instance:
-            self.skipTest("Cannot run test with no Launcher on monitor")
-
         self.set_unity_option('launcher_hide_mode', 0)
         self.launcher_instance.move_mouse_to_right_of_launcher()
         self.icons = self.unity.launcher.model.get_launcher_icons(visible_only=True)
