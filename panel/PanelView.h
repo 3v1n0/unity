@@ -83,6 +83,7 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void PreLayoutManagement();
 
   // Introspectable methods
   std::string GetName() const;

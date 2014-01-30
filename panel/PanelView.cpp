@@ -516,6 +516,16 @@ void PanelView::ForceUpdateBackground()
   QueueDraw();
 }
 
+void PanelView::PreLayoutManagement()
+{
+  View::PreLayoutManagement();
+
+  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_->GetBaseWidth();
+
+  menu_view_->SetMinimumWidth(menu_width);
+  menu_view_->SetMaximumWidth(menu_width);
+}
+
 //
 // Signals
 //
@@ -532,8 +542,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
     indicators_->AddIndicator(proxy);
   }
 
-  ComputeContentSize();
-  NeedRedraw();
+  QueueRelayout();
 }
 
 void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
@@ -547,14 +556,13 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
     indicators_->RemoveIndicator(proxy);
   }
 
-  ComputeContentSize();
-  NeedRedraw();
+  QueueRelayout();
 }
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   needs_geo_sync_ = true;
-  ComputeContentSize();
+  QueueRelayout();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)
