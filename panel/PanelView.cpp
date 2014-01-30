@@ -100,7 +100,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 
   menu_view_ = new PanelMenuView();
   menu_view_->EnableDropdownMenu(true, remote_);
-  AddPanelView(menu_view_, 1);
+  AddPanelView(menu_view_, 0);
 
   SetCompositionLayout(layout_);
 
