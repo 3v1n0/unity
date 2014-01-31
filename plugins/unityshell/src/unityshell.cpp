@@ -3554,7 +3554,7 @@ void UnityScreen::initLauncher()
 
   /* Setup panel */
   timer.Reset();
-  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers);
+  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers, grabber_);
   AddChild(panel_controller_.get());
   panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
                                         optionGetMenusFadeout(),

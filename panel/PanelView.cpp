@@ -578,13 +578,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
 
 void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 {
-  if (!IsActive())
-    return;
-
-  bool ret;
-
-  ret = menu_view_->ActivateEntry(entry_id, 0);
-  if (!ret) indicators_->ActivateEntry(entry_id, 0);
+  ActivateEntry(entry_id);
 }
 
 bool PanelView::TrackMenuPointer()
@@ -679,6 +673,11 @@ bool PanelView::FirstMenuShow() const
 bool PanelView::SetMenuBarVisible(bool visible)
 {
   return (!visible || IsActive()) && menu_view_->SetMenuBarVisible(visible);
+}
+
+bool PanelView::ActivateEntry(std::string const& entry_id)
+{
+  return IsActive() && (menu_view_->ActivateEntry(entry_id, 0) || indicators_->ActivateEntry(entry_id, 0));
 }
 
 void PanelView::SetOpacity(float opacity)

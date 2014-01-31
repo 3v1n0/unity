@@ -42,6 +42,11 @@ public:
   Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber);
   ~Impl();
 
+  void GrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator);
+  void UngrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator);
+  void GrabEntryMnemonics(indicator::Entry::Ptr const& entry);
+  void UngrabEntryMnemonics(std::string const& entry_id);
+
   void SetMenuBarVisible(bool visible);
   void FirstMenuShow();
   void QueueRedraw();
@@ -77,6 +82,9 @@ public:
   int menus_discovery_fadein_;
   int menus_discovery_fadeout_;
   indicator::DBusIndicators::Ptr dbus_indicators_;
+  std::map<std::string, std::shared_ptr<CompAction>> entry_actions_;
+  connection::Manager dbus_indicators_connections_;
+  std::map<indicator::Indicator::Ptr, connection::Manager> indicator_connections_;
 };
 
 
@@ -91,10 +99,22 @@ Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, Gnom
   , menus_discovery_fadein_(0)
   , menus_discovery_fadeout_(0)
   , dbus_indicators_(std::make_shared<indicator::DBusIndicators>())
-{}
+{
+  for (auto const& indicator : dbus_indicators_->GetIndicators())
+    GrabIndicatorMnemonics(indicator);
+
+  auto& connections(dbus_indicators_connections_);
+  connections.Add(dbus_indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::GrabIndicatorMnemonics)));
+  connections.Add(dbus_indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::UngrabIndicatorMnemonics)));
+}
 
 Controller::Impl::~Impl()
 {
+  dbus_indicators_connections_.Clear();
+
+  for (auto const& indicator : dbus_indicators_->GetIndicators())
+    UngrabIndicatorMnemonics(indicator);
+
   // Since the panels are in a window which adds a reference to the
   // panel, we need to make sure the base windows are unreferenced
   // otherwise the pnales never die.
@@ -102,6 +122,72 @@ Controller::Impl::~Impl()
   {
     if (panel_ptr)
       panel_ptr->GetParent()->UnReference();
+  }
+}
+
+void Controller::Impl::GrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator)
+{
+  if (indicator->IsAppmenu())
+  {
+    for (auto const& entry : indicator->GetEntries())
+      GrabEntryMnemonics(entry);
+
+    auto& connections(indicator_connections_[indicator]);
+    connections.Add(indicator->on_entry_added.connect(sigc::mem_fun(this, &Impl::GrabEntryMnemonics)));
+    connections.Add(indicator->on_entry_removed.connect(sigc::mem_fun(this, &Impl::UngrabEntryMnemonics)));
+  }
+}
+
+void Controller::Impl::UngrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator)
+{
+  if (indicator->IsAppmenu())
+  {
+    indicator_connections_.erase(indicator);
+
+    for (auto const& entry : indicator->GetEntries())
+      UngrabEntryMnemonics(entry->id());
+  }
+}
+
+void Controller::Impl::GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
+{
+  gunichar mnemonic;
+
+  if (pango_parse_markup(entry->label().c_str(), -1, '_', NULL, NULL, &mnemonic, NULL) && mnemonic)
+  {
+    gchar* accelerator(gtk_accelerator_name(gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic)), GDK_MOD1_MASK));
+
+    std::shared_ptr<CompAction> action;
+    action->keyFromString(accelerator);
+
+    action->setInitiate([=](CompAction* action, CompAction::State state, CompOption::Vector& options)
+    {
+      for (auto const& panel : panels_)
+      {
+        if (panel->ActivateEntry(entry->id()))
+        {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    entry_actions_[entry->id()] = action;
+    grabber_->addAction(*action);
+
+    g_free (accelerator);
+  }
+}
+
+void Controller::Impl::UngrabEntryMnemonics(std::string const& entry_id)
+{
+  auto i(entry_actions_.find(entry_id));
+
+  if (i != entry_actions_.end())
+  {
+    grabber_->removeAction(*i->second);
+    entry_actions_.erase(i);
   }
 }
 
