@@ -118,7 +118,7 @@ public:
     font_size = pango_font_description_get_size(desc);
     pango_font_description_free(desc);
 
-    return font_size;
+    return font_size / 1024;
   }
 
   // FIXME Add in getting the specific dpi scale from each monitor
@@ -127,12 +127,12 @@ public:
     int dpi = 0;
     g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
 
-    return dpi;
+    return dpi / 1024;
   }
 
   void UpdateFontSize()
   {
-    int font_size = GetFontSize() / 1024;
+    int font_size = GetFontSize();
 
     for (auto& em : em_converters_)
       em.SetFontSize(font_size);
@@ -142,7 +142,7 @@ public:
   {
     for (int i = 0; i < (int)em_converters_.size(); ++i)
     {
-      int dpi = GetDPI(i) / 1024;
+      int dpi = GetDPI(i);
       em_converters_[i].SetDPI(dpi);
     }
   }
