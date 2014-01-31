@@ -19,10 +19,12 @@
 */
 
 #include <gdk/gdk.h>
+#include <gtk/gtk.h>
 #include <gio/gio.h>
 
 #include <NuxCore/Logger.h>
 
+#include "DecorationStyle.h"
 #include "UnitySettings.h"
 #include "UScreen.h"
 
@@ -62,6 +64,8 @@ public:
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
+
+    UpdateEMConverter();
   }
 
   void CacheFormFactor()
@@ -103,6 +107,44 @@ public:
     return cached_double_click_activate_;
   }
 
+  int GetFontSize() const
+  {
+    gint font_size;
+    PangoFontDescription* desc;
+
+    desc = pango_font_description_from_string(decoration::Style::Get()->font().c_str());
+    font_size = pango_font_description_get_size(desc);
+    pango_font_description_free(desc);
+
+    return font_size;
+  }
+
+  int GetDPI() const
+  {
+    int dpi = 0;
+    g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
+
+    return dpi;
+  }
+
+  void UpdateFontSize()
+  {
+    int font_size = GetFontSize() / 1024;
+    em_.SetFontSize(font_size);
+  }
+
+  void UpdateDPI()
+  {
+    int dpi = GetDPI() / 1024;
+    em_.SetDPI(dpi);
+  }
+
+  void UpdateEMConverter()
+  {
+    UpdateFontSize();
+    UpdateDPI();
+  }
+
   Settings* parent_;
   glib::Object<GSettings> gsettings_;
   FormFactor cached_form_factor_;
@@ -111,6 +153,8 @@ public:
 
   glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
   glib::Signal<void, GSettings*, gchar* > double_click_activate_changed_;
+
+  EMConverter em_;
 };
 
 //
@@ -161,6 +205,11 @@ bool Settings::GetLowGfxMode() const
 void Settings::SetLowGfxMode(const bool low_gfx)
 {
   pimpl->lowGfx_ = low_gfx;
+}
+
+EMConverter const& Settings::em() const
+{
+  return pimpl->em_;
 }
 
 } // namespace unity

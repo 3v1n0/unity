@@ -23,7 +23,9 @@
 
 #include <memory>
 #include <sigc++/signal.h>
-#include <Nux/Nux.h>
+#include <NuxCore/Property.h>
+
+#include "EMConverter.h"
 
 namespace unity
 {
@@ -48,6 +50,8 @@ public:
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
   nux::ROProperty<bool> double_click_activate;
+
+  EMConverter const& em() const;
 
 private:
   class Impl;
