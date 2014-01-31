@@ -25,6 +25,7 @@
 #include <NuxCore/Logger.h>
 
 #include "DecorationStyle.h"
+#include "MultiMonitor.h"
 #include "UnitySettings.h"
 #include "UScreen.h"
 
@@ -52,6 +53,7 @@ public:
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
+    , em_converters_(monitors::MAX)
   {
     CacheFormFactor();
     CacheDoubleClickActivate();
@@ -119,7 +121,8 @@ public:
     return font_size;
   }
 
-  int GetDPI() const
+  // FIXME Add in getting the specific dpi scale from each monitor
+  int GetDPI(int monitor = 0) const
   {
     int dpi = 0;
     g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
@@ -130,13 +133,18 @@ public:
   void UpdateFontSize()
   {
     int font_size = GetFontSize() / 1024;
-    em_.SetFontSize(font_size);
+
+    for (auto& em : em_converters_)
+      em.SetFontSize(font_size);
   }
 
   void UpdateDPI()
   {
-    int dpi = GetDPI() / 1024;
-    em_.SetDPI(dpi);
+    for (auto& em : em_converters_)
+    {
+      int dpi = GetDPI(0) / 1024;
+      em.SetDPI(dpi);
+    }
   }
 
   void UpdateEMConverter()
@@ -154,7 +162,7 @@ public:
   glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
   glib::Signal<void, GSettings*, gchar* > double_click_activate_changed_;
 
-  EMConverter em_;
+  std::vector<EMConverter> em_converters_;
 };
 
 //
@@ -207,9 +215,15 @@ void Settings::SetLowGfxMode(const bool low_gfx)
   pimpl->lowGfx_ = low_gfx;
 }
 
-EMConverter const& Settings::em() const
+EMConverter const& Settings::em(int monitor) const
 {
-  return pimpl->em_;
+  if (monitor < 0 || monitor >= (int)monitors::MAX)
+  {
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning primary monitor instead.";
+    return pimpl->em_converters_[0];
+  }
+
+  return pimpl->em_converters_[monitor];
 }
 
 } // namespace unity
