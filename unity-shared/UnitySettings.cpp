@@ -140,10 +140,10 @@ public:
 
   void UpdateDPI()
   {
-    for (auto& em : em_converters_)
+    for (int i = 0; i < (int)em_converters_.size(); ++i)
     {
-      int dpi = GetDPI(0) / 1024;
-      em.SetDPI(dpi);
+      int dpi = GetDPI(i) / 1024;
+      em_converters_[i].SetDPI(dpi);
     }
   }
 
