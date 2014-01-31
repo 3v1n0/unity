@@ -289,7 +289,7 @@ float Controller::Impl::opacity() const
   return opacity_;
 }
 
-Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
+Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber)
   : launcher_width(64)
   , pimpl(new Impl(edge_barriers))
 {
@@ -301,6 +301,11 @@ Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
   {
     pimpl->SetLauncherWidth(width);
   });
+}
+
+Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
+  : Controller(edge_barriers, GnomeKeyGrabber::Ptr())
+{
 }
 
 Controller::~Controller()
