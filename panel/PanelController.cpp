@@ -39,7 +39,7 @@ const char* window_title = "unity-panel";
 class Controller::Impl
 {
 public:
-  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers);
+  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber);
   ~Impl();
 
   void SetMenuBarVisible(bool visible);
@@ -65,6 +65,7 @@ public:
   unity::PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
   ui::EdgeBarrierController::Ptr edge_barriers_;
+  GnomeKeyGrabber::Ptr grabber_;
   PanelVector panels_;
   std::vector<nux::Geometry> panel_geometries_;
   std::vector<Window> tray_xids_;
@@ -79,8 +80,9 @@ public:
 };
 
 
-Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers)
+Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber)
   : edge_barriers_(edge_barriers)
+  , grabber_(grabber)
   , opacity_(1.0f)
   , opacity_maximized_toggle_(false)
   , menus_fadein_(0)
@@ -291,7 +293,7 @@ float Controller::Impl::opacity() const
 
 Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber)
   : launcher_width(64)
-  , pimpl(new Impl(edge_barriers))
+  , pimpl(new Impl(edge_barriers, grabber))
 {
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
