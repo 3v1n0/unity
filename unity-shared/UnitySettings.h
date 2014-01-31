@@ -51,7 +51,7 @@ public:
   nux::Property<bool> is_standalone;
   nux::ROProperty<bool> double_click_activate;
 
-  EMConverter const& em() const;
+  EMConverter const& em(int monitor = 0) const;
 
 private:
   class Impl;
