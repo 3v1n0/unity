@@ -406,7 +406,7 @@ private:
 
   bool is_desktop_active_;
 
-  GnomeKeyGrabber grabber_;
+  GnomeKeyGrabber::Ptr grabber_;
 
   friend class UnityWindow;
   friend class decoration::Manager;

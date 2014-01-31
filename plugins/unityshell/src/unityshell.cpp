@@ -171,7 +171,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dirty_helpers_on_this_frame_(false)
   , back_buffer_age_(0)
   , is_desktop_active_(false)
-  , grabber_(screen)
+  , grabber_(new GnomeKeyGrabber(screen))
 {
   Timer timer;
 #ifndef USE_GLES
@@ -3640,7 +3640,7 @@ void UnityScreen::InitGesturesSupport()
 
 CompAction::Vector& UnityScreen::getActions()
 {
-  return grabber_.getActions();
+  return grabber_->getActions();
 }
 
 /* Window init */
