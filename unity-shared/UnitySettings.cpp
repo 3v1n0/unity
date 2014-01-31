@@ -219,7 +219,7 @@ EMConverter const& Settings::em(int monitor) const
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning primary monitor instead.";
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning index 0 monitor instead.";
     return pimpl->em_converters_[0];
   }
 
