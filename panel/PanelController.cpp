@@ -100,20 +100,26 @@ Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, Gnom
   , menus_discovery_fadeout_(0)
   , dbus_indicators_(std::make_shared<indicator::DBusIndicators>())
 {
-  for (auto const& indicator : dbus_indicators_->GetIndicators())
-    GrabIndicatorMnemonics(indicator);
+  if (grabber_)
+  {
+    for (auto const& indicator : dbus_indicators_->GetIndicators())
+      GrabIndicatorMnemonics(indicator);
 
-  auto& connections(dbus_indicators_connections_);
-  connections.Add(dbus_indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::GrabIndicatorMnemonics)));
-  connections.Add(dbus_indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::UngrabIndicatorMnemonics)));
+    auto& connections(dbus_indicators_connections_);
+    connections.Add(dbus_indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::GrabIndicatorMnemonics)));
+    connections.Add(dbus_indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::UngrabIndicatorMnemonics)));
+  }
 }
 
 Controller::Impl::~Impl()
 {
-  dbus_indicators_connections_.Clear();
+  if (grabber_)
+  {
+    dbus_indicators_connections_.Clear();
 
-  for (auto const& indicator : dbus_indicators_->GetIndicators())
-    UngrabIndicatorMnemonics(indicator);
+    for (auto const& indicator : dbus_indicators_->GetIndicators())
+      UngrabIndicatorMnemonics(indicator);
+  }
 
   // Since the panels are in a window which adds a reference to the
   // panel, we need to make sure the base windows are unreferenced
