@@ -165,9 +165,7 @@ void Controller::Impl::GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
       for (auto const& panel : panels_)
       {
         if (panel->ActivateEntry(entry->id()))
-        {
           return true;
-        }
       }
 
       return false;
@@ -175,7 +173,6 @@ void Controller::Impl::GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
 
     entry_actions_[entry->id()] = action;
     grabber_->addAction(*action);
-
     g_free (accelerator);
   }
 }

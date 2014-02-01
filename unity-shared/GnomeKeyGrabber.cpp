@@ -214,7 +214,7 @@ unsigned int GnomeKeyGrabber::Impl::grabAccelerator(char const* accelerator, uns
   if (!isActionPostponed(action))
   {
     action.setState(CompAction::StateInitKey);
-    action.setInitiate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setInitiate([=](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       activateAction(action, 0);
       return true;
     });
@@ -222,7 +222,7 @@ unsigned int GnomeKeyGrabber::Impl::grabAccelerator(char const* accelerator, uns
   else
   {
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
-    action.setTerminate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setTerminate([=](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       if (state & CompAction::StateTermTapped)
       {
         activateAction(action, 0);
