@@ -155,11 +155,11 @@ void Controller::Impl::GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
 
   if (pango_parse_markup(entry->label().c_str(), -1, '_', NULL, NULL, &mnemonic, NULL) && mnemonic)
   {
-    gchar* accelerator(gtk_accelerator_name(gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic)), GDK_MOD1_MASK));
-
+    auto accelerator(gtk_accelerator_name(gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic)), GDK_MOD1_MASK));
     auto action(std::make_shared<CompAction>());
-    action->keyFromString(accelerator);
 
+    action->keyFromString(accelerator);
+    action->setState(CompAction::StateInitKey);
     action->setInitiate([=](CompAction* action, CompAction::State state, CompOption::Vector& options)
     {
       for (auto const& panel : panels_)
