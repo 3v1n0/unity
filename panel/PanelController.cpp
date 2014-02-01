@@ -157,7 +157,7 @@ void Controller::Impl::GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
   {
     gchar* accelerator(gtk_accelerator_name(gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic)), GDK_MOD1_MASK));
 
-    std::shared_ptr<CompAction> action;
+    auto action(std::make_shared<CompAction>());
     action->keyFromString(accelerator);
 
     action->setInitiate([=](CompAction* action, CompAction::State state, CompOption::Vector& options)
