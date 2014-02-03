@@ -272,16 +272,16 @@ int cfgstr_set_int (ConfigString *cfgstr, const char *key, int value)
 
 static char *strip_whitespace (char *buf)
 {
-	while (*buf && isspace(*buf))
-		buf++;
+  while (*buf && isspace(*buf))
+    buf++;
 
-	if (!*buf)
-		return 0;
+  if (!*buf)
+    return 0;
 
-	char *end = buf + strlen(buf) - 1;
-	while (end > buf && isspace(*end))
-		end--;
+  char *end = buf + strlen(buf) - 1;
+  while (end > buf && isspace(*end))
+    end--;
 
-	end[1] = 0;
-	return buf;
+  end[1] = 0;
+  return buf;
 }
