@@ -50,20 +50,17 @@ public:
   void Sync(Entries const& new_entries);
   Entry::Ptr GetEntry(std::string const& entry_id) const;
   int EntryIndex(std::string const& entry_id) const;
-  Entries GetEntries() const;
+  Entries const& GetEntries() const;
 
   // Signals
+  sigc::signal<void> updated;
   sigc::signal<void, Entry::Ptr const&> on_entry_added;
   sigc::signal<void, std::string const&> on_entry_removed;
   sigc::signal<void, std::string const&, unsigned, int, int, unsigned> on_show_menu;
   sigc::signal<void, std::string const&> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 
-protected:
-  void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
-  void OnEntrySecondaryActivate(std::string const& entry_id);
-  void OnEntryScroll(std::string const& entry_id, int delta);
-
+private:
   Entries entries_;
   std::string name_;
   std::map<Entry::Ptr, connection::Manager> entries_connections_;

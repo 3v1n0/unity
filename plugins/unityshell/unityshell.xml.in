@@ -32,6 +32,9 @@
                 <plugin>ezoom</plugin>
                 <plugin>wall</plugin>
             </relation>
+            <relation type="before">
+                <plugin>showrepaint</plugin>
+            </relation>
             <requirement>
                 <plugin>opengl</plugin>
                 <plugin>compiztoolbox</plugin>

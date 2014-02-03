@@ -38,15 +38,15 @@ public:
   DBusIndicators();
   ~DBusIndicators();
 
+  void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
 
+protected:
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
-  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button);
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button);
   virtual void OnEntrySecondaryActivate(std::string const& entry_id);
   virtual void OnShowAppMenu(unsigned int xid, int x, int y);
 
-protected:
   DBusIndicators(std::string const& dbus_name);
   bool IsConnected() const;
 

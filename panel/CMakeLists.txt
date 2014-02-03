@@ -19,6 +19,7 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 set (PANEL_SOURCES
      PanelController.cpp
      PanelIndicatorEntryView.cpp
+     PanelIndicatorEntryDropdownView.cpp
      PanelIndicatorsView.cpp
      PanelMenuView.cpp
      PanelTitlebarGrabAreaView.cpp
