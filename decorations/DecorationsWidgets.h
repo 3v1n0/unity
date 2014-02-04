@@ -144,7 +144,7 @@ public:
 
 protected:
   friend class Item;
-  virtual void Relayout() = 0;
+  void Relayout();
   bool IsContainer() const { return true; }
 
   std::string GetName() const { return "BasicContainer"; }
@@ -152,6 +152,10 @@ protected:
   IntrospectableList GetIntrospectableChildren();
 
   Item::List items_;
+
+private:
+  virtual void DoRelayout() = 0;
+  bool relayouting_;
 };
 
 
@@ -175,13 +179,12 @@ public:
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 protected:
-  void Relayout();
   std::string GetName() const { return "Layout"; }
   void AddProperties(debug::IntrospectionData&);
+  void DoRelayout();
 
 private:
   bool SetPadding(int& target, int new_value);
-  bool relayouting_;
 };
 
 } // decoration namespace

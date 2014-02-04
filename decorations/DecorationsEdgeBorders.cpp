@@ -48,7 +48,7 @@ EdgeBorders::EdgeBorders(CompWindow* win)
   Relayout();
 }
 
-void EdgeBorders::Relayout()
+void EdgeBorders::DoRelayout()
 {
   auto const& b = Style::Get()->Border();
   auto const& ib = Style::Get()->InputBorder();

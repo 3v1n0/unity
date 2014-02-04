@@ -33,9 +33,9 @@ class GrabEdge : public Edge
 public:
   GrabEdge(CompWindow* win);
 
-  void ButtonDownEvent(CompPoint const&, unsigned button);
-  void ButtonUpEvent(CompPoint const&, unsigned button);
-  void MotionEvent(CompPoint const&);
+  void ButtonDownEvent(CompPoint const&, unsigned button) override;
+  void ButtonUpEvent(CompPoint const&, unsigned button) override;
+  void MotionEvent(CompPoint const&) override;
 
 protected:
   void AddProperties(debug::IntrospectionData&);

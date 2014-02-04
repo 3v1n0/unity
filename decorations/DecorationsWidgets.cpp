@@ -284,12 +284,28 @@ void TexturedItem::SetCoords(int x, int y)
 //
 
 BasicContainer::BasicContainer()
+ : relayouting_(false)
 {
   geo_parameters_changed.connect(sigc::mem_fun(this, &BasicContainer::Relayout));
   focused.changed.connect([this] (bool focused) {
     for (auto const& item : items_)
-      item->focused = focused;
+      if (item) item->focused = focused;
   });
+}
+
+void BasicContainer::Relayout()
+{
+  if (relayouting_)
+    return;
+
+  auto old_geo = Geometry();
+
+  relayouting_ = true;
+  DoRelayout();
+  relayouting_ = false;
+
+  if (old_geo != Geometry())
+    geo_parameters_changed.emit();
 }
 
 CompRect BasicContainer::ContentGeometry() const
@@ -321,7 +337,6 @@ Layout::Layout()
   , right_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
   , top_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
   , bottom_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
-  , relayouting_(false)
 {}
 
 void Layout::Append(Item::Ptr const& item)
@@ -361,14 +376,9 @@ CompRect Layout::ContentGeometry() const
                   clamp_size(rect_.height() - top_padding - bottom_padding));
 }
 
-void Layout::Relayout()
+void Layout::DoRelayout()
 {
-  if (relayouting_)
-    return;
-
-  relayouting_ = true;
   int loop = 0;
-  CompRect old_geo(rect_);
 
   nux::Size available_space(clamp_size(max_.width - left_padding - right_padding),
                             clamp_size(max_.height - top_padding - bottom_padding));
@@ -449,11 +459,6 @@ void Layout::Relayout()
     ++loop;
   }
   while (rect_.width() > max_.width || rect_.height() > max_.height);
-
-  relayouting_ = false;
-
-  if (old_geo != rect_)
-    geo_parameters_changed.emit();
 }
 
 void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,

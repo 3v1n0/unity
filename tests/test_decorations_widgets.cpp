@@ -59,7 +59,7 @@ struct TestDecorationItem : Test
 
 struct MockBasicContainer : BasicContainer
 {
-  MOCK_METHOD0(Relayout, void());
+  MOCK_METHOD0(DoRelayout, void());
 };
 
 TEST_F(TestDecorationItem, DefaultVisibilty)
@@ -157,7 +157,7 @@ TEST_F(TestDecorationItem, RelayoutParentOnRequestRelayout)
   auto parent = std::make_shared<MockBasicContainer>();
   item.SetParent(parent);
 
-  EXPECT_CALL(*parent, Relayout());
+  EXPECT_CALL(*parent, DoRelayout());
   item.RequestRelayout();
 }
 
@@ -166,7 +166,7 @@ TEST_F(TestDecorationItem, RelayoutParentOnGeometryChanges)
   auto parent = std::make_shared<MockBasicContainer>();
   item.SetParent(parent);
 
-  EXPECT_CALL(*parent, Relayout());
+  EXPECT_CALL(*parent, DoRelayout());
   item.geo_parameters_changed.emit();
 }
 
@@ -175,7 +175,7 @@ TEST_F(TestDecorationItem, RelayoutParentOnVisibilityChanges)
   auto parent = std::make_shared<MockBasicContainer>();
   item.SetParent(parent);
 
-  EXPECT_CALL(*parent, Relayout());
+  EXPECT_CALL(*parent, DoRelayout());
   item.visible.changed.emit(false);
 }
 
@@ -282,11 +282,11 @@ struct MockLayout : Layout
 
   MockLayout()
   {
-    ON_CALL(*this, Relayout()).WillByDefault(Invoke(this, &MockLayout::LocalRelayout));
+    ON_CALL(*this, DoRelayout()).WillByDefault(Invoke(this, &MockLayout::LocalRelayout));
   }
 
-  void LocalRelayout() { Layout::Relayout(); }
-  MOCK_METHOD0(Relayout, void());
+  void LocalRelayout() { Layout::DoRelayout(); }
+  MOCK_METHOD0(DoRelayout, void());
 };
 
 struct TestDecorationLayout : Test
@@ -504,7 +504,7 @@ TEST_F(TestDecorationLayout, RecursivelyRelayoutsOnGeometryChanges)
   parent->Append(item);
 
   for (auto const& c : containers)
-    EXPECT_CALL(*c, Relayout()).Times(AtLeast(1));
+    EXPECT_CALL(*c, DoRelayout()).Times(AtLeast(1));
 
   item->SetSize(item->Geometry().width()+1, item->Geometry().height()+1);
 }
