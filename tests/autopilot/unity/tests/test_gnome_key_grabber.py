@@ -119,6 +119,8 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
 
             removed.add(action)
 
+        activated = False
+
         def accelerator_activated(a, b):
             if a in actions:
                 activated = True
@@ -138,4 +140,4 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         loop.run()
 
         # Check that signal was not emitted
-        self.assertFalse(activated[0])
+        self.assertFalse(activated)
