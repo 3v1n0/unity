@@ -79,4 +79,10 @@ TEST_F(TestEMConverter, TestDPIScale2)
   EXPECT_FLOAT_EQ(em_converter.DPIScale(), 2.0);
 }
 
+TEST_F(TestEMConverter, TestPtToPx)
+{
+  int pt = 12;
+  EXPECT_EQ(em_converter.PtToPx(pt), 16);
+}
+
 } // namespace unity

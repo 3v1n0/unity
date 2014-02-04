@@ -39,6 +39,7 @@
 #include "SoftwareCenterLauncherIcon.h"
 #include "unity-shared/UBusWrapper.h"
 #include "XdndManager.h"
+#include "HudLauncherIcon.h"
 
 namespace unity
 {
@@ -127,6 +128,7 @@ public:
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;
+  HudLauncherIcon* hud_icon_;
 
 #ifdef USE_X11
   ui::EdgeBarrierController::Ptr edge_barriers_;

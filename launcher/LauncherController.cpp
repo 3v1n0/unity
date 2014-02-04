@@ -137,6 +137,7 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
 
   HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
   RegisterIcon(AbstractLauncherIcon::Ptr(hud));
+  hud_icon_ = hud;
 
   TrashLauncherIcon* trash = new TrashLauncherIcon();
   RegisterIcon(AbstractLauncherIcon::Ptr(trash));
@@ -1070,6 +1071,7 @@ Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierCont
     int primary = uscreen->GetPrimaryMonitor();
     pimpl->EnsureLaunchers(primary, monitors);
     options()->show_for_all = !value;
+    pimpl->hud_icon_->SetSingleLauncher(!value, primary);
   });
 }
 

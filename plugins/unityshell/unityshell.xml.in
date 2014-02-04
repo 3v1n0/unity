@@ -140,6 +140,12 @@
                   <default>true</default>
                 </option>
 
+                <option name="fonts_scale_factor" type="key">
+                  <_short>Per monitor text scaling factor.</_short>
+                  <_long>This is used to scale the fonts.</_long>
+                  <default>;</default>
+                </option>
+
             </group>
 
             <group>

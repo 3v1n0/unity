@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, LessThan, GreaterThan
+from testtools import skip
 from time import sleep
 
 from unity.tests import UnityTestCase
@@ -50,6 +51,7 @@ class LauncherCaptureTests(UnityTestCase):
         return 1 - self.leftMostMonitor()
 
 
+    @skip("Test is no longer possible due to changes in AP mouse movement.")
     def test_launcher_captures_while_sticky_and_revealed(self):
         """Tests that the launcher captures the mouse when moving between monitors
         while revealed.
@@ -77,6 +79,7 @@ class LauncherCaptureTests(UnityTestCase):
         # The launcher should have held the mouse a little bit
         self.assertThat(x_fin, Equals(x - width / 2))
 
+    @skip("Test is no longer possible due to changes in AP mouse movement.")
     def test_launcher_capture_while_not_sticky_and_hidden(self):
         """Tests that the launcher captures the mouse when moving between monitors
         while hidden and sticky is off. (moving left)
@@ -110,6 +113,7 @@ class LauncherCaptureTests(UnityTestCase):
         # The launcher should have held the mouse a little bit
         self.assertThat(x_fin, Equals(x + width * 1.5))
 
+    @skip("Test is no longer possible due to changes in AP mouse movement.")
     def test_launcher_capture_while_sticky_and_hidden_moving_right(self):
         """Tests that the launcher captures the mouse when moving between monitors
         while hidden.

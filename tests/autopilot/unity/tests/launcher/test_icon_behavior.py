@@ -30,9 +30,6 @@ class LauncherIconsTests(LauncherTestCase):
     def setUp(self):
         super(LauncherIconsTests, self).setUp()
 
-        if not self.launcher_instance:
-            self.skipTest("Cannot run test with no Launcher on monitor")
-
         self.set_unity_option('launcher_hide_mode', 0)
 
     def ensure_expo_launcher_icon(self):
@@ -371,9 +368,6 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
     def setUp(self):
         super(LauncherDragIconsBehavior, self).setUp()
-
-        if not self.launcher_instance:
-            self.skipTest("Cannot run test with no Launcher on monitor")
 
         self.set_unity_option('launcher_hide_mode', 0)
 

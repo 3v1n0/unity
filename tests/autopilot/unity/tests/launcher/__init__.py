@@ -45,6 +45,9 @@ class LauncherTestCase(UnityTestCase):
         self.set_unity_option('num_launchers', int(self.only_primary))
         self.launcher_instance = self.get_launcher()
 
+        if not self.launcher_instance:
+            self.skipTest("Cannot run test with no Launcher on monitor %d." % self.launcher_monitor)
+
         if self.only_primary:
             try:
                 old_primary_screen = self.display.get_primary_screen()
@@ -52,6 +55,8 @@ class LauncherTestCase(UnityTestCase):
                 self.addCleanup(set_primary_monitor, old_primary_screen)
             except Display.BlacklistedDriverError:
                 self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_monitor)
+
+        self.launcher_instance.move_mouse_to_screen_of_current_launcher()
 
     def get_launcher(self):
         """Get the launcher for the current scenario."""
