@@ -60,23 +60,6 @@ namespace testing
 std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 }
 
-bool GnomeKeyGrabber::Impl::BindingLess::operator() (CompAction::KeyBinding const& first,
-                                                     CompAction::KeyBinding const& second) const
-{
-  int keycode1(first.keycode());
-  int keycode2(second.keycode());
-
-  if (keycode1 == keycode2)
-  {
-    unsigned int modifiers1(first.modifiers());
-    unsigned int modifiers2(second.modifiers());
-
-    return modifiers1 < modifiers2;
-  }
-
-  return keycode1 < keycode2;
-}
-
 GnomeKeyGrabber::Impl::Impl(CompScreen* screen, bool test_mode)
   : test_mode_(test_mode)
   , shell_server_(test_mode_ ? testing::DBUS_NAME : shell::DBUS_NAME)
@@ -107,18 +90,18 @@ unsigned int GnomeKeyGrabber::Impl::addAction(CompAction const& action, bool add
 
 bool GnomeKeyGrabber::Impl::removeAction(CompAction const& action)
 {
-  auto i(action_ids_by_action_.find(&action));
+  auto i = action_ids_by_action_.find(&action);
   return i != action_ids_by_action_.end() && removeAction(i->second);
 }
 
 bool GnomeKeyGrabber::Impl::removeAction(unsigned int action_id)
 {
-  auto i(std::find(action_ids_.begin(), action_ids_.end(), action_id));
+  auto i = std::find(action_ids_.begin(), action_ids_.end(), action_id);
 
   if (i != action_ids_.end())
   {
-    auto j(actions_.begin() + (i - action_ids_.begin()));
-    auto k(actions_by_action_id_.find(action_id));
+    auto j = actions_.begin() + (i - action_ids_.begin());
+    auto k = actions_by_action_id_.find(action_id);
 
     screen_->removeAction(&(*j));
 
@@ -204,7 +187,7 @@ unsigned int GnomeKeyGrabber::Impl::grabAccelerator(char const* accelerator, uns
   if (!isActionPostponed(action))
   {
     action.setState(CompAction::StateInitKey);
-    action.setInitiate([=](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setInitiate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       activateAction(action, 0);
       return true;
     });
@@ -212,7 +195,7 @@ unsigned int GnomeKeyGrabber::Impl::grabAccelerator(char const* accelerator, uns
   else
   {
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
-    action.setTerminate([=](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setTerminate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       if (state & CompAction::StateTermTapped)
       {
         activateAction(action, 0);
@@ -228,7 +211,7 @@ unsigned int GnomeKeyGrabber::Impl::grabAccelerator(char const* accelerator, uns
 
 void GnomeKeyGrabber::Impl::activateAction(CompAction const* action, unsigned int device) const
 {
-  ptrdiff_t i(action - &actions_.front());
+  ptrdiff_t i = action - &actions_.front();
 
   if (0 <= i && i < static_cast<ptrdiff_t>(action_ids_.size()))
     shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_ids_[i], device));
@@ -236,7 +219,7 @@ void GnomeKeyGrabber::Impl::activateAction(CompAction const* action, unsigned in
 
 bool GnomeKeyGrabber::Impl::isActionPostponed(CompAction const& action) const
 {
-  int keycode(action.key().keycode());
+  int keycode = action.key().keycode();
   return keycode == 0 || modHandler->keycodeToModifiers(keycode) != 0;
 }
 

@@ -82,9 +82,9 @@ public:
   int menus_discovery_fadein_;
   int menus_discovery_fadeout_;
   indicator::DBusIndicators::Ptr dbus_indicators_;
-  std::map<std::string, std::shared_ptr<CompAction>> entry_actions_;
+  std::unordered_map<std::string, std::shared_ptr<CompAction>> entry_actions_;
   connection::Manager dbus_indicators_connections_;
-  std::map<indicator::Indicator::Ptr, connection::Manager> indicator_connections_;
+  std::unordered_map<indicator::Indicator::Ptr, connection::Manager> indicator_connections_;
 };
 
 
@@ -105,7 +105,7 @@ Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, Gnom
     for (auto const& indicator : dbus_indicators_->GetIndicators())
       GrabIndicatorMnemonics(indicator);
 
-    auto& connections(dbus_indicators_connections_);
+    auto& connections = dbus_indicators_connections_;
     connections.Add(dbus_indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::GrabIndicatorMnemonics)));
     connections.Add(dbus_indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::UngrabIndicatorMnemonics)));
   }
@@ -138,7 +138,7 @@ void Controller::Impl::GrabIndicatorMnemonics(indicator::Indicator::Ptr const& i
     for (auto const& entry : indicator->GetEntries())
       GrabEntryMnemonics(entry);
 
-    auto& connections(indicator_connections_[indicator]);
+    auto& connections = indicator_connections_[indicator];
     connections.Add(indicator->on_entry_added.connect(sigc::mem_fun(this, &Impl::GrabEntryMnemonics)));
     connections.Add(indicator->on_entry_removed.connect(sigc::mem_fun(this, &Impl::UngrabEntryMnemonics)));
   }
@@ -161,31 +161,32 @@ void Controller::Impl::GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
 
   if (pango_parse_markup(entry->label().c_str(), -1, '_', NULL, NULL, &mnemonic, NULL) && mnemonic)
   {
-    auto accelerator(gtk_accelerator_name(gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic)), GDK_MOD1_MASK));
-    auto action(std::make_shared<CompAction>());
+    auto key = gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic));
+    glib::String accelerator(gtk_accelerator_name(key, GDK_MOD1_MASK));
+    auto action = std::make_shared<CompAction>();
+    auto id = entry->id();
 
     action->keyFromString(accelerator);
     action->setState(CompAction::StateInitKey);
-    action->setInitiate([=](CompAction* action, CompAction::State state, CompOption::Vector& options)
+    action->setInitiate([this, id](CompAction* action, CompAction::State state, CompOption::Vector& options)
     {
       for (auto const& panel : panels_)
       {
-        if (panel->ActivateEntry(entry->id()))
+        if (panel->ActivateEntry(id))
           return true;
       }
 
       return false;
     });
 
-    entry_actions_[entry->id()] = action;
+    entry_actions_[id] = action;
     grabber_->addAction(*action);
-    g_free (accelerator);
   }
 }
 
 void Controller::Impl::UngrabEntryMnemonics(std::string const& entry_id)
 {
-  auto i(entry_actions_.find(entry_id));
+  auto i = entry_actions_.find(entry_id);
 
   if (i != entry_actions_.end())
   {

@@ -25,19 +25,13 @@
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibDBusServer.h>
 
+#include <unordered_map>
+
 namespace unity
 {
 
 struct GnomeKeyGrabber::Impl
 {
-  class BindingLess
-  {
-  public:
-
-    bool operator()(CompAction::KeyBinding const& first,
-                    CompAction::KeyBinding const& second) const;
-  };
-
   bool test_mode_;
 
   glib::DBusServer shell_server_;
@@ -48,8 +42,8 @@ struct GnomeKeyGrabber::Impl
   std::vector<unsigned int> action_ids_;
   unsigned int current_action_id_;
 
-  std::map<CompAction const*, unsigned int> action_ids_by_action_;
-  std::map<unsigned int, CompAction const*> actions_by_action_id_;
+  std::unordered_map<CompAction const*, unsigned int> action_ids_by_action_;
+  std::unordered_map<unsigned int, CompAction const*> actions_by_action_id_;
 
   explicit Impl(CompScreen* screen, bool test_mode = false);
 
