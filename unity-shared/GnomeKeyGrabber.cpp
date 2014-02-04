@@ -100,13 +100,7 @@ unsigned int GnomeKeyGrabber::Impl::addAction(CompAction const& action, bool add
     actions_by_action_id_[current_action_id_] = &action;
   }
 
-  auto& added(actions_.back());
-  auto& grabs(grabs_by_binding_[added.key()]);
-
-  if (grabs == 0)
-    screen_->addAction(&added);
-
-  ++grabs;
+  screen_->addAction(&actions_.back());
 
   return current_action_id_;
 }
@@ -125,12 +119,8 @@ bool GnomeKeyGrabber::Impl::removeAction(unsigned int action_id)
   {
     auto j(actions_.begin() + (i - action_ids_.begin()));
     auto k(actions_by_action_id_.find(action_id));
-    auto& grabs(grabs_by_binding_[j->key()]);
 
-    --grabs;
-
-    if (grabs == 0)
-      screen_->removeAction(&(*j));
+    screen_->removeAction(&(*j));
 
     if (k != actions_by_action_id_.end())
     {

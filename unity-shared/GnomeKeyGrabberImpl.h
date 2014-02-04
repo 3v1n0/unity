@@ -50,7 +50,6 @@ struct GnomeKeyGrabber::Impl
 
   std::map<CompAction const*, unsigned int> action_ids_by_action_;
   std::map<unsigned int, CompAction const*> actions_by_action_id_;
-  std::map<CompAction::KeyBinding, unsigned int, BindingLess> grabs_by_binding_;
 
   explicit Impl(CompScreen* screen, bool test_mode = false);
 
