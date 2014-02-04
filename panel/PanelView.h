@@ -43,6 +43,8 @@
 
 namespace unity
 {
+namespace panel
+{
 
 class PanelView : public unity::debug::Introspectable, 
                   public ui::EdgeBarrierSubscriber,
@@ -83,6 +85,7 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void PreLayoutManagement();
 
   // Introspectable methods
   std::string GetName() const;
@@ -149,6 +152,7 @@ private:
   glib::Source::UniquePtr track_menu_pointer_timeout_;
 };
 
-}
+} // namespace panel
+} // namespace unity
 
 #endif // PANEL_VIEW_H

@@ -19,10 +19,13 @@
 */
 
 #include <gdk/gdk.h>
+#include <gtk/gtk.h>
 #include <gio/gio.h>
 
 #include <NuxCore/Logger.h>
 
+#include "DecorationStyle.h"
+#include "MultiMonitor.h"
 #include "UnitySettings.h"
 #include "UScreen.h"
 
@@ -50,6 +53,7 @@ public:
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
+    , em_converters_(monitors::MAX)
   {
     CacheFormFactor();
     CacheDoubleClickActivate();
@@ -62,6 +66,8 @@ public:
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
+
+    UpdateEMConverter();
   }
 
   void CacheFormFactor()
@@ -103,6 +109,50 @@ public:
     return cached_double_click_activate_;
   }
 
+  int GetFontSize() const
+  {
+    gint font_size;
+    PangoFontDescription* desc;
+
+    desc = pango_font_description_from_string(decoration::Style::Get()->font().c_str());
+    font_size = pango_font_description_get_size(desc);
+    pango_font_description_free(desc);
+
+    return font_size / 1024;
+  }
+
+  // FIXME Add in getting the specific dpi scale from each monitor
+  int GetDPI(int monitor = 0) const
+  {
+    int dpi = 0;
+    g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
+
+    return dpi / 1024;
+  }
+
+  void UpdateFontSize()
+  {
+    int font_size = GetFontSize();
+
+    for (auto& em : em_converters_)
+      em.SetFontSize(font_size);
+  }
+
+  void UpdateDPI()
+  {
+    for (int i = 0; i < (int)em_converters_.size(); ++i)
+    {
+      int dpi = GetDPI(i);
+      em_converters_[i].SetDPI(dpi);
+    }
+  }
+
+  void UpdateEMConverter()
+  {
+    UpdateFontSize();
+    UpdateDPI();
+  }
+
   Settings* parent_;
   glib::Object<GSettings> gsettings_;
   FormFactor cached_form_factor_;
@@ -111,6 +161,8 @@ public:
 
   glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
   glib::Signal<void, GSettings*, gchar* > double_click_activate_changed_;
+
+  std::vector<EMConverter> em_converters_;
 };
 
 //
@@ -161,6 +213,17 @@ bool Settings::GetLowGfxMode() const
 void Settings::SetLowGfxMode(const bool low_gfx)
 {
   pimpl->lowGfx_ = low_gfx;
+}
+
+EMConverter const& Settings::em(int monitor) const
+{
+  if (monitor < 0 || monitor >= (int)monitors::MAX)
+  {
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning index 0 monitor instead.";
+    return pimpl->em_converters_[0];
+  }
+
+  return pimpl->em_converters_[monitor];
 }
 
 } // namespace unity

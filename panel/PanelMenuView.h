@@ -34,6 +34,8 @@
 
 namespace unity
 {
+namespace panel
+{
 
 class PanelMenuView : public PanelIndicatorsView
 {
@@ -83,6 +85,7 @@ private:
   void SetupUBusManagerInterests();
 
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
+  void OnEntryViewAdded(PanelIndicatorEntryView* view);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);
   void OnApplicationClosed(BamfApplication* app);
@@ -200,6 +203,7 @@ private:
   nux::animation::AnimateValue<double> opacity_animator_;
 };
 
-}
+} // namespace panel
+} // namespace unity
 
 #endif

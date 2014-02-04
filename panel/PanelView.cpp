@@ -52,6 +52,8 @@ const int refine_gradient_midpoint = 959;
 
 namespace unity
 {
+namespace panel
+{
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
@@ -97,7 +99,8 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
   menu_view_ = new PanelMenuView();
-  AddPanelView(menu_view_, 1);
+  menu_view_->EnableDropdownMenu(true, remote_);
+  AddPanelView(menu_view_, 0);
 
   SetCompositionLayout(layout_);
 
@@ -514,6 +517,16 @@ void PanelView::ForceUpdateBackground()
   QueueDraw();
 }
 
+void PanelView::PreLayoutManagement()
+{
+  View::PreLayoutManagement();
+
+  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_->GetBaseWidth();
+
+  menu_view_->SetMinimumWidth(menu_width);
+  menu_view_->SetMaximumWidth(menu_width);
+}
+
 //
 // Signals
 //
@@ -530,8 +543,8 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
     indicators_->AddIndicator(proxy);
   }
 
-  ComputeContentSize();
-  NeedRedraw();
+  QueueRelayout();
+  QueueDraw();
 }
 
 void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
@@ -545,14 +558,15 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
     indicators_->RemoveIndicator(proxy);
   }
 
-  ComputeContentSize();
-  NeedRedraw();
+  QueueRelayout();
+  QueueDraw();
 }
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
   needs_geo_sync_ = true;
-  ComputeContentSize();
+  QueueRelayout();
+  QueueDraw();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)
@@ -788,4 +802,5 @@ ui::EdgeBarrierSubscriber::Result PanelView::HandleBarrierEvent(ui::PointerBarri
   return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
 }
 
+} // namespace panel
 } // namespace unity
