@@ -140,7 +140,8 @@ struct Style::Impl
     : parent_(parent)
     , ctx_(gtk_style_context_new())
     , settings_(g_settings_new(SETTINGS_NAME.c_str()))
-    , pango_context_(gdk_pango_context_get_for_screen(gdk_screen_get_default()))
+    , title_pango_ctx_(gdk_pango_context_get_for_screen(gdk_screen_get_default()))
+    , menu_item_pango_ctx_(gdk_pango_context_get_for_screen(gdk_screen_get_default()))
     , title_alignment_(0)
     , title_indent_(0)
     , title_fade_(0)
@@ -153,7 +154,8 @@ struct Style::Impl
     parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
     SetTitleFont();
 
-    UpdatePangoContext(parent_->title_font);
+    UpdateTitlePangoContext(parent_->title_font);
+    UpdateMenuItemPangoContext(parent_->font);
     UpdateThemedValues();
 
     GtkSettings* settings = gtk_settings_get_default();
@@ -165,11 +167,13 @@ struct Style::Impl
     });
 
     signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-font-name", [this] (GtkSettings*, GParamSpec*) {
-      parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+      auto const& font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+      UpdateMenuItemPangoContext(font);
+      parent_->font = font;
 
       if (g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str()))
       {
-        UpdatePangoContext(parent_->font());
+        UpdateTitlePangoContext(parent_->font());
         parent_->title_font = parent_->font();
       }
 
@@ -177,8 +181,10 @@ struct Style::Impl
     });
 
     signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-dpi", [this] (GtkSettings*, GParamSpec*) {
-      pango_context_ = gdk_pango_context_get_for_screen(gdk_screen_get_default());
-      UpdatePangoContext(parent_->title_font);
+      title_pango_ctx_ = gdk_pango_context_get_for_screen(gdk_screen_get_default());
+      menu_item_pango_ctx_ = gdk_pango_context_get_for_screen(gdk_screen_get_default());
+      UpdateTitlePangoContext(parent_->title_font);
+      UpdateMenuItemPangoContext(parent_->font);
       gtk_style_context_invalidate(ctx_);
       parent_->theme.changed.emit(parent_->theme());
       LOG_INFO(logger) << "gtk-xft-dpi changed to " << GetSettingValue<int>("gtk-xft-dpi");
@@ -189,7 +195,7 @@ struct Style::Impl
         return;
 
       auto const& font = glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
-      UpdatePangoContext(font);
+      UpdateTitlePangoContext(font);
       parent_->title_font = font;
       LOG_INFO(logger) << FONT_KEY << " changed to " << font;
     });
@@ -197,7 +203,7 @@ struct Style::Impl
     signals_.Add<void, GSettings*, gchar*>(settings_, "changed::" + USE_SYSTEM_FONT_KEY, [this] (GSettings*, gchar*) {
       parent_->title_font.DisableNotifications();
       SetTitleFont();
-      UpdatePangoContext(parent_->title_font());
+      UpdateTitlePangoContext(parent_->title_font());
       parent_->title_font.EnableNotifications();
       parent_->title_font.changed.emit(parent_->title_font());
       LOG_INFO(logger) << USE_SYSTEM_FONT_KEY << " changed to " << g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str());
@@ -234,11 +240,21 @@ struct Style::Impl
       parent_->title_font = glib::String(g_settings_get_string(settings_, FONT_KEY.c_str())).Str();
   }
 
-  void UpdatePangoContext(std::string const& font)
+  inline void UpdatePangoContext(glib::Object<PangoContext> const& ctx, std::string const& font)
   {
     std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
-    pango_context_set_font_description(pango_context_, desc.get());
-    pango_context_set_language(pango_context_, gtk_get_default_language());
+    pango_context_set_font_description(ctx, desc.get());
+    pango_context_set_language(ctx, gtk_get_default_language());
+  }
+
+  void UpdateTitlePangoContext(std::string const& font)
+  {
+    UpdatePangoContext(title_pango_ctx_, font);
+  }
+
+  void UpdateMenuItemPangoContext(std::string const& font)
+  {
+    UpdatePangoContext(menu_item_pango_ctx_, font);
   }
 
   inline std::string const& GetBorderClass(Side side)
@@ -435,20 +451,19 @@ struct Style::Impl
     cairo_stroke(cr);
   }
 
-  glib::Object<PangoLayout> BuildPangoLayout(std::string const& text)
+  inline glib::Object<PangoLayout> BuildPangoLayout(glib::Object<PangoContext> const& ctx, std::string const& text)
   {
-    glib::Object<PangoLayout> layout(pango_layout_new(pango_context_));
+    glib::Object<PangoLayout> layout(pango_layout_new(ctx));
     pango_layout_set_height(layout, -1); //avoid wrap lines
     pango_layout_set_text(layout, text.c_str(), -1);
     return layout;
   }
 
-  nux::Size TitleNaturalSize(std::string const& text)
+  nux::Size TextNaturalSize(glib::Object<PangoContext> const& pctx, std::string const& text)
   {
     nux::Size extents;
-    auto const& layout = BuildPangoLayout(text);
+    auto const& layout = BuildPangoLayout(pctx, text);
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
-
     return extents;
   }
 
@@ -457,7 +472,7 @@ struct Style::Impl
     gtk_style_context_save(ctx_);
     AddContextClasses(Side::TOP, ws);
 
-    auto const& layout = BuildPangoLayout(text);
+    auto const& layout = BuildPangoLayout(title_pango_ctx_, text);
 
     nux::Size extents;
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
@@ -488,11 +503,55 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
+  inline void AddContextClassesForMenuItem(WidgetState ws)
+  {
+    AddContextClasses(Side::TOP, ws);
+
+    gtk_style_context_add_class(ctx_, GTK_STYLE_CLASS_MENUBAR);
+    gtk_style_context_add_class(ctx_, GTK_STYLE_CLASS_MENUITEM);
+  }
+
+  void DrawMenuItem(WidgetState ws, cairo_t* cr, int w, int h)
+  {
+    gtk_style_context_save(ctx_);
+    AddContextClassesForMenuItem(ws);
+
+    gtk_render_background(ctx_, cr, 0, 0, w, h);
+    gtk_render_frame(ctx_, cr, 0, 0, w, h);
+
+    gtk_style_context_restore(ctx_);
+  }
+
+  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, int w, int h)
+  {
+    gtk_style_context_save(ctx_);
+    AddContextClassesForMenuItem(ws);
+
+    auto s = text;
+    s.erase(std::remove(s.begin(), s.end(), '_'), s.end());
+    auto const& layout = BuildPangoLayout(menu_item_pango_ctx_, s);
+
+    if (ws == WidgetState::PRELIGHT || ws == WidgetState::BACKDROP_PRELIGHT)
+    {
+      PangoAttrList* text_attribs = nullptr;
+      pango_parse_markup(text.c_str(), -1, '_', &text_attribs, nullptr, nullptr, nullptr);
+      pango_layout_set_attributes(layout, text_attribs);
+      pango_attr_list_unref(text_attribs);
+    }
+
+    pango_layout_set_width(layout, w * PANGO_SCALE);
+    pango_layout_set_height(layout, (h > 0) ? h * PANGO_SCALE : -1);
+    gtk_render_layout(ctx_, cr, 0, 0, layout);
+
+    gtk_style_context_restore(ctx_);
+  }
+
   Style* parent_;
   glib::SignalManager signals_;
   glib::Object<GtkStyleContext> ctx_;
   glib::Object<GSettings> settings_;
-  glib::Object<PangoContext> pango_context_;
+  glib::Object<PangoContext> title_pango_ctx_;
+  glib::Object<PangoContext> menu_item_pango_ctx_;
   decoration::Border border_;
   decoration::Border input_edges_;
   decoration::Border radius_;
@@ -548,6 +607,16 @@ void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
 void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, int w, int h)
 {
   impl_->DrawTitle(t, ws, cr, w, h);
+}
+
+void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, int w, int h)
+{
+  impl_->DrawMenuItem(ws, cr, w, h);
+}
+
+void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, int w, int h)
+{
+  impl_->DrawMenuItemEntry(t, ws, cr, w, h);
 }
 
 std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const
@@ -633,7 +702,12 @@ int Style::DoubleClickMaxTimeDelta() const
 
 nux::Size Style::TitleNaturalSize(std::string const& text)
 {
-  return impl_->TitleNaturalSize(text);
+  return impl_->TextNaturalSize(impl_->title_pango_ctx_, text);
+}
+
+nux::Size Style::MenuItemNaturalSize(std::string const& text)
+{
+  return impl_->TextNaturalSize(impl_->menu_item_pango_ctx_, text);
 }
 
 } // decoration namespace

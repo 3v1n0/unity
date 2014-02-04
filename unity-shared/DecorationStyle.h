@@ -116,6 +116,7 @@ public:
   float TitleAlignmentValue() const;
   int TitleIndent() const;
   nux::Size TitleNaturalSize(std::string const&);
+  nux::Size MenuItemNaturalSize(std::string const&);
 
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
   void DrawWindowButton(WindowButtonType, WidgetState, cairo_t*, int width, int height);
@@ -125,6 +126,8 @@ public:
 
   void DrawSide(Side, WidgetState, cairo_t*, int width, int height);
   void DrawTitle(std::string const&, WidgetState, cairo_t*, int width, int height);
+  void DrawMenuItem(WidgetState, cairo_t*, int width, int height);
+  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, int width, int height);
 
 private:
   Style();
