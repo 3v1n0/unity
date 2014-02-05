@@ -35,7 +35,7 @@ struct uweak_ptr : std::weak_ptr<T>
   operator std::shared_ptr<T>() const { return this->lock(); }
   operator bool() const { return !this->expired(); }
   T* operator->() const { return this->lock().get(); }
-  T const& operator*() const { return *(this->lock().get()); }
+  T const& operator*() const { return *(this->lock()); }
 };
 
 } // unity namespace

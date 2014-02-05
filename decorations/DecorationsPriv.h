@@ -117,7 +117,7 @@ private:
   std::vector<cu::SimpleTextureQuad> bg_textures_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
-  Title::Ptr title_;
+  Title::WeakPtr title_;
   Item::Ptr edge_borders_;
 };
 

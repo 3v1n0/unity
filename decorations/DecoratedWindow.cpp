@@ -59,7 +59,9 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   });
 
   parent->title.SetSetterFunction([this] (std::string const& new_title) {
-    if (!title_)
+    auto const& title_ptr = title_.lock();
+
+    if (!title_ptr)
     {
       if (last_title_ != new_title)
       {
@@ -70,10 +72,10 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
       return false;
     }
 
-    if (new_title == title_->text())
+    if (new_title == title_ptr->text())
       return false;
 
-    title_->text = new_title;
+    title_ptr->text = new_title;
     return true;
   });
 
@@ -298,14 +300,15 @@ void Window::Impl::SetupWindowControls()
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE));
 
-  title_ = std::make_shared<Title>();
-  title_->text = last_title_.empty() ? WindowManager::Default().GetWindowName(win_->id()) : last_title_;
-  title_->sensitive = false;
+  auto title = std::make_shared<Title>();
+  title->text = last_title_.empty() ? WindowManager::Default().GetWindowName(win_->id()) : last_title_;
+  title->sensitive = false;
+  title_ = title;
   last_title_.clear();
 
   auto title_layout = std::make_shared<Layout>();
   title_layout->left_padding = style->TitleIndent();
-  title_layout->Append(title_);
+  title_layout->Append(title);
   top_layout_->Append(title_layout);
 
   input_mixer_->PushToFront(top_layout_);
@@ -319,7 +322,6 @@ void Window::Impl::CleanupWindowControls()
     last_title_ = title_->text();
 
   theme_changed_->disconnect();
-  title_.reset();
   top_layout_.reset();
   input_mixer_.reset();
   edge_borders_.reset();
