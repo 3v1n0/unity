@@ -20,7 +20,7 @@
 #ifndef UNITY_DECORATIONS_EDGES
 #define UNITY_DECORATIONS_EDGES
 
-#include "DecorationsWidgets.h"
+#include "DecorationsEdge.h"
 
 namespace unity
 {
@@ -31,6 +31,7 @@ class EdgeBorders : public BasicContainer
 {
 public:
   EdgeBorders(CompWindow* win);
+  Item::Ptr const& GetEdge(Edge::Type) const;
 
 protected:
   std::string GetName() const { return "EdgeBorders"; }

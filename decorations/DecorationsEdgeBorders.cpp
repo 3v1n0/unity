@@ -19,7 +19,6 @@
 
 #include "DecorationStyle.h"
 #include "DecorationsEdgeBorders.h"
-#include "DecorationsEdge.h"
 #include "DecorationsGrabEdge.h"
 
 namespace unity
@@ -93,6 +92,11 @@ void EdgeBorders::DoRelayout()
   item = items_[unsigned(Edge::Type::GRAB)];
   item->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top);
   item->SetSize(rect_.width() - ib.left - ib.right, b.top);
+}
+
+Item::Ptr const& EdgeBorders::GetEdge(Edge::Type type) const
+{
+  return items_[unsigned(type)];
 }
 
 } // decoration namespace
