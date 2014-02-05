@@ -57,8 +57,6 @@ public:
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
 
-  virtual bool SetMenuBarVisible(bool visible);
-
   virtual void OverlayShown();
   virtual void OverlayHidden();
 

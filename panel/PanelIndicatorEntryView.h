@@ -74,8 +74,6 @@ public:
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
   bool GetShowNow() const;
-  void SetShowNow(bool show);
-
   bool IsSensitive() const;
   bool IsActive() const;
   bool IsVisible();

@@ -207,10 +207,15 @@ void Controller::Impl::UpdatePanelGeometries()
 
 void Controller::Impl::SetMenuBarVisible(bool visible)
 {
-  for (auto const& panel : panels_)
+  for (auto const& indicator : dbus_indicators_->GetIndicators())
   {
-    if (panel->SetMenuBarVisible(visible) && visible)
+    if (indicator->IsAppmenu())
+    {
+      for (auto const& entry : indicator->GetEntries())
+        entry->set_show_now(visible);
+
       break;
+    }
   }
 }
 

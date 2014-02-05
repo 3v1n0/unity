@@ -684,11 +684,6 @@ bool PanelView::FirstMenuShow() const
   return ret;
 }
 
-bool PanelView::SetMenuBarVisible(bool visible)
-{
-  return (!visible || IsActive()) && menu_view_->SetMenuBarVisible(visible);
-}
-
 bool PanelView::ActivateEntry(std::string const& entry_id)
 {
   return IsActive() && (menu_view_->ActivateEntry(entry_id, 0) || indicators_->ActivateEntry(entry_id, 0));

@@ -199,21 +199,6 @@ void PanelMenuView::SetupUBusManagerInterests()
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnLauncherSelectionChanged));
 }
 
-bool PanelMenuView::SetMenuBarVisible(bool visible)
-{
-  if (visible != show_now_activated_)
-  {
-    for (auto const& entry : entries_)
-      entry.second->SetShowNow(visible);
-
-    show_now_activated_ = visible;
-    QueueDraw();
-    return true;
-  }
-
-  return false;
-}
-
 void PanelMenuView::OverlayShown()
 {
   overlay_showing_ = true;

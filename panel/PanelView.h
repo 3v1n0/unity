@@ -65,7 +65,6 @@ public:
 
   bool IsActive() const;
   bool FirstMenuShow() const;
-  bool SetMenuBarVisible(bool visible);
   bool ActivateEntry(std::string const& entry_id);
 
   void SetOpacity(float opacity);
