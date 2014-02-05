@@ -531,7 +531,7 @@ struct Style::Impl
     s.erase(std::remove(s.begin(), s.end(), '_'), s.end());
     auto const& layout = BuildPangoLayout(menu_item_pango_ctx_, s);
 
-    if (ws == WidgetState::PRELIGHT || ws == WidgetState::BACKDROP_PRELIGHT)
+    if (ws == WidgetState::PRESSED || ws == WidgetState::BACKDROP_PRESSED)
     {
       PangoAttrList* text_attribs = nullptr;
       pango_parse_markup(text.c_str(), -1, '_', &text_attribs, nullptr, nullptr, nullptr);
@@ -707,7 +707,9 @@ nux::Size Style::TitleNaturalSize(std::string const& text)
 
 nux::Size Style::MenuItemNaturalSize(std::string const& text)
 {
-  return impl_->TextNaturalSize(impl_->menu_item_pango_ctx_, text);
+  auto s = text;
+  s.erase(std::remove(s.begin(), s.end(), '_'), s.end());
+  return impl_->TextNaturalSize(impl_->menu_item_pango_ctx_, s);
 }
 
 } // decoration namespace
