@@ -79,16 +79,34 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
 
         actions = self.interface.GrabAccelerators([(accelerator[0], 0) for accelerator in accelerators])
 
+        def clean_up_test_grab_accelerators():
+            for action in actions:
+                self.interface.UngrabAccelerator(action)
+
+        addCleanup(clean_up_test_grab_accelerators)
+
         for accelerator, action in zip(accelerators, actions):
             self.check_accelerator(action, accelerator[1])
 
     def test_grab_accelerator(self):
         action = self.interface.GrabAccelerator('<Shift><Control><Alt>a', 0)
+
+        def clean_up_test_grab_accelerator():
+            self.interface.UngrabAccelerator(action)
+
+        addCleanup(clean_up_test_grab_accelerator)
+
         self.check_accelerator(action, 'Shift+Control+Alt+a')
 
     def test_grab_same_accelerator(self):
         actions = self.interface.GrabAccelerators(3 * [('<Shift><Control><Alt>b', 0)])
         removed = set()
+
+        def clean_up_test_grab_same_accelerator():
+            for action in actions:
+                self.interface.UngrabAccelerator(action)
+
+        addCleanup(clean_up_test_grab_same_accelerator)
 
         for action in actions:
             activated = [False]
