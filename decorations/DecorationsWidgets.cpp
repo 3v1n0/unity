@@ -228,11 +228,11 @@ void Item::AddProperties(debug::IntrospectionData& data)
 
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 {
-  if (texture_.st == tex)
+  auto prev_geo = Geometry();
+
+  if (!texture_.SetTexture(tex))
     return;
 
-  auto prev_geo = Geometry();
-  texture_.SetTexture(tex);
   auto const& actual_geo = Geometry();
 
   if (prev_geo != actual_geo)
@@ -278,7 +278,8 @@ CompRect& TexturedItem::InternalGeo()
 
 void TexturedItem::SetCoords(int x, int y)
 {
-  texture_.SetCoords(x, y);
+  if (texture_.SetCoords(x, y))
+    geo_parameters_changed.emit();
 }
 
 //
