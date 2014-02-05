@@ -76,7 +76,7 @@ Item::Ptr InputMixer::GetMatchingItemRecursive(Item::List const& items, CompPoin
 {
   for (auto const& item : items)
   {
-    if (item->visible() && item->Geometry().contains(point))
+    if (item && item->visible() && item->Geometry().contains(point))
     {
       if (!item->IsContainer())
         return item->sensitive() ? item : nullptr;
@@ -164,10 +164,10 @@ void InputMixer::ButtonUpEvent(CompPoint const& point, unsigned button)
   if (last_mouse_owner_)
   {
     // This event might cause the InputMixer to be deleted, so we protect using a weak_ptr
-    std::weak_ptr<Item> weak_last_mouse_owner(last_mouse_owner_);
+    Item::WeakPtr weak_last_mouse_owner(last_mouse_owner_);
     last_mouse_owner_->ButtonUpEvent(point, button);
 
-    if (!weak_last_mouse_owner.expired() && !last_mouse_owner_->Geometry().contains(point))
+    if (!weak_last_mouse_owner && !last_mouse_owner_->Geometry().contains(point))
       UpdateMouseOwner(point);
   }
 }

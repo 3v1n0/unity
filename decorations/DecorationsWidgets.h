@@ -23,6 +23,7 @@
 #include <deque>
 #include <NuxCore/Size.h>
 #include <NuxCore/Property.h>
+#include <UnityCore/UWeakPtr.h>
 #include "Introspectable.h"
 #include "CompizUtils.h"
 
@@ -38,6 +39,7 @@ class Item : public sigc::trackable, public debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Item> Ptr;
+  typedef unity::uweak_ptr<Item> WeakPtr;
   typedef std::deque<Item::Ptr> List;
 
   Item();
