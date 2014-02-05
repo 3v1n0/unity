@@ -57,10 +57,10 @@ protected:
 
 struct SimpleTextureQuad
 {
-  void SetTexture(SimpleTexture::Ptr const&);
-  void SetCoords(int x, int y);
-  void SetX(int x);
-  void SetY(int y);
+  bool SetTexture(SimpleTexture::Ptr const&);
+  bool SetCoords(int x, int y);
+  bool SetX(int x);
+  bool SetY(int y);
 
   operator SimpleTexture::Ptr() const { return st; }
   operator bool() const { return st && st->texture(); }
