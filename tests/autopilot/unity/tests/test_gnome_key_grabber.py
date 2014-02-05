@@ -13,6 +13,19 @@ import unity
 from autopilot.matchers import *
 from testtools.matchers import *
 
+class Accelerator:
+
+    def __init__(self, accelerator=None, shortcut=None, action=0):
+        self.accelerator = accelerator
+        self.shortcut = shortcut
+        self.action = action
+
+    def __str__(self):
+        if self.action:
+            return "%u '%s'" % (self.action, self.shortcut)
+        else:
+            return "'%s'" % self.shortcut
+
 class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
     """Gnome key grabber tests"""
 
@@ -25,37 +38,28 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         proxy = bus.get_object('org.gnome.Shell', '/org/gnome/Shell')
         self.interface = dbus.Interface(proxy, 'org.gnome.Shell')
 
-    def check_accelerator(self, action, shortcut):
-        activated = [False]
+        self.activatable = set()
+        self.activated = [False]
+        self.active = True
 
-        def accelerator_activated(a, b):
-            if a == action:
-                activated[0] = True
+        def accelerator_activated(action, device):
+            if self.active and action in self.activatable:
+                print action, 'activated'
+                self.activated[0] = True
 
-        self.interface.connect_to_signal('AcceleratorActivated', accelerator_activated)
+        self.signal = self.interface.connect_to_signal('AcceleratorActivated', accelerator_activated)
 
-        # Activate the accelerator, should emit signal
-        self.keyboard.press_and_release(shortcut)
+    def tearDown(self):
+        self.active = False
 
-        loop = glib.MainLoop()
+        super(GnomeKeyGrabberTests, self).tearDown()
 
-        def wait():
-            loop.quit()
-            return False
+    def press_accelerator(self, accelerator):
+        self.activated[0] = False
 
-        glib.timeout_add_seconds(1, wait)
-        loop.run()
-
-        # Check that signal was emitted
-        self.assertTrue(activated[0])
-
-        # Remove accelerator, make sure it was removed
-        self.assertTrue(self.interface.UngrabAccelerator(action))
-
-        activated[0] = False
-
-        # Activate the accelerator, should not emit signal
-        self.keyboard.press_and_release(shortcut)
+        # Press accelerator shortcut
+        print "pressing '%s'" % accelerator.shortcut
+        self.keyboard.press_and_release(accelerator.shortcut)
 
         loop = glib.MainLoop()
 
@@ -66,96 +70,101 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         glib.timeout_add_seconds(1, wait)
         loop.run()
 
-        # Check that signal was not emitted
-        self.assertFalse(activated[0])
+        return self.activated[0]
 
-        # Try removing accelerator, should fail
-        self.assertFalse(self.interface.UngrabAccelerator(action))
+    def check_accelerator(self, accelerator):
+        # Check that accelerator works
+        self.assertTrue(self.press_accelerator(accelerator))
+
+        # Remove accelerator
+        print 'ungrabbing', accelerator
+        self.assertTrue(self.interface.UngrabAccelerator(accelerator.action))
+
+        # Check that accelerator does not work
+        self.assertFalse(self.press_accelerator(accelerator))
+
+        # Try removing accelerator
+        print 'ungrabbing', accelerator, '(should fail)'
+        self.assertFalse(self.interface.UngrabAccelerator(accelerator.action))
 
     def test_grab_accelerators(self):
-        accelerators = [('<Shift><Control>x', 'Shift+Control+x'),
-                        ('<Control><Alt>y', 'Control+Alt+y'),
-                        ('<Shift><Alt>z', 'Shift+Alt+z')]
+        accelerators = [Accelerator('<Shift><Control>x', 'Shift+Control+x'),
+                        Accelerator('<Control><Alt>y', 'Control+Alt+y'),
+                        Accelerator('<Shift><Alt>z', 'Shift+Alt+z')]
 
-        actions = self.interface.GrabAccelerators([(accelerator[0], 0) for accelerator in accelerators])
+        actions = self.interface.GrabAccelerators([(accelerator.accelerator, 0) for accelerator in accelerators])
 
-        def clean_up_test_grab_accelerators():
-            for action in actions:
-                self.interface.UngrabAccelerator(action)
-
-        addCleanup(clean_up_test_grab_accelerators)
+        self.activatable.clear()
 
         for accelerator, action in zip(accelerators, actions):
-            self.check_accelerator(action, accelerator[1])
+            accelerator.action = action
+            self.activatable.add(action)
+            print 'grabbed', accelerator
+
+        def clean_up_test_grab_accelerators():
+            self.activatable.clear()
+
+            for accelerator in accelerators:
+                print 'unconditionally ungrabbing', accelerator
+                self.interface.UngrabAccelerator(accelerator.action)
+
+        self.addCleanup(clean_up_test_grab_accelerators)
+
+        for accelerator in accelerators:
+            self.check_accelerator(accelerator)
 
     def test_grab_accelerator(self):
-        action = self.interface.GrabAccelerator('<Shift><Control><Alt>a', 0)
+        accelerator = Accelerator('<Shift><Control><Alt>a', 'Shift+Control+Alt+a')
+        accelerator.action = self.interface.GrabAccelerator(accelerator.accelerator, 0)
+
+        self.activatable.clear()
+        self.activatable.add(accelerator.action)
+
+        print 'grabbed', accelerator
 
         def clean_up_test_grab_accelerator():
-            self.interface.UngrabAccelerator(action)
+            self.activatable.clear()
+            print 'unconditionally ungrabbing', accelerator
+            self.interface.UngrabAccelerator(accelerator.action)
 
-        addCleanup(clean_up_test_grab_accelerator)
+        self.addCleanup(clean_up_test_grab_accelerator)
 
-        self.check_accelerator(action, 'Shift+Control+Alt+a')
+        self.check_accelerator(accelerator)
 
     def test_grab_same_accelerator(self):
-        actions = self.interface.GrabAccelerators(3 * [('<Shift><Control><Alt>b', 0)])
-        removed = set()
+        accelerators = [Accelerator('<Shift><Control><Alt>b', 'Shift+Control+Alt+b') for i in xrange(3)]
+        actions = self.interface.GrabAccelerators([(accelerator.accelerator, 0) for accelerator in accelerators])
+
+        self.activatable.clear()
+
+        for accelerator, action in zip(accelerators, actions):
+            accelerator.action = action
+            self.activatable.add(action)
+            print 'grabbed', accelerator
 
         def clean_up_test_grab_same_accelerator():
-            for action in actions:
-                self.interface.UngrabAccelerator(action)
+            self.activatable.clear()
 
-        addCleanup(clean_up_test_grab_same_accelerator)
+            for accelerator in accelerators:
+                print 'unconditionally ungrabbing', accelerator
+                self.interface.UngrabAccelerator(accelerator.action)
 
-        for action in actions:
-            activated = [False]
+        self.addCleanup(clean_up_test_grab_same_accelerator)
 
-            def accelerator_activated(a, b):
-                if a in actions and a not in removed:
-                    activated[0] = True
+        for accelerator in accelerators:
+            # Check that accelerator works
+            self.assertTrue(self.press_accelerator(accelerator))
 
-            self.interface.connect_to_signal('AcceleratorActivated', accelerator_activated)
+            # Remove accelerator
+            print 'ungrabbing', accelerator
+            self.assertTrue(self.interface.UngrabAccelerator(accelerator.action))
 
-            # Activate the accelerator, should emit signal
-            self.keyboard.press_and_release('Shift+Control+Alt+b')
+            # This accelerator cannot activate any more
+            self.activatable.remove(accelerator.action)
 
-            loop = glib.MainLoop()
-
-            def wait():
-                loop.quit()
-                return False
-
-            glib.timeout_add_seconds(1, wait)
-            loop.run()
-
-            # Check that signal was emitted
-            self.assertTrue(activated[0])
-
-            # Remove accelerator, make sure it was removed
-            self.assertTrue(self.interface.UngrabAccelerator(action))
-
-            removed.add(action)
-
-        activated = False
-
-        def accelerator_activated(a, b):
-            if a in actions:
-                activated = True
-
-        self.interface.connect_to_signal('AcceleratorActivated', accelerator_activated)
-
-        # Activate the accelerator, should not emit signal
-        self.keyboard.press_and_release('Shift+Control+Alt+b')
-
-        loop = glib.MainLoop()
-
-        def wait():
-            loop.quit()
-            return False
-
-        glib.timeout_add_seconds(1, wait)
-        loop.run()
+        # Add them all again for one final check
+        for accelerator in accelerators:
+            self.activatable.add(accelerator.action)
 
         # Check that signal was not emitted
-        self.assertFalse(activated)
+        self.assertFalse(self.press_accelerator(accelerators[0]))
