@@ -38,6 +38,8 @@ public:
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
 
+  bool IsLocked() const;
+
 private:
   friend class TestLockScreenController;
 
@@ -46,7 +48,6 @@ private:
   void LockScreenUsingUnity();
   void ShowShields(bool interactive, bool skip_animation);
   void HideShields(bool skip_animation);
-  bool IsLocked() const;
 
   void OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors);
   void OnLockRequested();

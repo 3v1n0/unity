@@ -1940,6 +1940,9 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
                                           CompAction::State state,
                                           CompOption::Vector& options)
 {
+  if (lockscreen_controller_->IsLocked())
+    return true;
+
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
@@ -1949,7 +1952,8 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   launcher_controller_->HandleLauncherKeyPress(when);
   EnsureSuperKeybindings ();
 
-  if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
+  if (!shortcut_controller_->Visible() &&
+      shortcut_controller_->IsEnabled())
   {
     if (shortcut_controller_->Show())
     {
@@ -2370,7 +2374,8 @@ bool UnityScreen::ShowHud()
     return false; // early exit if the switcher is open
   }
 
-  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
+  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse() ||
+      lockscreen_controller_->IsLocked())
   {
     return false;
   }
