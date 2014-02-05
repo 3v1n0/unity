@@ -132,7 +132,7 @@ protected:
 };
 
 
-class BasicContainer : public SimpleItem
+class BasicContainer : public SimpleItem, public std::enable_shared_from_this<BasicContainer>
 {
 public:
   typedef std::shared_ptr<BasicContainer> Ptr;
@@ -159,7 +159,7 @@ private:
 };
 
 
-class Layout : public std::enable_shared_from_this<Layout>, public BasicContainer
+class Layout : public BasicContainer
 {
 public:
   typedef std::shared_ptr<Layout> Ptr;
