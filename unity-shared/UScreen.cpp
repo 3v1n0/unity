@@ -96,6 +96,11 @@ nux::Geometry UScreen::GetScreenGeometry()
   return nux::Geometry(0, 0, width, height); 
 }
 
+const glib::Object<GdkScreen> &UScreen::GetScreen() const
+{
+  return screen_;
+}
+
 void UScreen::Changed(GdkScreen* screen)
 {
   if (refresh_idle_)

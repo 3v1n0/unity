@@ -52,6 +52,8 @@ public:
   sigc::signal<void, int, std::vector<nux::Geometry>&> changed;
   sigc::signal<void> resuming;
 
+  const glib::Object<GdkScreen> &GetScreen() const;
+
 private:
   void Changed(GdkScreen* screen);
   void Refresh();
