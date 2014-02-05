@@ -41,7 +41,7 @@ Settings::Settings()
   }
   else
   {
-  	lockscreen_type = Type::LIGHTDM;
+  	lockscreen_type = Type::UNITY;
 
     settings_instance = this;
   }

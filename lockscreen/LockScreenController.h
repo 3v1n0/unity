@@ -24,6 +24,7 @@
 
 #include "LockScreenShield.h"
 #include "LockScreenShieldFactory.h"
+#include "unity-shared/BackgroundEffectHelper.h"
 
 namespace unity
 {
@@ -56,6 +57,7 @@ private:
   ShieldFactoryInterface::Ptr shield_factory_;
   nux::animation::AnimateValue<double> fade_animator_;
   bool test_mode_;
+  BlurType old_blur_type_;
 };
 
 }

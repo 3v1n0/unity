@@ -137,6 +137,9 @@ void Controller::LockScreenUsingUnity()
 
 void Controller::ShowShields(bool interactive, bool skip_animation)
 {
+  old_blur_type_ = BackgroundEffectHelper::blur_type;
+  BackgroundEffectHelper::blur_type = BLUR_NONE;
+
   WindowManager& wm = WindowManager::Default();
   wm.SaveInputFocus();
 
@@ -193,6 +196,8 @@ void Controller::HideShields(bool skip_animation)
     shields_.clear();
   else
     animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+
+  BackgroundEffectHelper::blur_type = old_blur_type_;
 }
 
 bool Controller::IsLocked() const

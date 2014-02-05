@@ -161,7 +161,10 @@ nux::Area* Shield::FindKeyFocusArea(unsigned int key_symbol,
                                     unsigned long x11_key_code,
                                     unsigned long special_keys_state)
 {
-  return prompt_view_->text_entry();
+  if (prompt_view_)
+    return prompt_view_->text_entry();
+  else
+    return nullptr;
 }
 
 }
