@@ -51,7 +51,7 @@ struct DBusIndicators::Impl
   void CheckLocalService();
   void RequestSyncAll();
   void RequestSyncIndicator(std::string const& name);
-  void Sync(GVariant* args);
+  void Sync(GVariant* args, glib::Error const&);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
   void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
 
@@ -187,14 +187,14 @@ void DBusIndicators::Impl::OnEntryShowNowChanged(GVariant* parameters)
 
 void DBusIndicators::Impl::RequestSyncAll()
 {
-  gproxy_.Call("Sync", nullptr, sigc::mem_fun(this, &DBusIndicators::Impl::Sync));
+  gproxy_.CallBegin("Sync", nullptr, sigc::mem_fun(this, &DBusIndicators::Impl::Sync));
 }
 
 void DBusIndicators::Impl::RequestSyncIndicator(std::string const& name)
 {
   GVariant* parameter = g_variant_new("(s)", name.c_str());
 
-  gproxy_.Call("SyncOne", parameter, sigc::mem_fun(this, &DBusIndicators::Impl::Sync));
+  gproxy_.CallBegin("SyncOne", parameter, sigc::mem_fun(this, &DBusIndicators::Impl::Sync));
 }
 
 
@@ -263,9 +263,9 @@ void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
   gproxy_.Call("ScrollEntry", g_variant_new("(si)", entry_id.c_str(), delta));
 }
 
-void DBusIndicators::Impl::Sync(GVariant* args)
+void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
 {
-  if (!args)
+  if (!args || error)
     return;
 
   GVariantIter* iter            = nullptr;
@@ -402,7 +402,7 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
 
   g_variant_builder_close(&b);
 
-  gproxy_.Call("SyncGeometries", g_variant_builder_end(&b));
+  gproxy_.CallBegin("SyncGeometries", g_variant_builder_end(&b), [] (GVariant*, glib::Error const& e) {});
   cached_locations = locations;
 }
 
