@@ -17,6 +17,10 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
+// TODO
+// Disable gnome screensaver if it's active
+// Draw dark shield without animation if ligthdm
+
 #include "LockScreenController.h"
 
 #include "LockScreenSettings.h"
@@ -102,46 +106,56 @@ void Controller::OnLockRequested()
   }
   else if (lockscreen_type == Type::LIGHTDM)
   {
-    // FIXME (andy) move to a different function
-    // FIXME (andy) Move to a different function
-    auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
-                                                   "/org/freedesktop/DisplayManager/Session0",
-                                                   "org.freedesktop.DisplayManager.Session",
-                                                   test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
-
-    // By passing the proxy to the lambda we ensure that it will stay alive
-    // until we get the last callback.
-    proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
-
-    WindowManager& wm = WindowManager::Default();
-    wm.SaveInputFocus();
-
-    auto* uscreen = UScreen::GetDefault();
-    EnsureShields(-1, uscreen->GetMonitors());
-
-    std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-      shield->ShowWindow(true);
-      shield->SetOpacity(0.0);
-    });
-
-    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+    LockScreenUsingDisplayManager();
   }
   else if (lockscreen_type == Type::UNITY)
   {
-    // FIXME (andy) move to a different function
-    WindowManager& wm = WindowManager::Default();
-    wm.SaveInputFocus();
-
-    auto* uscreen = UScreen::GetDefault();
-    EnsureShields(uscreen->GetMonitorWithMouse(), uscreen->GetMonitors());
-
-    std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-      shield->ShowWindow(true);
-      shield->SetOpacity(0.0);
-    });
-
-    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+    LockScreenUsingUnity();
   }
+}
+
+void Controller::LockScreenUsingDisplayManager()
+{
+  // TODO (andy) Move to a different class
+  const char* session_path_raw = g_getenv("XDG_SESSION_PATH");
+  std::string session_path = session_path_raw ? session_path_raw : "";
+
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
+                                                 session_path,
+                                                 "org.freedesktop.DisplayManager.Session",
+                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
+
+  proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
+
+  ShowShields(/* interactive */ false, /* skip animation */ true);
+}
+
+void Controller::LockScreenUsingUnity()
+{
+  ShowShields(/* interactive */ true, /* skip animation */ false);
+}
+
+void Controller::ShowShields(bool interactive, bool skip_animation)
+{
+  WindowManager& wm = WindowManager::Default();
+  wm.SaveInputFocus();
+
+  auto* uscreen = UScreen::GetDefault();
+  EnsureShields(interactive ? uscreen->GetMonitorWithMouse() : -1, uscreen->GetMonitors());
+
+  std::for_each(shields_.begin(), shields_.end(), [skip_animation](nux::ObjectPtr<Shield> const& shield) {
+    shield->ShowWindow(true);
+    shield->SetOpacity(skip_animation ? 1.0 : 0.0);
+  });
+
+  if (!interactive)
+  {
+    shields_.at(0)->GrabPointer();
+    shields_.at(0)->GrabKeyboard();
+  }
+
+  if (!skip_animation)
+    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }
 
 void Controller::OnUnlockRequested()
@@ -155,19 +169,30 @@ void Controller::OnUnlockRequested()
   {
     return;
   }
-  else if (lockscreen_type == Type::LIGHTDM || lockscreen_type == Type::UNITY)
+  else if (lockscreen_type == Type::LIGHTDM)
   {
-    // FIXME (andy) Move to a different function
-    std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-      shield->UnGrabPointer();
-      shield->UnGrabKeyboard();
-    });
-
-    WindowManager& wm = WindowManager::Default();
-    wm.RestoreInputFocus();
-
-    animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+    HideShields(/* skip animation */ true);
   }
+  else if (lockscreen_type == Type::UNITY)
+  {
+    HideShields(/* skip animation */ false);
+  }
+}
+
+void Controller::HideShields(bool skip_animation)
+{
+  std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
+    shield->UnGrabPointer();
+    shield->UnGrabKeyboard();
+  });
+
+  WindowManager& wm = WindowManager::Default();
+  wm.RestoreInputFocus();
+
+  if (skip_animation)
+    shields_.clear();
+  else
+    animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
 }
 
 bool Controller::IsLocked() const

@@ -41,6 +41,10 @@ private:
   friend class TestLockScreenController;
 
   void EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry> const& monitors);
+  void LockScreenUsingDisplayManager();
+  void LockScreenUsingUnity();
+  void ShowShields(bool interactive, bool skip_animation);
+  void HideShields(bool skip_animation);
   bool IsLocked() const;
 
   void OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors);
