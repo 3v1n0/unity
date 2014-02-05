@@ -29,6 +29,7 @@ set (DECORATION_SOURCES
      DecorationsEdgeBorders.cpp
      DecorationsTitle.cpp
      DecorationsInputMixer.cpp
+     DecorationsSlidingLayout.cpp
      DecorationsDataPool.cpp
      )
 
