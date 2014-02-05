@@ -29,8 +29,7 @@ namespace indicator
 class Indicators::Impl
 {
 public:
-  typedef std::map<std::string, Indicator::Ptr> IndicatorMap;
-  typedef std::map<std::string, Entry::Ptr> EntryMap;
+  typedef std::unordered_map<std::string, Indicator::Ptr> IndicatorMap;
 
   Impl(Indicators* owner)
     : owner_(owner)
