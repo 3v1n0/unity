@@ -369,7 +369,7 @@ void Controller::ShowHud()
   StartShowHideTimeline();
 
   // hide the launcher
-  ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, glib::Variant(true));
+  ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, g_variant_new("(b)", TRUE));
 
   auto const& view_content_geometry = view_->GetContentGeometry();
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_,
@@ -419,7 +419,7 @@ void Controller::HideHud()
   hud_service_.CloseQuery();
 
   //unhide the launcher
-  ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, glib::Variant(false));
+  ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, g_variant_new("(b)", FALSE));
 
   auto const& view_content_geometry = view_->GetContentGeometry();
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_,
