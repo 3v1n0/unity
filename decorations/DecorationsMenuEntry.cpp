@@ -50,10 +50,10 @@ void MenuEntry::RebuildTexture()
   WidgetState state = WidgetState::NORMAL;
 
   if (entry_->show_now())
-    state = WidgetState::PRELIGHT;
+    state = WidgetState::PRESSED;
 
   if (entry_->active())
-    state = WidgetState::PRESSED;
+    state = WidgetState::PRELIGHT;
 
   cu::CairoContext text_ctx(GetNaturalWidth(), GetNaturalHeight());
 
