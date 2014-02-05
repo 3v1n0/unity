@@ -154,7 +154,7 @@ private:
   cu::PixmapTexture::Ptr active_shadow_pixmap_;
   cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
 
-  std::weak_ptr<InputMixer> last_mouse_owner_;
+  uweak_ptr<InputMixer> last_mouse_owner_;
   std::map<CompWindow*, decoration::Window::Ptr> windows_;
   std::unordered_map<::Window, std::weak_ptr<decoration::Window>> framed_windows_;
 };
