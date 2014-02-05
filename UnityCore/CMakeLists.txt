@@ -64,6 +64,7 @@ set (CORE_HEADERS
      SocialPreview.h
      Track.h
      Tracks.h
+     UWeakPtr.h
      Variant.h
     )
 
