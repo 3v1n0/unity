@@ -52,7 +52,7 @@ public:
   sigc::signal<void, int, std::vector<nux::Geometry>&> changed;
   sigc::signal<void> resuming;
 
-  const std::string GetMonitorName();
+  const std::string GetMonitorName(int output_number) const;
 
 private:
   void Changed(GdkScreen* screen);

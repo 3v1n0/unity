@@ -96,16 +96,14 @@ nux::Geometry UScreen::GetScreenGeometry()
   return nux::Geometry(0, 0, width, height); 
 }
 
-const std::string UScreen::GetMonitorName()
+const std::string UScreen::GetMonitorName(int output_number) const
 {
-  int output_num = GetMonitorWithMouse();
-
-  const char *output_name;
-  if (!(output_name = gdk_screen_get_monitor_plug_name(screen_, output_num)))
+  auto const &output_name = glib::gchar_to_string(gdk_screen_get_monitor_plug_name(screen_, output_number));
+  if (output_name.empty())
   {
-    LOG_ERROR(logger) << "Failed to get active monitor name";
-    return 0;
+    LOG_ERROR(logger) << "Failed to get monitor name";
   }
+
   return std::string(output_name);
 }
 
