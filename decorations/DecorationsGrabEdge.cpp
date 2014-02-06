@@ -92,6 +92,11 @@ void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button)
   button_down_timer_.reset();
 }
 
+bool GrabEdge::IsGrabbed() const
+{
+  return !button_down_timer_;
+}
+
 void GrabEdge::AddProperties(debug::IntrospectionData& data)
 {
   Edge::AddProperties(data);
