@@ -9,9 +9,12 @@
 import dbus
 import glib
 import unity
+import logging
 
 from autopilot.matchers import *
 from testtools.matchers import *
+
+log = logging.getLogger(__name__)
 
 class Accelerator:
 
@@ -44,7 +47,7 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
 
         def accelerator_activated(action, device):
             if self.active and action in self.activatable:
-                print action, 'activated'
+                log.info('%d activated' % action)
                 self.activated[0] = True
 
         self.signal = self.interface.connect_to_signal('AcceleratorActivated', accelerator_activated)
@@ -58,7 +61,7 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         self.activated[0] = False
 
         # Press accelerator shortcut
-        print "pressing '%s'" % accelerator.shortcut
+        log.info("pressing '%s'" % accelerator.shortcut)
         self.keyboard.press_and_release(accelerator.shortcut)
 
         loop = glib.MainLoop()
@@ -77,14 +80,14 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         self.assertTrue(self.press_accelerator(accelerator))
 
         # Remove accelerator
-        print 'ungrabbing', accelerator
+        log.info('ungrabbing %s' % accelerator)
         self.assertTrue(self.interface.UngrabAccelerator(accelerator.action))
 
         # Check that accelerator does not work
         self.assertFalse(self.press_accelerator(accelerator))
 
         # Try removing accelerator
-        print 'ungrabbing', accelerator, '(should fail)'
+        log.info('ungrabbing %s (should fail)' % accelerator)
         self.assertFalse(self.interface.UngrabAccelerator(accelerator.action))
 
     def test_grab_accelerators(self):
@@ -99,13 +102,13 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         for accelerator, action in zip(accelerators, actions):
             accelerator.action = action
             self.activatable.add(action)
-            print 'grabbed', accelerator
+            log.info('grabbed %s' % accelerator)
 
         def clean_up_test_grab_accelerators():
             self.activatable.clear()
 
             for accelerator in accelerators:
-                print 'unconditionally ungrabbing', accelerator
+                log.info('unconditionally ungrabbing %s' % accelerator)
                 self.interface.UngrabAccelerator(accelerator.action)
 
         self.addCleanup(clean_up_test_grab_accelerators)
@@ -120,11 +123,11 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         self.activatable.clear()
         self.activatable.add(accelerator.action)
 
-        print 'grabbed', accelerator
+        log.info('grabbed %s' % accelerator)
 
         def clean_up_test_grab_accelerator():
             self.activatable.clear()
-            print 'unconditionally ungrabbing', accelerator
+            log.info('unconditionally ungrabbing %s' % accelerator)
             self.interface.UngrabAccelerator(accelerator.action)
 
         self.addCleanup(clean_up_test_grab_accelerator)
@@ -140,13 +143,13 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         for accelerator, action in zip(accelerators, actions):
             accelerator.action = action
             self.activatable.add(action)
-            print 'grabbed', accelerator
+            log.info('grabbed %s' % accelerator)
 
         def clean_up_test_grab_same_accelerator():
             self.activatable.clear()
 
             for accelerator in accelerators:
-                print 'unconditionally ungrabbing', accelerator
+                log.info('unconditionally ungrabbing %s' % accelerator)
                 self.interface.UngrabAccelerator(accelerator.action)
 
         self.addCleanup(clean_up_test_grab_same_accelerator)
@@ -156,7 +159,7 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
             self.assertTrue(self.press_accelerator(accelerator))
 
             # Remove accelerator
-            print 'ungrabbing', accelerator
+            log.info('ungrabbing %s' % accelerator)
             self.assertTrue(self.interface.UngrabAccelerator(accelerator.action))
 
             # This accelerator cannot activate any more
