@@ -33,6 +33,7 @@ class GrabEdge : public Edge
 public:
   GrabEdge(CompWindow* win);
 
+  bool IsMaximizable() const;
   bool IsGrabbed() const;
 
   void ButtonDownEvent(CompPoint const&, unsigned button) override;

@@ -40,7 +40,7 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
   if (button != 1)
     return;
 
-  if (!(win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask)))
+  if (!IsMaximizable())
   {
     Edge::ButtonDownEvent(p, button);
     return;
@@ -95,6 +95,11 @@ void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button)
 bool GrabEdge::IsGrabbed() const
 {
   return !button_down_timer_;
+}
+
+bool GrabEdge::IsMaximizable() const
+{
+  return (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask));
 }
 
 void GrabEdge::AddProperties(debug::IntrospectionData& data)
