@@ -38,11 +38,15 @@ void MenuLayout::Setup(AppmenuIndicator::Ptr const& appmenu, CompWindow* win)
 
   for (auto const& entry : appmenu->GetEntries())
   {
-    auto en = std::make_shared<MenuEntry>(entry, win);
-    en->mouse_owner.changed.connect(ownership_cb);
-    en->active.changed.connect(active_cb);
-    Append(en);
+    auto menu = std::make_shared<MenuEntry>(entry, win);
+    menu->mouse_owner.changed.connect(ownership_cb);
+    menu->active.changed.connect(active_cb);
+    menu->focused = focused();
+    menu->SetParent(shared_from_this());
+    items_.push_back(menu);
   }
+
+  Relayout();
 }
 
 void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)
@@ -58,7 +62,6 @@ void MenuLayout::OnEntryActiveChanged(bool actived)
   {
     pointer_tracker_.reset(new glib::Timeout(16));
     pointer_tracker_->Run([this] {
-
       Window win;
       int i, x, y;
       unsigned int ui;
