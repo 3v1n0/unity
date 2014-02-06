@@ -106,7 +106,9 @@ bool GrabEdge::IsMaximizable() const
 void GrabEdge::AddProperties(debug::IntrospectionData& data)
 {
   Edge::AddProperties(data);
-  data.add("button_down", button_down_);
+  data.add("button_down", button_down_)
+  .add("maximizable", IsMaximizable())
+  .add("always_wait_grab_timeout", always_wait_grab_timeout_);
 }
 
 } // decoration namespace

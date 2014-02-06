@@ -132,5 +132,20 @@ void MenuEntry::MotionEvent(CompPoint const& p)
   grab_.MotionEvent(p);
 }
 
+void MenuEntry::AddProperties(debug::IntrospectionData& data)
+{
+  TexturedItem::AddProperties(data);
+  data.add("entry_id", Id())
+  .add("label", entry_->label())
+  .add("label_visible", entry_->label_visible())
+  .add("label_sensitive", entry_->label_sensitive())
+  .add("active", entry_->active());
+}
+
+debug::Introspectable::IntrospectableList MenuEntry::GetIntrospectableChildren()
+{
+  return IntrospectableList({&grab_});
+}
+
 } // decoration namespace
 } // unity namespace

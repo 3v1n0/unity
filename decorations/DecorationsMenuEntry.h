@@ -43,6 +43,9 @@ public:
 
 protected:
   std::string GetName() const override { return "MenuEntry"; }
+  void AddProperties(debug::IntrospectionData&) override;
+  IntrospectableList GetIntrospectableChildren() override;
+
   int GetNaturalWidth() const override;
   int GetNaturalHeight() const override;
   void ButtonDownEvent(CompPoint const&, unsigned button) override;
