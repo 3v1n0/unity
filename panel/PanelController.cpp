@@ -61,7 +61,7 @@ public:
 
   typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
 
-  unity::PanelView* ViewForWindow(BaseWindowPtr const& window) const;
+  PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
   ui::EdgeBarrierController::Ptr edge_barriers_;
   PanelVector panels_;

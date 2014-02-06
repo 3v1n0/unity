@@ -115,7 +115,7 @@ void Shield::ShowPrimaryView()
     }
   });
 
-  PanelView* panel_view = new PanelView(this, indicators);
+  panel::PanelView* panel_view = new panel::PanelView(this, indicators);
   panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
   panel_view->SetOpacity(0.5);
 

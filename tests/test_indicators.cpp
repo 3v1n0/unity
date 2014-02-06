@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 #include <UnityCore/Indicators.h>
 #include <UnityCore/AppmenuIndicator.h>
+#include "mock_indicators.h"
 
 using namespace std;
 using namespace unity;
@@ -29,96 +30,37 @@ using namespace testing;
 namespace
 {
 
-struct TargetData
+struct SigReceiver : sigc::trackable
 {
-  TargetData()
+  typedef NiceMock<SigReceiver> Nice;
+
+  SigReceiver(Indicators const& const_indicators)
   {
-    Reset();
+    auto& indicators = const_cast<Indicators&>(const_indicators);
+    indicators.on_object_added.connect(sigc::mem_fun(this, &SigReceiver::OnObjectAdded));
+    indicators.on_object_removed.connect(sigc::mem_fun(this, &SigReceiver::OnObjectRemoved));
+    indicators.on_entry_activate_request.connect(sigc::mem_fun(this, &SigReceiver::OnEntryActivateRequest));
+    indicators.on_entry_activated.connect(sigc::mem_fun(this, &SigReceiver::OnEntryActivated));
+    indicators.on_entry_show_menu.connect(sigc::mem_fun(this, &SigReceiver::OnEntryShowMenu));
   }
 
-  void Reset()
-  {
-    entry = "";
-    geo = nux::Rect();
-    delta = 0;
-    x = 0;
-    y = 0;
-    xid = 0;
-    button = 0;
-  }
-
-  std::string entry;
-  nux::Rect geo;
-  int delta;
-  int x;
-  int y;
-  unsigned int xid;
-  unsigned int button;
+  MOCK_CONST_METHOD1(OnObjectAdded, void(Indicator::Ptr const&));
+  MOCK_CONST_METHOD1(OnObjectRemoved, void(Indicator::Ptr const&));
+  MOCK_CONST_METHOD1(OnEntryActivateRequest, void(std::string const&));
+  MOCK_CONST_METHOD2(OnEntryActivated, void(std::string const&, nux::Rect const&));
+  MOCK_CONST_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned, int, int, unsigned));
 };
 
-class MockIndicators : public Indicators
+struct TestIndicators : Test
 {
-public:
-  MockIndicators()
-  {}
-
-  // Implementing Indicators virtual functions
-  virtual void OnEntryScroll(std::string const& entry_id, int delta)
-  {
-    target.entry = entry_id;
-    target.delta = delta;
-  }
-
-  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button)
-  {
-    on_entry_show_menu.emit(entry_id, xid, x, y, button);
-
-    target.entry = entry_id;
-    target.xid = xid;
-    target.x = x;
-    target.y = y;
-    target.button = button;
-  }
-
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id)
-  {
-    target.entry = entry_id;
-  }
-
-  virtual void OnShowAppMenu(unsigned int xid, int x, int y)
-  {
-    on_show_appmenu.emit(xid, x, y);
-
-    target.xid = xid;
-    target.x = x;
-    target.y = y;
-  }
-
-  // Redirecting protected methods
-  Indicator::Ptr GetIndicator(std::string const& name)
-  {
-    return Indicators::GetIndicator(name);
-  }
-
-  Indicator::Ptr AddIndicator(std::string const& name)
-  {
-    return Indicators::AddIndicator(name);
-  }
-
-  void RemoveIndicator(std::string const& name)
-  {
-    Indicators::RemoveIndicator(name);
-  }
-
   // Utility function used to fill the class with test indicators with entries
   void SetupTestChildren()
   {
-    // Adding an indicator filled with entries into the MockIndicators
+    // Adding an indicator filled with entries into the TestMockIndicators
     Indicator::Entries sync_data;
     Entry* entry;
 
-    Indicator::Ptr test_indicator_1 = AddIndicator("indicator-test-1");
+    Indicator::Ptr test_indicator_1 = indicators.AddIndicator("indicator-test-1");
 
     entry = new Entry("indicator-test-1|entry-1", "name-hint-1", "label", true, true,
                       0, "icon", true, true, -1);
@@ -137,8 +79,8 @@ public:
     EXPECT_EQ(test_indicator_1->GetEntries().size(), 3);
 
 
-    // Adding another indicator filled with entries into the MockIndicators
-    Indicator::Ptr test_indicator_2 = AddIndicator("indicator-test-2");
+    // Adding another indicator filled with entries into the TestMockIndicators
+    Indicator::Ptr test_indicator_2 = indicators.AddIndicator("indicator-test-2");
     sync_data.clear();
 
     entry = new Entry("indicator-test-2|entry-1", "name-hint-1", "label", true, true,
@@ -153,32 +95,24 @@ public:
     test_indicator_2->Sync(sync_data);
     EXPECT_EQ(test_indicator_2->GetEntries().size(), 2);
 
-    ASSERT_THAT(GetIndicators().size(), 2);
+    ASSERT_THAT(indicators.GetIndicators().size(), 2);
   }
 
-  TargetData target;
+  MockIndicators::Nice indicators;
 };
 
-TEST(TestIndicators, Construction)
+TEST_F(TestIndicators, Construction)
 {
-  {
-    MockIndicators indicators;
-
-    EXPECT_TRUE(indicators.GetIndicators().empty());
-  }
+  EXPECT_TRUE(indicators.GetIndicators().empty());
 }
 
-TEST(TestIndicators, GetInvalidIndicator)
+TEST_F(TestIndicators, GetInvalidIndicator)
 {
-  MockIndicators indicators;
-
   ASSERT_THAT(indicators.GetIndicator("no-available-indicator"), IsNull());
 }
 
-TEST(TestIndicators, IndicatorsFactory)
+TEST_F(TestIndicators, IndicatorsFactory)
 {
-  MockIndicators indicators;
-
   Indicator::Ptr standard_indicator = indicators.AddIndicator("libapplication.so");
   EXPECT_EQ(standard_indicator->name(), "libapplication.so");
   EXPECT_FALSE(standard_indicator->IsAppmenu());
@@ -188,173 +122,126 @@ TEST(TestIndicators, IndicatorsFactory)
   EXPECT_TRUE(appmenu_indicator->IsAppmenu());
 }
 
-TEST(TestIndicators, IndicatorsHandling)
+TEST_F(TestIndicators, IndicatorsHandling)
 {
-  MockIndicators indicators;
+  SigReceiver::Nice sig_receiver(indicators);
   Indicators::IndicatorsList indicators_list;
 
-  // Connecting to signals
-  Indicators::IndicatorsList added_list;
-  indicators.on_object_added.connect([&added_list] (Indicator::Ptr const& i) {
-    added_list.push_back(i);
-  });
-
-  Indicators::IndicatorsList removed_list;
-  indicators.on_object_removed.connect([&removed_list] (Indicator::Ptr const& i) {
-    removed_list.push_back(i);
-  });
-
   // Adding some indicators...
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_));
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(_)).Times(0);
+
   Indicator::Ptr test_indicator_1(indicators.AddIndicator("indicator-test-1"));
   EXPECT_EQ(indicators.GetIndicator("indicator-test-1"), test_indicator_1);
-
-  EXPECT_EQ(added_list.size(), 1);
-  EXPECT_NE(std::find(added_list.begin(), added_list.end(), test_indicator_1), added_list.end());
-  EXPECT_TRUE(removed_list.empty());
 
   indicators_list = indicators.GetIndicators();
   EXPECT_EQ(indicators_list.size(), 1);
   EXPECT_NE(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_1), indicators_list.end());
 
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_));
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(_)).Times(0);
 
   Indicator::Ptr test_indicator_2(indicators.AddIndicator("indicator-test-2"));
   EXPECT_EQ(indicators.GetIndicator("indicator-test-2"), test_indicator_2);
-
-  EXPECT_EQ(added_list.size(), 2);
-  EXPECT_NE(std::find(added_list.begin(), added_list.end(), test_indicator_2), added_list.end());
-  EXPECT_TRUE(removed_list.empty());
 
   indicators_list = indicators.GetIndicators();
   EXPECT_EQ(indicators_list.size(), 2);
   EXPECT_NE(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_2), indicators_list.end());
 
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_));
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(_)).Times(0);
 
   Indicator::Ptr test_indicator_3(indicators.AddIndicator("indicator-test-3"));
   EXPECT_EQ(indicators.GetIndicator("indicator-test-3"), test_indicator_3);
-
-  EXPECT_EQ(added_list.size(), 3);
-  EXPECT_NE(std::find(added_list.begin(), added_list.end(), test_indicator_3), added_list.end());
-  EXPECT_TRUE(removed_list.empty());
 
   indicators_list = indicators.GetIndicators();
   EXPECT_EQ(indicators_list.size(), 3);
   EXPECT_NE(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_3), indicators_list.end());
 
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(_)).Times(0);
 
   ASSERT_THAT(indicators.GetIndicator("invalid-indicator-test-4"), IsNull());
-  EXPECT_EQ(added_list.size(), 3);
-  EXPECT_TRUE(removed_list.empty());
   EXPECT_EQ(indicators.GetIndicators().size(), 3);
 
   // Readding an indicator already there should do nothing
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(_)).Times(0);
+
   Indicator::Ptr test_indicator_3_duplicate(indicators.AddIndicator("indicator-test-3"));
-  EXPECT_EQ(added_list.size(), 3);
   EXPECT_EQ(indicators.GetIndicator("indicator-test-3"), test_indicator_3);
   EXPECT_EQ(indicators.GetIndicators().size(), 3);
   EXPECT_EQ(test_indicator_3, test_indicator_3_duplicate);
 
   // Removing the indicators...
-  added_list.clear();
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(test_indicator_2));
 
   indicators.RemoveIndicator("indicator-test-2");
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), IsNull());
-
-  EXPECT_TRUE(added_list.empty());
-  EXPECT_NE(std::find(removed_list.begin(), removed_list.end(), test_indicator_2), removed_list.end());
-  EXPECT_EQ(removed_list.size(), 1);
 
   indicators_list = indicators.GetIndicators();
   EXPECT_EQ(indicators_list.size(), 2);
   EXPECT_EQ(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_2), indicators_list.end());
 
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(test_indicator_1));
 
   indicators.RemoveIndicator("indicator-test-1");
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), IsNull());
-
-  EXPECT_TRUE(added_list.empty());
-  EXPECT_NE(std::find(removed_list.begin(), removed_list.end(), test_indicator_1), removed_list.end());
-  EXPECT_EQ(removed_list.size(), 2);
 
   indicators_list = indicators.GetIndicators();
   EXPECT_EQ(indicators_list.size(), 1);
   EXPECT_EQ(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_1), indicators_list.end());
 
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(test_indicator_3));
 
   indicators.RemoveIndicator("indicator-test-3");
   ASSERT_THAT(indicators.GetIndicator("indicator-test-3"), IsNull());
 
-  EXPECT_TRUE(added_list.empty());
-  EXPECT_NE(std::find(removed_list.begin(), removed_list.end(), test_indicator_3), removed_list.end());
-  EXPECT_EQ(removed_list.size(), 3);
-
   indicators_list = indicators.GetIndicators();
   EXPECT_TRUE(indicators_list.empty());
 
+  EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
+  EXPECT_CALL(sig_receiver, OnObjectRemoved(_)).Times(0);
 
   indicators.RemoveIndicator("invalid-indicator-test-4");
-  EXPECT_EQ(removed_list.size(), 3);
 }
 
-TEST(TestIndicators, ActivateEntry)
+TEST_F(TestIndicators, ActivateEntry)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
+  SigReceiver::Nice sig_receiver(indicators);
 
   // Activating Entries from the Indicators class to see if they get updated
-  TargetData target;
-
-  sigc::connection activated_conn =
-  indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
-    target.entry = e;
-    target.geo = g;
-  });
-
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
 
   Entry::Ptr entry12(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-2"));
   ASSERT_THAT(entry12, NotNull());
-
   ASSERT_THAT(entry12->active(), false);
   ASSERT_THAT(entry12->geometry(), nux::Rect());
 
-  target.Reset();
+  EXPECT_CALL(sig_receiver, OnEntryActivated(entry12->id(), nux::Rect(1, 2, 3, 4)));
   indicators.ActivateEntry("indicator-test-1|entry-2", nux::Rect(1, 2, 3, 4));
 
   EXPECT_EQ(entry12->active(), true);
   EXPECT_EQ(entry12->geometry(), nux::Rect(1, 2, 3, 4));
-  EXPECT_EQ(target.entry, entry12->id());
-  EXPECT_EQ(target.geo, entry12->geometry());
-
-  activated_conn.disconnect();
 }
 
-TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
+TEST_F(TestIndicators, ActivateEntryShouldDisactivatePrevious)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
-
-  // Activating Entries from the Indicators class to see if they get updated
-  TargetData target;
-
-  sigc::connection activated_conn =
-  indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
-    target.entry = e;
-    target.geo = g;
-  });
+  SetupTestChildren();
+  SigReceiver::Nice sig_receiver(indicators);
 
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
 
   Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-2"));
   ASSERT_THAT(entry22, NotNull());
 
-  ASSERT_THAT(entry22->active(), false);
-  ASSERT_THAT(entry22->geometry(), nux::Rect());
-
   indicators.ActivateEntry("indicator-test-2|entry-2", nux::Rect(1, 2, 3, 4));
-
   ASSERT_THAT(entry22->active(), true);
   ASSERT_THAT(entry22->geometry(), nux::Rect(1, 2, 3, 4));
-
 
   // Activating another entry, the previously selected one should be disactivate
   Entry::Ptr entry21(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-1"));
@@ -363,7 +250,7 @@ TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
   ASSERT_THAT(entry21->active(), false);
   ASSERT_THAT(entry21->geometry(), nux::Rect());
 
-  target.Reset();
+  EXPECT_CALL(sig_receiver, OnEntryActivated(entry21->id(), nux::Rect(4, 3, 2, 1)));
   indicators.ActivateEntry("indicator-test-2|entry-1", nux::Rect(4, 3, 2, 1));
 
   EXPECT_EQ(entry22->active(), false);
@@ -371,71 +258,35 @@ TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
 
   EXPECT_EQ(entry21->active(), true);
   EXPECT_EQ(entry21->geometry(), nux::Rect(4, 3, 2, 1));
-  EXPECT_EQ(target.entry, entry21->id());
-  EXPECT_EQ(target.geo, entry21->geometry());
-
-  activated_conn.disconnect();
 }
 
-TEST(TestIndicators, ActivateEntryInvalidEmitsNullSignal)
+TEST_F(TestIndicators, ActivateEntryInvalidEmitsNullSignal)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
-
-  TargetData target;
-  bool signal_received = false;
-
-  sigc::connection activated_conn =
-  indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
-    signal_received = true;
-    target.entry = e;
-    target.geo = g;
-  });
+  SetupTestChildren();
+  SigReceiver::Nice sig_receiver(indicators);
 
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
 
   Entry::Ptr entry13(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-3"));
   ASSERT_THAT(entry13, NotNull());
 
-  ASSERT_THAT(entry13->active(), false);
-  ASSERT_THAT(entry13->geometry(), nux::Rect());
-
+  EXPECT_CALL(sig_receiver, OnEntryActivated(entry13->id(), nux::Rect(4, 2, 3, 4)));
   indicators.ActivateEntry("indicator-test-1|entry-3", nux::Rect(4, 2, 3, 4));
 
-  ASSERT_THAT(entry13->active(), true);
-  ASSERT_THAT(entry13->geometry(), nux::Rect(4, 2, 3, 4));
-  ASSERT_TRUE(signal_received);
-
-
   // Activating invalid entry, the previously selected one should be disactivate
-  target.Reset();
-  signal_received = false;
+
+  EXPECT_CALL(sig_receiver, OnEntryActivated("", nux::Rect()));
   indicators.ActivateEntry("indicator-entry-invalid", nux::Rect(5, 5, 5, 5));
-  EXPECT_TRUE(target.entry.empty());
-  EXPECT_EQ(target.geo, nux::Rect());
-  EXPECT_TRUE(signal_received);
 
   EXPECT_EQ(entry13->active(), false);
   EXPECT_EQ(entry13->geometry(), nux::Rect());
-
-  activated_conn.disconnect();
 }
 
-TEST(TestIndicators, SetEntryShowNow)
+TEST_F(TestIndicators, SetEntryShowNow)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
-
-  TargetData target;
-
-  sigc::connection activated_conn =
-  indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
-    target.entry = e;
-    target.geo = g;
-  });
+  SetupTestChildren();
 
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
-
   Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-2"));
 
   ASSERT_THAT(entry22, NotNull());
@@ -448,10 +299,9 @@ TEST(TestIndicators, SetEntryShowNow)
   EXPECT_EQ(entry22->show_now(), false);
 }
 
-TEST(TestIndicators, EntryShowMenu)
+TEST_F(TestIndicators, EntryShowMenu)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
@@ -459,55 +309,16 @@ TEST(TestIndicators, EntryShowMenu)
   Entry::Ptr entry13(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-3"));
   ASSERT_THAT(entry13, NotNull());
 
-  TargetData show_menu_data;
-  sigc::connection on_entry_show_menu_conn =
-  indicators.on_entry_show_menu.connect([&] (std::string const& e, unsigned int w,
-                                             int x, int y, unsigned int b) {
-    show_menu_data.entry = e;
-    show_menu_data.xid = w;
-    show_menu_data.x = x;
-    show_menu_data.y = y;
-    show_menu_data.button = b;
-  });
-
+  EXPECT_CALL(indicators, OnEntryShowMenu(entry13->id(), 465789, 35, 53, 2));
   entry13->ShowMenu(465789, 35, 53, 2);
 
-  EXPECT_EQ(indicators.target.entry, entry13->id());
-  EXPECT_EQ(indicators.target.xid, 465789);
-  EXPECT_EQ(indicators.target.x, 35);
-  EXPECT_EQ(indicators.target.y, 53);
-  EXPECT_EQ(indicators.target.button, 2);
-
-  EXPECT_EQ(show_menu_data.entry, entry13->id());
-  EXPECT_EQ(show_menu_data.xid, 465789);
-  EXPECT_EQ(show_menu_data.x, 35);
-  EXPECT_EQ(show_menu_data.y, 53);
-  EXPECT_EQ(show_menu_data.button, 2);
-
-  show_menu_data.Reset();
-  indicators.target.Reset();
-
+  EXPECT_CALL(indicators, OnEntryShowMenu(entry13->id(), 0, 55, 68, 3));
   entry13->ShowMenu(55, 68, 3);
-
-  EXPECT_EQ(indicators.target.entry, entry13->id());
-  EXPECT_EQ(indicators.target.xid, 0);
-  EXPECT_EQ(indicators.target.x, 55);
-  EXPECT_EQ(indicators.target.y, 68);
-  EXPECT_EQ(indicators.target.button, 3);
-
-  EXPECT_EQ(show_menu_data.entry, entry13->id());
-  EXPECT_EQ(show_menu_data.xid, 0);
-  EXPECT_EQ(show_menu_data.x, 55);
-  EXPECT_EQ(show_menu_data.y, 68);
-  EXPECT_EQ(show_menu_data.button, 3);
-
-  on_entry_show_menu_conn.disconnect();
 }
 
-TEST(TestIndicators, EntryScroll)
+TEST_F(TestIndicators, EntryScroll)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
@@ -515,18 +326,13 @@ TEST(TestIndicators, EntryScroll)
   Entry::Ptr entry11(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-1"));
   ASSERT_THAT(entry11, NotNull());
 
+  EXPECT_CALL(indicators, OnEntryScroll(entry11->id(), 80));
   entry11->Scroll(80);
-  EXPECT_EQ(indicators.target.entry, entry11->id());
-  EXPECT_EQ(indicators.target.delta, 80);
-
-  entry11->SecondaryActivate();
-  EXPECT_EQ(indicators.target.entry, entry11->id());
 }
 
-TEST(TestIndicators, EntrySecondaryActivate)
+TEST_F(TestIndicators, EntrySecondaryActivate)
 {
-  MockIndicators indicators;
-  indicators.SetupTestChildren();
+  SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
@@ -534,14 +340,12 @@ TEST(TestIndicators, EntrySecondaryActivate)
   Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-1"));
   ASSERT_THAT(entry22, NotNull());
 
+  EXPECT_CALL(indicators, OnEntrySecondaryActivate(entry22->id()));
   entry22->SecondaryActivate();
-  EXPECT_EQ(indicators.target.entry, entry22->id());
 }
 
-TEST(TestIndicators, ShowAppMenu)
+TEST_F(TestIndicators, ShowAppMenu)
 {
-  MockIndicators indicators;
-
   {
     Indicator::Ptr appmenu_indicator = indicators.AddIndicator("libappmenu.so");
     ASSERT_TRUE(appmenu_indicator->IsAppmenu());
@@ -555,15 +359,8 @@ TEST(TestIndicators, ShowAppMenu)
     auto appmenu_indicator = dynamic_cast<AppmenuIndicator*>(indicator.get());
     ASSERT_THAT(appmenu_indicator, NotNull());
 
-    indicators.target.Reset();
-
+    EXPECT_CALL(indicators, OnShowAppMenu(4356789, 54, 13));
     appmenu_indicator->ShowAppmenu(4356789, 54, 13);
-
-    EXPECT_TRUE(indicators.target.entry.empty());
-    EXPECT_EQ(indicators.target.xid, 4356789);
-    EXPECT_EQ(indicators.target.x, 54);
-    EXPECT_EQ(indicators.target.y, 13);
-    EXPECT_EQ(indicators.target.button, 0);
   }
 }
 

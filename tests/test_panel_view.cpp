@@ -18,7 +18,7 @@
  *
  */
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "PanelView.h"
 #include "unity-shared/MockableBaseWindow.h"
@@ -32,20 +32,37 @@
 
 namespace
 {
+using namespace unity;
+using namespace unity::panel;
+
+struct MockIndicators : indicator::DBusIndicators
+{
+  typedef testing::NiceMock<MockIndicators> Nice;
+
+  MockIndicators()
+  {}
+
+  // Implementing Indicators virtual functions
+  MOCK_METHOD5(ShowEntriesDropdown, void(indicator::Indicator::Entries const&, indicator::Entry::Ptr const&, unsigned xid, int x, int y));
+  MOCK_METHOD2(OnEntryScroll, void(std::string const&, int delta));
+  MOCK_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned xid, int x, int y, unsigned button));
+  MOCK_METHOD1(OnEntrySecondaryActivate, void(std::string const&));
+  MOCK_METHOD3(OnShowAppMenu, void(unsigned xid, int x, int y));
+};
 
 class TestPanelView : public testing::Test
 {
 public:
-  unity::Settings unity_settings_;
-  unity::panel::Style panel_style_;
-  unity::UBusManager ubus_manager_;
-  nux::ObjectPtr<unity::MockableBaseWindow> window_;
-  nux::ObjectPtr<unity::PanelView> panel_view_;
-  unity::testwrapper::StandaloneWM WM;
+  Settings unity_settings_;
+  Style panel_style_;
+  UBusManager ubus_manager_;
+  nux::ObjectPtr<MockableBaseWindow> window_;
+  nux::ObjectPtr<PanelView> panel_view_;
+  testwrapper::StandaloneWM WM;
 
   TestPanelView()
-    : window_(new unity::MockableBaseWindow())
-    , panel_view_(new unity::PanelView(window_.GetPointer(), std::make_shared<unity::indicator::DBusIndicators>()))
+    : window_(new MockableBaseWindow())
+    , panel_view_(new PanelView(window_.GetPointer(), std::make_shared<MockIndicators::Nice>()))
   {}
 };
 
@@ -70,9 +87,9 @@ TEST_F(TestPanelView, StoredDashWidth)
 
 TEST_F(TestPanelView, HandleBarrierEvent)
 {
-  auto barrier = std::make_shared<unity::ui::PointerBarrierWrapper>();
+  auto barrier = std::make_shared<ui::PointerBarrierWrapper>();
   auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
- 
+
   WM->SetIsAnyWindowMoving(false);
   EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier.get(), event),
             ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE);

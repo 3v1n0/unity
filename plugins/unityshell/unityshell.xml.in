@@ -32,6 +32,9 @@
                 <plugin>ezoom</plugin>
                 <plugin>wall</plugin>
             </relation>
+            <relation type="before">
+                <plugin>showrepaint</plugin>
+            </relation>
             <requirement>
                 <plugin>opengl</plugin>
                 <plugin>compiztoolbox</plugin>
@@ -157,7 +160,11 @@
                     </desc>
                 </option>
 
-
+                <option name="fonts_scale_factor" type="key">
+                  <_short>Per monitor text scaling factor.</_short>
+                  <_long>This is used to scale the fonts.</_long>
+                  <default>;</default>
+                </option>
             </group>
 
             <group>

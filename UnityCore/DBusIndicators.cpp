@@ -45,17 +45,16 @@ const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 
 /* Connects to the remote panel service (unity-panel-service) and translates
  * that into something that the panel can show */
-class DBusIndicators::Impl
+struct DBusIndicators::Impl
 {
-public:
   Impl(std::string const& dbus_name, DBusIndicators* owner);
-  virtual ~Impl() {}
 
   void CheckLocalService();
   void RequestSyncAll();
   void RequestSyncIndicator(std::string const& name);
   void Sync(GVariant* args);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
+  void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
 
   void OnConnected();
   void OnDisconnected();
@@ -65,11 +64,10 @@ public:
   void OnEntryActivatedRequest(GVariant* parameters);
   void OnEntryShowNowChanged(GVariant* parameters);
 
-  virtual void OnEntryScroll(std::string const& entry_id, int delta);
-  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button);
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id);
-  virtual void OnShowAppMenu(unsigned int xid, int x, int y);
+  void OnEntryScroll(std::string const& entry_id, int delta);
+  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button);
+  void OnEntrySecondaryActivate(std::string const& entry_id);
+  void OnShowAppMenu(unsigned int xid, int x, int y);
 
   DBusIndicators* owner_;
 
@@ -212,24 +210,46 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   // menu not to show
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([&, entry_id, xid, x, y, button] {
+  show_entry_idle_->Run([this, entry_id, xid, x, y, button] {
     gproxy_.Call("ShowEntry", g_variant_new("(suiiu)", entry_id.c_str(), xid,
                                                        x, y, button));
     return false;
   });
 }
 
+void DBusIndicators::Impl::ShowEntriesDropdown(Indicator::Entries const& entries, Entry::Ptr const& selected, unsigned xid, int x, int y)
+{
+  if (entries.empty())
+    return;
+
+  auto const& selected_id = (selected) ? selected->id() : "";
+  owner_->on_entry_show_menu.emit(selected ? selected_id : "dropdown", xid, x, y, 0);
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+  for (auto const& entry : entries)
+    g_variant_builder_add(&builder, "s", entry->id().c_str());
+
+  glib::Variant parameters(g_variant_new("(assuii)", &builder, selected_id.c_str(), xid, x, y));
+
+  show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  show_entry_idle_->Run([this, parameters] {
+    gproxy_.Call("ShowEntriesDropdown", parameters);
+    return false;
+  });
+}
+
 void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y)
 {
-  owner_->on_show_appmenu.emit(xid, x, y);
+  owner_->on_entry_show_menu.emit("appmenu", xid, x, y, 0);
 
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([&, xid, x, y] {
-    gproxy_.Call("ShowEntry", g_variant_new("(uii)", xid, x, y));
+  show_entry_idle_->Run([this, xid, x, y] {
+    gproxy_.Call("ShowAppMenu", g_variant_new("(uii)", xid, x, y));
     return false;
   });
 }
@@ -318,9 +338,9 @@ void DBusIndicators::Impl::Sync(GVariant* args)
       }
       else
       {
-        e->setLabel(label, label_sensitive, label_visible);
-        e->setImage(image_type, image_data, image_sensitive, image_visible);
-        e->setPriority(priority);
+        e->set_label(label, label_sensitive, label_visible);
+        e->set_image(image_type, image_data, image_sensitive, image_visible);
+        e->set_priority(priority);
       }
 
       entries.push_back(e);
@@ -333,9 +353,6 @@ void DBusIndicators::Impl::Sync(GVariant* args)
   {
     i->first->Sync(indicators[i->first]);
   }
-
-  // Notify listeners we have new data
-  owner_->on_synced.emit();
 }
 
 void DBusIndicators::Impl::SyncGeometries(std::string const& name,
@@ -410,6 +427,13 @@ void DBusIndicators::SyncGeometries(std::string const& name,
                                     EntryLocationMap const& locations)
 {
   pimpl->SyncGeometries(name, locations);
+}
+
+void DBusIndicators::ShowEntriesDropdown(Indicator::Entries const& entries,
+                                         Entry::Ptr const& selected,
+                                         unsigned xid, int x, int y)
+{
+  pimpl->ShowEntriesDropdown(entries, selected, xid, x, y);
 }
 
 void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)

@@ -43,29 +43,35 @@ public:
   enum IndicatorEntryType {
     INDICATOR,
     MENU,
+    DROP_DOWN,
     OTHER
   };
+
+  typedef nux::ObjectPtr<PanelIndicatorEntryView> Ptr;
 
   PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
 
   virtual ~PanelIndicatorEntryView();
 
+  nux::Property<bool> in_dropdown;
+
   IndicatorEntryType GetType() const;
+  indicator::Entry::Ptr GetEntry() const { return proxy_; }
   std::string GetEntryID() const;
   int GetEntryPriority() const;
 
-  virtual std::string GetLabel() const;
-  virtual bool IsLabelVisible() const;
-  virtual bool IsLabelSensitive() const;
+  std::string GetLabel() const;
+  bool IsLabelVisible() const;
+  bool IsLabelSensitive() const;
 
-  virtual bool IsIconVisible() const;
-  virtual bool IsIconSensitive() const;
+  bool IsIconVisible() const;
+  bool IsIconSensitive() const;
 
-  virtual void Activate(int button = 1);
-  virtual void Unactivate();
+  void Activate(int button = 1);
+  void Unactivate();
 
-  virtual void GetGeometryForSync(indicator::EntryLocationMap& locations);
+  void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
   bool GetShowNow() const;
   bool IsSensitive() const;
