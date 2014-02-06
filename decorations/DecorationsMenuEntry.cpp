@@ -105,12 +105,20 @@ void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button)
 {
   if (button == 1 && !grab_.IsGrabbed())
   {
-    button_up_timer_.reset(new glib::Timeout(MAX_DOUBLE_CLICK_WAIT));
-    button_up_timer_->Run([this, button] {
+    if (grab_.IsMaximizable())
+    {
+      button_up_timer_.reset(new glib::Timeout(MAX_DOUBLE_CLICK_WAIT));
+      button_up_timer_->Run([this, button] {
+        ShowMenu(button);
+        return false;
+      });
+    }
+    else
+    {
       ShowMenu(button);
-      return false;
-    });
+    }
   }
+
   if (button == 2 || button == 3)
   {
     ShowMenu(button);
