@@ -29,10 +29,11 @@ namespace
 const int MOUSE_DOWN_TIMEOUT = 150;
 }
 
-GrabEdge::GrabEdge(CompWindow* win)
+GrabEdge::GrabEdge(CompWindow* win, bool always_wait_grab_timeout)
   : Edge(win, Edge::Type::GRAB)
   , last_click_time_(0)
   , button_down_(-1)
+  , always_wait_grab_timeout_(always_wait_grab_timeout)
 {}
 
 void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
@@ -40,7 +41,7 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
   if (button != 1)
     return;
 
-  if (!IsMaximizable())
+  if (!IsMaximizable() && !always_wait_grab_timeout_)
   {
     Edge::ButtonDownEvent(p, button);
     return;
