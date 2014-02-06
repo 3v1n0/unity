@@ -1030,9 +1030,6 @@ class PanelKeyNavigationTests(PanelTestsBase):
         expected_indicator = self.panel.get_indicator_entries(include_hidden_menus=True)[0]
         self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
-        self.keybinding("panel/open_first_menu")
-        self.assertThat(self.panel.get_active_indicator, Eventually(Equals(None)))
-
     def test_panel_menu_accelerators_work(self):
         """Pressing a valid menu accelerator must open the correct menu item."""
         self.open_new_application_window("Text Editor")
