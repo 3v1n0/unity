@@ -77,6 +77,9 @@ void MenuEntry::RebuildTexture()
 
 void MenuEntry::ShowMenu(unsigned button)
 {
+  if (active)
+    return;
+
   active = true;
   auto const& geo = Geometry();
   entry_->ShowMenu(geo.x(), geo.y2(), button);
