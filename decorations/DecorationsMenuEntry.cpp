@@ -36,7 +36,7 @@ using namespace indicator;
 MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
   : active(false)
   , entry_(entry)
-  , grab_(win)
+  , grab_(win, true)
 {
   sensitive = entry_->label_sensitive();
   visible = entry_->visible();
