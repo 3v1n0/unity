@@ -28,12 +28,14 @@ namespace
 {
 const unsigned HORIZONTAL_PADDING = 5;
 const unsigned VERTICAL_PADDING = 3;
+const unsigned MAX_DOUBLE_CLICK_WAIT = 100;
 }
 
 using namespace indicator;
 
 MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
-  : entry_(entry)
+  : active(false)
+  , entry_(entry)
   , grab_(win)
 {
   sensitive = entry_->label_sensitive();
@@ -42,22 +44,28 @@ MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
   RebuildTexture();
 }
 
+std::string const& MenuEntry::Id() const
+{
+  return entry_->id();
+}
+
 void MenuEntry::RebuildTexture()
 {
   sensitive = entry_->label_sensitive();
   visible = entry_->visible();
-  real_size_ = Style::Get()->MenuItemNaturalSize(entry_->label());
+  active = entry_->active();
   WidgetState state = WidgetState::NORMAL;
 
   if (entry_->show_now())
     state = WidgetState::PRESSED;
 
-  if (entry_->active())
+  if (active())
     state = WidgetState::PRELIGHT;
 
+  real_size_ = Style::Get()->MenuItemNaturalSize(entry_->label());
   cu::CairoContext text_ctx(GetNaturalWidth(), GetNaturalHeight());
 
-  if (entry_->active())
+  if (state == WidgetState::PRELIGHT)
     Style::Get()->DrawMenuItem(state, text_ctx, text_ctx.width(), text_ctx.height());
 
   cairo_save(text_ctx);
@@ -65,6 +73,13 @@ void MenuEntry::RebuildTexture()
   Style::Get()->DrawMenuItemEntry(entry_->label(), state, text_ctx, real_size_.width, real_size_.height);
   cairo_restore(text_ctx);
   SetTexture(text_ctx);
+}
+
+void MenuEntry::ShowMenu(unsigned button)
+{
+  active = true;
+  auto const& geo = Geometry();
+  entry_->ShowMenu(geo.x(), geo.y2(), button);
 }
 
 int MenuEntry::GetNaturalWidth() const
@@ -79,11 +94,25 @@ int MenuEntry::GetNaturalHeight() const
 
 void MenuEntry::ButtonDownEvent(CompPoint const& p, unsigned button)
 {
+  button_up_timer_.reset();
   grab_.ButtonDownEvent(p, button);
 }
 
 void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button)
 {
+  if (button == 1 && !grab_.IsGrabbed())
+  {
+    button_up_timer_.reset(new glib::Timeout(MAX_DOUBLE_CLICK_WAIT));
+    button_up_timer_->Run([this, button] {
+      ShowMenu(button);
+      return false;
+    });
+  }
+  if (button == 2 || button == 3)
+  {
+    ShowMenu(button);
+  }
+
   grab_.ButtonUpEvent(p, button);
 }
 

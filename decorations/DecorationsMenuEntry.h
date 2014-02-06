@@ -36,6 +36,9 @@ public:
 
   MenuEntry(indicator::Entry::Ptr const&, CompWindow*);
 
+  nux::Property<bool> active;
+  std::string const& Id() const;
+
 protected:
   std::string GetName() const override { return "MenuEntry"; }
   int GetNaturalWidth() const override;
@@ -45,8 +48,10 @@ protected:
   void MotionEvent(CompPoint const&) override;
 
 private:
+  void ShowMenu(unsigned button);
   void RebuildTexture();
 
+  glib::Source::UniquePtr button_up_timer_;
   indicator::Entry::Ptr entry_;
   GrabEdge grab_;
   nux::Size real_size_;
