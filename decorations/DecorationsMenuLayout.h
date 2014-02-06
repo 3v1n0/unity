@@ -34,13 +34,19 @@ public:
   typedef std::shared_ptr<MenuLayout> Ptr;
   typedef unity::uweak_ptr<MenuLayout> WeakPtr;
 
+  MenuLayout();
+
+  nux::Property<bool> active;
+
   void Setup(indicator::AppmenuIndicator::Ptr const&, CompWindow*);
+  void ChildrenGeometries(indicator::EntryLocationMap&) const;
 
 protected:
   std::string GetName() const override { return "MenuLayout"; }
 
 private:
   void OnEntryMouseOwnershipChanged(bool);
+  void OnEntryActiveChanged(bool);
 };
 
 } // decoration namespace

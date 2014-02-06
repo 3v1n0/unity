@@ -26,15 +26,21 @@ namespace decoration
 {
 using namespace indicator;
 
+MenuLayout::MenuLayout()
+  : active(false)
+{}
+
 void MenuLayout::Setup(AppmenuIndicator::Ptr const& appmenu, CompWindow* win)
 {
   items_.clear();
   auto ownership_cb = sigc::mem_fun(this, &MenuLayout::OnEntryMouseOwnershipChanged);
+  auto active_cb = sigc::mem_fun(this, &MenuLayout::OnEntryActiveChanged);
 
   for (auto const& entry : appmenu->GetEntries())
   {
     auto en = std::make_shared<MenuEntry>(entry, win);
     en->mouse_owner.changed.connect(ownership_cb);
+    en->active.changed.connect(active_cb);
     Append(en);
   }
 }
@@ -42,6 +48,24 @@ void MenuLayout::Setup(AppmenuIndicator::Ptr const& appmenu, CompWindow* win)
 void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)
 {
   mouse_owner = owner;
+}
+
+void MenuLayout::OnEntryActiveChanged(bool actived)
+{
+  active = actived;
+}
+
+void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
+{
+  for (auto const& item : Items())
+  {
+    if (item->visible())
+    {
+      auto entry = std::static_pointer_cast<MenuEntry>(item);
+      auto const& geo = item->Geometry();
+      map.insert({entry->Id(), {geo.x(), geo.y(), geo.width(), geo.height()}});
+    }
+  }
 }
 
 } // decoration namespace
