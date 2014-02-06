@@ -53,6 +53,42 @@ void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)
 void MenuLayout::OnEntryActiveChanged(bool actived)
 {
   active = actived;
+
+  if (active && !pointer_tracker_ && Items().size() > 1)
+  {
+    pointer_tracker_.reset(new glib::Timeout(16));
+    pointer_tracker_->Run([this] {
+
+      Window win;
+      int i, x, y;
+      unsigned int ui;
+
+      XQueryPointer(screen->dpy(), screen->root(), &win, &win, &x, &y, &i, &i, &ui);
+
+      if (last_pointer_.x() != x || last_pointer_.y() != y)
+      {
+        last_pointer_.set(x, y);
+
+        for (auto const& item : Items())
+        {
+          if (!item->visible())
+            continue;
+
+          if (item->Geometry().contains(last_pointer_))
+          {
+            std::static_pointer_cast<MenuEntry>(item)->ShowMenu(1);
+            break;
+          }
+        }
+      }
+
+      return true;
+    });
+  }
+  else if (!active)
+  {
+    pointer_tracker_.reset();
+  }
 }
 
 void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
@@ -61,7 +97,7 @@ void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
   {
     if (item->visible())
     {
-      auto entry = std::static_pointer_cast<MenuEntry>(item);
+      auto const& entry = std::static_pointer_cast<MenuEntry>(item);
       auto const& geo = item->Geometry();
       map.insert({entry->Id(), {geo.x(), geo.y(), geo.width(), geo.height()}});
     }

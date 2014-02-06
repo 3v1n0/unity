@@ -21,6 +21,7 @@
 #define UNITY_DECORATIONS_MENU_LAYOUT
 
 #include <UnityCore/AppmenuIndicator.h>
+#include <UnityCore/GLibSource.h>
 #include "DecorationsWidgets.h"
 
 namespace unity
@@ -39,6 +40,7 @@ public:
   nux::Property<bool> active;
 
   void Setup(indicator::AppmenuIndicator::Ptr const&, CompWindow*);
+
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
 
 protected:
@@ -47,6 +49,9 @@ protected:
 private:
   void OnEntryMouseOwnershipChanged(bool);
   void OnEntryActiveChanged(bool);
+
+  CompPoint last_pointer_;
+  glib::Source::UniquePtr pointer_tracker_;
 };
 
 } // decoration namespace
