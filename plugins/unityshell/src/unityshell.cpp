@@ -74,11 +74,6 @@
 #include "UBusWrapper.h"
 #include "UScreen.h"
 
-#include <upstart.h>
-#include <nih/alloc.h>
-#include <nih/error.h>
-
-
 #include "config.h"
 
 /* FIXME: once we get a better method to add the toplevel windows to
@@ -3576,45 +3571,6 @@ void UnityScreen::initLauncher()
 
   // Setup Lockscreen Controller
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(manager);
-  manager->lock_requested();
-
-  {
-    NihDBusProxy * upstart;
-    const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
-    if (upstartsession != NULL)
-      {
-        DBusConnection *conn = dbus_connection_open (upstartsession, NULL);
-        if (conn != NULL)
-          {
-            upstart = nih_dbus_proxy_new (NULL, conn,
-                                                NULL,
-                                                DBUS_PATH_UPSTART,
-                                                NULL, NULL);
-            if (upstart == NULL)
-              {
-                NihError * err = nih_error_get();
-                g_warning("Unable to get Upstart proxy: %s", err->message);
-                nih_free(err);
-              }
-            dbus_connection_unref (conn);
-          }
-      }
-
-      if (upstart != NULL)
-      {
-        int event_sent = 0;
-        event_sent = upstart_emit_event_sync (NULL, upstart,
-                                              "desktop-lock", NULL, 0);
-        if (event_sent != 0)
-          {
-            NihError * err = nih_error_get();
-            g_warning("Unable to signal for indicator services to stop: %s", err->message);
-            nih_free(err);
-          }
-
-        nih_unref (upstart, NULL);
-      }
-  }
 
   launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin

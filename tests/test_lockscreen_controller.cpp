@@ -76,8 +76,9 @@ struct TestLockScreenController : Test
   TestLockScreenController()
     : animation_controller(tick_source)
     , session_manager(std::make_shared<NiceMock<session::MockManager>>())
+    , upstart_wrapper(std::make_shared<UpstartWrapper>())
     , shield_factory(std::make_shared<ShieldFactoryMock>())
-    , controller(session_manager, shield_factory)
+    , controller(session_manager, upstart_wrapper, shield_factory)
   {
     lightdm_ = std::make_shared<glib::DBusServer>(TEST_SERVER_NAME);
     lightdm_->AddObjects(introspection::LIGHTDM, LIGHTDM_PATH);
@@ -86,8 +87,9 @@ struct TestLockScreenController : Test
   struct ControllerWrap : Controller
   {
     ControllerWrap(session::Manager::Ptr const& session_manager,
+                   UpstartWrapper::Ptr const& upstart_wrapper,
                    ShieldFactoryInterface::Ptr const& shield_factory)
-      : Controller(session_manager, shield_factory, /* test_mode */ true)
+      : Controller(session_manager, upstart_wrapper, shield_factory, /* test_mode */ true)
     {}
 
     using Controller::shields_;
@@ -100,9 +102,10 @@ struct TestLockScreenController : Test
   unity::Settings unity_settings;
   unity::panel::Style panel_style;
   unity::lockscreen::Settings lockscreen_settings;
-
   static glib::DBusServer::Ptr lightdm_;
   session::MockManager::Ptr session_manager;
+  unity::UpstartWrapper::Ptr upstart_wrapper;
+
   ShieldFactoryMock::Ptr shield_factory;
   ControllerWrap controller;
 };

@@ -150,7 +150,7 @@ panel_service_class_dispose (GObject *self)
   g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
-  if (priv->upstart != NULL)
+  if (priv->upstart != NULL && !lockscreen_mode)
     {
       int event_sent = 0;
       event_sent = upstart_emit_event_sync (NULL, priv->upstart,
@@ -561,7 +561,7 @@ initial_resync (PanelService *self)
 static gboolean
 ready_signal (PanelService *self)
 {
-  if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL)
+  if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL && !lockscreen_mode)
     {
       int event_sent = 0;
       event_sent = upstart_emit_event_sync (NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
@@ -689,7 +689,7 @@ panel_service_init (PanelService *self)
   update_keybinding (priv->gsettings, SHOW_HUD_KEY, &priv->show_hud);
 
   const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
-  if (upstartsession != NULL)
+  if (upstartsession != NULL && !lockscreen_mode)
     {
       DBusConnection *conn = dbus_connection_open (upstartsession, NULL);
       if (conn != NULL)

@@ -43,9 +43,11 @@ const std::string DBUS_NAME = "com.canonical.Unity.Test.DisplayManager";
 }
 
 Controller::Controller(session::Manager::Ptr const& session_manager,
+                       UpstartWrapper::Ptr const& upstart_wrapper,
                        ShieldFactoryInterface::Ptr const& shield_factory,
                        bool test_mode)
   : session_manager_(session_manager)
+  , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , fade_animator_(FADE_DURATION)
   , test_mode_(test_mode)
@@ -97,6 +99,8 @@ void Controller::OnLockRequested()
 {
   if (IsLocked())
     return;
+
+  upstart_wrapper_->Emit("desktop-lock");
 
   auto lockscreen_type = Settings::Instance().lockscreen_type();
 
@@ -165,6 +169,8 @@ void Controller::OnUnlockRequested()
 {
   if (!IsLocked())
     return;
+
+  upstart_wrapper_->Emit("desktop-unlock");
 
   auto lockscreen_type = Settings::Instance().lockscreen_type();
 

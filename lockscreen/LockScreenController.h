@@ -25,6 +25,7 @@
 #include "LockScreenShield.h"
 #include "LockScreenShieldFactory.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/UpstartWrapper.h"
 
 namespace unity
 {
@@ -35,6 +36,7 @@ class Controller : public sigc::trackable
 {
 public:
   Controller(session::Manager::Ptr const& session_manager,
+             UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
 
@@ -55,6 +57,7 @@ private:
 
   std::vector<nux::ObjectPtr<Shield>> shields_;
   session::Manager::Ptr session_manager_;
+  UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
   nux::animation::AnimateValue<double> fade_animator_;
   bool test_mode_;
