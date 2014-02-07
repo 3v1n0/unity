@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2014-01-29 19:59+0100\n"
+"POT-Creation-Date: 2012-11-08 12:05+0000\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Italian\n"
@@ -38,14 +38,6 @@ msgstr ""
 msgid " or Right"
 msgstr ""
 
-#. The "%s" is used in the dash preview to display the "<hint>: <value>" infos
-#, c-format
-msgid "%s:"
-msgstr ""
-
-msgid "Activate"
-msgstr ""
-
 msgid "All"
 msgstr ""
 
@@ -55,16 +47,10 @@ msgstr ""
 msgid "Categories"
 msgstr ""
 
-msgid "Close"
-msgstr ""
-
 msgid "Closes the current window."
 msgstr ""
 
-msgid "Comments"
-msgstr ""
-
-msgid "Ctrl + Alt + Num (keypad)"
+msgid "Ctrl + Alt + Num"
 msgstr ""
 
 msgid "Ctrl + Tab"
@@ -73,7 +59,11 @@ msgstr ""
 msgid "Cursor Left or Right"
 msgstr ""
 
+#. Dash...
 msgid "Dash"
+msgstr ""
+
+msgid "Dash Home"
 msgstr ""
 
 msgid "Drop To Add Application"
@@ -85,90 +75,38 @@ msgstr ""
 msgid "Eject parent drive"
 msgstr ""
 
-msgid "Empty Trash…"
+msgid "Empty Trash..."
 msgstr ""
 
 msgid "Enter"
 msgstr ""
 
-msgid "Exit"
-msgstr ""
-
 msgid "Filter results"
 msgstr ""
 
-#, c-format
-msgid ""
-"Goodbye, %s. Are you sure you want to close all programs and log out from "
-"your account?"
-msgstr ""
-
-#, c-format
-msgid ""
-"Goodbye, %s. Are you sure you want to close all programs and shut down the "
-"computer?"
-msgstr ""
-
-#, c-format
-msgid "Goodbye, %s. Would you like to…"
-msgstr ""
-
-msgid "HUD"
-msgstr ""
-
+#. Menu Bar
 msgid "HUD & Menu Bar"
 msgstr ""
 
-#, c-format
-msgid ""
-"Hi %s, you have open files that you might want to save before logging out. "
-"Are you sure you want to continue?"
+msgid "Home"
 msgstr ""
 
-#, c-format
-msgid ""
-"Hi %s, you have open files that you might want to save before shutting down. "
-"Are you sure you want to continue?"
-msgstr ""
-
-#, c-format
-msgid ""
-"Hi %s, you have open files you might want to save.\n"
-"Would you like to…"
-msgstr ""
-
-#. We have enough buttons to show the message without a new line.
-#, c-format
-msgid "Hi %s, you have open files you might want to save. Would you like to…"
-msgstr ""
-
-msgid "Hibernate"
-msgstr ""
-
-msgid "Installing…"
+msgid "Home screen"
 msgstr ""
 
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-msgid "Last Updated"
-msgstr ""
-
+#. Launcher...
 msgid "Launcher"
 msgstr ""
 
 msgid "Left Mouse"
 msgstr ""
 
-msgid "Lock"
-msgstr ""
-
 #, fuzzy
 msgid "Lock to Launcher"
 msgstr "Rimuovi da Launcher"
-
-msgid "Log Out"
-msgstr ""
 
 msgid "Maximises the current window."
 msgstr ""
@@ -194,9 +132,6 @@ msgstr ""
 msgid "Multi-range"
 msgstr ""
 
-msgid "No Image Available"
-msgstr ""
-
 msgid "Open"
 msgstr ""
 
@@ -216,9 +151,6 @@ msgid "Opens the Dash Home."
 msgstr ""
 
 msgid "Opens the Dash Music Lens."
-msgstr ""
-
-msgid "Opens the Dash Photo Lens."
 msgstr ""
 
 msgid "Opens the Dash Video Lens."
@@ -257,9 +189,6 @@ msgstr ""
 msgid "Resizes the window."
 msgstr ""
 
-msgid "Restart"
-msgstr ""
-
 msgid "Restores or minimises the current window."
 msgstr ""
 
@@ -278,7 +207,7 @@ msgstr ""
 msgid "Same as clicking on a Launcher icon."
 msgstr ""
 
-msgid "Search your computer and online sources"
+msgid "Search"
 msgstr ""
 
 msgid "See fewer results"
@@ -290,16 +219,10 @@ msgstr ""
 msgid "Show Desktop"
 msgstr ""
 
-msgid "Shut Down"
-msgstr ""
-
 msgid "Sorry, there is nothing that matches your search."
 msgstr ""
 
 msgid "Spreads all windows in the current workspace."
-msgstr ""
-
-msgid "Suspend"
 msgstr ""
 
 msgid "Switcher"
@@ -323,6 +246,7 @@ msgstr ""
 msgid "Switches workspaces."
 msgstr ""
 
+#. Switching
 msgid "Switching"
 msgstr ""
 
@@ -349,23 +273,17 @@ msgstr ""
 msgid "Waiting to install"
 msgstr ""
 
+#. Windows
 msgid "Windows"
 msgstr ""
 
 msgid "Workspace Switcher"
 msgstr ""
 
+#. Workspaces
 msgid "Workspaces"
 msgstr ""
 
 #, fuzzy
-#~ msgid "Hide Launcher"
-#~ msgstr "Rimuovi da Launcher"
-
-#, fuzzy
 #~ msgid "Keep in launcher"
 #~ msgstr "Mantieni in Launcher"
-
-#, fuzzy
-#~ msgid "Launchers"
-#~ msgstr "Rimuovi da Launcher"
