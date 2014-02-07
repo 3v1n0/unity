@@ -265,32 +265,51 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   if (!view)
     return;
 
-  int entry_pos = pos;
+  bool added_to_dropdown = false;
   auto const& entry_id = view->GetEntryID();
   view->SetOpacity(opacity());
 
-  if (entry_pos == IndicatorEntryPosition::AUTO)
+
+  if (dropdown_ && !dropdown_->Empty())
   {
-    entry_pos = nux::NUX_LAYOUT_BEGIN;
-
-    if (view->GetEntryPriority() > -1)
+    if (pos == IndicatorEntryPosition::AUTO)
     {
-      for (auto area : layout_->GetChildren())
-      {
-        auto en = static_cast<PanelIndicatorEntryView*>(area);
-        if (view->GetEntryPriority() <= en->GetEntryPriority())
-          break;
-
-        ++entry_pos;
-      }
+      dropdown_->Insert(PanelIndicatorEntryView::Ptr(view));
+      added_to_dropdown = true;
+    }
+    else if (view->GetEntryPriority() >= dropdown_->Top()->GetEntryPriority())
+    {
+      dropdown_->Push(PanelIndicatorEntryView::Ptr(view));
+      added_to_dropdown = true;
     }
   }
 
-  layout_->AddView(view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 1.0, (nux::LayoutPosition) entry_pos);
-  AddChild(view);
+  if (!added_to_dropdown)
+  {
+    int entry_pos = pos;
+    if (entry_pos == IndicatorEntryPosition::AUTO)
+    {
+      entry_pos = nux::NUX_LAYOUT_BEGIN;
 
-  QueueRelayout();
-  QueueDraw();
+      if (view->GetEntryPriority() > -1)
+      {
+        for (auto area : layout_->GetChildren())
+        {
+          auto en = static_cast<PanelIndicatorEntryView*>(area);
+          if (view->GetEntryPriority() <= en->GetEntryPriority())
+            break;
+
+          ++entry_pos;
+        }
+      }
+    }
+
+    layout_->AddView(view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 1.0, (nux::LayoutPosition) entry_pos);
+    AddChild(view);
+
+    QueueRelayout();
+    QueueDraw();
+  }
 
   if (entries_.find(entry_id) == entries_.end())
   {
