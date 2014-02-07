@@ -36,6 +36,11 @@ EMConverter::EMConverter(int font_size, double dpi)
   UpdateBasePixelsPerEM();
 }
 
+double EMConverter::PtToPx(int pt)
+{
+  return pt * dpi_ / PIXELS_PER_INCH;
+}
+
 void EMConverter::UpdatePixelsPerEM()
 {
   pixels_per_em_ = font_size_ * dpi_ / PIXELS_PER_INCH;

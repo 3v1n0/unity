@@ -19,24 +19,16 @@
  */
 
 #include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <Nux/BaseWindow.h>
-#include <Nux/WindowCompositor.h>
 #include <UnityCore/GTKWrapper.h>
 
-#include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
-#include <boost/algorithm/string.hpp>
+
+#include "PanelIndicatorEntryView.h"
 
 #include "unity-shared/CairoTexture.h"
-#include "PanelIndicatorEntryView.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/WindowManager.h"
-
 
 namespace unity
 {
@@ -54,6 +46,7 @@ using namespace indicator;
 PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding,
                                                  IndicatorEntryType type)
   : TextureArea(NUX_TRACKER_LOCATION)
+  , in_dropdown(false)
   , proxy_(proxy)
   , spacing_(DEFAULT_SPACING)
   , left_padding_(padding < 0 ? 0 : padding)
@@ -73,10 +66,11 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseDown));
   InputArea::mouse_up.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseUp));
 
-  InputArea::SetAcceptMouseWheelEvent(true);
-
-  if (type_ != MENU)
+  if (type_ == INDICATOR)
+  {
+    InputArea::SetAcceptMouseWheelEvent(true);
     InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
+  }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::UpdateEMConverter));
@@ -130,12 +124,16 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
     int button = nux::GetEventButton(button_flags);
 
     if (button == 2 && type_ == INDICATOR)
+    {
       SetOpacity(0.75f);
+      QueueDraw();
+    }
     else
+    {
       ShowMenu(button);
+      Refresh();
+    }
   }
-
-  Refresh();
 }
 
 void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
@@ -157,9 +155,8 @@ void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long ke
       proxy_->SecondaryActivate();
 
     SetOpacity(1.0f);
+    QueueDraw();
   }
-
-  Refresh();
 }
 
 void PanelIndicatorEntryView::OnMouseWheel(int x, int y, int delta,
@@ -197,6 +194,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   glib::Object<GdkPixbuf> pixbuf;
   GtkIconTheme* theme = gtk_icon_theme_get_default();
   int image_type = proxy_->image_type();
+  int size = (type_ != DROP_DOWN) ? em_.CP(24) : em_.CP(16);
 
   if (image_type == GTK_IMAGE_PIXBUF)
   {
@@ -215,14 +213,14 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   else if (image_type == GTK_IMAGE_STOCK ||
            image_type == GTK_IMAGE_ICON_NAME)
   {
-    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), em_.CP(DESIRED_ICON_SIZE),
+    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size,
                                       (GtkIconLookupFlags)0, nullptr);
   }
   else if (image_type == GTK_IMAGE_GICON)
   {
     glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
 
-    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, em_.CP(DESIRED_ICON_SIZE),
+    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size,
                                                       (GtkIconLookupFlags)0));
     if (info)
       pixbuf = gtk_icon_info_load_icon(info, nullptr);
@@ -377,7 +375,6 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     PangoRectangle log_rect;
     pango_layout_get_extents(layout, nullptr, &log_rect);
     unsigned int text_height = log_rect.height / PANGO_SCALE;
-    unsigned int text_width = log_rect.width / PANGO_SCALE;
 
     pango_cairo_update_layout(cr, layout);
 
@@ -405,11 +402,14 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
     int y = (height - text_height) / 2;
 
-
+/*
     unsigned int text_space = GetMaximumWidth() - x - em_.CP(right_padding_);
 
     if (text_width > text_space)
+      */
+    if (overlay_showing_)
     {
+      /*
       cairo_pattern_t* linpat;
       int out_pixels = text_width - text_space;
       const int fading_pixels = 15;
@@ -435,19 +435,15 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       cairo_pattern_add_color_stop_rgba(linpat, 1, 0, 0, 0, 0);
       cairo_mask(cr, linpat);
       cairo_pattern_destroy(linpat);
+      */
+
+      cairo_move_to(cr, x, y);
+      cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
+      pango_cairo_show_layout(cr, layout);
     }
     else
     {
-      if (overlay_showing_)
-      {
-        cairo_move_to(cr, x, y);
-        cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
-        pango_cairo_show_layout(cr, layout);
-      }
-      else
-      {
-        gtk_render_layout(style_context, cr, x, y, layout);
-      }
+      gtk_render_layout(style_context, cr, x, y, layout);
     }
 
     gtk_widget_path_free(widget_path);
@@ -528,7 +524,7 @@ void PanelIndicatorEntryView::Refresh()
 
     pango_layout_set_font_description(layout, desc);
 
-    boost::erase_all(label, "_");
+    label.erase(std::remove(label.begin(), label.end(), '_'), label.end());
     pango_layout_set_text(layout, label.c_str(), -1);
 
     cxt = pango_layout_get_context(layout);
@@ -549,8 +545,8 @@ void PanelIndicatorEntryView::Refresh()
   if (width)
     width += em_.CP(left_padding_) + em_.CP(right_padding_);
 
-  width = std::min<int>(width, GetMaximumWidth());
   SetMinimumWidth(width);
+  SetMaximumWidth(width);
 
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
   cr = cg.GetInternalContext();
@@ -701,6 +697,9 @@ void PanelIndicatorEntryView::AddProperties(debug::IntrospectionData& introspect
     case MENU:
       type_name = "menu";
       break;
+    case DROP_DOWN:
+      type_name = "dropdown";
+      break;
     default:
       type_name = "other";
   }
@@ -753,7 +752,7 @@ bool PanelIndicatorEntryView::IsVisible()
 {
   if (proxy_.get())
   {
-    return TextureArea::IsVisible() && proxy_->visible();
+    return TextureArea::IsVisible() && proxy_->visible() && !in_dropdown();
   }
 
   return TextureArea::IsVisible();

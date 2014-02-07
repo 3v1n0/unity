@@ -232,11 +232,14 @@ class SwitcherTests(SwitcherTestCase):
 
         charmap, calc, mahjongg = self.start_applications()
 
+        self.addCleanup(self.unity.switcher.terminate)
+
         for monitor in range(num_monitors):
             move_mouse_to_screen(monitor)
             self.unity.switcher.initiate()
-            self.addCleanup(self.unity.switcher.terminate)
             self.assertThat(self.unity.switcher.monitor, Eventually(Equals(monitor)))
+            self.unity.switcher.terminate()
+            sleep(1)
 
     def test_switcher_alt_f4_is_disabled(self):
         """Tests that alt+f4 does not work while switcher is active."""

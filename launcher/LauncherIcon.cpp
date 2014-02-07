@@ -348,10 +348,9 @@ BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size
     icon_name = DEFAULT_ICON;
 
   default_theme = gtk_icon_theme_get_default();
+  result = TextureFromSpecificGtkTheme(default_theme, icon_name, size, update_glow_colors);
 
-  // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
-  // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
-  if (icon_name.find("workspace-switcher") == 0)
+  if (!result)
     result = TextureFromSpecificGtkTheme(GetUnityTheme(), icon_name, size, update_glow_colors);
 
   if (!result)
