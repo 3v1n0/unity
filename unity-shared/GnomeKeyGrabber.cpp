@@ -73,8 +73,11 @@ GnomeKeyGrabber::Impl::Impl(CompScreen* screen, bool test_mode)
 
 GnomeKeyGrabber::Impl::~Impl()
 {
-  for (auto& action : actions_)
-    screen_->removeAction(&action);
+  if (screen_)
+  {
+    for (auto& action : actions_)
+      screen_->removeAction(&action);
+  }
 }
 
 unsigned int GnomeKeyGrabber::Impl::addAction(CompAction const& action, bool addressable)
@@ -89,7 +92,8 @@ unsigned int GnomeKeyGrabber::Impl::addAction(CompAction const& action, bool add
     actions_by_action_id_[current_action_id_] = &action;
   }
 
-  screen_->addAction(&actions_.back());
+  if (screen_)
+    screen_->addAction(&actions_.back());
 
   return current_action_id_;
 }
@@ -109,7 +113,8 @@ bool GnomeKeyGrabber::Impl::removeAction(unsigned int action_id)
     auto j = actions_.begin() + (i - action_ids_.begin());
     auto k = actions_by_action_id_.find(action_id);
 
-    screen_->removeAction(&(*j));
+    if (screen_)
+      screen_->removeAction(&(*j));
 
     if (k != actions_by_action_id_.end())
     {

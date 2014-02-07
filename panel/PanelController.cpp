@@ -159,7 +159,7 @@ void Controller::Impl::GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
 {
   gunichar mnemonic;
 
-  if (pango_parse_markup(entry->label().c_str(), -1, '_', NULL, NULL, &mnemonic, NULL) && mnemonic)
+  if (pango_parse_markup(entry->label().c_str(), -1, '_', nullptr, nullptr, &mnemonic, nullptr) && mnemonic)
   {
     auto key = gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic));
     glib::String accelerator(gtk_accelerator_name(key, GDK_MOD1_MASK));
