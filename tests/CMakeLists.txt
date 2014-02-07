@@ -136,6 +136,7 @@ if (GMOCK_LIB AND
        test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
+       test_raw_pixel.cpp
        test_scope_data.cpp
        test_time_util.cpp
        test_ubus.cpp
