@@ -19,6 +19,7 @@
 
 #include "DecorationsMenuLayout.h"
 #include "DecorationsMenuEntry.h"
+#include "DecorationsMenuDropdown.h"
 
 namespace unity
 {
@@ -26,19 +27,24 @@ namespace decoration
 {
 using namespace indicator;
 
-MenuLayout::MenuLayout()
+MenuLayout::MenuLayout(Indicators::Ptr const& indicators, CompWindow* win)
   : active(false)
+  , win_(win)
+  , dropdown_(std::make_shared<MenuDropdown>(indicators, win))
 {}
 
-void MenuLayout::Setup(AppmenuIndicator::Ptr const& appmenu, CompWindow* win)
+void MenuLayout::SetAppMenu(AppmenuIndicator::Ptr const& appmenu)
 {
   items_.clear();
   auto ownership_cb = sigc::mem_fun(this, &MenuLayout::OnEntryMouseOwnershipChanged);
   auto active_cb = sigc::mem_fun(this, &MenuLayout::OnEntryActiveChanged);
 
+  dropdown_->mouse_owner.changed.connect(ownership_cb);
+  dropdown_->active.changed.connect(active_cb);
+
   for (auto const& entry : appmenu->GetEntries())
   {
-    auto menu = std::make_shared<MenuEntry>(entry, win);
+    auto menu = std::make_shared<MenuEntry>(entry, win_);
     menu->mouse_owner.changed.connect(ownership_cb);
     menu->active.changed.connect(active_cb);
     menu->focused = focused();
@@ -46,7 +52,8 @@ void MenuLayout::Setup(AppmenuIndicator::Ptr const& appmenu, CompWindow* win)
     items_.push_back(menu);
   }
 
-  Relayout();
+  if (!items_.empty())
+    Relayout();
 }
 
 void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)
@@ -58,7 +65,7 @@ void MenuLayout::OnEntryActiveChanged(bool actived)
 {
   active = actived;
 
-  if (active && !pointer_tracker_ && Items().size() > 1)
+  if (active && !pointer_tracker_ && items_.size() > 1)
   {
     pointer_tracker_.reset(new glib::Timeout(16));
     pointer_tracker_->Run([this] {
@@ -96,7 +103,7 @@ void MenuLayout::OnEntryActiveChanged(bool actived)
 
 void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
 {
-  for (auto const& item : Items())
+  for (auto const& item : items_)
   {
     if (item->visible())
     {
@@ -105,6 +112,55 @@ void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
       map.insert({entry->Id(), {geo.x(), geo.y(), geo.width(), geo.height()}});
     }
   }
+}
+
+void MenuLayout::DoRelayout()
+{
+  int dropdown_width = dropdown_->GetNaturalWidth();
+  int accumolated_width = dropdown_width + left_padding() + right_padding() - inner_padding();
+  int max_width = max_.width;
+  std::list<MenuEntry::Ptr> to_hide;
+
+  for (auto const& item : items_)
+  {
+    if (!item->visible() || item == dropdown_)
+      continue;
+
+    accumolated_width += item->GetNaturalWidth() + inner_padding();
+
+    if (accumolated_width > max_width)
+      to_hide.push_front(std::static_pointer_cast<MenuEntry>(item));
+  }
+
+  // No need to hide an item if there's space that we considered for the dropdown
+  if (dropdown_->Empty() && to_hide.size() == 1)
+  {
+    if (accumolated_width - dropdown_width < max_width)
+      to_hide.clear();
+  }
+
+  // There's just one hidden entry, it might fit in the space we have
+  if (to_hide.empty() && dropdown_->Size() == 1)
+    accumolated_width -= dropdown_width;
+
+  if (accumolated_width < max_width)
+  {
+    while (!dropdown_->Empty() && dropdown_->Top()->GetNaturalWidth() < (max_width - accumolated_width))
+      dropdown_->Pop();
+
+    if (dropdown_->Empty())
+      Remove(dropdown_);
+  }
+  else if (!to_hide.empty())
+  {
+    if (dropdown_->Empty())
+      Append(dropdown_);
+
+    for (auto const& hidden : to_hide)
+      dropdown_->Push(hidden);
+  }
+
+  Layout::DoRelayout();
 }
 
 } // decoration namespace

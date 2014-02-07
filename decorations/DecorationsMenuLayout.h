@@ -21,6 +21,7 @@
 #define UNITY_DECORATIONS_MENU_LAYOUT
 
 #include <UnityCore/AppmenuIndicator.h>
+#include <UnityCore/Indicators.h>
 #include <UnityCore/GLibSource.h>
 #include "DecorationsWidgets.h"
 
@@ -28,30 +29,31 @@ namespace unity
 {
 namespace decoration
 {
+class MenuDropdown;
 
 class MenuLayout : public Layout
 {
 public:
-  typedef std::shared_ptr<MenuLayout> Ptr;
-  typedef unity::uweak_ptr<MenuLayout> WeakPtr;
-
-  MenuLayout();
+  MenuLayout(indicator::Indicators::Ptr const&, CompWindow*);
 
   nux::Property<bool> active;
 
-  void Setup(indicator::AppmenuIndicator::Ptr const&, CompWindow*);
-
+  void SetAppMenu(indicator::AppmenuIndicator::Ptr const&);
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
 
 protected:
+  void DoRelayout() override;
   std::string GetName() const override { return "MenuLayout"; }
 
 private:
   void OnEntryMouseOwnershipChanged(bool);
   void OnEntryActiveChanged(bool);
 
+  CompWindow* win_;
   CompPoint last_pointer_;
   glib::Source::UniquePtr pointer_tracker_;
+  glib::Source::UniquePtr relayout_idle_;
+  std::shared_ptr<MenuDropdown> dropdown_;
 };
 
 } // decoration namespace
