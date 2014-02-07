@@ -52,7 +52,10 @@ class PanelView : public unity::debug::Introspectable,
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
 public:
-  PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr const&, NUX_FILE_LINE_PROTO);
+  PanelView(MockableBaseWindow* parent,
+            indicator::DBusIndicators::Ptr const&,
+            bool lockscreen_mode = false,
+            NUX_FILE_LINE_PROTO);
   ~PanelView();
 
   MockableBaseWindow* GetParent() const
@@ -141,6 +144,7 @@ private:
   int monitor_;
   int stored_dash_width_;
   int launcher_width_;
+  bool lockscreen_mode_;
 
   connection::Manager on_indicator_updated_connections_;
   connection::Manager maximized_opacity_toggle_connections_;

@@ -48,7 +48,10 @@ namespace panel
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
-PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE_DECL)
+PanelView::PanelView(MockableBaseWindow* parent,
+                     indicator::DBusIndicators::Ptr const& remote,
+                     bool lockscreen_mode,
+                     NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , parent_(parent)
   , remote_(remote)
@@ -60,6 +63,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   , monitor_(0)
   , stored_dash_width_(0)
   , launcher_width_(64)
+  , lockscreen_mode_(lockscreen_mode)
   , bg_effect_helper_(this)
 {
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
@@ -91,7 +95,9 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 
   menu_view_ = new PanelMenuView();
   menu_view_->EnableDropdownMenu(true, remote_);
-  AddPanelView(menu_view_, 0);
+
+  if (!lockscreen_mode_)
+    AddPanelView(menu_view_, 0);
 
   SetCompositionLayout(layout_);
 
@@ -100,7 +106,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   AddChild(tray_);
 
   indicators_ = new PanelIndicatorsView();
-  AddPanelView(indicators_, 0);
+  AddPanelView(indicators_, lockscreen_mode_ ? 1 : 0);
 
   for (auto const& object : remote_->GetIndicators())
     OnObjectAdded(object);

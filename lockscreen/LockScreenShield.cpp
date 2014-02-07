@@ -99,7 +99,7 @@ void Shield::ShowPrimaryView()
   nux::Layout* main_layout = GetLayout();
   main_layout->Clear();
 
-  auto indicators = std::make_shared<indicator::DBusIndicators>(true);
+  auto indicators = std::make_shared<indicator::DBusIndicators>(/* lockscreen mode */ true);
 
   // Hackish but ok for the moment.
   indicators->on_entry_show_menu.connect([this](std::string const&, unsigned, int, int, unsigned) {
@@ -115,7 +115,7 @@ void Shield::ShowPrimaryView()
     }
   });
 
-  panel::PanelView* panel_view = new panel::PanelView(this, indicators);
+  panel::PanelView* panel_view = new panel::PanelView(this, indicators, true);
   panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
   panel_view->SetOpacity(0.5);
 
