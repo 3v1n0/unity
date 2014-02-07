@@ -104,7 +104,7 @@ const std::string UScreen::GetMonitorName(int output_number) const
     LOG_ERROR(logger) << "Failed to get monitor name";
   }
 
-  return std::string(output_name);
+  return output_name;
 }
 
 void UScreen::Changed(GdkScreen* screen)
