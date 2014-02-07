@@ -71,6 +71,12 @@ GnomeKeyGrabber::Impl::Impl(CompScreen* screen, bool test_mode)
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::onShellMethodCall));
 }
 
+GnomeKeyGrabber::Impl::~Impl()
+{
+  for (auto& action : actions_)
+    screen_->removeAction(&action);
+}
+
 unsigned int GnomeKeyGrabber::Impl::addAction(CompAction const& action, bool addressable)
 {
   ++current_action_id_;

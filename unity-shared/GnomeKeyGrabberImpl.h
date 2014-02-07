@@ -46,6 +46,7 @@ struct GnomeKeyGrabber::Impl
   std::unordered_map<unsigned int, CompAction const*> actions_by_action_id_;
 
   explicit Impl(CompScreen* screen, bool test_mode = false);
+  ~Impl();
 
   unsigned int addAction(CompAction const& action, bool addressable = true);
   bool removeAction(CompAction const& action);
