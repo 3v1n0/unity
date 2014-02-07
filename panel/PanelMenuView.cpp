@@ -354,9 +354,6 @@ bool PanelMenuView::ShouldDrawMenus() const
 
 bool PanelMenuView::ShouldDrawButtons() const
 {
-  if (overlay_showing_)
-    return true;
-
   if (we_control_active_ && is_maximized_ && !launcher_keynav_ && !switcher_showing_)
   {
     WindowManager& wm = WindowManager::Default();
