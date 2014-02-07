@@ -67,6 +67,28 @@ void PanelIndicatorEntryDropdownView::Push(PanelIndicatorEntryView::Ptr const& c
   SetProxyVisibility(true);
 }
 
+void PanelIndicatorEntryDropdownView::Insert(PanelIndicatorEntryView::Ptr const& child)
+{
+  if (!child)
+    return;
+
+  if (std::find(children_.begin(), children_.end(), child) != children_.end())
+    return;
+
+  auto it = children_.begin();
+  for (; it != children_.end(); ++it)
+  {
+    if (child->GetEntryPriority() <= (*it)->GetEntryPriority())
+      break;
+  }
+
+  children_.insert(it, child);
+  child->GetEntry()->add_parent(proxy_);
+  child->in_dropdown = true;
+  debug::Introspectable::AddChild(child.GetPointer());
+  SetProxyVisibility(true);
+}
+
 PanelIndicatorEntryView::Ptr PanelIndicatorEntryDropdownView::Pop()
 {
   if (children_.empty())
