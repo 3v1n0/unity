@@ -30,7 +30,9 @@ set (DECORATION_SOURCES
      DecorationsTitle.cpp
      DecorationsInputMixer.cpp
      DecorationsSlidingLayout.cpp
+     DecorationsMenuLayout.cpp
      DecorationsMenuEntry.cpp
+     DecorationsMenuDropdown.cpp
      DecorationsDataPool.cpp
      )
 

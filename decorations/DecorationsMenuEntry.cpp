@@ -35,12 +35,14 @@ using namespace indicator;
 
 MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
   : active(false)
+  , in_dropdown(false)
   , entry_(entry)
   , grab_(win, true)
 {
   sensitive = entry_->label_sensitive();
-  visible = entry_->visible();
+  visible = entry_->visible() && !in_dropdown();
   entry_->updated.connect(sigc::mem_fun(this, &MenuEntry::RebuildTexture));
+  in_dropdown.changed.connect([this] (bool in) { visible = entry_->visible() && !in; });
   RebuildTexture();
 }
 
@@ -52,7 +54,7 @@ std::string const& MenuEntry::Id() const
 void MenuEntry::RebuildTexture()
 {
   sensitive = entry_->label_sensitive();
-  visible = entry_->visible();
+  visible = entry_->visible() && !in_dropdown();
   active = entry_->active();
   WidgetState state = WidgetState::NORMAL;
 
@@ -62,7 +64,7 @@ void MenuEntry::RebuildTexture()
   if (active())
     state = WidgetState::PRELIGHT;
 
-  real_size_ = Style::Get()->MenuItemNaturalSize(entry_->label());
+  natural_ = Style::Get()->MenuItemNaturalSize(entry_->label());
   cu::CairoContext text_ctx(GetNaturalWidth(), GetNaturalHeight());
 
   if (state == WidgetState::PRELIGHT)
@@ -70,7 +72,7 @@ void MenuEntry::RebuildTexture()
 
   cairo_save(text_ctx);
   cairo_translate(text_ctx, HORIZONTAL_PADDING, VERTICAL_PADDING);
-  Style::Get()->DrawMenuItemEntry(entry_->label(), state, text_ctx, real_size_.width, real_size_.height);
+  Style::Get()->DrawMenuItemEntry(entry_->label(), state, text_ctx, natural_.width, natural_.height);
   cairo_restore(text_ctx);
   SetTexture(text_ctx);
 }
@@ -87,12 +89,12 @@ void MenuEntry::ShowMenu(unsigned button)
 
 int MenuEntry::GetNaturalWidth() const
 {
-  return real_size_.width + HORIZONTAL_PADDING * 2;
+  return natural_.width + HORIZONTAL_PADDING * 2;
 }
 
 int MenuEntry::GetNaturalHeight() const
 {
-  return real_size_.height + VERTICAL_PADDING * 2;
+  return natural_.height + VERTICAL_PADDING * 2;
 }
 
 void MenuEntry::ButtonDownEvent(CompPoint const& p, unsigned button)
@@ -132,6 +134,11 @@ void MenuEntry::MotionEvent(CompPoint const& p)
   grab_.MotionEvent(p);
 }
 
+indicator::Entry::Ptr const& MenuEntry::GetEntry() const
+{
+  return entry_;
+}
+
 void MenuEntry::AddProperties(debug::IntrospectionData& data)
 {
   TexturedItem::AddProperties(data);
@@ -139,7 +146,8 @@ void MenuEntry::AddProperties(debug::IntrospectionData& data)
   .add("label", entry_->label())
   .add("label_visible", entry_->label_visible())
   .add("label_sensitive", entry_->label_sensitive())
-  .add("active", entry_->active());
+  .add("active", entry_->active())
+  .add("in_dropdown", in_dropdown());
 }
 
 debug::Introspectable::IntrospectableList MenuEntry::GetIntrospectableChildren()

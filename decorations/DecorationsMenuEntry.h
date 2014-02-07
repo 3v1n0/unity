@@ -32,22 +32,24 @@ class MenuEntry : public TexturedItem
 {
 public:
   typedef std::shared_ptr<MenuEntry> Ptr;
-  typedef unity::uweak_ptr<MenuEntry> WeakPtr;
 
   MenuEntry(indicator::Entry::Ptr const&, CompWindow*);
 
   nux::Property<bool> active;
+  nux::Property<bool> in_dropdown;
+
+  virtual void ShowMenu(unsigned button);
+  indicator::Entry::Ptr const& GetEntry() const;
   std::string const& Id() const;
 
-  void ShowMenu(unsigned button);
+  int GetNaturalWidth() const override;
+  int GetNaturalHeight() const override;
 
 protected:
   std::string GetName() const override { return "MenuEntry"; }
   void AddProperties(debug::IntrospectionData&) override;
   IntrospectableList GetIntrospectableChildren() override;
 
-  int GetNaturalWidth() const override;
-  int GetNaturalHeight() const override;
   void ButtonDownEvent(CompPoint const&, unsigned button) override;
   void ButtonUpEvent(CompPoint const&, unsigned button) override;
   void MotionEvent(CompPoint const&) override;
@@ -55,10 +57,12 @@ protected:
 private:
   void RebuildTexture();
 
-  glib::Source::UniquePtr button_up_timer_;
+protected:
   indicator::Entry::Ptr entry_;
+
+private:
+  glib::Source::UniquePtr button_up_timer_;
   GrabEdge grab_;
-  nux::Size real_size_;
 };
 
 } // decoration namespace
