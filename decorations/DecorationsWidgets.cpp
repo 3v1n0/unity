@@ -19,7 +19,6 @@
 
 #include <NuxCore/Logger.h>
 #include <composite/composite.h>
-#include <boost/range/adaptor/reversed.hpp>
 #include "DecorationsWidgets.h"
 
 namespace unity
@@ -306,7 +305,7 @@ void BasicContainer::Relayout()
   relayouting_ = false;
 
   if (old_geo != Geometry())
-    geo_parameters_changed.emit();
+    RequestRelayout();
 }
 
 CompRect BasicContainer::ContentGeometry() const
@@ -427,8 +426,10 @@ void Layout::DoRelayout()
     int exceeding_width = content.width - max_.width + inner_padding + right_padding - actual_right_padding;
     int content_y = rect_.y() + top_padding;
 
-    for (auto const& item : boost::adaptors::reverse(items_))
+    for (auto it = items_.rbegin(); it != items_.rend(); ++it)
     {
+      auto const& item = *it;
+
       if (!item->visible())
         continue;
 
