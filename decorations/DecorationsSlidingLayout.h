@@ -31,7 +31,6 @@ class SlidingLayout : public BasicContainer
 {
 public:
   typedef std::shared_ptr<SlidingLayout> Ptr;
-  typedef unity::uweak_ptr<SlidingLayout> WeakPtr;
 
   SlidingLayout();
 

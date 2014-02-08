@@ -27,7 +27,7 @@ namespace decoration
 SlidingLayout::SlidingLayout()
 {
   items_.resize(2);
-  mouse_owner.changed.connect([this] (bool) { Damage(); });
+  mouse_owner.changed.connect([this] (bool) { if (input_item_) Damage(); });
 }
 
 void SlidingLayout::SetMainItem(Item::Ptr const& main)
