@@ -25,10 +25,16 @@ namespace unity
 {
 namespace decoration
 {
+namespace
+{
+const unsigned MENU_SHOW_NOW_WAIT = 180;
+}
+
 using namespace indicator;
 
 MenuLayout::MenuLayout(Indicators::Ptr const& indicators, CompWindow* win)
   : active(false)
+  , show_now(false)
   , win_(win)
   , dropdown_(std::make_shared<MenuDropdown>(indicators, win))
 {}
@@ -38,15 +44,18 @@ void MenuLayout::SetAppMenu(AppmenuIndicator::Ptr const& appmenu)
   items_.clear();
   auto ownership_cb = sigc::mem_fun(this, &MenuLayout::OnEntryMouseOwnershipChanged);
   auto active_cb = sigc::mem_fun(this, &MenuLayout::OnEntryActiveChanged);
+  auto show_now_cb = sigc::mem_fun(this, &MenuLayout::OnEntryShowNowChanged);
 
   dropdown_->mouse_owner.changed.connect(ownership_cb);
   dropdown_->active.changed.connect(active_cb);
+  dropdown_->show_now.changed.connect(show_now_cb);
 
   for (auto const& entry : appmenu->GetEntries())
   {
     auto menu = std::make_shared<MenuEntry>(entry, win_);
     menu->mouse_owner.changed.connect(ownership_cb);
     menu->active.changed.connect(active_cb);
+    menu->show_now.changed.connect(show_now_cb);
     menu->focused = focused();
     menu->SetParent(shared_from_this());
     items_.push_back(menu);
@@ -59,6 +68,24 @@ void MenuLayout::SetAppMenu(AppmenuIndicator::Ptr const& appmenu)
 void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)
 {
   mouse_owner = owner;
+}
+
+void MenuLayout::OnEntryShowNowChanged(bool show)
+{
+  if (!show)
+  {
+    show_now_timeout_.reset();
+    show_now = false;
+  }
+  else
+  {
+    show_now_timeout_.reset(new glib::Timeout(MENU_SHOW_NOW_WAIT));
+    show_now_timeout_->Run([this] {
+      show_now = true;
+      show_now_timeout_.reset();
+      return false;
+    });
+  }
 }
 
 void MenuLayout::OnEntryActiveChanged(bool actived)

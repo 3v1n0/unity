@@ -37,6 +37,7 @@ public:
   MenuLayout(indicator::Indicators::Ptr const&, CompWindow*);
 
   nux::Property<bool> active;
+  nux::Property<bool> show_now;
 
   void SetAppMenu(indicator::AppmenuIndicator::Ptr const&);
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
@@ -48,11 +49,12 @@ protected:
 private:
   void OnEntryMouseOwnershipChanged(bool);
   void OnEntryActiveChanged(bool);
+  void OnEntryShowNowChanged(bool);
 
   CompWindow* win_;
   CompPoint last_pointer_;
   glib::Source::UniquePtr pointer_tracker_;
-  glib::Source::UniquePtr relayout_idle_;
+  glib::Source::UniquePtr show_now_timeout_;
   std::shared_ptr<MenuDropdown> dropdown_;
 };
 
