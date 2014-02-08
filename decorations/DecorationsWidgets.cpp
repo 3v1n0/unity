@@ -175,7 +175,7 @@ CompRect const& Item::Geometry() const
 
 void Item::SetParent(BasicContainer::Ptr const& parent)
 {
-  if (parent && !parent_.expired())
+  if (parent && parent_)
   {
     LOG_ERROR(logger) << "This item has already a parent!";
     return;
@@ -186,7 +186,7 @@ void Item::SetParent(BasicContainer::Ptr const& parent)
 
 BasicContainer::Ptr Item::GetParent() const
 {
-  return parent_.lock();
+  return parent_;
 }
 
 BasicContainer::Ptr Item::GetTopParent() const
@@ -195,7 +195,7 @@ BasicContainer::Ptr Item::GetTopParent() const
 
   while (parent)
   {
-    if (parent->parent_.expired())
+    if (!parent->parent_)
       return parent;
 
     parent = parent->GetParent();

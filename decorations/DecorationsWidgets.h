@@ -103,7 +103,7 @@ protected:
   nux::Size natural_;
 
 private:
-  std::weak_ptr<BasicContainer> parent_;
+  unity::uweak_ptr<BasicContainer> parent_;
 };
 
 class SimpleItem : public Item
