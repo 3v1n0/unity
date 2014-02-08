@@ -36,6 +36,7 @@ public:
   MenuEntry(indicator::Entry::Ptr const&, CompWindow*);
 
   nux::Property<bool> active;
+  nux::Property<bool> show_now;
   nux::Property<bool> in_dropdown;
 
   virtual void ShowMenu(unsigned button);

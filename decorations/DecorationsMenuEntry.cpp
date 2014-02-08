@@ -34,7 +34,8 @@ const unsigned MAX_DOUBLE_CLICK_WAIT = 100;
 using namespace indicator;
 
 MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
-  : active(false)
+  : active(entry->active())
+  , show_now(entry->show_now())
   , in_dropdown(false)
   , entry_(entry)
   , grab_(win, true)
@@ -53,12 +54,13 @@ std::string const& MenuEntry::Id() const
 
 void MenuEntry::RebuildTexture()
 {
+  WidgetState state = WidgetState::NORMAL;
   sensitive = entry_->label_sensitive();
   visible = entry_->visible() && !in_dropdown();
   active = entry_->active();
-  WidgetState state = WidgetState::NORMAL;
+  show_now = entry_->show_now();
 
-  if (entry_->show_now())
+  if (show_now())
     state = WidgetState::PRESSED;
 
   if (active())
