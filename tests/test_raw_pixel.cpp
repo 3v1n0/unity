@@ -17,42 +17,58 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef EM_CONVERTER_H
-#define EM_CONVERTER_H
+#include <gmock/gmock.h>
+using namespace testing;
+
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
 
-class EMConverter
+int const FONT_SIZE  = 13;
+double const DPI     = 96.0;
+
+class TestRawPixel : public Test
 {
 public:
-  EMConverter(int font_size = 0, double dpi = 96.0);
+  TestRawPixel()
+    : cv(FONT_SIZE, DPI)
+    , p_i(10_em)
+    , p_f(10.0_em)
+  {
+  }
 
-  void SetFontSize(int font_size);
-  void SetDPI(double dpi);
-
-  int    GetFontSize() const;
-  double GetDPI() const;
-
-  double CP(int pixels) const;
-  double DPIScale() const;
-
-  double PtToPx(int pt);
-
-private:
-  void UpdatePixelsPerEM();
-  void UpdateBasePixelsPerEM();
-
-  double  EMToPixels(double em) const;
-  double PixelsToBaseEM(int pixels) const;
-
-  double pixels_per_em_;
-  double base_pixels_per_em_;
-
-  double dpi_;
-  int font_size_;
+  EMConverter cv;
+  RawPixel p_i;
+  RawPixel p_f;
 };
 
-} // namespace unity
+TEST_F(TestRawPixel, TestDefinedLiteralInt)
+{
+  ASSERT_EQ(p_i, 10);
+}
 
-#endif // EM_CONVERTER_H
+TEST_F(TestRawPixel, TestDefinedLiteralFloat)
+{
+  ASSERT_EQ(p_f, 10.0);
+}
+
+TEST_F(TestRawPixel, TestCopy)
+{
+  RawPixel q = p_i;
+
+  ASSERT_EQ(q, 10);
+}
+
+TEST_F(TestRawPixel, TestConverter)
+{
+  ASSERT_EQ(p_i.CP(cv), 10);
+}
+
+TEST_F(TestRawPixel, TestConverterTimesTwo)
+{
+  cv.SetDPI(DPI * 2);
+  ASSERT_EQ(p_i.CP(cv), 20);
+}
+
+} // namespace unity

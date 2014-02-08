@@ -17,42 +17,34 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef EM_CONVERTER_H
-#define EM_CONVERTER_H
+#include "RawPixel.h"
 
 namespace unity
 {
 
-class EMConverter
+RawPixel operator"" _em(long double pixel)
 {
-public:
-  EMConverter(int font_size = 0, double dpi = 96.0);
+  return RawPixel(pixel);
+}
 
-  void SetFontSize(int font_size);
-  void SetDPI(double dpi);
+RawPixel operator"" _em(unsigned long long pixel)
+{
+  return RawPixel(pixel);
+}
 
-  int    GetFontSize() const;
-  double GetDPI() const;
+RawPixel::RawPixel(float raw_pixel)
+  : raw_pixel_(raw_pixel)
+{
+}
 
-  double CP(int pixels) const;
-  double DPIScale() const;
+float RawPixel::CP(EMConverter const& converter) const
+{
+  return converter.CP(raw_pixel_);
+}
 
-  double PtToPx(int pt);
+RawPixel::operator float() const
+{
+  return raw_pixel_;
+}
 
-private:
-  void UpdatePixelsPerEM();
-  void UpdateBasePixelsPerEM();
-
-  double  EMToPixels(double em) const;
-  double PixelsToBaseEM(int pixels) const;
-
-  double pixels_per_em_;
-  double base_pixels_per_em_;
-
-  double dpi_;
-  int font_size_;
-};
-
-} // namespace unity
-
-#endif // EM_CONVERTER_H
+} // namesapce unity
