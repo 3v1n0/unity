@@ -86,7 +86,7 @@ void MenuEntry::ShowMenu(unsigned button)
 
   active = true;
   auto const& geo = Geometry();
-  entry_->ShowMenu(geo.x(), geo.y2(), button);
+  entry_->ShowMenu(grab_.Window()->id(), geo.x(), geo.y2(), button);
 }
 
 int MenuEntry::GetNaturalWidth() const
