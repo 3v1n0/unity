@@ -49,7 +49,9 @@ public:
   Edge(CompWindow* win, Type t);
 
   Type GetType() const;
-  void ButtonDownEvent(CompPoint const&, unsigned button);
+  CompWindow* Window() const;
+
+  void ButtonDownEvent(CompPoint const&, unsigned button) override;
 
 protected:
   std::string GetName() const;

@@ -76,6 +76,11 @@ Edge::Type Edge::GetType() const
   return type_;
 }
 
+CompWindow* Edge::Window() const
+{
+  return win_;
+}
+
 void Edge::ButtonDownEvent(CompPoint const& p, unsigned button)
 {
   XEvent ev;
