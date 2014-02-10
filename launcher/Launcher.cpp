@@ -939,17 +939,7 @@ void Launcher::ShowShortcuts(bool show)
 
 void Launcher::OnLockHideChanged(GVariant *data)
 {
-  gboolean enable_lock = FALSE;
-  g_variant_get(data, "(b)", &enable_lock);
-
-  if (enable_lock)
-  {
-    hide_machine_.SetQuirk(LauncherHideMachine::LOCK_HIDE, true);
-  }
-  else
-  {
-    hide_machine_.SetQuirk(LauncherHideMachine::LOCK_HIDE, false);
-  }
+  hide_machine_.SetQuirk(LauncherHideMachine::LOCK_HIDE, glib::Variant(data).GetBool());
 }
 
 void Launcher::DesaturateIcons()

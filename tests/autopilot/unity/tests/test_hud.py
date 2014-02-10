@@ -442,10 +442,10 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
         current_monitor = self.unity.hud.monitor
 
-        (x,y,w,h) = self.unity.hud.geometry
-        (screen_x,screen_y,screen_w,screen_h) = self.display.get_screen_geometry(current_monitor)
-
-        self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
+        #Click bottom right of the screen
+        w = self.display.get_screen_width() - 1
+        h = self.display.get_screen_height() - 1
+        self.mouse.move(w,h)
         self.mouse.click()
 
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
@@ -463,8 +463,8 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
 
         #Click bottom right of the screen
-        w = self.display.get_screen_width()
-        h = self.display.get_screen_height()
+        w = self.display.get_screen_width() - 1
+        h = self.display.get_screen_height() - 1
         self.mouse.move(w,h)
         self.mouse.click()
 

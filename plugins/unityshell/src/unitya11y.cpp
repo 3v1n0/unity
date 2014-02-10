@@ -57,6 +57,7 @@
 using namespace unity;
 using namespace unity::dash;
 using namespace unity::launcher;
+using namespace unity::panel;
 
 static GHashTable* accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */

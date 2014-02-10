@@ -149,8 +149,8 @@ class DashRevealTests(DashTestCase):
         self.unity.dash.ensure_visible()
 
         #Click bottom right of the screen
-        w = self.display.get_screen_width()
-        h = self.display.get_screen_height()
+        w = self.display.get_screen_width() - 1
+        h = self.display.get_screen_height() - 1
         self.mouse.move(w,h)
         self.mouse.click()
 

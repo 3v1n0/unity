@@ -36,10 +36,19 @@ class WorkspaceManager(KeybindingsHelper):
 
     def refresh_workspace_information(self):
         """Re-read information about available workspaces from compiz and X11."""
+        self._viewport_width = 0
+        self._viewport_height = 0
+
         self._workspaces_wide = get_compiz_option("core", "hsize")
         self._workspaces_high = get_compiz_option("core", "vsize")
-        # Note: only gets the viewport for the first monitor.
-        _, _, self._viewport_width, self._viewport_height = Display.create().get_screen_geometry(0)
+
+        display = Display.create()
+        num_screens = display.get_num_screens()
+
+        for screen in range(num_screens):
+            _, _, width, height = display.get_screen_geometry(screen)
+            self._viewport_width += width
+            self._viewport_height += height
 
     def switch_to(self, workspace_num):
         """Switch to the workspace specified.
