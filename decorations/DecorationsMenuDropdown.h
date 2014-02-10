@@ -47,6 +47,8 @@ protected:
   IntrospectableList GetIntrospectableChildren() override;
 
 private:
+  void RenderTexture() override;
+
   indicator::Indicators::Ptr indicators_;
   std::deque<MenuEntry::Ptr> children_;
 };
