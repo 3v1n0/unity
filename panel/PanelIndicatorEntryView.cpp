@@ -181,7 +181,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   glib::Object<GdkPixbuf> pixbuf;
   GtkIconTheme* theme = gtk_icon_theme_get_default();
   int image_type = proxy_->image_type();
-  int size = (type_ != DROP_DOWN) ? 24 : 16;
+  int size = (type_ != DROP_DOWN) ? 24 : 10;
 
   if (image_type == GTK_IMAGE_PIXBUF)
   {
