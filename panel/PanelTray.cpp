@@ -21,6 +21,7 @@
 
 #include "PanelTray.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/UnitySettings.h"
 
 #include <NuxCore/Logger.h>
 
@@ -71,7 +72,8 @@ PanelTray::PanelTray()
     gtk_widget_show(GTK_WIDGET(tray_.RawPtr()));
   }
 
-  panel::Style::Instance().panel_height_changed.connect([this] (int height) {
+  unity::Settings::Instance().dpi_changed.connect([this] {
+    int height = panel::Style::Instance().PanelHeight(0);
     SetMinMaxSize(1, height);
   });
 

@@ -24,10 +24,11 @@
 #include <Nux/Button.h>
 
 #include "unity-shared/DecorationStyle.h"
-#include "unity-shared/EMConverter.h"
-#include "unity-shared/PanelStyle.h"
-#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/PanelStyle.h"
+#include "unity-shared/RawPixel.h"
+#include "unity-shared/UBusWrapper.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -45,6 +46,8 @@ public:
   panel::WindowButtonType GetType() const;
   void SetVisualState(nux::ButtonVisualState new_state);
 
+  void OnMonitorChanged(int monitor);
+
   nux::RWProperty<bool> enabled;
   nux::Property<bool> overlay_mode;
 
@@ -59,7 +62,6 @@ private:
   bool EnabledSetter(bool enabled);
   static nux::ObjectPtr<nux::BaseTexture> GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state);
 
-  void UpdateEMConverter();
   void UpdateGeometry();
 
   inline WindowButtons* Parent() const
@@ -70,7 +72,7 @@ private:
 private:
   panel::WindowButtonType type_;
 
-  EMConverter em_;
+  EMConverter cv_;
 
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> prelight_tex_;

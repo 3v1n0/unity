@@ -129,7 +129,7 @@ Indicators::IndicatorsList Indicators::Impl::GetIndicators() const
 {
   Indicators::IndicatorsList list;
 
-  for (auto it = indicators_.begin(); it != indicators_.end(); it++)
+  for (auto it = indicators_.begin(); it != indicators_.end(); ++it)
   {
     list.push_back(it->second);
   }

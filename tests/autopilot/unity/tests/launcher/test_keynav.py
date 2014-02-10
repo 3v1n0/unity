@@ -21,12 +21,6 @@ logger = logging.getLogger(__name__)
 class LauncherKeyNavTests(LauncherTestCase):
     """Test the launcher key navigation"""
 
-    def setUp(self):
-        super(LauncherKeyNavTests, self).setUp()
-
-        if not self.launcher_instance:
-            self.skipTest("Cannot run test with no Launcher on monitor")
-
     def start_keynav_with_cleanup_cancel(self):
         """Start keynav mode safely.
 

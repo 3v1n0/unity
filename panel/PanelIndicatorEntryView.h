@@ -34,6 +34,7 @@
 
 #include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/RawPixel.h"
 
 
 namespace unity
@@ -44,29 +45,35 @@ public:
   enum IndicatorEntryType {
     INDICATOR,
     MENU,
+    DROP_DOWN,
     OTHER
   };
+
+  typedef nux::ObjectPtr<PanelIndicatorEntryView> Ptr;
 
   PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
 
   virtual ~PanelIndicatorEntryView();
 
+  nux::Property<bool> in_dropdown;
+
   IndicatorEntryType GetType() const;
+  indicator::Entry::Ptr GetEntry() const { return proxy_; }
   std::string GetEntryID() const;
   int GetEntryPriority() const;
 
-  virtual std::string GetLabel() const;
-  virtual bool IsLabelVisible() const;
-  virtual bool IsLabelSensitive() const;
+  std::string GetLabel() const;
+  bool IsLabelVisible() const;
+  bool IsLabelSensitive() const;
 
-  virtual bool IsIconVisible() const;
-  virtual bool IsIconSensitive() const;
+  bool IsIconVisible() const;
+  bool IsIconSensitive() const;
 
-  virtual void Activate(int button = 1);
-  virtual void Unactivate();
+  void Activate(int button = 1);
+  void Unactivate();
 
-  virtual void GetGeometryForSync(indicator::EntryLocationMap& locations);
+  void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
   bool GetShowNow() const;
   bool IsSensitive() const;
@@ -84,6 +91,8 @@ public:
 
   void OverlayShown();
   void OverlayHidden();
+
+  void SetMonitor(int monitor);
 
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
@@ -103,9 +112,9 @@ protected:
   virtual void ShowMenu(int button = 1);
 
   indicator::Entry::Ptr proxy_;
-  unsigned int spacing_;
-  unsigned int left_padding_;
-  unsigned int right_padding_;
+  RawPixel spacing_;
+  RawPixel left_padding_;
+  RawPixel right_padding_;
 
 private:
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
@@ -117,7 +126,6 @@ private:
   int PixbufHeight(glib::Object<GdkPixbuf> const& pixbuf) const;
 
   void ScaleImageIcons(cairo_t* cr, int* x, int* y);
-  void UpdateEMConverter();
 
   glib::Object<GdkPixbuf> MakePixbuf();
 
@@ -130,7 +138,9 @@ private:
   bool disabled_;
   bool focused_;
 
-  EMConverter em_;
+  int monitor_;
+
+  EMConverter cv_;
 };
 
 }
