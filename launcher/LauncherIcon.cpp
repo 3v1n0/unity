@@ -117,7 +117,11 @@ LauncherIcon::LauncherIcon(IconType type)
 
 void LauncherIcon::LoadTooltip()
 {
-  _tooltip = new Tooltip();
+  int monitor = _last_monitor;
+  if (monitor < 0)
+    monitor = 0;
+
+  _tooltip = new Tooltip(monitor);
   _tooltip->SetOpacity(0.0f);
   AddChild(_tooltip.GetPointer());
 
@@ -508,6 +512,10 @@ void LauncherIcon::ShowTooltip()
 void LauncherIcon::RecvMouseEnter(int monitor)
 {
   _last_monitor = monitor;
+
+  // FIXME We need to look at why we need to set the last_monitor to -1 when it leaves.
+  // As it would be nice to not have to re-create the tooltip everytime now :(
+  LoadTooltip();
 }
 
 void LauncherIcon::RecvMouseLeave(int monitor)
