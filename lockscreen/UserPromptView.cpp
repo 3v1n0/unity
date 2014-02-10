@@ -21,6 +21,7 @@
 
 #include <Nux/VLayout.h>
 
+#include "LockScreenSettings.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/TextInput.h"
 #include "unity-shared/StaticCairoText.h"
@@ -35,9 +36,18 @@ nux::AbstractPaintLayer* Foo(int width, int height)
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t* cr = cg.GetInternalContext();
 
+
+
   // FIXME (andy) add radious
   cairo_set_source_rgba(cr, 0.1, 0.1, 0.1, 0.4);
-  cairo_rectangle(cr, 0, 0, width, height);
+
+  cg.DrawRoundedRectangle(cr,
+                          1.0,
+                          0, 0,
+                          Settings::GRID_SIZE * 0.3,
+                          width, height);
+
+  //cairo_rectangle(cr, 0, 0, width, height);
   cairo_fill_preserve(cr);
 
   cairo_set_source_rgba (cr, 0.4, 0.4, 0.4, 0.4);
@@ -75,7 +85,7 @@ UserPromptView::UserPromptView(std::string const& name)
   text_input_ = new unity::TextInput();
   text_input_->input_hint = _("Password");
   text_input_->text_entry()->SetPasswordMode(true);
-  text_input_->SetMaximumHeight(40);
+  text_input_->SetMaximumHeight(Settings::GRID_SIZE);
   /*const char password_char = '*';
   text_input_->text_entry()->SetPasswordChar(&password_char);*/
   GetLayout()->AddView(text_input_);
