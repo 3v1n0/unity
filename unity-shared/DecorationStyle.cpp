@@ -546,6 +546,28 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
+  void DrawMenuItemIcon(std::string const& icon, WidgetState ws, cairo_t* cr, int size)
+  {
+    gtk_style_context_save(ctx_);
+    AddContextClassesForMenuItem(ws);
+
+    auto* theme = gtk_icon_theme_get_default();
+    GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
+    glib::Error error;
+    glib::Object<GdkPixbuf> pixbuf(gtk_icon_theme_load_icon(theme, icon.c_str(), size, flags, &error));
+
+    if (error)
+    {
+      LOG_ERROR(logger) << "Error when loading icon " << icon << " at size "
+                        << size << ": " << error;
+    }
+
+    if (pixbuf)
+      gtk_render_icon(ctx_, cr, pixbuf, 0, 0);
+
+    gtk_style_context_restore(ctx_);
+  }
+
   Style* parent_;
   glib::SignalManager signals_;
   glib::Object<GtkStyleContext> ctx_;
@@ -617,6 +639,11 @@ void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, int w, int h)
 void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, int w, int h)
 {
   impl_->DrawMenuItemEntry(t, ws, cr, w, h);
+}
+
+void Style::DrawMenuItemIcon(std::string const& i, WidgetState ws, cairo_t* cr, int s)
+{
+  impl_->DrawMenuItemIcon(i, ws, cr, s);
 }
 
 std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const

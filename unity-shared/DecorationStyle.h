@@ -128,6 +128,7 @@ public:
   void DrawTitle(std::string const&, WidgetState, cairo_t*, int width, int height);
   void DrawMenuItem(WidgetState, cairo_t*, int width, int height);
   void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, int width, int height);
+  void DrawMenuItemIcon(std::string const&, WidgetState, cairo_t*, int size);
 
 private:
   Style();
