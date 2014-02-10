@@ -45,6 +45,14 @@ OverlayWindowButtons::OverlayWindowButtons()
   SetBackgroundColor(nux::color::Transparent);
 }
 
+bool OverlayWindowButtons::IsVisibleOnMonitor(unsigned int monitor) const
+{
+  if (window_buttons_->monitor == monitor)
+    return true;
+  
+  return false;
+}
+
 void OverlayWindowButtons::UpdateGeometry()
 {
   int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
