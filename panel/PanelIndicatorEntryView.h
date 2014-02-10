@@ -54,8 +54,6 @@ public:
 
   virtual ~PanelIndicatorEntryView();
 
-  nux::Property<bool> in_dropdown;
-
   IndicatorEntryType GetType() const;
   indicator::Entry::Ptr GetEntry() const { return proxy_; }
   std::string GetEntryID() const;

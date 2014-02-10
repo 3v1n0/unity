@@ -43,7 +43,6 @@ using namespace indicator;
 PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding,
                                                  IndicatorEntryType type)
   : TextureArea(NUX_TRACKER_LOCATION)
-  , in_dropdown(false)
   , proxy_(proxy)
   , spacing_(DEFAULT_SPACING)
   , left_padding_(padding < 0 ? 0 : padding)
@@ -659,7 +658,7 @@ bool PanelIndicatorEntryView::IsVisible()
 {
   if (proxy_.get())
   {
-    return TextureArea::IsVisible() && proxy_->visible() && !in_dropdown();
+    return TextureArea::IsVisible() && proxy_->visible();
   }
 
   return TextureArea::IsVisible();

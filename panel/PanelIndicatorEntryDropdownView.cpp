@@ -62,7 +62,6 @@ void PanelIndicatorEntryDropdownView::Push(PanelIndicatorEntryView::Ptr const& c
 
   children_.push_back(child);
   child->GetEntry()->add_parent(proxy_);
-  child->in_dropdown = true;
   debug::Introspectable::AddChild(child.GetPointer());
   SetProxyVisibility(true);
 }
@@ -84,7 +83,6 @@ void PanelIndicatorEntryDropdownView::Insert(PanelIndicatorEntryView::Ptr const&
 
   children_.insert(it, child);
   child->GetEntry()->add_parent(proxy_);
-  child->in_dropdown = true;
   debug::Introspectable::AddChild(child.GetPointer());
   SetProxyVisibility(true);
 }
@@ -128,7 +126,6 @@ void PanelIndicatorEntryDropdownView::Remove(PanelIndicatorEntryView::Ptr const&
   {
     debug::Introspectable::RemoveChild(it->GetPointer());
     child->GetEntry()->rm_parent(proxy_);
-    child->in_dropdown = false;
     children_.erase(it);
   }
 

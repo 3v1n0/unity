@@ -198,8 +198,8 @@ bool PanelIndicatorsView::ActivateIfSensitive()
 
 void PanelIndicatorsView::GetGeometryForSync(EntryLocationMap& locations)
 {
-  for (auto const& entry : entries_)
-    entry.second->GetGeometryForSync(locations);
+  for (auto* area : layout_->GetChildren())
+    static_cast<PanelIndicatorEntryView*>(area)->GetGeometryForSync(locations);
 }
 
 PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
