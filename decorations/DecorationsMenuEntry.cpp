@@ -17,6 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include <sigc++/adaptors/hide.h>
 #include "DecorationsMenuEntry.h"
 #include "DecorationStyle.h"
 
@@ -26,25 +27,25 @@ namespace decoration
 {
 namespace
 {
-const unsigned HORIZONTAL_PADDING = 5;
-const unsigned VERTICAL_PADDING = 3;
 const unsigned MAX_DOUBLE_CLICK_WAIT = 100;
 }
 
 using namespace indicator;
 
 MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
-  : active(entry->active())
+  : horizontal_padding(5)
+  , vertical_padding(3)
+  , active(entry->active())
   , show_now(entry->show_now())
   , in_dropdown(false)
   , entry_(entry)
   , grab_(win, true)
 {
-  sensitive = entry_->label_sensitive();
-  visible = entry_->visible() && !in_dropdown();
-  entry_->updated.connect(sigc::mem_fun(this, &MenuEntry::RebuildTexture));
+  entry_->updated.connect(sigc::mem_fun(this, &MenuEntry::EntryUpdated));
+  horizontal_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
+  vertical_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
   in_dropdown.changed.connect([this] (bool in) { visible = entry_->visible() && !in; });
-  RebuildTexture();
+  EntryUpdated();
 }
 
 std::string const& MenuEntry::Id() const
@@ -52,13 +53,19 @@ std::string const& MenuEntry::Id() const
   return entry_->id();
 }
 
-void MenuEntry::RebuildTexture()
+void MenuEntry::EntryUpdated()
 {
-  WidgetState state = WidgetState::NORMAL;
-  sensitive = entry_->label_sensitive();
+  sensitive = entry_->label_sensitive() || entry_->image_sensitive();
   visible = entry_->visible() && !in_dropdown();
   active = entry_->active();
   show_now = entry_->show_now();
+
+  RenderTexture();
+}
+
+void MenuEntry::RenderTexture()
+{
+  WidgetState state = WidgetState::NORMAL;
 
   if (show_now())
     state = WidgetState::PRESSED;
@@ -73,7 +80,7 @@ void MenuEntry::RebuildTexture()
     Style::Get()->DrawMenuItem(state, text_ctx, text_ctx.width(), text_ctx.height());
 
   cairo_save(text_ctx);
-  cairo_translate(text_ctx, HORIZONTAL_PADDING, VERTICAL_PADDING);
+  cairo_translate(text_ctx, horizontal_padding(), vertical_padding());
   Style::Get()->DrawMenuItemEntry(entry_->label(), state, text_ctx, natural_.width, natural_.height);
   cairo_restore(text_ctx);
   SetTexture(text_ctx);
@@ -91,12 +98,12 @@ void MenuEntry::ShowMenu(unsigned button)
 
 int MenuEntry::GetNaturalWidth() const
 {
-  return natural_.width + HORIZONTAL_PADDING * 2;
+  return natural_.width + horizontal_padding() * 2;
 }
 
 int MenuEntry::GetNaturalHeight() const
 {
-  return natural_.height + VERTICAL_PADDING * 2;
+  return natural_.height + vertical_padding() * 2;
 }
 
 void MenuEntry::ButtonDownEvent(CompPoint const& p, unsigned button)

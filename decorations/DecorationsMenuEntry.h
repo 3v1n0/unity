@@ -35,6 +35,8 @@ public:
 
   MenuEntry(indicator::Entry::Ptr const&, CompWindow*);
 
+  nux::Property<unsigned> horizontal_padding;
+  nux::Property<unsigned> vertical_padding;
   nux::Property<bool> active;
   nux::Property<bool> show_now;
   nux::Property<bool> in_dropdown;
@@ -56,7 +58,8 @@ protected:
   void MotionEvent(CompPoint const&) override;
 
 private:
-  void RebuildTexture();
+  void EntryUpdated();
+  virtual void RenderTexture();
 
 protected:
   indicator::Entry::Ptr entry_;
