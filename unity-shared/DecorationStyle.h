@@ -97,6 +97,7 @@ public:
   nux::Property<std::string> theme;
   nux::Property<std::string> font;
   nux::Property<std::string> title_font;
+  nux::Property<bool> integrated_menus;
 
   decoration::Border const& Border() const;
   decoration::Border const& InputBorder() const;
