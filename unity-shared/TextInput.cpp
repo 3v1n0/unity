@@ -77,6 +77,9 @@ void TextInput::Init()
   pango_entry_->cursor_moved.connect([this](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &TextInput::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &TextInput::OnEndKeyFocus));
+  pango_entry_->text_changed.connect([this](nux::TextEntry*) {
+    hint_->SetVisible(input_string().empty());
+  });
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayout(hint_layout);
