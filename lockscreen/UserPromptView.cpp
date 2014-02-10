@@ -70,9 +70,12 @@ UserPromptView::UserPromptView(std::string const& name)
   unity::StaticCairoText* username = new unity::StaticCairoText(name);
   GetLayout()->AddView(username);
 
+  GetLayout()->AddSpace(0, 1);
+
   text_input_ = new unity::TextInput();
   text_input_->input_hint = _("Password");
   text_input_->text_entry()->SetPasswordMode(true);
+  text_input_->SetMaximumHeight(40);
   /*const char password_char = '*';
   text_input_->text_entry()->SetPasswordChar(&password_char);*/
   GetLayout()->AddView(text_input_);
