@@ -615,7 +615,7 @@ bool PanelView::TrackMenuPointer()
 
 void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
 {
-  bool active = (entry_id.size() > 0);
+  bool active = !entry_id.empty();
   if (active && !track_menu_pointer_timeout_)
   {
     //
