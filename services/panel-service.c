@@ -65,6 +65,7 @@ struct _PanelServicePrivate
 
   IndicatorObjectEntry *last_entry;
   IndicatorObjectEntry *last_dropdown_entry;
+  const gchar *last_panel;
   GtkMenu *last_menu;
   gint32   last_x;
   gint32   last_y;
@@ -296,6 +297,34 @@ get_entry_at (PanelService *self, gint x, gint y)
               y >= geo->y && y <= (geo->y + geo->height))
             {
               return entry;
+            }
+        }
+    }
+
+  return NULL;
+}
+
+static const gchar*
+get_panel_at (PanelService *self, gint x, gint y)
+{
+  GHashTableIter panel_iter, entries_iter;
+  gpointer key, value, k, v;
+
+  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
+  while (g_hash_table_iter_next (&panel_iter, &key, &value))
+    {
+      const gchar *panel_id = key;
+      GHashTable *entry2geometry_hash = value;
+      g_hash_table_iter_init (&entries_iter, entry2geometry_hash);
+
+      while (g_hash_table_iter_next (&entries_iter, &k, &v))
+        {
+          GdkRectangle *geo = v;
+
+          if (x >= geo->x && x <= (geo->x + geo->width) &&
+              y >= geo->y && y <= (geo->y + geo->height))
+            {
+              return panel_id;
             }
         }
     }
@@ -1552,6 +1581,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_y = 0;
   priv->last_menu_button = 0;
 
+  priv->last_panel = NULL;
   priv->last_menu = NULL;
   priv->last_entry = NULL;
   priv->last_left = 0;
@@ -1661,6 +1691,13 @@ panel_service_sync_geometry (PanelService *self,
 
       if (width < 0 || height < 0 || !valid_entry)
         {
+          /* If the entry has been removed let's make sure that its menu is closed */
+          if (valid_entry && GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+            {
+              if (!priv->last_panel || g_strcmp0 (priv->last_panel, panel_id) == 0)
+                gtk_menu_popdown (entry->menu);
+            }
+
           if (entry2geometry_hash)
             {
               if (g_hash_table_size (entry2geometry_hash) > 1)
@@ -1671,12 +1708,6 @@ panel_service_sync_geometry (PanelService *self,
                 {
                   g_hash_table_remove (priv->panel2entries_hash, panel_id);
                 }
-            }
-
-          /* If the entry has been removed let's make sure that its menu is closed */
-          if (valid_entry && GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
-            {
-              gtk_menu_popdown (entry->menu);
             }
         }
       else
@@ -1703,7 +1734,8 @@ panel_service_sync_geometry (PanelService *self,
 
           /* If the current entry geometry has changed, we need to move the menu
            * accordingly to the change we recorded! */
-          if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+          if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu &&
+              g_strcmp0 (priv->last_panel, panel_id) == 0)
             {
               GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
 
@@ -1968,6 +2000,7 @@ panel_service_show_entry_common (PanelService *self,
 
       g_signal_handlers_disconnect_by_data (priv->last_menu, self);
 
+      priv->last_panel = NULL;
       priv->last_entry = NULL;
       priv->last_menu = NULL;
       priv->last_menu_button = 0;
@@ -2011,6 +2044,8 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;
+      priv->last_panel = get_panel_at (self, x, y);
+
       g_signal_connect (priv->last_menu, "hide", G_CALLBACK (on_active_menu_hidden), self);
       g_signal_connect_after (priv->last_menu, "move-current",
                               G_CALLBACK (on_active_menu_move_current), self);
