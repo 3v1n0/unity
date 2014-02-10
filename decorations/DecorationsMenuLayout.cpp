@@ -108,7 +108,7 @@ void MenuLayout::OnEntryActiveChanged(bool actived)
 
         for (auto const& item : Items())
         {
-          if (!item->visible())
+          if (!item->visible() || !item->sensitive())
             continue;
 
           if (item->Geometry().contains(last_pointer_))
