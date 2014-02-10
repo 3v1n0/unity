@@ -102,18 +102,8 @@ void Shield::ShowPrimaryView()
   auto indicators = std::make_shared<indicator::DBusIndicators>(/* lockscreen mode */ true);
 
   // Hackish but ok for the moment.
-  indicators->on_entry_show_menu.connect([this](std::string const&, unsigned, int, int, unsigned) {
-    UnGrabPointer();
-    UnGrabKeyboard();
-  });
-
-  indicators->on_entry_activated.connect([this](std::string const& entry, nux::Geometry const& geo) {
-    if (entry.empty() and geo.IsNull())
-    {
-      GrabPointer();
-      GrabKeyboard();
-    }
-  });
+  indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnEntryShowMenu));
+  indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnEntryActivated));
 
   panel::PanelView* panel_view = new panel::PanelView(this, indicators, true);
   panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
@@ -146,6 +136,21 @@ void Shield::ShowPrimaryView()
       }
     });
   });
+}
+
+void Shield::OnEntryShowMenu(std::string const&, unsigned, int, int, unsigned)
+{
+  UnGrabPointer();
+  UnGrabKeyboard();
+}
+
+void Shield::OnEntryActivated(std::string const& entry, nux::Geometry const& geo)
+{
+  if (entry.empty() and geo.IsNull())
+  {
+    GrabPointer();
+    GrabKeyboard();
+  }
 }
 
 void Shield::ShowSecondaryView()

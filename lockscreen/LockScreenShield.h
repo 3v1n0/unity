@@ -55,6 +55,9 @@ private:
   void ShowPrimaryView();
   void ShowSecondaryView();
 
+  void OnEntryShowMenu(std::string const&, unsigned, int, int, unsigned);
+  void OnEntryActivated(std::string const& entry, nux::Geometry const& geo);
+
   void OnMouseEnter(int /*x*/, int /*y*/, unsigned long /**/, unsigned long /**/);
   void OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long /**/);
   void OnPrimaryChanged(bool value);
