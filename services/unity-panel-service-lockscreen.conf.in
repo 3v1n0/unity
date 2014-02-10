@@ -1,0 +1,8 @@
+description "Backing Service for the Unity Panel"
+author "Andrea Azzarone <andrea.azzarone@canonical.com>"
+
+start on desktop-lock
+stop on desktop-unlock
+
+respawn
+exec ${CMAKE_INSTALL_PREFIX}/lib/unity/unity-panel-service --lockscreen-mode
