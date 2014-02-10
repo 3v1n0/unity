@@ -32,38 +32,37 @@ namespace unity
 {
 namespace
 {
-  const int ANCHOR_WIDTH = 14;
-  const int ANCHOR_HEIGHT = 18;
-  const int CORNER_RADIUS = 4;
-  const int PADDING = 15;
-  const int TEXT_PADDING = 8;
-  const int MINIMUM_TEXT_WIDTH = 100;
+  const RawPixel ANCHOR_WIDTH       =  14_em;
+  const RawPixel ANCHOR_HEIGHT      =  18_em;
+  const RawPixel CORNER_RADIUS      =   4_em;
+  const RawPixel PADDING            =  15_em;
+  const RawPixel TEXT_PADDING       =   8_em;
+  const RawPixel MINIMUM_TEXT_WIDTH = 100_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
-Tooltip::Tooltip() :
+Tooltip::Tooltip(int monitor) :
   _anchorX(0),
   _anchorY(0),
+  _monitor(monitor),
   _cairo_text_has_changed(true),
-  em_(0)
+  _cv(unity::Settings::Instance().em(monitor))
 {
-  UpdateEMConverter();
-
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  _left_space = new nux::SpaceLayout(em_.CP(PADDING + ANCHOR_WIDTH), em_.CP(PADDING + ANCHOR_WIDTH), 1, 1000);
-  _right_space = new nux::SpaceLayout(em_.CP(PADDING + CORNER_RADIUS), em_.CP(PADDING + CORNER_RADIUS), 1, 1000);
+  _left_space = new nux::SpaceLayout(PADDING.CP(_cv) + ANCHOR_WIDTH.CP(_cv), PADDING.CP(_cv) + ANCHOR_WIDTH.CP(_cv), 1, 1000);
+  _right_space = new nux::SpaceLayout(PADDING.CP(_cv) + CORNER_RADIUS.CP(_cv), PADDING.CP(_cv) + CORNER_RADIUS.CP(_cv), 1, 1000);
 
-  _top_space = new nux::SpaceLayout(1, 1000, em_.CP(PADDING), em_.CP(PADDING));
-  _bottom_space = new nux::SpaceLayout(1, 1000, em_.CP(PADDING), em_.CP(PADDING));
+  _top_space = new nux::SpaceLayout(1, 1000, PADDING.CP(_cv), PADDING.CP(_cv));
+  _bottom_space = new nux::SpaceLayout(1, 1000, PADDING.CP(_cv), PADDING.CP(_cv));
 
   _vlayout->AddLayout(_top_space, 0);
 
   _tooltip_text = new StaticCairoText(TEXT(""), NUX_TRACKER_LOCATION);
   _tooltip_text->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetTextVerticalAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
-  _tooltip_text->SetMinimumWidth(em_.CP(MINIMUM_TEXT_WIDTH));
+  _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH.CP(_cv));
 
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
@@ -94,16 +93,7 @@ Tooltip::Tooltip() :
 
   SetWindowSizeMatchLayout(true);
   SetLayout(_hlayout);
-
-  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &Tooltip::UpdateEMConverter));
 }
-
-void Tooltip::UpdateEMConverter()
-{
-  em_.SetFontSize(panel::Style::Instance().GetFontSize());
-  em_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
-}
-
 
 nux::Area* Tooltip::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
@@ -116,8 +106,8 @@ void Tooltip::SetTooltipPosition(int tip_x, int tip_y)
   _anchorX = tip_x;
   _anchorY = tip_y;
 
-  int x = _anchorX - em_.CP(PADDING);
-  int y = _anchorY - em_.CP(ANCHOR_HEIGHT) / 2 - em_.CP(CORNER_RADIUS) - em_.CP(PADDING);
+  int x = _anchorX - PADDING.CP(_cv);
+  int y = _anchorY - ANCHOR_HEIGHT.CP(_cv) / 2 - CORNER_RADIUS.CP(_cv) - PADDING.CP(_cv);
 
   SetBaseXY(x, y);
 }
@@ -141,22 +131,22 @@ void Tooltip::PreLayoutManagement()
 {
   int text_width;
   int text_height;
-  int text_min_width = em_.CP(MINIMUM_TEXT_WIDTH);
+  int text_min_width = MINIMUM_TEXT_WIDTH.CP(_cv);
 
   _tooltip_text->GetTextExtents(text_width, text_height);
 
-  if (text_width + em_.CP(TEXT_PADDING) * 2 > text_min_width)
+  if (text_width + TEXT_PADDING.CP(_cv) * 2 > text_min_width)
   {
-    text_min_width = text_width + em_.CP(TEXT_PADDING) * 2;
+    text_min_width = text_width + TEXT_PADDING.CP(_cv) * 2;
   }
 
   _tooltip_text->SetMinimumWidth(text_min_width);
   _tooltip_text->SetMinimumHeight(text_height);
 
-  if (text_height < em_.CP(ANCHOR_HEIGHT))
+  if (text_height < ANCHOR_HEIGHT.CP(_cv))
   {
-    _top_space->SetMinMaxSize(1, (em_.CP(ANCHOR_HEIGHT) - text_height) / 2 + em_.CP(PADDING) + em_.CP(CORNER_RADIUS));
-    _bottom_space->SetMinMaxSize(1, (em_.CP(ANCHOR_HEIGHT) - text_height) / 2 + 1 + em_.CP(PADDING) + em_.CP(CORNER_RADIUS));
+    _top_space->SetMinMaxSize(1, (ANCHOR_HEIGHT.CP(_cv) - text_height) / 2 + PADDING.CP(_cv) + CORNER_RADIUS.CP(_cv));
+    _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT.CP(_cv) - text_height) / 2 + 1 + PADDING.CP(_cv) + CORNER_RADIUS.CP(_cv));
   }
 
   CairoBaseWindow::PreLayoutManagement();
@@ -459,7 +449,7 @@ void Tooltip::UpdateTexture()
   int width = GetBaseWidth();
   int height = GetBaseHeight();
 
-  int x = _anchorX - em_.CP(PADDING);
+  int x = _anchorX - PADDING.CP(_cv);
   int y = _anchorY - height / 2;
 
   float blur_coef = 6.0f;
@@ -508,14 +498,14 @@ void Tooltip::UpdateTexture()
     cairo_outline.GetSurface(),
     width,
     height,
-    em_.CP(ANCHOR_WIDTH),
-    em_.CP(ANCHOR_HEIGHT),
+    ANCHOR_WIDTH.CP(_cv),
+    ANCHOR_HEIGHT.CP(_cv),
     -1,
-    em_.CP(CORNER_RADIUS),
+    CORNER_RADIUS.CP(_cv),
     blur_coef,
     shadow_color,
     1.0f,
-    em_.CP(PADDING),
+    PADDING.CP(_cv),
     outline_color);
 
   compute_full_mask(
@@ -523,15 +513,15 @@ void Tooltip::UpdateTexture()
     cairo_mask.GetSurface(),
     width,
     height,
-    em_.CP(CORNER_RADIUS), // radius,
-    em_.CP(16),            // shadow_radius,
-    em_.CP(ANCHOR_WIDTH),  // anchor_width,
-    em_.CP(ANCHOR_HEIGHT), // anchor_height,
+    CORNER_RADIUS.CP(_cv), // radius,
+    RawPixel(16).CP(_cv),  // shadow_radius,
+    ANCHOR_WIDTH.CP(_cv),  // anchor_width,
+    ANCHOR_HEIGHT.CP(_cv), // anchor_height,
     -1,                    // upper_size,
     true,                  // negative,
     false,                 // outline,
     1.0,                   // line_width,
-    em_.CP(PADDING),       // padding_size,
+    PADDING.CP(_cv),       // padding_size,
     mask_color);
 
   cairo_destroy(cr_bg);

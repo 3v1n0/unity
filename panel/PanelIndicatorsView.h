@@ -24,12 +24,14 @@
 #include <Nux/View.h>
 #include <Nux/Layout.h>
 
-#include <UnityCore/Indicator.h>
+#include <UnityCore/Indicators.h>
 
-#include "PanelIndicatorEntryView.h"
+#include "PanelIndicatorEntryDropdownView.h"
 #include "unity-shared/Introspectable.h"
 
 namespace unity
+{
+namespace panel
 {
 
 class PanelIndicatorsView : public nux::View, public unity::debug::Introspectable
@@ -65,27 +67,31 @@ public:
   void SetMaximumEntriesWidth(int max_width);
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
+  void EnableDropdownMenu(bool, indicator::Indicators::Ptr const& i = nullptr);
+
   nux::Property<double> opacity;
 
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
+  sigc::signal<void, PanelIndicatorEntryView*> entry_added;
+  sigc::signal<void, PanelIndicatorEntryView*> entry_removed;
+
+  void SetAllEntrysMonitor(int monitor);
 
 protected:
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
 
   typedef std::vector<indicator::Indicator::Ptr> Indicators;
-  Indicators GetIndicators();
+  Indicators const& GetIndicators() const;
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
   virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
-  virtual void OnEntryRemoved(std::string const& entry_id);
 
-  virtual void AddEntryView(PanelIndicatorEntryView* view,
-                            IndicatorEntryPosition pos = AUTO);
-  virtual void RemoveEntryView(PanelIndicatorEntryView* view);
+  void AddEntryView(PanelIndicatorEntryView* view, IndicatorEntryPosition pos = AUTO);
+  void RemoveEntryView(PanelIndicatorEntryView* view);
 
   nux::HLayout* layout_;
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
@@ -95,9 +101,11 @@ private:
   bool SetOpacity(double& target, double const& new_value);
 
   Indicators indicators_;
+  PanelIndicatorEntryDropdownView::Ptr dropdown_;
   std::unordered_map<indicator::Indicator::Ptr, connection::Manager> indicators_connections_;
 };
 
-}
+} // panel namespace
+} // unity namespace
 
 #endif // PANEL_INDICATORS_VIEW_H

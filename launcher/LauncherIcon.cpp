@@ -118,7 +118,12 @@ LauncherIcon::LauncherIcon(IconType type)
 
 void LauncherIcon::LoadTooltip()
 {
-  _tooltip.Adopt(new Tooltip());
+  int monitor = _last_monitor;
+  if (monitor < 0)
+    monitor = 0;
+
+  _tooltip.Adopt(new Tooltip(monitor));
+
   _tooltip->SetOpacity(0.0f);
   AddChild(_tooltip.GetPointer());
 
@@ -127,7 +132,11 @@ void LauncherIcon::LoadTooltip()
 
 void LauncherIcon::LoadQuicklist()
 {
-  _quicklist.Adopt(new QuicklistView());
+  int monitor = _last_monitor;
+  if (monitor < 0)
+    monitor = 0;
+
+  _quicklist.Adopt(new QuicklistView(monitor));
   AddChild(_quicklist.GetPointer());
 
   _quicklist->mouse_down_outside_pointer_grab_area.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -352,10 +361,9 @@ BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size
     icon_name = DEFAULT_ICON;
 
   default_theme = gtk_icon_theme_get_default();
+  result = TextureFromSpecificGtkTheme(default_theme, icon_name, size, update_glow_colors);
 
-  // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
-  // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
-  if (icon_name.find("workspace-switcher") == 0)
+  if (!result)
     result = TextureFromSpecificGtkTheme(GetUnityTheme(), icon_name, size, update_glow_colors);
 
   if (!result)
@@ -510,6 +518,11 @@ void LauncherIcon::ShowTooltip()
 void LauncherIcon::RecvMouseEnter(int monitor)
 {
   _last_monitor = monitor;
+
+  // FIXME We need to look at why we need to set the last_monitor to -1 when it leaves.
+  // As it would be nice to not have to re-create the tooltip/quicklist everytime now :(
+  LoadTooltip();
+  LoadQuicklist();
 }
 
 void LauncherIcon::RecvMouseLeave(int monitor)

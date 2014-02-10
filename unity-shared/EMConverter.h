@@ -26,7 +26,7 @@ namespace unity
 class EMConverter
 {
 public:
-  EMConverter(int font_size, double dpi = 96.0);
+  EMConverter(int font_size = 0, double dpi = 96.0);
 
   void SetFontSize(int font_size);
   void SetDPI(double dpi);
@@ -34,14 +34,16 @@ public:
   int    GetFontSize() const;
   double GetDPI() const;
 
-  int    CP(int pixels) const;
+  double CP(int pixels) const;
   double DPIScale() const;
+
+  double PtToPx(int pt);
 
 private:
   void UpdatePixelsPerEM();
   void UpdateBasePixelsPerEM();
 
-  int    EMToPixels(double em) const;
+  double  EMToPixels(double em) const;
   double PixelsToBaseEM(int pixels) const;
 
   double pixels_per_em_;

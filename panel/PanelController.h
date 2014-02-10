@@ -27,11 +27,9 @@
 #include "unity-shared/Introspectable.h"
 namespace unity
 {
-
-class PanelView;
-
 namespace panel
 {
+class PanelView;
 
 class Controller : public sigc::trackable, public unity::debug::Introspectable
 {

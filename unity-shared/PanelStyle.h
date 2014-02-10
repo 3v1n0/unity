@@ -29,6 +29,7 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/EMConverter.h"
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -68,12 +69,8 @@ public:
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
 
-  int GetFontSize();
-
   int PanelHeight(int monitor = 0) const;
 
-  // int height
-  sigc::signal<void, int> panel_height_changed;
   sigc::signal<void> changed;
 
 private:
@@ -86,8 +83,7 @@ private:
   glib::Object<GtkStyleContext> style_context_;
   BaseTexturePtr bg_texture_;
 
-  std::vector<int> panel_heights_;
-  EMConverter em_;
+  std::vector<RawPixel> panel_heights_;
 };
 
 }

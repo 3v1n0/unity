@@ -36,6 +36,8 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
  : SingleMonitorLauncherIcon(IconType::HUD)
  , launcher_hide_mode_(hide_mode)
  , overlay_monitor_(0)
+ , single_launcher_(false)
+ , launcher_monitor_(0)
 {
   tooltip_text = _("HUD");
   tooltip_enabled = false;
@@ -84,6 +86,21 @@ void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
   }
 }
 
+void HudLauncherIcon::SetSingleLauncher(bool single_launcher, int launcher_monitor)
+{
+  if (single_launcher_ == single_launcher && launcher_monitor_ == launcher_monitor)
+    return;
+  
+  single_launcher_ = single_launcher;
+  launcher_monitor_ = launcher_monitor;
+
+  if (single_launcher_)
+  {
+    SetQuirk(Quirk::ACTIVE, false);
+    SetQuirk(Quirk::VISIBLE, false);
+  }
+}
+
 void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
 {
   unity::glib::String overlay_identity;
@@ -94,7 +111,8 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
 
   // If the hud is open, we show the HUD button if we have a locked launcher
   if (overlay_identity.Str() == "hud" &&
-      launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
+      launcher_hide_mode_ == LAUNCHER_HIDE_NEVER &&
+      (!single_launcher_ || (single_launcher_ && launcher_monitor_ == overlay_monitor_)))
   {
     SetMonitor(visible ? overlay_monitor_ : -1);
     SetQuirk(Quirk::ACTIVE, visible, overlay_monitor_);

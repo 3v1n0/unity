@@ -36,6 +36,8 @@
 
 namespace unity
 {
+namespace panel
+{
 DECLARE_LOGGER(logger, "unity.panel.menu");
 
 namespace
@@ -97,7 +99,8 @@ PanelMenuView::PanelMenuView()
     FullRedraw();
   });
 
-  panel::Style::Instance().panel_height_changed.connect([this] (int height) {
+  unity::Settings::Instance().dpi_changed.connect([this] {
+    int height = panel::Style::Instance().PanelHeight(monitor_);
     window_buttons_->SetMaximumHeight(height);
   });
 
@@ -126,8 +129,8 @@ void PanelMenuView::SetupPanelMenuViewSignals()
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-
   opacity_animator_.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
+  entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryViewAdded));
 }
 
 
@@ -292,6 +295,8 @@ void PanelMenuView::PreLayoutManagement()
   int buttons_diff = geo.height - window_buttons_->GetContentHeight();
   window_buttons_->SetBaseY(buttons_diff > 0 ? std::ceil(buttons_diff/2.0f) : 0);
 
+  SetMaximumEntriesWidth(geo.width - window_buttons_->GetContentWidth());
+
   layout_->ComputeContentSize();
   int layout_width = layout_->GetContentWidth();
 
@@ -299,8 +304,6 @@ void PanelMenuView::PreLayoutManagement()
   titlebar_grab_area_->SetBaseHeight(geo.height);
   titlebar_grab_area_->SetMinimumWidth(geo.width - layout_width);
   titlebar_grab_area_->SetMaximumWidth(geo.width - layout_width);
-
-  SetMaximumEntriesWidth(geo.width - window_buttons_->GetContentWidth());
 }
 
 void PanelMenuView::StartFadeIn(int duration)
@@ -423,7 +426,6 @@ void PanelMenuView::UpdateLastGeometry(nux::Geometry const& geo)
   if (geo != last_geo_)
   {
     last_geo_ = geo;
-    QueueRelayout();
     Refresh(true);
   }
 }
@@ -719,7 +721,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname) const
 void PanelMenuView::UpdateTitleTexture(cairo_t *cr, nux::Geometry const& geo, std::string const& label) const
 {
   using namespace decoration;
-  auto const& style = Style::Get();
+  auto const& style = decoration::Style::Get();
   auto text_size = style->TitleNaturalSize(label);
   int x = MAIN_LEFT_PADDING + TITLE_PADDING + geo.x;
 
@@ -824,13 +826,15 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   PanelIndicatorEntryView* view;
 
   view = new PanelIndicatorEntryView(entry, MENU_ENTRIES_PADDING, IndicatorEntryType::MENU);
+  entry->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
+  AddEntryView(view);
+}
+
+void PanelMenuView::OnEntryViewAdded(PanelIndicatorEntryView* view)
+{
   view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-
-  entry->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
-
-  AddEntryView(view, IndicatorEntryPosition::END);
 }
 
 void PanelMenuView::NotifyAllMenusClosed()
@@ -1594,4 +1598,6 @@ void PanelMenuView::SetMousePosition(int x, int y)
     }
   }
 }
+
+} // namespace panel
 } // namespace unity

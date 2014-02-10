@@ -31,6 +31,8 @@ using namespace testing;
 
 namespace unity
 {
+namespace panel
+{
 
 struct TestPanelMenuView : public testing::Test
 {
@@ -136,5 +138,5 @@ TEST_P(ProgressTester, RestoreOnGrabInBiggerWorkArea)
   EXPECT_EQ(max_window->geo(), expected_geo);
 }
 
-
-}
+} // panel namespace
+} // unity namespace

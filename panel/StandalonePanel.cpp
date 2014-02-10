@@ -34,6 +34,7 @@
 #include "PanelView.h"
 
 using namespace unity;
+using namespace unity::panel;
 
 struct PanelWindow
 {

@@ -43,7 +43,7 @@ WindowButton::WindowButton(panel::WindowButtonType type)
             sigc::mem_fun(this, &WindowButton::EnabledSetter))
   , overlay_mode(false)
   , type_(type)
-  , em_(0)
+  , cv_(unity::Settings::Instance().em(0))
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
@@ -52,10 +52,9 @@ WindowButton::WindowButton(panel::WindowButtonType type)
   LoadImages();
 }
 
-void WindowButton::UpdateEMConverter()
+void WindowButton::OnMonitorChanged(int monitor)
 {
-  em_.SetFontSize(panel::Style::Instance().GetFontSize());
-  em_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
+  cv_ = unity::Settings::Instance().em(monitor);
 }
 
 void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
@@ -149,8 +148,8 @@ void WindowButton::UpdateSize()
 
   if (tex)
   {
-    int tex_w = em_.CP(tex->GetWidth());
-    int tex_h = em_.CP(tex->GetHeight());
+    int tex_w = RawPixel(tex->GetWidth()).CP(cv_);
+    int tex_h = RawPixel(tex->GetHeight()).CP(cv_);
     width  = std::min(panel_height, tex_w);
     height = std::min(panel_height, tex_h);
   }
@@ -174,7 +173,6 @@ void WindowButton::LoadImages()
   pressed_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRESSED);
   disabled_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::DISABLED);
 
-  UpdateEMConverter();
   UpdateSize();
   QueueDraw();
 }
@@ -328,6 +326,13 @@ WindowButtons::WindowButtons()
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));
   Settings::Instance().form_factor.changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
+}
+
+void WindowButtons::OnMonitorChanged(int monitor)
+{
+  // Need to update the EMConverter in each window button if the monitor changes
+  for (auto area : GetChildren())
+    static_cast<internal::WindowButton*>(area)->OnMonitorChanged(monitor);
 }
 
 nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType event_type)

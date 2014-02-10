@@ -23,6 +23,7 @@
 
 #include <iosfwd>
 #include <map>
+#include <vector>
 #include <string>
 #include <memory>
 #include <sigc++/signal.h>
@@ -43,6 +44,7 @@ class Entry
 public:
   typedef std::shared_ptr<Entry> Ptr;
 
+  Entry(std::string const& id, std::string const& name_hint = "");
   Entry(std::string const& id,
         std::string const& name_hint,
         std::string const& label,
@@ -59,13 +61,17 @@ public:
 
   std::string const& id() const;
   std::string const& name_hint() const;
-  std::string const& label() const;
-  int image_type() const;
-  std::string const& image_data() const;
+
+  void set_image(int type, std::string const& data, bool sensitive, bool visible);
   bool image_visible() const;
   bool image_sensitive() const;
+  int image_type() const;
+  std::string const& image_data() const;
+
+  void set_label(std::string const& label, bool sensitive, bool visible);
   bool label_visible() const;
   bool label_sensitive() const;
+  std::string const& label() const;
 
   void set_active(bool active);
   bool active() const;
@@ -73,6 +79,7 @@ public:
   void set_geometry(nux::Rect const& geometry);
   nux::Rect const& geometry() const;
 
+  void set_priority(int priority);
   int priority() const;
 
   bool visible() const;
@@ -85,14 +92,14 @@ public:
   bool show_now() const;
   void set_show_now(bool show_now);
 
+  void add_parent(Entry::Ptr const&);
+  void rm_parent(Entry::Ptr const&);
+  std::vector<Entry::Ptr> const& parents() const;
+
   void ShowMenu(int x, int y, unsigned button);
   void ShowMenu(unsigned int xid, int x, int y, unsigned button);
   void SecondaryActivate();
   void Scroll(int delta);
-
-  void setLabel(std::string const& label, bool sensitive, bool visible);
-  void setImage(int type, std::string const& data, bool sensitive, bool visible);
-  void setPriority(int priority);
 
   // Signals
   sigc::signal<void> updated;
@@ -122,6 +129,7 @@ private:
   bool active_;
 
   nux::Rect geometry_;
+  std::vector<Entry::Ptr> parents_;
 };
 
 std::ostream& operator<<(std::ostream& out, Entry const& e);
