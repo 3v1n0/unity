@@ -17,7 +17,9 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include <sigc++/adaptors/hide.h>
 #include "DecorationsSlidingLayout.h"
+#include "AnimationUtils.h"
 
 namespace unity
 {
@@ -25,9 +27,15 @@ namespace decoration
 {
 
 SlidingLayout::SlidingLayout()
+  : fade_animator_(100)
 {
   items_.resize(2);
-  mouse_owner.changed.connect([this] (bool) { if (input_item_) Damage(); });
+  mouse_owner.changed.connect([this] (bool owner) {
+    if (input_item_)
+      animation::StartOrReverseIf(fade_animator_, owner);
+  });
+
+  fade_animator_.updated.connect(sigc::hide(sigc::mem_fun(this, &SlidingLayout::Damage)));
 }
 
 void SlidingLayout::SetMainItem(Item::Ptr const& main)
@@ -98,8 +106,30 @@ void SlidingLayout::DoRelayout()
 
 void SlidingLayout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib, CompRegion const& clip, unsigned mask)
 {
-  auto const& draw_area = (mouse_owner() && input_item_) ? input_item_ : main_item_;
-  draw_area->Draw(ctx, transformation, attrib, clip, mask);
+  if (!input_item_)
+  {
+    if (main_item_)
+      main_item_->Draw(ctx, transformation, attrib, clip, mask);
+
+    return;
+  }
+
+  if (fade_animator_.CurrentState() == na::Animation::State::Running)
+  {
+    auto new_attrib = attrib;
+    double animation_value = fade_animator_.GetCurrentValue();
+
+    new_attrib.opacity = animation_value * std::numeric_limits<ushort>::max();
+    input_item_->Draw(ctx, transformation, new_attrib, clip, mask);
+
+    new_attrib.opacity = (1.0f - animation_value) * std::numeric_limits<ushort>::max();
+    main_item_->Draw(ctx, transformation, new_attrib, clip, mask);
+  }
+  else
+  {
+    auto const& draw_area = mouse_owner() ? input_item_ : main_item_;
+    draw_area->Draw(ctx, transformation, attrib, clip, mask);
+  }
 }
 
 } // decoration namespace
