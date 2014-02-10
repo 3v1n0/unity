@@ -1546,6 +1546,7 @@ static void
 on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 {
   PanelServicePrivate *priv = self->priv;
+  g_signal_handlers_disconnect_by_data (priv->last_menu, self);
 
   priv->last_x = 0;
   priv->last_y = 0;
