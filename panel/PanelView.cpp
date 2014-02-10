@@ -95,9 +95,10 @@ PanelView::PanelView(MockableBaseWindow* parent,
 
   menu_view_ = new PanelMenuView();
   menu_view_->EnableDropdownMenu(true, remote_);
+  AddPanelView(menu_view_, 0);
 
-  if (!lockscreen_mode_)
-    AddPanelView(menu_view_, 0);
+  if (lockscreen_mode_)
+    menu_view_->SetVisible(false);
 
   SetCompositionLayout(layout_);
 
