@@ -577,7 +577,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   {
     PanelIndicatorEntryView* view = nullptr;
 
-    if (menu_view_->GetControlsActive())
+    if (menu_view_->HasMenus())
       view = menu_view_->ActivateEntryAt(x, y);
 
     if (!view) indicators_->ActivateEntryAt(x, y);
@@ -750,7 +750,7 @@ void PanelView::SyncGeometries()
   indicator::EntryLocationMap locations;
   std::string panel_id = GetName() + std::to_string(monitor_);
 
-  if (menu_view_->GetControlsActive())
+  if (menu_view_->HasMenus())
     menu_view_->GetGeometryForSync(locations);
 
   indicators_->GetGeometryForSync(locations);
