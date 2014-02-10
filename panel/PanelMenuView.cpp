@@ -46,6 +46,7 @@ namespace
   const int TITLE_PADDING = 2;
   const int MENUBAR_PADDING = 4;
   const int MENU_ENTRIES_PADDING = 6;
+  const int MENU_SHOW_NOW_WAIT = 180;
   const int DEFAULT_MENUS_FADEIN = 100;
   const int DEFAULT_MENUS_FADEOUT = 120;
   const int DEFAULT_MENUS_DISCOVERY = 2;
@@ -1498,7 +1499,7 @@ void PanelMenuView::UpdateShowNow(bool status)
    * If the status is false, we just check that the menus entries are hidden
    * and we remove any eventual delayed request */
 
-   sources_.Remove(UPDATE_SHOW_NOW_TIMEOUT);
+  sources_.Remove(UPDATE_SHOW_NOW_TIMEOUT);
 
   if (!status && show_now_activated_)
   {
@@ -1510,7 +1511,7 @@ void PanelMenuView::UpdateShowNow(bool status)
   if (status && !show_now_activated_)
   {
     auto cb_func = sigc::mem_fun(this, &PanelMenuView::UpdateShowNowWithDelay);
-    sources_.AddTimeout(180, cb_func, UPDATE_SHOW_NOW_TIMEOUT);
+    sources_.AddTimeout(MENU_SHOW_NOW_WAIT, cb_func, UPDATE_SHOW_NOW_TIMEOUT);
   }
 }
 
