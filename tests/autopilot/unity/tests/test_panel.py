@@ -1030,9 +1030,6 @@ class PanelKeyNavigationTests(PanelTestsBase):
         expected_indicator = self.panel.get_indicator_entries(include_hidden_menus=True)[0]
         self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
-        self.keybinding("panel/open_first_menu")
-        self.assertThat(self.panel.get_active_indicator, Eventually(Equals(None)))
-
     def test_panel_menu_accelerators_work(self):
         """Pressing a valid menu accelerator must open the correct menu item."""
         self.open_new_application_window("Text Editor")
@@ -1210,9 +1207,9 @@ class PanelCrossMonitorsTests(PanelTestsBase):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
 
             if self.unity.dash.monitor == monitor:
-                self.assertThat(panel.window_buttons_shown, Eventually(Equals(True)))
+                self.assertThat(self.unity.dash.view.overlay_window_buttons_shown[monitor], Equals(True))
             else:
-                self.assertThat(panel.window_buttons_shown, Eventually(Equals(False)))
+                self.assertThat(self.unity.dash.view.overlay_window_buttons_shown[monitor], Equals(False))
 
     def test_window_buttons_dont_show_in_other_monitors_when_hud_is_open(self):
         """Window buttons must not show on the panels other than the one where
@@ -1225,9 +1222,9 @@ class PanelCrossMonitorsTests(PanelTestsBase):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
 
             if self.unity.hud.monitor == monitor:
-                self.assertThat(panel.window_buttons_shown, Eventually(Equals(True)))
+                self.assertThat(self.unity.hud.view.overlay_window_buttons_shown[monitor], Equals(True))
             else:
-                self.assertThat(panel.window_buttons_shown, Eventually(Equals(False)))
+                self.assertThat(self.unity.hud.view.overlay_window_buttons_shown[monitor], Equals(False))
 
     def test_window_buttons_close_inactive_when_clicked_in_another_monitor(self):
         """Clicking the close button must not affect the active maximized window

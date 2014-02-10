@@ -562,7 +562,7 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
   QueueDraw();
 }
 
-void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
+void PanelView::OnIndicatorViewUpdated()
 {
   needs_geo_sync_ = true;
   QueueRelayout();

@@ -1,3 +1,20 @@
+unity (7.1.2+14.04.20131106.1-0ubuntu4) trusty; urgency=medium
+
+  * Temporally allow running under gnome-settings-daemon, until
+    unity-settings-daemon is in main.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Fri, 07 Feb 2014 19:18:24 +0000
+
+unity (7.1.2+14.04.20131106.1-0ubuntu3) trusty; urgency=medium
+
+  * Make unity7 job start on started either gnome or unity settings
+    daemon.
+
+  * Cherrypick "Removed the ZeitgeistUtils.h as this is no longer needed
+    since Zeitgeist in main is now fixed." to fix FTBFS.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Fri, 07 Feb 2014 13:18:44 +0000
+
 unity (7.1.2+14.04.20131106.1-0ubuntu2) trusty; urgency=medium
 
   * Disable errors upon deprecated-warnings.

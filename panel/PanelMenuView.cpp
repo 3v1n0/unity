@@ -1229,6 +1229,9 @@ bool PanelMenuView::UpdateActiveWindowPosition()
   {
     we_control_active_ = we_control_window;
 
+    if (!entries_.empty())
+      on_indicator_updated.emit();
+
     if (Refresh())
       QueueDraw();
   }

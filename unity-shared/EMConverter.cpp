@@ -86,7 +86,7 @@ double EMConverter::GetDPI() const
   return dpi_;
 }
 
-int EMConverter::EMToPixels(double em) const
+double EMConverter::EMToPixels(double em) const
 {
   return (em * pixels_per_em_);
 }
@@ -96,7 +96,7 @@ double EMConverter::PixelsToBaseEM(int pixels) const
   return (pixels / base_pixels_per_em_);
 }
 
-int EMConverter::ConvertPixels(int pixels) const
+double EMConverter::ConvertPixels(int pixels) const
 {
   double pixels_em = PixelsToBaseEM(pixels);
   return EMToPixels(pixels_em);

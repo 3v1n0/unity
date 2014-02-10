@@ -80,7 +80,7 @@ Depends: ${shlibs:Depends},
          libxfixes3 (>= 1:5.0.1-1),
          libxi6 (>= 2:1.7.1.901),
 Provides: indicator-renderer
-Recommends: gnome-control-center-unity,
+Recommends: unity-control-center,
             ${unity-default-masterscopes}
             indicator-appmenu,
             indicator-application,
