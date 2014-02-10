@@ -51,6 +51,7 @@ public:
   nux::Property<bool> is_standalone;
   nux::ROProperty<bool> double_click_activate;
 
+  sigc::signal<void> dpi_changed;
   EMConverter const& em(int monitor = 0) const;
 
 private:

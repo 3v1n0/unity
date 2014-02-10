@@ -287,13 +287,13 @@ Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
   OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 
-  panel::Style::Instance().panel_height_changed.connect([this, screen] (int height)
-  {
+  unity::Settings::Instance().dpi_changed.connect([this] {
     for (auto& panel_ptr : pimpl->panels_)
     {
       if (panel_ptr)
       {
         int monitor = panel_ptr->GetMonitor();
+        int height  = panel::Style::Instance().PanelHeight(monitor);
 
         panel_ptr->SetMaximumHeight(height);
         panel_ptr->SetMonitor(monitor);

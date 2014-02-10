@@ -34,6 +34,7 @@
 
 #include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/RawPixel.h"
 
 
 namespace unity
@@ -91,6 +92,8 @@ public:
   void OverlayShown();
   void OverlayHidden();
 
+  void SetMonitor(int monitor);
+
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
 
@@ -109,9 +112,9 @@ protected:
   virtual void ShowMenu(int button = 1);
 
   indicator::Entry::Ptr proxy_;
-  unsigned int spacing_;
-  unsigned int left_padding_;
-  unsigned int right_padding_;
+  RawPixel spacing_;
+  RawPixel left_padding_;
+  RawPixel right_padding_;
 
 private:
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
@@ -123,7 +126,6 @@ private:
   int PixbufHeight(glib::Object<GdkPixbuf> const& pixbuf) const;
 
   void ScaleImageIcons(cairo_t* cr, int* x, int* y);
-  void UpdateEMConverter();
 
   glib::Object<GdkPixbuf> MakePixbuf();
 
@@ -136,7 +138,9 @@ private:
   bool disabled_;
   bool focused_;
 
-  EMConverter em_;
+  int monitor_;
+
+  EMConverter cv_;
 };
 
 }

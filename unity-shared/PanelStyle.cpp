@@ -55,7 +55,6 @@ std::string button_id(WindowButtonType type, WindowState ws)
 Style::Style()
   : style_context_(gtk_style_context_new())
   , panel_heights_(monitors::MAX, BASE_PANEL_HEIGHT)
-  , em_(0)
 {
   if (style_instance)
   {
@@ -81,9 +80,6 @@ Style::Style()
   deco_style->theme.changed.connect(sigc::mem_fun(this, &Style::OnThemeChanged));
   deco_style->font.changed.connect(refresh_cb);
   deco_style->title_font.changed.connect(refresh_cb);
-
-  UpdateFontSize();
-  UpdatePanelHeight();
 }
 
 Style::~Style()
@@ -124,7 +120,8 @@ int Style::PanelHeight(int monitor) const
     return 0;
   }
 
-  return em_.CP(panel_heights_[monitor]);
+  EMConverter const& cv = unity::Settings::Instance().em(monitor);
+  return panel_heights_[monitor].CP(cv);
 }
 
 void Style::RefreshContext()
@@ -132,38 +129,7 @@ void Style::RefreshContext()
   gtk_style_context_invalidate(style_context_);
   bg_texture_.Release();
 
-  UpdateFontSize();
-  UpdatePanelHeight();
-
   changed.emit();
-}
-
-int Style::GetFontSize()
-{
-  gint font_size;
-  PangoFontDescription* desc;
-
-  desc = pango_font_description_from_string(decoration::Style::Get()->font().c_str());
-  font_size = pango_font_description_get_size(desc);
-  pango_font_description_free(desc);
-
-  return font_size;
-}
-
-void Style::UpdateFontSize()
-{
-  int font_size = GetFontSize();
-
-  em_.SetFontSize(font_size / 1024);
-}
-
-void Style::UpdatePanelHeight()
-{
-  int dpi = GetTextDPI() / 1024;
-  em_.SetDPI(dpi);
-
-  // TODO Default monitor for now...
-  panel_height_changed.emit(PanelHeight());
 }
 
 GtkStyleContext* Style::GetStyleContext()

@@ -68,6 +68,8 @@ private:
   void OnDashSettingsUpdated(FormFactor form_factor);
   void OnControlledWindowChanged(Window xid);
   bool OpacitySetter(double& target, double new_value);
+  void OnMonitorChanged(int monitor);
+
 
   std::string active_overlay_;
   UBusManager ubus_manager_;

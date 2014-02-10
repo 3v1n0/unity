@@ -99,7 +99,8 @@ PanelMenuView::PanelMenuView()
     FullRedraw();
   });
 
-  panel::Style::Instance().panel_height_changed.connect([this] (int height) {
+  unity::Settings::Instance().dpi_changed.connect([this] {
+    int height = panel::Style::Instance().PanelHeight(monitor_);
     window_buttons_->SetMaximumHeight(height);
   });
 

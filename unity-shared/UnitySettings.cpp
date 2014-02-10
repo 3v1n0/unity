@@ -143,7 +143,12 @@ public:
     for (int i = 0; i < (int)em_converters_.size(); ++i)
     {
       int dpi = GetDPI(i);
-      em_converters_[i].SetDPI(dpi);
+
+      if (em_converters_[i].GetDPI() != dpi)
+      {
+        em_converters_[i].SetDPI(dpi);
+        parent_->dpi_changed.emit();
+      }
     }
   }
 

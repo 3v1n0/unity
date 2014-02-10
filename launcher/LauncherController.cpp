@@ -44,6 +44,7 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -170,14 +171,16 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
     }
   });
 
-  panel::Style::Instance().panel_height_changed.connect([this, uscreen] (int height)
-  {
+  unity::Settings::Instance().dpi_changed.connect([this] {
     for (auto const& launcher_ptr : launchers)
     {
       if (launcher_ptr)
       {
         nux::Geometry const& parent_geo = launcher_ptr->GetParent()->GetGeometry();
-        int diff = height - parent_geo.y;
+        int monitor = launcher_ptr->monitor();
+        int height  = panel::Style::Instance().PanelHeight(monitor);
+        int diff    = height - parent_geo.y;
+
         launcher_ptr->Resize(nux::Point(parent_geo.x, parent_geo.y + diff), parent_geo.height - diff);
       }
     }

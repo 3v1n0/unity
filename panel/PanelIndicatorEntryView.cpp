@@ -29,14 +29,14 @@
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
 
 namespace
 {
-const int DEFAULT_SPACING   = 3;
-const int DESIRED_ICON_SIZE = 22;
+const RawPixel DEFAULT_SPACING = 3_em;
 
 const int SCALED_IMAGE_Y = 1;
 }
@@ -58,7 +58,8 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , overlay_showing_(false)
   , disabled_(false)
   , focused_(true)
-  , em_(0)
+  , monitor_(0)
+  , cv_(unity::Settings::Instance().em(monitor_))
 {
   proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -73,9 +74,6 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
-  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::UpdateEMConverter));
-
-  UpdateEMConverter();
 
   Refresh();
 }
@@ -83,12 +81,6 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
 PanelIndicatorEntryView::~PanelIndicatorEntryView()
 {
   // Nothing to do...
-}
-
-void PanelIndicatorEntryView::UpdateEMConverter()
-{
-  em_.SetFontSize(panel::Style::Instance().GetFontSize());
-  em_.SetDPI(panel::Style::Instance().GetTextDPI() / 1024);
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -194,7 +186,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   glib::Object<GdkPixbuf> pixbuf;
   GtkIconTheme* theme = gtk_icon_theme_get_default();
   int image_type = proxy_->image_type();
-  int size = (type_ != DROP_DOWN) ? em_.CP(24) : em_.CP(16);
+  RawPixel size = (type_ != DROP_DOWN) ? 24_em : 16_em;
 
   if (image_type == GTK_IMAGE_PIXBUF)
   {
@@ -213,14 +205,14 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   else if (image_type == GTK_IMAGE_STOCK ||
            image_type == GTK_IMAGE_ICON_NAME)
   {
-    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size,
+    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size.CP(cv_),
                                       (GtkIconLookupFlags)0, nullptr);
   }
   else if (image_type == GTK_IMAGE_GICON)
   {
     glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
 
-    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size,
+    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size.CP(cv_),
                                                       (GtkIconLookupFlags)0));
     if (info)
       pixbuf = gtk_icon_info_load_icon(info, nullptr);
@@ -234,7 +226,7 @@ int PanelIndicatorEntryView::PixbufWidth(glib::Object<GdkPixbuf> const& pixbuf) 
   int image_type = proxy_->image_type();
   if (image_type == GTK_IMAGE_PIXBUF)
   {
-    return em_.CP(gdk_pixbuf_get_width(pixbuf));
+    return RawPixel(gdk_pixbuf_get_width(pixbuf)).CP(cv_);
   }
   else
   {
@@ -247,7 +239,7 @@ int PanelIndicatorEntryView::PixbufHeight(glib::Object<GdkPixbuf> const& pixbuf)
   int image_type = proxy_->image_type();
   if (image_type == GTK_IMAGE_PIXBUF)
   {
-    return em_.CP(gdk_pixbuf_get_height(pixbuf));
+    return RawPixel(gdk_pixbuf_get_height(pixbuf)).CP(cv_);
   }
   else
   {
@@ -286,7 +278,7 @@ void PanelIndicatorEntryView::ScaleImageIcons(cairo_t* cr, int* x, int* y)
   int image_type = proxy_->image_type();
   if (image_type == GTK_IMAGE_PIXBUF)
   {
-    float aspect = em_.DPIScale();
+    float aspect = cv_.DPIScale();
     *x = left_padding_;
     *y = SCALED_IMAGE_Y;
     cairo_scale(cr, aspect, aspect);
@@ -295,7 +287,7 @@ void PanelIndicatorEntryView::ScaleImageIcons(cairo_t* cr, int* x, int* y)
 
 void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, glib::Object<PangoLayout> const& layout)
 {
-  int x = em_.CP(left_padding_);
+  int x = left_padding_.CP(cv_);
 
   if (IsActive())
     DrawEntryPrelight(cr, width, height);
@@ -367,7 +359,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
     gtk_style_context_restore(style_context);
 
-    x += icon_width + em_.CP(spacing_);
+    x += icon_width + spacing_.CP(cv_);
   }
 
   if (layout)
@@ -503,14 +495,14 @@ void PanelIndicatorEntryView::Refresh()
     unsigned int text_width = log_rect.width / PANGO_SCALE;
 
     if (icon_width)
-      width += em_.CP(spacing_);
+      width += spacing_.CP(cv_);
     width += text_width;
 
     pango_font_description_free(desc);
   }
 
   if (width)
-    width += em_.CP(left_padding_) + em_.CP(right_padding_);
+    width += left_padding_.CP(cv_) + right_padding_.CP(cv_);
 
   SetMinimumWidth(width);
   SetMaximumWidth(width);
@@ -573,6 +565,13 @@ void PanelIndicatorEntryView::OverlayHidden()
 {
   overlay_showing_ = false;
   Refresh();
+}
+
+void PanelIndicatorEntryView::SetMonitor(int monitor)
+{
+  monitor_ = monitor;
+
+  cv_ = unity::Settings::Instance().em(monitor);
 }
 
 void PanelIndicatorEntryView::SetOpacity(double opacity)
