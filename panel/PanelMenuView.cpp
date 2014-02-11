@@ -937,9 +937,6 @@ void PanelMenuView::OnEntryViewAdded(PanelIndicatorEntryView* view)
 
 void PanelMenuView::NotifyAllMenusClosed()
 {
-  if (!last_active_view_)
-    return;
-
   last_active_view_ = nullptr;
 
   if (integrated_menus_ && is_maximized_)
