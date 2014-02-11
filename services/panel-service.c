@@ -228,8 +228,8 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_SIGNAL_RUN_LAST,
                   0,
                   NULL, NULL, NULL,
-                  G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT,
-                  G_TYPE_UINT, G_TYPE_UINT);
+                  G_TYPE_NONE, 6, G_TYPE_STRING, G_TYPE_STRING,
+                  G_TYPE_INT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT);
 
   _service_signals[RE_SYNC] =
     g_signal_new ("re-sync",
@@ -1592,7 +1592,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->use_event = FALSE;
   priv->pressed_entry = NULL;
 
-  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "", 0, 0, 0, 0);
+  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "", "", 0, 0, 0, 0);
 }
 
 
@@ -2090,8 +2090,8 @@ panel_service_show_entry_common (PanelService *self,
           gdk_window_get_origin (gdkwin, &left, &top);
 
           gchar *entry_id = get_indicator_entry_id_by_entry (entry);
-          g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id,
-                         left, top, width, height);
+          g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0,
+                         priv->last_panel, entry_id, left, top, width, height);
           g_free (entry_id);
 
           priv->last_left = left;
