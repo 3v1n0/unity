@@ -37,9 +37,9 @@ public:
   bool IsGrabbed() const;
   int ButtonDown() const;
 
-  void ButtonDownEvent(CompPoint const&, unsigned button) override;
-  void ButtonUpEvent(CompPoint const&, unsigned button) override;
-  void MotionEvent(CompPoint const&) override;
+  void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
+  void ButtonUpEvent(CompPoint const&, unsigned button, Time) override;
+  void MotionEvent(CompPoint const&, Time) override;
 
 protected:
   void AddProperties(debug::IntrospectionData&);

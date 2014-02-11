@@ -53,9 +53,9 @@ protected:
   void AddProperties(debug::IntrospectionData&) override;
   IntrospectableList GetIntrospectableChildren() override;
 
-  void ButtonDownEvent(CompPoint const&, unsigned button) override;
-  void ButtonUpEvent(CompPoint const&, unsigned button) override;
-  void MotionEvent(CompPoint const&) override;
+  void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
+  void ButtonUpEvent(CompPoint const&, unsigned button, Time) override;
+  void MotionEvent(CompPoint const&, Time) override;
 
 private:
   void EntryUpdated();

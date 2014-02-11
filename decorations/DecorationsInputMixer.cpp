@@ -153,24 +153,24 @@ void InputMixer::LeaveEvent(CompPoint const& point)
     UnsetMouseOwner();
 }
 
-void InputMixer::MotionEvent(CompPoint const& point)
+void InputMixer::MotionEvent(CompPoint const& point, Time timestamp)
 {
   if (!mouse_down_)
     UpdateMouseOwner(point);
 
   if (last_mouse_owner_)
-    last_mouse_owner_->MotionEvent(point);
+    last_mouse_owner_->MotionEvent(point, timestamp);
 }
 
-void InputMixer::ButtonDownEvent(CompPoint const& point, unsigned button)
+void InputMixer::ButtonDownEvent(CompPoint const& point, unsigned button, Time timestamp)
 {
   mouse_down_ = true;
 
   if (last_mouse_owner_)
-    last_mouse_owner_->ButtonDownEvent(point, button);
+    last_mouse_owner_->ButtonDownEvent(point, button, timestamp);
 }
 
-void InputMixer::ButtonUpEvent(CompPoint const& point, unsigned button)
+void InputMixer::ButtonUpEvent(CompPoint const& point, unsigned button, Time timestamp)
 {
   mouse_down_ = false;
 
@@ -178,7 +178,7 @@ void InputMixer::ButtonUpEvent(CompPoint const& point, unsigned button)
   {
     // This event might cause the LastMouseOwner to be deleted, so we protect using a weak_ptr
     Item::WeakPtr weak_last_mouse_owner(last_mouse_owner_);
-    last_mouse_owner_->ButtonUpEvent(point, button);
+    last_mouse_owner_->ButtonUpEvent(point, button, timestamp);
 
     if (weak_last_mouse_owner && !last_mouse_owner_->Geometry().contains(point))
     {

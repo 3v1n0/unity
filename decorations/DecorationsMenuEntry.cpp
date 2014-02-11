@@ -106,13 +106,13 @@ int MenuEntry::GetNaturalHeight() const
   return natural_.height + vertical_padding() * 2;
 }
 
-void MenuEntry::ButtonDownEvent(CompPoint const& p, unsigned button)
+void MenuEntry::ButtonDownEvent(CompPoint const& p, unsigned button, Time timestamp)
 {
   button_up_timer_.reset();
-  grab_.ButtonDownEvent(p, button);
+  grab_.ButtonDownEvent(p, button, timestamp);
 }
 
-void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button)
+void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button, Time timestamp)
 {
   if (button == 1 && !grab_.IsGrabbed())
   {
@@ -135,12 +135,12 @@ void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button)
     ShowMenu(button);
   }
 
-  grab_.ButtonUpEvent(p, button);
+  grab_.ButtonUpEvent(p, button, timestamp);
 }
 
-void MenuEntry::MotionEvent(CompPoint const& p)
+void MenuEntry::MotionEvent(CompPoint const& p, Time timestamp)
 {
-  grab_.MotionEvent(p);
+  grab_.MotionEvent(p, timestamp);
 }
 
 indicator::Entry::Ptr const& MenuEntry::GetEntry() const

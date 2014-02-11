@@ -81,7 +81,7 @@ CompWindow* Edge::Window() const
   return win_;
 }
 
-void Edge::ButtonDownEvent(CompPoint const& p, unsigned button)
+void Edge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timestamp)
 {
   XEvent ev;
   auto* dpy = screen->dpy();
@@ -102,8 +102,8 @@ void Edge::ButtonDownEvent(CompPoint const& p, unsigned button)
   ev.xclient.data.l[3] = button;
   ev.xclient.data.l[4] = 1;
 
-  XUngrabPointer(dpy, screen->getCurrentTime());
-  XUngrabKeyboard(dpy, screen->getCurrentTime());
+  XUngrabPointer(dpy, timestamp);
+  XUngrabKeyboard(dpy, timestamp);
 
   auto mask = SubstructureRedirectMask | SubstructureNotifyMask;
   XSendEvent(dpy, screen->root(), False, mask, &ev);

@@ -51,7 +51,7 @@ public:
   Type GetType() const;
   CompWindow* Window() const;
 
-  void ButtonDownEvent(CompPoint const&, unsigned button) override;
+  void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
 
 protected:
   std::string GetName() const;

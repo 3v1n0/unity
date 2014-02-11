@@ -41,10 +41,10 @@ public:
   Item::Ptr const& GetMouseOwner() const;
 
   void EnterEvent(CompPoint const&);
-  void MotionEvent(CompPoint const&);
+  void MotionEvent(CompPoint const&, Time);
   void LeaveEvent(CompPoint const&);
-  void ButtonDownEvent(CompPoint const&, unsigned button);
-  void ButtonUpEvent(CompPoint const&, unsigned button);
+  void ButtonDownEvent(CompPoint const&, unsigned button, Time);
+  void ButtonUpEvent(CompPoint const&, unsigned button, Time);
 
   void ForceMouseOwnerCheck();
 
