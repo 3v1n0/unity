@@ -40,6 +40,7 @@ public:
   nux::Property<bool> show_now;
 
   void SetAppMenu(indicator::AppmenuIndicator::Ptr const&);
+  void ActivateMenu(std::string const& entry_id);
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
 
 protected:

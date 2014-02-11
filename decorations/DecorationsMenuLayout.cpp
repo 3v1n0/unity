@@ -65,6 +65,22 @@ void MenuLayout::SetAppMenu(AppmenuIndicator::Ptr const& appmenu)
     Relayout();
 }
 
+void MenuLayout::ActivateMenu(std::string const& entry_id)
+{
+  for (auto const& item : items_)
+  {
+    auto const& menu_entry = std::static_pointer_cast<MenuEntry>(item);
+
+    if (menu_entry->Id() == entry_id)
+    {
+      if (item->visible() && item->sensitive())
+        menu_entry->ShowMenu(0);
+
+      break;
+    }
+  }
+}
+
 void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)
 {
   mouse_owner = owner;
@@ -106,14 +122,13 @@ void MenuLayout::OnEntryActiveChanged(bool actived)
       {
         last_pointer_.set(x, y);
 
-        for (auto const& item : Items())
+        for (auto const& item : items_)
         {
-          if (!item->visible() || !item->sensitive())
-            continue;
-
           if (item->Geometry().contains(last_pointer_))
           {
-            std::static_pointer_cast<MenuEntry>(item)->ShowMenu(1);
+            if (item->visible() && item->sensitive())
+              std::static_pointer_cast<MenuEntry>(item)->ShowMenu(1);
+
             break;
           }
         }
