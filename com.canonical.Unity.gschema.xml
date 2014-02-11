@@ -46,6 +46,13 @@
       <summary>Enable/Disable dash result double-click activation.</summary>
       <description>This is used to enable/disable double-click result activation in the dash. Double-click to activate, single click preview</description>
     </key>
+    <key type="b" name="integrated-menus">
+      <default>true</default>
+      <summary>Enable/Disable the integrated menus in Unity.</summary>
+      <description>When this is enabled, the application menus will be shown
+        on the window decoration, otherwise they will be always shown on the
+        unity top panel</description>
+    </key>
   </schema>
   <schema path="/com/canonical/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">

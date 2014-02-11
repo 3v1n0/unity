@@ -60,7 +60,6 @@ const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "
 const std::string SETTINGS_NAME = "org.gnome.desktop.wm.preferences";
 const std::string FONT_KEY = "titlebar-font";
 const std::string USE_SYSTEM_FONT_KEY = "titlebar-uses-system-font";
-const std::string HIGH_CONTRAST_THEME_PREFIX = "HighContrast";
 
 struct UnityDecoration
 {
@@ -150,6 +149,7 @@ struct Style::Impl
     gtk_widget_path_append_type(widget_path.get(), unity_decoration_get_type());
     gtk_style_context_set_path(ctx_, widget_path.get());
 
+    parent_->integrated_menus = true;
     parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
     parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
     SetTitleFont();

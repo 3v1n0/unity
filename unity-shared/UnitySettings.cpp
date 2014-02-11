@@ -39,6 +39,7 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
+const std::string LIM_KEY = "integrated-menus";
 }
 
 //
@@ -57,15 +58,20 @@ public:
   {
     CacheFormFactor();
     CacheDoubleClickActivate();
+    UpdateLimSetting();
 
-    signals_.Add<void, GSettings*>(gsettings_, "changed::" + FORM_FACTOR, [this] (GSettings*) {
+    signals_.Add<void, GSettings*, const gchar*>(gsettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
       parent_->form_factor.changed.emit(cached_form_factor_);
     });
 
-    signals_.Add<void, GSettings*>(gsettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*) {
+    signals_.Add<void, GSettings*, const gchar*>(gsettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, const gchar*) {
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(gsettings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
+      UpdateLimSetting();
     });
 
     UpdateEMConverter();
@@ -92,6 +98,11 @@ public:
   void CacheDoubleClickActivate()
   {
     cached_double_click_activate_ = g_settings_get_boolean(gsettings_, DOUBLE_CLICK_ACTIVATE.c_str());
+  }
+
+  void UpdateLimSetting()
+  {
+    decoration::Style::Get()->integrated_menus = g_settings_get_boolean(gsettings_, LIM_KEY.c_str());
   }
 
   FormFactor GetFormFactor() const
