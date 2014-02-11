@@ -689,7 +689,9 @@ bool PanelView::FirstMenuShow() const
   if (!IsActive())
     return ret;
 
-  ret = menu_view_->ActivateIfSensitive();
+  if (menu_view_->HasMenus())
+    ret = menu_view_->ActivateIfSensitive();
+
   if (!ret) indicators_->ActivateIfSensitive();
 
   return ret;
