@@ -46,6 +46,8 @@ public:
   void ButtonDownEvent(CompPoint const&, unsigned button);
   void ButtonUpEvent(CompPoint const&, unsigned button);
 
+  void ForceMouseOwnerCheck();
+
 private:
   InputMixer(InputMixer const&) = delete;
   InputMixer& operator=(InputMixer const&) = delete;
@@ -58,6 +60,7 @@ private:
   Item::List items_;
   Item::Ptr last_mouse_owner_;
   bool mouse_down_;
+  bool recheck_owner_;
 };
 
 } // decoration namespace
