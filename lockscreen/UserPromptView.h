@@ -24,6 +24,8 @@
 
 #include <Nux/View.h>
 
+#include "unity-shared/SearchBarSpinner.h"
+
 namespace unity
 {
 
@@ -40,6 +42,9 @@ public:
   ~UserPromptView() {};
 
   nux::TextEntry* text_entry();
+
+  void SetSpinnerVisible(bool visible);
+  void SetSpinnerState(SpinnerState spinner_state);
 
   void ShowErrorMessage();
 

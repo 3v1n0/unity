@@ -138,6 +138,18 @@ nux::TextEntry* UserPromptView::text_entry()
   return text_input_->text_entry();
 }
 
+void UserPromptView::SetSpinnerVisible(bool visible)
+{
+  text_input_->SetSpinnerVisible(visible);
+  QueueRelayout();
+}
+
+void UserPromptView::SetSpinnerState(SpinnerState spinner_state)
+{
+  text_input_->SetSpinnerState(spinner_state);
+  QueueRelayout();
+}
+
 void UserPromptView::ShowErrorMessage()
 {
   message_->SetVisible(true);

@@ -88,6 +88,11 @@ void TextInput::Init()
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
+  spinner_ = new SearchBarSpinner();
+  spinner_->SetVisible(false);
+  spinner_->SetMinMaxSize(22, 22);
+  layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
   sig_manager_.Add<void, GtkSettings*, GParamSpec*>(gtk_settings_get_default(),
     "notify::gtk-font-name", sigc::mem_fun(this, &TextInput::OnFontChanged));
   OnFontChanged(gtk_settings_get_default());
@@ -98,6 +103,16 @@ void TextInput::Init()
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_preedit));
   input_hint.changed.connect([this](std::string const& s) { OnInputHintChanged(); });
 
+}
+
+void TextInput::SetSpinnerVisible(bool visible)
+{
+  spinner_->SetVisible(visible);
+}
+
+void TextInput::SetSpinnerState(SpinnerState spinner_state)
+{
+  spinner_->SetState(spinner_state);
 }
 
 void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -187,14 +202,10 @@ void TextInput::UpdateBackground(bool force)
 {
   int RADIUS = 5;
   nux::Geometry geo(GetGeometry());
-  geo.width = layered_layout_->GetAbsoluteX() +
-              layered_layout_->GetAbsoluteWidth() -
-              GetAbsoluteX() +
-              TEXT_INPUT_RIGHT_BORDER;
 
   LOG_DEBUG(logger) << "height: "
   << geo.height << " - "
-  << layered_layout_->GetGeometry().height << " - "
+  << layout_->GetGeometry().height << " - "
   << pango_entry_->GetGeometry().height;
 
   if (geo.width == last_width_

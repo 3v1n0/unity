@@ -128,7 +128,10 @@ void Shield::ShowPrimaryView()
   main_layout->AddLayout(prompt_layout);
   main_layout->AddSpace(0, 10);
 
-  prompt_view_->text_entry()->activated.connect([this](){
+  prompt_view_->text_entry()->activated.connect([this]() {
+    prompt_view_->SetSpinnerVisible(true);
+    prompt_view_->SetSpinnerState(STATE_SEARCHING);
+
     user_authenticator_->AuthenticateStart(session_manager_->UserName(), prompt_view_->text_entry()->GetText(), [this](bool authenticated) {
       if (authenticated)
       {
@@ -136,6 +139,7 @@ void Shield::ShowPrimaryView()
       }
       else
       {
+        prompt_view_->SetSpinnerVisible(false);
         prompt_view_->ShowErrorMessage();
       }
     });
