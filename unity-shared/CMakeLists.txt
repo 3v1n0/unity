@@ -50,6 +50,7 @@ set (UNITY_SHARED_SOURCES
      PlacesOverlayVScrollBar.cpp
      PreviewStyle.cpp
      RatingsButton.cpp
+     RawPixel.cpp
      ResizingBaseWindow.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
