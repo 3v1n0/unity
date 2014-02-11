@@ -35,14 +35,14 @@ GrabEdge::GrabEdge(CompWindow* win)
   , button_down_(-1)
 {}
 
-void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
+void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timestamp)
 {
   if (button != 1)
     return;
 
   if (!(win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask)))
   {
-    Edge::ButtonDownEvent(p, button);
+    Edge::ButtonDownEvent(p, button, timestamp);
     return;
   }
 
@@ -50,7 +50,7 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
   unsigned max_time_delta = std::max(0, style->DoubleClickMaxTimeDelta());
   bool maximized = false;
 
-  if (screen->getCurrentTime() - last_click_time_ < max_time_delta)
+  if (timestamp - last_click_time_ < max_time_delta)
   {
     int max_distance = style->DoubleClickMaxDistance();
 
@@ -67,7 +67,7 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
   {
     button_down_timer_.reset(new glib::Timeout(MOUSE_DOWN_TIMEOUT));
     button_down_timer_->Run([this] {
-      Edge::ButtonDownEvent(CompPoint(pointerX, pointerY), button_down_);
+      Edge::ButtonDownEvent(CompPoint(pointerX, pointerY), button_down_, last_click_time_);
       button_down_timer_.reset();
       return false;
     });
@@ -75,19 +75,19 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button)
 
   button_down_ = button;
   last_click_pos_ = p;
-  last_click_time_ = screen->getCurrentTime();
+  last_click_time_ = timestamp;
 }
 
-void GrabEdge::MotionEvent(CompPoint const& p)
+void GrabEdge::MotionEvent(CompPoint const& p, Time timestamp)
 {
   if (button_down_timer_)
   {
     button_down_timer_.reset();
-    Edge::ButtonDownEvent(p, button_down_);
+    Edge::ButtonDownEvent(p, button_down_, timestamp);
   }
 }
 
-void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button)
+void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button, Time)
 {
   button_down_timer_.reset();
 }
