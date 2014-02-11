@@ -1766,28 +1766,8 @@ panel_service_sync_geometry (PanelService *self,
 static gboolean
 panel_service_entry_is_visible (PanelService *self, IndicatorObjectEntry *entry)
 {
-  GHashTableIter panel_iter;
-  gpointer key, value;
-  gboolean found_geo;
-
   g_return_val_if_fail (PANEL_IS_SERVICE (self), FALSE);
   g_return_val_if_fail (entry != NULL, FALSE);
-
-  found_geo = FALSE;
-  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
-
-  while (g_hash_table_iter_next (&panel_iter, &key, &value) && !found_geo)
-    {
-      GHashTable *entry2geometry_hash = value;
-
-      if (g_hash_table_lookup (entry2geometry_hash, entry))
-        {
-          found_geo = TRUE;
-        }
-    }
-
-  if (!found_geo)
-    return FALSE;
 
   if (GTK_IS_LABEL (entry->label))
     {
@@ -1807,7 +1787,55 @@ panel_service_entry_is_visible (PanelService *self, IndicatorObjectEntry *entry)
         }
     }
 
-  return TRUE;
+  if (g_slist_find (self->priv->dropdown_entries, entry))
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+panel_service_entry_is_visible_on_panel (PanelService *self,
+                                         IndicatorObjectEntry *entry,
+                                         const gchar *panel_id)
+{
+  GHashTable *entry2geometry_hash;
+  GHashTableIter panel_iter;
+  gpointer key, value;
+  gboolean found_geo;
+
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), FALSE);
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  found_geo = FALSE;
+
+  if (panel_id)
+    {
+      entry2geometry_hash = g_hash_table_lookup (self->priv->panel2entries_hash, panel_id);
+
+      if (entry2geometry_hash && g_hash_table_lookup (entry2geometry_hash, entry))
+        {
+          found_geo = TRUE;
+        }
+    }
+  else
+    {
+      g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
+
+      while (g_hash_table_iter_next (&panel_iter, &key, &value) && !found_geo)
+        {
+          entry2geometry_hash = value;
+
+          if (g_hash_table_lookup (entry2geometry_hash, entry))
+            {
+              found_geo = TRUE;
+            }
+        }
+    }
+
+  if (!found_geo)
+    return FALSE;
+
+  return panel_service_entry_is_visible (self, entry);
 }
 
 static int
@@ -1859,7 +1887,7 @@ activate_next_prev_menu (PanelService         *self,
 
               if (!priv->last_dropdown_entry)
                 {
-                  if (!panel_service_entry_is_visible (self, new_entry))
+                  if (!panel_service_entry_is_visible_on_panel (self, new_entry, priv->last_panel))
                     continue;
                 }
 
