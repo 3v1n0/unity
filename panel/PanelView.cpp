@@ -620,6 +620,11 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
   bool active = !entry_id.empty();
   if (active && !track_menu_pointer_timeout_)
   {
+    auto const& abs_geo = GetAbsoluteGeometry();
+
+    if (geo.y != (abs_geo.y + abs_geo.height) || geo.x < abs_geo.x || geo.x > abs_geo.x+abs_geo.width)
+      return;
+
     //
     // Track menus being scrubbed at 60Hz (about every 16 millisec)
     // It might sound ugly, but it's far nicer (and more responsive) than the
