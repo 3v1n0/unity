@@ -134,6 +134,10 @@ void Shield::ShowPrimaryView()
       {
         session_manager_->unlock_requested.emit();
       }
+      else
+      {
+        prompt_view_->ShowErrorMessage();
+      }
     });
   });
 }

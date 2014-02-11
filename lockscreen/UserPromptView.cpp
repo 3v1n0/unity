@@ -47,7 +47,6 @@ nux::AbstractPaintLayer* Foo(int width, int height)
                           Settings::GRID_SIZE * 0.3,
                           width, height);
 
-  //cairo_rectangle(cr, 0, 0, width, height);
   cairo_fill_preserve(cr);
 
   cairo_set_source_rgba (cr, 0.4, 0.4, 0.4, 0.4);
@@ -76,19 +75,28 @@ UserPromptView::UserPromptView(std::string const& name)
 
   GetLayout()->SetLeftAndRightPadding(10);
   GetLayout()->SetTopAndBottomPadding(10);
+  static_cast<nux::VLayout*>(GetLayout())->SetVerticalInternalMargin(5);
 
   unity::StaticCairoText* username = new unity::StaticCairoText(name);
+  username->SetFont("Ubuntu 13");
   GetLayout()->AddView(username);
 
   GetLayout()->AddSpace(0, 1);
 
+  message_ = new unity::StaticCairoText("Invalid password, please try again");
+  message_->SetFont("Ubuntu 10");
+  message_->SetTextColor(nux::Color("#df382c"));
+  message_->SetVisible(false);
+  GetLayout()->AddView(message_);
+
   text_input_ = new unity::TextInput();
   text_input_->input_hint = _("Password");
   text_input_->text_entry()->SetPasswordMode(true);
+  text_input_->SetMinimumHeight(Settings::GRID_SIZE);
   text_input_->SetMaximumHeight(Settings::GRID_SIZE);
   /*const char password_char = '*';
   text_input_->text_entry()->SetPasswordChar(&password_char);*/
-  GetLayout()->AddView(text_input_);
+  GetLayout()->AddView(text_input_, 1);
 }
 
 void UserPromptView::Draw(nux::GraphicsEngine& graphics_engine, bool /* force_draw */)
@@ -128,6 +136,12 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
 nux::TextEntry* UserPromptView::text_entry()
 {
   return text_input_->text_entry();
+}
+
+void UserPromptView::ShowErrorMessage()
+{
+  message_->SetVisible(true);
+  QueueRelayout();
 }
 
 }

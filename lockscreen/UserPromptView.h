@@ -27,6 +27,7 @@
 namespace unity
 {
 
+class StaticCairoText;
 class TextInput;
 
 namespace lockscreen
@@ -40,12 +41,15 @@ public:
 
   nux::TextEntry* text_entry();
 
+  void ShowErrorMessage();
+
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
 
 private:
   std::shared_ptr<nux::AbstractPaintLayer> bg_layer_;
+  StaticCairoText* message_;
   TextInput* text_input_;
 };
 

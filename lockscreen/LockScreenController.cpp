@@ -129,7 +129,7 @@ void Controller::LockScreenUsingDisplayManager()
                                                  "org.freedesktop.DisplayManager.Session",
                                                  test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
-  proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
+  proxy->Call("Lock", nullptr, [] (GVariant*) {});
 
   ShowShields(/* interactive */ false, /* skip animation */ true);
 }
