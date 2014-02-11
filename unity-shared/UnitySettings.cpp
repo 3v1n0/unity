@@ -58,11 +58,12 @@ public:
     CacheFormFactor();
     CacheDoubleClickActivate();
 
-    form_factor_changed_.Connect(gsettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, gchar*) {
+    signals_.Add<void, GSettings*>(gsettings_, "changed::" + FORM_FACTOR, [this] (GSettings*) {
       CacheFormFactor();
       parent_->form_factor.changed.emit(cached_form_factor_);
     });
-    double_click_activate_changed_.Connect(gsettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, gchar*) {
+
+    signals_.Add<void, GSettings*>(gsettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*) {
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
@@ -159,9 +160,7 @@ public:
   bool cached_double_click_activate_;
   bool lowGfx_;
 
-  glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
-  glib::Signal<void, GSettings*, gchar* > double_click_activate_changed_;
-
+  glib::SignalManager signals_;
   std::vector<EMConverter> em_converters_;
 };
 
