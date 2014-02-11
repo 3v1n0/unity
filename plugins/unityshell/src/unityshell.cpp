@@ -171,6 +171,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dirty_helpers_on_this_frame_(false)
   , back_buffer_age_(0)
   , is_desktop_active_(false)
+  , grabber_(new GnomeKeyGrabber(screen))
 {
   Timer timer;
 #ifndef USE_GLES
@@ -298,6 +299,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
 
+     optionSetShowMenuBarInitiate(boost::bind(&UnityScreen::showMenuBarInitiate, this, _1, _2, _3));
+     optionSetShowMenuBarTerminate(boost::bind(&UnityScreen::showMenuBarTerminate, this, _1, _2, _3));
      optionSetLockScreenInitiate(boost::bind(&UnityScreen::LockScreenInitiate, this, _1, _2, _3));
      optionSetOverrideDecorationThemeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShadowXOffsetNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1930,6 +1933,32 @@ void UnityScreen::handleCompizEvent(const char* plugin,
   screen->handleCompizEvent(plugin, event, option);
 }
 
+bool UnityScreen::showMenuBarInitiate(CompAction* action,
+                                      CompAction::State state,
+                                      CompOption::Vector& options)
+{
+  if (state & CompAction::StateInitKey)
+  {
+    action->setState(action->state() | CompAction::StateTermKey);
+    panel_controller_->ShowMenuBar();
+  }
+
+  return false;
+}
+
+bool UnityScreen::showMenuBarTerminate(CompAction* action,
+                                       CompAction::State state,
+                                       CompOption::Vector& options)
+{
+  if (state & CompAction::StateTermKey)
+  {
+    action->setState(action->state() & ~CompAction::StateTermKey);
+    panel_controller_->HideMenuBar();
+  }
+
+  return false;
+}
+
 bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
                                           CompAction::State state,
                                           CompOption::Vector& options)
@@ -3525,7 +3554,7 @@ void UnityScreen::initLauncher()
 
   /* Setup panel */
   timer.Reset();
-  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers);
+  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers, grabber_);
   AddChild(panel_controller_.get());
   panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
                                         optionGetMenusFadeout(),
@@ -3607,6 +3636,11 @@ void UnityScreen::InitGesturesSupport()
   gestures_sub_windows_->SetNumTouches(3);
   gestures_sub_windows_->SetWindowId(GDK_ROOT_WINDOW());
   gestures_sub_windows_->Activate();
+}
+
+CompAction::Vector& UnityScreen::getActions()
+{
+  return grabber_->getActions();
 }
 
 /* Window init */
