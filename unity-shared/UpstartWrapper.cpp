@@ -20,10 +20,7 @@
 #include "UpstartWrapper.h"
 
 #include <NuxCore/Logger.h>
-
-#include <upstart.h>
-#include <nih/alloc.h>
-#include <nih/error.h>
+#include <UnityCore/GLibDBusProxy.h>
 
 namespace unity
 {
@@ -38,60 +35,23 @@ class UpstartWrapper::Impl
 {
 public:
   Impl();
-  ~Impl();
 
   void Emit(std::string const& name);
 
 private:
-  NihDBusProxy* upstart_;
+  glib::DBusProxy::Ptr upstart_proxy_;
 };
 
 UpstartWrapper::Impl::Impl()
-  : upstart_(nullptr)
 {
-  const gchar* upstart_session = g_getenv("UPSTART_SESSION");
-
-  if (upstart_session)
-  {
-    DBusConnection* conn = dbus_connection_open(upstart_session, nullptr);
-
-    if (conn)
-    {
-      upstart_ = nih_dbus_proxy_new(nullptr, conn,
-                                    nullptr,
-                                    DBUS_PATH_UPSTART,
-                                    nullptr, nullptr);
-      if (!upstart_)
-      {
-        NihError* err = nih_error_get();
-        LOG_WARN(logger) << "Unable to get Upstart proxy: " << err->message << std::endl;
-        nih_free(err);
-      }
-
-      dbus_connection_unref (conn);
-    }
-  }
-}
-
-UpstartWrapper::Impl::~Impl()
-{
-  if (upstart_)
-    nih_unref(upstart_, nullptr);
+  upstart_proxy_ = std::make_shared<unity::glib::DBusProxy>("com.ubuntu.Upstart",
+                                                            "/com/ubuntu/Upstart", 
+                                                            "com.ubuntu.Upstart0_6");
 }
 
 void UpstartWrapper::Impl::Emit(std::string const& name)
 {
-  if (upstart_)
-  {
-    int event_sent = upstart_emit_event_sync(nullptr, upstart_,
-                                             name.c_str(), nullptr, 0);
-    if (event_sent)
-    {
-      NihError * err = nih_error_get();
-      LOG_WARN(logger) << "Unable to signal for indicator services to stop: " <<  err->message << std::endl;;
-      nih_free(err);
-    }
-  }
+  upstart_proxy_->Call("EmitEvent", g_variant_new("(sasb)", name.c_str(), nullptr, 0));
 }
 
 //

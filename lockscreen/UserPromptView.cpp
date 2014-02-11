@@ -36,9 +36,6 @@ nux::AbstractPaintLayer* Foo(int width, int height)
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t* cr = cg.GetInternalContext();
 
-
-
-  // FIXME (andy) add radious
   cairo_set_source_rgba(cr, 0.1, 0.1, 0.1, 0.4);
 
   cg.DrawRoundedRectangle(cr,
@@ -94,8 +91,6 @@ UserPromptView::UserPromptView(std::string const& name)
   text_input_->text_entry()->SetPasswordMode(true);
   text_input_->SetMinimumHeight(Settings::GRID_SIZE);
   text_input_->SetMaximumHeight(Settings::GRID_SIZE);
-  /*const char password_char = '*';
-  text_input_->text_entry()->SetPasswordChar(&password_char);*/
   GetLayout()->AddView(text_input_, 1);
 }
 

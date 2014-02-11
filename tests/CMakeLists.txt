@@ -291,6 +291,7 @@ if (ENABLE_X_SUPPORT)
                  test_unity_settings.cpp
                  test_unity_window_style.cpp
                  test_unity_window_view.cpp
+                 test_upstart_wrapper.cpp
                  test_user_authenticator_pam.cpp
                  test_volume_launcher_icon.cpp
                  test_window_buttons.cpp
