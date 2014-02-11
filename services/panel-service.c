@@ -1885,7 +1885,7 @@ activate_next_prev_menu (PanelService         *self,
               gint prio = -1;
               new_entry = ll->data;
 
-              if (!priv->last_dropdown_entry)
+              if (!priv->last_dropdown_entry || new_entry != entry)
                 {
                   if (!panel_service_entry_is_visible_on_panel (self, new_entry, priv->last_panel))
                     continue;
