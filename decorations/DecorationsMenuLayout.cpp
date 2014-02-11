@@ -135,11 +135,12 @@ void MenuLayout::OnEntryActiveChanged(bool actived)
 
         for (auto const& item : items_)
         {
+          if (!item->visible() || !item->sensitive())
+            continue;
+
           if (item->Geometry().contains(last_pointer_))
           {
-            if (item->visible() && item->sensitive())
-              std::static_pointer_cast<MenuEntry>(item)->ShowMenu(1);
-
+            std::static_pointer_cast<MenuEntry>(item)->ShowMenu(1);
             break;
           }
         }
