@@ -34,6 +34,7 @@ public:
   MenuDropdown(indicator::Indicators::Ptr const&, CompWindow*);
 
   void ShowMenu(unsigned button) override;
+  void ActivateChild(MenuEntry::Ptr const&);
 
   void Push(MenuEntry::Ptr const&);
   MenuEntry::Ptr Pop();
@@ -51,6 +52,7 @@ private:
 
   indicator::Indicators::Ptr indicators_;
   std::deque<MenuEntry::Ptr> children_;
+  indicator::Entry::Ptr active_;
 };
 
 } // decoration namespace

@@ -67,18 +67,29 @@ void MenuLayout::SetAppMenu(AppmenuIndicator::Ptr const& appmenu)
 
 void MenuLayout::ActivateMenu(std::string const& entry_id)
 {
+  MenuEntry::Ptr target;
+  bool activated = false;
+
   for (auto const& item : items_)
   {
     auto const& menu_entry = std::static_pointer_cast<MenuEntry>(item);
 
     if (menu_entry->Id() == entry_id)
     {
+      target = menu_entry;
+
       if (item->visible() && item->sensitive())
+      {
         menu_entry->ShowMenu(0);
+        activated = true;
+      }
 
       break;
     }
   }
+
+  if (!activated)
+    dropdown_->ActivateChild(target);
 }
 
 void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)

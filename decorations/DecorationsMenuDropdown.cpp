@@ -53,7 +53,17 @@ void MenuDropdown::ShowMenu(unsigned button)
   for (auto const& child : children_)
     entries.push_back(child->GetEntry());
 
-  indicators_->ShowEntriesDropdown(entries, nullptr, 0, geo.x(), geo.y2());
+  indicators_->ShowEntriesDropdown(entries, active_, 0, geo.x(), geo.y2());
+}
+
+void MenuDropdown::ActivateChild(MenuEntry::Ptr const& child)
+{
+  if (!child || std::find(children_.begin(), children_.end(), child) == children_.end())
+    return;
+
+  active_ = child->GetEntry();
+  ShowMenu(0);
+  active_.reset();
 }
 
 void MenuDropdown::Push(MenuEntry::Ptr const& child)
