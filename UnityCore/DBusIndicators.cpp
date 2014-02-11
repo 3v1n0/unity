@@ -158,12 +158,13 @@ void DBusIndicators::Impl::OnReSync(GVariant* parameters)
 
 void DBusIndicators::Impl::OnEntryActivated(GVariant* parameters)
 {
-  glib::String entry_name;
+  glib::String panel;
+  glib::String entry_id;
   nux::Rect geo;
-  g_variant_get(parameters, "(s(iiuu))", &entry_name, &geo.x, &geo.y, &geo.width, &geo.height);
+  g_variant_get(parameters, "(ss(iiuu))", &panel, &entry_id, &geo.x, &geo.y, &geo.width, &geo.height);
 
-  if (entry_name)
-    owner_->ActivateEntry(entry_name, geo);
+  if (entry_id)
+    owner_->ActivateEntry(panel.Str(), entry_id.Str(), geo);
 }
 
 void DBusIndicators::Impl::OnEntryActivatedRequest(GVariant* parameters)

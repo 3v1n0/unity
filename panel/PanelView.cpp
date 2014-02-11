@@ -615,16 +615,14 @@ bool PanelView::TrackMenuPointer()
   return true;
 }
 
-void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
+void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const&)
 {
+  if (!panel.empty() && panel != GetPanelName())
+    return;
+
   bool active = !entry_id.empty();
   if (active && !track_menu_pointer_timeout_)
   {
-    auto const& abs_geo = GetAbsoluteGeometry();
-
-    if (geo.y != (abs_geo.y + abs_geo.height) || geo.x < abs_geo.x || geo.x > abs_geo.x+abs_geo.width)
-      return;
-
     //
     // Track menus being scrubbed at 60Hz (about every 16 millisec)
     // It might sound ugly, but it's far nicer (and more responsive) than the
@@ -752,16 +750,20 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   }
 }
 
+std::string PanelView::GetPanelName() const
+{
+  return GetName() + std::to_string(monitor_);
+}
+
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  std::string panel_id = GetName() + std::to_string(monitor_);
 
-  if (menu_view_->HasMenus())
+   if (menu_view_->HasMenus())
     menu_view_->GetGeometryForSync(locations);
 
   indicators_->GetGeometryForSync(locations);
-  remote_->SyncGeometries(panel_id, locations);
+  remote_->SyncGeometries(GetPanelName(), locations);
 }
 
 void PanelView::SetMonitor(int monitor)

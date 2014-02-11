@@ -40,6 +40,8 @@ public:
   virtual ~Indicators();
 
   IndicatorsList GetIndicators() const;
+
+  virtual void SyncGeometries(std::string const& panel, EntryLocationMap const&) = 0;
   virtual void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y) = 0;
 
   // Signals
@@ -58,7 +60,7 @@ public:
    * An entry just got activated. View needs to repaint it.
    * @param entry_id entry id
    */
-  sigc::signal<void, std::string const&, nux::Rect const&> on_entry_activated;
+  sigc::signal<void, std::string const&, std::string const&, nux::Rect const&> on_entry_activated;
 
   /**
    * The service is about to show a menu.
@@ -71,7 +73,7 @@ public:
   sigc::signal<void, std::string const&, unsigned, int, int, unsigned> on_entry_show_menu;
 
 protected:
-  void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
+  void ActivateEntry(std::string const& panel, std::string const& entry_id, nux::Rect const& geometry);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
