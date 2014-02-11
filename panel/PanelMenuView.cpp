@@ -277,7 +277,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
       return titlebar_grab_area_.GetPointer();
   }
 
-  if (is_maximized_ || integrated_menus_ && GetMaximizedWindow() != 0))
+  if (is_maximized_ || (integrated_menus_ && GetMaximizedWindow() != 0))
   {
     if (window_buttons_)
     {

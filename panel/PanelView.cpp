@@ -595,9 +595,11 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   if (!IsActive())
     return;
 
-  bool ret;
+  bool ret = false;
 
-  ret = menu_view_->ActivateEntry(entry_id, 0);
+  if (menu_view_->HasMenus())
+    ret = menu_view_->ActivateEntry(entry_id, 0);
+
   if (!ret) indicators_->ActivateEntry(entry_id, 0);
 }
 
