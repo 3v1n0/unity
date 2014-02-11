@@ -35,6 +35,7 @@ public:
 
   bool IsMaximizable() const;
   bool IsGrabbed() const;
+  int ButtonDown() const;
 
   void ButtonDownEvent(CompPoint const&, unsigned button) override;
   void ButtonUpEvent(CompPoint const&, unsigned button) override;

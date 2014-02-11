@@ -91,11 +91,17 @@ void GrabEdge::MotionEvent(CompPoint const& p)
 void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button)
 {
   button_down_timer_.reset();
+  button_down_ = -1;
 }
 
 bool GrabEdge::IsGrabbed() const
 {
   return !button_down_timer_;
+}
+
+int GrabEdge::ButtonDown() const
+{
+  return button_down_;
 }
 
 bool GrabEdge::IsMaximizable() const
