@@ -68,6 +68,7 @@ public:
 
   bool IsActive() const;
   bool FirstMenuShow() const;
+  bool ActivateEntry(std::string const& entry_id);
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
@@ -94,7 +95,7 @@ protected:
 
   void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
   void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
-  void OnIndicatorViewUpdated(PanelIndicatorEntryView* view);
+  void OnIndicatorViewUpdated();
   void OnMenuPointerMoved(int x, int y);
   void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);

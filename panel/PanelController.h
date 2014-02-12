@@ -24,7 +24,9 @@
 #include <Nux/Nux.h>
 
 #include "launcher/EdgeBarrierController.h"
+#include "unity-shared/GnomeKeyGrabber.h"
 #include "unity-shared/Introspectable.h"
+
 namespace unity
 {
 namespace panel
@@ -37,9 +39,12 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
   typedef std::vector<nux::ObjectPtr<PanelView>> PanelVector;
 
+  Controller(ui::EdgeBarrierController::Ptr const& barrier_controller, GnomeKeyGrabber::Ptr const& grabber);
   Controller(ui::EdgeBarrierController::Ptr const& barrier_controller);
   ~Controller();
 
+  void ShowMenuBar();
+  void HideMenuBar();
   void FirstMenuShow();
   void QueueRedraw();
 

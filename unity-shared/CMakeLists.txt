@@ -50,6 +50,7 @@ set (UNITY_SHARED_SOURCES
      PlacesOverlayVScrollBar.cpp
      PreviewStyle.cpp
      RatingsButton.cpp
+     RawPixel.cpp
      ResizingBaseWindow.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
@@ -100,16 +101,24 @@ if (ENABLE_X_SUPPORT)
   set (UNITY_SHARED_COMPIZ_SOURCES
     CompizUtils.cpp
     PluginAdapter.cpp
+    GnomeKeyGrabber.cpp
     )
 
   find_package (PkgConfig)
+  pkg_check_modules (COMPIZ REQUIRED compiz)
   pkg_check_modules (COMPIZ_OPENGL REQUIRED compiz-opengl)
 
   add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
 
   # This makes linker to include library dir in RUNPATH
+  find_library (COMPIZ_LIB compiz_core ${COMPIZ_LIBDIR})
   find_library (COMPIZ_OPENGL_LIB opengl ${COMPIZ_OPENGL_LIBDIR})
-  target_link_libraries (unity-shared-compiz ${LIBS} ${COMPIZ_OPENGL_LIB} ${COMPIZ_OPENGL_LDFLAGS})
+  target_link_libraries (unity-shared-compiz
+                         ${LIBS}
+                         ${COMPIZ_LIB}
+                         ${COMPIZ_LDFLAGS}
+                         ${COMPIZ_OPENGL_LIB}
+                         ${COMPIZ_OPENGL_LDFLAGS})
   add_dependencies (unity-shared-compiz unity-shared)
 
   # bamf application manager

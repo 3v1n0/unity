@@ -61,9 +61,9 @@ struct MockItem : public SimpleItem
   MOCK_METHOD1(SetMinWidth, void(int));
   MOCK_METHOD1(SetMinHeight, void(int));
 
-  MOCK_METHOD1(MotionEvent, void(CompPoint const&));
-  MOCK_METHOD2(ButtonDownEvent, void(CompPoint const&, unsigned));
-  MOCK_METHOD2(ButtonUpEvent, void(CompPoint const&, unsigned));
+  MOCK_METHOD2(MotionEvent, void(CompPoint const&, Time));
+  MOCK_METHOD3(ButtonDownEvent, void(CompPoint const&, unsigned, Time));
+  MOCK_METHOD3(ButtonUpEvent, void(CompPoint const&, unsigned, Time));
 
   using SimpleItem::RequestRelayout;
   using SimpleItem::geo_parameters_changed;

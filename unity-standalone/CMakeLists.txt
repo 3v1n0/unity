@@ -27,4 +27,5 @@ target_link_libraries (unity-standalone
                        panel-lib
                        unity-shared
                        unity-shared-bamf
+                       unity-shared-compiz
                        unity-shared-standalone)

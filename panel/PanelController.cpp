@@ -39,9 +39,15 @@ const char* window_title = "unity-panel";
 class Controller::Impl
 {
 public:
-  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers);
+  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber);
   ~Impl();
 
+  void GrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator);
+  void UngrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator);
+  void GrabEntryMnemonics(indicator::Entry::Ptr const& entry);
+  void UngrabEntryMnemonics(std::string const& entry_id);
+
+  void SetMenuBarVisible(bool visible);
   void FirstMenuShow();
   void QueueRedraw();
 
@@ -64,6 +70,7 @@ public:
   PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
   ui::EdgeBarrierController::Ptr edge_barriers_;
+  GnomeKeyGrabber::Ptr grabber_;
   PanelVector panels_;
   std::vector<nux::Geometry> panel_geometries_;
   std::vector<Window> tray_xids_;
@@ -75,11 +82,15 @@ public:
   int menus_discovery_fadein_;
   int menus_discovery_fadeout_;
   indicator::DBusIndicators::Ptr dbus_indicators_;
+  std::unordered_map<std::string, std::shared_ptr<CompAction>> entry_actions_;
+  connection::Manager dbus_indicators_connections_;
+  std::unordered_map<indicator::Indicator::Ptr, connection::Manager> indicator_connections_;
 };
 
 
-Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers)
+Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber)
   : edge_barriers_(edge_barriers)
+  , grabber_(grabber)
   , opacity_(1.0f)
   , opacity_maximized_toggle_(false)
   , menus_fadein_(0)
@@ -88,10 +99,28 @@ Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers)
   , menus_discovery_fadein_(0)
   , menus_discovery_fadeout_(0)
   , dbus_indicators_(std::make_shared<indicator::DBusIndicators>())
-{}
+{
+  if (grabber_)
+  {
+    for (auto const& indicator : dbus_indicators_->GetIndicators())
+      GrabIndicatorMnemonics(indicator);
+
+    auto& connections = dbus_indicators_connections_;
+    connections.Add(dbus_indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::GrabIndicatorMnemonics)));
+    connections.Add(dbus_indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::UngrabIndicatorMnemonics)));
+  }
+}
 
 Controller::Impl::~Impl()
 {
+  if (grabber_)
+  {
+    dbus_indicators_connections_.Clear();
+
+    for (auto const& indicator : dbus_indicators_->GetIndicators())
+      UngrabIndicatorMnemonics(indicator);
+  }
+
   // Since the panels are in a window which adds a reference to the
   // panel, we need to make sure the base windows are unreferenced
   // otherwise the pnales never die.
@@ -102,6 +131,70 @@ Controller::Impl::~Impl()
   }
 }
 
+void Controller::Impl::GrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator)
+{
+  if (indicator->IsAppmenu())
+  {
+    for (auto const& entry : indicator->GetEntries())
+      GrabEntryMnemonics(entry);
+
+    auto& connections = indicator_connections_[indicator];
+    connections.Add(indicator->on_entry_added.connect(sigc::mem_fun(this, &Impl::GrabEntryMnemonics)));
+    connections.Add(indicator->on_entry_removed.connect(sigc::mem_fun(this, &Impl::UngrabEntryMnemonics)));
+  }
+}
+
+void Controller::Impl::UngrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator)
+{
+  if (indicator->IsAppmenu())
+  {
+    indicator_connections_.erase(indicator);
+
+    for (auto const& entry : indicator->GetEntries())
+      UngrabEntryMnemonics(entry->id());
+  }
+}
+
+void Controller::Impl::GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
+{
+  gunichar mnemonic;
+
+  if (pango_parse_markup(entry->label().c_str(), -1, '_', nullptr, nullptr, &mnemonic, nullptr) && mnemonic)
+  {
+    auto key = gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic));
+    glib::String accelerator(gtk_accelerator_name(key, GDK_MOD1_MASK));
+    auto action = std::make_shared<CompAction>();
+    auto id = entry->id();
+
+    action->keyFromString(accelerator);
+    action->setState(CompAction::StateInitKey);
+    action->setInitiate([this, id](CompAction* action, CompAction::State state, CompOption::Vector& options)
+    {
+      for (auto const& panel : panels_)
+      {
+        if (panel->ActivateEntry(id))
+          return true;
+      }
+
+      return false;
+    });
+
+    entry_actions_[id] = action;
+    grabber_->addAction(*action);
+  }
+}
+
+void Controller::Impl::UngrabEntryMnemonics(std::string const& entry_id)
+{
+  auto i = entry_actions_.find(entry_id);
+
+  if (i != entry_actions_.end())
+  {
+    grabber_->removeAction(*i->second);
+    entry_actions_.erase(i);
+  }
+}
+
 void Controller::Impl::UpdatePanelGeometries()
 {
   panel_geometries_.reserve(panels_.size());
@@ -109,6 +202,20 @@ void Controller::Impl::UpdatePanelGeometries()
   for (auto const& panel : panels_)
   {
     panel_geometries_.push_back(panel->GetAbsoluteGeometry());
+  }
+}
+
+void Controller::Impl::SetMenuBarVisible(bool visible)
+{
+  for (auto const& indicator : dbus_indicators_->GetIndicators())
+  {
+    if (indicator->IsAppmenu())
+    {
+      for (auto const& entry : indicator->GetEntries())
+        entry->set_show_now(visible);
+
+      break;
+    }
   }
 }
 
@@ -279,9 +386,9 @@ float Controller::Impl::opacity() const
   return opacity_;
 }
 
-Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
+Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber)
   : launcher_width(64)
-  , pimpl(new Impl(edge_barriers))
+  , pimpl(new Impl(edge_barriers, grabber))
 {
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
@@ -293,9 +400,24 @@ Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
   });
 }
 
+Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
+  : Controller(edge_barriers, GnomeKeyGrabber::Ptr())
+{
+}
+
 Controller::~Controller()
 {
   delete pimpl;
+}
+
+void Controller::ShowMenuBar()
+{
+  pimpl->SetMenuBarVisible(true);
+}
+
+void Controller::HideMenuBar()
+{
+  pimpl->SetMenuBarVisible(false);
 }
 
 void Controller::FirstMenuShow()

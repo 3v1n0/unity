@@ -82,6 +82,8 @@
 
 #include "unityshell_glow.h"
 
+#include "GnomeKeyGrabber.h"
+
 namespace unity
 {
 class UnityWindow;
@@ -108,6 +110,7 @@ class UnityScreen :
   public GLScreenInterface,
   public BaseSwitchScreen,
   public PluginClassHandler <UnityScreen, CompScreen>,
+  public CompAction::Container,
   public UnityshellOptions
 {
 public:
@@ -167,6 +170,8 @@ public:
   void enterShowDesktopMode ();
   void leaveShowDesktopMode (CompWindow *w);
 
+  bool showMenuBarInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showMenuBarTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showPanelFirstMenuKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -226,6 +231,8 @@ public:
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
 
   ui::LayoutWindow::Ptr GetSwitcherDetailLayoutWindow(Window window) const;
+
+  CompAction::Vector& getActions();
 
 protected:
   std::string GetName() const;
@@ -402,6 +409,8 @@ private:
   unsigned int back_buffer_age_;
 
   bool is_desktop_active_;
+
+  GnomeKeyGrabber::Ptr grabber_;
 
   friend class UnityWindow;
   friend class decoration::Manager;
