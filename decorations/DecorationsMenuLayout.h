@@ -20,7 +20,6 @@
 #ifndef UNITY_DECORATIONS_MENU_LAYOUT
 #define UNITY_DECORATIONS_MENU_LAYOUT
 
-#include <UnityCore/AppmenuIndicator.h>
 #include <UnityCore/Indicators.h>
 #include <UnityCore/GLibSource.h>
 #include "DecorationsWidgets.h"
@@ -34,12 +33,14 @@ class MenuDropdown;
 class MenuLayout : public Layout
 {
 public:
+  typedef std::shared_ptr<MenuLayout> Ptr;
+
   MenuLayout(indicator::Indicators::Ptr const&, CompWindow*);
 
   nux::Property<bool> active;
   nux::Property<bool> show_now;
 
-  void SetAppMenu(indicator::AppmenuIndicator::Ptr const&);
+  void SetAppMenu(indicator::Indicator::Ptr const&);
   void ActivateMenu(std::string const& entry_id);
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
 

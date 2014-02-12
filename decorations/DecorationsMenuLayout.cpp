@@ -39,7 +39,7 @@ MenuLayout::MenuLayout(Indicators::Ptr const& indicators, CompWindow* win)
   , dropdown_(std::make_shared<MenuDropdown>(indicators, win))
 {}
 
-void MenuLayout::SetAppMenu(AppmenuIndicator::Ptr const& appmenu)
+void MenuLayout::SetAppMenu(Indicator::Ptr const& appmenu)
 {
   items_.clear();
   auto ownership_cb = sigc::mem_fun(this, &MenuLayout::OnEntryMouseOwnershipChanged);
