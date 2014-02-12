@@ -46,7 +46,7 @@ const unsigned ANIMATION_DURATION = 200 * 1000; // in microseconds
 const unsigned TICK_DURATION =  10 * 1000;
 
 const std::string TEST_SERVER_NAME = "com.canonical.Unity.Test.DisplayManager";
-const std::string LIGHTDM_PATH = g_getenv("XDG_SESSION_PATH");
+const std::string LIGHTDM_PATH = g_getenv("XDG_SESSION_PATH") ? g_getenv("XDG_SESSION_PATH") : "";
 
 }
 

@@ -80,7 +80,7 @@ struct DBusIndicators::Impl
 
 
 // Public Methods
-DBusIndicators::Impl::Impl(std::string const& dbus_name ,DBusIndicators* owner)
+DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
   : owner_(owner)
   , gproxy_(dbus_name, SERVICE_PATH, SERVICE_IFACE,
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
