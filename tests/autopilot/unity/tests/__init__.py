@@ -127,6 +127,7 @@ class UnityTestCase(AutopilotTestCase):
             # In the event that this doesn't work, wait_for will throw an
             # exception.
             win = self.process_manager.start_app_window('Calculator', locale='C')
+            self.keybinding("window/show_desktop")
             count = 1
             while self.unity.window_manager.showdesktop_active:
                 self.keybinding("window/show_desktop")
