@@ -1895,8 +1895,11 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
-  if (switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
+  if ((event->type == MotionNotify || event->type == ButtonPress || event->type == ButtonRelease) &&
+      switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
+  {
     skip_other_plugins = true;
+  }
 
   if (!skip_other_plugins &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
