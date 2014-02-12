@@ -81,12 +81,18 @@ GVariant* Introspectable::Introspect()
 
 void Introspectable::AddChild(Introspectable* child)
 {
+  if (!child)
+    return;
+
   children_.push_back(child);
   child->parents_.push_back(this);
 }
 
 void Introspectable::RemoveChild(Introspectable* child)
 {
+  if (!child)
+    return;
+
   children_.remove(child);
   child->parents_.remove(this);
 }
