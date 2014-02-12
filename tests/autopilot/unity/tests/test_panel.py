@@ -297,7 +297,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.unity.dash.ensure_visible()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.assertThat(self.unity.dash.view.overlay_window_buttons_shown, Eventually(Equals(True)))
+        for monitor in range(0, self.display.get_num_screens()):
+            panel = self.unity.panels.get_panel_for_monitor(monitor)
+
+            if self.unity.dash.monitor == monitor:
+                self.assertThat(self.unity.dash.view.overlay_window_buttons_shown[monitor], Equals(True))
+            else:
+                self.assertThat(self.unity.dash.view.overlay_window_buttons_shown[monitor], Equals(False))
 
     def test_window_buttons_work_in_dash_after_launcher_resize(self):
         """When the launcher icons are resized, the window
@@ -320,7 +326,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.unity.hud.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.assertThat(self.unity.hud.view.overlay_window_buttons_shown, Eventually(Equals(True)))
+        for monitor in range(0, self.display.get_num_screens()):
+            panel = self.unity.panels.get_panel_for_monitor(monitor)
+
+            if self.unity.hud.monitor == monitor:
+                self.assertThat(self.unity.hud.view.overlay_window_buttons_shown[monitor], Equals(True))
+            else:
+                self.assertThat(self.unity.hud.view.overlay_window_buttons_shown[monitor], Equals(False))
 
     def test_window_buttons_update_visual_state(self):
         """Window button must update its state in response to mouse events."""
