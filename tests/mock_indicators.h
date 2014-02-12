@@ -19,6 +19,7 @@
  */
 
 #include <gmock/gmock.h>
+#include <UnityCore/Indicators.h>
 
 namespace unity
 {

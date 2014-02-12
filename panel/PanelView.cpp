@@ -57,10 +57,10 @@ namespace panel
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
-PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE_DECL)
+PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , parent_(parent)
-  , remote_(remote)
+  , remote_(menus->Indicators())
   , is_dirty_(true)
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
@@ -98,7 +98,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   layout_ = new nux::HLayout("", NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  menu_view_ = new PanelMenuView();
+  menu_view_ = new PanelMenuView(menus);
   menu_view_->EnableDropdownMenu(true, remote_);
   AddPanelView(menu_view_, 0);
 
@@ -116,9 +116,10 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 
   remote_->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
-  remote_->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
   remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
+  menus->activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
+  menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
@@ -590,19 +591,6 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   }
 }
 
-void PanelView::OnEntryActivateRequest(std::string const& entry_id)
-{
-  if (!IsActive())
-    return;
-
-  bool ret = false;
-
-  if (menu_view_->HasMenus())
-    ret = menu_view_->ActivateEntry(entry_id, 0);
-
-  if (!ret) indicators_->ActivateEntry(entry_id, 0);
-}
-
 bool PanelView::TrackMenuPointer()
 {
   nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
@@ -678,24 +666,43 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
   // --------------------------------------------------------------------------
 }
 
+bool PanelView::ActivateFirstSensitive()
+{
+  if (!IsActive())
+    return false;
+
+  if ((menu_view_->HasMenus() && menu_view_->ActivateIfSensitive()) ||
+      indicators_->ActivateIfSensitive())
+  {
+    // Since this only happens on keyboard events, we need to prevent that the
+    // pointer tracker would select another entry.
+    tracked_pointer_pos_ = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    return true;
+  }
+
+  return false;
+}
+
+bool PanelView::ActivateEntry(std::string const& entry_id)
+{
+  if (!IsActive())
+    return false;
+
+  if ((menu_view_->HasMenus() && menu_view_->ActivateEntry(entry_id, 0)) ||
+      indicators_->ActivateEntry(entry_id, 0))
+  {
+    // Since this only happens on keyboard events, we need to prevent that the
+    // pointer tracker would select another entry.
+    tracked_pointer_pos_ = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    return true;
+  }
+
+  return false;
+}
+
 //
 // Useful Public Methods
 //
-
-bool PanelView::FirstMenuShow() const
-{
-  bool ret = false;
-
-  if (!IsActive())
-    return ret;
-
-  if (menu_view_->HasMenus())
-    ret = menu_view_->ActivateIfSensitive();
-
-  if (!ret) indicators_->ActivateIfSensitive();
-
-  return ret;
-}
 
 void PanelView::SetOpacity(float opacity)
 {
@@ -711,12 +718,6 @@ void PanelView::SetOpacity(float opacity)
 bool PanelView::IsTransparent()
 {
   return (opacity_ < 1.0f || overlay_is_open_);
-}
-
-void PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                   int discovery_fadein, int discovery_fadeout)
-{
-  menu_view_->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
 void PanelView::SetOpacityMaximizedToggle(bool enabled)

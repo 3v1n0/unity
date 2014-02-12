@@ -47,11 +47,6 @@ namespace
   const int MENUBAR_PADDING = 4;
   const int MENU_ENTRIES_PADDING = 6;
   const int MENU_SHOW_NOW_WAIT = 180;
-  const int DEFAULT_MENUS_FADEIN = 100;
-  const int DEFAULT_MENUS_FADEOUT = 120;
-  const int DEFAULT_MENUS_DISCOVERY = 2;
-  const int DEFAULT_DISCOVERY_FADEIN = 200;
-  const int DEFAULT_DISCOVERY_FADEOUT = 300;
 
   const std::string NEW_APP_HIDE_TIMEOUT = "new-app-hide-timeout";
   const std::string NEW_APP_SHOW_TIMEOUT = "new-app-show-timeout";
@@ -59,8 +54,9 @@ namespace
   const std::string UPDATE_SHOW_NOW_TIMEOUT = "update-show-now-timeout";
 }
 
-PanelMenuView::PanelMenuView()
-  : matcher_(bamf_matcher_get_default())
+PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
+  : menu_manager_(menus)
+  , matcher_(bamf_matcher_get_default())
   , is_inside_(false)
   , is_grabbed_(false)
   , is_maximized_(false)
@@ -77,11 +73,6 @@ PanelMenuView::PanelMenuView()
   , monitor_(0)
   , active_xid_(0)
   , desktop_name_(_("Ubuntu Desktop"))
-  , menus_fadein_(DEFAULT_MENUS_FADEIN)
-  , menus_fadeout_(DEFAULT_MENUS_FADEOUT)
-  , menus_discovery_(DEFAULT_MENUS_DISCOVERY)
-  , menus_discovery_fadein_(DEFAULT_DISCOVERY_FADEIN)
-  , menus_discovery_fadeout_(DEFAULT_DISCOVERY_FADEOUT)
 {
 
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
@@ -236,25 +227,6 @@ void PanelMenuView::AddIndicator(indicator::Indicator::Ptr const& indicator)
   PanelIndicatorsView::AddIndicator(indicator);
 }
 
-void PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                       int discovery_fadein, int discovery_fadeout)
-{
-  if (fadein > -1)
-    menus_fadein_ = fadein;
-
-  if (fadeout > -1)
-    menus_fadeout_ = fadeout;
-
-  if (discovery > -1)
-    menus_discovery_ = discovery;
-
-  if (discovery_fadein > -1)
-    menus_discovery_fadein_ = discovery_fadein;
-
-  if (discovery_fadeout > -1)
-    menus_discovery_fadeout_ = discovery_fadeout;
-}
-
 void PanelMenuView::FullRedraw()
 {
   QueueDraw();
@@ -328,13 +300,13 @@ void PanelMenuView::PreLayoutManagement()
 
 void PanelMenuView::StartFadeIn(int duration)
 {
-  opacity_animator_.SetDuration(duration >= 0 ? duration : menus_fadein_);
+  opacity_animator_.SetDuration(duration >= 0 ? duration : menu_manager_->fadein());
   animation::StartOrReverse(opacity_animator_, animation::Direction::FORWARD);
 }
 
 void PanelMenuView::StartFadeOut(int duration)
 {
-  opacity_animator_.SetDuration(duration >= 0 ? duration : menus_fadeout_);
+  opacity_animator_.SetDuration(duration >= 0 ? duration : menu_manager_->fadeout());
   animation::StartOrReverse(opacity_animator_, animation::Direction::BACKWARD);
 }
 
@@ -650,7 +622,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
     if (new_application_ && !is_inside_)
     {
       if (opacity() != 1.0f)
-        StartFadeIn(menus_discovery_fadein_);
+        StartFadeIn(menu_manager_->discovery_fadein());
     }
     else
     {
@@ -665,7 +637,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
     if (opacity() != 0.0f)
     {
       layout_->ProcessDraw(GfxContext, true);
-      StartFadeOut(new_app_menu_shown_ ? menus_discovery_fadeout_ : -1);
+      StartFadeOut(new_app_menu_shown_ ? menu_manager_->discovery_fadeout() : -1);
     }
 
     for (auto const& entry : entries_)
@@ -686,7 +658,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
     /* If we try to hide only the buttons, then use a faster fadeout */
     if (opacity_animator_.CurrentState() != na::Animation::Running)
     {
-      StartFadeOut(menus_fadeout_/3);
+      StartFadeOut(menu_manager_->fadeout()/3);
     }
   }
 
@@ -965,7 +937,7 @@ bool PanelMenuView::OnNewAppShow()
   }
 
   auto cb_func = sigc::mem_fun(this, &PanelMenuView::OnNewAppHide);
-  sources_.AddTimeoutSeconds(menus_discovery_, cb_func, NEW_APP_HIDE_TIMEOUT);
+  sources_.AddTimeoutSeconds(menu_manager_->discovery(), cb_func, NEW_APP_HIDE_TIMEOUT);
 
   return false;
 }
@@ -1522,12 +1494,11 @@ void PanelMenuView::AddProperties(debug::IntrospectionData& introspection)
   .add("draw_menus", ShouldDrawMenus())
   .add("draw_window_buttons", ShouldDrawButtons())
   .add("controls_active_window", we_control_active_)
-  .add("fadein_duration", menus_fadein_)
-  .add("fadeout_duration", menus_fadeout_)
-  .add("discovery_duration", menus_discovery_)
-  .add("discovery_fadein_duration", menus_discovery_fadein_)
-  .add("discovery_fadeout_duration", menus_discovery_fadeout_)
-  .add("integrated_menus", integrated_menus_)
+  .add("fadein_duration", menu_manager_->fadein())
+  .add("fadeout_duration", menu_manager_->fadeout())
+  .add("discovery_duration", menu_manager_->discovery())
+  .add("discovery_fadein_duration", menu_manager_->discovery_fadein())
+  .add("discovery_fadeout_duration", menu_manager_->discovery_fadeout())
   .add("has_menus", HasMenus())
   .add("title_geo", title_geo_);
 }

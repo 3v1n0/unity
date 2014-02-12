@@ -1030,6 +1030,21 @@ class PanelKeyNavigationTests(PanelTestsBase):
         expected_indicator = self.panel.get_indicator_entries(include_hidden_menus=True)[0]
         self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
+    def test_panel_hold_show_menu_works(self):
+        """Holding the show menu key must reveal the menu with mnemonics."""
+        self.open_new_application_window("Text Editor")
+        refresh_fn = lambda: len(self.panel.menus.get_entries())
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+
+        # Wait for menu to fade out first
+        self.assertThat(self.panel.menus.get_entries()[0].visible, Eventually(Equals(0)))
+
+        self.keyboard.press("Alt")
+        self.addCleanup(self.keyboard.release, "Alt")
+        self.assertTrue(self.panel.menus.get_entries()[0].visible)
+        self.assertThat(self.panel.menus.get_entries()[0].label, Equals("_File"))
+
     def test_panel_menu_accelerators_work(self):
         """Pressing a valid menu accelerator must open the correct menu item."""
         self.open_new_application_window("Text Editor")

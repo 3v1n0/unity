@@ -23,6 +23,7 @@
 #include "PanelStyle.h"
 #include "PanelView.h"
 #include "UnitySettings.h"
+#include "mock_menu_manager.h"
 #include "test_uscreen_mock.h"
 #include "launcher/LauncherOptions.h"
 
@@ -31,11 +32,11 @@ namespace
 using namespace unity;
 using namespace unity::panel;
 
-
 struct TestPanelController : public testing::Test
 {
   TestPanelController()
-  : edge_barriers(std::make_shared<ui::EdgeBarrierController>())
+  : menus(std::make_shared<menu::MockManager>())
+  , edge_barriers(std::make_shared<ui::EdgeBarrierController>())
   , options(std::make_shared<launcher::Options>())
   {
     edge_barriers->options = options;
@@ -44,6 +45,7 @@ struct TestPanelController : public testing::Test
   MockUScreen uscreen;
   Settings settings;
   Style panel_style;
+  menu::MockManager::Ptr menus;
   ui::EdgeBarrierController::Ptr edge_barriers;
   launcher::Options::Ptr options;
 };
@@ -53,7 +55,7 @@ TEST_F(TestPanelController, Construction)
   nux::ObjectPtr<PanelView> panel_ptr;
 
   {
-    Controller pc(edge_barriers);
+    Controller pc(menus, edge_barriers);
 
     ASSERT_EQ(pc.panels().size(), 1);
     EXPECT_EQ(pc.panels()[0]->GetMonitor(), 0);
@@ -69,7 +71,7 @@ TEST_F(TestPanelController, Multimonitor)
   Controller::PanelVector panel_ptrs;
 
   {
-    Controller pc(edge_barriers);
+    Controller pc(menus, edge_barriers);
 
     ASSERT_EQ(pc.panels().size(), monitors::MAX);
 
@@ -91,7 +93,7 @@ TEST_F(TestPanelController, MultimonitorSwitchToSingleMonitor)
   uscreen.SetupFakeMultiMonitor();
 
   {
-    Controller pc(edge_barriers);
+    Controller pc(menus, edge_barriers);
 
     ASSERT_EQ(pc.panels().size(), monitors::MAX);
 
@@ -106,7 +108,7 @@ TEST_F(TestPanelController, MultimonitorRemoveMiddleMonitor)
   uscreen.SetupFakeMultiMonitor();
 
   {
-    Controller pc(edge_barriers);
+    Controller pc(menus, edge_barriers);
 
     ASSERT_EQ(pc.panels().size(), monitors::MAX);
 
@@ -123,7 +125,7 @@ TEST_F(TestPanelController, MultimonitorRemoveMiddleMonitor)
 TEST_F(TestPanelController, SingleMonitorSwitchToMultimonitor)
 {
   {
-    Controller pc(edge_barriers);
+    Controller pc(menus, edge_barriers);
 
     ASSERT_EQ(pc.panels().size(), 1);
 
@@ -137,7 +139,7 @@ TEST_F(TestPanelController, MultimonitorGeometries)
   uscreen.SetupFakeMultiMonitor();
 
   {
-    Controller pc(edge_barriers);
+    Controller pc(menus, edge_barriers);
 
     for (unsigned int i = 0; i < monitors::MAX; ++i)
     {
@@ -153,7 +155,7 @@ TEST_F(TestPanelController, MultimonitorGeometries)
 
 TEST_F(TestPanelController, MonitorResizesPanels)
 {
-  Controller pc(edge_barriers);
+  Controller pc(menus, edge_barriers);
 
   nux::Geometry monitor_geo = uscreen.GetMonitorGeometry(0);
   monitor_geo.SetSize(monitor_geo.width/2, monitor_geo.height/2);
@@ -178,7 +180,7 @@ TEST_F(TestPanelController, MultiMonitorEdgeBarrierSubscriptions)
   uscreen.SetupFakeMultiMonitor();
 
   {
-    Controller pc(edge_barriers);
+    Controller pc(menus, edge_barriers);
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       ASSERT_EQ(edge_barriers->GetHorizontalSubscriber(i), pc.panels()[i].GetPointer());
