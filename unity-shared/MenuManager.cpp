@@ -131,7 +131,12 @@ struct Manager::Impl : sigc::trackable
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)
-  : impl_(new Impl(this, indicators, grabber))
+  : fadein(100)
+  , fadeout(120)
+  , discovery(2)
+  , discovery_fadein(200)
+  , discovery_fadeout(300)
+  , impl_(new Impl(this, indicators, grabber))
 {}
 
 Manager::~Manager()

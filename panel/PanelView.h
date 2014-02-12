@@ -66,8 +66,6 @@ public:
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
-  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                          int discovery_fadein, int discovery_fadeout);
 
   Window GetTrayXid() const;
   int GetStoredDashWidth() const;

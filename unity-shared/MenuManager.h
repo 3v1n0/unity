@@ -45,6 +45,11 @@ public:
   typedef std::shared_ptr<Manager> Ptr;
 
   nux::Property<bool> show_menus;
+  nux::Property<unsigned> fadein;
+  nux::Property<unsigned> fadeout;
+  nux::Property<unsigned> discovery;
+  nux::Property<unsigned> discovery_fadein;
+  nux::Property<unsigned> discovery_fadeout;
 
   Manager(indicator::Indicators::Ptr const&, key::Grabber::Ptr const&);
   virtual ~Manager();

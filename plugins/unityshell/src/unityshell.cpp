@@ -3355,15 +3355,19 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       panel_controller_->SetOpacityMaximizedToggle(optionGetPanelOpacityMaximizedToggle());
       break;
     case UnityshellOptions::MenusFadein:
+      menus_->fadein = optionGetMenusFadein();
+      break;
     case UnityshellOptions::MenusFadeout:
+      menus_->fadeout = optionGetMenusFadeout();
+      break;
     case UnityshellOptions::MenusDiscoveryFadein:
+      menus_->discovery_fadein = optionGetMenusDiscoveryFadein();
+      break;
     case UnityshellOptions::MenusDiscoveryFadeout:
+      menus_->discovery_fadeout = optionGetMenusDiscoveryFadeout();
+      break;
     case UnityshellOptions::MenusDiscoveryDuration:
-      panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
-                                            optionGetMenusFadeout(),
-                                            optionGetMenusDiscoveryDuration(),
-                                            optionGetMenusDiscoveryFadein(),
-                                            optionGetMenusDiscoveryFadeout());
+      menus_->discovery = optionGetMenusDiscoveryDuration();
       break;
     case UnityshellOptions::LauncherOpacity:
       launcher_options->background_alpha = optionGetLauncherOpacity();
@@ -3558,11 +3562,6 @@ void UnityScreen::initLauncher()
   timer.Reset();
   panel_controller_ = std::make_shared<panel::Controller>(menus_, edge_barriers);
   AddChild(panel_controller_.get());
-  panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
-                                        optionGetMenusFadeout(),
-                                        optionGetMenusDiscoveryDuration(),
-                                        optionGetMenusDiscoveryFadein(),
-                                        optionGetMenusDiscoveryFadeout());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */

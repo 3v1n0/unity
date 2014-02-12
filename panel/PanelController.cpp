@@ -49,9 +49,6 @@ public:
 
   float opacity() const;
 
-  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                          int discovery_fadein, int discovery_fadeout);
-
   nux::ObjectPtr<PanelView> CreatePanel(Introspectable *iobj);
   void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
   void UpdatePanelGeometries();
@@ -67,11 +64,6 @@ public:
   std::vector<Window> tray_xids_;
   float opacity_;
   bool opacity_maximized_toggle_;
-  int menus_fadein_;
-  int menus_fadeout_;
-  int menus_discovery_;
-  int menus_discovery_fadein_;
-  int menus_discovery_fadeout_;
 };
 
 
@@ -80,11 +72,6 @@ Controller::Impl::Impl(menu::Manager::Ptr const& indicators, ui::EdgeBarrierCont
   , edge_barriers_(edge_barriers)
   , opacity_(1.0f)
   , opacity_maximized_toggle_(false)
-  , menus_fadein_(0)
-  , menus_fadeout_(0)
-  , menus_discovery_(0)
-  , menus_discovery_fadein_(0)
-  , menus_discovery_fadeout_(0)
 {}
 
 Controller::Impl::~Impl()
@@ -134,22 +121,6 @@ void Controller::Impl::SetOpacityMaximizedToggle(bool enabled)
   for (auto const& panel: panels_)
   {
     panel->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
-  }
-}
-
-void Controller::Impl::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                          int discovery_fadein, int discovery_fadeout)
-{
-  menus_fadein_ = fadein;
-  menus_fadeout_ = fadeout;
-  menus_discovery_ = discovery;
-  menus_discovery_fadein_ = discovery_fadein;
-  menus_discovery_fadeout_ = discovery_fadeout;
-
-  for (auto const& panel: panels_)
-  {
-    panel->SetMenuShowTimings(fadein, fadeout, discovery,
-                              discovery_fadein, discovery_fadeout);
   }
 }
 
@@ -222,8 +193,6 @@ nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel(Introspectable *iobj)
   view->SetMaximumHeight(panel::Style::Instance().panel_height);
   view->SetOpacity(opacity_);
   view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
-  view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
-                         menus_discovery_fadein_, menus_discovery_fadeout_);
 
   layout->AddView(view, 1);
   layout->SetContentDistribution(nux::MAJOR_POSITION_START);
@@ -284,12 +253,6 @@ void Controller::SetOpacity(float opacity)
 void Controller::SetOpacityMaximizedToggle(bool enabled)
 {
   pimpl->SetOpacityMaximizedToggle(enabled);
-}
-
-void Controller::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                    int discovery_fadein, int discovery_fadeout)
-{
-  pimpl->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
 std::vector<Window> const& Controller::GetTrayXids() const

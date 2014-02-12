@@ -98,7 +98,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   layout_ = new nux::HLayout("", NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  menu_view_ = new PanelMenuView();
+  menu_view_ = new PanelMenuView(menus);
   menu_view_->EnableDropdownMenu(true, remote_);
   AddPanelView(menu_view_, 0);
 
@@ -704,12 +704,6 @@ void PanelView::SetOpacity(float opacity)
 bool PanelView::IsTransparent()
 {
   return (opacity_ < 1.0f || overlay_is_open_);
-}
-
-void PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                   int discovery_fadein, int discovery_fadeout)
-{
-  menu_view_->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
 void PanelView::SetOpacityMaximizedToggle(bool enabled)

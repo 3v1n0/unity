@@ -51,7 +51,6 @@ public:
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
-  void SetMenuShowTimings(int fadein, int fadeout, int discovery, int discovery_fadein, int discovery_fadeout);
 
   float opacity() const;
 
