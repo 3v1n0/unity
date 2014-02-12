@@ -87,15 +87,15 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
-  // TODO (andy) fallback to CK. But I need to figure out how to do that.
+  // TODO (andy) fallback to CK. But we need to figure out how to do that.
   {
     const char* session_id = g_getenv("XDG_SESSION_ID");
     session_id = session_id ? session_id : "";
 
-    login_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.login1",
+    login_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
                                                      std::string("/org/freedesktop/login1/session/") + session_id,
                                                      "org.freedesktop.login1.Session",
-                                                     G_BUS_TYPE_SYSTEM);
+                                                     test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
     login_proxy_->Connect("Lock", [this](GVariant*){
       manager_->lock_requested.emit();
@@ -416,13 +416,8 @@ void GnomeManager::LockScreen()
 {
   impl_->EnsureCancelPendingAction();
 
-  auto proxy = std::make_shared<glib::DBusProxy>(impl_->test_mode_ ? testing::DBUS_NAME : "org.gnome.ScreenSaver",
-                                                 "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-
-  // By passing the proxy to the lambda we ensure that it will stay alive
-  // until we get the last callback.
-  proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
-  proxy->Call("SimulateUserActivity", nullptr, [proxy] (GVariant*) {});
+  // FIXME (andy) we should ask gnome-session to emit the logind signal
+  lock_requested.emit();
 }
 
 void GnomeManager::Logout()

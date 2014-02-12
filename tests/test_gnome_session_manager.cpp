@@ -37,9 +37,9 @@ const std::string SHELL_INTERFACE = "org.gnome.SessionManager.EndSessionDialog";
 const std::string SHELL_OBJECT_PATH = "/org/gnome/SessionManager/EndSessionDialog";
 
 const std::string UPOWER_PATH = "/org/freedesktop/UPower";
-const std::string LOGIND_PATH = "/org/freedesktop/login1";
+const std::string LOGIND_MANAGER_PATH = "/org/freedesktop/login1";
+const std::string LOGIND_SESSION_PATH = "/org/freedesktop/login1/session/" + std::string(g_getenv("XDG_SESSION_ID") ? g_getenv("XDG_SESSION_ID") : "");
 const std::string CONSOLE_KIT_PATH = "/org/freedesktop/ConsoleKit/Manager";
-const std::string SCREEN_SAVER_PATH = "/org/gnome/ScreenSaver";
 const std::string SESSION_MANAGER_PATH = "/org/gnome/SessionManager";
 
 const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
@@ -62,7 +62,7 @@ R"(<node>
   </interface>
 </node>)";
 
-const std::string LOGIND =
+const std::string LOGIND_MANAGER =
 R"(<node>
   <interface name="org.freedesktop.login1.Manager">
     <method name="CanSuspend">
@@ -89,6 +89,14 @@ R"(<node>
   </interface>
 </node>)";
 
+const std::string LOGIND_SESSION =
+R"(<node>
+  <interface name="org.freedesktop.login1.Session">
+    <signal name="Lock" />
+    <signal name="Unlock" />
+  </interface>
+</node>)";
+
 const std::string CONSOLE_KIT =
 R"(<node>
   <interface name="org.freedesktop.ConsoleKit.Manager">
@@ -97,14 +105,6 @@ R"(<node>
     <method name="CloseSession">
       <arg type="s" name="cookie" direction="in"/>
     </method>
-  </interface>
-</node>)";
-
-const std::string SCREEN_SAVER =
-R"(<node>
-  <interface name="org.gnome.ScreenSaver">
-    <method name="Lock"/>
-    <method name="SimulateUserActivity"/>
   </interface>
 </node>)";
 
@@ -162,7 +162,8 @@ struct TestGnomeSessionManager : testing::Test
     });
 
     logind_ = std::make_shared<DBusServer>();
-    logind_->AddObjects(introspection::LOGIND, LOGIND_PATH);
+    logind_->AddObjects(introspection::LOGIND_MANAGER, LOGIND_MANAGER_PATH);
+    logind_->AddObjects(introspection::LOGIND_SESSION, LOGIND_SESSION_PATH);
     logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
       if (method == "CanSuspend")
       {
@@ -180,9 +181,6 @@ struct TestGnomeSessionManager : testing::Test
 
     console_kit_ = std::make_shared<DBusServer>();
     console_kit_->AddObjects(introspection::CONSOLE_KIT, CONSOLE_KIT_PATH);
-
-    screen_saver_ = std::make_shared<DBusServer>();
-    screen_saver_->AddObjects(introspection::SCREEN_SAVER, SCREEN_SAVER_PATH);
 
     session_manager_ = std::make_shared<DBusServer>();
     session_manager_->AddObjects(introspection::SESSION_MANAGER, SESSION_MANAGER_PATH);
@@ -215,7 +213,6 @@ struct TestGnomeSessionManager : testing::Test
     Utils::WaitUntilMSec([] { return upower_->IsConnected(); });
     Utils::WaitUntilMSec([] { return logind_->IsConnected(); });
     Utils::WaitUntilMSec([] { return console_kit_->IsConnected(); });
-    Utils::WaitUntilMSec([] { return screen_saver_->IsConnected(); });
     Utils::WaitUntilMSec([] { return session_manager_->IsConnected(); });
     Utils::WaitUntilMSec([] { return shell_proxy_->IsConnected();});
     ASSERT_TRUE(shell_proxy_->IsConnected());
@@ -267,7 +264,6 @@ struct TestGnomeSessionManager : testing::Test
     upower_.reset();
     logind_.reset();
     console_kit_.reset();
-    screen_saver_.reset();
     session_manager_.reset();
   }
 
@@ -327,7 +323,6 @@ struct TestGnomeSessionManager : testing::Test
   static DBusServer::Ptr upower_;
   static DBusServer::Ptr console_kit_;
   static DBusServer::Ptr logind_;
-  static DBusServer::Ptr screen_saver_;
   static DBusServer::Ptr session_manager_;
   static DBusProxy::Ptr shell_proxy_;
 };
@@ -336,7 +331,6 @@ session::Manager::Ptr TestGnomeSessionManager::manager;
 DBusServer::Ptr TestGnomeSessionManager::upower_;
 DBusServer::Ptr TestGnomeSessionManager::console_kit_;
 DBusServer::Ptr TestGnomeSessionManager::logind_;
-DBusServer::Ptr TestGnomeSessionManager::screen_saver_;
 DBusServer::Ptr TestGnomeSessionManager::session_manager_;
 DBusProxy::Ptr TestGnomeSessionManager::shell_proxy_;
 bool TestGnomeSessionManager::can_shutdown_;
@@ -375,31 +369,17 @@ TEST_F(TestGnomeSessionManager, UserName)
 
 TEST_F(TestGnomeSessionManager, LockScreen)
 {
-  bool lock_called = false;
-  bool simulate_activity_called = false;
+  bool lock_emitted = false;
 
-  screen_saver_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
-    if (method == "Lock")
-    {
-      lock_called = true;
-      EXPECT_FALSE(simulate_activity_called);
-    }
-    else if (method == "SimulateUserActivity")
-    {
-      simulate_activity_called = true;
-      EXPECT_TRUE(lock_called);
-    }
-
-    return nullptr;
+  manager->lock_requested.connect([&lock_emitted]()
+  {
+    lock_emitted = true;
   });
 
   manager->LockScreen();
 
-  Utils::WaitUntilMSec(lock_called);
-  EXPECT_TRUE(lock_called);
-
-  Utils::WaitUntilMSec(simulate_activity_called);
-  EXPECT_TRUE(simulate_activity_called);
+  Utils::WaitUntilMSec(lock_emitted);
+  EXPECT_TRUE(lock_emitted);
 }
 
 TEST_F(TestGnomeSessionManager, Logout)
@@ -1002,6 +982,36 @@ TEST_F(TestGnomeSessionManager, CancelRequested)
 
   Utils::WaitUntilMSec(closed);
   EXPECT_TRUE(closed);
+}
+
+TEST_F(TestGnomeSessionManager, LogindLock)
+{
+  bool lock_emitted = false;
+
+  manager->lock_requested.connect([&lock_emitted]()
+  {
+    lock_emitted = true;
+  });
+
+  logind_->GetObject("org.freedesktop.login1.Session")->EmitSignal("Lock");
+
+  Utils::WaitUntilMSec(lock_emitted);
+  EXPECT_TRUE(lock_emitted);
+}
+
+TEST_F(TestGnomeSessionManager, LogindUnLock)
+{
+  bool unlock_emitted = false;
+
+  manager->unlock_requested.connect([&unlock_emitted]()
+  {
+    unlock_emitted = true;
+  });
+
+  logind_->GetObject("org.freedesktop.login1.Session")->EmitSignal("Unlock");
+
+  Utils::WaitUntilMSec(unlock_emitted);
+  EXPECT_TRUE(unlock_emitted);
 }
 
 } // Namespace
