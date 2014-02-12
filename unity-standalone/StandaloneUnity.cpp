@@ -20,11 +20,12 @@
  */
 #include <gtk/gtk.h>
 
-#include "Nux/Nux.h"
-#include "Nux/VLayout.h"
-#include "Nux/WindowThread.h"
-#include "NuxGraphics/GraphicsEngine.h"
+#include <Nux/Nux.h>
+#include <Nux/VLayout.h>
+#include <Nux/WindowThread.h>
+#include <NuxGraphics/GraphicsEngine.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/DBusIndicators.h>
 
 #include "dash/DashController.h"
 #include "dash/DashView.h"
@@ -37,6 +38,8 @@
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/FontSettings.h"
+#include "unity-shared/KeyGrabber.h"
+#include "unity-shared/MenuManager.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/ThumbnailGenerator.h"
 #include "unity-shared/UBusMessages.h"
@@ -67,6 +70,16 @@ struct StandaloneDndManager : XdndManager
   int Monitor() const { return 0; }
 };
 
+struct StandaloneKeyGrabber : key::Grabber
+{
+  CompAction::Vector& GetActions() { return actions_; }
+  void AddAction(CompAction const&) {}
+  void RemoveAction(CompAction const&) {}
+
+  private:
+    CompAction::Vector actions_;
+};
+
 class UnityStandalone
 {
 public:
@@ -93,8 +106,11 @@ void UnityStandalone::Init ()
 {
   auto xdnd_manager = std::make_shared<StandaloneDndManager>();
   auto edge_barriers = std::make_shared<ui::EdgeBarrierController>();
+  auto indicators = std::make_shared<indicator::DBusIndicators>();
+  auto key_grabber = std::make_shared<StandaloneKeyGrabber>();
+  auto menu_manager = std::make_shared<menu::Manager>(indicators, key_grabber);
   launcher_controller = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers);
-  panel_controller = std::make_shared<panel::Controller>(edge_barriers);
+  panel_controller = std::make_shared<panel::Controller>(menu_manager, edge_barriers);
   dash_controller = std::make_shared<dash::Controller>();
 
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;

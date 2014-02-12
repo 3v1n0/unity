@@ -21,11 +21,13 @@ set (STANDALONE_SOURCES
      )
 
 add_executable (unity-standalone StandaloneUnity.cpp)
-target_link_libraries (unity-standalone 
+# This makes linker to include library dir in RUNPATH
+find_library (COMPIZ_LIB compiz_core ${COMPIZ_LIBDIR})
+target_link_libraries (unity-standalone
                        dash-lib
                        launcher-lib
                        panel-lib
                        unity-shared
                        unity-shared-bamf
-                       unity-shared-compiz
-                       unity-shared-standalone)
+                       unity-shared-standalone
+                       ${COMPIZ_LIB})
