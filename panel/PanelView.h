@@ -89,7 +89,6 @@ protected:
   void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
   void OnIndicatorViewUpdated();
   void OnMenuPointerMoved(int x, int y);
-  void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);
   void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
 

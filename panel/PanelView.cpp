@@ -591,11 +591,6 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   }
 }
 
-void PanelView::OnEntryActivateRequest(std::string const& entry_id)
-{
-  ActivateEntry(entry_id);
-}
-
 bool PanelView::TrackMenuPointer()
 {
   nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
