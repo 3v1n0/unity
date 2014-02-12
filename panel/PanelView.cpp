@@ -119,7 +119,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
   menus->activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
-  menus->open_first.connect(sigc::mem_fun(this, &PanelView::FirstMenuShow));
+  menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
@@ -663,22 +663,30 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
   // --------------------------------------------------------------------------
 }
 
-bool PanelView::FirstMenuShow() const
+bool PanelView::ActivateFirstSensitive()
 {
-  bool ret = false;
+  if (IsActive() && (menu_view_->ActivateIfSensitive() || indicators_->ActivateIfSensitive()))
+  {
+    // Since this only happens on keyboard events, we need to prevent that the
+    // pointer tracker would select another entry.
+    tracked_pointer_pos_ = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    return true;
+  }
 
-  if (!IsActive())
-    return ret;
-
-  ret = menu_view_->ActivateIfSensitive();
-  if (!ret) indicators_->ActivateIfSensitive();
-
-  return ret;
+  return false;
 }
 
 bool PanelView::ActivateEntry(std::string const& entry_id)
 {
-  return IsActive() && (menu_view_->ActivateEntry(entry_id, 0) || indicators_->ActivateEntry(entry_id, 0));
+  if (IsActive() && (menu_view_->ActivateEntry(entry_id, 0) || indicators_->ActivateEntry(entry_id, 0)))
+  {
+    // Since this only happens on keyboard events, we need to prevent that the
+    // pointer tracker would select another entry.
+    tracked_pointer_pos_ = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    return true;
+  }
+
+  return false;
 }
 
 //

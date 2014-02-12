@@ -97,7 +97,7 @@ private:
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
 
-  bool FirstMenuShow() const;
+  bool ActivateFirstSensitive();
   bool ActivateEntry(std::string const& entry_id);
   void Resize(nux::Point const& offset, int width);
   bool IsTransparent();
