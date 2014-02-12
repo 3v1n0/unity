@@ -32,9 +32,9 @@ public:
   typedef std::shared_ptr<Grabber> Ptr;
   virtual ~Grabber() = default;
 
-  virtual CompAction::Vector& getActions() = 0;
-  virtual void addAction(CompAction const&) = 0;
-  virtual void removeAction(CompAction const&) = 0;
+  virtual void AddAction(CompAction const&) = 0;
+  virtual void RemoveAction(CompAction const&) = 0;
+  virtual CompAction::Vector& GetActions() = 0;
 };
 
 } // namespace key

@@ -25,8 +25,9 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
-#include <UnityCore/ScopeProxyInterface.h>
+#include <UnityCore/DBusIndicators.h>
 #include <UnityCore/GnomeSessionManager.h>
+#include <UnityCore/ScopeProxyInterface.h>
 
 #include "CompizUtils.h"
 #include "BaseWindowRaiserImp.h"
@@ -148,8 +149,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
   , deco_manager_(std::make_shared<decoration::Manager>())
-  , key_grabber_(std::make_shared<key::GnomeGrabber>())
   , debugger_(this)
   , needsRelayout(false)
   , super_keypressed_(false)
@@ -1941,7 +1942,7 @@ bool UnityScreen::showMenuBarInitiate(CompAction* action,
   if (state & CompAction::StateInitKey)
   {
     action->setState(action->state() | CompAction::StateTermKey);
-    panel_controller_->ShowMenuBar();
+    menus_->show_menus = true;
   }
 
   return false;
@@ -1954,7 +1955,7 @@ bool UnityScreen::showMenuBarTerminate(CompAction* action,
   if (state & CompAction::StateTermKey)
   {
     action->setState(action->state() & ~CompAction::StateTermKey);
-    panel_controller_->HideMenuBar();
+    menus_->show_menus = false;
   }
 
   return false;
@@ -2063,7 +2064,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
    * the menus entries after that a menu has been shown and hidden via the
    * keyboard and the Alt key is still pressed */
   action->setState(action->state() | CompAction::StateTermKey);
-  panel_controller_->FirstMenuShow();
+  menus_->open_first.emit();
 
   return true;
 }
@@ -3555,7 +3556,7 @@ void UnityScreen::initLauncher()
 
   /* Setup panel */
   timer.Reset();
-  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers, key_grabber_);
+  panel_controller_ = std::make_shared<panel::Controller>(menus_, edge_barriers);
   AddChild(panel_controller_.get());
   panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
                                         optionGetMenusFadeout(),
@@ -3641,7 +3642,7 @@ void UnityScreen::InitGesturesSupport()
 
 CompAction::Vector& UnityScreen::getActions()
 {
-  return key_grabber_->getActions();
+  return menus_->KeyGrabber()->GetActions();
 }
 
 /* Window init */

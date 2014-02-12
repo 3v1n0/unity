@@ -248,17 +248,17 @@ GnomeGrabber::GnomeGrabber(TestMode const& dummy)
 GnomeGrabber::~GnomeGrabber()
 {}
 
-CompAction::Vector& GnomeGrabber::getActions()
+CompAction::Vector& GnomeGrabber::GetActions()
 {
   return impl_->actions_;
 }
 
-void GnomeGrabber::addAction(CompAction const& action)
+void GnomeGrabber::AddAction(CompAction const& action)
 {
   impl_->addAction(action);
 }
 
-void GnomeGrabber::removeAction(CompAction const& action)
+void GnomeGrabber::RemoveAction(CompAction const& action)
 {
   impl_->removeAction(action);
 }

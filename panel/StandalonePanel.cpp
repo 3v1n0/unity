@@ -26,10 +26,12 @@
 #include <NuxCore/AnimationController.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/DBusIndicators.h>
 #include <gtk/gtk.h>
 
 #include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/KeyGrabber.h"
 #include "unity-shared/PanelStyle.h"
 #include "PanelView.h"
 
@@ -52,18 +54,31 @@ private:
   struct StandalonePanelView : public PanelView
   {
     // Used to sync menu geometries
-    StandalonePanelView(MockableBaseWindow* window)
-      : PanelView(window, std::make_shared<indicator::DBusIndicators>())
+    StandalonePanelView(MockableBaseWindow* window, menu::Manager::Ptr const& indicators)
+      : PanelView(window, indicators)
     {}
 
     std::string GetName() const { return "StandalonePanel"; }
   };
 
+  struct MockKeyGrabber : key::Grabber
+  {
+    CompAction::Vector& GetActions() { return actions_; }
+    void AddAction(CompAction const&) {}
+    void RemoveAction(CompAction const&) {}
+
+    private:
+      CompAction::Vector actions_;
+  };
+
   void Init()
   {
     panel_window = new MockableBaseWindow("StandalonePanel");
+    auto dbus_indicators = std::make_shared<indicator::DBusIndicators>();
+    auto key_grabber = std::make_shared<MockKeyGrabber>();
+    indicators_ = std::make_shared<menu::Manager>(dbus_indicators, key_grabber);
 
-    PanelView* panel = new StandalonePanelView(panel_window.GetPointer());
+    PanelView* panel = new StandalonePanelView(panel_window.GetPointer(), indicators_);
 
     nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
     layout->AddView(panel, 1);
@@ -92,6 +107,7 @@ private:
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller;
   nux::ObjectPtr<MockableBaseWindow> panel_window;
+  menu::Manager::Ptr indicators_;
 };
 
 int main(int argc, char** argv)

@@ -69,7 +69,7 @@
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
 #include "ThumbnailGenerator.h"
-#include "KeyGrabber.h"
+#include "MenuManager.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -313,8 +313,8 @@ private:
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
 
+  menu::Manager::Ptr menus_;
   std::shared_ptr<decoration::Manager> deco_manager_;
-  key::Grabber::Ptr key_grabber_;
 
   /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;

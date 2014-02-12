@@ -32,9 +32,9 @@ public:
   GnomeGrabber();
   virtual ~GnomeGrabber();
 
-  CompAction::Vector& getActions();
-  void addAction(CompAction const&);
-  void removeAction(CompAction const&);
+  void AddAction(CompAction const&);
+  void RemoveAction(CompAction const&);
+  CompAction::Vector& GetActions();
 
 protected:
   struct TestMode {};
