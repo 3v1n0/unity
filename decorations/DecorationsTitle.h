@@ -30,9 +30,6 @@ namespace decoration
 class Title : public TexturedItem
 {
 public:
-  typedef std::shared_ptr<Title> Ptr;
-  typedef unity::uweak_ptr<Title> WeakPtr;
-
   nux::Property<std::string> text;
 
   Title();

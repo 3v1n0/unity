@@ -22,6 +22,7 @@
 #include <core/atoms.h>
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/CairoGraphics.h>
+#include <UnityCore/DBusIndicators.h>
 #include <X11/Xatom.h>
 #include "WindowManager.h"
 
@@ -46,6 +47,7 @@ Manager::Impl::Impl(decoration::Manager* parent)
   : active_window_(0)
   , enable_add_supported_atoms_(true)
   , data_pool_(DataPool::Get())
+  , indicators_(std::make_shared<indicator::DBusIndicators>())
 {
   if (!manager_)
     manager_ = parent;
@@ -61,9 +63,11 @@ Manager::Impl::Impl(decoration::Manager* parent)
   manager_->inactive_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->inactive_shadow_radius.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->shadow_offset.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateWindowsExtents)));
+  Style::Get()->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIndicators)));
 
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
+  SetupIndicators();
 }
 
 Manager::Impl::~Impl()
@@ -107,6 +111,74 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
     BuildInactiveShadowTexture();
 
   UpdateWindowsExtents();
+}
+
+void Manager::Impl::SetupIndicators()
+{
+  if (!Style::Get()->integrated_menus())
+  {
+    CleanupAppMenu();
+    indicators_connections_.Clear();
+    return;
+  }
+
+  using namespace indicator;
+
+  indicators_connections_.Add(indicators_->on_object_added.connect([this] (Indicator::Ptr const& indicator) {
+    if (indicator->IsAppmenu())
+      SetupAppmenu(indicator);
+  }));
+
+  indicators_connections_.Add(indicators_->on_object_removed.connect([this] (Indicator::Ptr const& indicator) {
+    if (appmenu_ == indicator)
+      CleanupAppMenu();
+  }));
+
+  indicators_connections_.Add(indicators_->on_entry_activate_request.connect([this] (std::string const& entry_id) {
+    if (Window::Ptr const& win = active_deco_win_.lock())
+      win->impl_->ActivateMenu(entry_id);
+  }));
+
+  for (auto const& indicator : indicators_->GetIndicators())
+  {
+    if (indicator->IsAppmenu())
+    {
+      SetupAppmenu(indicator);
+      break;
+    }
+  }
+}
+
+void Manager::Impl::SetupAppmenu(indicator::Indicator::Ptr const& appmenu)
+{
+  if (!appmenu)
+  {
+    CleanupAppMenu();
+    return;
+  }
+
+  auto setup_active_window = [this] {
+    if (Window::Ptr const& active_win = active_deco_win_.lock())
+      active_win->impl_->SetupAppMenu();
+  };
+
+  appmenu_ = appmenu;
+  indicators_connections_.Remove(appmenu_connection_);
+  appmenu_connection_ = indicators_connections_.Add(appmenu_->updated.connect(setup_active_window));
+  setup_active_window();
+}
+
+void Manager::Impl::CleanupAppMenu()
+{
+  appmenu_.reset();
+  indicators_connections_.Remove(appmenu_connection_);
+  auto const& active_win = active_deco_win_.lock();
+
+  if (active_win)
+  {
+    active_win->impl_->CleanupAppMenu();
+    active_win->impl_->Damage();
+  }
 }
 
 void Manager::Impl::UpdateWindowsExtents()
@@ -178,14 +250,12 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
   if (screen->activeWindow() != active_window_)
   {
     // Do this when _NET_ACTIVE_WINDOW changes on root!
-    auto const& old_active = GetWindowByXid(active_window_);
-
-    if (old_active)
-      old_active->impl_->active = false;
+    if (active_deco_win_)
+      active_deco_win_->impl_->active = false;
 
     active_window_ = screen->activeWindow();
-
     auto const& new_active = GetWindowByXid(active_window_);
+    active_deco_win_ = new_active;
 
     if (new_active)
       new_active->impl_->active = true;

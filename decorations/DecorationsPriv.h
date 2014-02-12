@@ -24,6 +24,7 @@
 #include <NuxCore/NuxCore.h>
 #include <NuxCore/Rect.h>
 #include <UnityCore/ConnectionManager.h>
+#include <UnityCore/Indicators.h>
 #include <core/core.h>
 #include <opengl/opengl.h>
 #include <composite/composite.h>
@@ -31,7 +32,6 @@
 
 #include "DecorationsDataPool.h"
 #include "DecorationsManager.h"
-#include "DecorationsTitle.h"
 #include "DecorationsInputMixer.h"
 
 class CompRegion;
@@ -40,9 +40,13 @@ namespace unity
 {
 namespace decoration
 {
-namespace cu = compiz_utils;
-
 extern Manager* manager_;
+
+class Title;
+class MenuLayout;
+class SlidingLayout;
+
+namespace cu = compiz_utils;
 
 struct Quads
 {
@@ -78,6 +82,9 @@ struct Window::Impl
   bool FullyDecorated() const;
   bool ShadowDecorated() const;
   void RedrawDecorations();
+  void Damage();
+  void SetupAppMenu();
+  void ActivateMenu(std::string const&);
 
 private:
   void UnsetExtents();
@@ -88,7 +95,10 @@ private:
   void UnsetFrame();
   void SetupWindowControls();
   void CleanupWindowControls();
+  void CleanupAppMenu();
+  void UpdateAppMenuVisibility();
   void SyncXShapeWithFrameRegion();
+  void SyncMenusGeometries() const;
   bool ShouldBeDecorated() const;
   GLTexture* ShadowTexture() const;
   unsigned ShadowRadius() const;
@@ -113,11 +123,15 @@ private:
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
   connection::Wrapper theme_changed_;
+  connection::Wrapper grab_mouse_changed_;
   std::string last_title_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
-  Title::WeakPtr title_;
+  uweak_ptr<MenuLayout> menus_;
+  uweak_ptr<Title> title_;
+  uweak_ptr<SlidingLayout> sliding_layout_;
+  Item::WeakPtr grab_edge_;
   Item::Ptr edge_borders_;
 };
 
@@ -138,6 +152,9 @@ private:
   bool UpdateWindow(::Window);
   void UpdateWindowsExtents();
 
+  void SetupIndicators();
+  void SetupAppmenu(indicator::Indicator::Ptr const&);
+  void CleanupAppMenu();
   void BuildActiveShadowTexture();
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
@@ -154,9 +171,16 @@ private:
   cu::PixmapTexture::Ptr active_shadow_pixmap_;
   cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
 
+  uweak_ptr<decoration::Window> active_deco_win_;
   uweak_ptr<InputMixer> last_mouse_owner_;
   std::map<CompWindow*, decoration::Window::Ptr> windows_;
   std::unordered_map<::Window, std::weak_ptr<decoration::Window>> framed_windows_;
+
+  indicator::Indicators::Ptr indicators_;
+  indicator::Indicator::Ptr appmenu_;
+
+  connection::Manager indicators_connections_;
+  connection::handle appmenu_connection_;
 };
 
 } // decoration namespace

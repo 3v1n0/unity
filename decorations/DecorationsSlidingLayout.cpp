@@ -30,12 +30,11 @@ SlidingLayout::SlidingLayout()
   : fade_animator_(100)
 {
   items_.resize(2);
+  fade_animator_.updated.connect(sigc::hide(sigc::mem_fun(this, &SlidingLayout::Damage)));
   mouse_owner.changed.connect([this] (bool owner) {
     if (input_item_)
       animation::StartOrReverseIf(fade_animator_, owner);
   });
-
-  fade_animator_.updated.connect(sigc::hide(sigc::mem_fun(this, &SlidingLayout::Damage)));
 }
 
 void SlidingLayout::SetMainItem(Item::Ptr const& main)
