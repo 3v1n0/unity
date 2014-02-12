@@ -39,7 +39,7 @@ const char* window_title = "unity-panel";
 class Controller::Impl
 {
 public:
-  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber);
+  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, key::Grabber::Ptr const& grabber);
   ~Impl();
 
   void GrabIndicatorMnemonics(indicator::Indicator::Ptr const& indicator);
@@ -70,7 +70,7 @@ public:
   PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
   ui::EdgeBarrierController::Ptr edge_barriers_;
-  GnomeKeyGrabber::Ptr grabber_;
+  key::Grabber::Ptr grabber_;
   PanelVector panels_;
   std::vector<nux::Geometry> panel_geometries_;
   std::vector<Window> tray_xids_;
@@ -88,7 +88,7 @@ public:
 };
 
 
-Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber)
+Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers, key::Grabber::Ptr const& grabber)
   : edge_barriers_(edge_barriers)
   , grabber_(grabber)
   , opacity_(1.0f)
@@ -386,7 +386,7 @@ float Controller::Impl::opacity() const
   return opacity_;
 }
 
-Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers, GnomeKeyGrabber::Ptr const& grabber)
+Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers, key::Grabber::Ptr const& grabber)
   : launcher_width(64)
   , pimpl(new Impl(edge_barriers, grabber))
 {
@@ -401,14 +401,11 @@ Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers, Gnom
 }
 
 Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
-  : Controller(edge_barriers, GnomeKeyGrabber::Ptr())
-{
-}
+  : Controller(edge_barriers, nullptr)
+{}
 
 Controller::~Controller()
-{
-  delete pimpl;
-}
+{}
 
 void Controller::ShowMenuBar()
 {

@@ -24,7 +24,7 @@
 #include <Nux/Nux.h>
 
 #include "launcher/EdgeBarrierController.h"
-#include "unity-shared/GnomeKeyGrabber.h"
+#include "unity-shared/KeyGrabber.h"
 #include "unity-shared/Introspectable.h"
 
 namespace unity
@@ -39,8 +39,8 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
   typedef std::vector<nux::ObjectPtr<PanelView>> PanelVector;
 
-  Controller(ui::EdgeBarrierController::Ptr const& barrier_controller, GnomeKeyGrabber::Ptr const& grabber);
-  Controller(ui::EdgeBarrierController::Ptr const& barrier_controller);
+  Controller(ui::EdgeBarrierController::Ptr const&, key::Grabber::Ptr const&);
+  Controller(ui::EdgeBarrierController::Ptr const&);
   ~Controller();
 
   void ShowMenuBar();
@@ -71,7 +71,7 @@ private:
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 
   class Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

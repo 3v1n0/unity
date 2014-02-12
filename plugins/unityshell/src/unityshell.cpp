@@ -50,6 +50,7 @@
 #include "launcher/XdndManagerImp.h"
 #include "launcher/XdndStartStopNotifierImp.h"
 #include "CompizShortcutModeller.h"
+#include "GnomeKeyGrabber.h"
 
 #include "decorations/DecorationsDataPool.h"
 #include "decorations/DecorationsManager.h"
@@ -122,7 +123,7 @@ inline nux::Geometry NuxGeometryFromCompRect(CompRect const& rect)
   return nux::Geometry(rect.x(), rect.y(), rect.width(), rect.height());
 }
 
-inline nux::Color NuxColorFromCompizColor(unsigned short * color)
+inline nux::Color NuxColorFromCompizColor(unsigned short* color)
 {
   return nux::Color(color[0]/65535.0f, color[1]/65535.0f, color[2]/65535.0f, color[3]/65535.0f);
 }
@@ -148,6 +149,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
   , deco_manager_(std::make_shared<decoration::Manager>())
+  , key_grabber_(std::make_shared<key::GnomeGrabber>())
   , debugger_(this)
   , needsRelayout(false)
   , super_keypressed_(false)
@@ -171,7 +173,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , dirty_helpers_on_this_frame_(false)
   , back_buffer_age_(0)
   , is_desktop_active_(false)
-  , grabber_(new GnomeKeyGrabber(screen))
 {
   Timer timer;
 #ifndef USE_GLES
@@ -3554,7 +3555,7 @@ void UnityScreen::initLauncher()
 
   /* Setup panel */
   timer.Reset();
-  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers, grabber_);
+  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers, key_grabber_);
   AddChild(panel_controller_.get());
   panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
                                         optionGetMenusFadeout(),
@@ -3640,20 +3641,19 @@ void UnityScreen::InitGesturesSupport()
 
 CompAction::Vector& UnityScreen::getActions()
 {
-  return grabber_->getActions();
+  return key_grabber_->getActions();
 }
 
 /* Window init */
 
 namespace
 {
-bool WindowHasInconsistentShapeRects (Display *d,
-                                      Window  w)
+bool WindowHasInconsistentShapeRects(Display *d, Window  w)
 {
   int n;
   Atom *atoms = XListProperties(d, w, &n);
-  Atom unity_shape_rects_atom = XInternAtom (d, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
   bool has_inconsistent_shape = false;
+  static Atom unity_shape_rects_atom = XInternAtom(d, "_UNITY_SAVED_WINDOW_SHAPE", False);
 
   for (int i = 0; i < n; ++i)
     if (atoms[i] == unity_shape_rects_atom)

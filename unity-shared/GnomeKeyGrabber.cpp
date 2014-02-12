@@ -23,7 +23,9 @@
 
 namespace unity
 {
-DECLARE_LOGGER(logger, "unity.gnome");
+namespace key
+{
+DECLARE_LOGGER(logger, "unity.key.gnome.grabber");
 
 // Private implementation
 namespace shell
@@ -60,9 +62,8 @@ namespace testing
 std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 }
 
-GnomeKeyGrabber::Impl::Impl(CompScreen* screen, bool test_mode)
-  : test_mode_(test_mode)
-  , shell_server_(test_mode_ ? testing::DBUS_NAME : shell::DBUS_NAME)
+GnomeGrabber::Impl::Impl(bool test_mode)
+  : shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
   , screen_(screen)
   , current_action_id_(0)
 {
@@ -71,7 +72,7 @@ GnomeKeyGrabber::Impl::Impl(CompScreen* screen, bool test_mode)
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::onShellMethodCall));
 }
 
-GnomeKeyGrabber::Impl::~Impl()
+GnomeGrabber::Impl::~Impl()
 {
   if (screen_)
   {
@@ -80,7 +81,7 @@ GnomeKeyGrabber::Impl::~Impl()
   }
 }
 
-unsigned int GnomeKeyGrabber::Impl::addAction(CompAction const& action, bool addressable)
+unsigned int GnomeGrabber::Impl::addAction(CompAction const& action, bool addressable)
 {
   ++current_action_id_;
   actions_.push_back(action);
@@ -98,13 +99,13 @@ unsigned int GnomeKeyGrabber::Impl::addAction(CompAction const& action, bool add
   return current_action_id_;
 }
 
-bool GnomeKeyGrabber::Impl::removeAction(CompAction const& action)
+bool GnomeGrabber::Impl::removeAction(CompAction const& action)
 {
   auto i = action_ids_by_action_.find(&action);
   return i != action_ids_by_action_.end() && removeAction(i->second);
 }
 
-bool GnomeKeyGrabber::Impl::removeAction(unsigned int action_id)
+bool GnomeGrabber::Impl::removeAction(unsigned int action_id)
 {
   auto i = std::find(action_ids_.begin(), action_ids_.end(), action_id);
 
@@ -130,7 +131,7 @@ bool GnomeKeyGrabber::Impl::removeAction(unsigned int action_id)
   return false;
 }
 
-GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(std::string const& method, GVariant* parameters)
+GVariant* GnomeGrabber::Impl::onShellMethodCall(std::string const& method, GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Called method '" << method << "'";
 
@@ -190,7 +191,7 @@ GVariant* GnomeKeyGrabber::Impl::onShellMethodCall(std::string const& method, GV
   return nullptr;
 }
 
-unsigned int GnomeKeyGrabber::Impl::grabAccelerator(char const* accelerator, unsigned int flags)
+unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsigned int flags)
 {
   CompAction action;
   action.keyFromString(accelerator);
@@ -220,7 +221,7 @@ unsigned int GnomeKeyGrabber::Impl::grabAccelerator(char const* accelerator, uns
   return addAction(action, false);
 }
 
-void GnomeKeyGrabber::Impl::activateAction(CompAction const* action, unsigned int device) const
+void GnomeGrabber::Impl::activateAction(CompAction const* action, unsigned int device) const
 {
   ptrdiff_t i = action - &actions_.front();
 
@@ -228,7 +229,7 @@ void GnomeKeyGrabber::Impl::activateAction(CompAction const* action, unsigned in
     shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_ids_[i], device));
 }
 
-bool GnomeKeyGrabber::Impl::isActionPostponed(CompAction const& action) const
+bool GnomeGrabber::Impl::isActionPostponed(CompAction const& action) const
 {
   int keycode = action.key().keycode();
   return keycode == 0 || modHandler->keycodeToModifiers(keycode) != 0;
@@ -236,33 +237,31 @@ bool GnomeKeyGrabber::Impl::isActionPostponed(CompAction const& action) const
 
 // Public implementation
 
-GnomeKeyGrabber::GnomeKeyGrabber(CompScreen* screen)
-  : impl_(new Impl(screen))
-{
-}
+GnomeGrabber::GnomeGrabber()
+  : impl_(new Impl())
+{}
 
-GnomeKeyGrabber::GnomeKeyGrabber(CompScreen* screen, TestMode const& dummy)
-  : impl_(new Impl(screen, true))
-{
-}
+GnomeGrabber::GnomeGrabber(TestMode const& dummy)
+  : impl_(new Impl(true))
+{}
 
-GnomeKeyGrabber::~GnomeKeyGrabber()
-{
-}
+GnomeGrabber::~GnomeGrabber()
+{}
 
-CompAction::Vector& GnomeKeyGrabber::getActions()
+CompAction::Vector& GnomeGrabber::getActions()
 {
   return impl_->actions_;
 }
 
-void GnomeKeyGrabber::addAction(CompAction const& action)
+void GnomeGrabber::addAction(CompAction const& action)
 {
   impl_->addAction(action);
 }
 
-void GnomeKeyGrabber::removeAction(CompAction const& action)
+void GnomeGrabber::removeAction(CompAction const& action)
 {
   impl_->removeAction(action);
 }
 
+} // namespace key
 } // namespace unity

@@ -69,6 +69,7 @@
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
 #include "ThumbnailGenerator.h"
+#include "KeyGrabber.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -79,8 +80,6 @@
 #include "WindowMinimizeSpeedController.h"
 
 #include "unityshell_glow.h"
-
-#include "GnomeKeyGrabber.h"
 
 namespace unity
 {
@@ -315,6 +314,7 @@ private:
   std::unique_ptr<nux::WindowThread> wt;
 
   std::shared_ptr<decoration::Manager> deco_manager_;
+  key::Grabber::Ptr key_grabber_;
 
   /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;
@@ -405,8 +405,6 @@ private:
   unsigned int back_buffer_age_;
 
   bool is_desktop_active_;
-
-  GnomeKeyGrabber::Ptr grabber_;
 
   friend class UnityWindow;
   friend class decoration::Manager;
