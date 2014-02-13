@@ -32,17 +32,26 @@ const unsigned MENU_SHOW_NOW_WAIT = 180;
 
 using namespace indicator;
 
-MenuLayout::MenuLayout(Indicators::Ptr const& indicators, CompWindow* win)
+MenuLayout::MenuLayout(menu::Manager::Ptr const& menu, CompWindow* win)
   : active(false)
   , show_now(false)
+  , menu_manager_(menu)
   , win_(win)
   , last_pointer_(-1, -1)
-  , dropdown_(std::make_shared<MenuDropdown>(indicators, win))
+  , dropdown_(std::make_shared<MenuDropdown>(menu_manager_->Indicators(), win))
 {}
 
-void MenuLayout::SetAppMenu(Indicator::Ptr const& appmenu)
+void MenuLayout::Setup()
 {
+  // This function is needed, because we can't use shared_from_this() in the ctor
   items_.clear();
+
+  if (!menu_manager_->HasAppMenu())
+  {
+    Relayout();
+    return;
+  }
+
   auto ownership_cb = sigc::mem_fun(this, &MenuLayout::OnEntryMouseOwnershipChanged);
   auto active_cb = sigc::mem_fun(this, &MenuLayout::OnEntryActiveChanged);
   auto show_now_cb = sigc::mem_fun(this, &MenuLayout::OnEntryShowNowChanged);
@@ -51,7 +60,7 @@ void MenuLayout::SetAppMenu(Indicator::Ptr const& appmenu)
   dropdown_->active.changed.connect(active_cb);
   dropdown_->show_now.changed.connect(show_now_cb);
 
-  for (auto const& entry : appmenu->GetEntries())
+  for (auto const& entry : menu_manager_->AppMenu()->GetEntries())
   {
     auto menu = std::make_shared<MenuEntry>(entry, win_);
     menu->mouse_owner.changed.connect(ownership_cb);

@@ -20,9 +20,9 @@
 #ifndef UNITY_DECORATIONS_MENU_LAYOUT
 #define UNITY_DECORATIONS_MENU_LAYOUT
 
-#include <UnityCore/Indicators.h>
 #include <UnityCore/GLibSource.h>
 #include "DecorationsWidgets.h"
+#include "MenuManager.h"
 
 namespace unity
 {
@@ -35,12 +35,12 @@ class MenuLayout : public Layout
 public:
   typedef std::shared_ptr<MenuLayout> Ptr;
 
-  MenuLayout(indicator::Indicators::Ptr const&, CompWindow*);
+  MenuLayout(menu::Manager::Ptr const&, CompWindow*);
 
   nux::Property<bool> active;
   nux::Property<bool> show_now;
 
-  void SetAppMenu(indicator::Indicator::Ptr const&);
+  void Setup();
   bool ActivateMenu(std::string const& entry_id);
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
 
@@ -53,6 +53,7 @@ private:
   void OnEntryActiveChanged(bool);
   void OnEntryShowNowChanged(bool);
 
+  menu::Manager::Ptr menu_manager_;
   CompWindow* win_;
   CompPoint last_pointer_;
   glib::Source::UniquePtr pointer_tracker_;

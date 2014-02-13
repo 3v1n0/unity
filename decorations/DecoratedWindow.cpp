@@ -592,17 +592,16 @@ void Window::Impl::SetupAppMenu()
     return;
 
   auto const& menu_manager = manager_->impl_->menu_manager_;
-  auto const& appmenu = menu_manager->AppMenu();
   auto const& sliding_layout = sliding_layout_.lock();
   sliding_layout->SetInputItem(nullptr);
   sliding_layout->mouse_owner = false;
 
-  if (!appmenu || appmenu->GetEntries().empty())
+  if (!menu_manager->HasAppMenu())
     return;
 
   auto visibility_cb = sigc::hide(sigc::mem_fun(this, &Impl::UpdateAppMenuVisibility));
-  auto menus = std::make_shared<MenuLayout>(menu_manager->Indicators(), win_);
-  menus->SetAppMenu(appmenu);
+  auto menus = std::make_shared<MenuLayout>(menu_manager, win_);
+  menus->Setup();
   menus->active.changed.connect(visibility_cb);
   menus->show_now.changed.connect(visibility_cb);
   menus->mouse_owner.changed.connect(visibility_cb);
