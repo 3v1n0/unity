@@ -404,17 +404,24 @@ bool PanelMenuView::HasVisibleMenus() const
 double PanelMenuView::GetTitleOpacity() const
 {
   double title_opacity = 1.0f;
+  bool is_title_soild;
   bool has_menu = HasVisibleMenus();
 
-  bool is_title_soild = we_control_active_ && (!has_menu || opacity() == 0.0) &&
-                        window_buttons_->opacity() == 0.0;
-
-  if (integrated_menus_)
-    is_title_soild = !ShouldDrawMenus();
+  if (!integrated_menus_)
+  {
+    is_title_soild = we_control_active_ && (!has_menu || opacity() == 0.0) &&
+                     window_buttons_->opacity() == 0.0;
+  }
+  else
+  {
+    is_title_soild = is_maximized_ && (!has_menu || opacity() == 0.0);
+  }
 
   if (!is_title_soild)
   {
-    if (has_menu)
+    if (integrated_menus_)
+      title_opacity -= has_menu ? opacity() : 0;
+    else if (has_menu)
       title_opacity -= std::max<double>(opacity(), window_buttons_->opacity());
     else
       title_opacity -= window_buttons_->opacity();
@@ -1661,7 +1668,7 @@ bool PanelMenuView::HasMenus() const
   if (entries_.empty())
     return false;
 
-  return integrated_menus_ ? we_control_active_ && is_maximized_ : we_control_active_;
+  return (integrated_menus_ && we_control_active_) || we_control_active_;
 }
 
 bool PanelMenuView::GetControlsActive() const
