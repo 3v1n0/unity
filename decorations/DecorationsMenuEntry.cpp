@@ -28,6 +28,7 @@ namespace decoration
 namespace
 {
 const unsigned MAX_DOUBLE_CLICK_WAIT = 100;
+const int MOVEMENT_THRESHOLD = 4;
 }
 
 using namespace indicator;
@@ -140,7 +141,21 @@ void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button, Time timestam
 
 void MenuEntry::MotionEvent(CompPoint const& p, Time timestamp)
 {
-  grab_.MotionEvent(p, timestamp);
+  bool ignore_movement = false;
+
+  if (!grab_.IsGrabbed())
+  {
+    auto const& clicked = grab_.ClickedPoint();
+
+    if (std::abs(p.x() - clicked.x()) < MOVEMENT_THRESHOLD &&
+        std::abs(p.y() - clicked.y()) < MOVEMENT_THRESHOLD)
+    {
+      ignore_movement = true;
+    }
+  }
+
+  if (!ignore_movement)
+    grab_.MotionEvent(p, timestamp);
 }
 
 indicator::Entry::Ptr const& MenuEntry::GetEntry() const

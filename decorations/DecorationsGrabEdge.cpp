@@ -26,7 +26,7 @@ namespace decoration
 {
 namespace
 {
-const int MOUSE_DOWN_TIMEOUT = 150;
+const int MOUSE_DOWN_TIMEOUT = 175;
 }
 
 GrabEdge::GrabEdge(CompWindow* win, bool always_wait_grab_timeout)
@@ -102,6 +102,11 @@ bool GrabEdge::IsGrabbed() const
 int GrabEdge::ButtonDown() const
 {
   return button_down_;
+}
+
+CompPoint const& GrabEdge::ClickedPoint() const
+{
+  return last_click_pos_;
 }
 
 bool GrabEdge::IsMaximizable() const
