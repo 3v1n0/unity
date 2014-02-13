@@ -210,7 +210,7 @@ unity_quicklist_menu_item_accessible_get_name(AtkObject* obj)
     menu_item = dynamic_cast<QuicklistMenuItem*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
     if (menu_item != NULL)
     {
-      name = menu_item->GetAccessibleLabel().c_str();
+      name = menu_item->GetPlainTextLabel().c_str();
     }
   }
 
