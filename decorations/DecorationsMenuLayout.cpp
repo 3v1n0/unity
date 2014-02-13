@@ -25,10 +25,6 @@ namespace unity
 {
 namespace decoration
 {
-namespace
-{
-const unsigned MENU_SHOW_NOW_WAIT = 180;
-}
 
 using namespace indicator;
 
@@ -125,7 +121,7 @@ void MenuLayout::OnEntryShowNowChanged(bool show)
   }
   else
   {
-    show_now_timeout_.reset(new glib::Timeout(MENU_SHOW_NOW_WAIT));
+    show_now_timeout_.reset(new glib::Timeout(menu_manager_->show_menus_wait()));
     show_now_timeout_->Run([this] {
       show_now = true;
       show_now_timeout_.reset();

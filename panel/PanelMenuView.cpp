@@ -46,7 +46,6 @@ namespace
   const int TITLE_PADDING = 2;
   const int MENUBAR_PADDING = 4;
   const int MENU_ENTRIES_PADDING = 6;
-  const int MENU_SHOW_NOW_WAIT = 180;
 
   const std::string NEW_APP_HIDE_TIMEOUT = "new-app-hide-timeout";
   const std::string NEW_APP_SHOW_TIMEOUT = "new-app-show-timeout";
@@ -1632,7 +1631,7 @@ void PanelMenuView::UpdateShowNow(bool status)
   if (status && !show_now_activated_)
   {
     auto cb_func = sigc::mem_fun(this, &PanelMenuView::UpdateShowNowWithDelay);
-    sources_.AddTimeout(MENU_SHOW_NOW_WAIT, cb_func, UPDATE_SHOW_NOW_TIMEOUT);
+    sources_.AddTimeout(menu_manager_->show_menus_wait(), cb_func, UPDATE_SHOW_NOW_TIMEOUT);
   }
 }
 

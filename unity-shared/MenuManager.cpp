@@ -140,7 +140,8 @@ struct Manager::Impl : sigc::trackable
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)
-  : fadein(100)
+  : show_menus_wait(180)
+  , fadein(100)
   , fadeout(120)
   , discovery(2)
   , discovery_fadein(200)
