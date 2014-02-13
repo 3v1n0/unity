@@ -609,7 +609,9 @@ void Window::Impl::SetupAppMenu()
 
   auto const& grab_edge = grab_edge_.lock();
   sliding_layout->SetInputItem(menus);
-  sliding_layout->mouse_owner = grab_edge->mouse_owner();
+
+  if (grab_edge->mouse_owner() || grab_edge->Geometry().contains(CompPoint(pointerX, pointerY)))
+    sliding_layout->mouse_owner = true;
 
   grab_mouse_changed_ = grab_edge->mouse_owner.changed.connect([this] (bool owner) {
     sliding_layout_->mouse_owner = owner;
