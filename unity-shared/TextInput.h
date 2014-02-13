@@ -51,7 +51,6 @@ class LinearLayout;
 namespace unity
 {
 
-
 class TextInput : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(TextInput, nux::View);

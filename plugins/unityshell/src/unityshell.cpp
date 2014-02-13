@@ -3446,7 +3446,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_options->edge_passed_disabled_ms = optionGetEdgePassedDisabledMs();
       break;
     case UnityshellOptions::LockScreenType:
-      lockscreen_settings_.lockscreen_type = static_cast<lockscreen::Type>(1/*optionGetLockScreenType()*/);
+      lockscreen_settings_.lockscreen_type = static_cast<lockscreen::Type>(optionGetLockScreenType());
       break;
     default:
       break;

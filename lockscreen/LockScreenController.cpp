@@ -73,13 +73,10 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
 void Controller::OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors)
 {
   if (IsLocked())
-  {
-    auto* uscreen = UScreen::GetDefault();
-    EnsureShields(uscreen->GetMonitorWithMouse(), monitors);
-  }
+    EnsureShields(primary, monitors);
 }
 
-void Controller::EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry> const& monitors)
+void Controller::EnsureShields(int primary, std::vector<nux::Geometry> const& monitors)
 {
   int num_monitors = monitors.size();
   int shields_size = shields_.size();
@@ -87,7 +84,7 @@ void Controller::EnsureShields(int monitor_with_mouse, std::vector<nux::Geometry
   for (int i = 0; i < num_monitors; ++i)
   {
     if (i >= shields_size)
-      shields_.push_back(shield_factory_->CreateShield(session_manager_, i == monitor_with_mouse));
+      shields_.push_back(shield_factory_->CreateShield(session_manager_, i == primary));
 
     shields_[i]->SetGeometry(monitors.at(i));
   }
@@ -120,7 +117,7 @@ void Controller::OnLockRequested()
 
 void Controller::LockScreenUsingDisplayManager()
 {
-  // TODO (andy) Move to a different class
+  // TODO (andy) Move to a different class (DisplayManagerWrapper)
   const char* session_path_raw = g_getenv("XDG_SESSION_PATH");
   std::string session_path = session_path_raw ? session_path_raw : "";
 
@@ -148,7 +145,7 @@ void Controller::ShowShields(bool interactive, bool skip_animation)
   wm.SaveInputFocus();
 
   auto* uscreen = UScreen::GetDefault();
-  EnsureShields(interactive ? uscreen->GetMonitorWithMouse() : -1, uscreen->GetMonitors());
+  EnsureShields(interactive ? uscreen->GetPrimaryMonitor() : -1, uscreen->GetMonitors());
 
   std::for_each(shields_.begin(), shields_.end(), [skip_animation](nux::ObjectPtr<Shield> const& shield) {
     shield->ShowWindow(true);
@@ -157,8 +154,8 @@ void Controller::ShowShields(bool interactive, bool skip_animation)
 
   if (!interactive)
   {
-    shields_.at(0)->GrabPointer();
-    shields_.at(0)->GrabKeyboard();
+    shields_.at(uscreen->GetPrimaryMonitor())->GrabPointer();
+    shields_.at(uscreen->GetPrimaryMonitor())->GrabKeyboard();
   }
 
   if (!skip_animation)

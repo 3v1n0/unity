@@ -26,9 +26,9 @@ namespace lockscreen
 {
 
 nux::ObjectPtr<MockableBaseWindow> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager,
-                                                               bool is_monitor_with_mouse)
+                                                               bool is_primary)
 {
-  nux::ObjectPtr<Shield> shield(new Shield(session_manager, is_monitor_with_mouse));
+  nux::ObjectPtr<Shield> shield(new Shield(session_manager, is_primary));
   return shield;
 }
 

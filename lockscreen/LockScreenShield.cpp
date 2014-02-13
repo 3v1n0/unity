@@ -48,18 +48,13 @@ Shield::Shield(session::Manager::Ptr const& session_manager, bool is_primary)
 {
   SetLayout(new nux::VLayout());
 
-  primary ? ShowPrimaryView() : ShowSecondaryView();
+  is_primary ? ShowPrimaryView() : ShowSecondaryView();
 
   EnableInputWindow(true);
-
-  mouse_enter.connect(sigc::mem_fun(this, &Shield::OnMouseEnter));
-  mouse_leave.connect(sigc::mem_fun(this, &Shield::OnMouseLeave));
-  primary.changed.connect(sigc::mem_fun(this, &Shield::OnPrimaryChanged));
 
   geometry_changed.connect([this](nux::Area*, nux::Geometry&) {
     UpdateBackgroundTexture();
   });
-
 }
 
 void Shield::UpdateBackgroundTexture()
@@ -67,28 +62,6 @@ void Shield::UpdateBackgroundTexture()
   auto background_texture = bg_settings_->GetBackgroundTexture(nux::Size(GetBaseWidth(), GetBaseHeight()), true, true);
   background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
   SetBackgroundLayer(background_layer_.get());
-}
-
-void Shield::OnMouseEnter(int /*x*/, int /*y*/, unsigned long /**/, unsigned long /**/)
-{
-  // FIXME: does not work well!
-  //primary = true;
-}
-
-void Shield::OnMouseLeave(int /*x*/, int /**/, unsigned long /**/, unsigned long /**/)
-{
-  //primary = false;
-}
-
-void Shield::OnPrimaryChanged(bool value)
-{
-  if (primary)
-    ShowPrimaryView();
-  else
-    ShowSecondaryView();
-
-  QueueDraw();
-  QueueRelayout();
 }
 
 void Shield::ShowPrimaryView()
@@ -102,8 +75,8 @@ void Shield::ShowPrimaryView()
   auto indicators = std::make_shared<indicator::LockscreenDBusIndicators>();
 
   // Hackish but ok for the moment.
-  indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnEntryShowMenu));
-  indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnEntryActivated));
+  indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryShowMenu));
+  indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryActivated));
 
   panel::PanelView* panel_view = new panel::PanelView(this, indicators, true);
   panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
@@ -145,13 +118,13 @@ void Shield::ShowPrimaryView()
   });
 }
 
-void Shield::OnEntryShowMenu(std::string const&, unsigned, int, int, unsigned)
+void Shield::OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned)
 {
   UnGrabPointer();
   UnGrabKeyboard();
 }
 
-void Shield::OnEntryActivated(std::string const& entry, nux::Geometry const& geo)
+void Shield::OnIndicatorEntryActivated(std::string const& entry, nux::Geometry const& geo)
 {
   if (entry.empty() and geo.IsNull())
   {

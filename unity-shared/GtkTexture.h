@@ -20,7 +20,7 @@
  *
  */
 
-#ifndef UNITY_GDKTEXTURE_H
+#ifndef UNITY_GDK_TEXTURE_H
 #define UNITY_GDK_TEXTURE_H
 
 #include <Nux/Nux.h>

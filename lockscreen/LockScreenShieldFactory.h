@@ -38,13 +38,13 @@ struct ShieldFactoryInterface
   virtual ~ShieldFactoryInterface() {};
 
   virtual nux::ObjectPtr<MockableBaseWindow> CreateShield(session::Manager::Ptr const& session_manager,
-                                                          bool is_monitor_with_mouse) = 0;
+                                                          bool is_primary) = 0;
 };
 
 struct ShieldFactory : ShieldFactoryInterface
 {
   nux::ObjectPtr<MockableBaseWindow> CreateShield(session::Manager::Ptr const& session_manager,
-                                                  bool is_monitor_with_mouse) override;
+                                                  bool is_primary) override;
 };
 
 }

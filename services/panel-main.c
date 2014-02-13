@@ -409,7 +409,7 @@ main (gint argc, gchar **argv)
   GError *error = NULL;
   GOptionContext *context;
   GOptionEntry entries[] = {
-    { "lockscreen-mode", 0, 0, G_OPTION_ARG_NONE, &lockscreen_mode, "Average over N repetitions", NULL },
+    { "lockscreen-mode", 0, 0, G_OPTION_ARG_NONE, &lockscreen_mode, "Load indicators for the lockscreen", NULL },
     { NULL }};
 
 
