@@ -24,10 +24,6 @@ namespace unity
 {
 namespace decoration
 {
-namespace
-{
-const int MOUSE_DOWN_TIMEOUT = 175;
-}
 
 GrabEdge::GrabEdge(CompWindow* win, bool always_wait_grab_timeout)
   : Edge(win, Edge::Type::GRAB)
@@ -66,7 +62,7 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timesta
 
   if (!maximized)
   {
-    button_down_timer_.reset(new glib::Timeout(MOUSE_DOWN_TIMEOUT));
+    button_down_timer_.reset(new glib::Timeout(style->grab_wait()));
     button_down_timer_->Run([this] {
       Edge::ButtonDownEvent(CompPoint(pointerX, pointerY), button_down_, last_click_time_);
       button_down_timer_.reset();
