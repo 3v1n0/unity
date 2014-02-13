@@ -34,7 +34,7 @@
 #include <Nux/PaintLayer.h>
 #include <Nux/Nux.h> // FIXME: remove this
 
-namespace unity 
+namespace unity
 {
 namespace lockscreen
 {
@@ -70,52 +70,59 @@ void Shield::ShowPrimaryView()
   GrabKeyboard();
 
   nux::Layout* main_layout = GetLayout();
-  main_layout->Clear();
 
+  main_layout->AddView(CreatePanel());
+
+  nux::HLayout* prompt_layout = new nux::HLayout();
+  prompt_layout->SetLeftAndRightPadding(2 * Settings::GRID_SIZE);
+  prompt_layout->AddView(CreatePromptView());
+
+  // 10 is just a random number to center the prompt view.
+  main_layout->AddSpace(0, 10);
+  main_layout->AddLayout(prompt_layout);
+  main_layout->AddSpace(0, 10);
+}
+
+void Shield::ShowSecondaryView()
+{
+  nux::Layout* main_layout = GetLayout();
+
+  // The circle of friends
+  CofView* cof_view = new CofView();
+  main_layout->AddView(cof_view);
+}
+
+nux::View* Shield::CreatePanel()
+{
   auto indicators = std::make_shared<indicator::LockscreenDBusIndicators>();
 
-  // Hackish but ok for the moment.
+  // Hackish but ok for the moment. Would be nice to have menus without grab.
   indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryShowMenu));
   indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryActivated));
 
   panel::PanelView* panel_view = new panel::PanelView(this, indicators, true);
   panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
 
-  main_layout->AddView(panel_view);
+  return panel_view;
+}
 
-  nux::HLayout* prompt_layout = new nux::HLayout();
-  prompt_layout->SetLeftAndRightPadding(2*Settings::GRID_SIZE); // FIXME (andy)
-
+nux::View* Shield::CreatePromptView()
+{
   auto const& real_name = session_manager_->RealName();
   auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
   prompt_view_ = new UserPromptView(name);
 
-  prompt_view_->SetMinimumWidth(8*Settings::GRID_SIZE);
-  prompt_view_->SetMaximumWidth(8*Settings::GRID_SIZE);
-  prompt_view_->SetMinimumHeight(3*Settings::GRID_SIZE);
-  prompt_view_->SetMaximumHeight(3*Settings::GRID_SIZE);
-  prompt_layout->AddView(prompt_view_);
+  auto width = 8 * Settings::GRID_SIZE;
+  auto height = 3 * Settings::GRID_SIZE;
 
-  main_layout->AddSpace(0, 10);
-  main_layout->AddLayout(prompt_layout);
-  main_layout->AddSpace(0, 10);
+  prompt_view_->SetMinimumWidth(width);
+  prompt_view_->SetMaximumWidth(width);
+  prompt_view_->SetMinimumHeight(height);
+  prompt_view_->SetMaximumHeight(height);
 
-  prompt_view_->text_entry()->activated.connect([this]() {
-    prompt_view_->SetSpinnerVisible(true);
-    prompt_view_->SetSpinnerState(STATE_SEARCHING);
+  prompt_view_->text_entry()->activated.connect(sigc::mem_fun(this, &Shield::OnPromptActivated));
 
-    user_authenticator_->AuthenticateStart(session_manager_->UserName(), prompt_view_->text_entry()->GetText(), [this](bool authenticated) {
-      if (authenticated)
-      {
-        session_manager_->unlock_requested.emit();
-      }
-      else
-      {
-        prompt_view_->SetSpinnerVisible(false);
-        prompt_view_->ShowErrorMessage();
-      }
-    });
-  });
+  return prompt_view_;
 }
 
 void Shield::OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned)
@@ -126,30 +133,46 @@ void Shield::OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, un
 
 void Shield::OnIndicatorEntryActivated(std::string const& entry, nux::Geometry const& geo)
 {
-  if (entry.empty() and geo.IsNull())
+  if (entry.empty() and geo.IsNull()) /* on menu closed */
   {
     GrabPointer();
     GrabKeyboard();
   }
 }
 
-void Shield::ShowSecondaryView()
+void Shield::OnPromptActivated()
 {
-  nux::Layout* main_layout = GetLayout();
-  main_layout->Clear();
+  prompt_view_->SetSpinnerVisible(true);
+  prompt_view_->SetSpinnerState(STATE_SEARCHING);
 
-  CofView* cof_view = new CofView();
-  main_layout->AddView(cof_view);
+  user_authenticator_->AuthenticateStart(session_manager_->UserName(),
+                                         prompt_view_->text_entry()->GetText(),
+                                         sigc::mem_fun(this, &Shield::AuthenticationCb));
 }
 
-nux::Area* Shield::FindKeyFocusArea(unsigned int key_symbol,
-                                    unsigned long x11_key_code,
-                                    unsigned long special_keys_state)
+void Shield::AuthenticationCb(bool authenticated)
+{
+  prompt_view_->SetSpinnerVisible(false);
+
+  if (authenticated)
+    session_manager_->unlock_requested.emit();
+  else
+    prompt_view_->ShowErrorMessage();
+}
+
+nux::Area* Shield::FindKeyFocusArea(unsigned int,
+                                    unsigned long,
+                                    unsigned long)
 {
   if (prompt_view_)
     return prompt_view_->text_entry();
   else
     return nullptr;
+}
+
+bool Shield::AcceptKeyNavFocus()
+{
+  return false;
 }
 
 }

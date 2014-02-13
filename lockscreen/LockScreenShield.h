@@ -43,20 +43,25 @@ public:
 
   nux::Property<bool> primary;
 
-  nux::Area* FindKeyFocusArea(unsigned int key_symbol,
-                                   unsigned long x11_key_code,
-                                   unsigned long special_keys_state) override;
+  nux::Area* FindKeyFocusArea(unsigned int,
+                              unsigned long,
+                              unsigned long) override;
 
-  bool AcceptKeyNavFocus() override {return false;}
+  bool AcceptKeyNavFocus() override;
 
 
 private:
   void UpdateBackgroundTexture();
   void ShowPrimaryView();
   void ShowSecondaryView();
+  nux::View* CreatePanel();
+  nux::View* CreatePromptView();
 
   void OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned);
   void OnIndicatorEntryActivated(std::string const& entry, nux::Geometry const& geo);
+  void OnPromptActivated();
+  void AuthenticationCb(bool authenticated);
+
 
   session::Manager::Ptr session_manager_;
   std::shared_ptr<BackgroundSettings> bg_settings_;
