@@ -36,6 +36,7 @@ MenuLayout::MenuLayout(Indicators::Ptr const& indicators, CompWindow* win)
   : active(false)
   , show_now(false)
   , win_(win)
+  , last_pointer_(-1, -1)
   , dropdown_(std::make_shared<MenuDropdown>(indicators, win))
 {}
 
@@ -90,6 +91,13 @@ bool MenuLayout::ActivateMenu(std::string const& entry_id)
 
   if (!activated)
     activated = dropdown_->ActivateChild(target);
+
+  if (activated)
+  {
+    // Since this generally happens on keyboard activation we need to avoid that
+    // the mouse position would interfere with this
+    last_pointer_.set(pointerX, pointerY);
+  }
 
   return activated;
 }
