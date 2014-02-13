@@ -22,7 +22,7 @@
 
 #include <functional>
 #include <string>
- 
+
 namespace unity
 {
 namespace lockscreen

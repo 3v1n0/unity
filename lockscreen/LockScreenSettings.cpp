@@ -41,8 +41,7 @@ Settings::Settings()
   }
   else
   {
-  	lockscreen_type = Type::UNITY;
-
+    lockscreen_type = Type::UNITY;
     settings_instance = this;
   }
 }

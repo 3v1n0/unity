@@ -18,12 +18,12 @@
  */
 
 // Kindly inspired by user_authenticator_linux.cc of chromium project
-// TODO (andy) Would be nice to make it more thread-safe and to imporve 
-// the API and the cody style
+// In the future would be nice to have something less static. For the moment
+// let's just fallcback to lightdm.
+
 #include "UserAuthenticatorPam.h"
 
 #include <security/pam_appl.h>
-#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -38,12 +38,12 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
   password_ = password;
   authenticate_cb_ = authenticate_cb;
 
-  // FIXME: would be nice to support a fallback in case PAM
+  // FIXME (andy) would be nice to support a fallback in case PAM
   // is not available.
   if (!InitPam())
     return false;
 
-  glib::Object<GTask> task(g_task_new(nullptr, nullptr, [] (GObject*, GAsyncResult*, gpointer data) {
+  glib::Object<GTask> task(g_task_new(nullptr, cancellable_, [] (GObject*, GAsyncResult*, gpointer data) {
     auto self = static_cast<UserAuthenticatorPam*>(data);
     pam_end(self->pam_handle_, self->status_);
     self->authenticate_cb_(self->status_ == PAM_SUCCESS);
@@ -62,17 +62,18 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
 bool UserAuthenticatorPam::InitPam()
 {
   pam_conv conversation;
-  conversation.conv = ConverationFunction;
+  conversation.conv = ConversationFunction;
   conversation.appdata_ptr = static_cast<void*>(this);
 
-  return pam_start(/*FIXME*/ "gnome_screensaver", username_.c_str(),
+  // FIXME (andy) We should install our own unityshell pam file.
+  return pam_start("common-auth", username_.c_str(),
                    &conversation, &pam_handle_) == PAM_SUCCESS;
 }
 
-int UserAuthenticatorPam::ConverationFunction(int num_msg,
-                                              const pam_message** msg,
-                                              pam_response** resp,
-                                              void* appdata_ptr)
+int UserAuthenticatorPam::ConversationFunction(int num_msg,
+                                               const pam_message** msg,
+                                               pam_response** resp,
+                                               void* appdata_ptr)
 {
   if (num_msg <= 0)
     return PAM_CONV_ERR;

@@ -32,9 +32,9 @@ CofView::CofView()
 {}
 
 nux::Area* CofView::FindAreaUnderMouse(nux::Point const& mouse_position,
-	                                   nux::NuxEventType event_type)
+                                       nux::NuxEventType event_type)
 {
-	return nullptr;
+    return nullptr;
 }
 
 }

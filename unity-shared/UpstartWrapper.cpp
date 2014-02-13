@@ -19,13 +19,10 @@
 
 #include "UpstartWrapper.h"
 
-#include <NuxCore/Logger.h>
 #include <UnityCore/GLibDBusProxy.h>
 
 namespace unity
 {
-
-DECLARE_LOGGER(logger, "unity.upstart");
 
 //
 // Start private implementation

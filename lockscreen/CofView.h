@@ -32,8 +32,8 @@ class CofView : public unity::IconTexture
 public:
   CofView();
 
-  nux::Area* FindAreaUnderMouse(nux::Point const& mouse_position, 
-  	                            nux::NuxEventType event_type) override;
+  nux::Area* FindAreaUnderMouse(nux::Point const& mouse_position,
+                                nux::NuxEventType event_type) override;
 };
 
 }

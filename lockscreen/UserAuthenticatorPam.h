@@ -21,10 +21,11 @@
 #define UNITY_USER_AUTHENTICATOR_PAM_H
 
 #include <boost/noncopyable.hpp>
+#include <UnityCore/GLibWrapper.h>
 
 #include "UserAuthenticator.h"
 
-// Forware declarations
+// Forward declarations
 struct pam_handle;
 struct pam_message;
 struct pam_response;
@@ -42,13 +43,13 @@ public:
                          AuthenticateEndCallback authenticate_cb) override;
 
 private:
-  // TODO: move to pimpl
+  // TODO (andy) move to pimpl
   bool InitPam();
 
-  static int ConverationFunction(int num_msg,
-                                 const pam_message** msg,
-                                 pam_response** resp,
-                                 void* appdata_ptr);
+  static int ConversationFunction(int num_msg,
+                                  const pam_message** msg,
+                                  pam_response** resp,
+                                  void* appdata_ptr);
 
   std::string username_;
   std::string password_;
@@ -56,6 +57,7 @@ private:
 
   int status_;
   pam_handle* pam_handle_;
+  glib::Cancellable cancellable_;
 };
 
 } // lockscreen
