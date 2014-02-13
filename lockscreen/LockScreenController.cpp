@@ -17,10 +17,6 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-// TODO
-// Disable gnome screensaver if it's active
-// Draw dark shield without animation if ligthdm
-
 #include "LockScreenController.h"
 
 #include "LockScreenSettings.h"

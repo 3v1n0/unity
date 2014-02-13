@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2014-02-13 22:27+0100\n"
+"POT-Creation-Date: 2013-04-17 16:00+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,14 +38,6 @@ msgstr ""
 msgid "Last Updated"
 msgstr ""
 
-#. The "%s" is used in the dash preview to display the "<hint>: <value>" infos
-#, c-format
-msgid "%s:"
-msgstr ""
-
-msgid "Comments"
-msgstr ""
-
 msgid "Type your command"
 msgstr ""
 
@@ -56,12 +48,6 @@ msgid "Unlock from Launcher"
 msgstr ""
 
 msgid "Quit"
-msgstr ""
-
-msgid "Exit"
-msgstr ""
-
-msgid "Close"
 msgstr ""
 
 msgid "Search your computer and online sources"
@@ -83,16 +69,13 @@ msgstr ""
 msgid "Waiting to install"
 msgstr ""
 
-msgid "Installing…"
-msgstr ""
-
 msgid "Drop To Add Application"
 msgstr ""
 
 msgid "Trash"
 msgstr ""
 
-msgid "Empty Trash…"
+msgid "Empty Trash..."
 msgstr ""
 
 msgid "Open"
@@ -180,9 +163,6 @@ msgid "Opens the Dash Files Lens."
 msgstr ""
 
 msgid "Opens the Dash Music Lens."
-msgstr ""
-
-msgid "Opens the Dash Photo Lens."
 msgstr ""
 
 msgid "Opens the Dash Video Lens."
@@ -278,7 +258,7 @@ msgstr ""
 msgid "Places the window in corresponding position."
 msgstr ""
 
-msgid "Ctrl + Alt + Num (keypad)"
+msgid "Ctrl + Alt + Num"
 msgstr ""
 
 msgid " Drag"

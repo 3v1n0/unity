@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2014-02-13 22:27+0100\n"
+"POT-Creation-Date: 2013-04-17 16:00+0100\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Danish\n"
@@ -38,11 +38,6 @@ msgstr ""
 msgid " or Right"
 msgstr ""
 
-#. The "%s" is used in the dash preview to display the "<hint>: <value>" infos
-#, c-format
-msgid "%s:"
-msgstr ""
-
 msgid "Activate"
 msgstr ""
 
@@ -55,16 +50,10 @@ msgstr ""
 msgid "Categories"
 msgstr ""
 
-msgid "Close"
-msgstr ""
-
 msgid "Closes the current window."
 msgstr ""
 
-msgid "Comments"
-msgstr ""
-
-msgid "Ctrl + Alt + Num (keypad)"
+msgid "Ctrl + Alt + Num"
 msgstr ""
 
 msgid "Ctrl + Tab"
@@ -85,13 +74,10 @@ msgstr ""
 msgid "Eject parent drive"
 msgstr ""
 
-msgid "Empty Trash…"
+msgid "Empty Trash..."
 msgstr ""
 
 msgid "Enter"
-msgstr ""
-
-msgid "Exit"
 msgstr ""
 
 msgid "Filter results"
@@ -143,9 +129,6 @@ msgid "Hi %s, you have open files you might want to save. Would you like to…"
 msgstr ""
 
 msgid "Hibernate"
-msgstr ""
-
-msgid "Installing…"
 msgstr ""
 
 msgid "Keyboard Shortcuts"
@@ -216,9 +199,6 @@ msgid "Opens the Dash Home."
 msgstr ""
 
 msgid "Opens the Dash Music Lens."
-msgstr ""
-
-msgid "Opens the Dash Photo Lens."
 msgstr ""
 
 msgid "Opens the Dash Video Lens."

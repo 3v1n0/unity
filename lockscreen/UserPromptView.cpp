@@ -115,7 +115,7 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
 
   if (!IsFullRedraw())
   {
-    bg_layer_.reset(Foo(geo.width, geo.height));
+    bg_layer_.reset(CrateBackgroundLayer(geo.width, geo.height));
     nux::GetPainter().PushLayer(graphics_engine, geo, bg_layer_.get());
   }
 
