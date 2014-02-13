@@ -151,6 +151,11 @@ Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& gra
 Manager::~Manager()
 {}
 
+bool Manager::HasAppMenu() const
+{
+  return impl_->appmenu_ && !impl_->appmenu_->GetEntries().empty();
+}
+
 Indicators::Ptr const& Manager::Indicators() const
 {
   return impl_->indicators_;

@@ -54,6 +54,7 @@ public:
   Manager(indicator::Indicators::Ptr const&, key::Grabber::Ptr const&);
   virtual ~Manager();
 
+  bool HasAppMenu() const;
   indicator::Indicators::Ptr const& Indicators() const;
   indicator::Indicator::Ptr const& AppMenu() const;
 
