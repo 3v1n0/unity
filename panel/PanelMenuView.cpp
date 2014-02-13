@@ -52,6 +52,7 @@ namespace
   const std::string WINDOW_MOVED_TIMEOUT = "window-moved-timeout";
   const std::string WINDOW_ACTIVATED_TIMEOUT = "window-activated-timeout";
   const std::string UPDATE_SHOW_NOW_TIMEOUT = "update-show-now-timeout";
+  const std::string INTEGRATED_MENUS_DOUBLE_CLICK_TIMEOUT = "integrated-menus-double-click-timeout";
 }
 
 PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
@@ -1361,6 +1362,32 @@ BamfWindow* PanelMenuView::GetBamfWindowForXid(Window xid) const
   return window;
 }
 
+void PanelMenuView::ActivateIntegratedMenus(nux::Point const& click)
+{
+  if (!layout_->GetAbsoluteGeometry().IsInside(click))
+    return;
+
+  unsigned double_click_wait = Settings::Instance().lim_double_click_wait();
+
+  if (double_click_wait > 0)
+  {
+    sources_.AddTimeout(double_click_wait, [this, click] {
+      ActivateEntryAt(click.x, click.y);
+      return false;
+    }, INTEGRATED_MENUS_DOUBLE_CLICK_TIMEOUT);
+
+    auto conn = std::make_shared<connection::Wrapper>();
+    *conn = titlebar_grab_area_->mouse_double_click.connect([this, conn] (int, int, unsigned long, unsigned long) {
+      sources_.Remove(INTEGRATED_MENUS_DOUBLE_CLICK_TIMEOUT);
+      (*conn)->disconnect();
+    });
+  }
+  else
+  {
+    ActivateEntryAt(click.x, click.y);
+  }
+}
+
 void PanelMenuView::OnMaximizedActivate(int x, int y)
 {
   Window maximized = GetMaximizedWindow();
@@ -1373,8 +1400,10 @@ void PanelMenuView::OnMaximizedActivate(int x, int y)
     }
     else if (integrated_menus_)
     {
+      // Adjusting the click coordinates to be absolute.
       auto const& grab_geo = titlebar_grab_area_->GetAbsoluteGeometry();
-      ActivateEntryAt(grab_geo.x + x, grab_geo.y + y);
+      nux::Point click(grab_geo.x + x, grab_geo.y + y);
+      ActivateIntegratedMenus(click);
     }
   }
 }

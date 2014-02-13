@@ -150,6 +150,8 @@ private:
   void StartFadeOut(int duration = -1);
   void OnFadeAnimatorUpdated(double opacity);
 
+  void ActivateIntegratedMenus(nux::Point const&);
+
   menu::Manager::Ptr const& menu_manager_;
   glib::Object<BamfMatcher> matcher_;
 
