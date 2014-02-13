@@ -2158,6 +2158,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
       show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
   }
 
+  menus_->show_menus = false;
   SetUpAndShowSwitcher(show_mode);
 
   return true;
