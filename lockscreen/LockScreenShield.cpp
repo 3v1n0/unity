@@ -107,7 +107,6 @@ void Shield::ShowPrimaryView()
 
   panel::PanelView* panel_view = new panel::PanelView(this, indicators, true);
   panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
-  panel_view->SetOpacity(0.5);
 
   main_layout->AddView(panel_view);
 
