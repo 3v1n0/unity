@@ -41,14 +41,9 @@ BackgroundSettings::BackgroundSettings()
   gnome_bg_load_from_preferences(gnome_bg_, settings);
 }
 
-int get_grid_offset (int size)
-{
-    return (size % Settings::GRID_SIZE) / 2;
-}
-
 BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
-                                                             bool draw_grid,
-                                                             bool draw_logo)
+                                                        bool draw_grid,
+                                                        bool draw_logo)
 {
   cairo_surface_t* cairo_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(),
                                                            size.width, size.height, FALSE);
@@ -56,8 +51,8 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
 
   if (draw_logo)
   {
-    int grid_x_offset = get_grid_offset(size.width);
-    int grid_y_offset = get_grid_offset(size.height);
+    int grid_x_offset = GetGridOffset(size.width);
+    int grid_y_offset = GetGridOffset(size.height);
 
     cairo_save(c);
 
@@ -77,8 +72,8 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
   {
     int width = size.width;
     int height = size.height;
-    int grid_x_offset = get_grid_offset(width);
-    int grid_y_offset = get_grid_offset(height);
+    int grid_x_offset = GetGridOffset(width);
+    int grid_y_offset = GetGridOffset(height);
 
     // overlay grid
     cairo_surface_t* overlay_surface = cairo_surface_create_similar(cairo_surface,
@@ -114,13 +109,19 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
     cairo_destroy(oc);
   }
 
-  GdkPixbuf* gdk_pixbuf = gdk_pixbuf_get_from_surface(cairo_surface, 0, 0, 
+  GdkPixbuf* gdk_pixbuf = gdk_pixbuf_get_from_surface(cairo_surface,
+                                                      0, 0, 
                                                       size.width, size.height);
 
   cairo_destroy(c);
   cairo_surface_destroy(cairo_surface);
 
   return texture_ptr_from_gdk_graphics(nux::GdkGraphics(gdk_pixbuf));
+}
+
+int BackgroundSettings::GetGridOffset(int size)
+{
+  return (size % Settings::GRID_SIZE) / 2;
 }
 
 } // lockscreen

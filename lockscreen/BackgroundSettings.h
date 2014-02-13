@@ -21,7 +21,7 @@
 #define UNITY_BACKGROUND_SETTINGS_H
 
 #include <NuxCore/Size.h>
-#include <NuxGraphics/GLTextureResourceManager.h>
+#include <NuxGraphics/GLTextureResourceManager.h> // for nux::BaseTexture
 #include <UnityCore/GLibWrapper.h>
 
 class _GnomeBG;
@@ -44,6 +44,8 @@ public:
   	                                  bool draw_logo);
 
 private:
+  static int GetGridOffset(int size);
+
   glib::Object<_GnomeBG> gnome_bg_;
 };
 
