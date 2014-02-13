@@ -99,7 +99,7 @@ void Shield::ShowPrimaryView()
   nux::Layout* main_layout = GetLayout();
   main_layout->Clear();
 
-  auto indicators = std::make_shared<indicator::DBusIndicators>(/* lockscreen mode */ true);
+  auto indicators = std::make_shared<indicator::LockscreenDBusIndicators>();
 
   // Hackish but ok for the moment.
   indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnEntryShowMenu));

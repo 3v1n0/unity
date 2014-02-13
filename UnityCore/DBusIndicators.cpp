@@ -407,12 +407,16 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
   cached_locations = locations;
 }
 
-DBusIndicators::DBusIndicators(bool lockscreen_mode)
-  : pimpl(new Impl(lockscreen_mode ? SERVICE_NAME_LOCKSCREEN : SERVICE_NAME_DESKTOP, this))
+DBusIndicators::DBusIndicators()
+  : pimpl(new Impl(SERVICE_NAME_DESKTOP, this))
 {}
 
 DBusIndicators::DBusIndicators(std::string const& dbus_name)
   : pimpl(new Impl(dbus_name, this))
+{}
+
+LockscreenDBusIndicators::LockscreenDBusIndicators()
+  : DBusIndicators(SERVICE_NAME_LOCKSCREEN)
 {}
 
 DBusIndicators::~DBusIndicators()

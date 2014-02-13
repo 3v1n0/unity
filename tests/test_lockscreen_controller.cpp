@@ -82,6 +82,8 @@ struct TestLockScreenController : Test
   {
     lightdm_ = std::make_shared<glib::DBusServer>(TEST_SERVER_NAME);
     lightdm_->AddObjects(introspection::LIGHTDM, LIGHTDM_PATH);
+
+    Utils::WaitUntilMSec([] { return lightdm_->IsConnected(); });
   }
 
   struct ControllerWrap : Controller

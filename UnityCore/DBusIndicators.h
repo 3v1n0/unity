@@ -35,7 +35,7 @@ class DBusIndicators : public Indicators
 public:
   typedef std::shared_ptr<DBusIndicators> Ptr;
 
-  DBusIndicators(bool lockscreen_mode = false);
+  DBusIndicators();
   ~DBusIndicators();
 
   void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
@@ -53,6 +53,11 @@ protected:
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl;
+};
+
+struct LockscreenDBusIndicators : DBusIndicators
+{
+  LockscreenDBusIndicators();
 };
 
 }
