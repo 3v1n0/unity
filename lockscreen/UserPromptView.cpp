@@ -31,7 +31,7 @@ namespace unity
 namespace lockscreen
 {
 
-nux::AbstractPaintLayer* Foo(int width, int height)
+nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
 {
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t* cr = cg.GetInternalContext();
@@ -80,7 +80,7 @@ UserPromptView::UserPromptView(std::string const& name)
 
   GetLayout()->AddSpace(0, 1);
 
-  message_ = new unity::StaticCairoText("Invalid password, please try again");
+  message_ = new unity::StaticCairoText(_("Invalid password, please try again"));
   message_->SetFont("Ubuntu 10");
   message_->SetTextColor(nux::Color("#df382c"));
   message_->SetVisible(false);
@@ -101,7 +101,7 @@ void UserPromptView::Draw(nux::GraphicsEngine& graphics_engine, bool /* force_dr
   graphics_engine.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(graphics_engine, geo);
 
-  bg_layer_.reset(Foo(geo.width, geo.height));
+  bg_layer_.reset(CrateBackgroundLayer(geo.width, geo.height));
   nux::GetPainter().PushDrawLayer(graphics_engine, geo, bg_layer_.get());
 
   nux::GetPainter().PopBackground();
