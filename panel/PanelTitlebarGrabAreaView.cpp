@@ -21,21 +21,14 @@
  */
 
 #include <Nux/Nux.h>
-
+#include <X11/cursorfont.h>
+#include "unity-shared/UnitySettings.h"
+#include "unity-shared/DecorationStyle.h"
 #include "PanelTitlebarGrabAreaView.h"
 
-#include <X11/cursorfont.h>
 
 namespace unity
 {
-namespace
-{
-
-const int MOUSE_DOWN_TIMEOUT = 150;
-const int MOUSE_MOVEMENT_TOLERANCE = 4;
-
-}
-
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   : InputArea(NUX_TRACKER_LOCATION)
   , grab_cursor_(None)
@@ -100,7 +93,7 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
     mouse_down_point_.x = x;
     mouse_down_point_.y = y;
 
-    mouse_down_timer_.reset(new glib::Timeout(MOUSE_DOWN_TIMEOUT));
+    mouse_down_timer_.reset(new glib::Timeout(decoration::Style::Get()->grab_wait()));
     mouse_down_timer_->Run([this] () {
       if (!grab_started_)
       {
@@ -147,8 +140,10 @@ void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long but
 
   if (mouse_down_timer_)
   {
-    if (abs(mouse_down_point_.x - x) <= MOUSE_MOVEMENT_TOLERANCE &&
-        abs(mouse_down_point_.y - y) <= MOUSE_MOVEMENT_TOLERANCE)
+    int movement_tolerance = Settings::Instance().lim_movement_thresold();
+
+    if (std::abs(mouse_down_point_.x - x) <= movement_tolerance &&
+        std::abs(mouse_down_point_.y - y) <= movement_tolerance)
     {
       return;
     }
