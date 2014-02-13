@@ -48,8 +48,6 @@ protected:
 private:
   void DoRelayout() override;
 
-  Item::Ptr main_item_;
-  Item::Ptr input_item_;
   nux::animation::AnimateValue<double> fade_animator_;
 };
 

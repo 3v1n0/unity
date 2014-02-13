@@ -25,6 +25,14 @@ namespace unity
 {
 namespace decoration
 {
+namespace
+{
+enum ItemRole
+{
+  INPUT = 0,
+  MAIN
+};
+}
 
 SlidingLayout::SlidingLayout()
   : fadein(100)
@@ -34,7 +42,7 @@ SlidingLayout::SlidingLayout()
   items_.resize(2);
   fade_animator_.updated.connect(sigc::hide(sigc::mem_fun(this, &SlidingLayout::Damage)));
   mouse_owner.changed.connect([this] (bool owner) {
-    if (input_item_)
+    if (items_[ItemRole::INPUT])
     {
       fade_animator_.SetDuration(owner ? fadein() : fadeout());
       animation::StartOrReverseIf(fade_animator_, owner);
@@ -44,6 +52,8 @@ SlidingLayout::SlidingLayout()
 
 void SlidingLayout::SetMainItem(Item::Ptr const& main)
 {
+  auto& main_item_ = items_[ItemRole::MAIN];
+
   if (main_item_ == main)
     return;
 
@@ -51,16 +61,20 @@ void SlidingLayout::SetMainItem(Item::Ptr const& main)
     main_item_->SetParent(nullptr);
 
   main_item_ = main;
-  items_[1] = main;
 
   if (main_item_)
+  {
     main_item_->SetParent(shared_from_this());
+    main_item_->focused = focused();
+  }
 
   Relayout();
 }
 
 void SlidingLayout::SetInputItem(Item::Ptr const& input)
 {
+  auto& input_item_ = items_[ItemRole::INPUT];
+
   if (input_item_ == input)
     return;
 
@@ -68,10 +82,12 @@ void SlidingLayout::SetInputItem(Item::Ptr const& input)
     input_item_->SetParent(nullptr);
 
   input_item_ = input;
-  items_[0] = input;
 
   if (input_item_)
+  {
     input_item_->SetParent(shared_from_this());
+    input_item_->focused = focused();
+  }
 
   Relayout();
 }
@@ -110,6 +126,9 @@ void SlidingLayout::DoRelayout()
 
 void SlidingLayout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib, CompRegion const& clip, unsigned mask)
 {
+  auto& main_item_ = items_[ItemRole::MAIN];
+  auto& input_item_ = items_[ItemRole::INPUT];
+
   if (!input_item_)
   {
     if (main_item_)
