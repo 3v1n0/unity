@@ -51,6 +51,7 @@ namespace
   const std::string NEW_APP_HIDE_TIMEOUT = "new-app-hide-timeout";
   const std::string NEW_APP_SHOW_TIMEOUT = "new-app-show-timeout";
   const std::string WINDOW_MOVED_TIMEOUT = "window-moved-timeout";
+  const std::string WINDOW_ACTIVATED_TIMEOUT = "window-activated-timeout";
   const std::string UPDATE_SHOW_NOW_TIMEOUT = "update-show-now-timeout";
 }
 
@@ -69,6 +70,7 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , show_now_activated_(false)
   , we_control_active_(false)
   , new_app_menu_shown_(false)
+  , ignore_menu_visibility_(false)
   , integrated_menus_(decoration::Style::Get()->integrated_menus())
   , monitor_(0)
   , active_xid_(0)
@@ -335,7 +337,7 @@ bool PanelMenuView::ShouldDrawMenus() const
   if (integrated_menus_ && !is_maximized_)
     return false;
 
-  if (we_control_active_ && !switcher_showing_ && !launcher_keynav_ && !entries_.empty())
+  if (we_control_active_ && !switcher_showing_ && !launcher_keynav_ && !ignore_menu_visibility_ && !entries_.empty())
   {
     WindowManager& wm = WindowManager::Default();
 
@@ -1091,6 +1093,19 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher, BamfView* old_vi
 
   if (!force_refresh && BAMF_IS_WINDOW(old_view) && integrated_menus_)
     force_refresh = (bamf_window_maximized(reinterpret_cast<BamfWindow*>(old_view)) == BAMF_WINDOW_MAXIMIZED);
+
+  if (ShouldDrawMenus())
+  {
+    // Wait 100ms before showing the menus again if we've just switched view
+    // this is done because the menus are updated by the indicator with some
+    // delay, and we don't want to see the previous menus and then the new ones
+    ignore_menu_visibility_ = true;
+    sources_.AddTimeout(100, [this] {
+      ignore_menu_visibility_ = false;
+      QueueDraw();
+      return false;
+    }, WINDOW_ACTIVATED_TIMEOUT);
+  }
 
   if (Refresh(force_refresh))
     FullRedraw();

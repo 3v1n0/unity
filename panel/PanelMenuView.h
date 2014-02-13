@@ -178,6 +178,7 @@ private:
   bool show_now_activated_;
   bool we_control_active_;
   bool new_app_menu_shown_;
+  bool ignore_menu_visibility_;
   bool integrated_menus_;
 
   int monitor_;
