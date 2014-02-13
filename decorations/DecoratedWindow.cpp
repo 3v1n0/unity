@@ -53,7 +53,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
       top_layout_->focused = active;
 
       if (!active)
-        CleanupAppMenu();
+        UnsetAppMenu();
     }
     RedrawDecorations();
   });
@@ -341,7 +341,7 @@ void Window::Impl::CleanupWindowControls()
   if (title_)
     last_title_ = title_->text();
 
-  CleanupAppMenu();
+  UnsetAppMenu();
   theme_changed_->disconnect();
   top_layout_.reset();
   input_mixer_.reset();
@@ -591,17 +591,17 @@ void Window::Impl::SetupAppMenu()
   if (!active() || !top_layout_)
     return;
 
-  auto const& appmenu = manager_->impl_->appmenu_;
-  auto const& indicators = manager_->impl_->indicators_;
+  auto const& menu_manager = manager_->impl_->menu_manager_;
+  auto const& appmenu = menu_manager->AppMenu();
   auto const& sliding_layout = sliding_layout_.lock();
   sliding_layout->SetInputItem(nullptr);
   sliding_layout->mouse_owner = false;
 
-  if (!appmenu || !indicators || appmenu->GetEntries().empty())
+  if (!appmenu || appmenu->GetEntries().empty())
     return;
 
   auto visibility_cb = sigc::hide(sigc::mem_fun(this, &Impl::UpdateAppMenuVisibility));
-  auto menus = std::make_shared<MenuLayout>(indicators, win_);
+  auto menus = std::make_shared<MenuLayout>(menu_manager->Indicators(), win_);
   menus->SetAppMenu(appmenu);
   menus->active.changed.connect(visibility_cb);
   menus->show_now.changed.connect(visibility_cb);
@@ -633,12 +633,13 @@ void Window::Impl::UpdateAppMenuVisibility()
     sliding_layout->mouse_owner = grab_edge_->mouse_owner();
 }
 
-void Window::Impl::CleanupAppMenu()
+void Window::Impl::UnsetAppMenu()
 {
   if (!menus_)
     return;
 
-  manager_->impl_->indicators_->SyncGeometries(MENUS_PANEL_NAME, indicator::EntryLocationMap());
+  auto const& indicators = manager_->impl_->menu_manager_->Indicators();
+  indicators->SyncGeometries(MENUS_PANEL_NAME, indicator::EntryLocationMap());
   sliding_layout_->SetInputItem(nullptr);
   grab_mouse_changed_->disconnect();
 }
@@ -648,15 +649,15 @@ void Window::Impl::SyncMenusGeometries() const
   if (!menus_)
     return;
 
+  auto const& indicators = manager_->impl_->menu_manager_->Indicators();
   indicator::EntryLocationMap map;
   menus_->ChildrenGeometries(map);
-  manager_->impl_->indicators_->SyncGeometries(MENUS_PANEL_NAME, map);
+  indicators->SyncGeometries(MENUS_PANEL_NAME, map);
 }
 
-void Window::Impl::ActivateMenu(std::string const& entry_id)
+bool Window::Impl::ActivateMenu(std::string const& entry_id)
 {
-  if (menus_)
-    menus_->ActivateMenu(entry_id);
+  return menus_ && menus_->ActivateMenu(entry_id);
 }
 
 // Public APIs

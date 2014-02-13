@@ -22,6 +22,7 @@
 
 #include <NuxCore/Property.h>
 #include "DecoratedWindow.h"
+#include "MenuManager.h"
 
 class CompWindow;
 class CompManager;
@@ -35,7 +36,7 @@ class Manager : public debug::Introspectable
 public:
   typedef std::shared_ptr<Manager> Ptr;
 
-  Manager();
+  Manager(menu::Manager::Ptr const&);
   virtual ~Manager();
 
   nux::Property<nux::Point> shadow_offset;

@@ -84,7 +84,7 @@ struct Window::Impl
   void RedrawDecorations();
   void Damage();
   void SetupAppMenu();
-  void ActivateMenu(std::string const&);
+  bool ActivateMenu(std::string const&);
 
 private:
   void UnsetExtents();
@@ -95,7 +95,7 @@ private:
   void UnsetFrame();
   void SetupWindowControls();
   void CleanupWindowControls();
-  void CleanupAppMenu();
+  void UnsetAppMenu();
   void UpdateAppMenuVisibility();
   void SyncXShapeWithFrameRegion();
   void SyncMenusGeometries() const;
@@ -137,7 +137,7 @@ private:
 
 struct Manager::Impl : sigc::trackable
 {
-  Impl(decoration::Manager*);
+  Impl(decoration::Manager*, menu::Manager::Ptr const&);
   ~Impl();
 
   Window::Ptr HandleWindow(CompWindow* cwin);
@@ -152,14 +152,15 @@ private:
   bool UpdateWindow(::Window);
   void UpdateWindowsExtents();
 
-  void SetupIndicators();
-  void SetupAppmenu(indicator::Indicator::Ptr const&);
-  void CleanupAppMenu();
+  void SetupIntegratedMenus();
+  void SetupAppMenu();
+  void UnsetAppMenu();
   void BuildActiveShadowTexture();
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
   void OnShadowOptionsChanged(bool active);
   void OnWindowFrameChanged(bool, ::Window, std::weak_ptr<decoration::Window> const&);
+  bool OnMenuKeyActivated(std::string const&);
 
   friend class Manager;
   friend struct Window::Impl;
@@ -176,10 +177,8 @@ private:
   std::map<CompWindow*, decoration::Window::Ptr> windows_;
   std::unordered_map<::Window, std::weak_ptr<decoration::Window>> framed_windows_;
 
-  indicator::Indicators::Ptr indicators_;
-  indicator::Indicator::Ptr appmenu_;
-
-  connection::Manager indicators_connections_;
+  menu::Manager::Ptr menu_manager_;
+  connection::Manager menu_connections_;
   connection::handle appmenu_connection_;
 };
 

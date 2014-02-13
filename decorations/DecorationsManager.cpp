@@ -43,11 +43,11 @@ Atom _NET_WM_VISIBLE_NAME = 0;
 }
 }
 
-Manager::Impl::Impl(decoration::Manager* parent)
+Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   : active_window_(0)
   , enable_add_supported_atoms_(true)
   , data_pool_(DataPool::Get())
-  , indicators_(std::make_shared<indicator::DBusIndicators>())
+  , menu_manager_(menu)
 {
   if (!manager_)
     manager_ = parent;
@@ -63,11 +63,11 @@ Manager::Impl::Impl(decoration::Manager* parent)
   manager_->inactive_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->inactive_shadow_radius.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->shadow_offset.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateWindowsExtents)));
-  Style::Get()->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIndicators)));
+  Style::Get()->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIntegratedMenus)));
 
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
-  SetupIndicators();
+  SetupIntegratedMenus();
 }
 
 Manager::Impl::~Impl()
@@ -113,47 +113,35 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
   UpdateWindowsExtents();
 }
 
-void Manager::Impl::SetupIndicators()
+void Manager::Impl::SetupIntegratedMenus()
 {
   if (!Style::Get()->integrated_menus())
   {
-    CleanupAppMenu();
-    indicators_connections_.Clear();
+    UnsetAppMenu();
+    menu_connections_.Clear();
     return;
   }
 
-  using namespace indicator;
+  menu_connections_.Add(menu_manager_->appmenu_added.connect(sigc::mem_fun(this, &Impl::SetupAppMenu)));
+  menu_connections_.Add(menu_manager_->appmenu_removed.connect(sigc::mem_fun(this, &Impl::UnsetAppMenu)));
+  menu_connections_.Add(menu_manager_->key_activate_entry.connect(sigc::mem_fun(this, &Impl::OnMenuKeyActivated)));
 
-  indicators_connections_.Add(indicators_->on_object_added.connect([this] (Indicator::Ptr const& indicator) {
-    if (indicator->IsAppmenu())
-      SetupAppmenu(indicator);
-  }));
-
-  indicators_connections_.Add(indicators_->on_object_removed.connect([this] (Indicator::Ptr const& indicator) {
-    if (appmenu_ == indicator)
-      CleanupAppMenu();
-  }));
-
-  indicators_connections_.Add(indicators_->on_entry_activate_request.connect([this] (std::string const& entry_id) {
-    if (Window::Ptr const& win = active_deco_win_.lock())
-      win->impl_->ActivateMenu(entry_id);
-  }));
-
-  for (auto const& indicator : indicators_->GetIndicators())
-  {
-    if (indicator->IsAppmenu())
-    {
-      SetupAppmenu(indicator);
-      break;
-    }
-  }
+  SetupAppMenu();
 }
 
-void Manager::Impl::SetupAppmenu(indicator::Indicator::Ptr const& appmenu)
+bool Manager::Impl::OnMenuKeyActivated(std::string const& entry_id)
 {
+  // Lambda will crash with this, unless we don't use a workaround.
+  return active_deco_win_ && active_deco_win_->impl_->ActivateMenu(entry_id);
+}
+
+void Manager::Impl::SetupAppMenu()
+{
+  auto const& appmenu = menu_manager_->AppMenu();
+
   if (!appmenu)
   {
-    CleanupAppMenu();
+    UnsetAppMenu();
     return;
   }
 
@@ -162,21 +150,19 @@ void Manager::Impl::SetupAppmenu(indicator::Indicator::Ptr const& appmenu)
       active_win->impl_->SetupAppMenu();
   };
 
-  appmenu_ = appmenu;
-  indicators_connections_.Remove(appmenu_connection_);
-  appmenu_connection_ = indicators_connections_.Add(appmenu_->updated.connect(setup_active_window));
+  menu_connections_.Remove(appmenu_connection_);
+  appmenu_connection_ = menu_connections_.Add(appmenu->updated.connect(setup_active_window));
   setup_active_window();
 }
 
-void Manager::Impl::CleanupAppMenu()
+void Manager::Impl::UnsetAppMenu()
 {
-  appmenu_.reset();
-  indicators_connections_.Remove(appmenu_connection_);
+  menu_connections_.Remove(appmenu_connection_);
   auto const& active_win = active_deco_win_.lock();
 
   if (active_win)
   {
-    active_win->impl_->CleanupAppMenu();
+    active_win->impl_->UnsetAppMenu();
     active_win->impl_->Damage();
   }
 }
@@ -380,13 +366,13 @@ void Manager::Impl::OnWindowFrameChanged(bool framed, ::Window frame, std::weak_
 
 // Public APIs
 
-Manager::Manager()
+Manager::Manager(menu::Manager::Ptr const& menu)
   : shadow_offset(Style::Get()->ShadowOffset())
   , active_shadow_color(Style::Get()->ActiveShadowColor())
   , active_shadow_radius(Style::Get()->ActiveShadowRadius())
   , inactive_shadow_color(Style::Get()->InactiveShadowColor())
   , inactive_shadow_radius(Style::Get()->InactiveShadowRadius())
-  , impl_(new Impl(this))
+  , impl_(new Impl(this, menu))
 {}
 
 Manager::~Manager()
