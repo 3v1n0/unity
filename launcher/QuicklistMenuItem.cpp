@@ -84,6 +84,21 @@ std::string QuicklistMenuItem::GetLabel() const
   return label ? label : "";
 }
 
+std::string QuicklistMenuItem::GetPlainTextLabel() const
+{
+  if (!_menu_item)
+    return "";
+
+  const char *label;
+
+  if (dbusmenu_menuitem_property_get(_menu_item, DBUSMENU_MENUITEM_PROP_ACCESSIBLE_DESC) != NULL)
+    label = dbusmenu_menuitem_property_get(_menu_item, DBUSMENU_MENUITEM_PROP_ACCESSIBLE_DESC);
+  else
+    label = dbusmenu_menuitem_property_get(_menu_item, DBUSMENU_MENUITEM_PROP_LABEL);
+
+  return label ? label : "";
+}
+
 bool QuicklistMenuItem::GetEnabled() const
 {
   if (!_menu_item)
