@@ -130,6 +130,7 @@ void PanelMenuView::SetupPanelMenuViewSignals()
     {
       auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
       is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
+      window_buttons_->focused = true;
     }
     Refresh(true);
     FullRedraw();
