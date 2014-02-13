@@ -20,16 +20,12 @@
 #include <sigc++/adaptors/hide.h>
 #include "DecorationsMenuEntry.h"
 #include "DecorationStyle.h"
+#include "UnitySettings.h"
 
 namespace unity
 {
 namespace decoration
 {
-namespace
-{
-const unsigned MAX_DOUBLE_CLICK_WAIT = 100;
-const int MOVEMENT_THRESHOLD = 4;
-}
 
 using namespace indicator;
 
@@ -117,9 +113,10 @@ void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button, Time timestam
 {
   if (button == 1 && !grab_.IsGrabbed())
   {
-    if (grab_.IsMaximizable())
+    unsigned double_click_wait = Settings::Instance().lim_double_click_wait();
+    if (grab_.IsMaximizable() && double_click_wait > 0)
     {
-      button_up_timer_.reset(new glib::Timeout(MAX_DOUBLE_CLICK_WAIT));
+      button_up_timer_.reset(new glib::Timeout(double_click_wait));
       button_up_timer_->Run([this, button] {
         ShowMenu(button);
         return false;
@@ -145,10 +142,11 @@ void MenuEntry::MotionEvent(CompPoint const& p, Time timestamp)
 
   if (!grab_.IsGrabbed())
   {
+    int move_threshold = Settings::Instance().lim_movement_thresold();
     auto const& clicked = grab_.ClickedPoint();
 
-    if (std::abs(p.x() - clicked.x()) < MOVEMENT_THRESHOLD &&
-        std::abs(p.y() - clicked.y()) < MOVEMENT_THRESHOLD)
+    if (std::abs(p.x() - clicked.x()) < move_threshold &&
+        std::abs(p.y() - clicked.y()) < move_threshold)
     {
       ignore_movement = true;
     }

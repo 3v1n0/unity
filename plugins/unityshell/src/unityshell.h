@@ -303,7 +303,7 @@ private:
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 
-  Settings dash_settings_;
+  Settings unity_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
