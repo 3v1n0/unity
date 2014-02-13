@@ -41,7 +41,7 @@ public:
   nux::Property<bool> show_now;
 
   void SetAppMenu(indicator::Indicator::Ptr const&);
-  void ActivateMenu(std::string const& entry_id);
+  bool ActivateMenu(std::string const& entry_id);
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
 
 protected:

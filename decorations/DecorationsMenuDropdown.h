@@ -34,7 +34,7 @@ public:
   MenuDropdown(indicator::Indicators::Ptr const&, CompWindow*);
 
   void ShowMenu(unsigned button) override;
-  void ActivateChild(MenuEntry::Ptr const&);
+  bool ActivateChild(MenuEntry::Ptr const&);
 
   void Push(MenuEntry::Ptr const&);
   MenuEntry::Ptr Pop();

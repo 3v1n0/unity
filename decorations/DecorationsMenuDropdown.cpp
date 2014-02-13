@@ -56,14 +56,15 @@ void MenuDropdown::ShowMenu(unsigned button)
   indicators_->ShowEntriesDropdown(entries, active_, 0, geo.x(), geo.y2());
 }
 
-void MenuDropdown::ActivateChild(MenuEntry::Ptr const& child)
+bool MenuDropdown::ActivateChild(MenuEntry::Ptr const& child)
 {
   if (!child || std::find(children_.begin(), children_.end(), child) == children_.end())
-    return;
+    return false;
 
   active_ = child->GetEntry();
   ShowMenu(0);
   active_.reset();
+  return true;
 }
 
 void MenuDropdown::Push(MenuEntry::Ptr const& child)

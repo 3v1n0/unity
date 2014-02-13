@@ -65,7 +65,7 @@ void MenuLayout::SetAppMenu(Indicator::Ptr const& appmenu)
     Relayout();
 }
 
-void MenuLayout::ActivateMenu(std::string const& entry_id)
+bool MenuLayout::ActivateMenu(std::string const& entry_id)
 {
   MenuEntry::Ptr target;
   bool activated = false;
@@ -89,7 +89,9 @@ void MenuLayout::ActivateMenu(std::string const& entry_id)
   }
 
   if (!activated)
-    dropdown_->ActivateChild(target);
+    activated = dropdown_->ActivateChild(target);
+
+  return activated;
 }
 
 void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)
