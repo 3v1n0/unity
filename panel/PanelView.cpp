@@ -118,7 +118,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
-  menus->activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
+  menus->key_activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
   menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));

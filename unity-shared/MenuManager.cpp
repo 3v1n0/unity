@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
+ *              William Hua <william.hua@canonical.com>
  */
 
 #include <gtk/gtk.h>
@@ -38,42 +39,49 @@ struct Manager::Impl : sigc::trackable
     , key_grabber_(grabber)
   {
     for (auto const& indicator : indicators_->GetIndicators())
-      GrabIndicatorMnemonics(indicator);
+      AddIndicator(indicator);
 
     parent_->show_menus.changed.connect(sigc::mem_fun(this, &Impl::ShowMenus));
-    indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::GrabIndicatorMnemonics));
-    indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::UnGrabIndicatorMnemonics));
+    indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::AddIndicator));
+    indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::RemoveIndicator));
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
   }
 
   ~Impl()
   {
-    for (auto const& indicator : indicators_->GetIndicators())
-      UnGrabIndicatorMnemonics(indicator);
+    if (appmenu_)
+      RemoveIndicator(appmenu_);
   }
 
-  void GrabIndicatorMnemonics(Indicator::Ptr const& indicator)
+  void AddIndicator(Indicator::Ptr const& indicator)
   {
     if (!indicator->IsAppmenu())
       return;
 
-    for (auto const& entry : indicator->GetEntries())
+    appmenu_connections_.Clear();
+    appmenu_ = indicator;
+
+    for (auto const& entry : appmenu_->GetEntries())
       GrabEntryMnemonics(entry);
 
-    auto& connections = indicator_connections_[indicator];
-    connections.Add(indicator->on_entry_added.connect(sigc::mem_fun(this, &Impl::GrabEntryMnemonics)));
-    connections.Add(indicator->on_entry_removed.connect(sigc::mem_fun(this, &Impl::UngrabEntryMnemonics)));
+    appmenu_connections_.Add(appmenu_->on_entry_added.connect(sigc::mem_fun(this, &Impl::GrabEntryMnemonics)));
+    appmenu_connections_.Add(appmenu_->on_entry_removed.connect(sigc::mem_fun(this, &Impl::UngrabEntryMnemonics)));
+
+    parent_->appmenu_added();
   }
 
-  void UnGrabIndicatorMnemonics(Indicator::Ptr const& indicator)
+  void RemoveIndicator(Indicator::Ptr const& indicator)
   {
-    if (!indicator->IsAppmenu())
+    if (indicator != appmenu_)
       return;
 
-    indicator_connections_.erase(indicator);
+    appmenu_connections_.Clear();
 
-    for (auto const& entry : indicator->GetEntries())
+    for (auto const& entry : appmenu_->GetEntries())
       UngrabEntryMnemonics(entry->id());
+
+    appmenu_.reset();
+    parent_->appmenu_removed();
   }
 
   void GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
@@ -90,7 +98,7 @@ struct Manager::Impl : sigc::trackable
       action->keyFromString(accelerator);
       action->setState(CompAction::StateInitKey);
       action->setInitiate([this, id] (CompAction*, CompAction::State, CompOption::Vector&) {
-        return parent_->activate_entry.emit(id);
+        return parent_->key_activate_entry.emit(id);
       });
 
       entry_actions_[id] = action;
@@ -111,23 +119,24 @@ struct Manager::Impl : sigc::trackable
 
   void ActivateRequest(std::string const& entry_id)
   {
-    parent_->activate_entry.emit(entry_id);
+    parent_->key_activate_entry.emit(entry_id);
   }
 
   void ShowMenus(bool show)
   {
-    for (auto const& it : indicator_connections_)
-    {
-      for (auto const& entry : it.first->GetEntries())
-        entry->set_show_now(show);
-    }
+    if (!appmenu_)
+      return;
+
+    for (auto const& entry : appmenu_->GetEntries())
+      entry->set_show_now(show);
   }
 
   Manager* parent_;
   Indicators::Ptr indicators_;
+  Indicator::Ptr appmenu_;
   key::Grabber::Ptr key_grabber_;
+  connection::Manager appmenu_connections_;
   std::unordered_map<std::string, std::shared_ptr<CompAction>> entry_actions_;
-  std::unordered_map<Indicator::Ptr, connection::Manager> indicator_connections_;
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)
@@ -145,6 +154,11 @@ Manager::~Manager()
 Indicators::Ptr const& Manager::Indicators() const
 {
   return impl_->indicators_;
+}
+
+Indicator::Ptr const& Manager::AppMenu() const
+{
+  return impl_->appmenu_;
 }
 
 key::Grabber::Ptr const& Manager::KeyGrabber() const

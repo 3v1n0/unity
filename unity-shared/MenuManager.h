@@ -55,10 +55,14 @@ public:
   virtual ~Manager();
 
   indicator::Indicators::Ptr const& Indicators() const;
+  indicator::Indicator::Ptr const& AppMenu() const;
+
   key::Grabber::Ptr const& KeyGrabber() const;
 
+  sigc::signal<void> appmenu_added;
+  sigc::signal<void> appmenu_removed;
   sigc::signal<bool>::accumulated<any_true> open_first;
-  sigc::signal<bool, std::string const&>::accumulated<any_true> activate_entry;
+  sigc::signal<bool, std::string const&>::accumulated<any_true> key_activate_entry;
 
 private:
   Manager(Manager const&) = delete;
