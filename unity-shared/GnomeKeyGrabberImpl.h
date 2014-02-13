@@ -22,17 +22,19 @@
 
 #include "GnomeKeyGrabber.h"
 
+#include <unordered_map>
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibDBusServer.h>
 
-#include <unordered_map>
-
 namespace unity
 {
-
-struct GnomeKeyGrabber::Impl
+namespace key
 {
-  bool test_mode_;
+
+struct GnomeGrabber::Impl
+{
+  Impl(bool test_mode = false);
+  ~Impl();
 
   glib::DBusServer shell_server_;
   glib::DBusObject::Ptr shell_object_;
@@ -45,9 +47,6 @@ struct GnomeKeyGrabber::Impl
   std::unordered_map<CompAction const*, unsigned int> action_ids_by_action_;
   std::unordered_map<unsigned int, CompAction const*> actions_by_action_id_;
 
-  explicit Impl(CompScreen* screen, bool test_mode = false);
-  ~Impl();
-
   unsigned int addAction(CompAction const& action, bool addressable = true);
   bool removeAction(CompAction const& action);
   bool removeAction(unsigned int action_id);
@@ -59,6 +58,7 @@ struct GnomeKeyGrabber::Impl
   bool isActionPostponed(CompAction const& action) const;
 };
 
+} // namespace key
 } // namespace unity
 
 #endif // __GNOME_KEY_GRABBER_IMPL_H__

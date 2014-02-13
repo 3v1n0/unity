@@ -69,6 +69,7 @@
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
 #include "ThumbnailGenerator.h"
+#include "MenuManager.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -79,8 +80,6 @@
 #include "WindowMinimizeSpeedController.h"
 
 #include "unityshell_glow.h"
-
-#include "GnomeKeyGrabber.h"
 
 namespace unity
 {
@@ -314,6 +313,7 @@ private:
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
 
+  menu::Manager::Ptr menus_;
   std::shared_ptr<decoration::Manager> deco_manager_;
 
   /* These must stay below the window thread, please keep the order */
@@ -405,8 +405,6 @@ private:
   unsigned int back_buffer_age_;
 
   bool is_desktop_active_;
-
-  GnomeKeyGrabber::Ptr grabber_;
 
   friend class UnityWindow;
   friend class decoration::Manager;
