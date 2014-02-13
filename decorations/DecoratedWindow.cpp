@@ -609,6 +609,8 @@ void Window::Impl::SetupAppMenu()
 
   auto const& grab_edge = grab_edge_.lock();
   sliding_layout->SetInputItem(menus);
+  sliding_layout->fadein = menu_manager->fadein();
+  sliding_layout->fadeout = menu_manager->fadeout();
 
   if (grab_edge->mouse_owner() || grab_edge->Geometry().contains(CompPoint(pointerX, pointerY)))
     sliding_layout->mouse_owner = true;

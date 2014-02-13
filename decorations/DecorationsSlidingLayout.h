@@ -35,6 +35,9 @@ public:
 
   SlidingLayout();
 
+  nux::Property<unsigned> fadein;
+  nux::Property<unsigned> fadeout;
+
   void SetMainItem(Item::Ptr const& main);
   void SetInputItem(Item::Ptr const& input);
 

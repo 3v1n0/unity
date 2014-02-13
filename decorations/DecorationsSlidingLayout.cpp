@@ -27,13 +27,18 @@ namespace decoration
 {
 
 SlidingLayout::SlidingLayout()
-  : fade_animator_(100)
+  : fadein(100)
+  , fadeout(120)
+  , fade_animator_(fadein())
 {
   items_.resize(2);
   fade_animator_.updated.connect(sigc::hide(sigc::mem_fun(this, &SlidingLayout::Damage)));
   mouse_owner.changed.connect([this] (bool owner) {
     if (input_item_)
+    {
+      fade_animator_.SetDuration(owner ? fadein() : fadeout());
       animation::StartOrReverseIf(fade_animator_, owner);
+    }
   });
 }
 
