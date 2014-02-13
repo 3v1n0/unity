@@ -19,20 +19,20 @@
 
 #include "LockScreenShield.h"
 
-#include "BackgroundSettings.h" // FIXME: remove this
+#include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
+#include <Nux/PaintLayer.h>
+#include <UnityCore/DBusIndicators.h>
+
+#include "BackgroundSettings.h"
 #include "CofView.h"
 #include "LockScreenSettings.h"
 #include "UserAuthenticatorPam.h"
 #include "UserPromptView.h"
+#include "panel/PanelView.h"
+#include "unity-shared/GnomeKeyGrabber.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/TextInput.h"
-#include "panel/PanelView.h"
-
-#include <Nux/VLayout.h>
-#include <Nux/HLayout.h>
-
-#include <Nux/PaintLayer.h>
-#include <Nux/Nux.h> // FIXME: remove this
 
 namespace unity
 {
@@ -94,13 +94,15 @@ void Shield::ShowSecondaryView()
 
 nux::View* Shield::CreatePanel()
 {
-  auto indicators = std::make_shared<indicator::LockscreenDBusIndicators>();
+  auto indicators = std::make_shared<indicator::LockScreenDBusIndicators>();
+  auto gnome_grabber = std::make_shared<key::GnomeGrabber>();
+  auto menu_manager = std::make_shared<menu::Manager>(indicators, gnome_grabber);
 
   // Hackish but ok for the moment. Would be nice to have menus without grab.
   indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryShowMenu));
   indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryActivated));
 
-  panel::PanelView* panel_view = new panel::PanelView(this, indicators, true);
+  panel::PanelView* panel_view = new panel::PanelView(this, menu_manager, /*lockscreen_mode*/ true);
   panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
 
   return panel_view;

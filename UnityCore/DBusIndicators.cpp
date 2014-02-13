@@ -415,7 +415,7 @@ DBusIndicators::DBusIndicators(std::string const& dbus_name)
   : pimpl(new Impl(dbus_name, this))
 {}
 
-LockscreenDBusIndicators::LockscreenDBusIndicators()
+LockScreenDBusIndicators::LockScreenDBusIndicators()
   : DBusIndicators(SERVICE_NAME_LOCKSCREEN)
 {}
 

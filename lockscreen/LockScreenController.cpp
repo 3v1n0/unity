@@ -34,7 +34,7 @@ namespace lockscreen
 {
 namespace
 {
-const unsigned int FADE_DURATION = 200;
+const unsigned int FADE_DURATION = 400;
 }
 
 namespace testing

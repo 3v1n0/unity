@@ -22,7 +22,6 @@
 
 #include "Indicators.h"
 
-
 namespace unity
 {
 namespace indicator
@@ -55,9 +54,9 @@ private:
   std::unique_ptr<Impl> pimpl;
 };
 
-struct LockscreenDBusIndicators : DBusIndicators
+struct LockScreenDBusIndicators : DBusIndicators
 {
-  LockscreenDBusIndicators();
+  LockScreenDBusIndicators();
 };
 
 }

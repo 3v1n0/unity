@@ -23,6 +23,7 @@
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "UBusMessages.h"
+#include "mock_menu_manager.h"
 #include "test_standalone_wm.h"
 #include "test_uscreen_mock.h"
 #include "test_utils.h"
@@ -38,6 +39,10 @@ struct TestPanelMenuView : public testing::Test
 {
   struct MockPanelMenuView : public PanelMenuView
   {
+    MockPanelMenuView()
+      : PanelMenuView(std::make_shared<menu::MockManager>())
+    {}
+
     MOCK_METHOD0(QueueDraw, void());
     MOCK_CONST_METHOD1(GetActiveViewName, std::string(bool));
 

@@ -30,11 +30,10 @@
 #include <NuxGraphics/CairoGraphics.h>
 #include <gdk/gdkx.h>
 
-#include <UnityCore/DBusIndicators.h>
-
 #include "launcher/EdgeBarrierController.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/MenuManager.h"
 #include "unity-shared/MockableBaseWindow.h"
 #include "PanelMenuView.h"
 #include "PanelTray.h"
@@ -46,16 +45,13 @@ namespace unity
 namespace panel
 {
 
-class PanelView : public unity::debug::Introspectable, 
+class PanelView : public unity::debug::Introspectable,
                   public ui::EdgeBarrierSubscriber,
                   public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
 public:
-  PanelView(MockableBaseWindow* parent,
-            indicator::DBusIndicators::Ptr const&,
-            bool lockscreen_mode = false,
-            NUX_FILE_LINE_PROTO);
+  PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const&, bool lockscreen_mode_ = false, NUX_FILE_LINE_PROTO);
   ~PanelView();
 
   MockableBaseWindow* GetParent() const
@@ -67,13 +63,9 @@ public:
   int GetMonitor() const;
 
   bool IsActive() const;
-  bool FirstMenuShow() const;
-  bool ActivateEntry(std::string const& entry_id);
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
-  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                          int discovery_fadein, int discovery_fadeout);
 
   Window GetTrayXid() const;
   int GetStoredDashWidth() const;
@@ -97,7 +89,6 @@ protected:
   void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
   void OnIndicatorViewUpdated();
   void OnMenuPointerMoved(int x, int y);
-  void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);
   void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
 
@@ -106,6 +97,8 @@ private:
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
 
+  bool ActivateFirstSensitive();
+  bool ActivateEntry(std::string const& entry_id);
   void Resize(nux::Point const& offset, int width);
   bool IsTransparent();
   void UpdateBackground();
@@ -115,7 +108,7 @@ private:
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
   MockableBaseWindow* parent_;
-  indicator::DBusIndicators::Ptr remote_;
+  indicator::Indicators::Ptr remote_;
 
   // No ownership is taken for these views, that is done by the AddChild method.
   PanelMenuView* menu_view_;

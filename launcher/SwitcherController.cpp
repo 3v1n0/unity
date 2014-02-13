@@ -77,6 +77,7 @@ Controller::Controller(WindowCreator const& create_window)
   , visible_(false)
   , monitor_(0)
   , show_desktop_disabled_(false)
+  , mouse_disabled_(false)
   , detail_mode_(DetailMode::TAB_NEXT_WINDOW)
   , impl_(new Controller::Impl(this, 20, create_window))
 {}

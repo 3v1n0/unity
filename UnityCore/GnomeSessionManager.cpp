@@ -383,11 +383,11 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
 // Public implementation
 
 GnomeManager::GnomeManager()
-  : impl_(new GnomeManager::Impl(this))
+  : impl_(new Impl(this))
 {}
 
 GnomeManager::GnomeManager(GnomeManager::TestMode const& tm)
-  : impl_(new GnomeManager::Impl(this, true))
+  : impl_(new Impl(this, true))
 {}
 
 GnomeManager::~GnomeManager()

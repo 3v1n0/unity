@@ -43,6 +43,7 @@ set (UNITY_SHARED_SOURCES
      JSONParser.cpp
      LayoutSystem.cpp
      LineSeparator.cpp
+     MenuManager.cpp
      OverlayRenderer.cpp
      OverlayWindowButtons.cpp
      PanelStyle.cpp
