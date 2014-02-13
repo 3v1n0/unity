@@ -98,6 +98,7 @@ public:
   nux::Property<std::string> font;
   nux::Property<std::string> title_font;
   nux::Property<bool> integrated_menus;
+  nux::Property<unsigned> grab_wait;
 
   decoration::Border const& Border() const;
   decoration::Border const& InputBorder() const;

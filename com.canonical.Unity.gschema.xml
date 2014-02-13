@@ -80,4 +80,13 @@
       <description>The scopes listed in the scope bar will be ordered according to this list.</description>
     </key>
   </schema>
+  <schema path="/com/canonical/unity/decorations/" id="com.canonical.Unity.Decorations" gettext-domain="unity">
+    <key type="u" name="grab-wait">
+      <default>175</default>
+      <range min="0" max="1000"/>
+      <summary>Milliseconds to wait before considering a mouse pressure a grab</summary>
+      <description>The number of ms to wait before starting the window movement (and then
+        showing the proper mouse cursor, and grabbing the window)</description>
+    </key>
+  </schema>
 </schemalist>

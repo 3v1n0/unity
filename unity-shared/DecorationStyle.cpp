@@ -61,6 +61,9 @@ const std::string SETTINGS_NAME = "org.gnome.desktop.wm.preferences";
 const std::string FONT_KEY = "titlebar-font";
 const std::string USE_SYSTEM_FONT_KEY = "titlebar-uses-system-font";
 
+const std::string UNITY_SETTINGS_NAME = "com.canonical.Unity.Decorations";
+const std::string GRAB_WAIT_KEY = "grab-wait";
+
 struct UnityDecoration
 {
   GtkWidget parent_instance;
@@ -139,6 +142,7 @@ struct Style::Impl
     : parent_(parent)
     , ctx_(gtk_style_context_new())
     , settings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , usettings_(g_settings_new(UNITY_SETTINGS_NAME.c_str()))
     , title_pango_ctx_(gdk_pango_context_get_for_screen(gdk_screen_get_default()))
     , menu_item_pango_ctx_(gdk_pango_context_get_for_screen(gdk_screen_get_default()))
     , title_alignment_(0)
@@ -207,6 +211,11 @@ struct Style::Impl
       parent_->title_font.EnableNotifications();
       parent_->title_font.changed.emit(parent_->title_font());
       LOG_INFO(logger) << USE_SYSTEM_FONT_KEY << " changed to " << g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str());
+    });
+
+    parent_->grab_wait = g_settings_get_uint(usettings_, GRAB_WAIT_KEY.c_str());
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + GRAB_WAIT_KEY, [this] (GSettings*, const gchar*) {
+      parent_->grab_wait = g_settings_get_uint(usettings_, GRAB_WAIT_KEY.c_str());
     });
   }
 
@@ -572,6 +581,7 @@ struct Style::Impl
   glib::SignalManager signals_;
   glib::Object<GtkStyleContext> ctx_;
   glib::Object<GSettings> settings_;
+  glib::Object<GSettings> usettings_;
   glib::Object<PangoContext> title_pango_ctx_;
   glib::Object<PangoContext> menu_item_pango_ctx_;
   decoration::Border border_;
