@@ -144,12 +144,15 @@ void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long but
 
   if (mouse_down_timer_)
   {
-    int movement_tolerance = Settings::Instance().lim_movement_thresold();
-
-    if (std::abs(mouse_down_point_.x - x) <= movement_tolerance &&
-        std::abs(mouse_down_point_.y - y) <= movement_tolerance)
+    if (y >= 0 && y <= GetBaseHeight())
     {
-      return;
+      int movement_tolerance = Settings::Instance().lim_movement_thresold();
+
+      if (std::abs(mouse_down_point_.x - x) <= movement_tolerance &&
+          std::abs(mouse_down_point_.y - y) <= movement_tolerance)
+      {
+        return;
+      }
     }
 
     mouse_down_timer_.reset();

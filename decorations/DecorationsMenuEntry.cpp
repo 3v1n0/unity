@@ -142,13 +142,16 @@ void MenuEntry::MotionEvent(CompPoint const& p, Time timestamp)
 
   if (!grab_.IsGrabbed())
   {
-    int move_threshold = Settings::Instance().lim_movement_thresold();
-    auto const& clicked = grab_.ClickedPoint();
-
-    if (std::abs(p.x() - clicked.x()) < move_threshold &&
-        std::abs(p.y() - clicked.y()) < move_threshold)
+    if (Geometry().contains(p))
     {
-      ignore_movement = true;
+      int move_threshold = Settings::Instance().lim_movement_thresold();
+      auto const& clicked = grab_.ClickedPoint();
+
+      if (std::abs(p.x() - clicked.x()) < move_threshold &&
+          std::abs(p.y() - clicked.y()) < move_threshold)
+      {
+        ignore_movement = true;
+      }
     }
   }
 
