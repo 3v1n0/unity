@@ -730,9 +730,8 @@ std::string PanelMenuView::GetCurrentTitle() const
     // panel_title_ needs to be only escaped when computed
     // in this function, if it comes from OnLauncherSelectionChanged
     // it is already escaped
-    // glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
-    // return escaped.Str();
-    return new_title;
+    glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
+    return escaped.Str();
   }
   else
   {
