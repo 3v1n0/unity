@@ -261,7 +261,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       bg_blur_texture_ = bg_effect_helper_.GetBlurRegion();
     }
-    else
+    else if(!lockscreen_mode_)
     {
       bg_blur_texture_ = bg_effect_helper_.GetRegion();
     }

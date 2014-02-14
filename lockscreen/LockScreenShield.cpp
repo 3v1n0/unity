@@ -104,6 +104,7 @@ nux::View* Shield::CreatePanel()
 
   panel::PanelView* panel_view = new panel::PanelView(this, menu_manager, /*lockscreen_mode*/ true);
   panel_view->SetMaximumHeight(panel::Style::Instance().panel_height);
+  panel_view->SetOpacity(0.5);
 
   return panel_view;
 }

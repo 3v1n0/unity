@@ -24,6 +24,7 @@
 #include "config.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/GtkTexture.h"
+#include "unity-shared/PanelStyle.h"
 
 namespace unity 
 {
@@ -52,7 +53,7 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
   if (draw_logo)
   {
     int grid_x_offset = GetGridOffset(size.width);
-    int grid_y_offset = GetGridOffset(size.height);
+    int grid_y_offset = GetGridOffset(size.height) + panel::Style::Instance().panel_height();
 
     cairo_save(c);
 
@@ -73,7 +74,7 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
     int width = size.width;
     int height = size.height;
     int grid_x_offset = GetGridOffset(width);
-    int grid_y_offset = GetGridOffset(height);
+    int grid_y_offset = GetGridOffset(height) + panel::Style::Instance().panel_height();
 
     // overlay grid
     cairo_surface_t* overlay_surface = cairo_surface_create_similar(cairo_surface,
