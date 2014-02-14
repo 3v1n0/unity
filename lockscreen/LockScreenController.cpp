@@ -114,8 +114,10 @@ void Controller::OnLockRequested()
 void Controller::LockScreenUsingDisplayManager()
 {
   // TODO (andy) Move to a different class (DisplayManagerWrapper)
-  const char* session_path_raw = g_getenv("XDG_SESSION_PATH");
-  std::string session_path = session_path_raw ? session_path_raw : "";
+  const char* session_path = g_getenv("XDG_SESSION_PATH");
+  
+  if (!session_path)
+    return;
 
   auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
                                                  session_path,

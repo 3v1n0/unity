@@ -87,7 +87,6 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
-  // TODO (andy) fallback to CK. But we need to figure out how to do that.
   {
     const char* session_id = g_getenv("XDG_SESSION_ID");
     session_id = session_id ? session_id : "";

@@ -38,8 +38,6 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
   password_ = password;
   authenticate_cb_ = authenticate_cb;
 
-  // FIXME (andy) would be nice to support a fallback in case PAM
-  // is not available.
   if (!InitPam())
     return false;
 
