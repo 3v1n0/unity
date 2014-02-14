@@ -162,6 +162,32 @@ std::string XWindowManager::GetWindowName(Window window_id) const
   return GetStringProperty(window_id, XA_WM_NAME);
 }
 
+void XWindowManager::UnGrabMousePointer(Time timestamp, int button, int x, int y)
+{
+  Display* dpy = nux::GetGraphicsDisplay()->GetX11Display();
+  XUngrabPointer(dpy, CurrentTime);
+  XFlush(dpy);
+
+  // --------------------------------------------------------------------------
+  // FIXME: This is a workaround until the non-paired events issue is fixed in
+  // nux
+  XButtonEvent bev;
+  memset(&bev, 0, sizeof(bev));
+
+  bev.type = ButtonRelease;
+  bev.send_event = False;
+  bev.display = dpy;
+  bev.time = timestamp;
+  bev.x = x;
+  bev.y = y;
+  bev.x_root = x;
+  bev.y_root = y;
+  bev.button = button;
+  bev.same_screen = True;
+  nux::GetWindowThread()->ProcessForeignEvent(reinterpret_cast<XEvent*>(&bev), nullptr);
+  // --------------------------------------------------------------------------
+}
+
 void XWindowManager::StartMove(Window window_id, int x, int y)
 {
   if (x < 0 || y < 0)
@@ -171,30 +197,7 @@ void XWindowManager::StartMove(Window window_id, int x, int y)
   Display* d = nux::GetGraphicsDisplay()->GetX11Display();
 
   /* We first need to ungrab the pointer. FIXME: Evil */
-
-  XUngrabPointer(d, CurrentTime);
-
-  // --------------------------------------------------------------------------
-  // FIXME: This is a workaround until the non-paired events issue is fixed in
-  // nux
-  XButtonEvent bev =
-  {
-    ButtonRelease,
-    0,
-    False,
-    d,
-    0,
-    0,
-    0,
-    CurrentTime,
-    x, y,
-    x, y,
-    0,
-    Button1,
-    True
-  };
-  XEvent* e = (XEvent*)&bev;
-  nux::GetWindowThread()->ProcessForeignEvent(e, NULL);
+  UnGrabMousePointer(CurrentTime, Button1, x, y);
 
   ev.xclient.type    = ClientMessage;
   ev.xclient.display = d;
