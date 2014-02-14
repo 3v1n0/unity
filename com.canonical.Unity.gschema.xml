@@ -91,15 +91,15 @@
   </schema>
   <schema path="/com/canonical/unity/integrated-menus/" id="com.canonical.Unity.IntegratedMenus" gettext-domain="unity">
     <key type="u" name="click-movement-threshold">
-      <default>4</default>
-      <range min="0" max="15"/>
+      <default>15</default>
+      <range min="0" max="30"/>
       <summary>Number of pixels to ignore on mouse pressure</summary>
       <description>This value define how many pixels the user can move the mouse
         when holding the mouse button, before we consider his action a movement
         (to grab the window).</description>
     </key>
     <key type="u" name="double-click-wait">
-      <default>100</default>
+      <default>0</default>
       <range min="0" max="300"/>
       <summary>Milliseconds to wait before activating a menu after mouse release</summary>
       <description>The number of ms to wait after a mouse button release event before considering
