@@ -154,6 +154,7 @@ void PanelMenuView::SetupTitlebarGrabArea()
   titlebar_grab_area_->activate_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedActivate));
   titlebar_grab_area_->restore_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedRestore));
   titlebar_grab_area_->lower_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedLower));
+  titlebar_grab_area_->menu_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedShowActionMenu));
   titlebar_grab_area_->grab_started.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
   titlebar_grab_area_->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
   titlebar_grab_area_->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
@@ -1253,6 +1254,22 @@ void PanelMenuView::OnMaximizedLower(int x, int y)
   if (maximized != 0)
   {
     WindowManager::Default().Lower(maximized);
+  }
+}
+
+void PanelMenuView::OnMaximizedShowActionMenu(int x, int y)
+{
+  Window maximized = GetMaximizedWindow();
+
+  if (maximized != 0)
+  {
+    auto const& event = nux::GetGraphicsDisplay()->GetCurrentEvent();
+    auto const& abs_geo = titlebar_grab_area_->GetAbsoluteGeometry();
+    int button = event.GetEventButton();
+    nux::Point click(abs_geo.x + x, abs_geo.y + y);
+    auto& wm = WindowManager::Default();
+    wm.UnGrabMousePointer(event.x11_timestamp, button, click.x, click.y);
+    wm.ShowActionMenu(event.x11_timestamp, maximized, button, click);
   }
 }
 
