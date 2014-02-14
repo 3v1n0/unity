@@ -31,6 +31,7 @@ public:
   XWindowManager();
 
   void StartMove(Window window_id, int x, int y);
+  void UnGrabMousePointer(Time, int button, int x, int y);
 
   std::string GetWindowName(Window window_id) const;
   std::string GetStringProperty(Window window_id, Atom atom) const;
