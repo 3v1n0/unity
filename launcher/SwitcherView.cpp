@@ -161,7 +161,7 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   text_view_->SetVisible(!model->detail_selection);
 
   if (!model->detail_selection)
-    text_view_->SetText(model->Selection()->tooltip_text());
+    text_view_->SetText(model->Selection()->tooltip_text(), true);
 }
 
 void SwitcherView::OnIconSizeChanged (int size)
@@ -207,7 +207,7 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
 
   if (!detail)
   {
-    text_view_->SetText(model_->Selection()->tooltip_text());
+    text_view_->SetText(model_->Selection()->tooltip_text(), true);
     render_targets_.clear();
   }
 
@@ -217,7 +217,7 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
 void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection)
 {
   if (selection)
-    text_view_->SetText(selection->tooltip_text());
+    text_view_->SetText(selection->tooltip_text(), true);
 
   delta_tracker_.ResetState();
 
