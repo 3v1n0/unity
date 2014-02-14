@@ -136,6 +136,12 @@ void InputMixer::UnsetMouseOwner()
   last_mouse_owner_ = nullptr;
 }
 
+void InputMixer::UngrabPointer()
+{
+  mouse_down_ = false;
+  UnsetMouseOwner();
+}
+
 Item::Ptr const& InputMixer::GetMouseOwner() const
 {
   return last_mouse_owner_;

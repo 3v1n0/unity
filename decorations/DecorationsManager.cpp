@@ -225,6 +225,12 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
     case ButtonRelease:
       if (HandleFrameEvent(event))
         return true;
+    case FocusOut:
+      if (event->xfocus.mode == NotifyGrab && !last_mouse_owner_.expired())
+      {
+        last_mouse_owner_.lock()->UngrabPointer();
+        last_mouse_owner_.reset();
+      }
       break;
   }
 

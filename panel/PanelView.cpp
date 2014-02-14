@@ -638,32 +638,8 @@ void PanelView::OnEntryActivated(std::string const& panel, std::string const& en
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
                                 int x, int y, unsigned button)
 {
-  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
-  XUngrabPointer(d, CurrentTime);
-  XFlush(d);
-
-  // --------------------------------------------------------------------------
-  // FIXME: This is a workaround until the non-paired events issue is fixed in
-  // nux
-  XButtonEvent ev =
-  {
-    ButtonRelease,
-    0,
-    False,
-    d,
-    0,
-    0,
-    0,
-    CurrentTime,
-    x, y,
-    x, y,
-    0,
-    Button1,
-    True
-  };
-  XEvent* e = (XEvent*)&ev;
-  nux::GetWindowThread()->ProcessForeignEvent(e, NULL);
-  // --------------------------------------------------------------------------
+  // This is ugly... But Nux fault!
+  WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
 }
 
 bool PanelView::ActivateFirstSensitive()

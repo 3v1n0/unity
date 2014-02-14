@@ -106,6 +106,7 @@ private:
   void OnMaximizedActivate(int x, int y);
   void OnMaximizedRestore(int x, int y);
   void OnMaximizedLower(int x, int y);
+  void OnMaximizedShowActionMenu(int x, int y);
   void OnMaximizedGrabStart(int x, int y);
   void OnMaximizedGrabMove(int x, int y);
   void OnMaximizedGrabEnd(int x, int y);

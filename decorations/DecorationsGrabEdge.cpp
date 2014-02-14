@@ -17,6 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include <core/atoms.h>
 #include "DecorationsGrabEdge.h"
 #include "DecorationStyle.h"
 
@@ -34,7 +35,9 @@ GrabEdge::GrabEdge(CompWindow* win, bool always_wait_grab_timeout)
 
 void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timestamp)
 {
-  if (button != 1)
+  if (button == 3)
+    screen->toolkitAction(Atoms::toolkitActionWindowMenu, timestamp, win_->id(), button, p.x(), p.y());
+  else if (button != 1)
     return;
 
   if (!IsMaximizable() && !always_wait_grab_timeout_)

@@ -45,6 +45,7 @@ public:
   void LeaveEvent(CompPoint const&);
   void ButtonDownEvent(CompPoint const&, unsigned button, Time);
   void ButtonUpEvent(CompPoint const&, unsigned button, Time);
+  void UngrabPointer();
 
   void ForceMouseOwnerCheck();
 
