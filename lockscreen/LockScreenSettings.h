@@ -20,6 +20,8 @@
 #ifndef UNITY_LOCKSCREEN_SETTINGS_H
 #define UNITY_LOCKSCREEN_SETTINGS_H
 
+#include <NuxCore/Property.h>
+
 namespace unity
 {
 namespace lockscreen

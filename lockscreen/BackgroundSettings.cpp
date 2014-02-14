@@ -42,6 +42,9 @@ BackgroundSettings::BackgroundSettings()
   gnome_bg_load_from_preferences(gnome_bg_, settings);
 }
 
+BackgroundSettings::~BackgroundSettings()
+{}
+
 BaseTexturePtr BackgroundSettings::GetBackgroundTexture(nux::Size const& size,
                                                         bool draw_grid,
                                                         bool draw_logo)

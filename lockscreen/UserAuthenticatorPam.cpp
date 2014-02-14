@@ -23,6 +23,7 @@
 
 #include "UserAuthenticatorPam.h"
 
+#include <cstring>
 #include <security/pam_appl.h>
 
 namespace unity

@@ -22,6 +22,7 @@
 
 #include <memory>
 
+#include <Nux/Nux.h>
 #include <Nux/View.h>
 
 #include "unity-shared/SearchBarSpinner.h"

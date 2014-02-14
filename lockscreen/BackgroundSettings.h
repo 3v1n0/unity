@@ -20,8 +20,7 @@
 #ifndef UNITY_BACKGROUND_SETTINGS_H
 #define UNITY_BACKGROUND_SETTINGS_H
 
-#include <NuxCore/Size.h>
-#include <NuxGraphics/GLTextureResourceManager.h> // for nux::BaseTexture
+#include <Nux/Nux.h>
 #include <UnityCore/GLibWrapper.h>
 
 class _GnomeBG;
@@ -38,6 +37,7 @@ class BackgroundSettings
 {
 public:
   BackgroundSettings();
+  ~BackgroundSettings();
 
   BaseTexturePtr GetBackgroundTexture(nux::Size const& size,
   	                                  bool draw_grid,

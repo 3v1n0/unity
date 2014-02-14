@@ -20,7 +20,7 @@
 #ifndef UNITY_LOCKSCREEN_SHIELD_FACTORY
 #define UNITY_LOCKSCREEN_SHIELD_FACTORY
 
-#include <NuxCore/ObjectPtr.h>
+#include <Nux/Nux.h>
 #include <UnityCore/SessionManager.h>
 
 namespace unity
