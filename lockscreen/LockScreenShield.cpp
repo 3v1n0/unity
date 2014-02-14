@@ -42,7 +42,7 @@ namespace lockscreen
 Shield::Shield(session::Manager::Ptr const& session_manager, bool is_primary)
   : primary(is_primary)
   , session_manager_(session_manager)
-  , bg_settings_(new BackgroundSettings) // FIXME (andy) inject it!
+  , bg_settings_(new BackgroundSettings)
   , user_authenticator_(new UserAuthenticatorPam)
   , prompt_view_(nullptr)
 {
@@ -147,6 +147,7 @@ void Shield::OnPromptActivated()
 {
   prompt_view_->SetSpinnerVisible(true);
   prompt_view_->SetSpinnerState(STATE_SEARCHING);
+  prompt_view_->text_entry()->SetInputEventSensitivity(false);
 
   user_authenticator_->AuthenticateStart(session_manager_->UserName(),
                                          prompt_view_->text_entry()->GetText(),
@@ -155,7 +156,9 @@ void Shield::OnPromptActivated()
 
 void Shield::AuthenticationCb(bool authenticated)
 {
+  prompt_view_->text_entry()->SetText("");
   prompt_view_->SetSpinnerVisible(false);
+  prompt_view_->text_entry()->SetInputEventSensitivity(true);
 
   if (authenticated)
     session_manager_->unlock_requested.emit();
@@ -167,7 +170,7 @@ nux::Area* Shield::FindKeyFocusArea(unsigned int,
                                     unsigned long,
                                     unsigned long)
 {
-  if (prompt_view_)
+  if (prompt_view_ && prompt_view_->text_entry() && prompt_view_->text_entry()->GetInputEventSensitivity())
     return prompt_view_->text_entry();
   else
     return nullptr;
