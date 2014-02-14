@@ -730,8 +730,9 @@ std::string PanelMenuView::GetCurrentTitle() const
     // panel_title_ needs to be only escaped when computed
     // in this function, if it comes from OnLauncherSelectionChanged
     // it is already escaped
-    glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
-    return escaped.Str();
+    // glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
+    // return escaped.Str();
+    return new_title;
   }
   else
   {
@@ -1270,6 +1271,9 @@ void PanelMenuView::OnMaximizedShowActionMenu(int x, int y)
     auto& wm = WindowManager::Default();
     wm.UnGrabMousePointer(event.x11_timestamp, button, click.x, click.y);
     wm.ShowActionMenu(event.x11_timestamp, maximized, button, click);
+
+    is_inside_ = false;
+    QueueDraw();
   }
 }
 
