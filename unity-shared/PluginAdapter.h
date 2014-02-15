@@ -205,18 +205,16 @@ private:
   MultiActionList m_ExpoActionList;
   MultiActionList m_ScaleActionList;
 
+  float _coverage_area_before_automaximize;
   bool _spread_state;
   bool _spread_windows_state;
   bool _expo_state;
   bool _vp_switch_started;
+  bool _in_show_desktop;
 
   CompAction* _grab_show_action;
   CompAction* _grab_hide_action;
   CompAction* _grab_toggle_action;
-
-  float _coverage_area_before_automaximize;
-
-  bool _in_show_desktop;
   CompWindow* _last_focused_window;
 };
 
