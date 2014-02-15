@@ -96,6 +96,10 @@ private:
   void OnBackgroundUpdate(nux::Color const&);
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
+  void OnSpreadInitiate();
+  void OnSpreadTerminate();
+  void EnableOverlayMode(bool);
+  bool InOverlayMode() const;
 
   bool ActivateFirstSensitive();
   bool ActivateEntry(std::string const& entry_id);
