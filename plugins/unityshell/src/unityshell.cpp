@@ -3382,21 +3382,8 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 
       hud_controller_->icon_size = launcher_options->icon_size();
       hud_controller_->tile_size = launcher_options->tile_size();
-
-      if (CompPlugin* p = CompPlugin::find("expo"))
-      {
-        CompOption::Vector &opts = p->vTable->getOptions ();
-
-        for (CompOption &o : opts)
-        {
-          if (o.name() == "x_offset")
-          {
-            CompOption::Value v(optionGetIconSize() + 18);
-            screen->setOptionForPlugin(p->vTable->name().c_str(), o.name().c_str(), v);
-            break;
-          }
-        }
-      }
+      CompOption::Value v(optionGetIconSize() + 18);
+      screen->setOptionForPlugin("expo", "x_offset", v);
       break;
     }
     case UnityshellOptions::AutohideAnimation:
