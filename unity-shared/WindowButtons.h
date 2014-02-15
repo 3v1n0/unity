@@ -65,8 +65,11 @@ private:
   void OnMaximizeClicked(nux::Button *button);
   void OnOverlayShown(GVariant* data);
   void OnOverlayHidden(GVariant* data);
+  void OnSpreadInitiate();
+  void OnSpreadTerminate();
   void OnDashSettingsUpdated(FormFactor form_factor);
   void OnControlledWindowChanged(Window xid);
+  void ResetNormalButtonState();
   bool OpacitySetter(double& target, double new_value);
 
   std::string active_overlay_;
