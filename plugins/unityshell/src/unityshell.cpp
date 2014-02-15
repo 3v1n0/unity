@@ -3336,9 +3336,15 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
         deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
       break;
     case UnityshellOptions::LauncherHideMode:
-      launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
-      hud_controller_->launcher_locked_out = (launcher_options->hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
+    {
+      launcher_options->hide_mode = (launcher::LauncherHideMode) optionGetLauncherHideMode();
+      hud_controller_->launcher_locked_out = (launcher_options->hide_mode == LAUNCHER_HIDE_NEVER);
+
+      int scale_offset = (launcher_options->hide_mode == LAUNCHER_HIDE_NEVER) ? 0 : launcher_controller_->launcher().GetWidth();
+      CompOption::Value v(scale_offset);
+      screen->setOptionForPlugin("scale", "x_offset", v);
       break;
+    }
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
       break;
@@ -3382,8 +3388,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 
       hud_controller_->icon_size = launcher_options->icon_size();
       hud_controller_->tile_size = launcher_options->tile_size();
-      CompOption::Value v(optionGetIconSize() + 18);
-      screen->setOptionForPlugin("expo", "x_offset", v);
       break;
     }
     case UnityshellOptions::AutohideAnimation:
@@ -3580,7 +3584,7 @@ void UnityScreen::initLauncher()
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
 
-  launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {
+  auto on_launcher_size_changed = [this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
     int launcher_width = w - 1;
@@ -3588,7 +3592,17 @@ void UnityScreen::initLauncher()
     dash_controller_->launcher_width = launcher_width;
     panel_controller_->launcher_width = launcher_width;
     shortcut_controller_->SetAdjustment(launcher_width, panel_style_.panel_height);
-  });
+
+    CompOption::Value v(launcher_width);
+    screen->setOptionForPlugin("expo", "x_offset", v);
+
+    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
+      screen->setOptionForPlugin("scale", "x_offset", v);
+  };
+  launcher_controller_->launcher().size_changed.connect(on_launcher_size_changed);
+
+  auto* l = &launcher_controller_->launcher();
+  on_launcher_size_changed(l, l->GetWidth(), l->GetHeight());
 
   ScheduleRelayout(0);
 }
