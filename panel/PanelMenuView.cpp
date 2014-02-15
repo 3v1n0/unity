@@ -1728,7 +1728,7 @@ bool PanelMenuView::HasMenus() const
   if (entries_.empty())
     return false;
 
-  return (integrated_menus_ && is_maximized_) || we_control_active_;
+  return integrated_menus_ ? is_maximized_ : we_control_active_;
 }
 
 bool PanelMenuView::GetControlsActive() const
