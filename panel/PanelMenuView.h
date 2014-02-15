@@ -171,6 +171,7 @@ private:
 
   bool overlay_showing_;
   bool switcher_showing_;
+  bool spread_showing_;
   bool launcher_keynav_;
   bool show_now_activated_;
   bool we_control_active_;
