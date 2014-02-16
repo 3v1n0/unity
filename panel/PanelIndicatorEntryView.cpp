@@ -19,6 +19,7 @@
  */
 
 #include <Nux/Nux.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GTKWrapper.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -93,11 +94,24 @@ void PanelIndicatorEntryView::ShowMenu(int button)
 {
   WindowManager& wm = WindowManager::Default();
 
-  if (!wm.IsExpoActive() && !wm.IsScaleActive())
+  if (wm.IsExpoActive())
   {
-    auto const& abs_geo = GetAbsoluteGeometry();
-    proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().panel_height, button);
+    // Delay the activation until expo is closed
+    auto conn = std::make_shared<connection::Wrapper>();
+    *conn = wm.terminate_expo.connect([this, conn, button] {
+      ShowMenu(button);
+      (*conn)->disconnect();
+    });
+
+    wm.TerminateExpo();
+    return;
   }
+
+  if (wm.IsScaleActive())
+    wm.TerminateScale();
+
+  auto const& abs_geo = GetAbsoluteGeometry();
+  proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().panel_height, button);
 }
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)

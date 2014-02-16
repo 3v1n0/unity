@@ -116,18 +116,16 @@ void PanelIndicatorEntryDropdownView::Remove(PanelIndicatorEntryView::Ptr const&
 
 void PanelIndicatorEntryDropdownView::ShowMenu(int button)
 {
-  WindowManager& wm = WindowManager::Default();
+  if (children_.empty())
+    return;
 
-  if (!children_.empty() && !wm.IsExpoActive() && !wm.IsScaleActive())
-  {
-    indicator::Indicator::Entries entries;
+  Indicator::Entries entries;
 
-    for (auto const& entry : children_)
-      entries.push_back(entry->GetEntry());
+  for (auto const& entry : children_)
+    entries.push_back(entry->GetEntry());
 
-    auto const& geo = GetAbsoluteGeometry();
-    indicators_->ShowEntriesDropdown(entries, active_entry_, 0, geo.x, geo.y + Style::Instance().panel_height);
-  }
+  auto const& geo = GetAbsoluteGeometry();
+  indicators_->ShowEntriesDropdown(entries, active_entry_, 0, geo.x, geo.y + Style::Instance().panel_height);
 }
 
 bool PanelIndicatorEntryDropdownView::ActivateChild(PanelIndicatorEntryView::Ptr const& child)
