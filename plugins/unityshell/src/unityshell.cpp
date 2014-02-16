@@ -3949,11 +3949,12 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
     return;
 
   nux::Geometry const& scale_geo = GetScaledGeometry();
-
   auto const& pos = scale_win->getCurrentPosition();
+  auto deco_attrib = attrib;
+  deco_attrib.opacity = COMPIZ_COMPOSITE_OPAQUE;
 
   bool highlighted = (ss->getSelectedWindow() == window->id());
-  paintFakeDecoration(scale_geo, attrib, transform, mask, highlighted, pos.scale);
+  paintFakeDecoration(scale_geo, deco_attrib, transform, mask, highlighted, pos.scale);
 }
 
 nux::Geometry UnityWindow::GetLayoutWindowGeometry()
@@ -4033,7 +4034,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
   last_bound = geo;
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib();
-  attrib.opacity = (alpha * parent_alpha * G_MAXUSHORT);
+  attrib.opacity = (alpha * parent_alpha * COMPIZ_COMPOSITE_OPAQUE);
   unsigned mask = gWindow->lastMask();
   nux::Geometry thumb_geo = geo;
 
@@ -4046,7 +4047,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
   paintThumb(attrib, matrix, mask, g.x, g.y, g.width, g.height, g.width, g.height);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
-  attrib.opacity = parent_alpha * G_MAXUSHORT;
+  attrib.opacity = parent_alpha * COMPIZ_COMPOSITE_OPAQUE;
 
   // The thumbnail is still animating, don't draw the decoration as selected
   if (selected && alpha < 1.0f)
