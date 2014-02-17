@@ -1,0 +1,13 @@
+start on started dbus and starting gnome-session
+
+pre-start script
+  # This is temporary override until unity-settings-daemon is in main
+  # and used by default in unity session
+
+  [ "$DESKTOP_SESSION" = "ubuntu" ] || { exit 0; }
+
+  if initctl status 2>/dev/null 1>/dev/null unity-settings-daemon ; then
+    stop ; exit 0
+  fi
+
+end script
