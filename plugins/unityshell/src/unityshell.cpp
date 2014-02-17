@@ -4160,7 +4160,7 @@ void ScreenIntrospection::AddProperties(debug::IntrospectionData& introspection)
 
 Introspectable::IntrospectableList ScreenIntrospection::GetIntrospectableChildren()
 {
-  IntrospectableList children;
+  IntrospectableList children({uScreen->spread_filter_.get()});
 
   for (auto const& win : screen_->windows())
     children.push_back(UnityWindow::get(win));

@@ -410,6 +410,7 @@ private:
   bool is_desktop_active_;
 
   friend class UnityWindow;
+  friend class debug::ScreenIntrospection;
   friend class decoration::Manager;
 };
 

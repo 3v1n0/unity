@@ -28,6 +28,15 @@ class Screen(UnityIntrospectionObject):
         """Return the available scaled windows, or None."""
         return self.get_children_by_type(Window, scaled=True)
 
+    @property
+    def spread_filter(self):
+        """Return the spread filter, or None."""
+        filter = self.get_children_by_type(SpreadFilter)
+        if len(filter):
+            return filter[0]
+
+        return None
+
     def window(self, xid):
         """Return the window with given xid."""
         windows = self.get_children_by_type(Window, xid=xid)
@@ -51,3 +60,17 @@ class Window(UnityIntrospectionObject):
         self.scaled_close_width.wait_for(GreaterThan(0))
         self.scaled_close_height.wait_for(GreaterThan(0))
         return (self.scaled_close_x, self.scaled_close_y, self.scaled_close_width, self.scaled_close_height)
+
+
+class SpreadFilter(UnityIntrospectionObject):
+    """The spread filter."""
+
+    @property
+    def search_bar(self):
+        """Return the search bar."""
+        [search_bar] = self.get_children_by_type(SearchBar)
+        return search_bar
+
+
+class SearchBar(UnityIntrospectionObject):
+    """The search bar for the spread filter."""
