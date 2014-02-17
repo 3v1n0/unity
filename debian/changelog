@@ -1,3 +1,29 @@
+unity (7.1.2+14.04.20140217-0ubuntu1) trusty; urgency=low
+
+  [ Luke Yelavich ]
+  * QuickListMenuItem: Add GetPlainTextLabel method to better present
+    quicklist menu items to screen reader users. When Orca users
+    navigate quicklists, they hear something like <b>item name</b>, due
+    to the markup for the item being used as the accessible label. Use
+    the ACCESSIBLE_DESC property of dbusmenu menu items to provide a
+    plain text form of the label. (LP: #1266656)
+
+  [ Sebastien Bacher ]
+  * Restore archive change dropped by error, let g-s-d run in Unity
+    sessions
+
+  [ Niklas Steger ]
+  * Add missing unity-scope-home dependency. (LP: #1233029)
+
+  [ Chris Townsend ]
+  * Fix some more AP tests: Redo the Hud query method to account for the
+    fact that the Hud button we want may not be the first entry. Fix a
+    show desktop test so we get the correct show desktop state after the
+    test exits. Fix a Spread test to get the mouse to move to the
+    Launcher icon that we want. .
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 17 Feb 2014 14:02:37 +0000
+
 unity (7.1.2+14.04.20140214.1-0ubuntu1) trusty; urgency=low
 
   [ Sebastien Bacher ]
