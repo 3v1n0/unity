@@ -49,7 +49,7 @@ public:
   Edge(CompWindow* win, Type t);
 
   Type GetType() const;
-  void ButtonDownEvent(CompPoint const&, unsigned button);
+  void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
 
 protected:
   std::string GetName() const;

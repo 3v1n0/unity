@@ -71,11 +71,9 @@ public:
 
   nux::Property<double> opacity;
 
-  sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
+  sigc::signal<void> on_indicator_updated;
   sigc::signal<void, PanelIndicatorEntryView*> entry_added;
   sigc::signal<void, PanelIndicatorEntryView*> entry_removed;
-
-  void SetAllEntrysMonitor(int monitor);
 
 protected:
   std::string GetName() const;

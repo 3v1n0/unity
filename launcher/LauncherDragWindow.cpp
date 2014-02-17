@@ -51,6 +51,7 @@ LauncherDragWindow::LauncherDragWindow(unsigned size, DeferredIconRenderer const
              size, size, 1, nux::BITFMT_R8G8B8A8))
 {
   SetBaseSize(size, size);
+  SetBackgroundColor(nux::color::Transparent);
 
   key_down.connect([this] (unsigned long, unsigned long keysym, unsigned long, const char*, unsigned short) {
     if (keysym == NUX_VK_ESCAPE)

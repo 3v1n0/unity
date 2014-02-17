@@ -27,9 +27,10 @@
 #include <libbamf/libbamf.h>
 
 #include "PanelIndicatorsView.h"
+#include "PanelTitlebarGrabAreaView.h"
+#include "unity-shared/MenuManager.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/WindowButtons.h"
-#include "PanelTitlebarGrabAreaView.h"
 #include "unity-shared/UBusWrapper.h"
 
 namespace unity
@@ -40,11 +41,8 @@ namespace panel
 class PanelMenuView : public PanelIndicatorsView
 {
 public:
-  PanelMenuView();
+  PanelMenuView(menu::Manager::Ptr const&);
   ~PanelMenuView();
-
-  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                          int discovery_fadein, int discovery_fadeout);
 
   void SetMousePosition(int x, int y);
   void SetMonitor(int monitor);
@@ -106,6 +104,7 @@ private:
   void OnMaximizedActivate(int x, int y);
   void OnMaximizedRestore(int x, int y);
   void OnMaximizedLower(int x, int y);
+  void OnMaximizedShowActionMenu(int x, int y);
   void OnMaximizedGrabStart(int x, int y);
   void OnMaximizedGrabMove(int x, int y);
   void OnMaximizedGrabEnd(int x, int y);
@@ -150,6 +149,7 @@ private:
   void StartFadeOut(int duration = -1);
   void OnFadeAnimatorUpdated(double opacity);
 
+  menu::Manager::Ptr const& menu_manager_;
   glib::Object<BamfMatcher> matcher_;
 
   nux::TextureLayer* title_layer_;
@@ -180,12 +180,6 @@ private:
   Window active_xid_;
   nux::Geometry monitor_geo_;
   const std::string desktop_name_;
-
-  int menus_fadein_;
-  int menus_fadeout_;
-  int menus_discovery_;
-  int menus_discovery_fadein_;
-  int menus_discovery_fadeout_;
 
   glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::Signal<void, BamfMatcher*, BamfView*> view_closed_signal_;

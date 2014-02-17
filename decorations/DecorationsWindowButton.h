@@ -36,9 +36,9 @@ public:
   WidgetState GetCurrentState() const;
 
 protected:
-  void ButtonDownEvent(CompPoint const&, unsigned button);
-  void ButtonUpEvent(CompPoint const&, unsigned button);
-  void MotionEvent(CompPoint const&);
+  void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
+  void ButtonUpEvent(CompPoint const&, unsigned button, Time) override;
+  void MotionEvent(CompPoint const&, Time) override;
 
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
