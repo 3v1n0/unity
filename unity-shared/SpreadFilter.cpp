@@ -31,7 +31,7 @@ namespace spread
 namespace
 {
 const unsigned FADE_DURATION = 100;
-const unsigned DEFAULT_SEARCH_WAIT = 500;
+const unsigned DEFAULT_SEARCH_WAIT = 300;
 const nux::Point OFFSET(10, 15);
 const nux::Size SIZE(620, 42);
 }
@@ -66,15 +66,23 @@ Filter::Filter()
 
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
 
-  search_bar_->live_search_reached.connect([this] (std::string const& search) {
+  search_bar_->search_changed.connect([this] (std::string const& search) {
     if (!Visible())
       animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 
+    if (search.empty())
+    {
+      text.changed.emit(search);
+      animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+    }
+  });
+
+  search_bar_->live_search_reached.connect([this] (std::string const& search) {
+    if (search.empty())
+      return;
+
     text.changed.emit(search);
     search_bar_->SetSearchFinished();
-
-    if (search.empty())
-      animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
   });
 }
 

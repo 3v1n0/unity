@@ -83,14 +83,17 @@ TEST_F(TestSpreadFilter, VisibleWithText)
 {
   std::string filter_string = "Unity is cool!";
   EXPECT_CALL(sig_receiver, TextChanged(_)).Times(0);
+
   filter.text = filter_string;
+  Tick();
+
+  EXPECT_TRUE(filter.Visible());
+  EXPECT_FALSE(filter.text().empty());
 
   EXPECT_CALL(sig_receiver, TextChanged(filter_string));
   Utils::WaitForTimeoutMSec();
-  Tick();
 
   EXPECT_EQ(filter_string, filter.text());
-  EXPECT_TRUE(filter.Visible());
 }
 
 TEST_F(TestSpreadFilter, InVisibleWithoutText)
@@ -101,12 +104,10 @@ TEST_F(TestSpreadFilter, InVisibleWithoutText)
 
   ASSERT_TRUE(filter.Visible());
 
-  filter.text = "";
   EXPECT_CALL(sig_receiver, TextChanged(""));
-  Utils::WaitForTimeoutMSec();
-  Tick();
-
+  filter.text = "";
   EXPECT_TRUE(filter.text().empty());
+  Tick();
   EXPECT_FALSE(filter.Visible());
 }
 
