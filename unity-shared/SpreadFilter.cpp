@@ -31,6 +31,7 @@ namespace spread
 namespace
 {
 const unsigned FADE_DURATION = 100;
+const unsigned DEFAULT_SEARCH_WAIT = 500;
 const nux::Point OFFSET(10, 15);
 const nux::Size SIZE(620, 42);
 }
@@ -40,6 +41,7 @@ Filter::Filter()
 {
   search_bar_ = SearchBar::Ptr(new SearchBar());
   search_bar_->SetMinMaxSize(SIZE.width, SIZE.height);
+  search_bar_->live_search_wait = DEFAULT_SEARCH_WAIT;
   text.SetGetterFunction([this] { return search_bar_->search_string(); });
   text.SetSetterFunction([this] (std::string const& t) { search_bar_->search_string = t; return false; });
   debug::Introspectable::AddChild(search_bar_.GetPointer());
