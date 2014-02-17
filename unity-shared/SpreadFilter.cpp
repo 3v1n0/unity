@@ -113,6 +113,7 @@ std::string Filter::GetName() const
 void Filter::AddProperties(debug::IntrospectionData& introspection)
 {
   introspection
+    .add(GetAbsoluteGeometry())
     .add("visible", Visible());
 }
 
