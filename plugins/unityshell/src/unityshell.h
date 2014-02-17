@@ -65,6 +65,7 @@
 #include "ScreenIntrospection.h"
 #include "SwitcherController.h"
 #include "SessionController.h"
+#include "SpreadFilter.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
@@ -118,6 +119,7 @@ public:
   CompScreen* screen;
   CompositeScreen* cScreen;
   GLScreen* gScreen;
+  ScaleScreen* sScreen;
 
   /* prepares nux for drawing */
   void nuxPrologue();
@@ -327,6 +329,7 @@ private:
   session::Controller::Ptr  session_controller_;
   debug::DebugDBusInterface debugger_;
   std::unique_ptr<BGHash>   bghash_;
+  spread::Filter::Ptr       spread_filter_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
