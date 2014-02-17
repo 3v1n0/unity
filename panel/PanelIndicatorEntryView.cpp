@@ -76,6 +76,12 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   Refresh();
+
+  geometry_changed.connect([this] (nux::Area*, nux::Geometry&) {
+    int monitor = WindowManager::Default().MonitorGeometryIn(GetAbsoluteGeometry());
+    if (monitor != monitor_)
+      SetMonitor(monitor);
+  });
 }
 
 PanelIndicatorEntryView::~PanelIndicatorEntryView()
@@ -101,7 +107,7 @@ void PanelIndicatorEntryView::ShowMenu(int button)
   if (!wm.IsExpoActive() && !wm.IsScaleActive())
   {
     auto const& abs_geo = GetAbsoluteGeometry();
-    proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().PanelHeight(), button);
+    proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().PanelHeight(monitor_), button);
   }
 }
 
@@ -437,7 +443,7 @@ void PanelIndicatorEntryView::Refresh()
 
   unsigned int width = 0;
   unsigned int icon_width = 0;
-  unsigned int height = panel::Style::Instance().PanelHeight();
+  unsigned int height = panel::Style::Instance().PanelHeight(monitor_);
 
   // First lets figure out our size
   if (pixbuf && IsIconVisible())

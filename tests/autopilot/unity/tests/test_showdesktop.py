@@ -86,6 +86,10 @@ class ShowDesktopTests(UnityTestCase):
         self.assertProperty(charmap, is_hidden=False)
         self.assertProperty(calc, is_hidden=True)
 
+        # Need to re-enter show desktop since the CharMap is visible so the cleanup handlers 
+        # get the correct show desktop state
+        self.unity.window_manager.enter_show_desktop()
+
     def test_showdesktop_closes_dash(self):
         """Show Desktop must close Dash if it's open"""
         test_windows = self.launch_test_apps()

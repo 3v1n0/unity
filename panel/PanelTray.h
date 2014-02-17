@@ -40,7 +40,7 @@ namespace unity
 class PanelTray : public nux::View, public unity::debug::Introspectable
 {
 public:
-  PanelTray();
+  PanelTray(int monitor);
   ~PanelTray();
 
   void Sync();
@@ -70,6 +70,8 @@ private:
   glib::Source::UniquePtr sync_idle_;
   std::list<NaTrayChild*> children_;
   nux::Geometry last_geo_;
+
+  int monitor_;
 };
 
 }

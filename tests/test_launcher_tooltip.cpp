@@ -106,4 +106,10 @@ TEST_F(TestTooltip, TestSetTooltipText)
   EXPECT_EQ(new_tip, tooltip->_tooltip_text->GetText());
 }
 
+TEST_F(TestTooltip, EscapedText)
+{
+  tooltip->text = "Unity's Tooltip!";
+  EXPECT_EQ("Unity&apos;s Tooltip!", tooltip->_tooltip_text->GetText());
+}
+
 } // unity

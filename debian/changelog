@@ -1,3 +1,368 @@
+unity (7.1.2+14.04.20140217-0ubuntu1) trusty; urgency=low
+
+  [ Luke Yelavich ]
+  * QuickListMenuItem: Add GetPlainTextLabel method to better present
+    quicklist menu items to screen reader users. When Orca users
+    navigate quicklists, they hear something like <b>item name</b>, due
+    to the markup for the item being used as the accessible label. Use
+    the ACCESSIBLE_DESC property of dbusmenu menu items to provide a
+    plain text form of the label. (LP: #1266656)
+
+  [ Sebastien Bacher ]
+  * Restore archive change dropped by error, let g-s-d run in Unity
+    sessions
+
+  [ Niklas Steger ]
+  * Add missing unity-scope-home dependency. (LP: #1233029)
+
+  [ Chris Townsend ]
+  * Fix some more AP tests: Redo the Hud query method to account for the
+    fact that the Hud button we want may not be the first entry. Fix a
+    show desktop test so we get the correct show desktop state after the
+    test exits. Fix a Spread test to get the mouse to move to the
+    Launcher icon that we want. .
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 17 Feb 2014 14:02:37 +0000
+
+unity (7.1.2+14.04.20140214.1-0ubuntu1) trusty; urgency=low
+
+  [ Sebastien Bacher ]
+  * use unity-control-center by default.
+  * lists keybinding in unity-control-center. (LP: #1271710)
+
+  [ Brandon Schaefer ]
+  * Bump to new libnux from this branch:
+    https://code.launchpad.net/~brandontschaefer/nux/xim-preedit-
+    support.
+  * Adds Super+L to lock the screen, while keeping the older shortcut
+    around in g-s-d (Ctrl+Alt+L). (LP: #830709)
+  * Do not open the dash/hud on a monitor with a top most window that is
+    fullscreen. (LP: #1267210)
+  * Implement an EMConveter. This way with default settings such that
+    DPI = 96.0f, and font_size = system font size. We can get the
+    correct EM value for any pixel size. Once we have the correct EM
+    value for any pixel size, the DPI value can be adjusted to the
+    current logical one. From here, you can now get the correct pixel
+    size based from of the EM value for the logical DPI of the screen.
+  * Refactor EMConverter API. Now all thats needed is int
+    ConvertPixels(int pixel); This will calculate the correct pixel size
+    based on the DPI and font size.
+  * Testing that the ibus anthy tests could possibly be causing strange
+    issues on the nvidia machine. So skipping them to test if tihs is
+    the source of the error.
+  * Add Pt to Px function to em converter.
+  * Move EMConverter over to unity settings.
+  * Add multi monitor support for EMConverter in unity settings. Now you
+    can grab a specific converter per monitor.
+  * Simple RawPixel class. It adds 2 define literals, ex: 10_em,
+    10.0_em. From there it turns them into raw pixels. RawPixels have CP
+    (CovertPixel) function which takes in an EMConverter that allows you
+    to use a converter specific to a monitor to convert the raw pixel to
+    the correct value.
+
+  [ Marco Trevisan (Treviño) ]
+  * Don't re-present all of our windows on every frame. Only do that if
+    damage intersects it. Use the new APIs exposed by compiz and nux to
+    intelligently determine which windows need to be presented per-frame
+    and only register damage for those windows. This fixes two things:
+    1. BaseWindows being redrawn from scratch every time damage was
+    registered over them. That was incorrect and should only be done in
+    the case of background blurs. 2. BaseWindows being drawn to the
+    screen on every frame, regardless of whether or not they needed to
+    be. Now they will only be drawn if some damage intersects beneath
+    them. Note that unity will expand the damage region to accomadate
+    the base window since nux does not support geometry clipping. So if
+    there is a partial intersection of the launcher for example, the
+    area of the screen which contains the launcher will be re-painted
+    (but the launcher itself won't be redrawn, just its texture) (LP:
+    #1080947). (LP: #1080947)
+  * Convert compiz regions / rects to nux::Geometry's and back easily.
+  * UnityScreen: remove the useless and expensive gl{Push,Pop}Attrib
+    calls For some reasons this code was copied by the opengl plugin as
+    a workaround to fix the state of our screen after that nux has
+    drawn. Actually this is not needed, the only thing we really need to
+    do is to fix the current Viewport, because nux seems to leave it in
+    a bad state which would lead to flickering menus, fullscreen
+    windows, tooltip and missing windows thumbnails in switcher. Thanks
+    to Sam Spilsbury for his precious support. (LP: #1251275)
+  * Unity: always prefer passing [this] to lambdas than [&].
+  * Introspectable: use IntrospectionData class for collecting data from
+    children Now each introspectable object is called with an
+    IntrospectionData parameter and calling one of its methods it's the
+    only way to fill introspection data into unity. As bonus point,
+    remove all the unneeded UnityCore/Variant.cpp inclusions. (LP:
+    #1227131)
+  * DebugDBusInterface: add local::xpathselect::NodeSelector to use the
+    dloaded lib.
+  * BackgroundEffectHelper: Specify the required blur area before
+    drawing so selectively copy it at paint time This means that we
+    don't have to waste fragment bandwidth copying the entire backbuffer
+    when we could just do parts of it. Now BackgroundEffectHelper
+    listens to windows and views geometry changes and updates a list of
+    blurred regions that might be copied to the backup texture at every
+    repaint that affects them. This avoids to copy large regions
+    (especially when using big resolutions or multiple monitors), but
+    only the ones we really need to blur.
+  * SwitcherView: define a custom GeometryGetterFunc and notify helper
+    on changes Thanks to this the switcher won't make
+    BackgroundEffectHelper to create a blurred area as big as the
+    current monitor (with just a small padding), but an area big enough
+    to draw its background. This get updated automagically when the
+    switcher view changes its geometry... Also, use nux::AnimateValue
+    for switcher animations, making compiz to orchestrate it and only
+    redraw the view if an icon changed since the last progress
+    iteration. We don't want the switcher to be drawn unless its
+    geometry or an icon changes. Also we don't want to redraw the
+    switcher multiple times if only a not-animated parameter of an icon
+    (such as a pip or the selection glow) has changed. As bonus, reduce
+    lots of list copies.
+  * {Dash,Hud}Controller: unset the keyfocus area only if one of their
+    children has the focus Otherwise we could steal the focus to another
+    view (such as the Alt+Tab switcher). (LP: #1252760)
+  * IntrospectionData: use forward declaration for nux classes, add
+    support to glib::Variant We don't need to repeat the inclusion
+    everywhere we want debug introspection. This allows also to add
+    glib::Variant adder without the need of any other cast.
+  * decorations: added new unity-decorations fully gtk-css-themed inside
+    unity. (LP: #691817, #827537)
+  * PanelMenuView: show a dropdown menu of indicators, if there's no
+    enough horizontal space PanelService: add new dbus method
+    ShowEntriesDropdown that when called puts the requested indicator
+    entires into a DropDown menu before showing them, also threat
+    dropdown menus as special entries when the their geometry has been
+    synced. UnityCore: add add ShowEntriesDropdown virtual method as
+    well and implement in DBusIndicators, to call the relative method in
+    PanelService. Add parents to indicator::Entry, now an entry can have
+    one or more parents (that's mostly depending on how many monitors we
+    have), and if parented, it notifies active, show_now and geometry
+    status to them. API cleanups included, SO-name bumped. PanelView:
+    add simpler PreLayoutManagement function, to avoid nux to do too
+    many computations that will cause the Menu to relayout too much with
+    no need. Added PanelIndicatorEntryDropdownView as new subtype of
+    PanelIndicatorEntryView that will show a go-down icon on the
+    PanelMenuView that when clicked will show a dropdown menu of
+    indicators. This will happen only if there's not enough room to see
+    them inline. PanelIndicatorsView: many cleanups, and add
+    EnableDropdownMenu that creates a new
+    PanelIndicatorEntryDropdownView and uses it to place the entries
+    that don't fit the available space, until we don't get some more.
+    Added and reworked a bunch of unit tests. (LP: #1274554)
+  * DecorationsInputMixer: pass Timestamp to events This might be needed
+    to perform some actions, and using CompScreen getCurrentTime() is
+    way much more expensive than I thought.
+  * MenuManager: add a wrapper for Indicators and KeyGrabber that
+    registers mnemonics It also emits signals with accumulators that
+    will just stop the emission when a client returns true, and holds
+    menu general settings.
+  * LauncherDragWindow: set the drag window background to transparent or
+    it will be white by default This was causing a quick flickering of
+    the icon as soon as it was drawn on the first place. (LP: #1279904)
+  * {DecorationsGrabEdge, PanelTitlebarGrabAreaView}: show the
+    WindowAction menu on right-click (LP: #1098419)
+  * PanelMenuView: we don't need to escape the panel title anymore New
+    decorations just use pango text. (LP: #1280077)
+
+  [ Chris Townsend ]
+  * Don't re-present all of our windows on every frame. Only do that if
+    damage intersects it. Use the new APIs exposed by compiz and nux to
+    intelligently determine which windows need to be presented per-frame
+    and only register damage for those windows. This fixes two things:
+    1. BaseWindows being redrawn from scratch every time damage was
+    registered over them. That was incorrect and should only be done in
+    the case of background blurs. 2. BaseWindows being drawn to the
+    screen on every frame, regardless of whether or not they needed to
+    be. Now they will only be drawn if some damage intersects beneath
+    them. Note that unity will expand the damage region to accomadate
+    the base window since nux does not support geometry clipping. So if
+    there is a partial intersection of the launcher for example, the
+    area of the screen which contains the launcher will be re-painted
+    (but the launcher itself won't be redrawn, just its texture) (LP:
+    #1080947). (LP: #1080947)
+  * In low graphics mode, only draw the Launcher background as needed
+    instead of all of the time, even if the Launcher is hidden. (LP:
+    #1179210)
+  * Bump the Unity glib build dependency version.
+  * Use IsVisibleOnMonitor() instead of IsVisible() for checking to
+    close the Hud when clicking the Hud icon. This is due to the icon's
+    quirk only being set for the current monitor. (LP: #1255241)
+  * Add some introspection vector variables to account for per-monitor
+    icon quirks to fix some failing Hud AP tests. (LP: #1244704)
+  * Revert most of lp:unity revno. 3509 as the Compiz Grid plugin is a
+    better place to handle the Ctrl-Super-Left/Right shortcuts. Expanded
+    autopilot test to check for correct window placement when semi-
+    maximizing and restoring. (LP: #1251777)
+  * Re-enable Quicklist and Tooltip active blurring since it was removed
+    due to the performance merge. (LP: #1253740)
+  * Fix compile error due to deprecated gtk_widget_get_state() function.
+    (LP: #1173219)
+  * Fix a bunch of failing AP tests due to changes in Unity. (LP:
+    #1244704)
+  * Due to a change in xpathselect1.4, this fixes a sorting issue of
+    Switcher icons for AP tests. (LP: #1244704)
+  * Always set the interval timer to 0 when starting a new urgent
+    animation timer. (LP: #1263775)
+  * When hiding the Dash & Hud views, zero out the geometry and update
+    the blur background size. This fixes the issue where the blur
+    background wouldn't be updated when using static blur on subsequent
+    opens of the Dash and Hud. (LP: #834777)
+  * If the Dash or Hud is opened when entering Show Desktop, ensure they
+    are closed. Added some Autopilot tests for this condition. (LP:
+    #961890)
+  * Add mesa-utils dependency to the unity-autopilot package since some
+    of the autopilot tests use glxinfo to gather information. (LP:
+    #1267902)
+  * Fixes issue where a user places the mouse over a Launcher icon that
+    has one unfocused window and then scrolls with the scroll wheel
+    would focus that application when it should not according to Design.
+    (LP: #1263786)
+  * When using the mouse scrollwheel on inactive Launcher icons with
+    unfocused windows, the unfocused window should not be focused. (LP:
+    #1267888)
+  * Add missing Python module declarations for multi-monitor setups.
+    Fixes some AP test failures.
+  * Fixes most Launcher based Autopilot tests due to the new object list
+    sorting in xpathselect1.4.
+  * Add back in vertical/horizontal maximized introspection objects
+    since some Autopilot tests need them.
+  * Removed the ZeitgeistUtils.h as this is no longer needed since
+    Zeitgeist in main is now fixed.
+  * Fix more Autopilot tests: Base icon center introspection on the
+    current monitor instead of the hardcoded first monitor. Fix
+    move_mouse_to_icon AP method to work correctly with multi-monitor.
+    Fix some scroll tests for multi-monitor. Skip the Launcher only on
+    primary monitor/test Launcher functionality on the second monitor
+    tests since the tests cannot run in this scenario.
+  * More Unity Autopilot Launcher test fixes: When initializing the
+    Launcher tests, check whether the Launcher is available on the
+    monitor being tested. If not, skip the test. Also, move the mouse to
+    the monitor being tested before running the test to make sure the
+    correct Launcher is being tested. Skip some Launcher reveal tests
+    since the test is no longer valid due to how Autopilot moves the
+    mouse now. Fix drag_icon_to_position method. Fix
+    mouse_reveal_launcher method.
+  * Fix more AP tests: Fix workspace emulator to get viewport info for
+    more than the first monitor. Fix some Hud, Dash, and Switcher tests
+    for multi-monitor.
+  * Add a method to tell the Hud icon when there are multi-monitors and
+    only a Launcher on the primary monitor. This will make sure the
+    active and visible states for the icon are correct and allow the AP
+    tests to pass. (LP: #1274985)
+  * Fixes some Autopilot Panel test failures: Emit the signal to call
+    OnIndicatorViewUpdated() when the active window position has
+    changed. Account for an overlay (Dash/Hud) to be opened when testing
+    if the window buttons should be shown in the Panel. This was removed
+    some revisions ago and it looks like it shouldn't have been. Fix up
+    a Panel test since it was failing in a part that didn't need to be
+    ran anyways. (LP: #1277265)
+  * Fix a couple of test_panel AP tests: The overlay window buttons did
+    not take multi-monitor into account, so now account for that. Fix
+    the AP test themselves to actually use the correct introspection
+    object.
+  * Fix a failing Dash AP test due to too many results being returned
+    which caused the position of the Dash icon to be off the screen.
+  * Fix where the mouse_disabled_ variable was unintialized which would
+    cause the Switcher to not work correctly with the mouse and arrow
+    keys. Fix the mouse filter list to account for only motion and
+    button click/release so arrow key navigation will still work in the
+    Switcher when mouse interaction is disabled. (LP: #1279499)
+  * Fix Autopilot test issue where Show Desktop is somehow invoked and
+    the recovery from this does not properly get the state back to Show
+    Desktop off.
+
+  [ William Hua ]
+  * Replace deprecated g_settings_list_schemas with
+    g_settings_schema_source_list_schemas.
+  * Launcher: Fix GVariant type error in Hud UBus message.
+  * Implement the GNOME key grabber interface so that Compiz and gnome-
+    settings-daemon no longer have to fight for key grabs. Also, fix the
+    global menu bar mnemonics. (LP: #1113008, LP: #1206582, LP:
+    #1226962). (LP: #1113008, #1226962, #1206582)
+
+  [ Stephen M. Webb ]
+  * add multi-mointor support to a couple of tests where it got misssed.
+
+  [ George Karavasilev ]
+  * LauncherIcon: always try to use themed icons first, before falling
+    back to UnityTheme.
+
+  [ CI bot ]
+  * Flush trunk to Ubuntu
+
+  [ Eleni Maria Stea ]
+  * the branch fixes the following compile errors: 1.
+    SetReferenceFramebuffer function gets 3 parameters
+    (Nux/WindowCompositor.h) 2. RenderInterfaceFromForeignCmd gets const
+    reference not pointer as argument (Nux/WindowThread.h).
+  * adds virtual destructors to classes with virtual methods to prevent
+    memory leaks - ABI break.
+  * new gsetting in unityshell.xml.in: fonts-scale-factor.
+  * Configuration Parser class for custom gsettings.
+  * function that gets the monitor name from the GDKScreen in UScreen.
+
+  [ Andrea Azzarone ]
+  * Don't re-present all of our windows on every frame. Only do that if
+    damage intersects it. Use the new APIs exposed by compiz and nux to
+    intelligently determine which windows need to be presented per-frame
+    and only register damage for those windows. This fixes two things:
+    1. BaseWindows being redrawn from scratch every time damage was
+    registered over them. That was incorrect and should only be done in
+    the case of background blurs. 2. BaseWindows being drawn to the
+    screen on every frame, regardless of whether or not they needed to
+    be. Now they will only be drawn if some damage intersects beneath
+    them. Note that unity will expand the damage region to accomadate
+    the base window since nux does not support geometry clipping. So if
+    there is a partial intersection of the launcher for example, the
+    area of the screen which contains the launcher will be re-painted
+    (but the launcher itself won't be redrawn, just its texture) (LP:
+    #1080947). (LP: #1080947)
+  * Alt-Tab, shutdown dialog and shortcut overlay should not be
+    transparent in Low GFX Mode. (LP: #1170508)
+
+  [ Sam Spilsbury ]
+  * Don't re-present all of our windows on every frame. Only do that if
+    damage intersects it. Use the new APIs exposed by compiz and nux to
+    intelligently determine which windows need to be presented per-frame
+    and only register damage for those windows. This fixes two things:
+    1. BaseWindows being redrawn from scratch every time damage was
+    registered over them. That was incorrect and should only be done in
+    the case of background blurs. 2. BaseWindows being drawn to the
+    screen on every frame, regardless of whether or not they needed to
+    be. Now they will only be drawn if some damage intersects beneath
+    them. Note that unity will expand the damage region to accomadate
+    the base window since nux does not support geometry clipping. So if
+    there is a partial intersection of the launcher for example, the
+    area of the screen which contains the launcher will be re-painted
+    (but the launcher itself won't be redrawn, just its texture) (LP:
+    #1080947). (LP: #1080947)
+  * BackgroundEffectHelper: Specify the required blur area before
+    drawing so selectively copy it at paint time This means that we
+    don't have to waste fragment bandwidth copying the entire backbuffer
+    when we could just do parts of it. Now BackgroundEffectHelper
+    listens to windows and views geometry changes and updates a list of
+    blurred regions that might be copied to the backup texture at every
+    repaint that affects them. This avoids to copy large regions
+    (especially when using big resolutions or multiple monitors), but
+    only the ones we really need to blur.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 14 Feb 2014 23:06:09 +0000
+
+unity (7.1.2+14.04.20131106.1-0ubuntu4) trusty; urgency=medium
+
+  * Temporally allow running under gnome-settings-daemon, until
+    unity-settings-daemon is in main.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Fri, 07 Feb 2014 19:18:24 +0000
+
+unity (7.1.2+14.04.20131106.1-0ubuntu3) trusty; urgency=medium
+
+  * Make unity7 job start on started either gnome or unity settings
+    daemon.
+
+  * Cherrypick "Removed the ZeitgeistUtils.h as this is no longer needed
+    since Zeitgeist in main is now fixed." to fix FTBFS.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Fri, 07 Feb 2014 13:18:44 +0000
+
 unity (7.1.2+14.04.20131106.1-0ubuntu2) trusty; urgency=medium
 
   * Disable errors upon deprecated-warnings.

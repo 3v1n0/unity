@@ -115,6 +115,7 @@ public:
   Window GetActiveWindow() const;
   std::vector<Window> GetWindowsInStackingOrder() const override;
 
+  int MonitorGeometryIn(nux::Geometry const& geo) const override;
   bool IsTopWindowFullscreenOnMonitorWithMouse() const override;
 
   // WindowManager implementation
@@ -133,6 +134,7 @@ public:
   bool IsWindowMaximizable(Window window_id) const;
   bool HasWindowDecorations(Window window_id) const;
 
+  void ShowActionMenu(Time, Window, unsigned button, nux::Point const&);
   void Maximize(Window window_id);
   void Restore(Window window_id);
   void RestoreAt(Window window_id, int x, int y);

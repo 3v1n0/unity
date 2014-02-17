@@ -23,6 +23,7 @@
 #include "DecorationStyle.h"
 #include "PluginAdapter.h"
 #include "CompizUtils.h"
+#include "MultiMonitor.h"
 
 #include <NuxCore/Logger.h>
 
@@ -418,6 +419,20 @@ std::vector<Window> PluginAdapter::GetWindowsInStackingOrder() const
   return ret;
 }
 
+int PluginAdapter::MonitorGeometryIn(nux::Geometry const& geo) const
+{
+  std::vector<nux::Geometry> const& monitors = unity::UScreen::GetDefault()->GetMonitors();
+  for (unsigned i = 0; i < monitors.size(); ++i)
+  {
+    nux::Geometry const& i_g = geo.Intersect(monitors[i]);
+
+    if (i_g.width > 0 && i_g.height > 0)
+      return i;
+  }
+
+  return 0;
+}
+
 bool PluginAdapter::IsTopWindowFullscreenOnMonitorWithMouse() const
 {
   int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
@@ -696,6 +711,11 @@ void PluginAdapter::RestoreAt(Window window_id, int x, int y)
     window->maximize(0);
     MoveResizeWindow(window_id, new_geo);
   }
+}
+
+void PluginAdapter::ShowActionMenu(Time timestamp, Window window_id, unsigned button, nux::Point const& p)
+{
+  m_Screen->toolkitAction(Atoms::toolkitActionWindowMenu, timestamp, window_id, button, p.x, p.y);
 }
 
 void PluginAdapter::Minimize(Window window_id)
