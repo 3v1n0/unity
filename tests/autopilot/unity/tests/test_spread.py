@@ -195,6 +195,14 @@ class SpreadTests(UnityTestCase):
         self.initiate_spread_for_screen()
         self.assertThat(icon.get_tooltip().active, Eventually(Equals(False)))
 
+    def test_spread_puts_panel_in_overlay_mode(self):
+        """Test that the panel is in overlay mode when in spread"""
+        self.start_test_application_windows("Calculator", 1)
+        self.initiate_spread_for_screen()
+        self.assertThat(self.unity.panels.get_active_panel().in_overlay_mode, Eventually(Equals(True)))
+        self.unity.window_manager.terminate_spread()
+        self.assertThat(self.unity.panels.get_active_panel().in_overlay_mode, Eventually(Equals(False)))
+
     def test_spread_filter(self):
         """Test spread filter"""
         cal_wins = self.start_test_application_windows("Calculator", 2)
