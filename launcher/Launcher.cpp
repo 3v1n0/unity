@@ -1177,8 +1177,10 @@ void Launcher::OnMonitorChanged(int new_monitor)
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(new_monitor);
   unity::panel::Style &panel_style = panel::Style::Instance();
-  Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_style.PanelHeight(new_monitor)),
-         monitor_geo.height - panel_style.PanelHeight(new_monitor));
+  int panel_height = panel_style.PanelHeight(new_monitor)
+
+  Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_height),
+         monitor_geo.height - panel_height);
   icon_renderer_->monitor = new_monitor;
 }
 
