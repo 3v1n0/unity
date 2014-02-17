@@ -337,13 +337,8 @@ std::string PluginAdapter::MatchStringForXids(std::vector<Window> const& windows
 {
   std::ostringstream sout;
 
-  sout << "any & (";
-
   for (auto const& window : windows)
-  {
-    sout << "| xid=" << window << " ";
-  }
-  sout << ")";
+    sout << "xid=" << window << " | ";
 
   return sout.str();
 }
