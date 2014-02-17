@@ -599,14 +599,19 @@ void SearchBar::AddProperties(debug::IntrospectionData& introspection)
   .add(GetAbsoluteGeometry())
   .add("has_focus", pango_entry_->HasKeyFocus())
   .add("search_string", pango_entry_->GetText())
-  .add("expander-has-focus", expander_view_->HasKeyFocus())
   .add("showing-filters", showing_filters)
-  .add("filter-label-x", show_filters_->GetAbsoluteX())
-  .add("filter-label-y", show_filters_->GetAbsoluteY())
-  .add("filter-label-width", show_filters_->GetAbsoluteWidth())
-  .add("filter-label-height", show_filters_->GetAbsoluteHeight())
-  .add("filter-label-geo", show_filters_->GetAbsoluteGeometry())
   .add("im_active", pango_entry_->im_active());
+
+  if (show_filter_hint_)
+  {
+    introspection
+    .add("expander-has-focus", expander_view_->HasKeyFocus())
+    .add("filter-label-x", show_filters_->GetAbsoluteX())
+    .add("filter-label-y", show_filters_->GetAbsoluteY())
+    .add("filter-label-width", show_filters_->GetAbsoluteWidth())
+    .add("filter-label-height", show_filters_->GetAbsoluteHeight())
+    .add("filter-label-geo", show_filters_->GetAbsoluteGeometry());
+  }
 }
 
 } // namespace unity
