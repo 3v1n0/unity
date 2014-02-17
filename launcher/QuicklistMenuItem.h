@@ -54,6 +54,7 @@ public:
 
   QuicklistMenuItemType GetItemType() const;
   virtual std::string GetLabel() const;
+  virtual std::string GetPlainTextLabel() const;
   virtual bool GetEnabled() const;
   virtual bool GetActive() const;
   virtual bool GetVisible() const;
