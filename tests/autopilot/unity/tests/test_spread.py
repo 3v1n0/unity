@@ -12,7 +12,6 @@ from autopilot.display import Display
 from autopilot.matchers import Eventually
 from testtools.matchers import Equals, NotEquals
 from time import sleep
-from unity.emulators.icons import BFBLauncherIcon
 
 from unity.tests import UnityTestCase
 
@@ -76,7 +75,7 @@ class SpreadTests(UnityTestCase):
 
     def assertLauncherIconsDesaturated(self, also_active=True):
         for icon in self.unity.launcher.model.get_launcher_icons():
-            if isinstance(icon, BFBLauncherIcon) or (not also_active and icon.active):
+            if not also_active and icon.active:
                 self.assertFalse(icon.monitors_desaturated[self.monitor])
             else:
                 self.assertTrue(icon.monitors_desaturated[self.monitor])
