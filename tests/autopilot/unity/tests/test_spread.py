@@ -203,6 +203,13 @@ class SpreadTests(UnityTestCase):
         self.unity.window_manager.terminate_spread()
         self.assertThat(self.unity.panels.get_active_panel().in_overlay_mode, Eventually(Equals(False)))
 
+    def test_panel_close_window_button_terminates_spread(self):
+        """Test that the panel close window button terminates the spread"""
+        self.start_test_application_windows("Calculator", 1)
+        self.initiate_spread_for_screen()
+        self.unity.panels.get_active_panel().window_buttons.close.mouse_click();
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(False)))
+
     def test_spread_filter(self):
         """Test spread filter"""
         cal_wins = self.start_test_application_windows("Calculator", 2)
