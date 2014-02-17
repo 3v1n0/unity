@@ -49,6 +49,7 @@ struct TestPanelMenuView : public testing::Test
     using PanelMenuView::GetCurrentTitle;
     using PanelMenuView::window_buttons_;
     using PanelMenuView::titlebar_grab_area_;
+    using PanelMenuView::we_control_active_;
   };
 
   nux::ObjectPtr<nux::BaseWindow> AddPanelToWindow(int monitor)
@@ -90,8 +91,7 @@ TEST_F(TestPanelMenuView, Escaping)
   ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED, glib::Variant(escapedText));
   Utils::WaitUntilMSec([this, &escapedText] {return menu_view.GetCurrentTitle() == escapedText;});
 
-  WM->SetScaleActive(true);
-  WM->SetScaleActiveForGroup(true);
+  menu_view.we_control_active_ = true;
   ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV);
   Utils::WaitUntilMSec([this] {return menu_view.GetCurrentTitle() == "<>'";});
 }
