@@ -2816,7 +2816,8 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
-  if (uScreen->sScreen->getSelectedWindow() == window->id())
+  if (WindowManager::Default().IsScaleActive() &&
+      uScreen->sScreen->getSelectedWindow() == window->id())
   {
     nux::Geometry const& scaled_geo = GetScaledGeometry();
     paintInnerGlow(scaled_geo, matrix, attrib, mask);
