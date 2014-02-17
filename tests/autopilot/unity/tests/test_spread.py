@@ -56,10 +56,14 @@ class SpreadTests(UnityTestCase):
         self.launcher.click_launcher_icon(icon, move_mouse_after=False)
         self.assertThat(self.unity.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
-    def assertWindowIsNotScaled(self, window):
-        """Assert that a window is not scaled"""
-        refresh_fn = lambda: window.id in [w.id for w in self.unity.screen.scaled_windows]
-        self.assertThat(refresh_fn, Eventually(Equals(False)))
+    def get_spread_filter(self):
+        self.assertThat(lambda: self.unity.screen.spread_filter, Eventually(NotEquals(None)))
+        return self.unity.screen.spread_filter
+
+    def assertWindowIsScaledEquals(self, xid, scaled):
+        """Assert weather a window is scaled"""
+        refresh_fn = lambda: xid in [w.xid for w in self.unity.screen.scaled_windows]
+        self.assertThat(refresh_fn, Eventually(Equals(scaled)))
 
     def assertWindowIsClosed(self, xid):
         """Assert that a window is not in the list of the open windows"""
@@ -119,7 +123,7 @@ class SpreadTests(UnityTestCase):
         sleep(.5)
         self.mouse.click(button=2)
 
-        self.assertWindowIsNotScaled(target_win)
+        self.assertWindowIsScaledEquals(target_xid, False)
         self.assertWindowIsClosed(target_xid)
 
     def test_scaled_window_closes_on_close_button_click(self):
@@ -135,7 +139,7 @@ class SpreadTests(UnityTestCase):
         sleep(.5)
         self.mouse.click()
 
-        self.assertWindowIsNotScaled(target_win)
+        self.assertWindowIsScaledEquals(target_xid, False)
         self.assertWindowIsClosed(target_xid)
 
     def test_spread_desaturate_launcher_icons(self):
@@ -191,3 +195,26 @@ class SpreadTests(UnityTestCase):
 
         self.initiate_spread_for_screen()
         self.assertThat(icon.get_tooltip().active, Eventually(Equals(False)))
+
+    def test_spread_filter(self):
+        """Test spread filter"""
+        cal_wins = self.start_test_application_windows("Calculator", 2)
+        char_wins = self.start_test_application_windows("Character Map", 2)
+        self.initiate_spread_for_screen()
+        spread_filter = self.get_spread_filter()
+        self.assertThat(spread_filter.visible, Eventually(Equals(False)))
+
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.keyboard.type(cal_wins[0].title)
+        self.assertThat(spread_filter.visible, Eventually(Equals(True)))
+        self.assertThat(spread_filter.search_bar.search_string, Eventually(Equals(cal_wins[0].title)))
+
+        for w in cal_wins + char_wins:
+            self.assertWindowIsScaledEquals(w.x_id, (w in cal_wins))
+
+        self.keyboard.press_and_release("Escape")
+        self.assertThat(spread_filter.visible, Eventually(Equals(False)))
+        self.assertThat(spread_filter.search_bar.search_string, Eventually(Equals("")))
+
+        for w in cal_wins + char_wins:
+            self.assertWindowIsScaledEquals(w.x_id, True)
