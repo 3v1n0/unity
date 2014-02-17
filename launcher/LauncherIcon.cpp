@@ -520,9 +520,8 @@ void LauncherIcon::RecvMouseEnter(int monitor)
   _last_monitor = monitor;
 
   // FIXME We need to look at why we need to set the last_monitor to -1 when it leaves.
-  // As it would be nice to not have to re-create the tooltip/quicklist everytime now :(
+  // As it would be nice to not have to re-create the tooltip everytime now :(
   LoadTooltip();
-  LoadQuicklist();
 }
 
 void LauncherIcon::RecvMouseLeave(int monitor)
