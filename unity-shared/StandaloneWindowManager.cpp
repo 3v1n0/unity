@@ -603,17 +603,30 @@ void StandaloneWindowManager::ResetStatus()
 
 void StandaloneWindowManager::SetScaleActiveForGroup(bool scale_active_for_group)
 {
+  if (scale_active_for_group_ == scale_active_for_group)
+    return;
+
+  scale_active_ = scale_active_for_group;
   scale_active_for_group_ = scale_active_for_group;
+  scale_active_ ? initiate_spread.emit() : terminate_spread.emit();
 }
 
 void StandaloneWindowManager::SetScaleActive(bool scale_active)
 {
+  if (scale_active_ == scale_active)
+    return;
+
   scale_active_ = scale_active;
+  scale_active_ ? initiate_spread.emit() : terminate_spread.emit();
 }
 
 void StandaloneWindowManager::SetExpoActive(bool expo_active)
 {
+  if (expo_state_ == expo_active)
+    return;
+
   expo_state_ = expo_active;
+  expo_state_ ? initiate_expo.emit() : terminate_expo.emit();
 }
 
 void StandaloneWindowManager::SetIsAnyWindowMoving(bool is_any_window_moving)
