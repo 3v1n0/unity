@@ -167,6 +167,12 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
     case ButtonRelease:
       if (HandleFrameEvent(event))
         return true;
+    case FocusOut:
+      if (event->xfocus.mode == NotifyGrab && !last_mouse_owner_.expired())
+      {
+        last_mouse_owner_.lock()->UngrabPointer();
+        last_mouse_owner_.reset();
+      }
       break;
   }
 
@@ -252,7 +258,7 @@ bool Manager::Impl::HandleFrameEvent(XEvent* event)
   {
     case MotionNotify:
     {
-      input_mixer->MotionEvent(CompPoint(event->xmotion.x_root, event->xmotion.y_root));
+      input_mixer->MotionEvent(CompPoint(event->xmotion.x_root, event->xmotion.y_root), event->xmotion.time);
       break;
     }
     case EnterNotify:
@@ -267,14 +273,14 @@ bool Manager::Impl::HandleFrameEvent(XEvent* event)
     }
     case ButtonPress:
     {
-      input_mixer->ButtonDownEvent(CompPoint(event->xbutton.x_root, event->xbutton.y_root), event->xbutton.button);
+      input_mixer->ButtonDownEvent(CompPoint(event->xbutton.x_root, event->xbutton.y_root), event->xbutton.button, event->xbutton.time);
       if (input_mixer->GetMouseOwner())
         last_mouse_owner_ = input_mixer;
       break;
     }
     case ButtonRelease:
     {
-      input_mixer->ButtonUpEvent(CompPoint(event->xbutton.x_root, event->xbutton.y_root), event->xbutton.button);
+      input_mixer->ButtonUpEvent(CompPoint(event->xbutton.x_root, event->xbutton.y_root), event->xbutton.button, event->xbutton.time);
       last_mouse_owner_.reset();
       break;
     }

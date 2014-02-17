@@ -21,6 +21,7 @@
 #include "DashView.h"
 #include "DashViewPrivate.h"
 #include "FilterExpanderLabel.h"
+#include "MultiMonitor.h"
 
 #include <math.h>
 
@@ -1435,6 +1436,7 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
 {
   dash::Style& style = dash::Style::Instance();
   int num_rows = 1; // The search bar
+  std::vector<bool> button_on_monitor;
 
   if (active_scope_view_.IsValid())
     num_rows += active_scope_view_->GetNumRows();
@@ -1448,6 +1450,9 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
   else if (Settings::Instance().form_factor() == FormFactor::TV)
     form_factor = "tv";
 
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    button_on_monitor.push_back(overlay_window_buttons_->IsVisibleOnMonitor(i));
+
   introspection.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height))
                .add("num_rows", num_rows)
                .add("form_factor", form_factor)
@@ -1456,7 +1461,7 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
                .add("preview_displaying", preview_displaying_)
                .add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_)
                .add("dash_maximized", style.always_maximised())
-               .add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
+               .add("overlay_window_buttons_shown", glib::Variant::FromVector(button_on_monitor));
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)

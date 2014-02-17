@@ -84,9 +84,9 @@ protected:
   void RequestRelayout();
 
   friend class InputMixer;
-  virtual void MotionEvent(CompPoint const&) {}
-  virtual void ButtonDownEvent(CompPoint const&, unsigned button) {}
-  virtual void ButtonUpEvent(CompPoint const&, unsigned button) {}
+  virtual void MotionEvent(CompPoint const&, Time) {}
+  virtual void ButtonDownEvent(CompPoint const&, unsigned button, Time) {}
+  virtual void ButtonUpEvent(CompPoint const&, unsigned button, Time) {}
 
   std::string GetName() const { return "Item"; }
   void AddProperties(debug::IntrospectionData&);

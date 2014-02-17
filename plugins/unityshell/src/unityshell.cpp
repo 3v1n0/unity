@@ -25,8 +25,9 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
-#include <UnityCore/ScopeProxyInterface.h>
+#include <UnityCore/DBusIndicators.h>
 #include <UnityCore/GnomeSessionManager.h>
+#include <UnityCore/ScopeProxyInterface.h>
 
 #include "CompizUtils.h"
 #include "BaseWindowRaiserImp.h"
@@ -50,6 +51,7 @@
 #include "launcher/XdndManagerImp.h"
 #include "launcher/XdndStartStopNotifierImp.h"
 #include "CompizShortcutModeller.h"
+#include "GnomeKeyGrabber.h"
 
 #include "decorations/DecorationsDataPool.h"
 #include "decorations/DecorationsManager.h"
@@ -122,7 +124,7 @@ inline nux::Geometry NuxGeometryFromCompRect(CompRect const& rect)
   return nux::Geometry(rect.x(), rect.y(), rect.width(), rect.height());
 }
 
-inline nux::Color NuxColorFromCompizColor(unsigned short * color)
+inline nux::Color NuxColorFromCompizColor(unsigned short* color)
 {
   return nux::Color(color[0]/65535.0f, color[1]/65535.0f, color[2]/65535.0f, color[3]/65535.0f);
 }
@@ -147,6 +149,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
   , deco_manager_(std::make_shared<decoration::Manager>())
   , debugger_(this)
   , needsRelayout(false)
@@ -298,6 +301,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
 
+     optionSetShowMenuBarInitiate(boost::bind(&UnityScreen::showMenuBarInitiate, this, _1, _2, _3));
+     optionSetShowMenuBarTerminate(boost::bind(&UnityScreen::showMenuBarTerminate, this, _1, _2, _3));
      optionSetLockScreenInitiate(boost::bind(&UnityScreen::LockScreenInitiate, this, _1, _2, _3));
      optionSetOverrideDecorationThemeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShadowXOffsetNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1894,8 +1899,11 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
-  if (switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
+  if ((event->type == MotionNotify || event->type == ButtonPress || event->type == ButtonRelease) &&
+      switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
+  {
     skip_other_plugins = true;
+  }
 
   if (!skip_other_plugins &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
@@ -1930,6 +1938,32 @@ void UnityScreen::handleCompizEvent(const char* plugin,
   }
 
   screen->handleCompizEvent(plugin, event, option);
+}
+
+bool UnityScreen::showMenuBarInitiate(CompAction* action,
+                                      CompAction::State state,
+                                      CompOption::Vector& options)
+{
+  if (state & CompAction::StateInitKey)
+  {
+    action->setState(action->state() | CompAction::StateTermKey);
+    menus_->show_menus = true;
+  }
+
+  return false;
+}
+
+bool UnityScreen::showMenuBarTerminate(CompAction* action,
+                                       CompAction::State state,
+                                       CompOption::Vector& options)
+{
+  if (state & CompAction::StateTermKey)
+  {
+    action->setState(action->state() & ~CompAction::StateTermKey);
+    menus_->show_menus = false;
+  }
+
+  return false;
 }
 
 bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
@@ -2035,7 +2069,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
    * the menus entries after that a menu has been shown and hidden via the
    * keyboard and the Alt key is still pressed */
   action->setState(action->state() | CompAction::StateTermKey);
-  panel_controller_->FirstMenuShow();
+  menus_->open_first.emit();
 
   return true;
 }
@@ -3326,15 +3360,19 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       panel_controller_->SetOpacityMaximizedToggle(optionGetPanelOpacityMaximizedToggle());
       break;
     case UnityshellOptions::MenusFadein:
+      menus_->fadein = optionGetMenusFadein();
+      break;
     case UnityshellOptions::MenusFadeout:
+      menus_->fadeout = optionGetMenusFadeout();
+      break;
     case UnityshellOptions::MenusDiscoveryFadein:
+      menus_->discovery_fadein = optionGetMenusDiscoveryFadein();
+      break;
     case UnityshellOptions::MenusDiscoveryFadeout:
+      menus_->discovery_fadeout = optionGetMenusDiscoveryFadeout();
+      break;
     case UnityshellOptions::MenusDiscoveryDuration:
-      panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
-                                            optionGetMenusFadeout(),
-                                            optionGetMenusDiscoveryDuration(),
-                                            optionGetMenusDiscoveryFadein(),
-                                            optionGetMenusDiscoveryFadeout());
+      menus_->discovery = optionGetMenusDiscoveryDuration();
       break;
     case UnityshellOptions::LauncherOpacity:
       launcher_options->background_alpha = optionGetLauncherOpacity();
@@ -3527,13 +3565,8 @@ void UnityScreen::initLauncher()
 
   /* Setup panel */
   timer.Reset();
-  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers);
+  panel_controller_ = std::make_shared<panel::Controller>(menus_, edge_barriers);
   AddChild(panel_controller_.get());
-  panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
-                                        optionGetMenusFadeout(),
-                                        optionGetMenusDiscoveryDuration(),
-                                        optionGetMenusDiscoveryFadein(),
-                                        optionGetMenusDiscoveryFadeout());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
@@ -3611,17 +3644,21 @@ void UnityScreen::InitGesturesSupport()
   gestures_sub_windows_->Activate();
 }
 
+CompAction::Vector& UnityScreen::getActions()
+{
+  return menus_->KeyGrabber()->GetActions();
+}
+
 /* Window init */
 
 namespace
 {
-bool WindowHasInconsistentShapeRects (Display *d,
-                                      Window  w)
+bool WindowHasInconsistentShapeRects(Display *d, Window  w)
 {
   int n;
   Atom *atoms = XListProperties(d, w, &n);
-  Atom unity_shape_rects_atom = XInternAtom (d, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
   bool has_inconsistent_shape = false;
+  static Atom unity_shape_rects_atom = XInternAtom(d, "_UNITY_SAVED_WINDOW_SHAPE", False);
 
   for (int i = 0; i < n; ++i)
     if (atoms[i] == unity_shape_rects_atom)

@@ -24,7 +24,9 @@
 #include <Nux/Nux.h>
 
 #include "launcher/EdgeBarrierController.h"
+#include "unity-shared/MenuManager.h"
 #include "unity-shared/Introspectable.h"
+
 namespace unity
 {
 namespace panel
@@ -37,11 +39,8 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
   typedef std::vector<nux::ObjectPtr<PanelView>> PanelVector;
 
-  Controller(ui::EdgeBarrierController::Ptr const& barrier_controller);
+  Controller(menu::Manager::Ptr const&, ui::EdgeBarrierController::Ptr const&);
   ~Controller();
-
-  void FirstMenuShow();
-  void QueueRedraw();
 
   std::vector<Window> const& GetTrayXids() const;
   PanelVector& panels() const;
@@ -52,7 +51,6 @@ public:
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
-  void SetMenuShowTimings(int fadein, int fadeout, int discovery, int discovery_fadein, int discovery_fadeout);
 
   float opacity() const;
 
@@ -66,7 +64,7 @@ private:
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 
   class Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

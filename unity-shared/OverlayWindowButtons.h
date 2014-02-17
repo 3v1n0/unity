@@ -40,6 +40,8 @@ public:
   nux::Area* FindAreaUnderMouse(nux::Point const& mouse_position,
                                 nux::NuxEventType event_type);
 
+  bool IsVisibleOnMonitor(unsigned int monitor) const;
+
 protected:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
 

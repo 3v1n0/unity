@@ -1038,6 +1038,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
     glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
     dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, bold_app_name.c_str());
+    dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_ACCESSIBLE_DESC, app_name.Str().c_str());
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
     dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, TRUE);
 

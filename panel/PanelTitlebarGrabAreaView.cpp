@@ -91,11 +91,7 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
 {
   mouse_down_button_ = nux::GetEventButton(button_flags);
 
-  if (mouse_down_button_ == 2)
-  {
-    lower_request.emit(x, y);
-  }
-  else if (mouse_down_button_ == 1)
+  if (mouse_down_button_ == 1)
   {
     mouse_down_point_.x = x;
     mouse_down_point_.y = y;
@@ -113,6 +109,14 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
       mouse_down_timer_.reset();
       return false;
     });
+  }
+  else if (mouse_down_button_ == 2)
+  {
+    lower_request.emit(x, y);
+  }
+  else if (mouse_down_button_ == 3)
+  {
+    menu_request.emit(x, y);
   }
 }
 
