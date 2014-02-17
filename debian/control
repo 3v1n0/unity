@@ -79,6 +79,7 @@ Depends: ${shlibs:Depends},
          bamfdaemon,
          libxfixes3 (>= 1:5.0.1-1),
          libxi6 (>= 2:1.7.1.901),
+	 unity-scope-home,
 Provides: indicator-renderer
 Recommends: unity-control-center,
             ${unity-default-masterscopes}
