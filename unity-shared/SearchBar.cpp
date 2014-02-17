@@ -33,7 +33,7 @@
 
 namespace
 {
-const float kExpandDefaultIconOpacity = 1.0f;
+const float DEFAULT_ICON_OPACITY = 1.0f;
 const int LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
 
@@ -199,7 +199,7 @@ void SearchBar::Init()
     expand_icon_ = new IconTexture(arrow,
                                    arrow->GetWidth(),
                                    arrow->GetHeight());
-    expand_icon_->SetOpacity(kExpandDefaultIconOpacity);
+    expand_icon_->SetOpacity(DEFAULT_ICON_OPACITY);
     expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
     expand_icon_->SetVisible(false);
 
@@ -428,6 +428,9 @@ void SearchBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_dra
     nux::GetPainter().PushPaintLayerStack();      
   }
 
+  if (!IsFullRedraw())
+    graphics::ClearGeometry(pango_entry_->GetGeometry());
+
   layout_->ProcessDraw(graphics_engine, force_draw);
 
   if (IsFullRedraw())
@@ -466,8 +469,7 @@ void SearchBar::SetSearchFinished()
 {
   start_spinner_timeout_.reset();
 
-  bool is_empty = pango_entry_->im_active() ?
-    false : pango_entry_->GetText() == "";
+  bool is_empty = pango_entry_->im_active() ? false : pango_entry_->GetText().empty();
   spinner_->SetState(is_empty ? STATE_READY : STATE_CLEAR);
 }
 
