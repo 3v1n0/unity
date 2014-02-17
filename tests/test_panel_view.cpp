@@ -52,6 +52,11 @@ public:
   {}
 };
 
+TEST_F(TestPanelView, Construction)
+{
+  EXPECT_FALSE(panel_view_->InOverlayMode());
+}
+
 TEST_F(TestPanelView, StoredDashWidth)
 {
   auto check_function = [this] (int value) {
@@ -83,6 +88,55 @@ TEST_F(TestPanelView, HandleBarrierEvent)
   WM->SetIsAnyWindowMoving(true);
   EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier.get(), event),
             ui::EdgeBarrierSubscriber::Result::IGNORED);
+}
+
+TEST_F(TestPanelView, InOverlayModeDash)
+{
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, 0, 10, 20);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
+  Utils::WaitUntil([this] {return panel_view_->InOverlayMode();});
+}
+
+TEST_F(TestPanelView, InOverlayModeSpread)
+{
+  WM->SetScaleActive(true);
+  EXPECT_TRUE(panel_view_->InOverlayMode());
+}
+
+TEST_F(TestPanelView, InOverlayModeSpreadThenDash)
+{
+  WM->SetScaleActive(true);
+  ASSERT_TRUE(panel_view_->InOverlayMode());
+
+  glib::Variant info(g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, 0, 10, 20));
+  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
+  Utils::WaitPendingEvents(100);
+  ASSERT_TRUE(panel_view_->InOverlayMode());
+
+  WM->SetScaleActive(false);
+  EXPECT_TRUE(panel_view_->InOverlayMode());
+
+  ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
+  Utils::WaitUntil([this] {return !panel_view_->InOverlayMode();});
+  EXPECT_FALSE(panel_view_->InOverlayMode());
+}
+
+TEST_F(TestPanelView, InOverlayModeDashThenSpread)
+{
+  glib::Variant info(g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, 0, 10, 20));
+  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
+  Utils::WaitUntil([this] {return panel_view_->InOverlayMode();});
+  ASSERT_TRUE(panel_view_->InOverlayMode());
+
+  WM->SetScaleActive(true);
+  ASSERT_TRUE(panel_view_->InOverlayMode());
+
+  ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
+  Utils::WaitPendingEvents(100);
+  EXPECT_TRUE(panel_view_->InOverlayMode());
+
+  WM->SetScaleActive(false);
+  EXPECT_FALSE(panel_view_->InOverlayMode());
 }
 
 }

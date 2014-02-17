@@ -244,6 +244,7 @@ void PanelView::OnOverlayShown(GVariant* data)
   {
     overlay_is_open_ = true;
     active_overlay_ = overlay_identity.Str();
+    stored_dash_width_ = width;
     EnableOverlayMode(true);
   }
 }
