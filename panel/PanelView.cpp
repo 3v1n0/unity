@@ -104,7 +104,7 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
 
   SetCompositionLayout(layout_);
 
-  tray_ = new PanelTray();
+  tray_ = new PanelTray(monitor_);
   layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   AddChild(tray_);
 

@@ -36,11 +36,12 @@ const std::array<std::string, 2> WHITELIST {{ "JavaEmbeddedFrame", "Wine" }};
 namespace unity
 {
 
-PanelTray::PanelTray()
+PanelTray::PanelTray(int monitor)
   : View(NUX_TRACKER_LOCATION)
   , window_(gtk_window_new(GTK_WINDOW_TOPLEVEL))
+  , monitor_(monitor)
 {
-  int panel_height = panel::Style::Instance().PanelHeight();
+  int panel_height = panel::Style::Instance().PanelHeight(monitor_);
 
   auto gtkwindow = glib::object_cast<GtkWindow>(window_);
   gtk_window_set_type_hint(gtkwindow, GDK_WINDOW_TYPE_HINT_DOCK);
@@ -73,7 +74,7 @@ PanelTray::PanelTray()
   }
 
   unity::Settings::Instance().dpi_changed.connect([this] {
-    int height = panel::Style::Instance().PanelHeight(0);
+    int height = panel::Style::Instance().PanelHeight(monitor_);
     SetMinMaxSize(1, height);
   });
 
@@ -119,7 +120,7 @@ void PanelTray::Sync()
 {
   if (tray_)
   {
-    SetMinMaxSize(WidthOfTray() + (PADDING * 2), panel::Style::Instance().PanelHeight());
+    SetMinMaxSize(WidthOfTray() + (PADDING * 2), panel::Style::Instance().PanelHeight(monitor_));
     QueueRelayout();
     QueueDraw();
 
@@ -182,7 +183,7 @@ void PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* removed)
 bool PanelTray::IdleSync()
 {
   int width = WidthOfTray();
-  gtk_window_resize(GTK_WINDOW(window_.RawPtr()), width, panel::Style::Instance().PanelHeight());
+  gtk_window_resize(GTK_WINDOW(window_.RawPtr()), width, panel::Style::Instance().PanelHeight(monitor_));
   Sync();
 
   return false;

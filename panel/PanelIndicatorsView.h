@@ -75,8 +75,6 @@ public:
   sigc::signal<void, PanelIndicatorEntryView*> entry_added;
   sigc::signal<void, PanelIndicatorEntryView*> entry_removed;
 
-  void SetAllEntrysMonitor(int monitor);
-
 protected:
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);

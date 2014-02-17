@@ -609,7 +609,9 @@ void UnityScreen::FillShadowRectForOutput(CompRect& shadowRect, CompOutput const
   if (_shadow_texture.empty ())
     return;
 
-  float panel_h = static_cast<float>(panel_style_.PanelHeight());
+  nux::Geometry const& geo = {output.x(), output.y(), output.width(), output.height()};
+  int monitor = PluginAdapter::Default().MonitorGeometryIn(geo);
+  float panel_h = static_cast<float>(panel_style_.PanelHeight(monitor));
   float shadowX = output.x();
   float shadowY = output.y() + panel_h;
   float shadowWidth = output.width();

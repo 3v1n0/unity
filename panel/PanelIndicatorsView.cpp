@@ -301,15 +301,6 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   }
 }
 
-void PanelIndicatorsView::SetAllEntrysMonitor(int monitor)
-{
-  for (auto area : layout_->GetChildren())
-  {
-    auto en = static_cast<PanelIndicatorEntryView*>(area);
-    en->SetMonitor(monitor);
-  }
-}
-
 PanelIndicatorEntryView *PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, int padding, IndicatorEntryPosition pos, IndicatorEntryType type)
 {
   auto view = new PanelIndicatorEntryView(entry, padding, type);

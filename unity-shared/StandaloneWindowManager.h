@@ -71,6 +71,7 @@ public:
   virtual Window GetActiveWindow() const;
   std::vector<Window> GetWindowsInStackingOrder() const override;
 
+  virtual int  MonitorGeometryIn(nux::Geometry const& geo) const override;
   virtual bool IsTopWindowFullscreenOnMonitorWithMouse() const override;
 
   virtual bool IsWindowMaximized(Window window_id) const;
