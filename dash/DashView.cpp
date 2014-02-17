@@ -21,6 +21,7 @@
 #include "DashView.h"
 #include "DashViewPrivate.h"
 #include "FilterExpanderLabel.h"
+#include "MultiMonitor.h"
 
 #include <math.h>
 
@@ -518,12 +519,13 @@ void DashView::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
   panel::Style &panel_style = panel::Style::Instance();
+  int panel_height = panel_style.PanelHeight();
 
   layout_ = new nux::VLayout();
   layout_->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
   layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
   SetLayout(layout_);
-  layout_->AddLayout(new nux::SpaceLayout(0, 0, panel_style.PanelHeight(), panel_style.PanelHeight()), 0);
+  layout_->AddLayout(new nux::SpaceLayout(0, 0, panel_height, panel_height), 0);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
@@ -610,6 +612,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
   dash::Style& style = dash::Style::Instance();
   panel::Style &panel_style = panel::Style::Instance();
+  int panel_height = panel_style.PanelHeight();
 
   int width = 0, height = 0;
   int tile_width = style.GetTileWidth();
@@ -634,14 +637,14 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   // width/height shouldn't be bigger than the geo available.
   width = std::min(width, for_geo.width); // launcher width is taken into account in for_geo.
-  height = std::min(height, for_geo.height - panel_style.PanelHeight()); // panel height is not taken into account in for_geo.
+  height = std::min(height, for_geo.height - panel_height); // panel height is not taken into account in for_geo.
 
   if (style.always_maximised)
   {
     width = std::max(0, for_geo.width);
-    height = std::max(0, for_geo.height - panel_style.PanelHeight());
+    height = std::max(0, for_geo.height - panel_height);
   }
-  return nux::Geometry(0, panel_style.PanelHeight(), width, height);
+  return nux::Geometry(0, panel_height, width, height);
 }
 
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -649,9 +652,10 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   panel::Style &panel_style = panel::Style::Instance();
   nux::Geometry const& renderer_geo_abs(GetRenderAbsoluteGeometry());
   nux::Geometry renderer_geo(GetGeometry());
+  int panel_height = panel_style.PanelHeight();
 
-  renderer_geo.y += panel_style.PanelHeight();
-  renderer_geo.height += panel_style.PanelHeight();
+  renderer_geo.y += panel_height;
+  renderer_geo.height += panel_height;
 
   renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, false);
 }
@@ -659,14 +663,15 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   panel::Style& panel_style = panel::Style::Instance();
+  int panel_height = panel_style.PanelHeight();
 
   nux::Geometry renderer_geo_abs(GetAbsoluteGeometry());
-  renderer_geo_abs.y += panel_style.PanelHeight();
-  renderer_geo_abs.height -= panel_style.PanelHeight();
+  renderer_geo_abs.y += panel_height;
+  renderer_geo_abs.height -= panel_height;
 
   nux::Geometry renderer_geo(GetGeometry());
-  renderer_geo.y += panel_style.PanelHeight();
-  renderer_geo.height += panel_style.PanelHeight();
+  renderer_geo.y += panel_height;
+  renderer_geo.height += panel_height;
 
   renderer_.DrawInner(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo);
 
@@ -1431,6 +1436,7 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
 {
   dash::Style& style = dash::Style::Instance();
   int num_rows = 1; // The search bar
+  std::vector<bool> button_on_monitor;
 
   if (active_scope_view_.IsValid())
     num_rows += active_scope_view_->GetNumRows();
@@ -1444,6 +1450,9 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
   else if (Settings::Instance().form_factor() == FormFactor::TV)
     form_factor = "tv";
 
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    button_on_monitor.push_back(overlay_window_buttons_->IsVisibleOnMonitor(i));
+
   introspection.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height))
                .add("num_rows", num_rows)
                .add("form_factor", form_factor)
@@ -1452,7 +1461,7 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
                .add("preview_displaying", preview_displaying_)
                .add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_)
                .add("dash_maximized", style.always_maximised())
-               .add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
+               .add("overlay_window_buttons_shown", glib::Variant::FromVector(button_on_monitor));
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
@@ -1684,10 +1693,11 @@ nux::Geometry const& DashView::GetContentGeometry() const
 nux::Geometry DashView::GetRenderAbsoluteGeometry() const
 {
   panel::Style &panel_style = panel::Style::Instance();
+  int panel_height = panel_style.PanelHeight();
 
   nux::Geometry renderer_geo_abs(GetAbsoluteGeometry());
-  renderer_geo_abs.y += panel_style.PanelHeight();
-  renderer_geo_abs.height -= panel_style.PanelHeight();
+  renderer_geo_abs.y += panel_height;
+  renderer_geo_abs.height -= panel_height;
   return renderer_geo_abs;
 }
 

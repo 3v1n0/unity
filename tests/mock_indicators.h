@@ -19,6 +19,7 @@
  */
 
 #include <gmock/gmock.h>
+#include <UnityCore/Indicators.h>
 
 namespace unity
 {
@@ -33,6 +34,7 @@ struct MockIndicators : Indicators
   typedef testing::NiceMock<MockIndicators> Nice;
 
   // Implementing Indicators virtual functions
+  MOCK_METHOD2(SyncGeometries, void(std::string const&, EntryLocationMap const&));
   MOCK_METHOD5(ShowEntriesDropdown, void(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y));
   MOCK_METHOD2(OnEntryScroll, void(std::string const&, int delta));
   MOCK_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned xid, int x, int y, unsigned button));

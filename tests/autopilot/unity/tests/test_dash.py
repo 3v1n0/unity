@@ -799,7 +799,9 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        # wait for "More suggestions" category
+        self.keyboard.type("Software Updater")
+
+        # wait for "Installed" category
         category = self.wait_for_category(scope, _("Installed"))
 
         # wait for some results

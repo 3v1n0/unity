@@ -68,12 +68,12 @@ Tooltip::Tooltip(int monitor) :
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
 
   // getter and setter for the property
-  text.SetSetterFunction([this](std::string newText)
+  text.SetSetterFunction([this](std::string const& newText)
     {
       if(_tooltip_text->GetText() == newText)
         return false;
 
-      _tooltip_text->SetText(newText);
+      _tooltip_text->SetText(newText, true);
       return true;
     }
   );

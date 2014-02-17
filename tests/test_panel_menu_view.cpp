@@ -23,6 +23,7 @@
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "UBusMessages.h"
+#include "mock_menu_manager.h"
 #include "test_standalone_wm.h"
 #include "test_uscreen_mock.h"
 #include "test_utils.h"
@@ -38,6 +39,10 @@ struct TestPanelMenuView : public testing::Test
 {
   struct MockPanelMenuView : public PanelMenuView
   {
+    MockPanelMenuView()
+      : PanelMenuView(std::make_shared<menu::MockManager>())
+    {}
+
     MOCK_METHOD0(QueueDraw, void());
     MOCK_CONST_METHOD1(GetActiveViewName, std::string(bool));
 
@@ -77,20 +82,18 @@ protected:
 TEST_F(TestPanelMenuView, Escaping)
 {
   ON_CALL(menu_view, GetActiveViewName(testing::_)).WillByDefault(Return("<>'"));
-  static const char *escapedText = "Panel d&amp;Inici";
-  EXPECT_TRUE(menu_view.GetCurrentTitle().empty());
+  auto escapedText = "Panel d'Inici";
+  ASSERT_TRUE(menu_view.GetCurrentTitle().empty());
 
   UBusManager ubus;
   ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
-  ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
-                   glib::Variant(escapedText));
-  Utils::WaitUntilMSec([this] {return menu_view.GetCurrentTitle() == escapedText;});
-
+  ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED, glib::Variant(escapedText));
+  Utils::WaitUntilMSec([this, &escapedText] {return menu_view.GetCurrentTitle() == escapedText;});
 
   WM->SetScaleActive(true);
   WM->SetScaleActiveForGroup(true);
   ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV);
-  Utils::WaitUntilMSec([this] {return menu_view.GetCurrentTitle() == "&lt;&gt;&apos;";});
+  Utils::WaitUntilMSec([this] {return menu_view.GetCurrentTitle() == "<>'";});
 }
 
 TEST_F(TestPanelMenuView, QueuesDrawOnButtonsOpacityChange)

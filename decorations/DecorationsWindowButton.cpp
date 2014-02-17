@@ -77,7 +77,7 @@ WidgetState WindowButton::GetCurrentState() const
   }
 }
 
-void WindowButton::ButtonDownEvent(CompPoint const& p, unsigned button)
+void WindowButton::ButtonDownEvent(CompPoint const& p, unsigned button, Time)
 {
   if (!pressed_ && button <= Button3)
   {
@@ -87,7 +87,7 @@ void WindowButton::ButtonDownEvent(CompPoint const& p, unsigned button)
   }
 }
 
-void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button)
+void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button, Time timestamp)
 {
   if (pressed_ && button <= Button3)
   {
@@ -98,7 +98,7 @@ void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button)
     {
       case WindowButtonType::CLOSE:
         if (win_->actions() & CompWindowActionCloseMask)
-          win_->close(screen->getCurrentTime());
+          win_->close(timestamp);
         break;
       case WindowButtonType::MINIMIZE:
         if (win_->actions() & CompWindowActionMinimizeMask)
@@ -142,7 +142,7 @@ void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button)
   was_pressed_ = false;
 }
 
-void WindowButton::MotionEvent(CompPoint const& p)
+void WindowButton::MotionEvent(CompPoint const& p, Time)
 {
   if (pressed_)
   {

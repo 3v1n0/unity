@@ -231,13 +231,15 @@ nux::Geometry Controller::GetIdealWindowGeometry()
   int ideal_monitor = GetIdealMonitor();
   auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(ideal_monitor);
 
+  panel::Style &panel_style = panel::Style::Instance();
+  int panel_height = panel_style.PanelHeight(ideal_monitor);
+
   // We want to cover as much of the screen as possible to grab any mouse events
   // outside of our window
-  panel::Style &panel_style = panel::Style::Instance();
   nux::Geometry geo(monitor_geo.x,
-                    monitor_geo.y + panel_style.PanelHeight(ideal_monitor),
+                    monitor_geo.y + panel_height,
                     monitor_geo.width,
-                    monitor_geo.height - panel_style.PanelHeight(ideal_monitor));
+                    monitor_geo.height - panel_height);
 
   if (IsLockedToLauncher(ideal_monitor))
   {

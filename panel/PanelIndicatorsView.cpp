@@ -296,17 +296,8 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   {
     view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
     entries_.insert({entry_id, view});
-    on_indicator_updated.emit(view);
+    on_indicator_updated.emit();
     entry_added.emit(view);
-  }
-}
-
-void PanelIndicatorsView::SetAllEntrysMonitor(int monitor)
-{
-  for (auto area : layout_->GetChildren())
-  {
-    auto en = static_cast<PanelIndicatorEntryView*>(area);
-    en->SetMonitor(monitor);
   }
 }
 
@@ -327,7 +318,7 @@ void PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
 {
   QueueRelayout();
   QueueDraw();
-  on_indicator_updated.emit(view);
+  on_indicator_updated.emit();
 }
 
 void PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
@@ -343,7 +334,7 @@ void PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
   RemoveChild(view);
   entries_.erase(view->GetEntryID());
   layout_->RemoveChildObject(view);
-  on_indicator_updated.emit(view);
+  on_indicator_updated.emit();
 
   QueueRelayout();
   QueueDraw();

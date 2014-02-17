@@ -46,6 +46,7 @@ public:
   sigc::signal<void, int, int> lower_request;
   sigc::signal<void, int, int> activate_request;
   sigc::signal<void, int, int> restore_request;
+  sigc::signal<void, int, int> menu_request;
   sigc::signal<void, int, int> grab_started;
   sigc::signal<void, int, int> grab_move;
   sigc::signal<void, int, int> grab_end;

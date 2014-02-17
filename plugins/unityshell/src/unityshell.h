@@ -69,6 +69,7 @@
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
 #include "ThumbnailGenerator.h"
+#include "MenuManager.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -106,6 +107,7 @@ class UnityScreen :
   public GLScreenInterface,
   public BaseSwitchScreen,
   public PluginClassHandler <UnityScreen, CompScreen>,
+  public CompAction::Container,
   public UnityshellOptions
 {
 public:
@@ -165,6 +167,8 @@ public:
   void enterShowDesktopMode ();
   void leaveShowDesktopMode (CompWindow *w);
 
+  bool showMenuBarInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showMenuBarTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showPanelFirstMenuKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -224,6 +228,8 @@ public:
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
 
   ui::LayoutWindow::Ptr GetSwitcherDetailLayoutWindow(Window window) const;
+
+  CompAction::Vector& getActions();
 
 protected:
   std::string GetName() const;
@@ -307,6 +313,7 @@ private:
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
 
+  menu::Manager::Ptr menus_;
   std::shared_ptr<decoration::Manager> deco_manager_;
 
   /* These must stay below the window thread, please keep the order */

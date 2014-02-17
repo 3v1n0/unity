@@ -71,7 +71,7 @@ public:
   virtual Window GetActiveWindow() const;
   std::vector<Window> GetWindowsInStackingOrder() const override;
 
-  virtual int MonitorGeometryIn(nux::Geometry const& geo) const override;
+  virtual int  MonitorGeometryIn(nux::Geometry const& geo) const override;
   virtual bool IsTopWindowFullscreenOnMonitorWithMouse() const override;
 
   virtual bool IsWindowMaximized(Window window_id) const;
@@ -92,6 +92,7 @@ public:
   virtual void ShowDesktop();
   virtual bool InShowDesktop() const;
 
+  virtual void ShowActionMenu(Time, Window, unsigned button, nux::Point const&) {}
   virtual void Maximize(Window window_id);
   virtual void Restore(Window window_id);
   virtual void RestoreAt(Window window_id, int x, int y);
@@ -127,6 +128,7 @@ public:
 
   virtual void MoveResizeWindow(Window window_id, nux::Geometry geometry);
   virtual void StartMove(Window window_id, int x, int y);
+  virtual void UnGrabMousePointer(Time, int button, int x, int y) {}
 
   virtual int GetWindowMonitor(Window window_id) const;
   virtual nux::Geometry GetWindowGeometry(Window window_id) const;

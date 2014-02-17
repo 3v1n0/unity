@@ -713,6 +713,11 @@ void PluginAdapter::RestoreAt(Window window_id, int x, int y)
   }
 }
 
+void PluginAdapter::ShowActionMenu(Time timestamp, Window window_id, unsigned button, nux::Point const& p)
+{
+  m_Screen->toolkitAction(Atoms::toolkitActionWindowMenu, timestamp, window_id, button, p.x, p.y);
+}
+
 void PluginAdapter::Minimize(Window window_id)
 {
   CompWindow* window = m_Screen->findWindow(window_id);

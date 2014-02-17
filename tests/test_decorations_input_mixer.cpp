@@ -186,14 +186,15 @@ TEST_F(TestDecorationInputMixer, MotionEvent)
 
   {
   CompPoint point(5, 5);
+  Time timestamp = g_random_int();
   EXPECT_CALL(sig1, MouseOwnerChanged(_)).Times(0);
   EXPECT_CALL(sig2, MouseOwnerChanged(_)).Times(0);
   EXPECT_CALL(sig3, MouseOwnerChanged(true));
-  EXPECT_CALL(*item1, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item2, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item3, MotionEvent(point));
+  EXPECT_CALL(*item1, MotionEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, MotionEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, MotionEvent(point, timestamp));
 
-  mixer.MotionEvent(point);
+  mixer.MotionEvent(point, timestamp);
 
   ASSERT_TRUE(item3->mouse_owner());
   ASSERT_EQ(item3, mixer.GetMouseOwner());
@@ -201,14 +202,15 @@ TEST_F(TestDecorationInputMixer, MotionEvent)
 
   {
   CompPoint point(15, 15);
+  Time timestamp = g_random_int();
   EXPECT_CALL(sig1, MouseOwnerChanged(_)).Times(0);
   EXPECT_CALL(sig2, MouseOwnerChanged(true));
   EXPECT_CALL(sig3, MouseOwnerChanged(false));
-  EXPECT_CALL(*item1, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item2, MotionEvent(point));
-  EXPECT_CALL(*item3, MotionEvent(_)).Times(0);
+  EXPECT_CALL(*item1, MotionEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, MotionEvent(point, timestamp));
+  EXPECT_CALL(*item3, MotionEvent(_, _)).Times(0);
 
-  mixer.MotionEvent(point);
+  mixer.MotionEvent(point, timestamp);
 
   ASSERT_FALSE(item3->mouse_owner());
   ASSERT_TRUE(item2->mouse_owner());
@@ -217,14 +219,15 @@ TEST_F(TestDecorationInputMixer, MotionEvent)
 
   {
   CompPoint point(25, 25);
+  Time timestamp = g_random_int();
   EXPECT_CALL(sig1, MouseOwnerChanged(true));
   EXPECT_CALL(sig2, MouseOwnerChanged(false));
   EXPECT_CALL(sig3, MouseOwnerChanged(_)).Times(0);
-  EXPECT_CALL(*item1, MotionEvent(point));
-  EXPECT_CALL(*item2, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item3, MotionEvent(_)).Times(0);
+  EXPECT_CALL(*item1, MotionEvent(point, timestamp));
+  EXPECT_CALL(*item2, MotionEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, MotionEvent(_, _)).Times(0);
 
-  mixer.MotionEvent(point);
+  mixer.MotionEvent(point, timestamp);
 
   ASSERT_FALSE(item2->mouse_owner());
   ASSERT_TRUE(item1->mouse_owner());
@@ -305,35 +308,38 @@ TEST_F(TestDecorationInputMixer, ButtonDownEvent)
 
   {
   CompPoint point(5, 5);
-  EXPECT_CALL(*item1, ButtonDownEvent(_, _)).Times(0);
-  EXPECT_CALL(*item2, ButtonDownEvent(_, _)).Times(0);
-  EXPECT_CALL(*item3, ButtonDownEvent(point, 1));
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, ButtonDownEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonDownEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonDownEvent(point, 1, timestamp));
 
   mixer.EnterEvent(point);
-  mixer.ButtonDownEvent(point, 1);
-  mixer.ButtonUpEvent(point, 1);
+  mixer.ButtonDownEvent(point, 1, timestamp);
+  mixer.ButtonUpEvent(point, 1, timestamp);
   }
 
   {
   CompPoint point(15, 15);
-  EXPECT_CALL(*item1, ButtonDownEvent(_, _)).Times(0);
-  EXPECT_CALL(*item2, ButtonDownEvent(point, 2));
-  EXPECT_CALL(*item3, ButtonDownEvent(_, _)).Times(0);
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, ButtonDownEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonDownEvent(point, 2, timestamp));
+  EXPECT_CALL(*item3, ButtonDownEvent(_, _, timestamp)).Times(0);
 
   mixer.EnterEvent(point);
-  mixer.ButtonDownEvent(point, 2);
-  mixer.ButtonUpEvent(point, 2);
+  mixer.ButtonDownEvent(point, 2, timestamp);
+  mixer.ButtonUpEvent(point, 2, timestamp);
   }
 
   {
   CompPoint point(25, 25);
-  EXPECT_CALL(*item1, ButtonDownEvent(point, 3));
-  EXPECT_CALL(*item2, ButtonDownEvent(_, _)).Times(0);
-  EXPECT_CALL(*item3, ButtonDownEvent(_, _)).Times(0);
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, ButtonDownEvent(point, 3, timestamp));
+  EXPECT_CALL(*item2, ButtonDownEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonDownEvent(_, _, _)).Times(0);
 
   mixer.EnterEvent(point);
-  mixer.ButtonDownEvent(point, 3);
-  mixer.ButtonUpEvent(point, 3);
+  mixer.ButtonDownEvent(point, 3, timestamp);
+  mixer.ButtonUpEvent(point, 3, timestamp);
   }
 }
 
@@ -350,32 +356,35 @@ TEST_F(TestDecorationInputMixer, ButtonUpEvent)
 
   {
   CompPoint point(5, 5);
-  EXPECT_CALL(*item1, ButtonUpEvent(_, _)).Times(0);
-  EXPECT_CALL(*item2, ButtonUpEvent(_, _)).Times(0);
-  EXPECT_CALL(*item3, ButtonUpEvent(point, 1));
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, ButtonUpEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonUpEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonUpEvent(point, 1, timestamp));
 
   mixer.EnterEvent(point);
-  mixer.ButtonUpEvent(point, 1);
+  mixer.ButtonUpEvent(point, 1, timestamp);
   }
 
   {
   CompPoint point(15, 15);
-  EXPECT_CALL(*item1, ButtonUpEvent(_, _)).Times(0);
-  EXPECT_CALL(*item2, ButtonUpEvent(point, 2));
-  EXPECT_CALL(*item3, ButtonUpEvent(_, _)).Times(0);
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, ButtonUpEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonUpEvent(point, 2, timestamp));
+  EXPECT_CALL(*item3, ButtonUpEvent(_, _, _)).Times(0);
 
   mixer.EnterEvent(point);
-  mixer.ButtonUpEvent(point, 2);
+  mixer.ButtonUpEvent(point, 2, timestamp);
   }
 
   {
   CompPoint point(25, 25);
-  EXPECT_CALL(*item1, ButtonUpEvent(point, 3));
-  EXPECT_CALL(*item2, ButtonUpEvent(_, _)).Times(0);
-  EXPECT_CALL(*item3, ButtonUpEvent(_, _)).Times(0);
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, ButtonUpEvent(point, 3, timestamp));
+  EXPECT_CALL(*item2, ButtonUpEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonUpEvent(_, _, _)).Times(0);
 
   mixer.EnterEvent(point);
-  mixer.ButtonUpEvent(point, 3);
+  mixer.ButtonUpEvent(point, 3, timestamp);
   }
 }
 
@@ -392,39 +401,43 @@ TEST_F(TestDecorationInputMixer, ButtonDownEventGrab)
 
   {
   CompPoint point(5, 5);
-  EXPECT_CALL(*item1, ButtonDownEvent(_, _)).Times(0);
-  EXPECT_CALL(*item2, ButtonDownEvent(_, _)).Times(0);
-  EXPECT_CALL(*item3, ButtonDownEvent(point, 1));
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, ButtonDownEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonDownEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonDownEvent(point, 1, timestamp));
 
   mixer.EnterEvent(point);
-  mixer.ButtonDownEvent(point, 1);
+  mixer.ButtonDownEvent(point, 1, timestamp);
   ASSERT_TRUE(item3->mouse_owner());
   }
 
   {
   CompPoint point(15, 15);
-  EXPECT_CALL(*item1, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item2, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item3, MotionEvent(point));
-  mixer.MotionEvent(point);
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, MotionEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, MotionEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, MotionEvent(point, timestamp));
+  mixer.MotionEvent(point, timestamp);
   ASSERT_TRUE(item3->mouse_owner());
   }
 
   {
   CompPoint point(25, 25);
-  EXPECT_CALL(*item1, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item2, MotionEvent(_)).Times(0);
-  EXPECT_CALL(*item3, MotionEvent(point));
-  mixer.MotionEvent(point);
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, MotionEvent(_, _)).Times(0);
+  EXPECT_CALL(*item2, MotionEvent(_, _)).Times(0);
+  EXPECT_CALL(*item3, MotionEvent(point, timestamp));
+  mixer.MotionEvent(point, timestamp);
   ASSERT_TRUE(item3->mouse_owner());
   }
 
   {
   CompPoint point(15, 15);
-  EXPECT_CALL(*item1, ButtonUpEvent(_, _)).Times(0);
-  EXPECT_CALL(*item2, ButtonUpEvent(_, _)).Times(0);
-  EXPECT_CALL(*item3, ButtonUpEvent(point, 1));
-  mixer.ButtonUpEvent(point, 1);
+  Time timestamp = g_random_int();
+  EXPECT_CALL(*item1, ButtonUpEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item2, ButtonUpEvent(_, _, _)).Times(0);
+  EXPECT_CALL(*item3, ButtonUpEvent(point, 1, timestamp));
+  mixer.ButtonUpEvent(point, 1, timestamp);
 
   EXPECT_FALSE(item3->mouse_owner());
   EXPECT_TRUE(item2->mouse_owner());
@@ -435,7 +448,7 @@ TEST_F(TestDecorationInputMixer, ParentRemovalFromChildrenButtonDown)
 {
   struct BadItem : SimpleItem
   {
-    void ButtonDownEvent(CompPoint const&, unsigned button) { mx_->reset(); }
+    void ButtonDownEvent(CompPoint const&, unsigned button, Time) override { mx_->reset(); }
     InputMixer::Ptr* mx_;
   };
 
@@ -453,8 +466,9 @@ TEST_F(TestDecorationInputMixer, ParentRemovalFromChildrenButtonDown)
 
   ASSERT_FALSE(weak_bad_item.expired());
   CompPoint point(1, 1);
+  Time timestamp = g_random_int();
   mx->EnterEvent(point);
-  mx->ButtonDownEvent(point, 1);
+  mx->ButtonDownEvent(point, 1, timestamp);
 
   EXPECT_TRUE(weak_bad_item.expired());
   EXPECT_TRUE(weak_mixer.expired());
@@ -464,7 +478,7 @@ TEST_F(TestDecorationInputMixer, ParentRemovalFromChildrenButtonUp)
 {
   struct BadItem : SimpleItem
   {
-    void ButtonUpEvent(CompPoint const&, unsigned button) { mx_->reset(); }
+    void ButtonUpEvent(CompPoint const&, unsigned button, Time) override { mx_->reset(); }
     InputMixer::Ptr* mx_;
   };
 
@@ -482,9 +496,10 @@ TEST_F(TestDecorationInputMixer, ParentRemovalFromChildrenButtonUp)
 
   ASSERT_FALSE(weak_bad_item.expired());
   CompPoint point(1, 1);
+  Time timestamp = g_random_int();
   mx->EnterEvent(point);
-  mx->ButtonDownEvent(point, 1);
-  mx->ButtonUpEvent(point, 1);
+  mx->ButtonDownEvent(point, 1, timestamp);
+  mx->ButtonUpEvent(point, 1, timestamp);
 
   EXPECT_TRUE(weak_bad_item.expired());
   EXPECT_TRUE(weak_mixer.expired());

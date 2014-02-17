@@ -39,11 +39,8 @@ const char* window_title = "unity-panel";
 class Controller::Impl
 {
 public:
-  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers);
+  Impl(menu::Manager::Ptr const&, ui::EdgeBarrierController::Ptr const&);
   ~Impl();
-
-  void FirstMenuShow();
-  void QueueRedraw();
 
   // NOTE: nux::Property maybe?
   void SetLauncherWidth(int width);
@@ -51,9 +48,6 @@ public:
   void SetOpacityMaximizedToggle(bool enabled);
 
   float opacity() const;
-
-  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                          int discovery_fadein, int discovery_fadeout);
 
   nux::ObjectPtr<PanelView> CreatePanel(Introspectable *iobj);
   void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
@@ -63,31 +57,21 @@ public:
 
   PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
+  menu::Manager::Ptr indicators_;
   ui::EdgeBarrierController::Ptr edge_barriers_;
   PanelVector panels_;
   std::vector<nux::Geometry> panel_geometries_;
   std::vector<Window> tray_xids_;
   float opacity_;
   bool opacity_maximized_toggle_;
-  int menus_fadein_;
-  int menus_fadeout_;
-  int menus_discovery_;
-  int menus_discovery_fadein_;
-  int menus_discovery_fadeout_;
-  indicator::DBusIndicators::Ptr dbus_indicators_;
 };
 
 
-Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers)
-  : edge_barriers_(edge_barriers)
+Controller::Impl::Impl(menu::Manager::Ptr const& indicators, ui::EdgeBarrierController::Ptr const& edge_barriers)
+  : indicators_(indicators)
+  , edge_barriers_(edge_barriers)
   , opacity_(1.0f)
   , opacity_maximized_toggle_(false)
-  , menus_fadein_(0)
-  , menus_fadeout_(0)
-  , menus_discovery_(0)
-  , menus_discovery_fadein_(0)
-  , menus_discovery_fadeout_(0)
-  , dbus_indicators_(std::make_shared<indicator::DBusIndicators>())
 {}
 
 Controller::Impl::~Impl()
@@ -109,15 +93,6 @@ void Controller::Impl::UpdatePanelGeometries()
   for (auto const& panel : panels_)
   {
     panel_geometries_.push_back(panel->GetAbsoluteGeometry());
-  }
-}
-
-void Controller::Impl::FirstMenuShow()
-{
-  for (auto const& panel: panels_)
-  {
-    if (panel->FirstMenuShow())
-      break;
   }
 }
 
@@ -146,30 +121,6 @@ void Controller::Impl::SetOpacityMaximizedToggle(bool enabled)
   for (auto const& panel: panels_)
   {
     panel->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
-  }
-}
-
-void Controller::Impl::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                          int discovery_fadein, int discovery_fadeout)
-{
-  menus_fadein_ = fadein;
-  menus_fadeout_ = fadeout;
-  menus_discovery_ = discovery;
-  menus_discovery_fadein_ = discovery_fadein;
-  menus_discovery_fadeout_ = discovery_fadeout;
-
-  for (auto const& panel: panels_)
-  {
-    panel->SetMenuShowTimings(fadein, fadeout, discovery,
-                              discovery_fadein, discovery_fadeout);
-  }
-}
-
-void Controller::Impl::QueueRedraw()
-{
-  for (auto const& panel: panels_)
-  {
-    panel->QueueDraw();
   }
 }
 
@@ -239,11 +190,10 @@ nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel(Introspectable *iobj)
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  PanelView* view = new PanelView(panel_window, dbus_indicators_);
+  PanelView* view = new PanelView(panel_window, indicators_);
+  view->SetMaximumHeight(panel::Style::Instance().PanelHeight());
   view->SetOpacity(opacity_);
   view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
-  view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
-                         menus_discovery_fadein_, menus_discovery_fadeout_);
 
   layout->AddView(view, 1);
   layout->SetContentDistribution(nux::MAJOR_POSITION_START);
@@ -279,9 +229,9 @@ float Controller::Impl::opacity() const
   return opacity_;
 }
 
-Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
+Controller::Controller(menu::Manager::Ptr const& menus, ui::EdgeBarrierController::Ptr const& edge_barriers)
   : launcher_width(64)
-  , pimpl(new Impl(edge_barriers))
+  , pimpl(new Impl(menus, edge_barriers))
 {
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
@@ -308,14 +258,7 @@ Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
 }
 
 Controller::~Controller()
-{
-  delete pimpl;
-}
-
-void Controller::FirstMenuShow()
-{
-  pimpl->FirstMenuShow();
-}
+{}
 
 void Controller::SetOpacity(float opacity)
 {
@@ -325,17 +268,6 @@ void Controller::SetOpacity(float opacity)
 void Controller::SetOpacityMaximizedToggle(bool enabled)
 {
   pimpl->SetOpacityMaximizedToggle(enabled);
-}
-
-void Controller::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                                    int discovery_fadein, int discovery_fadeout)
-{
-  pimpl->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
-}
-
-void Controller::QueueRedraw()
-{
-  pimpl->QueueRedraw();
 }
 
 std::vector<Window> const& Controller::GetTrayXids() const

@@ -216,6 +216,7 @@ public:
     glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, bold_volume_name.str().c_str());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_ACCESSIBLE_DESC, volume_->GetName().c_str());
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, true);

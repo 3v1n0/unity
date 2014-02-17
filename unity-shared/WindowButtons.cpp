@@ -43,6 +43,7 @@ WindowButton::WindowButton(panel::WindowButtonType type)
             sigc::mem_fun(this, &WindowButton::EnabledSetter))
   , overlay_mode(false)
   , type_(type)
+  , monitor_(0)
   , cv_(unity::Settings::Instance().em(0))
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
@@ -54,6 +55,7 @@ WindowButton::WindowButton(panel::WindowButtonType type)
 
 void WindowButton::OnMonitorChanged(int monitor)
 {
+  monitor_ = monitor;
   cv_ = unity::Settings::Instance().em(monitor);
 }
 
@@ -140,7 +142,7 @@ void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void WindowButton::UpdateSize()
 {
-  int panel_height = panel::Style::Instance().PanelHeight();
+  int panel_height = panel::Style::Instance().PanelHeight(monitor_);
   nux::BaseTexture* tex;
   tex = (overlay_mode()) ? normal_dash_tex_.GetPointer() : normal_tex_.GetPointer();
   int width = 0;

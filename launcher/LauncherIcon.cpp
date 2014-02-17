@@ -87,7 +87,6 @@ LauncherIcon::LauncherIcon(IconType type)
 {
   tooltip_enabled = true;
   tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
-  tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
 
   position = Position::FLOATING;
   removed = false;
@@ -458,23 +457,6 @@ BaseTexturePtr LauncherIcon::TextureFromPath(std::string const& icon_name, int s
   }
 
   return BaseTexturePtr();
-}
-
-bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
-{
-  auto const& escaped = glib::String(g_markup_escape_text(value.c_str(), -1)).Str();
-
-  if (escaped != target)
-  {
-    target = escaped;
-
-    if (_tooltip)
-      _tooltip->text = target;
-
-    return true;
-  }
-
-  return false;
 }
 
 void LauncherIcon::OnTooltipEnabledChanged(bool value)
