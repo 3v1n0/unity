@@ -78,11 +78,11 @@ Filter::Filter()
   });
 
   search_bar_->live_search_reached.connect([this] (std::string const& search) {
-    if (search.empty())
-      return;
-
-    text.changed.emit(search);
-    search_bar_->SetSearchFinished();
+    if (!search.empty())
+    {
+      text.changed.emit(search);
+      search_bar_->SetSearchFinished();
+    }
   });
 }
 
