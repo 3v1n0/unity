@@ -47,9 +47,13 @@ struct TestPanelMenuView : public testing::Test
     MOCK_CONST_METHOD1(GetActiveViewName, std::string(bool));
 
     using PanelMenuView::GetCurrentTitle;
+    using PanelMenuView::ShouldDrawButtons;
+    using PanelMenuView::ShouldDrawMenus;
+    using PanelMenuView::FindAreaUnderMouse;
     using PanelMenuView::window_buttons_;
     using PanelMenuView::titlebar_grab_area_;
     using PanelMenuView::we_control_active_;
+    using PanelMenuView::spread_showing_;
   };
 
   nux::ObjectPtr<nux::BaseWindow> AddPanelToWindow(int monitor)
@@ -80,6 +84,13 @@ protected:
   testing::NiceMock<MockPanelMenuView> menu_view;
 };
 
+TEST_F(TestPanelMenuView, Construction)
+{
+  EXPECT_FALSE(menu_view.spread_showing_);
+  EXPECT_FALSE(menu_view.GetControlsActive());
+  ASSERT_TRUE(menu_view.window_buttons_.IsValid());
+}
+
 TEST_F(TestPanelMenuView, Escaping)
 {
   ON_CALL(menu_view, GetActiveViewName(testing::_)).WillByDefault(Return("<>'"));
@@ -100,6 +111,25 @@ TEST_F(TestPanelMenuView, QueuesDrawOnButtonsOpacityChange)
 {
   EXPECT_CALL(menu_view, QueueDraw());
   menu_view.window_buttons_->opacity.changed.emit(0.5f);
+}
+
+TEST_F(TestPanelMenuView, SpreadActivation)
+{
+  EXPECT_CALL(menu_view, QueueDraw());
+  WM->SetScaleActive(true);
+  EXPECT_TRUE(menu_view.spread_showing_);
+}
+
+TEST_F(TestPanelMenuView, ShouldDrawButtonsOnSpread)
+{
+  WM->SetScaleActive(true);
+  EXPECT_TRUE(menu_view.ShouldDrawButtons());
+}
+
+TEST_F(TestPanelMenuView, ShouldDrawMenusOnSpread)
+{
+  WM->SetScaleActive(true);
+  EXPECT_FALSE(menu_view.ShouldDrawMenus());
 }
 
 struct ProgressTester : TestPanelMenuView, WithParamInterface<double> {};
