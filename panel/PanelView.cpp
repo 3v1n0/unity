@@ -786,6 +786,9 @@ void PanelView::SetMonitor(int monitor)
   menu_view_->SetMonitor(monitor);
   indicators_->SetMonitor(monitor);
 
+  int height = panel_style.PanelHeight(monitor_);
+  SetMinMaxSize(height, height);
+  
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
   Resize(nux::Point(monitor_geo.x, monitor_geo.y), monitor_geo.width);

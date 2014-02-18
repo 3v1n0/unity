@@ -255,7 +255,6 @@ void Controller::OnDPIChanged()
       int monitor = panel_ptr->GetMonitor();
       int height  = panel::Style::Instance().PanelHeight(monitor);
 
-      panel_ptr->SetMinMaxSize(height, height);
       panel_ptr->SetMonitor(monitor);
     }
   }
