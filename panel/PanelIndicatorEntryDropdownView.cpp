@@ -145,7 +145,7 @@ void PanelIndicatorEntryDropdownView::ShowMenu(int button)
       entries.push_back(entry->GetEntry());
 
     auto const& geo = GetAbsoluteGeometry();
-    indicators_->ShowEntriesDropdown(entries, active_entry_, 0, geo.x, geo.y + Style::Instance().panel_height);
+    indicators_->ShowEntriesDropdown(entries, active_entry_, 0, geo.x, geo.y + Style::Instance().PanelHeight(monitor_));
   }
 }
 

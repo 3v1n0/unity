@@ -45,7 +45,7 @@ public:
   ~PanelMenuView();
 
   void SetMousePosition(int x, int y);
-  void SetMonitor(int monitor);
+  void SetMonitor(int monitor) override;
 
   Window GetTopWindow() const;
   Window GetMaximizedWindow() const;
@@ -184,7 +184,6 @@ private:
   bool ignore_menu_visibility_;
   bool integrated_menus_;
 
-  int monitor_;
   Window active_xid_;
   nux::Geometry monitor_geo_;
   const std::string desktop_name_;

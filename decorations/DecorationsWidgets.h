@@ -120,6 +120,7 @@ public:
   typedef std::shared_ptr<TexturedItem> Ptr;
 
   void SetTexture(cu::SimpleTexture::Ptr const&);
+  void SetTextureScale(float scale);
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void SetCoords(int x, int y);
 

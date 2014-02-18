@@ -57,7 +57,9 @@ protected:
 
 struct SimpleTextureQuad
 {
+  SimpleTextureQuad();
   bool SetTexture(SimpleTexture::Ptr const&);
+  bool SetScale(float scale);
   bool SetCoords(int x, int y);
   bool SetX(int x);
   bool SetY(int y);
@@ -69,6 +71,10 @@ struct SimpleTextureQuad
 
   SimpleTexture::Ptr st;
   TextureQuad quad;
+
+private:
+  void UpdateMatrix();
+  float scale;
 };
 
 struct PixmapTexture : SimpleTexture

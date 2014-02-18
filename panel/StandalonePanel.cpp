@@ -89,7 +89,7 @@ private:
     panel_window->ShowWindow(true);
     panel_window->SetWidth(1024);
     panel_window->SetXY(0, 0);
-    panel_window->SetMaximumHeight(panel_style.panel_height());
+    panel_window->SetMaximumHeight(panel_style.PanelHeight());
 
     wt->window_configuration.connect([this] (int x, int y, int w, int h) {
       panel_window->SetWidth(w);

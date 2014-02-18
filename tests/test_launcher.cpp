@@ -187,11 +187,11 @@ public:
     return icons;
   }
 
+  panel::Style panel_style;
   MockUScreen uscreen;
   testwrapper::StandaloneWM WM;
   nux::ObjectPtr<MockableBaseWindow> parent_window_;
   Settings settings;
-  panel::Style panel_style;
   LauncherModel::Ptr model_;
   Options::Ptr options_;
   nux::ObjectPtr<MockLauncher> launcher_;

@@ -26,6 +26,7 @@
 #include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 
 #include "QuicklistManager.h"
@@ -98,6 +99,9 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
 
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadTooltip));
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadQuicklist));
+
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     for (unsigned j = 0; j < static_cast<unsigned>(Quirk::LAST); ++j)
@@ -113,7 +117,12 @@ LauncherIcon::LauncherIcon(IconType type)
 
 void LauncherIcon::LoadTooltip()
 {
-  _tooltip = new Tooltip();
+  int monitor = _last_monitor;
+  if (monitor < 0)
+    monitor = 0;
+
+  _tooltip.Adopt(new Tooltip(monitor));
+
   _tooltip->SetOpacity(0.0f);
   AddChild(_tooltip.GetPointer());
 
@@ -122,7 +131,11 @@ void LauncherIcon::LoadTooltip()
 
 void LauncherIcon::LoadQuicklist()
 {
-  _quicklist = new QuicklistView();
+  int monitor = _last_monitor;
+  if (monitor < 0)
+    monitor = 0;
+
+  _quicklist.Adopt(new QuicklistView(monitor));
   AddChild(_quicklist.GetPointer());
 
   _quicklist->mouse_down_outside_pointer_grab_area.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -487,6 +500,10 @@ void LauncherIcon::ShowTooltip()
 void LauncherIcon::RecvMouseEnter(int monitor)
 {
   _last_monitor = monitor;
+
+  // FIXME We need to look at why we need to set the last_monitor to -1 when it leaves.
+  // As it would be nice to not have to re-create the tooltip everytime now :(
+  LoadTooltip();
 }
 
 void LauncherIcon::RecvMouseLeave(int monitor)

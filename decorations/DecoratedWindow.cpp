@@ -25,7 +25,9 @@
 #include "DecorationsTitle.h"
 #include "DecorationsSlidingLayout.h"
 #include "DecorationsMenuLayout.h"
+#include "RawPixel.h"
 #include "WindowManager.h"
+#include "UnitySettings.h"
 
 namespace unity
 {
@@ -45,6 +47,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , glwin_(GLWindow::get(win_))
   , frame_(0)
   , dirty_geo_(true)
+  , cv_(unity::Settings::Instance().em(parent_->monitor))
 {
   active.changed.connect([this] (bool active) {
     bg_textures_.clear();
@@ -137,11 +140,16 @@ void Window::Impl::SetupExtents()
     return;
 
   auto const& sb = Style::Get()->Border();
-  CompWindowExtents border(sb.left, sb.right, sb.top, sb.bottom);
+  CompWindowExtents border(RawPixel(sb.left).CP(cv_),
+                           RawPixel(sb.right).CP(cv_),
+                           RawPixel(sb.top).CP(cv_),
+                           RawPixel(sb.bottom).CP(cv_));
 
   auto const& ib = Style::Get()->InputBorder();
-  CompWindowExtents input(sb.left + ib.left, sb.right + ib.right,
-                          sb.top + ib.top, sb.bottom + ib.bottom);
+  CompWindowExtents input(RawPixel(sb.left + ib.left).CP(cv_),
+                          RawPixel(sb.right + ib.right).CP(cv_),
+                          RawPixel(sb.top + ib.top).CP(cv_),
+                          RawPixel(sb.bottom + ib.bottom).CP(cv_));
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
@@ -663,12 +671,29 @@ bool Window::Impl::ActivateMenu(std::string const& entry_id)
   return menus_ && menus_->ActivateMenu(entry_id);
 }
 
+void Window::Impl::UpdateMonitor()
+{
+  nux::Geometry const window_geo(win_->x(), win_->y(),
+                                 win_->width(), win_->height());
+
+  int monitor = WindowManager::Default().MonitorGeometryIn(window_geo);
+  if (parent_->monitor != monitor)
+  {
+    parent_->monitor = monitor;
+    cv_ = unity::Settings::Instance().em(monitor);
+    Update();
+  }
+}
+
 // Public APIs
 
 Window::Window(CompWindow* cwin)
   : scaled(false)
+  , monitor(0)
   , impl_(new Impl(this, cwin))
-{}
+{
+  impl_->UpdateMonitor();
+}
 
 void Window::Update()
 {
@@ -710,6 +735,7 @@ void Window::Undecorate()
 
 void Window::UpdateDecorationPosition()
 {
+  impl_->UpdateMonitor();
   impl_->ComputeShadowQuads();
   impl_->UpdateDecorationTextures();
   impl_->dirty_geo_ = false;

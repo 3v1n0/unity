@@ -32,7 +32,9 @@
 
 #include <gtk/gtk.h>
 
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/RawPixel.h"
 
 
 namespace unity
@@ -88,6 +90,8 @@ public:
   void OverlayShown();
   void OverlayHidden();
 
+  virtual void SetMonitor(int monitor);
+
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
 
@@ -106,15 +110,22 @@ protected:
   virtual void ShowMenu(int button = 1);
 
   indicator::Entry::Ptr proxy_;
-  unsigned int spacing_;
-  unsigned int left_padding_;
-  unsigned int right_padding_;
+  RawPixel spacing_;
+  RawPixel left_padding_;
+  RawPixel right_padding_;
+
+  int monitor_;
 
 private:
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
   void OnMouseUp(int x, int y, long button_flags, long key_flags);
   void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void OnActiveChanged(bool is_active);
+
+  int PixbufWidth(glib::Object<GdkPixbuf> const& pixbuf) const;
+  int PixbufHeight(glib::Object<GdkPixbuf> const& pixbuf) const;
+
+  void ScaleImageIcons(cairo_t* cr, int* x, int* y);
 
   glib::Object<GdkPixbuf> MakePixbuf();
 
@@ -126,6 +137,8 @@ private:
   bool overlay_showing_;
   bool disabled_;
   bool focused_;
+
+  EMConverter cv_;
 };
 
 }

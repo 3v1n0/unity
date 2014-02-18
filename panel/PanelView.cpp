@@ -104,11 +104,12 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 
   SetCompositionLayout(layout_);
 
-  tray_ = new PanelTray();
+  tray_ = new PanelTray(monitor_);
   layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   AddChild(tray_);
 
   indicators_ = new PanelIndicatorsView();
+  indicators_->SetMonitor(monitor_);
   AddPanelView(indicators_, 0);
 
   for (auto const& object : remote_->GetIndicators())
@@ -749,6 +750,7 @@ void PanelView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
+  indicators_->SetMonitor(monitor);
 
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
@@ -759,8 +761,8 @@ void PanelView::Resize(nux::Point const& offset, int width)
 {
   unity::panel::Style &panel_style = panel::Style::Instance();
   SetMaximumWidth(width);
-  SetGeometry(nux::Geometry(0, 0, width, panel_style.panel_height));
-  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.panel_height));
+  SetGeometry(nux::Geometry(0, 0, width, panel_style.PanelHeight(monitor_)));
+  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.PanelHeight(monitor_)));
 }
 
 int PanelView::GetMonitor() const

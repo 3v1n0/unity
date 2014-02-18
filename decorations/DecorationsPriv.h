@@ -33,6 +33,7 @@
 #include "DecorationsDataPool.h"
 #include "DecorationsManager.h"
 #include "DecorationsInputMixer.h"
+#include "EMConverter.h"
 
 class CompRegion;
 
@@ -86,6 +87,8 @@ struct Window::Impl
   void SetupAppMenu();
   bool ActivateMenu(std::string const&);
 
+  void UpdateMonitor();
+
 private:
   void UnsetExtents();
   void SetupExtents();
@@ -133,6 +136,8 @@ private:
   uweak_ptr<SlidingLayout> sliding_layout_;
   Item::WeakPtr grab_edge_;
   Item::Ptr edge_borders_;
+
+  EMConverter cv_;
 };
 
 struct Manager::Impl : sigc::trackable

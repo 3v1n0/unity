@@ -28,6 +28,9 @@
 #include <gtk/gtk.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "unity-shared/EMConverter.h"
+#include "unity-shared/RawPixel.h"
+
 namespace unity
 {
 namespace decoration
@@ -57,14 +60,14 @@ public:
 
   static Style& Instance();
 
-  nux::Property<int> panel_height;
-
   GtkStyleContext* GetStyleContext();
-  BaseTexturePtr GetBackground();
+  BaseTexturePtr GetBackground(int monitor = 0);
   BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
   BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state);
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();
+
+  int PanelHeight(int monitor = 0) const;
 
   sigc::signal<void> changed;
 
@@ -72,8 +75,13 @@ private:
   void OnThemeChanged(std::string const&);
   void RefreshContext();
 
+  void UpdateFontSize();
+  void UpdatePanelHeight();
+
   glib::Object<GtkStyleContext> style_context_;
   BaseTexturePtr bg_texture_;
+
+  std::vector<RawPixel> panel_heights_;
 };
 
 }

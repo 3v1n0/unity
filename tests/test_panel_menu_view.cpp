@@ -56,7 +56,7 @@ struct TestPanelMenuView : public testing::Test
     nux::ObjectPtr<nux::BaseWindow> panel_win(new nux::BaseWindow());
     auto const& monitor_geo = uscreen.GetMonitorGeometry(monitor);
     panel_win->SetGeometry(monitor_geo);
-    panel_win->SetMaximumHeight(panelStyle.panel_height());
+    panel_win->SetMaximumHeight(panelStyle.PanelHeight(monitor));
     panel_win->SetLayout(new nux::HLayout(NUX_TRACKER_LOCATION));
     panel_win->GetLayout()->AddView(&menu_view, 1);
     panel_win->GetLayout()->SetContentDistribution(nux::MAJOR_POSITION_START);

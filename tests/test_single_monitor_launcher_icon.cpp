@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 #include "SingleMonitorLauncherIcon.h"
+#include "unity-shared/UnitySettings.h"
 
 using namespace unity;
 using namespace launcher;
@@ -27,7 +28,12 @@ using namespace launcher;
 namespace
 {
 
-TEST(TestSingleMonitorLauncherIcon, Construction)
+struct TestSingleMonitorLauncherIconMock : testing::Test
+{
+  unity::Settings settings;
+};
+
+TEST_F(TestSingleMonitorLauncherIconMock, Construction)
 {
   SingleMonitorLauncherIcon icon(AbstractLauncherIcon::IconType::NONE, 1);
 
@@ -36,7 +42,7 @@ TEST(TestSingleMonitorLauncherIcon, Construction)
   EXPECT_FALSE(icon.IsVisibleOnMonitor(0));
 }
 
-TEST(TestSingleMonitorLauncherIcon, MonitorVisibility)
+TEST_F(TestSingleMonitorLauncherIconMock, MonitorVisibility)
 {
   SingleMonitorLauncherIcon icon(AbstractLauncherIcon::IconType::NONE, 2);
 

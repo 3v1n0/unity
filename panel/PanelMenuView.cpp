@@ -72,7 +72,6 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , new_app_menu_shown_(false)
   , ignore_menu_visibility_(false)
   , integrated_menus_(decoration::Style::Get()->integrated_menus())
-  , monitor_(0)
   , active_xid_(0)
   , desktop_name_(_("Ubuntu Desktop"))
 {
@@ -93,6 +92,11 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
 
     Refresh(true);
     FullRedraw();
+  });
+
+  unity::Settings::Instance().dpi_changed.connect([this] {
+    int height = panel::Style::Instance().PanelHeight(monitor_);
+    window_buttons_->SetMaximumHeight(height);
   });
 
   opacity = 0.0f;
@@ -145,7 +149,7 @@ void PanelMenuView::SetupWindowButtons()
   window_buttons_->controlled_window = active_xid_;
   window_buttons_->opacity = 0.0f;
   window_buttons_->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
-  window_buttons_->SetMaximumHeight(panel::Style::Instance().panel_height);
+  window_buttons_->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor_));
   window_buttons_->ComputeContentSize();
 
   window_buttons_->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
@@ -161,7 +165,7 @@ void PanelMenuView::SetupLayout()
 {
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-  layout_->SetBaseHeight(panel::Style::Instance().panel_height);
+  layout_->SetBaseHeight(panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void PanelMenuView::SetupTitlebarGrabArea()
