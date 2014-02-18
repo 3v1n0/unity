@@ -109,6 +109,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   AddChild(tray_);
 
   indicators_ = new PanelIndicatorsView();
+  indicators_->SetMonitor(monitor_);
   AddPanelView(indicators_, 0);
 
   for (auto const& object : remote_->GetIndicators())
@@ -734,6 +735,7 @@ void PanelView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
+  indicators_->SetMonitor(monitor);
 
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);

@@ -60,8 +60,6 @@ public:
 
   static Style& Instance();
 
-  nux::Property<int> panel_height;
-
   GtkStyleContext* GetStyleContext();
   BaseTexturePtr GetBackground(int monitor = 0);
   BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
