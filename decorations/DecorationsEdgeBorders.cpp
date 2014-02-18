@@ -17,7 +17,6 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include "DecorationStyle.h"
 #include "DecorationsEdgeBorders.h"
 #include "DecorationsGrabEdge.h"
 
@@ -49,13 +48,16 @@ EdgeBorders::EdgeBorders(CompWindow* win)
 
 void EdgeBorders::DoRelayout()
 {
-  auto const& b = Style::Get()->Border();
-  auto const& ib = Style::Get()->InputBorder();
+  auto const& grab_edge = items_[unsigned(Edge::Type::GRAB)];
+  CompWindow* win = std::static_pointer_cast<GrabEdge>(grab_edge)->Window();
+  auto const& b = win->border();
+  auto const& ib = win->input();
 
-  Border edges(std::max(b.top, MIN_CORNER_EDGE) + ib.top,
-               std::max(b.left, MIN_CORNER_EDGE) + ib.left,
-               std::max(b.right, MIN_CORNER_EDGE) + ib.right,
-               std::max(b.bottom, MIN_CORNER_EDGE) + ib.bottom);
+  using namespace compiz::window::extents;
+  Extents edges(std::max(ib.left, MIN_CORNER_EDGE),
+                std::max(ib.right, MIN_CORNER_EDGE),
+                std::max(ib.top, MIN_CORNER_EDGE),
+                std::max(ib.bottom, MIN_CORNER_EDGE));
 
   auto item = items_[unsigned(Edge::Type::TOP)];
   item->SetCoords(rect_.x() + edges.left, rect_.y());
@@ -90,7 +92,7 @@ void EdgeBorders::DoRelayout()
   item->SetSize(edges.right, edges.bottom);
 
   item = items_[unsigned(Edge::Type::GRAB)];
-  item->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top);
+  item->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top - b.top);
   item->SetSize(rect_.width() - ib.left - ib.right, b.top);
 }
 
