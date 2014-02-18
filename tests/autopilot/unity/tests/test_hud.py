@@ -74,9 +74,18 @@ class HudTestsBase(UnityTestCase):
         }
         self.launch_test_window(window_spec)
 
-    def hud_query_check(self):
+    def hud_query_check(self, button_label):
         try:
-            button = self.unity.hud.selected_hud_button
+            button = 0
+
+            for button in self.unity.hud.hud_buttons:
+                if button.label_no_formatting == button_label:
+                    break
+                else:
+                    self.keyboard.press_and_release('Down')
+
+            self.assertThat(button.label_no_formatting, Equals(button_label))
+
             if not button:
                 return
             return button.label_no_formatting
@@ -219,8 +228,8 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("save")
 
-        self.assertThat(self.hud_query_check,
-                        Eventually(Equals(u'Save\u2002(File)')))
+        self.hud_query_check(u'Save\u2002(File)')
+
         self.keyboard.press_and_release('Return')
         self.addCleanup(self.keyboard.press_and_release, "Ctrl+s")
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False), timeout=30))
@@ -326,8 +335,8 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("Quit")
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("Quit")))
-        self.assertThat(self.hud_query_check,
-                        Eventually(Equals(u'Quit\u2002(File)'), timeout=30))
+
+        self.hud_query_check(u'Quit\u2002(File)')
 
         self.keyboard.press_and_release("Enter")
 
