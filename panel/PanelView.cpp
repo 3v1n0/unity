@@ -786,7 +786,7 @@ void PanelView::SetMonitor(int monitor)
   menu_view_->SetMonitor(monitor);
   indicators_->SetMonitor(monitor);
 
-  int height = panel_style.PanelHeight(monitor_);
+  int height = panel::Style::Instance().PanelHeight(monitor_);
   SetMinMaxSize(height, height);
   
   UScreen* uscreen = UScreen::GetDefault();
