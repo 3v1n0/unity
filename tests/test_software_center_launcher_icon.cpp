@@ -30,7 +30,6 @@
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "PanelStyle.h"
-#include "UnitySettings.h"
 #include "test_utils.h"
 
 using namespace testmocks;
@@ -84,7 +83,6 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
     return launcher;
   }
 
-  Settings settings;
   panel::Style panel;
   nux::ObjectPtr<MockableBaseWindow> launcher_win;
   MockApplication::Ptr usc;
