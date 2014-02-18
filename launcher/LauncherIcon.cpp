@@ -26,7 +26,7 @@
 #include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/PanelStyle.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 
 #include "QuicklistManager.h"
@@ -99,7 +99,7 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
 
-  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadTooltip));
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadTooltip));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {

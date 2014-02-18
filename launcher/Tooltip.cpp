@@ -22,8 +22,8 @@
 
 #include <Nux/Nux.h>
 
-#include "unity-shared/CairoTexture.h"
-#include <unity-shared/PanelStyle.h>
+#include <unity-shared/CairoTexture.h>
+#include <unity-shared/RawPixel.h>
 #include <unity-shared/UnitySettings.h>
 
 #include "Tooltip.h"
