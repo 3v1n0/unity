@@ -153,7 +153,7 @@ struct Style::Impl
     gtk_widget_path_append_type(widget_path.get(), unity_decoration_get_type());
     gtk_style_context_set_path(ctx_, widget_path.get());
 
-    parent_->integrated_menus = true;
+    parent_->integrated_menus = false;
     parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
     parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
     SetTitleFont();
