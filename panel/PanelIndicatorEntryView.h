@@ -92,7 +92,7 @@ public:
   void OverlayShown();
   void OverlayHidden();
 
-  void SetMonitor(int monitor);
+  virtual void SetMonitor(int monitor);
 
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
@@ -116,6 +116,8 @@ protected:
   RawPixel left_padding_;
   RawPixel right_padding_;
 
+  int monitor_;
+
 private:
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
   void OnMouseUp(int x, int y, long button_flags, long key_flags);
@@ -137,8 +139,6 @@ private:
   bool overlay_showing_;
   bool disabled_;
   bool focused_;
-
-  int monitor_;
 
   EMConverter cv_;
 };
