@@ -117,7 +117,7 @@ int Style::PanelHeight(int monitor) const
     return 0;
   }
 
-  EMConverter const& cv = unity::Settings::Instance().em(monitor);
+  EMConverter::Ptr const& cv = unity::Settings::Instance().em(monitor);
   return panel_heights_[monitor].CP(cv);
 }
 
