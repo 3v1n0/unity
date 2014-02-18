@@ -303,7 +303,7 @@ private:
   void DndHoveredIconReset();
   bool DndIsSpecialRequest(std::string const& uri) const;
 
-  void UpdateEMConverter();
+  void OnDPIChanged();
 
   LauncherModel::Ptr model_;
   MockableBaseWindow* parent_;

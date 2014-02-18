@@ -26,7 +26,6 @@
 
 #include "unity-shared/UScreen.h"
 #include "PanelView.h"
-#include "unity-shared/PanelStyle.h"
 
 namespace unity
 {
@@ -253,9 +252,7 @@ void Controller::OnDPIChanged()
     if (panel_ptr)
     {
       int monitor = panel_ptr->GetMonitor();
-      int height  = panel::Style::Instance().PanelHeight(monitor);
 
-      panel_ptr->SetMinMaxSize(height, height);
       panel_ptr->SetMonitor(monitor);
     }
   }
