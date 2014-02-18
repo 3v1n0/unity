@@ -137,10 +137,8 @@ const unsigned int SCROLL_DOWN_BUTTON = 6;
 const unsigned int SCROLL_UP_BUTTON = 7;
 const int MAX_BUFFER_AGE = 11;
 const int FRAMES_TO_REDRAW_ON_RESUME = 10;
-
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 } // namespace local
-
 } // anon namespace
 
 UnityScreen::UnityScreen(CompScreen* screen)
@@ -149,6 +147,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , sScreen(ScaleScreen::get(screen))
   , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
   , deco_manager_(std::make_shared<decoration::Manager>())
   , debugger_(this)
@@ -511,13 +510,28 @@ void UnityScreen::initAltTabNextWindow()
 
 void UnityScreen::OnInitiateSpread()
 {
-  for (auto const& swin : ScaleScreen::get(screen)->getWindows())
+  spread_filter_ = std::make_shared<spread::Filter>();
+  spread_filter_->text.changed.connect([this] (std::string const& filter) {
+    if (filter.empty())
+    {
+      sScreen->relayoutSlots(CompMatch::emptyMatch);
+    }
+    else
+    {
+      auto match = sScreen->getCustomMatch();
+      sScreen->relayoutSlots(match & ("ititle="+filter));
+    }
+  });
+
+  for (auto const& swin : sScreen->getWindows())
     UnityWindow::get(swin->window)->OnInitiateSpread();
 }
 
 void UnityScreen::OnTerminateSpread()
 {
-  for (auto const& swin : ScaleScreen::get(screen)->getWindows())
+  spread_filter_.reset();
+
+  for (auto const& swin : sScreen->getWindows())
     UnityWindow::get(swin->window)->OnTerminateSpread();
 }
 
@@ -1680,8 +1694,7 @@ void UnityScreen::handleEvent(XEvent* event)
     case MotionNotify:
       if (wm.IsScaleActive())
       {
-        ScaleScreen* ss = ScaleScreen::get(screen);
-        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
+        if (CompWindow *w = screen->findWindow(sScreen->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       else if (switcher_controller_->IsDetailViewShown())
@@ -1706,9 +1719,14 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       if (wm.IsScaleActive())
       {
-        ScaleScreen* ss = ScaleScreen::get(screen);
-        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
-          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+        if (spread_filter_ && spread_filter_->Visible())
+          skip_other_plugins = spread_filter_->GetAbsoluteGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root);
+
+        if (!skip_other_plugins)
+        {
+          if (CompWindow *w = screen->findWindow(sScreen->getSelectedWindow()))
+            skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+        }
       }
       else if (switcher_controller_->IsDetailViewShown())
       {
@@ -1782,9 +1800,14 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       else if (wm.IsScaleActive())
       {
-        ScaleScreen* ss = ScaleScreen::get(screen);
-        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
-          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+        if (spread_filter_ && spread_filter_->Visible())
+          skip_other_plugins = spread_filter_->GetAbsoluteGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root);
+
+        if (!skip_other_plugins)
+        {
+          if (CompWindow *w = screen->findWindow(sScreen->getSelectedWindow()))
+            skip_other_plugins = skip_other_plugins || UnityWindow::get(w)->handleEvent(event);
+        }
       }
       break;
     case KeyPress:
@@ -1853,6 +1876,16 @@ void UnityScreen::handleEvent(XEvent* event)
           EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
         }
       }
+
+      if (spread_filter_ && spread_filter_->Visible())
+      {
+        if (key_sym == XK_Escape)
+        {
+          skip_other_plugins = true;
+          spread_filter_->text = "";
+        }
+      }
+
       break;
     }
     case MapRequest:
@@ -1866,22 +1899,21 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     default:
-        if (screen->shapeEvent () + ShapeNotify == event->type)
+        if (screen->shapeEvent() + ShapeNotify == event->type)
         {
           Window xid = event->xany.window;
           CompWindow *w = screen->findWindow(xid);
 
           if (w)
           {
-            UnityWindow *uw = UnityWindow::get (w);
-
+            UnityWindow *uw = UnityWindow::get(w);
             uw->handleEvent(event);
           }
         }
       break;
   }
 
-  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleEvent (event);
+  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleEvent(event);
 
   // avoid further propagation (key conflict for instance)
   if (!skip_other_plugins)
@@ -1890,18 +1922,17 @@ void UnityScreen::handleEvent(XEvent* event)
   if (deco_manager_->HandleEventAfter(event))
     return;
 
-  switch (event->type)
-  {
-    case MapRequest:
-      ShowdesktopHandler::AllowLeaveShowdesktopMode(event->xmaprequest.window);
-      break;
-  }
+  if (event->type == MapRequest)
+    ShowdesktopHandler::AllowLeaveShowdesktopMode(event->xmaprequest.window);
 
-  if ((event->type == MotionNotify || event->type == ButtonPress || event->type == ButtonRelease) &&
-      switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
+  if (switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible() &&
+      (event->type == MotionNotify || event->type == ButtonPress || event->type == ButtonRelease))
   {
     skip_other_plugins = true;
   }
+
+  if (spread_filter_ && spread_filter_->Visible())
+    skip_other_plugins = false;
 
   if (!skip_other_plugins &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
@@ -2786,7 +2817,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   }
 
   if (WindowManager::Default().IsScaleActive() &&
-      ScaleScreen::get(screen)->getSelectedWindow() == window->id())
+      uScreen->sScreen->getSelectedWindow() == window->id())
   {
     nux::Geometry const& scaled_geo = GetScaledGeometry();
     paintInnerGlow(scaled_geo, matrix, attrib, mask);
@@ -3737,7 +3768,7 @@ UnityWindow::UnityWindow(CompWindow* window)
 void UnityWindow::AddProperties(debug::IntrospectionData& introspection)
 {
   Window xid = window->id();
-  auto const& swins = ScaleScreen::get(screen)->getWindows();
+  auto const& swins = uScreen->sScreen->getWindows();
   bool scaled = std::find(swins.begin(), swins.end(), ScaleWindow::get(window)) != swins.end();
   WindowManager& wm = WindowManager::Default();
 
@@ -3942,8 +3973,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (!scale_win->hasSlot()) // animation not finished
     return;
 
-  ScaleScreen* ss = ScaleScreen::get(screen);
-  auto state = ss->getState();
+  auto state = uScreen->sScreen->getState();
 
   if (state != ScaleScreen::Wait && state != ScaleScreen::Out)
     return;
@@ -3953,7 +3983,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   auto deco_attrib = attrib;
   deco_attrib.opacity = COMPIZ_COMPOSITE_OPAQUE;
 
-  bool highlighted = (ss->getSelectedWindow() == window->id());
+  bool highlighted = (uScreen->sScreen->getSelectedWindow() == window->id());
   paintFakeDecoration(scale_geo, deco_attrib, transform, mask, highlighted, pos.scale);
 }
 
@@ -4130,7 +4160,7 @@ void ScreenIntrospection::AddProperties(debug::IntrospectionData& introspection)
 
 Introspectable::IntrospectableList ScreenIntrospection::GetIntrospectableChildren()
 {
-  IntrospectableList children;
+  IntrospectableList children({uScreen->spread_filter_.get()});
 
   for (auto const& win : screen_->windows())
     children.push_back(UnityWindow::get(win));
