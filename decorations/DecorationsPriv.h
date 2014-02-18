@@ -120,6 +120,7 @@ private:
   ::GLWindow* glwin_;
   ::Window frame_;
   bool dirty_geo_;
+  int monitor_;
 
   CompRect last_shadow_rect_;
   Quads shadow_quads_;

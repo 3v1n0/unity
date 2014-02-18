@@ -47,7 +47,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , glwin_(GLWindow::get(win_))
   , frame_(0)
   , dirty_geo_(true)
-  , cv_(unity::Settings::Instance().em(parent_->monitor))
+  , monitor_(0)
 {
   active.changed.connect([this] (bool active) {
     bg_textures_.clear();
@@ -673,13 +673,14 @@ bool Window::Impl::ActivateMenu(std::string const& entry_id)
 
 void Window::Impl::UpdateMonitor()
 {
-  nux::Geometry const window_geo(win_->x(), win_->y(),
-                                 win_->width(), win_->height());
+  auto const& input = win_->inputRect();
+  nux::Geometry window_geo(input.x(), input.y(), input.width(), input.height());
 
   int monitor = WindowManager::Default().MonitorGeometryIn(window_geo);
-  if (parent_->monitor != monitor)
+
+  if (monitor_ != monitor)
   {
-    parent_->monitor = monitor;
+    monitor_ = monitor;
     cv_ = unity::Settings::Instance().em(monitor);
     Update();
   }
@@ -689,11 +690,8 @@ void Window::Impl::UpdateMonitor()
 
 Window::Window(CompWindow* cwin)
   : scaled(false)
-  , monitor(0)
   , impl_(new Impl(this, cwin))
-{
-  impl_->UpdateMonitor();
-}
+{}
 
 void Window::Update()
 {
