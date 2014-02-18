@@ -123,7 +123,7 @@ private:
   Title::Ptr title_;
   Item::Ptr edge_borders_;
 
-  EMConverter cv_;
+  EMConverter::Ptr cv_;
 };
 
 struct Manager::Impl : sigc::trackable
