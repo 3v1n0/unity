@@ -614,8 +614,7 @@ void UnityScreen::FillShadowRectForOutput(CompRect& shadowRect, CompOutput const
   if (_shadow_texture.empty ())
     return;
 
-  nux::Geometry const& geo = {output.x(), output.y(), output.width(), output.height()};
-  int monitor = PluginAdapter::Default().MonitorGeometryIn(geo);
+  int monitor = PluginAdapter::Default().MonitorGeometryIn(NuxGeometryFromCompRect(output));
   float panel_h = static_cast<float>(panel_style_.PanelHeight(monitor));
   float shadowX = output.x();
   float shadowY = output.y() + panel_h;
@@ -2869,6 +2868,8 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
     else
     {
+      WindowManager& wm = WindowManager::Default();
+
       if (window->id() == active_window)
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
@@ -2879,8 +2880,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
             !(window->type() & CompWindowTypeFullscreenMask))
         {
           auto const& output = uScreen->screen->currentOutputDev();
+          int monitor = wm.MonitorGeometryIn(NuxGeometryFromCompRect(output));
 
-          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.PanelHeight())
+          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.PanelHeight(monitor))
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
           }

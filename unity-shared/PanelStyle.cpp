@@ -111,9 +111,6 @@ void Style::OnThemeChanged(std::string const&)
 
 int Style::PanelHeight(int monitor) const
 {
-  if (Settings::Instance().form_factor() == FormFactor::TV)
-    return 0;
-
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
     LOG_ERROR(logger) << "Invalid monitor index: " << monitor;
