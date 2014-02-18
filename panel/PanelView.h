@@ -63,6 +63,7 @@ public:
   int GetMonitor() const;
 
   bool IsActive() const;
+  bool InOverlayMode() const;
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
@@ -96,6 +97,9 @@ private:
   void OnBackgroundUpdate(nux::Color const&);
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
+  void OnSpreadInitiate();
+  void OnSpreadTerminate();
+  void EnableOverlayMode(bool);
 
   bool ActivateFirstSensitive();
   bool ActivateEntry(std::string const& entry_id);

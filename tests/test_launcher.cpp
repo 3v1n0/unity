@@ -164,7 +164,7 @@ public:
     launcher_->SetModel(model_);
   }
 
-  std::vector<MockMockLauncherIcon::Ptr> AddMockIcons(unsigned number)
+  std::vector<MockMockLauncherIcon::Ptr> AddMockIcons(unsigned number, AbstractLauncherIcon::IconType type = AbstractLauncherIcon::IconType::APPLICATION)
   {
     std::vector<MockMockLauncherIcon::Ptr> icons;
     int icon_size = launcher_->GetIconSize();
@@ -174,7 +174,7 @@ public:
 
     for (unsigned i = 0; i < number; ++i)
     {
-      MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon::Nice);
+      MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon::Nice(type));
       icon->SetCenter(nux::Point3(launcher_geo.x + icon_size/2.0f, launcher_geo.y + icon_size/2.0f * (i+1) + 1, 0), monitor);
 
       icons.push_back(icon);
@@ -812,7 +812,6 @@ TEST_F(TestLauncher, DesaturateAllIconsOnSpread)
   icons[g_random_int()%icons.size()]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
 
   WM->SetScaleActive(true);
-  WM->initiate_spread.emit();
 
   Utils::WaitUntilMSec([this, &icons] {
     for (auto const& icon : icons)
@@ -851,7 +850,6 @@ TEST_F(TestLauncher, SaturatesAllIconsOnSpreadWithMouseOver)
 
   launcher_->SetHover(true);
   WM->SetScaleActive(true);
-  WM->initiate_spread.emit();
 
   Utils::WaitPendingEvents();
 }
@@ -862,8 +860,6 @@ TEST_F(TestLauncher, DesaturateInactiveIconsOnAppSpread)
   icons[g_random_int()%icons.size()]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
 
   WM->SetScaleActiveForGroup(true);
-  WM->SetScaleActive(true);
-  WM->initiate_spread.emit();
 
   Utils::WaitUntilMSec([this, &icons] {
     for (auto const& icon : icons)
@@ -886,8 +882,6 @@ TEST_F(TestLauncher, SaturatesAllIconsOnAppSpreadMouseMove)
 
   launcher_->SetHover(true);
   WM->SetScaleActiveForGroup(true);
-  WM->SetScaleActive(true);
-  WM->initiate_spread.emit();
 
   Utils::WaitUntilMSec([this, &icons] {
     for (auto const& icon : icons)
@@ -930,8 +924,6 @@ TEST_F(TestLauncher, DesaturateActiveIconOnAppSpreadIconUpdate)
 
   launcher_->SetHover(true);
   WM->SetScaleActiveForGroup(true);
-  WM->SetScaleActive(true);
-  WM->initiate_spread.emit();
 
   Utils::WaitPendingEvents();
   for (auto const& icon : icons)
@@ -955,7 +947,6 @@ TEST_F(TestLauncher, DesaturateAllIconsOnExpo)
   icons[g_random_int()%icons.size()]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
 
   WM->SetExpoActive(true);
-  WM->initiate_expo.emit();
 
   for (auto const& icon : icons)
   {
@@ -985,7 +976,6 @@ TEST_F(TestLauncher, SaturatesAllIconsOnExpoWithMouseOver)
 
   launcher_->SetHover(true);
   WM->SetExpoActive(true);
-  WM->initiate_expo.emit();
 }
 
 TEST_F(TestLauncher, HideTooltipOnSpread)
@@ -995,7 +985,6 @@ TEST_F(TestLauncher, HideTooltipOnSpread)
 
   launcher_->SetIconUnderMouse(icon);
   WM->SetScaleActive(true);
-  WM->initiate_spread.emit();
 }
 
 TEST_F(TestLauncher, HideTooltipOnExpo)
@@ -1005,13 +994,11 @@ TEST_F(TestLauncher, HideTooltipOnExpo)
 
   launcher_->SetIconUnderMouse(icon);
   WM->SetExpoActive(true);
-  WM->initiate_expo.emit();
 }
 
 TEST_F(TestLauncher, IconIsDesaturatedWhenAddedInOverlayMode)
 {
   WM->SetScaleActive(true);
-  WM->initiate_spread.emit();
   launcher_->SetHover(false);
   ASSERT_TRUE(launcher_->IsOverlayOpen());
 
@@ -1024,7 +1011,6 @@ TEST_F(TestLauncher, IconIsDesaturatedWhenAddedInOverlayMode)
 TEST_F(TestLauncher, IconIsNotDesaturatedWhenAddedInOverlayModeWithMouseOver)
 {
   WM->SetScaleActive(true);
-  WM->initiate_spread.emit();
   launcher_->SetHover(true);
   ASSERT_TRUE(launcher_->IsOverlayOpen());
 
