@@ -58,6 +58,8 @@ public:
   virtual void OverlayShown();
   virtual void OverlayHidden();
 
+  void OnDPIChanged();
+
 protected:
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);

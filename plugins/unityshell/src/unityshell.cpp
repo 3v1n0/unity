@@ -894,6 +894,8 @@ void UnityScreen::DrawPanelUnderDash()
 
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
+
+  // FIXME Change to paint per monitor vs all at once
   int panel_height = panel_style_.PanelHeight();
   auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
   graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
@@ -2868,8 +2870,6 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
     else
     {
-      WindowManager& wm = WindowManager::Default();
-
       if (window->id() == active_window)
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
@@ -2879,6 +2879,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
             !(window->state() & CompWindowStateFullscreenMask) &&
             !(window->type() & CompWindowTypeFullscreenMask))
         {
+          WindowManager& wm = WindowManager::Default();
           auto const& output = uScreen->screen->currentOutputDev();
           int monitor = wm.MonitorGeometryIn(NuxGeometryFromCompRect(output));
 

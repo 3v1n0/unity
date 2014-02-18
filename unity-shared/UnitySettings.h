@@ -52,7 +52,7 @@ public:
   nux::ROProperty<bool> double_click_activate;
 
   sigc::signal<void> dpi_changed;
-  EMConverter const& em(int monitor = 0) const;
+  EMConverter& em(int monitor = 0) const;
 
 private:
   class Impl;
