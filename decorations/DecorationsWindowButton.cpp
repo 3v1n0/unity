@@ -54,7 +54,7 @@ void WindowButton::UpdateTextureScale()
   nux::Geometry geo(c_geo.x(), c_geo.y(), c_geo.width(), c_geo.height());
 
   int monitor = wm.MonitorGeometryIn(geo);
-  float scale = unity::Settings::Instance().em(monitor).DPIScale();
+  float scale = unity::Settings::Instance().em(monitor)->DPIScale();
 
   SetTextureScale(scale);
 }

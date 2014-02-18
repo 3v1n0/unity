@@ -58,7 +58,7 @@ public:
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
-    , em_converters_(monitors::MAX)
+    , em_converters_(monitors::MAX, std::make_shared<EMConverter>())
   {
     CacheFormFactor();
     CacheDoubleClickActivate();
@@ -75,7 +75,6 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(gnome_settings_, "changed::" + TEXT_SCALING_FACTOR, [this] (GSettings*, const gchar* t) {
       UpdateEMConverter();
     });
-
 
     UpdateEMConverter();
   }
@@ -145,7 +144,7 @@ public:
     int font_size = GetFontSize();
 
     for (auto& em : em_converters_)
-      em.SetFontSize(font_size);
+      em->SetFontSize(font_size);
   }
 
   void UpdateDPI()
@@ -153,7 +152,7 @@ public:
     for (int i = 0; i < (int)em_converters_.size(); ++i)
     {
       int dpi = GetDPI(i);
-      em_converters_[i].SetDPI(dpi);
+      em_converters_[i]->SetDPI(dpi);
     }
 
     parent_->dpi_changed.emit();
@@ -176,7 +175,7 @@ public:
   glib::Signal<void, GSettings*, gchar* > double_click_activate_changed_;
 
   glib::SignalManager signals_;
-  std::vector<EMConverter> em_converters_;
+  std::vector<EMConverter::Ptr> em_converters_;
 };
 
 //
@@ -229,7 +228,7 @@ void Settings::SetLowGfxMode(const bool low_gfx)
   pimpl->lowGfx_ = low_gfx;
 }
 
-EMConverter& Settings::em(int monitor) const
+EMConverter::Ptr const Settings::em(int monitor) const
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {

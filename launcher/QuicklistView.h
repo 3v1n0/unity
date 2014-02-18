@@ -181,7 +181,7 @@ private:
   // list of introspectable children, used to return children in the correct order:
   IntrospectableList _introspectable_children;
 
-  EMConverter& _cv;
+  EMConverter::Ptr _cv;
 };
 
 } // NAMESPACE
