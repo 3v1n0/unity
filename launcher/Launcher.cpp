@@ -189,6 +189,8 @@ Launcher::Launcher(MockableBaseWindow* parent,
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
 
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Launcher::OnDPIChanged));
+
   auto_hide_animation_.updated.connect(redraw_cb);
   hover_animation_.updated.connect(redraw_cb);
   drag_over_animation_.updated.connect(redraw_cb);
@@ -324,6 +326,11 @@ float Launcher::GetAutohidePositionMax() const
     return 1.00f;
   else
     return 0.75f;
+}
+
+void Launcher::OnDPIChanged()
+{
+  UpdateOptions(options());
 }
 
 void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo)
