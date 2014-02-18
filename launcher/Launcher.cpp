@@ -939,15 +939,22 @@ void Launcher::OnLockHideChanged(GVariant *data)
 
 void Launcher::DesaturateIcons()
 {
-  bool inactive_only = WindowManager::Default().IsScaleActiveForGroup();
+  auto& wm = WindowManager::Default();
+  bool spread_mode = wm.IsScaleActive() || wm.IsExpoActive();
+  bool inactive_only = spread_mode && wm.IsScaleActiveForGroup();
 
   for (auto const& icon : *model_)
   {
     bool desaturate = false;
 
-    if (icon->GetIconType () != AbstractLauncherIcon::IconType::HOME &&
-        icon->GetIconType () != AbstractLauncherIcon::IconType::HUD &&
-        (!inactive_only || !icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, monitor())))
+    if (!spread_mode)
+    {
+      auto type = icon->GetIconType();
+
+      if (type != AbstractLauncherIcon::IconType::HOME && type != AbstractLauncherIcon::IconType::HUD)
+        desaturate = true;
+    }
+    else if (!inactive_only || !icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, monitor()))
     {
       desaturate = true;
     }
@@ -1149,7 +1156,6 @@ void Launcher::OnSpreadChanged()
   WindowManager& wm = WindowManager::Default();
   bool active = wm.IsScaleActive();
   hide_machine_.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, active);
-
   bg_effect_helper_.enabled = active;
 
   if (active && icon_under_mouse_)

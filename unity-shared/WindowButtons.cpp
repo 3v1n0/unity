@@ -328,6 +328,8 @@ WindowButtons::WindowButtons()
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));
   Settings::Instance().form_factor.changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
+  WindowManager::Default().initiate_spread.connect(sigc::mem_fun(this, &WindowButtons::OnSpreadInitiate));
+  WindowManager::Default().terminate_spread.connect(sigc::mem_fun(this, &WindowButtons::OnSpreadTerminate));
 }
 
 void WindowButtons::OnMonitorChanged(int monitor)
@@ -380,7 +382,12 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
 
   if (win_button->overlay_mode())
   {
-    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
+    auto& wm = WindowManager::Default();
+
+    if (wm.IsScaleActive())
+      wm.TerminateScale();
+    else
+      ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
   else
   {
@@ -506,9 +513,6 @@ void WindowButtons::OnOverlayShown(GVariant* data)
 
 void WindowButtons::OnOverlayHidden(GVariant* data)
 {
-  internal::WindowButton* maximize_button = nullptr;
-  internal::WindowButton* restore_button = nullptr;
-
   glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
@@ -527,8 +531,35 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
 
   active_overlay_ = "";
 
-  WindowManager& wm = WindowManager::Default();
+  if (!WindowManager::Default().IsScaleActive())
+    ResetNormalButtonState();
+}
+
+void WindowButtons::OnSpreadInitiate()
+{
   for (auto area : GetChildren())
+  {
+    auto button = static_cast<internal::WindowButton*>(area);
+    button->enabled = (button->GetType() == panel::WindowButtonType::CLOSE);
+    button->overlay_mode = true;
+  }
+}
+
+void WindowButtons::OnSpreadTerminate()
+{
+  if (!active_overlay_.empty())
+      return;
+
+  ResetNormalButtonState();
+}
+
+void WindowButtons::ResetNormalButtonState()
+{
+  WindowManager& wm = WindowManager::Default();
+  internal::WindowButton* maximize_button = nullptr;
+  internal::WindowButton* restore_button = nullptr;
+
+  for (auto* area : GetChildren())
   {
     auto button = static_cast<internal::WindowButton*>(area);
 
