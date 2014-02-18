@@ -73,6 +73,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   Refresh();
 }

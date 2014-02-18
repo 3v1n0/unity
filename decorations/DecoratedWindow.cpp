@@ -48,6 +48,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , frame_(0)
   , dirty_geo_(true)
   , monitor_(0)
+  , cv_(unity::Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
     bg_textures_.clear();

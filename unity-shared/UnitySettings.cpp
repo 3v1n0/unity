@@ -44,6 +44,10 @@ const std::string LIM_KEY = "integrated-menus";
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
+
+// FIXME Update this when hikikos settings changes land in unity
+const std::string GNOME_SETTINGS = "org.gnome.desktop.interface";
+const std::string TEXT_SCALING_FACTOR = "text-scaling-factor";
 }
 
 //
@@ -56,6 +60,7 @@ public:
     : parent_(owner)
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
+    , gnome_settings_(g_settings_new(GNOME_SETTINGS.c_str()))
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
@@ -63,6 +68,7 @@ public:
   {
     CacheFormFactor();
     CacheDoubleClickActivate();
+    UpdateEMConverter();
     UpdateLimSetting();
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
@@ -83,7 +89,9 @@ public:
       UpdateLimSetting();
     });
 
-    UpdateEMConverter();
+    signals_.Add<void, GSettings*, const gchar*>(gnome_settings_, "changed::" + TEXT_SCALING_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateEMConverter();
+    });
   }
 
   void CacheFormFactor()
@@ -147,10 +155,10 @@ public:
   // FIXME Add in getting the specific dpi scale from each monitor
   int GetDPI(int monitor = 0) const
   {
-    int dpi = 0;
-    g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
+    int dpi = 96;
+    float scale = g_settings_get_double(gnome_settings_, TEXT_SCALING_FACTOR.c_str());
 
-    return dpi / 1024;
+    return dpi * scale;
   }
 
   void UpdateFontSize()
@@ -166,15 +174,9 @@ public:
     for (int i = 0; i < (int)em_converters_.size(); ++i)
     {
       int dpi = GetDPI(i);
-
-      if (em_converters_[i].GetDPI() != dpi)
-      {
-        em_converters_[i].SetDPI(dpi);
-        parent_->dpi_changed.emit();
-      }
+      em_converters_[i].SetDPI(dpi);
     }
 
-    em_converters_[1].SetDPI(192);
     parent_->dpi_changed.emit();
   }
 
@@ -187,10 +189,10 @@ public:
   Settings* parent_;
   glib::Object<GSettings> usettings_;
   glib::Object<GSettings> lim_settings_;
+  glib::Object<GSettings> gnome_settings_;
   FormFactor cached_form_factor_;
   bool cached_double_click_activate_;
   bool lowGfx_;
-
   glib::SignalManager signals_;
   std::vector<EMConverter> em_converters_;
 };
@@ -245,7 +247,7 @@ void Settings::SetLowGfxMode(const bool low_gfx)
   pimpl->lowGfx_ = low_gfx;
 }
 
-EMConverter const& Settings::em(int monitor) const
+EMConverter& Settings::em(int monitor) const
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
