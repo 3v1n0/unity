@@ -372,7 +372,7 @@ private:
   UBusManager ubus_;
   glib::SourceManager sources_;
 
-  EMConverter cv_;
+  EMConverter& cv_;
 
   friend class TestLauncher;
 };

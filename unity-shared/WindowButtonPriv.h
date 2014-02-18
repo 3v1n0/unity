@@ -73,7 +73,7 @@ private:
   panel::WindowButtonType type_;
 
   int monitor_;
-  EMConverter cv_;
+  EMConverter& cv_;
 
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> prelight_tex_;

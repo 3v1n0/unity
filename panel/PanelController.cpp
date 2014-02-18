@@ -161,7 +161,6 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
     }
 
     panels_[i]->SetMonitor(i);
-    panels_[i]->SetMaximumHeight(panel::Style::Instance().PanelHeight(i));
     panels_[i]->geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdatePanelGeometries(); });
     tray_xids_[i] = panels_[i]->GetTrayXid();
 
@@ -236,19 +235,7 @@ Controller::Controller(menu::Manager::Ptr const& menus, ui::EdgeBarrierControlle
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
   OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 
-  unity::Settings::Instance().dpi_changed.connect([this] {
-    for (auto& panel_ptr : pimpl->panels_)
-    {
-      if (panel_ptr)
-      {
-        int monitor = panel_ptr->GetMonitor();
-        int height  = panel::Style::Instance().PanelHeight(monitor);
-
-        panel_ptr->SetMaximumHeight(height);
-        panel_ptr->SetMonitor(monitor);
-      }
-    }
-  });
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Controller::OnDPIChanged));
 
   launcher_width.changed.connect([this] (int width)
   {
@@ -258,6 +245,21 @@ Controller::Controller(menu::Manager::Ptr const& menus, ui::EdgeBarrierControlle
 
 Controller::~Controller()
 {}
+
+void Controller::OnDPIChanged()
+{
+  for (auto& panel_ptr : pimpl->panels_)
+  {
+    if (panel_ptr)
+    {
+      int monitor = panel_ptr->GetMonitor();
+      int height  = panel::Style::Instance().PanelHeight(monitor);
+
+      panel_ptr->SetMinMaxSize(height, height);
+      panel_ptr->SetMonitor(monitor);
+    }
+  }
+}
 
 void Controller::SetOpacity(float opacity)
 {
