@@ -67,7 +67,6 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , show_now_activated_(false)
   , we_control_active_(false)
   , new_app_menu_shown_(false)
-  , monitor_(0)
   , active_xid_(0)
   , desktop_name_(_("Ubuntu Desktop"))
 {

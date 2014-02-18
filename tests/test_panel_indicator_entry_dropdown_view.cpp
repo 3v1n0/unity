@@ -230,7 +230,7 @@ TEST_F(TestPanelIndicatorEntryDropdownView, ShowMenu)
   }
 
   auto const& geo = dropdown.GetGeometry();
-  EXPECT_CALL(*indicators_, ShowEntriesDropdown(entries, Entry::Ptr(), 0, geo.x, geo.y + Style::Instance().panel_height));
+  EXPECT_CALL(*indicators_, ShowEntriesDropdown(entries, Entry::Ptr(), 0, geo.x, geo.y + Style::Instance().PanelHeight()));
   dropdown.ShowMenu();
 }
 
@@ -249,7 +249,7 @@ TEST_F(TestPanelIndicatorEntryDropdownView, ActivateChild)
   auto active = views[g_random_int() % views.size()];
   auto const& geo = dropdown.GetGeometry();
 
-  EXPECT_CALL(*indicators_, ShowEntriesDropdown(entries, active->GetEntry(), 0, geo.x, geo.y + Style::Instance().panel_height));
+  EXPECT_CALL(*indicators_, ShowEntriesDropdown(entries, active->GetEntry(), 0, geo.x, geo.y + Style::Instance().PanelHeight()));
   dropdown.ActivateChild(active);
 }
 
