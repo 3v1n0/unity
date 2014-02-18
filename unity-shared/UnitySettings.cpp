@@ -150,6 +150,9 @@ public:
         parent_->dpi_changed.emit();
       }
     }
+
+    em_converters_[1].SetDPI(192);
+    parent_->dpi_changed.emit();
   }
 
   void UpdateEMConverter()
