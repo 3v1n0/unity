@@ -391,7 +391,7 @@ void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
 
 void Window::Impl::UpdateDecorationTextures()
 {
-  if (!FullyDecorated())
+  if (!top_layout_)
   {
     bg_textures_.clear();
     return;
