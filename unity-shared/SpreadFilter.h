@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2013 Canonical Ltd
+* Copyright (C) 2014 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -14,41 +14,38 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Marco Trevisan (Treviño) <marco@ubuntu.com>
+* Authored by: Marco Trevisan <marco@ubuntu.com>
 */
 
-#ifndef UNITYSHELL_SESSION_CONTROLLER_H
-#define UNITYSHELL_SESSION_CONTROLLER_H
+#ifndef UNITYSHELL_SPREAD_FILTER_H
+#define UNITYSHELL_SPREAD_FILTER_H
 
 #include <memory>
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
-#include <Nux/HLayout.h>
 #include <NuxCore/Animation.h>
-#include <UnityCore/SessionManager.h>
-
-#include "SessionView.h"
+#include "Introspectable.h"
 
 namespace unity
 {
-namespace session
+class SearchBar;
+
+namespace spread
 {
 
-class Controller : public debug::Introspectable, public sigc::trackable
+class Filter : public debug::Introspectable, public sigc::trackable
 {
 public:
-  typedef std::shared_ptr<Controller> Ptr;
+  typedef std::shared_ptr<Filter> Ptr;
 
-  Controller(session::Manager::Ptr const& manager);
-  virtual ~Controller() = default;
+  Filter();
+  virtual ~Filter();
 
-  void Show(View::Mode mode);
-  void Hide();
+  nux::RWProperty<std::string> text;
 
   bool Visible() const;
-
-  void LockScreen() const;
+  nux::Geometry const& GetAbsoluteGeometry() const;
 
 protected:
   // Introspectable
@@ -56,25 +53,12 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
 private:
-  friend class TestSessionController;
-
-  void Show(View::Mode mode, bool inhibitors);
-  void CancelAndHide();
-  void ConstructView();
-  void EnsureView();
-  void CloseWindow();
-  void OnBackgroundUpdate(nux::Color const&);
-  nux::Point GetOffsetPerMonitor(int monitor);
-
-  View::Ptr view_;
+  nux::ObjectPtr<SearchBar> search_bar_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;
-  nux::Point adjustment_;
-  session::Manager::Ptr manager_;
-
   nux::animation::AnimateValue<double> fade_animator_;
 };
 
-}
-}
+} // namespace spread
+} // namespace unity
 
 #endif

@@ -63,14 +63,13 @@ public:
   nux::Property<bool> can_refine_search;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
+  nux::Property<unsigned> live_search_wait;
 
   sigc::signal<void> activated;
   sigc::signal<void, std::string const&> search_changed;
   sigc::signal<void, std::string const&> live_search_reached;
 
 private:
-  void Init();
-
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
   void OnSearchHintChanged();
 
