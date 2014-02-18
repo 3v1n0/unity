@@ -21,6 +21,9 @@
 #include "DecorationsWindowButton.h"
 #include "DecorationsDataPool.h"
 
+#include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
+
 namespace unity
 {
 namespace decoration
@@ -41,6 +44,19 @@ WindowButton::WindowButton(CompWindow* win, WindowButtonType type)
 void WindowButton::UpdateTexture()
 {
   SetTexture(DataPool::Get()->ButtonTexture(type_, GetCurrentState()));
+  UpdateTextureScale();
+}
+
+void WindowButton::UpdateTextureScale()
+{
+  WindowManager const& wm = WindowManager::Default();
+  CompRect const& c_geo = Geometry();
+  nux::Geometry geo(c_geo.x(), c_geo.y(), c_geo.width(), c_geo.height());
+
+  int monitor = wm.MonitorGeometryIn(geo);
+  float scale = unity::Settings::Instance().em(monitor).DPIScale();
+
+  SetTextureScale(scale);
 }
 
 WidgetState WindowButton::GetCurrentState() const

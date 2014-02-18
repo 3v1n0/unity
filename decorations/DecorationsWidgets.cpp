@@ -248,6 +248,11 @@ void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
   Damage();
 }
 
+void TexturedItem::SetTextureScale(float scale)
+{
+  texture_.SetScale(scale);
+}
+
 void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
                         CompRegion const& clip, unsigned mask)
 {

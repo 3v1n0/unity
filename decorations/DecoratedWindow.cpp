@@ -134,8 +134,10 @@ void Window::Impl::SetupExtents()
                            RawPixel(sb.bottom).CP(cv_));
 
   auto const& ib = Style::Get()->InputBorder();
-  CompWindowExtents input(sb.left + ib.left, sb.right + ib.right,
-                          sb.top + ib.top, sb.bottom + ib.bottom);
+  CompWindowExtents input(RawPixel(sb.left + ib.left).CP(cv_),
+                          RawPixel(sb.right + ib.right).CP(cv_),
+                          RawPixel(sb.top + ib.top).CP(cv_),
+                          RawPixel(sb.bottom + ib.bottom).CP(cv_));
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
@@ -567,8 +569,16 @@ void Window::Impl::UpdateMonitor()
   nux::Geometry const window_geo(win_->x(), win_->y(),
                                  win_->width(), win_->height());
 
-  parent_->monitor = WindowManager::Default().MonitorGeometryIn(window_geo);
-  cv_ = unity::Settings::Instance().em(parent_->monitor);
+  int monitor = WindowManager::Default().MonitorGeometryIn(window_geo);
+  if (parent_->monitor != monitor)
+  {
+    parent_->monitor = monitor;
+    cv_ = unity::Settings::Instance().em(monitor);
+
+    // FIXME Window buttons still dont dynamically update, but the frame does.. 
+    Update();
+  }
+
 }
 
 // Public APIs
