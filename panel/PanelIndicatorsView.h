@@ -69,6 +69,8 @@ public:
 
   void EnableDropdownMenu(bool, indicator::Indicators::Ptr const& i = nullptr);
 
+  virtual void SetMonitor(int monitor);
+
   nux::Property<double> opacity;
 
   sigc::signal<void> on_indicator_updated;
@@ -94,6 +96,8 @@ protected:
   nux::HLayout* layout_;
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
   Entries entries_;
+
+  int monitor_;
 
 private:
   bool SetOpacity(double& target, double const& new_value);

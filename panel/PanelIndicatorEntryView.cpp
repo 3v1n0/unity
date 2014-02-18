@@ -51,6 +51,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , spacing_(DEFAULT_SPACING)
   , left_padding_(padding < 0 ? 0 : padding)
   , right_padding_(left_padding_)
+  , monitor_(0)
   , type_(type)
   , entry_texture_(nullptr)
   , opacity_(1.0f)
@@ -58,7 +59,6 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , overlay_showing_(false)
   , disabled_(false)
   , focused_(true)
-  , monitor_(0)
   , cv_(unity::Settings::Instance().em(monitor_))
 {
   proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
@@ -76,12 +76,6 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   Refresh();
-
-  geometry_changed.connect([this] (nux::Area*, nux::Geometry&) {
-    int monitor = WindowManager::Default().MonitorGeometryIn(GetAbsoluteGeometry());
-    if (monitor != monitor_)
-      SetMonitor(monitor);
-  });
 }
 
 PanelIndicatorEntryView::~PanelIndicatorEntryView()
