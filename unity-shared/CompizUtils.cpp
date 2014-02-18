@@ -67,6 +67,9 @@ bool SimpleTextureQuad::SetScale(float s)
     return false;
 
   scale = s;
+  auto* tex = st->texture();
+  quad.box.setWidth(tex->width() * scale);
+  quad.box.setHeight(tex->height() * scale);
   UpdateMatrix();
   return true;
 }
