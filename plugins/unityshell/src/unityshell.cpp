@@ -3341,9 +3341,15 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
         deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
       break;
     case UnityshellOptions::LauncherHideMode:
-      launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
-      hud_controller_->launcher_locked_out = (launcher_options->hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
+    {
+      launcher_options->hide_mode = (launcher::LauncherHideMode) optionGetLauncherHideMode();
+      hud_controller_->launcher_locked_out = (launcher_options->hide_mode == LAUNCHER_HIDE_NEVER);
+
+      int scale_offset = (launcher_options->hide_mode == LAUNCHER_HIDE_NEVER) ? 0 : launcher_controller_->launcher().GetWidth();
+      CompOption::Value v(scale_offset);
+      screen->setOptionForPlugin("scale", "x_offset", v);
       break;
+    }
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
       break;
@@ -3387,21 +3393,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 
       hud_controller_->icon_size = launcher_options->icon_size();
       hud_controller_->tile_size = launcher_options->tile_size();
-
-      if (CompPlugin* p = CompPlugin::find("expo"))
-      {
-        CompOption::Vector &opts = p->vTable->getOptions ();
-
-        for (CompOption &o : opts)
-        {
-          if (o.name() == "x_offset")
-          {
-            CompOption::Value v(optionGetIconSize() + 18);
-            screen->setOptionForPlugin(p->vTable->name().c_str(), o.name().c_str(), v);
-            break;
-          }
-        }
-      }
       break;
     }
     case UnityshellOptions::AutohideAnimation:
@@ -3598,7 +3589,7 @@ void UnityScreen::initLauncher()
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
 
-  launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {
+  auto on_launcher_size_changed = [this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
     int launcher_width = w - 1;
@@ -3606,7 +3597,17 @@ void UnityScreen::initLauncher()
     dash_controller_->launcher_width = launcher_width;
     panel_controller_->launcher_width = launcher_width;
     shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight());
-  });
+
+    CompOption::Value v(launcher_width);
+    screen->setOptionForPlugin("expo", "x_offset", v);
+
+    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
+      screen->setOptionForPlugin("scale", "x_offset", v);
+  };
+  launcher_controller_->launcher().size_changed.connect(on_launcher_size_changed);
+
+  auto* l = &launcher_controller_->launcher();
+  on_launcher_size_changed(l, l->GetWidth(), l->GetHeight());
 
   ScheduleRelayout(0);
 }
@@ -3953,11 +3954,12 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
     return;
 
   nux::Geometry const& scale_geo = GetScaledGeometry();
-
   auto const& pos = scale_win->getCurrentPosition();
+  auto deco_attrib = attrib;
+  deco_attrib.opacity = COMPIZ_COMPOSITE_OPAQUE;
 
   bool highlighted = (ss->getSelectedWindow() == window->id());
-  paintFakeDecoration(scale_geo, attrib, transform, mask, highlighted, pos.scale);
+  paintFakeDecoration(scale_geo, deco_attrib, transform, mask, highlighted, pos.scale);
 }
 
 nux::Geometry UnityWindow::GetLayoutWindowGeometry()
@@ -4037,7 +4039,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
   last_bound = geo;
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib();
-  attrib.opacity = (alpha * parent_alpha * G_MAXUSHORT);
+  attrib.opacity = (alpha * parent_alpha * COMPIZ_COMPOSITE_OPAQUE);
   unsigned mask = gWindow->lastMask();
   nux::Geometry thumb_geo = geo;
 
@@ -4050,7 +4052,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
   paintThumb(attrib, matrix, mask, g.x, g.y, g.width, g.height, g.width, g.height);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
-  attrib.opacity = parent_alpha * G_MAXUSHORT;
+  attrib.opacity = parent_alpha * COMPIZ_COMPOSITE_OPAQUE;
 
   // The thumbnail is still animating, don't draw the decoration as selected
   if (selected && alpha < 1.0f)

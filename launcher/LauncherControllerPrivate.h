@@ -119,6 +119,8 @@ public:
   void OnDndMonitorChanged(std::string const& data, int old_monitor, int new_monitor);
   GVariant* OnDBusMethodCall(std::string const& method, GVariant *parameters);
 
+  void OnDPIChanged();
+
   Controller* parent_;
   LauncherModel::Ptr model_;
   nux::ObjectPtr<Launcher> launcher_;

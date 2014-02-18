@@ -63,6 +63,7 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , new_application_(nullptr)
   , overlay_showing_(false)
   , switcher_showing_(false)
+  , spread_showing_(false)
   , launcher_keynav_(false)
   , show_now_activated_(false)
   , we_control_active_(false)
@@ -234,20 +235,17 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
 
   Area* found_area = nullptr;
 
-  if (!we_control_active_)
+  if (!we_control_active_ && !spread_showing_)
   {
     /* When the current panel is not active, it all behaves like a grab-area */
     if (GetAbsoluteGeometry().IsInside(mouse_position))
       return titlebar_grab_area_.GetPointer();
   }
 
-  if (is_maximized_)
+  if (is_maximized_ || spread_showing_)
   {
-    if (window_buttons_)
-    {
-      found_area = window_buttons_->FindAreaUnderMouse(mouse_position, event_type);
-      NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
-    }
+    found_area = window_buttons_->FindAreaUnderMouse(mouse_position, event_type);
+    NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
   if (titlebar_grab_area_)
@@ -336,7 +334,7 @@ bool PanelMenuView::ShouldDrawButtons() const
   {
     WindowManager& wm = WindowManager::Default();
 
-    if (!wm.IsExpoActive() && !wm.IsScaleActive())
+    if (!wm.IsExpoActive())
     {
       if (is_inside_ || show_now_activated_ || new_application_)
         return true;
@@ -345,6 +343,9 @@ bool PanelMenuView::ShouldDrawButtons() const
         return true;
     }
   }
+
+  if (spread_showing_)
+    return true;
 
   return false;
 }
@@ -405,7 +406,7 @@ void PanelMenuView::UpdateLastGeometry(nux::Geometry const& geo)
 
 void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  if (overlay_showing_)
+  if (overlay_showing_ || spread_showing_)
     return;
 
   nux::Geometry const& geo = GetGeometry();
@@ -564,7 +565,7 @@ void PanelMenuView::UpdateTitleGradientTexture()
 
 void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  if (overlay_showing_)
+  if (overlay_showing_ && !spread_showing_)
     return;
 
   nux::Geometry const& geo = GetGeometry();
@@ -711,14 +712,7 @@ std::string PanelMenuView::GetCurrentTitle() const
     WindowManager& wm = WindowManager::Default();
     std::string new_title;
 
-    if (wm.IsScaleActive())
-    {
-      if (wm.IsScaleActiveForGroup())
-        new_title = GetActiveViewName(true);
-      else if (we_control_active_)
-        new_title = desktop_name_;
-    }
-    else if (wm.IsExpoActive())
+    if (wm.IsExpoActive())
     {
       new_title = desktop_name_;
     }
@@ -978,14 +972,14 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher, BamfView* old_vi
 
 void PanelMenuView::OnSpreadInitiate()
 {
-  if (Refresh())
-    QueueDraw();
+  spread_showing_ = true;
+  QueueDraw();
 }
 
 void PanelMenuView::OnSpreadTerminate()
 {
-  if (Refresh())
-    QueueDraw();
+  spread_showing_ = false;
+  QueueDraw();
 }
 
 void PanelMenuView::OnExpoInitiate()
