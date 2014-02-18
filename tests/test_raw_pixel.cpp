@@ -32,13 +32,13 @@ class TestRawPixel : public Test
 {
 public:
   TestRawPixel()
-    : cv(FONT_SIZE, DPI)
+    : cv(std::make_shared<EMConverter>(FONT_SIZE, DPI))
     , p_i(10_em)
     , p_f(10.0_em)
   {
   }
 
-  EMConverter cv;
+  EMConverter::Ptr cv;
   RawPixel p_i;
   RawPixel p_f;
 };
@@ -67,7 +67,7 @@ TEST_F(TestRawPixel, TestConverter)
 
 TEST_F(TestRawPixel, TestConverterTimesTwo)
 {
-  cv.SetDPI(DPI * 2);
+  cv->SetDPI(DPI * 2);
   ASSERT_EQ(p_i.CP(cv), 20);
 }
 

@@ -87,7 +87,7 @@ private:
   bool _cairo_text_has_changed;
   void UpdateTexture();
 
-  EMConverter& _cv;
+  EMConverter::Ptr _cv;
 };
 }
 
