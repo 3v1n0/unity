@@ -106,6 +106,8 @@ private:
   bool TrackMenuPointer();
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
+  
+  void OnDPIChanged();
 
   MockableBaseWindow* parent_;
   indicator::Indicators::Ptr remote_;

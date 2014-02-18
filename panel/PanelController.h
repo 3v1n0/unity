@@ -62,6 +62,7 @@ protected:
 
 private:
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
+  void OnDPIChanged();
 
   class Impl;
   std::unique_ptr<Impl> pimpl;

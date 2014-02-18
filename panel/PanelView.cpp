@@ -73,6 +73,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 {
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
   WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::OnDPIChanged));
 
   bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
@@ -164,6 +165,13 @@ Window PanelView::GetTrayXid() const
     return 0;
 
   return tray_->xid();
+}
+
+void PanelView::OnDPIChanged()
+{
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  tray_->SetMinMaxSize(1, height);
+  menu_view_->OnDPIChanged();
 }
 
 void PanelView::SetLauncherWidth(int width)

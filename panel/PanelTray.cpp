@@ -73,11 +73,6 @@ PanelTray::PanelTray(int monitor)
     gtk_widget_show(GTK_WIDGET(tray_.RawPtr()));
   }
 
-  unity::Settings::Instance().dpi_changed.connect([this] {
-    int height = panel::Style::Instance().PanelHeight(monitor_);
-    SetMinMaxSize(1, height);
-  });
-
   SetMinMaxSize(1, panel_height);
 }
 
