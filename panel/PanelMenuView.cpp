@@ -89,11 +89,6 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
     FullRedraw();
   });
 
-  unity::Settings::Instance().dpi_changed.connect([this] {
-    int height = panel::Style::Instance().PanelHeight(monitor_);
-    window_buttons_->SetMaximumHeight(height);
-  });
-
   opacity = 0.0f;
 
   if (Refresh())
@@ -104,6 +99,12 @@ PanelMenuView::~PanelMenuView()
 {
   window_buttons_->UnParentObject();
   titlebar_grab_area_->UnParentObject();
+}
+
+void PanelMenuView::OnDPIChanged()
+{
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  window_buttons_->SetMaximumHeight(height);
 }
 
 void PanelMenuView::SetupPanelMenuViewSignals()
