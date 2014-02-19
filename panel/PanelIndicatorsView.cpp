@@ -266,12 +266,12 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   if (!view)
     return;
 
-  bool added_to_dropdown = false;
   auto const& entry_id = view->GetEntryID();
+  bool added_to_dropdown = false;
+  bool known_entry = (entries_.find(entry_id) != entries_.end());
   view->SetOpacity(opacity());
 
-
-  if (dropdown_ && !dropdown_->Empty())
+  if (!known_entry && dropdown_ && !dropdown_->Empty())
   {
     if (pos == IndicatorEntryPosition::AUTO)
     {
@@ -312,7 +312,7 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
     QueueDraw();
   }
 
-  if (entries_.find(entry_id) == entries_.end())
+  if (!known_entry)
   {
     view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
     entries_.insert({entry_id, view});
