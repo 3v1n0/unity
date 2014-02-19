@@ -230,7 +230,7 @@ void Settings::SetLowGfxMode(const bool low_gfx)
   pimpl->lowGfx_ = low_gfx;
 }
 
-EMConverter::Ptr const Settings::em(int monitor) const
+EMConverter::Ptr const& Settings::em(int monitor) const
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
