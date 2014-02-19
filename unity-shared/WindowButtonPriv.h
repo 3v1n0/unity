@@ -47,6 +47,7 @@ public:
   void SetVisualState(nux::ButtonVisualState new_state);
 
   void OnMonitorChanged(int monitor);
+  void UpdateDPIChanged();
 
   nux::RWProperty<bool> enabled;
   nux::Property<bool> overlay_mode;
