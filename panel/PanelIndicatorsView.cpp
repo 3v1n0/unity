@@ -266,23 +266,27 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   if (!view)
     return;
 
-  int entry_pos = pos;
   auto const& entry_id = view->GetEntryID();
+  int entry_pos = pos;
+  bool known_entry = (entries_.find(entry_id) != entries_.end());
   view->SetOpacity(opacity());
 
-  if (entry_pos == IndicatorEntryPosition::AUTO)
+  if (!known_entry && dropdown_ && !dropdown_->Empty())
   {
-    entry_pos = nux::NUX_LAYOUT_BEGIN;
-
-    if (view->GetEntryPriority() > -1)
+    if (entry_pos == IndicatorEntryPosition::AUTO)
     {
-      for (auto area : layout_->GetChildren())
-      {
-        auto en = static_cast<PanelIndicatorEntryView*>(area);
-        if (view->GetEntryPriority() <= en->GetEntryPriority())
-          break;
+      entry_pos = nux::NUX_LAYOUT_BEGIN;
 
-        ++entry_pos;
+      if (view->GetEntryPriority() > -1)
+      {
+        for (auto area : layout_->GetChildren())
+        {
+          auto en = static_cast<PanelIndicatorEntryView*>(area);
+          if (view->GetEntryPriority() <= en->GetEntryPriority())
+            break;
+
+          ++entry_pos;
+        }
       }
     }
   }
@@ -293,7 +297,7 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   QueueRelayout();
   QueueDraw();
 
-  if (entries_.find(entry_id) == entries_.end())
+  if (!known_entry)
   {
     view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
     entries_.insert({entry_id, view});
