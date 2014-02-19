@@ -71,8 +71,8 @@ protected:
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position,
                                         nux::NuxEventType event_type);
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
-  std::string GetActiveViewName(bool use_appname = false) const;
-  std::string GetMaximizedViewName(bool use_appname = false) const;
+  virtual std::string GetActiveViewName(bool use_appname = false) const;
+  virtual std::string GetMaximizedViewName(bool use_appname = false) const;
 
 private:
   friend class TestPanelMenuView;
