@@ -47,7 +47,7 @@ const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
 
 // FIXME Update this when hikikos settings changes land in unity
 const std::string GNOME_SETTINGS = "org.gnome.desktop.interface";
-const std::string TEXT_SCALING_FACTOR = "text-scaling-factor";
+const std::string SCALING_FACTOR = "scaling-factor";
 }
 
 //
@@ -91,7 +91,7 @@ public:
       UpdateLimSetting();
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(gnome_settings_, "changed::" + TEXT_SCALING_FACTOR, [this] (GSettings*, const gchar* t) {
+    signals_.Add<void, GSettings*, const gchar*>(gnome_settings_, "changed::" + SCALING_FACTOR, [this] (GSettings*, const gchar* t) {
       UpdateEMConverter();
     });
   }
@@ -158,9 +158,9 @@ public:
   int GetDPI(int monitor = 0) const
   {
     int dpi = 96;
-    float scale = g_settings_get_double(gnome_settings_, TEXT_SCALING_FACTOR.c_str());
+    int scale = g_settings_get_uint(gnome_settings_, SCALING_FACTOR.c_str());
 
-    return dpi * scale;
+    return dpi * (scale > 0 ? scale : 1);
   }
 
   void UpdateFontSize()
