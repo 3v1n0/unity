@@ -21,6 +21,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <gio/gio.h>
+#include <glib.h>
 
 #include <NuxCore/Logger.h>
 
@@ -28,6 +29,8 @@
 #include "MultiMonitor.h"
 #include "UnitySettings.h"
 #include "UScreen.h"
+
+#define UI_SETTINGS "com.ubuntu.desktop" /* TODO: change the schema name and add a dependancy */
 
 namespace unity
 {
@@ -121,13 +124,38 @@ public:
     return font_size / 1024;
   }
 
-  // FIXME Add in getting the specific dpi scale from each monitor
+  float GetUIScaleFactor(int monitor = 0) const
+  {
+    GSettings* gsettings = g_settings_new(UI_SETTINGS);
+
+    GVariant* dict;
+    g_settings_get(gsettings, "scale-factor", "@a{si}", &dict);
+
+    auto uscreen = UScreen::GetDefault();
+    const char *monitor_name = uscreen->GetMonitorName(monitor).c_str();
+
+    int value;
+    float ui_scale;
+    if (!g_variant_lookup (dict, monitor_name, "i", &value))
+    {
+      ui_scale = 1.0;
+    }
+    else
+    {
+      ui_scale = (float)value / 8.0;
+    }
+
+    g_object_unref(gsettings);
+    return ui_scale;
+  }
+
   int GetDPI(int monitor = 0) const
   {
     int dpi = 0;
     g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
 
-    return dpi / 1024;
+    float scale = GetUIScaleFactor(monitor) * 96.0;
+    return dpi * scale / 1024;
   }
 
   void UpdateFontSize()
