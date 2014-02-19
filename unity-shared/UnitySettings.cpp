@@ -58,8 +58,10 @@ public:
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
-    , em_converters_(monitors::MAX, std::make_shared<EMConverter>())
   {
+    for (int i = 0; i < (int)monitors::MAX; i++)
+      em_converters_.push_back(std::make_shared<EMConverter>());
+
     CacheFormFactor();
     CacheDoubleClickActivate();
 
