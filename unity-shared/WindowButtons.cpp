@@ -44,12 +44,16 @@ WindowButton::WindowButton(panel::WindowButtonType type)
   , overlay_mode(false)
   , type_(type)
   , monitor_(0)
-  , cv_(unity::Settings::Instance().em(0))
+  , cv_(unity::Settings::Instance().em(monitor_))
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
+  LoadImages();
+}
 
+void WindowButton::UpdateDPIChanged()
+{
   LoadImages();
 }
 
@@ -273,6 +277,7 @@ WindowButtons::WindowButtons()
 {
   controlled_window.changed.connect(sigc::mem_fun(this, &WindowButtons::OnControlledWindowChanged));
   focused.changed.connect(sigc::hide(sigc::mem_fun(this, &WindowButtons::QueueDraw)));
+  monitor.changed.connect(sigc::mem_fun(this, &WindowButtons::OnMonitorChanged));
 
   auto lambda_enter = [this](int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
@@ -330,6 +335,12 @@ WindowButtons::WindowButtons()
   Settings::Instance().form_factor.changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
   WindowManager::Default().initiate_spread.connect(sigc::mem_fun(this, &WindowButtons::OnSpreadInitiate));
   WindowManager::Default().terminate_spread.connect(sigc::mem_fun(this, &WindowButtons::OnSpreadTerminate));
+}
+
+void WindowButtons::UpdateDPIChanged()
+{
+  for (auto area : GetChildren())
+    static_cast<internal::WindowButton*>(area)->UpdateDPIChanged();
 }
 
 void WindowButtons::OnMonitorChanged(int monitor)

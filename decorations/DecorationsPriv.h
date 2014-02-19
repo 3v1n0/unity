@@ -87,11 +87,10 @@ struct Window::Impl
   void SetupAppMenu();
   bool ActivateMenu(std::string const&);
 
-  void UpdateMonitor();
-
 private:
   void UnsetExtents();
   void SetupExtents();
+  void UpdateMonitor();
   void UpdateFrame();
   void CreateFrame(nux::Geometry const&);
   void UpdateFrameGeo(nux::Geometry const&);
@@ -138,7 +137,7 @@ private:
   Item::WeakPtr grab_edge_;
   Item::Ptr edge_borders_;
 
-  EMConverter& cv_;
+  EMConverter::Ptr cv_;
 };
 
 struct Manager::Impl : sigc::trackable

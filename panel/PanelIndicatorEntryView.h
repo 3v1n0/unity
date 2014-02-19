@@ -138,7 +138,7 @@ private:
   bool disabled_;
   bool focused_;
 
-  EMConverter& cv_;
+  EMConverter::Ptr cv_;
 };
 
 }

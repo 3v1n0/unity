@@ -121,12 +121,10 @@ void LauncherIcon::LoadTooltip()
   if (monitor < 0)
     monitor = 0;
 
-  _tooltip.Adopt(new Tooltip(monitor));
-
+  _tooltip = new Tooltip(monitor);
   _tooltip->SetOpacity(0.0f);
-  AddChild(_tooltip.GetPointer());
-
   _tooltip->text = tooltip_text();
+  debug::Introspectable::AddChild(_tooltip.GetPointer());
 }
 
 void LauncherIcon::LoadQuicklist()
@@ -135,8 +133,8 @@ void LauncherIcon::LoadQuicklist()
   if (monitor < 0)
     monitor = 0;
 
-  _quicklist.Adopt(new QuicklistView(monitor));
-  AddChild(_quicklist.GetPointer());
+  _quicklist = new QuicklistView(monitor);
+  debug::Introspectable::AddChild(_quicklist.GetPointer());
 
   _quicklist->mouse_down_outside_pointer_grab_area.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags)
   {

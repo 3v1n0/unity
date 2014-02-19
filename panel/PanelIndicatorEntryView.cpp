@@ -291,7 +291,7 @@ void PanelIndicatorEntryView::ScaleImageIcons(cairo_t* cr, int* x, int* y)
   int image_type = proxy_->image_type();
   if (image_type == GTK_IMAGE_PIXBUF)
   {
-    float aspect = cv_.DPIScale();
+    float aspect = cv_->DPIScale();
     *x = left_padding_;
     *y = SCALED_IMAGE_Y;
     cairo_scale(cr, aspect, aspect);

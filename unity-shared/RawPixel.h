@@ -30,7 +30,7 @@ class RawPixel
 public:
   RawPixel(float raw_pixel);
 
-  float CP(EMConverter const& converter) const;
+  float CP(EMConverter::Ptr const& converter) const;
 
   operator float() const;
 

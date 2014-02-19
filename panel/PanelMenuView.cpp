@@ -87,14 +87,6 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   SetupWindowManagerSignals();
   SetupUBusManagerInterests();
 
-  style_changed_connection_ = panel::Style::Instance().changed.connect([this] {
-    window_buttons_->ComputeContentSize();
-    layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-
-    Refresh(true);
-    FullRedraw();
-  });
-
   opacity = 0.0f;
 
   if (Refresh())
@@ -111,6 +103,12 @@ void PanelMenuView::OnDPIChanged()
 {
   int height = panel::Style::Instance().PanelHeight(monitor_);
   window_buttons_->SetMaximumHeight(height);
+  window_buttons_->UpdateDPIChanged();
+  window_buttons_->ComputeContentSize();
+  layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
+
+  Refresh(true);
+  FullRedraw();
 }
 
 void PanelMenuView::SetupPanelMenuViewSignals()
@@ -128,6 +126,8 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   opacity_animator_.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
   entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryViewAdded));
+
+  Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnDPIChanged));
 
   auto const& deco_style = decoration::Style::Get();
   lim_changed_connection_ = deco_style->integrated_menus.changed.connect([this] (bool lim) {

@@ -47,6 +47,7 @@ public:
   void SetVisualState(nux::ButtonVisualState new_state);
 
   void OnMonitorChanged(int monitor);
+  void UpdateDPIChanged();
 
   nux::RWProperty<bool> enabled;
   nux::Property<bool> overlay_mode;
@@ -71,9 +72,8 @@ private:
 
 private:
   panel::WindowButtonType type_;
-
   int monitor_;
-  EMConverter& cv_;
+  EMConverter::Ptr cv_;
 
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> prelight_tex_;

@@ -314,6 +314,7 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
 
   if (!known_entry)
   {
+    view->SetMonitor(monitor_);
     view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
     entries_.insert({entry_id, view});
     on_indicator_updated.emit();
@@ -325,8 +326,6 @@ PanelIndicatorEntryView *PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, 
 {
   auto view = new PanelIndicatorEntryView(entry, padding, type);
   AddEntryView(view, pos);
-
-  view->SetMonitor(monitor_);
 
   return view;
 }

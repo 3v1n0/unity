@@ -197,7 +197,6 @@ private:
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> active_app_changed_signal_;
   glib::Signal<void, BamfView*, gchar*, gchar*> view_name_changed_signal_;
   glib::Signal<void, BamfView*, gchar*, gchar*> app_name_changed_signal_;
-  connection::Wrapper style_changed_connection_;
   connection::Wrapper lim_changed_connection_;
 
   UBusManager ubus_manager_;
