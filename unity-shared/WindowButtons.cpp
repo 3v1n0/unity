@@ -53,6 +53,11 @@ WindowButton::WindowButton(panel::WindowButtonType type)
   LoadImages();
 }
 
+void WindowButton::UpdateDPIChanged()
+{
+  LoadImages();
+}
+
 void WindowButton::OnMonitorChanged(int monitor)
 {
   monitor_ = monitor;
@@ -330,6 +335,13 @@ WindowButtons::WindowButtons()
   Settings::Instance().form_factor.changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
   WindowManager::Default().initiate_spread.connect(sigc::mem_fun(this, &WindowButtons::OnSpreadInitiate));
   WindowManager::Default().terminate_spread.connect(sigc::mem_fun(this, &WindowButtons::OnSpreadTerminate));
+}
+
+
+void WindowButtons::UpdateDPIChanged()
+{
+  for (auto area : GetChildren())
+    static_cast<internal::WindowButton*>(area)->UpdateDPIChanged();
 }
 
 void WindowButtons::OnMonitorChanged(int monitor)
