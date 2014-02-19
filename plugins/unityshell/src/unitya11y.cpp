@@ -42,6 +42,7 @@
 #include "QuicklistView.h"
 #include "QuicklistMenuItem.h"
 #include "SwitcherView.h"
+#include "SessionButton.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
@@ -53,11 +54,13 @@
 #include "unity-quicklist-accessible.h"
 #include "unity-quicklist-menu-item-accessible.h"
 #include "unity-switcher-accessible.h"
+#include "unity-session-button-accessible.h"
 
 using namespace unity;
 using namespace unity::dash;
 using namespace unity::launcher;
 using namespace unity::panel;
+using namespace unity::session;
 
 static GHashTable* accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */
@@ -186,6 +189,9 @@ unity_a11y_create_accessible(nux::Object* object)
 
   if (object->Type().IsDerivedFromType(unity::switcher::SwitcherView::StaticObjectType))
     return unity_switcher_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(Button::StaticObjectType))
+    return unity_session_button_accessible_new(object);
 
   /* NUX classes  */
   if (object->Type().IsDerivedFromType(nux::TextEntry::StaticObjectType))

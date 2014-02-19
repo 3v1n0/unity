@@ -108,6 +108,7 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   highlighted.changed.connect([this] (bool value) {
     image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
     label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
+    highlight_change.emit();
   });
 }
 
