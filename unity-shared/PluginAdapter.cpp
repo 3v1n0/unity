@@ -25,6 +25,7 @@
 #include "CompizUtils.h"
 #include "MultiMonitor.h"
 
+#include <scale/scale.h>
 #include <NuxCore/Logger.h>
 
 namespace unity
@@ -289,7 +290,7 @@ void MultiActionList::TerminateAll(CompOption::Vector const& extra_args) const
 
   if (primary_action_)
   {
-    primary_action_->terminate()(primary_action_, 0, argument);
+    primary_action_->terminate()(primary_action_, CompAction::StateCancel, argument);
     return;
   }
 
@@ -338,13 +339,8 @@ std::string PluginAdapter::MatchStringForXids(std::vector<Window> const& windows
 {
   std::ostringstream sout;
 
-  sout << "any & (";
-
   for (auto const& window : windows)
-  {
-    sout << "| xid=" << window << " ";
-  }
-  sout << ")";
+    sout << "xid=" << window << " | ";
 
   return sout.str();
 }

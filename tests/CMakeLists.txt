@@ -278,6 +278,7 @@ if (ENABLE_X_SUPPORT)
                  test_single_monitor_launcher_icon.cpp
                  test_showdesktop_handler.cpp
                  test_software_center_launcher_icon.cpp
+                 test_spread_filter.cpp
                  test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_controller_class.cpp
