@@ -82,13 +82,7 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   SetupWindowManagerSignals();
   SetupUBusManagerInterests();
 
-  style_changed_connection_ = panel::Style::Instance().changed.connect([this] {
-    window_buttons_->ComputeContentSize();
-    layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-
-    Refresh(true);
-    FullRedraw();
-  });
+  style_changed_connection_ = panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnDPIChanged));
 
   opacity = 0.0f;
 
@@ -106,6 +100,13 @@ void PanelMenuView::OnDPIChanged()
 {
   int height = panel::Style::Instance().PanelHeight(monitor_);
   window_buttons_->SetMaximumHeight(height);
+  window_buttons_->UpdateDPIChanged();
+
+  window_buttons_->ComputeContentSize();
+  layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
+
+  Refresh(true);
+  FullRedraw();
 }
 
 void PanelMenuView::SetupPanelMenuViewSignals()
