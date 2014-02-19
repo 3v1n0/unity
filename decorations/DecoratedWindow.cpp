@@ -314,6 +314,7 @@ void Window::Impl::SetupWindowControls()
   top_layout_->right_padding = padding.right;
   top_layout_->top_padding = padding.top;
   top_layout_->focused = active();
+  top_layout_->scale = Settings::Instance().em(monitor_).DPIScale();
 
   if (win_->actions() & CompWindowActionCloseMask)
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::CLOSE));
@@ -684,6 +685,9 @@ void Window::Impl::UpdateMonitor()
     monitor_ = monitor;
     cv_ = unity::Settings::Instance().em(monitor);
     Update();
+
+    if (top_layout_)
+      top_layout_->scale = cv_.DPIScale();
   }
 }
 
