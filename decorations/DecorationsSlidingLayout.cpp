@@ -66,6 +66,7 @@ void SlidingLayout::SetMainItem(Item::Ptr const& main)
   {
     main_item_->SetParent(shared_from_this());
     main_item_->focused = focused();
+    main_item_->scale = scale();
   }
 
   Relayout();

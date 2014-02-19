@@ -40,6 +40,7 @@ Item::Item()
   , focused(false)
   , sensitive(true)
   , mouse_owner(false)
+  , scale(1.0f)
   , max_(std::numeric_limits<short>::max(), std::numeric_limits<short>::max())
 {
   auto parent_relayout_cb = sigc::mem_fun(this, &Item::RequestRelayout);
@@ -225,6 +226,17 @@ void Item::AddProperties(debug::IntrospectionData& data)
 
 //
 
+TexturedItem::TexturedItem()
+{
+  scale.changed.connect([this] (float s) {
+    if (texture_.SetScale(s))
+    {
+      geo_parameters_changed.emit();
+      Damage();
+    }
+  });
+}
+
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 {
   auto prev_geo = Geometry();
@@ -247,11 +259,6 @@ void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
   Damage();
 }
 
-void TexturedItem::SetTextureScale(float scale)
-{
-  texture_.SetScale(scale);
-}
-
 void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,
                         CompRegion const& clip, unsigned mask)
 {
@@ -267,12 +274,12 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
 
 int TexturedItem::GetNaturalWidth() const
 {
-  return (texture_) ? texture_.st->width() : Item::GetNaturalWidth();
+  return (texture_) ? texture_.st->width() * scale() : Item::GetNaturalWidth();
 }
 
 int TexturedItem::GetNaturalHeight() const
 {
-  return (texture_) ? texture_.st->height() : Item::GetNaturalHeight();
+  return (texture_) ? texture_.st->height() * scale() : Item::GetNaturalHeight();
 }
 
 CompRect& TexturedItem::InternalGeo()
@@ -295,6 +302,10 @@ BasicContainer::BasicContainer()
   focused.changed.connect([this] (bool focused) {
     for (auto const& item : items_)
       if (item) item->focused = focused;
+  });
+  scale.changed.connect([this] (float scale) {
+    for (auto const& item : items_)
+      if (item) item->scale = scale;
   });
 }
 
@@ -357,6 +368,7 @@ void Layout::Append(Item::Ptr const& item)
 
   items_.push_back(item);
   item->focused = focused();
+  item->scale = scale();
   item->SetParent(shared_from_this());
   Relayout();
 }

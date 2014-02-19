@@ -49,6 +49,7 @@ public:
   nux::Property<bool> focused;
   nux::Property<bool> sensitive;
   nux::Property<bool> mouse_owner;
+  nux::Property<float> scale;
 
   CompRect const& Geometry() const;
   virtual int GetNaturalWidth() const;
@@ -119,8 +120,9 @@ class TexturedItem : public Item
 public:
   typedef std::shared_ptr<TexturedItem> Ptr;
 
+  TexturedItem();
+
   void SetTexture(cu::SimpleTexture::Ptr const&);
-  void SetTextureScale(float scale);
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void SetCoords(int x, int y);
 
