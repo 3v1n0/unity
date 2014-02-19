@@ -28,7 +28,6 @@
 #include <Nux/VLayout.h>
 
 #include "CairoBaseWindow.h"
-#include "unity-shared/EMConverter.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/Introspectable.h"
 
@@ -75,7 +74,6 @@ private:
 
   int                   _anchorX;
   int                   _anchorY;
-  int                   _monitor;
 
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
@@ -86,8 +84,6 @@ private:
 
   bool _cairo_text_has_changed;
   void UpdateTexture();
-
-  EMConverter::Ptr _cv;
 };
 }
 

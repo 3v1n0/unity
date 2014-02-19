@@ -42,27 +42,26 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
 Tooltip::Tooltip(int monitor) :
+  CairoBaseWindow(monitor),
   _anchorX(0),
   _anchorY(0),
-  _monitor(monitor),
-  _cairo_text_has_changed(true),
-  _cv(unity::Settings::Instance().em(monitor))
+  _cairo_text_has_changed(true)
 {
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  _left_space = new nux::SpaceLayout(PADDING.CP(_cv) + ANCHOR_WIDTH.CP(_cv), PADDING.CP(_cv) + ANCHOR_WIDTH.CP(_cv), 1, 1000);
-  _right_space = new nux::SpaceLayout(PADDING.CP(_cv) + CORNER_RADIUS.CP(_cv), PADDING.CP(_cv) + CORNER_RADIUS.CP(_cv), 1, 1000);
+  _left_space = new nux::SpaceLayout(PADDING.CP(cv_) + ANCHOR_WIDTH.CP(cv_), PADDING.CP(cv_) + ANCHOR_WIDTH.CP(cv_), 1, 1000);
+  _right_space = new nux::SpaceLayout(PADDING.CP(cv_) + CORNER_RADIUS.CP(cv_), PADDING.CP(cv_) + CORNER_RADIUS.CP(cv_), 1, 1000);
 
-  _top_space = new nux::SpaceLayout(1, 1000, PADDING.CP(_cv), PADDING.CP(_cv));
-  _bottom_space = new nux::SpaceLayout(1, 1000, PADDING.CP(_cv), PADDING.CP(_cv));
+  _top_space = new nux::SpaceLayout(1, 1000, PADDING.CP(cv_), PADDING.CP(cv_));
+  _bottom_space = new nux::SpaceLayout(1, 1000, PADDING.CP(cv_), PADDING.CP(cv_));
 
   _vlayout->AddLayout(_top_space, 0);
 
   _tooltip_text = new StaticCairoText(TEXT(""), NUX_TRACKER_LOCATION);
   _tooltip_text->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetTextVerticalAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
-  _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH.CP(_cv));
+  _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH.CP(cv_));
 
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
@@ -106,8 +105,8 @@ void Tooltip::SetTooltipPosition(int tip_x, int tip_y)
   _anchorX = tip_x;
   _anchorY = tip_y;
 
-  int x = _anchorX - PADDING.CP(_cv);
-  int y = _anchorY - ANCHOR_HEIGHT.CP(_cv) / 2 - CORNER_RADIUS.CP(_cv) - PADDING.CP(_cv);
+  int x = _anchorX - PADDING.CP(cv_);
+  int y = _anchorY - ANCHOR_HEIGHT.CP(cv_) / 2 - CORNER_RADIUS.CP(cv_) - PADDING.CP(cv_);
 
   SetBaseXY(x, y);
 }
@@ -131,22 +130,22 @@ void Tooltip::PreLayoutManagement()
 {
   int text_width;
   int text_height;
-  int text_min_width = MINIMUM_TEXT_WIDTH.CP(_cv);
+  int text_min_width = MINIMUM_TEXT_WIDTH.CP(cv_);
 
   _tooltip_text->GetTextExtents(text_width, text_height);
 
-  if (text_width + TEXT_PADDING.CP(_cv) * 2 > text_min_width)
+  if (text_width + TEXT_PADDING.CP(cv_) * 2 > text_min_width)
   {
-    text_min_width = text_width + TEXT_PADDING.CP(_cv) * 2;
+    text_min_width = text_width + TEXT_PADDING.CP(cv_) * 2;
   }
 
   _tooltip_text->SetMinimumWidth(text_min_width);
   _tooltip_text->SetMinimumHeight(text_height);
 
-  if (text_height < ANCHOR_HEIGHT.CP(_cv))
+  if (text_height < ANCHOR_HEIGHT.CP(cv_))
   {
-    _top_space->SetMinMaxSize(1, (ANCHOR_HEIGHT.CP(_cv) - text_height) / 2 + PADDING.CP(_cv) + CORNER_RADIUS.CP(_cv));
-    _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT.CP(_cv) - text_height) / 2 + 1 + PADDING.CP(_cv) + CORNER_RADIUS.CP(_cv));
+    _top_space->SetMinMaxSize(1, (ANCHOR_HEIGHT.CP(cv_) - text_height) / 2 + PADDING.CP(cv_) + CORNER_RADIUS.CP(cv_));
+    _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT.CP(cv_) - text_height) / 2 + 1 + PADDING.CP(cv_) + CORNER_RADIUS.CP(cv_));
   }
 
   CairoBaseWindow::PreLayoutManagement();
@@ -449,7 +448,7 @@ void Tooltip::UpdateTexture()
   int width = GetBaseWidth();
   int height = GetBaseHeight();
 
-  int x = _anchorX - PADDING.CP(_cv);
+  int x = _anchorX - PADDING.CP(cv_);
   int y = _anchorY - height / 2;
 
   float blur_coef = 6.0f;
@@ -498,14 +497,14 @@ void Tooltip::UpdateTexture()
     cairo_outline.GetSurface(),
     width,
     height,
-    ANCHOR_WIDTH.CP(_cv),
-    ANCHOR_HEIGHT.CP(_cv),
+    ANCHOR_WIDTH.CP(cv_),
+    ANCHOR_HEIGHT.CP(cv_),
     -1,
-    CORNER_RADIUS.CP(_cv),
+    CORNER_RADIUS.CP(cv_),
     blur_coef,
     shadow_color,
     1.0f,
-    PADDING.CP(_cv),
+    PADDING.CP(cv_),
     outline_color);
 
   compute_full_mask(
@@ -513,15 +512,15 @@ void Tooltip::UpdateTexture()
     cairo_mask.GetSurface(),
     width,
     height,
-    CORNER_RADIUS.CP(_cv), // radius,
-    RawPixel(16).CP(_cv),  // shadow_radius,
-    ANCHOR_WIDTH.CP(_cv),  // anchor_width,
-    ANCHOR_HEIGHT.CP(_cv), // anchor_height,
+    CORNER_RADIUS.CP(cv_), // radius,
+    RawPixel(16).CP(cv_),  // shadow_radius,
+    ANCHOR_WIDTH.CP(cv_),  // anchor_width,
+    ANCHOR_HEIGHT.CP(cv_), // anchor_height,
     -1,                    // upper_size,
     true,                  // negative,
     false,                 // outline,
     1.0,                   // line_width,
-    PADDING.CP(_cv),       // padding_size,
+    PADDING.CP(cv_),       // padding_size,
     mask_color);
 
   cairo_destroy(cr_bg);
