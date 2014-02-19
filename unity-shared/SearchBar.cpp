@@ -33,8 +33,8 @@
 
 namespace
 {
-const float kExpandDefaultIconOpacity = 1.0f;
-const int LIVE_SEARCH_TIMEOUT = 40;
+const float DEFAULT_ICON_OPACITY = 1.0f;
+const int DEFAULT_LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
 
 const int SPACE_BETWEEN_SPINNER_AND_TEXT = 5;
@@ -105,34 +105,19 @@ namespace unity
 NUX_IMPLEMENT_OBJECT_TYPE(SearchBar);
 
 SearchBar::SearchBar(NUX_FILE_LINE_DECL)
+  : SearchBar(false)
+{}
+
+SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , search_hint("")
   , showing_filters(false)
   , can_refine_search(false)
-  , show_filter_hint_(true)
+  , live_search_wait(DEFAULT_LIVE_SEARCH_TIMEOUT)
+  , show_filter_hint_(show_filter_hint)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
   , last_width_(-1)
   , last_height_(-1)
-{
-  Init();
-}
-
-SearchBar::SearchBar(bool show_filter_hint_, NUX_FILE_LINE_DECL)
-  : View(NUX_FILE_LINE_PARAM)
-  , search_hint("")
-  , showing_filters(false)
-  , can_refine_search(false)
-  , show_filter_hint_(show_filter_hint_)
-  , expander_view_(nullptr)
-  , show_filters_(nullptr)
-  , last_width_(-1)
-  , last_height_(-1)
-{
-  Init();
-}
-
-void SearchBar::Init()
 {
   dash::Style& style = dash::Style::Instance();
   nux::BaseTexture* icon = style.GetSearchMagnifyIcon();
@@ -199,7 +184,7 @@ void SearchBar::Init()
     expand_icon_ = new IconTexture(arrow,
                                    arrow->GetWidth(),
                                    arrow->GetHeight());
-    expand_icon_->SetOpacity(kExpandDefaultIconOpacity);
+    expand_icon_->SetOpacity(DEFAULT_ICON_OPACITY);
     expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
     expand_icon_->SetVisible(false);
 
@@ -294,10 +279,13 @@ void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
     font_desc << pango_font_description_get_family(desc) << " " << HINT_LABEL_FONT_STYLE << " " << HINT_LABEL_FONT_SIZE;
     hint_->SetFont(font_desc.str().c_str());
 
-    font_desc.str("");
-    font_desc.clear();
-    font_desc << pango_font_description_get_family(desc) << " " << SHOW_FILTERS_LABEL_FONT_STYLE << " " << SHOW_FILTERS_LABEL_FONT_SIZE;
-    show_filters_->SetFont(font_desc.str().c_str());
+    if (show_filter_hint_)
+    {
+      font_desc.str("");
+      font_desc.clear();
+      font_desc << pango_font_description_get_family(desc) << " " << SHOW_FILTERS_LABEL_FONT_STYLE << " " << SHOW_FILTERS_LABEL_FONT_SIZE;
+      show_filters_->SetFont(font_desc.str().c_str());
+    }
 
     pango_font_description_free(desc);
   }
@@ -317,7 +305,7 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
   // We don't want to set a new search string on every new character, so we add a sma
   // timeout to see if the user is typing a sentence. If more characters are added, we
   // keep restarting the timeout unti the user has actuay paused.
-  live_search_timeout_.reset(new glib::Timeout(LIVE_SEARCH_TIMEOUT));
+  live_search_timeout_.reset(new glib::Timeout(live_search_wait()));
   live_search_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnLiveSearchTimeout));
 
   // Don't animate the spinner immediately, the searches are fast and
@@ -428,6 +416,9 @@ void SearchBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_dra
     nux::GetPainter().PushPaintLayerStack();      
   }
 
+  if (!IsFullRedraw())
+    graphics::ClearGeometry(pango_entry_->GetGeometry());
+
   layout_->ProcessDraw(graphics_engine, force_draw);
 
   if (IsFullRedraw())
@@ -455,7 +446,7 @@ void SearchBar::OnEntryActivated()
 
 void SearchBar::ForceLiveSearch()
 {
-  live_search_timeout_.reset(new glib::Timeout(LIVE_SEARCH_TIMEOUT));
+  live_search_timeout_.reset(new glib::Timeout(live_search_wait()));
   live_search_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnLiveSearchTimeout));
 
   start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT));
@@ -466,8 +457,7 @@ void SearchBar::SetSearchFinished()
 {
   start_spinner_timeout_.reset();
 
-  bool is_empty = pango_entry_->im_active() ?
-    false : pango_entry_->GetText() == "";
+  bool is_empty = pango_entry_->im_active() ? false : pango_entry_->GetText().empty();
   spinner_->SetState(is_empty ? STATE_READY : STATE_CLEAR);
 }
 
@@ -609,14 +599,19 @@ void SearchBar::AddProperties(debug::IntrospectionData& introspection)
   .add(GetAbsoluteGeometry())
   .add("has_focus", pango_entry_->HasKeyFocus())
   .add("search_string", pango_entry_->GetText())
-  .add("expander-has-focus", expander_view_->HasKeyFocus())
   .add("showing-filters", showing_filters)
-  .add("filter-label-x", show_filters_->GetAbsoluteX())
-  .add("filter-label-y", show_filters_->GetAbsoluteY())
-  .add("filter-label-width", show_filters_->GetAbsoluteWidth())
-  .add("filter-label-height", show_filters_->GetAbsoluteHeight())
-  .add("filter-label-geo", show_filters_->GetAbsoluteGeometry())
   .add("im_active", pango_entry_->im_active());
+
+  if (show_filter_hint_)
+  {
+    introspection
+    .add("expander-has-focus", expander_view_->HasKeyFocus())
+    .add("filter-label-x", show_filters_->GetAbsoluteX())
+    .add("filter-label-y", show_filters_->GetAbsoluteY())
+    .add("filter-label-width", show_filters_->GetAbsoluteWidth())
+    .add("filter-label-height", show_filters_->GetAbsoluteHeight())
+    .add("filter-label-geo", show_filters_->GetAbsoluteGeometry());
+  }
 }
 
 } // namespace unity

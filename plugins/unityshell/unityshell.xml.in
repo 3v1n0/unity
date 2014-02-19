@@ -43,6 +43,7 @@
             </requirement>
             <conflict>
                 <plugin>decor</plugin>
+                <plugin>scalefilter</plugin>
             </conflict>
         </deps>
 
