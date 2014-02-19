@@ -82,6 +82,11 @@ TEST_F(TestDecorationItem, DefaultFocused)
   EXPECT_FALSE(item.focused());
 }
 
+TEST_F(TestDecorationItem, DefaultScale)
+{
+  EXPECT_FLOAT_EQ(1.0f, item.scale());
+}
+
 TEST_F(TestDecorationItem, DefaultMaxSize)
 {
   MockItem item;
@@ -463,6 +468,31 @@ TEST_F(TestDecorationLayout, AddToFocused)
 
   layout->Append(item);
   ASSERT_TRUE(item->focused());
+}
+
+TEST_F(TestDecorationLayout, Scale)
+{
+  for (int i = 0; i < 100; ++i)
+  {
+    auto const& item = RandomMockItem();
+    layout->Append(item);
+    ASSERT_FLOAT_EQ(1.0f, item->scale());
+  }
+
+  layout->scale = 2.0f;
+
+  for (auto const& item : layout->Items())
+    ASSERT_FLOAT_EQ(2.0f, item->scale());
+}
+
+TEST_F(TestDecorationLayout, AddToScaled)
+{
+  auto const& item = RandomMockItem();
+  layout->scale = 0.5f;
+  ASSERT_FLOAT_EQ(1.0f, item->scale());
+
+  layout->Append(item);
+  EXPECT_FLOAT_EQ(0.5f, item->scale());
 }
 
 TEST_F(TestDecorationLayout, ContentGeo)
