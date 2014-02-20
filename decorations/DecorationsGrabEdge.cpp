@@ -25,15 +25,12 @@ namespace unity
 {
 namespace decoration
 {
-namespace
-{
-const int MOUSE_DOWN_TIMEOUT = 150;
-}
 
-GrabEdge::GrabEdge(CompWindow* win)
+GrabEdge::GrabEdge(CompWindow* win, bool always_wait_grab_timeout)
   : Edge(win, Edge::Type::GRAB)
   , last_click_time_(0)
   , button_down_(-1)
+  , always_wait_grab_timeout_(always_wait_grab_timeout)
 {}
 
 void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timestamp)
@@ -43,7 +40,7 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timesta
   else if (button != 1)
     return;
 
-  if (!(win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask)))
+  if (!IsMaximizable() && !always_wait_grab_timeout_)
   {
     Edge::ButtonDownEvent(p, button, timestamp);
     return;
@@ -68,7 +65,7 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timesta
 
   if (!maximized)
   {
-    button_down_timer_.reset(new glib::Timeout(MOUSE_DOWN_TIMEOUT));
+    button_down_timer_.reset(new glib::Timeout(style->grab_wait()));
     button_down_timer_->Run([this] {
       Edge::ButtonDownEvent(CompPoint(pointerX, pointerY), button_down_, last_click_time_);
       button_down_timer_.reset();
@@ -93,12 +90,35 @@ void GrabEdge::MotionEvent(CompPoint const& p, Time timestamp)
 void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button, Time)
 {
   button_down_timer_.reset();
+  button_down_ = -1;
+}
+
+bool GrabEdge::IsGrabbed() const
+{
+  return !button_down_timer_;
+}
+
+int GrabEdge::ButtonDown() const
+{
+  return button_down_;
+}
+
+CompPoint const& GrabEdge::ClickedPoint() const
+{
+  return last_click_pos_;
+}
+
+bool GrabEdge::IsMaximizable() const
+{
+  return (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask));
 }
 
 void GrabEdge::AddProperties(debug::IntrospectionData& data)
 {
   Edge::AddProperties(data);
-  data.add("button_down", button_down_);
+  data.add("button_down", button_down_)
+  .add("maximizable", IsMaximizable())
+  .add("always_wait_grab_timeout", always_wait_grab_timeout_);
 }
 
 } // decoration namespace

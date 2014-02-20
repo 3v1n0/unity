@@ -37,9 +37,9 @@ RawPixel::RawPixel(float raw_pixel)
 {
 }
 
-float RawPixel::CP(EMConverter const& converter) const
+float RawPixel::CP(EMConverter::Ptr const& converter) const
 {
-  return converter.ConvertPixels(raw_pixel_);
+  return converter->CP(raw_pixel_);
 }
 
 RawPixel::operator float() const

@@ -65,6 +65,7 @@ struct _PanelServicePrivate
 
   IndicatorObjectEntry *last_entry;
   IndicatorObjectEntry *last_dropdown_entry;
+  const gchar *last_panel;
   GtkMenu *last_menu;
   gint32   last_x;
   gint32   last_y;
@@ -227,8 +228,8 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_SIGNAL_RUN_LAST,
                   0,
                   NULL, NULL, NULL,
-                  G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT,
-                  G_TYPE_UINT, G_TYPE_UINT);
+                  G_TYPE_NONE, 6, G_TYPE_STRING, G_TYPE_STRING,
+                  G_TYPE_INT, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT);
 
   _service_signals[RE_SYNC] =
     g_signal_new ("re-sync",
@@ -296,6 +297,34 @@ get_entry_at (PanelService *self, gint x, gint y)
               y >= geo->y && y <= (geo->y + geo->height))
             {
               return entry;
+            }
+        }
+    }
+
+  return NULL;
+}
+
+static const gchar*
+get_panel_at (PanelService *self, gint x, gint y)
+{
+  GHashTableIter panel_iter, entries_iter;
+  gpointer key, value, k, v;
+
+  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
+  while (g_hash_table_iter_next (&panel_iter, &key, &value))
+    {
+      const gchar *panel_id = key;
+      GHashTable *entry2geometry_hash = value;
+      g_hash_table_iter_init (&entries_iter, entry2geometry_hash);
+
+      while (g_hash_table_iter_next (&entries_iter, &k, &v))
+        {
+          GdkRectangle *geo = v;
+
+          if (x >= geo->x && x <= (geo->x + geo->width) &&
+              y >= geo->y && y <= (geo->y + geo->height))
+            {
+              return panel_id;
             }
         }
     }
@@ -1546,11 +1575,13 @@ static void
 on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 {
   PanelServicePrivate *priv = self->priv;
+  g_signal_handlers_disconnect_by_data (priv->last_menu, self);
 
   priv->last_x = 0;
   priv->last_y = 0;
   priv->last_menu_button = 0;
 
+  priv->last_panel = NULL;
   priv->last_menu = NULL;
   priv->last_entry = NULL;
   priv->last_left = 0;
@@ -1561,7 +1592,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->use_event = FALSE;
   priv->pressed_entry = NULL;
 
-  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "", 0, 0, 0, 0);
+  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "", "", 0, 0, 0, 0);
 }
 
 
@@ -1660,6 +1691,13 @@ panel_service_sync_geometry (PanelService *self,
 
       if (width < 0 || height < 0 || !valid_entry)
         {
+          /* If the entry has been removed let's make sure that its menu is closed */
+          if (valid_entry && GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+            {
+              if (!priv->last_panel || g_strcmp0 (priv->last_panel, panel_id) == 0)
+                gtk_menu_popdown (entry->menu);
+            }
+
           if (entry2geometry_hash)
             {
               if (g_hash_table_size (entry2geometry_hash) > 1)
@@ -1670,12 +1708,6 @@ panel_service_sync_geometry (PanelService *self,
                 {
                   g_hash_table_remove (priv->panel2entries_hash, panel_id);
                 }
-            }
-
-          /* If the entry has been removed let's make sure that its menu is closed */
-          if (valid_entry && GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
-            {
-              gtk_menu_popdown (entry->menu);
             }
         }
       else
@@ -1702,7 +1734,8 @@ panel_service_sync_geometry (PanelService *self,
 
           /* If the current entry geometry has changed, we need to move the menu
            * accordingly to the change we recorded! */
-          if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+          if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu &&
+              g_strcmp0 (priv->last_panel, panel_id) == 0)
             {
               GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
 
@@ -1733,28 +1766,8 @@ panel_service_sync_geometry (PanelService *self,
 static gboolean
 panel_service_entry_is_visible (PanelService *self, IndicatorObjectEntry *entry)
 {
-  GHashTableIter panel_iter;
-  gpointer key, value;
-  gboolean found_geo;
-
   g_return_val_if_fail (PANEL_IS_SERVICE (self), FALSE);
   g_return_val_if_fail (entry != NULL, FALSE);
-
-  found_geo = FALSE;
-  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
-
-  while (g_hash_table_iter_next (&panel_iter, &key, &value) && !found_geo)
-    {
-      GHashTable *entry2geometry_hash = value;
-
-      if (g_hash_table_lookup (entry2geometry_hash, entry))
-        {
-          found_geo = TRUE;
-        }
-    }
-
-  if (!found_geo)
-    return FALSE;
 
   if (GTK_IS_LABEL (entry->label))
     {
@@ -1774,7 +1787,55 @@ panel_service_entry_is_visible (PanelService *self, IndicatorObjectEntry *entry)
         }
     }
 
-  return TRUE;
+  if (g_slist_find (self->priv->dropdown_entries, entry))
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+panel_service_entry_is_visible_on_panel (PanelService *self,
+                                         IndicatorObjectEntry *entry,
+                                         const gchar *panel_id)
+{
+  GHashTable *entry2geometry_hash;
+  GHashTableIter panel_iter;
+  gpointer key, value;
+  gboolean found_geo;
+
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), FALSE);
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  found_geo = FALSE;
+
+  if (panel_id)
+    {
+      entry2geometry_hash = g_hash_table_lookup (self->priv->panel2entries_hash, panel_id);
+
+      if (entry2geometry_hash && g_hash_table_lookup (entry2geometry_hash, entry))
+        {
+          found_geo = TRUE;
+        }
+    }
+  else
+    {
+      g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
+
+      while (g_hash_table_iter_next (&panel_iter, &key, &value) && !found_geo)
+        {
+          entry2geometry_hash = value;
+
+          if (g_hash_table_lookup (entry2geometry_hash, entry))
+            {
+              found_geo = TRUE;
+            }
+        }
+    }
+
+  if (!found_geo)
+    return FALSE;
+
+  return panel_service_entry_is_visible (self, entry);
 }
 
 static int
@@ -1824,9 +1885,9 @@ activate_next_prev_menu (PanelService         *self,
               gint prio = -1;
               new_entry = ll->data;
 
-              if (!priv->last_dropdown_entry)
+              if (!priv->last_dropdown_entry || new_entry != entry)
                 {
-                  if (!panel_service_entry_is_visible (self, new_entry))
+                  if (!panel_service_entry_is_visible_on_panel (self, new_entry, priv->last_panel))
                     continue;
                 }
 
@@ -1967,6 +2028,7 @@ panel_service_show_entry_common (PanelService *self,
 
       g_signal_handlers_disconnect_by_data (priv->last_menu, self);
 
+      priv->last_panel = NULL;
       priv->last_entry = NULL;
       priv->last_menu = NULL;
       priv->last_menu_button = 0;
@@ -2010,6 +2072,8 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;
+      priv->last_panel = get_panel_at (self, x, y);
+
       g_signal_connect (priv->last_menu, "hide", G_CALLBACK (on_active_menu_hidden), self);
       g_signal_connect_after (priv->last_menu, "move-current",
                               G_CALLBACK (on_active_menu_move_current), self);
@@ -2026,8 +2090,8 @@ panel_service_show_entry_common (PanelService *self,
           gdk_window_get_origin (gdkwin, &left, &top);
 
           gchar *entry_id = get_indicator_entry_id_by_entry (entry);
-          g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id,
-                         left, top, width, height);
+          g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0,
+                         priv->last_panel, entry_id, left, top, width, height);
           g_free (entry_id);
 
           priv->last_left = left;

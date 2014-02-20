@@ -28,7 +28,8 @@ namespace compiz_utils
 {
 namespace
 {
-  const unsigned PIXMAP_DEPTH = 32;
+  const unsigned PIXMAP_DEPTH  = 32;
+  const float    DEFAULT_SCALE = 1.0f;
 }
 
 SimpleTexture::SimpleTexture(GLTexture::List const& tex)
@@ -37,8 +38,15 @@ SimpleTexture::SimpleTexture(GLTexture::List const& tex)
 
 //
 
-void SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
+SimpleTextureQuad::SimpleTextureQuad()
+  : scale(DEFAULT_SCALE)
+{}
+
+bool SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
 {
+  if (st == simple_texture)
+    return false;
+
   st = simple_texture;
 
   if (st && st->texture())
@@ -46,31 +54,57 @@ void SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
     auto* tex = st->texture();
     CompPoint old_coords(quad.box.x(), quad.box.y());
     short invalid = std::numeric_limits<short>::min();
-    quad.box.setGeometry(invalid, invalid, tex->width(), tex->height());
+    quad.box.setGeometry(invalid, invalid, tex->width() * scale, tex->height() * scale);
     SetCoords(old_coords.x(), old_coords.y());
   }
+
+  return true;
 }
 
-void SimpleTextureQuad::SetCoords(int x, int y)
+bool SimpleTextureQuad::SetScale(float s)
+{
+  if (!st || scale == s)
+    return false;
+
+  scale = s;
+  auto* tex = st->texture();
+  quad.box.setWidth(tex->width() * scale);
+  quad.box.setHeight(tex->height() * scale);
+  UpdateMatrix();
+  return true;
+}
+
+bool SimpleTextureQuad::SetCoords(int x, int y)
 {
   if (x == quad.box.x() && y == quad.box.y())
-    return;
+    return false;
 
   quad.box.setX(x);
   quad.box.setY(y);
+  UpdateMatrix();
+  return true;
+}
+
+void SimpleTextureQuad::UpdateMatrix()
+{
+  int x = quad.box.x();
+  int y = quad.box.y();
+
   quad.matrix = (st && st->texture()) ? st->texture()->matrix() : GLTexture::Matrix();
+  quad.matrix.xx /= scale;
+  quad.matrix.yy /= scale;
   quad.matrix.x0 = 0.0f - COMP_TEX_COORD_X(quad.matrix, x);
   quad.matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad.matrix, y);
 }
 
-void SimpleTextureQuad::SetX(int x)
+bool SimpleTextureQuad::SetX(int x)
 {
-  SetCoords(x, quad.box.y());
+  return SetCoords(x, quad.box.y());
 }
 
-void SimpleTextureQuad::SetY(int y)
+bool SimpleTextureQuad::SetY(int y)
 {
-  SetCoords(quad.box.x(), y);
+  return SetCoords(quad.box.x(), y);
 }
 
 //

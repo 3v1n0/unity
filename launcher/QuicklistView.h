@@ -36,6 +36,7 @@
 #include "QuicklistMenuItem.h"
 
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -44,7 +45,7 @@ class QuicklistView : public CairoBaseWindow, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(QuicklistView, unity::CairoBaseWindow);
 public:
-  QuicklistView();
+  QuicklistView(int monitor = 0);
   ~QuicklistView();
 
   void SetText(std::string const& text);
@@ -139,11 +140,14 @@ private:
   void SelectItem(int index);
   bool IsMenuItemSelectable(int index);
 
+  int CalculateX() const;
+  int CalculateY() const;
+
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
   std::string           _labelText;
-  int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
+  RawPixel              _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
   bool                  _mouse_down;
 
@@ -151,12 +155,12 @@ private:
   // Keep the Quicklist on screen for testing and automation.
   bool                  _enable_quicklist_for_testing;
 
-  float _anchor_width;
-  float _anchor_height;
-  float _corner_radius;
-  float _padding;
-  float _left_padding_correction;
-  float _offset_correction;
+  RawPixel _anchor_width;
+  RawPixel _anchor_height;
+  RawPixel _corner_radius;
+  RawPixel _padding;
+  RawPixel _left_padding_correction;
+  RawPixel _offset_correction;
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
   nux::VLayout* _item_layout;

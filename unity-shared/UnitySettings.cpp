@@ -43,6 +43,14 @@ const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
 const std::string SCALE_FACTOR = "scale-factor";
+const std::string LIM_KEY = "integrated-menus";
+const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
+const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
+const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
+
+// FIXME Update this when hikikos settings changes land in unity
+const std::string GNOME_SETTINGS = "org.gnome.desktop.interface";
+const std::string SCALING_FACTOR = "scaling-factor";
 }
 
 //
@@ -55,19 +63,27 @@ public:
     : parent_(owner)
     , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , ubuntu_settings_(g_settings_new(UI_SETTINGS))
+    , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
+    , gnome_settings_(g_settings_new(GNOME_SETTINGS.c_str()))
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
-    , em_converters_(monitors::MAX)
   {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      em_converters_.push_back(std::make_shared<EMConverter>());
+
     CacheFormFactor();
     CacheDoubleClickActivate();
+    UpdateEMConverter();
+    UpdateLimSetting();
 
-    form_factor_changed_.Connect(gsettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, gchar*) {
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
       parent_->form_factor.changed.emit(cached_form_factor_);
     });
-    double_click_activate_changed_.Connect(gsettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, gchar*) {
+
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, const gchar*) {
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
@@ -75,12 +91,22 @@ public:
       UpdateEMConverter();
     });
 
-    UpdateEMConverter();
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
+      UpdateLimSetting();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
+      UpdateLimSetting();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(gnome_settings_, "changed::" + SCALING_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateEMConverter();
+    });
   }
 
   void CacheFormFactor()
   {
-    int raw_from_factor = g_settings_get_enum(gsettings_, FORM_FACTOR.c_str());
+    int raw_from_factor = g_settings_get_enum(usettings_, FORM_FACTOR.c_str());
 
     if (raw_from_factor == 0) //Automatic
     {
@@ -98,7 +124,14 @@ public:
 
   void CacheDoubleClickActivate()
   {
-    cached_double_click_activate_ = g_settings_get_boolean(gsettings_, DOUBLE_CLICK_ACTIVATE.c_str());
+    cached_double_click_activate_ = g_settings_get_boolean(usettings_, DOUBLE_CLICK_ACTIVATE.c_str());
+  }
+
+  void UpdateLimSetting()
+  {
+    decoration::Style::Get()->integrated_menus = g_settings_get_boolean(usettings_, LIM_KEY.c_str());
+    parent_->lim_movement_thresold = g_settings_get_uint(lim_settings_, CLICK_MOVEMENT_THRESHOLD.c_str());
+    parent_->lim_double_click_wait = g_settings_get_uint(lim_settings_, DOUBLE_CLICK_WAIT.c_str());
   }
 
   FormFactor GetFormFactor() const
@@ -108,7 +141,7 @@ public:
 
   bool SetFormFactor(FormFactor factor)
   {
-    g_settings_set_enum(gsettings_, FORM_FACTOR.c_str(), static_cast<int>(factor));
+    g_settings_set_enum(usettings_, FORM_FACTOR.c_str(), static_cast<int>(factor));
     return true;
   }
 
@@ -163,18 +196,14 @@ public:
 
   int GetDPI(int monitor = 0) const
   {
-   // int dpi = 0;
-   // g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
-
     int dpi = 96;
     int valid_monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
     if (monitor >= 0 && monitor < valid_monitors)
     {
-      float new_dpi = (float)dpi * GetUIScaleFactor(monitor) * 96.0 / 1024.0;
+      float new_dpi = (float)dpi * GetUIScaleFactor(monitor);
       LOG_ERROR(logger) << "NEW DPI: " << new_dpi;
       dpi = (int)new_dpi;
     }
-
     LOG_ERROR(logger) << "DPI: " << dpi;
     return dpi;
   }
@@ -183,17 +212,19 @@ public:
   {
     int font_size = GetFontSize();
 
-    for (auto& em : em_converters_)
-      em.SetFontSize(font_size);
+    for (auto const& em : em_converters_)
+      em->SetFontSize(font_size);
   }
 
   void UpdateDPI()
   {
-    for (int i = 0; i < (int)em_converters_.size(); ++i)
+    for (unsigned i = 0; i < em_converters_.size(); ++i)
     {
       int dpi = GetDPI(i);
-      em_converters_[i].SetDPI(dpi);
+      em_converters_[i]->SetDPI(dpi);
     }
+
+    parent_->dpi_changed.emit();
   }
 
   void UpdateEMConverter()
@@ -205,15 +236,14 @@ public:
   Settings* parent_;
   glib::Object<GSettings> gsettings_;
   glib::Object<GSettings> ubuntu_settings_;
+  glib::Object<GSettings> usettings_;
+  glib::Object<GSettings> lim_settings_;
+  glib::Object<GSettings> gnome_settings_;
   glib::SignalManager signals_;
+  std::vector<EMConverter::Ptr> em_converters_;
   FormFactor cached_form_factor_;
   bool cached_double_click_activate_;
   bool lowGfx_;
-
-  glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
-  glib::Signal<void, GSettings*, gchar* > double_click_activate_changed_;
-
-  std::vector<EMConverter> em_converters_;
 };
 
 //
@@ -266,7 +296,7 @@ void Settings::SetLowGfxMode(const bool low_gfx)
   pimpl->lowGfx_ = low_gfx;
 }
 
-EMConverter const& Settings::em(int monitor) const
+EMConverter::Ptr const& Settings::em(int monitor) const
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {

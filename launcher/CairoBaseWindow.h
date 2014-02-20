@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Animation.h>
+#include "unity-shared/EMConverter.h"
 
 namespace unity
 {
@@ -30,7 +31,7 @@ class CairoBaseWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE(CairoBaseWindow, nux::BaseWindow);
 public:
-  CairoBaseWindow();
+  CairoBaseWindow(int monitor = 0);
   virtual ~CairoBaseWindow() = default;
 
   virtual void Show();
@@ -45,6 +46,7 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> texture_bg_;
   nux::ObjectPtr<nux::BaseTexture> texture_mask_;
   nux::ObjectPtr<nux::BaseTexture> texture_outline_;
+  EMConverter::Ptr cv_;
 
 private:
   bool use_blurred_background_;

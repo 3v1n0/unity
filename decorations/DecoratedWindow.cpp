@@ -19,10 +19,15 @@
 
 #include <NuxCore/Logger.h>
 #include "DecorationsPriv.h"
-#include "DecorationsWindowButton.h"
 #include "DecorationsEdgeBorders.h"
 #include "DecorationsGrabEdge.h"
+#include "DecorationsWindowButton.h"
+#include "DecorationsTitle.h"
+#include "DecorationsSlidingLayout.h"
+#include "DecorationsMenuLayout.h"
+#include "RawPixel.h"
 #include "WindowManager.h"
+#include "UnitySettings.h"
 
 namespace unity
 {
@@ -31,6 +36,7 @@ namespace decoration
 namespace
 {
 DECLARE_LOGGER(logger, "unity.decoration.window");
+const std::string MENUS_PANEL_NAME = "WindowLIM";
 }
 
 Window::Impl::Impl(Window* parent, CompWindow* win)
@@ -41,10 +47,18 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , glwin_(GLWindow::get(win_))
   , frame_(0)
   , dirty_geo_(true)
+  , monitor_(0)
+  , cv_(unity::Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
     bg_textures_.clear();
-    if (top_layout_) top_layout_->focused = active;
+    if (top_layout_)
+    {
+      top_layout_->focused = active;
+
+      if (!active)
+        UnsetAppMenu();
+    }
     RedrawDecorations();
   });
 
@@ -59,7 +73,9 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   });
 
   parent->title.SetSetterFunction([this] (std::string const& new_title) {
-    if (!title_)
+    auto const& title_ptr = title_.lock();
+
+    if (!title_ptr)
     {
       if (last_title_ != new_title)
       {
@@ -70,10 +86,10 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
       return false;
     }
 
-    if (new_title == title_->text())
+    if (new_title == title_ptr->text())
       return false;
 
-    title_->text = new_title;
+    title_ptr->text = new_title;
     return true;
   });
 
@@ -125,11 +141,16 @@ void Window::Impl::SetupExtents()
     return;
 
   auto const& sb = Style::Get()->Border();
-  CompWindowExtents border(sb.left, sb.right, sb.top, sb.bottom);
+  CompWindowExtents border(RawPixel(sb.left).CP(cv_),
+                           RawPixel(sb.right).CP(cv_),
+                           RawPixel(sb.top).CP(cv_),
+                           RawPixel(sb.bottom).CP(cv_));
 
   auto const& ib = Style::Get()->InputBorder();
-  CompWindowExtents input(sb.left + ib.left, sb.right + ib.right,
-                          sb.top + ib.top, sb.bottom + ib.bottom);
+  CompWindowExtents input(RawPixel(sb.left + ib.left).CP(cv_),
+                          RawPixel(sb.right + ib.right).CP(cv_),
+                          RawPixel(sb.top + ib.top).CP(cv_),
+                          RawPixel(sb.bottom + ib.bottom).CP(cv_));
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
@@ -274,11 +295,16 @@ void Window::Impl::SetupWindowControls()
   input_mixer_ = std::make_shared<InputMixer>();
 
   if (win_->actions() & CompWindowActionResizeMask)
-    edge_borders_ = std::make_shared<EdgeBorders>(win_);
-  else if (win_->actions() & CompWindowActionMoveMask)
+  {
+    auto edges = std::make_shared<EdgeBorders>(win_);
+    grab_edge_ = edges->GetEdge(Edge::Type::GRAB);
+    edge_borders_ = edges;
+  }
+  else /*if (win_->actions() & CompWindowActionMoveMask)*/
+  {
     edge_borders_ = std::make_shared<GrabEdge>(win_);
-  else
-    edge_borders_.reset();
+    grab_edge_ = edge_borders_;
+  }
 
   input_mixer_->PushToFront(edge_borders_);
 
@@ -288,6 +314,7 @@ void Window::Impl::SetupWindowControls()
   top_layout_->right_padding = padding.right;
   top_layout_->top_padding = padding.top;
   top_layout_->focused = active();
+  top_layout_->scale = Settings::Instance().em(monitor_)->DPIScale();
 
   if (win_->actions() & CompWindowActionCloseMask)
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::CLOSE));
@@ -298,18 +325,24 @@ void Window::Impl::SetupWindowControls()
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE));
 
-  title_ = std::make_shared<Title>();
-  title_->text = last_title_.empty() ? WindowManager::Default().GetWindowName(win_->id()) : last_title_;
-  title_->sensitive = false;
+  auto title = std::make_shared<Title>();
+  title->text = last_title_.empty() ? WindowManager::Default().GetWindowName(win_->id()) : last_title_;
+  title->sensitive = false;
+  title_ = title;
   last_title_.clear();
+
+  auto sliding_layout = std::make_shared<SlidingLayout>();
+  sliding_layout->SetMainItem(title);
+  sliding_layout_ = sliding_layout;
 
   auto title_layout = std::make_shared<Layout>();
   title_layout->left_padding = style->TitleIndent();
-  title_layout->Append(title_);
+  title_layout->Append(sliding_layout);
   top_layout_->Append(title_layout);
 
   input_mixer_->PushToFront(top_layout_);
 
+  SetupAppMenu();
   RedrawDecorations();
 }
 
@@ -318,8 +351,8 @@ void Window::Impl::CleanupWindowControls()
   if (title_)
     last_title_ = title_->text();
 
+  UnsetAppMenu();
   theme_changed_->disconnect();
-  title_.reset();
   top_layout_.reset();
   input_mixer_.reset();
   edge_borders_.reset();
@@ -415,6 +448,8 @@ void Window::Impl::UpdateDecorationTextures()
     edge_borders_->SetCoords(input.x(), input.y());
     edge_borders_->SetSize(input.width(), input.height());
   }
+
+  SyncMenusGeometries();
 }
 
 void Window::Impl::ComputeShadowQuads()
@@ -550,10 +585,110 @@ void Window::Impl::Draw(GLMatrix const& transformation,
     top_layout_->Draw(glwin_, transformation, attrib, region, mask);
 }
 
+void Window::Impl::Damage()
+{
+  cwin_->damageOutputExtents();
+}
+
 void Window::Impl::RedrawDecorations()
 {
   dirty_geo_ = true;
   cwin_->damageOutputExtents();
+}
+
+void Window::Impl::SetupAppMenu()
+{
+  if (!active() || !top_layout_)
+    return;
+
+  auto const& menu_manager = manager_->impl_->menu_manager_;
+  auto const& sliding_layout = sliding_layout_.lock();
+  sliding_layout->SetInputItem(nullptr);
+  sliding_layout->mouse_owner = false;
+
+  if (!menu_manager->HasAppMenu())
+    return;
+
+  auto visibility_cb = sigc::hide(sigc::mem_fun(this, &Impl::UpdateAppMenuVisibility));
+  auto menus = std::make_shared<MenuLayout>(menu_manager, win_);
+  menus->Setup();
+  menus->active.changed.connect(visibility_cb);
+  menus->show_now.changed.connect(visibility_cb);
+  menus->mouse_owner.changed.connect(visibility_cb);
+  menus_ = menus;
+
+  auto const& grab_edge = grab_edge_.lock();
+  sliding_layout->SetInputItem(menus);
+  sliding_layout->fadein = menu_manager->fadein();
+  sliding_layout->fadeout = menu_manager->fadeout();
+
+  if (grab_edge->mouse_owner() || grab_edge->Geometry().contains(CompPoint(pointerX, pointerY)))
+    sliding_layout->mouse_owner = true;
+
+  grab_mouse_changed_ = grab_edge->mouse_owner.changed.connect([this] (bool owner) {
+    sliding_layout_->mouse_owner = owner;
+  });
+
+  if (sliding_layout->mouse_owner())
+    input_mixer_->ForceMouseOwnerCheck();
+
+  SyncMenusGeometries();
+}
+
+void Window::Impl::UpdateAppMenuVisibility()
+{
+  auto const& sliding_layout = sliding_layout_.lock();
+  auto const& menus = menus_.lock();
+
+  sliding_layout->mouse_owner = (menus->mouse_owner() || menus->active() || menus->show_now());
+
+  if (!sliding_layout->mouse_owner())
+    sliding_layout->mouse_owner = grab_edge_->mouse_owner();
+}
+
+void Window::Impl::UnsetAppMenu()
+{
+  if (!menus_)
+    return;
+
+  auto const& indicators = manager_->impl_->menu_manager_->Indicators();
+  indicators->SyncGeometries(MENUS_PANEL_NAME, indicator::EntryLocationMap());
+  sliding_layout_->SetInputItem(nullptr);
+  grab_mouse_changed_->disconnect();
+}
+
+void Window::Impl::SyncMenusGeometries() const
+{
+  if (!menus_)
+    return;
+
+  auto const& indicators = manager_->impl_->menu_manager_->Indicators();
+  indicator::EntryLocationMap map;
+  menus_->ChildrenGeometries(map);
+  indicators->SyncGeometries(MENUS_PANEL_NAME, map);
+}
+
+bool Window::Impl::ActivateMenu(std::string const& entry_id)
+{
+  return menus_ && menus_->ActivateMenu(entry_id);
+}
+
+void Window::Impl::UpdateMonitor()
+{
+  auto const& input = win_->inputRect();
+  nux::Geometry window_geo(input.x(), input.y(), input.width(), input.height());
+
+  int monitor = WindowManager::Default().MonitorGeometryIn(window_geo);
+
+  if (monitor_ != monitor)
+  {
+    monitor_ = monitor;
+    cv_ = unity::Settings::Instance().em(monitor);
+    Update();
+
+    if (top_layout_)
+      top_layout_->scale = cv_->DPIScale();
+  }
 }
 
 // Public APIs
@@ -603,6 +738,7 @@ void Window::Undecorate()
 
 void Window::UpdateDecorationPosition()
 {
+  impl_->UpdateMonitor();
   impl_->ComputeShadowQuads();
   impl_->UpdateDecorationTextures();
   impl_->dirty_geo_ = false;
@@ -626,6 +762,8 @@ void Window::AddProperties(debug::IntrospectionData& data)
   .add("title", title())
   .add("active", impl_->active())
   .add("scaled", scaled())
+  .add("monitor", impl_->monitor_)
+  .add("dpi_scale", impl_->cv_->DPIScale())
   .add("xid", impl_->win_->id())
   .add("fully_decorable", cu::IsWindowFullyDecorable(impl_->win_))
   .add("shadow_decorable", cu::IsWindowShadowDecorable(impl_->win_))

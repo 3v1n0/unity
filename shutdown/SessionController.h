@@ -25,7 +25,6 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
-#include <NuxCore/Color.h>
 #include <NuxCore/Animation.h>
 #include <UnityCore/SessionManager.h>
 

@@ -1,3 +1,20 @@
+unity (7.1.2+14.04.20140218.1-0ubuntu1) trusty; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Panel: Draw blurred in spread mode and show active close button Also
+    desaturate the BFB on spread/expo and set an offset on scale when
+    the launcher is hidden (so that we get events and we have a proper
+    scaled windows geometry). (LP: #1280595)
+  * UnityScreen: add a SpreadFilter when in Scale mode, when updated it
+    filters the scale results The SpreadFilter is a BaseWindow with a
+    SearchBar shown on the top-left corner of the active workspace that
+    is hidden by default monitoring key-presses; when some content is
+    written, the bar is shown, while is hidden when empty. Thanks to
+    this we can finally filter the windows by name in the unity spread!
+    (LP: #1281257)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 18 Feb 2014 16:52:44 +0000
+
 unity (7.1.2+14.04.20140217-0ubuntu1) trusty; urgency=low
 
   [ Luke Yelavich ]

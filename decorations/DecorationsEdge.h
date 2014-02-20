@@ -49,6 +49,8 @@ public:
   Edge(CompWindow* win, Type t);
 
   Type GetType() const;
+  CompWindow* Window() const;
+
   void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
 
 protected:

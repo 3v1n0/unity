@@ -54,6 +54,7 @@ set (UNITY_SHARED_SOURCES
      ResizingBaseWindow.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
+     SpreadFilter.cpp
      StaticCairoText.cpp
      TextureCache.cpp
      TextInput.cpp

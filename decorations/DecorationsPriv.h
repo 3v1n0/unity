@@ -24,6 +24,7 @@
 #include <NuxCore/NuxCore.h>
 #include <NuxCore/Rect.h>
 #include <UnityCore/ConnectionManager.h>
+#include <UnityCore/Indicators.h>
 #include <core/core.h>
 #include <opengl/opengl.h>
 #include <composite/composite.h>
@@ -31,8 +32,8 @@
 
 #include "DecorationsDataPool.h"
 #include "DecorationsManager.h"
-#include "DecorationsTitle.h"
 #include "DecorationsInputMixer.h"
+#include "EMConverter.h"
 
 class CompRegion;
 
@@ -40,9 +41,13 @@ namespace unity
 {
 namespace decoration
 {
-namespace cu = compiz_utils;
-
 extern Manager* manager_;
+
+class Title;
+class MenuLayout;
+class SlidingLayout;
+
+namespace cu = compiz_utils;
 
 struct Quads
 {
@@ -78,17 +83,24 @@ struct Window::Impl
   bool FullyDecorated() const;
   bool ShadowDecorated() const;
   void RedrawDecorations();
+  void Damage();
+  void SetupAppMenu();
+  bool ActivateMenu(std::string const&);
 
 private:
   void UnsetExtents();
   void SetupExtents();
+  void UpdateMonitor();
   void UpdateFrame();
   void CreateFrame(nux::Geometry const&);
   void UpdateFrameGeo(nux::Geometry const&);
   void UnsetFrame();
   void SetupWindowControls();
   void CleanupWindowControls();
+  void UnsetAppMenu();
+  void UpdateAppMenuVisibility();
   void SyncXShapeWithFrameRegion();
+  void SyncMenusGeometries() const;
   bool ShouldBeDecorated() const;
   GLTexture* ShadowTexture() const;
   unsigned ShadowRadius() const;
@@ -107,23 +119,30 @@ private:
   ::GLWindow* glwin_;
   ::Window frame_;
   bool dirty_geo_;
+  int monitor_;
 
   CompRect last_shadow_rect_;
   Quads shadow_quads_;
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
   connection::Wrapper theme_changed_;
+  connection::Wrapper grab_mouse_changed_;
   std::string last_title_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
-  Title::Ptr title_;
+  uweak_ptr<MenuLayout> menus_;
+  uweak_ptr<Title> title_;
+  uweak_ptr<SlidingLayout> sliding_layout_;
+  Item::WeakPtr grab_edge_;
   Item::Ptr edge_borders_;
+
+  EMConverter::Ptr cv_;
 };
 
 struct Manager::Impl : sigc::trackable
 {
-  Impl(decoration::Manager*);
+  Impl(decoration::Manager*, menu::Manager::Ptr const&);
   ~Impl();
 
   Window::Ptr HandleWindow(CompWindow* cwin);
@@ -138,11 +157,15 @@ private:
   bool UpdateWindow(::Window);
   void UpdateWindowsExtents();
 
+  void SetupIntegratedMenus();
+  void SetupAppMenu();
+  void UnsetAppMenu();
   void BuildActiveShadowTexture();
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
   void OnShadowOptionsChanged(bool active);
   void OnWindowFrameChanged(bool, ::Window, std::weak_ptr<decoration::Window> const&);
+  bool OnMenuKeyActivated(std::string const&);
 
   friend class Manager;
   friend struct Window::Impl;
@@ -154,9 +177,14 @@ private:
   cu::PixmapTexture::Ptr active_shadow_pixmap_;
   cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
 
-  std::weak_ptr<InputMixer> last_mouse_owner_;
+  uweak_ptr<decoration::Window> active_deco_win_;
+  uweak_ptr<InputMixer> last_mouse_owner_;
   std::map<CompWindow*, decoration::Window::Ptr> windows_;
   std::unordered_map<::Window, std::weak_ptr<decoration::Window>> framed_windows_;
+
+  menu::Manager::Ptr menu_manager_;
+  connection::Manager menu_connections_;
+  connection::handle appmenu_connection_;
 };
 
 } // decoration namespace

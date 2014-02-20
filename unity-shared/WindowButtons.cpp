@@ -43,11 +43,24 @@ WindowButton::WindowButton(panel::WindowButtonType type)
             sigc::mem_fun(this, &WindowButton::EnabledSetter))
   , overlay_mode(false)
   , type_(type)
+  , monitor_(0)
+  , cv_(unity::Settings::Instance().em(monitor_))
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
   LoadImages();
+}
+
+void WindowButton::UpdateDPIChanged()
+{
+  LoadImages();
+}
+
+void WindowButton::OnMonitorChanged(int monitor)
+{
+  monitor_ = monitor;
+  cv_ = unity::Settings::Instance().em(monitor);
 }
 
 void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
@@ -133,7 +146,7 @@ void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void WindowButton::UpdateSize()
 {
-  int panel_height = panel::Style::Instance().panel_height;
+  int panel_height = panel::Style::Instance().PanelHeight(monitor_);
   nux::BaseTexture* tex;
   tex = (overlay_mode()) ? normal_dash_tex_.GetPointer() : normal_tex_.GetPointer();
   int width = 0;
@@ -141,8 +154,10 @@ void WindowButton::UpdateSize()
 
   if (tex)
   {
-    width = std::min(panel_height, tex->GetWidth());
-    height = std::min(panel_height, tex->GetHeight());
+    int tex_w = RawPixel(tex->GetWidth()).CP(cv_);
+    int tex_h = RawPixel(tex->GetHeight()).CP(cv_);
+    width  = std::min(panel_height, tex_w);
+    height = std::min(panel_height, tex_h);
   }
 
   SetMinMaxSize(width, height);
@@ -262,6 +277,7 @@ WindowButtons::WindowButtons()
 {
   controlled_window.changed.connect(sigc::mem_fun(this, &WindowButtons::OnControlledWindowChanged));
   focused.changed.connect(sigc::hide(sigc::mem_fun(this, &WindowButtons::QueueDraw)));
+  monitor.changed.connect(sigc::mem_fun(this, &WindowButtons::OnMonitorChanged));
 
   auto lambda_enter = [this](int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
@@ -317,6 +333,21 @@ WindowButtons::WindowButtons()
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));
   Settings::Instance().form_factor.changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
+  WindowManager::Default().initiate_spread.connect(sigc::mem_fun(this, &WindowButtons::OnSpreadInitiate));
+  WindowManager::Default().terminate_spread.connect(sigc::mem_fun(this, &WindowButtons::OnSpreadTerminate));
+}
+
+void WindowButtons::UpdateDPIChanged()
+{
+  for (auto area : GetChildren())
+    static_cast<internal::WindowButton*>(area)->UpdateDPIChanged();
+}
+
+void WindowButtons::OnMonitorChanged(int monitor)
+{
+  // Need to update the EMConverter in each window button if the monitor changes
+  for (auto area : GetChildren())
+    static_cast<internal::WindowButton*>(area)->OnMonitorChanged(monitor);
 }
 
 nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType event_type)
@@ -362,7 +393,12 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
 
   if (win_button->overlay_mode())
   {
-    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
+    auto& wm = WindowManager::Default();
+
+    if (wm.IsScaleActive())
+      wm.TerminateScale();
+    else
+      ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
   else
   {
@@ -488,9 +524,6 @@ void WindowButtons::OnOverlayShown(GVariant* data)
 
 void WindowButtons::OnOverlayHidden(GVariant* data)
 {
-  internal::WindowButton* maximize_button = nullptr;
-  internal::WindowButton* restore_button = nullptr;
-
   glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
@@ -509,8 +542,35 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
 
   active_overlay_ = "";
 
-  WindowManager& wm = WindowManager::Default();
+  if (!WindowManager::Default().IsScaleActive())
+    ResetNormalButtonState();
+}
+
+void WindowButtons::OnSpreadInitiate()
+{
   for (auto area : GetChildren())
+  {
+    auto button = static_cast<internal::WindowButton*>(area);
+    button->enabled = (button->GetType() == panel::WindowButtonType::CLOSE);
+    button->overlay_mode = true;
+  }
+}
+
+void WindowButtons::OnSpreadTerminate()
+{
+  if (!active_overlay_.empty())
+      return;
+
+  ResetNormalButtonState();
+}
+
+void WindowButtons::ResetNormalButtonState()
+{
+  WindowManager& wm = WindowManager::Default();
+  internal::WindowButton* maximize_button = nullptr;
+  internal::WindowButton* restore_button = nullptr;
+
+  for (auto* area : GetChildren())
   {
     auto button = static_cast<internal::WindowButton*>(area);
 

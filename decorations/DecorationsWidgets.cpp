@@ -19,7 +19,6 @@
 
 #include <NuxCore/Logger.h>
 #include <composite/composite.h>
-#include <boost/range/adaptor/reversed.hpp>
 #include "DecorationsWidgets.h"
 
 namespace unity
@@ -41,6 +40,7 @@ Item::Item()
   , focused(false)
   , sensitive(true)
   , mouse_owner(false)
+  , scale(1.0f)
   , max_(std::numeric_limits<short>::max(), std::numeric_limits<short>::max())
 {
   auto parent_relayout_cb = sigc::mem_fun(this, &Item::RequestRelayout);
@@ -176,7 +176,7 @@ CompRect const& Item::Geometry() const
 
 void Item::SetParent(BasicContainer::Ptr const& parent)
 {
-  if (parent && !parent_.expired())
+  if (parent && parent_)
   {
     LOG_ERROR(logger) << "This item has already a parent!";
     return;
@@ -187,7 +187,7 @@ void Item::SetParent(BasicContainer::Ptr const& parent)
 
 BasicContainer::Ptr Item::GetParent() const
 {
-  return parent_.lock();
+  return parent_;
 }
 
 BasicContainer::Ptr Item::GetTopParent() const
@@ -196,7 +196,7 @@ BasicContainer::Ptr Item::GetTopParent() const
 
   while (parent)
   {
-    if (parent->parent_.expired())
+    if (!parent->parent_)
       return parent;
 
     parent = parent->GetParent();
@@ -226,13 +226,24 @@ void Item::AddProperties(debug::IntrospectionData& data)
 
 //
 
+TexturedItem::TexturedItem()
+{
+  scale.changed.connect([this] (float s) {
+    if (texture_.SetScale(s))
+    {
+      geo_parameters_changed.emit();
+      Damage();
+    }
+  });
+}
+
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 {
-  if (texture_.st == tex)
+  auto prev_geo = Geometry();
+
+  if (!texture_.SetTexture(tex))
     return;
 
-  auto prev_geo = Geometry();
-  texture_.SetTexture(tex);
   auto const& actual_geo = Geometry();
 
   if (prev_geo != actual_geo)
@@ -263,12 +274,12 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
 
 int TexturedItem::GetNaturalWidth() const
 {
-  return (texture_) ? texture_.st->width() : Item::GetNaturalWidth();
+  return (texture_) ? texture_.st->width() * scale() : Item::GetNaturalWidth();
 }
 
 int TexturedItem::GetNaturalHeight() const
 {
-  return (texture_) ? texture_.st->height() : Item::GetNaturalHeight();
+  return (texture_) ? texture_.st->height() * scale() : Item::GetNaturalHeight();
 }
 
 CompRect& TexturedItem::InternalGeo()
@@ -278,18 +289,39 @@ CompRect& TexturedItem::InternalGeo()
 
 void TexturedItem::SetCoords(int x, int y)
 {
-  texture_.SetCoords(x, y);
+  if (texture_.SetCoords(x, y))
+    geo_parameters_changed.emit();
 }
 
 //
 
 BasicContainer::BasicContainer()
+ : relayouting_(false)
 {
   geo_parameters_changed.connect(sigc::mem_fun(this, &BasicContainer::Relayout));
   focused.changed.connect([this] (bool focused) {
     for (auto const& item : items_)
-      item->focused = focused;
+      if (item) item->focused = focused;
   });
+  scale.changed.connect([this] (float scale) {
+    for (auto const& item : items_)
+      if (item) item->scale = scale;
+  });
+}
+
+void BasicContainer::Relayout()
+{
+  if (relayouting_)
+    return;
+
+  auto old_geo = Geometry();
+
+  relayouting_ = true;
+  DoRelayout();
+  relayouting_ = false;
+
+  if (old_geo != Geometry())
+    RequestRelayout();
 }
 
 CompRect BasicContainer::ContentGeometry() const
@@ -321,7 +353,6 @@ Layout::Layout()
   , right_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
   , top_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
   , bottom_padding(0, sigc::mem_fun(this, &Layout::SetPadding))
-  , relayouting_(false)
 {}
 
 void Layout::Append(Item::Ptr const& item)
@@ -337,6 +368,7 @@ void Layout::Append(Item::Ptr const& item)
 
   items_.push_back(item);
   item->focused = focused();
+  item->scale = scale();
   item->SetParent(shared_from_this());
   Relayout();
 }
@@ -361,14 +393,9 @@ CompRect Layout::ContentGeometry() const
                   clamp_size(rect_.height() - top_padding - bottom_padding));
 }
 
-void Layout::Relayout()
+void Layout::DoRelayout()
 {
-  if (relayouting_)
-    return;
-
-  relayouting_ = true;
   int loop = 0;
-  CompRect old_geo(rect_);
 
   nux::Size available_space(clamp_size(max_.width - left_padding - right_padding),
                             clamp_size(max_.height - top_padding - bottom_padding));
@@ -416,8 +443,10 @@ void Layout::Relayout()
     int exceeding_width = content.width - max_.width + inner_padding + right_padding - actual_right_padding;
     int content_y = rect_.y() + top_padding;
 
-    for (auto const& item : boost::adaptors::reverse(items_))
+    for (auto it = items_.rbegin(); it != items_.rend(); ++it)
     {
+      auto const& item = *it;
+
       if (!item->visible())
         continue;
 
@@ -449,11 +478,6 @@ void Layout::Relayout()
     ++loop;
   }
   while (rect_.width() > max_.width || rect_.height() > max_.height);
-
-  relayouting_ = false;
-
-  if (old_geo != rect_)
-    geo_parameters_changed.emit();
 }
 
 void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib,

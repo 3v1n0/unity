@@ -44,6 +44,7 @@ public:
   nux::Property<bool> focused;
 
   bool IsMouseOwner();
+  void UpdateDPIChanged();
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_pos, nux::NuxEventType event_type);
 
   sigc::signal<void> close_clicked;
@@ -65,9 +66,13 @@ private:
   void OnMaximizeClicked(nux::Button *button);
   void OnOverlayShown(GVariant* data);
   void OnOverlayHidden(GVariant* data);
+  void OnSpreadInitiate();
+  void OnSpreadTerminate();
   void OnDashSettingsUpdated(FormFactor form_factor);
   void OnControlledWindowChanged(Window xid);
+  void ResetNormalButtonState();
   bool OpacitySetter(double& target, double new_value);
+  void OnMonitorChanged(int monitor);
 
   std::string active_overlay_;
   UBusManager ubus_manager_;

@@ -19,6 +19,7 @@
  */
 
 #include <Nux/Nux.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GTKWrapper.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -29,13 +30,16 @@
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
 
 namespace
 {
-const int DEFAULT_SPACING = 3;
+const RawPixel DEFAULT_SPACING = 3_em;
+
+const int SCALED_IMAGE_Y = 1;
 }
 
 using namespace indicator;
@@ -43,11 +47,11 @@ using namespace indicator;
 PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding,
                                                  IndicatorEntryType type)
   : TextureArea(NUX_TRACKER_LOCATION)
-  , in_dropdown(false)
   , proxy_(proxy)
   , spacing_(DEFAULT_SPACING)
   , left_padding_(padding < 0 ? 0 : padding)
   , right_padding_(left_padding_)
+  , monitor_(0)
   , type_(type)
   , entry_texture_(nullptr)
   , opacity_(1.0f)
@@ -55,6 +59,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , overlay_showing_(false)
   , disabled_(false)
   , focused_(true)
+  , cv_(unity::Settings::Instance().em(monitor_))
 {
   proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
   proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -69,6 +74,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   Refresh();
 }
@@ -93,11 +99,23 @@ void PanelIndicatorEntryView::ShowMenu(int button)
 {
   WindowManager& wm = WindowManager::Default();
 
-  if (!wm.IsExpoActive() && !wm.IsScaleActive())
+  if (wm.IsExpoActive())
   {
-    auto const& abs_geo = GetAbsoluteGeometry();
-    proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().panel_height, button);
+    // Delay the activation until expo is closed
+    auto conn = std::make_shared<connection::Wrapper>();
+    *conn = wm.terminate_expo.connect([this, conn, button] {
+      ShowMenu(button);
+      (*conn)->disconnect();
+    });
+
+    wm.TerminateExpo();
   }
+
+  if (wm.IsScaleActive())
+    wm.TerminateScale();
+
+  auto const& abs_geo = GetAbsoluteGeometry();
+  proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().PanelHeight(monitor_), button);
 }
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
@@ -181,7 +199,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   glib::Object<GdkPixbuf> pixbuf;
   GtkIconTheme* theme = gtk_icon_theme_get_default();
   int image_type = proxy_->image_type();
-  int size = (type_ != DROP_DOWN) ? 24 : 16;
+  RawPixel size = (type_ != DROP_DOWN) ? 24_em : 10_em;
 
   if (image_type == GTK_IMAGE_PIXBUF)
   {
@@ -200,20 +218,47 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   else if (image_type == GTK_IMAGE_STOCK ||
            image_type == GTK_IMAGE_ICON_NAME)
   {
-    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size,
+    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size.CP(cv_),
                                       (GtkIconLookupFlags)0, nullptr);
   }
   else if (image_type == GTK_IMAGE_GICON)
   {
     glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
 
-    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size,
+    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size.CP(cv_),
                                                       (GtkIconLookupFlags)0));
     if (info)
       pixbuf = gtk_icon_info_load_icon(info, nullptr);
   }
 
   return pixbuf;
+}
+
+int PanelIndicatorEntryView::PixbufWidth(glib::Object<GdkPixbuf> const& pixbuf) const
+{
+  int image_type = proxy_->image_type();
+  if (image_type == GTK_IMAGE_PIXBUF)
+  {
+    return RawPixel(gdk_pixbuf_get_width(pixbuf)).CP(cv_);
+  }
+  else
+  {
+    return gdk_pixbuf_get_width(pixbuf);
+  }
+}
+
+int PanelIndicatorEntryView::PixbufHeight(glib::Object<GdkPixbuf> const& pixbuf) const
+{
+  int image_type = proxy_->image_type();
+  if (image_type == GTK_IMAGE_PIXBUF)
+  {
+    return RawPixel(gdk_pixbuf_get_height(pixbuf)).CP(cv_);
+  }
+  else
+  {
+    return gdk_pixbuf_get_height(pixbuf);
+  }
+
 }
 
 void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width, unsigned int height)
@@ -240,9 +285,22 @@ void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width,
   gtk_style_context_restore(style_context);
 }
 
+// FIXME Remove me when icons for the indicators aren't stuck as 22x22 images...
+void PanelIndicatorEntryView::ScaleImageIcons(cairo_t* cr, int* x, int* y)
+{
+  int image_type = proxy_->image_type();
+  if (image_type == GTK_IMAGE_PIXBUF)
+  {
+    float aspect = cv_->DPIScale();
+    *x = left_padding_;
+    *y = SCALED_IMAGE_Y;
+    cairo_scale(cr, aspect, aspect);
+  }
+}
+
 void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, glib::Object<PangoLayout> const& layout)
 {
-  int x = left_padding_;
+  int x = left_padding_.CP(cv_);
 
   if (IsActive())
     DrawEntryPrelight(cr, width, height);
@@ -250,7 +308,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
   if (pixbuf && IsIconVisible())
   {
     GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
-    unsigned int icon_width = gdk_pixbuf_get_width(pixbuf);
+    unsigned int icon_width = PixbufWidth(pixbuf);
 
     gtk_style_context_save(style_context);
 
@@ -272,7 +330,8 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
     }
 
-    int y = (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2);
+    int y = (int)((height - PixbufHeight(pixbuf)) / 2);
+
     if (overlay_showing_ && !IsActive())
     {
       /* Most of the images we get are straight pixbufs (annoyingly), so when
@@ -281,6 +340,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
        * icon themes/icons.
        */
       cairo_save(cr);
+      ScaleImageIcons(cr, &x, &y);
 
       cairo_push_group(cr);
       gdk_cairo_set_source_pixbuf(cr, pixbuf, x, y);
@@ -297,17 +357,22 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     }
     else
     {
+      cairo_save(cr);
+      ScaleImageIcons(cr, &x, &y);
+
       cairo_push_group(cr);
       gtk_render_icon(style_context, cr, pixbuf, x, y);
       cairo_pop_group_to_source(cr);
       cairo_paint_with_alpha(cr, (IsIconSensitive() && IsFocused()) ? 1.0 : 0.5);
+
+      cairo_restore(cr);
     }
 
     gtk_widget_path_free(widget_path);
 
     gtk_style_context_restore(style_context);
 
-    x += icon_width + spacing_;
+    x += icon_width + spacing_.CP(cv_);
   }
 
   if (layout)
@@ -385,12 +450,12 @@ void PanelIndicatorEntryView::Refresh()
 
   unsigned int width = 0;
   unsigned int icon_width = 0;
-  unsigned int height = panel::Style::Instance().panel_height;
+  unsigned int height = panel::Style::Instance().PanelHeight(monitor_);
 
   // First lets figure out our size
   if (pixbuf && IsIconVisible())
   {
-    width = gdk_pixbuf_get_width(pixbuf);
+    width = PixbufWidth(pixbuf);
     icon_width = width;
   }
 
@@ -443,14 +508,14 @@ void PanelIndicatorEntryView::Refresh()
     unsigned int text_width = log_rect.width / PANGO_SCALE;
 
     if (icon_width)
-      width += spacing_;
+      width += spacing_.CP(cv_);
     width += text_width;
 
     pango_font_description_free(desc);
   }
 
   if (width)
-    width += left_padding_ + right_padding_;
+    width += left_padding_.CP(cv_) + right_padding_.CP(cv_);
 
   SetMinimumWidth(width);
   SetMaximumWidth(width);
@@ -513,6 +578,13 @@ void PanelIndicatorEntryView::OverlayHidden()
 {
   overlay_showing_ = false;
   Refresh();
+}
+
+void PanelIndicatorEntryView::SetMonitor(int monitor)
+{
+  monitor_ = monitor;
+
+  cv_ = unity::Settings::Instance().em(monitor);
 }
 
 void PanelIndicatorEntryView::SetOpacity(double opacity)
@@ -659,7 +731,7 @@ bool PanelIndicatorEntryView::IsVisible()
 {
   if (proxy_.get())
   {
-    return TextureArea::IsVisible() && proxy_->visible() && !in_dropdown();
+    return TextureArea::IsVisible() && proxy_->visible();
   }
 
   return TextureArea::IsVisible();

@@ -20,6 +20,8 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
+#include "unity-shared/UnitySettings.h"
+
 #include "DevicesSettings.h"
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
@@ -76,6 +78,7 @@ struct TestVolumeLauncherIcon : public Test
     return *menuitem;
   }
 
+  unity::Settings u_settings_;
   MockVolume::Ptr volume_;
   MockDevicesSettings::Ptr settings_;
   MockDeviceNotificationDisplay::Ptr notifications_;

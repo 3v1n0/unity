@@ -30,6 +30,8 @@ namespace indicator
 class AppmenuIndicator : public Indicator
 {
 public:
+  typedef std::shared_ptr<AppmenuIndicator> Ptr;
+
   AppmenuIndicator(std::string const& name);
 
   virtual bool IsAppmenu() const { return true; }

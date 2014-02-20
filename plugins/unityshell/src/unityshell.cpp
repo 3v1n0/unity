@@ -137,10 +137,8 @@ const unsigned int SCROLL_DOWN_BUTTON = 6;
 const unsigned int SCROLL_UP_BUTTON = 7;
 const int MAX_BUFFER_AGE = 11;
 const int FRAMES_TO_REDRAW_ON_RESUME = 10;
-
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 } // namespace local
-
 } // anon namespace
 
 UnityScreen::UnityScreen(CompScreen* screen)
@@ -149,8 +147,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , sScreen(ScaleScreen::get(screen))
   , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
-  , deco_manager_(std::make_shared<decoration::Manager>())
+  , deco_manager_(std::make_shared<decoration::Manager>(menus_))
   , debugger_(this)
   , needsRelayout(false)
   , super_keypressed_(false)
@@ -252,7 +251,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
       renderer.find("on softpipe") != std::string::npos ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
     {
-      Settings::Instance().SetLowGfxMode(true);
+      unity_settings_.SetLowGfxMode(true);
     }
 #endif
 
@@ -511,13 +510,28 @@ void UnityScreen::initAltTabNextWindow()
 
 void UnityScreen::OnInitiateSpread()
 {
-  for (auto const& swin : ScaleScreen::get(screen)->getWindows())
+  spread_filter_ = std::make_shared<spread::Filter>();
+  spread_filter_->text.changed.connect([this] (std::string const& filter) {
+    if (filter.empty())
+    {
+      sScreen->relayoutSlots(CompMatch::emptyMatch);
+    }
+    else
+    {
+      auto match = sScreen->getCustomMatch();
+      sScreen->relayoutSlots(match & ("ititle="+filter));
+    }
+  });
+
+  for (auto const& swin : sScreen->getWindows())
     UnityWindow::get(swin->window)->OnInitiateSpread();
 }
 
 void UnityScreen::OnTerminateSpread()
 {
-  for (auto const& swin : ScaleScreen::get(screen)->getWindows())
+  spread_filter_.reset();
+
+  for (auto const& swin : sScreen->getWindows())
     UnityWindow::get(swin->window)->OnTerminateSpread();
 }
 
@@ -614,7 +628,8 @@ void UnityScreen::FillShadowRectForOutput(CompRect& shadowRect, CompOutput const
   if (_shadow_texture.empty ())
     return;
 
-  float panel_h = static_cast<float>(panel_style_.panel_height);
+  int monitor = PluginAdapter::Default().MonitorGeometryIn(NuxGeometryFromCompRect(output));
+  float panel_h = static_cast<float>(panel_style_.PanelHeight(monitor));
   float shadowX = output.x();
   float shadowY = output.y() + panel_h;
   float shadowWidth = output.width();
@@ -893,7 +908,9 @@ void UnityScreen::DrawPanelUnderDash()
 
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
-  int panel_height = panel_style_.panel_height;
+
+  // FIXME Change to paint per monitor vs all at once
+  int panel_height = panel_style_.PanelHeight();
   auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
   graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
 }
@@ -1680,8 +1697,7 @@ void UnityScreen::handleEvent(XEvent* event)
     case MotionNotify:
       if (wm.IsScaleActive())
       {
-        ScaleScreen* ss = ScaleScreen::get(screen);
-        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
+        if (CompWindow *w = screen->findWindow(sScreen->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       else if (switcher_controller_->IsDetailViewShown())
@@ -1706,9 +1722,14 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       if (wm.IsScaleActive())
       {
-        ScaleScreen* ss = ScaleScreen::get(screen);
-        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
-          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+        if (spread_filter_ && spread_filter_->Visible())
+          skip_other_plugins = spread_filter_->GetAbsoluteGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root);
+
+        if (!skip_other_plugins)
+        {
+          if (CompWindow *w = screen->findWindow(sScreen->getSelectedWindow()))
+            skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+        }
       }
       else if (switcher_controller_->IsDetailViewShown())
       {
@@ -1782,9 +1803,14 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       else if (wm.IsScaleActive())
       {
-        ScaleScreen* ss = ScaleScreen::get(screen);
-        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
-          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+        if (spread_filter_ && spread_filter_->Visible())
+          skip_other_plugins = spread_filter_->GetAbsoluteGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root);
+
+        if (!skip_other_plugins)
+        {
+          if (CompWindow *w = screen->findWindow(sScreen->getSelectedWindow()))
+            skip_other_plugins = skip_other_plugins || UnityWindow::get(w)->handleEvent(event);
+        }
       }
       break;
     case KeyPress:
@@ -1853,6 +1879,16 @@ void UnityScreen::handleEvent(XEvent* event)
           EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
         }
       }
+
+      if (spread_filter_ && spread_filter_->Visible())
+      {
+        if (key_sym == XK_Escape)
+        {
+          skip_other_plugins = true;
+          spread_filter_->text = "";
+        }
+      }
+
       break;
     }
     case MapRequest:
@@ -1866,22 +1902,21 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     default:
-        if (screen->shapeEvent () + ShapeNotify == event->type)
+        if (screen->shapeEvent() + ShapeNotify == event->type)
         {
           Window xid = event->xany.window;
           CompWindow *w = screen->findWindow(xid);
 
           if (w)
           {
-            UnityWindow *uw = UnityWindow::get (w);
-
+            UnityWindow *uw = UnityWindow::get(w);
             uw->handleEvent(event);
           }
         }
       break;
   }
 
-  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleEvent (event);
+  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleEvent(event);
 
   // avoid further propagation (key conflict for instance)
   if (!skip_other_plugins)
@@ -1890,18 +1925,17 @@ void UnityScreen::handleEvent(XEvent* event)
   if (deco_manager_->HandleEventAfter(event))
     return;
 
-  switch (event->type)
-  {
-    case MapRequest:
-      ShowdesktopHandler::AllowLeaveShowdesktopMode(event->xmaprequest.window);
-      break;
-  }
+  if (event->type == MapRequest)
+    ShowdesktopHandler::AllowLeaveShowdesktopMode(event->xmaprequest.window);
 
-  if ((event->type == MotionNotify || event->type == ButtonPress || event->type == ButtonRelease) &&
-      switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
+  if (switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible() &&
+      (event->type == MotionNotify || event->type == ButtonPress || event->type == ButtonRelease))
   {
     skip_other_plugins = true;
   }
+
+  if (spread_filter_ && spread_filter_->Visible())
+    skip_other_plugins = false;
 
   if (!skip_other_plugins &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
@@ -2161,6 +2195,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
       show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
   }
 
+  menus_->show_menus = false;
   SetUpAndShowSwitcher(show_mode);
 
   return true;
@@ -2786,7 +2821,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   }
 
   if (WindowManager::Default().IsScaleActive() &&
-      ScaleScreen::get(screen)->getSelectedWindow() == window->id())
+      uScreen->sScreen->getSelectedWindow() == window->id())
   {
     nux::Geometry const& scaled_geo = GetScaledGeometry();
     paintInnerGlow(scaled_geo, matrix, attrib, mask);
@@ -2867,7 +2902,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
     else
     {
-      if (window->id() == active_window)
+      if (window->id() == active_window || decoration::Style::Get()->integrated_menus())
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
         uScreen->is_desktop_active_ = false;
@@ -2876,9 +2911,11 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
             !(window->state() & CompWindowStateFullscreenMask) &&
             !(window->type() & CompWindowTypeFullscreenMask))
         {
+          WindowManager& wm = WindowManager::Default();
           auto const& output = uScreen->screen->currentOutputDev();
+          int monitor = wm.MonitorGeometryIn(NuxGeometryFromCompRect(output));
 
-          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.panel_height)
+          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.PanelHeight(monitor))
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
           }
@@ -3336,9 +3373,15 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
         deco_manager_->shadow_offset = nux::Point(optionGetShadowXOffset(), optionGetShadowYOffset());
       break;
     case UnityshellOptions::LauncherHideMode:
-      launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
-      hud_controller_->launcher_locked_out = (launcher_options->hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
+    {
+      launcher_options->hide_mode = (launcher::LauncherHideMode) optionGetLauncherHideMode();
+      hud_controller_->launcher_locked_out = (launcher_options->hide_mode == LAUNCHER_HIDE_NEVER);
+
+      int scale_offset = (launcher_options->hide_mode == LAUNCHER_HIDE_NEVER) ? 0 : launcher_controller_->launcher().GetWidth();
+      CompOption::Value v(scale_offset);
+      screen->setOptionForPlugin("scale", "x_offset", v);
       break;
+    }
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
       break;
@@ -3382,21 +3425,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 
       hud_controller_->icon_size = launcher_options->icon_size();
       hud_controller_->tile_size = launcher_options->tile_size();
-
-      if (CompPlugin* p = CompPlugin::find("expo"))
-      {
-        CompOption::Vector &opts = p->vTable->getOptions ();
-
-        for (CompOption &o : opts)
-        {
-          if (o.name() == "x_offset")
-          {
-            CompOption::Value v(optionGetIconSize() + 18);
-            screen->setOptionForPlugin(p->vTable->name().c_str(), o.name().c_str(), v);
-            break;
-          }
-        }
-      }
       break;
     }
     case UnityshellOptions::AutohideAnimation:
@@ -3593,15 +3621,25 @@ void UnityScreen::initLauncher()
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
 
-  launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {
+  auto on_launcher_size_changed = [this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
     int launcher_width = w - 1;
     hud_controller_->launcher_width = launcher_width;
     dash_controller_->launcher_width = launcher_width;
     panel_controller_->launcher_width = launcher_width;
-    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.panel_height);
-  });
+    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight());
+
+    CompOption::Value v(launcher_width);
+    screen->setOptionForPlugin("expo", "x_offset", v);
+
+    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
+      screen->setOptionForPlugin("scale", "x_offset", v);
+  };
+  launcher_controller_->launcher().size_changed.connect(on_launcher_size_changed);
+
+  auto* l = &launcher_controller_->launcher();
+  on_launcher_size_changed(l, l->GetWidth(), l->GetHeight());
 
   ScheduleRelayout(0);
 }
@@ -3736,7 +3774,7 @@ UnityWindow::UnityWindow(CompWindow* window)
 void UnityWindow::AddProperties(debug::IntrospectionData& introspection)
 {
   Window xid = window->id();
-  auto const& swins = ScaleScreen::get(screen)->getWindows();
+  auto const& swins = uScreen->sScreen->getWindows();
   bool scaled = std::find(swins.begin(), swins.end(), ScaleWindow::get(window)) != swins.end();
   WindowManager& wm = WindowManager::Default();
 
@@ -3941,18 +3979,18 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (!scale_win->hasSlot()) // animation not finished
     return;
 
-  ScaleScreen* ss = ScaleScreen::get(screen);
-  auto state = ss->getState();
+  auto state = uScreen->sScreen->getState();
 
   if (state != ScaleScreen::Wait && state != ScaleScreen::Out)
     return;
 
   nux::Geometry const& scale_geo = GetScaledGeometry();
-
   auto const& pos = scale_win->getCurrentPosition();
+  auto deco_attrib = attrib;
+  deco_attrib.opacity = COMPIZ_COMPOSITE_OPAQUE;
 
-  bool highlighted = (ss->getSelectedWindow() == window->id());
-  paintFakeDecoration(scale_geo, attrib, transform, mask, highlighted, pos.scale);
+  bool highlighted = (uScreen->sScreen->getSelectedWindow() == window->id());
+  paintFakeDecoration(scale_geo, deco_attrib, transform, mask, highlighted, pos.scale);
 }
 
 nux::Geometry UnityWindow::GetLayoutWindowGeometry()
@@ -4032,7 +4070,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
   last_bound = geo;
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib();
-  attrib.opacity = (alpha * parent_alpha * G_MAXUSHORT);
+  attrib.opacity = (alpha * parent_alpha * COMPIZ_COMPOSITE_OPAQUE);
   unsigned mask = gWindow->lastMask();
   nux::Geometry thumb_geo = geo;
 
@@ -4045,7 +4083,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
   paintThumb(attrib, matrix, mask, g.x, g.y, g.width, g.height, g.width, g.height);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
-  attrib.opacity = parent_alpha * G_MAXUSHORT;
+  attrib.opacity = parent_alpha * COMPIZ_COMPOSITE_OPAQUE;
 
   // The thumbnail is still animating, don't draw the decoration as selected
   if (selected && alpha < 1.0f)
@@ -4128,7 +4166,7 @@ void ScreenIntrospection::AddProperties(debug::IntrospectionData& introspection)
 
 Introspectable::IntrospectableList ScreenIntrospection::GetIntrospectableChildren()
 {
-  IntrospectableList children;
+  IntrospectableList children({uScreen->spread_filter_.get()});
 
   for (auto const& win : screen_->windows())
     children.push_back(UnityWindow::get(win));

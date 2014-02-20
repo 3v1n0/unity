@@ -71,8 +71,13 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   , launcher_width_(64)
   , bg_effect_helper_(this)
 {
+  auto& wm = WindowManager::Default();
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
-  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::OnDPIChanged));
+
+  wm.average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
+  wm.initiate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadInitiate));
+  wm.terminate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadTerminate));
 
   bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
@@ -90,7 +95,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   {
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    darken_colour = WindowManager::Default().average_color();
+    darken_colour = wm.average_color();
   }
 
   bg_darken_layer_.reset(new nux::ColorLayer(darken_colour, false, rop));
@@ -104,11 +109,12 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 
   SetCompositionLayout(layout_);
 
-  tray_ = new PanelTray();
+  tray_ = new PanelTray(monitor_);
   layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   AddChild(tray_);
 
   indicators_ = new PanelIndicatorsView();
+  indicators_->SetMonitor(monitor_);
   AddPanelView(indicators_, 0);
 
   for (auto const& object : remote_->GetIndicators())
@@ -118,7 +124,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
-  menus->activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
+  menus->key_activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
   menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
@@ -165,6 +171,13 @@ Window PanelView::GetTrayXid() const
   return tray_->xid();
 }
 
+void PanelView::OnDPIChanged()
+{
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  tray_->SetMinMaxSize(1, height);
+  menu_view_->OnDPIChanged();
+}
+
 void PanelView::SetLauncherWidth(int width)
 {
   launcher_width_ = width;
@@ -178,8 +191,35 @@ bool PanelView::IsMouseInsideIndicator(nux::Point const& mouse_position) const
 
 void PanelView::OnBackgroundUpdate(nux::Color const&)
 {
-  if (overlay_is_open_)
+  if (InOverlayMode())
     ForceUpdateBackground();
+}
+
+bool PanelView::InOverlayMode() const
+{
+  return overlay_is_open_ || WindowManager::Default().IsScaleActive();
+}
+
+void PanelView::EnableOverlayMode(bool overlay_mode)
+{
+  if (overlay_mode)
+  {
+    bg_effect_helper_.enabled = true;
+    indicators_->OverlayShown();
+    menu_view_->OverlayShown();
+    SetAcceptKeyNavFocusOnMouseDown(false);
+  }
+  else
+  {
+    if (opacity_ >= 1.0f)
+      bg_effect_helper_.enabled = false;
+
+    menu_view_->OverlayHidden();
+    indicators_->OverlayHidden();
+    SetAcceptKeyNavFocusOnMouseDown(true);
+  }
+
+  ForceUpdateBackground();
 }
 
 void PanelView::OnOverlayHidden(GVariant* data)
@@ -193,15 +233,11 @@ void PanelView::OnOverlayHidden(GVariant* data)
 
   if (monitor_ == overlay_monitor && overlay_identity.Str() == active_overlay_)
   {
-    if (opacity_ >= 1.0f)
-      bg_effect_helper_.enabled = false;
-
     overlay_is_open_ = false;
     active_overlay_ = "";
-    menu_view_->OverlayHidden();
-    indicators_->OverlayHidden();
-    SetAcceptKeyNavFocusOnMouseDown(true);
-    ForceUpdateBackground();
+
+    if (!WindowManager::Default().IsScaleActive())
+      EnableOverlayMode(false);
   }
 }
 
@@ -216,15 +252,27 @@ void PanelView::OnOverlayShown(GVariant* data)
 
   if (monitor_ == overlay_monitor)
   {
-    stored_dash_width_ = width;
-    bg_effect_helper_.enabled = true;
-    active_overlay_ = overlay_identity.Str();
     overlay_is_open_ = true;
-    indicators_->OverlayShown();
-    menu_view_->OverlayShown();
-    SetAcceptKeyNavFocusOnMouseDown(false);
-    ForceUpdateBackground();
+    active_overlay_ = overlay_identity.Str();
+    stored_dash_width_ = width;
+    EnableOverlayMode(true);
   }
+}
+
+void PanelView::OnSpreadInitiate()
+{
+  if (overlay_is_open_)
+    return;
+
+  EnableOverlayMode(true);
+}
+
+void PanelView::OnSpreadTerminate()
+{
+  if (overlay_is_open_)
+    return;
+
+  EnableOverlayMode(false);
 }
 
 void PanelView::AddPanelView(PanelIndicatorsView* child,
@@ -247,6 +295,7 @@ void PanelView::AddProperties(debug::IntrospectionData& introspection)
   .add("backend", "remote")
   .add("monitor", monitor_)
   .add("active", IsActive())
+  .add("in_overlay_mode", InOverlayMode())
   .add(GetAbsoluteGeometry());
 }
 
@@ -256,6 +305,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& geo = GetGeometry();
   UpdateBackground();
 
+  bool overlay_mode = InOverlayMode();
   GfxContext.PushClippingRectangle(geo);
 
   if (IsTransparent())
@@ -315,7 +365,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (overlay_is_open_ && !Settings::Instance().GetLowGfxMode())
+    if (overlay_mode && !Settings::Instance().GetLowGfxMode())
     {
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_darken_layer_.get());
 
@@ -338,7 +388,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-  if (!overlay_is_open_ || !GfxContext.UsingGLSLCodePath())
+  if (!overlay_mode || !GfxContext.UsingGLSLCodePath())
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_layer_.get());
 
   GfxContext.PopClippingRectangle();
@@ -354,6 +404,7 @@ void
 PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
+  bool overlay_mode = InOverlayMode();
   int bgs = 1;
 
   GfxContext.PushClippingRectangle(geo);
@@ -405,7 +456,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 #endif
     bgs++;
 
-    if (overlay_is_open_)
+    if (overlay_mode)
     {
       if (Settings::Instance().GetLowGfxMode())
       {
@@ -426,7 +477,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       refine_geo.width = bg_refine_tex_->GetWidth();
       refine_geo.height = bg_refine_tex_->GetHeight();
 
-      if (Settings::Instance().GetLowGfxMode() == false)
+      if (!Settings::Instance().GetLowGfxMode())
       {
         nux::GetPainter().PushLayer(GfxContext, refine_geo, bg_refine_layer_.get());
         bgs++;
@@ -440,10 +491,10 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-  if (!overlay_is_open_ || GfxContext.UsingGLSLCodePath() == false)
+  if (!overlay_mode || !GfxContext.UsingGLSLCodePath())
     gPainter.PushLayer(GfxContext, geo, bg_layer_.get());
 
-  if (overlay_is_open_ && Settings::Instance().GetLowGfxMode() == false)
+  if (overlay_mode && !Settings::Instance().GetLowGfxMode())
   {
     // apply the shine
     nux::TexCoordXForm texxform;
@@ -475,6 +526,7 @@ PanelView::UpdateBackground()
   if (!is_dirty_)
     return;
 
+  WindowManager& wm = WindowManager::Default();
   is_dirty_ = false;
 
   nux::ROPConfig rop;
@@ -482,10 +534,9 @@ PanelView::UpdateBackground()
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  if (overlay_is_open_)
+  if (overlay_is_open_ || wm.IsScaleActive())
   {
-    auto const& bg_color = WindowManager::Default().average_color();
-    bg_layer_.reset(new nux::ColorLayer(bg_color, true, rop));
+    bg_layer_.reset(new nux::ColorLayer(wm.average_color(), true, rop));
   }
   else
   {
@@ -493,7 +544,6 @@ PanelView::UpdateBackground()
 
     if (opacity_maximized_toggle_)
     {
-      WindowManager& wm = WindowManager::Default();
       Window maximized_win = menu_view_->GetMaximizedWindow();
 
       if (wm.IsExpoActive() || (maximized_win != 0 && !wm.IsWindowObscured(maximized_win)))
@@ -578,7 +628,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   {
     PanelIndicatorEntryView* view = nullptr;
 
-    if (menu_view_->GetControlsActive())
+    if (menu_view_->HasMenus())
       view = menu_view_->ActivateEntryAt(x, y);
 
     if (!view) indicators_->ActivateEntryAt(x, y);
@@ -603,9 +653,12 @@ bool PanelView::TrackMenuPointer()
   return true;
 }
 
-void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
+void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const&)
 {
-  bool active = (entry_id.size() > 0);
+  if (!panel.empty() && panel != GetPanelName())
+    return;
+
+  bool active = !entry_id.empty();
   if (active && !track_menu_pointer_timeout_)
   {
     //
@@ -641,7 +694,11 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
 
 bool PanelView::ActivateFirstSensitive()
 {
-  if (IsActive() && (menu_view_->ActivateIfSensitive() || indicators_->ActivateIfSensitive()))
+  if (!IsActive())
+    return false;
+
+  if ((menu_view_->HasMenus() && menu_view_->ActivateIfSensitive()) ||
+      indicators_->ActivateIfSensitive())
   {
     // Since this only happens on keyboard events, we need to prevent that the
     // pointer tracker would select another entry.
@@ -654,7 +711,11 @@ bool PanelView::ActivateFirstSensitive()
 
 bool PanelView::ActivateEntry(std::string const& entry_id)
 {
-  if (IsActive() && (menu_view_->ActivateEntry(entry_id, 0) || indicators_->ActivateEntry(entry_id, 0)))
+  if (!IsActive())
+    return false;
+
+  if ((menu_view_->HasMenus() && menu_view_->ActivateEntry(entry_id, 0)) ||
+      indicators_->ActivateEntry(entry_id, 0))
   {
     // Since this only happens on keyboard events, we need to prevent that the
     // pointer tracker would select another entry.
@@ -682,7 +743,7 @@ void PanelView::SetOpacity(float opacity)
 
 bool PanelView::IsTransparent()
 {
-  return (opacity_ < 1.0f || overlay_is_open_);
+  return (opacity_ < 1.0f || InOverlayMode());
 }
 
 void PanelView::SetOpacityMaximizedToggle(bool enabled)
@@ -718,23 +779,31 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   }
 }
 
+std::string PanelView::GetPanelName() const
+{
+  return GetName() + std::to_string(monitor_);
+}
+
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  std::string panel_id = GetName() + std::to_string(monitor_);
 
-  if (menu_view_->GetControlsActive())
+   if (menu_view_->HasMenus())
     menu_view_->GetGeometryForSync(locations);
 
   indicators_->GetGeometryForSync(locations);
-  remote_->SyncGeometries(panel_id, locations);
+  remote_->SyncGeometries(GetPanelName(), locations);
 }
 
 void PanelView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
+  indicators_->SetMonitor(monitor);
 
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  SetMinMaxSize(height, height);
+  
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
   Resize(nux::Point(monitor_geo.x, monitor_geo.y), monitor_geo.width);
@@ -744,8 +813,8 @@ void PanelView::Resize(nux::Point const& offset, int width)
 {
   unity::panel::Style &panel_style = panel::Style::Instance();
   SetMaximumWidth(width);
-  SetGeometry(nux::Geometry(0, 0, width, panel_style.panel_height));
-  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.panel_height));
+  SetGeometry(nux::Geometry(0, 0, width, panel_style.PanelHeight(monitor_)));
+  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.PanelHeight(monitor_)));
 }
 
 int PanelView::GetMonitor() const

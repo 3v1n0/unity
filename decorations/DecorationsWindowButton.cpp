@@ -21,6 +21,9 @@
 #include "DecorationsWindowButton.h"
 #include "DecorationsDataPool.h"
 
+#include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
+
 namespace unity
 {
 namespace decoration
