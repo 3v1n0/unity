@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <gdk/gdkx.h>
 #include "UScreen.h"
+#include "UnitySettings.h"
 #include "DecorationStyle.h"
 #include "PluginAdapter.h"
 #include "CompizUtils.h"
@@ -1011,6 +1012,24 @@ nux::Geometry PluginAdapter::GetScreenGeometry() const
   return nux::Geometry(0, 0, m_Screen->width(), m_Screen->height());
 }
 
+template<typename T>
+nux::Size get_edge_size(WindowManager::Edge edge, CompRect const& win_rect, T const& extents)
+{
+  switch (edge)
+  {
+    case WindowManager::Edge::LEFT:
+      return nux::Size(extents.left, win_rect.height());
+    case WindowManager::Edge::TOP:
+      return nux::Size(win_rect.width(), extents.top);
+    case WindowManager::Edge::RIGHT:
+      return nux::Size(extents.right, win_rect.height());
+    case WindowManager::Edge::BOTTOM:
+      return nux::Size(win_rect.width(), extents.bottom);
+  }
+
+  return nux::Size();
+}
+
 nux::Size PluginAdapter::GetWindowDecorationSize(Window window_id, WindowManager::Edge edge) const
 {
   if (CompWindow* window = m_Screen->findWindow(window_id))
@@ -1018,18 +1037,20 @@ nux::Size PluginAdapter::GetWindowDecorationSize(Window window_id, WindowManager
     if (compiz_utils::IsWindowFullyDecorable(window))
     {
       auto const& win_rect = window->borderRect();
-      auto const& extents = decoration::Style::Get()->Border();
 
-      switch (edge)
+      if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
       {
-        case Edge::LEFT:
-          return nux::Size(extents.left, win_rect.height());
-        case Edge::TOP:
-          return nux::Size(win_rect.width(), extents.top);
-        case Edge::RIGHT:
-          return nux::Size(extents.right, win_rect.height());
-        case Edge::BOTTOM:
-          return nux::Size(win_rect.width(), extents.bottom);
+        auto& settings = unity::Settings::Instance();
+        auto const& extents = decoration::Style::Get()->Border();
+        nux::Geometry win_geo(win_rect.x(), win_rect.y(), win_rect.width(), win_rect.height());
+        auto deco_size = get_edge_size(edge, win_rect, extents);
+        double scale = settings.em(MonitorGeometryIn(win_geo))->DPIScale();
+        return nux::Size(deco_size.width * scale, deco_size.height * scale);
+      }
+      else
+      {
+        auto const& extents = window->border();
+        return get_edge_size(edge, win_rect, extents);
       }
     }
   }
