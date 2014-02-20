@@ -126,6 +126,10 @@ public:
 
   float GetUIScaleFactor(int monitor = 0) const
   {
+    //TODO FIXME
+    LOG_ERROR(logger) << "Monitor num";
+    LOG_ERROR(logger) << monitor;
+
     GSettings* gsettings = g_settings_new(UI_SETTINGS);
 
     GVariant* dict;
@@ -133,6 +137,9 @@ public:
 
     auto uscreen = UScreen::GetDefault();
     const char *monitor_name = uscreen->GetMonitorName(monitor).c_str();
+
+    LOG_ERROR(logger) << "Monitor name:";
+    LOG_ERROR(logger) << monitor_name;
 
     int value;
     float ui_scale;
@@ -151,6 +158,10 @@ public:
 
   int GetDPI(int monitor = 0) const
   {
+    //TODO FIXME:
+    LOG_ERROR(logger) << "GetDPI monitor number:";
+    LOG_ERROR(logger) << monitor;
+
     int dpi = 0;
     g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
 

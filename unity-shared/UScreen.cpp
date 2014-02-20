@@ -96,8 +96,15 @@ nux::Geometry UScreen::GetScreenGeometry()
   return nux::Geometry(0, 0, width, height); 
 }
 
-const std::string UScreen::GetMonitorName(int output_number) const
+const std::string UScreen::GetMonitorName(int output_number = 0) const
 {
+  if (output_number < 0 || output_number > gdk_screen_get_n_monitors(screen_))
+  {
+    //TODO
+    LOG_ERROR(logger) << "Invalid monitor number";
+    LOG_ERROR(logger) << output_number;
+    return "";
+  }
   auto const &output_name = glib::gchar_to_string(gdk_screen_get_monitor_plug_name(screen_, output_number));
   if (output_name.empty())
   {
