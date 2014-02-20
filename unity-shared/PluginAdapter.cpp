@@ -700,8 +700,13 @@ void PluginAdapter::RestoreAt(Window window_id, int x, int y)
   if (window && (window->state() & MAXIMIZE_STATE))
   {
     nux::Geometry new_geo(GetWindowSavedGeometry(window_id));
+    auto& settings = unity::Settings::Instance();
+    auto const& border = decoration::Style::Get()->Border();
+    double scale = settings.em(MonitorGeometryIn(new_geo))->DPIScale();
     new_geo.x = x;
     new_geo.y = y;
+    new_geo.width -= (border.left - border.right) * scale;
+    new_geo.height -= (border.top - border.bottom) * scale;
     window->maximize(0);
     MoveResizeWindow(window_id, new_geo);
   }
