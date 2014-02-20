@@ -41,6 +41,7 @@ PanelIndicatorsView::PanelIndicatorsView()
 : View(NUX_TRACKER_LOCATION)
 , opacity(1.0f, sigc::mem_fun(this, &PanelIndicatorsView::SetOpacity))
 , layout_(new nux::HLayout("", NUX_TRACKER_LOCATION))
+, monitor_(0)
 {
   opacity.DisableNotifications();
   layout_->SetContentDistribution(nux::MAJOR_POSITION_END);
@@ -265,23 +266,27 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   if (!view)
     return;
 
-  int entry_pos = pos;
   auto const& entry_id = view->GetEntryID();
+  int entry_pos = pos;
+  bool known_entry = (entries_.find(entry_id) != entries_.end());
   view->SetOpacity(opacity());
 
-  if (entry_pos == IndicatorEntryPosition::AUTO)
+  if (!known_entry && dropdown_ && !dropdown_->Empty())
   {
-    entry_pos = nux::NUX_LAYOUT_BEGIN;
-
-    if (view->GetEntryPriority() > -1)
+    if (entry_pos == IndicatorEntryPosition::AUTO)
     {
-      for (auto area : layout_->GetChildren())
-      {
-        auto en = static_cast<PanelIndicatorEntryView*>(area);
-        if (view->GetEntryPriority() <= en->GetEntryPriority())
-          break;
+      entry_pos = nux::NUX_LAYOUT_BEGIN;
 
-        ++entry_pos;
+      if (view->GetEntryPriority() > -1)
+      {
+        for (auto area : layout_->GetChildren())
+        {
+          auto en = static_cast<PanelIndicatorEntryView*>(area);
+          if (view->GetEntryPriority() <= en->GetEntryPriority())
+            break;
+
+          ++entry_pos;
+        }
       }
     }
   }
@@ -292,7 +297,7 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   QueueRelayout();
   QueueDraw();
 
-  if (entries_.find(entry_id) == entries_.end())
+  if (!known_entry)
   {
     view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
     entries_.insert({entry_id, view});
@@ -305,6 +310,8 @@ PanelIndicatorEntryView *PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, 
 {
   auto view = new PanelIndicatorEntryView(entry, padding, type);
   AddEntryView(view, pos);
+
+  view->SetMonitor(monitor_);
 
   return view;
 }
@@ -355,6 +362,11 @@ void PanelIndicatorsView::OverlayHidden()
 {
   for (auto const& entry: entries_)
     entry.second->OverlayHidden();
+}
+
+void PanelIndicatorsView::SetMonitor(int monitor)
+{
+  monitor_ = monitor;
 }
 
 bool PanelIndicatorsView::SetOpacity(double& target, double const& new_value)

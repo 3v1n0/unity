@@ -20,12 +20,16 @@
 #ifndef EM_CONVERTER_H
 #define EM_CONVERTER_H
 
+#include <memory>
+
 namespace unity
 {
 
 class EMConverter
 {
 public:
+  typedef std::shared_ptr<EMConverter> Ptr;
+
   EMConverter(int font_size = 0, double dpi = 96.0);
 
   void SetFontSize(int font_size);
@@ -34,7 +38,7 @@ public:
   int    GetFontSize() const;
   double GetDPI() const;
 
-  double ConvertPixels(int pixels) const;
+  double CP(int pixels) const;
   double DPIScale() const;
 
   double PtToPx(int pt);

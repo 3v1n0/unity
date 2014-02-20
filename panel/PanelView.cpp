@@ -73,6 +73,8 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 {
   auto& wm = WindowManager::Default();
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::OnDPIChanged));
+
   wm.average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
   wm.initiate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadInitiate));
   wm.terminate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadTerminate));
@@ -107,11 +109,12 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 
   SetCompositionLayout(layout_);
 
-  tray_ = new PanelTray();
+  tray_ = new PanelTray(monitor_);
   layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   AddChild(tray_);
 
   indicators_ = new PanelIndicatorsView();
+  indicators_->SetMonitor(monitor_);
   AddPanelView(indicators_, 0);
 
   for (auto const& object : remote_->GetIndicators())
@@ -166,6 +169,13 @@ Window PanelView::GetTrayXid() const
     return 0;
 
   return tray_->xid();
+}
+
+void PanelView::OnDPIChanged()
+{
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  tray_->SetMinMaxSize(1, height);
+  menu_view_->OnDPIChanged();
 }
 
 void PanelView::SetLauncherWidth(int width)
@@ -774,7 +784,11 @@ void PanelView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
+  indicators_->SetMonitor(monitor);
 
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  SetMinMaxSize(height, height);
+  
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
   Resize(nux::Point(monitor_geo.x, monitor_geo.y), monitor_geo.width);
@@ -784,8 +798,8 @@ void PanelView::Resize(nux::Point const& offset, int width)
 {
   unity::panel::Style &panel_style = panel::Style::Instance();
   SetMaximumWidth(width);
-  SetGeometry(nux::Geometry(0, 0, width, panel_style.panel_height));
-  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.panel_height));
+  SetGeometry(nux::Geometry(0, 0, width, panel_style.PanelHeight(monitor_)));
+  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.PanelHeight(monitor_)));
 }
 
 int PanelView::GetMonitor() const

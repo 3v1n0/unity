@@ -68,7 +68,6 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , show_now_activated_(false)
   , we_control_active_(false)
   , new_app_menu_shown_(false)
-  , monitor_(0)
   , active_xid_(0)
   , desktop_name_(_("Ubuntu Desktop"))
 {
@@ -83,13 +82,7 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   SetupWindowManagerSignals();
   SetupUBusManagerInterests();
 
-  style_changed_connection_ = panel::Style::Instance().changed.connect([this] {
-    window_buttons_->ComputeContentSize();
-    layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-
-    Refresh(true);
-    FullRedraw();
-  });
+  style_changed_connection_ = panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnDPIChanged));
 
   opacity = 0.0f;
 
@@ -101,6 +94,19 @@ PanelMenuView::~PanelMenuView()
 {
   window_buttons_->UnParentObject();
   titlebar_grab_area_->UnParentObject();
+}
+
+void PanelMenuView::OnDPIChanged()
+{
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  window_buttons_->SetMaximumHeight(height);
+  window_buttons_->UpdateDPIChanged();
+
+  window_buttons_->ComputeContentSize();
+  layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
+
+  Refresh(true);
+  FullRedraw();
 }
 
 void PanelMenuView::SetupPanelMenuViewSignals()
@@ -129,7 +135,7 @@ void PanelMenuView::SetupWindowButtons()
   window_buttons_->controlled_window = active_xid_;
   window_buttons_->opacity = 0.0f;
   window_buttons_->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
-  window_buttons_->SetMaximumHeight(panel::Style::Instance().panel_height);
+  window_buttons_->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor_));
   window_buttons_->ComputeContentSize();
 
   window_buttons_->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
@@ -145,7 +151,7 @@ void PanelMenuView::SetupLayout()
 {
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-  layout_->SetBaseHeight(panel::Style::Instance().panel_height);
+  layout_->SetBaseHeight(panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void PanelMenuView::SetupTitlebarGrabArea()
