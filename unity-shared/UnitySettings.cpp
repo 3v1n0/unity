@@ -30,8 +30,6 @@
 #include "UnitySettings.h"
 #include "UScreen.h"
 
-#define UI_SETTINGS "com.ubuntu.user-interface"
-
 namespace unity
 {
 DECLARE_LOGGER(logger, "unity.settings");
@@ -47,10 +45,7 @@ const std::string LIM_KEY = "integrated-menus";
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
-
-// FIXME Update this when hikikos settings changes land in unity
-const std::string GNOME_SETTINGS = "org.gnome.desktop.interface";
-const std::string SCALING_FACTOR = "scaling-factor";
+const std::string UI_SETTINGS = "com.ubuntu.user-interface";
 }
 
 //
@@ -62,10 +57,9 @@ public:
   Impl(Settings* owner)
     : parent_(owner)
     , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
-    , ubuntu_settings_(g_settings_new(UI_SETTINGS))
+    , ubuntu_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
-    , gnome_settings_(g_settings_new(GNOME_SETTINGS.c_str()))
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
@@ -97,10 +91,6 @@ public:
 
     signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
-    });
-
-    signals_.Add<void, GSettings*, const gchar*>(gnome_settings_, "changed::" + SCALING_FACTOR, [this] (GSettings*, const gchar* t) {
-      UpdateEMConverter();
     });
   }
 
@@ -164,19 +154,11 @@ public:
 
   float GetUIScaleFactor(int monitor = 0) const
   {
-    //TODO FIXME
-    LOG_ERROR(logger) << "Monitor num";
-    LOG_ERROR(logger) << monitor;
-
-    GSettings* gsettings = g_settings_new(UI_SETTINGS);
-
+    GSettings* gsettings = g_settings_new(UI_SETTINGS.c_str());
     GVariant* dict;
     g_settings_get(gsettings, SCALE_FACTOR.c_str(), "@a{si}", &dict);
 
     std::string monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
-
-    LOG_ERROR(logger) << "Monitor name:";
-    LOG_ERROR(logger) << monitor_name;
 
     int value;
     float ui_scale;
@@ -189,7 +171,6 @@ public:
       ui_scale = (float)value / 8.0;
     }
 
-    LOG_ERROR(logger) << "SCALE FACTOR: " << ui_scale;
     g_object_unref(gsettings);
     return ui_scale;
   }
@@ -201,10 +182,8 @@ public:
     if (monitor >= 0 && monitor < valid_monitors)
     {
       float new_dpi = (float)dpi * GetUIScaleFactor(monitor);
-      LOG_ERROR(logger) << "NEW DPI: " << new_dpi;
       dpi = (int)new_dpi;
     }
-    LOG_ERROR(logger) << "DPI: " << dpi;
     return dpi;
   }
 
