@@ -33,6 +33,7 @@
 #include "DecorationsManager.h"
 #include "DecorationsTitle.h"
 #include "DecorationsInputMixer.h"
+#include "EMConverter.h"
 
 class CompRegion;
 
@@ -79,6 +80,8 @@ struct Window::Impl
   bool ShadowDecorated() const;
   void RedrawDecorations();
 
+  void UpdateMonitor();
+
 private:
   void UnsetExtents();
   void SetupExtents();
@@ -119,6 +122,8 @@ private:
   Layout::Ptr top_layout_;
   Title::Ptr title_;
   Item::Ptr edge_borders_;
+
+  EMConverter::Ptr cv_;
 };
 
 struct Manager::Impl : sigc::trackable

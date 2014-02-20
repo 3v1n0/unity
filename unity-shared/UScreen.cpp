@@ -133,7 +133,9 @@ void UScreen::Refresh()
   {
     GdkRectangle rect = { 0 };
     gdk_screen_get_monitor_geometry(screen_, i, &rect);
-    nux::Geometry geo(rect.x, rect.y, rect.width, rect.height);
+
+    float scale = gdk_screen_get_monitor_scale_factor(screen_, i);
+    nux::Geometry geo(rect.x*scale, rect.y*scale, rect.width*scale, rect.height*scale);
 
     // Check for mirrored displays
     if (geo == last_geo)

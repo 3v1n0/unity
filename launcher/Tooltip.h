@@ -28,6 +28,7 @@
 #include <Nux/VLayout.h>
 
 #include "CairoBaseWindow.h"
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/Introspectable.h"
 
@@ -37,7 +38,7 @@ class Tooltip : public CairoBaseWindow, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(Tooltip, CairoBaseWindow);
 public:
-  Tooltip();
+  Tooltip(int monitor = 0);
 
   nux::RWProperty<std::string> text;
 
@@ -74,6 +75,7 @@ private:
 
   int                   _anchorX;
   int                   _anchorY;
+  int                   _monitor;
 
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
@@ -84,6 +86,8 @@ private:
 
   bool _cairo_text_has_changed;
   void UpdateTexture();
+
+  EMConverter::Ptr _cv;
 };
 }
 

@@ -19,6 +19,7 @@
 
 #include <gmock/gmock.h>
 
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 #include "launcher/DesktopLauncherIcon.h"
 
@@ -30,6 +31,7 @@ namespace
 
 struct TestDesktopLauncherIcon : testing::Test
 {
+  unity::Settings settings;
   DesktopLauncherIcon icon;
 };
 

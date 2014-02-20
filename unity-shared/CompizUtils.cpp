@@ -28,7 +28,8 @@ namespace compiz_utils
 {
 namespace
 {
-  const unsigned PIXMAP_DEPTH = 32;
+  const unsigned PIXMAP_DEPTH  = 32;
+  const float    DEFAULT_SCALE = 1.0f;
 }
 
 SimpleTexture::SimpleTexture(GLTexture::List const& tex)
@@ -36,6 +37,11 @@ SimpleTexture::SimpleTexture(GLTexture::List const& tex)
 {}
 
 //
+
+SimpleTextureQuad::SimpleTextureQuad()
+  : scale(DEFAULT_SCALE)
+{
+}
 
 void SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
 {
@@ -46,7 +52,7 @@ void SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
     auto* tex = st->texture();
     CompPoint old_coords(quad.box.x(), quad.box.y());
     short invalid = std::numeric_limits<short>::min();
-    quad.box.setGeometry(invalid, invalid, tex->width(), tex->height());
+    quad.box.setGeometry(invalid, invalid, tex->width() * scale, tex->height() * scale);
     SetCoords(old_coords.x(), old_coords.y());
   }
 }
@@ -58,9 +64,26 @@ void SimpleTextureQuad::SetCoords(int x, int y)
 
   quad.box.setX(x);
   quad.box.setY(y);
+  UpdateMatrix();
+}
+
+void SimpleTextureQuad::UpdateMatrix()
+{
+  int x = quad.box.x();
+  int y = quad.box.y();
+
   quad.matrix = (st && st->texture()) ? st->texture()->matrix() : GLTexture::Matrix();
+  quad.matrix.xx /= scale;
+  quad.matrix.yy /= scale;
   quad.matrix.x0 = 0.0f - COMP_TEX_COORD_X(quad.matrix, x);
   quad.matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad.matrix, y);
+}
+
+void SimpleTextureQuad::SetScale(float s)
+{
+  scale = s;
+  if (st)
+    UpdateMatrix();
 }
 
 void SimpleTextureQuad::SetX(int x)
