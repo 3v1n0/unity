@@ -700,9 +700,16 @@ void PluginAdapter::RestoreAt(Window window_id, int x, int y)
   if (window && (window->state() & MAXIMIZE_STATE))
   {
     nux::Geometry new_geo(GetWindowSavedGeometry(window_id));
-    auto& settings = unity::Settings::Instance();
-    auto const& border = decoration::Style::Get()->Border();
-    double scale = settings.em(MonitorGeometryIn(new_geo))->DPIScale();
+    decoration::Border border;
+    double scale = 1.0f;
+
+    if (compiz_utils::IsWindowFullyDecorable(window))
+    {
+      auto& settings = Settings::Instance();
+      border = decoration::Style::Get()->Border();
+      scale = settings.em(MonitorGeometryIn(new_geo))->DPIScale();
+    }
+
     new_geo.x = x;
     new_geo.y = y;
     new_geo.width -= (border.left - border.right) * scale;
@@ -1045,11 +1052,10 @@ nux::Size PluginAdapter::GetWindowDecorationSize(Window window_id, WindowManager
 
       if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
       {
-        auto& settings = unity::Settings::Instance();
         auto const& extents = decoration::Style::Get()->Border();
         nux::Geometry win_geo(win_rect.x(), win_rect.y(), win_rect.width(), win_rect.height());
         auto deco_size = get_edge_size(edge, win_rect, extents);
-        double scale = settings.em(MonitorGeometryIn(win_geo))->DPIScale();
+        double scale = Settings::Instance().em(MonitorGeometryIn(win_geo))->DPIScale();
         return nux::Size(deco_size.width * scale, deco_size.height * scale);
       }
       else
