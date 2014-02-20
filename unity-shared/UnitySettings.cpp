@@ -166,16 +166,15 @@ public:
     int dpi = 0;
     g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
 
-    LOG_ERROR(logger) << "DPI: " << dpi;
     int valid_monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
     if (monitor >= 0 && monitor < valid_monitors)
     {
       float new_dpi = (float)dpi * GetUIScaleFactor(monitor) * 96.0 / 1024.0;
       LOG_ERROR(logger) << "NEW DPI: " << new_dpi;
       dpi = (int)new_dpi;
-      LOG_ERROR(logger) << "DPI: " << dpi;
     }
 
+    LOG_ERROR(logger) << "DPI: " << dpi;
     return dpi;
   }
 
