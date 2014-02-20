@@ -30,8 +30,8 @@ const int TEXT_INPUT_RIGHT_BORDER = 10;
 const int HIGHLIGHT_HEIGHT = 24;
 
 // Fonts
-const std::string HINT_LABEL_FONT_SIZE = "12px";
-const std::string HINT_LABEL_FONT_STYLE = "Italic";
+const std::string HINT_LABEL_FONT_SIZE = "14px";
+const std::string HINT_LABEL_FONT_STYLE = "";
 const std::string HINT_LABEL_DEFAULT_FONT = "Ubuntu " + HINT_LABEL_FONT_STYLE + " " + HINT_LABEL_FONT_SIZE;
 
 const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
@@ -77,13 +77,21 @@ void TextInput::Init()
   pango_entry_->cursor_moved.connect([this](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &TextInput::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &TextInput::OnEndKeyFocus));
+  pango_entry_->text_changed.connect([this](nux::TextEntry*) {
+    hint_->SetVisible(input_string().empty());
+  });
 
   layered_layout_ = new nux::LayeredLayout();
-  layered_layout_->AddLayout(hint_layout);
+  layered_layout_->AddLayer(hint_layout);
   layered_layout_->AddLayer(pango_entry_);
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  spinner_ = new SearchBarSpinner();
+  spinner_->SetVisible(false);
+  spinner_->SetMinMaxSize(22, 22);
+  layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   sig_manager_.Add<void, GtkSettings*, GParamSpec*>(gtk_settings_get_default(),
     "notify::gtk-font-name", sigc::mem_fun(this, &TextInput::OnFontChanged));
@@ -95,6 +103,16 @@ void TextInput::Init()
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_preedit));
   input_hint.changed.connect([this](std::string const& s) { OnInputHintChanged(); });
 
+}
+
+void TextInput::SetSpinnerVisible(bool visible)
+{
+  spinner_->SetVisible(visible);
+}
+
+void TextInput::SetSpinnerState(SpinnerState spinner_state)
+{
+  spinner_->SetState(spinner_state);
 }
 
 void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -184,14 +202,10 @@ void TextInput::UpdateBackground(bool force)
 {
   int RADIUS = 5;
   nux::Geometry geo(GetGeometry());
-  geo.width = layered_layout_->GetAbsoluteX() +
-              layered_layout_->GetAbsoluteWidth() -
-              GetAbsoluteX() +
-              TEXT_INPUT_RIGHT_BORDER;
 
   LOG_DEBUG(logger) << "height: "
   << geo.height << " - "
-  << layered_layout_->GetGeometry().height << " - "
+  << layout_->GetGeometry().height << " - "
   << pango_entry_->GetGeometry().height;
 
   if (geo.width == last_width_
@@ -251,7 +265,7 @@ void TextInput::OnEndKeyFocus()
 }
 
 
-nux::TextEntry* TextInput::text_entry() const
+IMTextEntry* TextInput::text_entry() const
 {
   return pango_entry_;
 }

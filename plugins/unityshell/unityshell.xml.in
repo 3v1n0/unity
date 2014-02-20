@@ -147,12 +147,31 @@
                   <default>true</default>
                 </option>
 
+                <option name="lock_screen_type" type="int">
+                    <_short>Lockscreen</_short>
+                    <_long>Set how Unity should handle lockscreen.</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>2</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>None</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Lightdm</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Custom lockscreen</_name>
+                    </desc>
+                </option>
+
                 <option name="fonts_scale_factor" type="key">
                   <_short>Per monitor text scaling factor.</_short>
                   <_long>This is used to scale the fonts.</_long>
                   <default>;</default>
                 </option>
-
             </group>
 
             <group>

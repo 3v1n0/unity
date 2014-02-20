@@ -245,7 +245,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       auto temp_background_color = background_color();
       auto blend_mode = nux::LAYER_BLEND_MODE_OVERLAY;
 
-      if (Settings::Instance().GetLowGfxMode())
+      if (Settings::Instance().GetLowGfxMode() || BackgroundEffectHelper::blur_type == BLUR_NONE)
       {
         temp_background_color.alpha = 1.0f;
         blend_mode = nux::LAYER_BLEND_MODE_NORMAL;

@@ -13,7 +13,7 @@ endif()
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl compiztoolbox scale
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${PKGDATADIR}\"' -I${CMAKE_BINARY_DIR} -I${CMAKE_SOURCE_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CXXFLAGS} -I${CMAKE_SOURCE_DIR}/dash/ -I${CMAKE_SOURCE_DIR}/launcher/ -I${CMAKE_SOURCE_DIR}/hud/ -I${CMAKE_SOURCE_DIR}/panel/ -I${CMAKE_SOURCE_DIR}/shortcuts/ -I${CMAKE_SOURCE_DIR}/shutdown/ -I${CMAKE_SOURCE_DIR}/unity-shared/"
+               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${PKGDATADIR}\"' -I${CMAKE_BINARY_DIR} -I${CMAKE_SOURCE_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CXXFLAGS} -I${CMAKE_SOURCE_DIR}/dash/ -I${CMAKE_SOURCE_DIR}/launcher/ -I${CMAKE_SOURCE_DIR}/lockscreen/ -I${CMAKE_SOURCE_DIR}/hud/ -I${CMAKE_SOURCE_DIR}/panel/ -I${CMAKE_SOURCE_DIR}/shortcuts/ -I${CMAKE_SOURCE_DIR}/shutdown/ -I${CMAKE_SOURCE_DIR}/unity-shared/"
                LIBDIRS "${CMAKE_BINARY_DIR}/UnityCore"
                )
 
@@ -26,6 +26,8 @@ add_dependencies(unityshell
                  decorations-lib
                  hud-lib
                  launcher-lib
+                 pam
+                 lockscreen-lib
                  panel-lib
                  shortcuts-lib
                  shutdown-lib
@@ -39,6 +41,8 @@ target_link_libraries(unityshell
                       decorations-lib
                       hud-lib
                       launcher-lib
+                      pam
+                      lockscreen-lib
                       panel-lib
                       shortcuts-lib
                       shutdown-lib

@@ -36,7 +36,8 @@ DECLARE_LOGGER(logger, "unity.indicator.dbus");
 
 namespace
 {
-const std::string SERVICE_NAME("com.canonical.Unity.Panel.Service");
+const std::string SERVICE_NAME_DESKTOP("com.canonical.Unity.Panel.ServiceDesktop");
+const std::string SERVICE_NAME_LOCKSCREEN("com.canonical.Unity.Panel.ServiceLockscreen");
 const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
 const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 } // anonymous namespace
@@ -408,11 +409,15 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
 }
 
 DBusIndicators::DBusIndicators()
-  : pimpl(new Impl(SERVICE_NAME, this))
+  : pimpl(new Impl(SERVICE_NAME_DESKTOP, this))
 {}
 
 DBusIndicators::DBusIndicators(std::string const& dbus_name)
   : pimpl(new Impl(dbus_name, this))
+{}
+
+LockScreenDBusIndicators::LockScreenDBusIndicators()
+  : DBusIndicators(SERVICE_NAME_LOCKSCREEN)
 {}
 
 DBusIndicators::~DBusIndicators()
