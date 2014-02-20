@@ -47,7 +47,7 @@ struct SigReceiver : sigc::trackable
   MOCK_CONST_METHOD1(OnObjectAdded, void(Indicator::Ptr const&));
   MOCK_CONST_METHOD1(OnObjectRemoved, void(Indicator::Ptr const&));
   MOCK_CONST_METHOD1(OnEntryActivateRequest, void(std::string const&));
-  MOCK_CONST_METHOD2(OnEntryActivated, void(std::string const&, nux::Rect const&));
+  MOCK_CONST_METHOD3(OnEntryActivated, void(std::string const&, std::string const&, nux::Rect const&));
   MOCK_CONST_METHOD5(OnEntryShowMenu, void(std::string const&, unsigned, int, int, unsigned));
 };
 
@@ -222,8 +222,8 @@ TEST_F(TestIndicators, ActivateEntry)
   ASSERT_THAT(entry12->active(), false);
   ASSERT_THAT(entry12->geometry(), nux::Rect());
 
-  EXPECT_CALL(sig_receiver, OnEntryActivated(entry12->id(), nux::Rect(1, 2, 3, 4)));
-  indicators.ActivateEntry("indicator-test-1|entry-2", nux::Rect(1, 2, 3, 4));
+  EXPECT_CALL(sig_receiver, OnEntryActivated("panel1", entry12->id(), nux::Rect(1, 2, 3, 4)));
+  indicators.ActivateEntry("panel1", "indicator-test-1|entry-2", nux::Rect(1, 2, 3, 4));
 
   EXPECT_EQ(entry12->active(), true);
   EXPECT_EQ(entry12->geometry(), nux::Rect(1, 2, 3, 4));
@@ -239,7 +239,7 @@ TEST_F(TestIndicators, ActivateEntryShouldDisactivatePrevious)
   Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-2"));
   ASSERT_THAT(entry22, NotNull());
 
-  indicators.ActivateEntry("indicator-test-2|entry-2", nux::Rect(1, 2, 3, 4));
+  indicators.ActivateEntry("panel0", "indicator-test-2|entry-2", nux::Rect(1, 2, 3, 4));
   ASSERT_THAT(entry22->active(), true);
   ASSERT_THAT(entry22->geometry(), nux::Rect(1, 2, 3, 4));
 
@@ -250,8 +250,8 @@ TEST_F(TestIndicators, ActivateEntryShouldDisactivatePrevious)
   ASSERT_THAT(entry21->active(), false);
   ASSERT_THAT(entry21->geometry(), nux::Rect());
 
-  EXPECT_CALL(sig_receiver, OnEntryActivated(entry21->id(), nux::Rect(4, 3, 2, 1)));
-  indicators.ActivateEntry("indicator-test-2|entry-1", nux::Rect(4, 3, 2, 1));
+  EXPECT_CALL(sig_receiver, OnEntryActivated("panel1", entry21->id(), nux::Rect(4, 3, 2, 1)));
+  indicators.ActivateEntry("panel1", "indicator-test-2|entry-1", nux::Rect(4, 3, 2, 1));
 
   EXPECT_EQ(entry22->active(), false);
   EXPECT_EQ(entry22->geometry(), nux::Rect());
@@ -270,13 +270,13 @@ TEST_F(TestIndicators, ActivateEntryInvalidEmitsNullSignal)
   Entry::Ptr entry13(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-3"));
   ASSERT_THAT(entry13, NotNull());
 
-  EXPECT_CALL(sig_receiver, OnEntryActivated(entry13->id(), nux::Rect(4, 2, 3, 4)));
-  indicators.ActivateEntry("indicator-test-1|entry-3", nux::Rect(4, 2, 3, 4));
+  EXPECT_CALL(sig_receiver, OnEntryActivated("panel0", entry13->id(), nux::Rect(4, 2, 3, 4)));
+  indicators.ActivateEntry("panel0", "indicator-test-1|entry-3", nux::Rect(4, 2, 3, 4));
 
   // Activating invalid entry, the previously selected one should be disactivate
 
-  EXPECT_CALL(sig_receiver, OnEntryActivated("", nux::Rect()));
-  indicators.ActivateEntry("indicator-entry-invalid", nux::Rect(5, 5, 5, 5));
+  EXPECT_CALL(sig_receiver, OnEntryActivated("", "", nux::Rect()));
+  indicators.ActivateEntry("panel1", "indicator-entry-invalid", nux::Rect(5, 5, 5, 5));
 
   EXPECT_EQ(entry13->active(), false);
   EXPECT_EQ(entry13->geometry(), nux::Rect());

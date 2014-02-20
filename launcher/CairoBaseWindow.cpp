@@ -42,8 +42,9 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(CairoBaseWindow);
 
-CairoBaseWindow::CairoBaseWindow()
-  : use_blurred_background_(!Settings::Instance().GetLowGfxMode())
+CairoBaseWindow::CairoBaseWindow(int monitor)
+  : cv_(Settings::Instance().em(monitor))
+  , use_blurred_background_(!Settings::Instance().GetLowGfxMode())
   , compute_blur_bkg_(use_blurred_background_)
   , fade_animator_(FADE_DURATION)
 {

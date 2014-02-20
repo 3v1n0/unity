@@ -45,7 +45,6 @@ protected:
 
 private:
   void UpdateTexture();
-  void UpdateTextureScale();
 
   WindowButtonType type_;
   bool pressed_;

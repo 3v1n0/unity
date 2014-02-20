@@ -149,7 +149,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , sScreen(ScaleScreen::get(screen))
   , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
-  , deco_manager_(std::make_shared<decoration::Manager>())
+  , deco_manager_(std::make_shared<decoration::Manager>(menus_))
   , debugger_(this)
   , needsRelayout(false)
   , super_keypressed_(false)
@@ -251,7 +251,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
       renderer.find("on softpipe") != std::string::npos ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
     {
-      Settings::Instance().SetLowGfxMode(true);
+      unity_settings_.SetLowGfxMode(true);
     }
 #endif
 
@@ -2195,6 +2195,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
       show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
   }
 
+  menus_->show_menus = false;
   SetUpAndShowSwitcher(show_mode);
 
   return true;
@@ -2901,7 +2902,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
     else
     {
-      if (window->id() == active_window)
+      if (window->id() == active_window || decoration::Style::Get()->integrated_menus())
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
         uScreen->is_desktop_active_ = false;

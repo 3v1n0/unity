@@ -72,7 +72,6 @@ private:
 
 private:
   panel::WindowButtonType type_;
-
   int monitor_;
   EMConverter::Ptr cv_;
 

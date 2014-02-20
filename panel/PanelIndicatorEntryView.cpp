@@ -47,7 +47,6 @@ using namespace indicator;
 PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding,
                                                  IndicatorEntryType type)
   : TextureArea(NUX_TRACKER_LOCATION)
-  , in_dropdown(false)
   , proxy_(proxy)
   , spacing_(DEFAULT_SPACING)
   , left_padding_(padding < 0 ? 0 : padding)
@@ -200,7 +199,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   glib::Object<GdkPixbuf> pixbuf;
   GtkIconTheme* theme = gtk_icon_theme_get_default();
   int image_type = proxy_->image_type();
-  RawPixel size = (type_ != DROP_DOWN) ? 24_em : 16_em;
+  RawPixel size = (type_ != DROP_DOWN) ? 24_em : 10_em;
 
   if (image_type == GTK_IMAGE_PIXBUF)
   {
@@ -732,7 +731,7 @@ bool PanelIndicatorEntryView::IsVisible()
 {
   if (proxy_.get())
   {
-    return TextureArea::IsVisible() && proxy_->visible() && !in_dropdown();
+    return TextureArea::IsVisible() && proxy_->visible();
   }
 
   return TextureArea::IsVisible();

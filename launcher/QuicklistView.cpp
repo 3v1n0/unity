@@ -63,11 +63,11 @@ namespace
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
 
 QuicklistView::QuicklistView(int monitor)
-  : _anchorX(0)
+  : CairoBaseWindow(monitor)
+  , _anchorX(0)
   , _anchorY(0)
   , _labelText("QuicklistView 1234567890")
   , _top_size(TOP_SIZE)
-  , _monitor(monitor)
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
   , _anchor_width(ANCHOR_WIDTH)
@@ -78,25 +78,24 @@ QuicklistView::QuicklistView(int monitor)
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
   , _current_item_index(-1)
-  , _cv(unity::Settings::Instance().em(monitor))
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
 
-  _left_space = new nux::SpaceLayout(RawPixel(_padding + _anchor_width + _corner_radius + _left_padding_correction).CP(_cv),
-                                     RawPixel(_padding + _anchor_width + _corner_radius + _left_padding_correction).CP(_cv),
-                                     1, MAX_HEIGHT.CP(_cv));
+  _left_space = new nux::SpaceLayout(RawPixel(_padding + _anchor_width + _corner_radius + _left_padding_correction).CP(cv_),
+                                     RawPixel(_padding + _anchor_width + _corner_radius + _left_padding_correction).CP(cv_),
+                                     1, MAX_HEIGHT.CP(cv_));
 
-  _right_space = new nux::SpaceLayout(_padding.CP(_cv) + _corner_radius.CP(_cv),
-                                      _padding.CP(_cv) + _corner_radius.CP(_cv),
-                                      1, MAX_HEIGHT.CP(_cv));
+  _right_space = new nux::SpaceLayout(_padding.CP(cv_) + _corner_radius.CP(cv_),
+                                      _padding.CP(cv_) + _corner_radius.CP(cv_),
+                                      1, MAX_HEIGHT.CP(cv_));
 
-  _top_space = new nux::SpaceLayout(1, MAX_WIDTH.CP(_cv),
-                                    _padding.CP(_cv) + _corner_radius.CP(_cv),
-                                    _padding.CP(_cv) + _corner_radius.CP(_cv));
+  _top_space = new nux::SpaceLayout(1, MAX_WIDTH.CP(cv_),
+                                    _padding.CP(cv_) + _corner_radius.CP(cv_),
+                                    _padding.CP(cv_) + _corner_radius.CP(cv_));
 
-  _bottom_space = new nux::SpaceLayout(1, MAX_WIDTH.CP(_cv),
-                                       _padding.CP(_cv) + _corner_radius.CP(_cv),
-                                       _padding.CP(_cv) + _corner_radius.CP(_cv));
+  _bottom_space = new nux::SpaceLayout(1, MAX_WIDTH.CP(cv_),
+                                       _padding.CP(cv_) + _corner_radius.CP(cv_),
+                                       _padding.CP(cv_) + _corner_radius.CP(cv_));
 
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_top_space, 0);
@@ -105,7 +104,7 @@ QuicklistView::QuicklistView(int monitor)
   _vlayout->AddLayout(_item_layout, 0);
 
   _vlayout->AddLayout(_bottom_space, 0);
-  _vlayout->SetMinimumWidth(RawPixel(140).CP(_cv));
+  _vlayout->SetMinimumWidth(RawPixel(140).CP(cv_));
 
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _hlayout->AddLayout(_left_space, 0);
@@ -130,12 +129,12 @@ QuicklistView::QuicklistView(int monitor)
 
 int QuicklistView::CalculateX() const
 {
-  return _anchorX - _padding.CP(_cv);
+  return _anchorX - _padding.CP(cv_);
 }
 
 int QuicklistView::CalculateY() const
 {
-  return _anchorY - (_anchor_height.CP(_cv) / 2) - _top_size.CP(_cv) - _corner_radius.CP(_cv) - _padding.CP(_cv);
+  return _anchorY - (_anchor_height.CP(cv_) / 2) - _top_size.CP(cv_) - _corner_radius.CP(cv_) - _padding.CP(cv_);
 }
 
 void
@@ -459,10 +458,10 @@ void QuicklistView::PreLayoutManagement()
     TotalItemHeight += text_extents.height;
   }
 
-  if (TotalItemHeight < _anchor_height.CP(_cv))
+  if (TotalItemHeight < _anchor_height.CP(cv_))
   {
-    int b = (_anchor_height.CP(_cv) - TotalItemHeight) / 2 + _padding.CP(_cv) + _corner_radius.CP(_cv);
-    int t = b + _offset_correction.CP(_cv);
+    int b = (_anchor_height.CP(cv_) - TotalItemHeight) / 2 + _padding.CP(cv_) + _corner_radius.CP(cv_);
+    int t = b + _offset_correction.CP(cv_);
 
     _top_space->SetMinimumHeight(t);
     _top_space->SetMaximumHeight(t);
@@ -472,8 +471,8 @@ void QuicklistView::PreLayoutManagement()
   }
   else
   {
-    int b = _padding.CP(_cv) + _corner_radius.CP(_cv);
-    int t = b + _offset_correction.CP(_cv);
+    int b = _padding.CP(cv_) + _corner_radius.CP(cv_);
+    int t = b + _offset_correction.CP(cv_);
 
     _top_space->SetMinimumHeight(t);
     _top_space->SetMaximumHeight(t);
@@ -493,7 +492,7 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
 
   UpdateTexture();
 
-  int x = RawPixel(_padding + _anchor_width + _corner_radius + _offset_correction).CP(_cv);
+  int x = RawPixel(_padding + _anchor_width + _corner_radius + _offset_correction).CP(cv_);
   int y = _top_space->GetMinimumHeight();
 
   for (auto item : _item_list)
@@ -1244,14 +1243,14 @@ void QuicklistView::UpdateTexture()
     cairo_outline.GetSurface(),
     width,
     height,
-    _anchor_width.CP(_cv),
-    _anchor_height.CP(_cv),
-    size_above_anchor.CP(_cv),
-    _corner_radius.CP(_cv),
+    _anchor_width.CP(cv_),
+    _anchor_height.CP(cv_),
+    size_above_anchor.CP(cv_),
+    _corner_radius.CP(cv_),
     blur_coef,
     shadow_color,
     1.0f,
-    _padding.CP(_cv),
+    _padding.CP(cv_),
     outline_color);
 
   ql_compute_full_mask(
@@ -1259,15 +1258,15 @@ void QuicklistView::UpdateTexture()
     cairo_mask.GetSurface(),
     width,
     height,
-    _corner_radius.CP(_cv),    // radius,
-    RawPixel(16).CP(_cv),      // shadow_radius,
-    _anchor_width.CP(_cv),     // anchor_width,
-    _anchor_height.CP(_cv),    // anchor_height,
-    size_above_anchor.CP(_cv), // upper_size,
+    _corner_radius.CP(cv_),    // radius,
+    RawPixel(16).CP(cv_),      // shadow_radius,
+    _anchor_width.CP(cv_),     // anchor_width,
+    _anchor_height.CP(cv_),    // anchor_height,
+    size_above_anchor.CP(cv_), // upper_size,
     true,                      // negative,
     false,                     // outline,
     1.0,                       // line_width,
-    _padding.CP(_cv),          // padding_size,
+    _padding.CP(cv_),          // padding_size,
     mask_color);
 
   cairo_destroy(cr_bg);

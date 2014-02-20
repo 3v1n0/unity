@@ -40,11 +40,13 @@ SimpleTexture::SimpleTexture(GLTexture::List const& tex)
 
 SimpleTextureQuad::SimpleTextureQuad()
   : scale(DEFAULT_SCALE)
-{
-}
+{}
 
-void SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
+bool SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
 {
+  if (st == simple_texture)
+    return false;
+
   st = simple_texture;
 
   if (st && st->texture())
@@ -55,16 +57,32 @@ void SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
     quad.box.setGeometry(invalid, invalid, tex->width() * scale, tex->height() * scale);
     SetCoords(old_coords.x(), old_coords.y());
   }
+
+  return true;
 }
 
-void SimpleTextureQuad::SetCoords(int x, int y)
+bool SimpleTextureQuad::SetScale(float s)
+{
+  if (!st || scale == s)
+    return false;
+
+  scale = s;
+  auto* tex = st->texture();
+  quad.box.setWidth(tex->width() * scale);
+  quad.box.setHeight(tex->height() * scale);
+  UpdateMatrix();
+  return true;
+}
+
+bool SimpleTextureQuad::SetCoords(int x, int y)
 {
   if (x == quad.box.x() && y == quad.box.y())
-    return;
+    return false;
 
   quad.box.setX(x);
   quad.box.setY(y);
   UpdateMatrix();
+  return true;
 }
 
 void SimpleTextureQuad::UpdateMatrix()
@@ -79,21 +97,14 @@ void SimpleTextureQuad::UpdateMatrix()
   quad.matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad.matrix, y);
 }
 
-void SimpleTextureQuad::SetScale(float s)
+bool SimpleTextureQuad::SetX(int x)
 {
-  scale = s;
-  if (st)
-    UpdateMatrix();
+  return SetCoords(x, quad.box.y());
 }
 
-void SimpleTextureQuad::SetX(int x)
+bool SimpleTextureQuad::SetY(int y)
 {
-  SetCoords(x, quad.box.y());
-}
-
-void SimpleTextureQuad::SetY(int y)
-{
-  SetCoords(quad.box.x(), y);
+  return SetCoords(quad.box.x(), y);
 }
 
 //

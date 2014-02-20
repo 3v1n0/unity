@@ -35,7 +35,6 @@
 #include "CairoBaseWindow.h"
 #include "QuicklistMenuItem.h"
 
-#include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/RawPixel.h"
 
@@ -149,7 +148,6 @@ private:
   int                   _anchorY;
   std::string           _labelText;
   RawPixel              _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
-  int                   _monitor;
 
   bool                  _mouse_down;
 
@@ -180,8 +178,6 @@ private:
 
   // list of introspectable children, used to return children in the correct order:
   IntrospectableList _introspectable_children;
-
-  EMConverter::Ptr _cv;
 };
 
 } // NAMESPACE

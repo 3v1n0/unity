@@ -199,8 +199,8 @@ bool PanelIndicatorsView::ActivateIfSensitive()
 
 void PanelIndicatorsView::GetGeometryForSync(EntryLocationMap& locations)
 {
-  for (auto const& entry : entries_)
-    entry.second->GetGeometryForSync(locations);
+  for (auto* area : layout_->GetChildren())
+    static_cast<PanelIndicatorEntryView*>(area)->GetGeometryForSync(locations);
 }
 
 PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
@@ -267,12 +267,27 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
     return;
 
   auto const& entry_id = view->GetEntryID();
-  int entry_pos = pos;
+  bool added_to_dropdown = false;
   bool known_entry = (entries_.find(entry_id) != entries_.end());
   view->SetOpacity(opacity());
 
   if (!known_entry && dropdown_ && !dropdown_->Empty())
   {
+    if (pos == IndicatorEntryPosition::AUTO)
+    {
+      dropdown_->Insert(PanelIndicatorEntryView::Ptr(view));
+      added_to_dropdown = true;
+    }
+    else if (view->GetEntryPriority() >= dropdown_->Top()->GetEntryPriority())
+    {
+      dropdown_->Push(PanelIndicatorEntryView::Ptr(view));
+      added_to_dropdown = true;
+    }
+  }
+
+  if (!added_to_dropdown)
+  {
+    int entry_pos = pos;
     if (entry_pos == IndicatorEntryPosition::AUTO)
     {
       entry_pos = nux::NUX_LAYOUT_BEGIN;
@@ -289,16 +304,17 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
         }
       }
     }
+
+    layout_->AddView(view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 1.0, (nux::LayoutPosition) entry_pos);
+    AddChild(view);
+
+    QueueRelayout();
+    QueueDraw();
   }
-
-  layout_->AddView(view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 1.0, (nux::LayoutPosition) entry_pos);
-  AddChild(view);
-
-  QueueRelayout();
-  QueueDraw();
 
   if (!known_entry)
   {
+    view->SetMonitor(monitor_);
     view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
     entries_.insert({entry_id, view});
     on_indicator_updated.emit();
@@ -310,8 +326,6 @@ PanelIndicatorEntryView *PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, 
 {
   auto view = new PanelIndicatorEntryView(entry, padding, type);
   AddEntryView(view, pos);
-
-  view->SetMonitor(monitor_);
 
   return view;
 }

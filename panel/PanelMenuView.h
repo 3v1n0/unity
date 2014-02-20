@@ -50,6 +50,7 @@ public:
   Window GetTopWindow() const;
   Window GetMaximizedWindow() const;
   bool GetControlsActive() const;
+  bool HasMenus() const;
 
   void NotifyAllMenusClosed();
 
@@ -71,6 +72,7 @@ protected:
                                         nux::NuxEventType event_type);
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
   virtual std::string GetActiveViewName(bool use_appname = false) const;
+  virtual std::string GetMaximizedViewName(bool use_appname = false) const;
 
 private:
   friend class TestPanelMenuView;
@@ -115,7 +117,7 @@ private:
   std::string GetCurrentTitle() const;
   bool Refresh(bool force = false);
 
-  void UpdateTitleTexture(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const;
+  void UpdateTitleTexture(nux::Geometry const&, std::string const& label);
 
   void UpdateLastGeometry(nux::Geometry const& geo);
   void UpdateTitleGradientTexture();
@@ -151,6 +153,8 @@ private:
   void StartFadeOut(int duration = -1);
   void OnFadeAnimatorUpdated(double opacity);
 
+  void ActivateIntegratedMenus(nux::Point const&);
+
   menu::Manager::Ptr const& menu_manager_;
   glib::Object<BamfMatcher> matcher_;
 
@@ -163,6 +167,7 @@ private:
   bool is_inside_;
   bool is_grabbed_;
   bool is_maximized_;
+  bool is_desktop_focused_;
 
   PanelIndicatorEntryView* last_active_view_;
   std::set<Window> maximized_set_;
@@ -170,6 +175,7 @@ private:
   std::list<glib::Object<BamfApplication>> new_apps_;
   std::string panel_title_;
   nux::Geometry last_geo_;
+  nux::Geometry title_geo_;
 
   bool overlay_showing_;
   bool switcher_showing_;
@@ -178,6 +184,8 @@ private:
   bool show_now_activated_;
   bool we_control_active_;
   bool new_app_menu_shown_;
+  bool ignore_menu_visibility_;
+  bool integrated_menus_;
 
   Window active_xid_;
   nux::Geometry monitor_geo_;
@@ -189,7 +197,7 @@ private:
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> active_app_changed_signal_;
   glib::Signal<void, BamfView*, gchar*, gchar*> view_name_changed_signal_;
   glib::Signal<void, BamfView*, gchar*, gchar*> app_name_changed_signal_;
-  connection::Wrapper style_changed_connection_;
+  connection::Wrapper lim_changed_connection_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;

@@ -33,8 +33,8 @@ namespace
 const std::string ICON_NAME = "go-down-symbolic";
 }
 
-PanelIndicatorEntryDropdownView::PanelIndicatorEntryDropdownView(std::string const& indicator, indicator::Indicators::Ptr const& indicators)
-  : PanelIndicatorEntryView(std::make_shared<indicator::Entry>(indicator+"-dropdown"), 5, IndicatorEntryType::DROP_DOWN)
+PanelIndicatorEntryDropdownView::PanelIndicatorEntryDropdownView(std::string const& indicator, Indicators::Ptr const& indicators)
+  : PanelIndicatorEntryView(std::make_shared<Entry>(indicator+"-dropdown"), 5, IndicatorEntryType::DROP_DOWN)
   , indicators_(indicators)
 {
   proxy_->set_priority(std::numeric_limits<int>::max());
@@ -62,7 +62,27 @@ void PanelIndicatorEntryDropdownView::Push(PanelIndicatorEntryView::Ptr const& c
 
   children_.push_back(child);
   child->GetEntry()->add_parent(proxy_);
-  child->in_dropdown = true;
+  debug::Introspectable::AddChild(child.GetPointer());
+  SetProxyVisibility(true);
+}
+
+void PanelIndicatorEntryDropdownView::Insert(PanelIndicatorEntryView::Ptr const& child)
+{
+  if (!child)
+    return;
+
+  if (std::find(children_.begin(), children_.end(), child) != children_.end())
+    return;
+
+  auto it = children_.begin();
+  for (; it != children_.end(); ++it)
+  {
+    if (child->GetEntryPriority() <= (*it)->GetEntryPriority())
+      break;
+  }
+
+  children_.insert(it, child);
+  child->GetEntry()->add_parent(proxy_);
   debug::Introspectable::AddChild(child.GetPointer());
   SetProxyVisibility(true);
 }
@@ -105,8 +125,7 @@ void PanelIndicatorEntryDropdownView::Remove(PanelIndicatorEntryView::Ptr const&
   if (it != children_.end())
   {
     debug::Introspectable::RemoveChild(it->GetPointer());
-    (*it)->GetEntry()->rm_parent(proxy_);
-    child->in_dropdown = false;
+    child->GetEntry()->rm_parent(proxy_);
     children_.erase(it);
   }
 

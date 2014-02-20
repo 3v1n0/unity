@@ -43,7 +43,6 @@ public:
 
   nux::RWProperty<std::string> title;
   nux::Property<bool> scaled;
-  nux::Property<int> monitor;
 
   void Update();
   void Undecorate();

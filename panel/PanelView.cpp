@@ -124,7 +124,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
-  menus->activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
+  menus->key_activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
   menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
@@ -628,7 +628,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   {
     PanelIndicatorEntryView* view = nullptr;
 
-    if (menu_view_->GetControlsActive())
+    if (menu_view_->HasMenus())
       view = menu_view_->ActivateEntryAt(x, y);
 
     if (!view) indicators_->ActivateEntryAt(x, y);
@@ -653,9 +653,12 @@ bool PanelView::TrackMenuPointer()
   return true;
 }
 
-void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
+void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const&)
 {
-  bool active = (entry_id.size() > 0);
+  if (!panel.empty() && panel != GetPanelName())
+    return;
+
+  bool active = !entry_id.empty();
   if (active && !track_menu_pointer_timeout_)
   {
     //
@@ -691,7 +694,11 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
 
 bool PanelView::ActivateFirstSensitive()
 {
-  if (IsActive() && (menu_view_->ActivateIfSensitive() || indicators_->ActivateIfSensitive()))
+  if (!IsActive())
+    return false;
+
+  if ((menu_view_->HasMenus() && menu_view_->ActivateIfSensitive()) ||
+      indicators_->ActivateIfSensitive())
   {
     // Since this only happens on keyboard events, we need to prevent that the
     // pointer tracker would select another entry.
@@ -704,7 +711,11 @@ bool PanelView::ActivateFirstSensitive()
 
 bool PanelView::ActivateEntry(std::string const& entry_id)
 {
-  if (IsActive() && (menu_view_->ActivateEntry(entry_id, 0) || indicators_->ActivateEntry(entry_id, 0)))
+  if (!IsActive())
+    return false;
+
+  if ((menu_view_->HasMenus() && menu_view_->ActivateEntry(entry_id, 0)) ||
+      indicators_->ActivateEntry(entry_id, 0))
   {
     // Since this only happens on keyboard events, we need to prevent that the
     // pointer tracker would select another entry.
@@ -768,16 +779,20 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   }
 }
 
+std::string PanelView::GetPanelName() const
+{
+  return GetName() + std::to_string(monitor_);
+}
+
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  std::string panel_id = GetName() + std::to_string(monitor_);
 
-  if (menu_view_->GetControlsActive())
+   if (menu_view_->HasMenus())
     menu_view_->GetGeometryForSync(locations);
 
   indicators_->GetGeometryForSync(locations);
-  remote_->SyncGeometries(panel_id, locations);
+  remote_->SyncGeometries(GetPanelName(), locations);
 }
 
 void PanelView::SetMonitor(int monitor)

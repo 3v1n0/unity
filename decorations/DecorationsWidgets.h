@@ -23,6 +23,7 @@
 #include <deque>
 #include <NuxCore/Size.h>
 #include <NuxCore/Property.h>
+#include <UnityCore/UWeakPtr.h>
 #include "Introspectable.h"
 #include "CompizUtils.h"
 
@@ -38,6 +39,7 @@ class Item : public sigc::trackable, public debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Item> Ptr;
+  typedef unity::uweak_ptr<Item> WeakPtr;
   typedef std::deque<Item::Ptr> List;
 
   Item();
@@ -47,6 +49,7 @@ public:
   nux::Property<bool> focused;
   nux::Property<bool> sensitive;
   nux::Property<bool> mouse_owner;
+  nux::Property<float> scale;
 
   CompRect const& Geometry() const;
   virtual int GetNaturalWidth() const;
@@ -101,7 +104,7 @@ protected:
   nux::Size natural_;
 
 private:
-  std::weak_ptr<BasicContainer> parent_;
+  unity::uweak_ptr<BasicContainer> parent_;
 };
 
 class SimpleItem : public Item
@@ -117,8 +120,9 @@ class TexturedItem : public Item
 public:
   typedef std::shared_ptr<TexturedItem> Ptr;
 
+  TexturedItem();
+
   void SetTexture(cu::SimpleTexture::Ptr const&);
-  void SetTextureScale(float scale);
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void SetCoords(int x, int y);
 
@@ -133,7 +137,7 @@ protected:
 };
 
 
-class BasicContainer : public SimpleItem
+class BasicContainer : public SimpleItem, public std::enable_shared_from_this<BasicContainer>
 {
 public:
   typedef std::shared_ptr<BasicContainer> Ptr;
@@ -145,7 +149,7 @@ public:
 
 protected:
   friend class Item;
-  virtual void Relayout() = 0;
+  void Relayout();
   bool IsContainer() const { return true; }
 
   std::string GetName() const { return "BasicContainer"; }
@@ -153,10 +157,14 @@ protected:
   IntrospectableList GetIntrospectableChildren();
 
   Item::List items_;
+
+private:
+  virtual void DoRelayout() = 0;
+  bool relayouting_;
 };
 
 
-class Layout : public std::enable_shared_from_this<Layout>, public BasicContainer
+class Layout : public BasicContainer
 {
 public:
   typedef std::shared_ptr<Layout> Ptr;
@@ -176,13 +184,12 @@ public:
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
 protected:
-  void Relayout();
   std::string GetName() const { return "Layout"; }
   void AddProperties(debug::IntrospectionData&);
+  void DoRelayout();
 
 private:
   bool SetPadding(int& target, int new_value);
-  bool relayouting_;
 };
 
 } // decoration namespace

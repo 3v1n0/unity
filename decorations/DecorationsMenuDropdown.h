@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,30 +17,45 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#ifndef UNITY_DECORATIONS_EDGES
-#define UNITY_DECORATIONS_EDGES
+#ifndef UNITY_DECORATIONS_MENU_DROPDOWN
+#define UNITY_DECORATIONS_MENU_DROPDOWN
 
-#include "DecorationsEdge.h"
+#include <UnityCore/Indicators.h>
+#include "DecorationsMenuEntry.h"
 
 namespace unity
 {
 namespace decoration
 {
 
-class EdgeBorders : public BasicContainer
+class MenuDropdown : public MenuEntry
 {
 public:
-  EdgeBorders(CompWindow* win);
-  Item::Ptr const& GetEdge(Edge::Type) const;
+  MenuDropdown(indicator::Indicators::Ptr const&, CompWindow*);
+
+  void ShowMenu(unsigned button) override;
+  bool ActivateChild(MenuEntry::Ptr const&);
+
+  void Push(MenuEntry::Ptr const&);
+  MenuEntry::Ptr Pop();
+  MenuEntry::Ptr Top() const;
+
+  size_t Size() const;
+  bool Empty() const;
 
 protected:
-  std::string GetName() const { return "EdgeBorders"; }
+  std::string GetName() const override { return "MenuDropdown"; }
+  IntrospectableList GetIntrospectableChildren() override;
 
 private:
-  void DoRelayout();
+  void RenderTexture() override;
+
+  indicator::Indicators::Ptr indicators_;
+  std::deque<MenuEntry::Ptr> children_;
+  indicator::Entry::Ptr active_;
 };
 
 } // decoration namespace
 } // unity namespace
 
-#endif // UNITY_DECORATIONS_EDGES
+#endif // UNITY_DECORATIONS_MENU_DROPDOWN

@@ -31,7 +31,12 @@ namespace decoration
 class GrabEdge : public Edge
 {
 public:
-  GrabEdge(CompWindow* win);
+  GrabEdge(CompWindow* win, bool always_wait_grab_timeout = false);
+
+  bool IsMaximizable() const;
+  bool IsGrabbed() const;
+  int ButtonDown() const;
+  CompPoint const& ClickedPoint() const;
 
   void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
   void ButtonUpEvent(CompPoint const&, unsigned button, Time) override;
@@ -44,6 +49,7 @@ private:
   Time last_click_time_;
   CompPoint last_click_pos_;
   int button_down_;
+  bool always_wait_grab_timeout_;
   glib::Source::UniquePtr button_down_timer_;
 };
 
