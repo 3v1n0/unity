@@ -17,10 +17,13 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
- #ifndef UNITY_USER_AUTHENTICATOR_H
- #define UNITY_USER_AUTHENTICATOR_H
+#ifndef UNITY_USER_AUTHENTICATOR_H
+#define UNITY_USER_AUTHENTICATOR_H
 
+#include <future>
 #include <functional>
+#include <memory>
+#include <sigc++/signal.h>
 #include <string>
 
 namespace unity
@@ -33,16 +36,21 @@ class UserAuthenticator
 public:
   typedef std::function<void(bool)> AuthenticateEndCallback;
 
-  virtual ~UserAuthenticator() {}
+  virtual ~UserAuthenticator() {};
 
   // Authenticate the user in a background thread.
   virtual bool AuthenticateStart(std::string const& username,
-                                 std::string const& password,
                                  AuthenticateEndCallback authenticate_cb) = 0;
+
+  // FIXME (andy) found a better name for the promise ptr.
+  sigc::signal<void, std::string, std::shared_ptr<std::promise<std::string>> const&> echo_on_requested;
+  sigc::signal<void, std::string, std::shared_ptr<std::promise<std::string>> const&> echo_off_requested;
+  sigc::signal<void, std::string> message_requested;
+  sigc::signal<void, std::string> error_requested;
+  sigc::signal<void> clear_prompts;
 };
 
 } // lockscreen
 } // unity
- 
- 
+
  #endif // UNITY_USER_AUTHENTICATOR_H

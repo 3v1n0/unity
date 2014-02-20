@@ -21,8 +21,6 @@
 #define UNITY_LOCKSCREEN_SHIELD_H
 
 #include <NuxCore/Property.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/SessionManager.h>
 
 #include "unity-shared/MockableBaseWindow.h"
@@ -59,14 +57,11 @@ private:
 
   void OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned);
   void OnIndicatorEntryActivated(std::string const& entry, nux::Geometry const& geo);
-  void OnPromptActivated();
-  void AuthenticationCb(bool authenticated);
 
 
   session::Manager::Ptr session_manager_;
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
-  std::shared_ptr<UserAuthenticator> user_authenticator_;
 
   UserPromptView* prompt_view_;
 };

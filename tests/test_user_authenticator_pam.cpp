@@ -53,26 +53,6 @@ struct TestUserAuthenticatorPam : public ::testing::Test
   UserAuthenticatorPam user_authenticator_pam_;
 };
 
-TEST_F(TestUserAuthenticatorPam, AuthenticateStart)
-{
-  bool authentication_result = false;
-
-  user_authenticator_pam_.AuthenticateStart("andrea", "password", [&authentication_result](bool success) {
-    authentication_result = success;
-  });
-
-  Utils::WaitUntilMSec(authentication_result);
-}
-
-TEST_F(TestUserAuthenticatorPam, AuthenticateStartWrongPassword)
-{
-  bool authentication_result = false;
-
-  user_authenticator_pam_.AuthenticateStart("maria", "wrong password", [&authentication_result](bool success) {
-    authentication_result = not success;
-  });
-
-  Utils::WaitUntilMSec(authentication_result);
-}
+// FIXME (add tests)
 
 }

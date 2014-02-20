@@ -65,33 +65,82 @@ nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
                                 rop));
 }
 
-UserPromptView::UserPromptView(std::string const& name)
+UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
+  , session_manager_(session_manager)
 {
+  user_authenticator_.echo_on_requested.connect([this](std::string const& message, std::shared_ptr<std::promise<std::string>> const& promise){
+    AddPrompt(message, /* visible */ true, promise);
+  });
+
+  user_authenticator_.echo_off_requested.connect([this](std::string const& message, std::shared_ptr<std::promise<std::string>> const& promise){
+    AddPrompt(message, /* visible */ false, promise);
+  });
+
+  user_authenticator_.message_requested.connect([this](std::string const& message){
+    AddMessage(message, nux::color::White);
+  });
+
+  user_authenticator_.error_requested.connect([this](std::string const& message){
+    AddMessage(message, nux::color::Red);
+  });
+
+  user_authenticator_.clear_prompts.connect([this](){
+    ResetLayout();
+  });
+
+  ResetLayout();
+
+  user_authenticator_.AuthenticateStart(session_manager_->UserName(),
+                                        sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+}
+
+void UserPromptView::ResetLayout()
+{
+  focus_queue_ = std::queue<IMTextEntry*>();
+
   SetLayout(new nux::VLayout());
 
   GetLayout()->SetLeftAndRightPadding(10);
   GetLayout()->SetTopAndBottomPadding(10);
-  static_cast<nux::VLayout*>(GetLayout())->SetVerticalInternalMargin(5);
+  static_cast<nux::VLayout*>(GetLayout())->SetVerticalInternalMargin(10);
+
+  auto const& real_name = session_manager_->RealName();
+  auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
 
   unity::StaticCairoText* username = new unity::StaticCairoText(name);
   username->SetFont("Ubuntu 13");
   GetLayout()->AddView(username);
 
-  GetLayout()->AddSpace(0, 1);
+  msg_layout_ = new nux::VLayout();
+  msg_layout_->SetVerticalInternalMargin(15);
+  msg_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
+  GetLayout()->AddLayout(msg_layout_);
 
-  message_ = new unity::StaticCairoText(_("Invalid password, please try again"));
-  message_->SetFont("Ubuntu 10");
-  message_->SetTextColor(nux::Color("#df382c"));
-  message_->SetVisible(false);
-  GetLayout()->AddView(message_);
+  prompt_layout_ = new nux::VLayout();
+  prompt_layout_->SetVerticalInternalMargin(5);
+  prompt_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
+  GetLayout()->AddLayout(prompt_layout_);
 
-  text_input_ = new unity::TextInput();
-  text_input_->input_hint = _("Password");
-  text_input_->text_entry()->SetPasswordMode(true);
-  text_input_->SetMinimumHeight(Settings::GRID_SIZE);
-  text_input_->SetMaximumHeight(Settings::GRID_SIZE);
-  GetLayout()->AddView(text_input_, 1);
+  QueueRelayout();
+  QueueDraw();
+}
+
+void UserPromptView::AuthenticationCb(bool authenticated)
+{
+  ResetLayout();
+
+  if (authenticated)
+  {
+    session_manager_->unlock_requested.emit();
+  }
+  else
+  {
+    AddMessage(_("Invalid password, please try again"), nux::color::Red);
+
+    user_authenticator_.AuthenticateStart(session_manager_->UserName(),
+                                          sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+  }
 }
 
 void UserPromptView::Draw(nux::GraphicsEngine& graphics_engine, bool /* force_draw */)
@@ -128,27 +177,68 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
   graphics_engine.PopClippingRectangle();
 }
 
-nux::TextEntry* UserPromptView::text_entry()
+nux::View* UserPromptView::focus_view()
 {
-  return text_input_->text_entry();
+  if (focus_queue_.empty())
+    return nullptr;
+
+  focus_queue_.front()->cursor_visible_ = true;
+  return focus_queue_.front();
 }
 
-void UserPromptView::SetSpinnerVisible(bool visible)
+void UserPromptView::AddPrompt(std::string const& message, bool visible, std::shared_ptr<std::promise<std::string>> const& promise)
 {
-  text_input_->SetSpinnerVisible(visible);
+  auto text_input = new unity::TextInput();
+
+  text_input->input_hint = message;
+  text_input->text_entry()->SetPasswordMode(!visible);
+
+  text_input->text_entry()->cursor_visible_ = false;
+  if (text_input->text_entry()->cursor_blink_timer_)
+    g_source_remove(text_input->text_entry()->cursor_blink_timer_);
+
+  text_input->SetMinimumHeight(Settings::GRID_SIZE);
+  text_input->SetMaximumHeight(Settings::GRID_SIZE);
+  prompt_layout_->AddView(text_input, 1);
+  focus_queue_.push(text_input->text_entry());
+
+  text_input->text_entry()->activated.connect([this, text_input, promise](){
+    if (focus_queue_.size() == 1)
+    {
+      text_input->SetSpinnerVisible(true);
+      text_input->SetSpinnerState(STATE_SEARCHING);
+    }
+
+    this->focus_queue_.pop();
+
+    text_input->text_entry()->SetInputEventSensitivity(false);
+    text_input->text_entry()->cursor_visible_ = false;
+    this->QueueRelayout();
+    this->QueueDraw();
+
+    std::string password = text_input->text_entry()->GetText();
+    promise->set_value(password);
+  });
+
+  GetLayout()->ComputeContentPosition(0, 0);
+  ComputeContentSize();
   QueueRelayout();
+  QueueDraw();
 }
 
-void UserPromptView::SetSpinnerState(SpinnerState spinner_state)
+void UserPromptView::AddMessage(std::string const& message, nux::Color const& color)
 {
-  text_input_->SetSpinnerState(spinner_state);
-  QueueRelayout();
-}
+  auto* view = new unity::StaticCairoText("");
+  view->SetFont("Ubuntu 10");
+  view->SetTextColor(color);
+  view->SetText(message);
 
-void UserPromptView::ShowErrorMessage()
-{
-  message_->SetVisible(true);
+  msg_layout_->AddView(view);
+
+  GetLayout()->ComputeContentPosition(0, 0);
+  ComputeContentSize();
   QueueRelayout();
+  QueueDraw();
 }
 
 }

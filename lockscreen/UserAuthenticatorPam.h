@@ -22,6 +22,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSource.h>
 
 #include "UserAuthenticator.h"
 
@@ -39,7 +40,6 @@ class UserAuthenticatorPam : public UserAuthenticator, private boost::noncopyabl
 {
 public:
   bool AuthenticateStart(std::string const& username,
-                         std::string const& password,
                          AuthenticateEndCallback authenticate_cb) override;
 
 private:
@@ -52,12 +52,13 @@ private:
                                   void* appdata_ptr);
 
   std::string username_;
-  std::string password_;
   AuthenticateEndCallback authenticate_cb_;
 
   int status_;
+  bool first_prompt_;
   pam_handle* pam_handle_;
   glib::Cancellable cancellable_;
+  glib::SourceManager source_manager_;
 };
 
 } // lockscreen

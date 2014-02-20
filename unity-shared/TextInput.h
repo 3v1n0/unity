@@ -63,7 +63,7 @@ public:
   void SetSpinnerVisible(bool visible);
   void SetSpinnerState(SpinnerState spinner_state);
 
-  nux::TextEntry* text_entry() const;
+  IMTextEntry* text_entry() const;
 
   nux::RWProperty<std::string> input_string;
   nux::Property<std::string> input_hint;

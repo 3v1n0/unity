@@ -30,8 +30,8 @@ const int TEXT_INPUT_RIGHT_BORDER = 10;
 const int HIGHLIGHT_HEIGHT = 24;
 
 // Fonts
-const std::string HINT_LABEL_FONT_SIZE = "12px";
-const std::string HINT_LABEL_FONT_STYLE = "Italic";
+const std::string HINT_LABEL_FONT_SIZE = "14px";
+const std::string HINT_LABEL_FONT_STYLE = "";
 const std::string HINT_LABEL_DEFAULT_FONT = "Ubuntu " + HINT_LABEL_FONT_STYLE + " " + HINT_LABEL_FONT_SIZE;
 
 const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
@@ -82,7 +82,7 @@ void TextInput::Init()
   });
 
   layered_layout_ = new nux::LayeredLayout();
-  layered_layout_->AddLayout(hint_layout);
+  layered_layout_->AddLayer(hint_layout);
   layered_layout_->AddLayer(pango_entry_);
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
@@ -265,7 +265,7 @@ void TextInput::OnEndKeyFocus()
 }
 
 
-nux::TextEntry* TextInput::text_entry() const
+IMTextEntry* TextInput::text_entry() const
 {
   return pango_entry_;
 }

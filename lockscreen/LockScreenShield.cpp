@@ -27,12 +27,10 @@
 #include "BackgroundSettings.h"
 #include "CofView.h"
 #include "LockScreenSettings.h"
-#include "UserAuthenticatorPam.h"
 #include "UserPromptView.h"
 #include "panel/PanelView.h"
 #include "unity-shared/GnomeKeyGrabber.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/TextInput.h"
 
 namespace unity
 {
@@ -43,7 +41,6 @@ Shield::Shield(session::Manager::Ptr const& session_manager, bool is_primary)
   : primary(is_primary)
   , session_manager_(session_manager)
   , bg_settings_(new BackgroundSettings)
-  , user_authenticator_(new UserAuthenticatorPam)
   , prompt_view_(nullptr)
 {
   SetLayout(new nux::VLayout());
@@ -111,9 +108,7 @@ nux::View* Shield::CreatePanel()
 
 nux::View* Shield::CreatePromptView()
 {
-  auto const& real_name = session_manager_->RealName();
-  auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
-  prompt_view_ = new UserPromptView(name);
+  prompt_view_ = new UserPromptView(session_manager_);
 
   auto width = 8 * Settings::GRID_SIZE;
   auto height = 3 * Settings::GRID_SIZE;
@@ -121,9 +116,6 @@ nux::View* Shield::CreatePromptView()
   prompt_view_->SetMinimumWidth(width);
   prompt_view_->SetMaximumWidth(width);
   prompt_view_->SetMinimumHeight(height);
-  prompt_view_->SetMaximumHeight(height);
-
-  prompt_view_->text_entry()->activated.connect(sigc::mem_fun(this, &Shield::OnPromptActivated));
 
   return prompt_view_;
 }
@@ -143,38 +135,16 @@ void Shield::OnIndicatorEntryActivated(std::string const& entry, nux::Geometry c
   }
 }
 
-void Shield::OnPromptActivated()
-{
-  prompt_view_->SetSpinnerVisible(true);
-  prompt_view_->SetSpinnerState(STATE_SEARCHING);
-  prompt_view_->text_entry()->SetInputEventSensitivity(false);
-
-  user_authenticator_->AuthenticateStart(session_manager_->UserName(),
-                                         prompt_view_->text_entry()->GetText(),
-                                         sigc::mem_fun(this, &Shield::AuthenticationCb));
-}
-
-void Shield::AuthenticationCb(bool authenticated)
-{
-  prompt_view_->text_entry()->SetText("");
-  prompt_view_->SetSpinnerVisible(false);
-  prompt_view_->text_entry()->SetInputEventSensitivity(true);
-
-  if (authenticated)
-    session_manager_->unlock_requested.emit();
-  else
-    prompt_view_->ShowErrorMessage();
-}
-
 nux::Area* Shield::FindKeyFocusArea(unsigned int,
                                     unsigned long,
                                     unsigned long)
 {
-  if (prompt_view_ && prompt_view_->text_entry() && prompt_view_->text_entry()->GetInputEventSensitivity())
-    return prompt_view_->text_entry();
+  if (prompt_view_ && prompt_view_->focus_view() && prompt_view_->focus_view()->GetInputEventSensitivity())
+    return prompt_view_->focus_view();
   else
     return nullptr;
 }
+
 
 bool Shield::AcceptKeyNavFocus()
 {

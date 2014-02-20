@@ -25,6 +25,7 @@
 
 #include <cstring>
 #include <security/pam_appl.h>
+#include <vector>
 
 namespace unity
 {
@@ -32,11 +33,10 @@ namespace lockscreen
 {
 
 bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
-                                             std::string const& password,
                                              AuthenticateEndCallback authenticate_cb)
 {
+  first_prompt_ = true;
   username_ = username;
-  password_ = password;
   authenticate_cb_ = authenticate_cb;
 
   if (!InitPam())
@@ -65,7 +65,7 @@ bool UserAuthenticatorPam::InitPam()
   conversation.appdata_ptr = static_cast<void*>(this);
 
   // FIXME (andy) We should install our own unityshell pam file.
-  return pam_start("common-auth", username_.c_str(),
+  return pam_start("lightdm", username_.c_str(),
                    &conversation, &pam_handle_) == PAM_SUCCESS;
 }
 
@@ -83,30 +83,69 @@ int UserAuthenticatorPam::ConversationFunction(int num_msg,
 
   UserAuthenticatorPam* user_auth = static_cast<UserAuthenticatorPam*>(appdata_ptr);
 
+  if (!user_auth->first_prompt_)
+    // Adding a timeout ensures that the signal is emitted in the main thread
+    user_auth->source_manager_.AddTimeout(0, [&]() { user_auth->clear_prompts.emit(); return false; });
+
+  user_auth->first_prompt_ = false;
+
   bool raise_error = false;
   int count;
+  std::vector<std::shared_ptr<std::promise<std::string>>> promises;
+
   for (count = 0; count < num_msg && !raise_error; ++count)
   {
-    pam_response* resp_item = &tmp_response[count];
-    resp_item->resp_retcode = 0;
-    resp_item->resp = nullptr;
-
     switch (msg[count]->msg_style)
     {
       case PAM_PROMPT_ECHO_ON:
-        resp_item->resp = strdup(user_auth->username_.c_str());
-        if (!resp_item->resp)
-          raise_error = true;
+      {
+        auto promise = std::make_shared<std::promise<std::string>>();
+        promises.push_back(promise);
+
+        // Adding a timeout ensures that the signal is emitted in the main thread
+        std::string message(msg[count]->msg);
+        user_auth->source_manager_.AddTimeout(0, [&, message, promise]() { user_auth->echo_on_requested.emit(message, promise); return false; });
         break;
+      }
       case PAM_PROMPT_ECHO_OFF:
-        resp_item->resp = strdup(user_auth->password_.c_str());
-        if (!resp_item->resp)
-          raise_error = true;
+      {
+        auto promise = std::make_shared<std::promise<std::string>>();
+        promises.push_back(promise);
+
+        // Adding a timeout ensures that the signal is emitted in the main thread
+        std::string message(msg[count]->msg);
+        user_auth->source_manager_.AddTimeout(0, [&, message, promise]() { user_auth->echo_off_requested.emit(message, promise); return false; });
+      }
         break;
       case PAM_TEXT_INFO:
+      {
+        // Adding a timeout ensures that the signal is emitted in the main thread
+        std::string message(msg[count]->msg);
+        user_auth->source_manager_.AddTimeout(0, [&, message]() { user_auth->message_requested.emit(message); return false; });
         break;
+      }
       default:
-        raise_error = true;
+      {
+        // Adding a timeout ensures that the signal is emitted in the main thread
+        std::string message(msg[count]->msg);
+        user_auth->source_manager_.AddTimeout(0, [&, message]() { user_auth->error_requested.emit(message); return false; });
+      }
+    }
+  }
+
+  int i = 0;
+
+  for (auto promise : promises)
+  {
+    auto future = promise->get_future();
+    pam_response* resp_item = &tmp_response[i++];
+    resp_item->resp_retcode = 0;
+    resp_item->resp = strdup(future.get().c_str());
+
+    if (!resp_item->resp)
+    {
+      raise_error = true;
+      break;
     }
   }
 

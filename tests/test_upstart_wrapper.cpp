@@ -60,7 +60,7 @@ TEST_F(TestUpstartWrapper, Emit)
 
   upstart_wrapper_.Emit("desktop-lock");
 
-  Utils::WaitUntil(event_emitted, 5);
+  Utils::WaitUntil(event_emitted);
 }
 
 }
