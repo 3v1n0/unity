@@ -163,9 +163,10 @@ public:
 
   int GetDPI(int monitor = 0) const
   {
-    int dpi = 0;
-    g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
+   // int dpi = 0;
+   // g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
 
+    int dpi = 96;
     int valid_monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
     if (monitor >= 0 && monitor < valid_monitors)
     {
