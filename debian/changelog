@@ -1,8 +1,8 @@
-unity (7.1.2+14.04.20140218.1-0ubuntu2) UNRELEASED; urgency=medium
+unity (7.1.2+14.04.20140218.1-0ubuntu2) trusty; urgency=medium
 
   * Add Conflicts: libunity-core-6.0-8 to facilitate smooth upgrades.
 
- -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 19 Feb 2014 23:07:39 -0800
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 19 Feb 2014 23:08:03 -0800
 
 unity (7.1.2+14.04.20140218.1-0ubuntu1) trusty; urgency=low
 
