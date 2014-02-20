@@ -30,7 +30,7 @@
 #include "UnitySettings.h"
 #include "UScreen.h"
 
-#define UI_SETTINGS "com.ubuntu.desktop" /* TODO: change the schema name and add a dependancy */
+#define UI_SETTINGS "com.ubuntu.user-interface"
 
 namespace unity
 {
@@ -42,6 +42,7 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
+const std::string SCALE_FACTOR = "scale-factor";
 }
 
 //
@@ -53,6 +54,7 @@ public:
   Impl(Settings* owner)
     : parent_(owner)
     , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , ubuntu_settings_(g_settings_new(UI_SETTINGS))
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
@@ -68,6 +70,9 @@ public:
     double_click_activate_changed_.Connect(gsettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, gchar*) {
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
+    });
+    signals_.Add<void, GSettings*, const gchar*>(ubuntu_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateEMConverter();
     });
 
     UpdateEMConverter();
@@ -133,17 +138,16 @@ public:
     GSettings* gsettings = g_settings_new(UI_SETTINGS);
 
     GVariant* dict;
-    g_settings_get(gsettings, "scale-factor", "@a{si}", &dict);
+    g_settings_get(gsettings, SCALE_FACTOR.c_str(), "@a{si}", &dict);
 
-    auto uscreen = UScreen::GetDefault();
-    const char *monitor_name = uscreen->GetMonitorName(monitor).c_str();
+    std::string monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
 
     LOG_ERROR(logger) << "Monitor name:";
     LOG_ERROR(logger) << monitor_name;
 
     int value;
     float ui_scale;
-    if (!g_variant_lookup (dict, monitor_name, "i", &value))
+    if (!g_variant_lookup (dict, monitor_name.c_str(), "i", &value))
     {
       ui_scale = 1.0;
     }
@@ -152,21 +156,27 @@ public:
       ui_scale = (float)value / 8.0;
     }
 
+    LOG_ERROR(logger) << "SCALE FACTOR: " << ui_scale;
     g_object_unref(gsettings);
     return ui_scale;
   }
 
   int GetDPI(int monitor = 0) const
   {
-    //TODO FIXME:
-    LOG_ERROR(logger) << "GetDPI monitor number:";
-    LOG_ERROR(logger) << monitor;
-
     int dpi = 0;
     g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
 
-    float scale = GetUIScaleFactor(monitor) * 96.0;
-    return dpi * scale / 1024;
+    LOG_ERROR(logger) << "DPI: " << dpi;
+    int valid_monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+    if (monitor >= 0 && monitor < valid_monitors)
+    {
+      float new_dpi = (float)dpi * GetUIScaleFactor(monitor) * 96.0 / 1024.0;
+      LOG_ERROR(logger) << "NEW DPI: " << new_dpi;
+      dpi = (int)new_dpi;
+      LOG_ERROR(logger) << "DPI: " << dpi;
+    }
+
+    return dpi;
   }
 
   void UpdateFontSize()
@@ -194,6 +204,8 @@ public:
 
   Settings* parent_;
   glib::Object<GSettings> gsettings_;
+  glib::Object<GSettings> ubuntu_settings_;
+  glib::SignalManager signals_;
   FormFactor cached_form_factor_;
   bool cached_double_click_activate_;
   bool lowGfx_;

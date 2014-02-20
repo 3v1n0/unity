@@ -53,6 +53,7 @@ public:
   sigc::signal<void> resuming;
 
   const std::string GetMonitorName(int output_number) const;
+  int GetPluggedMonitorsNumber() const;
 
 private:
   void Changed(GdkScreen* screen);

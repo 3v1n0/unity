@@ -100,18 +100,23 @@ const std::string UScreen::GetMonitorName(int output_number = 0) const
 {
   if (output_number < 0 || output_number > gdk_screen_get_n_monitors(screen_))
   {
-    //TODO
-    LOG_ERROR(logger) << "Invalid monitor number";
-    LOG_ERROR(logger) << output_number;
+    LOG_ERROR(logger) << "UScreen::GetMonitorName: Invalid monitor number" << output_number;
     return "";
   }
-  auto const &output_name = glib::gchar_to_string(gdk_screen_get_monitor_plug_name(screen_, output_number));
-  if (output_name.empty())
+
+  char* const output_name = gdk_screen_get_monitor_plug_name(screen_, output_number);
+  if (!output_name)
   {
-    LOG_ERROR(logger) << "Failed to get monitor name";
+    LOG_ERROR(logger) << "UScreen::GetMonitorName: Failed to get monitor name for monitor" << output_number;
+    return "";
   }
 
-  return output_name;
+  return std::string(output_name);
+}
+
+int UScreen::GetPluggedMonitorsNumber() const
+{
+  return monitors_.size();
 }
 
 void UScreen::Changed(GdkScreen* screen)
