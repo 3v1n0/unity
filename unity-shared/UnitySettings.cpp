@@ -94,6 +94,14 @@ public:
     });
   }
 
+  ~Impl()
+  {
+    g_object_unref(gsettings_);
+    g_object_unref(ubuntu_settings_);
+    g_object_unref(usettings_);
+    g_object_unref(lim_settings_);
+  }
+
   void CacheFormFactor()
   {
     int raw_from_factor = g_settings_get_enum(usettings_, FORM_FACTOR.c_str());
@@ -154,9 +162,8 @@ public:
 
   float GetUIScaleFactor(int monitor = 0) const
   {
-    GSettings* gsettings = g_settings_new(UI_SETTINGS.c_str());
     GVariant* dict;
-    g_settings_get(gsettings, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+    g_settings_get(ubuntu_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
 
     std::string monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
 
@@ -171,7 +178,6 @@ public:
       ui_scale = (float)value / 8.0;
     }
 
-    g_object_unref(gsettings);
     return ui_scale;
   }
 
