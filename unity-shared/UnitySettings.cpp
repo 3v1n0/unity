@@ -21,6 +21,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <gio/gio.h>
+#include <glib.h>
 
 #include <NuxCore/Logger.h>
 
@@ -39,15 +40,12 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
+const std::string SCALE_FACTOR = "scale-factor";
 const std::string LIM_KEY = "integrated-menus";
-
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
-
-// FIXME Update this when hikikos settings changes land in unity
-const std::string GNOME_SETTINGS = "org.gnome.desktop.interface";
-const std::string SCALING_FACTOR = "scaling-factor";
+const std::string UI_SETTINGS = "com.ubuntu.user-interface";
 }
 
 //
@@ -58,9 +56,10 @@ class Settings::Impl
 public:
   Impl(Settings* owner)
     : parent_(owner)
+    , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , ubuntu_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
-    , gnome_settings_(g_settings_new(GNOME_SETTINGS.c_str()))
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
@@ -82,6 +81,9 @@ public:
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
+    signals_.Add<void, GSettings*, const gchar*>(ubuntu_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateEMConverter();
+    });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
@@ -90,10 +92,14 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
     });
+  }
 
-    signals_.Add<void, GSettings*, const gchar*>(gnome_settings_, "changed::" + SCALING_FACTOR, [this] (GSettings*, const gchar* t) {
-      UpdateEMConverter();
-    });
+  ~Impl()
+  {
+    g_object_unref(gsettings_);
+    g_object_unref(ubuntu_settings_);
+    g_object_unref(usettings_);
+    g_object_unref(lim_settings_);
   }
 
   void CacheFormFactor()
@@ -154,13 +160,37 @@ public:
     return font_size / 1024;
   }
 
-  // FIXME Add in getting the specific dpi scale from each monitor
+  float GetUIScaleFactor(int monitor = 0) const
+  {
+    GVariant* dict;
+    g_settings_get(ubuntu_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+
+    std::string monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
+
+    int value;
+    float ui_scale;
+    if (!g_variant_lookup (dict, monitor_name.c_str(), "i", &value))
+    {
+      ui_scale = 1.0;
+    }
+    else
+    {
+      ui_scale = (float)value / 8.0;
+    }
+
+    return ui_scale;
+  }
+
   int GetDPI(int monitor = 0) const
   {
     int dpi = 96;
-    int scale = g_settings_get_uint(gnome_settings_, SCALING_FACTOR.c_str());
-
-    return dpi * (scale > 0 ? scale : 1);
+    int valid_monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+    if (monitor >= 0 && monitor < valid_monitors)
+    {
+      float new_dpi = (float)dpi * GetUIScaleFactor(monitor);
+      dpi = (int)new_dpi;
+    }
+    return dpi;
   }
 
   void UpdateFontSize()
@@ -189,6 +219,8 @@ public:
   }
 
   Settings* parent_;
+  glib::Object<GSettings> gsettings_;
+  glib::Object<GSettings> ubuntu_settings_;
   glib::Object<GSettings> usettings_;
   glib::Object<GSettings> lim_settings_;
   glib::Object<GSettings> gnome_settings_;
