@@ -94,14 +94,6 @@ public:
     });
   }
 
-  ~Impl()
-  {
-    g_object_unref(gsettings_);
-    g_object_unref(ubuntu_settings_);
-    g_object_unref(usettings_);
-    g_object_unref(lim_settings_);
-  }
-
   void CacheFormFactor()
   {
     int raw_from_factor = g_settings_get_enum(usettings_, FORM_FACTOR.c_str());
