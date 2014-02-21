@@ -129,8 +129,8 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          unity-services (= ${binary:Version}),
-Conflicts: unity-common, libunity-core-6.0-6, libunity-core-6.0-7
-Replaces: unity-common, libunity-core-6.0-6, libunity-core-6.0-7
+Conflicts: unity-common, libunity-core-6.0-6, libunity-core-6.0-7, libunity-core-6.0-8
+Replaces: unity-common, libunity-core-6.0-6, libunity-core-6.0-7, libunity-core-6.0-8
 Provides: unity-common, unity-common-7.0
 Description: Core library for the Unity interface.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
