@@ -104,9 +104,12 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 
   SetCompositionLayout(layout_);
 
-  tray_ = new PanelTray(monitor_);
-  layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  AddChild(tray_);
+  if (!lockscreen_mode_)
+  {
+    tray_ = new PanelTray(monitor_);
+    layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+    AddChild(tray_);
+  }
 
   indicators_ = new PanelIndicatorsView();
   indicators_->SetMonitor(monitor_);
@@ -168,8 +171,12 @@ Window PanelView::GetTrayXid() const
 
 void PanelView::OnDPIChanged()
 {
-  int height = panel::Style::Instance().PanelHeight(monitor_);
-  tray_->SetMinMaxSize(1, height);
+  if (tray_)
+  {
+    int height = panel::Style::Instance().PanelHeight(monitor_);
+    tray_->SetMinMaxSize(1, height);
+  }
+
   menu_view_->OnDPIChanged();
 }
 
@@ -567,7 +574,11 @@ void PanelView::PreLayoutManagement()
 {
   View::PreLayoutManagement();
 
-  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_->GetBaseWidth();
+  int tray_width = 0;
+  if (tray_)
+    tray_width = tray_->GetBaseWidth();
+
+  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_width;
 
   menu_view_->SetMinimumWidth(menu_width);
   menu_view_->SetMaximumWidth(menu_width);
