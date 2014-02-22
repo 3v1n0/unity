@@ -2526,7 +2526,11 @@ bool UnityScreen::LockScreenInitiate(CompAction* action,
                                      CompAction::State state,
                                      CompOption::Vector& options)
 {
-  session_controller_->LockScreen();
+  sources_.AddIdle([this] {
+    session_controller_->LockScreen();
+    return false;
+  });
+
   return true;
 }
 

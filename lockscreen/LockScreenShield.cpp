@@ -98,8 +98,8 @@ nux::View* Shield::CreatePanel()
   auto menu_manager = std::make_shared<menu::Manager>(indicators, gnome_grabber);
 
   // Hackish but ok for the moment. Would be nice to have menus without grab.
-  //indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryShowMenu));
-  //indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryActivated));
+  indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryShowMenu));
+  indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryActivated));
 
   panel::PanelView* panel_view = new panel::PanelView(this, menu_manager, /*lockscreen_mode*/ true);
   panel_view->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor_));
@@ -129,7 +129,7 @@ void Shield::OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, un
   UnGrabKeyboard();
 }
 
-void Shield::OnIndicatorEntryActivated(std::string const& entry, nux::Geometry const& geo)
+void Shield::OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo)
 {
   if (entry.empty() and geo.IsNull()) /* on menu closed */
   {

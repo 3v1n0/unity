@@ -56,7 +56,7 @@ private:
   nux::View* CreatePromptView();
 
   void OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned);
-  void OnIndicatorEntryActivated(std::string const& entry, nux::Geometry const& geo);
+  void OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo);
 
 
   session::Manager::Ptr session_manager_;

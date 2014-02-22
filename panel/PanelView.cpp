@@ -104,6 +104,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 
   SetCompositionLayout(layout_);
 
+  tray_ = nullptr;
   if (!lockscreen_mode_)
   {
     tray_ = new PanelTray(monitor_);
