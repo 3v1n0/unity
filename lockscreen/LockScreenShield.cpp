@@ -38,7 +38,8 @@ namespace lockscreen
 {
 
 Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary)
-  : primary(is_primary)
+  : MockableBaseWindow("Lockscreen")
+  , primary(is_primary)
   , session_manager_(session_manager)
   , monitor_(monitor)
   , bg_settings_(new BackgroundSettings)

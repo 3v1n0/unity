@@ -202,6 +202,10 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, std::sh
   prompt_layout_->AddView(text_input, 1);
   focus_queue_.push(text_input->text_entry());
 
+  // Don't remove it, it helps with a11y.
+  if (focus_queue_.size() == 1)
+    nux::GetWindowCompositor().SetKeyFocusArea(text_input->text_entry());
+
   text_input->text_entry()->activated.connect([this, text_input, promise](){
     if (focus_queue_.size() == 1)
     {
