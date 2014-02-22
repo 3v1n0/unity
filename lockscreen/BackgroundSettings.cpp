@@ -21,7 +21,6 @@
 
 #include <libgnome-desktop/gnome-bg.h>
 
-#include "config.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/GtkTexture.h"
 #include "unity-shared/PanelStyle.h"
@@ -63,13 +62,12 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor,
 
     cairo_save(c);
 
-    int height = 22;
-    int padding = 10;
-    int x = grid_x_offset + Settings::GRID_SIZE + padding;
-    int y = grid_y_offset + Settings::GRID_SIZE * (geo.height / Settings::GRID_SIZE - 1) - height - padding;
+    int height = 43;
+    int x = grid_x_offset;
+    int y = grid_y_offset + Settings::GRID_SIZE * (geo.height / Settings::GRID_SIZE - 1) - height;
     cairo_translate (c, x, y);
 
-    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png (PKGDATADIR"/logo.png");
+    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png ("/usr/share/unity-greeter/logo.png");
     cairo_set_source_surface(c, logo_surface, 0, 0);
     cairo_paint_with_alpha(c, 0.5);
     cairo_restore(c);
