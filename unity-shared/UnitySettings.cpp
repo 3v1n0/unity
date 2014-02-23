@@ -18,11 +18,7 @@
 *              Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-#include <gdk/gdk.h>
-#include <gtk/gtk.h>
-#include <gio/gio.h>
 #include <glib.h>
-
 #include <NuxCore/Logger.h>
 
 #include "DecorationStyle.h"
