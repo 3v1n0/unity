@@ -43,6 +43,7 @@ public:
 protected:
   std::string GetName() const { return "Title"; }
   void AddProperties(debug::IntrospectionData&);
+  bool IsScalable() const override { return false; }
 
 private:
   void OnFontChanged(std::string const&);
