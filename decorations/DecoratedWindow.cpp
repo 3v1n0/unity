@@ -292,6 +292,11 @@ void Window::Impl::SetupWindowControls()
     Decorate();
   });
 
+  dpi_changed_ = Settings::Instance().dpi_changed.connect([this] {
+    Update();
+    top_layout_->scale = cv_->DPIScale();
+  });
+
   input_mixer_ = std::make_shared<InputMixer>();
 
   if (win_->actions() & CompWindowActionResizeMask)
@@ -353,6 +358,7 @@ void Window::Impl::CleanupWindowControls()
 
   UnsetAppMenu();
   theme_changed_->disconnect();
+  dpi_changed_->disconnect();
   top_layout_.reset();
   input_mixer_.reset();
   edge_borders_.reset();
