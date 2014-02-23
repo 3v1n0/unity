@@ -1556,6 +1556,14 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
     }
 }
 
+static int
+get_monitor_scale_at (gint x, gint y)
+{
+  GdkScreen *screen = gdk_screen_get_default ();
+  int monitor = gdk_screen_get_monitor_at_point (screen, x, y);
+  return gdk_screen_get_monitor_scale_factor (screen, monitor);
+}
+
 static void
 positon_menu (GtkMenu  *menu,
               gint     *x,
@@ -1566,8 +1574,9 @@ positon_menu (GtkMenu  *menu,
   PanelService *self = PANEL_SERVICE (user_data);
   PanelServicePrivate *priv = self->priv;
 
-  *x = priv->last_x;
-  *y = priv->last_y;
+  gint scale = get_monitor_scale_at (priv->last_x, priv->last_y);
+  *x = priv->last_x / scale;
+  *y = priv->last_y / scale;
   *push = TRUE;
 }
 
@@ -1744,8 +1753,9 @@ panel_service_sync_geometry (PanelService *self,
                   GtkWindow *top_win = GTK_WINDOW (top_widget);
                   gint old_x, old_y;
 
+                  gint scale = get_monitor_scale_at (x, y);
                   gtk_window_get_position (top_win, &old_x, &old_y);
-                  gtk_window_move (top_win, old_x - (geo->x - x), old_y - (geo->y - y));
+                  gtk_window_move (top_win, old_x - (geo->x - x) / scale, old_y - (geo->y - y) / scale);
                 }
             }
 
