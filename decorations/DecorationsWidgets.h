@@ -130,6 +130,7 @@ public:
   int GetNaturalHeight() const;
 
 protected:
+  virtual bool IsScalable() const { return true; }
   std::string GetName() const { return "TexturedItem"; }
 
   CompRect& InternalGeo();

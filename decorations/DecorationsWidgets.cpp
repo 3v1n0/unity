@@ -229,7 +229,7 @@ void Item::AddProperties(debug::IntrospectionData& data)
 TexturedItem::TexturedItem()
 {
   scale.changed.connect([this] (float s) {
-    if (texture_.SetScale(s))
+    if (IsScalable() && texture_.SetScale(s))
     {
       geo_parameters_changed.emit();
       Damage();
