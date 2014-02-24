@@ -54,7 +54,8 @@ std::string button_id(WindowButtonType type, WindowState ws)
 
 Style::Style()
   : style_context_(gtk_style_context_new())
-  , panel_heights_(monitors::MAX, BASE_PANEL_HEIGHT)
+  , bg_textures_(monitors::MAX)
+  , panel_heights_(monitors::MAX, 0)
 {
   if (style_instance)
   {
@@ -75,6 +76,7 @@ Style::Style()
 
   gtk_widget_path_free(widget_path);
 
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Style::DPIChanged));
   auto const& deco_style = decoration::Style::Get();
   auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Style::RefreshContext));
   deco_style->theme.changed.connect(sigc::mem_fun(this, &Style::OnThemeChanged));
@@ -117,14 +119,26 @@ int Style::PanelHeight(int monitor) const
     return 0;
   }
 
-  EMConverter::Ptr const& cv = unity::Settings::Instance().em(monitor);
-  return panel_heights_[monitor].CP(cv);
+  auto& panel_height = panel_heights_[monitor];
+
+  if (panel_height > 0)
+    return panel_height;
+
+  panel_height = Settings::Instance().em(monitor)->CP(BASE_PANEL_HEIGHT);
+  return panel_height;
+}
+
+void Style::DPIChanged()
+{
+  bg_textures_.assign(monitors::MAX, BaseTexturePtr());
+  panel_heights_.assign(monitors::MAX, 0);
+  changed.emit();
 }
 
 void Style::RefreshContext()
 {
   gtk_style_context_invalidate(style_context_);
-  bg_texture_.Release();
+  bg_textures_.assign(monitors::MAX, BaseTexturePtr());
 
   changed.emit();
 }
@@ -136,12 +150,13 @@ GtkStyleContext* Style::GetStyleContext()
 
 BaseTexturePtr Style::GetBackground(int monitor)
 {
-  if (bg_texture_)
-    return bg_texture_;
+  auto& bg_texture = bg_textures_[monitor];
 
-  int width = 1;
+  if (bg_texture)
+    return bg_texture;
+
+  const int width = 1;
   int height = PanelHeight(monitor);
-
   nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
 
   // Use the internal context as we know it is good and shiny new.
@@ -149,9 +164,8 @@ BaseTexturePtr Style::GetBackground(int monitor)
   gtk_render_background(style_context_, cr, 0, 0, width, height);
   gtk_render_frame(style_context_, cr, 0, 0, width, height);
 
-  bg_texture_ = texture_ptr_from_cairo_graphics(context);
-
-  return bg_texture_;
+  bg_texture = texture_ptr_from_cairo_graphics(context);
+  return bg_texture;
 }
 
 BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)

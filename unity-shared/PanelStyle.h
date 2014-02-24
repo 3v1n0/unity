@@ -74,14 +74,14 @@ public:
 private:
   void OnThemeChanged(std::string const&);
   void RefreshContext();
+  void DPIChanged();
 
   void UpdateFontSize();
   void UpdatePanelHeight();
 
   glib::Object<GtkStyleContext> style_context_;
-  BaseTexturePtr bg_texture_;
-
-  std::vector<RawPixel> panel_heights_;
+  std::vector<BaseTexturePtr> bg_textures_;
+  mutable std::vector<unsigned> panel_heights_;
 };
 
 }
