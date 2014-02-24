@@ -64,8 +64,7 @@ void Title::RenderTexture()
   auto state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
   cu::CairoContext text_ctx(texture_size_.width, texture_size_.height);
   cairo_surface_set_device_scale(cairo_get_target(text_ctx), scale(), scale());
-  nux::Size title_size(std::ceil(texture_size_.width / scale()), std::ceil(texture_size_.height / scale()));
-  Style::Get()->DrawTitle(text(), state, text_ctx, title_size.width, title_size.height);
+  Style::Get()->DrawTitle(text(), state, text_ctx, texture_size_.width / scale(), texture_size_.height / scale());
   SetTexture(text_ctx);
 }
 

@@ -121,15 +121,15 @@ public:
   nux::Size MenuItemNaturalSize(std::string const&);
 
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
-  void DrawWindowButton(WindowButtonType, WidgetState, cairo_t*, int width, int height);
+  void DrawWindowButton(WindowButtonType, WidgetState, cairo_t*, double width, double height);
 
   int DoubleClickMaxDistance() const;
   int DoubleClickMaxTimeDelta() const;
 
-  void DrawSide(Side, WidgetState, cairo_t*, int width, int height);
-  void DrawTitle(std::string const&, WidgetState, cairo_t*, int width, int height);
-  void DrawMenuItem(WidgetState, cairo_t*, int width, int height);
-  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, int width, int height);
+  void DrawSide(Side, WidgetState, cairo_t*, double width, double height);
+  void DrawTitle(std::string const&, WidgetState, cairo_t*, double width, double height);
+  void DrawMenuItem(WidgetState, cairo_t*, double width, double height);
+  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, double width, double height);
   void DrawMenuItemIcon(std::string const&, WidgetState, cairo_t*, int size);
 
 private:

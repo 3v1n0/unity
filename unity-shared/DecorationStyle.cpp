@@ -331,7 +331,7 @@ struct Style::Impl
     gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
   }
 
-  void DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
+  void DrawSide(Side s, WidgetState ws, cairo_t* cr, double w, double h)
   {
     gtk_style_context_save(ctx_);
     AddContextClasses(s, ws);
@@ -374,7 +374,7 @@ struct Style::Impl
     return std::string();
   }
 
-  void DrawWindowButton(WindowButtonType type, WidgetState ws, cairo_t* cr, int width, int height)
+  void DrawWindowButton(WindowButtonType type, WidgetState ws, cairo_t* cr, double width, double height)
   {
     nux::Color color;
     float w = width / 3.5f;
@@ -476,7 +476,7 @@ struct Style::Impl
     return extents;
   }
 
-  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, int w, int h)
+  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h)
   {
     gtk_style_context_save(ctx_);
     AddContextClasses(Side::TOP, ws);
@@ -520,7 +520,7 @@ struct Style::Impl
     gtk_style_context_add_class(ctx_, GTK_STYLE_CLASS_MENUITEM);
   }
 
-  void DrawMenuItem(WidgetState ws, cairo_t* cr, int w, int h)
+  void DrawMenuItem(WidgetState ws, cairo_t* cr, double w, double h)
   {
     gtk_style_context_save(ctx_);
     AddContextClassesForMenuItem(ws);
@@ -531,7 +531,7 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
-  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, int w, int h)
+  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h)
   {
     gtk_style_context_save(ctx_);
     AddContextClassesForMenuItem(ws);
@@ -631,22 +631,22 @@ int Style::TitleIndent() const
   return impl_->title_indent_;
 }
 
-void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
+void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, double w, double h)
 {
   impl_->DrawSide(s, ws, cr, w, h);
 }
 
-void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, int w, int h)
+void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h)
 {
   impl_->DrawTitle(t, ws, cr, w, h);
 }
 
-void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, int w, int h)
+void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, double w, double h)
 {
   impl_->DrawMenuItem(ws, cr, w, h);
 }
 
-void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, int w, int h)
+void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h)
 {
   impl_->DrawMenuItemEntry(t, ws, cr, w, h);
 }
@@ -661,7 +661,7 @@ std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) co
   return impl_->WindowButtonFile(type, state);
 }
 
-void Style::DrawWindowButton(WindowButtonType type, WidgetState state, cairo_t* cr, int width, int height)
+void Style::DrawWindowButton(WindowButtonType type, WidgetState state, cairo_t* cr, double width, double height)
 {
   return impl_->DrawWindowButton(type, state, cr, width, height);
 }
