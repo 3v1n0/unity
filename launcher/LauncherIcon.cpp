@@ -478,7 +478,8 @@ guint64 LauncherIcon::GetShortcut()
 
 nux::Point LauncherIcon::GetTipPosition(int monitor) const
 {
-  return nux::Point(_center[monitor].x + icon_size()/2 + 1, _center[monitor].y);
+  auto const& converter = Settings::Instance().em(monitor);
+  return nux::Point(_center[monitor].x + converter->CP(icon_size()) / 2 + 1, _center[monitor].y);
 }
 
 void LauncherIcon::ShowTooltip()
