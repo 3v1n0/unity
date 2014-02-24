@@ -419,7 +419,7 @@ int PluginAdapter::MonitorGeometryIn(nux::Geometry const& geo) const
   {
     nux::Geometry const& i_g = geo.Intersect(monitors[i]);
 
-    if (i_g.width > 0 && i_g.height > 0)
+    if (i_g.width > geo.width/2 && i_g.height > geo.height/2)
       return i;
   }
 
