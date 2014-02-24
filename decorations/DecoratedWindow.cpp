@@ -93,6 +93,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
     return true;
   });
 
+  parent->dpi_scale.SetGetterFunction([this] { return cv_->DPIScale(); });
   parent->scaled.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Update)));
 
   if (win_->isViewable() || win_->shaded())
@@ -319,7 +320,7 @@ void Window::Impl::SetupWindowControls()
   top_layout_->right_padding = padding.right;
   top_layout_->top_padding = padding.top;
   top_layout_->focused = active();
-  top_layout_->scale = Settings::Instance().em(monitor_)->DPIScale();
+  top_layout_->scale = cv_->DPIScale();
 
   if (win_->actions() & CompWindowActionCloseMask)
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::CLOSE));
@@ -770,7 +771,7 @@ void Window::AddProperties(debug::IntrospectionData& data)
   .add("active", impl_->active())
   .add("scaled", scaled())
   .add("monitor", impl_->monitor_)
-  .add("dpi_scale", impl_->cv_->DPIScale())
+  .add("dpi_scale", dpi_scale())
   .add("xid", impl_->win_->id())
   .add("fully_decorable", cu::IsWindowFullyDecorable(impl_->win_))
   .add("shadow_decorable", cu::IsWindowShadowDecorable(impl_->win_))
