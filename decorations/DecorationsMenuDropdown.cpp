@@ -75,15 +75,12 @@ void MenuDropdown::Push(MenuEntry::Ptr const& child)
   if (std::find(children_.begin(), children_.end(), child) != children_.end())
     return;
 
-  if (children_.empty())
-  {
-    int size_diff = child->GetNaturalHeight() - GetNaturalHeight();
+  int size_diff = (child->GetNaturalHeight() - GetNaturalHeight()) / scale();
 
-    if (size_diff > 0)
-    {
-      natural_.height += (size_diff % 2);
-      vertical_padding = vertical_padding() + (size_diff / 2);
-    }
+  if (size_diff > 0)
+  {
+    natural_.height += (size_diff % 2);
+    vertical_padding = vertical_padding() + (size_diff / 2);
   }
 
   children_.push_front(child);
@@ -123,9 +120,10 @@ void MenuDropdown::RenderTexture()
 {
   WidgetState state = active() ? WidgetState::PRELIGHT : WidgetState::NORMAL;
   cu::CairoContext icon_ctx(GetNaturalWidth(), GetNaturalHeight());
+  cairo_surface_set_device_scale(cairo_get_target(icon_ctx), scale(), scale());
 
   if (state == WidgetState::PRELIGHT)
-    Style::Get()->DrawMenuItem(state, icon_ctx, icon_ctx.width(), icon_ctx.height());
+    Style::Get()->DrawMenuItem(state, icon_ctx, icon_ctx.width() / scale(), icon_ctx.height() / scale());
 
   cairo_save(icon_ctx);
   cairo_translate(icon_ctx, horizontal_padding(), vertical_padding());
