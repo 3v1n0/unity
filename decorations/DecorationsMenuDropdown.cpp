@@ -119,8 +119,7 @@ bool MenuDropdown::Empty() const
 void MenuDropdown::RenderTexture()
 {
   WidgetState state = active() ? WidgetState::PRELIGHT : WidgetState::NORMAL;
-  cu::CairoContext icon_ctx(GetNaturalWidth(), GetNaturalHeight());
-  cairo_surface_set_device_scale(cairo_get_target(icon_ctx), scale(), scale());
+  cu::CairoContext icon_ctx(GetNaturalWidth(), GetNaturalHeight(), scale());
 
   if (state == WidgetState::PRELIGHT)
     Style::Get()->DrawMenuItem(state, icon_ctx, icon_ctx.width() / scale(), icon_ctx.height() / scale());

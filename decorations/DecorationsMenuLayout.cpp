@@ -63,6 +63,7 @@ void MenuLayout::Setup()
     menu->active.changed.connect(active_cb);
     menu->show_now.changed.connect(show_now_cb);
     menu->focused = focused();
+    menu->scale = scale();
     menu->SetParent(shared_from_this());
     items_.push_back(menu);
   }

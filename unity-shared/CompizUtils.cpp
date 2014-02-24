@@ -125,7 +125,7 @@ PixmapTexture::~PixmapTexture()
 
 //
 
-CairoContext::CairoContext(int w, int h)
+CairoContext::CairoContext(int w, int h, double scale)
   : pixmap_texture_(std::make_shared<PixmapTexture>(w, h))
   , surface_(nullptr)
   , cr_(nullptr)
@@ -134,6 +134,7 @@ CairoContext::CairoContext(int w, int h)
   XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
   surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(), pixmap_texture_->pixmap(),
                                                            xscreen, format, w, h);
+  cairo_surface_set_device_scale(surface_, scale, scale);
 
   cr_ = cairo_create(surface_);
   cairo_save(cr_);

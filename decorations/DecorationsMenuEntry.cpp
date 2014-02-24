@@ -72,8 +72,7 @@ void MenuEntry::RenderTexture()
     state = WidgetState::PRELIGHT;
 
   natural_ = Style::Get()->MenuItemNaturalSize(entry_->label());
-  cu::CairoContext text_ctx(GetNaturalWidth(), GetNaturalHeight());
-  cairo_surface_set_device_scale(cairo_get_target(text_ctx), scale(), scale());
+  cu::CairoContext text_ctx(GetNaturalWidth(), GetNaturalHeight(), scale());
 
   if (state == WidgetState::PRELIGHT)
     Style::Get()->DrawMenuItem(state, text_ctx, text_ctx.width() / scale(), text_ctx.height() / scale());
