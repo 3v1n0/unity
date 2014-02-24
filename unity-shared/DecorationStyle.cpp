@@ -489,8 +489,8 @@ struct Style::Impl
 
     if (extents.width > w)
     {
-      int out_pixels = extents.width - w;
-      int fading_width = std::min<int>(title_fade_, out_pixels);
+      double out_pixels = extents.width - w;
+      double fading_width = std::min<double>(title_fade_, out_pixels);
 
       cairo_push_group(cr);
       gtk_render_layout(ctx_, cr, 0, 0, layout);
