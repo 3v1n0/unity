@@ -93,7 +93,7 @@ nux::Geometry UScreen::GetScreenGeometry()
 {
   int width = gdk_screen_get_width(screen_);
   int height = gdk_screen_get_height(screen_);
-  return nux::Geometry(0, 0, width, height); 
+  return nux::Geometry(0, 0, width, height);
 }
 
 const std::string UScreen::GetMonitorName(int output_number = 0) const
@@ -104,14 +104,14 @@ const std::string UScreen::GetMonitorName(int output_number = 0) const
     return "";
   }
 
-  char* const output_name = gdk_screen_get_monitor_plug_name(screen_, output_number);
+  glib::String output_name(gdk_screen_get_monitor_plug_name(screen_, output_number));
   if (!output_name)
   {
     LOG_ERROR(logger) << "UScreen::GetMonitorName: Failed to get monitor name for monitor" << output_number;
     return "";
   }
 
-  return std::string(output_name);
+  return output_name.Str();
 }
 
 int UScreen::GetPluggedMonitorsNumber() const
