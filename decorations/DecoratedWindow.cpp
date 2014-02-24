@@ -420,8 +420,10 @@ void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
   if (deco_tex.quad.box.width() != geo.width || deco_tex.quad.box.height() != geo.height)
   {
     cu::CairoContext ctx(geo.width, geo.height);
+    float scale = top_layout_->scale();
+    cairo_surface_set_device_scale(cairo_get_target(ctx), scale, scale);
     auto ws = active() ? WidgetState::NORMAL : WidgetState::BACKDROP;
-    Style::Get()->DrawSide(s, ws, ctx, geo.width, geo.height);
+    Style::Get()->DrawSide(s, ws, ctx, geo.width / scale, geo.height / scale);
     deco_tex.SetTexture(ctx);
   }
 
