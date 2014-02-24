@@ -126,7 +126,10 @@ void MenuDropdown::RenderTexture()
 
   cairo_save(icon_ctx);
   cairo_translate(icon_ctx, horizontal_padding(), vertical_padding());
-  Style::Get()->DrawMenuItemIcon(ICON_NAME, state, icon_ctx, ICON_SIZE);
+  cairo_save(icon_ctx);
+  cairo_scale(icon_ctx, 1.0f/scale(), 1.0f/scale());
+  Style::Get()->DrawMenuItemIcon(ICON_NAME, state, icon_ctx, ICON_SIZE * scale());
+  cairo_restore(icon_ctx);
   cairo_restore(icon_ctx);
   SetTexture(icon_ctx);
 }
