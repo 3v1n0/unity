@@ -890,10 +890,12 @@ void UnityScreen::paintDisplay()
 
 void UnityScreen::DrawPanelUnderDash()
 {
-  if (!paint_panel_under_dash_ || !launcher_controller_->IsOverlayOpen())
+  if (!paint_panel_under_dash_ || (!dash_controller_->IsVisible() && !hud_controller_->IsVisible()))
     return;
 
-  if (_last_output->id() != screen->currentOutputDev().id())
+  auto const& output_dev = screen->currentOutputDev();
+
+  if (_last_output->id() != output_dev.id())
     return;
 
   auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
@@ -904,18 +906,17 @@ void UnityScreen::DrawPanelUnderDash()
   graphics_engine->ResetModelViewMatrixStack();
   graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
   graphics_engine->ResetProjectionMatrix();
-  graphics_engine->SetOrthographicProjectionMatrix(screen->width(), screen->height());
+  graphics_engine->SetOrthographicProjectionMatrix(output_dev.width(), output_dev.height());
 
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
 
-  // FIXME Change to paint per monitor vs all at once
-  int panel_height = panel_style_.PanelHeight();
-  auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
-  graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
+  int monitor = WindowManager::Default().MonitorGeometryIn(NuxGeometryFromCompRect(output_dev));
+  auto const& texture = panel_style_.GetBackground(monitor)->GetDeviceTexture();
+  graphics_engine->QRP_GLSL_1Tex(0, 0, output_dev.width(), texture->GetHeight(), texture, texxform, nux::color::White);
 }
 
-bool UnityScreen::forcePaintOnTop ()
+bool UnityScreen::forcePaintOnTop()
 {
     return !allowWindowPaint ||
       ((switcher_controller_->Visible() ||
