@@ -90,10 +90,11 @@ protected:
   void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
   void OnIndicatorViewUpdated();
   void OnMenuPointerMoved(int x, int y);
-  void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);
+  void OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& geo);
   void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
 
 private:
+  std::string GetPanelName() const;
   void OnBackgroundUpdate(nux::Color const&);
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
@@ -110,6 +111,8 @@ private:
   bool TrackMenuPointer();
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
+  
+  void OnDPIChanged();
 
   MockableBaseWindow* parent_;
   indicator::Indicators::Ptr remote_;

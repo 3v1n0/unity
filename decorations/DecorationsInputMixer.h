@@ -47,6 +47,8 @@ public:
   void ButtonUpEvent(CompPoint const&, unsigned button, Time);
   void UngrabPointer();
 
+  void ForceMouseOwnerCheck();
+
 private:
   InputMixer(InputMixer const&) = delete;
   InputMixer& operator=(InputMixer const&) = delete;

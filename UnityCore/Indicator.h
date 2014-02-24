@@ -63,7 +63,7 @@ public:
 private:
   Entries entries_;
   std::string name_;
-  std::map<Entry::Ptr, connection::Manager> entries_connections_;
+  std::unordered_map<Entry::Ptr, connection::Manager> entries_connections_;
 
   friend std::ostream& operator<<(std::ostream& out, Indicator const& i);
 };

@@ -41,6 +41,7 @@ PanelIndicatorsView::PanelIndicatorsView()
 : View(NUX_TRACKER_LOCATION)
 , opacity(1.0f, sigc::mem_fun(this, &PanelIndicatorsView::SetOpacity))
 , layout_(new nux::HLayout("", NUX_TRACKER_LOCATION))
+, monitor_(0)
 {
   opacity.DisableNotifications();
   layout_->SetContentDistribution(nux::MAJOR_POSITION_END);
@@ -198,8 +199,8 @@ bool PanelIndicatorsView::ActivateIfSensitive()
 
 void PanelIndicatorsView::GetGeometryForSync(EntryLocationMap& locations)
 {
-  for (auto const& entry : entries_)
-    entry.second->GetGeometryForSync(locations);
+  for (auto* area : layout_->GetChildren())
+    static_cast<PanelIndicatorEntryView*>(area)->GetGeometryForSync(locations);
 }
 
 PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
@@ -265,35 +266,55 @@ void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorE
   if (!view)
     return;
 
-  int entry_pos = pos;
   auto const& entry_id = view->GetEntryID();
+  bool added_to_dropdown = false;
+  bool known_entry = (entries_.find(entry_id) != entries_.end());
   view->SetOpacity(opacity());
 
-  if (entry_pos == IndicatorEntryPosition::AUTO)
+  if (!known_entry && dropdown_ && !dropdown_->Empty())
   {
-    entry_pos = nux::NUX_LAYOUT_BEGIN;
-
-    if (view->GetEntryPriority() > -1)
+    if (pos == IndicatorEntryPosition::AUTO)
     {
-      for (auto area : layout_->GetChildren())
-      {
-        auto en = static_cast<PanelIndicatorEntryView*>(area);
-        if (view->GetEntryPriority() <= en->GetEntryPriority())
-          break;
-
-        ++entry_pos;
-      }
+      dropdown_->Insert(PanelIndicatorEntryView::Ptr(view));
+      added_to_dropdown = true;
+    }
+    else if (view->GetEntryPriority() >= dropdown_->Top()->GetEntryPriority())
+    {
+      dropdown_->Push(PanelIndicatorEntryView::Ptr(view));
+      added_to_dropdown = true;
     }
   }
 
-  layout_->AddView(view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 1.0, (nux::LayoutPosition) entry_pos);
-  AddChild(view);
-
-  QueueRelayout();
-  QueueDraw();
-
-  if (entries_.find(entry_id) == entries_.end())
+  if (!added_to_dropdown)
   {
+    int entry_pos = pos;
+    if (entry_pos == IndicatorEntryPosition::AUTO)
+    {
+      entry_pos = nux::NUX_LAYOUT_BEGIN;
+
+      if (view->GetEntryPriority() > -1)
+      {
+        for (auto area : layout_->GetChildren())
+        {
+          auto en = static_cast<PanelIndicatorEntryView*>(area);
+          if (view->GetEntryPriority() <= en->GetEntryPriority())
+            break;
+
+          ++entry_pos;
+        }
+      }
+    }
+
+    layout_->AddView(view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 1.0, (nux::LayoutPosition) entry_pos);
+    AddChild(view);
+
+    QueueRelayout();
+    QueueDraw();
+  }
+
+  if (!known_entry)
+  {
+    view->SetMonitor(monitor_);
     view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
     entries_.insert({entry_id, view});
     on_indicator_updated.emit();
@@ -355,6 +376,11 @@ void PanelIndicatorsView::OverlayHidden()
 {
   for (auto const& entry: entries_)
     entry.second->OverlayHidden();
+}
+
+void PanelIndicatorsView::SetMonitor(int monitor)
+{
+  monitor_ = monitor;
 }
 
 bool PanelIndicatorsView::SetOpacity(double& target, double const& new_value)

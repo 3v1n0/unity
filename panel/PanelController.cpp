@@ -26,7 +26,6 @@
 
 #include "unity-shared/UScreen.h"
 #include "PanelView.h"
-#include "unity-shared/PanelStyle.h"
 
 namespace unity
 {
@@ -190,7 +189,6 @@ nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel(Introspectable *iobj)
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   PanelView* view = new PanelView(panel_window, indicators_);
-  view->SetMaximumHeight(panel::Style::Instance().panel_height);
   view->SetOpacity(opacity_);
   view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
 
@@ -236,6 +234,8 @@ Controller::Controller(menu::Manager::Ptr const& menus, ui::EdgeBarrierControlle
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
   OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Controller::OnDPIChanged));
+
   launcher_width.changed.connect([this] (int width)
   {
     pimpl->SetLauncherWidth(width);
@@ -244,6 +244,19 @@ Controller::Controller(menu::Manager::Ptr const& menus, ui::EdgeBarrierControlle
 
 Controller::~Controller()
 {}
+
+void Controller::OnDPIChanged()
+{
+  for (auto& panel_ptr : pimpl->panels_)
+  {
+    if (panel_ptr)
+    {
+      int monitor = panel_ptr->GetMonitor();
+
+      panel_ptr->SetMonitor(monitor);
+    }
+  }
+}
 
 void Controller::SetOpacity(float opacity)
 {

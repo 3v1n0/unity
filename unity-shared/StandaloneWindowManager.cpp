@@ -129,6 +129,12 @@ std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
 
   return ret;
 }
+  
+int StandaloneWindowManager::MonitorGeometryIn(nux::Geometry const& geo) const
+{
+  // TODO
+  return 0;
+}
 
 bool StandaloneWindowManager::IsTopWindowFullscreenOnMonitorWithMouse() const
 {

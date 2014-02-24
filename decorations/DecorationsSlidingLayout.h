@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,30 +17,41 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#ifndef UNITY_DECORATIONS_EDGES
-#define UNITY_DECORATIONS_EDGES
+#ifndef UNITY_DECORATIONS_SLIDING_LAYOUT
+#define UNITY_DECORATIONS_SLIDING_LAYOUT
 
-#include "DecorationsEdge.h"
+#include <NuxCore/Animation.h>
+#include "DecorationsWidgets.h"
 
 namespace unity
 {
 namespace decoration
 {
 
-class EdgeBorders : public BasicContainer
+class SlidingLayout : public BasicContainer
 {
 public:
-  EdgeBorders(CompWindow* win);
-  Item::Ptr const& GetEdge(Edge::Type) const;
+  typedef std::shared_ptr<SlidingLayout> Ptr;
+
+  SlidingLayout();
+
+  nux::Property<unsigned> fadein;
+  nux::Property<unsigned> fadeout;
+
+  void SetMainItem(Item::Ptr const& main);
+  void SetInputItem(Item::Ptr const& input);
 
 protected:
-  std::string GetName() const { return "EdgeBorders"; }
+  void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask) override;
+  std::string GetName() const override { return "SlidingLayout"; }
 
 private:
-  void DoRelayout();
+  void DoRelayout() override;
+
+  nux::animation::AnimateValue<double> fade_animator_;
 };
 
 } // decoration namespace
 } // unity namespace
 
-#endif // UNITY_DECORATIONS_EDGES
+#endif // UNITY_DECORATIONS_SLIDING_LAYOUT

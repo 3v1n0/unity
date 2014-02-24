@@ -36,7 +36,8 @@ public:
   PanelIndicatorEntryDropdownView(std::string const& id, indicator::Indicators::Ptr const&);
 
   void Push(PanelIndicatorEntryView::Ptr const&);
-  void Remove(PanelIndicatorEntryView::Ptr const& child);
+  void Insert(PanelIndicatorEntryView::Ptr const&);
+  void Remove(PanelIndicatorEntryView::Ptr const&);
   PanelIndicatorEntryView::Ptr Pop();
 
   PanelIndicatorEntryView::Ptr Top() const;

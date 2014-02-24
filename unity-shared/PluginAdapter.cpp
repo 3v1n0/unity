@@ -23,6 +23,7 @@
 #include "DecorationStyle.h"
 #include "PluginAdapter.h"
 #include "CompizUtils.h"
+#include "MultiMonitor.h"
 
 #include <scale/scale.h>
 #include <NuxCore/Logger.h>
@@ -411,6 +412,20 @@ std::vector<Window> PluginAdapter::GetWindowsInStackingOrder() const
   return ret;
 }
 
+int PluginAdapter::MonitorGeometryIn(nux::Geometry const& geo) const
+{
+  std::vector<nux::Geometry> const& monitors = unity::UScreen::GetDefault()->GetMonitors();
+  for (unsigned i = 0; i < monitors.size(); ++i)
+  {
+    nux::Geometry const& i_g = geo.Intersect(monitors[i]);
+
+    if (i_g.width > 0 && i_g.height > 0)
+      return i;
+  }
+
+  return 0;
+}
+
 bool PluginAdapter::IsTopWindowFullscreenOnMonitorWithMouse() const
 {
   int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
@@ -522,7 +537,6 @@ bool PluginAdapter::IsWindowObscured(Window window_id) const
       return true;
 
     CompPoint window_vp = window->defaultViewport();
-    nux::Geometry const& win_geo = GetWindowGeometry(window->id());
     // Check if any windows above this one are blocking it
     for (CompWindow* sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
@@ -531,7 +545,7 @@ bool PluginAdapter::IsWindowObscured(Window window_id) const
           && sibling->isMapped()
           && sibling->isViewable()
           && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE
-          && GetWindowGeometry(sibling->id()).IsIntersecting(win_geo))
+          && sibling->borderRect().intersects(window->borderRect()))
       {
         return true;
       }

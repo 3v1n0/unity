@@ -47,7 +47,7 @@ G_DEFINE_TYPE_WITH_CODE(PanelIndicatorEntryAccessible,
 #define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ENTRY_ACCESSIBLE, PanelIndicatorEntryAccessiblePrivate))
 
 static void
-on_entry_activated_cb (PanelService *service, const gchar *entry_id,
+on_entry_activated_cb (PanelService *service, const gchar *panel, const gchar *entry_id,
                        gint x, gint y, guint w, guint h, gpointer user_data)
 {
   gchar *s;

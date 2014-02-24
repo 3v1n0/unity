@@ -115,6 +115,7 @@ public:
   Window GetActiveWindow() const;
   std::vector<Window> GetWindowsInStackingOrder() const override;
 
+  int MonitorGeometryIn(nux::Geometry const& geo) const override;
   bool IsTopWindowFullscreenOnMonitorWithMouse() const override;
 
   // WindowManager implementation

@@ -30,8 +30,6 @@ namespace decoration
 class Title : public TexturedItem
 {
 public:
-  typedef std::shared_ptr<Title> Ptr;
-
   nux::Property<std::string> text;
 
   Title();

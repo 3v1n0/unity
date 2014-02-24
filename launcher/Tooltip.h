@@ -37,7 +37,7 @@ class Tooltip : public CairoBaseWindow, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(Tooltip, CairoBaseWindow);
 public:
-  Tooltip();
+  Tooltip(int monitor = 0);
 
   nux::RWProperty<std::string> text;
 

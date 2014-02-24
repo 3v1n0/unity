@@ -1,3 +1,39 @@
+unity (7.1.2+14.04.20140220-0ubuntu1) trusty; urgency=low
+
+  [ CI bot ]
+  * Add dynamic HiDPI support to the launcher. (LP: #1075417)
+  * Add dynamic HiDPI support to the tooltips.
+  * Add dynamic HiDPI support to the quicklist.
+  * The decor now scales with the DPI value.
+
+  [ Brandon Schaefer ]
+  * Remove the nux::Property panel_height; Replace it with a function.
+    Now PanelStyle holds up to monitors::MAX panel_height. Now to get
+    the panel height for the monitor you just use PanelHeight(int
+    monitor). Added a signal panel_height_changed() that will emit the
+    new panel height, and the monitor that was changed. Its not
+    currently used. (LP: #1075417)
+  * UnitySettings: use proper gnome scaling-factor
+
+  [ Marco Trevisan (Treviño) ]
+  * UnitySettings: use proper gnome scaling-factor
+  * DecoratedWindow: add menu
+  * DecoratedWindow: make sure that the top_layout exist when setting up
+    the decorations If there's no layout, then we don't need any
+    texture. Also this might cause a crash if a window is about to be
+    mapped but not yet fully framed. (LP: #1281610)
+
+  [ Sebastien Bacher ]
+  * Drop g-s-d override, unity-settings-daemon landed
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 20 Feb 2014 16:25:16 +0000
+
+unity (7.1.2+14.04.20140218.1-0ubuntu2) trusty; urgency=medium
+
+  * Add Conflicts: libunity-core-6.0-8 to facilitate smooth upgrades.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 19 Feb 2014 23:08:03 -0800
+
 unity (7.1.2+14.04.20140218.1-0ubuntu1) trusty; urgency=low
 
   [ Marco Trevisan (Treviño) ]

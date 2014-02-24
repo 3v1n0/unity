@@ -149,7 +149,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , sScreen(ScaleScreen::get(screen))
   , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
-  , deco_manager_(std::make_shared<decoration::Manager>())
+  , deco_manager_(std::make_shared<decoration::Manager>(menus_))
   , debugger_(this)
   , needsRelayout(false)
   , super_keypressed_(false)
@@ -251,7 +251,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
       renderer.find("on softpipe") != std::string::npos ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
     {
-      Settings::Instance().SetLowGfxMode(true);
+      unity_settings_.SetLowGfxMode(true);
     }
 #endif
 
@@ -628,7 +628,8 @@ void UnityScreen::FillShadowRectForOutput(CompRect& shadowRect, CompOutput const
   if (_shadow_texture.empty ())
     return;
 
-  float panel_h = static_cast<float>(panel_style_.panel_height);
+  int monitor = PluginAdapter::Default().MonitorGeometryIn(NuxGeometryFromCompRect(output));
+  float panel_h = static_cast<float>(panel_style_.PanelHeight(monitor));
   float shadowX = output.x();
   float shadowY = output.y() + panel_h;
   float shadowWidth = output.width();
@@ -907,7 +908,9 @@ void UnityScreen::DrawPanelUnderDash()
 
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
-  int panel_height = panel_style_.panel_height;
+
+  // FIXME Change to paint per monitor vs all at once
+  int panel_height = panel_style_.PanelHeight();
   auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
   graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
 }
@@ -2192,6 +2195,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
       show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
   }
 
+  menus_->show_menus = false;
   SetUpAndShowSwitcher(show_mode);
 
   return true;
@@ -2898,7 +2902,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
     else
     {
-      if (window->id() == active_window)
+      if (window->id() == active_window || decoration::Style::Get()->integrated_menus())
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
         uScreen->is_desktop_active_ = false;
@@ -2907,9 +2911,11 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
             !(window->state() & CompWindowStateFullscreenMask) &&
             !(window->type() & CompWindowTypeFullscreenMask))
         {
+          WindowManager& wm = WindowManager::Default();
           auto const& output = uScreen->screen->currentOutputDev();
+          int monitor = wm.MonitorGeometryIn(NuxGeometryFromCompRect(output));
 
-          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.panel_height)
+          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.PanelHeight(monitor))
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
           }
@@ -3622,7 +3628,7 @@ void UnityScreen::initLauncher()
     hud_controller_->launcher_width = launcher_width;
     dash_controller_->launcher_width = launcher_width;
     panel_controller_->launcher_width = launcher_width;
-    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.panel_height);
+    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight());
 
     CompOption::Value v(launcher_width);
     screen->setOptionForPlugin("expo", "x_offset", v);

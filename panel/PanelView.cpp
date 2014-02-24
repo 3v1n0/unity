@@ -73,6 +73,8 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 {
   auto& wm = WindowManager::Default();
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::OnDPIChanged));
+
   wm.average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
   wm.initiate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadInitiate));
   wm.terminate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadTerminate));
@@ -107,11 +109,12 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 
   SetCompositionLayout(layout_);
 
-  tray_ = new PanelTray();
+  tray_ = new PanelTray(monitor_);
   layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   AddChild(tray_);
 
   indicators_ = new PanelIndicatorsView();
+  indicators_->SetMonitor(monitor_);
   AddPanelView(indicators_, 0);
 
   for (auto const& object : remote_->GetIndicators())
@@ -121,7 +124,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
-  menus->activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
+  menus->key_activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
   menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
@@ -166,6 +169,13 @@ Window PanelView::GetTrayXid() const
     return 0;
 
   return tray_->xid();
+}
+
+void PanelView::OnDPIChanged()
+{
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  tray_->SetMinMaxSize(1, height);
+  menu_view_->OnDPIChanged();
 }
 
 void PanelView::SetLauncherWidth(int width)
@@ -618,7 +628,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   {
     PanelIndicatorEntryView* view = nullptr;
 
-    if (menu_view_->GetControlsActive())
+    if (menu_view_->HasMenus())
       view = menu_view_->ActivateEntryAt(x, y);
 
     if (!view) indicators_->ActivateEntryAt(x, y);
@@ -643,9 +653,12 @@ bool PanelView::TrackMenuPointer()
   return true;
 }
 
-void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
+void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const&)
 {
-  bool active = (entry_id.size() > 0);
+  if (!panel.empty() && panel != GetPanelName())
+    return;
+
+  bool active = !entry_id.empty();
   if (active && !track_menu_pointer_timeout_)
   {
     //
@@ -681,7 +694,11 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
 
 bool PanelView::ActivateFirstSensitive()
 {
-  if (IsActive() && (menu_view_->ActivateIfSensitive() || indicators_->ActivateIfSensitive()))
+  if (!IsActive())
+    return false;
+
+  if ((menu_view_->HasMenus() && menu_view_->ActivateIfSensitive()) ||
+      indicators_->ActivateIfSensitive())
   {
     // Since this only happens on keyboard events, we need to prevent that the
     // pointer tracker would select another entry.
@@ -694,7 +711,11 @@ bool PanelView::ActivateFirstSensitive()
 
 bool PanelView::ActivateEntry(std::string const& entry_id)
 {
-  if (IsActive() && (menu_view_->ActivateEntry(entry_id, 0) || indicators_->ActivateEntry(entry_id, 0)))
+  if (!IsActive())
+    return false;
+
+  if ((menu_view_->HasMenus() && menu_view_->ActivateEntry(entry_id, 0)) ||
+      indicators_->ActivateEntry(entry_id, 0))
   {
     // Since this only happens on keyboard events, we need to prevent that the
     // pointer tracker would select another entry.
@@ -758,23 +779,31 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   }
 }
 
+std::string PanelView::GetPanelName() const
+{
+  return GetName() + std::to_string(monitor_);
+}
+
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  std::string panel_id = GetName() + std::to_string(monitor_);
 
-  if (menu_view_->GetControlsActive())
+   if (menu_view_->HasMenus())
     menu_view_->GetGeometryForSync(locations);
 
   indicators_->GetGeometryForSync(locations);
-  remote_->SyncGeometries(panel_id, locations);
+  remote_->SyncGeometries(GetPanelName(), locations);
 }
 
 void PanelView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
+  indicators_->SetMonitor(monitor);
 
+  int height = panel::Style::Instance().PanelHeight(monitor_);
+  SetMinMaxSize(height, height);
+  
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
   Resize(nux::Point(monitor_geo.x, monitor_geo.y), monitor_geo.width);
@@ -784,8 +813,8 @@ void PanelView::Resize(nux::Point const& offset, int width)
 {
   unity::panel::Style &panel_style = panel::Style::Instance();
   SetMaximumWidth(width);
-  SetGeometry(nux::Geometry(0, 0, width, panel_style.panel_height));
-  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.panel_height));
+  SetGeometry(nux::Geometry(0, 0, width, panel_style.PanelHeight(monitor_)));
+  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.PanelHeight(monitor_)));
 }
 
 int PanelView::GetMonitor() const

@@ -234,7 +234,7 @@ TEST(TestIndicatorEntry, AddParent)
   auto parent = std::make_shared<Entry>("parent");
   SigReceiver parent_receiver(*parent);
 
-  EXPECT_CALL(entry_receiver, Updated());
+  EXPECT_CALL(entry_receiver, Updated()).Times(0);
   EXPECT_CALL(parent_receiver, Updated()).Times(0);
   EXPECT_CALL(parent_receiver, ActiveChanged(_)).Times(0);
   EXPECT_CALL(parent_receiver, ShowNowChanged(_)).Times(0);
@@ -272,20 +272,18 @@ TEST(TestIndicatorEntry, AddParentWithValues)
   EXPECT_EQ(entry.parents(), std::vector<Entry::Ptr>({parent}));
 }
 
-TEST(TestIndicatorEntry, AddParentsUpdatedOnFirstOnly)
+TEST(TestIndicatorEntry, AddParentsNeverUpdates)
 {
   Entry entry("id");
   SigReceiver entry_receiver(entry);
 
-  EXPECT_CALL(entry_receiver, Updated());
-  entry.add_parent(std::make_shared<Entry>("parent-1"));
-
   EXPECT_CALL(entry_receiver, Updated()).Times(0);
+  entry.add_parent(std::make_shared<Entry>("parent-1"));
   entry.add_parent(std::make_shared<Entry>("parent-2"));
   entry.add_parent(std::make_shared<Entry>("parent-3"));
 }
 
-TEST(TestIndicatorEntry, RmParentsUpdatedOnLastOnly)
+TEST(TestIndicatorEntry, RmParentsNeverUpdates)
 {
   Entry entry("id");
   SigReceiver::Nice entry_receiver(entry);
@@ -300,10 +298,9 @@ TEST(TestIndicatorEntry, RmParentsUpdatedOnLastOnly)
   EXPECT_CALL(entry_receiver, Updated()).Times(0);
   entry.rm_parent(parent_1);
   entry.rm_parent(parent_2);
-
-  ASSERT_EQ(1, entry.parents().size());
-  EXPECT_CALL(entry_receiver, Updated());
   entry.rm_parent(parent_3);
+
+  EXPECT_TRUE(entry.parents().empty());
 }
 
 TEST(TestIndicatorEntry, RmParent)
@@ -316,7 +313,7 @@ TEST(TestIndicatorEntry, RmParent)
   entry.add_parent(parent);
 
   ASSERT_FALSE(entry.parents().empty());
-  EXPECT_CALL(entry_receiver, Updated());
+  EXPECT_CALL(entry_receiver, Updated()).Times(0);
 
   entry.rm_parent(parent);
   EXPECT_TRUE(entry.parents().empty());

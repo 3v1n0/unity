@@ -29,14 +29,13 @@ namespace indicator
 class Indicators::Impl
 {
 public:
-  typedef std::map<std::string, Indicator::Ptr> IndicatorMap;
-  typedef std::map<std::string, Entry::Ptr> EntryMap;
+  typedef std::unordered_map<std::string, Indicator::Ptr> IndicatorMap;
 
   Impl(Indicators* owner)
     : owner_(owner)
   {}
 
-  void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
+  void ActivateEntry(std::string const& panel, std::string const& entry_id, nux::Rect const& geometry);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
 
   IndicatorsList GetIndicators() const;
@@ -63,9 +62,9 @@ Indicators::Indicators()
 Indicators::~Indicators()
 {}
 
-void Indicators::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
+void Indicators::ActivateEntry(std::string const& panel, std::string const& entry_id, nux::Rect const& geometry)
 {
-  pimpl->ActivateEntry(entry_id, geometry);
+  pimpl->ActivateEntry(panel, entry_id, geometry);
 }
 
 void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
@@ -93,7 +92,7 @@ void Indicators::RemoveIndicator(std::string const& name)
   return pimpl->RemoveIndicator(name);
 }
 
-void Indicators::Impl::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
+void Indicators::Impl::ActivateEntry(std::string const& panel, std::string const& entry_id, nux::Rect const& geometry)
 {
   if (active_entry_)
   {
@@ -107,11 +106,11 @@ void Indicators::Impl::ActivateEntry(std::string const& entry_id, nux::Rect cons
   {
     active_entry_->set_geometry(geometry);
     active_entry_->set_active(true);
-    owner_->on_entry_activated.emit(entry_id, geometry);
+    owner_->on_entry_activated.emit(panel, entry_id, geometry);
   }
   else
   {
-    owner_->on_entry_activated.emit(std::string(), nux::Rect());
+    owner_->on_entry_activated.emit(std::string(), std::string(), nux::Rect());
   }
 }
 

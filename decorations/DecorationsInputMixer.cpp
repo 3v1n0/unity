@@ -31,6 +31,7 @@ DECLARE_LOGGER(logger, "unity.decorations.inputmixer");
 
 InputMixer::InputMixer()
   : mouse_down_(false)
+  , recheck_owner_(false)
 {}
 
 void InputMixer::PushToFront(Item::Ptr const& item)
@@ -72,11 +73,23 @@ Item::List const& InputMixer::Items() const
   return items_;
 }
 
+void InputMixer::ForceMouseOwnerCheck()
+{
+  if (!mouse_down_)
+  {
+    UpdateMouseOwner(CompPoint(pointerX, pointerY));
+  }
+  else
+  {
+    recheck_owner_ = true;
+  }
+}
+
 Item::Ptr InputMixer::GetMatchingItemRecursive(Item::List const& items, CompPoint const& point)
 {
   for (auto const& item : items)
   {
-    if (item->visible() && item->Geometry().contains(point))
+    if (item && item->visible() && item->Geometry().contains(point))
     {
       if (!item->IsContainer())
         return item->sensitive() ? item : nullptr;
@@ -169,12 +182,19 @@ void InputMixer::ButtonUpEvent(CompPoint const& point, unsigned button, Time tim
 
   if (last_mouse_owner_)
   {
-    // This event might cause the InputMixer to be deleted, so we protect using a weak_ptr
-    std::weak_ptr<Item> weak_last_mouse_owner(last_mouse_owner_);
+    // This event might cause the LastMouseOwner to be deleted, so we protect using a weak_ptr
+    Item::WeakPtr weak_last_mouse_owner(last_mouse_owner_);
     last_mouse_owner_->ButtonUpEvent(point, button, timestamp);
 
-    if (!weak_last_mouse_owner.expired() && !last_mouse_owner_->Geometry().contains(point))
+    if (weak_last_mouse_owner && !last_mouse_owner_->Geometry().contains(point))
+    {
       UpdateMouseOwner(point);
+    }
+    else if (recheck_owner_)
+    {
+      recheck_owner_ = false;
+      UpdateMouseOwner(point);
+    }
   }
 }
 

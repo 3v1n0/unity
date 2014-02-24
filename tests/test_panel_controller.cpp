@@ -148,7 +148,7 @@ TEST_F(TestPanelController, MultimonitorGeometries)
       ASSERT_EQ(panel_geo.x, monitor_geo.x);
       ASSERT_EQ(panel_geo.y, monitor_geo.y);
       ASSERT_EQ(panel_geo.width, monitor_geo.width);
-      ASSERT_EQ(panel_geo.height, panel_style.panel_height);
+      ASSERT_EQ(panel_geo.height, panel_style.PanelHeight(i));
     }
   }
 }
@@ -164,7 +164,7 @@ TEST_F(TestPanelController, MonitorResizesPanels)
   ASSERT_EQ(panel_geo.x, monitor_geo.x);
   ASSERT_EQ(panel_geo.y, monitor_geo.y);
   ASSERT_EQ(panel_geo.width, monitor_geo.width);
-  ASSERT_EQ(panel_geo.height, panel_style.panel_height);
+  ASSERT_EQ(panel_geo.height, panel_style.PanelHeight());
 
   uscreen.Reset();
   monitor_geo = uscreen.GetMonitorGeometry(0);
@@ -172,7 +172,7 @@ TEST_F(TestPanelController, MonitorResizesPanels)
   ASSERT_EQ(panel_geo.x, monitor_geo.x);
   ASSERT_EQ(panel_geo.y, monitor_geo.y);
   ASSERT_EQ(panel_geo.width, monitor_geo.width);
-  ASSERT_EQ(panel_geo.height, panel_style.panel_height);
+  ASSERT_EQ(panel_geo.height, panel_style.PanelHeight());
 }
 
 TEST_F(TestPanelController, MultiMonitorEdgeBarrierSubscriptions)

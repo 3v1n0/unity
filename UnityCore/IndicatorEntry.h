@@ -22,7 +22,7 @@
 #define UNITY_INDICATOR_ENTRY_H
 
 #include <iosfwd>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 #include <memory>
@@ -37,7 +37,7 @@ namespace indicator
 
 // The EntryLocationMap is used to map the entry name to the
 // physical location on the screen.
-typedef std::map<std::string, nux::Rect> EntryLocationMap;
+typedef std::unordered_map<std::string, nux::Rect> EntryLocationMap;
 
 class Entry
 {
