@@ -41,6 +41,7 @@ MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
   entry_->updated.connect(sigc::mem_fun(this, &MenuEntry::EntryUpdated));
   horizontal_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
   vertical_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
   in_dropdown.changed.connect([this] (bool in) { visible = entry_->visible() && !in; });
   EntryUpdated();
 }
@@ -72,9 +73,10 @@ void MenuEntry::RenderTexture()
 
   natural_ = Style::Get()->MenuItemNaturalSize(entry_->label());
   cu::CairoContext text_ctx(GetNaturalWidth(), GetNaturalHeight());
+  cairo_surface_set_device_scale(cairo_get_target(text_ctx), scale(), scale());
 
   if (state == WidgetState::PRELIGHT)
-    Style::Get()->DrawMenuItem(state, text_ctx, text_ctx.width(), text_ctx.height());
+    Style::Get()->DrawMenuItem(state, text_ctx, text_ctx.width() / scale(), text_ctx.height() / scale());
 
   cairo_save(text_ctx);
   cairo_translate(text_ctx, horizontal_padding(), vertical_padding());
@@ -95,12 +97,12 @@ void MenuEntry::ShowMenu(unsigned button)
 
 int MenuEntry::GetNaturalWidth() const
 {
-  return natural_.width + horizontal_padding() * 2;
+  return (natural_.width + horizontal_padding() * 2) * scale();
 }
 
 int MenuEntry::GetNaturalHeight() const
 {
-  return natural_.height + vertical_padding() * 2;
+  return (natural_.height + vertical_padding() * 2) * scale();
 }
 
 void MenuEntry::ButtonDownEvent(CompPoint const& p, unsigned button, Time timestamp)

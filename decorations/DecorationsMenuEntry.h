@@ -53,6 +53,7 @@ protected:
   void AddProperties(debug::IntrospectionData&) override;
   IntrospectableList GetIntrospectableChildren() override;
 
+  bool IsScalable() const override { return false; }
   void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
   void ButtonUpEvent(CompPoint const&, unsigned button, Time) override;
   void MotionEvent(CompPoint const&, Time) override;
