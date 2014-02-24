@@ -25,7 +25,6 @@
 #include "DecorationsTitle.h"
 #include "DecorationsSlidingLayout.h"
 #include "DecorationsMenuLayout.h"
-#include "RawPixel.h"
 #include "WindowManager.h"
 #include "UnitySettings.h"
 
@@ -142,16 +141,16 @@ void Window::Impl::SetupExtents()
     return;
 
   auto const& sb = Style::Get()->Border();
-  CompWindowExtents border(RawPixel(sb.left).CP(cv_),
-                           RawPixel(sb.right).CP(cv_),
-                           RawPixel(sb.top).CP(cv_),
-                           RawPixel(sb.bottom).CP(cv_));
+  CompWindowExtents border(cv_->CP(sb.left),
+                           cv_->CP(sb.right),
+                           cv_->CP(sb.top),
+                           cv_->CP(sb.bottom));
 
   auto const& ib = Style::Get()->InputBorder();
-  CompWindowExtents input(RawPixel(sb.left + ib.left).CP(cv_),
-                          RawPixel(sb.right + ib.right).CP(cv_),
-                          RawPixel(sb.top + ib.top).CP(cv_),
-                          RawPixel(sb.bottom + ib.bottom).CP(cv_));
+  CompWindowExtents input(cv_->CP(sb.left + ib.left),
+                          cv_->CP(sb.right + ib.right),
+                          cv_->CP(sb.top + ib.top),
+                          cv_->CP(sb.bottom + ib.bottom));
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
