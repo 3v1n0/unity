@@ -39,6 +39,8 @@ public:
   void RedrawBlur();
   bool HasBlurredBackground() const;
 
+  sigc::signal<void> hidden;
+
 protected:
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
 

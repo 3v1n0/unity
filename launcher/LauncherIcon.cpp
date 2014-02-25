@@ -121,6 +121,7 @@ void LauncherIcon::LoadTooltip()
   _tooltip = new Tooltip(monitor);
   _tooltip->SetOpacity(0.0f);
   _tooltip->text = tooltip_text();
+  _tooltip->hidden.connect([this] { _tooltip.Release(); });
   debug::Introspectable::AddChild(_tooltip.GetPointer());
 }
 
@@ -131,6 +132,7 @@ void LauncherIcon::LoadQuicklist()
     monitor = 0;
 
   _quicklist = new QuicklistView(monitor);
+  _quicklist->hidden.connect([this] { _quicklist.Release(); });
   debug::Introspectable::AddChild(_quicklist.GetPointer());
 
   _quicklist->mouse_down_outside_pointer_grab_area.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags)
