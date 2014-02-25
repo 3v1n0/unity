@@ -54,7 +54,6 @@ public:
   gboolean CheckShortcutActivation(const char* key_string);
   std::vector<char> GetAllShortcuts();
 
-  nux::Property<int> launcher_width;
   nux::Property<bool> use_primary;
 
   sigc::signal<void> on_realize;

@@ -68,7 +68,6 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   , opacity_(1.0f)
   , monitor_(0)
   , stored_dash_width_(0)
-  , launcher_width_(64)
   , bg_effect_helper_(this)
 {
   auto& wm = WindowManager::Default();
@@ -169,12 +168,6 @@ Window PanelView::GetTrayXid() const
     return 0;
 
   return tray_->xid();
-}
-
-void PanelView::SetLauncherWidth(int width)
-{
-  launcher_width_ = width;
-  QueueDraw();
 }
 
 bool PanelView::IsMouseInsideIndicator(nux::Point const& mouse_position) const
@@ -367,7 +360,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
 
-      refine_x_pos += launcher_width_;
+      refine_x_pos += unity::Settings::Instance().LauncherWidth(monitor_);
       GfxContext.QRP_1Tex(refine_x_pos, geo.y,
                           bg_refine_tex_->GetWidth(),
                           bg_refine_tex_->GetHeight(),
@@ -464,7 +457,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::Geometry refine_geo = geo;
 
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
-      refine_x_pos += launcher_width_;
+      refine_x_pos += unity::Settings::Instance().LauncherWidth(monitor_);
 
       refine_geo.x = refine_x_pos;
       refine_geo.width = bg_refine_tex_->GetWidth();

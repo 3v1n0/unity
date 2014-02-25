@@ -33,6 +33,7 @@
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
+#include "MultiMonitor.h"
 
 namespace unity
 {
@@ -44,7 +45,7 @@ const char* window_title = "unity-dash";
 
 namespace
 {
-const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
+unsigned const PRELOAD_TIMEOUT_LENGTH = 40;
 
 namespace dbus
 {
@@ -63,8 +64,7 @@ const std::string INTROSPECTION =\
 }
 
 Controller::Controller(Controller::WindowCreator const& create_window)
-  : launcher_width(64)
-  , use_primary(false)
+  : use_primary(false)
   , create_window_(create_window)
   , monitor_(0)
   , visible_(false)
@@ -228,6 +228,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
+  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
@@ -242,11 +243,11 @@ void Controller::Relayout(bool check_monitor)
   EnsureDash();
 
   if (check_monitor)
-  {
     monitor_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
-  }
 
+  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
   nux::Geometry geo = GetIdealWindowGeometry();
+
   view_->Relayout();
   window_->SetGeometry(geo);
   view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
@@ -298,6 +299,7 @@ void Controller::ShowDash()
   }
 
   monitor_ = GetIdealMonitor();
+  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
   view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
   view_->AboutToShow();
   FocusWindow();

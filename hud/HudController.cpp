@@ -27,7 +27,10 @@
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
+
+#include "MultiMonitor.h"
 
 #include "config.h"
 
@@ -36,12 +39,12 @@ namespace unity
 {
 namespace hud
 {
+
 DECLARE_LOGGER(logger, "unity.hud.controller");
 
 Controller::Controller(Controller::ViewCreator const& create_view,
                        Controller::WindowCreator const& create_window)
-  : launcher_width(64)
-  , launcher_locked_out(false)
+  : launcher_locked_out(false)
   , multiple_launchers(true)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , visible_(false)
@@ -57,7 +60,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   // As a default, the create_view_ function should just create a view.
   if (create_view == nullptr)
   {
-    create_view_ = []() {
+    create_view_ = [] {
       return new hud::View;
     };
   }
@@ -95,8 +98,6 @@ Controller::Controller(Controller::ViewCreator const& create_view,
       HideHud();
     }
   });
-
-  launcher_width.changed.connect([this] (int) { Relayout(); });
 
   WindowManager& wm = WindowManager::Default();
   wm.screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
@@ -201,6 +202,7 @@ void Controller::EnsureHud()
 void Controller::SetIcon(std::string const& icon_name)
 {
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
+  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
 
   if (view_)
     view_->SetIcon(icon_name, tile_size, icon_size, launcher_width - tile_size);
@@ -243,6 +245,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
   if (IsLockedToLauncher(ideal_monitor))
   {
+    int launcher_width = unity::Settings::Instance().LauncherWidth(ideal_monitor);
     geo.x += launcher_width;
     geo.width -= launcher_width;
   }
@@ -255,10 +258,10 @@ void Controller::Relayout(bool check_monitor)
   EnsureHud();
 
   if (check_monitor)
-  {
     monitor_index_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
-  }
+
   nux::Geometry const& geo = GetIdealWindowGeometry();
+  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
 
   view_->QueueDraw();
   window_->SetGeometry(geo);

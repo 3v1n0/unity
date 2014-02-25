@@ -46,6 +46,9 @@ public:
   void SetLowGfxMode(const bool low_gfx);
   EMConverter::Ptr const& em(int monitor = 0) const;
 
+  void SetLauncherWidth(int launcher_width, int monitor);
+  int LauncherWidth(int monitor) const;
+
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
   nux::ROProperty<bool> double_click_activate;
