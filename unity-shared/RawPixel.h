@@ -28,15 +28,15 @@ namespace unity
 class RawPixel
 {
 public:
-  RawPixel(float raw_pixel);
+  RawPixel(double raw_pixel);
 
-  float CP(EMConverter::Ptr const& converter) const;
+  double CP(EMConverter::Ptr const&) const;
+  double CP(double scale) const;
 
-  operator float() const;
+  operator double() const;
 
 private:
-  float raw_pixel_;
-
+  double raw_pixel_;
 };
 
 // User-Defined Literals (ex: 10_em, 10.0_em)

@@ -32,17 +32,21 @@ RawPixel operator"" _em(unsigned long long pixel)
   return RawPixel(pixel);
 }
 
-RawPixel::RawPixel(float raw_pixel)
+RawPixel::RawPixel(double raw_pixel)
   : raw_pixel_(raw_pixel)
-{
-}
+{}
 
-float RawPixel::CP(EMConverter::Ptr const& converter) const
+double RawPixel::CP(EMConverter::Ptr const& converter) const
 {
   return converter->CP(raw_pixel_);
 }
 
-RawPixel::operator float() const
+double RawPixel::CP(double scale) const
+{
+  return raw_pixel_ * scale;
+}
+
+RawPixel::operator double() const
 {
   return raw_pixel_;
 }
