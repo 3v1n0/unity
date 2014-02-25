@@ -104,15 +104,13 @@ private:
 
   bool ActivateFirstSensitive();
   bool ActivateEntry(std::string const& entry_id);
-  void Resize(nux::Point const& offset, int width);
+  void Resize();
   bool IsTransparent();
   void UpdateBackground();
   void ForceUpdateBackground();
   bool TrackMenuPointer();
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
-  
-  void OnDPIChanged();
 
   MockableBaseWindow* parent_;
   indicator::Indicators::Ptr remote_;

@@ -73,7 +73,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 {
   auto& wm = WindowManager::Default();
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::OnDPIChanged));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::Resize));
 
   wm.average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
   wm.initiate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadInitiate));
@@ -169,13 +169,6 @@ Window PanelView::GetTrayXid() const
     return 0;
 
   return tray_->xid();
-}
-
-void PanelView::OnDPIChanged()
-{
-  int height = panel::Style::Instance().PanelHeight(monitor_);
-  tray_->SetMinMaxSize(1, height);
-  menu_view_->OnDPIChanged();
 }
 
 void PanelView::SetLauncherWidth(int width)
@@ -800,21 +793,24 @@ void PanelView::SetMonitor(int monitor)
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
   indicators_->SetMonitor(monitor);
-
-  int height = panel::Style::Instance().PanelHeight(monitor_);
-  SetMinMaxSize(height, height);
-  
-  UScreen* uscreen = UScreen::GetDefault();
-  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
-  Resize(nux::Point(monitor_geo.x, monitor_geo.y), monitor_geo.width);
+  Resize();
 }
 
-void PanelView::Resize(nux::Point const& offset, int width)
+void PanelView::Resize()
 {
-  unity::panel::Style &panel_style = panel::Style::Instance();
-  SetMaximumWidth(width);
-  SetGeometry(nux::Geometry(0, 0, width, panel_style.PanelHeight(monitor_)));
-  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.PanelHeight(monitor_)));
+  int height = Style::Instance().PanelHeight(monitor_);
+  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
+
+  SetMinMaxSize(monitor_geo.width, height);
+  parent_->SetGeometry({monitor_geo.x, monitor_geo.y, monitor_geo.width, height});
+
+  for (auto* child : layout_->GetChildren())
+  {
+    child->SetMinimumHeight(height);
+    child->SetMaximumHeight(height);
+  }
+
+  QueueRelayout();
 }
 
 int PanelView::GetMonitor() const
