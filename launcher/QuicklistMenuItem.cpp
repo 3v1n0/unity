@@ -339,10 +339,10 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, double width, double
   int text_width  = log_rect.width / PANGO_SCALE;
   int text_height = log_rect.height / PANGO_SCALE;
 
-  _text_extents.width = text_width + ITEM_INDENT_ABS + 3 * ITEM_MARGIN;
-  _text_extents.height = text_height + 2 * ITEM_MARGIN;
+  _text_extents.width = std::ceil((text_width + ITEM_INDENT_ABS + 3 * ITEM_MARGIN) * _scale);
+  _text_extents.height = std::ceil((text_height + 2 * ITEM_MARGIN) * _scale);
 
-  SetMinimumSize(_text_extents.width * _scale, _text_extents.height * _scale);
+  SetMinimumSize(_text_extents.width, _text_extents.height);
 
   cairo_move_to(cr, 2 * ITEM_MARGIN + ITEM_INDENT_ABS, static_cast<float>(height - text_height) / 2.0f);
   pango_cairo_show_layout(cr, layout);
