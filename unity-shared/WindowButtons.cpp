@@ -341,6 +341,11 @@ void WindowButtons::UpdateDPIChanged()
 {
   for (auto area : GetChildren())
     static_cast<internal::WindowButton*>(area)->UpdateDPIChanged();
+
+  ComputeContentSize();
+  int width = GetContentWidth();
+  SetMaximumWidth(width);
+  SetMinimumWidth(width);
 }
 
 void WindowButtons::OnMonitorChanged(int monitor)

@@ -102,9 +102,10 @@ PanelMenuView::~PanelMenuView()
 void PanelMenuView::OnDPIChanged()
 {
   int height = panel::Style::Instance().PanelHeight(monitor_);
+  window_buttons_->SetMinimumHeight(height);
   window_buttons_->SetMaximumHeight(height);
   window_buttons_->UpdateDPIChanged();
-  window_buttons_->ComputeContentSize();
+
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
 
   Refresh(true);
@@ -126,8 +127,7 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   opacity_animator_.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
   entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryViewAdded));
-
-  Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnDPIChanged));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnDPIChanged));
 
   auto const& deco_style = decoration::Style::Get();
   lim_changed_connection_ = deco_style->integrated_menus.changed.connect([this] (bool lim) {
@@ -167,7 +167,6 @@ void PanelMenuView::SetupLayout()
 {
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-  layout_->SetBaseHeight(panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void PanelMenuView::SetupTitlebarGrabArea()
@@ -1685,9 +1684,9 @@ void PanelMenuView::UpdateShowNow(bool status)
 
 void PanelMenuView::SetMonitor(int monitor)
 {
-  monitor_ = monitor;
-  monitor_geo_ = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
+  PanelIndicatorsView::SetMonitor(monitor);
 
+  monitor_geo_ = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
   maximized_set_.clear();
   GList* windows = bamf_matcher_get_window_stack_for_monitor(matcher_, monitor_);
 
@@ -1722,6 +1721,7 @@ void PanelMenuView::SetMonitor(int monitor)
   window_buttons_->monitor = monitor_;
   window_buttons_->controlled_window = buttons_win;
 
+  OnDPIChanged();
   g_list_free(windows);
 }
 

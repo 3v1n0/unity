@@ -59,8 +59,6 @@ public:
   virtual void OverlayShown();
   virtual void OverlayHidden();
 
-  void OnDPIChanged();
-
 protected:
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
@@ -92,6 +90,7 @@ private:
   void OnActiveWindowChanged(BamfMatcher* matcher, BamfView* old_view, BamfView* new_view);
   void OnActiveAppChanged(BamfMatcher* matcher, BamfApplication* old_app, BamfApplication* new_app);
   void OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name);
+  void OnDPIChanged();
 
   void OnSpreadInitiate();
   void OnSpreadTerminate();
