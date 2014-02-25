@@ -54,7 +54,6 @@ public:
   nux::ROProperty<std::string> label;
 
   sigc::signal<void> activated;
-  sigc::signal<void> highlight_change;
 
 protected:
   void Draw(nux::GraphicsEngine&, bool force);

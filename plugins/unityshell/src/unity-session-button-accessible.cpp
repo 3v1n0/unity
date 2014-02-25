@@ -57,22 +57,13 @@ static const gchar* unity_session_button_accessible_get_name(AtkAction *action,
                                                             gint i);
 
 /* private/utility methods*/
-static void on_focus_change_cb(UnitySessionButtonAccessible* accessible);
+static void on_focus_change_cb(bool const& value, UnitySessionButtonAccessible* accessible);
 
 G_DEFINE_TYPE_WITH_CODE(UnitySessionButtonAccessible,
                         unity_session_button_accessible,
                         NUX_TYPE_OBJECT_ACCESSIBLE,
                         G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION,
                                               atk_action_interface_init))
-
-#define UNITY_SESSION_BUTTON_ACCESSIBLE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_SESSION_BUTTON_ACCESSIBLE, \
-                                UnitySessionButtonAccessiblePrivate))
-
-struct _UnitySessionButtonAccessiblePrivate
-{
-  sigc::connection on_focus_change;
-};
 
 static void
 unity_session_button_accessible_class_init(UnitySessionButtonAccessibleClass* klass)
@@ -87,17 +78,11 @@ unity_session_button_accessible_class_init(UnitySessionButtonAccessibleClass* kl
   atk_class->initialize = unity_session_button_accessible_initialize;
   atk_class->get_name = unity_session_button_accessible_get_name;
   atk_class->ref_state_set = unity_session_button_accessible_ref_state_set;
-
-  g_type_class_add_private(gobject_class, sizeof(UnitySessionButtonAccessiblePrivate));
 }
 
 static void
 unity_session_button_accessible_init(UnitySessionButtonAccessible* session_button_accessible)
 {
-  UnitySessionButtonAccessiblePrivate* priv =
-    UNITY_SESSION_BUTTON_ACCESSIBLE_GET_PRIVATE(session_button_accessible);
-
-  session_button_accessible->priv = priv;
 }
 
 static void
@@ -109,10 +94,6 @@ unity_session_button_accessible_dispose(GObject* object)
 static void
 unity_session_button_accessible_finalize(GObject* object)
 {
-  UnitySessionButtonAccessible* self = UNITY_SESSION_BUTTON_ACCESSIBLE(object);
-
-  self->priv->on_focus_change.disconnect();
-
   G_OBJECT_CLASS(unity_session_button_accessible_parent_class)->finalize(object);
 }
 
@@ -151,7 +132,8 @@ unity_session_button_accessible_initialize(AtkObject* accessible,
 
   button = dynamic_cast<Button*>(nux_object);
 
-  self->priv->on_focus_change = button->highlight_change.connect(sigc::bind(sigc::ptr_fun(on_focus_change_cb), self));
+  button->highlighted.changed.connect(sigc::bind(sigc::ptr_fun(on_focus_change_cb),
+                                                 UNITY_SESSION_BUTTON_ACCESSIBLE(self)));
 }
 
 static const gchar*
@@ -213,7 +195,7 @@ unity_session_button_accessible_ref_state_set(AtkObject* obj)
 
 /* private methods */
 static void
-on_focus_change_cb(UnitySessionButtonAccessible* accessible)
+on_focus_change_cb(bool const& value, UnitySessionButtonAccessible* accessible)
 {
   nux::Object* nux_object = NULL;
   Button* button = NULL;
