@@ -4041,7 +4041,8 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
 {
   using namespace decoration;
   auto const& style = Style::Get();
-  unsigned glow_size = style->GlowSize();
+  double dpi_scale = deco_win_->dpi_scale();
+  unsigned glow_size = std::round(style->GlowSize() * dpi_scale);
   auto const& glow_texture = DataPool::Get()->GlowTexture();
 
   if (!glow_size || !glow_texture)
@@ -4054,7 +4055,7 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
   {
     // We paint the glow below the window edges to correctly
     // render the rounded corners
-    int inside_glow = decoration_radius * deco_win_->dpi_scale() / 4;
+    int inside_glow = decoration_radius * dpi_scale / 4;
     glow_size += inside_glow;
     glow_geo.Expand(-inside_glow, -inside_glow);
   }
