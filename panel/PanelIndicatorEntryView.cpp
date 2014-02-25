@@ -507,8 +507,12 @@ void PanelIndicatorEntryView::OverlayHidden()
 
 void PanelIndicatorEntryView::SetMonitor(int monitor)
 {
+  if (monitor_ == monitor)
+    return;
+
   monitor_ = monitor;
   cv_ = Settings::Instance().em(monitor);
+  Refresh();
 }
 
 void PanelIndicatorEntryView::SetOpacity(double opacity)

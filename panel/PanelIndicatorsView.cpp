@@ -381,6 +381,9 @@ void PanelIndicatorsView::OverlayHidden()
 void PanelIndicatorsView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
+
+  for (auto const& entry : entries_)
+    entry.second->SetMonitor(monitor_);
 }
 
 bool PanelIndicatorsView::SetOpacity(double& target, double const& new_value)
