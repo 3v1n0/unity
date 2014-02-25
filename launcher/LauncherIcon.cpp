@@ -99,9 +99,6 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
 
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadTooltip));
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadQuicklist));
-
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     for (unsigned j = 0; j < static_cast<unsigned>(Quirk::LAST); ++j)
@@ -515,19 +512,16 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 {
   MenuItemsVector const& menus = Menus();
 
-  if (!_quicklist)
-    LoadQuicklist();
-
   if (menus.empty())
     return false;
+
+  LoadQuicklist();
 
   if (_tooltip)
   {
     // Hide the tooltip without fade animation
     _tooltip->ShowWindow(false);
   }
-
-  _quicklist->RemoveAllMenuItem();
 
   for (auto const& menu_item : menus)
   {

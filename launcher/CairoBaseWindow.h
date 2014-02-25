@@ -32,7 +32,6 @@ class CairoBaseWindow : public nux::BaseWindow
   NUX_DECLARE_OBJECT_TYPE(CairoBaseWindow, nux::BaseWindow);
 public:
   CairoBaseWindow(int monitor = 0);
-  virtual ~CairoBaseWindow() = default;
 
   virtual void Show();
   virtual void Hide();
