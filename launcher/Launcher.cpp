@@ -145,9 +145,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , cv_(unity::Settings::Instance().em(monitor))
 {
   icon_renderer_->monitor = monitor();
-  icon_renderer_->SetTargetSize(icon_size_.CP(cv_),
-                                DEFAULT_ICON_SIZE.CP(cv_),
-                                SPACE_BETWEEN_ICONS.CP(cv_));
+  icon_renderer_->SetTargetSize(icon_size_.CP(cv_), DEFAULT_ICON_SIZE.CP(cv_), SPACE_BETWEEN_ICONS.CP(cv_));
 
   CaptureMouseDownAnyWhereElse(true);
   SetAcceptKeyNavFocusOnMouseDown(false);
@@ -330,7 +328,7 @@ float Launcher::GetAutohidePositionMax() const
 
 void Launcher::OnDPIChanged()
 {
-  UpdateOptions(options());
+  monitor.changed.emit(monitor());
 }
 
 void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo)
@@ -1200,11 +1198,11 @@ void Launcher::OnMonitorChanged(int new_monitor)
   unity::panel::Style &panel_style = panel::Style::Instance();
   int panel_height = panel_style.PanelHeight(new_monitor);
 
-  Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_height),
-         monitor_geo.height - panel_height);
-  icon_renderer_->monitor = new_monitor;
-
   cv_ = unity::Settings::Instance().em(monitor);
+  Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_height), monitor_geo.height - panel_height);
+
+  icon_renderer_->monitor = new_monitor;
+  SetIconSize(options()->tile_size, options()->icon_size);
 }
 
 void Launcher::UpdateOptions(Options::Ptr options)
@@ -1492,10 +1490,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   ui::IconRenderer::DestroyShortcutTextures();
 
   icon_size_ = tile_size;
-  icon_renderer_->SetTargetSize(icon_size_.CP(cv_),
-                                RawPixel(icon_size).CP(cv_),
-                                SPACE_BETWEEN_ICONS.CP(cv_));
-
+  icon_renderer_->SetTargetSize(icon_size_.CP(cv_), RawPixel(icon_size).CP(cv_), SPACE_BETWEEN_ICONS.CP(cv_));
   AbstractLauncherIcon::icon_size = icon_size_.CP(cv_);
 
   nux::Geometry const& parent_geo = parent_->GetGeometry();
