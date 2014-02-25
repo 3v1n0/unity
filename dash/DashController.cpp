@@ -249,8 +249,7 @@ void Controller::Relayout(bool check_monitor)
   nux::Geometry geo = GetIdealWindowGeometry();
   view_->Relayout();
   window_->SetGeometry(geo);
-  panel::Style &panel_style = panel::Style::Instance();
-  view_->SetMonitorOffset(launcher_width, panel_style.PanelHeight(monitor_));
+  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -299,9 +298,8 @@ void Controller::ShowDash()
   }
 
   monitor_ = GetIdealMonitor();
-
+  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
   view_->AboutToShow();
-
   FocusWindow();
 
   need_show_ = false;
