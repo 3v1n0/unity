@@ -104,6 +104,7 @@ struct StaticCairoText::Impl
   int lines_;
   int actual_lines_;
   float line_spacing_;
+  double scale_;
 };
 
 StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
@@ -122,6 +123,7 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
     // number of lines if negative.
   , actual_lines_(0)
   , line_spacing_(0.5)
+  , scale_(1.0f)
 {
   GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
   g_signal_connect(settings, "notify::gtk-font-name",
@@ -443,6 +445,22 @@ void StaticCairoText::SetUnderline(UnderlineState underline)
   }
 }
 
+void StaticCairoText::SetScale(double scale)
+{
+  if (pimpl->scale_ == scale)
+    return;
+
+  pimpl->scale_ = scale;
+  pimpl->need_new_extent_cache_ = true;
+  pimpl->UpdateTexture();
+  QueueDraw();
+}
+
+double StaticCairoText::GetScale() const
+{
+  return pimpl->scale_;
+}
+
 int StaticCairoText::GetLineCount() const
 {
   return pimpl->actual_lines_;
@@ -590,11 +608,17 @@ Size StaticCairoText::Impl::GetTextExtents() const
   else
     result.width = logic_rect.width;
 
+  result.width = std::ceil(result.width * scale_);
+  result.height = std::ceil(result.height * scale_);
+
   if (result.width > parent_->GetMaximumWidth())
   {
-    pango_layout_set_width(layout, parent_->GetMaximumWidth() * PANGO_SCALE);
+    pango_layout_set_width(layout, parent_->GetMaximumWidth() * PANGO_SCALE / scale_);
     pango_layout_context_changed(layout);
     pango_layout_get_pixel_size(layout, &result.width, &result.height);
+
+    result.width = std::ceil(result.width * scale_);
+    result.height = std::ceil(result.height * scale_);
   }
 
   cached_extent_ = result;
@@ -691,6 +715,7 @@ void StaticCairoText::Impl::DrawText(CacheTexture::Ptr const& texture)
 
   nux::Size layout_size(-1, lines_ < 0 ? lines_ : std::numeric_limits<int>::min());
   texture->cr.reset(new CairoGraphics(CAIRO_FORMAT_ARGB32, cached_extent_.width, cached_extent_.height));
+  cairo_surface_set_device_scale(texture->cr->GetSurface(), scale_, scale_);
   cairo_t* cr = texture->cr->GetInternalContext();
 
   PangoLayout*          layout     = NULL;
@@ -739,9 +764,9 @@ void StaticCairoText::Impl::DrawText(CacheTexture::Ptr const& texture)
   pango_layout_context_changed(layout);
   pango_layout_get_pixel_size(layout, &result.width, &result.height);
 
-  if (result.width > parent_->GetMaximumWidth())
+  if (std::ceil(result.width * scale_) > parent_->GetMaximumWidth())
   {
-    pango_layout_set_width(layout, parent_->GetMaximumWidth() * PANGO_SCALE);
+    pango_layout_set_width(layout, parent_->GetMaximumWidth() * PANGO_SCALE / scale_);
     pango_layout_context_changed(layout);
   }
 

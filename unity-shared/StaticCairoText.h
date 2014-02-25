@@ -97,6 +97,9 @@ public:
   void GetTextExtents(int& width, int& height) const;
   nux::Size GetTextExtents() const;
 
+  void SetScale(double);
+  double GetScale() const;
+
   sigc::signal<void, StaticCairoText*> sigTextChanged;
   sigc::signal<void, StaticCairoText*> sigTextColorChanged;
   sigc::signal<void, StaticCairoText*> sigFontChanged;
