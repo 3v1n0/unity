@@ -41,14 +41,9 @@ std::string QuicklistMenuItemCheckmark::GetName() const
   return "QuicklistMenuItemCheckmark";
 }
 
-void QuicklistMenuItemCheckmark::UpdateTexture()
+void QuicklistMenuItemCheckmark::UpdateTexture(nux::CairoGraphics& cairoGraphics, double width, double height)
 {
-  int width = GetBaseWidth();
-  int height = GetBaseHeight();
-
-  nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  std::shared_ptr<cairo_t> cairo_context(cairoGraphics.GetContext(), cairo_destroy);
-  cairo_t* cr = cairo_context.get();
+  cairo_t* cr = cairoGraphics.GetInternalContext();
 
   // draw normal, unchecked version
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);

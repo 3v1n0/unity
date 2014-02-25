@@ -29,8 +29,8 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(glib::Object<DbusmenuMenu
   , _color(1.0f, 1.0f, 1.0f, 0.5f)
   , _premultiplied_color(0.5f, 0.5f, 0.5f, 0.5f)
 {
-  SetMinimumHeight(7);
-  SetBaseSize(64, 7);
+  SetMinimumHeight(std::ceil(7 * _scale));
+  SetBaseSize(std::ceil(64 * _scale), std::ceil(7 * _scale));
 }
 
 std::string QuicklistMenuItemSeparator::GetName() const
@@ -41,6 +41,13 @@ std::string QuicklistMenuItemSeparator::GetName() const
 bool QuicklistMenuItemSeparator::GetSelectable()
 {
   return false;
+}
+
+void QuicklistMenuItemSeparator::SetScale(double scale)
+{
+  QuicklistMenuItem::SetScale(scale);
+  SetMinimumHeight(std::ceil(7 * scale));
+  SetBaseSize(std::ceil(64 * scale), std::ceil(7 * scale));
 }
 
 void QuicklistMenuItemSeparator::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
@@ -67,22 +74,17 @@ void QuicklistMenuItemSeparator::Draw(nux::GraphicsEngine& gfxContext, bool forc
   gfxContext.PopClippingRectangle();
 }
 
-void QuicklistMenuItemSeparator::UpdateTexture()
+void QuicklistMenuItemSeparator::UpdateTexture(nux::CairoGraphics& cairoGraphics, double width, double height)
 {
-  int width = GetBaseWidth();
-  int height = GetBaseHeight();
-
-  nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  std::shared_ptr<cairo_t> cairo_context(cairoGraphics.GetContext(), cairo_destroy);
-  cairo_t* cr = cairo_context.get();
+  cairo_t* cr = cairoGraphics.GetInternalContext();
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
   cairo_paint(cr);
   cairo_set_source_rgba(cr, _color.red, _color.green, _color.blue, _color.alpha);
   cairo_set_line_width(cr, 1.0f);
-  cairo_move_to(cr, 0.0f, 3.5f);
-  cairo_line_to(cr, width, 3.5f);
+  cairo_move_to(cr, 0.0f, height/2.0f);
+  cairo_line_to(cr, width, height/2.0f);
   cairo_stroke(cr);
 
   _normalTexture[0].Adopt(texture_from_cairo_graphics(cairoGraphics));

@@ -49,6 +49,8 @@ class QuicklistMenuItem : public nux::View, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(QuicklistMenuItem, nux::View);
 public:
+  typedef nux::ObjectPtr<QuicklistMenuItem> Ptr;
+
   QuicklistMenuItem(QuicklistMenuItemType type, glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
   virtual ~QuicklistMenuItem();
 
@@ -68,6 +70,9 @@ public:
   void SetMaxLabelWidth(int max_width);
   int GetMaxLabelWidth() const;
 
+  virtual void SetScale(double);
+  double GetScale() const;
+
   bool IsOverlayQuicklist() const;
 
   void Activate() const;
@@ -76,7 +81,7 @@ public:
   bool IsSelected() const;
 
   nux::Size const& GetTextExtents() const;
-  virtual void UpdateTexture() = 0;
+  void UpdateTexture();
   unsigned GetCairoSurfaceWidth() const;
 
   sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
@@ -117,9 +122,11 @@ protected:
 
   void PreLayoutManagement();
   long PostLayoutManagement(long layoutResult);
+
+  virtual void UpdateTexture(nux::CairoGraphics&, double width, double height) = 0;
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
-  void DrawText(nux::CairoGraphics& cairo, int width, int height, nux::Color const& color);
-  void DrawPrelight(nux::CairoGraphics& cairo, int width, int height, nux::Color const& color);
+  void DrawText(nux::CairoGraphics& cairo, double width, double height, nux::Color const& color);
+  void DrawPrelight(nux::CairoGraphics& cairo, double width, double height, nux::Color const& color);
 
   nux::ObjectPtr<nux::BaseTexture> _normalTexture[2];
   nux::ObjectPtr<nux::BaseTexture> _prelightTexture[2];
@@ -129,6 +136,7 @@ protected:
   bool _prelight;
   int _pre_layout_width;
   int _pre_layout_height;
+  double _scale;
   nux::Size _text_extents;
   std::string _text;
 };

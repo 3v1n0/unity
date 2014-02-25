@@ -198,15 +198,21 @@ void QuicklistMenuItem::RecvMouseLeave(int x, int y, unsigned long button_flags,
   sigMouseLeave.emit(this);
 }
 
+void QuicklistMenuItem::UpdateTexture()
+{
+  auto const& geo = GetGeometry();
+  nux::CairoGraphics cairo(CAIRO_FORMAT_ARGB32, geo.width * _scale, geo.height * _scale);
+  cairo_surface_set_device_scale(cairo.GetSurface(), _scale, _scale);
+  UpdateTexture(cairo, geo.width / _scale, geo.height / _scale);
+}
+
 void QuicklistMenuItem::PreLayoutManagement()
 {
   _pre_layout_width = GetBaseWidth();
   _pre_layout_height = GetBaseHeight();
 
   if (!_normalTexture[0])
-  {
     UpdateTexture();
-  }
 
   View::PreLayoutManagement();
 }
@@ -277,7 +283,7 @@ nux::Size const& QuicklistMenuItem::GetTextExtents() const
   return _text_extents;
 }
 
-void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, int width, int height, nux::Color const& color)
+void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, double width, double height, nux::Color const& color)
 {
   if (_text.empty())
     return;
@@ -288,8 +294,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, int width, int heigh
   glib::String font_name;
   g_object_get(settings, "gtk-font-name", &font_name, nullptr);
 
-  std::shared_ptr<cairo_t> cairo_context(cairo.GetContext(), cairo_destroy);
-  cairo_t* cr = cairo_context.get();
+  cairo_t* cr = cairo.GetInternalContext();
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr, color.red, color.blue, color.green, color.alpha);
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
@@ -337,13 +342,13 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, int width, int heigh
   _text_extents.width = text_width + ITEM_INDENT_ABS + 3 * ITEM_MARGIN;
   _text_extents.height = text_height + 2 * ITEM_MARGIN;
 
-  SetMinimumSize(_text_extents.width, _text_extents.height);
+  SetMinimumSize(_text_extents.width * _scale, _text_extents.height * _scale);
 
   cairo_move_to(cr, 2 * ITEM_MARGIN + ITEM_INDENT_ABS, static_cast<float>(height - text_height) / 2.0f);
   pango_cairo_show_layout(cr, layout);
 }
 
-void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics& cairo, int width, int height, nux::Color const& color)
+void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics& cairo, double width, double height, nux::Color const& color)
 {
   std::shared_ptr<cairo_t> cairo_context(cairo.GetContext(), cairo_destroy);
   cairo_t* cr = cairo_context.get();
@@ -414,7 +419,7 @@ int QuicklistMenuItem::GetMaxLabelWidth() const
   if (!_menu_item)
     return -1;
 
-  return dbusmenu_menuitem_property_get_int(_menu_item, MAXIMUM_LABEL_WIDTH_PROPERTY);
+  return std::ceil(dbusmenu_menuitem_property_get_int(_menu_item, MAXIMUM_LABEL_WIDTH_PROPERTY) * _scale);
 }
 
 bool QuicklistMenuItem::IsOverlayQuicklist() const
@@ -432,6 +437,21 @@ unsigned QuicklistMenuItem::GetCairoSurfaceWidth() const
     return 0;
 
   return _normalTexture[0]->GetWidth();
+}
+
+double QuicklistMenuItem::GetScale() const
+{
+  return _scale;
+}
+
+void QuicklistMenuItem::SetScale(double scale)
+{
+  if (scale == _scale)
+    return;
+
+  _scale = scale;
+  UpdateTexture();
+  QueueDraw();
 }
 
 // Introspection
