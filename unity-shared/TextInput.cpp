@@ -203,7 +203,7 @@ void TextInput::UpdateBackground(bool force)
   last_height_ = geo.height;
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, last_width_, last_height_);
-  cairo_t* cr = cairo_graphics.GetContext();
+  cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
@@ -219,7 +219,6 @@ void TextInput::UpdateBackground(bool force)
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
   cairo_stroke(cr);
 
-  cairo_destroy(cr);
   nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
 
   nux::TexCoordXForm texxform;
