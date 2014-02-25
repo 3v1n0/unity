@@ -19,6 +19,7 @@
  */
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GTKWrapper.h>
 
@@ -34,11 +35,10 @@
 
 namespace unity
 {
-
 namespace
 {
+DECLARE_LOGGER(logger, "unity.panel.indicator.entry");
 const RawPixel DEFAULT_SPACING = 3_em;
-
 const int SCALED_IMAGE_Y = 1;
 }
 
@@ -51,9 +51,8 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , spacing_(DEFAULT_SPACING)
   , left_padding_(padding < 0 ? 0 : padding)
   , right_padding_(left_padding_)
-  , monitor_(0)
   , type_(type)
-  , entry_texture_(nullptr)
+  , monitor_(0)
   , opacity_(1.0f)
   , draw_active_(false)
   , overlay_showing_(false)
@@ -115,7 +114,7 @@ void PanelIndicatorEntryView::ShowMenu(int button)
     wm.TerminateScale();
 
   auto const& abs_geo = GetAbsoluteGeometry();
-  proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().PanelHeight(monitor_), button);
+  proxy_->ShowMenu(abs_geo.x, abs_geo.y + abs_geo.height, button);
 }
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
@@ -447,10 +446,11 @@ void PanelIndicatorEntryView::Refresh()
 
   std::string label = GetLabel();
   glib::Object<GdkPixbuf> const& pixbuf = MakePixbuf();
+  auto& panel_style = panel::Style::Instance();
 
   unsigned int width = 0;
   unsigned int icon_width = 0;
-  unsigned int height = panel::Style::Instance().PanelHeight(monitor_);
+  unsigned int height = panel_style.PanelHeight(monitor_);
 
   // First lets figure out our size
   if (pixbuf && IsIconVisible())
@@ -461,65 +461,42 @@ void PanelIndicatorEntryView::Refresh()
 
   if (!label.empty() && IsLabelVisible())
   {
-    using namespace panel;
-    PangoContext* cxt;
     PangoAttrList* attrs = nullptr;
-    PangoRectangle log_rect;
-    GdkScreen* screen = gdk_screen_get_default();
-    PangoFontDescription* desc = nullptr;
-    PanelItem panel_item = (type_ == MENU) ? PanelItem::MENU : PanelItem::INDICATOR;
-
-    Style& panel_style = Style::Instance();
-    std::string const& font_description = panel_style.GetFontDescription(panel_item);
-    int dpi = panel_style.GetTextDPI();
+    auto panel_item = (type_ == MENU) ? panel::PanelItem::MENU : panel::PanelItem::INDICATOR;
+    std::string const& font = panel_style.GetFontDescription(panel_item);
 
     if (proxy_->show_now())
     {
       if (!pango_parse_markup(label.c_str(), -1, '_', &attrs, nullptr, nullptr, nullptr))
       {
-        g_debug("pango_parse_markup failed");
+        LOG_WARN(logger) << "Pango markup parsing failed";
       }
     }
 
-    desc = pango_font_description_from_string(font_description.c_str());
-    pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
-
-    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 1, 1);
-    cr = cairo_graphics.GetInternalContext();
-
-    layout = pango_cairo_create_layout(cr);
-    if (attrs)
-    {
-      pango_layout_set_attributes(layout, attrs);
-      pango_attr_list_unref(attrs);
-    }
-
-    pango_layout_set_font_description(layout, desc);
+    glib::Object<PangoContext> context(gdk_pango_context_get_for_screen(gdk_screen_get_default()));
+    std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
+    pango_context_set_font_description(context, desc.get());
+    pango_context_set_language(context, gtk_get_default_language());
 
     label.erase(std::remove(label.begin(), label.end(), '_'), label.end());
+    layout = pango_layout_new(context);
+    pango_layout_set_height(layout, -1); //avoid wrap lines
     pango_layout_set_text(layout, label.c_str(), -1);
+    pango_layout_set_attributes(layout, attrs);
+    pango_attr_list_unref(attrs);
 
-    cxt = pango_layout_get_context(layout);
-    pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-    pango_cairo_context_set_resolution(cxt, dpi / static_cast<float>(PANGO_SCALE));
-    pango_layout_context_changed(layout);
-
-    pango_layout_get_extents(layout, nullptr, &log_rect);
-    unsigned int text_width = log_rect.width / PANGO_SCALE;
+    nux::Size extents;
+    pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
 
     if (icon_width)
       width += spacing_.CP(cv_);
-    width += text_width;
-
-    pango_font_description_free(desc);
+    width += extents.width;
   }
 
   if (width)
     width += left_padding_.CP(cv_) + right_padding_.CP(cv_);
 
-  SetMinimumWidth(width);
-  SetMaximumWidth(width);
-
+  SetMinMaxSize(width, height);
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
   cr = cg.GetInternalContext();
   cairo_set_line_width(cr, 1);
@@ -583,8 +560,7 @@ void PanelIndicatorEntryView::OverlayHidden()
 void PanelIndicatorEntryView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
-
-  cv_ = unity::Settings::Instance().em(monitor);
+  cv_ = Settings::Instance().em(monitor);
 }
 
 void PanelIndicatorEntryView::SetOpacity(double opacity)

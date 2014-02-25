@@ -114,8 +114,6 @@ protected:
   RawPixel left_padding_;
   RawPixel right_padding_;
 
-  int monitor_;
-
 private:
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
   void OnMouseUp(int x, int y, long button_flags, long key_flags);
@@ -132,6 +130,7 @@ private:
   IndicatorEntryType type_;
   nux::ObjectPtr<nux::BaseTexture> entry_texture_;
   nux::Geometry cached_geo_;
+  int monitor_;
   double opacity_;
   bool draw_active_;
   bool overlay_showing_;
