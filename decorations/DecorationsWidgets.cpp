@@ -387,10 +387,10 @@ void Layout::Remove(Item::Ptr const& item)
 
 CompRect Layout::ContentGeometry() const
 {
-  int left_padding = (this->left_padding() * scale());
-  int right_padding = (this->right_padding() * scale());
-  int top_padding = (this->top_padding() * scale());
-  int bottom_padding = (this->bottom_padding() * scale());
+  int left_padding = std::round(this->left_padding() * scale());
+  int right_padding = std::round(this->right_padding() * scale());
+  int top_padding = std::round(this->top_padding() * scale());
+  int bottom_padding = std::round(this->bottom_padding() * scale());
 
   return CompRect(rect_.x() + min(left_padding, rect_.width()),
                   rect_.y() + min(top_padding, rect_.height()),
@@ -401,11 +401,11 @@ CompRect Layout::ContentGeometry() const
 void Layout::DoRelayout()
 {
   int loop = 0;
-  int inner_padding = (this->inner_padding() * scale());
-  int left_padding = (this->left_padding() * scale());
-  int right_padding = (this->right_padding() * scale());
-  int top_padding = (this->top_padding() * scale());
-  int bottom_padding = (this->bottom_padding() * scale());
+  int inner_padding = std::round(this->inner_padding() * scale());
+  int left_padding = std::round(this->left_padding() * scale());
+  int right_padding = std::round(this->right_padding() * scale());
+  int top_padding = std::round(this->top_padding() * scale());
+  int bottom_padding = std::round(this->bottom_padding() * scale());
 
   nux::Size available_space(clamp_size(max_.width - left_padding - right_padding),
                             clamp_size(max_.height - top_padding - bottom_padding));

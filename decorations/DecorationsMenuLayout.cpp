@@ -186,8 +186,12 @@ void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
 
 void MenuLayout::DoRelayout()
 {
+  int inner_padding = std::round(this->inner_padding() * scale());
+  int left_padding = std::round(this->left_padding() * scale());
+  int right_padding = std::round(this->right_padding() * scale());
+
   int dropdown_width = dropdown_->GetNaturalWidth();
-  int accumolated_width = dropdown_width + left_padding() + right_padding() - inner_padding();
+  int accumolated_width = dropdown_width + left_padding + right_padding - inner_padding;
   int max_width = max_.width;
   std::list<MenuEntry::Ptr> to_hide;
 
@@ -196,7 +200,7 @@ void MenuLayout::DoRelayout()
     if (!item->visible() || item == dropdown_)
       continue;
 
-    accumolated_width += item->GetNaturalWidth() + inner_padding();
+    accumolated_width += item->GetNaturalWidth() + inner_padding;
 
     if (accumolated_width > max_width)
       to_hide.push_front(std::static_pointer_cast<MenuEntry>(item));
