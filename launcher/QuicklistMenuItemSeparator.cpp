@@ -19,18 +19,24 @@
  */
 
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/RawPixel.h"
 #include "QuicklistMenuItemSeparator.h"
 
 namespace unity
 {
+namespace
+{
+const RawPixel WIDTH = 64_em;
+const RawPixel HEIGHT = 7_em;
+}
 
 QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_DECL)
   : QuicklistMenuItem(QuicklistMenuItemType::SEPARATOR, item, NUX_FILE_LINE_PARAM)
   , _color(1.0f, 1.0f, 1.0f, 0.5f)
   , _premultiplied_color(0.5f, 0.5f, 0.5f, 0.5f)
 {
-  SetMinimumHeight(std::ceil(7 * _scale));
-  SetBaseSize(std::ceil(64 * _scale), std::ceil(7 * _scale));
+  SetMinimumWidth(WIDTH.CP(_scale));
+  SetMinimumHeight(HEIGHT.CP(_scale));
 }
 
 std::string QuicklistMenuItemSeparator::GetName() const
@@ -46,8 +52,8 @@ bool QuicklistMenuItemSeparator::GetSelectable()
 void QuicklistMenuItemSeparator::SetScale(double scale)
 {
   QuicklistMenuItem::SetScale(scale);
-  SetMinimumHeight(std::ceil(7 * scale));
-  SetBaseSize(std::ceil(64 * scale), std::ceil(7 * scale));
+  SetMinimumWidth(WIDTH.CP(scale));
+  SetMinimumHeight(HEIGHT.CP(scale));
 }
 
 void QuicklistMenuItemSeparator::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
