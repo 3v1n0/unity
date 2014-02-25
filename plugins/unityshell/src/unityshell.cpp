@@ -3630,11 +3630,8 @@ void UnityScreen::initLauncher()
     int monitor = WindowManager::Default().MonitorGeometryIn(geo);
 
     int launcher_width = w - 1;
-    //hud_controller_->SetLauncherWidth(launcher_width, monitor);
-    //dash_controller_->SetLauncherWidth(launcher_width, monitor);
     unity::Settings::Instance().SetLauncherWidth(launcher_width, monitor);
-    //panel_controller_->launcher_width = launcher_width;
-    //shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(monitor));
+    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(monitor));
 
     CompOption::Value v(launcher_width);
     screen->setOptionForPlugin("expo", "x_offset", v);
