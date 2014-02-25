@@ -46,7 +46,6 @@ class QuicklistView : public CairoBaseWindow, public debug::Introspectable
   NUX_DECLARE_OBJECT_TYPE(QuicklistView, unity::CairoBaseWindow);
 public:
   QuicklistView(int monitor = 0);
-  ~QuicklistView();
 
   void SetText(std::string const& text);
 
@@ -67,7 +66,7 @@ public:
   QuicklistMenuItem* GetNthItems(int index);
   QuicklistMenuItemType GetNthType(int index);
   int GetItemIndex(QuicklistMenuItem* item);
-  std::list<QuicklistMenuItem*> GetChildren();
+  std::list<QuicklistMenuItem::Ptr> GetChildren();
   void SelectFirstItem();
 
   void TestMenuItems(DbusmenuMenuitem* root);
@@ -171,13 +170,10 @@ private:
 
   bool _cairo_text_has_changed;
   void UpdateTexture();
-  std::list<QuicklistMenuItem*> _item_list;
+  std::list<QuicklistMenuItem::Ptr> _item_list;
 
   // used by keyboard/a11y-navigation
   int _current_item_index;
-
-  // list of introspectable children, used to return children in the correct order:
-  IntrospectableList _introspectable_children;
 };
 
 } // NAMESPACE
