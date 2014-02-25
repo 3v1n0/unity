@@ -785,26 +785,28 @@ void PanelMenuView::UpdateTitleTexture(nux::Geometry const& geo, std::string con
   auto const& style = decoration::Style::Get();
   auto text_size = style->TitleNaturalSize(label);
   auto state = WidgetState::NORMAL;
+  float dpi_scale = Settings::Instance().em(monitor_)->DPIScale();
 
   if (integrated_menus_ && !is_desktop_focused_ && !WindowManager::Default().IsScaleActive())
   {
-    title_geo_.x = geo.x + window_buttons_->GetBaseWidth() + style->TitleIndent();
+    title_geo_.x = geo.x + window_buttons_->GetBaseWidth() + (style->TitleIndent() * dpi_scale);
 
     if (!window_buttons_->focused())
       state = WidgetState::BACKDROP;
   }
   else
   {
-    title_geo_.x = geo.x + MAIN_LEFT_PADDING + TITLE_PADDING;
+    title_geo_.x = geo.x + (MAIN_LEFT_PADDING + TITLE_PADDING) * dpi_scale;
   }
 
-  title_geo_.y = geo.y + (geo.height - text_size.height) / 2;
-  title_geo_.width = std::min(text_size.width, geo.width - title_geo_.x);
-  title_geo_.height = text_size.height;
+  title_geo_.y = geo.y + (geo.height - (text_size.height * dpi_scale)) / 2;
+  title_geo_.width = std::min<int>(std::ceil(text_size.width * dpi_scale), geo.width - title_geo_.x);
+  title_geo_.height = std::ceil(text_size.height * dpi_scale);
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, title_geo_.width, title_geo_.height);
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), dpi_scale, dpi_scale);
   cairo_t* cr = cairo_graphics.GetInternalContext();
-  style->DrawTitle(label, state, cr, title_geo_.width, title_geo_.height);
+  style->DrawTitle(label, state, cr, title_geo_.width / dpi_scale, title_geo_.height / dpi_scale);
   title_texture_ = texture_ptr_from_cairo_graphics(cairo_graphics);
 }
 
