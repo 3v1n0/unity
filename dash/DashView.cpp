@@ -538,7 +538,7 @@ void DashView::SetupViews()
   search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding(), 0);
   content_layout_->AddLayout(search_bar_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  search_bar_ = new SearchBar();
+  search_bar_ = new SearchBar(true);
   AddChild(search_bar_);
   search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
   search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
