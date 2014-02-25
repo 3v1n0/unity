@@ -468,7 +468,6 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       refine_geo.x = refine_x_pos;
       refine_geo.width = bg_refine_tex_->GetWidth();
-      refine_geo.height = bg_refine_tex_->GetHeight();
 
       if (!Settings::Instance().GetLowGfxMode())
       {
@@ -477,7 +476,6 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
         refine_geo.x += refine_geo.width;
         refine_geo.width = geo.width;
-        refine_geo.height = geo.height;
         nux::GetPainter().PushLayer(GfxContext, refine_geo, bg_refine_single_column_layer_.get());
         bgs++;
       }
