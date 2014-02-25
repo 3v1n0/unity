@@ -59,6 +59,7 @@ Tooltip::Tooltip(int monitor) :
   _vlayout->AddLayout(_top_space, 0);
 
   _tooltip_text = new StaticCairoText(TEXT(""), NUX_TRACKER_LOCATION);
+  _tooltip_text->SetScale(cv_->DPIScale());
   _tooltip_text->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetTextVerticalAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH.CP(cv_));
