@@ -65,7 +65,6 @@ public:
   BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
   BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state);
   std::string GetFontDescription(PanelItem item);
-  int GetTextDPI();
 
   int PanelHeight(int monitor = 0) const;
 

@@ -211,14 +211,6 @@ std::string Style::GetFontDescription(PanelItem item)
   return std::string();
 }
 
-int Style::GetTextDPI()
-{
-  int dpi = 0;
-  g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
-
-  return dpi;
-}
-
 } // namespace panel
 } // namespace unity
 
