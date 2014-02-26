@@ -20,6 +20,7 @@
 
 #include <glib.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/Variant.h>
 
 #include "DecorationStyle.h"
 #include "MultiMonitor.h"
@@ -150,7 +151,7 @@ public:
 
   float GetUIScaleFactor(int monitor = 0) const
   {
-    GVariant* dict;
+    glib::Variant dict;
     g_settings_get(ubuntu_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
 
     std::string monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
@@ -173,11 +174,13 @@ public:
   {
     int dpi = 96;
     int valid_monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+
     if (monitor >= 0 && monitor < valid_monitors)
     {
-      float new_dpi = (float)dpi * GetUIScaleFactor(monitor);
-      dpi = (int)new_dpi;
+      float new_dpi = static_cast<float>(dpi) * GetUIScaleFactor(monitor);
+      dpi = new_dpi;
     }
+
     return dpi;
   }
 
