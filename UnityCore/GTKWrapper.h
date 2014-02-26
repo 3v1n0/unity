@@ -29,13 +29,7 @@ namespace gtk
 
 #if GTK_CHECK_VERSION(3, 8, 0)
 
-class IconInfo : public glib::Object<GtkIconInfo>
-{
-public:
-  IconInfo(GtkIconInfo *info = nullptr)
-    : glib::Object<GtkIconInfo>(info)
-  {}
-};
+typedef glib::Object<GtkIconInfo> IconInfo;
 
 #else
 
