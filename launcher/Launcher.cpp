@@ -252,7 +252,7 @@ void Launcher::AddProperties(debug::IntrospectionData& introspection)
   .add("quicklist-open", hide_machine_.GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
   .add("hide-quirks", hide_machine_.DebugHideQuirks())
   .add("hover-quirks", hover_machine_.DebugHoverQuirks())
-  .add("icon-size", icon_size_)
+  .add("icon-size", icon_size_.CP(cv_))
   .add("shortcuts_shown", shortcuts_shown_)
   .add("tooltip-shown", active_tooltip_ != nullptr);
 }
@@ -1491,7 +1491,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
   icon_size_ = tile_size;
   icon_renderer_->SetTargetSize(icon_size_.CP(cv_), RawPixel(icon_size).CP(cv_), SPACE_BETWEEN_ICONS.CP(cv_));
-  AbstractLauncherIcon::icon_size = icon_size_.CP(cv_);
+  AbstractLauncherIcon::icon_size = icon_size_;
 
   nux::Geometry const& parent_geo = parent_->GetGeometry();
   Resize(nux::Point(parent_geo.x, parent_geo.y), parent_geo.height);

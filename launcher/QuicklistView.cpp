@@ -40,6 +40,7 @@
 
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/DecorationStyle.h"
 #include "unity-shared/UnitySettings.h"
 
 #include "unity-shared/UBusWrapper.h"
@@ -745,23 +746,23 @@ void QuicklistView::SelectFirstItem()
 }
 
 void ql_tint_dot_hl(cairo_t* cr,
+                    gfloat  scale,
                     gint    width,
                     gint    height,
                     gfloat  hl_x,
                     gfloat  hl_y,
                     gfloat  hl_size,
-                    gfloat* rgba_tint,
-                    gfloat* rgba_hl,
-                    gfloat* rgba_dot)
+                    nux::Color const& tint_color,
+                    nux::Color const& hl_color,
+                    nux::Color const& dot_color)
 {
-  cairo_surface_t* dots_surf    = NULL;
-  cairo_t*         dots_cr      = NULL;
   cairo_pattern_t* dots_pattern = NULL;
   cairo_pattern_t* hl_pattern   = NULL;
 
   // create context for dot-pattern
-  dots_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 4, 4);
-  dots_cr = cairo_create(dots_surf);
+  nux::CairoGraphics dots_surf(CAIRO_FORMAT_ARGB32, 4 * scale, 4 * scale);
+  cairo_surface_set_device_scale(dots_surf.GetSurface(), scale, scale);
+  cairo_t* dots_cr = dots_surf.GetInternalContext();
 
   // clear normal context
   cairo_scale(cr, 1.0f, 1.0f);
@@ -777,10 +778,10 @@ void ql_tint_dot_hl(cairo_t* cr,
 
   // fill path of normal context with tint
   cairo_set_source_rgba(cr,
-                        rgba_tint[0],
-                        rgba_tint[1],
-                        rgba_tint[2],
-                        rgba_tint[3]);
+                        tint_color.red,
+                        tint_color.green,
+                        tint_color.blue,
+                        tint_color.alpha);
   cairo_fill_preserve(cr);
 
   // create pattern in dot-context
@@ -789,15 +790,15 @@ void ql_tint_dot_hl(cairo_t* cr,
   cairo_scale(dots_cr, 1.0f, 1.0f);
   cairo_set_operator(dots_cr, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba(dots_cr,
-                        rgba_dot[0],
-                        rgba_dot[1],
-                        rgba_dot[2],
-                        rgba_dot[3]);
+                        dot_color.red,
+                        dot_color.green,
+                        dot_color.blue,
+                        dot_color.alpha);
   cairo_rectangle(dots_cr, 0.0f, 0.0f, 1.0f, 1.0f);
   cairo_fill(dots_cr);
   cairo_rectangle(dots_cr, 2.0f, 2.0f, 1.0f, 1.0f);
   cairo_fill(dots_cr);
-  dots_pattern = cairo_pattern_create_for_surface(dots_surf);
+  dots_pattern = cairo_pattern_create_for_surface(dots_surf.GetSurface());
 
   // fill path of normal context with dot-pattern
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
@@ -805,8 +806,6 @@ void ql_tint_dot_hl(cairo_t* cr,
   cairo_pattern_set_extend(dots_pattern, CAIRO_EXTEND_REPEAT);
   cairo_fill_preserve(cr);
   cairo_pattern_destroy(dots_pattern);
-  cairo_surface_destroy(dots_surf);
-  cairo_destroy(dots_cr);
 
   // draw highlight
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
@@ -818,10 +817,10 @@ void ql_tint_dot_hl(cairo_t* cr,
                                            hl_size);
   cairo_pattern_add_color_stop_rgba(hl_pattern,
                                     0.0f,
-                                    rgba_hl[0],
-                                    rgba_hl[1],
-                                    rgba_hl[2],
-                                    rgba_hl[3]);
+                                    hl_color.red,
+                                    hl_color.green,
+                                    hl_color.blue,
+                                    hl_color.alpha);
   cairo_pattern_add_color_stop_rgba(hl_pattern, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
   cairo_set_source(cr, hl_pattern);
   cairo_fill(cr);
@@ -831,17 +830,8 @@ void ql_tint_dot_hl(cairo_t* cr,
 void ql_setup(cairo_surface_t** surf,
               cairo_t**         cr,
               gboolean          outline,
-              gint              width,
-              gint              height,
               gboolean          negative)
 {
-//     // create context
-//     if (outline)
-//       *surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-//     else
-//       *surf = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
-//     *cr = cairo_create (*surf);
-
   // clear context
   cairo_scale(*cr, 1.0f, 1.0f);
   if (outline)
@@ -863,8 +853,8 @@ void ql_setup(cairo_surface_t** surf,
 void ql_compute_full_mask_path(cairo_t* cr,
                                gfloat   anchor_width,
                                gfloat   anchor_height,
-                               gint     width,
-                               gint     height,
+                               gfloat   width,
+                               gfloat   height,
                                gint     upper_size,
                                gfloat   radius,
                                guint    pad)
@@ -983,7 +973,7 @@ void ql_compute_mask(cairo_t* cr)
 
 void ql_compute_outline(cairo_t* cr,
                         gfloat   line_width,
-                        gfloat*  rgba_line,
+                        nux::Color const& line_color,
                         gfloat   size)
 {
   cairo_pattern_t* pattern = NULL;
@@ -995,25 +985,25 @@ void ql_compute_outline(cairo_t* cr,
 
   pattern = cairo_pattern_create_linear(x, y, size, y);
   cairo_pattern_add_color_stop_rgba(pattern, 0.0f,
-                                    rgba_line[0],
-                                    rgba_line[1],
-                                    rgba_line[2],
-                                    rgba_line[3]);
+                                    line_color.red,
+                                    line_color.green,
+                                    line_color.blue,
+                                    line_color.alpha);
   cairo_pattern_add_color_stop_rgba(pattern, offset,
-                                    rgba_line[0],
-                                    rgba_line[1],
-                                    rgba_line[2],
-                                    rgba_line[3]);
+                                    line_color.red,
+                                    line_color.green,
+                                    line_color.blue,
+                                    line_color.alpha);
   cairo_pattern_add_color_stop_rgba(pattern, 1.1f * offset,
-                                    rgba_line[0] * 0.65f,
-                                    rgba_line[1] * 0.65f,
-                                    rgba_line[2] * 0.65f,
-                                    rgba_line[3]);
+                                    line_color.red * 0.65f,
+                                    line_color.green * 0.65f,
+                                    line_color.blue * 0.65f,
+                                    line_color.alpha);
   cairo_pattern_add_color_stop_rgba(pattern, 1.0f,
-                                    rgba_line[0] * 0.65f,
-                                    rgba_line[1] * 0.65f,
-                                    rgba_line[2] * 0.65f,
-                                    rgba_line[3]);
+                                    line_color.red * 0.65f,
+                                    line_color.green * 0.65f,
+                                    line_color.blue * 0.65f,
+                                    line_color.alpha);
   cairo_set_source(cr, pattern);
   cairo_set_line_width(cr, line_width);
   cairo_stroke(cr);
@@ -1023,7 +1013,7 @@ void ql_compute_outline(cairo_t* cr,
 void ql_draw(cairo_t* cr,
              gboolean outline,
              gfloat   line_width,
-             gfloat*  rgba,
+             nux::Color const& color,
              gboolean negative,
              gboolean stroke)
 {
@@ -1034,7 +1024,7 @@ void ql_draw(cairo_t* cr,
   if (outline)
   {
     cairo_set_line_width(cr, line_width);
-    cairo_set_source_rgba(cr, rgba[0], rgba[1], rgba[2], rgba[3]);
+    cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
   }
   else
   {
@@ -1054,7 +1044,7 @@ void ql_draw(cairo_t* cr,
 void ql_finalize(cairo_t** cr,
                  gboolean  outline,
                  gfloat    line_width,
-                 gfloat*   rgba,
+                 nux::Color const& color,
                  gboolean  negative,
                  gboolean  stroke)
 {
@@ -1065,7 +1055,7 @@ void ql_finalize(cairo_t** cr,
   if (outline)
   {
     cairo_set_line_width(*cr, line_width);
-    cairo_set_source_rgba(*cr, rgba[0], rgba[1], rgba[2], rgba[3]);
+    cairo_set_source_rgba(*cr, color.red, color.green, color.blue, color.alpha);
   }
   else
   {
@@ -1086,19 +1076,19 @@ void
 ql_compute_full_outline_shadow(
   cairo_t* cr,
   cairo_surface_t* surf,
-  gint    width,
-  gint    height,
+  gfloat  width,
+  gfloat  height,
   gfloat  anchor_width,
   gfloat  anchor_height,
   gint    upper_size,
   gfloat  corner_radius,
   guint   blur_coeff,
-  gfloat* rgba_shadow,
+  nux::Color const& rgba_shadow,
   gfloat  line_width,
   gint    padding_size,
-  gfloat* rgba_line)
+  nux::Color const& rgba_line)
 {
-  ql_setup(&surf, &cr, TRUE, width, height, FALSE);
+  ql_setup(&surf, &cr, TRUE, FALSE);
   ql_compute_full_mask_path(cr,
                             anchor_width,
                             anchor_height,
@@ -1118,10 +1108,9 @@ ql_compute_full_outline_shadow(
 void ql_compute_full_mask(
   cairo_t* cr,
   cairo_surface_t* surf,
-  gint     width,
-  gint     height,
+  gfloat   width,
+  gfloat   height,
   gfloat   radius,
-  guint    shadow_radius,
   gfloat   anchor_width,
   gfloat   anchor_height,
   gint     upper_size,
@@ -1129,9 +1118,9 @@ void ql_compute_full_mask(
   gboolean outline,
   gfloat   line_width,
   gint     padding_size,
-  gfloat*  rgba)
+  nux::Color const&  rgba)
 {
-  ql_setup(&surf, &cr, outline, width, height, negative);
+  ql_setup(&surf, &cr, outline, negative);
   ql_compute_full_mask_path(cr,
                             anchor_width,
                             anchor_height,
@@ -1184,26 +1173,33 @@ void QuicklistView::UpdateTexture()
     }
   }
 
-  float blur_coef         = 6.0f;
+  auto const& deco_style = decoration::Style::Get();
+  float dpi_scale = cv_->DPIScale();
+  float blur_coef = std::round(deco_style->ActiveShadowRadius() * dpi_scale / 2.0f);
 
   nux::CairoGraphics cairo_bg(CAIRO_FORMAT_ARGB32, width, height);
   nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, width, height);
   nux::CairoGraphics cairo_outline(CAIRO_FORMAT_ARGB32, width, height);
 
-  cairo_t* cr_bg      = cairo_bg.GetContext();
-  cairo_t* cr_mask    = cairo_mask.GetContext();
-  cairo_t* cr_outline = cairo_outline.GetContext();
+  cairo_surface_set_device_scale(cairo_bg.GetSurface(), dpi_scale, dpi_scale);
+  cairo_surface_set_device_scale(cairo_mask.GetSurface(), dpi_scale, dpi_scale);
+  cairo_surface_set_device_scale(cairo_outline.GetSurface(), dpi_scale, dpi_scale);
 
-  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, HasBlurredBackground() ? 0.60f : 1.0f};
-  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.35f};
-  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.03f};
-  float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
-  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.40f};
-  float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
+  cairo_t* cr_bg      = cairo_bg.GetInternalContext();
+  cairo_t* cr_mask    = cairo_mask.GetInternalContext();
+  cairo_t* cr_outline = cairo_outline.GetInternalContext();
+
+  nux::Color tint_color(0.0f, 0.0f, 0.0f, HasBlurredBackground() ? 0.60f : 1.0f);
+  nux::Color hl_color(1.0f, 1.0f, 1.0f, 0.35f);
+  nux::Color dot_color(1.0f, 1.0f, 1.0f, 0.03f);
+  nux::Color shadow_color(deco_style->ActiveShadowColor());
+  nux::Color outline_color(1.0f, 1.0f, 1.0f, 0.40f);
+  nux::Color mask_color(1.0f, 1.0f, 1.0f, 1.00f);
 
   ql_tint_dot_hl(cr_bg,
-                 width,
-                 height,
+                 dpi_scale,
+                 width / dpi_scale,
+                 height / dpi_scale,
                  width / 2.0f,
                  0,
                  nux::Max<float>(width / 1.6f, height / 1.6f),
@@ -1215,37 +1211,32 @@ void QuicklistView::UpdateTexture()
   (
     cr_outline,
     cairo_outline.GetSurface(),
-    width,
-    height,
-    _anchor_width.CP(cv_),
-    _anchor_height.CP(cv_),
-    size_above_anchor.CP(cv_),
-    _corner_radius.CP(cv_),
+    width / dpi_scale,
+    height / dpi_scale,
+    _anchor_width,
+    _anchor_height,
+    size_above_anchor,
+    _corner_radius,
     blur_coef,
     shadow_color,
-    1.0f,
-    _padding.CP(cv_),
+    1.0f * dpi_scale,
+    _padding,
     outline_color);
 
   ql_compute_full_mask(
     cr_mask,
     cairo_mask.GetSurface(),
-    width,
-    height,
-    _corner_radius.CP(cv_),    // radius,
-    RawPixel(16).CP(cv_),      // shadow_radius,
-    _anchor_width.CP(cv_),     // anchor_width,
-    _anchor_height.CP(cv_),    // anchor_height,
-    size_above_anchor.CP(cv_), // upper_size,
+    width / dpi_scale,
+    height / dpi_scale,
+    _corner_radius,            // radius,
+    _anchor_width,             // anchor_width,
+    _anchor_height,            // anchor_height,
+    size_above_anchor,         // upper_size,
     true,                      // negative,
     false,                     // outline,
     1.0,                       // line_width,
-    _padding.CP(cv_),          // padding_size,
+    _padding,                  // padding_size,
     mask_color);
-
-  cairo_destroy(cr_bg);
-  cairo_destroy(cr_outline);
-  cairo_destroy(cr_mask);
 
   texture_bg_ = texture_ptr_from_cairo_graphics(cairo_bg);
   texture_mask_ = texture_ptr_from_cairo_graphics(cairo_mask);
