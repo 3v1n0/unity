@@ -745,6 +745,7 @@ void QuicklistView::SelectFirstItem()
 }
 
 void ql_tint_dot_hl(cairo_t* cr,
+                    gfloat  scale,
                     gint    width,
                     gint    height,
                     gfloat  hl_x,
@@ -754,14 +755,13 @@ void ql_tint_dot_hl(cairo_t* cr,
                     gfloat* rgba_hl,
                     gfloat* rgba_dot)
 {
-  cairo_surface_t* dots_surf    = NULL;
-  cairo_t*         dots_cr      = NULL;
   cairo_pattern_t* dots_pattern = NULL;
   cairo_pattern_t* hl_pattern   = NULL;
 
   // create context for dot-pattern
-  dots_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 4, 4);
-  dots_cr = cairo_create(dots_surf);
+  nux::CairoGraphics dots_surf(CAIRO_FORMAT_ARGB32, 4 * scale, 4 * scale);
+  cairo_surface_set_device_scale(dots_surf.GetSurface(), scale, scale);
+  cairo_t* dots_cr = dots_surf.GetInternalContext();
 
   // clear normal context
   cairo_scale(cr, 1.0f, 1.0f);
@@ -797,7 +797,7 @@ void ql_tint_dot_hl(cairo_t* cr,
   cairo_fill(dots_cr);
   cairo_rectangle(dots_cr, 2.0f, 2.0f, 1.0f, 1.0f);
   cairo_fill(dots_cr);
-  dots_pattern = cairo_pattern_create_for_surface(dots_surf);
+  dots_pattern = cairo_pattern_create_for_surface(dots_surf.GetSurface());
 
   // fill path of normal context with dot-pattern
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
@@ -805,8 +805,6 @@ void ql_tint_dot_hl(cairo_t* cr,
   cairo_pattern_set_extend(dots_pattern, CAIRO_EXTEND_REPEAT);
   cairo_fill_preserve(cr);
   cairo_pattern_destroy(dots_pattern);
-  cairo_surface_destroy(dots_surf);
-  cairo_destroy(dots_cr);
 
   // draw highlight
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
@@ -831,17 +829,10 @@ void ql_tint_dot_hl(cairo_t* cr,
 void ql_setup(cairo_surface_t** surf,
               cairo_t**         cr,
               gboolean          outline,
-              gint              width,
-              gint              height,
+              gfloat            width,
+              gfloat            height,
               gboolean          negative)
 {
-//     // create context
-//     if (outline)
-//       *surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-//     else
-//       *surf = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
-//     *cr = cairo_create (*surf);
-
   // clear context
   cairo_scale(*cr, 1.0f, 1.0f);
   if (outline)
@@ -863,8 +854,8 @@ void ql_setup(cairo_surface_t** surf,
 void ql_compute_full_mask_path(cairo_t* cr,
                                gfloat   anchor_width,
                                gfloat   anchor_height,
-                               gint     width,
-                               gint     height,
+                               gfloat   width,
+                               gfloat   height,
                                gint     upper_size,
                                gfloat   radius,
                                guint    pad)
@@ -1086,8 +1077,8 @@ void
 ql_compute_full_outline_shadow(
   cairo_t* cr,
   cairo_surface_t* surf,
-  gint    width,
-  gint    height,
+  gfloat  width,
+  gfloat  height,
   gfloat  anchor_width,
   gfloat  anchor_height,
   gint    upper_size,
@@ -1118,8 +1109,8 @@ ql_compute_full_outline_shadow(
 void ql_compute_full_mask(
   cairo_t* cr,
   cairo_surface_t* surf,
-  gint     width,
-  gint     height,
+  gfloat   width,
+  gfloat   height,
   gfloat   radius,
   guint    shadow_radius,
   gfloat   anchor_width,
@@ -1184,15 +1175,20 @@ void QuicklistView::UpdateTexture()
     }
   }
 
-  float blur_coef         = 6.0f;
+  float dpi_scale = cv_->DPIScale();
+  float blur_coef = std::round(6.0f * dpi_scale);
 
   nux::CairoGraphics cairo_bg(CAIRO_FORMAT_ARGB32, width, height);
   nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, width, height);
   nux::CairoGraphics cairo_outline(CAIRO_FORMAT_ARGB32, width, height);
 
-  cairo_t* cr_bg      = cairo_bg.GetContext();
-  cairo_t* cr_mask    = cairo_mask.GetContext();
-  cairo_t* cr_outline = cairo_outline.GetContext();
+  cairo_surface_set_device_scale(cairo_bg.GetSurface(), dpi_scale, dpi_scale);
+  cairo_surface_set_device_scale(cairo_mask.GetSurface(), dpi_scale, dpi_scale);
+  cairo_surface_set_device_scale(cairo_outline.GetSurface(), dpi_scale, dpi_scale);
+
+  cairo_t* cr_bg      = cairo_bg.GetInternalContext();
+  cairo_t* cr_mask    = cairo_mask.GetInternalContext();
+  cairo_t* cr_outline = cairo_outline.GetInternalContext();
 
   float   tint_color[4]    = {0.0f, 0.0f, 0.0f, HasBlurredBackground() ? 0.60f : 1.0f};
   float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.35f};
@@ -1202,8 +1198,9 @@ void QuicklistView::UpdateTexture()
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
 
   ql_tint_dot_hl(cr_bg,
-                 width,
-                 height,
+                 dpi_scale,
+                 width / dpi_scale,
+                 height / dpi_scale,
                  width / 2.0f,
                  0,
                  nux::Max<float>(width / 1.6f, height / 1.6f),
@@ -1215,37 +1212,33 @@ void QuicklistView::UpdateTexture()
   (
     cr_outline,
     cairo_outline.GetSurface(),
-    width,
-    height,
-    _anchor_width.CP(cv_),
-    _anchor_height.CP(cv_),
-    size_above_anchor.CP(cv_),
-    _corner_radius.CP(cv_),
+    width / dpi_scale,
+    height / dpi_scale,
+    _anchor_width,
+    _anchor_height,
+    size_above_anchor,
+    _corner_radius,
     blur_coef,
     shadow_color,
-    1.0f,
-    _padding.CP(cv_),
+    1.0f * dpi_scale,
+    _padding,
     outline_color);
 
   ql_compute_full_mask(
     cr_mask,
     cairo_mask.GetSurface(),
-    width,
-    height,
-    _corner_radius.CP(cv_),    // radius,
-    RawPixel(16).CP(cv_),      // shadow_radius,
-    _anchor_width.CP(cv_),     // anchor_width,
-    _anchor_height.CP(cv_),    // anchor_height,
-    size_above_anchor.CP(cv_), // upper_size,
+    width / dpi_scale,
+    height / dpi_scale,
+    _corner_radius,            // radius,
+    16,                        // shadow_radius,
+    _anchor_width,             // anchor_width,
+    _anchor_height,            // anchor_height,
+    size_above_anchor,         // upper_size,
     true,                      // negative,
     false,                     // outline,
     1.0,                       // line_width,
-    _padding.CP(cv_),          // padding_size,
+    _padding,                  // padding_size,
     mask_color);
-
-  cairo_destroy(cr_bg);
-  cairo_destroy(cr_outline);
-  cairo_destroy(cr_mask);
 
   texture_bg_ = texture_ptr_from_cairo_graphics(cairo_bg);
   texture_mask_ = texture_ptr_from_cairo_graphics(cairo_mask);
