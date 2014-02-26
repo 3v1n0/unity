@@ -17,6 +17,7 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
+#include <cmath>
 #include "RawPixel.h"
 
 namespace unity
@@ -36,19 +37,19 @@ RawPixel::RawPixel(double raw_pixel)
   : raw_pixel_(raw_pixel)
 {}
 
-double RawPixel::CP(EMConverter::Ptr const& converter) const
+int RawPixel::CP(EMConverter::Ptr const& converter) const
 {
-  return converter->CP(raw_pixel_);
+  return std::round(converter->CP(raw_pixel_));
 }
 
-double RawPixel::CP(double scale) const
+int RawPixel::CP(double scale) const
 {
-  return raw_pixel_ * scale;
+  return std::round(raw_pixel_ * scale);
 }
 
-RawPixel::operator double() const
+RawPixel::operator int() const
 {
-  return raw_pixel_;
+  return std::round(raw_pixel_);
 }
 
 } // namesapce unity

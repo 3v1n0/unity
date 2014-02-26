@@ -30,10 +30,10 @@ class RawPixel
 public:
   RawPixel(double raw_pixel);
 
-  double CP(EMConverter::Ptr const&) const;
-  double CP(double scale) const;
+  int CP(EMConverter::Ptr const&) const;
+  int CP(double scale) const;
 
-  operator double() const;
+  operator int() const;
 
 private:
   double raw_pixel_;
