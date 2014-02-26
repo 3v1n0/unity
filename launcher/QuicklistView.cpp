@@ -1176,8 +1176,9 @@ void QuicklistView::UpdateTexture()
     }
   }
 
+  auto const& deco_style = decoration::Style::Get();
   float dpi_scale = cv_->DPIScale();
-  float blur_coef = std::round(6.0f * dpi_scale);
+  float blur_coef = std::round(deco_style->ActiveShadowRadius() * dpi_scale / 2.0f);
 
   nux::CairoGraphics cairo_bg(CAIRO_FORMAT_ARGB32, width, height);
   nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, width, height);
@@ -1194,7 +1195,7 @@ void QuicklistView::UpdateTexture()
   nux::Color tint_color(0.0f, 0.0f, 0.0f, HasBlurredBackground() ? 0.60f : 1.0f);
   nux::Color hl_color(1.0f, 1.0f, 1.0f, 0.35f);
   nux::Color dot_color(1.0f, 1.0f, 1.0f, 0.03f);
-  nux::Color shadow_color(0.0f, 0.0f, 0.0f, 1.00f);
+  nux::Color shadow_color(deco_style->ActiveShadowColor());
   nux::Color outline_color(1.0f, 1.0f, 1.0f, 0.40f);
   nux::Color mask_color(1.0f, 1.0f, 1.0f, 1.00f);
 
