@@ -161,6 +161,9 @@ class DashRevealTests(DashTestCase):
         gedit = self.process_manager.start_app("Text Editor")
         self.keyboard.press_and_release('F11')
 
+        monitor = gedit.get_windows()[0].monitor
+        move_mouse_to_screen(monitor)
+
         self.keybinding("dash/reveal")
         self.addCleanup(self.unity.dash.ensure_hidden)
 

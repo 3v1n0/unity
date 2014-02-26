@@ -508,6 +508,10 @@ class HudBehaviorTests(HudTestsBase):
         """ The Hud must not open if a window is fullscreen. """
         gedit = self.process_manager.start_app("Text Editor")
         self.keyboard.press_and_release('F11')
+
+        monitor = gedit.get_windows()[0].monitor
+        move_mouse_to_screen(monitor)
+
         self.keybinding("hud/reveal")
         self.addCleanup(self.unity.hud.ensure_hidden)
 
