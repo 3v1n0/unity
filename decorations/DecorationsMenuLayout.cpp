@@ -186,9 +186,10 @@ void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
 
 void MenuLayout::DoRelayout()
 {
-  int inner_padding = std::round(this->inner_padding() * scale());
-  int left_padding = std::round(this->left_padding() * scale());
-  int right_padding = std::round(this->right_padding() * scale());
+  float scale = this->scale();
+  int inner_padding = this->inner_padding().CP(scale);
+  int left_padding = this->left_padding().CP(scale);
+  int right_padding = this->right_padding().CP(scale);
 
   int dropdown_width = dropdown_->GetNaturalWidth();
   int accumolated_width = dropdown_width + left_padding + right_padding - inner_padding;
