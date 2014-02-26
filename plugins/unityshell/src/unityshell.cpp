@@ -2853,9 +2853,12 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
-  if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window->type() == CompWindowTypeNormalMask)
+  auto window_state = window->state();
+  auto window_type = window->type();
+
+  if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window_type == CompWindowTypeNormalMask)
   {
-    if ((window->state() & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
+    if ((window_state & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
     {
       CompPoint const& viewport = window->defaultViewport();
       unsigned output = window->outputDevice();
@@ -2888,7 +2891,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     Window active_window = screen->activeWindow();
 
-    if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
+    if (G_UNLIKELY(window_type == CompWindowTypeDesktopMask))
     {
       uScreen->setPanelShadowMatrix(matrix);
 
@@ -2908,9 +2911,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
         uScreen->is_desktop_active_ = false;
 
-        if (!(window->state() & CompWindowStateMaximizedVertMask) &&
-            !(window->state() & CompWindowStateFullscreenMask) &&
-            !(window->type() & CompWindowTypeFullscreenMask))
+        if (!(window_state & CompWindowStateMaximizedVertMask) &&
+            !(window_state & CompWindowStateFullscreenMask) &&
+            !(window_type & CompWindowTypeFullscreenMask))
         {
           WindowManager& wm = WindowManager::Default();
           auto const& output = uScreen->screen->currentOutputDev();
