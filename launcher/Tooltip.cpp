@@ -472,7 +472,7 @@ void Tooltip::UpdateTexture()
   nux::Color tint_color(0.074f, 0.074f, 0.074f, 0.80f);
   nux::Color hl_color(1.0f, 1.0f, 1.0f, 0.8f);
   nux::Color dot_color(1.0f, 1.0f, 1.0f, 0.20f);
-  nux::Color shadow_color(0.0f, 0.0f, 0.0f, 1.00f);
+  nux::Color shadow_color(deco_style->ActiveShadowColor());
   nux::Color outline_color(1.0f, 1.0f, 1.0f, 0.15f);
   nux::Color mask_color(1.0f, 1.0f, 1.0f, 1.00f);
 
