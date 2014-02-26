@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2013-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -56,13 +56,18 @@ bool OverlayWindowButtons::IsVisibleOnMonitor(unsigned int monitor) const
 void OverlayWindowButtons::UpdateGeometry()
 {
   int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
+  int height  = panel::Style::Instance().PanelHeight(monitor);
   nux::Geometry const& geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
   SetX(geo.x + MAIN_LEFT_PADDING);
-  SetY(geo.y + MENUBAR_PADDING);
-  SetHeight(panel::Style::Instance().PanelHeight(monitor));
+  SetY(geo.y);
+  SetHeight(height);
 
   window_buttons_->monitor = monitor;
+
+  window_buttons_->SetMinimumHeight(height);
+  window_buttons_->SetMaximumHeight(height);
+  window_buttons_->UpdateDPIChanged();
 }
 
 void OverlayWindowButtons::Show()
