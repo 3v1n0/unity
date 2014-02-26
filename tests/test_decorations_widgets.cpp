@@ -509,10 +509,10 @@ TEST_F(TestDecorationLayout, ContentGeoWithPadding)
   layout->right_padding = random_positive_int();
   layout->bottom_padding = random_positive_int();
 
-  CompRect expected_geo(layout->Geometry().x() + layout->left_padding,
-                        layout->Geometry().y() + layout->top_padding,
-                        layout->Geometry().width() - layout->left_padding - layout->right_padding,
-                        layout->Geometry().height() - layout->top_padding - layout->bottom_padding);
+  CompRect expected_geo(layout->Geometry().x() + layout->left_padding(),
+                        layout->Geometry().y() + layout->top_padding(),
+                        layout->Geometry().width() - layout->left_padding() - layout->right_padding(),
+                        layout->Geometry().height() - layout->top_padding() - layout->bottom_padding());
   EXPECT_EQ(expected_geo, layout->ContentGeometry());
 }
 
