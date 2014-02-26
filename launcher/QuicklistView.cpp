@@ -830,8 +830,6 @@ void ql_tint_dot_hl(cairo_t* cr,
 void ql_setup(cairo_surface_t** surf,
               cairo_t**         cr,
               gboolean          outline,
-              gfloat            width,
-              gfloat            height,
               gboolean          negative)
 {
   // clear context
@@ -1090,7 +1088,7 @@ ql_compute_full_outline_shadow(
   gint    padding_size,
   nux::Color const& rgba_line)
 {
-  ql_setup(&surf, &cr, TRUE, width, height, FALSE);
+  ql_setup(&surf, &cr, TRUE, FALSE);
   ql_compute_full_mask_path(cr,
                             anchor_width,
                             anchor_height,
@@ -1113,7 +1111,6 @@ void ql_compute_full_mask(
   gfloat   width,
   gfloat   height,
   gfloat   radius,
-  guint    shadow_radius,
   gfloat   anchor_width,
   gfloat   anchor_height,
   gint     upper_size,
@@ -1123,7 +1120,7 @@ void ql_compute_full_mask(
   gint     padding_size,
   nux::Color const&  rgba)
 {
-  ql_setup(&surf, &cr, outline, width, height, negative);
+  ql_setup(&surf, &cr, outline, negative);
   ql_compute_full_mask_path(cr,
                             anchor_width,
                             anchor_height,
@@ -1232,7 +1229,6 @@ void QuicklistView::UpdateTexture()
     width / dpi_scale,
     height / dpi_scale,
     _corner_radius,            // radius,
-    16,                        // shadow_radius,
     _anchor_width,             // anchor_width,
     _anchor_height,            // anchor_height,
     size_above_anchor,         // upper_size,
