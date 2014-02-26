@@ -303,6 +303,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, double width, double
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
   pango_layout_set_font_description(layout, desc.get());
+  pango_layout_set_height(layout, -1);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 
   if (IsMarkupAccelEnabled())
@@ -351,8 +352,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, double width, double
 
 void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics& cairo, double width, double height, nux::Color const& color)
 {
-  std::shared_ptr<cairo_t> cairo_context(cairo.GetContext(), cairo_destroy);
-  cairo_t* cr = cairo_context.get();
+  cairo_t* cr = cairo.GetInternalContext();
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr, color.red, color.blue, color.green, color.alpha);
@@ -451,6 +451,7 @@ void QuicklistMenuItem::SetScale(double scale)
     return;
 
   _scale = scale;
+  InitializeText();
   UpdateTexture();
   QueueDraw();
 }
