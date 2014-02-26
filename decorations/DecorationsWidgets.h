@@ -26,6 +26,7 @@
 #include <UnityCore/UWeakPtr.h>
 #include "Introspectable.h"
 #include "CompizUtils.h"
+#include "RawPixel.h"
 
 namespace unity
 {
@@ -172,11 +173,11 @@ public:
 
   Layout();
 
-  nux::Property<int> inner_padding;
-  nux::Property<int> left_padding;
-  nux::Property<int> right_padding;
-  nux::Property<int> top_padding;
-  nux::Property<int> bottom_padding;
+  nux::Property<RawPixel> inner_padding;
+  nux::Property<RawPixel> left_padding;
+  nux::Property<RawPixel> right_padding;
+  nux::Property<RawPixel> top_padding;
+  nux::Property<RawPixel> bottom_padding;
 
   void Append(Item::Ptr const&);
   void Remove(Item::Ptr const&);
@@ -190,7 +191,7 @@ protected:
   void DoRelayout();
 
 private:
-  bool SetPadding(int& target, int new_value);
+  bool SetPadding(RawPixel& target, RawPixel const& new_value);
 };
 
 } // decoration namespace

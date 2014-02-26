@@ -17,6 +17,7 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
+#include <cmath>
 #include "RawPixel.h"
 
 namespace unity
@@ -32,19 +33,23 @@ RawPixel operator"" _em(unsigned long long pixel)
   return RawPixel(pixel);
 }
 
-RawPixel::RawPixel(float raw_pixel)
+RawPixel::RawPixel(double raw_pixel)
   : raw_pixel_(raw_pixel)
+{}
+
+int RawPixel::CP(EMConverter::Ptr const& converter) const
 {
+  return std::round(converter->CP(raw_pixel_));
 }
 
-float RawPixel::CP(EMConverter::Ptr const& converter) const
+int RawPixel::CP(double scale) const
 {
-  return converter->CP(raw_pixel_);
+  return std::round(raw_pixel_ * scale);
 }
 
-RawPixel::operator float() const
+RawPixel::operator int() const
 {
-  return raw_pixel_;
+  return std::round(raw_pixel_);
 }
 
 } // namesapce unity

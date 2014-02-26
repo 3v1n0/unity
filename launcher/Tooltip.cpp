@@ -25,6 +25,7 @@
 #include <unity-shared/CairoTexture.h>
 #include <unity-shared/RawPixel.h>
 #include <unity-shared/UnitySettings.h>
+#include "unity-shared/DecorationStyle.h"
 
 #include "Tooltip.h"
 
@@ -170,14 +171,14 @@ void Tooltip::RecvCairoTextChanged(StaticCairoText* cairo_text)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 void tint_dot_hl(cairo_t* cr,
-                 gint    width,
-                 gint    height,
+                 gfloat  width,
+                 gfloat  height,
                  gfloat  hl_x,
                  gfloat  hl_y,
                  gfloat  hl_size,
-                 gfloat* rgba_tint,
-                 gfloat* rgba_hl,
-                 gfloat* rgba_dot)
+                 nux::Color const& tint_color,
+                 nux::Color const& hl_color,
+                 nux::Color const& dot_color)
 {
   cairo_pattern_t* hl_pattern = NULL;
 
@@ -191,14 +192,14 @@ void tint_dot_hl(cairo_t* cr,
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
   // create path in normal context
-  cairo_rectangle(cr, 0.0f, 0.0f, (gdouble) width, (gdouble) height);
+  cairo_rectangle(cr, 0.0f, 0.0f, width, height);
 
   // fill path of normal context with tint
   cairo_set_source_rgba(cr,
-                        rgba_tint[0],
-                        rgba_tint[1],
-                        rgba_tint[2],
-                        rgba_tint[3]);
+                        tint_color.red,
+                        tint_color.green,
+                        tint_color.blue,
+                        tint_color.alpha);
   cairo_fill_preserve(cr);
 
   // draw glow
@@ -210,10 +211,10 @@ void tint_dot_hl(cairo_t* cr,
                                            hl_size);
   cairo_pattern_add_color_stop_rgba(hl_pattern,
                                     0.0f,
-                                    rgba_hl[0],
-                                    rgba_hl[1],
-                                    rgba_hl[2],
-                                    rgba_hl[3]);
+                                    hl_color.red,
+                                    hl_color.green,
+                                    hl_color.blue,
+                                    hl_color.alpha);
   cairo_pattern_add_color_stop_rgba(hl_pattern, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
   cairo_set_source(cr, hl_pattern);
   cairo_fill(cr);
@@ -223,8 +224,6 @@ void tint_dot_hl(cairo_t* cr,
 void _setup(cairo_surface_t** surf,
             cairo_t**         cr,
             gboolean          outline,
-            gint              width,
-            gint              height,
             gboolean          negative)
 {
   // clear context
@@ -248,8 +247,8 @@ void _setup(cairo_surface_t** surf,
 void _compute_full_mask_path(cairo_t* cr,
                              gfloat   anchor_width,
                              gfloat   anchor_height,
-                             gint     width,
-                             gint     height,
+                             gfloat   width,
+                             gfloat   height,
                              gint     upper_size,
                              gfloat   radius,
                              guint    pad)
@@ -306,14 +305,14 @@ void compute_mask(cairo_t* cr)
 
 void compute_outline(cairo_t* cr,
                      gfloat   line_width,
-                     gfloat*  rgba_line)
+                     nux::Color const& line_color)
 {
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr,
-                        rgba_line[0],
-                        rgba_line[1],
-                        rgba_line[2],
-                        rgba_line[3]);
+                        line_color.red,
+                        line_color.green,
+                        line_color.blue,
+                        line_color.alpha);
   cairo_set_line_width(cr, line_width);
   cairo_stroke(cr);
 }
@@ -321,7 +320,7 @@ void compute_outline(cairo_t* cr,
 void _draw(cairo_t* cr,
            gboolean outline,
            gfloat   line_width,
-           gfloat*  rgba,
+           nux::Color const& color,
            gboolean negative,
            gboolean stroke)
 {
@@ -332,7 +331,7 @@ void _draw(cairo_t* cr,
   if (outline)
   {
     cairo_set_line_width(cr, line_width);
-    cairo_set_source_rgba(cr, rgba[0], rgba[1], rgba[2], rgba[3]);
+    cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
   }
   else
   {
@@ -352,7 +351,7 @@ void _draw(cairo_t* cr,
 void _finalize(cairo_t** cr,
                gboolean  outline,
                gfloat    line_width,
-               gfloat*   rgba,
+               nux::Color const& color,
                gboolean  negative,
                gboolean  stroke)
 {
@@ -363,7 +362,7 @@ void _finalize(cairo_t** cr,
   if (outline)
   {
     cairo_set_line_width(*cr, line_width);
-    cairo_set_source_rgba(*cr, rgba[0], rgba[1], rgba[2], rgba[3]);
+    cairo_set_source_rgba(*cr, color.red, color.green, color.blue, color.alpha);
   }
   else
   {
@@ -384,19 +383,19 @@ void
 compute_full_outline_shadow(
   cairo_t* cr,
   cairo_surface_t* surf,
-  gint    width,
-  gint    height,
+  gfloat  width,
+  gfloat  height,
   gfloat  anchor_width,
   gfloat  anchor_height,
   gint    upper_size,
   gfloat  corner_radius,
   guint   blur_coeff,
-  gfloat* rgba_shadow,
+  nux::Color const& shadow_color,
   gfloat  line_width,
   gint    padding_size,
-  gfloat* rgba_line)
+  nux::Color const& line_color)
 {
-  _setup(&surf, &cr, TRUE, width, height, FALSE);
+  _setup(&surf, &cr, TRUE, FALSE);
   _compute_full_mask_path(cr,
                           anchor_width,
                           anchor_height,
@@ -406,20 +405,19 @@ compute_full_outline_shadow(
                           corner_radius,
                           padding_size);
 
-  _draw(cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
+  _draw(cr, TRUE, line_width, shadow_color, FALSE, FALSE);
   nux::CairoGraphics dummy(CAIRO_FORMAT_A1, 1, 1);
   dummy.BlurSurface(blur_coeff, surf);
   compute_mask(cr);
-  compute_outline(cr, line_width, rgba_line);
+  compute_outline(cr, line_width, line_color);
 }
 
 void compute_full_mask(
   cairo_t* cr,
   cairo_surface_t* surf,
-  gint     width,
-  gint     height,
+  gfloat   width,
+  gfloat   height,
   gfloat   radius,
-  guint    shadow_radius,
   gfloat   anchor_width,
   gfloat   anchor_height,
   gint     upper_size,
@@ -427,9 +425,9 @@ void compute_full_mask(
   gboolean outline,
   gfloat   line_width,
   gint     padding_size,
-  gfloat*  rgba)
+  nux::Color const& color)
 {
-  _setup(&surf, &cr, outline, width, height, negative);
+  _setup(&surf, &cr, outline, negative);
   _compute_full_mask_path(cr,
                           anchor_width,
                           anchor_height,
@@ -438,7 +436,7 @@ void compute_full_mask(
                           upper_size,
                           radius,
                           padding_size);
-  _finalize(&cr, outline, line_width, rgba, negative, outline);
+  _finalize(&cr, outline, line_width, color, negative, outline);
 }
 
 void Tooltip::UpdateTexture()
@@ -452,7 +450,9 @@ void Tooltip::UpdateTexture()
   int x = _anchorX - PADDING.CP(cv_);
   int y = _anchorY - height / 2;
 
-  float blur_coef = 6.0f;
+  auto const& deco_style = decoration::Style::Get();
+  float dpi_scale = cv_->DPIScale();
+  float blur_coef = std::round(deco_style->ActiveShadowRadius() * dpi_scale / 2.0f);
 
   SetBaseX(x);
   SetBaseY(y);
@@ -461,30 +461,32 @@ void Tooltip::UpdateTexture()
   nux::CairoGraphics cairo_mask(CAIRO_FORMAT_ARGB32, width, height);
   nux::CairoGraphics cairo_outline(CAIRO_FORMAT_ARGB32, width, height);
 
-  cairo_t* cr_bg      = cairo_bg.GetContext();
-  cairo_t* cr_mask    = cairo_mask.GetContext();
-  cairo_t* cr_outline = cairo_outline.GetContext();
+  cairo_surface_set_device_scale(cairo_bg.GetSurface(), dpi_scale, dpi_scale);
+  cairo_surface_set_device_scale(cairo_mask.GetSurface(), dpi_scale, dpi_scale);
+  cairo_surface_set_device_scale(cairo_outline.GetSurface(), dpi_scale, dpi_scale);
 
-  float   tint_color[4]    = {0.074f, 0.074f, 0.074f, 0.80f};
-  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.8f};
-  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.20f};
-  float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
-  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.15f};
-  float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
+  cairo_t* cr_bg      = cairo_bg.GetInternalContext();
+  cairo_t* cr_mask    = cairo_mask.GetInternalContext();
+  cairo_t* cr_outline = cairo_outline.GetInternalContext();
+
+  nux::Color tint_color(0.074f, 0.074f, 0.074f, 0.80f);
+  nux::Color hl_color(1.0f, 1.0f, 1.0f, 0.8f);
+  nux::Color dot_color(1.0f, 1.0f, 1.0f, 0.20f);
+  nux::Color shadow_color(deco_style->ActiveShadowColor());
+  nux::Color outline_color(1.0f, 1.0f, 1.0f, 0.15f);
+  nux::Color mask_color(1.0f, 1.0f, 1.0f, 1.00f);
 
   if (!HasBlurredBackground())
   {
     //If low gfx is detected then disable transparency because we're not bluring using our blur anymore.
-    const float alpha_value = 1.0f;
-
-    tint_color[3] = alpha_value;
-    hl_color[3] = alpha_value;
-    dot_color[3] = alpha_value;
+    tint_color.alpha = 1.0f;
+    hl_color.alpha = 1.0f;
+    dot_color.alpha = 1.0f;
   }
 
   tint_dot_hl(cr_bg,
-              width,
-              height,
+              width / dpi_scale,
+              height / dpi_scale,
               width / 2.0f,
               0,
               nux::Max<float>(width / 1.3f, height / 1.3f),
@@ -496,37 +498,32 @@ void Tooltip::UpdateTexture()
   (
     cr_outline,
     cairo_outline.GetSurface(),
-    width,
-    height,
-    ANCHOR_WIDTH.CP(cv_),
-    ANCHOR_HEIGHT.CP(cv_),
+    width / dpi_scale,
+    height / dpi_scale,
+    ANCHOR_WIDTH,
+    ANCHOR_HEIGHT,
     -1,
-    CORNER_RADIUS.CP(cv_),
+    CORNER_RADIUS,
     blur_coef,
     shadow_color,
     1.0f,
-    PADDING.CP(cv_),
+    PADDING,
     outline_color);
 
   compute_full_mask(
     cr_mask,
     cairo_mask.GetSurface(),
-    width,
-    height,
-    CORNER_RADIUS.CP(cv_), // radius,
-    RawPixel(16).CP(cv_),  // shadow_radius,
-    ANCHOR_WIDTH.CP(cv_),  // anchor_width,
-    ANCHOR_HEIGHT.CP(cv_), // anchor_height,
+    width / dpi_scale,
+    height / dpi_scale,
+    CORNER_RADIUS,         // radius,
+    ANCHOR_WIDTH,          // anchor_width,
+    ANCHOR_HEIGHT,         // anchor_height,
     -1,                    // upper_size,
     true,                  // negative,
     false,                 // outline,
     1.0,                   // line_width,
-    PADDING.CP(cv_),       // padding_size,
+    PADDING,               // padding_size,
     mask_color);
-
-  cairo_destroy(cr_bg);
-  cairo_destroy(cr_outline);
-  cairo_destroy(cr_mask);
 
   texture_bg_ = texture_ptr_from_cairo_graphics(cairo_bg);
   texture_mask_ = texture_ptr_from_cairo_graphics(cairo_mask);
