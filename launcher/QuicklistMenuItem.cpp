@@ -41,6 +41,7 @@ QuicklistMenuItem::QuicklistMenuItem(QuicklistMenuItemType type, glib::Object<Db
   , _menu_item(item)
   , _activate_timestamp(0)
   , _prelight(false)
+  , _scale(1.0f)
 {
   mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
