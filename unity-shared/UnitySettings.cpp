@@ -43,6 +43,8 @@ const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
 const std::string UI_SETTINGS = "com.ubuntu.user-interface";
+
+const double DEFAULT_DPI = 96.0f;
 }
 
 //
@@ -149,39 +151,21 @@ public:
     return font_size / 1024;
   }
 
-  float GetUIScaleFactor(int monitor = 0) const
+  int GetDPI(glib::Variant const& dict, int monitor) const
   {
-    glib::Variant dict;
-    g_settings_get(ubuntu_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+    auto* uscreen = UScreen::GetDefault();
 
-    std::string monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
+    if (monitor < 0 || monitor >= uscreen->GetPluggedMonitorsNumber())
+      return DEFAULT_DPI;
 
+    auto const& monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
+    double ui_scale = 1.0f;
     int value;
-    float ui_scale;
-    if (!g_variant_lookup (dict, monitor_name.c_str(), "i", &value))
-    {
-      ui_scale = 1.0;
-    }
-    else
-    {
-      ui_scale = (float)value / 8.0;
-    }
 
-    return ui_scale;
-  }
+    if (g_variant_lookup(dict, monitor_name.c_str(), "i", &value))
+      ui_scale = static_cast<double>(value)/8.0f;
 
-  int GetDPI(int monitor = 0) const
-  {
-    int dpi = 96;
-    int valid_monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
-
-    if (monitor >= 0 && monitor < valid_monitors)
-    {
-      float new_dpi = static_cast<float>(dpi) * GetUIScaleFactor(monitor);
-      dpi = new_dpi;
-    }
-
-    return dpi;
+    return (DEFAULT_DPI * ui_scale);
   }
 
   void UpdateFontSize()
@@ -194,9 +178,12 @@ public:
 
   void UpdateDPI()
   {
+    glib::Variant dict;
+    g_settings_get(ubuntu_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+
     for (unsigned i = 0; i < em_converters_.size(); ++i)
     {
-      int dpi = GetDPI(i);
+      int dpi = GetDPI(dict, i);
       em_converters_[i]->SetDPI(dpi);
     }
 
