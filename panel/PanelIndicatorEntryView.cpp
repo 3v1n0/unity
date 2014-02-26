@@ -192,44 +192,44 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
   }
 }
 
-glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
+glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 {
-  glib::Object<GdkPixbuf> pixbuf;
-  GtkIconTheme* theme = gtk_icon_theme_get_default();
-  int image_type = proxy_->image_type();
-  RawPixel size = (type_ != DROP_DOWN) ? 24_em : 10_em;
-
-  if (image_type == GTK_IMAGE_PIXBUF)
+  switch (proxy_->image_type())
   {
-    gsize len = 0;
-    guchar* decoded = g_base64_decode(proxy_->image_data().c_str(), &len);
+    case GTK_IMAGE_PIXBUF:
+    {
+      gsize len = 0;
+      auto* decoded = g_base64_decode(proxy_->image_data().c_str(), &len);
+      glib::Object<GInputStream> stream(g_memory_input_stream_new_from_data(decoded, len, nullptr));
+      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_stream(stream, nullptr, nullptr));
+      g_input_stream_close(stream, nullptr, nullptr);
+      g_free(decoded);
+      return pixbuf;
+    }
 
-    glib::Object<GInputStream> stream(g_memory_input_stream_new_from_data(decoded,
-                                                                          len,
-                                                                          nullptr));
+    case GTK_IMAGE_ICON_NAME:
+    case GTK_IMAGE_STOCK:
+    {
+      GtkIconTheme* theme = gtk_icon_theme_get_default();
+      auto flags = static_cast<GtkIconLookupFlags>(0);
+      glib::Object<GdkPixbuf> pixbuf(gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size, flags, nullptr));
+      return pixbuf;
+    }
 
-    pixbuf = gdk_pixbuf_new_from_stream(stream, nullptr, nullptr);
+    case GTK_IMAGE_GICON:
+    {
+      GtkIconTheme* theme = gtk_icon_theme_get_default();
+      auto flags = static_cast<GtkIconLookupFlags>(0);
+      glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
+      gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags));
 
-    g_free(decoded);
-    g_input_stream_close(stream, nullptr, nullptr);
+      if (info)
+        return glib::Object<GdkPixbuf>(gtk_icon_info_load_icon(info, nullptr));
+    }
+    break;
   }
-  else if (image_type == GTK_IMAGE_STOCK ||
-           image_type == GTK_IMAGE_ICON_NAME)
-  {
-    pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size.CP(cv_),
-                                      (GtkIconLookupFlags)0, nullptr);
-  }
-  else if (image_type == GTK_IMAGE_GICON)
-  {
-    glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
 
-    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size.CP(cv_),
-                                                      (GtkIconLookupFlags)0));
-    if (info)
-      pixbuf = gtk_icon_info_load_icon(info, nullptr);
-  }
-
-  return pixbuf;
+  return glib::Object<GdkPixbuf>();
 }
 
 void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width, unsigned int height)
@@ -256,7 +256,7 @@ void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width,
   gtk_style_context_restore(style_context);
 }
 
-void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, glib::Object<PangoLayout> const& layout)
+void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, bool icon_scalable, glib::Object<PangoLayout> const& layout)
 {
   int x = padding_;
 
@@ -290,6 +290,16 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
     int y = (height - gdk_pixbuf_get_height(pixbuf)) / 2;
 
+    if (icon_scalable)
+    {
+      double dpi_scale = cv_->DPIScale();
+      cairo_save(cr);
+      cairo_scale(cr, 1.0f/dpi_scale, 1.0f/dpi_scale);
+      y = (height - gdk_pixbuf_get_height(pixbuf) / dpi_scale) / 2;
+      x = padding_ * dpi_scale;
+      icon_width /= dpi_scale;
+    }
+
     if (overlay_showing_ && !IsActive())
     {
       /* Most of the images we get are straight pixbufs (annoyingly), so when
@@ -319,6 +329,12 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
     gtk_widget_path_free(widget_path);
     gtk_style_context_restore(style_context);
+
+    if (icon_scalable)
+    {
+      cairo_restore(cr);
+      x = padding_;
+    }
 
     x += icon_width + DEFAULT_SPACING;
   }
@@ -390,18 +406,28 @@ void PanelIndicatorEntryView::Refresh()
   cairo_t* cr;
 
   std::string label = GetLabel();
-  glib::Object<GdkPixbuf> const& pixbuf = MakePixbuf();
   auto& panel_style = panel::Style::Instance();
 
-  unsigned int width = 0;
-  unsigned int icon_width = 0;
   double dpi_scale = cv_->DPIScale();
-  unsigned int height = panel_style.PanelHeight(monitor_) / dpi_scale;
+  int width = 0;
+  int height = panel_style.PanelHeight(monitor_) / dpi_scale;
+  int icon_width = 0;
+
+  int icon_size = RawPixel((type_ != DROP_DOWN) ? 24 : 10).CP(dpi_scale);
+  glib::Object<GdkPixbuf> const& pixbuf = MakePixbuf(icon_size);
+  bool icon_scalable = false;
 
   // First lets figure out our size
   if (pixbuf && IsIconVisible())
   {
     width = gdk_pixbuf_get_width(pixbuf);
+
+    if (width == icon_size || height == gdk_pixbuf_get_height(pixbuf))
+    {
+      icon_scalable = true;
+      width /= dpi_scale;
+    }
+
     icon_width = width;
   }
 
@@ -452,7 +478,7 @@ void PanelIndicatorEntryView::Refresh()
   cairo_paint(cr);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  DrawEntryContent(cr, width, height, pixbuf, layout);
+  DrawEntryContent(cr, width, height, pixbuf, icon_scalable, layout);
 
   entry_texture_ = texture_ptr_from_cairo_graphics(cg);
   SetTexture(entry_texture_.GetPointer());
