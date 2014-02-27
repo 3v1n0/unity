@@ -3937,7 +3937,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         RenderDecoration(context, scale);
 
         // Draw window title
-        int text_x = padding.left + (close_texture ? close_texture->width() : 0);
+        int text_x = padding.left + (close_texture ? close_texture->width() : 0) / dpi_scale;
         RenderTitle(context, text_x, padding.top, (width - padding.right) / dpi_scale, height / dpi_scale, scale);
         decoration_selected_tex_ = context;
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
