@@ -145,6 +145,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , cv_(unity::Settings::Instance().em(monitor))
 {
   icon_renderer_->monitor = monitor();
+  icon_renderer_->scale = cv_->DPIScale();
   icon_renderer_->SetTargetSize(icon_size_.CP(cv_), DEFAULT_ICON_SIZE.CP(cv_), SPACE_BETWEEN_ICONS.CP(cv_));
 
   CaptureMouseDownAnyWhereElse(true);
@@ -1490,6 +1491,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   ui::IconRenderer::DestroyShortcutTextures();
 
   icon_size_ = tile_size;
+  icon_renderer_->scale = cv_->DPIScale();
   icon_renderer_->SetTargetSize(icon_size_.CP(cv_), RawPixel(icon_size).CP(cv_), SPACE_BETWEEN_ICONS.CP(cv_));
   AbstractLauncherIcon::icon_size = icon_size_;
 

@@ -146,6 +146,7 @@ public:
 
   nux::Property<PipRenderStyle> pip_style;
   nux::Property<int> monitor;
+  nux::Property<double> scale;
 
   // RenderArgs not const in case processor needs to modify positions to do a perspective correct.
   virtual void PreprocessIcons(std::list<RenderArg>& args, nux::Geometry const& target_window) = 0;
