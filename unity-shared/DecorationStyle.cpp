@@ -53,6 +53,7 @@ const int DEFAULT_TITLE_FADING_PIXELS = 35;
 const int DEFAULT_GLOW_SIZE = 10;
 const nux::Color DEFAULT_GLOW_COLOR(221, 72, 20);
 
+const std::array<std::string, 2> WBUTTON_EXTENSIONS = { "svg", "png" };
 const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
@@ -343,34 +344,39 @@ struct Style::Impl
   std::string WindowButtonFile(WindowButtonType type, WidgetState state) const
   {
     auto const& theme = parent_->theme();
-    auto filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)] + ".png";
-    glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
+    auto base_filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)];
 
-    // Look in home directory
     const char* home_dir = g_get_home_dir();
-    if (home_dir)
+    const char* gtk_prefix = g_getenv("GTK_DATA_PREFIX");
+    if (!gtk_prefix)
+      gtk_prefix = GTK_PREFIX;
+
+    for (auto const& extension : WBUTTON_EXTENSIONS)
     {
-      glib::String local_file(g_build_filename(home_dir, ".local", "share", "themes", subpath.Value(), nullptr));
+      auto filename = base_filename + '.' + extension;
+      glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
 
-      if (g_file_test(local_file, G_FILE_TEST_EXISTS))
-        return local_file.Str();
+      // Look in home directory
+      if (home_dir)
+      {
+        glib::String local_file(g_build_filename(home_dir, ".local", "share", "themes", subpath.Value(), nullptr));
 
-      glib::String home_file(g_build_filename(home_dir, ".themes", subpath.Value(), nullptr));
+        if (g_file_test(local_file, G_FILE_TEST_EXISTS))
+          return local_file.Str();
 
-      if (g_file_test(home_file, G_FILE_TEST_EXISTS))
-        return home_file.Str();
+        glib::String home_file(g_build_filename(home_dir, ".themes", subpath.Value(), nullptr));
+
+        if (g_file_test(home_file, G_FILE_TEST_EXISTS))
+          return home_file.Str();
+      }
+
+      glib::String path(g_build_filename(gtk_prefix, "share", "themes", subpath.Value(), nullptr));
+
+      if (g_file_test(path, G_FILE_TEST_EXISTS))
+        return path.Str();
     }
 
-    const char* var = g_getenv("GTK_DATA_PREFIX");
-    if (!var)
-      var = GTK_PREFIX;
-
-    glib::String path(g_build_filename(var, "share", "themes", subpath.Value(), nullptr));
-
-    if (g_file_test(path, G_FILE_TEST_EXISTS))
-      return path.Str();
-
-    LOG_WARN(logger) << "No Window button file for '"<< subpath.Str() << "'";
+    LOG_WARN(logger) << "No Window button file for '"<< base_filename << "'";
     return std::string();
   }
 
