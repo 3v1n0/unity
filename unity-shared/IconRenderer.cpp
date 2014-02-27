@@ -205,8 +205,6 @@ struct IconRenderer::TexturesPool
 
   nux::ObjectPtr<nux::BaseTexture> RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color);
 
-  BaseTexturePtr progress_bar_trough;
-  BaseTexturePtr progress_bar_fill;
   BaseTexturePtr pip_ltr;
   BaseTexturePtr large_pip_ltr;
   // BaseTexturePtr pip_rtl;
@@ -229,6 +227,8 @@ struct IconRenderer::TexturesPool
   BaseTexturePtr icon_glow[local::IconSize::SIZE];
   BaseTexturePtr icon_shadow[local::IconSize::SIZE];
   BaseTexturePtr icon_shine[local::IconSize::SIZE];
+  BaseTexturePtr progress_bar_trough[local::IconSize::SIZE];
+  BaseTexturePtr progress_bar_fill[local::IconSize::SIZE];
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
   nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
@@ -1059,12 +1059,13 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int height = texture->GetHeight();
 
   int progress_width =  icon_size;
-  int progress_height = textures_->progress_bar_trough->GetHeight();
+  int progress_height = icon_size;
 
   int fill_width = image_size - (icon_size - image_size);
-  int fill_height = textures_->progress_bar_fill->GetHeight();
+  int fill_height = std::round(textures_->progress_bar_fill[local::IconSize::SMALL]->GetHeight() * scale());
 
   int fill_offset = static_cast<float>(image_size) * fill_offset_ratio;
+  auto tex_size = icon_size > 100 ? local::IconSize::BIG : local::IconSize::SMALL;
 
   // We need to perform a barn doors effect to acheive the slide in and out
 
@@ -1097,10 +1098,10 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge, 0, half_size, height));
   GfxContext.QRP_1Tex(left_edge, progress_y, progress_width, progress_height,
-                      textures_->progress_bar_trough->GetDeviceTexture(), texxform,
+                      textures_->progress_bar_trough[tex_size]->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(left_edge + fill_offset, fill_y, fill_width, fill_height,
-                      textures_->progress_bar_fill->GetDeviceTexture(), texxform,
+                      textures_->progress_bar_fill[tex_size]->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.PopClippingRectangle();
 
@@ -1108,11 +1109,11 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge + half_size, 0, half_size, height));
   GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
                       progress_width, progress_height,
-                      textures_->progress_bar_trough->GetDeviceTexture(), texxform,
+                      textures_->progress_bar_trough[tex_size]->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(right_edge - progress_width + fill_offset, fill_y,
                       fill_width, fill_height,
-                      textures_->progress_bar_fill->GetDeviceTexture(), texxform,
+                      textures_->progress_bar_fill[tex_size]->GetDeviceTexture(), texxform,
                       nux::color::White);
 
   GfxContext.PopClippingRectangle();
@@ -1219,8 +1220,6 @@ IconRenderer::TexturesPool::TexturesPool()
   , ColorifyColor(0)
   , DesatFactor(0)
 {
-  LoadTexture(progress_bar_trough, PKGDATADIR"/progress_bar_trough.png");
-  LoadTexture(progress_bar_fill, PKGDATADIR"/progress_bar_fill.png");
   LoadTexture(pip_ltr, PKGDATADIR"/launcher_pip_ltr.png");
   LoadTexture(large_pip_ltr, PKGDATADIR"/launcher_pip_large_ltr.png");
   // LoadTexture(pip_rtl, PKGDATADIR"/launcher_pip_rtl.png");
@@ -1262,6 +1261,12 @@ IconRenderer::TexturesPool::TexturesPool()
   GenerateTextures(icon_shine,
                    PKGDATADIR"/launcher_icon_shine_150.png",
                    PKGDATADIR"/launcher_icon_shine_54.png");
+  GenerateTextures(progress_bar_trough,
+                   PKGDATADIR"/progress_bar_trough_150.png",
+                   PKGDATADIR"/progress_bar_trough_54.png");
+  GenerateTextures(progress_bar_fill,
+                   PKGDATADIR"/progress_bar_fill_150.png",
+                   PKGDATADIR"/progress_bar_fill_42.png");
 
   SetupShaders();
 }
