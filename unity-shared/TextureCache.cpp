@@ -40,9 +40,11 @@ nux::BaseTexture* TextureCache::DefaultTexturesLoader(std::string const& name, i
   return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name).c_str(), (!size ? -1 : size), true);
 }
 
-std::string TextureCache::Hash(std::string const& id, int width, int height)
+std::size_t TextureCache::Hash(std::string const& id, int width, int height)
 {
-  return id + "-" + std::to_string(width) + "x" + std::to_string(height);
+  return ((std::hash<std::string>()(id)
+          ^ (std::hash<int>()(width) << 1)) >> 1)
+          ^ (std::hash<int>()(height) << 1);
 }
 
 TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,
@@ -52,7 +54,7 @@ TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& textur
   if (!factory)
     return BaseTexturePtr();
 
-  std::string const& key = Hash(texture_id, width, height);
+  auto key = Hash(texture_id, width, height);
   auto texture_it = cache_.find(key);
 
   BaseTexturePtr texture(texture_it != cache_.end() ? texture_it->second : nullptr);
@@ -81,8 +83,7 @@ TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& textur
     // are destroyed first, then the sigc::trackable disconnects all methods
     // created using mem_fun.
 
-    cache_[key] = texture.GetPointer();
-
+    cache_.insert({key, texture.GetPointer()});
     auto on_destroy = sigc::mem_fun(this, &TextureCache::OnDestroyNotify);
     texture->OnDestroyed.connect(sigc::bind(on_destroy, key));
   }
@@ -95,7 +96,7 @@ void TextureCache::Invalidate(std::string const& texture_id, int width, int heig
   cache_.erase(Hash(texture_id, width, height));
 }
 
-void TextureCache::OnDestroyNotify(nux::Trackable* Object, std::string const& key)
+void TextureCache::OnDestroyNotify(nux::Trackable* Object, std::size_t key)
 {
   cache_.erase(key);
 }
