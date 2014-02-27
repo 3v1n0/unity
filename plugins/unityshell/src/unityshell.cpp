@@ -3926,7 +3926,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     if (window->actions() & CompWindowActionCloseMask)
     {
       using namespace decoration;
-      close_texture = DataPool::Get()->ButtonTexture(WindowButtonType::CLOSE, close_icon_state_);
+      close_texture = DataPool::Get()->ButtonTexture(dpi_scale, WindowButtonType::CLOSE, close_icon_state_);
     }
 
     if (redraw_decoration)
@@ -3954,13 +3954,13 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 
     if (close_texture)
     {
-      int w = close_texture->width() * dpi_scale;
-      int h = close_texture->height() * dpi_scale;
+      int w = close_texture->width();
+      int h = close_texture->height();
       int x = geo.x + padding.left * dpi_scale;
       int y = geo.y + padding.top * dpi_scale + (height - w) / 2.0f;
 
       close_button_geo_.Set(x, y, w, h);
-      DrawTexture(*close_texture, attrib, transform, mask, x, y, dpi_scale);
+      DrawTexture(*close_texture, attrib, transform, mask, x, y);
     }
     else
     {

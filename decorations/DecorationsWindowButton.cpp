@@ -38,12 +38,13 @@ WindowButton::WindowButton(CompWindow* win, WindowButtonType type)
   auto cb = sigc::hide(sigc::mem_fun(this, &WindowButton::UpdateTexture));
   mouse_owner.changed.connect(cb);
   focused.changed.connect(cb);
+  scale.changed.connect(cb);
   UpdateTexture();
 }
 
 void WindowButton::UpdateTexture()
 {
-  SetTexture(DataPool::Get()->ButtonTexture(type_, GetCurrentState()));
+  SetTexture(DataPool::Get()->ButtonTexture(scale(), type_, GetCurrentState()));
 }
 
 WidgetState WindowButton::GetCurrentState() const
