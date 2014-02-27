@@ -401,10 +401,9 @@ TEST_F(TestLauncherController, MultimonitorRemoveMiddleMonitor)
 {
   uscreen.SetupFakeMultiMonitor();
   ASSERT_EQ(lc.launchers().size(), monitors::MAX);
-
-  auto const& monitors = uscreen.GetMonitors();
+  auto monitors = uscreen.GetMonitors();
   monitors.erase(monitors.begin() + monitors.size()/2);
-  uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
+  uscreen.SetMonitors(monitors);
   ASSERT_EQ(lc.launchers().size(), monitors::MAX - 1);
 
   for (unsigned i = 0; i < monitors::MAX - 1; ++i)

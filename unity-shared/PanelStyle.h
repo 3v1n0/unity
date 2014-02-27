@@ -28,9 +28,6 @@
 #include <gtk/gtk.h>
 #include <UnityCore/GLibWrapper.h>
 
-#include "unity-shared/EMConverter.h"
-#include "unity-shared/RawPixel.h"
-
 namespace unity
 {
 namespace decoration
