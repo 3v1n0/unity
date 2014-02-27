@@ -42,9 +42,10 @@ const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
 const int BASE_PANEL_HEIGHT = 24;
 
-std::string button_id(WindowButtonType type, WindowState ws)
+std::string button_id(double scale, WindowButtonType type, WindowState ws)
 {
   std::string texture_id = "window-button-";
+  texture_id += std::to_string(scale);
   texture_id += std::to_string(static_cast<int>(type));
   texture_id += std::to_string(static_cast<int>(ws));
   return texture_id;
@@ -103,10 +104,12 @@ Style& Style::Instance()
 void Style::OnThemeChanged(std::string const&)
 {
   auto& cache = TextureCache::GetDefault();
+  auto& settings = Settings::Instance();
 
-  for (unsigned button = 0; button < unsigned(WindowButtonType::Size); ++button)
-    for (unsigned state = 0; state < unsigned(WindowState::Size); ++state)
-      cache.Invalidate(button_id(WindowButtonType(button), WindowState(state)));
+  for (unsigned monitor = 0; monitor < monitors::MAX; ++monitor)
+    for (unsigned button = 0; button < unsigned(WindowButtonType::Size); ++button)
+      for (unsigned state = 0; state < unsigned(WindowState::Size); ++state)
+        cache.Invalidate(button_id(settings.em(monitor)->DPIScale(), WindowButtonType(button), WindowState(state)));
 
   RefreshContext();
 }
@@ -168,16 +171,24 @@ BaseTexturePtr Style::GetBackground(int monitor)
   return bg_texture;
 }
 
-BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
+BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state, int monitor)
 {
-  auto texture_factory = [this, type, state] (std::string const&, int, int) {
+  double scale = Settings::Instance().em(monitor)->DPIScale();
+
+  auto texture_factory = [this, type, state, monitor, scale] (std::string const&, int, int) {
+    nux::Size size;
     nux::BaseTexture* texture = nullptr;
     auto const& file = decoration::Style::Get()->WindowButtonFile(type, state);
-    texture = nux::CreateTexture2DFromFile(file.c_str(), -1, true);
+    gdk_pixbuf_get_file_info(file.c_str(), &size.width, &size.height);
+
+    size.width = std::round(size.width * scale);
+    size.height = std::round(size.height * scale);
+    texture = nux::CreateTexture2DFromFile(file.c_str(), std::max(size.width, size.height), true);
+
     if (texture)
       return texture;
 
-    auto const& fallback = GetFallbackWindowButton(type, state);
+    auto const& fallback = GetFallbackWindowButton(type, state, monitor);
     texture = fallback.GetPointer();
     texture->Reference();
 
@@ -185,13 +196,16 @@ BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
   };
 
   auto& cache = TextureCache::GetDefault();
-  return cache.FindTexture(button_id(type, state), 0, 0, texture_factory);
+  return cache.FindTexture(button_id(scale, type, state), 0, 0, texture_factory);
 }
 
-BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type, WindowState state)
+BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type, WindowState state, int monitor)
 {
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, BUTTONS_SIZE + BUTTONS_PADDING*2, BUTTONS_SIZE + BUTTONS_PADDING*2);
+  double scale = Settings::Instance().em(monitor)->DPIScale();
+  int button_size = std::round((BUTTONS_SIZE + BUTTONS_PADDING*2) * scale);
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, button_size, button_size);
   cairo_t* ctx = cairo_graphics.GetInternalContext();
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
   cairo_translate(ctx, BUTTONS_PADDING, BUTTONS_PADDING);
   decoration::Style::Get()->DrawWindowButton(type, state, ctx, BUTTONS_SIZE, BUTTONS_SIZE);
   return texture_ptr_from_cairo_graphics(cairo_graphics);

@@ -62,8 +62,8 @@ public:
 
   GtkStyleContext* GetStyleContext();
   BaseTexturePtr GetBackground(int monitor = 0);
-  BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
-  BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state);
+  BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state, int monitor = 0);
+  BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state, int monitor = 0);
   std::string GetFontDescription(PanelItem item);
 
   int PanelHeight(int monitor = 0) const;
