@@ -92,34 +92,34 @@
     </marker>
     <filter
        inkscape:collect="always"
-       id="filter5171"
-       x="-0.054393096"
-       width="1.1087862"
-       y="-0.40838875"
-       height="1.8167775">
+       id="filter6680"
+       x="-0.056347826"
+       width="1.1126957"
+       y="-0.324"
+       height="1.648">
       <feGaussianBlur
          inkscape:collect="always"
-         stdDeviation="0.99355515"
-         id="feGaussianBlur5173" />
+         stdDeviation="1.08"
+         id="feGaussianBlur6682" />
     </filter>
   </defs>
   <sodipodi:namedview
      id="base"
-     pagecolor="#12f82b"
+     pagecolor="#5277f0"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="7.9195959"
-     inkscape:cx="47.76404"
-     inkscape:cy="27.178915"
+     inkscape:zoom="11.962963"
+     inkscape:cx="27"
+     inkscape:cy="27"
      inkscape:document-units="px"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1450"
      inkscape:window-height="793"
-     inkscape:window-x="551"
-     inkscape:window-y="125"
+     inkscape:window-x="503"
+     inkscape:window-y="97"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
@@ -129,7 +129,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -143,19 +143,17 @@
        y="346.57648"
        x="413.71429"
        id="image3023"
-       xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAABHNCSVQICAgIfAhkiAAAAAxJREFU
-CJljYCAZAAAAMwAB0kOx4wAAAABJRU5ErkJggg==
-"
+       xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAABHNCSVQICAgIfAhkiAAAAAxJREFU CJljYCAZAAAAMwAB0kOx4wAAAABJRU5ErkJggg== "
        height="3"
        width="4" />
     <rect
-       style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:18.70000076;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;filter:url(#filter5171)"
+       style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:18.70000076000000178;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;opacity:0.555;filter:url(#filter6680)"
        id="rect5033-0"
-       width="43.838879"
-       height="5.8388786"
-       x="5.0805607"
-       y="1022.4428"
-       ry="2.1012185"
+       width="46"
+       height="8"
+       x="4"
+       y="1021.3622"
+       ry="2.8789341"
        inkscape:export-filename="/tmp/progress.png"
        inkscape:export-xdpi="90"
        inkscape:export-ydpi="90" />
@@ -167,13 +165,13 @@ CJljYCAZAAAAMwAB0kOx4wAAAABJRU5ErkJggg==
      style="display:inline"
      transform="translate(0,-998.36218)">
     <rect
-       style="fill:#838383;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:0;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       style="fill:#838383;fill-opacity:1;stroke:#ffffff;stroke-width:2.02898455;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:0;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect5033"
-       width="43.821442"
-       height="5.8214412"
-       x="5.0892797"
-       y="1022.4514"
-       ry="2.0949435"
+       width="43.971016"
+       height="5.9710155"
+       x="5.0144925"
+       y="1022.3766"
+       ry="2.1487703"
        inkscape:export-filename="/tmp/progress.png"
        inkscape:export-xdpi="90"
        inkscape:export-ydpi="90" />

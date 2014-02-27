@@ -28,6 +28,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/TextureCache.h"
 #include "GraphicsUtils.h"
 
 #include <gtk/gtk.h>
@@ -227,8 +228,6 @@ struct IconRenderer::TexturesPool
   BaseTexturePtr icon_glow[local::IconSize::SIZE];
   BaseTexturePtr icon_shadow[local::IconSize::SIZE];
   BaseTexturePtr icon_shine[local::IconSize::SIZE];
-  BaseTexturePtr progress_bar_trough[local::IconSize::SIZE];
-  BaseTexturePtr progress_bar_fill[local::IconSize::SIZE];
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
   nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
@@ -263,19 +262,38 @@ private:
   void SetupShaders();
 };
 
+struct IconRenderer::LocalTextures
+{
+  void ReloadIconSizedTextures(int icon_size, int image_size)
+  {
+    auto& cache = TextureCache::GetDefault();
+    progress_bar_trough = cache.FindTexture("progress_bar_trough.svg", icon_size, icon_size);
+    progress_bar_fill = cache.FindTexture("progress_bar_fill.svg", image_size - (icon_size - image_size));
+  }
+
+  BaseTexturePtr progress_bar_trough;
+  BaseTexturePtr progress_bar_fill;
+};
+
 IconRenderer::IconRenderer()
   : icon_size(0)
   , image_size(0)
   , spacing(0)
   , textures_(TexturesPool::Get())
+  , local_textures_(std::make_shared<LocalTextures>())
 {
   pip_style = OUTSIDE_TILE;
 }
 
 void IconRenderer::SetTargetSize(int tile_size, int image_size_, int spacing_)
 {
-  icon_size = tile_size;
-  image_size = image_size_;
+  if (icon_size != tile_size || image_size != image_size_)
+  {
+    icon_size = tile_size;
+    image_size = image_size_;
+    local_textures_->ReloadIconSizedTextures(icon_size, image_size);
+  }
+
   spacing = spacing_;
 }
 
@@ -1058,14 +1076,13 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int width = texture->GetWidth();
   int height = texture->GetHeight();
 
-  int progress_width =  icon_size;
-  int progress_height = icon_size;
+  int progress_width = local_textures_->progress_bar_trough->GetHeight();
+  int progress_height = local_textures_->progress_bar_trough->GetWidth();
 
   int fill_width = image_size - (icon_size - image_size);
-  int fill_height = std::round(textures_->progress_bar_fill[local::IconSize::SMALL]->GetHeight() * scale());
+  int fill_height = local_textures_->progress_bar_fill->GetHeight();
 
   int fill_offset = static_cast<float>(image_size) * fill_offset_ratio;
-  auto tex_size = icon_size > 100 ? local::IconSize::BIG : local::IconSize::SMALL;
 
   // We need to perform a barn doors effect to acheive the slide in and out
 
@@ -1098,10 +1115,10 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge, 0, half_size, height));
   GfxContext.QRP_1Tex(left_edge, progress_y, progress_width, progress_height,
-                      textures_->progress_bar_trough[tex_size]->GetDeviceTexture(), texxform,
+                      local_textures_->progress_bar_trough->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(left_edge + fill_offset, fill_y, fill_width, fill_height,
-                      textures_->progress_bar_fill[tex_size]->GetDeviceTexture(), texxform,
+                      local_textures_->progress_bar_fill->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.PopClippingRectangle();
 
@@ -1109,11 +1126,11 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge + half_size, 0, half_size, height));
   GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
                       progress_width, progress_height,
-                      textures_->progress_bar_trough[tex_size]->GetDeviceTexture(), texxform,
+                      local_textures_->progress_bar_trough->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(right_edge - progress_width + fill_offset, fill_y,
                       fill_width, fill_height,
-                      textures_->progress_bar_fill[tex_size]->GetDeviceTexture(), texxform,
+                      local_textures_->progress_bar_fill->GetDeviceTexture(), texxform,
                       nux::color::White);
 
   GfxContext.PopClippingRectangle();
@@ -1261,12 +1278,6 @@ IconRenderer::TexturesPool::TexturesPool()
   GenerateTextures(icon_shine,
                    PKGDATADIR"/launcher_icon_shine_150.png",
                    PKGDATADIR"/launcher_icon_shine_54.png");
-  GenerateTextures(progress_bar_trough,
-                   PKGDATADIR"/progress_bar_trough_150.png",
-                   PKGDATADIR"/progress_bar_trough_54.png");
-  GenerateTextures(progress_bar_fill,
-                   PKGDATADIR"/progress_bar_fill_150.png",
-                   PKGDATADIR"/progress_bar_fill_42.png");
 
   SetupShaders();
 }
