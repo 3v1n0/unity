@@ -50,7 +50,7 @@ public:
   nux::Property<bool> focused;
   nux::Property<bool> sensitive;
   nux::Property<bool> mouse_owner;
-  nux::Property<float> scale;
+  nux::Property<double> scale;
 
   CompRect const& Geometry() const;
   virtual int GetNaturalWidth() const;
