@@ -22,11 +22,16 @@
 #ifndef PANEL_STYLE_H
 #define PANEL_STYLE_H
 
-#include <Nux/Nux.h>
+#include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
 #include <gtk/gtk.h>
 #include <UnityCore/GLibWrapper.h>
+
+namespace nux
+{
+class BaseTexture;
+}
 
 namespace unity
 {

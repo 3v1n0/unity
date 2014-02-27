@@ -18,6 +18,7 @@
  *              Marco Trevisan <3v1n0@ubuntu.com>
  */
 
+#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
 #include "PanelStyle.h"
