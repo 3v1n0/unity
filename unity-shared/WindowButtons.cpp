@@ -182,14 +182,31 @@ void WindowButton::LoadImages()
 
 nux::ObjectPtr<nux::BaseTexture> WindowButton::GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state, int monitor)
 {
+  nux::Size size;
   nux::ObjectPtr<nux::BaseTexture> texture;
-  static const std::array<std::string, 4> names = {{ "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" }};
-  static const std::array<std::string, 4> states = {{ "", "_prelight", "_pressed", "_disabled" }};
-
-  std::string subpath = names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
-
   auto& cache = TextureCache::GetDefault();
-  texture = cache.FindTexture(subpath);
+  double scale = Settings::Instance().em(monitor)->DPIScale();
+
+  static const std::array<std::string, 2> exts = {"svg", "png"};
+  static const std::array<std::string, 4> names = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
+  static const std::array<std::string, 4> states = { "", "_prelight", "_pressed", "_disabled" };
+
+  std::string basename = names[static_cast<int>(type)] + states[static_cast<int>(state)];
+
+  for (auto const& ext : exts)
+  {
+    auto const& name = basename + '.' + ext;
+    gdk_pixbuf_get_file_info((PKGDATADIR"/" + name).c_str(), &size.width, &size.height);
+    if (!size.width || !size.height)
+      continue;
+
+    size.width = std::round(size.width * scale);
+    size.height = std::round(size.height * scale);
+    texture = cache.FindTexture(name, size.width, size.height);
+
+    if (texture)
+      return texture;
+  }
 
   if (!texture)
     texture = panel::Style::Instance().GetFallbackWindowButton(type, state, monitor);
