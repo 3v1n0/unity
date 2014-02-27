@@ -25,7 +25,7 @@
 #include "CompizUtils.h"
 #include "MultiMonitor.h"
 
-#include <scale/scale.h>
+#include <NuxGraphics/XInputWindow.h>
 #include <NuxCore/Logger.h>
 
 namespace unity

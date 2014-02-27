@@ -87,7 +87,7 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   ResizeBarrierList(monitors);
 
   /* FIXME: Back to c++11 lambda once we get sigc::track_obj.
-  uscreen->changed.connect(sigc::track_obj(([this](int primary, std::vector<nux::Geometry>& layout) {
+  uscreen->changed.connect(sigc::track_obj(([this](int primary, std::vector<nux::Geometry> const& layout) {
     ResizeBarrierList(layout);
     SetupBarriers(layout);
   }));*/
@@ -123,7 +123,7 @@ EdgeBarrierController::Impl::~Impl()
   nux::GetGraphicsDisplay()->RemoveEventFilter(this);
 }
 
-void EdgeBarrierController::Impl::OnUScreenChanged(int primary, std::vector<nux::Geometry>& layout)
+void EdgeBarrierController::Impl::OnUScreenChanged(int primary, std::vector<nux::Geometry> const& layout)
 {
   ResizeBarrierList(layout);
   SetupBarriers(layout);

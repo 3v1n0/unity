@@ -50,7 +50,7 @@ const double DEFAULT_DPI = 96.0f;
 //
 // Start private implementation
 //
-class Settings::Impl
+class Settings::Impl : public sigc::trackable
 {
 public:
   Impl(Settings* owner)
@@ -70,6 +70,8 @@ public:
     CacheDoubleClickActivate();
     UpdateEMConverter();
     UpdateLimSetting();
+
+    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateEMConverter))));
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
@@ -180,14 +182,18 @@ public:
   {
     glib::Variant dict;
     g_settings_get(ubuntu_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+    bool any_changed = false;
 
     for (unsigned i = 0; i < em_converters_.size(); ++i)
     {
       int dpi = GetDPI(dict, i);
-      em_converters_[i]->SetDPI(dpi);
+
+      if (em_converters_[i]->SetDPI(dpi))
+        any_changed = true;
     }
 
-    parent_->dpi_changed.emit();
+    if (any_changed)
+      parent_->dpi_changed.emit();
   }
 
   void UpdateEMConverter()

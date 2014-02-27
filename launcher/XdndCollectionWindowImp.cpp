@@ -55,7 +55,7 @@ public:
     WindowManager::Default().window_moved.connect(sigc::mem_fun(this, &PrivateWindow::OnWindowMoved));
   }
 
-  void OnScreenChanged(int /*primary*/, std::vector<nux::Geometry>& /*monitors*/)
+  void OnScreenChanged(int /*primary*/, std::vector<nux::Geometry> const& /*monitors*/)
   {
     auto uscreen = UScreen::GetDefault();
     SetGeometry(uscreen->GetScreenGeometry());

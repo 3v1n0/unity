@@ -402,7 +402,7 @@ TEST_F(TestLauncherController, MultimonitorRemoveMiddleMonitor)
   uscreen.SetupFakeMultiMonitor();
   ASSERT_EQ(lc.launchers().size(), monitors::MAX);
 
-  std::vector<nux::Geometry> &monitors = uscreen.GetMonitors();
+  auto const& monitors = uscreen.GetMonitors();
   monitors.erase(monitors.begin() + monitors.size()/2);
   uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
   ASSERT_EQ(lc.launchers().size(), monitors::MAX - 1);

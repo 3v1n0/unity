@@ -76,7 +76,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   }
 
   SetupWindow();
-  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry>&) { Relayout(true); });
+  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const&) { Relayout(true); });
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
