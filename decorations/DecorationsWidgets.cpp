@@ -226,17 +226,6 @@ void Item::AddProperties(debug::IntrospectionData& data)
 
 //
 
-TexturedItem::TexturedItem()
-{
-  scale.changed.connect([this] (float s) {
-    if (IsScalable() && texture_.SetScale(s))
-    {
-      geo_parameters_changed.emit();
-      Damage();
-    }
-  });
-}
-
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 {
   auto prev_geo = Geometry();
@@ -274,12 +263,12 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
 
 int TexturedItem::GetNaturalWidth() const
 {
-  return (texture_) ? texture_.st->width() * scale() : Item::GetNaturalWidth();
+  return (texture_) ? texture_.st->width() : Item::GetNaturalWidth();
 }
 
 int TexturedItem::GetNaturalHeight() const
 {
-  return (texture_) ? texture_.st->height() * scale() : Item::GetNaturalHeight();
+  return (texture_) ? texture_.st->height() : Item::GetNaturalHeight();
 }
 
 CompRect& TexturedItem::InternalGeo()

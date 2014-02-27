@@ -121,8 +121,6 @@ class TexturedItem : public Item
 public:
   typedef std::shared_ptr<TexturedItem> Ptr;
 
-  TexturedItem();
-
   void SetTexture(cu::SimpleTexture::Ptr const&);
   void Draw(GLWindow*, GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void SetCoords(int x, int y);
@@ -131,7 +129,6 @@ public:
   int GetNaturalHeight() const;
 
 protected:
-  virtual bool IsScalable() const { return true; }
   std::string GetName() const { return "TexturedItem"; }
 
   CompRect& InternalGeo();
