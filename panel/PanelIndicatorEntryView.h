@@ -121,6 +121,7 @@ private:
   IndicatorEntryType type_;
   nux::ObjectPtr<nux::BaseTexture> entry_texture_;
   nux::Geometry cached_geo_;
+  glib::Signal<void, GtkIconTheme*> icon_theme_changed_;
   int monitor_;
   double opacity_;
   bool draw_active_;

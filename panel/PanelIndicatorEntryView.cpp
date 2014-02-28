@@ -70,6 +70,14 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
     InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
   }
 
+  if (type_ != MENU)
+  {
+    icon_theme_changed_.Connect(gtk_icon_theme_get_default(), "changed", [this] (GtkIconTheme*) {
+      if (proxy_->image_type() && proxy_->image_visible())
+        Refresh();
+    });
+  }
+
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
   unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
@@ -193,6 +201,8 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 
 glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 {
+  glib::Object<GdkPixbuf> pixbuf;
+
   switch (proxy_->image_type())
   {
     case GTK_IMAGE_PIXBUF:
@@ -200,10 +210,10 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
       gsize len = 0;
       auto* decoded = g_base64_decode(proxy_->image_data().c_str(), &len);
       glib::Object<GInputStream> stream(g_memory_input_stream_new_from_data(decoded, len, nullptr));
-      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_stream(stream, nullptr, nullptr));
+      pixbuf = gdk_pixbuf_new_from_stream(stream, nullptr, nullptr);
       g_input_stream_close(stream, nullptr, nullptr);
       g_free(decoded);
-      return pixbuf;
+      break;
     }
 
     case GTK_IMAGE_ICON_NAME:
@@ -211,8 +221,8 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
     {
       GtkIconTheme* theme = gtk_icon_theme_get_default();
       auto flags = static_cast<GtkIconLookupFlags>(0);
-      glib::Object<GdkPixbuf> pixbuf(gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size, flags, nullptr));
-      return pixbuf;
+      pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size, flags, nullptr);
+      break;
     }
 
     case GTK_IMAGE_GICON:
@@ -223,12 +233,16 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
       gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags));
 
       if (info)
-        return glib::Object<GdkPixbuf>(gtk_icon_info_load_icon(info, nullptr));
+      {
+        nux::Size icon_size;
+        auto* filename = gtk_icon_info_get_filename(info);
+        pixbuf = gdk_pixbuf_new_from_file_at_size(filename, -1, size, nullptr);
+      }
+      break;
     }
-    break;
   }
 
-  return glib::Object<GdkPixbuf>();
+  return pixbuf;
 }
 
 void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width, unsigned int height)
@@ -421,7 +435,7 @@ void PanelIndicatorEntryView::Refresh()
   {
     width = gdk_pixbuf_get_width(pixbuf);
 
-    if (width == icon_size || height == gdk_pixbuf_get_height(pixbuf))
+    if (width == icon_size || gdk_pixbuf_get_height(pixbuf) == icon_size)
     {
       icon_scalable = true;
       width /= dpi_scale;
