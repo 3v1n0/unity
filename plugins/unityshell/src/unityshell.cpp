@@ -3628,13 +3628,12 @@ void UnityScreen::initLauncher()
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
-    
-    nux::Geometry const& geo = area->GetAbsoluteGeometry();
-    int monitor = WindowManager::Default().MonitorGeometryIn(geo);
 
     int launcher_width = w - 1;
-    unity::Settings::Instance().SetLauncherWidth(launcher_width, monitor);
-    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(monitor));
+    Launcher const* const launcher = static_cast<Launcher*>(area);
+
+    unity::Settings::Instance().SetLauncherWidth(launcher_width, launcher->monitor);
+    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(launcher->monitor));
 
     CompOption::Value v(launcher_width);
     screen->setOptionForPlugin("expo", "x_offset", v);
