@@ -40,7 +40,6 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.panel.indicator.entry");
 const int DEFAULT_SPACING = 3;
-const int SCALED_IMAGE_Y = 1;
 }
 
 using namespace indicator;
@@ -295,8 +294,8 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       double dpi_scale = cv_->DPIScale();
       cairo_save(cr);
       cairo_scale(cr, 1.0f/dpi_scale, 1.0f/dpi_scale);
-      y = (height - gdk_pixbuf_get_height(pixbuf) / dpi_scale) / 2;
       x = padding_ * dpi_scale;
+      y = (std::ceil(height * dpi_scale) - gdk_pixbuf_get_height(pixbuf)) / 2;
       icon_width /= dpi_scale;
     }
 
@@ -413,7 +412,7 @@ void PanelIndicatorEntryView::Refresh()
   int height = panel_style.PanelHeight(monitor_) / dpi_scale;
   int icon_width = 0;
 
-  int icon_size = RawPixel((type_ != DROP_DOWN) ? 24 : 10).CP(dpi_scale);
+  int icon_size = RawPixel((type_ != DROP_DOWN) ? 22 : 10).CP(dpi_scale);
   glib::Object<GdkPixbuf> const& pixbuf = MakePixbuf(icon_size);
   bool icon_scalable = false;
 
