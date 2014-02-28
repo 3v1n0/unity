@@ -27,6 +27,7 @@
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/RawPixel.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity
@@ -38,7 +39,8 @@ namespace
 {
 // according to Q design the inner area of the scopebar should be 40px
 // (without any borders)
-const int SCOPEBAR_HEIGHT = 41;
+RawPixel const SCOPEBAR_HEIGHT = 41;
+RawPixel const TRIANGLE_SIZE   = 5;
 
 }
 
@@ -46,6 +48,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(ScopeBar);
 
 ScopeBar::ScopeBar()
   : nux::View(NUX_TRACKER_LOCATION)
+  , scale_(1.0)
 {
   SetupBackground();
   SetupLayout();
@@ -60,14 +63,30 @@ void ScopeBar::SetupBackground()
   bg_layer_.reset(new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.2f), true, rop));
 }
 
+void ScopeBar::UpdateScale(double scale)
+{
+  if (scale_ != scale)
+  {
+    scale_ = scale;
+
+    SetMinimumHeight(SCOPEBAR_HEIGHT.CP(scale_));
+    SetMaximumHeight(SCOPEBAR_HEIGHT.CP(scale_));
+
+    for (auto icon : icons_)
+    {
+      icon->UpdateScale(scale_);
+    }
+  }
+}
+
 void ScopeBar::SetupLayout()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   SetLayout(layout_);
 
-  SetMinimumHeight(SCOPEBAR_HEIGHT);
-  SetMaximumHeight(SCOPEBAR_HEIGHT);
+  SetMinimumHeight(SCOPEBAR_HEIGHT.CP(scale_));
+  SetMaximumHeight(SCOPEBAR_HEIGHT.CP(scale_));
 }
 
 void ScopeBar::AddScope(Scope::Ptr const& scope)
@@ -75,6 +94,7 @@ void ScopeBar::AddScope(Scope::Ptr const& scope)
   ScopeBarIcon* icon = new ScopeBarIcon(scope->id, scope->icon_hint);
 
   icon->SetVisible(scope->visible);
+  icon->UpdateScale(scale_);
   scope->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
   icons_.push_back(icon);
   layout_->AddView(icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
@@ -160,9 +180,9 @@ void ScopeBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     {
       nux::Geometry const& geo = icon->GetGeometry();
       int middle = geo.x + geo.width/2;
-      int size = 5;
       // Nux doesn't draw too well the small triangles, so let's draw a
       // bigger one and clip part of them using the "-1".
+      int size = TRIANGLE_SIZE.CP(scale_);
       int y = base.y - 1;
 
       nux::GetPainter().Draw2DTriangleColor(graphics_engine,

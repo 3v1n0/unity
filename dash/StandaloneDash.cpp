@@ -73,7 +73,7 @@ void TestRunner::Init ()
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
   layout->SetMinMaxSize(WIDTH, HEIGHT);
 
-  view->AboutToShow();
+  view->AboutToShow(0);
 
   nux::GetWindowThread()->SetLayout (layout);
   nux::GetWindowCompositor().SetKeyFocusArea(view->default_focus());

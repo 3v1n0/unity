@@ -62,6 +62,8 @@ public:
   void ActivateNext();
   void ActivatePrevious();
 
+  void UpdateScale(double scale);
+
   std::string GetActiveScopeId() const;
 
   sigc::signal<void, std::string const&> scope_activated;
@@ -85,6 +87,8 @@ private:
 
   nux::HLayout* layout_;
   LayerPtr bg_layer_;
+
+  double scale_;
 
   friend class TestScopeBar;
 };

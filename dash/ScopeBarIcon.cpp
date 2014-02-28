@@ -40,6 +40,7 @@ ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
   , id(id_)
   , active(false)
   , inactive_opacity_(0.4f)
+  , scale_(1.0)
 {
   SetMinimumWidth(FOCUS_OVERLAY_WIDTH);
   SetMaximumWidth(FOCUS_OVERLAY_WIDTH);
@@ -60,6 +61,23 @@ ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
 
 ScopeBarIcon::~ScopeBarIcon()
 {}
+
+void ScopeBarIcon::UpdateScale(double scale)
+{
+  if (scale_ != scale)
+  {
+    scale_ = scale;
+    int overlay_width  = FOCUS_OVERLAY_WIDTH  * scale_;
+    int overlay_height = FOCUS_OVERLAY_HEIGHT * scale_; 
+
+    SetMinimumWidth(overlay_width);
+    SetMaximumWidth(overlay_width);
+    SetMinimumHeight(overlay_height);
+    SetMaximumHeight(overlay_height);
+
+    focus_layer_.reset(Style::Instance().FocusOverlay(overlay_width, overlay_height));
+  }
+}
 
 void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {

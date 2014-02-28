@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,6 +29,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "SearchBarSpinner.h"
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
@@ -124,6 +125,8 @@ private:
   glib::Source::UniquePtr start_spinner_timeout_;
 
   SearchBarSpinner* spinner_;
+
+  EMConverter::Ptr cv_;
 };
 
 }

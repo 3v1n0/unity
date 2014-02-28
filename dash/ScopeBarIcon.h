@@ -40,6 +40,8 @@ public:
   ScopeBarIcon(std::string id, std::string icon_hint);
   ~ScopeBarIcon();
 
+  void UpdateScale(double scale);
+
   nux::Property<std::string> id;
   nux::Property<bool> active;
 
@@ -56,6 +58,8 @@ private:
 
   const float inactive_opacity_;
   LayerPtr focus_layer_;
+
+  double scale_;
 };
 
 }

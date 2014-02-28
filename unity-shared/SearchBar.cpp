@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2011 Canonical Ltd
+ * Copyright (C) 2010-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,6 +30,11 @@
 #include "CairoTexture.h"
 #include "DashStyle.h"
 #include "GraphicsUtils.h"
+#include "RawPixel.h"
+#include "UnitySettings.h"
+
+namespace unity
+{
 
 namespace
 {
@@ -37,12 +42,23 @@ const float DEFAULT_ICON_OPACITY = 1.0f;
 const int DEFAULT_LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
 
-const int SPACE_BETWEEN_SPINNER_AND_TEXT = 5;
-const int SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10;
-const int LEFT_INTERNAL_PADDING = 4;
-const int SEARCH_ENTRY_RIGHT_BORDER = 10;
+const RawPixel SPACE_BETWEEN_SPINNER_AND_TEXT    =  5_em;
+const RawPixel SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10_em;
+const RawPixel LEFT_INTERNAL_PADDING     =  4_em;
+const RawPixel SEARCH_ENTRY_RIGHT_BORDER = 10_em;
+const RawPixel LEFT_PADDING  =  0_em;
+const RawPixel RIGHT_PADDING = 10_em;
 
-const int HIGHLIGHT_HEIGHT = 24;
+const RawPixel HIGHLIGHT_HEIGHT = 24_em;
+
+const RawPixel ARROW_MIN_WIDTH = 2_em;
+const RawPixel ARROW_MAX_WIDTH = 2_em;
+
+const RawPixel TOP_ARROW_MIN_HEIGHT = 12_em;
+const RawPixel TOP_ARROW_MAX_HEIGHT = 12_em;
+
+const RawPixel BOT_ARROW_MIN_HEIGHT = 8_em;
+const RawPixel BOT_ARROW_MAX_HEIGHT = 8_em;
 
 // Fonts
 const std::string HINT_LABEL_FONT_SIZE = "20px";
@@ -55,6 +71,8 @@ const int PANGO_ENTRY_FONT_SIZE = 22;
 const std::string SHOW_FILTERS_LABEL_FONT_SIZE = "13";
 const std::string SHOW_FILTERS_LABEL_FONT_STYLE = "";
 const std::string SHOW_FILTERS_LABEL_DEFAULT_FONT = "Ubuntu " + SHOW_FILTERS_LABEL_FONT_STYLE + " " + SHOW_FILTERS_LABEL_FONT_SIZE;
+
+}
 
 }
 
@@ -118,6 +136,7 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   , show_filters_(nullptr)
   , last_width_(-1)
   , last_height_(-1)
+  , cv_(Settings::Instance().em(0))
 {
   dash::Style& style = dash::Style::Instance();
   nux::BaseTexture* icon = style.GetSearchMagnifyIcon();
@@ -125,19 +144,19 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, SEARCH_ENTRY_RIGHT_BORDER);
-  layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT);
+  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(cv_), SEARCH_ENTRY_RIGHT_BORDER.CP(cv_));
+  layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT.CP(cv_));
   SetLayout(layout_);
 
   entry_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  entry_layout_->SetLeftAndRightPadding(0, 10);
+  entry_layout_->SetLeftAndRightPadding(LEFT_PADDING.CP(cv_), RIGHT_PADDING.CP(cv_));
   layout_->AddLayout(entry_layout_);
 
   spinner_ = new SearchBarSpinner();
   spinner_->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
   entry_layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT);
+  entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT.CP(cv_));
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -195,8 +214,16 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
     arrow_layout_  = new nux::VLayout();
-    arrow_top_space_ = new nux::SpaceLayout(2, 2, 12, 12);
-    arrow_bottom_space_ = new nux::SpaceLayout(2, 2, 8, 8);
+    arrow_top_space_ = new nux::SpaceLayout(ARROW_MIN_WIDTH.CP(cv_),
+                                            ARROW_MIN_WIDTH.CP(cv_),
+                                            TOP_ARROW_MIN_HEIGHT.CP(cv_),
+                                            TOP_ARROW_MAX_HEIGHT.CP(cv_));
+
+    arrow_bottom_space_ = new nux::SpaceLayout(ARROW_MIN_WIDTH.CP(cv_),
+                                               ARROW_MAX_WIDTH.CP(cv_),
+                                               BOT_ARROW_MIN_HEIGHT.CP(cv_),
+                                               BOT_ARROW_MAX_HEIGHT.CP(cv_));
+
     arrow_layout_->AddView(arrow_top_space_, 0, nux::MINOR_POSITION_CENTER);
     arrow_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
     arrow_layout_->AddView(arrow_bottom_space_, 0, nux::MINOR_POSITION_CENTER);
@@ -370,8 +397,8 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
     nux::Geometry geo(expander_view_->GetGeometry());
 
-    geo.y -= (HIGHLIGHT_HEIGHT- geo.height) / 2;
-    geo.height = HIGHLIGHT_HEIGHT;
+    geo.y -= (HIGHLIGHT_HEIGHT.CP(cv_) - geo.height) / 2;
+    geo.height = HIGHLIGHT_HEIGHT.CP(cv_);
 
     if (!highlight_layer_)
       highlight_layer_.reset(style.FocusOverlay(geo.width, geo.height));
@@ -468,7 +495,7 @@ void SearchBar::UpdateBackground(bool force)
   geo.width = layered_layout_->GetAbsoluteX() +
               layered_layout_->GetAbsoluteWidth() -
               GetAbsoluteX() +
-              SEARCH_ENTRY_RIGHT_BORDER;
+              SEARCH_ENTRY_RIGHT_BORDER.CP(cv_);
 
   LOG_TRACE(logger) << "height: "
   << geo.height << " - "
