@@ -120,6 +120,8 @@ public:
   nux::Size TitleNaturalSize(std::string const&);
   nux::Size MenuItemNaturalSize(std::string const&);
 
+  std::string ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders = {}) const;
+
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
   void DrawWindowButton(WindowButtonType, WidgetState, cairo_t*, double width, double height);
 
