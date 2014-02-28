@@ -12,6 +12,9 @@ from __future__ import absolute_import
 import logging
 from unity.emulators import UnityIntrospectionObject
 from testtools.matchers import GreaterThan
+
+from unity.emulators.dash import SearchBar
+
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +73,3 @@ class SpreadFilter(UnityIntrospectionObject):
         """Return the search bar."""
         [search_bar] = self.get_children_by_type(SearchBar)
         return search_bar
-
-
-class SearchBar(UnityIntrospectionObject):
-    """The search bar for the spread filter."""

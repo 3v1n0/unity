@@ -1,3 +1,25 @@
+unity (7.1.2+14.04.20140225-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * Fix some Autopilot test failure regressions due to changes in rev.
+    3668. (LP: #1283159)
+
+  [ Eleni Maria Stea ]
+  * scaling desktop according to a scale factor (LP: #1282804)
+  * removed fonts-scale-factor gsetting from unityshell schema, since we
+    now use the ubuntu ui-scale factor to scale the desktop (LP:
+    #1282804)
+
+  [ Dimitri John Ledkov ]
+  * Fix common buildflags missing. (LP: #1284047) (LP: #1284047)
+
+  [ Marco Trevisan (Treviño) ]
+  * PluginAdapter: take in account the window border size when restoring
+    it from maximization state Also don't forget about monitor scaling
+    when getting data from the decoration Style. (LP: #1276352)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 25 Feb 2014 12:36:17 +0000
+
 unity (7.1.2+14.04.20140220-0ubuntu1) trusty; urgency=low
 
   [ CI bot ]
