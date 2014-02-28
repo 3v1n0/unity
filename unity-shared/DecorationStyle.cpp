@@ -375,7 +375,7 @@ struct Style::Impl
 
       for (auto const& folder : extra_folders)
       {
-        glib::String path(g_build_filename(folder.c_str(), subpath.Value(), nullptr));
+        glib::String path(g_build_filename(folder.c_str(), filename.c_str(), nullptr));
 
         if (g_file_test(path, G_FILE_TEST_EXISTS))
           return path.Str();
