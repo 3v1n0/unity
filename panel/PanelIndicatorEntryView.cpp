@@ -240,7 +240,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
         auto* filename = gtk_icon_info_get_filename(info);
         pixbuf = gdk_pixbuf_new_from_file_at_size(filename, -1, size, nullptr);
       }
-      else if (type == GTK_IMAGE_ICON_NAME)
+      else if (image_type == GTK_IMAGE_ICON_NAME)
       {
         pixbuf = gdk_pixbuf_new_from_file_at_size(proxy_->image_data().c_str(), -1, size, nullptr);
       }
