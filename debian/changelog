@@ -1,3 +1,23 @@
+unity (7.1.2+14.04.20140228-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * Use the current Launcher instead of the first launcher when
+    determing when to highlight the Launcher tile during keynav. (LP:
+    #1285361)
+  * Fix Dash/Hud fullscreen Autopilot window test on multi-monitor where
+    the tests would fail depending on which monitor has the fullscreen
+    window. (LP: #1285367)
+  * Fix a couple of Panel Autopilot test failures. (LP: #1285737)
+  * Fix a few randomly failing Spread Autopilot tests. (LP: #1285758)
+  * Fix corner case depending on where a test window opens, a Dash and
+    Hud Autopilot test failure can occur. (LP: #1286143)
+
+  [ Stephen M. Webb ]
+  * remove -O3 and replace with -O3 for C++ compiles to prevent
+    template-related FTBFS (LP: #1286284)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 28 Feb 2014 19:53:26 +0000
+
 unity (7.1.2+14.04.20140225-0ubuntu1) trusty; urgency=low
 
   [ Chris Townsend ]
