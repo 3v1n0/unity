@@ -47,6 +47,10 @@ static const gchar introspection_xml[] =
   "      <arg type='a(siiii)' name='geometries' direction='in'/>"
   "    </method>"
   ""
+  "    <method name='GetIconPaths'>"
+  "      <arg type='as' name='paths' direction='out'/>"
+  "    </method>"
+  ""
   "    <method name='ShowEntry'>"
   "      <arg type='s' name='entry_id' direction='in'/>"
   "      <arg type='u' name='xid' direction='in'/>"
@@ -96,6 +100,8 @@ static const gchar introspection_xml[] =
   "     <arg type='s' name='entry_id' />"
   "     <arg type='b' name='show_now_state' />"
   "    </signal>"
+  ""
+  "    <signal name='IconPathsChanged' />"
   ""
   "  </interface>"
   "</node>";
@@ -177,6 +183,16 @@ handle_method_call (GDBusConnection       *connection,
         }
 
       g_dbus_method_invocation_return_value (invocation, NULL);
+    }
+  else if (g_strcmp0 (method_name, "GetIconPaths") == 0)
+    {
+      gchar **paths;
+      gint len;
+      GVariant *ret_value;
+      gtk_icon_theme_get_search_path (gtk_icon_theme_get_default (), &paths, &len);
+      ret_value = g_variant_new("(@as)", g_variant_new_strv ((const gchar **) paths, len));
+      g_dbus_method_invocation_return_value (invocation, ret_value);
+      g_strfreev (paths);
     }
   else if (g_strcmp0 (method_name, "ShowEntry") == 0)
     {
@@ -326,6 +342,25 @@ on_service_entry_show_now_changed (PanelService    *service,
 }
 
 static void
+on_icon_theme_changed (GtkIconTheme* theme, GDBusConnection *connection)
+{
+  GError *error = NULL;
+  g_dbus_connection_emit_signal (connection,
+                                 NULL,
+                                 S_PATH,
+                                 S_IFACE,
+                                 "IconPathsChanged",
+                                 NULL,
+                                 &error);
+
+  if (error)
+    {
+      g_warning ("Unable to emit IconPathsChanged signal: %s", error->message);
+      g_error_free (error);
+    }
+}
+
+static void
 on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
@@ -349,6 +384,9 @@ on_bus_acquired (GDBusConnection *connection,
   g_signal_connect (service, "entry-show-now-changed",
                     G_CALLBACK (on_service_entry_show_now_changed), connection);
 
+  g_signal_connect (gtk_icon_theme_get_default(), "changed",
+                    G_CALLBACK (on_icon_theme_changed), connection);
+
   g_debug ("%s", G_STRFUNC);
   g_assert (reg_id > 0);
 }
@@ -370,12 +408,8 @@ on_name_lost (GDBusConnection *connection,
 
   g_debug ("%s", G_STRFUNC);
   if (service != NULL)
-  {
-    g_signal_handlers_disconnect_by_func (service, on_service_resync, connection);
-    g_signal_handlers_disconnect_by_func (service, on_service_entry_activated, connection);
-    g_signal_handlers_disconnect_by_func (service, on_service_entry_activate_request, connection);
-    g_signal_handlers_disconnect_by_func (service, on_service_entry_show_now_changed, connection);
-  }
+    g_signal_handlers_disconnect_by_data (service, connection);
+
   gtk_main_quit ();
 }
 
@@ -412,8 +446,7 @@ main (gint argc, gchar **argv)
   g_unsetenv ("NO_GAIL");
 
   gtk_init (&argc, &argv);
-  gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
-				     INDICATORICONDIR);
+  gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(), INDICATORICONDIR);
   ido_init ();
 
   if (g_getenv ("SILENT_PANEL_SERVICE") != NULL)

@@ -99,7 +99,7 @@ PanelMenuView::~PanelMenuView()
   titlebar_grab_area_->UnParentObject();
 }
 
-void PanelMenuView::OnDPIChanged()
+void PanelMenuView::OnStyleChanged()
 {
   int height = panel::Style::Instance().PanelHeight(monitor_);
   window_buttons_->SetMinimumHeight(height);
@@ -127,7 +127,7 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   opacity_animator_.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
   entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryViewAdded));
-  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnDPIChanged));
+  Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnStyleChanged));
 
   auto const& deco_style = decoration::Style::Get();
   lim_changed_connection_ = deco_style->integrated_menus.changed.connect([this] (bool lim) {
@@ -1723,7 +1723,7 @@ void PanelMenuView::SetMonitor(int monitor)
   window_buttons_->monitor = monitor_;
   window_buttons_->controlled_window = buttons_win;
 
-  OnDPIChanged();
+  OnStyleChanged();
   g_list_free(windows);
 }
 

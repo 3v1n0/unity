@@ -44,7 +44,6 @@ WindowButton::WindowButton(panel::WindowButtonType type)
   , overlay_mode(false)
   , type_(type)
   , monitor_(0)
-  , cv_(unity::Settings::Instance().em(monitor_))
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
@@ -60,7 +59,7 @@ void WindowButton::UpdateDPIChanged()
 void WindowButton::OnMonitorChanged(int monitor)
 {
   monitor_ = monitor;
-  cv_ = unity::Settings::Instance().em(monitor);
+  LoadImages();
 }
 
 void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
@@ -154,10 +153,8 @@ void WindowButton::UpdateSize()
 
   if (tex)
   {
-    int tex_w = RawPixel(tex->GetWidth()).CP(cv_);
-    int tex_h = RawPixel(tex->GetHeight()).CP(cv_);
-    width  = std::min(panel_height, tex_w);
-    height = std::min(panel_height, tex_h);
+    width  = std::min(panel_height, tex->GetWidth());
+    height = std::min(panel_height, tex->GetHeight());
   }
 
   SetMinMaxSize(width, height);
@@ -167,35 +164,52 @@ void WindowButton::LoadImages()
 {
   panel::Style& style = panel::Style::Instance();
 
-  normal_tex_ = style.GetWindowButton(type_, panel::WindowState::NORMAL);
-  prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::PRELIGHT);
-  pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::PRESSED);
-  unfocused_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP);
-  disabled_tex_ = style.GetWindowButton(type_, panel::WindowState::DISABLED);
-  unfocused_prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP_PRELIGHT);
-  unfocused_pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP_PRESSED);
-  normal_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::NORMAL);
-  prelight_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRELIGHT);
-  pressed_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRESSED);
-  disabled_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::DISABLED);
+  normal_tex_ = style.GetWindowButton(type_, panel::WindowState::NORMAL, monitor_);
+  prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::PRELIGHT, monitor_);
+  pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::PRESSED, monitor_);
+  unfocused_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP, monitor_);
+  disabled_tex_ = style.GetWindowButton(type_, panel::WindowState::DISABLED, monitor_);
+  unfocused_prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP_PRELIGHT, monitor_);
+  unfocused_pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::BACKDROP_PRESSED, monitor_);
+  normal_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::NORMAL, monitor_);
+  prelight_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRELIGHT, monitor_);
+  pressed_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRESSED, monitor_);
+  disabled_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::DISABLED, monitor_);
 
   UpdateSize();
   QueueDraw();
 }
 
-nux::ObjectPtr<nux::BaseTexture> WindowButton::GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state)
+nux::ObjectPtr<nux::BaseTexture> WindowButton::GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state, int monitor)
 {
+  nux::Size size;
   nux::ObjectPtr<nux::BaseTexture> texture;
-  static const std::array<std::string, 4> names = {{ "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" }};
-  static const std::array<std::string, 4> states = {{ "", "_prelight", "_pressed", "_disabled" }};
-
-  std::string subpath = names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
-
   auto& cache = TextureCache::GetDefault();
-  texture = cache.FindTexture(subpath);
+  double scale = Settings::Instance().em(monitor)->DPIScale();
+
+  static const std::array<std::string, 2> exts = {"svg", "png"};
+  static const std::array<std::string, 4> names = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
+  static const std::array<std::string, 4> states = { "", "_prelight", "_pressed", "_disabled" };
+
+  std::string basename = names[static_cast<int>(type)] + states[static_cast<int>(state)];
+
+  for (auto const& ext : exts)
+  {
+    auto const& name = basename + '.' + ext;
+    gdk_pixbuf_get_file_info((PKGDATADIR"/" + name).c_str(), &size.width, &size.height);
+    if (!size.width || !size.height)
+      continue;
+
+    size.width = std::round(size.width * scale);
+    size.height = std::round(size.height * scale);
+    texture = cache.FindTexture(name, size.width, size.height);
+
+    if (texture)
+      return texture;
+  }
 
   if (!texture)
-    texture = panel::Style::Instance().GetFallbackWindowButton(type, state);
+    texture = panel::Style::Instance().GetFallbackWindowButton(type, state, monitor);
 
   return texture;
 }

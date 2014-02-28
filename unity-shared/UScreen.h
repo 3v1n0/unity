@@ -20,9 +20,10 @@
 #define _UNITY_SCREEN_H_
 
 #include <gdk/gdk.h>
-#include <Nux/Nux.h>
-#include <sigc++/sigc++.h>
 #include <vector>
+#include <iostream>
+#include <sigc++/sigc++.h>
+#include <NuxCore/Rect.h>
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
@@ -40,16 +41,16 @@ public:
 
   static UScreen* GetDefault();
 
-  int             GetPrimaryMonitor();
-  int             GetMonitorWithMouse();
-  int             GetMonitorAtPosition(int x, int y);
-  nux::Geometry&  GetMonitorGeometry(int monitor);
+  int GetPrimaryMonitor() const;
+  int GetMonitorWithMouse() const;
+  int GetMonitorAtPosition(int x, int y) const;
+  nux::Geometry const& GetMonitorGeometry(int monitor) const;
 
-  std::vector<nux::Geometry>& GetMonitors();
-  nux::Geometry GetScreenGeometry();
+  std::vector<nux::Geometry> const& GetMonitors() const;
+  nux::Geometry GetScreenGeometry() const;
 
   // <void, primary_monitor, monitors>
-  sigc::signal<void, int, std::vector<nux::Geometry>&> changed;
+  sigc::signal<void, int, std::vector<nux::Geometry> const&> changed;
   sigc::signal<void> resuming;
 
   const std::string GetMonitorName(int output_number) const;

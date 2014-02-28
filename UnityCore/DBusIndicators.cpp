@@ -59,6 +59,7 @@ struct DBusIndicators::Impl
   void OnDisconnected();
 
   void OnReSync(GVariant* parameters);
+  void OnIconsPathChanged(GVariant* parameters);
   void OnEntryActivated(GVariant* parameters);
   void OnEntryActivatedRequest(GVariant* parameters);
   void OnEntryShowNowChanged(GVariant* parameters);
@@ -74,6 +75,7 @@ struct DBusIndicators::Impl
   glib::Source::UniquePtr reconnect_timeout_;
   glib::Source::UniquePtr show_entry_idle_;
   glib::Source::UniquePtr show_appmenu_idle_;
+  std::vector<std::string> icon_paths_;
   std::map<std::string, EntryLocationMap> cached_locations_;
 };
 
@@ -85,6 +87,7 @@ DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
   gproxy_.Connect("ReSync", sigc::mem_fun(this, &DBusIndicators::Impl::OnReSync));
+  gproxy_.Connect("IconPathsChanged", sigc::mem_fun(this, &DBusIndicators::Impl::OnIconsPathChanged));
   gproxy_.Connect("EntryActivated", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryActivated));
   gproxy_.Connect("EntryActivateRequest", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryActivatedRequest));
   gproxy_.Connect("EntryShowNowChanged", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryShowNowChanged));
@@ -126,6 +129,7 @@ void DBusIndicators::Impl::CheckLocalService()
 
 void DBusIndicators::Impl::OnConnected()
 {
+  OnIconsPathChanged(nullptr);
   RequestSyncAll();
 }
 
@@ -154,6 +158,50 @@ void DBusIndicators::Impl::OnReSync(GVariant* parameters)
   {
     RequestSyncAll();
   }
+}
+
+void DBusIndicators::Impl::OnIconsPathChanged(GVariant*)
+{
+  gproxy_.CallBegin("GetIconPaths", nullptr, [this] (GVariant* paths, glib::Error const& e) {
+    if (e || !paths)
+    {
+      LOG_ERROR(logger) << "Something went wrong on GetIconPaths: " << e;
+      return;
+    }
+
+    bool changed = false;
+    gsize length;
+    glib::Variant array(g_variant_get_child_value(paths, 0));
+    const gchar** icon_paths = g_variant_get_strv(array, &length);
+
+    if (icon_paths_.size() != length)
+    {
+      changed = true;
+    }
+    else
+    {
+      for (unsigned i = 0; i < length; ++i)
+      {
+        if (icon_paths_[i] != glib::gchar_to_string(icon_paths[i]))
+        {
+          changed = true;
+          break;
+        }
+      }
+    }
+
+    if (changed)
+    {
+      icon_paths_.resize(length);
+
+      for (unsigned i = 0; i < length; ++i)
+        icon_paths_[i] = glib::gchar_to_string(icon_paths[i]);
+
+      owner_->icon_paths_changed.emit();
+    }
+
+    g_free(icon_paths);
+  });
 }
 
 void DBusIndicators::Impl::OnEntryActivated(GVariant* parameters)
@@ -456,6 +504,11 @@ void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id)
 void DBusIndicators::OnShowAppMenu(unsigned int xid, int x, int y)
 {
   pimpl->OnShowAppMenu(xid, x, y);
+}
+
+std::vector<std::string> const& DBusIndicators::IconPaths() const
+{
+  return pimpl->icon_paths_;
 }
 
 } // namespace indicator

@@ -33,8 +33,6 @@
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
-#include "MultiMonitor.h"
-
 namespace unity
 {
 namespace dash
@@ -92,7 +90,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   }
 
   SetupWindow();
-  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry>&) { Relayout(true); });
+  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const&) { Relayout(true); });
 
   Settings::Instance().form_factor.changed.connect([this](FormFactor)
   {

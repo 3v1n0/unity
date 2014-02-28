@@ -1403,54 +1403,62 @@ gtk_image_to_data (GtkImage *image)
   GtkImageType type = gtk_image_get_storage_type (image);
   gchar *ret = NULL;
 
-  if (type == GTK_IMAGE_PIXBUF)
+  switch (type)
     {
-      GdkPixbuf  *pixbuf;
-      gchar      *buffer = NULL;
-      gsize       buffer_size = 0;
-      GError     *error = NULL;
+      case GTK_IMAGE_PIXBUF:
+      {
+        GdkPixbuf  *pixbuf;
+        gchar      *buffer = NULL;
+        gsize       buffer_size = 0;
+        GError     *error = NULL;
 
-      pixbuf = gtk_image_get_pixbuf (image);
+        pixbuf = gtk_image_get_pixbuf (image);
 
-      if (gdk_pixbuf_save_to_buffer (pixbuf, &buffer, &buffer_size, "png", &error, NULL))
-        {
-          ret = g_base64_encode ((const guchar *)buffer, buffer_size);
-          g_free (buffer);
-        }
-      else
-        {
-          g_warning ("Unable to convert pixbuf to png data: '%s'", error ? error->message : "unknown");
-          if (error)
-            g_error_free (error);
+        if (gdk_pixbuf_save_to_buffer (pixbuf, &buffer, &buffer_size, "png", &error, NULL))
+          {
+            ret = g_base64_encode ((const guchar *)buffer, buffer_size);
+            g_free (buffer);
+          }
+        else
+          {
+            g_warning ("Unable to convert pixbuf to png data: '%s'", error ? error->message : "unknown");
+            if (error)
+              g_error_free (error);
 
-          ret = g_strdup ("");
-        }
-    }
-  else if (type == GTK_IMAGE_STOCK)
-    {
-      g_object_get (G_OBJECT (image), "stock", &ret, NULL);
-    }
-  else if (type == GTK_IMAGE_ICON_NAME)
-    {
-      g_object_get (G_OBJECT (image), "icon-name", &ret, NULL);
-    }
-  else if (type == GTK_IMAGE_GICON)
-    {
-      GIcon *icon = NULL;
-      gtk_image_get_gicon (image, &icon, NULL);
-      if (G_IS_ICON (icon))
-        {
+            ret = g_strdup ("");
+          }
+
+        break;
+      }
+      case GTK_IMAGE_STOCK:
+      {
+        g_object_get (G_OBJECT (image), "stock", &ret, NULL);
+        break;
+      }
+      case GTK_IMAGE_ICON_NAME:
+      {
+        g_object_get (G_OBJECT (image), "icon-name", &ret, NULL);
+        break;
+      }
+      case GTK_IMAGE_GICON:
+      {
+        GIcon *icon = NULL;
+        gtk_image_get_gicon (image, &icon, NULL);
+        if (G_IS_ICON (icon))
           ret = g_icon_to_string (icon);
-        }
-    }
-  else if (type == GTK_IMAGE_EMPTY)
-    {
-      ret = g_strdup ("");
-    }
-  else
-    {
-      ret = g_strdup ("");
-      g_warning ("Unable to support GtkImageType: %d", type);
+
+        break;
+      }
+      case GTK_IMAGE_EMPTY:
+      {
+        ret = g_strdup ("");
+        break;
+      }
+    default:
+      {
+        ret = g_strdup ("");
+        g_warning ("Unable to support GtkImageType: %d", type);
+      }
     }
 
   return ret;

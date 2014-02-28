@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 #include <gtest/gtest.h>
 
+#include <Nux/Nux.h>
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 #include "test_utils.h"

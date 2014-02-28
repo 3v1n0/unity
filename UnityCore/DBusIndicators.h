@@ -38,6 +38,7 @@ public:
   DBusIndicators();
   ~DBusIndicators();
 
+  std::vector<std::string> const& IconPaths() const;
   void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
 

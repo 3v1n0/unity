@@ -127,6 +127,7 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
 
   UScreen* uscreen = UScreen::GetDefault();
   EnsureLaunchers(uscreen->GetPrimaryMonitor(), uscreen->GetMonitors());
+  uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::EnsureLaunchers));
   SetupIcons();
 
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
@@ -147,8 +148,6 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
     bfb->SetHideMode(mode);
     hud->SetHideMode(mode);
   });
-
-  uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
   WindowManager& wm = WindowManager::Default();
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
@@ -249,11 +248,6 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
   launcher_ = launchers[0];
   launchers.resize(num_launchers);
-}
-
-void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
-{
-  EnsureLaunchers(primary_monitor, monitors);
 }
 
 void Controller::Impl::OnWindowFocusChanged(guint32 xid)

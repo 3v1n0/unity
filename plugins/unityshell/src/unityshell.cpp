@@ -2853,9 +2853,12 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
-  if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window->type() == CompWindowTypeNormalMask)
+  auto window_state = window->state();
+  auto window_type = window->type();
+
+  if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window_type == CompWindowTypeNormalMask)
   {
-    if ((window->state() & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
+    if ((window_state & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
     {
       CompPoint const& viewport = window->defaultViewport();
       unsigned output = window->outputDevice();
@@ -2888,7 +2891,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     Window active_window = screen->activeWindow();
 
-    if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
+    if (G_UNLIKELY(window_type == CompWindowTypeDesktopMask))
     {
       uScreen->setPanelShadowMatrix(matrix);
 
@@ -2908,9 +2911,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
         uScreen->is_desktop_active_ = false;
 
-        if (!(window->state() & CompWindowStateMaximizedVertMask) &&
-            !(window->state() & CompWindowStateFullscreenMask) &&
-            !(window->type() & CompWindowTypeFullscreenMask))
+        if (!(window_state & CompWindowStateMaximizedVertMask) &&
+            !(window_state & CompWindowStateFullscreenMask) &&
+            !(window_type & CompWindowTypeFullscreenMask))
         {
           WindowManager& wm = WindowManager::Default();
           auto const& output = uScreen->screen->currentOutputDev();
@@ -3928,7 +3931,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     if (window->actions() & CompWindowActionCloseMask)
     {
       using namespace decoration;
-      close_texture = DataPool::Get()->ButtonTexture(WindowButtonType::CLOSE, close_icon_state_);
+      close_texture = DataPool::Get()->ButtonTexture(dpi_scale, WindowButtonType::CLOSE, close_icon_state_);
     }
 
     if (redraw_decoration)
@@ -3939,7 +3942,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         RenderDecoration(context, scale);
 
         // Draw window title
-        int text_x = padding.left + (close_texture ? close_texture->width() : 0);
+        int text_x = padding.left + (close_texture ? close_texture->width() : 0) / dpi_scale;
         RenderTitle(context, text_x, padding.top, (width - padding.right) / dpi_scale, height / dpi_scale, scale);
         decoration_selected_tex_ = context;
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
@@ -3956,13 +3959,13 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 
     if (close_texture)
     {
-      int w = close_texture->width() * dpi_scale;
-      int h = close_texture->height() * dpi_scale;
+      int w = close_texture->width();
+      int h = close_texture->height();
       int x = geo.x + padding.left * dpi_scale;
       int y = geo.y + padding.top * dpi_scale + (height - w) / 2.0f;
 
       close_button_geo_.Set(x, y, w, h);
-      DrawTexture(*close_texture, attrib, transform, mask, x, y, dpi_scale);
+      DrawTexture(*close_texture, attrib, transform, mask, x, y);
     }
     else
     {

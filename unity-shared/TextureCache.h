@@ -57,12 +57,12 @@ public:
 private:
   TextureCache() = default;
 
-  std::string Hash(std::string const& , int width, int height);
+  std::size_t Hash(std::string const& , int width, int height);
   // Have the key passed by value not referece, as the key will be a bound
   // parameter in the slot passed to the texture on_destroy signal.
-  void OnDestroyNotify(nux::Trackable* Object, std::string const& key);
+  void OnDestroyNotify(nux::Trackable* Object, std::size_t key);
 
-  std::unordered_map<std::string, nux::BaseTexture*> cache_;
+  std::unordered_map<std::size_t, nux::BaseTexture*> cache_;
 };
 
 }
