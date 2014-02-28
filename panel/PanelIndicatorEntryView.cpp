@@ -442,7 +442,7 @@ void PanelIndicatorEntryView::Refresh()
   {
     width = gdk_pixbuf_get_width(pixbuf);
 
-    if (width == icon_size || gdk_pixbuf_get_height(pixbuf) == icon_size)
+    if (gdk_pixbuf_get_height(pixbuf) == icon_size)
     {
       icon_scalable = true;
       width /= dpi_scale;
