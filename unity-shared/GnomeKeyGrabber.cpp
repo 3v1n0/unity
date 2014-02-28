@@ -213,11 +213,13 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
   {
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
     action.setTerminate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
-      LOG_DEBUG(logger) << "released \"" << action->keyToString() << "\"";
+      auto key = action->keyToString();
+
+      LOG_DEBUG(logger) << "released \"" << key << "\"";
 
       if (state & CompAction::StateTermTapped)
       {
-        LOG_DEBUG(logger) << "tapped \"" << action->keyToString() << "\"";
+        LOG_DEBUG(logger) << "tapped \"" << key << "\"";
         activateAction(action, 0);
         return true;
       }
@@ -235,8 +237,10 @@ void GnomeGrabber::Impl::activateAction(CompAction const* action, unsigned int d
 
   if (0 <= i && i < static_cast<ptrdiff_t>(action_ids_.size()))
   {
-    LOG_DEBUG(logger) << "activateAction (" << action_ids_[i] << " \"" << action->keyToString() << "\")";
-    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_ids_[i], device));
+    auto action_id = action_ids_[i];
+
+    LOG_DEBUG(logger) << "activateAction (" << action_id << " \"" << action->keyToString() << "\")";
+    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_id, device));
   }
 }
 
