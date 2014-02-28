@@ -101,7 +101,7 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);
   virtual void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
-                                glib::Object<GdkPixbuf> const& pixbuf,
+                                glib::Object<GdkPixbuf> const& pixbuf, bool scalable,
                                 glib::Object<PangoLayout> const& layout);
 
   void Refresh();
@@ -116,11 +116,12 @@ private:
   void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void OnActiveChanged(bool is_active);
 
-  glib::Object<GdkPixbuf> MakePixbuf();
+  glib::Object<GdkPixbuf> MakePixbuf(int size);
 
   IndicatorEntryType type_;
   nux::ObjectPtr<nux::BaseTexture> entry_texture_;
   nux::Geometry cached_geo_;
+  glib::Signal<void, GtkIconTheme*> icon_theme_changed_;
   int monitor_;
   double opacity_;
   bool draw_active_;

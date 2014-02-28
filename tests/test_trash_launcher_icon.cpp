@@ -20,8 +20,6 @@
 #include <gmock/gmock.h>
 #include <UnityCore/DesktopUtilities.h>
 
-#include "unity-shared/PanelStyle.h"
-
 #include "TrashLauncherIcon.h"
 #include "test_mock_filemanager.h"
 #include "mock-application.h"
@@ -40,7 +38,6 @@ struct TestTrashLauncherIcon : testmocks::TestUnityAppBase
     , icon(fm_)
   {}
 
-  panel::Style panel_style;
   MockFileManager::Ptr fm_;
   TrashLauncherIcon icon;
 };

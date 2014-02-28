@@ -45,6 +45,7 @@ struct Manager::Impl : sigc::trackable
     indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::AddIndicator));
     indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::RemoveIndicator));
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
+    indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
   }
 
   ~Impl()
@@ -129,6 +130,17 @@ struct Manager::Impl : sigc::trackable
 
     for (auto const& entry : appmenu_->GetEntries())
       entry->set_show_now(show);
+  }
+
+  void IconPathsChanged()
+  {
+    auto const& icon_paths = indicators_->IconPaths();
+    std::vector<const gchar*> gicon_paths(icon_paths.size());
+
+    for (auto const& path : icon_paths)
+      gicon_paths.push_back(path.c_str());
+
+    gtk_icon_theme_set_search_path(gtk_icon_theme_get_default(), gicon_paths.data(), gicon_paths.size());
   }
 
   Manager* parent_;

@@ -28,6 +28,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/TextureCache.h"
 #include "GraphicsUtils.h"
 
 #include <gtk/gtk.h>
@@ -205,8 +206,6 @@ struct IconRenderer::TexturesPool
 
   nux::ObjectPtr<nux::BaseTexture> RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color);
 
-  BaseTexturePtr progress_bar_trough;
-  BaseTexturePtr progress_bar_fill;
   BaseTexturePtr pip_ltr;
   BaseTexturePtr large_pip_ltr;
   // BaseTexturePtr pip_rtl;
@@ -263,19 +262,38 @@ private:
   void SetupShaders();
 };
 
+struct IconRenderer::LocalTextures
+{
+  void ReloadIconSizedTextures(int icon_size, int image_size)
+  {
+    auto& cache = TextureCache::GetDefault();
+    progress_bar_trough = cache.FindTexture("progress_bar_trough.svg", icon_size, icon_size);
+    progress_bar_fill = cache.FindTexture("progress_bar_fill.svg", image_size - (icon_size - image_size));
+  }
+
+  BaseTexturePtr progress_bar_trough;
+  BaseTexturePtr progress_bar_fill;
+};
+
 IconRenderer::IconRenderer()
   : icon_size(0)
   , image_size(0)
   , spacing(0)
   , textures_(TexturesPool::Get())
+  , local_textures_(std::make_shared<LocalTextures>())
 {
   pip_style = OUTSIDE_TILE;
 }
 
 void IconRenderer::SetTargetSize(int tile_size, int image_size_, int spacing_)
 {
-  icon_size = tile_size;
-  image_size = image_size_;
+  if (icon_size != tile_size || image_size != image_size_)
+  {
+    icon_size = tile_size;
+    image_size = image_size_;
+    local_textures_->ReloadIconSizedTextures(icon_size, image_size);
+  }
+
   spacing = spacing_;
 }
 
@@ -1058,11 +1076,11 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int width = texture->GetWidth();
   int height = texture->GetHeight();
 
-  int progress_width =  icon_size;
-  int progress_height = textures_->progress_bar_trough->GetHeight();
+  int progress_width = local_textures_->progress_bar_trough->GetHeight();
+  int progress_height = local_textures_->progress_bar_trough->GetWidth();
 
   int fill_width = image_size - (icon_size - image_size);
-  int fill_height = textures_->progress_bar_fill->GetHeight();
+  int fill_height = local_textures_->progress_bar_fill->GetHeight();
 
   int fill_offset = static_cast<float>(image_size) * fill_offset_ratio;
 
@@ -1097,10 +1115,10 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge, 0, half_size, height));
   GfxContext.QRP_1Tex(left_edge, progress_y, progress_width, progress_height,
-                      textures_->progress_bar_trough->GetDeviceTexture(), texxform,
+                      local_textures_->progress_bar_trough->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(left_edge + fill_offset, fill_y, fill_width, fill_height,
-                      textures_->progress_bar_fill->GetDeviceTexture(), texxform,
+                      local_textures_->progress_bar_fill->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.PopClippingRectangle();
 
@@ -1108,11 +1126,11 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge + half_size, 0, half_size, height));
   GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
                       progress_width, progress_height,
-                      textures_->progress_bar_trough->GetDeviceTexture(), texxform,
+                      local_textures_->progress_bar_trough->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(right_edge - progress_width + fill_offset, fill_y,
                       fill_width, fill_height,
-                      textures_->progress_bar_fill->GetDeviceTexture(), texxform,
+                      local_textures_->progress_bar_fill->GetDeviceTexture(), texxform,
                       nux::color::White);
 
   GfxContext.PopClippingRectangle();
@@ -1219,8 +1237,6 @@ IconRenderer::TexturesPool::TexturesPool()
   , ColorifyColor(0)
   , DesatFactor(0)
 {
-  LoadTexture(progress_bar_trough, PKGDATADIR"/progress_bar_trough.png");
-  LoadTexture(progress_bar_fill, PKGDATADIR"/progress_bar_fill.png");
   LoadTexture(pip_ltr, PKGDATADIR"/launcher_pip_ltr.png");
   LoadTexture(large_pip_ltr, PKGDATADIR"/launcher_pip_large_ltr.png");
   // LoadTexture(pip_rtl, PKGDATADIR"/launcher_pip_rtl.png");

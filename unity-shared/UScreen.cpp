@@ -54,7 +54,7 @@ UScreen* UScreen::GetDefault()
   return default_screen_;
 }
 
-int UScreen::GetMonitorWithMouse()
+int UScreen::GetMonitorWithMouse() const
 {
   GdkDevice* device;
   GdkDisplay *display;
@@ -69,27 +69,27 @@ int UScreen::GetMonitorWithMouse()
   return GetMonitorAtPosition(x, y);
 }
 
-int UScreen::GetPrimaryMonitor()
+int UScreen::GetPrimaryMonitor() const
 {
   return primary_;
 }
 
-int UScreen::GetMonitorAtPosition(int x, int y)
+int UScreen::GetMonitorAtPosition(int x, int y) const
 {
   return gdk_screen_get_monitor_at_point(screen_, x, y);
 }
 
-nux::Geometry& UScreen::GetMonitorGeometry(int monitor)
+nux::Geometry const& UScreen::GetMonitorGeometry(int monitor) const
 {
   return monitors_[monitor];
 }
 
-std::vector<nux::Geometry>& UScreen::GetMonitors()
+std::vector<nux::Geometry> const& UScreen::GetMonitors() const
 {
   return monitors_;
 }
 
-nux::Geometry UScreen::GetScreenGeometry()
+nux::Geometry UScreen::GetScreenGeometry() const
 {
   int width = gdk_screen_get_width(screen_);
   int height = gdk_screen_get_height(screen_);
