@@ -856,6 +856,7 @@ class PanelMenuTests(PanelTestsBase):
         """Applications with no menus must not show menus in the panel."""
 
         test_win = self.launch_test_window()
+        self.move_window_to_panel_monitor(test_win)
 
         self.assertThat(
             lambda: len(self.panel.menus.get_entries()),
@@ -867,6 +868,11 @@ class PanelMenuTests(PanelTestsBase):
 
     def test_menus_shows_when_new_application_is_opened(self):
         """When starting a new application, menus must first show, then hide."""
+
+        # This test requires the window to be opened on the monitor that is being tested and
+        # we cannot guarantee which monitor the window will open up on.
+        if self.panel_monitor > 0:
+            self.skipTest("Cannot guarantee which monitor the window will open on.")
 
         self.start_test_app_with_menus()
 
