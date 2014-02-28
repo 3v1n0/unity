@@ -202,8 +202,9 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 {
   glib::Object<GdkPixbuf> pixbuf;
+  auto image_type = proxy_->image_type();
 
-  switch (proxy_->image_type())
+  switch (image_type)
   {
     case GTK_IMAGE_PIXBUF:
     {
@@ -218,26 +219,28 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 
     case GTK_IMAGE_ICON_NAME:
     case GTK_IMAGE_STOCK:
-    {
-      GtkIconTheme* theme = gtk_icon_theme_get_default();
-      auto flags = static_cast<GtkIconLookupFlags>(0);
-      pixbuf = gtk_icon_theme_load_icon(theme, proxy_->image_data().c_str(), size, flags, nullptr);
-      break;
-    }
-
     case GTK_IMAGE_GICON:
     {
       GtkIconTheme* theme = gtk_icon_theme_get_default();
       auto flags = static_cast<GtkIconLookupFlags>(0);
-      glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
-      gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags));
+      gtk::IconInfo info;
+
+      if (image_type == GTK_IMAGE_GICON)
+      {
+        glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
+        info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
+      }
+      else
+      {
+        info = gtk_icon_theme_lookup_icon(theme, proxy_->image_data().c_str(), size, flags);
+      }
 
       if (info)
       {
-        nux::Size icon_size;
         auto* filename = gtk_icon_info_get_filename(info);
         pixbuf = gdk_pixbuf_new_from_file_at_size(filename, -1, size, nullptr);
       }
+
       break;
     }
   }
