@@ -56,6 +56,7 @@ class ScopeBar : public nux::View, public unity::debug::Introspectable
 
 public:
   ScopeBar();
+  ~ScopeBar();
 
   void AddScope(Scope::Ptr const& scope);
   void Activate(std::string id);

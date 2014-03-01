@@ -110,6 +110,15 @@ void IconTexture::SetByFilePath(std::string const& file_path, unsigned int size)
   SetByIconName(file_path, size);
 }
 
+void IconTexture::ReLoadIcon()
+{
+  IconLoader::GetDefault().DisconnectHandle(_handle);
+  _handle = 0;
+  _loading = false;
+
+  LoadIcon();
+}
+
 void IconTexture::LoadIcon()
 {
   LOG_DEBUG(logger) << "LoadIcon called (" << _icon_name << ") - loading: " << _loading;

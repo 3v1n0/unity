@@ -45,6 +45,8 @@ public:
   nux::Property<std::string> id;
   nux::Property<bool> active;
 
+  std::string IconHint() const;
+
 private:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void OnActiveChanged(bool is_active);
@@ -60,6 +62,7 @@ private:
   LayerPtr focus_layer_;
 
   double scale_;
+  std::string icon_hint_;
 };
 
 }

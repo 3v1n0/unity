@@ -130,6 +130,8 @@ private:
 
   nux::Geometry GetRenderAbsoluteGeometry() const;
 
+  void UpdateDashViewSize();
+  void OnDPIChanged();
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 

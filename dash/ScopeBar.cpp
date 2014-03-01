@@ -54,6 +54,13 @@ ScopeBar::ScopeBar()
   SetupLayout();
 }
 
+ScopeBar::~ScopeBar()
+{
+  // If you store pointers in an STL, you've got to manually clean them up!
+  for (unsigned i = 0; i < icons_.size(); ++i)
+    delete icons_[i];
+}
+
 void ScopeBar::SetupBackground()
 {
   nux::ROPConfig rop;
@@ -73,9 +80,7 @@ void ScopeBar::UpdateScale(double scale)
     SetMaximumHeight(SCOPEBAR_HEIGHT.CP(scale_));
 
     for (auto icon : icons_)
-    {
       icon->UpdateScale(scale_);
-    }
   }
 }
 

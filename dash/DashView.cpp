@@ -157,6 +157,8 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
     if (visible_ && !area)
       nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
   });
+
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &DashView::OnDPIChanged));
 }
 
 DashView::~DashView()
@@ -528,38 +530,23 @@ void DashView::AboutToHide()
 
 void DashView::SetupViews()
 {
-  dash::Style& style = dash::Style::Instance();
-
-  RawPixel const v_separator_size = style.GetVSeparatorSize();
-  RawPixel const h_separator_size = style.GetHSeparatorSize();
-  RawPixel const view_top_padding = style.GetDashViewTopPadding();
-
-  RawPixel const search_bar_left_padding = style.GetSearchBarLeftPadding();
-  RawPixel const search_bar_height       = style.GetSearchBarHeight();
-
   layout_ = new nux::VLayout();
-  layout_->SetLeftAndRightPadding(v_separator_size.CP(cv_), 0);
-  layout_->SetTopAndBottomPadding(h_separator_size.CP(cv_), 0);
   SetLayout(layout_);
 
   top_space_ = new nux::SpaceLayout(0, 0, renderer_.y_offset(), renderer_.y_offset());
   layout_->AddLayout(top_space_, 0);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
-  content_layout_->SetTopAndBottomPadding(view_top_padding.CP(cv_), 0);
 
   content_view_ = new DashContentView(NUX_TRACKER_LOCATION);
   content_view_->SetLayout(content_layout_);
   layout_->AddView(content_view_, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   search_bar_layout_ = new nux::HLayout();
-  search_bar_layout_->SetLeftAndRightPadding(search_bar_left_padding.CP(cv_), 0);
   content_layout_->AddLayout(search_bar_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   search_bar_ = new SearchBar(true);
   AddChild(search_bar_);
-  search_bar_->SetMinimumHeight(search_bar_height.CP(cv_));
-  search_bar_->SetMaximumHeight(search_bar_height.CP(cv_));
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
@@ -581,6 +568,34 @@ void DashView::SetupViews()
   AddChild(scope_bar_);
   scope_bar_->scope_activated.connect(sigc::mem_fun(this, &DashView::OnScopeBarActivated));
   content_layout_->AddView(scope_bar_, 0, nux::MINOR_POSITION_CENTER);
+
+  UpdateDashViewSize();
+}
+
+void DashView::OnDPIChanged()
+{
+  UpdateDashViewSize();
+}
+
+void DashView::UpdateDashViewSize()
+{
+  dash::Style const& style = dash::Style::Instance();
+
+  RawPixel const v_separator_size = style.GetVSeparatorSize();
+  RawPixel const h_separator_size = style.GetHSeparatorSize();
+  RawPixel const view_top_padding = style.GetDashViewTopPadding();
+
+  RawPixel const search_bar_left_padding = style.GetSearchBarLeftPadding();
+  RawPixel const search_bar_height       = style.GetSearchBarHeight();
+
+  layout_->SetLeftAndRightPadding(v_separator_size.CP(cv_), 0);
+  layout_->SetTopAndBottomPadding(h_separator_size.CP(cv_), 0);
+
+  content_layout_->SetTopAndBottomPadding(view_top_padding.CP(cv_), 0);
+
+  search_bar_layout_->SetLeftAndRightPadding(search_bar_left_padding.CP(cv_), 0);
+  search_bar_->SetMinimumHeight(search_bar_height.CP(cv_));
+  search_bar_->SetMaximumHeight(search_bar_height.CP(cv_));
 
   scope_bar_->UpdateScale(cv_->DPIScale());
 }

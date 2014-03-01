@@ -53,6 +53,7 @@ public:
   void GetTextureSize(int* width, int* height);
 
   void LoadIcon();
+  void ReLoadIcon();
 
   void SetOpacity(float opacity);
 
