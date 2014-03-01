@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -467,7 +467,6 @@ void DashView::AboutToShow(int monitor)
   {
     monitor_ = monitor;
     cv_ = Settings::Instance().em(monitor_);
-    printf("MONITOR CHANGED!! %i\n", monitor_);
     Relayout();
   }
 
@@ -575,6 +574,11 @@ void DashView::SetupViews()
 void DashView::OnDPIChanged()
 {
   UpdateDashViewSize();
+
+  for (auto& scope : scope_views_)
+  {
+    scope.second->UpdateScale(cv_->DPIScale());
+  }
 }
 
 void DashView::UpdateDashViewSize()
@@ -1274,6 +1278,7 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
 
   nux::ObjectPtr<ScopeView> view(new ScopeView(scope, search_bar_->show_filters()));
   AddChild(view.GetPointer());
+  view->UpdateScale(cv_->DPIScale());
   view->SetVisible(false);
   view->result_activated.connect(sigc::mem_fun(this, &DashView::OnResultActivated));
 

@@ -110,6 +110,11 @@ void IconTexture::SetByFilePath(std::string const& file_path, unsigned int size)
   SetByIconName(file_path, size);
 }
 
+void IconTexture::SetSize(unsigned size)
+{
+  _size = size;
+}
+
 void IconTexture::ReLoadIcon()
 {
   IconLoader::GetDefault().DisconnectHandle(_handle);

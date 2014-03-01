@@ -52,6 +52,8 @@ public:
   void SetByFilePath(std::string const& file_path, unsigned int size);
   void GetTextureSize(int* width, int* height);
 
+  void SetSize(unsigned size);
+
   void LoadIcon();
   void ReLoadIcon();
 
