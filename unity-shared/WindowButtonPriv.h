@@ -61,7 +61,6 @@ private:
   void UpdateSize();
   void LoadImages();
   bool EnabledSetter(bool enabled);
-  static nux::ObjectPtr<nux::BaseTexture> GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state, int monitor);
 
   void UpdateGeometry();
 

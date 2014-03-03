@@ -467,13 +467,21 @@ class HudBehaviorTests(HudTestsBase):
         char_win = self.process_manager.start_app("Character Map")
         self.assertProperty(char_win, is_active=True)
         self.keybinding("window/maximize")
-        self.process_manager.start_app("Calculator")
+        calc_win = self.process_manager.start_app("Calculator")
 
         self.unity.hud.ensure_visible()
 
-        #Click bottom right of the screen
+        # Click bottom right of the screen, but take into account the non-maximized window -
+        # we do not want to click on it as it focuses the wrong window
         w = self.display.get_screen_width() - 1
         h = self.display.get_screen_height() - 1
+
+        # If the mouse is over the non-maximized window, move it away from it.
+        (calc_x, calc_y, calc_w, calc_h) = calc_win.get_windows()[0].geometry
+        if calc_x <= w <= calc_x+calc_w:
+            grab_padding = 15
+            w = w - (calc_w + grab_padding)
+
         self.mouse.move(w,h)
         self.mouse.click()
 
@@ -508,6 +516,10 @@ class HudBehaviorTests(HudTestsBase):
         """ The Hud must not open if a window is fullscreen. """
         gedit = self.process_manager.start_app("Text Editor")
         self.keyboard.press_and_release('F11')
+
+        monitor = gedit.get_windows()[0].monitor
+        move_mouse_to_screen(monitor)
+
         self.keybinding("hud/reveal")
         self.addCleanup(self.unity.hud.ensure_hidden)
 
