@@ -57,23 +57,29 @@ void EMConverter::UpdateBasePixelsPerEM()
     base_pixels_per_em_ = DEFAULT_PPE;
 }
 
-void EMConverter::SetFontSize(int font_size)
+bool EMConverter::SetFontSize(int font_size)
 {
   if (font_size != font_size_)
   {
     font_size_ = font_size;
     UpdatePixelsPerEM();
     UpdateBasePixelsPerEM();
+    return true;
   }
+
+  return false;
 }
 
-void EMConverter::SetDPI(double dpi)
+bool EMConverter::SetDPI(double dpi)
 {
   if (dpi != dpi_)
   {
     dpi_ = dpi;
     UpdatePixelsPerEM();
+    return true;
   }
+
+  return false;
 }
 
 int EMConverter::GetFontSize() const

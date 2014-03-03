@@ -61,7 +61,6 @@ private:
   void UpdateSize();
   void LoadImages();
   bool EnabledSetter(bool enabled);
-  static nux::ObjectPtr<nux::BaseTexture> GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state);
 
   void UpdateGeometry();
 
@@ -73,7 +72,6 @@ private:
 private:
   panel::WindowButtonType type_;
   int monitor_;
-  EMConverter::Ptr cv_;
 
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> prelight_tex_;

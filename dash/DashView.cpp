@@ -36,7 +36,6 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/PreviewStyle.h"
-#include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
@@ -169,6 +168,8 @@ void DashView::SetMonitorOffset(int x, int y)
 {
   renderer_.x_offset = x;
   renderer_.y_offset = y;
+
+  top_space_->SetMinMaxSize(0, y);
 }
 
 bool DashView::IsCommandLensOpen() const
@@ -518,14 +519,14 @@ void DashView::AboutToHide()
 void DashView::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
-  panel::Style &panel_style = panel::Style::Instance();
-  int panel_height = panel_style.PanelHeight();
 
   layout_ = new nux::VLayout();
   layout_->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
   layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
   SetLayout(layout_);
-  layout_->AddLayout(new nux::SpaceLayout(0, 0, panel_height, panel_height), 0);
+
+  top_space_ = new nux::SpaceLayout(0, 0, renderer_.y_offset(), renderer_.y_offset());
+  layout_->AddLayout(top_space_, 0);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
@@ -611,8 +612,7 @@ void DashView::Relayout()
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
   dash::Style& style = dash::Style::Instance();
-  panel::Style &panel_style = panel::Style::Instance();
-  int panel_height = panel_style.PanelHeight();
+  int panel_height = renderer_.y_offset;
 
   int width = 0, height = 0;
   int tile_width = style.GetTileWidth();
@@ -649,29 +649,25 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  panel::Style &panel_style = panel::Style::Instance();
   nux::Geometry const& renderer_geo_abs(GetRenderAbsoluteGeometry());
   nux::Geometry renderer_geo(GetGeometry());
-  int panel_height = panel_style.PanelHeight();
-
-  renderer_geo.y += panel_height;
-  renderer_geo.height += panel_height;
+  renderer_geo.y += renderer_.y_offset;
+  renderer_geo.height += renderer_.y_offset;
 
   renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, false);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  panel::Style& panel_style = panel::Style::Instance();
-  int panel_height = panel_style.PanelHeight();
+  int renderer_y_offset = renderer_.y_offset();
 
   nux::Geometry renderer_geo_abs(GetAbsoluteGeometry());
-  renderer_geo_abs.y += panel_height;
-  renderer_geo_abs.height -= panel_height;
+  renderer_geo_abs.y += renderer_y_offset;
+  renderer_geo_abs.height -= renderer_y_offset;
 
   nux::Geometry renderer_geo(GetGeometry());
-  renderer_geo.y += panel_height;
-  renderer_geo.height += panel_height;
+  renderer_geo.y += renderer_y_offset;
+  renderer_geo.height += renderer_y_offset;
 
   renderer_.DrawInner(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo);
 
@@ -1692,12 +1688,9 @@ nux::Geometry const& DashView::GetContentGeometry() const
 
 nux::Geometry DashView::GetRenderAbsoluteGeometry() const
 {
-  panel::Style &panel_style = panel::Style::Instance();
-  int panel_height = panel_style.PanelHeight();
-
   nux::Geometry renderer_geo_abs(GetAbsoluteGeometry());
-  renderer_geo_abs.y += panel_height;
-  renderer_geo_abs.height -= panel_height;
+  renderer_geo_abs.y += renderer_.y_offset;
+  renderer_geo_abs.height -= renderer_.y_offset;
   return renderer_geo_abs;
 }
 

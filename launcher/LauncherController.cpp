@@ -127,7 +127,7 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
 
   UScreen* uscreen = UScreen::GetDefault();
   EnsureLaunchers(uscreen->GetPrimaryMonitor(), uscreen->GetMonitors());
-
+  uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::EnsureLaunchers));
   SetupIcons();
 
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
@@ -149,8 +149,6 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
     hud->SetHideMode(mode);
   });
 
-  uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
-
   WindowManager& wm = WindowManager::Default();
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
   wm.viewport_layout_changed.connect(sigc::group(sigc::mem_fun(this, &Controller::Impl::UpdateNumWorkspaces), sigc::_1 * sigc::_2));
@@ -170,8 +168,6 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
       ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED, glib::Variant(selected->tooltip_text()));
     }
   });
-
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnDPIChanged));
 
   parent_->AddChild(model_.get());
 
@@ -252,11 +248,6 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
   launcher_ = launchers[0];
   launchers.resize(num_launchers);
-}
-
-void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
-{
-  EnsureLaunchers(primary_monitor, monitors);
 }
 
 void Controller::Impl::OnWindowFocusChanged(guint32 xid)
@@ -549,22 +540,6 @@ void Controller::Impl::SortAndUpdate()
     {
       // reset shortcut
       icon->SetShortcut(0);
-    }
-  }
-}
-
-void Controller::Impl::OnDPIChanged()
-{
-  for (auto const& launcher_ptr : launchers)
-  {
-    if (launcher_ptr)
-    {
-      nux::Geometry const& parent_geo = launcher_ptr->GetParent()->GetGeometry();
-      int monitor = launcher_ptr->monitor();
-      int height  = panel::Style::Instance().PanelHeight(monitor);
-      int diff    = height - parent_geo.y;
-
-      launcher_ptr->Resize(nux::Point(parent_geo.x, parent_geo.y + diff), parent_geo.height - diff);
     }
   }
 }

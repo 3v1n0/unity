@@ -226,17 +226,6 @@ void Item::AddProperties(debug::IntrospectionData& data)
 
 //
 
-TexturedItem::TexturedItem()
-{
-  scale.changed.connect([this] (float s) {
-    if (texture_.SetScale(s))
-    {
-      geo_parameters_changed.emit();
-      Damage();
-    }
-  });
-}
-
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 {
   auto prev_geo = Geometry();
@@ -274,12 +263,12 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
 
 int TexturedItem::GetNaturalWidth() const
 {
-  return (texture_) ? texture_.st->width() * scale() : Item::GetNaturalWidth();
+  return (texture_) ? texture_.st->width() : Item::GetNaturalWidth();
 }
 
 int TexturedItem::GetNaturalHeight() const
 {
-  return (texture_) ? texture_.st->height() * scale() : Item::GetNaturalHeight();
+  return (texture_) ? texture_.st->height() : Item::GetNaturalHeight();
 }
 
 CompRect& TexturedItem::InternalGeo()
@@ -387,8 +376,14 @@ void Layout::Remove(Item::Ptr const& item)
 
 CompRect Layout::ContentGeometry() const
 {
-  return CompRect(rect_.x() + min(left_padding(), rect_.width()),
-                  rect_.y() + min(top_padding(), rect_.height()),
+  float scale = this->scale();
+  int left_padding = this->left_padding().CP(scale);
+  int right_padding = this->right_padding().CP(scale);
+  int top_padding = this->top_padding().CP(scale);
+  int bottom_padding = this->bottom_padding().CP(scale);
+
+  return CompRect(rect_.x() + min(left_padding, rect_.width()),
+                  rect_.y() + min(top_padding, rect_.height()),
                   clamp_size(rect_.width() - left_padding - right_padding),
                   clamp_size(rect_.height() - top_padding - bottom_padding));
 }
@@ -396,13 +391,19 @@ CompRect Layout::ContentGeometry() const
 void Layout::DoRelayout()
 {
   int loop = 0;
+  float scale = this->scale();
+  int inner_padding = this->inner_padding().CP(scale);
+  int left_padding = this->left_padding().CP(scale);
+  int right_padding = this->right_padding().CP(scale);
+  int top_padding = this->top_padding().CP(scale);
+  int bottom_padding = this->bottom_padding().CP(scale);
 
   nux::Size available_space(clamp_size(max_.width - left_padding - right_padding),
                             clamp_size(max_.height - top_padding - bottom_padding));
 
   do
   {
-    nux::Size content(min(left_padding(), max_.width), 0);
+    nux::Size content(min(left_padding, max_.width), 0);
 
     for (auto const& item : items_)
     {
@@ -428,7 +429,7 @@ void Layout::DoRelayout()
     if (!items_.empty() && content.width > inner_padding)
       content.width -= inner_padding;
 
-    int actual_right_padding = max(0, min(right_padding(), max_.width - content.width));
+    int actual_right_padding = max(0, min(right_padding, max_.width - content.width));
     int vertical_padding = top_padding + bottom_padding;
 
     content.width += actual_right_padding;
@@ -490,7 +491,7 @@ void Layout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAt
   }
 }
 
-bool Layout::SetPadding(int& target, int new_value)
+bool Layout::SetPadding(RawPixel& target, RawPixel const& new_value)
 {
   int padding = clamp_size(new_value);
 

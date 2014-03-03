@@ -38,7 +38,7 @@ const char* window_title = "unity-panel";
 class Controller::Impl
 {
 public:
-  Impl(menu::Manager::Ptr const&, ui::EdgeBarrierController::Ptr const&);
+  Impl(Controller*, menu::Manager::Ptr const&, ui::EdgeBarrierController::Ptr const&);
   ~Impl();
 
   // NOTE: nux::Property maybe?
@@ -48,14 +48,15 @@ public:
 
   float opacity() const;
 
-  nux::ObjectPtr<PanelView> CreatePanel(Introspectable *iobj);
-  void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
+  nux::ObjectPtr<PanelView> CreatePanel();
+  void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry> const& monitors);
   void UpdatePanelGeometries();
 
   typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
 
   PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
+  Controller* parent_;
   menu::Manager::Ptr indicators_;
   ui::EdgeBarrierController::Ptr edge_barriers_;
   PanelVector panels_;
@@ -66,12 +67,17 @@ public:
 };
 
 
-Controller::Impl::Impl(menu::Manager::Ptr const& indicators, ui::EdgeBarrierController::Ptr const& edge_barriers)
-  : indicators_(indicators)
+Controller::Impl::Impl(Controller* parent, menu::Manager::Ptr const& indicators, ui::EdgeBarrierController::Ptr const& edge_barriers)
+  : parent_(parent)
+  , indicators_(indicators)
   , edge_barriers_(edge_barriers)
   , opacity_(1.0f)
   , opacity_maximized_toggle_(false)
-{}
+{
+  UScreen* screen = UScreen::GetDefault();
+  screen->changed.connect(sigc::mem_fun(this, &Impl::OnScreenChanged));
+  OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
+}
 
 Controller::Impl::~Impl()
 {
@@ -132,9 +138,7 @@ PanelView* Controller::Impl::ViewForWindow(BaseWindowPtr const& window) const
 }
 
 // We need to put a panel on every monitor, and try and re-use the panels we already have
-void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
-                                       std::vector<nux::Geometry>& monitors,
-                                       Introspectable *iobj)
+void Controller::Impl::OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry> const& monitors)
 {
   unsigned int num_monitors = monitors.size();
   unsigned int num_panels = num_monitors;
@@ -147,11 +151,11 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
   {
     if (i >= panels_size)
     {
-      panels_.push_back(CreatePanel(iobj));
+      panels_.push_back(CreatePanel());
     }
     else if (!panels_[i])
     {
-      panels_[i] = CreatePanel(iobj);
+      panels_[i] = CreatePanel();
     }
 
     if (panels_[i]->GetMonitor() != static_cast<int>(i))
@@ -171,7 +175,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
     auto const& panel = panels_[i];
     if (panel)
     {
-      iobj->RemoveChild(panel.GetPointer());
+      parent_->RemoveChild(panel.GetPointer());
       panel->GetParent()->UnReference();
       edge_barriers_->RemoveHorizontalSubscriber(panel.GetPointer(), panel->GetMonitor());
     }
@@ -182,7 +186,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
 }
 
 
-nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel(Introspectable *iobj)
+nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel()
 {
   auto* panel_window = new MockableBaseWindow(TEXT("PanelWindow"));
 
@@ -205,7 +209,7 @@ nux::ObjectPtr<PanelView> Controller::Impl::CreatePanel(Introspectable *iobj)
     panel_window->EnableInputWindow(true, panel::window_title, false, false);
 
   panel_window->InputWindowEnableStruts(true);
-  iobj->AddChild(view);
+  parent_->AddChild(view);
 
   return nux::ObjectPtr<PanelView>(view);
 }
@@ -228,14 +232,8 @@ float Controller::Impl::opacity() const
 
 Controller::Controller(menu::Manager::Ptr const& menus, ui::EdgeBarrierController::Ptr const& edge_barriers)
   : launcher_width(64)
-  , pimpl(new Impl(menus, edge_barriers))
+  , pimpl(new Impl(this, menus, edge_barriers))
 {
-  UScreen* screen = UScreen::GetDefault();
-  screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
-  OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
-
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Controller::OnDPIChanged));
-
   launcher_width.changed.connect([this] (int width)
   {
     pimpl->SetLauncherWidth(width);
@@ -244,19 +242,6 @@ Controller::Controller(menu::Manager::Ptr const& menus, ui::EdgeBarrierControlle
 
 Controller::~Controller()
 {}
-
-void Controller::OnDPIChanged()
-{
-  for (auto& panel_ptr : pimpl->panels_)
-  {
-    if (panel_ptr)
-    {
-      int monitor = panel_ptr->GetMonitor();
-
-      panel_ptr->SetMonitor(monitor);
-    }
-  }
-}
 
 void Controller::SetOpacity(float opacity)
 {
@@ -297,11 +282,6 @@ void Controller::AddProperties(debug::IntrospectionData& introspection)
 {
   introspection
     .add("opacity", pimpl->opacity());
-}
-
-void Controller::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
-{
-  pimpl->OnScreenChanged(primary_monitor, monitors, this);
 }
 
 } // namespace panel

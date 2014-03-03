@@ -30,6 +30,7 @@ Title::Title()
 {
   text.changed.connect(sigc::mem_fun(this, &Title::OnTextChanged));
   focused.changed.connect(sigc::hide(sigc::mem_fun(this, &Title::RenderTexture)));
+  scale.changed.connect([this] (double) { text.changed.emit(text()); });
   Style::Get()->title_font.changed.connect(sigc::mem_fun(this, &Title::OnFontChanged));
 }
 
@@ -37,6 +38,8 @@ void Title::OnTextChanged(std::string const& new_text)
 {
   bool damaged = false;
   auto real_size = Style::Get()->TitleNaturalSize(new_text);
+  real_size.width *= scale();
+  real_size.height *= scale();
 
   if (GetNaturalWidth() > real_size.width || GetNaturalHeight() > real_size.height)
   {
@@ -59,8 +62,8 @@ void Title::OnFontChanged(std::string const&)
 void Title::RenderTexture()
 {
   auto state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
-  cu::CairoContext text_ctx(texture_size_.width, texture_size_.height);
-  Style::Get()->DrawTitle(text(), state, text_ctx, texture_size_.width, texture_size_.height);
+  cu::CairoContext text_ctx(texture_size_.width, texture_size_.height, scale());
+  Style::Get()->DrawTitle(text(), state, text_ctx, texture_size_.width / scale(), texture_size_.height / scale());
   SetTexture(text_ctx);
 }
 

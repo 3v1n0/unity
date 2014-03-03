@@ -40,6 +40,7 @@ public:
   virtual ~Indicators();
 
   IndicatorsList GetIndicators() const;
+  virtual std::vector<std::string> const& IconPaths() const = 0;
 
   virtual void SyncGeometries(std::string const& panel, EntryLocationMap const&) = 0;
   virtual void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y) = 0;
@@ -47,6 +48,7 @@ public:
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
   sigc::signal<void, Indicator::Ptr const&> on_object_removed;
+  sigc::signal<void> icon_paths_changed;
 
   /**
    * Service wants the view to activate an entry.

@@ -25,7 +25,6 @@
 #include "DecorationsTitle.h"
 #include "DecorationsSlidingLayout.h"
 #include "DecorationsMenuLayout.h"
-#include "RawPixel.h"
 #include "WindowManager.h"
 #include "UnitySettings.h"
 
@@ -93,6 +92,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
     return true;
   });
 
+  parent->dpi_scale.SetGetterFunction([this] { return cv_->DPIScale(); });
   parent->scaled.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Update)));
 
   if (win_->isViewable() || win_->shaded())
@@ -141,16 +141,16 @@ void Window::Impl::SetupExtents()
     return;
 
   auto const& sb = Style::Get()->Border();
-  CompWindowExtents border(RawPixel(sb.left).CP(cv_),
-                           RawPixel(sb.right).CP(cv_),
-                           RawPixel(sb.top).CP(cv_),
-                           RawPixel(sb.bottom).CP(cv_));
+  CompWindowExtents border(cv_->CP(sb.left),
+                           cv_->CP(sb.right),
+                           cv_->CP(sb.top),
+                           cv_->CP(sb.bottom));
 
   auto const& ib = Style::Get()->InputBorder();
-  CompWindowExtents input(RawPixel(sb.left + ib.left).CP(cv_),
-                          RawPixel(sb.right + ib.right).CP(cv_),
-                          RawPixel(sb.top + ib.top).CP(cv_),
-                          RawPixel(sb.bottom + ib.bottom).CP(cv_));
+  CompWindowExtents input(cv_->CP(sb.left + ib.left),
+                          cv_->CP(sb.right + ib.right),
+                          cv_->CP(sb.top + ib.top),
+                          cv_->CP(sb.bottom + ib.bottom));
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
@@ -292,6 +292,11 @@ void Window::Impl::SetupWindowControls()
     Decorate();
   });
 
+  dpi_changed_ = Settings::Instance().dpi_changed.connect([this] {
+    Update();
+    top_layout_->scale = cv_->DPIScale();
+  });
+
   input_mixer_ = std::make_shared<InputMixer>();
 
   if (win_->actions() & CompWindowActionResizeMask)
@@ -314,7 +319,7 @@ void Window::Impl::SetupWindowControls()
   top_layout_->right_padding = padding.right;
   top_layout_->top_padding = padding.top;
   top_layout_->focused = active();
-  top_layout_->scale = Settings::Instance().em(monitor_)->DPIScale();
+  top_layout_->scale = cv_->DPIScale();
 
   if (win_->actions() & CompWindowActionCloseMask)
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::CLOSE));
@@ -353,6 +358,7 @@ void Window::Impl::CleanupWindowControls()
 
   UnsetAppMenu();
   theme_changed_->disconnect();
+  dpi_changed_->disconnect();
   top_layout_.reset();
   input_mixer_.reset();
   edge_borders_.reset();
@@ -413,9 +419,10 @@ void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
 
   if (deco_tex.quad.box.width() != geo.width || deco_tex.quad.box.height() != geo.height)
   {
-    cu::CairoContext ctx(geo.width, geo.height);
+    double scale = top_layout_->scale();
+    cu::CairoContext ctx(geo.width, geo.height, scale);
     auto ws = active() ? WidgetState::NORMAL : WidgetState::BACKDROP;
-    Style::Get()->DrawSide(s, ws, ctx, geo.width, geo.height);
+    Style::Get()->DrawSide(s, ws, ctx, geo.width / scale, geo.height / scale);
     deco_tex.SetTexture(ctx);
   }
 
@@ -763,7 +770,7 @@ void Window::AddProperties(debug::IntrospectionData& data)
   .add("active", impl_->active())
   .add("scaled", scaled())
   .add("monitor", impl_->monitor_)
-  .add("dpi_scale", impl_->cv_->DPIScale())
+  .add("dpi_scale", dpi_scale())
   .add("xid", impl_->win_->id())
   .add("fully_decorable", cu::IsWindowFullyDecorable(impl_->win_))
   .add("shadow_decorable", cu::IsWindowShadowDecorable(impl_->win_))

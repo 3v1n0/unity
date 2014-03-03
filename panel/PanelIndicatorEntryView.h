@@ -34,7 +34,6 @@
 
 #include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
-#include "unity-shared/RawPixel.h"
 
 
 namespace unity
@@ -102,7 +101,7 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);
   virtual void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
-                                glib::Object<GdkPixbuf> const& pixbuf,
+                                glib::Object<GdkPixbuf> const& pixbuf, bool scalable,
                                 glib::Object<PangoLayout> const& layout);
 
   void Refresh();
@@ -110,11 +109,6 @@ protected:
   virtual void ShowMenu(int button = 1);
 
   indicator::Entry::Ptr proxy_;
-  RawPixel spacing_;
-  RawPixel left_padding_;
-  RawPixel right_padding_;
-
-  int monitor_;
 
 private:
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
@@ -122,21 +116,19 @@ private:
   void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void OnActiveChanged(bool is_active);
 
-  int PixbufWidth(glib::Object<GdkPixbuf> const& pixbuf) const;
-  int PixbufHeight(glib::Object<GdkPixbuf> const& pixbuf) const;
-
-  void ScaleImageIcons(cairo_t* cr, int* x, int* y);
-
-  glib::Object<GdkPixbuf> MakePixbuf();
+  glib::Object<GdkPixbuf> MakePixbuf(int size);
 
   IndicatorEntryType type_;
   nux::ObjectPtr<nux::BaseTexture> entry_texture_;
   nux::Geometry cached_geo_;
+  glib::Signal<void, GtkIconTheme*> icon_theme_changed_;
+  int monitor_;
   double opacity_;
   bool draw_active_;
   bool overlay_showing_;
   bool disabled_;
   bool focused_;
+  int padding_;
 
   EMConverter::Ptr cv_;
 };

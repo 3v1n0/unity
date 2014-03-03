@@ -54,7 +54,7 @@ UScreen* UScreen::GetDefault()
   return default_screen_;
 }
 
-int UScreen::GetMonitorWithMouse()
+int UScreen::GetMonitorWithMouse() const
 {
   GdkDevice* device;
   GdkDisplay *display;
@@ -69,31 +69,31 @@ int UScreen::GetMonitorWithMouse()
   return GetMonitorAtPosition(x, y);
 }
 
-int UScreen::GetPrimaryMonitor()
+int UScreen::GetPrimaryMonitor() const
 {
   return primary_;
 }
 
-int UScreen::GetMonitorAtPosition(int x, int y)
+int UScreen::GetMonitorAtPosition(int x, int y) const
 {
   return gdk_screen_get_monitor_at_point(screen_, x, y);
 }
 
-nux::Geometry& UScreen::GetMonitorGeometry(int monitor)
+nux::Geometry const& UScreen::GetMonitorGeometry(int monitor) const
 {
   return monitors_[monitor];
 }
 
-std::vector<nux::Geometry>& UScreen::GetMonitors()
+std::vector<nux::Geometry> const& UScreen::GetMonitors() const
 {
   return monitors_;
 }
 
-nux::Geometry UScreen::GetScreenGeometry()
+nux::Geometry UScreen::GetScreenGeometry() const
 {
   int width = gdk_screen_get_width(screen_);
   int height = gdk_screen_get_height(screen_);
-  return nux::Geometry(0, 0, width, height); 
+  return nux::Geometry(0, 0, width, height);
 }
 
 const std::string UScreen::GetMonitorName(int output_number = 0) const
@@ -104,14 +104,14 @@ const std::string UScreen::GetMonitorName(int output_number = 0) const
     return "";
   }
 
-  char* const output_name = gdk_screen_get_monitor_plug_name(screen_, output_number);
+  glib::String output_name(gdk_screen_get_monitor_plug_name(screen_, output_number));
   if (!output_name)
   {
     LOG_ERROR(logger) << "UScreen::GetMonitorName: Failed to get monitor name for monitor" << output_number;
     return "";
   }
 
-  return std::string(output_name);
+  return output_name.Str();
 }
 
 int UScreen::GetPluggedMonitorsNumber() const

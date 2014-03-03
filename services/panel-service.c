@@ -1398,59 +1398,82 @@ sort_indicators (PanelService *self)
 }
 
 static gchar *
-gtk_image_to_data (GtkImage *image)
+gtk_image_to_data (GtkImage *image, guint32 *storage_type)
 {
-  GtkImageType type = gtk_image_get_storage_type (image);
+  *storage_type = gtk_image_get_storage_type (image);
   gchar *ret = NULL;
 
-  if (type == GTK_IMAGE_PIXBUF)
+  switch (*storage_type)
     {
-      GdkPixbuf  *pixbuf;
-      gchar      *buffer = NULL;
-      gsize       buffer_size = 0;
-      GError     *error = NULL;
+      case GTK_IMAGE_PIXBUF:
+      {
+        gchar *file;
+        g_object_get (image, "file", &file, NULL);
 
-      pixbuf = gtk_image_get_pixbuf (image);
+        if (file)
+          {
+            if (file[0] != '\0')
+              {
+                *storage_type = GTK_IMAGE_ICON_NAME;
+                ret = file;
+                break;
+              }
 
-      if (gdk_pixbuf_save_to_buffer (pixbuf, &buffer, &buffer_size, "png", &error, NULL))
-        {
-          ret = g_base64_encode ((const guchar *)buffer, buffer_size);
-          g_free (buffer);
-        }
-      else
-        {
-          g_warning ("Unable to convert pixbuf to png data: '%s'", error ? error->message : "unknown");
-          if (error)
-            g_error_free (error);
+            g_free (file);
+          }
 
-          ret = g_strdup ("");
-        }
-    }
-  else if (type == GTK_IMAGE_STOCK)
-    {
-      g_object_get (G_OBJECT (image), "stock", &ret, NULL);
-    }
-  else if (type == GTK_IMAGE_ICON_NAME)
-    {
-      g_object_get (G_OBJECT (image), "icon-name", &ret, NULL);
-    }
-  else if (type == GTK_IMAGE_GICON)
-    {
-      GIcon *icon = NULL;
-      gtk_image_get_gicon (image, &icon, NULL);
-      if (G_IS_ICON (icon))
-        {
+        GdkPixbuf  *pixbuf;
+        gchar      *buffer = NULL;
+        gsize       buffer_size = 0;
+        GError     *error = NULL;
+
+        pixbuf = gtk_image_get_pixbuf (image);
+
+        if (gdk_pixbuf_save_to_buffer (pixbuf, &buffer, &buffer_size, "png", &error, NULL))
+          {
+            ret = g_base64_encode ((const guchar *)buffer, buffer_size);
+            g_free (buffer);
+          }
+        else
+          {
+            g_warning ("Unable to convert pixbuf to png data: '%s'", error ? error->message : "unknown");
+            if (error)
+              g_error_free (error);
+
+            ret = g_strdup ("");
+          }
+
+        break;
+      }
+      case GTK_IMAGE_STOCK:
+      {
+        g_object_get (G_OBJECT (image), "stock", &ret, NULL);
+        break;
+      }
+      case GTK_IMAGE_ICON_NAME:
+      {
+        g_object_get (G_OBJECT (image), "icon-name", &ret, NULL);
+        break;
+      }
+      case GTK_IMAGE_GICON:
+      {
+        GIcon *icon = NULL;
+        gtk_image_get_gicon (image, &icon, NULL);
+        if (G_IS_ICON (icon))
           ret = g_icon_to_string (icon);
-        }
-    }
-  else if (type == GTK_IMAGE_EMPTY)
-    {
-      ret = g_strdup ("");
-    }
-  else
-    {
-      ret = g_strdup ("");
-      g_warning ("Unable to support GtkImageType: %d", type);
+
+        break;
+      }
+      case GTK_IMAGE_EMPTY:
+      {
+        ret = g_strdup ("");
+        break;
+      }
+    default:
+      {
+        ret = g_strdup ("");
+        g_warning ("Unable to support GtkImageType: %u", *storage_type);
+      }
     }
 
   return ret;
@@ -1465,7 +1488,8 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
 {
   gboolean is_label = GTK_IS_LABEL (entry->label);
   gboolean is_image = GTK_IS_IMAGE (entry->image);
-  gchar *image_data = NULL;
+  guint32 image_type = 0;
+  gchar *image_data = gtk_image_to_data (entry->image, &image_type);
 
   g_variant_builder_add (b, "(ssssbbusbbi)",
                          indicator_id,
@@ -1474,8 +1498,8 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
                          is_label ? gtk_label_get_label (entry->label) : "",
                          is_label ? gtk_widget_get_sensitive (GTK_WIDGET (entry->label)) : FALSE,
                          is_label ? gtk_widget_get_visible (GTK_WIDGET (entry->label)) : FALSE,
-                         is_image ? (guint32)gtk_image_get_storage_type (entry->image) : (guint32) 0,
-                         is_image ? (image_data = gtk_image_to_data (entry->image)) : "",
+                         is_image ? image_type : 0,
+                         is_image ? image_data : "",
                          is_image ? gtk_widget_get_sensitive (GTK_WIDGET (entry->image)) : FALSE,
                          is_image ? gtk_widget_get_visible (GTK_WIDGET (entry->image)) : FALSE,
                          prio);
@@ -1556,6 +1580,14 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
     }
 }
 
+static int
+get_monitor_scale_at (gint x, gint y)
+{
+  GdkScreen *screen = gdk_screen_get_default ();
+  int monitor = gdk_screen_get_monitor_at_point (screen, x, y);
+  return gdk_screen_get_monitor_scale_factor (screen, monitor);
+}
+
 static void
 positon_menu (GtkMenu  *menu,
               gint     *x,
@@ -1566,8 +1598,9 @@ positon_menu (GtkMenu  *menu,
   PanelService *self = PANEL_SERVICE (user_data);
   PanelServicePrivate *priv = self->priv;
 
-  *x = priv->last_x;
-  *y = priv->last_y;
+  gint scale = get_monitor_scale_at (priv->last_x, priv->last_y);
+  *x = priv->last_x / scale;
+  *y = priv->last_y / scale;
   *push = TRUE;
 }
 
@@ -1744,8 +1777,9 @@ panel_service_sync_geometry (PanelService *self,
                   GtkWindow *top_win = GTK_WINDOW (top_widget);
                   gint old_x, old_y;
 
+                  gint scale = get_monitor_scale_at (x, y);
                   gtk_window_get_position (top_win, &old_x, &old_y);
-                  gtk_window_move (top_win, old_x - (geo->x - x), old_y - (geo->y - y));
+                  gtk_window_move (top_win, old_x - (geo->x - x) / scale, old_y - (geo->y - y) / scale);
                 }
             }
 

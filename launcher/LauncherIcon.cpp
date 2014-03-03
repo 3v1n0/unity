@@ -99,9 +99,6 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
 
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadTooltip));
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::LoadQuicklist));
-
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     for (unsigned j = 0; j < static_cast<unsigned>(Quirk::LAST); ++j)
@@ -124,6 +121,7 @@ void LauncherIcon::LoadTooltip()
   _tooltip = new Tooltip(monitor);
   _tooltip->SetOpacity(0.0f);
   _tooltip->text = tooltip_text();
+  _tooltip->hidden.connect([this] { _tooltip.Release(); });
   debug::Introspectable::AddChild(_tooltip.GetPointer());
 }
 
@@ -134,6 +132,7 @@ void LauncherIcon::LoadQuicklist()
     monitor = 0;
 
   _quicklist = new QuicklistView(monitor);
+  _quicklist->hidden.connect([this] { _quicklist.Release(); });
   debug::Introspectable::AddChild(_quicklist.GetPointer());
 
   _quicklist->mouse_down_outside_pointer_grab_area.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -478,7 +477,8 @@ guint64 LauncherIcon::GetShortcut()
 
 nux::Point LauncherIcon::GetTipPosition(int monitor) const
 {
-  return nux::Point(_center[monitor].x + icon_size()/2 + 1, _center[monitor].y);
+  auto const& converter = Settings::Instance().em(monitor);
+  return nux::Point(_center[monitor].x + converter->CP(icon_size()) / 2 + 1, _center[monitor].y);
 }
 
 void LauncherIcon::ShowTooltip()
@@ -514,19 +514,16 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 {
   MenuItemsVector const& menus = Menus();
 
-  if (!_quicklist)
-    LoadQuicklist();
-
   if (menus.empty())
     return false;
+
+  LoadQuicklist();
 
   if (_tooltip)
   {
     // Hide the tooltip without fade animation
     _tooltip->ShowWindow(false);
   }
-
-  _quicklist->RemoveAllMenuItem();
 
   for (auto const& menu_item : menus)
   {

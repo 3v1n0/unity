@@ -36,7 +36,7 @@ protected:
   std::string GetName() const;
 
   virtual std::string GetDefaultText() const;
-  virtual void UpdateTexture();
+  virtual void UpdateTexture(nux::CairoGraphics&, double width, double height);
 };
 
 } // NAMESPACE

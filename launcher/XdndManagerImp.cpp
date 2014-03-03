@@ -19,6 +19,7 @@
 
 #include "XdndManagerImp.h"
 
+#include <algorithm>
 #include "unity-shared/UScreen.h"
 
 namespace unity {

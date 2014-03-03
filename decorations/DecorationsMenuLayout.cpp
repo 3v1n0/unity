@@ -63,6 +63,7 @@ void MenuLayout::Setup()
     menu->active.changed.connect(active_cb);
     menu->show_now.changed.connect(show_now_cb);
     menu->focused = focused();
+    menu->scale = scale();
     menu->SetParent(shared_from_this());
     items_.push_back(menu);
   }
@@ -185,8 +186,13 @@ void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
 
 void MenuLayout::DoRelayout()
 {
+  float scale = this->scale();
+  int inner_padding = this->inner_padding().CP(scale);
+  int left_padding = this->left_padding().CP(scale);
+  int right_padding = this->right_padding().CP(scale);
+
   int dropdown_width = dropdown_->GetNaturalWidth();
-  int accumolated_width = dropdown_width + left_padding() + right_padding() - inner_padding();
+  int accumolated_width = dropdown_width + left_padding + right_padding - inner_padding;
   int max_width = max_.width;
   std::list<MenuEntry::Ptr> to_hide;
 
@@ -195,7 +201,7 @@ void MenuLayout::DoRelayout()
     if (!item->visible() || item == dropdown_)
       continue;
 
-    accumolated_width += item->GetNaturalWidth() + inner_padding();
+    accumolated_width += item->GetNaturalWidth() + inner_padding;
 
     if (accumolated_width > max_width)
       to_hide.push_front(std::static_pointer_cast<MenuEntry>(item));

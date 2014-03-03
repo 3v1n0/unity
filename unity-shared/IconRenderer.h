@@ -88,6 +88,8 @@ private:
 
   struct TexturesPool;
   std::shared_ptr<TexturesPool> textures_;
+  struct LocalTextures;
+  std::shared_ptr<LocalTextures> local_textures_;
   nux::Matrix4 stored_projection_matrix_;
 };
 

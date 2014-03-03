@@ -152,6 +152,7 @@ private:
   SearchBar* search_bar_;
   nux::VLayout* scopes_layout_;
   ScopeBar* scope_bar_;
+  nux::SpaceLayout* top_space_;
 
   nux::ObjectPtr<ScopeView> active_scope_view_;
   nux::ObjectPtr<ScopeView> preview_scope_view_;

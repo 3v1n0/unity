@@ -43,6 +43,7 @@ public:
 
   nux::RWProperty<std::string> title;
   nux::Property<bool> scaled;
+  nux::ROProperty<double> dpi_scale;
 
   void Update();
   void Undecorate();

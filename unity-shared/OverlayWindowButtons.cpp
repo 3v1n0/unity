@@ -49,7 +49,7 @@ bool OverlayWindowButtons::IsVisibleOnMonitor(unsigned int monitor) const
 {
   if (window_buttons_->monitor == monitor)
     return true;
-  
+
   return false;
 }
 

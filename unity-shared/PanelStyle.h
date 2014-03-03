@@ -22,14 +22,16 @@
 #ifndef PANEL_STYLE_H
 #define PANEL_STYLE_H
 
-#include <Nux/Nux.h>
+#include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
 #include <gtk/gtk.h>
 #include <UnityCore/GLibWrapper.h>
 
-#include "unity-shared/EMConverter.h"
-#include "unity-shared/RawPixel.h"
+namespace nux
+{
+class BaseTexture;
+}
 
 namespace unity
 {
@@ -62,10 +64,9 @@ public:
 
   GtkStyleContext* GetStyleContext();
   BaseTexturePtr GetBackground(int monitor = 0);
-  BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
-  BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state);
+  BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state, int monitor = 0);
+  BaseTexturePtr GetDashWindowButton(WindowButtonType type, WindowState state, int monitor = 0);
   std::string GetFontDescription(PanelItem item);
-  int GetTextDPI();
 
   int PanelHeight(int monitor = 0) const;
 
@@ -74,14 +75,14 @@ public:
 private:
   void OnThemeChanged(std::string const&);
   void RefreshContext();
+  void DPIChanged();
 
   void UpdateFontSize();
   void UpdatePanelHeight();
 
   glib::Object<GtkStyleContext> style_context_;
-  BaseTexturePtr bg_texture_;
-
-  std::vector<RawPixel> panel_heights_;
+  std::vector<BaseTexturePtr> bg_textures_;
+  mutable std::vector<unsigned> panel_heights_;
 };
 
 }
