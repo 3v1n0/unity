@@ -61,6 +61,12 @@ void Title::OnFontChanged(std::string const&)
 
 void Title::RenderTexture()
 {
+  if (!texture_size_.width || !texture_size_.height)
+  {
+    SetTexture(nullptr);
+    return;
+  }
+
   auto state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
   cu::CairoContext text_ctx(texture_size_.width, texture_size_.height, scale());
   Style::Get()->DrawTitle(text(), state, text_ctx, texture_size_.width / scale(), texture_size_.height / scale());
