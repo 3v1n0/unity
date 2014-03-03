@@ -1398,15 +1398,30 @@ sort_indicators (PanelService *self)
 }
 
 static gchar *
-gtk_image_to_data (GtkImage *image)
+gtk_image_to_data (GtkImage *image, guint32 *storage_type)
 {
-  GtkImageType type = gtk_image_get_storage_type (image);
+  *storage_type = gtk_image_get_storage_type (image);
   gchar *ret = NULL;
 
-  switch (type)
+  switch (*storage_type)
     {
       case GTK_IMAGE_PIXBUF:
       {
+        gchar *file;
+        g_object_get (image, "file", &file, NULL);
+
+        if (file)
+          {
+            if (file[0] != '\0')
+              {
+                *storage_type = GTK_IMAGE_ICON_NAME;
+                ret = file;
+                break;
+              }
+
+            g_free (file);
+          }
+
         GdkPixbuf  *pixbuf;
         gchar      *buffer = NULL;
         gsize       buffer_size = 0;
@@ -1457,7 +1472,7 @@ gtk_image_to_data (GtkImage *image)
     default:
       {
         ret = g_strdup ("");
-        g_warning ("Unable to support GtkImageType: %d", type);
+        g_warning ("Unable to support GtkImageType: %u", *storage_type);
       }
     }
 
@@ -1473,7 +1488,8 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
 {
   gboolean is_label = GTK_IS_LABEL (entry->label);
   gboolean is_image = GTK_IS_IMAGE (entry->image);
-  gchar *image_data = NULL;
+  guint32 image_type = 0;
+  gchar *image_data = gtk_image_to_data (entry->image, &image_type);
 
   g_variant_builder_add (b, "(ssssbbusbbi)",
                          indicator_id,
@@ -1482,8 +1498,8 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
                          is_label ? gtk_label_get_label (entry->label) : "",
                          is_label ? gtk_widget_get_sensitive (GTK_WIDGET (entry->label)) : FALSE,
                          is_label ? gtk_widget_get_visible (GTK_WIDGET (entry->label)) : FALSE,
-                         is_image ? (guint32)gtk_image_get_storage_type (entry->image) : (guint32) 0,
-                         is_image ? (image_data = gtk_image_to_data (entry->image)) : "",
+                         is_image ? image_type : 0,
+                         is_image ? image_data : "",
                          is_image ? gtk_widget_get_sensitive (GTK_WIDGET (entry->image)) : FALSE,
                          is_image ? gtk_widget_get_visible (GTK_WIDGET (entry->image)) : FALSE,
                          prio);
