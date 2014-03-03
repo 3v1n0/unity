@@ -209,6 +209,7 @@ Window::Ptr Manager::Impl::GetWindowByFrame(::Window xid) const
 bool Manager::Impl::HandleEventBefore(XEvent* event)
 {
   active_window_ = screen->activeWindow();
+
   switch (event->type)
   {
     case ClientMessage:

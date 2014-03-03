@@ -2834,7 +2834,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     wAttrib.brightness *= 0.75f;
   }
 
-  return gWindow->glPaint(wAttrib, matrix, region, mask);
+  bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
+  deco_win_->Paint(matrix, wAttrib, region, mask);
+  return ret;
 }
 
 /* handle window painting in an opengl context
