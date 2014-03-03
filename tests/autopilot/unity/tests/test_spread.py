@@ -61,6 +61,9 @@ class SpreadTests(UnityTestCase):
 
     def assertWindowIsScaledEquals(self, xid, scaled):
         """Assert weather a window is scaled"""
+        # Add a short delay to ensure the Spread has finished.
+        sleep(0.5)
+
         refresh_fn = lambda: xid in [w.xid for w in self.unity.screen.scaled_windows]
         self.assertThat(refresh_fn, Eventually(Equals(scaled)))
 
@@ -132,6 +135,10 @@ class SpreadTests(UnityTestCase):
 
         target_xid = win.x_id
         [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
+
+        # Make sure mouse is over the test window
+        (x1, y1, w1, h1) = target_win.geometry
+        self.mouse.move(x1 + w1 / 2, y1 + h1 / 2)
 
         (x, y, w, h) = target_win.scale_close_geometry
         self.mouse.move(x + w / 2, y + h / 2)
