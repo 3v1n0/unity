@@ -462,11 +462,13 @@ void DashView::AboutToShow(int monitor)
 {
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
-  
+
   if (monitor_ != monitor)
   {
     monitor_ = monitor;
     cv_ = Settings::Instance().em(monitor_);
+
+    OnDPIChanged();
     Relayout();
   }
 

@@ -195,6 +195,11 @@ void Controller::EnsureDash()
   }
 }
 
+int Controller::Monitor() const
+{
+  return monitor_;
+}
+
 nux::BaseWindow* Controller::window() const
 {
   return window_.GetPointer();

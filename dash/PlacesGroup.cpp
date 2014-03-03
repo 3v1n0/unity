@@ -55,8 +55,8 @@ const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 const float kExpandDefaultIconOpacity = 0.5f;
 
 // Category  highlight
+const RawPixel kHighlightRightPadding =  7_em; // FIXME 10 - 3 because the scrollbar is not a real overlay scrollbar!
 const RawPixel kHighlightHeight       = 24_em;
-const RawPixel kHighlightRightPadding =  7_em; // 10 - 3 because the scrollbar is not a real overlay scrollbar!
 const RawPixel kHighlightLeftPadding  = 10_em;
 const RawPixel SPACE_BETWEEN_CHILDREN = 10_em;
 const RawPixel TEXT_INTERNAL_MARGIN   = 15_em;
@@ -64,7 +64,7 @@ const RawPixel EXPAND_INTERNAL_MARGIN =  8_em;
 const double DEFAULT_SCALE            = 1.0;
 
 // Font
-const char* const NAME_LABEL_FONT = "Ubuntu 13"; // 17px = 13
+const char* const NAME_LABEL_FONT     = "Ubuntu 13"; // 17px = 13
 const char* const EXPANDER_LABEL_FONT = "Ubuntu 10"; // 13px = 10
 
 }
@@ -250,6 +250,11 @@ PlacesGroup::UpdateScale(double scale)
 
     // FIXME _expand_icon, needs some work here. Not as easy as _icon
 
+    if (_child_view)
+    {
+      _child_view->UpdateScale(scale);
+    }
+
     ComputeContentSize();
     UpdatePlacesGroupSize();
     UpdateResultViewPadding();
@@ -337,6 +342,7 @@ PlacesGroup::SetChildView(dash::ResultView* view)
   AddChild(view);
 
   _child_view = view;
+  _child_view->UpdateScale(_scale);
 
   _child_layout = new nux::VLayout();
   _child_layout->AddView(_child_view, 0);
