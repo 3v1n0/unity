@@ -53,7 +53,7 @@ const int DEFAULT_TITLE_FADING_PIXELS = 35;
 const int DEFAULT_GLOW_SIZE = 10;
 const nux::Color DEFAULT_GLOW_COLOR(221, 72, 20);
 
-const std::array<std::string, 2> WBUTTON_EXTENSIONS = { "svg", "png" };
+const std::array<std::string, 2> THEMED_FILE_EXTENSIONS = { "svg", "png" };
 const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
@@ -341,17 +341,15 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
-  std::string WindowButtonFile(WindowButtonType type, WidgetState state) const
+  std::string ThemedFilePath(std::string const& base_filename, std::vector<std::string> const& extra_folders = {}) const
   {
     auto const& theme = parent_->theme();
-    auto base_filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)];
-
     const char* home_dir = g_get_home_dir();
     const char* gtk_prefix = g_getenv("GTK_DATA_PREFIX");
     if (!gtk_prefix)
       gtk_prefix = GTK_PREFIX;
 
-    for (auto const& extension : WBUTTON_EXTENSIONS)
+    for (auto const& extension : THEMED_FILE_EXTENSIONS)
     {
       auto filename = base_filename + '.' + extension;
       glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
@@ -374,7 +372,26 @@ struct Style::Impl
 
       if (g_file_test(path, G_FILE_TEST_EXISTS))
         return path.Str();
+
+      for (auto const& folder : extra_folders)
+      {
+        glib::String path(g_build_filename(folder.c_str(), filename.c_str(), nullptr));
+
+        if (g_file_test(path, G_FILE_TEST_EXISTS))
+          return path.Str();
+      }
     }
+
+    return std::string();
+  }
+
+  std::string WindowButtonFile(WindowButtonType type, WidgetState state) const
+  {
+    auto base_filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)];
+    auto const& file_path = ThemedFilePath(base_filename);
+
+    if (!file_path.empty())
+      return file_path;
 
     LOG_WARN(logger) << "No Window button file for '"<< base_filename << "'";
     return std::string();
@@ -660,6 +677,11 @@ void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr,
 void Style::DrawMenuItemIcon(std::string const& i, WidgetState ws, cairo_t* cr, int s)
 {
   impl_->DrawMenuItemIcon(i, ws, cr, s);
+}
+
+std::string Style::ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders) const
+{
+  return impl_->ThemedFilePath(basename, extra_folders);
 }
 
 std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const
