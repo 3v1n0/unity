@@ -1,3 +1,14 @@
+unity (7.1.2+14.04.20140303-0ubuntu1) trusty; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Panel, Decorations, Launcher, Quicklist, Tooltip: correctly scale
+    items based on the monitor settings Adapt elements to match their
+    monitor DPI scale settings. We mostly use
+    cairo_surface_set_device_scale to easily scale cairo-generated
+    textures. (LP: #1283171)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 03 Mar 2014 16:47:47 +0000
+
 unity (7.1.2+14.04.20140228-0ubuntu1) trusty; urgency=low
 
   [ Chris Townsend ]
