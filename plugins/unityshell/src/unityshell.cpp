@@ -1701,7 +1701,7 @@ void UnityScreen::handleEvent(XEvent* event)
         if (CompWindow *w = screen->findWindow(sScreen->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
-      else if (switcher_controller_->IsDetailViewShown())
+      else if (switcher_controller_->detail())
       {
         Window win = switcher_controller_->GetCurrentSelection().window_;
         CompWindow* w = screen->findWindow(win);
@@ -1732,7 +1732,7 @@ void UnityScreen::handleEvent(XEvent* event)
             skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
         }
       }
-      else if (switcher_controller_->IsDetailViewShown())
+      else if (switcher_controller_->detail())
       {
         Window win = switcher_controller_->GetCurrentSelection().window_;
         CompWindow* w = screen->findWindow(win);
@@ -1794,7 +1794,7 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
     case ButtonRelease:
 
-      if (switcher_controller_->IsDetailViewShown())
+      if (switcher_controller_->detail())
       {
         Window win = switcher_controller_->GetCurrentSelection().window_;
         CompWindow* w = screen->findWindow(win);
@@ -2297,13 +2297,13 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
     switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
     switcher_controller_->InitiateDetail();
   }
-  else if (switcher_controller_->IsDetailViewShown())
+  else if (switcher_controller_->detail())
   {
     switcher_controller_->NextDetail();
   }
   else
   {
-    switcher_controller_->SetDetail(true);
+    switcher_controller_->detail = true;
   }
 
   action->setState(action->state() | CompAction::StateTermKey);
@@ -3446,7 +3446,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_options->super_tap_duration = optionGetDashTapDuration();
       break;
     case UnityshellOptions::AltTabTimeout:
-      switcher_controller_->SetDetailOnTimeout(optionGetAltTabTimeout());
+      switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
     case UnityshellOptions::AltTabBiasViewport:
       PluginAdapter::Default().bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;

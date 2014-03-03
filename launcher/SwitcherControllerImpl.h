@@ -74,8 +74,6 @@ struct Controller::Impl : public sigc::trackable
 
   ui::LayoutWindow::Vector ExternalRenderTargets();
 
-  guint GetSwitcherInputWindowId() const;
-
   int StartIndex() const;
   Selection GetCurrentSelection() const;
 

@@ -49,11 +49,9 @@ public:
   MOCK_CONST_METHOD1(CanShowSwitcher, bool(const std::vector<launcher::AbstractLauncherIcon::Ptr> &));
   MOCK_METHOD0(NextDetail, void());
   MOCK_METHOD0(PrevDetail, void());
-  MOCK_METHOD2(SetDetail, void(bool, unsigned int));
   MOCK_METHOD0(SelectFirstItem, void());
   MOCK_METHOD2(SetWorkspace, void(nux::Geometry, int));
   MOCK_METHOD0(ExternalRenderTargets, unity::ui::LayoutWindow::Vector ());
-  MOCK_CONST_METHOD0(GetSwitcherInputWindowId, guint());
   MOCK_CONST_METHOD0(IsShowDesktopDisabled, bool());
   MOCK_METHOD1(SetShowDesktopDisabled, void(bool));
   MOCK_CONST_METHOD0(StartIndex, int());
