@@ -253,7 +253,7 @@ void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hi
   if (ws_enabled)
   {
     hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
-                                                     _("Switches between applications in all workspaces."),
+                                                     _("Switches between applications from all workspaces."),
                                                      shortcut::OptionType::COMPIZ_KEY,
                                                      UNITYSHELL_PLUGIN_NAME,
                                                      UNITYSHELL_OPTION_ALT_TAB_FORWARD_ALL));
