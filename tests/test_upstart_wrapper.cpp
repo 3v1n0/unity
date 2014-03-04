@@ -22,44 +22,68 @@ using namespace testing;
 
 #include "unity-shared/UpstartWrapper.h"
 
-#include <UnityCore/GLibDBusProxy.h>
+#include <UnityCore/GLibDBusServer.h>
+#include <UnityCore/Variant.h>
 
 #include "test_utils.h"
 
 namespace
 {
 
+const std::string UPSTART =
+R"(<node>
+  <interface name="com.ubuntu.Upstart0_6">
+    <method name="EmitEvent">
+      <arg name="name" type="s" direction="in" />
+      <arg name="env" type="as" direction="in" />
+      <arg name="wait" type="b" direction="in" />
+    </method>
+
+    <signal name="EventEmitted">
+      <arg name="name" type="s" />
+      <arg name="env" type="as" />
+    </signal>
+  </interface>
+</node>)";
+
+struct MockUpstartWrapper : unity::UpstartWrapper {
+  MockUpstartWrapper()
+    : UpstartWrapper(UpstartWrapper::TestMode())
+  {}
+};
+
 struct TestUpstartWrapper : public Test
 {
   TestUpstartWrapper()
   {
-    upstart_proxy_ = std::make_shared<unity::glib::DBusProxy>("com.ubuntu.Upstart",
-                                                              "/com/ubuntu/Upstart", 
-                                                              "com.ubuntu.Upstart0_6");
+    upstart_server_ = std::make_shared<unity::glib::DBusServer>("com.canonical.Unity.Test.Upstart");
+    upstart_server_->AddObjects(UPSTART, "/com/ubuntu/Upstart");
+
+    Utils::WaitUntilMSec([this] { return upstart_server_->IsConnected(); });
   }
 
-  unity::UpstartWrapper upstart_wrapper_;
-  unity::glib::DBusProxy::Ptr upstart_proxy_;
+  unity::glib::DBusServer::Ptr upstart_server_;
+  MockUpstartWrapper upstart_wrapper_;
 };
 
-TEST_F(TestUpstartWrapper, Constuction)
-{
-  Utils::WaitUntilMSec([this] {
-    return upstart_proxy_->IsConnected();
-  });
-}
 
 TEST_F(TestUpstartWrapper, Emit)
 {
   bool event_emitted = false;
 
-  upstart_proxy_->Connect("EventEmitted", [&event_emitted] (GVariant* value) {
-    std::string event_name = glib::Variant(g_variant_get_child_value(value, 0)).GetString();
-    event_emitted = (event_name == "desktop-lock");
+  upstart_server_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) -> GVariant* {
+    if (method == "EmitEvent")
+    {
+      event_emitted = true;
+
+      std::string event_name = glib::Variant(g_variant_get_child_value(par, 0)).GetString();
+      EXPECT_EQ("desktop-lock", event_name);
+    }
+
+    return nullptr;
   });
 
   upstart_wrapper_.Emit("desktop-lock");
-
   Utils::WaitUntil(event_emitted);
 }
 

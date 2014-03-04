@@ -35,6 +35,10 @@ public:
 
   void Emit(std::string const& name);
 
+protected:
+  struct TestMode {};
+  UpstartWrapper(TestMode const&);
+
 private:
   // Noncopyable
   UpstartWrapper(UpstartWrapper const&) = delete;

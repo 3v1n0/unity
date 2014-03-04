@@ -31,7 +31,7 @@ namespace unity
 class UpstartWrapper::Impl
 {
 public:
-  Impl();
+  Impl(bool test_mode = false);
 
   void Emit(std::string const& name);
 
@@ -39,9 +39,9 @@ private:
   glib::DBusProxy::Ptr upstart_proxy_;
 };
 
-UpstartWrapper::Impl::Impl()
+UpstartWrapper::Impl::Impl(bool test_mode)
 {
-  upstart_proxy_ = std::make_shared<unity::glib::DBusProxy>("com.ubuntu.Upstart",
+  upstart_proxy_ = std::make_shared<unity::glib::DBusProxy>(test_mode ?  "com.canonical.Unity.Test.Upstart" : "com.ubuntu.Upstart",
                                                             "/com/ubuntu/Upstart", 
                                                             "com.ubuntu.Upstart0_6");
 }
@@ -57,6 +57,10 @@ void UpstartWrapper::Impl::Emit(std::string const& name)
 
 UpstartWrapper::UpstartWrapper()
   : pimpl_(new Impl)
+{}
+
+UpstartWrapper::UpstartWrapper(UpstartWrapper::TestMode const& tm)
+  : pimpl_(new Impl(true))
 {}
 
 UpstartWrapper::~UpstartWrapper()
