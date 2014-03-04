@@ -35,6 +35,9 @@ public:
   virtual ~IMTextEntry() {}
   bool im_preedit();
 
+  using TextEntry::cursor_visible_;
+  using TextEntry::cursor_blink_timer_;
+
 protected:
   virtual void InsertText(std::string const& text);
   virtual void CopyClipboard();

@@ -344,6 +344,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetLockScreenTypeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetAltTabForwardAllInitiate(boost::bind(&UnityScreen::altTabForwardAllInitiate, this, _1, _2, _3));
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
@@ -2003,6 +2004,9 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
                                           CompAction::State state,
                                           CompOption::Vector& options)
 {
+  if (lockscreen_controller_->IsLocked())
+    return true;
+
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
@@ -2012,7 +2016,8 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
   launcher_controller_->HandleLauncherKeyPress(when);
   EnsureSuperKeybindings ();
 
-  if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
+  if (!shortcut_controller_->Visible() &&
+      shortcut_controller_->IsEnabled())
   {
     if (shortcut_controller_->Show())
     {
@@ -2434,7 +2439,8 @@ bool UnityScreen::ShowHud()
     return false; // early exit if the switcher is open
   }
 
-  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
+  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse() ||
+      lockscreen_controller_->IsLocked())
   {
     return false;
   }
@@ -2521,7 +2527,11 @@ bool UnityScreen::LockScreenInitiate(CompAction* action,
                                      CompAction::State state,
                                      CompOption::Vector& options)
 {
-  session_controller_->LockScreen();
+  sources_.AddIdle([this] {
+    session_controller_->LockScreen();
+    return false;
+  });
+
   return true;
 }
 
@@ -3480,6 +3490,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::EdgePassedDisabledMs:
       launcher_options->edge_passed_disabled_ms = optionGetEdgePassedDisabledMs();
       break;
+    case UnityshellOptions::LockScreenType:
+      lockscreen_settings_.lockscreen_type = static_cast<lockscreen::Type>(optionGetLockScreenType());
+      break;
     default:
       break;
   }
@@ -3624,6 +3637,9 @@ void UnityScreen::initLauncher()
   auto manager = std::make_shared<session::GnomeManager>();
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
+
+  // Setup Lockscreen Controller
+  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(manager);
 
   auto on_launcher_size_changed = [this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin

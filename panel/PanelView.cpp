@@ -19,19 +19,10 @@
  */
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
-#include <Nux/Layout.h>
-#include <Nux/WindowCompositor.h>
 
-#include <NuxGraphics/CairoGraphics.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <NuxGraphics/RenderingPipe.h>
-
-#include <glib.h>
 
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/TextureCache.h"
@@ -57,7 +48,7 @@ namespace panel
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
-PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus, NUX_FILE_LINE_DECL)
+PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus, bool lockscreen_mode, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , parent_(parent)
   , remote_(menus->Indicators())
@@ -69,6 +60,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   , monitor_(0)
   , stored_dash_width_(0)
   , launcher_width_(64)
+  , lockscreen_mode_(lockscreen_mode)
   , bg_effect_helper_(this)
 {
   auto& wm = WindowManager::Default();
@@ -107,15 +99,22 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   menu_view_->EnableDropdownMenu(true, remote_);
   AddPanelView(menu_view_, 0);
 
+  if (lockscreen_mode_)
+    menu_view_->SetVisible(false);
+
   SetCompositionLayout(layout_);
 
-  tray_ = new PanelTray(monitor_);
-  layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  AddChild(tray_);
+  tray_ = nullptr;
+  if (!lockscreen_mode_)
+  {
+    tray_ = new PanelTray(monitor_);
+    layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+    AddChild(tray_);
+  }
 
   indicators_ = new PanelIndicatorsView();
   indicators_->SetMonitor(monitor_);
-  AddPanelView(indicators_, 0);
+  AddPanelView(indicators_, lockscreen_mode_ ? 1 : 0);
 
   for (auto const& object : remote_->GetIndicators())
     OnObjectAdded(object);
@@ -309,7 +308,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       bg_blur_texture_ = bg_effect_helper_.GetBlurRegion();
     }
-    else
+    else if(!lockscreen_mode_)
     {
       bg_blur_texture_ = bg_effect_helper_.GetRegion();
     }
@@ -563,7 +562,11 @@ void PanelView::PreLayoutManagement()
 {
   View::PreLayoutManagement();
 
-  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_->GetBaseWidth();
+  int tray_width = 0;
+  if (tray_)
+    tray_width = tray_->GetBaseWidth();
+
+  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_width;
 
   menu_view_->SetMinimumWidth(menu_width);
   menu_view_->SetMaximumWidth(menu_width);

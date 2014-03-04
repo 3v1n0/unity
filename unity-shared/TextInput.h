@@ -39,6 +39,7 @@
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/SearchBarSpinner.h"
 #include "unity-shared/StaticCairoText.h"
 
 namespace nux
@@ -49,6 +50,7 @@ class LinearLayout;
 
 namespace unity
 {
+
 class TextInput : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(TextInput, nux::View);
@@ -58,7 +60,10 @@ public:
   TextInput(NUX_FILE_LINE_PROTO);
   TextInput(bool show_filter_hint, NUX_FILE_LINE_PROTO);
 
-  nux::TextEntry* text_entry() const;
+  void SetSpinnerVisible(bool visible);
+  void SetSpinnerState(SpinnerState spinner_state);
+
+  IMTextEntry* text_entry() const;
 
   nux::RWProperty<std::string> input_string;
   nux::Property<std::string> input_hint;
@@ -104,6 +109,7 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
   nux::LayeredLayout* layered_layout_;
+  SearchBarSpinner* spinner_;
 
   int last_width_;
   int last_height_;

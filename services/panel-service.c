@@ -53,6 +53,7 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define SHOW_HUD_KEY "show-hud"
 
 static PanelService *static_service = NULL;
+static gboolean lockscreen_mode = FALSE;
 
 struct _PanelServicePrivate
 {
@@ -150,7 +151,7 @@ panel_service_class_dispose (GObject *self)
   g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
-  if (priv->upstart != NULL)
+  if (priv->upstart != NULL && !lockscreen_mode)
     {
       int event_sent = 0;
       event_sent = upstart_emit_event_sync (NULL, priv->upstart,
@@ -461,6 +462,9 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     {
       case XI_KeyPress:
         {
+          if (lockscreen_mode)
+            break;
+
           KeySym keysym = XkbKeycodeToKeysym (event->display, event->detail, 0, 0);
 
           if (event_matches_keybinding (event->mods.base, keysym, &priv->menu_toggle) ||
@@ -586,7 +590,7 @@ initial_resync (PanelService *self)
 static gboolean
 ready_signal (PanelService *self)
 {
-  if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL)
+  if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL && !lockscreen_mode)
     {
       int event_sent = 0;
       event_sent = upstart_emit_event_sync (NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
@@ -714,7 +718,7 @@ panel_service_init (PanelService *self)
   update_keybinding (priv->gsettings, SHOW_HUD_KEY, &priv->show_hud);
 
   const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
-  if (upstartsession != NULL)
+  if (upstartsession != NULL && !lockscreen_mode)
     {
       DBusConnection *conn = dbus_connection_open (upstartsession, NULL);
       if (conn != NULL)
@@ -859,7 +863,11 @@ initial_load_default_or_custom_indicators (PanelService *self, GList *indicators
 
   if (!indicators)
     {
-      load_indicators (self);
+      if (!lockscreen_mode)
+        {
+          load_indicators (self);
+        }
+
       load_indicators_from_indicator_files (self);
       sort_indicators (self);
     }
@@ -906,6 +914,12 @@ panel_service_get_default_with_indicators (GList *indicators)
     }
 
   return self;
+}
+
+void
+panel_service_set_lockscreen_mode (gboolean enable)
+{
+  lockscreen_mode = enable;
 }
 
 guint
@@ -1313,7 +1327,7 @@ load_indicators_from_indicator_files (PanelService *self)
       IndicatorNg *indicator;
 
       filename = g_build_filename (INDICATOR_SERVICE_DIR, name, NULL);
-      indicator = indicator_ng_new_for_profile (filename, "desktop", &error);
+      indicator = indicator_ng_new_for_profile (filename, !lockscreen_mode ? "desktop" : "desktop_greeter", &error);
       if (indicator)
         {
           load_indicator (self, INDICATOR_OBJECT (indicator), name);

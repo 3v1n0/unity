@@ -48,36 +48,19 @@ static AtkStateSet* nux_text_entry_accessible_ref_state_set(AtkObject* obj);
 G_DEFINE_TYPE(NuxTextEntryAccessible, nux_text_entry_accessible,  NUX_TYPE_VIEW_ACCESSIBLE);
 
 
-#define NUX_TEXT_ENTRY_ACCESSIBLE_GET_PRIVATE(obj)                      \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_TEXT_ENTRY_ACCESSIBLE,  \
-                                NuxTextEntryAccessiblePrivate))
-
-struct _NuxTextEntryAccessiblePrivate
-{
-};
-
-
 static void
 nux_text_entry_accessible_class_init(NuxTextEntryAccessibleClass* klass)
 {
-  GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
   AtkObjectClass* atk_class = ATK_OBJECT_CLASS(klass);
 
   /* AtkObject */
   atk_class->ref_state_set = nux_text_entry_accessible_ref_state_set;
   atk_class->initialize = nux_text_entry_accessible_initialize;
-
-  g_type_class_add_private(gobject_class, sizeof(NuxTextEntryAccessiblePrivate));
 }
 
 static void
 nux_text_entry_accessible_init(NuxTextEntryAccessible* self)
-{
-  NuxTextEntryAccessiblePrivate* priv =
-    NUX_TEXT_ENTRY_ACCESSIBLE_GET_PRIVATE(self);
-
-  self->priv = priv;
-}
+{}
 
 AtkObject*
 nux_text_entry_accessible_new(nux::Object* object)
@@ -98,9 +81,15 @@ static void
 nux_text_entry_accessible_initialize(AtkObject* accessible,
                                      gpointer data)
 {
+  nux::Object* nux_object = NULL;
+  nux::TextEntry* text_entry = NULL;
+
   ATK_OBJECT_CLASS(nux_text_entry_accessible_parent_class)->initialize(accessible, data);
 
-  atk_object_set_role(accessible, ATK_ROLE_ENTRY);
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
+  text_entry = dynamic_cast<nux::TextEntry*>(nux_object);
+
+  atk_object_set_role(accessible, text_entry->PasswordMode() ? ATK_ROLE_PASSWORD_TEXT : ATK_ROLE_ENTRY);
 }
 
 static AtkStateSet*
