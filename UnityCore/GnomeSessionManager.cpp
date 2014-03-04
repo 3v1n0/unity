@@ -88,7 +88,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
   {
-    const char* session_id = g_getenv("XDG_SESSION_ID");
+    const char* session_id = test_mode_ ? "id0" : g_getenv("XDG_SESSION_ID");
     session_id = session_id ? session_id : "";
 
     login_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",

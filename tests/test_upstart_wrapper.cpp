@@ -45,7 +45,7 @@ struct TestUpstartWrapper : public Test
 TEST_F(TestUpstartWrapper, Constuction)
 {
   Utils::WaitUntilMSec([this] {
-  	return upstart_proxy_->IsConnected();
+    return upstart_proxy_->IsConnected();
   });
 }
 

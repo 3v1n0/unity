@@ -38,7 +38,7 @@ const std::string SHELL_OBJECT_PATH = "/org/gnome/SessionManager/EndSessionDialo
 
 const std::string UPOWER_PATH = "/org/freedesktop/UPower";
 const std::string LOGIND_MANAGER_PATH = "/org/freedesktop/login1";
-const std::string LOGIND_SESSION_PATH = "/org/freedesktop/login1/session/" + std::string(g_getenv("XDG_SESSION_ID") ? g_getenv("XDG_SESSION_ID") : "");
+const std::string LOGIND_SESSION_PATH = "/org/freedesktop/login1/session/id0";
 const std::string CONSOLE_KIT_PATH = "/org/freedesktop/ConsoleKit/Manager";
 const std::string SESSION_MANAGER_PATH = "/org/gnome/SessionManager";
 
