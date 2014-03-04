@@ -384,9 +384,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_SWITCHER_END,
-                   sigc::mem_fun(this, &UnityScreen::OnSwitcherEnd));
-
      auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
      sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
@@ -524,7 +521,11 @@ void UnityScreen::OnInitiateSpread()
   });
 
   for (auto const& swin : sScreen->getWindows())
-    UnityWindow::get(swin->window)->OnInitiateSpread();
+  {
+    auto* uwin = UnityWindow::get(swin->window);
+    fake_decorated_windows_.insert(uwin);
+    uwin->OnInitiateSpread();
+  }
 }
 
 void UnityScreen::OnTerminateSpread()
@@ -533,6 +534,8 @@ void UnityScreen::OnTerminateSpread()
 
   for (auto const& swin : sScreen->getWindows())
     UnityWindow::get(swin->window)->OnTerminateSpread();
+
+  fake_decorated_windows_.clear();
 }
 
 void UnityScreen::DamagePanelShadow()
@@ -867,9 +870,9 @@ void UnityScreen::paintDisplay()
     }
   }
 
-  if (switcher_controller_->Opacity() > 0.0f)
+  if (switcher_controller_->detail())
   {
-    LayoutWindow::Vector const& targets = switcher_controller_->ExternalRenderTargets();
+    auto const& targets = switcher_controller_->ExternalRenderTargets();
 
     for (LayoutWindow::Ptr const& target : targets)
     {
@@ -2398,13 +2401,27 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default().RestoreInputFocus();
 }
 
-void UnityScreen::OnSwitcherEnd(GVariant* data)
+void UnityScreen::OnSwitcherDetailChanged(bool detail)
 {
-  for (UnityWindow* uwin : fake_decorated_windows_)
+  if (detail)
   {
-    uwin->close_icon_state_ = decoration::WidgetState::NORMAL;
-    uwin->middle_clicked_ = false;
-    uwin->CleanupCachedTextures();
+    for (LayoutWindow::Ptr const& target : switcher_controller_->ExternalRenderTargets())
+    {
+      if (CompWindow* window = screen->findWindow(target->xid))
+      {
+        auto* uwin = UnityWindow::get(window);
+        uwin->close_icon_state_ = decoration::WidgetState::NORMAL;
+        uwin->middle_clicked_ = false;
+        fake_decorated_windows_.insert(uwin);
+      }
+    }
+  }
+  else
+  {
+    for (UnityWindow* uwin : fake_decorated_windows_)
+      uwin->CleanupCachedTextures();
+
+    fake_decorated_windows_.clear();
   }
 }
 
@@ -3591,6 +3608,7 @@ void UnityScreen::initLauncher()
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
+  switcher_controller_->detail.changed.connect(sigc::mem_fun(this, &UnityScreen::OnSwitcherDetailChanged));
   AddChild(switcher_controller_.get());
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
@@ -3719,6 +3737,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , gWindow(GLWindow::get(window))
   , close_icon_state_(decoration::WidgetState::NORMAL)
   , deco_win_(uScreen->deco_manager_->HandleWindow(window))
+  , need_fake_deco_redraw_(false)
   , is_nux_window_(isNuxWindow(window))
 {
   WindowInterface::setHandler(window);
@@ -3892,14 +3911,11 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 {
   mask |= PAINT_WINDOW_BLEND_MASK;
 
+  if (!decoration_tex_ && compiz_utils::IsWindowFullyDecorable(window))
+    BuildDecorationTexture();
+
   if (!highlighted)
   {
-    if (!compiz_utils::IsWindowFullyDecorable(window))
-      return;
-
-    if (!decoration_tex_)
-      BuildDecorationTexture();
-
     if (decoration_tex_)
       DrawTexture(*decoration_tex_, attrib, transform, mask, geo.x, geo.y, scale);
 
@@ -3942,13 +3958,24 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         int text_x = padding.left + (close_texture ? close_texture->width() : 0) / dpi_scale;
         RenderTitle(context, text_x, padding.top, (width - padding.right) / dpi_scale, height / dpi_scale, scale);
         decoration_selected_tex_ = context;
+        decoration_title_ = deco_win_->title();
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
+        need_fake_deco_redraw_ = true;
+
+        if (decoration_tex_)
+          DrawTexture(*decoration_tex_, attrib, transform, mask, geo.x, geo.y, scale);
+
+        return; // Let's draw this at next repaint cycle
       }
       else
       {
         decoration_selected_tex_.reset();
         redraw_decoration = false;
       }
+    }
+    else
+    {
+      need_fake_deco_redraw_ = false;
     }
 
     if (decoration_selected_tex_)
@@ -3986,7 +4013,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
   auto state = uScreen->sScreen->getState();
 
-  if (state != ScaleScreen::Wait && state != ScaleScreen::Out)
+  if (state != ScaleScreen::Wait && state != ScaleScreen::Out && !need_fake_deco_redraw_)
     return;
 
   nux::Geometry const& scale_geo = GetScaledGeometry();
