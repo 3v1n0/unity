@@ -276,7 +276,7 @@ panel_service_class_init (PanelServiceClass *klass)
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
 
-static IndicatorObjectEntry *
+IndicatorObjectEntry *
 get_entry_at (PanelService *self, gint x, gint y)
 {
   GHashTableIter panel_iter, entries_iter;
@@ -298,6 +298,37 @@ get_entry_at (PanelService *self, gint x, gint y)
             {
               return entry;
             }
+        }
+    }
+
+  return NULL;
+}
+
+static IndicatorObjectEntry *
+get_entry_at_panel (PanelService *self, const gchar *panel, gint x, gint y)
+{
+  GHashTable *entry2geometry_hash;
+  GHashTableIter entries_iter;
+  gpointer key, value;
+
+  if (!panel)
+    return NULL;
+
+  entry2geometry_hash = g_hash_table_lookup (self->priv->panel2entries_hash, panel);
+
+  if (!entry2geometry_hash)
+    return NULL;
+
+  g_hash_table_iter_init (&entries_iter, entry2geometry_hash);
+  while (g_hash_table_iter_next (&entries_iter, &key, &value))
+    {
+      IndicatorObjectEntry *entry = key;
+      GdkRectangle *geo = value;
+
+      if (x >= geo->x && x <= (geo->x + geo->width) &&
+          y >= geo->y && y <= (geo->y + geo->height))
+        {
+          return entry;
         }
     }
 
@@ -489,7 +520,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
       case XI_ButtonPress:
         {
-          priv->pressed_entry = get_entry_at (self, event->root_x, event->root_y);
+          priv->pressed_entry = get_entry_at_panel (self, priv->last_panel, event->root_x, event->root_y);
           priv->use_event = (priv->pressed_entry == NULL);
 
           if (priv->pressed_entry)
@@ -500,9 +531,9 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
       case XI_ButtonRelease:
         {
-          IndicatorObjectEntry *entry;
+          IndicatorObjectEntry *entry = NULL;
           gboolean event_is_a_click = FALSE;
-          entry = get_entry_at (self, event->root_x, event->root_y);
+          entry = get_entry_at_panel (self, priv->last_panel, event->root_x, event->root_y);
 
           if (event->detail == 1 || event->detail == 3)
             {
