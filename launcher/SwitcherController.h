@@ -107,7 +107,7 @@ public:
 
   nux::ObjectPtr<SwitcherView> GetView() const;
 
-  ui::LayoutWindow::Vector ExternalRenderTargets();
+  ui::LayoutWindow::Vector const& ExternalRenderTargets() const;
 
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);

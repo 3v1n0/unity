@@ -141,7 +141,7 @@ debug::Introspectable::IntrospectableList SwitcherView::GetIntrospectableChildre
   return introspection_results;
 }
 
-LayoutWindow::Vector SwitcherView::ExternalTargets ()
+LayoutWindow::Vector const& SwitcherView::ExternalTargets() const
 {
   return render_targets_;
 }
@@ -934,7 +934,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   if (render_boxes)
   {
     float val = 0.1f;
-    for (LayoutWindow::Ptr const& layout : ExternalTargets())
+    for (LayoutWindow::Ptr const& layout : render_targets_)
     {
       gPainter.Paint2DQuadColor(GfxContext, layout->result, nux::Color(val, val, val ,val));
       val += 0.1f;

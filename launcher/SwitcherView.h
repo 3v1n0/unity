@@ -51,7 +51,7 @@ public:
 
   SwitcherView();
 
-  ui::LayoutWindow::Vector ExternalTargets();
+  ui::LayoutWindow::Vector const& ExternalTargets() const;
 
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();

@@ -196,7 +196,7 @@ void Controller::PrevDetail()
   impl_->PrevDetail();
 }
 
-LayoutWindow::Vector Controller::ExternalRenderTargets()
+LayoutWindow::Vector const& Controller::ExternalRenderTargets() const
 {
   return impl_->ExternalRenderTargets();
 }
@@ -497,12 +497,16 @@ void Controller::Impl::DetailHide()
 {
   // FIXME We need to refactor SwitcherModel so we can add/remove icons without causing
   // a crash. If you remove the last application in the list it crashes.
+  obj_->detail.changed.emit(false);
   model_->detail_selection = false;
   Hide(false);
 }
 
 void Controller::Impl::HideWindow()
 {
+  if (model_->detail_selection())
+    obj_->detail.changed.emit(false);
+
   main_layout_->RemoveChildObject(view_.GetPointer());
 
   view_window_->SetOpacity(0.0f);
@@ -655,13 +659,14 @@ bool Controller::Impl::HasPrevDetailRow() const
   return model_->HasPrevDetailRow();
 }
 
-LayoutWindow::Vector Controller::Impl::ExternalRenderTargets()
+LayoutWindow::Vector const& Controller::Impl::ExternalRenderTargets() const
 {
   if (!view_)
   {
-    LayoutWindow::Vector result;
-    return result;
+    static LayoutWindow::Vector empty_list;
+    return empty_list;
   }
+
   return view_->ExternalTargets();
 }
 
@@ -718,7 +723,7 @@ void Controller::Impl::SelectFirstItem()
   for (auto& window : first->Windows())
   {
     Window xid = window->window_id();
-    
+
     if (model_->only_detail_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
       continue;
 

@@ -71,8 +71,7 @@ struct Controller::Impl : public sigc::trackable
   void SelectFirstItem();
 
   virtual SwitcherView::Ptr GetView() const;
-
-  ui::LayoutWindow::Vector ExternalRenderTargets();
+  ui::LayoutWindow::Vector const& ExternalRenderTargets() const;
 
   int StartIndex() const;
   Selection GetCurrentSelection() const;
