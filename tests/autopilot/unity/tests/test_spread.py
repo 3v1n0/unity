@@ -70,7 +70,7 @@ class SpreadTests(UnityTestCase):
     def assertWindowIsClosed(self, xid):
         """Assert that a window is not in the list of the open windows"""
         refresh_fn = lambda: xid in [w.x_id for w in self.process_manager.get_open_windows()]
-        self.assertThat(refresh_fn, Eventually(Equals(False)))
+        self.assertThat(refresh_fn, Equals(None))
 
     def assertLauncherIconsSaturated(self):
         for icon in self.unity.launcher.model.get_launcher_icons():
@@ -200,7 +200,7 @@ class SpreadTests(UnityTestCase):
         self.assertThat(icon.get_tooltip().active, Eventually(Equals(True)))
 
         self.initiate_spread_for_screen()
-        self.assertThat(icon.get_tooltip().active, Eventually(Equals(False)))
+        self.assertThat(icon.get_tooltip(), Equals(None))
 
     def test_spread_puts_panel_in_overlay_mode(self):
         """Test that the panel is in overlay mode when in spread"""
