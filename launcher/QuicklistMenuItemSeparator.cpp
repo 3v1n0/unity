@@ -19,18 +19,24 @@
  */
 
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/RawPixel.h"
 #include "QuicklistMenuItemSeparator.h"
 
 namespace unity
 {
+namespace
+{
+const RawPixel WIDTH = 64_em;
+const RawPixel HEIGHT = 7_em;
+}
 
 QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_DECL)
   : QuicklistMenuItem(QuicklistMenuItemType::SEPARATOR, item, NUX_FILE_LINE_PARAM)
   , _color(1.0f, 1.0f, 1.0f, 0.5f)
   , _premultiplied_color(0.5f, 0.5f, 0.5f, 0.5f)
 {
-  SetMinimumHeight(7);
-  SetBaseSize(64, 7);
+  SetMinimumWidth(WIDTH.CP(_scale));
+  SetMinimumHeight(HEIGHT.CP(_scale));
 }
 
 std::string QuicklistMenuItemSeparator::GetName() const
@@ -41,6 +47,13 @@ std::string QuicklistMenuItemSeparator::GetName() const
 bool QuicklistMenuItemSeparator::GetSelectable()
 {
   return false;
+}
+
+void QuicklistMenuItemSeparator::SetScale(double scale)
+{
+  QuicklistMenuItem::SetScale(scale);
+  SetMinimumWidth(WIDTH.CP(scale));
+  SetMinimumHeight(HEIGHT.CP(scale));
 }
 
 void QuicklistMenuItemSeparator::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
@@ -67,22 +80,17 @@ void QuicklistMenuItemSeparator::Draw(nux::GraphicsEngine& gfxContext, bool forc
   gfxContext.PopClippingRectangle();
 }
 
-void QuicklistMenuItemSeparator::UpdateTexture()
+void QuicklistMenuItemSeparator::UpdateTexture(nux::CairoGraphics& cairoGraphics, double width, double height)
 {
-  int width = GetBaseWidth();
-  int height = GetBaseHeight();
-
-  nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  std::shared_ptr<cairo_t> cairo_context(cairoGraphics.GetContext(), cairo_destroy);
-  cairo_t* cr = cairo_context.get();
+  cairo_t* cr = cairoGraphics.GetInternalContext();
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
   cairo_paint(cr);
   cairo_set_source_rgba(cr, _color.red, _color.green, _color.blue, _color.alpha);
   cairo_set_line_width(cr, 1.0f);
-  cairo_move_to(cr, 0.0f, 3.5f);
-  cairo_line_to(cr, width, 3.5f);
+  cairo_move_to(cr, 0.0f, height/2.0f);
+  cairo_line_to(cr, width, height/2.0f);
   cairo_stroke(cr);
 
   _normalTexture[0].Adopt(texture_from_cairo_graphics(cairoGraphics));

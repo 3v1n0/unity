@@ -92,7 +92,7 @@ private:
 
 struct CairoContext
 {
-  CairoContext(int width, int height);
+  CairoContext(int width, int height, double scale = 1.0f);
   ~CairoContext();
 
   int width() const;

@@ -1,3 +1,56 @@
+unity (7.1.2+14.04.20140303-0ubuntu1) trusty; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Panel, Decorations, Launcher, Quicklist, Tooltip: correctly scale
+    items based on the monitor settings Adapt elements to match their
+    monitor DPI scale settings. We mostly use
+    cairo_surface_set_device_scale to easily scale cairo-generated
+    textures. (LP: #1283171)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 03 Mar 2014 16:47:47 +0000
+
+unity (7.1.2+14.04.20140228-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * Use the current Launcher instead of the first launcher when
+    determing when to highlight the Launcher tile during keynav. (LP:
+    #1285361)
+  * Fix Dash/Hud fullscreen Autopilot window test on multi-monitor where
+    the tests would fail depending on which monitor has the fullscreen
+    window. (LP: #1285367)
+  * Fix a couple of Panel Autopilot test failures. (LP: #1285737)
+  * Fix a few randomly failing Spread Autopilot tests. (LP: #1285758)
+  * Fix corner case depending on where a test window opens, a Dash and
+    Hud Autopilot test failure can occur. (LP: #1286143)
+
+  [ Stephen M. Webb ]
+  * remove -O3 and replace with -O3 for C++ compiles to prevent
+    template-related FTBFS (LP: #1286284)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 28 Feb 2014 19:53:26 +0000
+
+unity (7.1.2+14.04.20140225-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * Fix some Autopilot test failure regressions due to changes in rev.
+    3668. (LP: #1283159)
+
+  [ Eleni Maria Stea ]
+  * scaling desktop according to a scale factor (LP: #1282804)
+  * removed fonts-scale-factor gsetting from unityshell schema, since we
+    now use the ubuntu ui-scale factor to scale the desktop (LP:
+    #1282804)
+
+  [ Dimitri John Ledkov ]
+  * Fix common buildflags missing. (LP: #1284047) (LP: #1284047)
+
+  [ Marco Trevisan (Treviño) ]
+  * PluginAdapter: take in account the window border size when restoring
+    it from maximization state Also don't forget about monitor scaling
+    when getting data from the decoration Style. (LP: #1276352)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 25 Feb 2014 12:36:17 +0000
+
 unity (7.1.2+14.04.20140220-0ubuntu1) trusty; urgency=low
 
   [ CI bot ]

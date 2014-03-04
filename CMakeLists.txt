@@ -219,6 +219,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     ${UNITY_PROTOCOL_PRIVATE_DEPS}
     atk
     atk-bridge-2.0
+    cairo>=1.13.1
     dbusmenu-glib-0.4
     dee-1.0
     gio-2.0>=2.30.0

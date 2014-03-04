@@ -18,8 +18,10 @@
  *              Marco Trevisan <3v1n0@ubuntu.com>
  */
 
+#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
+#include "config.h"
 #include "PanelStyle.h"
 #include "CairoTexture.h"
 
@@ -42,19 +44,31 @@ const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
 const int BASE_PANEL_HEIGHT = 24;
 
-std::string button_id(WindowButtonType type, WindowState ws)
+inline std::string button_id(std::string const& prefix, double scale, WindowButtonType type, WindowState ws)
 {
-  std::string texture_id = "window-button-";
+  std::string texture_id = prefix;
+  texture_id += std::to_string(scale);
   texture_id += std::to_string(static_cast<int>(type));
   texture_id += std::to_string(static_cast<int>(ws));
   return texture_id;
+}
+
+inline std::string win_button_id(double scale, WindowButtonType type, WindowState ws)
+{
+  return button_id("window-button-", scale, type, ws);
+}
+
+inline std::string dash_button_id(double scale, WindowButtonType type, WindowState ws)
+{
+  return button_id("dash-win-button-", scale, type, ws);
 }
 
 }
 
 Style::Style()
   : style_context_(gtk_style_context_new())
-  , panel_heights_(monitors::MAX, BASE_PANEL_HEIGHT)
+  , bg_textures_(monitors::MAX)
+  , panel_heights_(monitors::MAX, 0)
 {
   if (style_instance)
   {
@@ -75,6 +89,7 @@ Style::Style()
 
   gtk_widget_path_free(widget_path);
 
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Style::DPIChanged));
   auto const& deco_style = decoration::Style::Get();
   auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Style::RefreshContext));
   deco_style->theme.changed.connect(sigc::mem_fun(this, &Style::OnThemeChanged));
@@ -101,10 +116,15 @@ Style& Style::Instance()
 void Style::OnThemeChanged(std::string const&)
 {
   auto& cache = TextureCache::GetDefault();
+  auto& settings = Settings::Instance();
 
-  for (unsigned button = 0; button < unsigned(WindowButtonType::Size); ++button)
-    for (unsigned state = 0; state < unsigned(WindowState::Size); ++state)
-      cache.Invalidate(button_id(WindowButtonType(button), WindowState(state)));
+  for (unsigned monitor = 0; monitor < monitors::MAX; ++monitor)
+    for (unsigned button = 0; button < unsigned(WindowButtonType::Size); ++button)
+      for (unsigned state = 0; state < unsigned(WindowState::Size); ++state)
+      {
+        cache.Invalidate(win_button_id(settings.em(monitor)->DPIScale(), WindowButtonType(button), WindowState(state)));
+        cache.Invalidate(dash_button_id(settings.em(monitor)->DPIScale(), WindowButtonType(button), WindowState(state)));
+      }
 
   RefreshContext();
 }
@@ -117,14 +137,26 @@ int Style::PanelHeight(int monitor) const
     return 0;
   }
 
-  EMConverter::Ptr const& cv = unity::Settings::Instance().em(monitor);
-  return panel_heights_[monitor].CP(cv);
+  auto& panel_height = panel_heights_[monitor];
+
+  if (panel_height > 0)
+    return panel_height;
+
+  panel_height = Settings::Instance().em(monitor)->CP(BASE_PANEL_HEIGHT);
+  return panel_height;
+}
+
+void Style::DPIChanged()
+{
+  bg_textures_.assign(monitors::MAX, BaseTexturePtr());
+  panel_heights_.assign(monitors::MAX, 0);
+  changed.emit();
 }
 
 void Style::RefreshContext()
 {
   gtk_style_context_invalidate(style_context_);
-  bg_texture_.Release();
+  bg_textures_.assign(monitors::MAX, BaseTexturePtr());
 
   changed.emit();
 }
@@ -136,12 +168,13 @@ GtkStyleContext* Style::GetStyleContext()
 
 BaseTexturePtr Style::GetBackground(int monitor)
 {
-  if (bg_texture_)
-    return bg_texture_;
+  auto& bg_texture = bg_textures_[monitor];
 
-  int width = 1;
+  if (bg_texture)
+    return bg_texture;
+
+  const int width = 1;
   int height = PanelHeight(monitor);
-
   nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
 
   // Use the internal context as we know it is good and shiny new.
@@ -149,38 +182,74 @@ BaseTexturePtr Style::GetBackground(int monitor)
   gtk_render_background(style_context_, cr, 0, 0, width, height);
   gtk_render_frame(style_context_, cr, 0, 0, width, height);
 
-  bg_texture_ = texture_ptr_from_cairo_graphics(context);
-
-  return bg_texture_;
+  bg_texture = texture_ptr_from_cairo_graphics(context);
+  return bg_texture;
 }
 
-BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
+BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state, int monitor = 0)
 {
-  auto texture_factory = [this, type, state] (std::string const&, int, int) {
-    nux::BaseTexture* texture = nullptr;
-    auto const& file = decoration::Style::Get()->WindowButtonFile(type, state);
-    texture = nux::CreateTexture2DFromFile(file.c_str(), -1, true);
-    if (texture)
-      return texture;
-
-    auto const& fallback = GetFallbackWindowButton(type, state);
-    texture = fallback.GetPointer();
-    texture->Reference();
-
-    return texture;
-  };
-
-  auto& cache = TextureCache::GetDefault();
-  return cache.FindTexture(button_id(type, state), 0, 0, texture_factory);
-}
-
-BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type, WindowState state)
-{
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, BUTTONS_SIZE + BUTTONS_PADDING*2, BUTTONS_SIZE + BUTTONS_PADDING*2);
+  double scale = Settings::Instance().em(monitor)->DPIScale();
+  int button_size = std::round((BUTTONS_SIZE + BUTTONS_PADDING*2) * scale);
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, button_size, button_size);
   cairo_t* ctx = cairo_graphics.GetInternalContext();
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
   cairo_translate(ctx, BUTTONS_PADDING, BUTTONS_PADDING);
   decoration::Style::Get()->DrawWindowButton(type, state, ctx, BUTTONS_SIZE, BUTTONS_SIZE);
   return texture_ptr_from_cairo_graphics(cairo_graphics);
+}
+
+nux::BaseTexture* ButtonFactory(std::string const& file, WindowButtonType type, WindowState state, int monitor, double scale)
+{
+  nux::Size size;
+  nux::BaseTexture* texture = nullptr;
+  gdk_pixbuf_get_file_info(file.c_str(), &size.width, &size.height);
+
+  size.width = std::round(size.width * scale);
+  size.height = std::round(size.height * scale);
+  texture = nux::CreateTexture2DFromFile(file.c_str(), std::max(size.width, size.height), true);
+
+  if (texture)
+    return texture;
+
+  auto const& fallback = GetFallbackWindowButton(type, state, monitor);
+  texture = fallback.GetPointer();
+  texture->Reference();
+
+  return texture;
+}
+
+BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state, int monitor)
+{
+  auto const& file = decoration::Style::Get()->WindowButtonFile(type, state);
+  double scale = Settings::Instance().em(monitor)->DPIScale();
+
+  auto texture_factory = [this, &file, type, state, monitor, scale] (std::string const&, int, int) {
+    return ButtonFactory(file, type, state, monitor, scale);
+  };
+
+  auto& cache = TextureCache::GetDefault();
+  return cache.FindTexture(win_button_id(scale, type, state), 0, 0, texture_factory);
+}
+
+BaseTexturePtr Style::GetDashWindowButton(WindowButtonType type, WindowState state, int monitor)
+{
+  static const std::array<std::string, 4> names = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
+  static const std::array<std::string, 4> states = { "", "_prelight", "_pressed", "_disabled" };
+
+  auto base_filename = names[unsigned(type)] + states[unsigned(state)];
+  auto const& file = decoration::Style::Get()->ThemedFilePath(base_filename, {PKGDATADIR"/"});
+
+  if (file.empty())
+    return BaseTexturePtr();
+
+  double scale = Settings::Instance().em(monitor)->DPIScale();
+
+  auto texture_factory = [this, &file, type, state, monitor, scale] (std::string const&, int, int) {
+    return ButtonFactory(file, type, state, monitor, scale);
+  };
+
+  auto& cache = TextureCache::GetDefault();
+  return cache.FindTexture(dash_button_id(scale, type, state), 0, 0, texture_factory);
 }
 
 std::string Style::GetFontDescription(PanelItem item)
@@ -195,14 +264,6 @@ std::string Style::GetFontDescription(PanelItem item)
   }
 
   return std::string();
-}
-
-int Style::GetTextDPI()
-{
-  int dpi = 0;
-  g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
-
-  return dpi;
 }
 
 } // namespace panel

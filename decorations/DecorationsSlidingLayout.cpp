@@ -88,6 +88,7 @@ void SlidingLayout::SetInputItem(Item::Ptr const& input)
   {
     input_item_->SetParent(shared_from_this());
     input_item_->focused = focused();
+    input_item_->scale = scale();
   }
 
   Relayout();

@@ -65,6 +65,11 @@ TEST_F(TestRawPixel, TestConverter)
   ASSERT_EQ(p_i.CP(cv), 10);
 }
 
+TEST_F(TestRawPixel, TestConverterScale)
+{
+  ASSERT_EQ(p_i.CP(2), 20);
+}
+
 TEST_F(TestRawPixel, TestConverterTimesTwo)
 {
   cv->SetDPI(DPI * 2);

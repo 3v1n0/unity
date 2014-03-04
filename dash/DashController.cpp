@@ -92,7 +92,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   }
 
   SetupWindow();
-  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry>&) { Relayout(true); });
+  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const&) { Relayout(true); });
 
   Settings::Instance().form_factor.changed.connect([this](FormFactor)
   {
@@ -249,8 +249,7 @@ void Controller::Relayout(bool check_monitor)
   nux::Geometry geo = GetIdealWindowGeometry();
   view_->Relayout();
   window_->SetGeometry(geo);
-  panel::Style &panel_style = panel::Style::Instance();
-  view_->SetMonitorOffset(launcher_width, panel_style.PanelHeight(monitor_));
+  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -299,9 +298,8 @@ void Controller::ShowDash()
   }
 
   monitor_ = GetIdealMonitor();
-
+  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
   view_->AboutToShow();
-
   FocusWindow();
 
   need_show_ = false;

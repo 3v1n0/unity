@@ -37,7 +37,8 @@ protected:
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
   std::string GetName() const;
 
-  virtual void UpdateTexture();
+  virtual void SetScale(double);
+  virtual void UpdateTexture(nux::CairoGraphics&, double width, double height);
 
 private:
   nux::Color _color;

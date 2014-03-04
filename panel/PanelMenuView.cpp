@@ -99,12 +99,13 @@ PanelMenuView::~PanelMenuView()
   titlebar_grab_area_->UnParentObject();
 }
 
-void PanelMenuView::OnDPIChanged()
+void PanelMenuView::OnStyleChanged()
 {
   int height = panel::Style::Instance().PanelHeight(monitor_);
+  window_buttons_->SetMinimumHeight(height);
   window_buttons_->SetMaximumHeight(height);
   window_buttons_->UpdateDPIChanged();
-  window_buttons_->ComputeContentSize();
+
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
 
   Refresh(true);
@@ -126,8 +127,7 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   opacity_animator_.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
   entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryViewAdded));
-
-  Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnDPIChanged));
+  Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnStyleChanged));
 
   auto const& deco_style = decoration::Style::Get();
   lim_changed_connection_ = deco_style->integrated_menus.changed.connect([this] (bool lim) {
@@ -167,7 +167,6 @@ void PanelMenuView::SetupLayout()
 {
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-  layout_->SetBaseHeight(panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void PanelMenuView::SetupTitlebarGrabArea()
@@ -786,26 +785,28 @@ void PanelMenuView::UpdateTitleTexture(nux::Geometry const& geo, std::string con
   auto const& style = decoration::Style::Get();
   auto text_size = style->TitleNaturalSize(label);
   auto state = WidgetState::NORMAL;
+  float dpi_scale = Settings::Instance().em(monitor_)->DPIScale();
 
   if (integrated_menus_ && !is_desktop_focused_ && !WindowManager::Default().IsScaleActive())
   {
-    title_geo_.x = geo.x + window_buttons_->GetBaseWidth() + style->TitleIndent();
+    title_geo_.x = geo.x + window_buttons_->GetBaseWidth() + (style->TitleIndent() * dpi_scale);
 
     if (!window_buttons_->focused())
       state = WidgetState::BACKDROP;
   }
   else
   {
-    title_geo_.x = geo.x + MAIN_LEFT_PADDING + TITLE_PADDING;
+    title_geo_.x = geo.x + (MAIN_LEFT_PADDING + TITLE_PADDING) * dpi_scale;
   }
 
-  title_geo_.y = geo.y + (geo.height - text_size.height) / 2;
-  title_geo_.width = std::min(text_size.width, geo.width - title_geo_.x);
-  title_geo_.height = text_size.height;
+  title_geo_.y = geo.y + (geo.height - (text_size.height * dpi_scale)) / 2;
+  title_geo_.width = std::min<int>(std::ceil(text_size.width * dpi_scale), geo.width - title_geo_.x);
+  title_geo_.height = std::ceil(text_size.height * dpi_scale);
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, title_geo_.width, title_geo_.height);
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), dpi_scale, dpi_scale);
   cairo_t* cr = cairo_graphics.GetInternalContext();
-  style->DrawTitle(label, state, cr, title_geo_.width, title_geo_.height);
+  style->DrawTitle(label, state, cr, title_geo_.width / dpi_scale, title_geo_.height / dpi_scale);
   title_texture_ = texture_ptr_from_cairo_graphics(cairo_graphics);
 }
 
@@ -1685,9 +1686,9 @@ void PanelMenuView::UpdateShowNow(bool status)
 
 void PanelMenuView::SetMonitor(int monitor)
 {
-  monitor_ = monitor;
-  monitor_geo_ = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
+  PanelIndicatorsView::SetMonitor(monitor);
 
+  monitor_geo_ = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
   maximized_set_.clear();
   GList* windows = bamf_matcher_get_window_stack_for_monitor(matcher_, monitor_);
 
@@ -1722,6 +1723,7 @@ void PanelMenuView::SetMonitor(int monitor)
   window_buttons_->monitor = monitor_;
   window_buttons_->controlled_window = buttons_win;
 
+  OnStyleChanged();
   g_list_free(windows);
 }
 

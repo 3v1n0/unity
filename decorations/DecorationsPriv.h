@@ -126,6 +126,7 @@ private:
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
   connection::Wrapper theme_changed_;
+  connection::Wrapper dpi_changed_;
   connection::Wrapper grab_mouse_changed_;
   std::string last_title_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;

@@ -439,7 +439,7 @@ void VScrollBarOverlayWindow::UpdateTexture()
   nux::color::RedGreenBlue const& bg_bright_line = ProduceColorShade(bg, 1.2);
 
   nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cairoGraphics.GetContext();
+  cr = cairoGraphics.GetInternalContext();
 
   cairo_save(cr);
 
@@ -559,7 +559,6 @@ void VScrollBarOverlayWindow::UpdateTexture()
   DrawBothArrows(cr, arrow_color, width, height);
 
   thumb_texture_.Adopt(unity::texture_from_cairo_graphics(cairoGraphics));
-  cairo_destroy(cr);
 
   QueueDraw();
 }

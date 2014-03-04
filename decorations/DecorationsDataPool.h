@@ -20,6 +20,7 @@
 #ifndef UNITY_DECORATIONS_DATA_POOL
 #define UNITY_DECORATIONS_DATA_POOL
 
+#include <unordered_map>
 #include "DecorationStyle.h"
 #include "DecorationsEdge.h"
 
@@ -39,6 +40,7 @@ public:
   Cursor EdgeCursor(Edge::Type) const;
   cu::SimpleTexture::Ptr const& GlowTexture() const;
   cu::SimpleTexture::Ptr const& ButtonTexture(WindowButtonType, WidgetState) const;
+  cu::SimpleTexture::Ptr const& ButtonTexture(double scale, WindowButtonType, WidgetState) const;
 
 private:
   DataPool();
@@ -50,7 +52,10 @@ private:
 
   std::array<Cursor, size_t(Edge::Type::Size)> edge_cursors_;
   cu::SimpleTexture::Ptr glow_texture_;
-  std::array<std::array<cu::SimpleTexture::Ptr, size_t(WidgetState::Size)>, size_t(WindowButtonType::Size)> window_buttons_;
+
+  typedef std::array<std::array<cu::SimpleTexture::Ptr, size_t(WidgetState::Size)>, size_t(WindowButtonType::Size)> WindowButtonsArray;
+  WindowButtonsArray window_buttons_;
+  std::unordered_map<double, WindowButtonsArray> scaled_window_buttons_;
 };
 
 } // decoration namespace

@@ -891,10 +891,12 @@ void UnityScreen::paintDisplay()
 
 void UnityScreen::DrawPanelUnderDash()
 {
-  if (!paint_panel_under_dash_ || !launcher_controller_->IsOverlayOpen())
+  if (!paint_panel_under_dash_ || (!dash_controller_->IsVisible() && !hud_controller_->IsVisible()))
     return;
 
-  if (_last_output->id() != screen->currentOutputDev().id())
+  auto const& output_dev = screen->currentOutputDev();
+
+  if (_last_output->id() != output_dev.id())
     return;
 
   auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
@@ -905,18 +907,17 @@ void UnityScreen::DrawPanelUnderDash()
   graphics_engine->ResetModelViewMatrixStack();
   graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
   graphics_engine->ResetProjectionMatrix();
-  graphics_engine->SetOrthographicProjectionMatrix(screen->width(), screen->height());
+  graphics_engine->SetOrthographicProjectionMatrix(output_dev.width(), output_dev.height());
 
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
 
-  // FIXME Change to paint per monitor vs all at once
-  int panel_height = panel_style_.PanelHeight();
-  auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
-  graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
+  int monitor = WindowManager::Default().MonitorGeometryIn(NuxGeometryFromCompRect(output_dev));
+  auto const& texture = panel_style_.GetBackground(monitor)->GetDeviceTexture();
+  graphics_engine->QRP_GLSL_1Tex(0, 0, output_dev.width(), texture->GetHeight(), texture, texxform, nux::color::White);
 }
 
-bool UnityScreen::forcePaintOnTop ()
+bool UnityScreen::forcePaintOnTop()
 {
     return !allowWindowPaint ||
       ((switcher_controller_->Visible() ||
@@ -2862,9 +2863,12 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
-  if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window->type() == CompWindowTypeNormalMask)
+  auto window_state = window->state();
+  auto window_type = window->type();
+
+  if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window_type == CompWindowTypeNormalMask)
   {
-    if ((window->state() & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
+    if ((window_state & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
     {
       CompPoint const& viewport = window->defaultViewport();
       unsigned output = window->outputDevice();
@@ -2897,7 +2901,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     Window active_window = screen->activeWindow();
 
-    if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
+    if (G_UNLIKELY(window_type == CompWindowTypeDesktopMask))
     {
       uScreen->setPanelShadowMatrix(matrix);
 
@@ -2917,9 +2921,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
         uScreen->is_desktop_active_ = false;
 
-        if (!(window->state() & CompWindowStateMaximizedVertMask) &&
-            !(window->state() & CompWindowStateFullscreenMask) &&
-            !(window->type() & CompWindowTypeFullscreenMask))
+        if (!(window_state & CompWindowStateMaximizedVertMask) &&
+            !(window_state & CompWindowStateFullscreenMask) &&
+            !(window_type & CompWindowTypeFullscreenMask))
         {
           WindowManager& wm = WindowManager::Default();
           auto const& output = uScreen->screen->currentOutputDev();
@@ -3833,8 +3837,7 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures,
 
     if (texture->width() && texture->height())
     {
-      GLTexture::MatrixList ml(1);
-      ml[0] = texture->matrix();
+      GLTexture::MatrixList ml({texture->matrix()});
       CompRegion texture_region(0, 0, texture->width(), texture->height());
       gWindow->glAddGeometry(ml, texture_region, texture_region);
     }
@@ -3857,16 +3860,13 @@ void UnityWindow::RenderDecoration(compiz_utils::CairoContext const& ctx, double
 
   using namespace decoration;
 
-  // We need to scale the cairo matrix in order to get the properly scaled
-  cairo_save(ctx);
-  cairo_scale(ctx, aspect, aspect);
-  int w = std::round(ctx.width() / aspect);
-  int h = std::round(ctx.height() / aspect);
+  aspect *= deco_win_->dpi_scale();
+  double w = ctx.width() / aspect;
+  double h = ctx.height() / aspect;
   Style::Get()->DrawSide(Side::TOP, WidgetState::NORMAL, ctx, w, h);
-  cairo_restore(ctx);
 }
 
-void UnityWindow::RenderTitle(compiz_utils::CairoContext const& ctx, int x, int y, int width, int height)
+void UnityWindow::RenderTitle(compiz_utils::CairoContext const& ctx, int x, int y, int width, int height, double aspect)
 {
   using namespace decoration;
   auto const& style = Style::Get();
@@ -3876,6 +3876,7 @@ void UnityWindow::RenderTitle(compiz_utils::CairoContext const& ctx, int x, int 
   y += (height - text_size.height)/2;
 
   cairo_save(ctx);
+  cairo_scale(ctx, 1.0f/aspect, 1.0f/aspect);
   cairo_translate(ctx, x, y);
   style->DrawTitle(title, WidgetState::NORMAL, ctx, width - x, height);
   cairo_restore(ctx);
@@ -3883,14 +3884,12 @@ void UnityWindow::RenderTitle(compiz_utils::CairoContext const& ctx, int x, int 
 
 void UnityWindow::BuildDecorationTexture()
 {
-  if (decoration_tex_)
-    return;
-
   auto const& border = decoration::Style::Get()->Border();
 
   if (border.top)
   {
-    compiz_utils::CairoContext context(window->borderRect().width(), border.top);
+    double dpi_scale = deco_win_->dpi_scale();
+    compiz_utils::CairoContext context(window->borderRect().width(), border.top * dpi_scale, dpi_scale);
     RenderDecoration(context);
     decoration_tex_ = context;
   }
@@ -3912,7 +3911,8 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     if (!compiz_utils::IsWindowFullyDecorable(window))
       return;
 
-    BuildDecorationTexture();
+    if (!decoration_tex_)
+      BuildDecorationTexture();
 
     if (decoration_tex_)
       DrawTexture(*decoration_tex_, attrib, transform, mask, geo.x, geo.y, scale);
@@ -3922,8 +3922,9 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
   else
   {
     auto const& style = decoration::Style::Get();
+    double dpi_scale = deco_win_->dpi_scale();
     int width = geo.width;
-    int height = style->Border().top;
+    int height = style->Border().top * dpi_scale;
     auto const& padding = style->Padding(decoration::Side::TOP);
     bool redraw_decoration = true;
     compiz_utils::SimpleTexture::Ptr close_texture;
@@ -3941,19 +3942,19 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
     if (window->actions() & CompWindowActionCloseMask)
     {
       using namespace decoration;
-      close_texture = DataPool::Get()->ButtonTexture(WindowButtonType::CLOSE, close_icon_state_);
+      close_texture = DataPool::Get()->ButtonTexture(dpi_scale, WindowButtonType::CLOSE, close_icon_state_);
     }
 
     if (redraw_decoration)
     {
       if (width != 0 && height != 0)
       {
-        compiz_utils::CairoContext context(width, height);
+        compiz_utils::CairoContext context(width, height, scale * dpi_scale);
         RenderDecoration(context, scale);
 
         // Draw window title
-        int text_x = padding.left + (close_texture ? close_texture->width() : 0);
-        RenderTitle(context, text_x, padding.top, width - padding.right, height);
+        int text_x = padding.left + (close_texture ? close_texture->width() : 0) / dpi_scale;
+        RenderTitle(context, text_x, padding.top, (width - padding.right) / dpi_scale, height / dpi_scale, scale);
         decoration_selected_tex_ = context;
         uScreen->damageRegion(CompRegionFromNuxGeo(geo));
       }
@@ -3969,10 +3970,12 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 
     if (close_texture)
     {
-      int x = geo.x + padding.left;
-      int y = geo.y + padding.top + (height - close_texture->height()) / 2.0f;
+      int w = close_texture->width();
+      int h = close_texture->height();
+      int x = geo.x + padding.left * dpi_scale;
+      int y = geo.y + padding.top * dpi_scale + (height - w) / 2.0f;
 
-      close_button_geo_.Set(x, y, close_texture->width(), close_texture->height());
+      close_button_geo_.Set(x, y, w, h);
       DrawTexture(*close_texture, attrib, transform, mask, x, y);
     }
     else
@@ -4057,7 +4060,8 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
 {
   using namespace decoration;
   auto const& style = Style::Get();
-  unsigned glow_size = style->GlowSize();
+  double dpi_scale = deco_win_->dpi_scale();
+  unsigned glow_size = std::round(style->GlowSize() * dpi_scale);
   auto const& glow_texture = DataPool::Get()->GlowTexture();
 
   if (!glow_size || !glow_texture)
@@ -4070,7 +4074,7 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
   {
     // We paint the glow below the window edges to correctly
     // render the rounded corners
-    int inside_glow = decoration_radius / 4;
+    int inside_glow = decoration_radius * dpi_scale / 4;
     glow_size += inside_glow;
     glow_geo.Expand(-inside_glow, -inside_glow);
   }

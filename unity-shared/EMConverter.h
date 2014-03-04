@@ -32,8 +32,8 @@ public:
 
   EMConverter(int font_size = 0, double dpi = 96.0);
 
-  void SetFontSize(int font_size);
-  void SetDPI(double dpi);
+  bool SetFontSize(int font_size);
+  bool SetDPI(double dpi);
 
   int    GetFontSize() const;
   double GetDPI() const;

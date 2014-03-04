@@ -54,7 +54,10 @@ CairoBaseWindow::CairoBaseWindow(int monitor)
   fade_animator_.updated.connect(sigc::mem_fun(this, &BaseWindow::SetOpacity));
   fade_animator_.finished.connect([this] {
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
+    {
       ShowWindow(false);
+      hidden.emit();
+    }
   });
 }
 

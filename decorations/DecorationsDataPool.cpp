@@ -22,6 +22,8 @@
 #include <sigc++/adaptors/hide.h>
 #include "glow_texture.h"
 #include "DecorationsDataPool.h"
+#include "UnitySettings.h"
+#include "UScreen.h"
 
 namespace unity
 {
@@ -69,8 +71,12 @@ DataPool::DataPool()
   SetupCursors();
   SetupTextures();
 
-  auto cb = sigc::hide(sigc::mem_fun(this, &DataPool::SetupTextures));
-  Style::Get()->theme.changed.connect(cb);
+  CompSize glow_size(texture::GLOW_SIZE, texture::GLOW_SIZE);
+  glow_texture_ = std::make_shared<cu::SimpleTexture>(GLTexture::imageDataToTexture(texture::GLOW, glow_size, GL_RGBA, GL_UNSIGNED_BYTE));
+
+  auto cb = sigc::mem_fun(this, &DataPool::SetupTextures);
+  Style::Get()->theme.changed.connect(sigc::hide(cb));
+  unity::Settings::Instance().dpi_changed.connect(cb);
 }
 
 DataPool::~DataPool()
@@ -98,37 +104,63 @@ Cursor DataPool::EdgeCursor(Edge::Type type) const
 
 void DataPool::SetupTextures()
 {
-  CompSize size;
-  CompString plugin_name(PLUGIN_NAME);
   auto const& style = Style::Get();
+  unsigned monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+  auto& settings = Settings::Instance();
+  bool found_normal = false;
+  nux::Size size;
 
-  for (unsigned button = 0; button < window_buttons_.size(); ++button)
+  scaled_window_buttons_.clear();
+
+  for (unsigned monitor = 0; monitor < monitors; ++monitor)
   {
-    for (unsigned state = 0; state < window_buttons_[button].size(); ++state)
+    double scale = settings.em(monitor)->DPIScale();
+    bool scaled = (scale != 1.0f);
+
+    if (!scaled)
     {
-      auto file = style->WindowButtonFile(WindowButtonType(button), WidgetState(state));
-      auto const& tex_list = GLTexture::readImageToTexture(file, plugin_name, size);
+      if (found_normal)
+        continue;
 
-      if (!tex_list.empty())
-      {
-        LOG_DEBUG(logger) << "Loading texture " << file;
-        window_buttons_[button][state] = std::make_shared<cu::SimpleTexture>(tex_list);
-      }
-      else
-      {
-        LOG_WARN(logger) << "Impossible to load local button texture file; "
-                         << "falling back to cairo generated one";
+      found_normal = true;
+    }
 
-        cu::CairoContext ctx(BUTTONS_SIZE + BUTTONS_PADDING*2, BUTTONS_SIZE + BUTTONS_PADDING*2);
-        cairo_translate(ctx, BUTTONS_PADDING, BUTTONS_PADDING);
-        style->DrawWindowButton(WindowButtonType(button), WidgetState(state), ctx, BUTTONS_SIZE, BUTTONS_SIZE);
-        window_buttons_[button][state] = ctx;
+    auto& destination = scaled ? scaled_window_buttons_[scale] : window_buttons_;
+
+    for (unsigned button = 0; button < window_buttons_.size(); ++button)
+    {
+      for (unsigned state = 0; state < window_buttons_[button].size(); ++state)
+      {
+        glib::Error error;
+        auto const& file = style->WindowButtonFile(WindowButtonType(button), WidgetState(state));
+        gdk_pixbuf_get_file_info(file.c_str(), &size.width, &size.height);
+
+        size.width = std::round(size.width * scale);
+        size.height = std::round(size.height * scale);
+        glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(file.c_str(), size.width, size.height, &error));
+
+        if (pixbuf)
+        {
+          LOG_DEBUG(logger) << "Loading texture " << file;
+          cu::CairoContext ctx(size.width, size.height);
+          gdk_cairo_set_source_pixbuf(ctx, pixbuf, 0, 0);
+          cairo_paint(ctx);
+          destination[button][state] = ctx;
+        }
+        else
+        {
+          LOG_WARN(logger) << "Impossible to load local button texture file: "
+                           << error << "; falling back to cairo generated one.";
+
+          int button_size = std::round((BUTTONS_SIZE + BUTTONS_PADDING * 2) * scale);
+          cu::CairoContext ctx(button_size, button_size, scale);
+          cairo_translate(ctx, BUTTONS_PADDING, BUTTONS_PADDING);
+          style->DrawWindowButton(WindowButtonType(button), WidgetState(state), ctx, BUTTONS_SIZE, BUTTONS_SIZE);
+          destination[button][state] = ctx;
+        }
       }
     }
   }
-
-  CompSize glow_size(texture::GLOW_SIZE, texture::GLOW_SIZE);
-  glow_texture_ = std::make_shared<cu::SimpleTexture>(GLTexture::imageDataToTexture(texture::GLOW, glow_size, GL_RGBA, GL_UNSIGNED_BYTE));
 }
 
 cu::SimpleTexture::Ptr const& DataPool::GlowTexture() const
@@ -147,6 +179,27 @@ cu::SimpleTexture::Ptr const& DataPool::ButtonTexture(WindowButtonType wbt, Widg
   }
 
   return window_buttons_[unsigned(wbt)][unsigned(ws)];
+}
+
+cu::SimpleTexture::Ptr const& DataPool::ButtonTexture(double scale, WindowButtonType wbt, WidgetState ws) const
+{
+  if (wbt >= WindowButtonType::Size || ws >= WidgetState::Size)
+  {
+    LOG_ERROR(logger) << "It has been requested an invalid button texture "
+                      << "WindowButtonType: " << unsigned(wbt) << ", WidgetState: "
+                      << unsigned(ws);
+    return EMPTY_BUTTON;
+  }
+
+  if (scale == 1.0f)
+    return window_buttons_[unsigned(wbt)][unsigned(ws)];
+
+  auto it = scaled_window_buttons_.find(scale);
+
+  if (it == scaled_window_buttons_.end())
+    return EMPTY_BUTTON;
+
+  return it->second[unsigned(wbt)][unsigned(ws)];
 }
 
 } // decoration namespace

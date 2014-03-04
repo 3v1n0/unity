@@ -53,6 +53,7 @@ const int DEFAULT_TITLE_FADING_PIXELS = 35;
 const int DEFAULT_GLOW_SIZE = 10;
 const nux::Color DEFAULT_GLOW_COLOR(221, 72, 20);
 
+const std::array<std::string, 2> THEMED_FILE_EXTENSIONS = { "svg", "png" };
 const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
@@ -331,7 +332,7 @@ struct Style::Impl
     gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
   }
 
-  void DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
+  void DrawSide(Side s, WidgetState ws, cairo_t* cr, double w, double h)
   {
     gtk_style_context_save(ctx_);
     AddContextClasses(s, ws);
@@ -340,41 +341,63 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
-  std::string WindowButtonFile(WindowButtonType type, WidgetState state) const
+  std::string ThemedFilePath(std::string const& base_filename, std::vector<std::string> const& extra_folders = {}) const
   {
     auto const& theme = parent_->theme();
-    auto filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)] + ".png";
-    glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
-
-    // Look in home directory
     const char* home_dir = g_get_home_dir();
-    if (home_dir)
+    const char* gtk_prefix = g_getenv("GTK_DATA_PREFIX");
+    if (!gtk_prefix)
+      gtk_prefix = GTK_PREFIX;
+
+    for (auto const& extension : THEMED_FILE_EXTENSIONS)
     {
-      glib::String local_file(g_build_filename(home_dir, ".local", "share", "themes", subpath.Value(), nullptr));
+      auto filename = base_filename + '.' + extension;
+      glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
 
-      if (g_file_test(local_file, G_FILE_TEST_EXISTS))
-        return local_file.Str();
+      // Look in home directory
+      if (home_dir)
+      {
+        glib::String local_file(g_build_filename(home_dir, ".local", "share", "themes", subpath.Value(), nullptr));
 
-      glib::String home_file(g_build_filename(home_dir, ".themes", subpath.Value(), nullptr));
+        if (g_file_test(local_file, G_FILE_TEST_EXISTS))
+          return local_file.Str();
 
-      if (g_file_test(home_file, G_FILE_TEST_EXISTS))
-        return home_file.Str();
+        glib::String home_file(g_build_filename(home_dir, ".themes", subpath.Value(), nullptr));
+
+        if (g_file_test(home_file, G_FILE_TEST_EXISTS))
+          return home_file.Str();
+      }
+
+      glib::String path(g_build_filename(gtk_prefix, "share", "themes", subpath.Value(), nullptr));
+
+      if (g_file_test(path, G_FILE_TEST_EXISTS))
+        return path.Str();
+
+      for (auto const& folder : extra_folders)
+      {
+        glib::String path(g_build_filename(folder.c_str(), filename.c_str(), nullptr));
+
+        if (g_file_test(path, G_FILE_TEST_EXISTS))
+          return path.Str();
+      }
     }
 
-    const char* var = g_getenv("GTK_DATA_PREFIX");
-    if (!var)
-      var = GTK_PREFIX;
-
-    glib::String path(g_build_filename(var, "share", "themes", subpath.Value(), nullptr));
-
-    if (g_file_test(path, G_FILE_TEST_EXISTS))
-      return path.Str();
-
-    LOG_WARN(logger) << "No Window button file for '"<< subpath.Str() << "'";
     return std::string();
   }
 
-  void DrawWindowButton(WindowButtonType type, WidgetState ws, cairo_t* cr, int width, int height)
+  std::string WindowButtonFile(WindowButtonType type, WidgetState state) const
+  {
+    auto base_filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)];
+    auto const& file_path = ThemedFilePath(base_filename);
+
+    if (!file_path.empty())
+      return file_path;
+
+    LOG_WARN(logger) << "No Window button file for '"<< base_filename << "'";
+    return std::string();
+  }
+
+  void DrawWindowButton(WindowButtonType type, WidgetState ws, cairo_t* cr, double width, double height)
   {
     nux::Color color;
     float w = width / 3.5f;
@@ -476,7 +499,7 @@ struct Style::Impl
     return extents;
   }
 
-  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, int w, int h)
+  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h)
   {
     gtk_style_context_save(ctx_);
     AddContextClasses(Side::TOP, ws);
@@ -489,8 +512,8 @@ struct Style::Impl
 
     if (extents.width > w)
     {
-      int out_pixels = extents.width - w;
-      int fading_width = std::min<int>(title_fade_, out_pixels);
+      double out_pixels = extents.width - w;
+      double fading_width = std::min<double>(title_fade_, out_pixels);
 
       cairo_push_group(cr);
       gtk_render_layout(ctx_, cr, 0, 0, layout);
@@ -520,7 +543,7 @@ struct Style::Impl
     gtk_style_context_add_class(ctx_, GTK_STYLE_CLASS_MENUITEM);
   }
 
-  void DrawMenuItem(WidgetState ws, cairo_t* cr, int w, int h)
+  void DrawMenuItem(WidgetState ws, cairo_t* cr, double w, double h)
   {
     gtk_style_context_save(ctx_);
     AddContextClassesForMenuItem(ws);
@@ -531,7 +554,7 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
-  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, int w, int h)
+  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h)
   {
     gtk_style_context_save(ctx_);
     AddContextClassesForMenuItem(ws);
@@ -631,22 +654,22 @@ int Style::TitleIndent() const
   return impl_->title_indent_;
 }
 
-void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, int w, int h)
+void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, double w, double h)
 {
   impl_->DrawSide(s, ws, cr, w, h);
 }
 
-void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, int w, int h)
+void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h)
 {
   impl_->DrawTitle(t, ws, cr, w, h);
 }
 
-void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, int w, int h)
+void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, double w, double h)
 {
   impl_->DrawMenuItem(ws, cr, w, h);
 }
 
-void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, int w, int h)
+void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h)
 {
   impl_->DrawMenuItemEntry(t, ws, cr, w, h);
 }
@@ -656,12 +679,17 @@ void Style::DrawMenuItemIcon(std::string const& i, WidgetState ws, cairo_t* cr, 
   impl_->DrawMenuItemIcon(i, ws, cr, s);
 }
 
+std::string Style::ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders) const
+{
+  return impl_->ThemedFilePath(basename, extra_folders);
+}
+
 std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const
 {
   return impl_->WindowButtonFile(type, state);
 }
 
-void Style::DrawWindowButton(WindowButtonType type, WidgetState state, cairo_t* cr, int width, int height)
+void Style::DrawWindowButton(WindowButtonType type, WidgetState state, cairo_t* cr, double width, double height)
 {
   return impl_->DrawWindowButton(type, state, cr, width, height);
 }
