@@ -1145,6 +1145,11 @@ void PanelMenuView::OnWindowMinimized(Window xid)
     if (Refresh())
       QueueDraw();
   }
+  else if (integrated_menus_ && window_buttons_->controlled_window == xid)
+  {
+    if (Refresh())
+      QueueDraw();
+  }
 }
 
 void PanelMenuView::OnWindowUnminimized(Window xid)
@@ -1153,6 +1158,11 @@ void PanelMenuView::OnWindowUnminimized(Window xid)
     maximized_set_.insert(xid);
 
   if (xid == active_xid_)
+  {
+    if (Refresh())
+      QueueDraw();
+  }
+  else if (integrated_menus_ && IsWindowUnderOurControl(xid))
   {
     if (Refresh())
       QueueDraw();
@@ -1166,6 +1176,11 @@ void PanelMenuView::OnWindowUnmapped(Window xid)
   maximized_set_.erase(xid);
 
   if (xid == active_xid_)
+  {
+    if (Refresh())
+      QueueDraw();
+  }
+  else if (integrated_menus_ && window_buttons_->controlled_window == xid)
   {
     if (Refresh())
       QueueDraw();
@@ -1200,6 +1215,11 @@ void PanelMenuView::OnWindowMaximized(Window xid)
     if (Refresh())
       FullRedraw();
   }
+  else if (integrated_menus_ && IsWindowUnderOurControl(xid))
+  {
+    if (Refresh())
+      QueueDraw();
+  }
 }
 
 void PanelMenuView::OnWindowRestored(Window xid)
@@ -1213,6 +1233,11 @@ void PanelMenuView::OnWindowRestored(Window xid)
 
     if (Refresh())
       FullRedraw();
+  }
+  else if (integrated_menus_ && window_buttons_->controlled_window == xid)
+  {
+    if (Refresh())
+      QueueDraw();
   }
 }
 
