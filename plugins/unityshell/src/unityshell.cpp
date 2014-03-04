@@ -4060,7 +4060,11 @@ void UnityWindow::OnInitiateSpread()
 {
   close_icon_state_ = decoration::WidgetState::NORMAL;
   middle_clicked_ = false;
+  bool was_maximized = ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE);
   deco_win_->scaled = true;
+
+  if (was_maximized)
+    uScreen->sScreen->relayoutSlots(CompMatch::emptyMatch);
 }
 
 void UnityWindow::OnTerminateSpread()
