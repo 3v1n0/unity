@@ -921,11 +921,16 @@ void PanelMenuView::NotifyAllMenusClosed()
 {
   last_active_view_ = nullptr;
 
-  if (integrated_menus_ && is_maximized_)
+  if (!integrated_menus_ || is_maximized_)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
-    FullRedraw();
+    bool inside = GetAbsoluteGeometry().IsInside(mouse);
+
+    if (is_inside_ != inside)
+    {
+      is_inside_ = inside;
+      QueueDraw();
+    }
   }
 }
 
