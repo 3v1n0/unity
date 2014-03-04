@@ -39,7 +39,7 @@ private:
   void AddLauncherHints(std::list<shortcut::AbstractHint::Ptr> &hints);
   void AddDashHints(std::list<shortcut::AbstractHint::Ptr> &hints);
   void AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints);
-  void AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints);
+  void AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints, bool ws);
   void AddWorkspaceHints(std::list<shortcut::AbstractHint::Ptr> &hints);
   void AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hints, bool ws);
 
