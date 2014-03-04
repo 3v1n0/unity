@@ -30,7 +30,7 @@ namespace unity
 {
 namespace menu
 {
-DECLARE_LOGGER(logger, "unity.key.gnome.grabber");
+DECLARE_LOGGER(logger, "unity.menu.manager");
 
 using namespace indicator;
 
