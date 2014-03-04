@@ -1400,6 +1400,9 @@ sort_indicators (PanelService *self)
 static gchar *
 gtk_image_to_data (GtkImage *image, guint32 *storage_type)
 {
+  if (!GTK_IS_IMAGE (image))
+    return NULL;
+
   *storage_type = gtk_image_get_storage_type (image);
   gchar *ret = NULL;
 
@@ -1439,8 +1442,6 @@ gtk_image_to_data (GtkImage *image, guint32 *storage_type)
             g_warning ("Unable to convert pixbuf to png data: '%s'", error ? error->message : "unknown");
             if (error)
               g_error_free (error);
-
-            ret = g_strdup ("");
           }
 
         break;
@@ -1466,12 +1467,10 @@ gtk_image_to_data (GtkImage *image, guint32 *storage_type)
       }
       case GTK_IMAGE_EMPTY:
       {
-        ret = g_strdup ("");
         break;
       }
     default:
       {
-        ret = g_strdup ("");
         g_warning ("Unable to support GtkImageType: %u", *storage_type);
       }
     }
@@ -1499,7 +1498,7 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
                          is_label ? gtk_widget_get_sensitive (GTK_WIDGET (entry->label)) : FALSE,
                          is_label ? gtk_widget_get_visible (GTK_WIDGET (entry->label)) : FALSE,
                          is_image ? image_type : 0,
-                         is_image ? image_data : "",
+                         image_data ? image_data : "",
                          is_image ? gtk_widget_get_sensitive (GTK_WIDGET (entry->image)) : FALSE,
                          is_image ? gtk_widget_get_visible (GTK_WIDGET (entry->image)) : FALSE,
                          prio);
