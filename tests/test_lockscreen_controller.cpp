@@ -46,7 +46,7 @@ const unsigned ANIMATION_DURATION = 400 * 1000; // in microseconds
 const unsigned TICK_DURATION =  10 * 1000;
 
 const std::string TEST_SERVER_NAME = "com.canonical.Unity.Test.DisplayManager";
-const std::string LIGHTDM_PATH = g_getenv("XDG_SESSION_PATH") ? g_getenv("XDG_SESSION_PATH") : "";
+const std::string LIGHTDM_PATH = "/org/freedesktop/DisplayManager/Session0";
 
 }
 
@@ -158,6 +158,8 @@ TEST_F(TestLockScreenController, LockScreenTypeNone)
 
 TEST_F(TestLockScreenController, LockScreenTypeLightdmOnSingleMonitor)
 {
+  g_setenv("XDG_SESSION_PATH", LIGHTDM_PATH.c_str(), true);
+
   bool lock_called = false;
 
   lightdm_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
@@ -177,6 +179,8 @@ TEST_F(TestLockScreenController, LockScreenTypeLightdmOnSingleMonitor)
 
 TEST_F(TestLockScreenController, LockScreenTypeLightdmOnMultiMonitor)
 {
+  g_setenv("XDG_SESSION_PATH", LIGHTDM_PATH.c_str(), true);
+
   bool lock_called = false;
 
   lightdm_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
@@ -200,6 +204,8 @@ TEST_F(TestLockScreenController, LockScreenTypeLightdmOnMultiMonitor)
 
 TEST_F(TestLockScreenController, UnlockScreenTypeLightdmOnSingleMonitor)
 {
+  g_setenv("XDG_SESSION_PATH", LIGHTDM_PATH.c_str(), true);
+
   bool lock_called = false;
 
   lightdm_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
@@ -223,6 +229,8 @@ TEST_F(TestLockScreenController, UnlockScreenTypeLightdmOnSingleMonitor)
 
 TEST_F(TestLockScreenController, UnlockScreenTypeLightdmOnMultiMonitor)
 {
+  g_setenv("XDG_SESSION_PATH", LIGHTDM_PATH.c_str(), true);
+
   bool lock_called = false;
 
   lightdm_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
