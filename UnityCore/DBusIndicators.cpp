@@ -36,8 +36,8 @@ DECLARE_LOGGER(logger, "unity.indicator.dbus");
 
 namespace
 {
-const std::string SERVICE_NAME_DESKTOP("com.canonical.Unity.Panel.ServiceDesktop");
-const std::string SERVICE_NAME_LOCKSCREEN("com.canonical.Unity.Panel.ServiceLockscreen");
+const std::string SERVICE_NAME_DESKTOP("com.canonical.Unity.Panel.Service.Desktop");
+const std::string SERVICE_NAME_LOCKSCREEN("com.canonical.Unity.Panel.Service.LockScreen");
 const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
 const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 } // anonymous namespace
