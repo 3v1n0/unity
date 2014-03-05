@@ -81,11 +81,11 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
   , session_manager_(session_manager)
 {
-  user_authenticator_.echo_on_requested.connect([this](std::string const& message, std::shared_ptr<std::promise<std::string>> const& promise){
+  user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
     AddPrompt(message, /* visible */ true, promise);
   });
 
-  user_authenticator_.echo_off_requested.connect([this](std::string const& message, std::shared_ptr<std::promise<std::string>> const& promise){
+  user_authenticator_.echo_off_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
     AddPrompt(message, /* visible */ false, promise);
   });
 
@@ -201,7 +201,7 @@ nux::View* UserPromptView::focus_view()
   return focus_queue_.front();
 }
 
-void UserPromptView::AddPrompt(std::string const& message, bool visible, std::shared_ptr<std::promise<std::string>> const& promise)
+void UserPromptView::AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const& promise)
 {
   auto* text_input = new unity::TextInput();
   auto* text_entry = text_input->text_entry();

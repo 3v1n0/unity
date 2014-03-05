@@ -53,7 +53,7 @@ public:
 
   nux::View* focus_view();
 
-  void AddPrompt(std::string const& message, bool visible, std::shared_ptr<std::promise<std::string>> const& promise);
+  void AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const&);
   void AddMessage(std::string const& message, nux::Color const& color);
   void AuthenticationCb(bool authenticated);
 

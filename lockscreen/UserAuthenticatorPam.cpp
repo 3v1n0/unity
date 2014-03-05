@@ -33,7 +33,7 @@ namespace lockscreen
 {
 
 bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
-                                             AuthenticateEndCallback authenticate_cb)
+                                             AuthenticateEndCallback const& authenticate_cb)
 {
   first_prompt_ = true;
   username_ = username;
@@ -94,7 +94,7 @@ int UserAuthenticatorPam::ConversationFunction(int num_msg,
 
   bool raise_error = false;
   int count;
-  std::vector<std::shared_ptr<std::promise<std::string>>> promises;
+  std::vector<PromiseAuthCodePtr> promises;
 
   for (count = 0; count < num_msg && !raise_error; ++count)
   {
@@ -118,8 +118,8 @@ int UserAuthenticatorPam::ConversationFunction(int num_msg,
         // Adding a timeout ensures that the signal is emitted in the main thread
         std::string message(msg[count]->msg);
         user_auth->source_manager_.AddTimeout(0, [user_auth, message, promise] { user_auth->echo_off_requested.emit(message, promise); return false; });
-      }
         break;
+      }
       case PAM_TEXT_INFO:
       {
         // Adding a timeout ensures that the signal is emitted in the main thread
