@@ -59,11 +59,12 @@ private:
   void OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo);
 
 
-  session::Manager::Ptr session_manager_;
   int monitor_;
+  session::Manager::Ptr session_manager_;
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
-
+  nux::ObjectPtr<nux::Layout> primary_layout_;
+  nux::ObjectPtr<nux::Layout> cof_layout_;
   UserPromptView* prompt_view_;
 };
 

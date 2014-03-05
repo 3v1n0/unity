@@ -40,12 +40,11 @@ namespace lockscreen
 Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary)
   : MockableBaseWindow("Lockscreen")
   , primary(is_primary)
-  , session_manager_(session_manager)
   , monitor_(monitor)
+  , session_manager_(session_manager)
   , bg_settings_(new BackgroundSettings)
   , prompt_view_(nullptr)
 {
-  SetLayout(new nux::VLayout());
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
 
   EnableInputWindow(true);
@@ -61,7 +60,6 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool i
       UnGrabKeyboard();
     }
 
-    GetLayout()->Clear();
     is_primary ? ShowPrimaryView() : ShowSecondaryView();
     QueueRelayout();
     QueueDraw();
@@ -80,7 +78,15 @@ void Shield::ShowPrimaryView()
   GrabPointer();
   GrabKeyboard();
 
-  nux::Layout* main_layout = GetLayout();
+  if (primary_layout_)
+  {
+    SetLayout(primary_layout_.GetPointer());
+    return;
+  }
+
+  nux::Layout* main_layout = new nux::VLayout();
+  primary_layout_ = main_layout;
+  SetLayout(primary_layout_.GetPointer());
 
   main_layout->AddView(CreatePanel());
 
@@ -96,7 +102,15 @@ void Shield::ShowPrimaryView()
 
 void Shield::ShowSecondaryView()
 {
-  nux::Layout* main_layout = GetLayout();
+  if (cof_layout_)
+  {
+    SetLayout(cof_layout_.GetPointer());
+    return;
+  }
+
+  nux::Layout* main_layout = new nux::VLayout();
+  cof_layout_ = main_layout;
+  SetLayout(cof_layout_.GetPointer());
 
   // The circle of friends
   CofView* cof_view = new CofView();
@@ -155,10 +169,15 @@ void Shield::OnIndicatorEntryActivated(std::string const& panel, std::string con
 
 nux::Area* Shield::FindKeyFocusArea(unsigned int, unsigned long, unsigned long)
 {
-  if (prompt_view_ && prompt_view_->focus_view() && prompt_view_->focus_view()->GetInputEventSensitivity())
-    return prompt_view_->focus_view();
-  else
-    return nullptr;
+  if (primary && prompt_view_)
+  {
+    auto* focus_view = prompt_view_->focus_view();
+
+    if (focus_view && focus_view->GetInputEventSensitivity())
+      return focus_view;
+  }
+
+  return nullptr;
 }
 
 
