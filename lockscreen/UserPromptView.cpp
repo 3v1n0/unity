@@ -19,17 +19,27 @@
 
 #include "UserPromptView.h"
 
+#include <boost/algorithm/string/trim.hpp>
 #include <Nux/VLayout.h>
 
 #include "LockScreenSettings.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/TextInput.h"
 #include "unity-shared/StaticCairoText.h"
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
 namespace lockscreen
 {
+namespace
+{
+const RawPixel PADDING = 10_em;
+const RawPixel LAYOUT_MARGIN = 10_em;
+const RawPixel MSG_LAYOUT_MARGIN = 15_em;
+const RawPixel PROMPT_LAYOUT_MARGIN = 5_em;
+const int PROMPT_FONT_SIZE = 13;
+const int MESSAGE_FONT_SIZE = 10;
 
 nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
 {
@@ -65,6 +75,8 @@ nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
                                 rop));
 }
 
+}
+
 UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
   , session_manager_(session_manager)
@@ -97,28 +109,28 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
 
 void UserPromptView::ResetLayout()
 {
-  focus_queue_ = std::queue<IMTextEntry*>();
+  focus_queue_.clear();
 
   SetLayout(new nux::VLayout());
 
-  GetLayout()->SetLeftAndRightPadding(10);
-  GetLayout()->SetTopAndBottomPadding(10);
-  static_cast<nux::VLayout*>(GetLayout())->SetVerticalInternalMargin(10);
+  GetLayout()->SetLeftAndRightPadding(PADDING);
+  GetLayout()->SetTopAndBottomPadding(PADDING);
+  static_cast<nux::VLayout*>(GetLayout())->SetVerticalInternalMargin(LAYOUT_MARGIN);
 
   auto const& real_name = session_manager_->RealName();
   auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
 
   unity::StaticCairoText* username = new unity::StaticCairoText(name);
-  username->SetFont("Ubuntu 13");
+  username->SetFont("Ubuntu "+std::to_string(PROMPT_FONT_SIZE));
   GetLayout()->AddView(username);
 
   msg_layout_ = new nux::VLayout();
-  msg_layout_->SetVerticalInternalMargin(15);
+  msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN);
   msg_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
   GetLayout()->AddLayout(msg_layout_);
 
   prompt_layout_ = new nux::VLayout();
-  prompt_layout_->SetVerticalInternalMargin(5);
+  prompt_layout_->SetVerticalInternalMargin(PROMPT_LAYOUT_MARGIN);
   prompt_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
   GetLayout()->AddLayout(prompt_layout_);
 
@@ -146,7 +158,7 @@ void UserPromptView::AuthenticationCb(bool authenticated)
 void UserPromptView::Draw(nux::GraphicsEngine& graphics_engine, bool /* force_draw */)
 {
   nux::Geometry const& geo = GetGeometry();
-  
+
   graphics_engine.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(graphics_engine, geo);
 
@@ -182,46 +194,50 @@ nux::View* UserPromptView::focus_view()
   if (focus_queue_.empty())
     return nullptr;
 
-  focus_queue_.front()->cursor_visible_ = true;
+  for (auto* view : focus_queue_)
+    if (view->HasKeyboardFocus())
+      return view;
+
   return focus_queue_.front();
 }
 
 void UserPromptView::AddPrompt(std::string const& message, bool visible, std::shared_ptr<std::promise<std::string>> const& promise)
 {
-  auto text_input = new unity::TextInput();
+  auto* text_input = new unity::TextInput();
+  auto* text_entry = text_input->text_entry();
 
-  text_input->input_hint = message;
-  text_input->text_entry()->SetPasswordMode(!visible);
-
-  text_input->text_entry()->cursor_visible_ = false;
-  if (text_input->text_entry()->cursor_blink_timer_)
-    g_source_remove(text_input->text_entry()->cursor_blink_timer_);
+  std::string msg = boost::algorithm::trim_right_copy(message);
+  text_input->input_hint = (msg.empty() || msg[msg.size()-1] != ':') ? msg : msg.substr(0, msg.size()-1);
+  text_input->hint_font_size = PROMPT_FONT_SIZE;
+  text_entry->SetPasswordMode(!visible);
+  text_entry->SetPasswordChar("•");
+  text_entry->SetToggleCursorVisibilityOnKeyFocus(true);
 
   text_input->SetMinimumHeight(Settings::GRID_SIZE);
   text_input->SetMaximumHeight(Settings::GRID_SIZE);
   prompt_layout_->AddView(text_input, 1);
-  focus_queue_.push(text_input->text_entry());
+  focus_queue_.push_back(text_entry);
 
   // Don't remove it, it helps with a11y.
   if (focus_queue_.size() == 1)
-    nux::GetWindowCompositor().SetKeyFocusArea(text_input->text_entry());
+    nux::GetWindowCompositor().SetKeyFocusArea(text_entry);
 
-  text_input->text_entry()->activated.connect([this, text_input, promise](){
+  text_entry->activated.connect([this, text_input, promise](){
     if (focus_queue_.size() == 1)
     {
       text_input->SetSpinnerVisible(true);
       text_input->SetSpinnerState(STATE_SEARCHING);
     }
 
-    this->focus_queue_.pop();
+    focus_queue_.pop_front();
+    auto* text_entry = text_input->text_entry();
+    text_entry->SetInputEventSensitivity(false);
+    QueueRelayout();
+    QueueDraw();
 
-    text_input->text_entry()->SetInputEventSensitivity(false);
-    text_input->text_entry()->cursor_visible_ = false;
-    this->QueueRelayout();
-    this->QueueDraw();
-
-    std::string password = text_input->text_entry()->GetText();
-    promise->set_value(password);
+    std::string const& password = text_entry->GetText();
+    if (promise)
+      promise->set_value(password);
   });
 
   GetLayout()->ComputeContentPosition(0, 0);
@@ -233,7 +249,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, std::sh
 void UserPromptView::AddMessage(std::string const& message, nux::Color const& color)
 {
   auto* view = new unity::StaticCairoText("");
-  view->SetFont("Ubuntu 10");
+  view->SetFont("Ubuntu "+std::to_string(MESSAGE_FONT_SIZE));
   view->SetTextColor(color);
   view->SetText(message);
 

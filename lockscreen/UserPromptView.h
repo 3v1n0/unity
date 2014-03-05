@@ -21,7 +21,7 @@
 #define UNITY_USER_PROMPT_BOX
 
 #include <memory>
-#include <queue>
+#include <deque>
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
@@ -72,7 +72,7 @@ private:
   StaticCairoText* message_;
   StaticCairoText* error_;
   StaticCairoText* invalid_login_;
-  std::queue<IMTextEntry*> focus_queue_;
+  std::deque<IMTextEntry*> focus_queue_;
 };
 
 }
