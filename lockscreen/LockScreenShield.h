@@ -46,7 +46,7 @@ public:
                               unsigned long) override;
 
   bool AcceptKeyNavFocus() override;
-
+  nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
 
 private:
   void UpdateBackgroundTexture();

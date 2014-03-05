@@ -154,5 +154,15 @@ bool Shield::AcceptKeyNavFocus()
   return false;
 }
 
+nux::Area* Shield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType event_type)
+{
+  nux::Area* area = BaseWindow::FindAreaUnderMouse(mouse, event_type);
+
+  if (!area && primary)
+    return this;
+
+  return area;
+}
+
 }
 }
