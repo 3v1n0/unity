@@ -33,8 +33,6 @@ class IMTextEntry : public nux::TextEntry
 public:
   IMTextEntry();
 
-  nux::RWProperty<bool> cursor_visible;
-
   bool im_preedit();
 
 protected:

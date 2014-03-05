@@ -27,26 +27,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
   : TextEntry("", NUX_TRACKER_LOCATION)
-{
-  cursor_visible.SetGetterFunction([this] { return cursor_visible_; });
-  cursor_visible.SetSetterFunction([this] (bool visible) {
-    if (visible == cursor_visible_)
-      return false;
-
-    if (visible)
-    {
-      cursor_blink_timer_ = 0;
-      ShowCursor();
-    }
-    else
-    {
-      HideCursor();
-      g_source_remove (cursor_blink_timer_);
-    }
-
-    return true;
- });
-}
+{}
 
 void IMTextEntry::CopyClipboard()
 {
