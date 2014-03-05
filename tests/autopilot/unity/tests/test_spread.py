@@ -70,7 +70,7 @@ class SpreadTests(UnityTestCase):
     def assertWindowIsClosed(self, xid):
         """Assert that a window is not in the list of the open windows"""
         refresh_fn = lambda: xid in [w.x_id for w in self.process_manager.get_open_windows()]
-        self.assertThat(refresh_fn, Equals(None))
+        self.assertThat(refresh_fn, Eventually(Equals(False)))
 
     def assertLauncherIconsSaturated(self):
         for icon in self.unity.launcher.model.get_launcher_icons():
