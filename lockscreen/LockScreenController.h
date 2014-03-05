@@ -21,6 +21,7 @@
 #define UNITY_LOCKSCREEN_CONTROLLER_H
 
 #include <NuxCore/Animation.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include "LockScreenShield.h"
 #include "LockScreenShieldFactory.h"
@@ -45,21 +46,24 @@ public:
 private:
   friend class TestLockScreenController;
 
-  void EnsureShields(int primary, std::vector<nux::Geometry> const& monitors);
+  void EnsureShields(std::vector<nux::Geometry> const& monitors);
   void LockScreenUsingDisplayManager();
   void LockScreenUsingUnity();
-  void ShowShields(bool interactive, bool skip_animation);
-  void HideShields(bool skip_animation);
+  void ShowShields();
+  void HideShields();
 
   void OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors);
   void OnLockRequested();
   void OnUnlockRequested();
+  void OnPrimaryShieldMotion(int x, int y);
 
   std::vector<nux::ObjectPtr<Shield>> shields_;
+  nux::ObjectWeakPtr<Shield> primary_shield_;
   session::Manager::Ptr session_manager_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
   nux::animation::AnimateValue<double> fade_animator_;
+  connection::Wrapper motion_connection_;
   bool test_mode_;
   BlurType old_blur_type_;
 };
