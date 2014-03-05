@@ -46,13 +46,25 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool i
   , prompt_view_(nullptr)
 {
   SetLayout(new nux::VLayout());
-
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
 
   EnableInputWindow(true);
 
   geometry_changed.connect([this](nux::Area*, nux::Geometry&) {
     UpdateBackgroundTexture();
+  });
+
+  primary.changed.connect([this] (bool is_primary) {
+    if (!is_primary)
+    {
+      UnGrabPointer();
+      UnGrabKeyboard();
+    }
+
+    GetLayout()->Clear();
+    is_primary ? ShowPrimaryView() : ShowSecondaryView();
+    QueueRelayout();
+    QueueDraw();
   });
 }
 
@@ -125,22 +137,23 @@ nux::View* Shield::CreatePromptView()
 
 void Shield::OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned)
 {
-  UnGrabPointer();
-  UnGrabKeyboard();
+  if (primary())
+  {
+    UnGrabPointer();
+    UnGrabKeyboard();
+  }
 }
 
 void Shield::OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo)
 {
-  if (entry.empty() and geo.IsNull()) /* on menu closed */
+  if (primary() && entry.empty() and geo.IsNull()) /* on menu closed */
   {
     GrabPointer();
     GrabKeyboard();
   }
 }
 
-nux::Area* Shield::FindKeyFocusArea(unsigned int,
-                                    unsigned long,
-                                    unsigned long)
+nux::Area* Shield::FindKeyFocusArea(unsigned int, unsigned long, unsigned long)
 {
   if (prompt_view_ && prompt_view_->focus_view() && prompt_view_->focus_view()->GetInputEventSensitivity())
     return prompt_view_->focus_view();
