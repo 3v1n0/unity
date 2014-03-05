@@ -32,11 +32,10 @@ class IMTextEntry : public nux::TextEntry
   NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntry);
 public:
   IMTextEntry();
-  virtual ~IMTextEntry() {}
-  bool im_preedit();
 
-  using TextEntry::cursor_visible_;
-  using TextEntry::cursor_blink_timer_;
+  nux::RWProperty<bool> cursor_visible;
+
+  bool im_preedit();
 
 protected:
   virtual void InsertText(std::string const& text);

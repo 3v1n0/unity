@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: ni; tab-width: 2 -*-
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2011-2012 Canonical Ltd
  *
@@ -26,8 +26,27 @@ namespace unity
 NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
-: TextEntry("", NUX_TRACKER_LOCATION)
-{}
+  : TextEntry("", NUX_TRACKER_LOCATION)
+{
+  cursor_visible.SetGetterFunction([this] { return cursor_visible_; });
+  cursor_visible.SetSetterFunction([this] (bool visible) {
+    if (visible == cursor_visible_)
+      return false;
+
+    if (visible)
+    {
+      cursor_blink_timer_ = 0;
+      ShowCursor();
+    }
+    else
+    {
+      HideCursor();
+      g_source_remove (cursor_blink_timer_);
+    }
+
+    return true;
+ });
+}
 
 void IMTextEntry::CopyClipboard()
 {
@@ -85,4 +104,5 @@ bool IMTextEntry::im_preedit()
 {
   return !preedit_.empty();
 }
+
 }
