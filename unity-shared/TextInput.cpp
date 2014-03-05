@@ -60,6 +60,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   SetLayout(layout_);
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  hint_layout->SetLeftAndRightPadding(3, 3);
 
   hint_ = new StaticCairoText("");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
@@ -143,8 +144,7 @@ void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 
 void TextInput::OnInputHintChanged()
 {
-  glib::String tmp(g_markup_escape_text(input_hint().c_str(), -1));
-  hint_->SetText(tmp);
+  hint_->SetText(input_hint().c_str(), true);
 }
 
 void TextInput::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
