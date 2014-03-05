@@ -1965,7 +1965,6 @@ TEST_F(TestLauncherController, IconShowsOnQuickApplicationReopen)
 
   mock_manager.Default().application_started.emit(app);
   
-  app->visible.changed.emit(true);
   app->title.changed.emit("Hello");
   auto app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
 
@@ -1978,13 +1977,12 @@ TEST_F(TestLauncherController, IconShowsOnQuickApplicationReopen)
     } 
   }
   ASSERT_TRUE(our_icon);
-  EXPECT_TRUE(our_icon->IsVisible());
+  EXPECT_FALSE(our_icon->removed);
 
-  app->visible.changed.emit(false);
-  app->visible.changed.emit(true);
+  app->closed.emit();
+  app->running.changed(true);
   Utils::WaitForTimeout(2);
 
-  ASSERT_TRUE(our_icon);
-  EXPECT_TRUE(our_icon->IsVisible());
+  EXPECT_FALSE(our_icon->removed);
 }
 }
