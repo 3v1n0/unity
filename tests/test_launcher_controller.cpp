@@ -41,7 +41,8 @@
 #include "test_mock_devices.h"
 #include "test_mock_filemanager.h"
 #include "mock-application.h"
-
+#include "BamfApplicationManager.h"
+#include "bamf-mock-application.h"
 
 using namespace testmocks;
 using namespace unity::launcher;
@@ -1954,4 +1955,36 @@ TEST_F(TestLauncherController, SetNonExistingLauncherIconAsFavorite)
   EXPECT_TRUE(favorite_store.IsFavorite(icon_uri));
 }
 
+TEST_F(TestLauncherController, IconShowsOnQuickApplicationReopen)
+{
+  MockApplicationManager mock_manager;
+  unity::glib::Object<BamfMockApplication> bamf_mock_application(bamf_mock_application_new());
+  ApplicationPtr app(new unity::bamf::Application(mock_manager, unity::glib::object_cast<BamfApplication>(bamf_mock_application)));
+
+  MockApplicationLauncherIcon::Ptr our_icon;
+
+  mock_manager.Default().application_started.emit(app);
+  
+  app->visible.changed.emit(true);
+  app->title.changed.emit("Hello");
+  auto app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
+
+  for (auto const& icon : app_icons)
+  {
+    if (icon->tooltip_text() == "Hello")
+    {
+       our_icon = icon;
+       break;
+    } 
+  }
+  ASSERT_TRUE(our_icon);
+  EXPECT_TRUE(our_icon->IsVisible());
+
+  app->visible.changed.emit(false);
+  app->visible.changed.emit(true);
+  Utils::WaitForTimeout(2);
+
+  ASSERT_TRUE(our_icon);
+  EXPECT_TRUE(our_icon->IsVisible());
+}
 }
