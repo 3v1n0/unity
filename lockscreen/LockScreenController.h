@@ -42,6 +42,7 @@ public:
              bool test_mode = false);
 
   bool IsLocked() const;
+  bool IsShielded() const;
 
 private:
   friend class TestLockScreenController;

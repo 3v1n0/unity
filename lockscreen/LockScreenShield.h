@@ -41,11 +41,8 @@ public:
 
   nux::Property<bool> primary;
 
-  nux::Area* FindKeyFocusArea(unsigned int,
-                              unsigned long,
-                              unsigned long) override;
-
   bool AcceptKeyNavFocus() override;
+  nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
   nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
 
   sigc::signal<void, int, int> grab_motion;

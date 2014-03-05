@@ -2808,6 +2808,12 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
+  if (uScreen->lockscreen_controller_->IsShielded())
+  {
+    mask |= PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
+    return gWindow->glPaint(attrib, matrix, region, mask);
+  }
+
   GLWindowPaintAttrib wAttrib = attrib;
 
   if (mMinimizeHandler)
@@ -2838,7 +2844,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     paintInnerGlow(scaled_geo, matrix, attrib, mask);
   }
 
-  if (uScreen->session_controller_ && uScreen->session_controller_->Visible())
+  if (uScreen->session_controller_->Visible())
   {
     // Let's darken the other windows if the session dialog is visible
     wAttrib.brightness *= 0.75f;
