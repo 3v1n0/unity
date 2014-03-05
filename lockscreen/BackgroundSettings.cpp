@@ -22,17 +22,18 @@
 #include <libgnome-desktop/gnome-bg.h>
 
 #include "LockScreenSettings.h"
-#include "unity-shared/GtkTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
 
-namespace unity 
+namespace unity
 {
 namespace lockscreen
 {
 namespace
 {
 const std::string SETTINGS_NAME = "org.gnome.desktop.background";
+const std::string LSB_LOGO_FILE = "/usr/share/unity-greeter/logo.png";
 }
 
 BackgroundSettings::BackgroundSettings()
@@ -51,9 +52,13 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor,
 {
   nux::Geometry geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
-  cairo_surface_t* cairo_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(),
-                                                           geo.width, geo.height, FALSE);
-  cairo_t* c = cairo_create(cairo_surface);
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
+  cairo_t* c = cairo_graphics.GetInternalContext();
+
+  cairo_surface_t* bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), geo.width, geo.height, FALSE);
+  cairo_set_source_surface(c, bg_surface, 0, 0);
+  cairo_paint(c);
+  cairo_surface_destroy(bg_surface);
 
   if (draw_logo)
   {
@@ -67,9 +72,10 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor,
     int y = grid_y_offset + Settings::GRID_SIZE * (geo.height / Settings::GRID_SIZE - 1) - height;
     cairo_translate (c, x, y);
 
-    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png ("/usr/share/unity-greeter/logo.png");
+    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(LSB_LOGO_FILE.c_str());
     cairo_set_source_surface(c, logo_surface, 0, 0);
     cairo_paint_with_alpha(c, 0.5);
+    cairo_surface_destroy(logo_surface);
     cairo_restore(c);
   }
 
@@ -81,7 +87,7 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor,
     int grid_y_offset = GetGridOffset(height) + panel::Style::Instance().PanelHeight(monitor);
 
     // overlay grid
-    cairo_surface_t* overlay_surface = cairo_surface_create_similar(cairo_surface,
+    cairo_surface_t* overlay_surface = cairo_surface_create_similar(cairo_graphics.GetSurface(),
                                                                     CAIRO_CONTENT_COLOR_ALPHA,
                                                                     Settings::GRID_SIZE,
                                                                     Settings::GRID_SIZE);
@@ -114,14 +120,7 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor,
     cairo_destroy(oc);
   }
 
-  GdkPixbuf* gdk_pixbuf = gdk_pixbuf_get_from_surface(cairo_surface,
-                                                      0, 0, 
-                                                      geo.width, geo.height);
-
-  cairo_destroy(c);
-  cairo_surface_destroy(cairo_surface);
-
-  return texture_ptr_from_gdk_graphics(nux::GdkGraphics(gdk_pixbuf));
+  return texture_ptr_from_cairo_graphics(cairo_graphics);
 }
 
 int BackgroundSettings::GetGridOffset(int size)
