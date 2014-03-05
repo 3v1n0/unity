@@ -30,9 +30,8 @@ const int TEXT_INPUT_RIGHT_BORDER = 10;
 const int HIGHLIGHT_HEIGHT = 24;
 
 // Fonts
-const std::string HINT_LABEL_FONT_SIZE = "14px";
-const std::string HINT_LABEL_FONT_STYLE = "";
-const std::string HINT_LABEL_DEFAULT_FONT = "Ubuntu " + HINT_LABEL_FONT_STYLE + " " + HINT_LABEL_FONT_SIZE;
+const std::string HINT_LABEL_DEFAULT_FONT_NAME = "Ubuntu";
+const int HINT_LABEL_FONT_SIZE = 11;
 
 const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
 const int PANGO_ENTRY_FONT_SIZE = 14;
@@ -42,23 +41,19 @@ const int PANGO_ENTRY_FONT_SIZE = 14;
 namespace unity
 {
 
-nux::logging::Logger logger("unity.dash.textinput");
+nux::logging::Logger logger("unity.textinput");
 
 NUX_IMPLEMENT_OBJECT_TYPE(TextInput);
 
 TextInput::TextInput(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , input_hint("")
+  , hint_font_name(HINT_LABEL_DEFAULT_FONT_NAME)
+  , hint_font_size(HINT_LABEL_FONT_SIZE)
+  , bg_layer_(new nux::ColorLayer(nux::Color(0xff595853), true))
   , last_width_(-1)
   , last_height_(-1)
 {
-  Init();
-}
-
-void TextInput::Init()
-{
-  bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
-
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, TEXT_INPUT_RIGHT_BORDER);
   layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT);
@@ -66,10 +61,12 @@ void TextInput::Init()
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  hint_ = new StaticCairoText(" ");
+  hint_ = new StaticCairoText("");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
-  hint_->SetFont(HINT_LABEL_DEFAULT_FONT.c_str());
-  hint_layout->AddView(hint_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  hint_layout->AddView(hint_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  hint_font_name.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateHintFont)));
+  hint_font_size.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateHintFont)));
+  UpdateHintFont();
 
   pango_entry_ = new IMTextEntry();
   pango_entry_->SetFontFamily(PANGO_ENTRY_DEFAULT_FONT_FAMILY.c_str());
@@ -115,11 +112,15 @@ void TextInput::SetSpinnerState(SpinnerState spinner_state)
   spinner_->SetState(spinner_state);
 }
 
+void TextInput::UpdateHintFont()
+{
+  hint_->SetFont((hint_font_name() + " " + std::to_string(hint_font_size())).c_str());
+}
+
 void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 {
   glib::String font_name;
   PangoFontDescription* desc;
-  std::ostringstream font_desc;
 
   g_object_get(settings, "gtk-font-name", &font_name, NULL);
 
@@ -130,13 +131,13 @@ void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
     pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
     pango_entry_->SetFontOptions(gdk_screen_get_font_options(gdk_screen_get_default()));
 
-    font_desc << pango_font_description_get_family(desc) << " " << HINT_LABEL_FONT_STYLE << " " << HINT_LABEL_FONT_SIZE;
-    hint_->SetFont(font_desc.str().c_str());
-
-    font_desc.str("");
-    font_desc.clear();
-
-    pango_font_description_free(desc);
+    if (hint_font_name() == HINT_LABEL_DEFAULT_FONT_NAME)
+    {
+      std::ostringstream font_desc;
+      font_desc << pango_font_description_get_family(desc) << " " << hint_font_size();
+      hint_->SetFont(font_desc.str().c_str());
+      pango_font_description_free(desc);
+    }
   }
 }
 
