@@ -38,7 +38,7 @@ namespace lockscreen
 {
 
 Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary)
-  : MockableBaseWindow("Lockscreen")
+  : MockableBaseWindow("Unity Lockscreen")
   , primary(is_primary)
   , monitor_(monitor)
   , session_manager_(session_manager)
@@ -63,6 +63,11 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool i
     is_primary ? ShowPrimaryView() : ShowSecondaryView();
     QueueRelayout();
     QueueDraw();
+  });
+
+  mouse_move.connect([this] (int x, int y, int, int, unsigned long, unsigned long) {
+    auto const& abs_geo = GetAbsoluteGeometry();
+    grab_motion.emit(abs_geo.x + x, abs_geo.y + y);
   });
 }
 

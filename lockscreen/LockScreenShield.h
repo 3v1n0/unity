@@ -48,6 +48,8 @@ public:
   bool AcceptKeyNavFocus() override;
   nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
 
+  sigc::signal<void, int, int> grab_motion;
+
 private:
   void UpdateBackgroundTexture();
   void ShowPrimaryView();
