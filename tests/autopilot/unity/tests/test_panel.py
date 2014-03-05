@@ -154,6 +154,12 @@ class PanelTitleTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
 
+    def setUp(self):
+        super(PanelTitleTests, self).setUp()
+        # Locked Launchers on all monitors
+        self.set_unity_option('num_launchers', 0)
+        self.set_unity_option('launcher_hide_mode', 0)
+
     def test_panel_title_on_empty_desktop(self):
         """With no windows shown, the panel must display the default title."""
         gettext.install("unity", unicode=True)
@@ -648,6 +654,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
 
+        # Sleep a bit to avoid a race with the Hud showing
+        sleep(0.5)
         self.keybinding_release("panel/show_menus")
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
@@ -1307,13 +1315,13 @@ class PanelCrossMonitorsTests(PanelTestsBase):
 
     def test_hovering_indicators_on_multiple_monitors(self):
         """Opening an indicator entry and then hovering others entries must open them."""
-        text_win = self.open_new_application_window("Text Editor")
-        panel = self.unity.panels.get_panel_for_monitor(text_win.monitor)
-        indicator = panel.indicators.get_indicator_by_name_hint("indicator-session")
-        self.mouse_open_indicator(indicator)
+        self.open_new_application_window("Text Editor")
 
         for monitor in range(0, self.display.get_num_screens()):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
+
+            indicator = panel.indicators.get_indicator_by_name_hint("indicator-session")
+            self.mouse_open_indicator(indicator)
 
             entries = panel.get_indicator_entries(include_hidden_menus=True)
             self.assertThat(len(entries), GreaterThan(0))
@@ -1330,3 +1338,6 @@ class PanelCrossMonitorsTests(PanelTestsBase):
                     self.assertThat(entry.visible, Eventually(Equals(True)))
                     self.assertThat(entry.active, Eventually(Equals(True)))
                     self.assertThat(entry.menu_y, Eventually(NotEquals(0)))
+
+            # Close the last indicator on the monitor
+            self.mouse.click()
