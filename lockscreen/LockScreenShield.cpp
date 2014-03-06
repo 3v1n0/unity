@@ -94,7 +94,9 @@ void Shield::ShowPrimaryView()
 
   nux::HLayout* prompt_layout = new nux::HLayout();
   prompt_layout->SetLeftAndRightPadding(2 * Settings::GRID_SIZE);
-  prompt_layout->AddView(CreatePromptView());
+
+  prompt_view_ = CreatePromptView();
+  prompt_layout->AddView(prompt_view_);
 
   // 10 is just a random number to center the prompt view.
   main_layout->AddSpace(0, 10);
@@ -137,18 +139,18 @@ nux::View* Shield::CreatePanel()
   return panel_view;
 }
 
-nux::View* Shield::CreatePromptView()
+UserPromptView* Shield::CreatePromptView()
 {
-  prompt_view_ = new UserPromptView(session_manager_);
+  auto* prompt_view = new UserPromptView(session_manager_);
 
   auto width = 8 * Settings::GRID_SIZE;
   auto height = 3 * Settings::GRID_SIZE;
 
-  prompt_view_->SetMinimumWidth(width);
-  prompt_view_->SetMaximumWidth(width);
-  prompt_view_->SetMinimumHeight(height);
+  prompt_view->SetMinimumWidth(width);
+  prompt_view->SetMaximumWidth(width);
+  prompt_view->SetMinimumHeight(height);
 
-  return prompt_view_;
+  return prompt_view;
 }
 
 void Shield::OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned)

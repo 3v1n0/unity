@@ -45,7 +45,7 @@ private:
   void ShowPrimaryView();
   void ShowSecondaryView();
   nux::View* CreatePanel();
-  nux::View* CreatePromptView();
+  UserPromptView* CreatePromptView();
 
   void OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned);
   void OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo);
