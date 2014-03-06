@@ -35,7 +35,6 @@ namespace unity
 class TextInputMock : public TextInput
 {
     public:
-      using TextInput::Init;
       using TextInput::OnInputHintChanged;
       using TextInput::OnMouseButtonDown;
       using TextInput::OnEndKeyFocus;
@@ -52,7 +51,6 @@ class TestTextInput : public ::testing::Test
      TestTextInput()
      {
        entry = new TextInputMock();
-       entry->Init();
        hint = entry->GetHint();
        pango_entry = entry->GetPangoEntry();
      }
