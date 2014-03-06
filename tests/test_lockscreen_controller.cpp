@@ -253,7 +253,7 @@ TEST_F(TestLockScreenController, UnlockScreenTypeLightdmOnMultiMonitor)
 }
 
 TEST_F(TestLockScreenController, LockScreenOnSingleMonitor)
-{  
+{
   session_manager->lock_requested.emit();
 
   ASSERT_EQ(1, controller.shields_.size());
@@ -274,6 +274,7 @@ TEST_F(TestLockScreenController, LockScreenOnMultiMonitor)
 TEST_F(TestLockScreenController, SwitchToMultiMonitor)
 {
   session_manager->lock_requested.emit();
+  tick_source.tick(ANIMATION_DURATION);
 
   ASSERT_EQ(1, controller.shields_.size());
   EXPECT_EQ(uscreen.GetMonitors().at(0), controller.shields_.at(0)->GetGeometry());
@@ -283,7 +284,10 @@ TEST_F(TestLockScreenController, SwitchToMultiMonitor)
   ASSERT_EQ(monitors::MAX, controller.shields_.size());
 
   for (unsigned int i=0; i < monitors::MAX; ++i)
-    EXPECT_EQ(uscreen.GetMonitors().at(i), controller.shields_.at(i)->GetAbsoluteGeometry());  
+  {
+    ASSERT_EQ(uscreen.GetMonitors().at(i), controller.shields_.at(i)->GetAbsoluteGeometry());
+    ASSERT_TRUE(controller.shields_.at(i)->IsVisible());
+  }
 }
 
 TEST_F(TestLockScreenController, SwitchToSingleMonitor)
@@ -294,7 +298,7 @@ TEST_F(TestLockScreenController, SwitchToSingleMonitor)
   ASSERT_EQ(monitors::MAX, controller.shields_.size());
 
   for (unsigned int i=0; i < monitors::MAX; ++i)
-    EXPECT_EQ(uscreen.GetMonitors().at(i), controller.shields_.at(i)->GetAbsoluteGeometry());
+    ASSERT_EQ(uscreen.GetMonitors().at(i), controller.shields_.at(i)->GetAbsoluteGeometry());
 
   uscreen.Reset(/* emit_change */ true);
 

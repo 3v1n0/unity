@@ -52,7 +52,6 @@ private:
   void ShowShields();
   void HideShields();
 
-  void OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors);
   void OnLockRequested();
   void OnUnlockRequested();
   void OnPrimaryShieldMotion(int x, int y);
@@ -63,6 +62,7 @@ private:
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
   nux::animation::AnimateValue<double> fade_animator_;
+  connection::Wrapper uscreen_connection_;
   connection::Wrapper motion_connection_;
   bool test_mode_;
   BlurType old_blur_type_;

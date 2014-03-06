@@ -49,8 +49,10 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
   , fade_animator_(FADE_DURATION)
   , test_mode_(test_mode)
 {
-  auto* uscreen = UScreen::GetDefault();
-  uscreen->changed.connect(sigc::mem_fun(this, &Controller::OnUScreenChanged));
+  uscreen_connection_ = UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
+    EnsureShields(monitors);
+  });
+  uscreen_connection_->block();
 
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
@@ -65,15 +67,10 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
     {
       motion_connection_->disconnect();
+      uscreen_connection_->block();
       shields_.clear();
     }
   });
-}
-
-void Controller::OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors)
-{
-  if (IsLocked())
-    EnsureShields(monitors);
 }
 
 void Controller::OnPrimaryShieldMotion(int x, int y)
@@ -107,14 +104,24 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   for (int i = 0; i < num_monitors; ++i)
   {
     auto& shield = shields_[i];
+    bool is_new = false;
 
     if (i >= shields_size)
+    {
       shield = shield_factory_->CreateShield(session_manager_, i, i == primary);
+      is_new = true;
+    }
 
-    shield->primary = (i == primary);
     shield->SetGeometry(monitors[i]);
     shield->SetMinMaxSize(monitors[i].width, monitors[i].height);
-    shield->PushToFront();
+    shield->primary = (i == primary);
+
+    if (is_new && fade_animator_.GetCurrentValue() > 0)
+    {
+      shield->SetOpacity(fade_animator_.GetCurrentValue());
+      shield->ShowWindow(true);
+      shield->PushToFront();
+    }
   }
 
   if (unity_mode)
@@ -180,6 +187,7 @@ void Controller::ShowShields()
 
   WindowManager::Default().SaveInputFocus();
   EnsureShields(UScreen::GetDefault()->GetMonitors());
+  uscreen_connection_->unblock();
 
   std::for_each(shields_.begin(), shields_.end(), [] (nux::ObjectPtr<Shield> const& shield) {
     shield->SetOpacity(0.0f);
