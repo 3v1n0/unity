@@ -33,19 +33,19 @@ namespace lockscreen
 class AbstractShield : public MockableBaseWindow
 {
 public:
-  AbstractShield(session::Manager::Ptr const& session, int monitor, bool is_primary)
+  AbstractShield(session::Manager::Ptr const& session, int monitor_num, bool is_primary)
     : MockableBaseWindow("Unity Lockscreen")
     , primary(is_primary)
-    , monitor_(monitor)
+    , monitor(monitor_num)
     , session_manager_(session)
   {}
 
   nux::Property<bool> primary;
+  nux::Property<int> monitor;
 
   sigc::signal<void, int, int> grab_motion;
 
 protected:
-  int monitor_;
   session::Manager::Ptr session_manager_;
 };
 

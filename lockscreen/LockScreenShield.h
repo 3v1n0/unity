@@ -24,6 +24,10 @@
 
 namespace unity
 {
+namespace panel
+{
+class PanelView;
+}
 namespace lockscreen
 {
 
@@ -55,6 +59,7 @@ private:
   nux::ObjectPtr<nux::Layout> primary_layout_;
   nux::ObjectPtr<nux::Layout> cof_layout_;
   UserPromptView* prompt_view_;
+  panel::PanelView* panel_view_;
 };
 
 }

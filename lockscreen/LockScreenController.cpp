@@ -118,6 +118,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
     shield->SetGeometry(monitors[i]);
     shield->SetMinMaxSize(monitors[i].width, monitors[i].height);
     shield->primary = (i == primary);
+    shield->monitor = i;
 
     if (is_new && fade_animator_.GetCurrentValue() > 0)
     {

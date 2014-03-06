@@ -31,14 +31,15 @@
 #include "panel/PanelView.h"
 #include "unity-shared/GnomeKeyGrabber.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/UScreen.h"
 
 namespace unity
 {
 namespace lockscreen
 {
 
-Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary)
-  : AbstractShield(session_manager, monitor, is_primary)
+Shield::Shield(session::Manager::Ptr const& session_manager, int monitor_num, bool is_primary)
+  : AbstractShield(session_manager, monitor_num, is_primary)
   , bg_settings_(new BackgroundSettings)
   , prompt_view_(nullptr)
 {
@@ -46,7 +47,12 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool i
 
   EnableInputWindow(true);
 
-  geometry_changed.connect([this](nux::Area*, nux::Geometry&) {
+  geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdateBackgroundTexture();});
+
+  monitor.changed.connect([this] (int monitor) {
+    if (primary() && panel_view_)
+      panel_view_->SetMonitor(monitor);
+
     UpdateBackgroundTexture();
   });
 
@@ -70,9 +76,14 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool i
 
 void Shield::UpdateBackgroundTexture()
 {
-  auto background_texture = bg_settings_->GetBackgroundTexture(monitor_);
-  background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
-  SetBackgroundLayer(background_layer_.get());
+  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+
+  if (!background_layer_ || monitor_geo != background_layer_->GetGeometry())
+  {
+    auto background_texture = bg_settings_->GetBackgroundTexture(monitor);
+    background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
+    SetBackgroundLayer(background_layer_.get());
+  }
 }
 
 void Shield::ShowPrimaryView()
@@ -132,9 +143,10 @@ nux::View* Shield::CreatePanel()
   indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryActivated));
 
   panel::PanelView* panel_view = new panel::PanelView(this, menu_manager, /*lockscreen_mode*/ true);
-  panel_view->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor_));
+  panel_view->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor));
   panel_view->SetOpacity(0.5);
-  panel_view->SetMonitor(monitor_);
+  panel_view->SetMonitor(monitor);
+  panel_view_ = panel_view;
 
   return panel_view;
 }
