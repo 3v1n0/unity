@@ -39,7 +39,7 @@ const RawPixel LAYOUT_MARGIN = 10_em;
 const RawPixel MSG_LAYOUT_MARGIN = 15_em;
 const RawPixel PROMPT_LAYOUT_MARGIN = 5_em;
 const int PROMPT_FONT_SIZE = 13;
-const int MESSAGE_FONT_SIZE = 10;
+const int MESSAGE_FONT_SIZE = 11;
 
 nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
 {
@@ -73,6 +73,25 @@ nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
                                 nux::color::White,
                                 true,
                                 rop));
+}
+
+std::string SanitizeMessage(std::string const& message)
+{
+  std::string msg = boost::algorithm::trim_copy(message);
+
+  if (msg.empty())
+    return msg;
+
+  if (msg[msg.size()-1] == ':')
+    msg = msg.substr(0, msg.size()-1);
+
+  if (msg == "Password")
+    return _("Password");
+
+  if (msg == "login")
+    return _("Username");
+
+  return msg;
 }
 
 }
@@ -206,8 +225,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
   auto* text_input = new unity::TextInput();
   auto* text_entry = text_input->text_entry();
 
-  std::string msg = boost::algorithm::trim_right_copy(message);
-  text_input->input_hint = (msg.empty() || msg[msg.size()-1] != ':') ? msg : msg.substr(0, msg.size()-1);
+  text_input->input_hint = SanitizeMessage(message);
   text_input->hint_font_size = PROMPT_FONT_SIZE;
   text_entry->SetPasswordMode(!visible);
   text_entry->SetPasswordChar("•");
