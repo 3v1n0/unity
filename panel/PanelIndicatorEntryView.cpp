@@ -387,7 +387,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
     int y = (height - extents.height) / 2;
 
-    if (overlay_showing_)
+    if (overlay_showing_ && !IsActive())
     {
       cairo_move_to(cr, x, y);
       cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
