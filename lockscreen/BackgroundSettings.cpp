@@ -67,12 +67,13 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor,
 
     cairo_save(c);
 
-    int height = 43;
+    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(LSB_LOGO_FILE.c_str());
+
+    int height = cairo_image_surface_get_height(logo_surface);
     int x = grid_x_offset;
     int y = grid_y_offset + Settings::GRID_SIZE * (geo.height / Settings::GRID_SIZE - 1) - height;
     cairo_translate (c, x, y);
 
-    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(LSB_LOGO_FILE.c_str());
     cairo_set_source_surface(c, logo_surface, 0, 0);
     cairo_paint_with_alpha(c, 0.5);
     cairo_surface_destroy(logo_surface);
