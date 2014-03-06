@@ -65,23 +65,30 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor, bool draw_g
   if (draw_logo)
   {
     int grid_x_offset = GetGridOffset(geo.width);
-    int grid_y_offset = GetGridOffset(geo.height) + panel::Style::Instance().PanelHeight(monitor);
-
-    cairo_save(c);
+    int grid_y_offset = GetGridOffset(geo.height);
 
     glib::Object<GSettings> greeter_settings(g_settings_new(GREETER_SETTINGS.c_str()));
     glib::String logo(g_settings_get_string(greeter_settings, LOGO_KEY.c_str()));
-    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(logo);
 
-    int height = cairo_image_surface_get_height(logo_surface);
-    int x = grid_x_offset;
-    int y = grid_y_offset + Settings::GRID_SIZE * (geo.height / Settings::GRID_SIZE - 1) - height;
-    cairo_translate (c, x, y);
+    if (logo)
+    {
+      cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(logo);
 
-    cairo_set_source_surface(c, logo_surface, 0, 0);
-    cairo_paint_with_alpha(c, 0.5);
-    cairo_surface_destroy(logo_surface);
-    cairo_restore(c);
+      if (logo_surface)
+      {
+        int height = cairo_image_surface_get_height(logo_surface);
+        int x = grid_x_offset;
+        int y = grid_y_offset + Settings::GRID_SIZE * (geo.height / Settings::GRID_SIZE - 1) - height;
+
+        cairo_save(c);
+        cairo_translate(c, x, y);
+
+        cairo_set_source_surface(c, logo_surface, 0, 0);
+        cairo_paint_with_alpha(c, 0.5);
+        cairo_surface_destroy(logo_surface);
+        cairo_restore(c);
+      }
+    }
   }
 
   if (draw_grid)
@@ -89,7 +96,7 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor, bool draw_g
     int width = geo.width;
     int height = geo.height;
     int grid_x_offset = GetGridOffset(width);
-    int grid_y_offset = GetGridOffset(height) + panel::Style::Instance().PanelHeight(monitor);
+    int grid_y_offset = GetGridOffset(height);
 
     // overlay grid
     cairo_surface_t* overlay_surface = cairo_surface_create_similar(cairo_graphics.GetSurface(),
