@@ -19,6 +19,7 @@
  */
 
 #include <gtk/gtk.h>
+#include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DBusIndicators.h>
 #include <unordered_map>
@@ -29,6 +30,8 @@ namespace unity
 {
 namespace menu
 {
+DECLARE_LOGGER(logger, "unity.menu.manager");
+
 using namespace indicator;
 
 struct Manager::Impl : sigc::trackable
@@ -98,7 +101,8 @@ struct Manager::Impl : sigc::trackable
 
       action->keyFromString(accelerator);
       action->setState(CompAction::StateInitKey);
-      action->setInitiate([this, id] (CompAction*, CompAction::State, CompOption::Vector&) {
+      action->setInitiate([this, id] (CompAction* action, CompAction::State, CompOption::Vector&) {
+        LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
         return parent_->key_activate_entry.emit(id);
       });
 

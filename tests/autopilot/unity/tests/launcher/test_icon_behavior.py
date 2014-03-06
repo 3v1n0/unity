@@ -70,7 +70,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.unity.dash.ensure_visible()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+        self.assertThat(bfb.get_tooltip(), Equals(None))
 
     def test_bfb_tooltip_is_disabled_when_dash_is_open(self):
         """Tests the that bfb tooltip is disabled when the dash is open."""

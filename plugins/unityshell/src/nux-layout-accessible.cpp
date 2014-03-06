@@ -137,6 +137,7 @@ nux_layout_accessible_ref_child(AtkObject* obj,
   std::list<nux::Area*> element_list;
   gint num = 0;
   std::list<nux::Area*>::iterator it;
+  AtkObject* parent = NULL;
 
   g_return_val_if_fail(NUX_IS_LAYOUT_ACCESSIBLE(obj), 0);
   num = atk_object_get_n_accessible_children(obj);
@@ -155,6 +156,10 @@ nux_layout_accessible_ref_child(AtkObject* obj,
 
   child = dynamic_cast<nux::Object*>(*it);
   child_accessible = unity_a11y_get_accessible(child);
+
+  parent = atk_object_get_parent(child_accessible);
+  if (parent != obj)
+    atk_object_set_parent(child_accessible, obj);
 
   g_object_ref(child_accessible);
 

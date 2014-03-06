@@ -11,8 +11,9 @@ from __future__ import absolute_import
 
 from autopilot.display import move_mouse_to_screen
 from autopilot.matchers import Eventually
+from autopilot.introspection.dbus import StateNotFoundError
 import os.path
-from testtools.matchers import Contains, Equals, NotEquals
+from testtools.matchers import Contains, Equals, NotEquals, Not, Raises
 from time import sleep
 from xdg.DesktopEntry import DesktopEntry
 
@@ -90,8 +91,7 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(lambda: len(nautilus_windows_fn()), Eventually(Equals(1)))
         [nautilus_window] = nautilus_windows_fn()
 
-        self.assertThat(lambda: self.get_startup_notification_timestamp(nautilus_window),
-                        Eventually(Equals(new_win_ql_item.activate_timestamp)))
+        self.assertThat(new_win_ql_item.wait_until_destroyed, Not(Raises()))
 
     def test_quicklist_application_item_focus_last_active_window(self):
         """This tests shows that when you activate a quicklist application item
@@ -198,7 +198,7 @@ class QuicklistActionTests(UnityTestCase):
 
         icon1_ql = self.open_quicklist_for_icon(icons[1])
         self.assertThat(icon1_ql.active, Eventually(Equals(True)))
-        self.assertThat(icon0_ql.active, Eventually(Equals(False)))
+        self.assertThat(icon0_ql.wait_until_destroyed, Not(Raises()))
 
     def test_right_clicking_same_icon_doesnt_reopen_ql(self):
         """A right click to the same icon in the launcher must
@@ -213,8 +213,13 @@ class QuicklistActionTests(UnityTestCase):
         calc_ql = self.open_quicklist_for_icon(calc_icon)
         self.assertThat(calc_ql.active, Eventually(Equals(True)))
 
-        calc_ql = self.open_quicklist_for_icon(calc_icon)
-        self.assertThat(calc_ql.active, Eventually(Equals(False)))
+        # We've to manually open the icon this time, as when the quicklist goes away
+        # its Destroyed, so its None!
+        launcher = self.unity.launcher.get_launcher_for_monitor(0)
+        launcher.click_launcher_icon(calc_icon, button=3)
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        calc_ql = calc_icon.get_quicklist()
+        self.assertThat(calc_ql, Equals(None))
 
 
 class QuicklistKeyNavigationTests(UnityTestCase):

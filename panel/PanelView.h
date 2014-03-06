@@ -71,8 +71,6 @@ public:
   Window GetTrayXid() const;
   int GetStoredDashWidth() const;
 
-  void SetLauncherWidth(int width);
-
   bool IsMouseInsideIndicator(nux::Point const& mouse_position) const;
 
   ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event) override;
@@ -142,7 +140,6 @@ private:
   float opacity_;
   int monitor_;
   int stored_dash_width_;
-  int launcher_width_;
   bool lockscreen_mode_;
 
   connection::Manager on_indicator_updated_connections_;

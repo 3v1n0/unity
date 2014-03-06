@@ -44,6 +44,7 @@ const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
 const std::string UI_SETTINGS = "com.ubuntu.user-interface";
 
+const int DEFAULT_LAUNCHER_WIDTH = 64;
 const double DEFAULT_DPI = 96.0f;
 }
 
@@ -59,6 +60,7 @@ public:
     , ubuntu_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
+    , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
     , lowGfx_(false)
@@ -210,6 +212,7 @@ public:
   glib::Object<GSettings> gnome_settings_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
+  std::vector<int> launcher_widths_;
   FormFactor cached_form_factor_;
   bool cached_double_click_activate_;
   bool lowGfx_;
@@ -274,6 +277,29 @@ EMConverter::Ptr const& Settings::em(int monitor) const
   }
 
   return pimpl->em_converters_[monitor];
+}
+
+void Settings::SetLauncherWidth(int launcher_width, int monitor)
+{
+  if (monitor < 0 || monitor >= (int)monitors::MAX)
+  {
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating laucher width.";
+  }
+  else
+  {
+    pimpl->launcher_widths_[monitor] = launcher_width;
+  }
+}
+
+int Settings::LauncherWidth(int monitor) const
+{
+  if (monitor < 0 || monitor >= (int)monitors::MAX)
+  {
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning 0.";
+    return 0;
+  }
+
+  return pimpl->launcher_widths_[monitor];
 }
 
 } // namespace unity
