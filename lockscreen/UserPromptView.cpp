@@ -39,7 +39,6 @@ const RawPixel LAYOUT_MARGIN = 10_em;
 const RawPixel MSG_LAYOUT_MARGIN = 15_em;
 const RawPixel PROMPT_LAYOUT_MARGIN = 5_em;
 const int PROMPT_FONT_SIZE = 13;
-const int MESSAGE_FONT_SIZE = 11;
 
 nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
 {
@@ -267,7 +266,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
 void UserPromptView::AddMessage(std::string const& message, nux::Color const& color)
 {
   auto* view = new unity::StaticCairoText("");
-  view->SetFont("Ubuntu "+std::to_string(MESSAGE_FONT_SIZE));
+  view->SetFont(Settings::Instance().font_name());
   view->SetTextColor(color);
   view->SetText(message);
 

@@ -2595,7 +2595,6 @@ void UnityScreen::UpdateActivateIndicatorsKey()
 bool UnityScreen::initPluginActions()
 {
   PluginAdapter& adapter = PluginAdapter::Default();
-  UpdateActivateIndicatorsKey();
 
   if (CompPlugin* p = CompPlugin::find("core"))
   {
@@ -3663,6 +3662,7 @@ void UnityScreen::initLauncher()
 
   // Setup Lockscreen Controller
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(manager);
+  UpdateActivateIndicatorsKey();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin

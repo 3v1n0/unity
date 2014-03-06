@@ -22,6 +22,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <Nux/HLayout.h>
 
+#include "LockScreenSettings.h"
 #include "panel/PanelIndicatorsView.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/StaticCairoText.h"
@@ -58,10 +59,11 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
 
   // Add setting
   auto *hostname = new StaticCairoText(session_manager->HostName());
-  hostname->SetFont("Ubuntu 11");
+  hostname->SetFont(Settings::Instance().font_name());
   hostname->SetTextColor(nux::color::White);
   hostname->SetInputEventSensitivity(false);
   hostname->SetScale(scale);
+  hostname->SetVisible(Settings::Instance().show_hostname());
   layout->AddView(hostname, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   indicators_view_ = new PanelIndicatorsView();
