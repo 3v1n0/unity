@@ -32,6 +32,7 @@
 #include "unity-shared/GnomeKeyGrabber.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -155,14 +156,26 @@ UserPromptView* Shield::CreatePromptView()
   return prompt_view;
 }
 
-nux::Area* Shield::FindKeyFocusArea(unsigned int, unsigned long, unsigned long)
+nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsigned long modifiers)
 {
-  if (primary && prompt_view_)
+  if (primary)
   {
-    auto* focus_view = prompt_view_->focus_view();
+    if (panel_view_)
+    {
+      modifiers &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL | nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+      auto const& indicators_key = WindowManager::Default().activate_indicators_key();
 
-    if (focus_view && focus_view->GetInputEventSensitivity())
-      return focus_view;
+      if (indicators_key.first == modifiers && indicators_key.second == key_code)
+        return panel_view_;
+    }
+
+    if (prompt_view_)
+    {
+      auto* focus_view = prompt_view_->focus_view();
+
+      if (focus_view && focus_view->GetInputEventSensitivity())
+        return focus_view;
+    }
   }
 
   return nullptr;

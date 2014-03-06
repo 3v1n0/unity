@@ -44,12 +44,12 @@ public:
   nux::Property<bool> active;
   nux::Property<int> monitor;
 
-  void ActivateFirst();
-
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) override;
+  bool InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char*) override;
 
 private:
+  void ActivateFirst();
   void AddIndicator(indicator::Indicator::Ptr const&);
   void RemoveIndicator(indicator::Indicator::Ptr const&);
   void OnIndicatorViewUpdated();

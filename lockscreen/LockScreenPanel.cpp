@@ -218,5 +218,11 @@ void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   }
 }
 
+bool Panel::InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char*)
+{
+  ActivateFirst();
+  return true;
+}
+
 }
 }
