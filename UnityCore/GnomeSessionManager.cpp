@@ -415,6 +415,11 @@ void GnomeManager::LockScreen()
   impl_->EnsureCancelPendingAction();
 
   // FIXME (andy) we should ask gnome-session to emit the logind signal
+  if (UserName().find("guest-") == 0)
+  {
+    LOG_INFO(logger) << "Impossible to lock a guest session";
+    return;
+  }
   lock_requested.emit();
 }
 
