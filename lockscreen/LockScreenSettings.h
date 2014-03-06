@@ -45,8 +45,19 @@ public:
   static Settings& Instance();
 
   nux::Property<Type> lockscreen_type;
+  nux::Property<std::string> font_name;
+  nux::Property<std::string> logo;
+  nux::Property<std::string> background;
+  nux::Property<nux::Color> background_color;
+  nux::Property<bool> show_hostname;
+  nux::Property<bool> use_user_background;
+  nux::Property<bool> draw_grid;
 
   static const int GRID_SIZE = 40;
+
+private:
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }

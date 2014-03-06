@@ -20,6 +20,9 @@
 #include "LockScreenSettings.h"
 
 #include <NuxCore/Logger.h>
+#include <sigc++/adaptors/hide.h>
+#include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -31,7 +34,41 @@ DECLARE_LOGGER(logger, "unity.lockscreen.settings");
 namespace
 {
 Settings* settings_instance = nullptr;
+
+const std::string GREETER_SETTINGS = "com.canonical.unity-greeter";
+const std::string LOGO_KEY = "logo";
+const std::string FONT_KEY = "font-name";
+const std::string BACKGROUND_KEY = "background";
+const std::string BACKGROUND_COLOR_KEY = "background-color";
+const std::string USER_BG_KEY = "draw-user-backgrounds";
+const std::string DRAW_GRID_KEY = "draw-grid";
+const std::string SHOW_HOSTNAME_KEY = "show-hostname";
 }
+
+struct Settings::Impl
+{
+  Impl()
+    : greeter_settings_(g_settings_new(GREETER_SETTINGS.c_str()))
+    , signal_(greeter_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateSettings))))
+  {
+    UpdateSettings();
+  }
+
+  void UpdateSettings()
+  {
+    auto* s = settings_instance;
+    s->font_name = glib::String(g_settings_get_string(greeter_settings_, FONT_KEY.c_str())).Str();
+    s->logo = glib::String(g_settings_get_string(greeter_settings_, LOGO_KEY.c_str())).Str();
+    s->background = glib::String(g_settings_get_string(greeter_settings_, BACKGROUND_KEY.c_str())).Str();
+    s->background_color = nux::Color(glib::String(g_settings_get_string(greeter_settings_, BACKGROUND_COLOR_KEY.c_str())).Str());
+    s->show_hostname = g_settings_get_boolean(greeter_settings_, SHOW_HOSTNAME_KEY.c_str()) != FALSE;
+    s->use_user_background = g_settings_get_boolean(greeter_settings_, USER_BG_KEY.c_str()) != FALSE;
+    s->draw_grid = g_settings_get_boolean(greeter_settings_, DRAW_GRID_KEY.c_str()) != FALSE;
+  }
+
+  glib::Object<GSettings> greeter_settings_;
+  glib::Signal<void, GSettings*, const gchar*> signal_;
+};
 
 Settings::Settings()
 {
@@ -43,6 +80,7 @@ Settings::Settings()
   {
     lockscreen_type = Type::UNITY;
     settings_instance = this;
+    impl_.reset(new Impl());
   }
 }
 
