@@ -393,9 +393,7 @@ GnomeManager::~GnomeManager()
 
 std::string GnomeManager::RealName() const
 {
-  const char* name = g_get_real_name();
-
-  std::string real_name(name ? name : "");
+  std::string real_name = glib::gchar_to_string(g_get_real_name());
 
   if (real_name == "Unknown")
     real_name.clear();
@@ -405,9 +403,12 @@ std::string GnomeManager::RealName() const
 
 std::string GnomeManager::UserName() const
 {
-  const char* name = g_get_user_name();
+  return glib::gchar_to_string(g_get_user_name());
+}
 
-  return name ? name : "";
+std::string GnomeManager::HostName() const
+{
+  return glib::gchar_to_string(g_get_host_name());
 }
 
 void GnomeManager::LockScreen()
