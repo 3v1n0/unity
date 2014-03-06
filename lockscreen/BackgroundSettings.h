@@ -43,9 +43,7 @@ public:
   BackgroundSettings();
   ~BackgroundSettings();
 
-  BaseTexturePtr GetBackgroundTexture(int monitor,
-  	                                  bool draw_grid,
-  	                                  bool draw_logo);
+  BaseTexturePtr GetBackgroundTexture(int monitor);
 
 private:
   glib::Object<_GnomeBG> gnome_bg_;

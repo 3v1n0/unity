@@ -36,6 +36,10 @@ namespace
 const std::string SETTINGS_NAME = "org.gnome.desktop.background";
 const std::string GREETER_SETTINGS = "com.canonical.unity-greeter";
 const std::string LOGO_KEY = "logo";
+const std::string BACKGROUND_KEY = "background";
+const std::string BACKGROUND_COLOR_KEY = "background-color";
+const std::string USER_BG_KEY = "draw-user-backgrounds";
+const std::string DRAW_GRID_KEY = "draw-grid";
 
 constexpr int GetGridOffset(int size) { return (size % Settings::GRID_SIZE) / 2; }
 }
@@ -50,27 +54,54 @@ BackgroundSettings::BackgroundSettings()
 BackgroundSettings::~BackgroundSettings()
 {}
 
-BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor, bool draw_grid, bool draw_logo)
+BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
 {
-  nux::Geometry geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+  nux::Geometry const& geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+  glib::Object<GSettings> greeter_settings(g_settings_new(GREETER_SETTINGS.c_str()));
+  bool user_bg = g_settings_get_boolean(greeter_settings, USER_BG_KEY.c_str()) != FALSE;
+  bool draw_grid = g_settings_get_boolean(greeter_settings, DRAW_GRID_KEY.c_str()) != FALSE;
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
   cairo_t* c = cairo_graphics.GetInternalContext();
 
-  cairo_surface_t* bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), geo.width, geo.height, FALSE);
-  cairo_set_source_surface(c, bg_surface, 0, 0);
-  cairo_paint(c);
-  cairo_surface_destroy(bg_surface);
+  cairo_surface_t* bg_surface = nullptr;
 
-  if (draw_logo)
+  if (user_bg)
   {
+    bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), geo.width, geo.height, FALSE);
+  }
+  else
+  {
+    glib::String bg_file(g_settings_get_string(greeter_settings, BACKGROUND_KEY.c_str()));
+
+    if (bg_file)
+    {
+      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_scale(bg_file, geo.width, geo.height, FALSE, NULL));
+
+      if (pixbuf)
+        bg_surface = gdk_cairo_surface_create_from_pixbuf(pixbuf, 0, NULL);
+    }
+  }
+
+  if (bg_surface)
+  {
+    cairo_set_source_surface(c, bg_surface, 0, 0);
+    cairo_paint(c);
+    cairo_surface_destroy(bg_surface);
+  }
+  else
+  {
+    nux::Color bg_color(glib::String(g_settings_get_string(greeter_settings, BACKGROUND_COLOR_KEY.c_str())).Str());
+    cairo_set_source_rgb(c, bg_color.red, bg_color.green, bg_color.blue);
+    cairo_paint(c);
+  }
+
+  {
+    glib::String logo(g_settings_get_string(greeter_settings, LOGO_KEY.c_str()));
     int grid_x_offset = GetGridOffset(geo.width);
     int grid_y_offset = GetGridOffset(geo.height);
 
-    glib::Object<GSettings> greeter_settings(g_settings_new(GREETER_SETTINGS.c_str()));
-    glib::String logo(g_settings_get_string(greeter_settings, LOGO_KEY.c_str()));
-
-    if (logo)
+    if (logo && !logo.Str().empty())
     {
       cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(logo);
 

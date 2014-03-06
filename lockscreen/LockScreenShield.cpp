@@ -70,7 +70,7 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool i
 
 void Shield::UpdateBackgroundTexture()
 {
-  auto background_texture = bg_settings_->GetBackgroundTexture(monitor_, true, true);
+  auto background_texture = bg_settings_->GetBackgroundTexture(monitor_);
   background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
   SetBackgroundLayer(background_layer_.get());
 }

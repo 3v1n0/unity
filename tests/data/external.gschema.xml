@@ -57,5 +57,17 @@
     <key type="s" name="logo">
       <default>'/usr/share/unity-greeter/logo.png'</default>
     </key>
+    <key type="s" name="background">
+      <default>'/usr/share/backgrounds/warty-final-ubuntu.png'</default>
+    </key>
+    <key type="s" name="background-color">
+      <default>'#2C001E'</default>
+    </key>
+    <key type="b" name="draw-user-backgrounds">
+      <default>true</default>
+    </key>
+    <key type="b" name="draw-grid">
+      <default>true</default>
+    </key>
   </schema>
 </schemalist>
