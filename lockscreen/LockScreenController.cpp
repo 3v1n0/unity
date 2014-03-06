@@ -19,6 +19,7 @@
 
 #include "LockScreenController.h"
 
+#include "LockScreenShield.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UScreen.h"
@@ -61,8 +62,11 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
   });
 
   fade_animator_.finished.connect([this]() {
-    if (fade_animator_.GetCurrentValue() == 0.0f)
+    if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
+    {
+      motion_connection_->disconnect();
       shields_.clear();
+    }
   });
 }
 
@@ -77,15 +81,17 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
   if (!primary_shield_->GetAbsoluteGeometry().IsPointInside(x, y))
   {
     for (auto const& shield : shields_)
-      if (shield->GetAbsoluteGeometry().IsPointInside(x, y))
-      {
-        primary_shield_->primary = false;
-        primary_shield_ = shield;
-        shield->primary = true;
-        auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
-        motion_connection_ = shield->grab_motion.connect(move_cb);
-        break;
-      }
+    {
+      if (!shield->GetAbsoluteGeometry().IsPointInside(x, y))
+        continue;
+
+      primary_shield_->primary = false;
+      primary_shield_ = shield;
+      shield->primary = true;
+      auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
+      motion_connection_ = shield->grab_motion.connect(move_cb);
+      break;
+    }
   }
 }
 

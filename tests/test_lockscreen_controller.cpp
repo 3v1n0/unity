@@ -64,11 +64,10 @@ R"(<node>
 
 struct ShieldFactoryMock : ShieldFactoryInterface
 {
-  nux::ObjectPtr<MockableBaseWindow> CreateShield (session::Manager::Ptr const&, int, bool) override
+  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, int, bool) override
   {
-    nux::ObjectPtr<MockableBaseWindow> shield(new MockableBaseWindow);
-    return shield;
-  }  
+    return nux::ObjectPtr<AbstractShield>(new AbstractShield(nullptr, 0, false));
+  }
 };
 
 struct TestLockScreenController : Test

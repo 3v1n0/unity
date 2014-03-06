@@ -25,12 +25,9 @@ namespace unity
 namespace lockscreen
 {
 
-nux::ObjectPtr<MockableBaseWindow> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager,
-                                                               int monitor,
-                                                               bool is_primary)
+nux::ObjectPtr<AbstractShield> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary)
 {
-  nux::ObjectPtr<Shield> shield(new Shield(session_manager, monitor, is_primary));
-  return shield;
+  return nux::ObjectPtr<Shield>(new Shield(session_manager, monitor, is_primary));
 }
 
 }

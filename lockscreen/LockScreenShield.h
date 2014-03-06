@@ -20,10 +20,7 @@
 #ifndef UNITY_LOCKSCREEN_SHIELD_H
 #define UNITY_LOCKSCREEN_SHIELD_H
 
-#include <NuxCore/Property.h>
-#include <UnityCore/SessionManager.h>
-
-#include "unity-shared/MockableBaseWindow.h"
+#include "LockScreenAbstractShield.h"
 
 namespace unity
 {
@@ -34,18 +31,14 @@ class BackgroundSettings;
 class UserAuthenticator;
 class UserPromptView;
 
-class Shield : public MockableBaseWindow
+class Shield : public AbstractShield
 {
 public:
   Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary);
 
-  nux::Property<bool> primary;
-
   bool AcceptKeyNavFocus() override;
   nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
   nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
-
-  sigc::signal<void, int, int> grab_motion;
 
 private:
   void UpdateBackgroundTexture();
@@ -57,9 +50,6 @@ private:
   void OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned);
   void OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo);
 
-
-  int monitor_;
-  session::Manager::Ptr session_manager_;
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
   nux::ObjectPtr<nux::Layout> primary_layout_;

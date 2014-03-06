@@ -23,7 +23,6 @@
 #include <NuxCore/Animation.h>
 #include <UnityCore/ConnectionManager.h>
 
-#include "LockScreenShield.h"
 #include "LockScreenShieldFactory.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
@@ -58,8 +57,8 @@ private:
   void OnUnlockRequested();
   void OnPrimaryShieldMotion(int x, int y);
 
-  std::vector<nux::ObjectPtr<Shield>> shields_;
-  nux::ObjectWeakPtr<Shield> primary_shield_;
+  std::vector<nux::ObjectPtr<AbstractShield>> shields_;
+  nux::ObjectWeakPtr<AbstractShield> primary_shield_;
   session::Manager::Ptr session_manager_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;

@@ -38,10 +38,7 @@ namespace lockscreen
 {
 
 Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary)
-  : MockableBaseWindow("Unity Lockscreen")
-  , primary(is_primary)
-  , monitor_(monitor)
-  , session_manager_(session_manager)
+  : AbstractShield(session_manager, monitor, is_primary)
   , bg_settings_(new BackgroundSettings)
   , prompt_view_(nullptr)
 {
