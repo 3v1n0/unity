@@ -24,16 +24,13 @@
 
 namespace unity
 {
-namespace panel
-{
-class PanelView;
-}
 namespace lockscreen
 {
 
 class BackgroundSettings;
 class UserAuthenticator;
 class UserPromptView;
+class Panel;
 
 class Shield : public AbstractShield
 {
@@ -48,18 +45,15 @@ private:
   void UpdateBackgroundTexture();
   void ShowPrimaryView();
   void ShowSecondaryView();
-  nux::View* CreatePanel();
+  Panel* CreatePanel();
   UserPromptView* CreatePromptView();
-
-  void OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned);
-  void OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo);
 
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
   nux::ObjectPtr<nux::Layout> primary_layout_;
   nux::ObjectPtr<nux::Layout> cof_layout_;
   UserPromptView* prompt_view_;
-  panel::PanelView* panel_view_;
+  Panel* panel_view_;
 };
 
 }

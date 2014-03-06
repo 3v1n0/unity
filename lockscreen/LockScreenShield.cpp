@@ -26,9 +26,9 @@
 
 #include "BackgroundSettings.h"
 #include "CofView.h"
+#include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
 #include "UserPromptView.h"
-#include "panel/PanelView.h"
 #include "unity-shared/GnomeKeyGrabber.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
@@ -50,8 +50,8 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor_num, bo
   geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdateBackgroundTexture();});
 
   monitor.changed.connect([this] (int monitor) {
-    if (primary() && panel_view_)
-      panel_view_->SetMonitor(monitor);
+    if (panel_view_)
+      panel_view_->monitor = monitor;
 
     UpdateBackgroundTexture();
   });
@@ -64,6 +64,7 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor_num, bo
     }
 
     is_primary ? ShowPrimaryView() : ShowSecondaryView();
+    if (panel_view_) panel_view_->active = is_primary;
     QueueRelayout();
     QueueDraw();
   });
@@ -132,23 +133,12 @@ void Shield::ShowSecondaryView()
   main_layout->AddView(cof_view);
 }
 
-nux::View* Shield::CreatePanel()
+Panel* Shield::CreatePanel()
 {
   auto indicators = std::make_shared<indicator::LockScreenDBusIndicators>();
-  auto gnome_grabber = std::make_shared<key::GnomeGrabber>();
-  auto menu_manager = std::make_shared<menu::Manager>(indicators, gnome_grabber);
+  panel_view_ = new Panel(monitor, indicators, session_manager_);
 
-  // Hackish but ok for the moment. Would be nice to have menus without grab.
-  indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryShowMenu));
-  indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryActivated));
-
-  panel::PanelView* panel_view = new panel::PanelView(this, menu_manager, /*lockscreen_mode*/ true);
-  panel_view->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor));
-  panel_view->SetOpacity(0.5);
-  panel_view->SetMonitor(monitor);
-  panel_view_ = panel_view;
-
-  return panel_view;
+  return panel_view_;
 }
 
 UserPromptView* Shield::CreatePromptView()
@@ -165,24 +155,6 @@ UserPromptView* Shield::CreatePromptView()
   return prompt_view;
 }
 
-void Shield::OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned)
-{
-  if (primary())
-  {
-    UnGrabPointer();
-    UnGrabKeyboard();
-  }
-}
-
-void Shield::OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo)
-{
-  if (primary() && entry.empty() and geo.IsNull()) /* on menu closed */
-  {
-    GrabPointer();
-    GrabKeyboard();
-  }
-}
-
 nux::Area* Shield::FindKeyFocusArea(unsigned int, unsigned long, unsigned long)
 {
   if (primary && prompt_view_)
@@ -195,7 +167,6 @@ nux::Area* Shield::FindKeyFocusArea(unsigned int, unsigned long, unsigned long)
 
   return nullptr;
 }
-
 
 bool Shield::AcceptKeyNavFocus()
 {
