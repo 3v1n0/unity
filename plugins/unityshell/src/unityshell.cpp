@@ -3625,14 +3625,15 @@ void UnityScreen::initLauncher()
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
 
-  auto on_launcher_size_changed = [this] (nux::Area*, int w, int h) {
+  auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
+
     int launcher_width = w - 1;
-    hud_controller_->launcher_width = launcher_width;
-    dash_controller_->launcher_width = launcher_width;
-    panel_controller_->launcher_width = launcher_width;
-    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight());
+    Launcher const* const launcher = static_cast<Launcher*>(area);
+
+    unity::Settings::Instance().SetLauncherWidth(launcher_width, launcher->monitor);
+    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(launcher->monitor));
 
     CompOption::Value v(launcher_width);
     screen->setOptionForPlugin("expo", "x_offset", v);
@@ -3640,10 +3641,13 @@ void UnityScreen::initLauncher()
     if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
       screen->setOptionForPlugin("scale", "x_offset", v);
   };
-  launcher_controller_->launcher().size_changed.connect(on_launcher_size_changed);
 
-  auto* l = &launcher_controller_->launcher();
-  on_launcher_size_changed(l, l->GetWidth(), l->GetHeight());
+  for (auto const& launcher : launcher_controller_->launchers())
+  {
+    launcher->size_changed.connect(on_launcher_size_changed);
+
+    on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
+  }
 
   ScheduleRelayout(0);
 }

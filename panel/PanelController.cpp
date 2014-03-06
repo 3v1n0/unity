@@ -41,8 +41,6 @@ public:
   Impl(Controller*, menu::Manager::Ptr const&, ui::EdgeBarrierController::Ptr const&);
   ~Impl();
 
-  // NOTE: nux::Property maybe?
-  void SetLauncherWidth(int width);
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
 
@@ -108,14 +106,6 @@ void Controller::Impl::SetOpacity(float opacity)
   for (auto const& panel: panels_)
   {
     panel->SetOpacity(opacity_);
-  }
-}
-
-void Controller::Impl::SetLauncherWidth(int width)
-{
-  for (auto const& panel: panels_)
-  {
-    panel->SetLauncherWidth(width);
   }
 }
 
@@ -231,13 +221,8 @@ float Controller::Impl::opacity() const
 }
 
 Controller::Controller(menu::Manager::Ptr const& menus, ui::EdgeBarrierController::Ptr const& edge_barriers)
-  : launcher_width(64)
-  , pimpl(new Impl(this, menus, edge_barriers))
+  : pimpl(new Impl(this, menus, edge_barriers))
 {
-  launcher_width.changed.connect([this] (int width)
-  {
-    pimpl->SetLauncherWidth(width);
-  });
 }
 
 Controller::~Controller()
