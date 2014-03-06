@@ -338,6 +338,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetShowDesktopKeyInitiate(boost::bind(&UnityScreen::showDesktopKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+     optionSetPanelFirstMenuNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashTapDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2582,9 +2583,19 @@ void UnityScreen::UpdateCloseWindowKey(CompAction::KeyBinding const& keybind)
   WindowManager::Default().close_window_key = std::make_pair(modifiers, keysym);
 }
 
+void UnityScreen::UpdateActivateIndicatorsKey()
+{
+  CompAction::KeyBinding const& keybind = optionGetPanelFirstMenu().key();
+  KeySym keysym = XkbKeycodeToKeysym(screen->dpy(), keybind.keycode(), 0, 0);
+  unsigned modifiers = CompizModifiersToNux(keybind.modifiers());
+
+  WindowManager::Default().activate_indicators_key = std::make_pair(modifiers, keysym);
+}
+
 bool UnityScreen::initPluginActions()
 {
   PluginAdapter& adapter = PluginAdapter::Default();
+  UpdateActivateIndicatorsKey();
 
   if (CompPlugin* p = CompPlugin::find("core"))
   {
@@ -3501,6 +3512,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::LockScreenType:
       lockscreen_settings_.lockscreen_type = static_cast<lockscreen::Type>(optionGetLockScreenType());
+      break;
+    case UnityshellOptions::PanelFirstMenu:
+      UpdateActivateIndicatorsKey();
       break;
     default:
       break;

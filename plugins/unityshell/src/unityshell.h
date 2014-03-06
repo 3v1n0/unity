@@ -299,6 +299,7 @@ private:
   unsigned XModifiersToNux(unsigned input) const;
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
+  void UpdateActivateIndicatorsKey();
 
   bool getMipmap () override { return false; }
 
