@@ -52,4 +52,10 @@
       <default>false</default>
     </key>
   </schema>
+
+  <schema id="com.canonical.unity-greeter" path="/com/canonical/unity-greeter/">
+    <key type="s" name="logo">
+      <default>'/usr/share/unity-greeter/logo.png'</default>
+    </key>
+  </schema>
 </schemalist>

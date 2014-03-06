@@ -33,7 +33,8 @@ namespace lockscreen
 namespace
 {
 const std::string SETTINGS_NAME = "org.gnome.desktop.background";
-const std::string LSB_LOGO_FILE = "/usr/share/unity-greeter/logo.png";
+const std::string GREETER_SETTINGS = "com.canonical.unity-greeter";
+const std::string LOGO_KEY = "logo";
 }
 
 BackgroundSettings::BackgroundSettings()
@@ -46,9 +47,7 @@ BackgroundSettings::BackgroundSettings()
 BackgroundSettings::~BackgroundSettings()
 {}
 
-BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor,
-                                                        bool draw_grid,
-                                                        bool draw_logo)
+BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor, bool draw_grid, bool draw_logo)
 {
   nux::Geometry geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
@@ -67,7 +66,9 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor,
 
     cairo_save(c);
 
-    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(LSB_LOGO_FILE.c_str());
+    glib::Object<GSettings> greeter_settings(g_settings_new(GREETER_SETTINGS.c_str()));
+    glib::String logo(g_settings_get_string(greeter_settings, LOGO_KEY.c_str()));
+    cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(logo);
 
     int height = cairo_image_surface_get_height(logo_surface);
     int x = grid_x_offset;
