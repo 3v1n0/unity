@@ -59,6 +59,7 @@ namespace
   const std::string RESIZE_OPTION_INITIATE_BUTTON = "initiate_button";
 
   // Compiz Scale Options
+  const std::string SCALE_OPTION_INITIATE_KEY = "initiate_key";
   const std::string SCALE_OPTION_INITIATE_ALL_KEY = "initiate_all_key";
 
   // Compiz Unityshell Options
@@ -68,6 +69,7 @@ namespace
   const std::string UNITYSHELL_OPTION_SHOW_HUD = "show_hud";
   const std::string UNITYSHELL_OPTION_PANEL_FIRST_MENU = "panel_first_menu";
   const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD = "alt_tab_forward";
+  const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD_ALL = "alt_tab_forward_all";
   const std::string UNITYSHELL_OPTION_ALT_TAB_NEXT_WINDOW = "alt_tab_next_window";
 
   // Compiz Wall Options
@@ -90,26 +92,25 @@ Model::Ptr CompizModeller::GetCurrentModel() const
 void CompizModeller::BuildModel(int hsize, int vsize)
 {
   std::list<shortcut::AbstractHint::Ptr> hints;
+  bool workspace_enabled = (hsize * vsize > 1);
 
-  if (hsize * vsize > 1)
+  if (workspace_enabled)
   {
-    // Workspaces enabled
     AddLauncherHints(hints);
     AddDashHints(hints);
     AddMenuHints(hints);
-    AddSwitcherHints(hints);
+    AddSwitcherHints(hints, workspace_enabled);
     AddWorkspaceHints(hints);
-    AddWindowsHints(hints);
   }
   else
   {
-    // Workspaces disabled
     AddLauncherHints(hints);
     AddMenuHints(hints);
-    AddSwitcherHints(hints);
+    AddSwitcherHints(hints, workspace_enabled);
     AddDashHints(hints);
-    AddWindowsHints(hints);
   }
+
+  AddWindowsHints(hints, workspace_enabled);
 
   model_ = std::make_shared<shortcut::Model>(hints);
   model_changed.emit(model_);
@@ -239,7 +240,7 @@ void CompizModeller::AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints)
                                                    _("Cursor Left or Right")));
 }
 
-void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints)
+void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints, bool ws_enabled)
 {
   static const std::string switching(_("Switching"));
 
@@ -248,6 +249,15 @@ void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hi
                                                    shortcut::OptionType::COMPIZ_KEY,
                                                    UNITYSHELL_PLUGIN_NAME,
                                                    UNITYSHELL_OPTION_ALT_TAB_FORWARD));
+
+  if (ws_enabled)
+  {
+    hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
+                                                     _("Switches between applications from all workspaces."),
+                                                     shortcut::OptionType::COMPIZ_KEY,
+                                                     UNITYSHELL_PLUGIN_NAME,
+                                                     UNITYSHELL_OPTION_ALT_TAB_FORWARD_ALL));
+  }
 
   hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
                                                    _("Switches windows of current applications."),
@@ -284,15 +294,26 @@ void CompizModeller::AddWorkspaceHints(std::list<shortcut::AbstractHint::Ptr> &h
                                                    WALL_OPTION_LEFT_WINDOW_KEY));
 }
 
-void CompizModeller::AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hints)
+void CompizModeller::AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hints, bool ws_enabled)
 {
   static const std::string windows(_("Windows"));
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
-                                                   _("Spreads all windows in the current workspace."),
+                                                   (ws_enabled ?
+                                                    _("Spreads all windows in the current workspace.") :
+                                                    _("Spreads all windows.")),
                                                    shortcut::OptionType::COMPIZ_KEY,
                                                    SCALE_PLUGIN_NAME,
-                                                   SCALE_OPTION_INITIATE_ALL_KEY));
+                                                   SCALE_OPTION_INITIATE_KEY));
+
+  if (ws_enabled)
+  {
+    hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
+                                                     _("Spreads all windows in all the workspaces."),
+                                                     shortcut::OptionType::COMPIZ_KEY,
+                                                     SCALE_PLUGIN_NAME,
+                                                     SCALE_OPTION_INITIATE_ALL_KEY));
+  }
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                    _("Minimises all windows."),

@@ -1,3 +1,31 @@
+unity (7.1.2+14.04.20140305-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * Fix more Panel Autopilot test failures. (LP: #1287745)
+
+  [ William Hua ]
+  * Improve debug logging for gnome key grabber.
+
+  [ Brandon Schaefer ]
+  * Allow the launcher_width to be stored per monitor and retrieved per
+    monitor. Allowing for correct Dash/Hud offsets. (LP: #1284879)
+  * When we update the OverlayWindowButtons geometry, make sure we ask
+    the WindowButtons to update their geo as well. (This means poking it
+    as if the DPI has changed). This way the overlay window buttons will
+    be the correct sides per monitor. (LP: #1285366)
+
+  [ Marco Trevisan (Treviño) ]
+  * CompizShortcutModeller: use proper keys for Spread and be dependent
+    on workspace setting (LP: #1287825)
+
+  [ Luke Yelavich ]
+  * Implement accessibility for the optino buttons in the shutdown
+    dialog. Also improve the parent-child relationship between objects
+    such that the shutdown message can be read with Orca flat review.
+    (LP: #1272168)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 05 Mar 2014 14:18:44 +0000
+
 unity (7.1.2+14.04.20140303-0ubuntu1) trusty; urgency=low
 
   [ Marco Trevisan (Treviño) ]
