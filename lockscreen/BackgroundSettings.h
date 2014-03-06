@@ -20,14 +20,18 @@
 #ifndef UNITY_BACKGROUND_SETTINGS_H
 #define UNITY_BACKGROUND_SETTINGS_H
 
-#include <Nux/Nux.h>
+#include <NuxCore/ObjectPtr.h>
 #include <UnityCore/GLibWrapper.h>
+
+namespace nux
+{
+class BaseTexture;
+}
 
 class _GnomeBG;
 
-namespace unity 
+namespace unity
 {
-
 typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
 namespace lockscreen
@@ -44,8 +48,6 @@ public:
   	                                  bool draw_logo);
 
 private:
-  static int GetGridOffset(int size);
-
   glib::Object<_GnomeBG> gnome_bg_;
 };
 

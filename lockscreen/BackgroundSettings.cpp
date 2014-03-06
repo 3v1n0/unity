@@ -17,6 +17,7 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
+#include <Nux/Nux.h>
 #include "BackgroundSettings.h"
 
 #include <libgnome-desktop/gnome-bg.h>
@@ -35,6 +36,8 @@ namespace
 const std::string SETTINGS_NAME = "org.gnome.desktop.background";
 const std::string GREETER_SETTINGS = "com.canonical.unity-greeter";
 const std::string LOGO_KEY = "logo";
+
+constexpr int GetGridOffset(int size) { return (size % Settings::GRID_SIZE) / 2; }
 }
 
 BackgroundSettings::BackgroundSettings()
@@ -123,11 +126,6 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor, bool draw_g
   }
 
   return texture_ptr_from_cairo_graphics(cairo_graphics);
-}
-
-int BackgroundSettings::GetGridOffset(int size)
-{
-  return (size % Settings::GRID_SIZE) / 2;
 }
 
 } // lockscreen
