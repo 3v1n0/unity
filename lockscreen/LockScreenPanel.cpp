@@ -148,7 +148,7 @@ void Panel::OnEntryActivateRequest(std::string const& entry_id)
     indicators_view_->ActivateEntry(entry_id, 0);
 }
 
-void Panel::ActivateIfSensitive()
+void Panel::ActivateFirst()
 {
   if (active())
     indicators_view_->ActivateIfSensitive();
