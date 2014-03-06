@@ -63,12 +63,15 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
     });
   });
 
-  fade_animator_.finished.connect([this]() {
+  fade_animator_.finished.connect([this] {
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
     {
       motion_connection_->disconnect();
       uscreen_connection_->block();
       shields_.clear();
+
+      if (Settings::Instance().lockscreen_type() == Type::UNITY)
+        upstart_wrapper_->Emit("desktop-unlock");
     }
   });
 }
@@ -138,8 +141,6 @@ void Controller::OnLockRequested()
   if (IsLocked())
     return;
 
-  upstart_wrapper_->Emit("desktop-lock");
-
   auto lockscreen_type = Settings::Instance().lockscreen_type();
 
   if (lockscreen_type == Type::NONE)
@@ -152,6 +153,7 @@ void Controller::OnLockRequested()
   }
   else if (lockscreen_type == Type::UNITY)
   {
+    upstart_wrapper_->Emit("desktop-lock");
     LockScreenUsingUnity();
   }
 }
@@ -202,8 +204,6 @@ void Controller::OnUnlockRequested()
 {
   if (!IsLocked())
     return;
-
-  upstart_wrapper_->Emit("desktop-unlock");
 
   auto lockscreen_type = Settings::Instance().lockscreen_type();
 
