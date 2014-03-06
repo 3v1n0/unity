@@ -139,7 +139,6 @@ private:
   std::string _remote_uri;
   Time _startup_notification_timestamp;
   Time _last_scroll_timestamp;
-  ScrollDirection _last_scroll_direction;
   unsigned int _progressive_scroll;
   std::set<std::string> _supported_types;
   std::vector<glib::Object<DbusmenuMenuitem>> _menu_items;
