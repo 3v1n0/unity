@@ -2808,13 +2808,16 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
-  if (uScreen->lockscreen_controller_->IsShielded())
-  {
-    mask |= PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
-    return gWindow->glPaint(attrib, matrix, region, mask);
-  }
-
   GLWindowPaintAttrib wAttrib = attrib;
+
+  if (window->type() != CompWindowTypePopupMenuMask)
+  {
+    if (uScreen->lockscreen_controller_->IsShielded())
+    {
+      wAttrib.opacity = 0;
+      return gWindow->glPaint(wAttrib, matrix, region, mask);
+    }
+  }
 
   if (mMinimizeHandler)
   {
