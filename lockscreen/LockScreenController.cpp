@@ -68,6 +68,7 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
     {
       motion_connection_->disconnect();
       uscreen_connection_->block();
+      session_manager_->unlocked.emit();
       shields_.clear();
 
       if (Settings::Instance().lockscreen_type() == Type::UNITY)
@@ -146,9 +147,11 @@ void Controller::OnLockRequested()
 
   if (lockscreen_type == Type::NONE)
   {
+    session_manager_->unlocked.emit();
     return;
   }
-  else if (lockscreen_type == Type::LIGHTDM)
+
+  if (lockscreen_type == Type::LIGHTDM)
   {
     LockScreenUsingDisplayManager();
   }
@@ -157,6 +160,8 @@ void Controller::OnLockRequested()
     upstart_wrapper_->Emit("desktop-lock");
     LockScreenUsingUnity();
   }
+
+  session_manager_->locked.emit();
 }
 
 void Controller::LockScreenUsingDisplayManager()

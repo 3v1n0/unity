@@ -61,7 +61,9 @@ R"(<node>
     </method>
 
     <signal name="LockRequested" />
+    <signal name="Locked" />
     <signal name="UnlockRequested" />
+    <signal name="Unlocked" />
     <signal name="LogoutRequested">
       <arg type="b" name="have_inhibitors" />
     </signal>
@@ -154,8 +156,14 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
   connections_.Add(session_->lock_requested.connect([this] {
     object_->EmitSignal("LockRequested");
   }));
+  connections_.Add(session_->locked.connect([this] {
+    object_->EmitSignal("Locked");
+  }));
   connections_.Add(session_->unlock_requested.connect([this] {
     object_->EmitSignal("UnlockRequested");
+  }));
+  connections_.Add(session_->unlocked.connect([this] {
+    object_->EmitSignal("Unlocked");
   }));
   connections_.Add(session_->logout_requested.connect([this] (bool inhibitors) {
     object_->EmitSignal("LogoutRequested", g_variant_new("(b)", inhibitors));
