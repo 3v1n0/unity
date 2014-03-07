@@ -3665,6 +3665,7 @@ void UnityScreen::initLauncher()
 
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
+  session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
 
