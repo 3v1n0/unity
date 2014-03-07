@@ -40,10 +40,13 @@ R"(<node>
     <method name="HostName">
       <arg type="s" direction="out" name="hostname" />
     </method>
-    <method name="LockScreen" />
+    <method name="Lock" />
     <method name="Logout" />
+    <method name="RequestLogout" />
     <method name="Reboot" />
+    <method name="RequestReboot" />
     <method name="Shutdown" />
+    <method name="RequestShutdown" />
     <method name="Suspend" />
     <method name="Hibernate" />
     <method name="CancelAction" />
@@ -91,7 +94,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     {
       return g_variant_new("(s)", session_->HostName().c_str());
     }
-    else if (method == "LockScreen")
+    else if (method == "Lock")
     {
       session_->LockScreen();
     }
@@ -99,13 +102,25 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     {
       session_->Logout();
     }
+    else if (method == "RequestLogout")
+    {
+      session_->logout_requested.emit(false);
+    }
     else if (method == "Reboot")
     {
       session_->Reboot();
     }
+    else if (method == "RequestReboot")
+    {
+      session_->reboot_requested.emit(false);
+    }
     else if (method == "Shutdown")
     {
       session_->Shutdown();
+    }
+    else if (method == "RequestShutdown")
+    {
+      session_->shutdown_requested.emit(false);
     }
     else if (method == "Suspend")
     {
