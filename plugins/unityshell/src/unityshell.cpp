@@ -372,6 +372,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetNumLaunchersNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherCaptureMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
+     optionSetScrollInactiveIconsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
@@ -3328,6 +3330,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::LauncherCaptureMouse:
       launcher_options->edge_resist = optionGetLauncherCaptureMouse();
+      break;
+    case UnityshellOptions::ScrollInactiveIcons:
+      launcher_options->scroll_inactive_icons = optionGetScrollInactiveIcons();
       break;
     case UnityshellOptions::BackgroundColor:
     {

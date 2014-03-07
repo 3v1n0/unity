@@ -1210,6 +1210,7 @@ void Launcher::UpdateOptions(Options::Ptr options)
 {
   SetIconSize(options->tile_size, options->icon_size);
   SetHideMode(options->hide_mode);
+  SetScrollInactiveIcons(options->scroll_inactive_icons);
 
   if (model_)
   {
@@ -1484,6 +1485,11 @@ bool Launcher::OnUrgentTimeout()
 
   SetUrgentTimer(urgent_animation_period_);
   return false;
+}
+
+void Launcher::SetScrollInactiveIcons(bool scroll)
+{
+  AbstractLauncherIcon::scroll_inactive_icons = scroll;
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size)

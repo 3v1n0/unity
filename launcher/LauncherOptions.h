@@ -102,6 +102,7 @@ public:
   nux::Property<unsigned> edge_passed_disabled_ms;
   nux::Property<bool> edge_resist;
   nux::Property<bool> show_for_all;
+  nux::Property<bool> scroll_inactive_icons;
 
   sigc::signal<void> option_changed;
 
