@@ -28,8 +28,6 @@
 #include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
 #include "UserPromptView.h"
-#include "unity-shared/GnomeKeyGrabber.h"
-#include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
