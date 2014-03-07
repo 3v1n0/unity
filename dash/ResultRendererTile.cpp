@@ -238,6 +238,17 @@ void ResultRendererTile::Preload(Result const& row)
   }
 }
 
+void ResultRendererTile::ReloadResult(Result const& row)
+{
+  Unload(row);
+
+  if (row.renderer<TextureContainer*>() == nullptr)
+    const_cast<Result&>(row).set_renderer(new TextureContainer());
+
+  LoadIcon(row);
+  LoadText(row);
+}
+
 void ResultRendererTile::Unload(Result const& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();

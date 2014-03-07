@@ -297,7 +297,7 @@ void ScopeView::UpdateScale(double scale)
 
     UpdateScopeViewSize();
 
-    for (auto const group : category_views_)
+    for (auto& group : category_views_)
     {
       group->UpdateScale(scale_);
     }

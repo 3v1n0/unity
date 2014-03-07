@@ -60,6 +60,8 @@ public:
 
   virtual void GetResultDimensions(int& rows, int& columns);
 
+  void UpdateScale(double scale);
+
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);

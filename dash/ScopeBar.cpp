@@ -39,8 +39,8 @@ namespace
 {
 // according to Q design the inner area of the scopebar should be 40px
 // (without any borders)
-RawPixel const SCOPEBAR_HEIGHT = 41;
-RawPixel const TRIANGLE_SIZE   = 5;
+RawPixel const SCOPEBAR_HEIGHT = 41_em;
+RawPixel const TRIANGLE_SIZE   =  5_em;
 
 }
 
@@ -56,9 +56,6 @@ ScopeBar::ScopeBar()
 
 ScopeBar::~ScopeBar()
 {
-  // If you store pointers in an STL, you've got to manually clean them up!
-  for (unsigned i = 0; i < icons_.size(); ++i)
-    delete icons_[i];
 }
 
 void ScopeBar::SetupBackground()

@@ -89,6 +89,17 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererHorizontalTile);
 ResultRendererHorizontalTile::ResultRendererHorizontalTile(NUX_FILE_LINE_DECL)
   : ResultRendererTile(NUX_FILE_LINE_PARAM)
 {
+  ReloadTextures();
+}
+
+void ResultRendererHorizontalTile::UpdateScale(double scale)
+{
+  ResultRenderer::UpdateScale(scale);
+  ReloadTextures();
+}
+
+void ResultRendererHorizontalTile::ReloadTextures()
+{
   width = CARD_VIEW_WIDTH.CP(scale_);
   height = CARD_VIEW_HEIGHT.CP(scale_);
 
@@ -96,12 +107,13 @@ ResultRendererHorizontalTile::ResultRendererHorizontalTile(NUX_FILE_LINE_DECL)
   // try and get a texture from the texture cache
   TextureCache& cache = TextureCache::GetDefault();
   prelight_cache_ = cache.FindTexture("ResultRendererHorizontalTile.PreLightTexture",
-                                      CARD_VIEW_WIDTH.CP(scale_),
-                                      CARD_VIEW_HEIGHT.CP(scale_),
+                                      width,
+                                      height,
                                       sigc::mem_fun(this, &ResultRendererHorizontalTile::DrawHighlight));
+
   normal_cache_ = cache.FindTexture("ResultRendererHorizontalTile.NormalTexture",
-                                      CARD_VIEW_WIDTH.CP(scale_),
-                                      CARD_VIEW_HEIGHT.CP(scale_),
+                                      width,
+                                      height, 
                                       sigc::mem_fun(this, &ResultRendererHorizontalTile::DrawNormal));
 
 }

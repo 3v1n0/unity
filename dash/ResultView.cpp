@@ -86,7 +86,16 @@ void ResultView::UpdateScale(double scale)
     scale_ = scale;
 
     if (renderer_)
+    {
       renderer_->UpdateScale(scale_);
+
+      for (auto it = result_model_->begin(); it != result_model_->end(); ++it)
+      {
+        renderer_->ReloadResult(*it);
+      }
+
+      NeedRedraw();
+    }
   }
 }
 

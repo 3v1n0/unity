@@ -51,10 +51,14 @@ public:
 
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
+  void UpdateScale(double scale);
+
 protected:
   virtual void LoadText(Result const& row);
 
 private:
+  void ReloadTextures();
+
   nux::BaseTexture* DrawHighlight(std::string const& texid,
                                   int width, int height);
   nux::BaseTexture* DrawNormal(std::string const& texid,

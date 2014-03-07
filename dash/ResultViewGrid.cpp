@@ -1011,6 +1011,13 @@ ResultViewGrid::SetSelectedIndex(int index)
 }
 
 void
+ResultViewGrid::UpdateScale(double scale)
+{
+  ResultView::UpdateScale(scale);
+  UpdateRenderTextures();
+}
+
+void
 ResultViewGrid::UpdateRenderTextures()
 {
   nux::Geometry root_geo(GetAbsoluteGeometry());

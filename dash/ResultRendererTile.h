@@ -75,6 +75,7 @@ public:
   
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
+  void ReloadResult(Result const& row);
   void UpdateScale(double scale) override;
 
   int Padding() const;

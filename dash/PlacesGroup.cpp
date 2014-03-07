@@ -151,15 +151,13 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
 
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
-  // FIXME, we'll have to figure out how to move this so we can update this with the DPI
-  RawPixel const group_top = style.GetPlacesGroupTopSpace();
-  int top_space = group_top.CP(_scale);
-  _group_layout->AddLayout(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0);
+  // Spacelayout size is updated in UpdatePlacesGroupSize
+  _space_layout = new nux::SpaceLayout(0, 0, 0, 0);
+  _group_layout->AddLayout(_space_layout, 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
   _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
-  // FIXME I might need to move this to Scale when we increase the DashIcon size
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _header_layout->SetLeftAndRightPadding(_style.GetCategoryHeaderLeftPadding(), 0);
   _header_view->SetLayout(_header_layout);
@@ -225,6 +223,11 @@ void
 PlacesGroup::UpdatePlacesGroupSize()
 {
    RawPixel const icon_size = _style.GetCategoryIconSize();
+   RawPixel const group_top = _style.GetPlacesGroupTopSpace();
+
+   int top_space = group_top.CP(_scale);
+   _space_layout->SetMinimumSize(top_space, top_space);
+   _space_layout->SetMaximumSize(top_space, top_space);
 
   _header_layout->SetSpaceBetweenChildren(SPACE_BETWEEN_CHILDREN.CP(_scale));
 
