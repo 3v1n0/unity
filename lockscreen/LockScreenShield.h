@@ -35,7 +35,7 @@ class Panel;
 class Shield : public AbstractShield
 {
 public:
-  Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary);
+  Shield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, int monitor, bool is_primary);
 
 protected:
   bool AcceptKeyNavFocus() override;

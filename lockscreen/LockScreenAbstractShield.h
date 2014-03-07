@@ -22,6 +22,7 @@
 
 #include <NuxCore/Property.h>
 #include <UnityCore/SessionManager.h>
+#include <UnityCore/Indicators.h>
 
 #include "unity-shared/MockableBaseWindow.h"
 
@@ -33,11 +34,12 @@ namespace lockscreen
 class AbstractShield : public MockableBaseWindow
 {
 public:
-  AbstractShield(session::Manager::Ptr const& session, int monitor_num, bool is_primary)
+  AbstractShield(session::Manager::Ptr const& session, indicator::Indicators::Ptr const& indicators, int monitor_num, bool is_primary)
     : MockableBaseWindow("Unity Lockscreen")
     , primary(is_primary)
     , monitor(monitor_num)
     , session_manager_(session)
+    , indicators_(indicators)
   {}
 
   nux::Property<bool> primary;
@@ -47,6 +49,7 @@ public:
 
 protected:
   session::Manager::Ptr session_manager_;
+  indicator::Indicators::Ptr indicators_;
 };
 
 } // lockscreen

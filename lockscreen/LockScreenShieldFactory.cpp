@@ -25,9 +25,9 @@ namespace unity
 namespace lockscreen
 {
 
-nux::ObjectPtr<AbstractShield> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary)
+nux::ObjectPtr<AbstractShield> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, int monitor, bool is_primary)
 {
-  return nux::ObjectPtr<Shield>(new Shield(session_manager, monitor, is_primary));
+  return nux::ObjectPtr<Shield>(new Shield(session_manager, indicators, monitor, is_primary));
 }
 
 }

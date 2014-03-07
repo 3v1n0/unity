@@ -64,9 +64,9 @@ R"(<node>
 
 struct ShieldFactoryMock : ShieldFactoryInterface
 {
-  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, int, bool) override
+  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, int, bool) override
   {
-    return nux::ObjectPtr<AbstractShield>(new AbstractShield(nullptr, 0, false));
+    return nux::ObjectPtr<AbstractShield>(new AbstractShield(nullptr, nullptr, 0, false));
   }
 };
 

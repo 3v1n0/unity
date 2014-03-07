@@ -29,3 +29,4 @@
 
 #include <Nux/Nux.h>
 #include <UnityCore/SessionManager.h>
+#include <UnityCore/Indicators.h>

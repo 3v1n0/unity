@@ -19,6 +19,7 @@
 
 #include "LockScreenController.h"
 
+#include <UnityCore/DBusIndicators.h>
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
@@ -72,7 +73,10 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
       shields_.clear();
 
       if (Settings::Instance().lockscreen_type() == Type::UNITY)
+      {
         upstart_wrapper_->Emit("desktop-unlock");
+        indicators_.reset();
+      }
     }
   });
 }
@@ -112,7 +116,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     if (i >= shields_size)
     {
-      shield = shield_factory_->CreateShield(session_manager_, i, i == primary);
+      shield = shield_factory_->CreateShield(session_manager_, indicators_, i, i == primary);
       is_new = true;
     }
 
@@ -157,6 +161,7 @@ void Controller::OnLockRequested()
   }
   else if (lockscreen_type == Type::UNITY)
   {
+    indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
     upstart_wrapper_->Emit("desktop-lock");
     LockScreenUsingUnity();
   }
