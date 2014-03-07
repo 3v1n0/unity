@@ -77,7 +77,7 @@ int UserAuthenticatorPam::ConversationFunction(int num_msg,
   if (num_msg <= 0)
     return PAM_CONV_ERR;
 
-  auto* tmp_response = g_new0(pam_response, num_msg);
+  auto* tmp_response = static_cast<pam_response*>(calloc(num_msg, sizeof(pam_response)));
 
   if (!tmp_response)
     return PAM_CONV_ERR;
