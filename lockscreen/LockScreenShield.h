@@ -38,6 +38,8 @@ class Shield : public AbstractShield
 public:
   Shield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, int monitor, bool is_primary);
 
+  bool IsIndicatorOpen() const;
+
 protected:
   bool AcceptKeyNavFocus() override;
   nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;

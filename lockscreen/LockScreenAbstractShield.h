@@ -45,6 +45,8 @@ public:
   nux::Property<bool> primary;
   nux::Property<int> monitor;
 
+  virtual bool IsIndicatorOpen() const = 0;
+
   sigc::signal<void, int, int> grab_motion;
 
 protected:

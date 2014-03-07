@@ -41,6 +41,7 @@ public:
              bool test_mode = false);
 
   bool IsLocked() const;
+  bool HasOpenMenu() const;
   double Opacity() const;
 
 private:

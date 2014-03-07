@@ -250,5 +250,10 @@ double Controller::Opacity() const
   return fade_animator_.GetCurrentValue();
 }
 
+bool Controller::HasOpenMenu() const
+{
+  return primary_shield_.IsValid() ? primary_shield_->IsIndicatorOpen() : false;
+}
+
 } // lockscreen
 } // unity

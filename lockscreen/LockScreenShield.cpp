@@ -213,5 +213,10 @@ nux::Area* Shield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType
   return area;
 }
 
+bool Shield::IsIndicatorOpen() const
+{
+  return panel_view_ ? panel_view_->active() : false;
+}
+
 }
 }
