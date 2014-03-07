@@ -133,6 +133,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     else if (method == "CancelAction")
     {
       session_->CancelAction();
+      session_->cancel_requested.emit();
     }
     else if (method == "CanShutdown")
     {
