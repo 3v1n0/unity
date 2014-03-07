@@ -21,7 +21,7 @@
 #define UNITY_LOCKSCREEN_SHIELD_FACTORY
 
 #include <Nux/Nux.h>
-#include <UnityCore/SessionManager.h>
+#include "LockScreenAbstractShield.h"
 
 namespace unity
 {
@@ -35,18 +35,14 @@ struct ShieldFactoryInterface
 {
   typedef std::shared_ptr<ShieldFactoryInterface> Ptr;
 
-  virtual ~ShieldFactoryInterface() {};
+  virtual ~ShieldFactoryInterface() = default;
 
-  virtual nux::ObjectPtr<MockableBaseWindow> CreateShield(session::Manager::Ptr const& session_manager,
-                                                          int monitor,
-                                                          bool is_primary) = 0;
+  virtual nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, int monitor, bool is_primary) = 0;
 };
 
 struct ShieldFactory : ShieldFactoryInterface
 {
-  nux::ObjectPtr<MockableBaseWindow> CreateShield(session::Manager::Ptr const& session_manager,
-                                                  int monitor, 
-                                                  bool is_primary) override;
+  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, int monitor, bool is_primary) override;
 };
 
 }

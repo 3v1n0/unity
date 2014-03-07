@@ -48,7 +48,7 @@ namespace panel
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
-PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus, bool lockscreen_mode, NUX_FILE_LINE_DECL)
+PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , parent_(parent)
   , remote_(menus->Indicators())
@@ -59,7 +59,6 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   , opacity_(1.0f)
   , monitor_(0)
   , stored_dash_width_(0)
-  , lockscreen_mode_(lockscreen_mode)
   , bg_effect_helper_(this)
 {
   auto& wm = WindowManager::Default();
@@ -98,22 +97,15 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   menu_view_->EnableDropdownMenu(true, remote_);
   AddPanelView(menu_view_, 0);
 
-  if (lockscreen_mode_)
-    menu_view_->SetVisible(false);
-
   SetCompositionLayout(layout_);
 
-  tray_ = nullptr;
-  if (!lockscreen_mode_)
-  {
-    tray_ = new PanelTray(monitor_);
-    layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-    AddChild(tray_);
-  }
+  tray_ = new PanelTray(monitor_);
+  layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  AddChild(tray_);
 
   indicators_ = new PanelIndicatorsView();
   indicators_->SetMonitor(monitor_);
-  AddPanelView(indicators_, lockscreen_mode_ ? 1 : 0);
+  AddPanelView(indicators_, 0);
 
   for (auto const& object : remote_->GetIndicators())
     OnObjectAdded(object);
@@ -301,7 +293,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       bg_blur_texture_ = bg_effect_helper_.GetBlurRegion();
     }
-    else if(!lockscreen_mode_)
+    else
     {
       bg_blur_texture_ = bg_effect_helper_.GetRegion();
     }

@@ -39,8 +39,7 @@ namespace lockscreen
 class UserAuthenticatorPam : public UserAuthenticator, private boost::noncopyable
 {
 public:
-  bool AuthenticateStart(std::string const& username,
-                         AuthenticateEndCallback authenticate_cb) override;
+  bool AuthenticateStart(std::string const& username, AuthenticateEndCallback const&) override;
 
 private:
   // TODO (andy) move to pimpl

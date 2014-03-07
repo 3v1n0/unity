@@ -31,20 +31,20 @@ namespace unity
 namespace lockscreen
 {
 
+typedef std::shared_ptr<std::promise<std::string>> PromiseAuthCodePtr;
+
 class UserAuthenticator
 {
 public:
   typedef std::function<void(bool)> AuthenticateEndCallback;
 
-  virtual ~UserAuthenticator() {};
+  virtual ~UserAuthenticator() = default;
 
   // Authenticate the user in a background thread.
-  virtual bool AuthenticateStart(std::string const& username,
-                                 AuthenticateEndCallback authenticate_cb) = 0;
+  virtual bool AuthenticateStart(std::string const& username, AuthenticateEndCallback const&) = 0;
 
-  // FIXME (andy) found a better name for the promise ptr.
-  sigc::signal<void, std::string, std::shared_ptr<std::promise<std::string>> const&> echo_on_requested;
-  sigc::signal<void, std::string, std::shared_ptr<std::promise<std::string>> const&> echo_off_requested;
+  sigc::signal<void, std::string, PromiseAuthCodePtr const&> echo_on_requested;
+  sigc::signal<void, std::string, PromiseAuthCodePtr const&> echo_off_requested;
   sigc::signal<void, std::string> message_requested;
   sigc::signal<void, std::string> error_requested;
   sigc::signal<void> clear_prompts;

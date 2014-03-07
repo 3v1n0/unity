@@ -106,8 +106,8 @@ static const gchar introspection_xml[] =
   "  </interface>"
   "</node>";
 
-#define S_NAME_DESKTOP "com.canonical.Unity.Panel.ServiceDesktop"
-#define S_NAME_LOCKSCREEN "com.canonical.Unity.Panel.ServiceLockscreen"
+#define S_NAME_DESKTOP "com.canonical.Unity.Panel.Service.Desktop"
+#define S_NAME_LOCKSCREEN "com.canonical.Unity.Panel.Service.LockScreen"
 #define S_PATH  "/com/canonical/Unity/Panel/Service"
 #define S_IFACE "com.canonical.Unity.Panel.Service"
 

@@ -338,6 +338,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetShowDesktopKeyInitiate(boost::bind(&UnityScreen::showDesktopKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+     optionSetPanelFirstMenuNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashTapDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2582,6 +2583,15 @@ void UnityScreen::UpdateCloseWindowKey(CompAction::KeyBinding const& keybind)
   WindowManager::Default().close_window_key = std::make_pair(modifiers, keysym);
 }
 
+void UnityScreen::UpdateActivateIndicatorsKey()
+{
+  CompAction::KeyBinding const& keybind = optionGetPanelFirstMenu().key();
+  KeySym keysym = XkbKeycodeToKeysym(screen->dpy(), keybind.keycode(), 0, 0);
+  unsigned modifiers = CompizModifiersToNux(keybind.modifiers());
+
+  WindowManager::Default().activate_indicators_key = std::make_pair(modifiers, keysym);
+}
+
 bool UnityScreen::initPluginActions()
 {
   PluginAdapter& adapter = PluginAdapter::Default();
@@ -2810,6 +2820,23 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   GLWindowPaintAttrib wAttrib = attrib;
 
+  if (window->type() != CompWindowTypePopupMenuMask)
+  {
+    if (uScreen->lockscreen_controller_->IsLocked())
+    {
+      // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
+      // (well, it works too much, as it applies to menus too), so we need
+      // to paint the windows at the proper opacity, overriding any other
+      // paint plugin (animation, fade?) that might interfere with us.
+      wAttrib.opacity = COMPIZ_COMPOSITE_OPAQUE * (1.0f - uScreen->lockscreen_controller_->Opacity());
+      int old_index = gWindow->glPaintGetCurrentIndex();
+      gWindow->glPaintSetCurrentIndex(MAXSHORT);
+      bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
+      gWindow->glPaintSetCurrentIndex(old_index);
+      return ret;
+    }
+  }
+
   if (mMinimizeHandler)
   {
     mask |= mMinimizeHandler->getPaintMask ();
@@ -2838,7 +2865,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     paintInnerGlow(scaled_geo, matrix, attrib, mask);
   }
 
-  if (uScreen->session_controller_ && uScreen->session_controller_->Visible())
+  if (uScreen->session_controller_->Visible())
   {
     // Let's darken the other windows if the session dialog is visible
     wAttrib.brightness *= 0.75f;
@@ -3493,6 +3520,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::LockScreenType:
       lockscreen_settings_.lockscreen_type = static_cast<lockscreen::Type>(optionGetLockScreenType());
       break;
+    case UnityshellOptions::PanelFirstMenu:
+      UpdateActivateIndicatorsKey();
+      break;
     default:
       break;
   }
@@ -3635,11 +3665,13 @@ void UnityScreen::initLauncher()
 
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
+  session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
 
   // Setup Lockscreen Controller
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(manager);
+  UpdateActivateIndicatorsKey();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin

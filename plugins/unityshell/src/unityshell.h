@@ -67,6 +67,7 @@
 #include "ScreenIntrospection.h"
 #include "SwitcherController.h"
 #include "SessionController.h"
+#include "SessionDBusManager.h"
 #include "SpreadFilter.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
@@ -299,6 +300,7 @@ private:
   unsigned XModifiersToNux(unsigned input) const;
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
+  void UpdateActivateIndicatorsKey();
 
   bool getMipmap () override { return false; }
 
@@ -329,6 +331,7 @@ private:
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
+  session::DBusManager::Ptr session_dbus_manager_;
   session::Controller::Ptr  session_controller_;
   std::shared_ptr<lockscreen::Controller> lockscreen_controller_;
   debug::DebugDBusInterface debugger_;

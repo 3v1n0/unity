@@ -33,7 +33,7 @@ namespace lockscreen
 {
 
 bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
-                                             AuthenticateEndCallback authenticate_cb)
+                                             AuthenticateEndCallback const& authenticate_cb)
 {
   first_prompt_ = true;
   username_ = username;
@@ -77,21 +77,24 @@ int UserAuthenticatorPam::ConversationFunction(int num_msg,
   if (num_msg <= 0)
     return PAM_CONV_ERR;
 
-  auto* tmp_response = static_cast<pam_response*>(malloc(num_msg * sizeof(pam_response)));
+  auto* tmp_response = static_cast<pam_response*>(calloc(num_msg, sizeof(pam_response)));
+
   if (!tmp_response)
     return PAM_CONV_ERR;
 
   UserAuthenticatorPam* user_auth = static_cast<UserAuthenticatorPam*>(appdata_ptr);
 
   if (!user_auth->first_prompt_)
+  {
     // Adding a timeout ensures that the signal is emitted in the main thread
-    user_auth->source_manager_.AddTimeout(0, [&]() { user_auth->clear_prompts.emit(); return false; });
+    user_auth->source_manager_.AddTimeout(0, [user_auth] { user_auth->clear_prompts.emit(); return false; });
+  }
 
   user_auth->first_prompt_ = false;
 
   bool raise_error = false;
   int count;
-  std::vector<std::shared_ptr<std::promise<std::string>>> promises;
+  std::vector<PromiseAuthCodePtr> promises;
 
   for (count = 0; count < num_msg && !raise_error; ++count)
   {
@@ -104,7 +107,7 @@ int UserAuthenticatorPam::ConversationFunction(int num_msg,
 
         // Adding a timeout ensures that the signal is emitted in the main thread
         std::string message(msg[count]->msg);
-        user_auth->source_manager_.AddTimeout(0, [&, message, promise]() { user_auth->echo_on_requested.emit(message, promise); return false; });
+        user_auth->source_manager_.AddTimeout(0, [user_auth, message, promise] { user_auth->echo_on_requested.emit(message, promise); return false; });
         break;
       }
       case PAM_PROMPT_ECHO_OFF:
@@ -114,28 +117,28 @@ int UserAuthenticatorPam::ConversationFunction(int num_msg,
 
         // Adding a timeout ensures that the signal is emitted in the main thread
         std::string message(msg[count]->msg);
-        user_auth->source_manager_.AddTimeout(0, [&, message, promise]() { user_auth->echo_off_requested.emit(message, promise); return false; });
-      }
+        user_auth->source_manager_.AddTimeout(0, [user_auth, message, promise] { user_auth->echo_off_requested.emit(message, promise); return false; });
         break;
+      }
       case PAM_TEXT_INFO:
       {
         // Adding a timeout ensures that the signal is emitted in the main thread
         std::string message(msg[count]->msg);
-        user_auth->source_manager_.AddTimeout(0, [&, message]() { user_auth->message_requested.emit(message); return false; });
+        user_auth->source_manager_.AddTimeout(0, [user_auth, message] { user_auth->message_requested.emit(message); return false; });
         break;
       }
       default:
       {
         // Adding a timeout ensures that the signal is emitted in the main thread
         std::string message(msg[count]->msg);
-        user_auth->source_manager_.AddTimeout(0, [&, message]() { user_auth->error_requested.emit(message); return false; });
+        user_auth->source_manager_.AddTimeout(0, [user_auth, message] { user_auth->error_requested.emit(message); return false; });
       }
     }
   }
 
   int i = 0;
 
-  for (auto promise : promises)
+  for (auto const& promise : promises)
   {
     auto future = promise->get_future();
     pam_response* resp_item = &tmp_response[i++];
@@ -152,8 +155,7 @@ int UserAuthenticatorPam::ConversationFunction(int num_msg,
   if (raise_error)
   {
     for (int i = 0; i < count; ++i)
-      if (tmp_response[i].resp)
-        free(tmp_response[i].resp);
+      free(tmp_response[i].resp);
 
     free(tmp_response);
     return PAM_CONV_ERR;

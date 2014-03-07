@@ -21,7 +21,7 @@
 #define UNITY_USER_PROMPT_BOX
 
 #include <memory>
-#include <queue>
+#include <deque>
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
@@ -53,7 +53,7 @@ public:
 
   nux::View* focus_view();
 
-  void AddPrompt(std::string const& message, bool visible, std::shared_ptr<std::promise<std::string>> const& promise);
+  void AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const&);
   void AddMessage(std::string const& message, nux::Color const& color);
   void AuthenticationCb(bool authenticated);
 
@@ -72,7 +72,7 @@ private:
   StaticCairoText* message_;
   StaticCairoText* error_;
   StaticCairoText* invalid_login_;
-  std::queue<IMTextEntry*> focus_queue_;
+  std::deque<IMTextEntry*> focus_queue_;
 };
 
 }

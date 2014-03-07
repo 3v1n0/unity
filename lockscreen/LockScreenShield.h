@@ -20,10 +20,7 @@
 #ifndef UNITY_LOCKSCREEN_SHIELD_H
 #define UNITY_LOCKSCREEN_SHIELD_H
 
-#include <NuxCore/Property.h>
-#include <UnityCore/SessionManager.h>
-
-#include "unity-shared/MockableBaseWindow.h"
+#include "LockScreenAbstractShield.h"
 
 namespace unity
 {
@@ -33,38 +30,31 @@ namespace lockscreen
 class BackgroundSettings;
 class UserAuthenticator;
 class UserPromptView;
+class Panel;
 
-class Shield : public MockableBaseWindow
+class Shield : public AbstractShield
 {
 public:
   Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary);
 
-  nux::Property<bool> primary;
-
-  nux::Area* FindKeyFocusArea(unsigned int,
-                              unsigned long,
-                              unsigned long) override;
-
+protected:
   bool AcceptKeyNavFocus() override;
-
+  nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
+  nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
 
 private:
   void UpdateBackgroundTexture();
   void ShowPrimaryView();
   void ShowSecondaryView();
-  nux::View* CreatePanel();
+  Panel* CreatePanel();
   UserPromptView* CreatePromptView();
 
-  void OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned);
-  void OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo);
-
-
-  session::Manager::Ptr session_manager_;
-  int monitor_;
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
-
+  nux::ObjectPtr<nux::Layout> primary_layout_;
+  nux::ObjectPtr<nux::Layout> cof_layout_;
   UserPromptView* prompt_view_;
+  Panel* panel_view_;
 };
 
 }

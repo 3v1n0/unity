@@ -89,10 +89,9 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
 
   {
     const char* session_id = test_mode_ ? "id0" : g_getenv("XDG_SESSION_ID");
-    session_id = session_id ? session_id : "";
 
     login_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
-                                                     std::string("/org/freedesktop/login1/session/") + session_id,
+                                                     "/org/freedesktop/login1/session/" + glib::gchar_to_string(session_id),
                                                      "org.freedesktop.login1.Session",
                                                      test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
@@ -394,9 +393,7 @@ GnomeManager::~GnomeManager()
 
 std::string GnomeManager::RealName() const
 {
-  const char* name = g_get_real_name();
-
-  std::string real_name(name ? name : "");
+  std::string real_name = glib::gchar_to_string(g_get_real_name());
 
   if (real_name == "Unknown")
     real_name.clear();
@@ -406,9 +403,12 @@ std::string GnomeManager::RealName() const
 
 std::string GnomeManager::UserName() const
 {
-  const char* name = g_get_user_name();
+  return glib::gchar_to_string(g_get_user_name());
+}
 
-  return name ? name : "";
+std::string GnomeManager::HostName() const
+{
+  return glib::gchar_to_string(g_get_host_name());
 }
 
 void GnomeManager::LockScreen()
@@ -416,6 +416,11 @@ void GnomeManager::LockScreen()
   impl_->EnsureCancelPendingAction();
 
   // FIXME (andy) we should ask gnome-session to emit the logind signal
+  if (UserName().find("guest-") == 0)
+  {
+    LOG_INFO(logger) << "Impossible to lock a guest session";
+    return;
+  }
   lock_requested.emit();
 }
 

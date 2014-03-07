@@ -26,41 +26,66 @@
 
 #include "BackgroundSettings.h"
 #include "CofView.h"
+#include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
 #include "UserPromptView.h"
-#include "panel/PanelView.h"
 #include "unity-shared/GnomeKeyGrabber.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/UScreen.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
 namespace lockscreen
 {
 
-Shield::Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary)
-  : MockableBaseWindow("Lockscreen")
-  , primary(is_primary)
-  , session_manager_(session_manager)
-  , monitor_(monitor)
+Shield::Shield(session::Manager::Ptr const& session_manager, int monitor_num, bool is_primary)
+  : AbstractShield(session_manager, monitor_num, is_primary)
   , bg_settings_(new BackgroundSettings)
   , prompt_view_(nullptr)
 {
-  SetLayout(new nux::VLayout());
-
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
 
   EnableInputWindow(true);
 
-  geometry_changed.connect([this](nux::Area*, nux::Geometry&) {
+  geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdateBackgroundTexture();});
+
+  monitor.changed.connect([this] (int monitor) {
+    if (panel_view_)
+      panel_view_->monitor = monitor;
+
     UpdateBackgroundTexture();
+  });
+
+  primary.changed.connect([this] (bool is_primary) {
+    if (!is_primary)
+    {
+      UnGrabPointer();
+      UnGrabKeyboard();
+    }
+
+    is_primary ? ShowPrimaryView() : ShowSecondaryView();
+    if (panel_view_) panel_view_->active = is_primary;
+    QueueRelayout();
+    QueueDraw();
+  });
+
+  mouse_move.connect([this] (int x, int y, int, int, unsigned long, unsigned long) {
+    auto const& abs_geo = GetAbsoluteGeometry();
+    grab_motion.emit(abs_geo.x + x, abs_geo.y + y);
   });
 }
 
 void Shield::UpdateBackgroundTexture()
 {
-  auto background_texture = bg_settings_->GetBackgroundTexture(monitor_, true, true);
-  background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
-  SetBackgroundLayer(background_layer_.get());
+  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+
+  if (!background_layer_ || monitor_geo != background_layer_->GetGeometry())
+  {
+    auto background_texture = bg_settings_->GetBackgroundTexture(monitor);
+    background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
+    SetBackgroundLayer(background_layer_.get());
+  }
 }
 
 void Shield::ShowPrimaryView()
@@ -68,7 +93,15 @@ void Shield::ShowPrimaryView()
   GrabPointer();
   GrabKeyboard();
 
-  nux::Layout* main_layout = GetLayout();
+  if (primary_layout_)
+  {
+    SetLayout(primary_layout_.GetPointer());
+    return;
+  }
+
+  nux::Layout* main_layout = new nux::VLayout();
+  primary_layout_ = main_layout;
+  SetLayout(primary_layout_.GetPointer());
 
   main_layout->AddView(CreatePanel());
 
@@ -86,29 +119,27 @@ void Shield::ShowPrimaryView()
 
 void Shield::ShowSecondaryView()
 {
-  nux::Layout* main_layout = GetLayout();
+  if (cof_layout_)
+  {
+    SetLayout(cof_layout_.GetPointer());
+    return;
+  }
+
+  nux::Layout* main_layout = new nux::VLayout();
+  cof_layout_ = main_layout;
+  SetLayout(cof_layout_.GetPointer());
 
   // The circle of friends
   CofView* cof_view = new CofView();
   main_layout->AddView(cof_view);
 }
 
-nux::View* Shield::CreatePanel()
+Panel* Shield::CreatePanel()
 {
   auto indicators = std::make_shared<indicator::LockScreenDBusIndicators>();
-  auto gnome_grabber = std::make_shared<key::GnomeGrabber>();
-  auto menu_manager = std::make_shared<menu::Manager>(indicators, gnome_grabber);
+  panel_view_ = new Panel(monitor, indicators, session_manager_);
 
-  // Hackish but ok for the moment. Would be nice to have menus without grab.
-  indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryShowMenu));
-  indicators->on_entry_activated.connect(sigc::mem_fun(this, &Shield::OnIndicatorEntryActivated));
-
-  panel::PanelView* panel_view = new panel::PanelView(this, menu_manager, /*lockscreen_mode*/ true);
-  panel_view->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor_));
-  panel_view->SetOpacity(0.5);
-  panel_view->SetMonitor(monitor_);
-
-  return panel_view;
+  return panel_view_;
 }
 
 UserPromptView* Shield::CreatePromptView()
@@ -125,35 +156,44 @@ UserPromptView* Shield::CreatePromptView()
   return prompt_view;
 }
 
-void Shield::OnIndicatorEntryShowMenu(std::string const&, unsigned, int, int, unsigned)
+nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsigned long modifiers)
 {
-  UnGrabPointer();
-  UnGrabKeyboard();
-}
-
-void Shield::OnIndicatorEntryActivated(std::string const& panel, std::string const& entry, nux::Geometry const& geo)
-{
-  if (entry.empty() and geo.IsNull()) /* on menu closed */
+  if (primary)
   {
-    GrabPointer();
-    GrabKeyboard();
+    if (panel_view_)
+    {
+      modifiers &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL | nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+      auto const& indicators_key = WindowManager::Default().activate_indicators_key();
+
+      if (indicators_key.first == modifiers && indicators_key.second == key_code)
+        return panel_view_;
+    }
+
+    if (prompt_view_)
+    {
+      auto* focus_view = prompt_view_->focus_view();
+
+      if (focus_view && focus_view->GetInputEventSensitivity())
+        return focus_view;
+    }
   }
-}
 
-nux::Area* Shield::FindKeyFocusArea(unsigned int,
-                                    unsigned long,
-                                    unsigned long)
-{
-  if (prompt_view_ && prompt_view_->focus_view() && prompt_view_->focus_view()->GetInputEventSensitivity())
-    return prompt_view_->focus_view();
-  else
-    return nullptr;
+  return nullptr;
 }
-
 
 bool Shield::AcceptKeyNavFocus()
 {
   return false;
+}
+
+nux::Area* Shield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType event_type)
+{
+  nux::Area* area = BaseWindow::FindAreaUnderMouse(mouse, event_type);
+
+  if (!area && primary)
+    return this;
+
+  return area;
 }
 
 }

@@ -23,5 +23,9 @@
  */
 
 #include <memory>
- 
-#include <Nux/BaseWindow.h>
+#include <vector>
+#include <deque>
+#include <security/pam_appl.h>
+
+#include <Nux/Nux.h>
+#include <UnityCore/SessionManager.h>

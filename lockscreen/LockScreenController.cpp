@@ -19,6 +19,7 @@
 
 #include "LockScreenController.h"
 
+#include "LockScreenShield.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UScreen.h"
@@ -48,10 +49,12 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
   , fade_animator_(FADE_DURATION)
   , test_mode_(test_mode)
 {
-  auto* uscreen = UScreen::GetDefault();
-  uscreen->changed.connect(sigc::mem_fun(this, &Controller::OnUScreenChanged));
+  uscreen_connection_ = UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
+    EnsureShields(monitors);
+  });
+  uscreen_connection_->block();
 
-  session_manager_->lock_requested.connect(sigc::mem_fun(this,&Controller::OnLockRequested));
+  session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
 
   fade_animator_.updated.connect([this](double value) {
@@ -60,32 +63,79 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
     });
   });
 
-  fade_animator_.finished.connect([this]() {
-    if (fade_animator_.GetCurrentValue() == 0.0f)
+  fade_animator_.finished.connect([this] {
+    if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
+    {
+      motion_connection_->disconnect();
+      uscreen_connection_->block();
+      session_manager_->unlocked.emit();
       shields_.clear();
+
+      if (Settings::Instance().lockscreen_type() == Type::UNITY)
+        upstart_wrapper_->Emit("desktop-unlock");
+    }
   });
 }
 
-void Controller::OnUScreenChanged(int primary, std::vector<nux::Geometry> const& monitors)
+void Controller::OnPrimaryShieldMotion(int x, int y)
 {
-  if (IsLocked())
-    EnsureShields(primary, monitors);
+  if (!primary_shield_->GetAbsoluteGeometry().IsPointInside(x, y))
+  {
+    for (auto const& shield : shields_)
+    {
+      if (!shield->GetAbsoluteGeometry().IsPointInside(x, y))
+        continue;
+
+      primary_shield_->primary = false;
+      primary_shield_ = shield;
+      shield->primary = true;
+      auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
+      motion_connection_ = shield->grab_motion.connect(move_cb);
+      break;
+    }
+  }
 }
 
-void Controller::EnsureShields(int primary, std::vector<nux::Geometry> const& monitors)
+void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 {
   int num_monitors = monitors.size();
   int shields_size = shields_.size();
+  bool unity_mode = (Settings::Instance().lockscreen_type() == Type::UNITY);
+  int primary = unity_mode ? UScreen::GetDefault()->GetMonitorWithMouse() : -1;
+
+  shields_.resize(num_monitors);
 
   for (int i = 0; i < num_monitors; ++i)
   {
-    if (i >= shields_size)
-      shields_.push_back(shield_factory_->CreateShield(session_manager_, i, i == primary));
+    auto& shield = shields_[i];
+    bool is_new = false;
 
-    shields_[i]->SetGeometry(monitors.at(i));
+    if (i >= shields_size)
+    {
+      shield = shield_factory_->CreateShield(session_manager_, i, i == primary);
+      is_new = true;
+    }
+
+    shield->SetGeometry(monitors[i]);
+    shield->SetMinMaxSize(monitors[i].width, monitors[i].height);
+    shield->primary = (i == primary);
+    shield->monitor = i;
+
+    if (is_new && fade_animator_.GetCurrentValue() > 0)
+    {
+      shield->SetOpacity(fade_animator_.GetCurrentValue());
+      shield->ShowWindow(true);
+      shield->PushToFront();
+    }
   }
 
-  shields_.resize(num_monitors);
+  if (unity_mode)
+  {
+    primary_shield_ = shields_[primary];
+    primary_shield_->primary = true;
+    auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
+    motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
+  }
 }
 
 void Controller::OnLockRequested()
@@ -93,29 +143,32 @@ void Controller::OnLockRequested()
   if (IsLocked())
     return;
 
-  upstart_wrapper_->Emit("desktop-lock");
-
   auto lockscreen_type = Settings::Instance().lockscreen_type();
 
   if (lockscreen_type == Type::NONE)
   {
+    session_manager_->unlocked.emit();
     return;
   }
-  else if (lockscreen_type == Type::LIGHTDM)
+
+  if (lockscreen_type == Type::LIGHTDM)
   {
     LockScreenUsingDisplayManager();
   }
   else if (lockscreen_type == Type::UNITY)
   {
+    upstart_wrapper_->Emit("desktop-lock");
     LockScreenUsingUnity();
   }
+
+  session_manager_->locked.emit();
 }
 
 void Controller::LockScreenUsingDisplayManager()
 {
   // TODO (andy) Move to a different class (DisplayManagerWrapper)
   const char* session_path = g_getenv("XDG_SESSION_PATH");
-  
+
   if (!session_path)
     return;
 
@@ -126,38 +179,31 @@ void Controller::LockScreenUsingDisplayManager()
 
   proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
 
-  ShowShields(/* interactive */ false, /* skip animation */ true);
+  ShowShields();
+  animation::Skip(fade_animator_);
 }
 
 void Controller::LockScreenUsingUnity()
 {
-  ShowShields(/* interactive */ true, /* skip animation */ false);
+  ShowShields();
 }
 
-void Controller::ShowShields(bool interactive, bool skip_animation)
+void Controller::ShowShields()
 {
   old_blur_type_ = BackgroundEffectHelper::blur_type;
   BackgroundEffectHelper::blur_type = BLUR_NONE;
 
-  WindowManager& wm = WindowManager::Default();
-  wm.SaveInputFocus();
+  WindowManager::Default().SaveInputFocus();
+  EnsureShields(UScreen::GetDefault()->GetMonitors());
+  uscreen_connection_->unblock();
 
-  auto* uscreen = UScreen::GetDefault();
-  EnsureShields(interactive ? uscreen->GetPrimaryMonitor() : -1, uscreen->GetMonitors());
-
-  std::for_each(shields_.begin(), shields_.end(), [skip_animation](nux::ObjectPtr<Shield> const& shield) {
+  std::for_each(shields_.begin(), shields_.end(), [] (nux::ObjectPtr<Shield> const& shield) {
+    shield->SetOpacity(0.0f);
     shield->ShowWindow(true);
-    shield->SetOpacity(skip_animation ? 1.0 : 0.0);
+    shield->PushToFront();
   });
 
-  if (!interactive)
-  {
-    shields_.at(uscreen->GetPrimaryMonitor())->GrabPointer();
-    shields_.at(uscreen->GetPrimaryMonitor())->GrabKeyboard();
-  }
-
-  if (!skip_animation)
-    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+  animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }
 
 void Controller::OnUnlockRequested()
@@ -165,38 +211,26 @@ void Controller::OnUnlockRequested()
   if (!IsLocked())
     return;
 
-  upstart_wrapper_->Emit("desktop-unlock");
-
   auto lockscreen_type = Settings::Instance().lockscreen_type();
 
   if (lockscreen_type == Type::NONE)
-  {
     return;
-  }
-  else if (lockscreen_type == Type::LIGHTDM)
-  {
-    HideShields(/* skip animation */ true);
-  }
-  else if (lockscreen_type == Type::UNITY)
-  {
-    HideShields(/* skip animation */ false);
-  }
+
+  HideShields();
+
+  if (lockscreen_type == Type::LIGHTDM)
+    animation::Skip(fade_animator_);
 }
 
-void Controller::HideShields(bool skip_animation)
+void Controller::HideShields()
 {
   std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
     shield->UnGrabPointer();
     shield->UnGrabKeyboard();
   });
 
-  WindowManager& wm = WindowManager::Default();
-  wm.RestoreInputFocus();
-
-  if (skip_animation)
-    shields_.clear();
-  else
-    animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+  WindowManager::Default().RestoreInputFocus();
+  animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
 
   BackgroundEffectHelper::blur_type = old_blur_type_;
 }
@@ -204,6 +238,11 @@ void Controller::HideShields(bool skip_animation)
 bool Controller::IsLocked() const
 {
   return !shields_.empty();
+}
+
+double Controller::Opacity() const
+{
+  return fade_animator_.GetCurrentValue();
 }
 
 } // lockscreen
