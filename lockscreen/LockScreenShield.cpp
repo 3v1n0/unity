@@ -65,7 +65,7 @@ Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicato
     }
 
     is_primary ? ShowPrimaryView() : ShowSecondaryView();
-    if (panel_view_) panel_view_->active = is_primary;
+    if (panel_view_) panel_view_->SetInputEventSensitivity(is_primary);
     QueueRelayout();
     QueueDraw();
   });
@@ -140,6 +140,21 @@ Panel* Shield::CreatePanel()
     return nullptr;
 
   panel_view_ = new Panel(monitor, indicators_, session_manager_);
+  panel_active_conn_ = panel_view_->active.changed.connect([this] (bool active) {
+    if (primary())
+    {
+      if (active)
+      {
+        UnGrabPointer();
+        UnGrabKeyboard();
+      }
+      else
+      {
+        GrabPointer();
+        GrabKeyboard();
+      }
+    }
+  });
 
   return panel_view_;
 }
