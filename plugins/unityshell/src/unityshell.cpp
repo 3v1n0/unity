@@ -2822,10 +2822,18 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   if (window->type() != CompWindowTypePopupMenuMask)
   {
-    if (uScreen->lockscreen_controller_->IsShielded())
+    if (uScreen->lockscreen_controller_->IsLocked())
     {
-      wAttrib.opacity = 0;
-      return gWindow->glPaint(wAttrib, matrix, region, mask);
+      // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
+      // (well, it works too much, as it applies to menus too), so we need
+      // to paint the windows at the proper opacity, overriding any other
+      // paint plugin (animation, fade?) that might interfere with us.
+      wAttrib.opacity = COMPIZ_COMPOSITE_OPAQUE * (1.0f - uScreen->lockscreen_controller_->Opacity());
+      int old_index = gWindow->glPaintGetCurrentIndex();
+      gWindow->glPaintSetCurrentIndex(MAXSHORT);
+      bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
+      gWindow->glPaintSetCurrentIndex(old_index);
+      return ret;
     }
   }
 

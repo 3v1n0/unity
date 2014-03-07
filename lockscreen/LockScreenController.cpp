@@ -235,9 +235,9 @@ bool Controller::IsLocked() const
   return !shields_.empty();
 }
 
-bool Controller::IsShielded() const
+double Controller::Opacity() const
 {
-  return (fade_animator_.GetCurrentValue() == 1.0f && !shields_.empty());
+  return fade_animator_.GetCurrentValue();
 }
 
 } // lockscreen
