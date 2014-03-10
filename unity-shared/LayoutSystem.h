@@ -46,6 +46,7 @@ public:
 
   bool selected;
   float aspect_ratio;
+  float scale;
   float alpha;
 
 protected:

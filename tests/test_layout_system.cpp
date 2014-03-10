@@ -57,6 +57,7 @@ TEST_F(TestLayoutWindow, InitializationNormalWindow)
   EXPECT_EQ(lwin.geo, fake_window->geo);
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
+  EXPECT_FLOAT_EQ(lwin.scale, 1.0f);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
 

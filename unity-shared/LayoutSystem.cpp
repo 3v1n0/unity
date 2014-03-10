@@ -125,12 +125,12 @@ nux::Geometry LayoutSystem::LayoutRow(LayoutWindow::Vector const& row, nux::Geom
   for (LayoutWindow::Ptr const& window : row)
   {
     // we dont allow scaling up
-    float final_scalar = std::min(1.0f, (unpadded_bounds.height / (float)window->geo.height) * global_scalar);
+    window->scale = std::min(1.0f, (unpadded_bounds.height / (float)window->geo.height) * global_scalar);
 
     window->result.x = x;
     window->result.y = y;
-    window->result.width = window->geo.width * final_scalar;
-    window->result.height = window->geo.height * final_scalar;
+    window->result.width = window->geo.width * window->scale;
+    window->result.height = window->geo.height * window->scale;
 
     x += window->result.width;
   }
@@ -275,6 +275,7 @@ LayoutWindow::LayoutWindow(Window xid)
  , decoration_height(0)
  , selected(false)
  , aspect_ratio(geo.width / static_cast<float>(geo.height))
+ , scale(1.0f)
  , alpha(0.0f)
 {
   auto& wm = WindowManager::Default();
