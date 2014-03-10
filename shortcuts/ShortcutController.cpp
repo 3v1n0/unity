@@ -200,6 +200,7 @@ void Controller::Hide()
   {
     view_->live_background = false;
     view_->closable = false;
+    first_run = false;
     animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
   }
 }
