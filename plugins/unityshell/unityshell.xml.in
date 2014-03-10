@@ -23,7 +23,6 @@
                 <plugin>cube</plugin>
                 <plugin>rotate</plugin>
                 <plugin>cubeaddon</plugin>
-                <plugin>gnomecompat</plugin>
                 <plugin>vpswitch</plugin>
                 <plugin>fade</plugin>
                 <plugin>staticswitcher</plugin>
@@ -44,6 +43,7 @@
             <conflict>
                 <plugin>decor</plugin>
                 <plugin>scalefilter</plugin>
+                <plugin>gnomecompat</plugin>
             </conflict>
         </deps>
 
