@@ -29,7 +29,6 @@
 #include <UnityCore/GLibSource.h>
 
 #include "SearchBarSpinner.h"
-#include "unity-shared/EMConverter.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
@@ -54,6 +53,8 @@ public:
 
   void ForceLiveSearch();
   void SetSearchFinished();
+
+  void UpdateScale(double scale);
 
   nux::TextEntry* text_entry() const;
   nux::View* show_filters() const;
@@ -100,6 +101,7 @@ private:
 
 private:
   bool ShouldBeHighlighted();
+  void UpdateSearchBarSize();
   
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
@@ -119,14 +121,13 @@ private:
 
   int last_width_;
   int last_height_;
+  double scale_;
 
   glib::SignalManager sig_manager_;
   glib::Source::UniquePtr live_search_timeout_;
   glib::Source::UniquePtr start_spinner_timeout_;
 
   SearchBarSpinner* spinner_;
-
-  EMConverter::Ptr cv_;
 };
 
 }

@@ -298,9 +298,9 @@ void ScopeView::UpdateScale(double scale)
     UpdateScopeViewSize();
 
     for (auto& group : category_views_)
-    {
       group->UpdateScale(scale_);
-    }
+
+    filter_bar_->UpdateScale(scale_);
   }
 }
 

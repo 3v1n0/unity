@@ -547,6 +547,7 @@ void DashView::SetupViews()
   content_layout_->AddLayout(search_bar_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   search_bar_ = new SearchBar(true);
+  search_bar_->UpdateScale(cv_->DPIScale());
   AddChild(search_bar_);
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
@@ -575,12 +576,15 @@ void DashView::SetupViews()
 
 void DashView::OnDPIChanged()
 {
-  UpdateDashViewSize();
+  double scale = cv_->DPIScale();
 
   for (auto& scope : scope_views_)
-  {
-    scope.second->UpdateScale(cv_->DPIScale());
-  }
+    scope.second->UpdateScale(scale);
+
+  search_bar_->UpdateScale(scale);
+  scope_bar_->UpdateScale(cv_->DPIScale());
+
+  UpdateDashViewSize();
 }
 
 void DashView::UpdateDashViewSize()
@@ -602,8 +606,6 @@ void DashView::UpdateDashViewSize()
   search_bar_layout_->SetLeftAndRightPadding(search_bar_left_padding.CP(cv_), 0);
   search_bar_->SetMinimumHeight(search_bar_height.CP(cv_));
   search_bar_->SetMaximumHeight(search_bar_height.CP(cv_));
-
-  scope_bar_->UpdateScale(cv_->DPIScale());
 }
 
 void DashView::SetupUBusConnections()
