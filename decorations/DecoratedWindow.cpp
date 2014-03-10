@@ -129,7 +129,7 @@ void Window::Impl::UnsetExtents()
   if (win_->hasUnmapReference())
     return;
 
-  CompWindowExtents empty(0, 0, 0, 0);
+  CompWindowExtents empty;
 
   if (win_->border() != empty || win_->input() != empty)
     win_->setWindowFrameExtents(&empty, &empty);

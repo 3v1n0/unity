@@ -106,6 +106,7 @@ class UnityScreen :
   public ScreenInterface,
   public CompositeScreenInterface,
   public GLScreenInterface,
+  public ScaleScreenInterface,
   public BaseSwitchScreen,
   public PluginClassHandler <UnityScreen, CompScreen>,
   public CompAction::Container,
@@ -168,6 +169,9 @@ public:
   /* handle showdesktop */
   void enterShowDesktopMode ();
   void leaveShowDesktopMode (CompWindow *w);
+
+   /* window scaling */
+  bool layoutSlotsAndAssignWindows();
 
   bool showMenuBarInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showMenuBarTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
