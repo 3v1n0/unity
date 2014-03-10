@@ -37,7 +37,8 @@ const unsigned int FADE_DURATION = 100;
 
 Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
                        AbstractModeller::Ptr const& modeller)
-  : modeller_(modeller)
+  : first_run(false)
+  , modeller_(modeller)
   , base_window_raiser_(base_window_raiser)
   , visible_(false)
   , enabled_(true)
@@ -155,6 +156,7 @@ void Controller::ConstructView()
   AddChild(view_.GetPointer());
   view_->SetModel(modeller_->GetCurrentModel());
   view_->background_color = WindowManager::Default().average_color();
+  view_->closable = first_run();
 
   if (!view_window_)
   {
@@ -197,6 +199,7 @@ void Controller::Hide()
   if (view_window_ && view_window_->GetOpacity() > 0.0f)
   {
     view_->live_background = false;
+    view_->closable = false;
     animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
   }
 }

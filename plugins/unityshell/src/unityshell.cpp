@@ -3708,6 +3708,7 @@ void UnityScreen::ShowFirstRunHints()
         auto panel_win = static_cast<nux::BaseWindow*>(panels.front()->GetTopLevelViewWindow());
         SaveInputThenFocus(panel_win->GetInputWindowId());
       }
+      shortcut_controller_->first_run = true;
       shortcut_controller_->Show();
 
       if (g_mkdir_with_parents(cache_dir.c_str(), 0700) >= 0)
