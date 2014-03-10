@@ -984,7 +984,7 @@ TEST_F(TestGnomeSessionManager, CancelRequested)
   EXPECT_TRUE(closed);
 }
 
-TEST_F(TestGnomeSessionManager, LogindLock)
+TEST_F(TestGnomeSessionManager, DISABLED_LogindLock)
 {
   bool lock_emitted = false;
 
