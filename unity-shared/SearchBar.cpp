@@ -203,7 +203,8 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
 
     filter_layout_ = new nux::HLayout();
     filter_layout_->SetHorizontalInternalMargin(8);
-    filter_layout_->SetLeftAndRightPadding(style.GetFilterResultsHighlightLeftPadding(), style.GetFilterResultsHighlightRightPadding()); // *
+    filter_layout_->SetLeftAndRightPadding(style.GetFilterResultsHighlightLeftPadding(),
+                                           style.GetFilterResultsHighlightRightPadding());
     filter_layout_->SetContentDistribution(nux::MAJOR_POSITION_END);
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
@@ -312,6 +313,29 @@ void SearchBar::UpdateSearchBarSize()
                                       BOT_ARROW_MIN_HEIGHT.CP(scale_));
   arrow_bottom_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
                                       BOT_ARROW_MAX_HEIGHT.CP(scale_));
+
+  // Based on the Font size, the MinHeight is changing in TextEntry. From there the
+  // layered_layout grows to match the MinHeight, but when the MinHeight is shurnk it
+  // is not changing (since the MaxHeight is int::MAX). Now we grab the MinHeight from 
+  // PangoEntry, and set it for layered_layout.
+  int entry_min = pango_entry_->GetMinimumHeight();
+
+  pango_entry_->SetMaximumHeight(entry_min);
+  layered_layout_->SetMinimumHeight(entry_min);
+  layered_layout_->SetMaximumHeight(entry_min);
+}
+
+void SearchBar::UpdateScale(double scale)
+{
+  if (scale_ != scale)
+  {
+    scale_ = scale;
+
+    hint_->SetScale(scale_);
+    show_filters_->SetScale(scale_);
+
+    UpdateSearchBarSize();
+  }
 }
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -341,22 +365,6 @@ void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
     }
 
     pango_font_description_free(desc);
-  }
-}
-
-void SearchBar::UpdateScale(double scale)
-{
-  if (scale_ != scale)
-  {
-    scale_ = scale;
-
-    pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale_));
-    hint_->SetScale(scale_);
-    show_filters_->SetScale(scale_);
-
-    spinner_->SetXY(0, 0);
-
-    UpdateSearchBarSize();
   }
 }
 

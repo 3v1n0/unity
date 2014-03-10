@@ -578,13 +578,13 @@ void DashView::OnDPIChanged()
 {
   double scale = cv_->DPIScale();
 
+  UpdateDashViewSize();
+
   for (auto& scope : scope_views_)
     scope.second->UpdateScale(scale);
 
   search_bar_->UpdateScale(scale);
   scope_bar_->UpdateScale(cv_->DPIScale());
-
-  UpdateDashViewSize();
 }
 
 void DashView::UpdateDashViewSize()
