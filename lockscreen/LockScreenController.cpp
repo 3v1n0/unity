@@ -161,8 +161,6 @@ void Controller::OnLockRequested()
   }
   else if (lockscreen_type == Type::UNITY)
   {
-    indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
-    upstart_wrapper_->Emit("desktop-lock");
     LockScreenUsingUnity();
   }
 
@@ -190,6 +188,9 @@ void Controller::LockScreenUsingDisplayManager()
 
 void Controller::LockScreenUsingUnity()
 {
+  indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
+  upstart_wrapper_->Emit("desktop-lock");
+
   ShowShields();
 }
 
