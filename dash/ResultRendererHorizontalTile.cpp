@@ -37,14 +37,14 @@ namespace unity
 {
 namespace
 {
-RawPixel const CARD_VIEW_PADDING                 =   4_em;   // pixels
-RawPixel const CARD_VIEW_ICON_SIZE               =  64_em;  // pixels
-RawPixel const CARD_VIEW_ICON_TEXT_GAP           =  10_em;  // pixels
-RawPixel const CARD_VIEW_WIDTH                   = 277_em; // pixels
-RawPixel const CARD_VIEW_HEIGHT                  =  74_em;  // pixels
-RawPixel const CARD_VIEW_HIGHLIGHT_CORNER_RADIUS =   2_em; // pixels
-RawPixel const CARD_VIEW_ICON_OUTLINE_WIDTH      =   1_em;   // pixels
-RawPixel const CARD_VIEW_TEXT_LINE_SPACING       =   0_em; // points
+RawPixel const CARD_VIEW_PADDING                 =   4_em;
+RawPixel const CARD_VIEW_ICON_SIZE               =  64_em;
+RawPixel const CARD_VIEW_ICON_TEXT_GAP           =  10_em;
+RawPixel const CARD_VIEW_WIDTH                   = 277_em;
+RawPixel const CARD_VIEW_HEIGHT                  =  74_em;
+RawPixel const CARD_VIEW_HIGHLIGHT_CORNER_RADIUS =   2_em;
+RawPixel const CARD_VIEW_ICON_OUTLINE_WIDTH      =   1_em;
+RawPixel const CARD_VIEW_TEXT_LINE_SPACING       =   0_em;
 
 void RenderTexture(nux::GraphicsEngine& GfxContext, 
                    int x,
