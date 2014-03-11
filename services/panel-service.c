@@ -1327,7 +1327,7 @@ load_indicators_from_indicator_files (PanelService *self)
       IndicatorNg *indicator;
 
       filename = g_build_filename (INDICATOR_SERVICE_DIR, name, NULL);
-      indicator = indicator_ng_new_for_profile (filename, !lockscreen_mode ? "desktop" : "desktop_greeter", &error);
+      indicator = indicator_ng_new_for_profile (filename, !lockscreen_mode ? "desktop" : "desktop_lockscreen", &error);
       if (indicator)
         {
           load_indicator (self, INDICATOR_OBJECT (indicator), name);
