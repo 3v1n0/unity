@@ -879,6 +879,8 @@ void LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value, int monitor)
 
   if (quirk == Quirk::VISIBLE)
     visibility_changed.emit(monitor);
+
+  QuirksChanged.emit();
 }
 
 void LauncherIcon::FullyAnimateQuirkDelayed(guint ms, LauncherIcon::Quirk quirk, int monitor)

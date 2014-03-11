@@ -722,6 +722,8 @@ void ApplicationLauncherIcon::EnsureWindowState()
 
   for (unsigned i = 0; i < monitors::MAX; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
+
+  WindowsChanged.emit();
 }
 
 void ApplicationLauncherIcon::UpdateDesktopQuickList()

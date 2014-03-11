@@ -41,6 +41,8 @@
  *
  */
 
+#include <glib/gi18n.h>
+
 #include "unity-launcher-icon-accessible.h"
 #include "unity-launcher-accessible.h"
 #include "Launcher.h"
@@ -111,6 +113,9 @@ struct _UnityLauncherIconAccessiblePrivate
   guint on_parent_change_id;
   guint on_parent_selection_change_id;
   guint on_parent_focus_event_id;
+
+  /* A textual representation of the icon's name and its quirks */
+  gchar* name;
 };
 
 static void
@@ -138,6 +143,7 @@ unity_launcher_icon_accessible_init(UnityLauncherIconAccessible* launcher_icon_a
     UNITY_LAUNCHER_ICON_ACCESSIBLE_GET_PRIVATE(launcher_icon_accessible);
 
   launcher_icon_accessible->priv = priv;
+  launcher_icon_accessible->priv->name = NULL;
 }
 
 static void
@@ -159,6 +165,12 @@ unity_launcher_icon_accessible_dispose(GObject* object)
 
   if (self->priv->on_parent_change_id != 0)
     g_signal_handler_disconnect(object, self->priv->on_parent_change_id);
+
+  if (self->priv->name != NULL)
+  {
+    g_free(self->priv->name);
+    self->priv->name = NULL;
+  }
 
   G_OBJECT_CLASS(unity_launcher_icon_accessible_parent_class)->dispose(object);
 }
@@ -213,13 +225,23 @@ on_parent_change_cb(gchar* property,
 }
 
 static void
+on_quirks_change_cb(UnityLauncherIconAccessible* self)
+{
+  g_object_notify(G_OBJECT(self), "accessible-name");
+}
+
+static void
 unity_launcher_icon_accessible_initialize(AtkObject* accessible,
                                           gpointer data)
 {
   UnityLauncherIconAccessible* self = NULL;
+  nux::Object* object = NULL;
+  LauncherIcon* icon = NULL;
 
   ATK_OBJECT_CLASS(unity_launcher_icon_accessible_parent_class)->initialize(accessible, data);
   self = UNITY_LAUNCHER_ICON_ACCESSIBLE(accessible);
+  object = (nux::Object*) data;
+  icon = dynamic_cast<LauncherIcon*>(object);
 
   accessible->role = ATK_ROLE_PUSH_BUTTON;
 
@@ -230,30 +252,60 @@ unity_launcher_icon_accessible_initialize(AtkObject* accessible,
   self->priv->on_parent_change_id =
     g_signal_connect(accessible, "notify::accessible-parent",
                      G_CALLBACK(on_parent_change_cb), self);
+
+  icon->QuirksChanged.connect(sigc::bind(sigc::ptr_fun(on_quirks_change_cb), self));
+  icon->WindowsChanged.connect(sigc::bind(sigc::ptr_fun(on_quirks_change_cb), self));
 }
 
 
 static const gchar*
 unity_launcher_icon_accessible_get_name(AtkObject* obj)
 {
-  const gchar* name;
+  UnityLauncherIconAccessible* self = NULL;
 
   g_return_val_if_fail(UNITY_IS_LAUNCHER_ICON_ACCESSIBLE(obj), NULL);
+  self = UNITY_LAUNCHER_ICON_ACCESSIBLE(obj);
 
-  name = ATK_OBJECT_CLASS(unity_launcher_icon_accessible_parent_class)->get_name(obj);
-  if (name == NULL)
+  if (self->priv->name != NULL)
   {
-    LauncherIcon* icon = NULL;
-
-    icon = dynamic_cast<LauncherIcon*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
-
-    if (icon == NULL) /* State is defunct */
-      name = NULL;
-    else
-      name = icon->tooltip_text().c_str();
+    g_free(self->priv->name);
+    self->priv->name = NULL;
   }
 
-  return name;
+  self->priv->name = g_strdup(ATK_OBJECT_CLASS(unity_launcher_icon_accessible_parent_class)->get_name(obj));
+  if (self->priv->name == NULL)
+  {
+    LauncherIcon* icon = NULL;
+    Launcher* launcher = NULL;
+
+    icon = dynamic_cast<LauncherIcon*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
+    launcher = dynamic_cast<Launcher*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(atk_object_get_parent(obj))));
+
+    if (icon == NULL) /* State is defunct */
+      self->priv->name = NULL;
+    else
+    {
+      /* We do not want to present the running state of apps in the switcher,
+       * Because showing in the switcher implies they are running
+       */
+      if (launcher == NULL)
+        self->priv->name = g_strdup(icon->tooltip_text().c_str());
+      else
+      {
+        if (icon->GetQuirk(LauncherIcon::Quirk::RUNNING))
+          if (icon->Windows().size() > 0)
+            self->priv->name = g_strdup_printf(_("%s: running: %lu windows open"),
+                                               icon->tooltip_text().c_str(),
+                                               icon->Windows().size());
+          else
+            self->priv->name = g_strdup_printf(_("%s: running"), icon->tooltip_text().c_str());
+        else
+          self->priv->name = g_strdup(icon->tooltip_text().c_str());
+      }
+    }
+  }
+
+  return self->priv->name;
 }
 
 static AtkStateSet*
