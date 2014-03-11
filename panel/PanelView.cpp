@@ -19,19 +19,10 @@
  */
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
-#include <Nux/Layout.h>
-#include <Nux/WindowCompositor.h>
 
-#include <NuxGraphics/CairoGraphics.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <NuxGraphics/RenderingPipe.h>
-
-#include <glib.h>
 
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/TextureCache.h"
@@ -556,7 +547,11 @@ void PanelView::PreLayoutManagement()
 {
   View::PreLayoutManagement();
 
-  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_->GetBaseWidth();
+  int tray_width = 0;
+  if (tray_)
+    tray_width = tray_->GetBaseWidth();
+
+  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_width;
 
   menu_view_->SetMinimumWidth(menu_width);
   menu_view_->SetMaximumWidth(menu_width);

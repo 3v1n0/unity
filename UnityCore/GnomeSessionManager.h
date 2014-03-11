@@ -35,6 +35,7 @@ public:
 
   std::string RealName() const;
   std::string UserName() const;
+  std::string HostName() const;
 
   void LockScreen();
   void Logout();

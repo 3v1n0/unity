@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: ni; tab-width: 2 -*-
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2011-2012 Canonical Ltd
  *
@@ -26,7 +26,7 @@ namespace unity
 NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
-: TextEntry("", NUX_TRACKER_LOCATION)
+  : TextEntry("", NUX_TRACKER_LOCATION)
 {}
 
 void IMTextEntry::CopyClipboard()
@@ -85,4 +85,5 @@ bool IMTextEntry::im_preedit()
 {
   return !preedit_.empty();
 }
+
 }
