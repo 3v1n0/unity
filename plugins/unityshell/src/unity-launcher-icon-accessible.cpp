@@ -294,7 +294,7 @@ unity_launcher_icon_accessible_get_name(AtkObject* obj)
       {
         if (icon->GetQuirk(LauncherIcon::Quirk::RUNNING))
           if (icon->Windows().size() > 0)
-            self->priv->name = g_strdup_printf(_("%s: running: %lu windows open"),
+            self->priv->name = g_strdup_printf(_("%s: running: %zu windows open"),
                                                icon->tooltip_text().c_str(),
                                                icon->Windows().size());
           else
