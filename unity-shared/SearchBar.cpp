@@ -304,15 +304,18 @@ void SearchBar::UpdateSearchBarSize()
 
   pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale_));
 
-  arrow_top_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale_),
-                                   TOP_ARROW_MIN_HEIGHT.CP(scale_));
-  arrow_top_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
-                                   TOP_ARROW_MAX_HEIGHT.CP(scale_));
+  if (show_filter_hint_)
+  {
+    arrow_top_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale_),
+                                     TOP_ARROW_MIN_HEIGHT.CP(scale_));
+    arrow_top_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
+                                     TOP_ARROW_MAX_HEIGHT.CP(scale_));
 
-  arrow_bottom_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale_),
-                                      BOT_ARROW_MIN_HEIGHT.CP(scale_));
-  arrow_bottom_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
-                                      BOT_ARROW_MAX_HEIGHT.CP(scale_));
+    arrow_bottom_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale_),
+                                        BOT_ARROW_MIN_HEIGHT.CP(scale_));
+    arrow_bottom_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
+                                        BOT_ARROW_MAX_HEIGHT.CP(scale_));
+  }
 
   // Based on the Font size, the MinHeight is changing in TextEntry. From there the
   // layered_layout grows to match the MinHeight, but when the MinHeight is shurnk it
