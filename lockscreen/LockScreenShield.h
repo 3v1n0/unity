@@ -20,6 +20,7 @@
 #ifndef UNITY_LOCKSCREEN_SHIELD_H
 #define UNITY_LOCKSCREEN_SHIELD_H
 
+#include <UnityCore/ConnectionManager.h>
 #include "LockScreenAbstractShield.h"
 
 namespace unity
@@ -35,7 +36,9 @@ class Panel;
 class Shield : public AbstractShield
 {
 public:
-  Shield(session::Manager::Ptr const& session_manager, int monitor, bool is_primary);
+  Shield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, int monitor, bool is_primary);
+
+  bool IsIndicatorOpen() const;
 
 protected:
   bool AcceptKeyNavFocus() override;
@@ -53,6 +56,7 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
   nux::ObjectPtr<nux::Layout> primary_layout_;
   nux::ObjectPtr<nux::Layout> cof_layout_;
+  connection::Wrapper panel_active_conn_;
   UserPromptView* prompt_view_;
   Panel* panel_view_;
 };

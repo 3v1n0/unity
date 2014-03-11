@@ -41,6 +41,7 @@ public:
              bool test_mode = false);
 
   bool IsLocked() const;
+  bool HasOpenMenu() const;
   double Opacity() const;
 
 private:
@@ -59,6 +60,7 @@ private:
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
   session::Manager::Ptr session_manager_;
+  indicator::Indicators::Ptr indicators_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
   nux::animation::AnimateValue<double> fade_animator_;

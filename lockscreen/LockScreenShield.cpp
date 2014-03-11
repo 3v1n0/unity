@@ -22,15 +22,12 @@
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/PaintLayer.h>
-#include <UnityCore/DBusIndicators.h>
 
 #include "BackgroundSettings.h"
 #include "CofView.h"
 #include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
 #include "UserPromptView.h"
-#include "unity-shared/GnomeKeyGrabber.h"
-#include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
@@ -39,10 +36,11 @@ namespace unity
 namespace lockscreen
 {
 
-Shield::Shield(session::Manager::Ptr const& session_manager, int monitor_num, bool is_primary)
-  : AbstractShield(session_manager, monitor_num, is_primary)
-  , bg_settings_(new BackgroundSettings)
+Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, int monitor_num, bool is_primary)
+  : AbstractShield(session_manager, indicators, monitor_num, is_primary)
+  , bg_settings_(std::make_shared<BackgroundSettings>())
   , prompt_view_(nullptr)
+  , panel_view_(nullptr)
 {
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
 
@@ -65,7 +63,7 @@ Shield::Shield(session::Manager::Ptr const& session_manager, int monitor_num, bo
     }
 
     is_primary ? ShowPrimaryView() : ShowSecondaryView();
-    if (panel_view_) panel_view_->active = is_primary;
+    if (panel_view_) panel_view_->SetInputEventSensitivity(is_primary);
     QueueRelayout();
     QueueDraw();
   });
@@ -136,8 +134,25 @@ void Shield::ShowSecondaryView()
 
 Panel* Shield::CreatePanel()
 {
-  auto indicators = std::make_shared<indicator::LockScreenDBusIndicators>();
-  panel_view_ = new Panel(monitor, indicators, session_manager_);
+  if (!indicators_ || !session_manager_)
+    return nullptr;
+
+  panel_view_ = new Panel(monitor, indicators_, session_manager_);
+  panel_active_conn_ = panel_view_->active.changed.connect([this] (bool active) {
+    if (primary())
+    {
+      if (active)
+      {
+        UnGrabPointer();
+        UnGrabKeyboard();
+      }
+      else
+      {
+        GrabPointer();
+        GrabKeyboard();
+      }
+    }
+  });
 
   return panel_view_;
 }
@@ -194,6 +209,11 @@ nux::Area* Shield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType
     return this;
 
   return area;
+}
+
+bool Shield::IsIndicatorOpen() const
+{
+  return panel_view_ ? panel_view_->active() : false;
 }
 
 }

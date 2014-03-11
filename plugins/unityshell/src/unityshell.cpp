@@ -2820,9 +2820,10 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   GLWindowPaintAttrib wAttrib = attrib;
 
-  if (window->type() != CompWindowTypePopupMenuMask)
+  if (uScreen->lockscreen_controller_->IsLocked())
   {
-    if (uScreen->lockscreen_controller_->IsLocked())
+    if (window->type() != CompWindowTypePopupMenuMask ||
+        !uScreen->lockscreen_controller_->HasOpenMenu())
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need

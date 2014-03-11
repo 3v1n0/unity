@@ -45,7 +45,7 @@ using namespace panel;
 
 Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
-  , active(true)
+  , active(false)
   , monitor(monitor_)
   , indicators_(indicators)
   , needs_geo_sync_(true)
@@ -133,32 +133,30 @@ void Panel::OnIndicatorViewUpdated()
 
 void Panel::OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button)
 {
-  if (!active())
+  if (!GetInputEventSensitivity())
     return;
 
   // This is ugly... But Nux fault!
   WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
 
-  auto shield = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-  shield->UnGrabPointer();
-  shield->UnGrabKeyboard();
+  active = true;
 }
 
 void Panel::OnEntryActivateRequest(std::string const& entry_id)
 {
-  if (active())
+  if (GetInputEventSensitivity())
     indicators_view_->ActivateEntry(entry_id, 0);
 }
 
 void Panel::ActivateFirst()
 {
-  if (active())
+  if (GetInputEventSensitivity())
     indicators_view_->ActivateIfSensitive();
 }
 
 void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const&)
 {
-  if (!active() || (!panel.empty() && panel != GetPanelName()))
+  if (!GetInputEventSensitivity() || (!panel.empty() && panel != GetPanelName()))
     return;
 
   bool active = !entry_id.empty();
@@ -182,10 +180,7 @@ void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_
   {
     track_menu_pointer_timeout_.reset();
     tracked_pointer_pos_ = {-1, -1};
-
-    auto shield = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-    shield->GrabPointer();
-    shield->GrabKeyboard();
+    this->active = false;
   }
 }
 
