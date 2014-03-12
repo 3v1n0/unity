@@ -278,8 +278,7 @@ private:
 
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
-
-  void OnSwitcherEnd(GVariant* data);
+  void OnSwitcherDetailChanged(bool detail);
 
   void OnInitiateSpread();
   void OnTerminateSpread();
@@ -558,6 +557,7 @@ private:
   nux::Geometry close_button_geo_;
   std::shared_ptr<decoration::Window> deco_win_;
   bool middle_clicked_;
+  bool need_fake_deco_redraw_;
   bool is_nux_window_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 

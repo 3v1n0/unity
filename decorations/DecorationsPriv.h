@@ -108,6 +108,7 @@ private:
   void ComputeShadowQuads();
   void UpdateDecorationTextures();
   void RenderDecorationTexture(Side, nux::Geometry const&);
+  void Paint(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
   friend class Window;

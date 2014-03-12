@@ -415,6 +415,9 @@ unsigned Window::Impl::ShadowRadius() const
 
 void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
 {
+  if (geo.width <= 0 || geo.height <= 0)
+    return;
+
   auto& deco_tex = bg_textures_[unsigned(s)];
 
   if (deco_tex.quad.box.width() != geo.width || deco_tex.quad.box.height() != geo.height)
@@ -461,7 +464,7 @@ void Window::Impl::UpdateDecorationTextures()
 
 void Window::Impl::ComputeShadowQuads()
 {
-  if (!ShadowDecorated())
+  if (last_shadow_rect_.isEmpty() && !ShadowDecorated())
     return;
 
   const auto* texture = ShadowTexture();
@@ -555,18 +558,23 @@ void Window::Impl::ComputeShadowQuads()
   }
 }
 
+void Window::Impl::Paint(GLMatrix const& transformation,
+                         GLWindowPaintAttrib const& attrib,
+                         CompRegion const& region, unsigned mask)
+{
+  if (dirty_geo_)
+    parent_->UpdateDecorationPosition();
+}
+
 void Window::Impl::Draw(GLMatrix const& transformation,
                         GLWindowPaintAttrib const& attrib,
                         CompRegion const& region, unsigned mask)
 {
-  if (!ShadowDecorated())
+  if (last_shadow_rect_.isEmpty())
     return;
 
   auto const& clip_region = (mask & PAINT_WINDOW_TRANSFORMED_MASK) ? infiniteRegion : region;
   mask |= PAINT_WINDOW_BLEND_MASK;
-
-  if (dirty_geo_)
-    parent_->UpdateDecorationPosition();
 
   glwin_->vertexBuffer()->begin();
 
@@ -581,6 +589,9 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   for (auto const& dtex : bg_textures_)
   {
+    if (!dtex)
+      continue;
+
     glwin_->vertexBuffer()->begin();
     glwin_->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
 
@@ -613,7 +624,7 @@ void Window::Impl::SetupAppMenu()
   sliding_layout->SetInputItem(nullptr);
   sliding_layout->mouse_owner = false;
 
-  if (!menu_manager->HasAppMenu())
+  if (!menu_manager->HasAppMenu() || !Style::Get()->integrated_menus())
     return;
 
   auto visibility_cb = sigc::hide(sigc::mem_fun(this, &Impl::UpdateAppMenuVisibility));
@@ -736,6 +747,12 @@ void Window::Draw(GLMatrix const& matrix, GLWindowPaintAttrib const& attrib,
                   CompRegion const& region, unsigned mask)
 {
   impl_->Draw(matrix, attrib, region, mask);
+}
+
+void Window::Paint(GLMatrix const& matrix, GLWindowPaintAttrib const& attrib,
+                  CompRegion const& region, unsigned mask)
+{
+  impl_->Paint(matrix, attrib, region, mask);
 }
 
 void Window::Undecorate()

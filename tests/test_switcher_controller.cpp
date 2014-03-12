@@ -83,27 +83,27 @@ TEST_F(TestSwitcherController, StartDetailMode)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   controller_->InitiateDetail();
-  EXPECT_TRUE(controller_->IsDetailViewShown());
+  EXPECT_TRUE(controller_->detail());
 
   auto const& view = controller_->GetView();
 
   view->switcher_stop_detail.emit();
-  EXPECT_FALSE(controller_->IsDetailViewShown());
+  EXPECT_FALSE(controller_->detail());
 
   view->switcher_start_detail.emit();
-  EXPECT_TRUE(controller_->IsDetailViewShown());
+  EXPECT_TRUE(controller_->detail());
 }
 
 TEST_F(TestSwitcherController, StopDetailMode)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   controller_->InitiateDetail();
-  EXPECT_TRUE(controller_->IsDetailViewShown());
+  EXPECT_TRUE(controller_->detail());
 
   auto const& view = controller_->GetView();
 
   view->switcher_stop_detail.emit();
-  EXPECT_FALSE(controller_->IsDetailViewShown());
+  EXPECT_FALSE(controller_->detail());
 }
 
 TEST_F(TestSwitcherController, StartDetailModeMovesNextRows)
@@ -117,7 +117,7 @@ TEST_F(TestSwitcherController, StartDetailModeMovesNextRows)
   model->SetRowSizes({2,2});
 
   view->switcher_start_detail.emit();
-  EXPECT_TRUE(controller_->IsDetailViewShown());
+  EXPECT_TRUE(controller_->detail());
 
   view->switcher_start_detail.emit();
 
@@ -137,7 +137,7 @@ TEST_F(TestSwitcherController, StopDetailModeMovesPrevRows)
   auto const& view = controller_->GetView();
 
   view->switcher_start_detail.emit();
-  EXPECT_TRUE(controller_->IsDetailViewShown());
+  EXPECT_TRUE(controller_->detail());
 
   auto model = view->GetModel();
   model->SetRowSizes({2,2});
@@ -153,7 +153,7 @@ TEST_F(TestSwitcherController, StopDetailModeMovesPrevRows)
 
   // Now we are in index 0, stoping detail mode must exit detail mode
   view->switcher_stop_detail.emit();
-  EXPECT_FALSE(controller_->IsDetailViewShown());
+  EXPECT_FALSE(controller_->detail());
 }
 
 TEST_F(TestSwitcherController, ShowSwitcher)

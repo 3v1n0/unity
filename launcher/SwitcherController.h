@@ -107,9 +107,7 @@ public:
 
   nux::ObjectPtr<SwitcherView> GetView() const;
 
-  ui::LayoutWindow::Vector ExternalRenderTargets();
-
-  guint GetSwitcherInputWindowId() const;
+  ui::LayoutWindow::Vector const& ExternalRenderTargets() const;
 
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
@@ -123,12 +121,12 @@ public:
   Selection GetCurrentSelection() const;
 
   sigc::connection ConnectToViewBuilt(sigc::slot<void> const&);
-  void SetDetailOnTimeout(bool timeout);
 
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
 
+  nux::RWProperty<bool> detail;
   nux::ROProperty<DetailMode> detail_mode;
   nux::Property<int>  timeout_length;
   nux::Property<bool> detail_on_timeout;

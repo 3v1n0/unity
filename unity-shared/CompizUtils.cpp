@@ -110,9 +110,13 @@ bool SimpleTextureQuad::SetY(int y)
 //
 
 PixmapTexture::PixmapTexture(int w, int h)
-  : pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w, h, PIXMAP_DEPTH))
+ : pixmap_(0)
 {
-  texture_ = GLTexture::bindPixmapToTexture(pixmap_, w, h, PIXMAP_DEPTH);
+  if (w > 0 && h > 0)
+  {
+    pixmap_ = XCreatePixmap(screen->dpy(), screen->root(), w, h, PIXMAP_DEPTH);
+    texture_ = GLTexture::bindPixmapToTexture(pixmap_, w, h, PIXMAP_DEPTH);
+  }
 }
 
 PixmapTexture::~PixmapTexture()

@@ -69,7 +69,9 @@ namespace switcher
 {
 
 Controller::Controller(WindowCreator const& create_window)
-  : detail_mode([this] { return detail_mode_; })
+  : detail([this] { return impl_->model_ && impl_->model_->detail_selection(); },
+           [this] (bool d) { if (impl_->model_) { impl_->model_->detail_selection = d; } return false; })
+  , detail_mode([this] { return detail_mode_; })
   , timeout_length(0)
   , detail_on_timeout(true)
   , detail_timeout_length(500)
@@ -133,8 +135,7 @@ void Controller::Impl::StartDetailMode()
 {
   if (obj_->visible_)
   {
-    if (IsDetailViewShown() &&
-        HasNextDetailRow())
+    if (obj_->detail() && HasNextDetailRow())
     {
       NextDetailRow();
     }
@@ -149,8 +150,7 @@ void Controller::Impl::StopDetailMode()
 {
   if (obj_->visible_)
   {
-    if (IsDetailViewShown() &&
-        HasPrevDetailRow())
+    if (obj_->detail() && HasPrevDetailRow())
     {
       PrevDetailRow();
     }
@@ -176,11 +176,6 @@ SwitcherView::Ptr Controller::GetView() const
   return impl_->GetView();
 }
 
-bool Controller::IsDetailViewShown()
-{
-  return impl_->IsDetailViewShown();
-}
-
 void Controller::SetDetail(bool value, unsigned int min_windows)
 {
   impl_->SetDetail(value, min_windows);
@@ -201,14 +196,9 @@ void Controller::PrevDetail()
   impl_->PrevDetail();
 }
 
-LayoutWindow::Vector Controller::ExternalRenderTargets()
+LayoutWindow::Vector const& Controller::ExternalRenderTargets() const
 {
   return impl_->ExternalRenderTargets();
-}
-
-guint Controller::GetSwitcherInputWindowId() const
-{
-  return impl_->GetSwitcherInputWindowId();
 }
 
 bool Controller::IsShowDesktopDisabled() const
@@ -249,11 +239,6 @@ void Controller::SelectFirstItem()
 sigc::connection Controller::ConnectToViewBuilt(const sigc::slot<void> &f)
 {
   return impl_->view_built.connect(f);
-}
-
-void Controller::SetDetailOnTimeout(bool timeout)
-{
-  detail_on_timeout = timeout;
 }
 
 double Controller::Opacity() const
@@ -512,12 +497,16 @@ void Controller::Impl::DetailHide()
 {
   // FIXME We need to refactor SwitcherModel so we can add/remove icons without causing
   // a crash. If you remove the last application in the list it crashes.
+  obj_->detail.changed.emit(false);
   model_->detail_selection = false;
   Hide(false);
 }
 
 void Controller::Impl::HideWindow()
 {
+  if (model_->detail_selection())
+    obj_->detail.changed.emit(false);
+
   main_layout_->RemoveChildObject(view_.GetPointer());
 
   view_window_->SetOpacity(0.0f);
@@ -591,20 +580,17 @@ SwitcherView::Ptr Controller::Impl::GetView() const
   return view_;
 }
 
-bool Controller::Impl::IsDetailViewShown()
-{
-  return model_ && model_->detail_selection();
-}
-
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
 {
   if (value && model_->Selection()->AllowDetailViewInSwitcher() && model_->DetailXids().size() >= min_windows)
   {
     model_->detail_selection = true;
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
+    obj_->detail.changed.emit(true);
   }
   else
   {
+    obj_->detail.changed.emit(false);
     model_->detail_selection = false;
   }
 }
@@ -673,21 +659,16 @@ bool Controller::Impl::HasPrevDetailRow() const
   return model_->HasPrevDetailRow();
 }
 
-LayoutWindow::Vector Controller::Impl::ExternalRenderTargets()
+LayoutWindow::Vector const& Controller::Impl::ExternalRenderTargets() const
 {
   if (!view_)
   {
-    LayoutWindow::Vector result;
-    return result;
+    static LayoutWindow::Vector empty_list;
+    return empty_list;
   }
+
   return view_->ExternalTargets();
 }
-
-guint Controller::Impl::GetSwitcherInputWindowId() const
-{
-  return view_window_->GetInputWindowId();
-}
-
 
 Selection Controller::Impl::GetCurrentSelection() const
 {
@@ -711,7 +692,6 @@ Selection Controller::Impl::GetCurrentSelection() const
   }
   return {application, window};
 }
-
 
 void Controller::Impl::SelectFirstItem()
 {
@@ -743,7 +723,7 @@ void Controller::Impl::SelectFirstItem()
   for (auto& window : first->Windows())
   {
     Window xid = window->window_id();
-    
+
     if (model_->only_detail_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
       continue;
 

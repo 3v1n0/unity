@@ -107,8 +107,8 @@ TEST_F(TestSwitcherController, DetailTimeoutOnDetailActivate)
   EXPECT_EQ(controller_->GetCurrentSelection().window_, 0);
 
   // Manually open-close the detail mode before that the timeout has occurred
-  controller_->SetDetail(true);
-  controller_->SetDetail(false);
+  controller_->detail = true;
+  controller_->detail = false;
 
   Utils::WaitForTimeoutMSec(initial_details_timeout * 1.1);
   EXPECT_EQ(controller_->GetCurrentSelection().window_, 0);

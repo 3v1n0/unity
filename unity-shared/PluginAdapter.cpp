@@ -699,21 +699,14 @@ void PluginAdapter::RestoreAt(Window window_id, int x, int y)
   if (window && (window->state() & MAXIMIZE_STATE))
   {
     nux::Geometry new_geo(GetWindowSavedGeometry(window_id));
-    decoration::Border border;
-    double scale = 1.0f;
-
-    if (compiz_utils::IsWindowFullyDecorable(window))
-    {
-      auto& settings = Settings::Instance();
-      border = decoration::Style::Get()->Border();
-      scale = settings.em(MonitorGeometryIn(new_geo))->DPIScale();
-    }
-
-    new_geo.x = x;
-    new_geo.y = y;
-    new_geo.width -= (border.left - border.right) * scale;
-    new_geo.height -= (border.top - border.bottom) * scale;
     window->maximize(0);
+
+    auto const& border = window->border();
+    new_geo.x = x;
+    new_geo.y = y + border.top;
+    new_geo.width -= (border.left + border.right);
+    new_geo.height -= (border.top + border.bottom);
+
     MoveResizeWindow(window_id, new_geo);
   }
 }
