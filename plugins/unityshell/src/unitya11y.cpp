@@ -42,6 +42,7 @@
 #include "QuicklistView.h"
 #include "QuicklistMenuItem.h"
 #include "SwitcherView.h"
+#include "TextInput.h"
 #include "SessionButton.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
@@ -54,6 +55,7 @@
 #include "unity-quicklist-accessible.h"
 #include "unity-quicklist-menu-item-accessible.h"
 #include "unity-switcher-accessible.h"
+#include "unity-text-input-accessible.h"
 #include "unity-session-button-accessible.h"
 
 using namespace unity;
@@ -186,6 +188,9 @@ unity_a11y_create_accessible(nux::Object* object)
 
   if (object->Type().IsDerivedFromType(unity::SearchBar::StaticObjectType))
     return unity_search_bar_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(unity::TextInput::StaticObjectType))
+    return unity_text_input_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(unity::switcher::SwitcherView::StaticObjectType))
     return unity_switcher_accessible_new(object);

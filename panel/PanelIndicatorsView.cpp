@@ -42,6 +42,7 @@ PanelIndicatorsView::PanelIndicatorsView()
 , opacity(1.0f, sigc::mem_fun(this, &PanelIndicatorsView::SetOpacity))
 , layout_(new nux::HLayout("", NUX_TRACKER_LOCATION))
 , monitor_(0)
+, overlay_showing_(false)
 {
   opacity.DisableNotifications();
   layout_->SetContentDistribution(nux::MAJOR_POSITION_END);
@@ -327,6 +328,9 @@ PanelIndicatorEntryView *PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, 
   auto view = new PanelIndicatorEntryView(entry, padding, type);
   AddEntryView(view, pos);
 
+  if (overlay_showing_)
+    view->OverlayShown();
+
   return view;
 }
 
@@ -368,12 +372,16 @@ void PanelIndicatorsView::RemoveEntry(std::string const& entry_id)
 
 void PanelIndicatorsView::OverlayShown()
 {
+  overlay_showing_ = true;
+
   for (auto const& entry: entries_)
     entry.second->OverlayShown();
 }
 
 void PanelIndicatorsView::OverlayHidden()
 {
+  overlay_showing_ = false;
+
   for (auto const& entry: entries_)
     entry.second->OverlayHidden();
 }
