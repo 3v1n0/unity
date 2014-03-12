@@ -138,6 +138,7 @@ const unsigned int SCROLL_UP_BUTTON = 7;
 const int MAX_BUFFER_AGE = 11;
 const int FRAMES_TO_REDRAW_ON_RESUME = 10;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
+const std::string FIRST_RUN_STAMP = "first_run.stamp";
 } // namespace local
 } // anon namespace
 
@@ -3671,6 +3672,7 @@ void UnityScreen::initLauncher()
   auto shortcuts_modeller = std::make_shared<shortcut::CompizModeller>();
   shortcut_controller_ = std::make_shared<shortcut::Controller>(base_window_raiser, shortcuts_modeller);
   AddChild(shortcut_controller_.get());
+  ShowFirstRunHints();
 
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
@@ -3750,6 +3752,41 @@ void UnityScreen::InitGesturesSupport()
 CompAction::Vector& UnityScreen::getActions()
 {
   return menus_->KeyGrabber()->GetActions();
+}
+
+void UnityScreen::ShowFirstRunHints()
+{
+  sources_.AddTimeoutSeconds(1, [this] {
+    auto const& cache_dir = glib::gchar_to_string(g_get_user_cache_dir())+"/unity/";
+    if (!g_file_test((cache_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
+    {
+      // We focus the panel, so the shortcut hint will be hidden at first user input
+      auto const& panels = panel_controller_->panels();
+      if (!panels.empty())
+      {
+        auto panel_win = static_cast<nux::BaseWindow*>(panels.front()->GetTopLevelViewWindow());
+        SaveInputThenFocus(panel_win->GetInputWindowId());
+      }
+      shortcut_controller_->first_run = true;
+      shortcut_controller_->Show();
+
+      if (g_mkdir_with_parents(cache_dir.c_str(), 0700) >= 0)
+      {
+        glib::Error error;
+        g_file_set_contents((cache_dir+local::FIRST_RUN_STAMP).c_str(), "", 0, &error);
+
+        if (error)
+        {
+          LOG_ERROR(logger) << "Impossible to save the unity stamp file: " << error;
+        }
+      }
+      else
+      {
+        LOG_ERROR(logger) << "Impossible to create unity cache folder!";
+      }
+    }
+    return false;
+  });
 }
 
 /* Window init */

@@ -693,22 +693,30 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname) const
   if (BAMF_IS_WINDOW(window))
   {
     BamfView *view = reinterpret_cast<BamfView*>(window);
-    std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
     Window window_xid = bamf_window_get_xid(window);
 
-    if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
+    if (bamf_window_get_window_type(window) == BAMF_WINDOW_DOCK)
     {
-      /* If the active window is an unity window, we need to fallback to the
-       * top one, anyway we should always avoid to focus unity internal windows */
-      BamfWindow* top_win = GetBamfWindowForXid(GetTopWindow());
+      auto panel = const_cast<PanelMenuView*>(this)->GetTopLevelViewWindow();
+      if (static_cast<nux::BaseWindow*>(panel)->GetInputWindowId() == window_xid)
+        return desktop_name_;
 
-      if (top_win && top_win != window)
+      std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
+
+      if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
       {
-        window = top_win;
-      }
-      else
-      {
-        return "";
+        /* If the active window is an unity window, we need to fallback to the
+         * top one, anyway we should always avoid to focus unity internal windows */
+        BamfWindow* top_win = GetBamfWindowForXid(GetTopWindow());
+
+        if (top_win && top_win != window)
+        {
+          window = top_win;
+        }
+        else
+        {
+          return "";
+        }
       }
     }
 
@@ -718,7 +726,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname) const
     }
     else if (!IsValidWindow(window_xid))
     {
-       return "";
+      return "";
     }
 
     if (WindowManager::Default().IsWindowMaximized(window_xid) && !use_appname)

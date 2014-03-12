@@ -68,6 +68,7 @@ class TestShortcutController : public Test
     MOCK_METHOD1(SetOpacity, void(double));
     using Controller::GetOffsetPerMonitor;
     using Controller::ConstructView;
+    using Controller::OnShowTimer;
     using Controller::view_;
 
     void RealSetOpacity(double value)
@@ -186,6 +187,38 @@ TEST_F(TestShortcutController, DisconnectWMSignalsOnDestruction)
   { Controller dummy(base_window_raiser_, modeller_); }
   ASSERT_EQ(before, color_property.changed.size());
   color_property.changed.emit(nux::color::RandomColor());
+}
+
+TEST_F(TestShortcutController, FirstRunFalse)
+{
+  ASSERT_FALSE(controller_.first_run());
+
+  controller_.ConstructView();
+  EXPECT_FALSE(controller_.view_->closable());
+}
+
+TEST_F(TestShortcutController, FirstRunTrue)
+{
+  ASSERT_FALSE(controller_.first_run());
+
+  controller_.first_run = true;
+  controller_.ConstructView();
+  EXPECT_TRUE(controller_.view_->closable());
+}
+
+TEST_F(TestShortcutController, UnsetFirstRunOnHide)
+{
+  controller_.first_run = true;
+  controller_.ConstructView();
+
+  ASSERT_TRUE(controller_.view_->closable());
+  controller_.Show();
+  controller_.OnShowTimer();
+  tick_source_.tick(100 * 1000);
+  controller_.Hide();
+
+  EXPECT_FALSE(controller_.first_run());
+  EXPECT_FALSE(controller_.view_->closable());
 }
 
 }
