@@ -1026,7 +1026,6 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
 {
   if (BAMF_IS_APPLICATION(new_app))
   {
-    app_name_changed_signal_.Disconnect();
     app_name_changed_signal_.Connect(BAMF_VIEW(new_app), "name-changed",
                                      sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
 
