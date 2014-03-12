@@ -309,6 +309,8 @@ private:
 
   void DamageBlurUpdateRegion(nux::Geometry const&);
 
+  void ShowFirstRunHints();
+
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 
