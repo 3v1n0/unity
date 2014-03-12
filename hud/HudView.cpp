@@ -507,8 +507,6 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
     GetLayout()->ProcessDraw(gfx_context, force_draw);
   }
 
-  overlay_window_buttons_->QueueDraw();
-
   gfx_context.PopClippingRectangle();
 
   renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());

@@ -200,7 +200,7 @@ class SpreadTests(UnityTestCase):
         self.assertThat(icon.get_tooltip().active, Eventually(Equals(True)))
 
         self.initiate_spread_for_screen()
-        self.assertThat(icon.get_tooltip().active, Eventually(Equals(False)))
+        self.assertThat(icon.get_tooltip(), Equals(None))
 
     def test_spread_puts_panel_in_overlay_mode(self):
         """Test that the panel is in overlay mode when in spread"""
