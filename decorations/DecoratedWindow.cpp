@@ -624,7 +624,7 @@ void Window::Impl::SetupAppMenu()
   sliding_layout->SetInputItem(nullptr);
   sliding_layout->mouse_owner = false;
 
-  if (!menu_manager->HasAppMenu())
+  if (!menu_manager->HasAppMenu() || !Style::Get()->integrated_menus())
     return;
 
   auto visibility_cb = sigc::hide(sigc::mem_fun(this, &Impl::UpdateAppMenuVisibility));
