@@ -415,6 +415,9 @@ unsigned Window::Impl::ShadowRadius() const
 
 void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
 {
+  if (geo.width <= 0 || geo.height <= 0)
+    return;
+
   auto& deco_tex = bg_textures_[unsigned(s)];
 
   if (deco_tex.quad.box.width() != geo.width || deco_tex.quad.box.height() != geo.height)
@@ -581,6 +584,9 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   for (auto const& dtex : bg_textures_)
   {
+    if (!dtex)
+      continue;
+
     glwin_->vertexBuffer()->begin();
     glwin_->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
 
