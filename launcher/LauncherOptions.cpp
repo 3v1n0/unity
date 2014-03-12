@@ -46,6 +46,7 @@ Options::Options()
   , edge_passed_disabled_ms(1000)
   , edge_resist(true)
   , show_for_all(false)
+  , scroll_inactive_icons(false)
 {
   auto changed_lambda = [this] {
     changed_idle_.reset(new glib::Idle(glib::Source::Priority::HIGH));
@@ -70,6 +71,7 @@ Options::Options()
   super_tap_duration.changed.connect(sigc::hide(changed_lambda));
   urgent_animation.changed.connect(sigc::hide(changed_lambda));
   edge_resist.changed.connect(sigc::hide(changed_lambda));
+  scroll_inactive_icons.changed.connect(sigc::hide(changed_lambda));
 }
 
 }

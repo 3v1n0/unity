@@ -79,6 +79,8 @@ public:
 
   AbstractLauncherIcon::Ptr GetSelectedMenuIcon() const;
 
+  void SetScrollInactiveIcons(bool scroll);
+
   void SetIconSize(int tile_size, int icon_size);
   int GetIconSize() const;
 
