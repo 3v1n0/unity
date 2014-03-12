@@ -39,6 +39,7 @@
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/SearchBarSpinner.h"
 #include "unity-shared/StaticCairoText.h"
 
 namespace nux
@@ -49,6 +50,7 @@ class LinearLayout;
 
 namespace unity
 {
+
 class TextInput : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(TextInput, nux::View);
@@ -56,18 +58,22 @@ class TextInput : public unity::debug::Introspectable, public nux::View
 public:
   typedef nux::ObjectPtr<TextInput> Ptr;
   TextInput(NUX_FILE_LINE_PROTO);
-  TextInput(bool show_filter_hint, NUX_FILE_LINE_PROTO);
 
-  nux::TextEntry* text_entry() const;
+  void SetSpinnerVisible(bool visible);
+  void SetSpinnerState(SpinnerState spinner_state);
+
+  IMTextEntry* text_entry() const;
 
   nux::RWProperty<std::string> input_string;
   nux::Property<std::string> input_hint;
+  nux::Property<std::string> hint_font_name;
+  nux::Property<int> hint_font_size;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
 
 private:
-
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+  void UpdateHintFont();
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   void UpdateBackground(bool force);
@@ -78,11 +84,8 @@ private:
   bool AcceptKeyNavFocus();
 
 protected:
-
-  void Init();
   void OnInputHintChanged();
-  void OnMouseButtonDown(int x, int y, unsigned long button_flags,
-          unsigned long key_flags);
+  void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnEndKeyFocus();
 
   // getters & setters
@@ -104,6 +107,7 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
   nux::LayeredLayout* layered_layout_;
+  SearchBarSpinner* spinner_;
 
   int last_width_;
   int last_height_;

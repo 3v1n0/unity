@@ -243,6 +243,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
                  test_launcher_tooltip.cpp
+                 test_lockscreen_controller.cpp
                  test_panel_controller.cpp
                  test_panel_indicators_view.cpp
                  test_panel_indicator_entry_dropdown_view.cpp
@@ -292,6 +293,8 @@ if (ENABLE_X_SUPPORT)
                  test_unity_settings.cpp
                  test_unity_window_style.cpp
                  test_unity_window_view.cpp
+                 test_upstart_wrapper.cpp
+                 test_user_authenticator_pam.cpp
                  test_volume_launcher_icon.cpp
                  test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
@@ -319,7 +322,9 @@ if (ENABLE_X_SUPPORT)
                         decorations-lib
                         hud-lib
                         launcher-lib
+                        lockscreen-lib
                         panel-lib
+                        pam
                         previews-lib
                         shortcuts-lib
                         shutdown-lib

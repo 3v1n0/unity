@@ -87,6 +87,23 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
+  {
+    const char* session_id = test_mode_ ? "id0" : g_getenv("XDG_SESSION_ID");
+
+    login_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
+                                                     "/org/freedesktop/login1/session/" + glib::gchar_to_string(session_id),
+                                                     "org.freedesktop.login1.Session",
+                                                     test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
+
+    login_proxy_->Connect("Lock", [this](GVariant*){
+      manager_->lock_requested.emit();
+    });
+
+    login_proxy_->Connect("Unlock", [this](GVariant*){
+      manager_->unlock_requested.emit();
+    });
+  }
+
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {
     if (err)
     {
@@ -376,9 +393,7 @@ GnomeManager::~GnomeManager()
 
 std::string GnomeManager::RealName() const
 {
-  const char* name = g_get_real_name();
-
-  std::string real_name(name ? name : "");
+  std::string real_name = glib::gchar_to_string(g_get_real_name());
 
   if (real_name == "Unknown")
     real_name.clear();
@@ -388,22 +403,25 @@ std::string GnomeManager::RealName() const
 
 std::string GnomeManager::UserName() const
 {
-  const char* name = g_get_user_name();
+  return glib::gchar_to_string(g_get_user_name());
+}
 
-  return name ? name : "";
+std::string GnomeManager::HostName() const
+{
+  return glib::gchar_to_string(g_get_host_name());
 }
 
 void GnomeManager::LockScreen()
 {
   impl_->EnsureCancelPendingAction();
 
-  auto proxy = std::make_shared<glib::DBusProxy>(impl_->test_mode_ ? testing::DBUS_NAME : "org.gnome.ScreenSaver",
-                                                 "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-
-  // By passing the proxy to the lambda we ensure that it will stay alive
-  // until we get the last callback.
-  proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
-  proxy->Call("SimulateUserActivity", nullptr, [proxy] (GVariant*) {});
+  // FIXME (andy) we should ask gnome-session to emit the logind signal
+  if (UserName().find("guest-") == 0)
+  {
+    LOG_INFO(logger) << "Impossible to lock a guest session";
+    return;
+  }
+  lock_requested.emit();
 }
 
 void GnomeManager::Logout()
