@@ -1,3 +1,40 @@
+unity (7.1.2+14.04.20140312-0ubuntu1) trusty; urgency=low
+
+  [ Brandon Schaefer ]
+  * When the monitors change, go through and update all the launcher
+    widths for all launchers. (LP: #1291034)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: show the shortcut hint on first run (LP: #1283619)
+  * UnityScreen: use switcher's LayoutSystem to compute the scaled
+    windows geometries Thanks to this, both the Alt+Tab and Spread will
+    use the same codepath to define the positioning of the scaled
+    windows. (LP: #925454)
+  * Decorations and Menus: a bunch of various fixes... (LP: #1283156)
+
+  [ CI bot ]
+  * fixes the segfault occuring when the scale factor is < 1.0 (LP:
+    #1288166)
+
+  [ William Hua ]
+  * Unity shell plugin conflicts with gnomecompat. (LP: #1284532)
+
+  [ Chris Townsend ]
+  * Remove the test_icon_shows_on_quick_application_reopen Autopilot
+    test and make it into a unit test since Autopilot has difficult time
+    dealing with this test as the test fails occasionally. (LP:
+    #1073990)
+  * Add option to allow users to restore the scroll-over-inactive-
+    Launcher-icon-to-focus-window behavior. (LP: #1288957)
+  * Fix the inconsistent z ordering of windows when using the mouse to
+    scroll the Launcher icon of the active application. (LP: #1286784)
+
+  [ Luke Yelavich ]
+  * Present a textual description of the state of applications to screen
+    reader users when navigating the launcher. (LP: #1266298)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 12 Mar 2014 23:46:36 +0000
+
 unity (7.1.2+14.04.20140311-0ubuntu1) trusty; urgency=low
 
   [ CI bot ]
