@@ -19,6 +19,7 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 set (SHUTDOWN_SOURCES
      SessionButton.cpp
      SessionController.cpp
+     SessionDBusManager.cpp
      SessionView.cpp
      )
 

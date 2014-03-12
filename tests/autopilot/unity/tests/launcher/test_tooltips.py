@@ -38,14 +38,13 @@ class LauncherTooltipTests(LauncherTestCase):
         if size > 5:
             size = 5
 
-        # subsequent tooltips reveal instantly, but hide on exit
+        # subsequent tooltips reveal instantly, but are destroyed on exit, meaning None
         a, b = 0, 1
         while b < size:
             self.mouse.move(self.icons[b].center.x, self.icons[b].center.y)
             self.assertThat(lambda: self.icons[b].get_tooltip(), Eventually(NotEquals(None)))
             self.assertThat(self.icons[b].get_tooltip().active, Eventually(Equals(True)))
-            self.assertThat(lambda: self.icons[a].get_tooltip(), Eventually(NotEquals(None)))
-            self.assertThat(self.icons[a].get_tooltip().active, Eventually(Equals(False)))
+            self.assertThat(self.icons[a].get_tooltip(), Equals(None))
             a, b = a + 1, b + 1
         b -= 1
 

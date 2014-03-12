@@ -47,6 +47,8 @@ public:
   Controller(BaseWindowRaiser::Ptr const& raiser, AbstractModeller::Ptr const& modeller);
   virtual ~Controller();
 
+  nux::Property<bool> first_run;
+
   bool Show();
   void Hide();
 

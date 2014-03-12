@@ -98,6 +98,7 @@ protected:
   Entries entries_;
 
   int monitor_;
+  bool overlay_showing_;
 
 private:
   bool SetOpacity(double& target, double const& new_value);

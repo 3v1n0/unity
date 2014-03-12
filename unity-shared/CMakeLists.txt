@@ -67,6 +67,7 @@ set (UNITY_SHARED_SOURCES
      UnitySettings.cpp
      UnityWindowStyle.cpp
      UnityWindowView.cpp
+     UpstartWrapper.cpp
      UserThumbnailProvider.cpp
      VScrollBarOverlayWindow.cpp
      WindowButtons.cpp

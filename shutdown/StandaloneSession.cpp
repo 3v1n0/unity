@@ -38,6 +38,7 @@ public:
 
   std::string RealName() const { return "Marco Trevisan"; }
   std::string UserName() const { return "marco"; }
+  std::string HostName() const { return "tricky"; }
 
   void LockScreen() { std::cout << "LockScreen" << std::endl; }
   void Logout() { std::cout << "Logout" << std::endl; }

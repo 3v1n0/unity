@@ -1,3 +1,35 @@
+unity (7.1.2+14.04.20140311-0ubuntu1) trusty; urgency=low
+
+  [ CI bot ]
+  * Lockscreen: Multimonitor support, use greeter settings and don't
+    paint popup windows In detail:  - Use proper fonts for text input  -
+    Make text cursor to blink as expected (needs
+    lp:~3v1n0/nux/textentry-toggle-cursor-visibility)  - Use bullet as
+    password char  - Support multi-monitor correctly, switching view on
+    mouse movement (as the greeter does)  - Fixed lockscreen not showing
+    on newly attached monitors  - Never paint windows that might popup
+    under the lockscreen (such as tooltips or notifications)  - Use
+    unity greeter gsettings values for painting the Background (support
+    color, or disable user bg)  - Don't lock guest sessions
+
+  [ Stephen M. Webb ]
+  * Bump Nux build-dep to 4.0.6 for ABI change.
+
+  [ Andrea Azzarone ]
+  * Implement the lockscreen in Unity that looks like unity-greeter.
+    Also allow to fallback to lightdm + greeter (tty switching) in case
+    you need more pam power. (LP: #878836)
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenPanel: added a light version of PanelView for Lockscreen
+    only, using PanelIndicatorsView - Indicators scrubbing using mouse
+    works again - Indicators key navigation is supported (Alt+F10
+    included) - Indicators will be correctly visible in light themes as
+    well - Show hostname (optionally) on the top left side of the panel
+    - LockScreenSettings now bind settings from unity-greeter dconf path
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 11 Mar 2014 18:37:36 +0000
+
 unity (7.1.2+14.04.20140305-0ubuntu1) trusty; urgency=low
 
   [ Chris Townsend ]
