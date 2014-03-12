@@ -131,6 +131,7 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   auto const& deco_style = decoration::Style::Get();
   lim_changed_connection_ = deco_style->integrated_menus.changed.connect([this] (bool lim) {
     integrated_menus_ = lim;
+    new_application_ = nullptr;
     if (!integrated_menus_)
     {
       auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
@@ -978,7 +979,7 @@ void PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
 
 void PanelMenuView::OnApplicationClosed(BamfApplication* app)
 {
-  if (BAMF_IS_APPLICATION(app))
+  if (BAMF_IS_APPLICATION(app) && !integrated_menus_)
   {
     if (std::find(new_apps_.begin(), new_apps_.end(), app) != new_apps_.end())
     {
@@ -1028,6 +1029,9 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
   {
     app_name_changed_signal_.Connect(BAMF_VIEW(new_app), "name-changed",
                                      sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
+
+    if (integrated_menus_)
+      return;
 
     if (std::find(new_apps_.begin(), new_apps_.end(), new_app) != new_apps_.end())
     {
