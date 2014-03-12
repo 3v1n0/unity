@@ -22,7 +22,9 @@
 
 #include <gtest/gtest.h>
 
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/TextInput.h"
+#include "unity-shared/UnitySettings.h"
 #include "test_utils.h"
 
 using namespace nux;
@@ -33,7 +35,6 @@ namespace unity
 class TextInputMock : public TextInput
 {
     public:
-      using TextInput::Init;
       using TextInput::OnInputHintChanged;
       using TextInput::OnMouseButtonDown;
       using TextInput::OnEndKeyFocus;
@@ -50,11 +51,12 @@ class TestTextInput : public ::testing::Test
      TestTextInput()
      {
        entry = new TextInputMock();
-       entry->Init();
        hint = entry->GetHint();
        pango_entry = entry->GetPangoEntry();
      }
 
+     unity::Settings unity_settings_;
+     dash::Style dash_style_;
      nux::ObjectPtr<TextInputMock> entry;
      StaticCairoText* hint;
      IMTextEntry* pango_entry;
