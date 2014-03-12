@@ -230,6 +230,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     indicator3-0.4>=0.4.90
     json-glib-1.0
     libbamf3>=0.5.0
+    gnome-desktop-3.0
     libnotify
     libstartup-notification-1.0
     nux-4.0>=4.0.5
@@ -263,6 +264,7 @@ add_subdirectory(dash)
 add_subdirectory(launcher)
 if (ENABLE_X_SUPPORT)
   add_subdirectory(hud)
+  add_subdirectory(lockscreen)
   add_subdirectory(panel)
   add_subdirectory(decorations)
   add_subdirectory(plugins/unityshell)

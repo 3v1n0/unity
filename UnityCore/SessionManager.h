@@ -38,6 +38,7 @@ public:
 
   virtual std::string RealName() const = 0;
   virtual std::string UserName() const = 0;
+  virtual std::string HostName() const = 0;
 
   virtual void LockScreen() = 0;
   virtual void Logout() = 0;
@@ -56,6 +57,10 @@ public:
   Manager(const Manager&) = delete;
   Manager& operator=(const Manager&) = delete;
 
+  sigc::signal<void> lock_requested;
+  sigc::signal<void> unlock_requested;
+  sigc::signal<void> locked;
+  sigc::signal<void> unlocked;
   sigc::signal<void, bool /* inhibitors */> logout_requested;
   sigc::signal<void, bool /* inhibitors */> reboot_requested;
   sigc::signal<void, bool /* inhibitors */> shutdown_requested;

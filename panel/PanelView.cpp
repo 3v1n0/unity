@@ -19,19 +19,10 @@
  */
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
-#include <Nux/Layout.h>
-#include <Nux/WindowCompositor.h>
 
-#include <NuxGraphics/CairoGraphics.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-
-#include <NuxGraphics/GLThread.h>
-#include <NuxGraphics/RenderingPipe.h>
-
-#include <glib.h>
 
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/TextureCache.h"
@@ -68,7 +59,6 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   , opacity_(1.0f)
   , monitor_(0)
   , stored_dash_width_(0)
-  , launcher_width_(64)
   , bg_effect_helper_(this)
 {
   auto& wm = WindowManager::Default();
@@ -169,12 +159,6 @@ Window PanelView::GetTrayXid() const
     return 0;
 
   return tray_->xid();
-}
-
-void PanelView::SetLauncherWidth(int width)
-{
-  launcher_width_ = width;
-  QueueDraw();
 }
 
 bool PanelView::IsMouseInsideIndicator(nux::Point const& mouse_position) const
@@ -367,7 +351,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
 
-      refine_x_pos += launcher_width_;
+      refine_x_pos += unity::Settings::Instance().LauncherWidth(monitor_);
       GfxContext.QRP_1Tex(refine_x_pos, geo.y,
                           bg_refine_tex_->GetWidth(),
                           bg_refine_tex_->GetHeight(),
@@ -464,7 +448,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::Geometry refine_geo = geo;
 
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
-      refine_x_pos += launcher_width_;
+      refine_x_pos += unity::Settings::Instance().LauncherWidth(monitor_);
 
       refine_geo.x = refine_x_pos;
       refine_geo.width = bg_refine_tex_->GetWidth();
@@ -563,7 +547,11 @@ void PanelView::PreLayoutManagement()
 {
   View::PreLayoutManagement();
 
-  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_->GetBaseWidth();
+  int tray_width = 0;
+  if (tray_)
+    tray_width = tray_->GetBaseWidth();
+
+  int menu_width = GetMaximumWidth() - indicators_->GetBaseWidth() - tray_width;
 
   menu_view_->SetMinimumWidth(menu_width);
   menu_view_->SetMaximumWidth(menu_width);

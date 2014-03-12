@@ -96,6 +96,8 @@ unsigned int GnomeGrabber::Impl::addAction(CompAction const& action, bool addres
   if (screen_)
     screen_->addAction(&actions_.back());
 
+  LOG_DEBUG(logger) << "addAction (\"" << action.keyToString() << "\", " << addressable << ") = " << current_action_id_;
+
   return current_action_id_;
 }
 
@@ -113,6 +115,8 @@ bool GnomeGrabber::Impl::removeAction(unsigned int action_id)
   {
     auto j = actions_.begin() + (i - action_ids_.begin());
     auto k = actions_by_action_id_.find(action_id);
+
+    LOG_DEBUG(logger) << "removeAction (" << action_id << " \"" << j->keyToString() << "\")";
 
     if (screen_)
       screen_->removeAction(&(*j));
@@ -200,6 +204,7 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
   {
     action.setState(CompAction::StateInitKey);
     action.setInitiate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+      LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
       activateAction(action, 0);
       return true;
     });
@@ -208,8 +213,13 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
   {
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
     action.setTerminate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+      auto key = action->keyToString();
+
+      LOG_DEBUG(logger) << "released \"" << key << "\"";
+
       if (state & CompAction::StateTermTapped)
       {
+        LOG_DEBUG(logger) << "tapped \"" << key << "\"";
         activateAction(action, 0);
         return true;
       }
@@ -226,7 +236,12 @@ void GnomeGrabber::Impl::activateAction(CompAction const* action, unsigned int d
   ptrdiff_t i = action - &actions_.front();
 
   if (0 <= i && i < static_cast<ptrdiff_t>(action_ids_.size()))
-    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_ids_[i], device));
+  {
+    auto action_id = action_ids_[i];
+
+    LOG_DEBUG(logger) << "activateAction (" << action_id << " \"" << action->keyToString() << "\")";
+    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_id, device));
+  }
 }
 
 bool GnomeGrabber::Impl::isActionPostponed(CompAction const& action) const
