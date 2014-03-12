@@ -1642,7 +1642,11 @@ positon_menu (GtkMenu  *menu,
   PanelService *self = PANEL_SERVICE (user_data);
   PanelServicePrivate *priv = self->priv;
 
-  gint scale = get_monitor_scale_at (priv->last_x, priv->last_y);
+  GdkScreen *screen = gdk_screen_get_default ();
+  gint monitor = gdk_screen_get_monitor_at_point (screen, priv->last_x, priv->last_y);
+  gtk_menu_set_monitor (menu, monitor);
+
+  gint scale = gdk_screen_get_monitor_scale_factor (screen, monitor);
   *x = priv->last_x / scale;
   *y = priv->last_y / scale;
   *push = TRUE;
