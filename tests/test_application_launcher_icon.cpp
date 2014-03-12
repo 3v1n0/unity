@@ -668,8 +668,14 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollSwitchDirection)
   mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 200);
   EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 1, 2));
 
-  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 400);
-  EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 4, 3, 1, 2, 5));
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 400);
+  EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 2, 1, 3));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 600);
+  EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 1, 2));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 800);
+  EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1));
 }
 
 TEST_F(TestApplicationLauncherIcon, PerformScrollNoWindows)

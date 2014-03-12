@@ -68,7 +68,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   : SimpleLauncherIcon(IconType::APPLICATION)
   , _startup_notification_timestamp(0)
   , _last_scroll_timestamp(0)
-  , _last_scroll_direction(ScrollDirection::DOWN)
   , _progressive_scroll(0)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
@@ -1276,19 +1275,17 @@ const std::set<std::string> ApplicationLauncherIcon::GetSupportedTypes()
 
 void PerformScrollUp(WindowList const& windows, unsigned int progressive_scroll)
 {
-  if (!progressive_scroll)
+  if (progressive_scroll == windows.size() - 1)
   {
-    windows.at(1)->Focus();
-    return;
-  }
-  else if (progressive_scroll == 1)
-  {
+    //RestackAbove to preserve Global Stacking Order
+    WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(1)->window_id());
+    WindowManager::Default().RestackBelow(windows.at(1)->window_id(), windows.at(0)->window_id());
     windows.back()->Focus();
     return;
   }
 
-  WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(windows.size() - progressive_scroll + 1)->window_id());
-  windows.at(windows.size() - progressive_scroll + 1)->Focus();
+  WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(progressive_scroll + 1)->window_id());
+  windows.at(progressive_scroll + 1)->Focus();
 }
 
 void PerformScrollDown(WindowList const& windows, unsigned int progressive_scroll)
@@ -1308,11 +1305,10 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
 {
   if (timestamp - _last_scroll_timestamp < 150)
     return;
-  else if (timestamp - _last_scroll_timestamp > 1500 || direction != _last_scroll_direction)
+  else if (timestamp - _last_scroll_timestamp > 1500)
     _progressive_scroll = 0;
 
   _last_scroll_timestamp = timestamp;
-  _last_scroll_direction = direction;
 
   auto const& windows = GetWindowsOnCurrentDesktopInStackingOrder();
 
@@ -1331,7 +1327,11 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
   if (windows.size() <= 1)
     return;
 
-  ++_progressive_scroll;
+  if (direction == ScrollDirection::DOWN)
+    ++_progressive_scroll;
+  else
+    //--_progressive_scroll; but roll to the top of windows
+    _progressive_scroll += windows.size() - 1;
   _progressive_scroll %= windows.size();
 
   switch(direction)
