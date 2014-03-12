@@ -588,8 +588,8 @@ void SwitcherView::ResizeRenderTargets(nux::Geometry const& layout_geo, float pr
 
   for (LayoutWindow::Ptr const& win : render_targets_)
   {
-    auto final_geo = win->result;
-    win->result = final_geo * progress;
+    win->scale *= progress;
+    win->result = win->result * progress;
     win->result.x += layout_abs_center.x;
     win->result.y += layout_abs_center.y;
   }
