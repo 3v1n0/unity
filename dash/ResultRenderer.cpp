@@ -108,6 +108,8 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
   return pbuf;
 }
 
+double const DEFAULT_SCALE = 1.0;
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultRenderer);
@@ -116,6 +118,7 @@ ResultRenderer::ResultRenderer(NUX_FILE_LINE_DECL)
   : InitiallyUnownedObject(NUX_FILE_LINE_PARAM)
   , width(50)
   , height(50)
+  , scale_(DEFAULT_SCALE)
 {}
 
 void ResultRenderer::Render(nux::GraphicsEngine& GfxContext,
@@ -142,6 +145,11 @@ nux::NBitmapData* ResultRenderer::GetDndImage(Result const& row) const
 {
   nux::GdkGraphics graphics(_icon_hint_get_drag_pixbuf(row.icon_hint, 64));
   return graphics.GetBitmap();
+}
+
+void ResultRenderer::UpdateScale(double scale)
+{
+  scale_ = scale;
 }
 
 }

@@ -69,7 +69,6 @@ public:
   void SetChildView(dash::ResultView* view);
   dash::ResultView* GetChildView();
 
-
   void SetChildLayout(nux::Layout* layout);
 
   void Relayout();
@@ -94,6 +93,8 @@ public:
 
   glib::Variant GetCurrentFocus() const;
   void SetCurrentFocus(glib::Variant const& variant);
+
+  void UpdateScale(double scale);
 
 protected:
   long ComputeContentSize();
@@ -123,6 +124,9 @@ private:
   bool OnIdleRelayout();
   void RefreshLabel();
 
+  void UpdatePlacesGroupSize();
+  void UpdateResultViewPadding();
+
 private:
   std::string _category_id;
   dash::StyleInterface& _style;
@@ -134,13 +138,14 @@ private:
   nux::HLayout* _expand_label_layout;
   nux::HLayout* _expand_layout;
   nux::VLayout*  _child_layout;
+  nux::SpaceLayout* _space_layout;
   dash::ResultView*  _child_view;
   std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
 
-  IconTexture*          _icon;
+  IconTexture*     _icon;
   StaticCairoText* _name;
   StaticCairoText* _expand_label;
-  IconTexture*          _expand_icon;
+  IconTexture*     _expand_icon;
 
   nux::BaseTexture* _background;
   nux::BaseTexture* _background_nofilters;
@@ -156,10 +161,12 @@ private:
 
   bool _coverflow_enabled;
 
-  bool disabled_header_count_;
+  bool _disabled_header_count;
 
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
+
+  double _scale;
 
   friend class TestScopeView;
 };

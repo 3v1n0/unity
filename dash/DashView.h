@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -37,6 +37,7 @@
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/BGHash.h"
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/OverlayRenderer.h"
 #include "unity-shared/SearchBar.h"
@@ -62,7 +63,7 @@ public:
   DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& application_starter);
   ~DashView();
 
-  void AboutToShow();
+  void AboutToShow(int monitor);
   void AboutToHide();
   void Relayout();
   void DisableBlur();
@@ -129,6 +130,8 @@ private:
 
   nux::Geometry GetRenderAbsoluteGeometry() const;
 
+  void UpdateDashViewSize();
+  void OnDPIChanged();
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
@@ -191,6 +194,9 @@ private:
   float animate_preview_value_;
 
   nux::ObjectPtr<OverlayWindowButtons> overlay_window_buttons_;
+
+  EMConverter::Ptr cv_;
+  int monitor_;
 
   friend class TestDashView;
 };

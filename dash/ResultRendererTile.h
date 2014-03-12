@@ -75,8 +75,10 @@ public:
   
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
-  int spacing;
-  int padding;
+  void ReloadResult(Result const& row);
+  void UpdateScale(double scale) override;
+
+  int Padding() const;
 
 protected:
   virtual void LoadText(Result const& row);
@@ -93,6 +95,8 @@ private:
                                           glib::Object<GdkPixbuf> const& pixbuf);
   nux::BaseTexture* DrawHighlight(std::string const& texid,
                                   int width, int height);
+
+  void UpdateWidthHeight();
 };
 
 }

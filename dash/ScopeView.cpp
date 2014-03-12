@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010, 2011 Canonical Ltd
+ * Copyright (C) 2010-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,6 +31,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/RawPixel.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -44,8 +45,10 @@ DECLARE_LOGGER(focus_logger, "unity.dash.scopeview.focus");
 
 namespace
 {
-const int CARD_VIEW_GAP_VERT  = 24; // pixels
-const int CARD_VIEW_GAP_HORIZ = 25; // pixels
+const RawPixel CARD_VIEW_GAP_VERT  = 24_em; // pixels
+const RawPixel CARD_VIEW_GAP_HORIZ = 25_em; // pixels
+const RawPixel FOCUSED_OFFSET      = 30_em;
+const double DEFAULT_SCALE         = 1.0;
 }
 
 // This is so we can access some protected members in scrollview.
@@ -157,6 +160,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 , scope_connected_(scope ? scope->connected : false)
 , search_on_next_connect_(false)
 , current_focus_category_position_(-1)
+, scale_(DEFAULT_SCALE)
 {
   SetupViews(show_filters);
 
@@ -211,8 +215,8 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
             (expand_label && expand_label->HasKeyFocus()))
         {
           focused_pos.x += child->GetGeometry().x;
-          focused_pos.y += child->GetGeometry().y - 30;
-          focused_pos.height += 30;
+          focused_pos.y += child->GetGeometry().y - FOCUSED_OFFSET.CP(scale_);
+          focused_pos.height += FOCUSED_OFFSET.CP(scale_);
           scroll_view_->ScrollToPosition(focused_pos);
           break;
         }
@@ -230,10 +234,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 
 void ScopeView::SetupViews(nux::Area* show_filters)
 {
-  dash::Style& style = dash::Style::Instance();
-
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenScopeAndFilters());
 
   scroll_view_ = new ScopeScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
@@ -261,18 +262,46 @@ void ScopeView::SetupViews(nux::Area* show_filters)
   fscroll_view_->SetLayout(fscroll_layout_);
 
   filter_bar_ = new FilterBar();
-  int width = style.GetFilterBarWidth() +
-              style.GetFilterBarLeftPadding() +
-              style.GetFilterBarRightPadding();
 
-  fscroll_view_->SetMinimumWidth(width + style.GetFilterViewRightPadding());
-  fscroll_view_->SetMaximumWidth(width + style.GetFilterViewRightPadding());
-  filter_bar_->SetMinimumWidth(width);
-  filter_bar_->SetMaximumWidth(width);
   AddChild(filter_bar_);
   fscroll_layout_->AddView(filter_bar_, 0);
 
   SetLayout(layout_);
+
+  UpdateScopeViewSize();
+}
+
+void ScopeView::UpdateScopeViewSize()
+{
+  dash::Style const& style = dash::Style::Instance();
+
+  RawPixel const scope_filter_space = style.GetSpaceBetweenScopeAndFilters();
+  RawPixel const right_padding      = style.GetFilterViewRightPadding();
+  RawPixel const filter_width       = style.GetFilterBarWidth() +
+                                      style.GetFilterBarLeftPadding() +
+                                      style.GetFilterBarRightPadding();
+
+  layout_->SetSpaceBetweenChildren(scope_filter_space.CP(scale_));
+
+  fscroll_view_->SetMinimumWidth(filter_width.CP(scale_) + right_padding.CP(scale_));
+  fscroll_view_->SetMaximumWidth(filter_width.CP(scale_) + right_padding.CP(scale_));
+  filter_bar_->SetMinimumWidth(filter_width.CP(scale_));
+  filter_bar_->SetMaximumWidth(filter_width.CP(scale_));
+}
+
+void ScopeView::UpdateScale(double scale)
+{
+  if (scale_ != scale)
+  {
+    scale_ = scale;
+
+    UpdateScopeViewSize();
+
+    for (auto& group : category_views_)
+      group->UpdateScale(scale_);
+
+    filter_bar_->UpdateScale(scale_);
+  }
 }
 
 void ScopeView::SetupCategories(Categories::Ptr const& categories)
@@ -435,6 +464,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
   group->SetIcon(icon_hint);
   group->SetExpanded(false);
   group->SetVisible(false);
+  group->UpdateScale(scale_);
 
   int view_index = category_order_.size();
   auto find_view_index = std::find(category_order_.begin(), category_order_.end(), index);
@@ -459,8 +489,8 @@ void ScopeView::OnCategoryAdded(Category const& category)
   {
     results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-    static_cast<ResultViewGrid*> (results_view)->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
-    static_cast<ResultViewGrid*> (results_view)->vertical_spacing = CARD_VIEW_GAP_VERT;
+    static_cast<ResultViewGrid*> (results_view)->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale_);
+    static_cast<ResultViewGrid*> (results_view)->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale_);
   }
   else
   {

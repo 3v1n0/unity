@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2011 Canonical Ltd
+ * Copyright (C) 2010-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,19 +30,36 @@
 #include "CairoTexture.h"
 #include "DashStyle.h"
 #include "GraphicsUtils.h"
+#include "RawPixel.h"
+#include "UnitySettings.h"
+
+namespace unity
+{
 
 namespace
 {
+const double DEFAULT_SCALE = 1.0;
 const float DEFAULT_ICON_OPACITY = 1.0f;
 const int DEFAULT_LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
 
-const int SPACE_BETWEEN_SPINNER_AND_TEXT = 5;
-const int SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10;
-const int LEFT_INTERNAL_PADDING = 4;
-const int SEARCH_ENTRY_RIGHT_BORDER = 10;
+const RawPixel SPACE_BETWEEN_SPINNER_AND_TEXT    =  5_em;
+const RawPixel SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10_em;
+const RawPixel LEFT_INTERNAL_PADDING     =  4_em;
+const RawPixel SEARCH_ENTRY_RIGHT_BORDER = 10_em;
+const RawPixel LEFT_PADDING  =  0_em;
+const RawPixel RIGHT_PADDING = 10_em;
 
-const int HIGHLIGHT_HEIGHT = 24;
+const RawPixel HIGHLIGHT_HEIGHT = 24_em;
+
+const RawPixel ARROW_MIN_WIDTH = 2_em;
+const RawPixel ARROW_MAX_WIDTH = 2_em;
+
+const RawPixel TOP_ARROW_MIN_HEIGHT = 12_em;
+const RawPixel TOP_ARROW_MAX_HEIGHT = 12_em;
+
+const RawPixel BOT_ARROW_MIN_HEIGHT = 8_em;
+const RawPixel BOT_ARROW_MAX_HEIGHT = 8_em;
 
 // Fonts
 const std::string HINT_LABEL_FONT_SIZE = "20px";
@@ -50,11 +67,13 @@ const std::string HINT_LABEL_FONT_STYLE = "Italic";
 const std::string HINT_LABEL_DEFAULT_FONT = "Ubuntu " + HINT_LABEL_FONT_STYLE + " " + HINT_LABEL_FONT_SIZE;
 
 const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
-const int PANGO_ENTRY_FONT_SIZE = 22;
+const RawPixel PANGO_ENTRY_FONT_SIZE = 22_em;
 
 const std::string SHOW_FILTERS_LABEL_FONT_SIZE = "13";
 const std::string SHOW_FILTERS_LABEL_FONT_STYLE = "";
 const std::string SHOW_FILTERS_LABEL_DEFAULT_FONT = "Ubuntu " + SHOW_FILTERS_LABEL_FONT_STYLE + " " + SHOW_FILTERS_LABEL_FONT_SIZE;
+
+}
 
 }
 
@@ -118,26 +137,21 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   , show_filters_(nullptr)
   , last_width_(-1)
   , last_height_(-1)
+  , scale_(DEFAULT_SCALE)
 {
   dash::Style& style = dash::Style::Instance();
-  nux::BaseTexture* icon = style.GetSearchMagnifyIcon();
 
   bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, SEARCH_ENTRY_RIGHT_BORDER);
-  layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT);
   SetLayout(layout_);
 
   entry_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  entry_layout_->SetLeftAndRightPadding(0, 10);
   layout_->AddLayout(entry_layout_);
 
   spinner_ = new SearchBarSpinner();
-  spinner_->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
   entry_layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT);
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -148,7 +162,6 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
 
   pango_entry_ = new IMTextEntry();
   pango_entry_->SetFontFamily(PANGO_ENTRY_DEFAULT_FONT_FAMILY.c_str());
-  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
   pango_entry_->text_changed.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   pango_entry_->activated.connect([this]() { activated.emit(); });
   pango_entry_->cursor_moved.connect([this](int i) { QueueDraw(); });
@@ -190,13 +203,22 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
 
     filter_layout_ = new nux::HLayout();
     filter_layout_->SetHorizontalInternalMargin(8);
-    filter_layout_->SetLeftAndRightPadding(style.GetFilterResultsHighlightLeftPadding(), style.GetFilterResultsHighlightRightPadding());
+    filter_layout_->SetLeftAndRightPadding(style.GetFilterResultsHighlightLeftPadding(),
+                                           style.GetFilterResultsHighlightRightPadding());
     filter_layout_->SetContentDistribution(nux::MAJOR_POSITION_END);
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
     arrow_layout_  = new nux::VLayout();
-    arrow_top_space_ = new nux::SpaceLayout(2, 2, 12, 12);
-    arrow_bottom_space_ = new nux::SpaceLayout(2, 2, 8, 8);
+    arrow_top_space_ = new nux::SpaceLayout(ARROW_MIN_WIDTH.CP(scale_),
+                                            ARROW_MAX_WIDTH.CP(scale_),
+                                            TOP_ARROW_MIN_HEIGHT.CP(scale_),
+                                            TOP_ARROW_MAX_HEIGHT.CP(scale_));
+
+    arrow_bottom_space_ = new nux::SpaceLayout(ARROW_MIN_WIDTH.CP(scale_),
+                                               ARROW_MAX_WIDTH.CP(scale_),
+                                               BOT_ARROW_MIN_HEIGHT.CP(scale_),
+                                               BOT_ARROW_MAX_HEIGHT.CP(scale_));
+
     arrow_layout_->AddView(arrow_top_space_, 0, nux::MINOR_POSITION_CENTER);
     arrow_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
     arrow_layout_->AddView(arrow_bottom_space_, 0, nux::MINOR_POSITION_CENTER);
@@ -259,6 +281,64 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
       expand_icon_->SetVisible(can_refine);
     }
   });
+
+  UpdateSearchBarSize();
+}
+
+void SearchBar::UpdateSearchBarSize()
+{
+  dash::Style& style = dash::Style::Instance();
+  nux::BaseTexture* icon = style.GetSearchMagnifyIcon();
+  RawPixel const icon_width  = icon->GetWidth();
+  RawPixel const icon_height = icon->GetHeight();
+
+  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale_),
+                                  SEARCH_ENTRY_RIGHT_BORDER.CP(scale_));
+  layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT.CP(scale_));
+
+  entry_layout_->SetLeftAndRightPadding(LEFT_PADDING.CP(scale_),
+                                        RIGHT_PADDING.CP(scale_));
+
+  spinner_->SetMinMaxSize(icon_width.CP(scale_), icon_height.CP(scale_));
+  entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT.CP(scale_));
+
+  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale_));
+
+  if (show_filter_hint_)
+  {
+    arrow_top_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale_),
+                                     TOP_ARROW_MIN_HEIGHT.CP(scale_));
+    arrow_top_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
+                                     TOP_ARROW_MAX_HEIGHT.CP(scale_));
+
+    arrow_bottom_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale_),
+                                        BOT_ARROW_MIN_HEIGHT.CP(scale_));
+    arrow_bottom_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
+                                        BOT_ARROW_MAX_HEIGHT.CP(scale_));
+  }
+
+  // Based on the Font size, the MinHeight is changing in TextEntry. From there the
+  // layered_layout grows to match the MinHeight, but when the MinHeight is shurnk it
+  // is not changing (since the MaxHeight is int::MAX). Now we grab the MinHeight from 
+  // PangoEntry, and set it for layered_layout.
+  int entry_min = pango_entry_->GetMinimumHeight();
+
+  pango_entry_->SetMaximumHeight(entry_min);
+  layered_layout_->SetMinimumHeight(entry_min);
+  layered_layout_->SetMaximumHeight(entry_min);
+}
+
+void SearchBar::UpdateScale(double scale)
+{
+  if (scale_ != scale)
+  {
+    scale_ = scale;
+
+    hint_->SetScale(scale_);
+    show_filters_->SetScale(scale_);
+
+    UpdateSearchBarSize();
+  }
 }
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -370,8 +450,8 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
     nux::Geometry geo(expander_view_->GetGeometry());
 
-    geo.y -= (HIGHLIGHT_HEIGHT- geo.height) / 2;
-    geo.height = HIGHLIGHT_HEIGHT;
+    geo.y -= (HIGHLIGHT_HEIGHT.CP(scale_) - geo.height) / 2;
+    geo.height = HIGHLIGHT_HEIGHT.CP(scale_);
 
     if (!highlight_layer_)
       highlight_layer_.reset(style.FocusOverlay(geo.width, geo.height));
@@ -463,12 +543,12 @@ void SearchBar::SetSearchFinished()
 
 void SearchBar::UpdateBackground(bool force)
 {
-  int RADIUS = 5;
+  RawPixel const RADIUS = 5;
   nux::Geometry geo(GetGeometry());
   geo.width = layered_layout_->GetAbsoluteX() +
               layered_layout_->GetAbsoluteWidth() -
               GetAbsoluteX() +
-              SEARCH_ENTRY_RIGHT_BORDER;
+              SEARCH_ENTRY_RIGHT_BORDER.CP(scale_);
 
   LOG_TRACE(logger) << "height: "
   << geo.height << " - "
@@ -490,7 +570,7 @@ void SearchBar::UpdateBackground(bool force)
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
                                       0.5, 0.5,
-                                      RADIUS,
+                                      RADIUS.CP(scale_),
                                       last_width_ - 1, last_height_ - 1,
                                       false);
 

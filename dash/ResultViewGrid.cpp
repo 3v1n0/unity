@@ -33,6 +33,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/RawPixel.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 #include "ResultViewGrid.h"
@@ -54,6 +55,9 @@ namespace
   const float FOCUSED_ICON_SATURATION_REF = 0.5f;
 
   const int DOUBLE_CLICK_SPEED = 500; //500 ms (double-click speed hardcoded to 400 ms in nux)
+
+  const RawPixel WIDTH_PADDING   = 25_em;
+  const RawPixel SCROLLBAR_WIDTH =  3_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
@@ -347,7 +351,7 @@ void ResultViewGrid::SizeReallocate()
 
   int width = (items_per_row * renderer_->width) + (padding*2) + ((items_per_row - 1) * horizontal_spacing);
   int geo_width = GetBaseWidth();
-  int extra_width = geo_width - (width + 25-3);
+  int extra_width = geo_width - (width + WIDTH_PADDING.CP(scale_) - SCROLLBAR_WIDTH.CP(scale_));
 
   if (items_per_row != 1)
     extra_horizontal_spacing_ = extra_width / (items_per_row - 1);
@@ -1004,6 +1008,13 @@ ResultViewGrid::SetSelectedIndex(int index)
   }
 
   selected_index_ = index;
+}
+
+void
+ResultViewGrid::UpdateScale(double scale)
+{
+  ResultView::UpdateScale(scale);
+  UpdateRenderTextures();
 }
 
 void

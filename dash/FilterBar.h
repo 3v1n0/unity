@@ -46,6 +46,8 @@ public:
 
   void SetFilters(Filters::Ptr const& filters);
 
+  void UpdateScale(double scale);
+
   void AddFilter(Filter::Ptr const& filter);
   void RemoveFilter(Filter::Ptr const& filter);
   void ClearFilters();
@@ -65,6 +67,8 @@ private:
   FilterFactory factory_;
   Filters::Ptr filters_;
   std::map<Filter::Ptr, FilterExpanderLabel*> filter_map_;
+
+  double scale_;
 };
 
 } // namespace dash

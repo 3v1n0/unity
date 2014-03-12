@@ -33,6 +33,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/RawPixel.h"
 
 #include "ResultView.h"
 #include "ResultViewGrid.h"
@@ -54,12 +55,16 @@ const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 const float kExpandDefaultIconOpacity = 0.5f;
 
 // Category  highlight
-const int kHighlightHeight = 24;
-const int kHighlightRightPadding = 10 - 3; // -3 because the scrollbar is not a real overlay scrollbar!
-const int kHighlightLeftPadding = 10;
+const RawPixel kHighlightRightPadding =  7_em; // FIXME 10 - 3 because the scrollbar is not a real overlay scrollbar!
+const RawPixel kHighlightHeight       = 24_em;
+const RawPixel kHighlightLeftPadding  = 10_em;
+const RawPixel SPACE_BETWEEN_CHILDREN = 10_em;
+const RawPixel TEXT_INTERNAL_MARGIN   = 15_em;
+const RawPixel EXPAND_INTERNAL_MARGIN =  8_em;
+const double DEFAULT_SCALE            = 1.0;
 
 // Font
-const char* const NAME_LABEL_FONT = "Ubuntu 13"; // 17px = 13
+const char* const NAME_LABEL_FONT     = "Ubuntu 13"; // 17px = 13
 const char* const EXPANDER_LABEL_FONT = "Ubuntu 10"; // 13px = 10
 
 }
@@ -121,7 +126,8 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
     _coverflow_enabled(false),
-    disabled_header_count_(false)
+    _disabled_header_count(false),
+    _scale(DEFAULT_SCALE)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
@@ -145,23 +151,22 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
 
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
-  int top_space = style.GetPlacesGroupTopSpace();
-  _group_layout->AddLayout(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0);
+  // Spacelayout size is updated in UpdatePlacesGroupSize
+  _space_layout = new nux::SpaceLayout(0, 0, 0, 0);
+  _group_layout->AddLayout(_space_layout, 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
   _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _header_layout->SetLeftAndRightPadding(_style.GetCategoryHeaderLeftPadding(), 0);
-  _header_layout->SetSpaceBetweenChildren(10);
   _header_view->SetLayout(_header_layout);
 
-  _icon = new IconTexture("", _style.GetCategoryIconSize());
-  _icon->SetMinMaxSize(_style.GetCategoryIconSize(), _style.GetCategoryIconSize());
+  RawPixel const icon_size = _style.GetCategoryIconSize();
+  _icon = new IconTexture("", icon_size.CP(_scale));
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  _text_layout->SetHorizontalInternalMargin(15);
   _header_layout->AddLayout(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   _name = new StaticCairoText("", NUX_TRACKER_LOCATION);
@@ -171,7 +176,6 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   _expand_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  _expand_layout->SetHorizontalInternalMargin(8);
   _text_layout->AddLayout(_expand_layout, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_MATCHCONTENT);
 
   _expand_label_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -211,6 +215,53 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     else
       nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
   });
+
+  UpdatePlacesGroupSize();
+}
+
+void
+PlacesGroup::UpdatePlacesGroupSize()
+{
+   RawPixel const icon_size = _style.GetCategoryIconSize();
+   RawPixel const group_top = _style.GetPlacesGroupTopSpace();
+
+   int top_space = group_top.CP(_scale);
+   _space_layout->SetMinimumSize(top_space, top_space);
+   _space_layout->SetMaximumSize(top_space, top_space);
+
+  _header_layout->SetSpaceBetweenChildren(SPACE_BETWEEN_CHILDREN.CP(_scale));
+
+  _icon->SetMinMaxSize(icon_size.CP(_scale), icon_size.CP(_scale));
+
+  _text_layout->SetHorizontalInternalMargin(TEXT_INTERNAL_MARGIN.CP(_scale));
+  _expand_layout->SetHorizontalInternalMargin(EXPAND_INTERNAL_MARGIN.CP(_scale));
+}
+
+void
+PlacesGroup::UpdateScale(double scale)
+{
+  if (_scale != scale)
+  {
+    RawPixel const icon_size = _style.GetCategoryIconSize();
+
+    _scale = scale;
+    _name->SetScale(_scale);
+    _expand_label->SetScale(_scale);
+
+    _icon->SetSize(icon_size.CP(_scale));
+    _icon->ReLoadIcon();
+
+    // FIXME _expand_icon, needs some work here. Not as easy as _icon
+
+    if (_child_view)
+    {
+      _child_view->UpdateScale(scale);
+    }
+
+    ComputeContentSize();
+    UpdatePlacesGroupSize();
+    UpdateResultViewPadding();
+  }
 }
 
 void
@@ -232,6 +283,8 @@ PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDi
 }
 
 void
+
+// FIXME _expand_icon, needs some work here. Not as easy as _icon
 PlacesGroup::SetName(std::string const& name)
 {
   if (_cached_name != name)
@@ -243,7 +296,7 @@ PlacesGroup::SetName(std::string const& name)
 
 void PlacesGroup::SetHeaderCountVisible(bool disable)
 {
-  disabled_header_count_ = !disable;
+  _disabled_header_count = !disable;
   Relayout();
 }
 
@@ -266,6 +319,19 @@ PlacesGroup::SetIcon(std::string const& path_to_emblem)
 }
 
 void
+PlacesGroup::UpdateResultViewPadding()
+{
+  if (_child_layout)
+  {
+    RawPixel const result_top_padding  = _style.GetPlacesGroupResultTopPadding();
+    RawPixel const result_left_padding = _style.GetPlacesGroupResultLeftPadding();
+
+    _child_layout->SetTopAndBottomPadding(result_top_padding.CP(_scale), 0);
+    _child_layout->SetLeftAndRightPadding(result_left_padding.CP(_scale), 0);
+  }
+}
+
+void
 PlacesGroup::SetChildView(dash::ResultView* view)
 {
   if (_child_view)
@@ -279,12 +345,12 @@ PlacesGroup::SetChildView(dash::ResultView* view)
   AddChild(view);
 
   _child_view = view;
+  _child_view->UpdateScale(_scale);
 
   _child_layout = new nux::VLayout();
   _child_layout->AddView(_child_view, 0);
 
-  _child_layout->SetTopAndBottomPadding(_style.GetPlacesGroupResultTopPadding(),0);
-  _child_layout->SetLeftAndRightPadding(_style.GetPlacesGroupResultLeftPadding(), 0);
+  UpdateResultViewPadding();
   _group_layout->AddLayout(_child_layout, 1);
 
   view->results_per_row.changed.connect([this] (int results_per_row)
@@ -311,7 +377,7 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
-  if (disabled_header_count_)
+  if (_disabled_header_count)
   {
     _expand_icon->SetVisible(false);
     _expand_label->SetVisible(false);
@@ -401,7 +467,10 @@ long PlacesGroup::ComputeContentSize()
   // only the width matters
   if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
-    _focus_layer.reset(_style.FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight));
+    _focus_layer.reset(_style.FocusOverlay(geo.width - 
+                                           kHighlightLeftPadding.CP(_scale) -
+                                           kHighlightRightPadding.CP(_scale),
+                                           kHighlightHeight.CP(_scale)));
     _cached_geometry = geo;
   }
   return ret;
@@ -419,8 +488,11 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   if (ShouldBeHighlighted() && _focus_layer)
   {
     nux::Geometry geo(_header_layout->GetGeometry());
-    geo.width = base.width - kHighlightRightPadding - kHighlightLeftPadding;
-    geo.x += kHighlightLeftPadding;
+    geo.width = base.width -
+                kHighlightRightPadding.CP(_scale) -
+                kHighlightLeftPadding.CP(_scale);
+
+    geo.x += kHighlightLeftPadding.CP(_scale);
 
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);

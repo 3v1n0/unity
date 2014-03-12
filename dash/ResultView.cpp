@@ -33,6 +33,11 @@ namespace unity
 namespace dash
 {
 
+namespace
+{
+  double const DEFAULT_SCALE = 1.0;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(ResultView);
 
 ResultView::ResultView(NUX_FILE_LINE_DECL)
@@ -41,6 +46,7 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   , desaturation_progress(0.0)
   , enable_texture_render(false)
   , renderer_(NULL)
+  , scale_(DEFAULT_SCALE)
   , cached_result_(nullptr, nullptr, nullptr)
 {
   expanded.changed.connect([this](bool value)
@@ -71,6 +77,26 @@ ResultView::~ResultView()
   }
 
   renderer_->UnReference();
+}
+
+void ResultView::UpdateScale(double scale)
+{
+  if (scale_ != scale)
+  {
+    scale_ = scale;
+
+    if (renderer_)
+    {
+      renderer_->UpdateScale(scale_);
+
+      for (auto it = result_model_->begin(); it != result_model_->end(); ++it)
+      {
+        renderer_->ReloadResult(*it);
+      }
+
+      NeedRedraw();
+    }
+  }
 }
 
 void ResultView::SetModelRenderer(ResultRenderer* renderer)

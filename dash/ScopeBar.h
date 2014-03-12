@@ -56,11 +56,14 @@ class ScopeBar : public nux::View, public unity::debug::Introspectable
 
 public:
   ScopeBar();
+  ~ScopeBar();
 
   void AddScope(Scope::Ptr const& scope);
   void Activate(std::string id);
   void ActivateNext();
   void ActivatePrevious();
+
+  void UpdateScale(double scale);
 
   std::string GetActiveScopeId() const;
 
@@ -85,6 +88,8 @@ private:
 
   nux::HLayout* layout_;
   LayerPtr bg_layer_;
+
+  double scale_;
 
   friend class TestScopeBar;
 };

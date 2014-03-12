@@ -88,6 +88,8 @@ public:
   void AddProperties(debug::IntrospectionData&);
   IntrospectableList GetIntrospectableChildren();
 
+  virtual void UpdateScale(double scale);
+
   virtual int GetSelectedIndex() const;
   virtual void SetSelectedIndex(int index);
 
@@ -120,6 +122,8 @@ protected:
   std::map<std::string, debug::ResultWrapper*> introspectable_children_;
 
   std::vector<ResultViewTexture::Ptr> result_textures_;
+
+  double scale_;
 
 private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);

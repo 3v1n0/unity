@@ -1747,8 +1747,11 @@ void UnityScreen::handleEvent(XEvent* event)
 
       if (dash_controller_->IsVisible())
       {
+        int panel_height = panel_style_.PanelHeight(dash_controller_->Monitor());
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
-        nux::Geometry const& dash_geo = dash_controller_->GetInputWindowGeometry();
+        nux::Geometry const& dash = dash_controller_->GetInputWindowGeometry();
+        nux::Geometry const& dash_geo = nux::Geometry(dash.x, dash.y, dash.width,
+                                                      dash.height + panel_height);
 
         Window dash_xid = dash_controller_->window()->GetInputWindowId();
         Window top_xid = wm.GetTopWindowAbove(dash_xid);

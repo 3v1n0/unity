@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010, 2011 Canonical Ltd
+ * Copyright (C) 2010-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -86,6 +86,8 @@ public:
   std::vector<ResultViewTexture::Ptr> GetResultTextureContainers();
   void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
 
+  void UpdateScale(double scale);
+
 private:
   void SetupViews(nux::Area* show_filters);
   void SetupCategories(Categories::Ptr const& categories);
@@ -127,6 +129,8 @@ private:
   virtual PlacesGroup::Ptr CreatePlacesGroup(Category const& category);
 
   void BuildPreview(std::string const& uri, Preview::Ptr model);
+
+  void UpdateScopeViewSize();
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -185,6 +189,8 @@ private:
 
   int current_focus_category_position_;
   glib::Variant current_focus_variant_;
+
+  double scale_;
 
   friend class TestScopeView;
 };

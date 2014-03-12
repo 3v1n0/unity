@@ -31,12 +31,7 @@
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/TextureCache.h"
-
-namespace
-{
-bool neko;
-#define DEFAULT_GICON ". GThemedIcon text-x-preview"
-}
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -44,10 +39,15 @@ DECLARE_LOGGER(logger, "unity.dash.results");
 
 namespace
 {
-const int FONT_SIZE = 10;
-const char REPLACEMENT_CHAR = '?';
 
-const float CORNER_HIGHTLIGHT_RADIUS = 2.0f;
+std::string const DEFAULT_GICON = ". GThemedIcon text-x-preview";
+RawPixel const PADDING    =  6_em;
+RawPixel const SPACING    = 10_em;
+RawPixel const FONT_SIZE  = 10_em;
+int const FONT_MULTIPLIER = 1024;
+
+char const REPLACEMENT_CHAR = '?';
+float const CORNER_HIGHTLIGHT_RADIUS = 2.0f;
 
 void RenderTexture(nux::GraphicsEngine& GfxContext, 
                    int x,
@@ -92,17 +92,24 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererTile);
 
 ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   : ResultRenderer(NUX_FILE_LINE_PARAM)
-  , spacing(10)
-  , padding(6)
 {
-  dash::Style& style = dash::Style::Instance();
-  width = style.GetTileWidth();
-  height = style.GetTileHeight();
+  UpdateWidthHeight();
+}
 
-  gsize tmp;
-  gchar* tmp1 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp);
-  neko = (g_getenv(tmp1));
-  g_free (tmp1);
+void ResultRendererTile::UpdateWidthHeight()
+{
+  dash::Style const& style = dash::Style::Instance();
+  RawPixel tile_width  = style.GetTileWidth();
+  RawPixel tile_height = style.GetTileHeight();
+
+  width  = tile_width.CP(scale_);
+  height = tile_height.CP(scale_);
+}
+
+void ResultRendererTile::UpdateScale(double scale)
+{
+  ResultRenderer::UpdateScale(scale);
+  UpdateWidthHeight();
 }
 
 void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
@@ -117,8 +124,14 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   if (container == nullptr)
     return;
 
-  dash::Style& style = dash::Style::Instance();
-  int tile_icon_size = style.GetTileImageSize();
+  dash::Style const& style = dash::Style::Instance();
+  RawPixel const tile_size   = style.GetTileImageSize();
+  RawPixel const tile_width  = style.GetTileWidth();
+  RawPixel const tile_height = style.GetTileHeight();
+  RawPixel const tile_highlight_width  = style.GetTileIconHightlightWidth();
+  RawPixel const tile_highlight_height = style.GetTileIconHightlightHeight();
+
+  int tile_icon_size = tile_size.CP(scale_);
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
@@ -135,13 +148,13 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   }
 
   int icon_left_hand_side = geometry.x + (geometry.width - icon_width) / 2;
-  int icon_top_side = geometry.y + padding + (tile_icon_size - icon_height) / 2;
+  int icon_top_side = geometry.y + PADDING.CP(scale_) + (tile_icon_size - icon_height) / 2;
 
   // render highlight if its needed
   if (container->prelight && state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
-    int highlight_x =  (geometry.x + geometry.width/2) - style.GetTileIconHightlightWidth()/2;
-    int highlight_y =  (geometry.y + padding + tile_icon_size / 2) - style.GetTileIconHightlightHeight()/2;
+    int highlight_x =  (geometry.x + geometry.width/2) - tile_highlight_width.CP(scale_)/2;
+    int highlight_y =  (geometry.y + PADDING.CP(scale_) + tile_icon_size / 2) - tile_highlight_height.CP(scale_)/2;
 
     RenderTexture(GfxContext,
                   highlight_x,
@@ -171,10 +184,10 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   if (container->text)
   {
     RenderTexture(GfxContext,
-                  geometry.x + padding,
-                  geometry.y + tile_icon_size + spacing,
-                  style.GetTileWidth() - (padding * 2),
-                  style.GetTileHeight() - tile_icon_size - spacing,
+                  geometry.x + PADDING.CP(scale_),
+                  geometry.y + tile_icon_size + SPACING.CP(scale_),
+                  tile_width.CP(scale_) - (PADDING.CP(scale_) * 2),
+                  tile_height.CP(scale_) - tile_icon_size - SPACING.CP(scale_),
                   container->text->GetDeviceTexture(),
                   texxform,
                   color,
@@ -209,6 +222,11 @@ nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, in
   return texture_from_cairo_graphics(cairo_graphics);
 }
 
+int ResultRendererTile::Padding() const
+{
+  return PADDING.CP(scale_);
+}
+
 void ResultRendererTile::Preload(Result const& row)
 {
   if (row.renderer<TextureContainer*>() == nullptr)
@@ -218,6 +236,17 @@ void ResultRendererTile::Preload(Result const& row)
     LoadIcon(row);
     LoadText(row);
   }
+}
+
+void ResultRendererTile::ReloadResult(Result const& row)
+{
+  Unload(row);
+
+  if (row.renderer<TextureContainer*>() == nullptr)
+    const_cast<Result&>(row).set_renderer(new TextureContainer());
+
+  LoadIcon(row);
+  LoadText(row);
 }
 
 void ResultRendererTile::Unload(Result const& row)
@@ -247,23 +276,15 @@ nux::NBitmapData* ResultRendererTile::GetDndImage(Result const& row) const
 
 void ResultRendererTile::LoadIcon(Result const& row)
 {
-  Style& style = Style::Instance();
+  Style const& style = Style::Instance();
+  RawPixel const tile_size   = style.GetTileImageSize();
+  RawPixel const tile_gsize  = style.GetTileGIconSize();
+  RawPixel const tile_highlight_width  = style.GetTileIconHightlightWidth();
+  RawPixel const tile_highlight_height = style.GetTileIconHightlightHeight();
+
   std::string icon_hint(row.icon_hint);
   std::string icon_name;
-  if (G_UNLIKELY(neko))
-  {
-    int tmp1 = style.GetTileGIconSize() + (rand() % 16) - 8;
-    gsize tmp3;
-    gchar* tmp2 = (gchar*)g_base64_decode("aHR0cDovL3BsYWNla2l0dGVuLmNvbS8laS8laS8=", &tmp3);
-    gchar* tmp4 = g_strdup_printf(tmp2, tmp1, tmp1);
-    icon_name = tmp4;
-    g_free(tmp4);
-    g_free(tmp2);
-  }
-  else
-  {
-    icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
-  }
+  icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
 
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), NULL));
   TextureContainer* container = row.renderer<TextureContainer*>();
@@ -272,7 +293,10 @@ void ResultRendererTile::LoadIcon(Result const& row)
   {
     TextureCache& cache = TextureCache::GetDefault();
     
-    BaseTexturePtr texture_prelight(cache.FindTexture("resultview_prelight", style.GetTileIconHightlightWidth(), style.GetTileIconHightlightHeight(),  sigc::mem_fun(this, &ResultRendererTile::DrawHighlight)));
+    BaseTexturePtr texture_prelight(cache.FindTexture("resultview_prelight",
+                                                      tile_highlight_width.CP(scale_),
+                                                      tile_highlight_height.CP(scale_),
+                                                      sigc::mem_fun(this, &ResultRendererTile::DrawHighlight)));
     container->prelight = texture_prelight;
   }
 
@@ -281,11 +305,14 @@ void ResultRendererTile::LoadIcon(Result const& row)
   if (icon.IsType(G_TYPE_ICON))
   {
     bool use_large_icon = icon.IsType(G_TYPE_FILE_ICON) || !icon.IsType(G_TYPE_THEMED_ICON);
-    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name, style.GetTileImageSize(), use_large_icon ? style.GetTileImageSize() : style.GetTileGIconSize(), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name, 
+                                                                          tile_size.CP(scale_),
+                                                                          use_large_icon ?
+                                                                          tile_size.CP(scale_) : tile_gsize.CP(scale_), slot);
   }
   else
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name, -1, style.GetTileGIconSize(), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name, -1, tile_gsize.CP(scale_), slot);
   }
 }
 
@@ -312,14 +339,15 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
   }
   else
   {
+    Style const& style = Style::Instance();
+    RawPixel const tile_size = style.GetTileImageSize();
+
     // slow path for non square icons that must be resized to fit in the square
     // texture
-
-    Style& style = Style::Instance();
     float aspect = static_cast<float>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
     if (aspect < 1.0f)
     {
-      pixbuf_width = style.GetTileImageSize();
+      pixbuf_width = tile_size.CP(scale_);
       pixbuf_height = pixbuf_width * aspect;
 
       if (pixbuf_height > height)
@@ -446,10 +474,14 @@ std::string ReplaceBlacklistedChars(std::string const& str)
 
 void ResultRendererTile::LoadText(Result const& row)
 {
-  Style& style = Style::Instance();
+  Style const& style = Style::Instance();
+  RawPixel const tile_size   = style.GetTileImageSize();
+  RawPixel const tile_width  = style.GetTileWidth();
+  RawPixel const tile_height = style.GetTileHeight();
+
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                    style.GetTileWidth() - (padding * 2),
-                                    style.GetTileHeight() - style.GetTileImageSize() - spacing);
+                                    tile_width.CP(scale_) - (PADDING.CP(scale_) * 2),
+                                    tile_height.CP(scale_) - tile_size.CP(scale_) - SPACING.CP(scale_));
 
   cairo_t* cr = _cairoGraphics.GetContext();
 
@@ -466,14 +498,14 @@ void ResultRendererTile::LoadText(Result const& row)
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font.Value());
-  pango_font_description_set_size (desc, FONT_SIZE * PANGO_SCALE);
+  pango_font_description_set_size (desc, FONT_SIZE.CP(scale_) * FONT_MULTIPLIER);
 
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
-  pango_layout_set_width(layout, (style.GetTileWidth() - (padding * 2))* PANGO_SCALE);
+  pango_layout_set_width(layout, (tile_width.CP(scale_) - (PADDING.CP(scale_) * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
   // FIXME bug #1239381

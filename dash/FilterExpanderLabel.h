@@ -59,6 +59,8 @@ public:
   void SetLabel(std::string const& label);
   void SetContents(nux::Layout* layout);
 
+  void UpdateScale(double scale);
+
   virtual void SetFilter(Filter::Ptr const& filter) = 0;
   virtual std::string GetFilterType() = 0;
 
@@ -97,6 +99,8 @@ private:
 
   nux::ObjectPtr<nux::Layout> contents_;
   std::unique_ptr<nux::AbstractPaintLayer> focus_layer_;
+
+  double scale_;
 };
 
 } // namespace dash

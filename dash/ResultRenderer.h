@@ -65,13 +65,20 @@ public:
   // unload any previous grabbed images
   virtual void Unload(Result const& row);
 
+  virtual void ReloadResult(Result const& row) {}
+
   // get a image to drag
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
+
+  virtual void UpdateScale(double scale);
 
   nux::Property<int> width;
   nux::Property<int> height;
 
   sigc::signal<void> NeedsRedraw;
+
+protected:
+  double scale_;
 };
 
 }

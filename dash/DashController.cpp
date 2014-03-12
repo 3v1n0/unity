@@ -195,6 +195,11 @@ void Controller::EnsureDash()
   }
 }
 
+int Controller::Monitor() const
+{
+  return monitor_;
+}
+
 nux::BaseWindow* Controller::window() const
 {
   return window_.GetPointer();
@@ -299,7 +304,7 @@ void Controller::ShowDash()
   monitor_ = GetIdealMonitor();
   int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
   view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
-  view_->AboutToShow();
+  view_->AboutToShow(monitor_);
   FocusWindow();
 
   need_show_ = false;

@@ -68,6 +68,8 @@ public:
   bool IsCommandLensOpen() const;
   nux::Geometry GetInputWindowGeometry();
   nux::ObjectPtr<DashView> const& Dash() const;
+  
+  int Monitor() const;
 
 protected:
   std::string GetName() const;

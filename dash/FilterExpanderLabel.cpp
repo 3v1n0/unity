@@ -22,6 +22,7 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/RawPixel.h"
 #include "FilterExpanderLabel.h"
 
 namespace
@@ -76,6 +77,11 @@ namespace unity
 namespace dash
 {
 
+namespace
+{
+  double const DEFAULT_SCALE = 1.0;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
 FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_DECL)
@@ -89,6 +95,7 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , cairo_label_(nullptr)
   , raw_label_(label)
   , label_("label")
+  , scale_(DEFAULT_SCALE)
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
@@ -101,13 +108,22 @@ void FilterExpanderLabel::SetLabel(std::string const& label)
   cairo_label_->SetText(label.c_str());
 }
 
+void FilterExpanderLabel::UpdateScale(double scale)
+{
+  if (scale_ != scale)
+  {
+    scale_ = scale;
+    cairo_label_->SetScale(scale);
+  }
+}
+
 void FilterExpanderLabel::SetRightHandView(nux::View* view)
 {
   dash::Style& style = dash::Style::Instance();
   if (right_hand_contents_)
   {
     top_bar_layout_->RemoveChildObject(right_hand_contents_);
-    right_hand_contents_ = nullptr;    
+    right_hand_contents_ = nullptr;
   }
   if (view)
   {

@@ -17,6 +17,7 @@
  */
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/RawPixel.h"
 #include "ScopeBarIcon.h"
 
 #include "config.h"
@@ -28,25 +29,25 @@ namespace dash
 namespace
 {
 
-const int FOCUS_OVERLAY_HEIGHT = 44;
-const int FOCUS_OVERLAY_WIDTH = 60;
+RawPixel const FOCUS_OVERLAY_HEIGHT = 44_em;
+RawPixel const FOCUS_OVERLAY_WIDTH  = 60_em;
+RawPixel const TEXTURE_SIZE         = 24_em;
+double const DEFAULT_SCALE          = 1.0;
 
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ScopeBarIcon);
 
 ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
-  : IconTexture(icon_hint, 24)
+  : IconTexture(icon_hint, TEXTURE_SIZE)
   , id(id_)
   , active(false)
   , inactive_opacity_(0.4f)
+  , scale_(DEFAULT_SCALE)
 {
-  SetMinimumWidth(FOCUS_OVERLAY_WIDTH);
-  SetMaximumWidth(FOCUS_OVERLAY_WIDTH);
-  SetMinimumHeight(FOCUS_OVERLAY_HEIGHT);
-  SetMaximumHeight(FOCUS_OVERLAY_HEIGHT);
+  SetMinMaxSize(FOCUS_OVERLAY_WIDTH.CP(scale_), FOCUS_OVERLAY_HEIGHT.CP(scale_));
 
-  focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
+  focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH.CP(scale_), FOCUS_OVERLAY_HEIGHT.CP(scale_)));
 
   SetOpacity(inactive_opacity_);
 
@@ -60,6 +61,22 @@ ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
 
 ScopeBarIcon::~ScopeBarIcon()
 {}
+
+void ScopeBarIcon::UpdateScale(double scale)
+{
+  if (scale_ != scale)
+  {
+    scale_ = scale;
+    int overlay_width  = FOCUS_OVERLAY_WIDTH.CP(scale_);
+    int overlay_height = FOCUS_OVERLAY_HEIGHT.CP(scale_);
+
+    SetMinMaxSize(overlay_width, overlay_height);
+    focus_layer_.reset(Style::Instance().FocusOverlay(overlay_width, overlay_height));
+
+    SetSize(TEXTURE_SIZE.CP(scale_));
+    ReLoadIcon();
+  }
+}
 
 void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
