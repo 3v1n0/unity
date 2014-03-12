@@ -3703,6 +3703,8 @@ void UnityScreen::initLauncher()
     on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
   }
 
+  launcher_controller_->options()->scroll_inactive_icons = optionGetScrollInactiveIcons();
+
   ScheduleRelayout(0);
 }
 
