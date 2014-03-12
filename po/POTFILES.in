@@ -31,6 +31,7 @@ plugins/unity-mt-grab-handles/unitymtgrabhandles.xml.in
 plugins/unitydialog/unitydialog.xml.in
 plugins/unityshell/src/unity-dash-view-accessible.cpp
 plugins/unityshell/src/unity-launcher-accessible.cpp
+plugins/unityshell/src/unity-launcher-icon-accessible.cpp
 plugins/unityshell/src/unity-quicklist-menu-accessible.cpp
 plugins/unityshell/src/unity-search-bar-accessible.cpp
 plugins/unityshell/src/unity-switcher-accessible.cpp
