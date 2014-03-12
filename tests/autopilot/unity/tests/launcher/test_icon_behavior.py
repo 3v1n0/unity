@@ -241,21 +241,6 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
         self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(False)))
 
-    def test_icon_shows_on_quick_application_reopen(self):
-        """Icons must stay on launcher when an application is quickly closed/reopened."""
-        calc = self.process_manager.start_app("Calculator")
-        desktop_file = calc.desktop_file
-        calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
-        self.assertThat(calc_icon.visible, Eventually(Equals(True)))
-
-        self.process_manager.close_all_app("Calculator")
-        calc = self.process_manager.start_app("Calculator")
-        sleep(2)
-
-        calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
-        self.assertThat(calc_icon, NotEquals(None))
-        self.assertThat(calc_icon.visible, Eventually(Equals(True)))
-
     def test_right_click_on_icon_ends_expo(self):
         """Right click on a launcher icon in expo mode must end the expo
         and show the quicklist.
