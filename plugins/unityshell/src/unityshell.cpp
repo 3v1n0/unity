@@ -3801,6 +3801,11 @@ void UnityScreen::initLauncher()
     on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
   }
 
+  UScreen::GetDefault()->changed.connect([this, on_launcher_size_changed] (int, std::vector<nux::Geometry> const&) {
+    for (auto const& launcher : launcher_controller_->launchers())
+      on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
+  });
+
   launcher_controller_->options()->scroll_inactive_icons = optionGetScrollInactiveIcons();
 
   ScheduleRelayout(0);
