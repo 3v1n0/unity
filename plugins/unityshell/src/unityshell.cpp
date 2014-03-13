@@ -3622,7 +3622,11 @@ void UnityScreen::OnDashRealized ()
 
 void UnityScreen::LockscreenRequested()
 {
-  if (launcher_controller_->IsOverlayOpen())
+  if (switcher_controller_->Visible())
+  {
+    switcher_controller_->Hide(false);
+  }
+  else if (launcher_controller_->IsOverlayOpen())
   {
     dash_controller_->HideDash();
     hud_controller_->HideHud();
