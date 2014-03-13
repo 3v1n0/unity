@@ -151,6 +151,8 @@ public:
   bool IsInKeyNavMode() const;
   bool IsOverlayOpen() const;
 
+  void ClearTooltip();
+
   void RenderIconToTexture(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&, AbstractLauncherIcon::Ptr const&);
 
 #ifdef NUX_GESTURES_SUPPORT

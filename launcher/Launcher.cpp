@@ -1074,6 +1074,12 @@ bool Launcher::IsOverlayOpen() const
   return dash_is_open_ || hud_is_open_ || wm.IsScaleActive() || wm.IsExpoActive();
 }
 
+void Launcher::ClearTooltip()
+{
+  if (icon_under_mouse_)
+    icon_under_mouse_->HideTooltip();
+}
+
 void Launcher::SetHidden(bool hide_launcher)
 {
   if (hide_launcher == hidden_)
