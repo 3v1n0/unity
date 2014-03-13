@@ -2199,6 +2199,8 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
     }
   }
 
+  launcher_controller_->ClearTooltips();
+
   /* Create a new keybinding for scroll buttons and current modifiers */
   CompAction scroll_up;
   CompAction scroll_down;
