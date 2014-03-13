@@ -2530,6 +2530,7 @@ bool UnityScreen::LockScreenInitiate(CompAction* action,
                                      CompOption::Vector& options)
 {
   sources_.AddIdle([this] {
+    /*
     PluginAdapter& adapter = PluginAdapter::Default();
 
     if (adapter.IsScaleActive())
@@ -2541,6 +2542,7 @@ bool UnityScreen::LockScreenInitiate(CompAction* action,
       dash_controller_->HideDash();
       hud_controller_->HideHud();
     }
+    */
 
     session_controller_->LockScreen();
     return false;
@@ -3630,6 +3632,23 @@ void UnityScreen::OnDashRealized ()
   }
 }
 
+void UnityScreen::LockscreenRequested()
+{
+  PluginAdapter& adapter = PluginAdapter::Default();
+
+  if (adapter.IsScaleActive())
+  {
+    adapter.TerminateScale();
+  }
+  else if (launcher_controller_->IsOverlayOpen())
+  {
+    dash_controller_->HideDash();
+    hud_controller_->HideHud();
+  }
+
+  printf("LOCK SCREEN REQUESTED!!!\n");
+}
+
 /* Start up the launcher */
 void UnityScreen::initLauncher()
 {
@@ -3686,6 +3705,8 @@ void UnityScreen::initLauncher()
   // Setup Lockscreen Controller
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(manager);
   UpdateActivateIndicatorsKey();
+
+  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::LockscreenRequested));
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
