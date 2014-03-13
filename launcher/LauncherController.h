@@ -78,6 +78,8 @@ public:
 
   bool IsOverlayOpen() const;
 
+  void ClearTooltips();
+
 protected:
   // Introspectable methods
   std::string GetName() const;

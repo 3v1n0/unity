@@ -1413,6 +1413,12 @@ bool Controller::IsOverlayOpen() const
   return false;
 }
 
+void Controller::ClearTooltips()
+{
+  for (auto launcher_ptr : pimpl->launchers)
+    launcher_ptr->ClearTooltip();
+}
+
 std::string
 Controller::GetName() const
 {

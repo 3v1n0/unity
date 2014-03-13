@@ -3726,6 +3726,8 @@ void UnityScreen::LockscreenRequested()
     dash_controller_->HideDash();
     hud_controller_->HideHud();
   }
+
+  launcher_controller_->ClearTooltips();
 }
 
 /* Start up the launcher */
