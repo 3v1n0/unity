@@ -2530,6 +2530,12 @@ bool UnityScreen::LockScreenInitiate(CompAction* action,
                                      CompOption::Vector& options)
 {
   sources_.AddIdle([this] {
+    if (launcher_controller_->IsOverlayOpen())
+    {
+      dash_controller_->HideDash();
+      hud_controller_->HideHud();
+    }
+
     session_controller_->LockScreen();
     return false;
   });
