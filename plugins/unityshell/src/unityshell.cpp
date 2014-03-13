@@ -921,9 +921,10 @@ void UnityScreen::DrawPanelUnderDash()
 bool UnityScreen::forcePaintOnTop()
 {
     return !allowWindowPaint ||
-      ((switcher_controller_->Visible() ||
-        WindowManager::Default().IsExpoActive())
-       && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
+           lockscreen_controller_->IsLocked() ||
+          ((switcher_controller_->Visible() ||
+            WindowManager::Default().IsExpoActive())
+           && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
 void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers)
