@@ -2822,8 +2822,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   if (uScreen->lockscreen_controller_->IsLocked())
   {
-    if (window->type() != CompWindowTypePopupMenuMask ||
-        !uScreen->lockscreen_controller_->HasOpenMenu())
+    if ((window->type() != CompWindowTypePopupMenuMask ||
+        !uScreen->lockscreen_controller_->HasOpenMenu()) &&
+        window->resName() != "onboard")
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need
