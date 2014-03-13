@@ -3719,6 +3719,15 @@ void UnityScreen::OnDashRealized()
   }
 }
 
+void UnityScreen::LockscreenRequested()
+{
+  if (launcher_controller_->IsOverlayOpen())
+  {
+    dash_controller_->HideDash();
+    hud_controller_->HideHud();
+  }
+}
+
 /* Start up the launcher */
 void UnityScreen::initLauncher()
 {
@@ -3777,6 +3786,8 @@ void UnityScreen::initLauncher()
   // Setup Lockscreen Controller
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(manager);
   UpdateActivateIndicatorsKey();
+
+  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::LockscreenRequested));
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
