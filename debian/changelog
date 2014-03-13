@@ -1,3 +1,17 @@
+unity (7.1.2+14.04.20140313-0ubuntu1) trusty; urgency=low
+
+  [ Brandon Schaefer ]
+  * When the lockscreen is locked, force paint it on top. This isn't the
+    perfect fix, but it a lot safer of a fix. (LP: #1291571)
+  * When we are about to LockScreen(). Hide the Dash/Hud if an overlay
+    is open! (LP: #1291383)
+  * Clear the tooltips when going into the lockscreen. (LP: #1291503)
+  * Cleartool tips when entering alt+tab mode. (LP: #1285889)
+  * If the switcher is open when going into lockscreen, hide it! (LP:
+    #1292225)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 13 Mar 2014 23:17:29 +0000
+
 unity (7.1.2+14.04.20140312-0ubuntu1) trusty; urgency=low
 
   [ Brandon Schaefer ]
