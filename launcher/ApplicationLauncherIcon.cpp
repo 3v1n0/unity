@@ -401,7 +401,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
         {
           WindowList windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP);
 
-          if (windows.size() == 1)
+          if (windows.size() == 1 && minimize_window_on_click)
           {
             wm.Minimize(windows[0]->window_id());
           }
