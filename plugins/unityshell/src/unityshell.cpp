@@ -930,7 +930,6 @@ void UnityScreen::DrawPanelUnderDash()
 bool UnityScreen::forcePaintOnTop()
 {
     return !allowWindowPaint ||
-           lockscreen_controller_->IsLocked() ||
           ((switcher_controller_->Visible() ||
             WindowManager::Default().IsExpoActive())
            && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
@@ -2794,7 +2793,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    * fully covers the shell on its output. It does not include regular windows
    * stacked above the shell like DnD icons or Onboard etc.
    */
-  if (G_UNLIKELY(is_nux_window_))
+  if (G_UNLIKELY(is_nux_window_) && !uScreen->lockscreen_controller_->IsLocked())
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
@@ -3007,6 +3006,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       }
     }
   }
+
+  if (uScreen->lockscreen_controller_->IsLocked())
+    draw_panel_shadow = DrawPanelShadow::NO;
 
   if (draw_panel_shadow == DrawPanelShadow::BELOW_WINDOW)
     uScreen->paintPanelShadow(region);
