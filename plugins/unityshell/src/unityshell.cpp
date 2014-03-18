@@ -3734,6 +3734,10 @@ void UnityScreen::LockscreenRequested()
   }
 
   launcher_controller_->ClearTooltips();
+
+  auto& adapter = PluginAdapter::Default();
+  if (adapter.IsScaleActive())
+    adapter.TerminateScale();
 }
 
 /* Start up the launcher */
