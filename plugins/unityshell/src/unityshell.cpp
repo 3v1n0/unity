@@ -380,6 +380,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherCaptureMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetScrollInactiveIconsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetLauncherMinimizeWindowNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
@@ -3405,6 +3406,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::ScrollInactiveIcons:
       launcher_options->scroll_inactive_icons = optionGetScrollInactiveIcons();
       break;
+    case UnityshellOptions::LauncherMinimizeWindow:
+      launcher_options->minimize_window_on_click = optionGetLauncherMinimizeWindow();
+      break;
     case UnityshellOptions::BackgroundColor:
     {
       auto override_color = NuxColorFromCompizColor(optionGetBackgroundColor());
@@ -3831,6 +3835,7 @@ void UnityScreen::initLauncher()
   });
 
   launcher_controller_->options()->scroll_inactive_icons = optionGetScrollInactiveIcons();
+  launcher_controller_->options()->minimize_window_on_click = optionGetLauncherMinimizeWindow();
 
   ScheduleRelayout(0);
 }
