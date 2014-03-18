@@ -363,7 +363,7 @@
                 </option>
 
                 <option name="launcher_minimize_window" type="bool">
-                    <_short>Minimize Single Window Applications</_short>
+                    <_short>Minimize Single Window Applications (Unsupported)</_short>
                     <_long>Allows minimizing a single windowed application by clicking on its Launcher icon.</_long>
                     <default>false</default>
                 </option>
