@@ -180,8 +180,8 @@ TEST_F(TestLockScreenController, LockScreenTypeLightdmOnSingleMonitor)
   lockscreen_settings.lockscreen_type = Type::LIGHTDM;
   session_manager->lock_requested.emit();
 
-  ASSERT_EQ(1, controller.shields_.size());
-  EXPECT_FALSE(controller.shields_.at(0)->primary());
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
+  Utils::WaitUntilMSec([this]{ return controller.shields_.at(0)->primary() == false; });
   Utils::WaitUntilMSec(lock_called);
 }
 
@@ -202,10 +202,10 @@ TEST_F(TestLockScreenController, LockScreenTypeLightdmOnMultiMonitor)
   uscreen.SetupFakeMultiMonitor(/*primary*/ 0, /*emit_change*/ true);
   session_manager->lock_requested.emit();
 
-  ASSERT_EQ(monitors::MAX, controller.shields_.size());
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == monitors::MAX; });
 
   for (unsigned int i=0; i < monitors::MAX; ++i)
-    EXPECT_FALSE(controller.shields_.at(i)->primary());
+    Utils::WaitUntilMSec([this, i]{ return controller.shields_.at(i)->primary() == false; });
 
   Utils::WaitUntilMSec(lock_called);
 }
@@ -226,7 +226,7 @@ TEST_F(TestLockScreenController, UnlockScreenTypeLightdmOnSingleMonitor)
   lockscreen_settings.lockscreen_type = Type::LIGHTDM;
   session_manager->lock_requested.emit();
 
-  ASSERT_EQ(1, controller.shields_.size());
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
   Utils::WaitUntilMSec(lock_called);
 
   session_manager->unlock_requested.emit();
@@ -252,7 +252,7 @@ TEST_F(TestLockScreenController, UnlockScreenTypeLightdmOnMultiMonitor)
   uscreen.SetupFakeMultiMonitor(/*primary*/ 0, /*emit_change*/ true);
   session_manager->lock_requested.emit();
 
-  ASSERT_EQ(monitors::MAX, controller.shields_.size());
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == monitors::MAX; });
   Utils::WaitUntilMSec(lock_called);
 
   session_manager->unlock_requested.emit();
@@ -265,8 +265,8 @@ TEST_F(TestLockScreenController, LockScreenOnSingleMonitor)
 {
   session_manager->lock_requested.emit();
 
-  ASSERT_EQ(1, controller.shields_.size());
-  EXPECT_EQ(uscreen.GetMonitors().at(0), controller.shields_.at(0)->GetGeometry());
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
+  Utils::WaitUntilMSec([this]{ return uscreen.GetMonitors().at(0) == controller.shields_.at(0)->GetGeometry(); });
 }
 
 TEST_F(TestLockScreenController, LockScreenOnMultiMonitor)
@@ -274,28 +274,33 @@ TEST_F(TestLockScreenController, LockScreenOnMultiMonitor)
   uscreen.SetupFakeMultiMonitor();
 
   session_manager->lock_requested.emit();
+
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == monitors::MAX; });
   ASSERT_EQ(monitors::MAX, controller.shields_.size());
 
   for (unsigned int i=0; i < monitors::MAX; ++i)
+  {
+    Utils::WaitUntilMSec([this, i]{ return uscreen.GetMonitors().at(i) == controller.shields_.at(i)->GetGeometry(); });
     EXPECT_EQ(uscreen.GetMonitors().at(i), controller.shields_.at(i)->GetAbsoluteGeometry());
+  }
 }
 
 TEST_F(TestLockScreenController, SwitchToMultiMonitor)
 {
   session_manager->lock_requested.emit();
-  tick_source.tick(ANIMATION_DURATION);
 
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
   ASSERT_EQ(1, controller.shields_.size());
+
+  Utils::WaitUntilMSec([this]{ return uscreen.GetMonitors().at(0) == controller.shields_.at(0)->GetGeometry(); });
   EXPECT_EQ(uscreen.GetMonitors().at(0), controller.shields_.at(0)->GetGeometry());
 
   uscreen.SetupFakeMultiMonitor(/* primary */ 0, /* emit_change */ true);
-
   ASSERT_EQ(monitors::MAX, controller.shields_.size());
 
   for (unsigned int i=0; i < monitors::MAX; ++i)
   {
     ASSERT_EQ(uscreen.GetMonitors().at(i), controller.shields_.at(i)->GetAbsoluteGeometry());
-    ASSERT_TRUE(controller.shields_.at(i)->IsVisible());
   }
 }
 
@@ -304,10 +309,14 @@ TEST_F(TestLockScreenController, SwitchToSingleMonitor)
   uscreen.SetupFakeMultiMonitor(/* primary */ 0, /* emit_change */ true);
   session_manager->lock_requested.emit();
 
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == monitors::MAX; });
   ASSERT_EQ(monitors::MAX, controller.shields_.size());
 
   for (unsigned int i=0; i < monitors::MAX; ++i)
+  {
+    Utils::WaitUntilMSec([this, i]{ return uscreen.GetMonitors().at(i) == controller.shields_.at(i)->GetGeometry(); });
     ASSERT_EQ(uscreen.GetMonitors().at(i), controller.shields_.at(i)->GetAbsoluteGeometry());
+  }
 
   uscreen.Reset(/* emit_change */ true);
 
@@ -319,6 +328,7 @@ TEST_F(TestLockScreenController, UnlockScreenOnSingleMonitor)
 {
   session_manager->lock_requested.emit();
 
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
   ASSERT_EQ(1, controller.shields_.size());
 
   session_manager->unlock_requested.emit();
@@ -332,6 +342,7 @@ TEST_F(TestLockScreenController, UnlockScreenOnMultiMonitor)
   uscreen.SetupFakeMultiMonitor(/* primary */ 0, /* emit_change */ true);
   session_manager->lock_requested.emit();
 
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == monitors::MAX; });
   ASSERT_EQ(monitors::MAX, controller.shields_.size());
 
   session_manager->unlock_requested.emit();
