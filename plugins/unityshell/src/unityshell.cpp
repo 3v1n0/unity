@@ -2793,7 +2793,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    * fully covers the shell on its output. It does not include regular windows
    * stacked above the shell like DnD icons or Onboard etc.
    */
-  if (G_UNLIKELY(is_nux_window_) && !uScreen->lockscreen_controller_->IsLocked())
+  if (G_UNLIKELY(is_nux_window_) &&
+     (!uScreen->lockscreen_controller_->IsLocked() ||
+      uScreen->lockscreen_controller_->Opacity() != 1.0f))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
