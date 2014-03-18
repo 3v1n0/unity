@@ -930,7 +930,6 @@ void UnityScreen::DrawPanelUnderDash()
 bool UnityScreen::forcePaintOnTop()
 {
     return !allowWindowPaint ||
-           lockscreen_controller_->IsLocked() ||
           ((switcher_controller_->Visible() ||
             WindowManager::Default().IsExpoActive())
            && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
@@ -3710,16 +3709,7 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
 
 void UnityScreen::OnDashRealized()
 {
-  /* stack any windows named "onboard" above us */
-  for (CompWindow *w : screen->windows ())
-  {
-    if (w->resName() == "onboard")
-    {
-      Window xid = dash_controller_->window()->GetInputWindowId();
-      XSetTransientForHint (screen->dpy(), w->id(), xid);
-      w->raise ();
-    }
-  }
+  RaiseOSK();
 }
 
 void UnityScreen::LockscreenRequested()
@@ -3735,6 +3725,22 @@ void UnityScreen::LockscreenRequested()
   }
 
   launcher_controller_->ClearTooltips();
+
+  RaiseOSK();
+}
+
+void UnityScreen::RaiseOSK()
+{
+  /* stack any windows named "onboard" above us */
+  for (CompWindow *w : screen->windows ())
+  {
+    if (w->resName() == "onboard")
+    {
+      Window xid = dash_controller_->window()->GetInputWindowId();
+      XSetTransientForHint (screen->dpy(), w->id(), xid);
+      w->raise ();
+    }
+  }
 }
 
 /* Start up the launcher */
