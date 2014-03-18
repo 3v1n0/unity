@@ -2853,8 +2853,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   if (uScreen->lockscreen_controller_->IsLocked())
   {
-    if (window->type() != CompWindowTypePopupMenuMask ||
-        !uScreen->lockscreen_controller_->HasOpenMenu())
+    if ((window->type() != CompWindowTypePopupMenuMask ||
+        !uScreen->lockscreen_controller_->HasOpenMenu()) &&
+        window->resName() != "onboard")
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need
@@ -3717,16 +3718,7 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
 
 void UnityScreen::OnDashRealized()
 {
-  /* stack any windows named "onboard" above us */
-  for (CompWindow *w : screen->windows ())
-  {
-    if (w->resName() == "onboard")
-    {
-      Window xid = dash_controller_->window()->GetInputWindowId();
-      XSetTransientForHint (screen->dpy(), w->id(), xid);
-      w->raise ();
-    }
-  }
+  RaiseOSK();
 }
 
 void UnityScreen::LockscreenRequested()
@@ -3742,6 +3734,22 @@ void UnityScreen::LockscreenRequested()
   }
 
   launcher_controller_->ClearTooltips();
+
+  RaiseOSK();
+}
+
+void UnityScreen::RaiseOSK()
+{
+  /* stack any windows named "onboard" above us */
+  for (CompWindow *w : screen->windows ())
+  {
+    if (w->resName() == "onboard")
+    {
+      Window xid = dash_controller_->window()->GetInputWindowId();
+      XSetTransientForHint (screen->dpy(), w->id(), xid);
+      w->raise ();
+    }
+  }
 }
 
 /* Start up the launcher */
