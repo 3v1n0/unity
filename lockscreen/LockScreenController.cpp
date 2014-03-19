@@ -150,14 +150,14 @@ void Controller::OnLockRequested()
 {
   if (IsLocked())
   {
-    LOG_WARNING(logger) << "Failed to lock screen: the screen is already locked.";
+    LOG_DEBUG(logger) << "Failed to lock screen: the screen is already locked.";
     return;
   }
 
   lockscreen_timeout_.reset(new glib::Timeout(10, [this](){
     if (WindowManager::Default().IsScreenGrabbed())
     {
-      LOG_WARNING(logger) << "Failed to lock the screen: the screen is already grabbed.";
+      LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";
       return true; // keep trying
     }
 
