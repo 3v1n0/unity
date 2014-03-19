@@ -1251,12 +1251,13 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
   }
 }
 
-bool Controller::HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_sym, Time timestamp)
+bool Controller::HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_code, Time timestamp)
 {
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
   for (auto const& icon : *pimpl->model_)
   {
-    if (icon->GetShortcut() == key_sym)
+    unsigned int shortcut_code = XKeysymToKeycode(nux::GetGraphicsDisplay()->GetX11Display(), icon->GetShortcut());
+    if (shortcut_code == key_code)
     {
       if ((key_state & nux::KEY_MODIFIER_SHIFT) &&
           icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)

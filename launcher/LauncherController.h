@@ -67,7 +67,7 @@ public:
 
   void HandleLauncherKeyPress(int when);
   void HandleLauncherKeyRelease(bool was_tap, int when);
-  bool HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_sym, Time timestamp);
+  bool HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_code, Time timestamp);
 
   void KeyNavActivate();
   void KeyNavGrab();
