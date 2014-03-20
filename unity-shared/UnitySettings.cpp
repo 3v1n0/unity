@@ -36,6 +36,7 @@ Settings* settings_instance = nullptr;
 
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
+const std::string TEXT_SCALE_FACTOR = "text-scale-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
 const std::string LIM_KEY = "integrated-menus";
 const std::string USE_MAX_SCALE = "app-use-maximum-scale-factor";
@@ -77,8 +78,8 @@ public:
 
     CacheFormFactor();
     CacheDoubleClickActivate();
-    UpdateEMConverter();
     UpdateLimSetting();
+    UpdateTextScaleFactor();
 
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateEMConverter))));
 
@@ -90,6 +91,10 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, const gchar*) {
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateTextScaleFactor();
     });
 
     signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
@@ -137,6 +142,13 @@ public:
     decoration::Style::Get()->integrated_menus = g_settings_get_boolean(usettings_, LIM_KEY.c_str());
     parent_->lim_movement_thresold = g_settings_get_uint(lim_settings_, CLICK_MOVEMENT_THRESHOLD.c_str());
     parent_->lim_double_click_wait = g_settings_get_uint(lim_settings_, DOUBLE_CLICK_WAIT.c_str());
+  }
+
+  void UpdateTextScaleFactor()
+  {
+    parent_->font_scaling = g_settings_get_double(usettings_, TEXT_SCALE_FACTOR.c_str());
+    decoration::Style::Get()->font_scale = parent_->font_scaling();
+    UpdateEMConverter();
   }
 
   FormFactor GetFormFactor() const
@@ -235,8 +247,9 @@ public:
   {
     unsigned integer_scaling = std::max<unsigned>(1, scale);
     double point_scaling = scale / static_cast<double>(integer_scaling);
+    double text_scale_factor = parent_->font_scaling() * point_scaling;
     g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
-    g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), point_scaling);
+    g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
   }
 
   Settings* parent_;
