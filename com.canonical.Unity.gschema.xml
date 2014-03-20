@@ -60,11 +60,18 @@
       <description>This value defines the global font scaling used by both
         unity and applications. It will match the current system font scaling.</description>
     </key>
-    <key type="b" name="app-use-maximum-scale-factor">
-      <default>false</default>
-      <summary>Use the maximum per-monitor scale-factor as application scale factor.</summary>
+    <key type="s" name="app-scale-factor-monitor">
+      <default>''</default>
+      <summary>The name of the monitor that controls the global app scaling factor.</summary>
       <description>When this is enabled, the applications scale factor will match
         the scale factor of the monitor with the greater value</description>
+    </key>
+    <key type="b" name="app-fallback-to-maximum-scale-factor">
+      <default>true</default>
+      <summary>Use the maximum per-monitor scale-factor as application scale factor if no target monitor is found.</summary>
+      <description>When this is enabled, the applications scale factor will match
+        the scale factor of the monitor with the greater value, in case the monitor
+        defined in 'app-scale-factor-monitor' is not provided or available.</description>
     </key>
   </schema>
   <schema path="/com/canonical/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">

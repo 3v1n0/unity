@@ -39,7 +39,8 @@ const std::string FORM_FACTOR = "form-factor";
 const std::string TEXT_SCALE_FACTOR = "text-scale-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
 const std::string LIM_KEY = "integrated-menus";
-const std::string USE_MAX_SCALE = "app-use-maximum-scale-factor";
+const std::string APP_SCALE_MONITOR = "app-scale-factor-monitor";
+const std::string APP_USE_MAX_SCALE = "app-fallback-to-maximum-scale-factor";
 
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
@@ -101,7 +102,11 @@ public:
       UpdateEMConverter();
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + USE_MAX_SCALE, [this] (GSettings*, const gchar* t) {
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + APP_SCALE_MONITOR, [this] (GSettings*, const gchar* t) {
+      UpdateEMConverter();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + APP_USE_MAX_SCALE, [this] (GSettings*, const gchar* t) {
       UpdateEMConverter();
     });
 
@@ -179,23 +184,6 @@ public:
     return font_size / 1024;
   }
 
-  int GetDPI(glib::Variant const& dict, int monitor) const
-  {
-    auto* uscreen = UScreen::GetDefault();
-
-    if (monitor < 0 || monitor >= uscreen->GetPluggedMonitorsNumber())
-      return -1;
-
-    auto const& monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
-    double ui_scale = 1.0f;
-    int value;
-
-    if (g_variant_lookup(dict, monitor_name.c_str(), "i", &value))
-      ui_scale = static_cast<double>(value)/8.0f;
-
-    return (DEFAULT_DPI * ui_scale);
-  }
-
   void UpdateFontSize()
   {
     int font_size = GetFontSize();
@@ -206,32 +194,46 @@ public:
 
   void UpdateDPI()
   {
-    glib::Variant dict;
-    g_settings_get(ui_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
-    int min_dpi = 0;
-    int max_dpi = 0;
+    auto* uscreen = UScreen::GetDefault();
+    double min_scale = 4.0;
+    double max_scale = 0.0;
     bool any_changed = false;
 
-    for (unsigned i = 0; i < em_converters_.size(); ++i)
+    glib::Variant dict;
+    g_settings_get(ui_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+
+    glib::String app_target_monitor(g_settings_get_string(usettings_, APP_SCALE_MONITOR.c_str()));
+    double app_target_scale = 0;
+
+    for (unsigned monitor = 0; monitor < em_converters_.size(); ++monitor)
     {
-      int dpi = GetDPI(dict, i);
+      int dpi = DEFAULT_DPI;
 
-      if (dpi >= 0)
+      if (monitor < uscreen->GetMonitors().size())
       {
-        min_dpi = std::min(min_dpi, dpi);
-        max_dpi = std::max(max_dpi, dpi);
-      }
-      else
-      {
-        dpi = DEFAULT_DPI;
+        auto const& monitor_name = uscreen->GetMonitorName(monitor);
+        double ui_scale = 1.0f;
+        int value;
+
+        if (g_variant_lookup(dict, monitor_name.c_str(), "i", &value))
+          ui_scale = static_cast<double>(value)/8.0f;
+
+        if (app_target_monitor.Str() == monitor_name)
+          app_target_scale = ui_scale;
+
+        dpi = DEFAULT_DPI * ui_scale;
+        min_scale = std::min(min_scale, ui_scale);
+        max_scale = std::max(max_scale, ui_scale);
       }
 
-      if (em_converters_[i]->SetDPI(dpi))
+      if (em_converters_[monitor]->SetDPI(dpi))
         any_changed = true;
     }
 
-    int app_dpi = (g_settings_get_boolean(usettings_, USE_MAX_SCALE.c_str())) ? max_dpi : min_dpi;
-    UpdateAppsScaling(static_cast<double>(app_dpi)/DEFAULT_DPI);
+    if (app_target_scale == 0)
+      app_target_scale = (g_settings_get_boolean(usettings_, APP_USE_MAX_SCALE.c_str())) ? max_scale : min_scale;
+
+    UpdateAppsScaling(app_target_scale);
 
     if (any_changed)
       parent_->dpi_changed.emit();
