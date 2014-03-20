@@ -75,6 +75,7 @@ public:
     , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
+    , changing_gnome_settings_(false)
     , lowGfx_(false)
   {
     for (unsigned i = 0; i < monitors::MAX; ++i)
@@ -115,6 +116,14 @@ public:
 
     signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(gnome_ui_settings_, "changed::" + GNOME_TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      if (!changing_gnome_settings_)
+      {
+        double new_scale_factor = g_settings_get_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str());
+        g_settings_set_double(ui_settings_, TEXT_SCALE_FACTOR.c_str(), new_scale_factor);
+      }
     });
 
     signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
@@ -250,11 +259,13 @@ public:
 
   void UpdateAppsScaling(double scale)
   {
+    changing_gnome_settings_ = true;
     unsigned integer_scaling = std::max<unsigned>(1, scale);
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
     g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
     g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
+    changing_gnome_settings_ = false;
   }
 
   Settings* parent_;
@@ -268,6 +279,7 @@ public:
   std::vector<int> launcher_widths_;
   FormFactor cached_form_factor_;
   bool cached_double_click_activate_;
+  bool changing_gnome_settings_;
   bool lowGfx_;
 };
 
