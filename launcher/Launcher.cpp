@@ -1217,6 +1217,7 @@ void Launcher::UpdateOptions(Options::Ptr options)
   SetIconSize(options->tile_size, options->icon_size);
   SetHideMode(options->hide_mode);
   SetScrollInactiveIcons(options->scroll_inactive_icons);
+  SetLauncherMinimizeWindow(options->minimize_window_on_click);
 
   if (model_)
   {
@@ -1496,6 +1497,11 @@ bool Launcher::OnUrgentTimeout()
 void Launcher::SetScrollInactiveIcons(bool scroll)
 {
   AbstractLauncherIcon::scroll_inactive_icons = scroll;
+}
+
+void Launcher::SetLauncherMinimizeWindow(bool click_to_minimize)
+{
+  AbstractLauncherIcon::minimize_window_on_click = click_to_minimize;
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size)

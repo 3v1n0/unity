@@ -23,6 +23,7 @@ namespace unity {
 namespace launcher {
   nux::Property<unsigned> AbstractLauncherIcon::icon_size(48);
   nux::Property<bool> AbstractLauncherIcon::scroll_inactive_icons(true);
+  nux::Property<bool> AbstractLauncherIcon::minimize_window_on_click(false);
 
   // needed for ungodly stupid reasons
   NUX_IMPLEMENT_OBJECT_TYPE(AbstractLauncherIcon);

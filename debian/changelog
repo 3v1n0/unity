@@ -1,3 +1,22 @@
+unity (7.1.2+14.04.20140318-0ubuntu1) trusty; urgency=low
+
+  [ Brandon Schaefer ]
+  * Update the DPI when we setup the view. (LP: #1292268)
+  * Do not avoid rendering the lockscreen when we have a fullscreen app.
+    This also removes the old fullscreen + lockscreen fix where we force
+    painted our selfs on top. (LP: #1291571)
+
+  [ Chris Townsend ]
+  * Add ability to minimize a single window application when clicking on
+    the Launcher icon of the application. (LP: #733349)
+
+  [ Andrea Azzarone ]
+  * Whitelist "onboard" for rendering during lockscreen. (LP: #1291402)
+  * Do not consider minimized windows for cross fade effect. (LP:
+    #1291402)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 18 Mar 2014 23:53:51 +0000
+
 unity (7.1.2+14.04.20140313-0ubuntu1) trusty; urgency=low
 
   [ Brandon Schaefer ]

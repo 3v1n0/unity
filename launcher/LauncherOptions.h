@@ -103,6 +103,7 @@ public:
   nux::Property<bool> edge_resist;
   nux::Property<bool> show_for_all;
   nux::Property<bool> scroll_inactive_icons;
+  nux::Property<bool> minimize_window_on_click;
 
   sigc::signal<void> option_changed;
 

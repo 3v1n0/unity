@@ -399,7 +399,16 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       {
         if (arg.source != ActionArg::Source::SWITCHER)
         {
-          Spread(true, 0, false);
+          WindowList windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP);
+
+          if (windows.size() == 1 && minimize_window_on_click)
+          {
+            wm.Minimize(windows[0]->window_id());
+          }
+          else
+          {
+            Spread(true, 0, false);
+          }
         }
       }
     }
