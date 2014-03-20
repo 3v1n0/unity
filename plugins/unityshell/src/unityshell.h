@@ -55,7 +55,6 @@
 #include "UnitySettings.h"
 #include "DashStyle.h"
 #include "FavoriteStoreGSettings.h"
-#include "FontSettings.h"
 #include "ShortcutController.h"
 #include "LauncherController.h"
 #include "LockScreenController.h"
@@ -319,7 +318,6 @@ private:
   Settings unity_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
-  FontSettings   font_settings_;
   internal::FavoriteStoreGSettings favorite_store_;
   ThumbnailGenerator thumbnail_generator_;
   lockscreen::Settings lockscreen_settings_;
