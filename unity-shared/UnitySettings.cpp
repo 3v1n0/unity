@@ -36,17 +36,19 @@ Settings* settings_instance = nullptr;
 
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
-const std::string TEXT_SCALE_FACTOR = "text-scale-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
 const std::string LIM_KEY = "integrated-menus";
-const std::string APP_SCALE_MONITOR = "app-scale-factor-monitor";
-const std::string APP_USE_MAX_SCALE = "app-fallback-to-maximum-scale-factor";
 
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
 
-const std::string UI_SETTINGS = "com.ubuntu.user-interface";
+const std::string UI_SETTINGS = "com.canonical.Unity.Interface";
+const std::string TEXT_SCALE_FACTOR = "text-scale-factor";
+const std::string APP_SCALE_MONITOR = "app-scale-factor-monitor";
+const std::string APP_USE_MAX_SCALE = "app-fallback-to-maximum-scale-factor";
+
+const std::string UBUNTU_UI_SETTINGS = "com.ubuntu.user-interface";
 const std::string SCALE_FACTOR = "scale-factor";
 
 const std::string GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
@@ -65,9 +67,10 @@ class Settings::Impl : public sigc::trackable
 public:
   Impl(Settings* owner)
     : parent_(owner)
-    , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
+    , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
+    , ubuntu_ui_settings_(g_settings_new(UBUNTU_UI_SETTINGS.c_str()))
     , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
     , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
     , cached_form_factor_(FormFactor::DESKTOP)
@@ -94,23 +97,23 @@ public:
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+    signals_.Add<void, GSettings*, const gchar*>(ubuntu_ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateEMConverter();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
       UpdateTextScaleFactor();
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + APP_SCALE_MONITOR, [this] (GSettings*, const gchar* t) {
       UpdateEMConverter();
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + APP_SCALE_MONITOR, [this] (GSettings*, const gchar* t) {
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + APP_USE_MAX_SCALE, [this] (GSettings*, const gchar* t) {
       UpdateEMConverter();
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + APP_USE_MAX_SCALE, [this] (GSettings*, const gchar* t) {
-      UpdateEMConverter();
-    });
-
-    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
     });
 
@@ -151,7 +154,7 @@ public:
 
   void UpdateTextScaleFactor()
   {
-    parent_->font_scaling = g_settings_get_double(usettings_, TEXT_SCALE_FACTOR.c_str());
+    parent_->font_scaling = g_settings_get_double(ui_settings_, TEXT_SCALE_FACTOR.c_str());
     decoration::Style::Get()->font_scale = parent_->font_scaling();
     UpdateEMConverter();
   }
@@ -200,9 +203,9 @@ public:
     bool any_changed = false;
 
     glib::Variant dict;
-    g_settings_get(ui_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+    g_settings_get(ubuntu_ui_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
 
-    glib::String app_target_monitor(g_settings_get_string(usettings_, APP_SCALE_MONITOR.c_str()));
+    glib::String app_target_monitor(g_settings_get_string(ui_settings_, APP_SCALE_MONITOR.c_str()));
     double app_target_scale = 0;
 
     for (unsigned monitor = 0; monitor < em_converters_.size(); ++monitor)
@@ -231,7 +234,7 @@ public:
     }
 
     if (app_target_scale == 0)
-      app_target_scale = (g_settings_get_boolean(usettings_, APP_USE_MAX_SCALE.c_str())) ? max_scale : min_scale;
+      app_target_scale = (g_settings_get_boolean(ui_settings_, APP_USE_MAX_SCALE.c_str())) ? max_scale : min_scale;
 
     UpdateAppsScaling(app_target_scale);
 
@@ -255,9 +258,10 @@ public:
   }
 
   Settings* parent_;
-  glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> usettings_;
   glib::Object<GSettings> lim_settings_;
+  glib::Object<GSettings> ui_settings_;
+  glib::Object<GSettings> ubuntu_ui_settings_;
   glib::Object<GSettings> gnome_ui_settings_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
