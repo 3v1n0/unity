@@ -39,12 +39,11 @@ DECLARE_LOGGER(logger, "unity.dash.results");
 
 namespace
 {
-
-std::string const DEFAULT_GICON = ". GThemedIcon text-x-preview";
-RawPixel const PADDING    =  6_em;
-RawPixel const SPACING    = 10_em;
-RawPixel const FONT_SIZE  = 10_em;
-int const FONT_MULTIPLIER = 1024;
+const std::string DEFAULT_GICON = ". GThemedIcon text-x-preview";
+const RawPixel PADDING    =  6_em;
+const RawPixel SPACING    = 10_em;
+const int FONT_SIZE       = 10;
+const int FONT_MULTIPLIER = 1024;
 
 char const REPLACEMENT_CHAR = '?';
 float const CORNER_HIGHTLIGHT_RADIUS = 2.0f;
@@ -198,6 +197,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, int width, int height)
 {
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale_, scale_);
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
@@ -214,8 +214,8 @@ nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, in
                                       0.0f,
                                       0.0f,
                                       CORNER_HIGHTLIGHT_RADIUS,
-                                      width,
-                                      height,
+                                      width/scale_,
+                                      height/scale_,
                                       false);
   cairo_fill(cr);
 
@@ -282,9 +282,8 @@ void ResultRendererTile::LoadIcon(Result const& row)
   RawPixel const tile_highlight_width  = style.GetTileIconHightlightWidth();
   RawPixel const tile_highlight_height = style.GetTileIconHightlightHeight();
 
-  std::string icon_hint(row.icon_hint);
-  std::string icon_name;
-  icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
+  std::string const& icon_hint = row.icon_hint;
+  std::string const& icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
 
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), NULL));
   TextureContainer* container = row.renderer<TextureContainer*>();
@@ -292,7 +291,6 @@ void ResultRendererTile::LoadIcon(Result const& row)
   if (container)
   {
     TextureCache& cache = TextureCache::GetDefault();
-    
     BaseTexturePtr texture_prelight(cache.FindTexture("resultview_prelight",
                                                       tile_highlight_width.CP(scale_),
                                                       tile_highlight_height.CP(scale_),
@@ -370,6 +368,7 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
     }
 
     nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, pixbuf_width, pixbuf_height);
+    cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale_, scale_);
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -482,8 +481,9 @@ void ResultRendererTile::LoadText(Result const& row)
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
                                     tile_width.CP(scale_) - (PADDING.CP(scale_) * 2),
                                     tile_height.CP(scale_) - tile_size.CP(scale_) - SPACING.CP(scale_));
+  cairo_surface_set_device_scale(_cairoGraphics.GetSurface(), scale_, scale_);
 
-  cairo_t* cr = _cairoGraphics.GetContext();
+  cairo_t* cr = _cairoGraphics.GetInternalContext();
 
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
@@ -498,14 +498,14 @@ void ResultRendererTile::LoadText(Result const& row)
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font.Value());
-  pango_font_description_set_size (desc, FONT_SIZE.CP(scale_) * FONT_MULTIPLIER);
+  pango_font_description_set_size (desc, FONT_SIZE * FONT_MULTIPLIER);
 
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
-  pango_layout_set_width(layout, (tile_width.CP(scale_) - (PADDING.CP(scale_) * 2))* PANGO_SCALE);
+  pango_layout_set_width(layout, (tile_width - (PADDING * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
   // FIXME bug #1239381
@@ -536,7 +536,6 @@ void ResultRendererTile::LoadText(Result const& row)
   // clean up
   pango_font_description_free(desc);
   g_object_unref(layout);
-  cairo_destroy(cr);
 
   TextureContainer *container = row.renderer<TextureContainer*>();
   if (container)

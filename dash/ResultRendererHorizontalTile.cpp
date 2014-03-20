@@ -37,14 +37,14 @@ namespace unity
 {
 namespace
 {
-RawPixel const CARD_VIEW_PADDING                 =   4_em;
-RawPixel const CARD_VIEW_ICON_SIZE               =  64_em;
-RawPixel const CARD_VIEW_ICON_TEXT_GAP           =  10_em;
-RawPixel const CARD_VIEW_WIDTH                   = 277_em;
-RawPixel const CARD_VIEW_HEIGHT                  =  74_em;
-RawPixel const CARD_VIEW_HIGHLIGHT_CORNER_RADIUS =   2_em;
-RawPixel const CARD_VIEW_ICON_OUTLINE_WIDTH      =   1_em;
-RawPixel const CARD_VIEW_TEXT_LINE_SPACING       =   0_em;
+const RawPixel CARD_VIEW_PADDING                 =   4_em;
+const RawPixel CARD_VIEW_ICON_SIZE               =  64_em;
+const RawPixel CARD_VIEW_ICON_TEXT_GAP           =  10_em;
+const RawPixel CARD_VIEW_WIDTH                   = 277_em;
+const RawPixel CARD_VIEW_HEIGHT                  =  74_em;
+const RawPixel CARD_VIEW_ICON_OUTLINE_WIDTH      =   1_em;
+const int CARD_VIEW_HIGHLIGHT_CORNER_RADIUS      =   2;
+const int CARD_VIEW_TEXT_LINE_SPACING            =   0;
 
 void RenderTexture(nux::GraphicsEngine& GfxContext, 
                    int x,
@@ -234,6 +234,7 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
                                                               int width, int height)
 {
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale_, scale_);
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
@@ -249,7 +250,7 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
                                       1.0f,
                                       0.0f,
                                       0.0f,
-                                      CARD_VIEW_HIGHLIGHT_CORNER_RADIUS.CP(scale_),
+                                      CARD_VIEW_HIGHLIGHT_CORNER_RADIUS,
                                       width,
                                       height,
                                       false);
@@ -262,6 +263,7 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawNormal(std::string const& te
                                                               int width, int height)
 {
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale_, scale_);
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
@@ -277,9 +279,9 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawNormal(std::string const& te
                                       1.0f,
                                       0.0f,
                                       0.0f,
-                                      CARD_VIEW_HIGHLIGHT_CORNER_RADIUS.CP(scale_),
-                                      width,
-                                      height,
+                                      CARD_VIEW_HIGHLIGHT_CORNER_RADIUS,
+                                      width/scale_,
+                                      height/scale_,
                                       false);
   cairo_fill(cr);
 
@@ -308,8 +310,9 @@ void ResultRendererHorizontalTile::LoadText(Result const& row)
                                     CARD_VIEW_ICON_TEXT_GAP.CP(scale_),
                                     CARD_VIEW_HEIGHT.CP(scale_) -
                                     2 * CARD_VIEW_PADDING.CP(scale_));
+  cairo_surface_set_device_scale(_cairoGraphics.GetSurface(), scale_, scale_);
 
-  cairo_t* cr = _cairoGraphics.GetContext();
+  cairo_t* cr = _cairoGraphics.GetInternalContext();
 
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
@@ -328,12 +331,12 @@ void ResultRendererHorizontalTile::LoadText(Result const& row)
 
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_spacing(layout, CARD_VIEW_TEXT_LINE_SPACING.CP(scale_) * PANGO_SCALE);
-  pango_layout_set_width(layout, (CARD_VIEW_WIDTH.CP(scale_) -
-                                  CARD_VIEW_ICON_SIZE.CP(scale_) -
-                                  2 * CARD_VIEW_ICON_OUTLINE_WIDTH.CP(scale_) -
-                                  2 * CARD_VIEW_PADDING.CP(scale_) -
-                                  CARD_VIEW_ICON_TEXT_GAP.CP(scale_)) * PANGO_SCALE);
+  pango_layout_set_spacing(layout, CARD_VIEW_TEXT_LINE_SPACING * PANGO_SCALE);
+  pango_layout_set_width(layout, (CARD_VIEW_WIDTH -
+                                  CARD_VIEW_ICON_SIZE -
+                                  2 * CARD_VIEW_ICON_OUTLINE_WIDTH -
+                                  2 * CARD_VIEW_PADDING -
+                                  CARD_VIEW_ICON_TEXT_GAP) * PANGO_SCALE);
 
   pango_layout_set_height(layout, -4);
 
@@ -356,15 +359,13 @@ void ResultRendererHorizontalTile::LoadText(Result const& row)
   PangoRectangle logRect = {0, 0, 0, 0};
   pango_layout_get_extents(layout, NULL, &logRect);
   if (pango_layout_get_line_count(layout) < 4)
-    offset = ((CARD_VIEW_HEIGHT.CP(scale_) - 2 * CARD_VIEW_PADDING.CP(scale_)) - (logRect.height / PANGO_SCALE)) / 2.0;
+    offset = ((CARD_VIEW_HEIGHT - 2 * CARD_VIEW_PADDING) - (logRect.height / PANGO_SCALE)) / 2.0;
   cairo_move_to(cr, 0.0f, offset);
   pango_cairo_show_layout(cr, layout);
 
   // clean up
   pango_font_description_free(desc);
   g_object_unref(layout);
-
-  cairo_destroy(cr);
 
   TextureContainer *container = row.renderer<TextureContainer*>();
   if (container)

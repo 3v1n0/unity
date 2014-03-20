@@ -420,7 +420,7 @@ void PlacesOverlayVScrollBar::UpdateConnectorTexture()
   nux::color::RedGreenBlue const& connector_bg = nux::color::Gray;
 
   nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cairoGraphics.GetContext();
+  cr = cairoGraphics.GetInternalContext();
   cairo_save(cr);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -434,7 +434,6 @@ void PlacesOverlayVScrollBar::UpdateConnectorTexture()
   cairo_fill_preserve(cr);
 
   connector_texture_.Adopt(texture_from_cairo_graphics(cairoGraphics));
-  cairo_destroy(cr);
 
   QueueDraw();
 }
