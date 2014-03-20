@@ -1885,10 +1885,7 @@ void UnityScreen::handleEvent(XEvent* event)
           key_sym = key_sym - XK_KP_0 + XK_0;
         }
 
-        // Turn the key_sym back to a keycode, this turns keypad key_sym to the correct top row key_code
-        unsigned int key_code = XKeysymToKeycode(nux::GetGraphicsDisplay()->GetX11Display(), key_sym);
-
-        skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(XModifiersToNux(event->xkey.state), key_code, event->xkey.time);
+        skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(XModifiersToNux(event->xkey.state), key_sym, event->xkey.time);
         if (!skip_other_plugins)
           skip_other_plugins = dash_controller_->CheckShortcutActivation(XKeysymToString(key_sym));
 

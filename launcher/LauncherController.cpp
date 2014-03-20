@@ -1251,8 +1251,11 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
   }
 }
 
-bool Controller::HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_code, Time timestamp)
+bool Controller::HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_sym, Time timestamp)
 {
+  // Turn the key_sym back to a keycode, this turns keypad key_sym to the correct top row key_code
+  unsigned int key_code = XKeysymToKeycode(nux::GetGraphicsDisplay()->GetX11Display(), key_sym);
+
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
   for (auto const& icon : *pimpl->model_)
   {
