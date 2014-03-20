@@ -63,8 +63,8 @@
     <key type="s" name="app-scale-factor-monitor">
       <default>''</default>
       <summary>The name of the monitor that controls the global app scaling factor.</summary>
-      <description>When this is enabled, the applications scale factor will match
-        the scale factor of the monitor with the greater value</description>
+      <description>This value defines the monitor that unity will use (if found) as reference
+        for scaling all the applications.</description>
     </key>
     <key type="b" name="app-fallback-to-maximum-scale-factor">
       <default>true</default>
