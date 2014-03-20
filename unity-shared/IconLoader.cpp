@@ -35,6 +35,7 @@
 #include <UnityCore/GTKWrapper.h>
 
 #include "unity-shared/Timer.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -313,10 +314,8 @@ private:
         PangoContext* pango_context = NULL;
         GdkScreen* screen = gdk_screen_get_default(); // not ref'ed
         glib::String font;
-        int dpi = -1;
 
         g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
-        g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
         cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
         layout = pango_cairo_create_layout(cr);
         std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
@@ -345,10 +344,8 @@ private:
         pango_layout_set_markup(layout, escaped_text, -1);
 
         pango_context = pango_layout_get_context(layout);  // is not ref'ed
-        pango_cairo_context_set_font_options(pango_context,
-                                             gdk_screen_get_font_options(screen));
-        pango_cairo_context_set_resolution(pango_context,
-                                           dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
+        pango_cairo_context_set_font_options(pango_context, gdk_screen_get_font_options(screen));
+        pango_cairo_context_set_resolution(pango_context, 96.0 * Settings::Instance().font_scaling());
         pango_layout_context_changed(layout);
 
         // find proper font size

@@ -108,9 +108,8 @@ private:
 } // anon namespace
 
 
-class Style::Impl
+struct Style::Impl : sigc::trackable
 {
-public:
   Impl(Style* owner);
   ~Impl();
 
@@ -293,10 +292,8 @@ Style::Impl::Impl(Style* owner)
                       (gtk_settings_get_default(),
                        "notify::gtk-font-name",
                        sigc::mem_fun(this, &Impl::OnFontChanged)));
-  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
-                      (gtk_settings_get_default(),
-                       "notify::gtk-xft-dpi",
-                       sigc::mem_fun(this, &Impl::OnFontChanged)));
+
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Refresh)));
   Refresh();
 
   // create fallback font-options
@@ -388,11 +385,7 @@ void Style::Impl::Refresh()
   cairo_t* cr = util_cg.GetInternalContext();
 
   glib::String font_description;
-  int dpi = 0;
-  ::g_object_get(settings,
-                 "gtk-font-name", &font_description,
-                 "gtk-xft-dpi", &dpi,
-                 NULL);
+  ::g_object_get(settings, "gtk-font-name", &font_description, nullptr);
   PangoFontDescription* desc = ::pango_font_description_from_string(font_description);
   ::pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
   ::pango_font_description_set_size(desc, 9 * PANGO_SCALE);
@@ -405,8 +398,7 @@ void Style::Impl::Refresh()
 
   GdkScreen* screen = ::gdk_screen_get_default();
   ::pango_cairo_context_set_font_options(cxt, ::gdk_screen_get_font_options(screen));
-  float pango_scale = PANGO_SCALE;
-  ::pango_cairo_context_set_resolution(cxt, dpi / pango_scale);
+  ::pango_cairo_context_set_resolution(cxt, 96.0 * Settings::Instance().font_scaling());
   ::pango_layout_context_changed(layout);
 
   PangoRectangle log_rect;
@@ -1384,7 +1376,6 @@ void Style::Impl::GetTextExtents(int& width,
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
   PangoRectangle        inkRect  = {0, 0, 0, 0};
-  int                   dpi      = 0;
   char*                 fontName = NULL;
   GdkScreen*            screen   = gdk_screen_get_default();  // is not ref'ed
   GtkSettings*          settings = gtk_settings_get_default();// is not ref'ed
@@ -1423,17 +1414,7 @@ void Style::Impl::GetTextExtents(int& width,
     pango_cairo_context_set_font_options(pangoCtx,
                                          gdk_screen_get_font_options(screen));
 
-  g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
-  if (dpi == -1)
-  {
-    // use some default DPI-value
-    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
-  }
-  else
-  {
-    pango_cairo_context_set_resolution(pangoCtx,
-                                       (float) dpi / (float) PANGO_SCALE);
-  }
+  pango_cairo_context_set_resolution(pangoCtx, 96.0 * Settings::Instance().font_scaling());
   pango_layout_context_changed(layout);
   pango_layout_get_extents(layout, &inkRect, NULL);
 
@@ -1461,7 +1442,6 @@ void Style::Impl::Text(cairo_t*    cr,
   PangoLayout*          layout      = NULL;
   PangoFontDescription* desc        = NULL;
   PangoContext*         pangoCtx    = NULL;
-  int                   dpi         = 0;
   GdkScreen*            screen      = gdk_screen_get_default();   // not ref'ed
   GtkSettings*          settings    = gtk_settings_get_default(); // not ref'ed
   gchar*                fontName    = NULL;
@@ -1480,7 +1460,7 @@ void Style::Impl::Text(cairo_t*    cr,
 
   g_object_get(settings, "gtk-font-name", &fontName, NULL);
   if (!fontName)
-    desc = pango_font_description_from_string("Sans 10");
+    desc = pango_font_description_from_string("Ubuntu 10");
   else
     desc = pango_font_description_from_string(fontName);
 
@@ -1543,17 +1523,7 @@ void Style::Impl::Text(cairo_t*    cr,
     pango_cairo_context_set_font_options(pangoCtx,
                                          gdk_screen_get_font_options(screen));
 
-  g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
-  if (dpi == -1)
-  {
-    // use some default DPI-value
-    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
-  }
-  else
-  {
-    pango_cairo_context_set_resolution(pangoCtx,
-                                       (float) dpi / (float) PANGO_SCALE);
-  }
+  pango_cairo_context_set_resolution(pangoCtx, 96.0 * Settings::Instance().font_scaling());
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba(cr, color);
