@@ -59,13 +59,12 @@ public:
   void SetLabel(std::string const& label);
   void SetContents(nux::Layout* layout);
 
-  void UpdateScale(double scale);
-
   virtual void SetFilter(Filter::Ptr const& filter) = 0;
   virtual std::string GetFilterType() = 0;
 
   nux::View* expander_view() const { return expander_view_; }
 
+  nux::Property<double> scale;
   nux::Property<bool> expanded;
 
 protected:
@@ -83,6 +82,7 @@ private:
   void BuildLayout();
   void DoExpandChange(bool change);
   bool ShouldBeHighlighted();
+  void UpdateScale(double scale);
 
   nux::LinearLayout* layout_;
   nux::LinearLayout* top_bar_layout_;
@@ -99,8 +99,6 @@ private:
 
   nux::ObjectPtr<nux::Layout> contents_;
   std::unique_ptr<nux::AbstractPaintLayer> focus_layer_;
-
-  double scale_;
 };
 
 } // namespace dash

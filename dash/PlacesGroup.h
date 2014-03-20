@@ -59,6 +59,8 @@ public:
 
   PlacesGroup(dash::StyleInterface& style);
 
+  nux::Property<double> scale;
+
   void SetIcon(std::string const& icon);
   void SetName(std::string const& name);
   void SetHeaderCountVisible(bool disable);
@@ -94,8 +96,6 @@ public:
   glib::Variant GetCurrentFocus() const;
   void SetCurrentFocus(glib::Variant const& variant);
 
-  void UpdateScale(double scale);
-
 protected:
   long ComputeContentSize();
 
@@ -126,6 +126,7 @@ private:
 
   void UpdatePlacesGroupSize();
   void UpdateResultViewPadding();
+  void UpdateScale(double scale);
 
 private:
   std::string _category_id;
@@ -165,8 +166,6 @@ private:
 
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
-
-  double _scale;
 
   friend class TestScopeView;
 };

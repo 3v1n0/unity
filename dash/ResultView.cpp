@@ -45,8 +45,8 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   , expanded(true)
   , desaturation_progress(0.0)
   , enable_texture_render(false)
+  , scale(DEFAULT_SCALE)
   , renderer_(NULL)
-  , scale_(DEFAULT_SCALE)
   , cached_result_(nullptr, nullptr, nullptr)
 {
   expanded.changed.connect([this](bool value)
@@ -61,6 +61,7 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   });
 
   enable_texture_render.changed.connect(sigc::mem_fun(this, &ResultView::OnEnableRenderToTexture));
+  scale.changed.connect(sigc::mem_fun(this, &ResultView::UpdateScale));
 }
 
 ResultView::~ResultView()
@@ -81,21 +82,14 @@ ResultView::~ResultView()
 
 void ResultView::UpdateScale(double scale)
 {
-  if (scale_ != scale)
+  if (renderer_)
   {
-    scale_ = scale;
+    renderer_->scale = scale;
 
-    if (renderer_)
-    {
-      renderer_->UpdateScale(scale_);
+    for (auto const& result : *result_model_)
+      renderer_->ReloadResult(result);
 
-      for (auto it = result_model_->begin(); it != result_model_->end(); ++it)
-      {
-        renderer_->ReloadResult(*it);
-      }
-
-      NeedRedraw();
-    }
+    QueueDraw();
   }
 }
 

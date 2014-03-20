@@ -86,6 +86,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 
 FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
+  , scale(DEFAULT_SCALE)
   , expanded(true)
   , layout_(nullptr)
   , top_bar_layout_(nullptr)
@@ -95,8 +96,8 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , cairo_label_(nullptr)
   , raw_label_(label)
   , label_("label")
-  , scale_(DEFAULT_SCALE)
 {
+  scale.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::UpdateScale));
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
 }
@@ -110,11 +111,7 @@ void FilterExpanderLabel::SetLabel(std::string const& label)
 
 void FilterExpanderLabel::UpdateScale(double scale)
 {
-  if (scale_ != scale)
-  {
-    scale_ = scale;
-    cairo_label_->SetScale(scale);
-  }
+  cairo_label_->SetScale(scale);
 }
 
 void FilterExpanderLabel::SetRightHandView(nux::View* view)

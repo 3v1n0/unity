@@ -153,6 +153,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 : nux::View(NUX_TRACKER_LOCATION)
 , filters_expanded(false)
 , can_refine_search(false)
+, scale(DEFAULT_SCALE)
 , scope_(scope)
 , no_results_active_(false)
 , last_good_filter_model_(-1)
@@ -160,13 +161,13 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 , scope_connected_(scope ? scope->connected : false)
 , search_on_next_connect_(false)
 , current_focus_category_position_(-1)
-, scale_(DEFAULT_SCALE)
 {
   SetupViews(show_filters);
 
   search_string.SetGetterFunction(sigc::mem_fun(this, &ScopeView::get_search_string));
   filters_expanded.changed.connect(sigc::mem_fun(this, &ScopeView::OnScopeFilterExpanded));
   view_type.changed.connect(sigc::mem_fun(this, &ScopeView::OnViewTypeChanged));
+  scale.changed.connect(sigc::mem_fun(this, &ScopeView::UpdateScale));
 
   auto conn = nux::GetWindowCompositor().key_nav_focus_change.connect(sigc::mem_fun(this, &ScopeView::OnCompositorKeyNavFocusChanged));
   key_nav_focus_connection_ = conn_manager_.Add(conn);
@@ -215,8 +216,8 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
             (expand_label && expand_label->HasKeyFocus()))
         {
           focused_pos.x += child->GetGeometry().x;
-          focused_pos.y += child->GetGeometry().y - FOCUSED_OFFSET.CP(scale_);
-          focused_pos.height += FOCUSED_OFFSET.CP(scale_);
+          focused_pos.y += child->GetGeometry().y - FOCUSED_OFFSET.CP(scale());
+          focused_pos.height += FOCUSED_OFFSET.CP(scale());
           scroll_view_->ScrollToPosition(focused_pos);
           break;
         }
@@ -281,27 +282,23 @@ void ScopeView::UpdateScopeViewSize()
                                       style.GetFilterBarLeftPadding() +
                                       style.GetFilterBarRightPadding();
 
-  layout_->SetSpaceBetweenChildren(scope_filter_space.CP(scale_));
+  double scale = this->scale();
+  layout_->SetSpaceBetweenChildren(scope_filter_space.CP(scale));
 
-  fscroll_view_->SetMinimumWidth(filter_width.CP(scale_) + right_padding.CP(scale_));
-  fscroll_view_->SetMaximumWidth(filter_width.CP(scale_) + right_padding.CP(scale_));
-  filter_bar_->SetMinimumWidth(filter_width.CP(scale_));
-  filter_bar_->SetMaximumWidth(filter_width.CP(scale_));
+  fscroll_view_->SetMinimumWidth(filter_width.CP(scale) + right_padding.CP(scale));
+  fscroll_view_->SetMaximumWidth(filter_width.CP(scale) + right_padding.CP(scale));
+  filter_bar_->SetMinimumWidth(filter_width.CP(scale));
+  filter_bar_->SetMaximumWidth(filter_width.CP(scale));
 }
 
 void ScopeView::UpdateScale(double scale)
 {
-  if (scale_ != scale)
-  {
-    scale_ = scale;
+  UpdateScopeViewSize();
 
-    UpdateScopeViewSize();
+  for (auto& group : category_views_)
+    group->scale = scale;
 
-    for (auto& group : category_views_)
-      group->UpdateScale(scale_);
-
-    filter_bar_->UpdateScale(scale_);
-  }
+  filter_bar_->scale = scale;
 }
 
 void ScopeView::SetupCategories(Categories::Ptr const& categories)
@@ -464,7 +461,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
   group->SetIcon(icon_hint);
   group->SetExpanded(false);
   group->SetVisible(false);
-  group->UpdateScale(scale_);
+  group->scale = scale();
 
   int view_index = category_order_.size();
   auto find_view_index = std::find(category_order_.begin(), category_order_.end(), index);
@@ -489,8 +486,8 @@ void ScopeView::OnCategoryAdded(Category const& category)
   {
     results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-    static_cast<ResultViewGrid*> (results_view)->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale_);
-    static_cast<ResultViewGrid*> (results_view)->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale_);
+    static_cast<ResultViewGrid*> (results_view)->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale());
+    static_cast<ResultViewGrid*> (results_view)->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale());
   }
   else
   {

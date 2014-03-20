@@ -45,7 +45,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
 
 FilterBar::FilterBar(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , scale_(DEFAULT_SCALE)
+  , scale(DEFAULT_SCALE)
 {
   Init();
 }
@@ -61,19 +61,14 @@ void FilterBar::Init()
   nux::LinearLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
   layout->SetTopAndBottomPadding(style.GetFilterBarTopPadding() - style.GetFilterHighlightPadding());
   layout->SetSpaceBetweenChildren(style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding());
+  scale.changed.connect(sigc::mem_fun(this, &FilterBar::UpdateScale));
   SetLayout(layout);
 }
 
 void FilterBar::UpdateScale(double scale)
 {
-  if (scale_ != scale)
-  {
-    scale_ = scale;
-    for (auto& filters : filter_map_)
-    {
-      filters.second->UpdateScale(scale_);
-    }
-  }
+  for (auto& filters : filter_map_)
+    filters.second->scale = scale;
 }
 
 void FilterBar::SetFilters(Filters::Ptr const& filters)
@@ -90,7 +85,7 @@ void FilterBar::AddFilter(Filter::Ptr const& filter)
   }
 
   FilterExpanderLabel* filter_view = factory_.WidgetForFilter(filter);
-  filter_view->UpdateScale(scale_);
+  filter_view->scale = scale();
   AddChild(filter_view);
   filter_map_[filter] = filter_view;
   GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
