@@ -70,6 +70,7 @@ void ScopeBarIcon::UpdateScale(double scale)
 
   SetSize(TEXTURE_SIZE.CP(scale));
   ReLoadIcon();
+  QueueDraw();
 }
 
 void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
