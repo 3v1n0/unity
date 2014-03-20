@@ -54,8 +54,6 @@ public:
   void ForceLiveSearch();
   void SetSearchFinished();
 
-  void UpdateScale(double scale);
-
   nux::TextEntry* text_entry() const;
   nux::View* show_filters() const;
 
@@ -66,6 +64,7 @@ public:
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
   nux::Property<unsigned> live_search_wait;
+  nux::Property<double> scale;
 
   sigc::signal<void> activated;
   sigc::signal<void, std::string const&> search_changed;
@@ -99,10 +98,10 @@ private:
   void AddProperties(debug::IntrospectionData&);
   bool AcceptKeyNavFocus();
 
-private:
   bool ShouldBeHighlighted();
   void UpdateSearchBarSize();
-  
+  void UpdateScale(double scale);
+
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
@@ -121,7 +120,6 @@ private:
 
   int last_width_;
   int last_height_;
-  double scale_;
 
   glib::SignalManager sig_manager_;
   glib::Source::UniquePtr live_search_timeout_;

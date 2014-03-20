@@ -91,6 +91,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   selected_index_.changed.connect(needredraw_lambda);
   expanded.changed.connect([this](bool value) { if (value) all_results_preloaded_ = false; });
   results_per_row.changed.connect([this](int value) { if (value > 0) all_results_preloaded_ = false; });
+  scale.changed.connect(sigc::mem_fun(this, &ResultViewGrid::UpdateScale));
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
   key_nav_focus_activate.connect([this] (nux::Area *area)
@@ -351,7 +352,7 @@ void ResultViewGrid::SizeReallocate()
 
   int width = (items_per_row * renderer_->width) + (padding*2) + ((items_per_row - 1) * horizontal_spacing);
   int geo_width = GetBaseWidth();
-  int extra_width = geo_width - (width + WIDTH_PADDING.CP(scale_) - SCROLLBAR_WIDTH.CP(scale_));
+  int extra_width = geo_width - (width + WIDTH_PADDING.CP(scale()) - SCROLLBAR_WIDTH.CP(scale()));
 
   if (items_per_row != 1)
     extra_horizontal_spacing_ = extra_width / (items_per_row - 1);
@@ -1013,7 +1014,6 @@ ResultViewGrid::SetSelectedIndex(int index)
 void
 ResultViewGrid::UpdateScale(double scale)
 {
-  ResultView::UpdateScale(scale);
   UpdateRenderTextures();
 }
 

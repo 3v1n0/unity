@@ -56,14 +56,13 @@ class ScopeBar : public nux::View, public unity::debug::Introspectable
 
 public:
   ScopeBar();
-  ~ScopeBar();
+
+  nux::Property<double> scale;
 
   void AddScope(Scope::Ptr const& scope);
   void Activate(std::string id);
   void ActivateNext();
   void ActivatePrevious();
-
-  void UpdateScale(double scale);
 
   std::string GetActiveScopeId() const;
 
@@ -77,6 +76,7 @@ private:
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 
   void SetActive(ScopeBarIcon* icon);
+  void UpdateScale(double scale);
 
   bool AcceptKeyNavFocus();
   std::string GetName() const;
@@ -88,8 +88,6 @@ private:
 
   nux::HLayout* layout_;
   LayerPtr bg_layer_;
-
-  double scale_;
 
   friend class TestScopeBar;
 };

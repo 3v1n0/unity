@@ -117,6 +117,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   : nux::View(NUX_TRACKER_LOCATION),
+    scale(DEFAULT_SCALE),
     _style(style),
     _child_layout(nullptr),
     _child_view(nullptr),
@@ -126,14 +127,14 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
     _coverflow_enabled(false),
-    _disabled_header_count(false),
-    _scale(DEFAULT_SCALE)
+    _disabled_header_count(false)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
+  scale.changed.connect(sigc::mem_fun(this, &PlacesGroup::UpdateScale));
 
   nux::BaseTexture* arrow = _style.GetGroupExpandIcon();
-  
+
   _background = _style.GetCategoryBackground();
   _background_nofilters = _style.GetCategoryBackgroundNoFilters();
 
@@ -163,7 +164,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _header_view->SetLayout(_header_layout);
 
   RawPixel const icon_size = _style.GetCategoryIconSize();
-  _icon = new IconTexture("", icon_size.CP(_scale));
+  _icon = new IconTexture("", icon_size.CP(scale()));
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -225,43 +226,37 @@ PlacesGroup::UpdatePlacesGroupSize()
    RawPixel const icon_size = _style.GetCategoryIconSize();
    RawPixel const group_top = _style.GetPlacesGroupTopSpace();
 
-   int top_space = group_top.CP(_scale);
+   int top_space = group_top.CP(scale());
    _space_layout->SetMinimumSize(top_space, top_space);
    _space_layout->SetMaximumSize(top_space, top_space);
 
-  _header_layout->SetSpaceBetweenChildren(SPACE_BETWEEN_CHILDREN.CP(_scale));
+  _header_layout->SetSpaceBetweenChildren(SPACE_BETWEEN_CHILDREN.CP(scale()));
 
-  _icon->SetMinMaxSize(icon_size.CP(_scale), icon_size.CP(_scale));
+  _icon->SetMinMaxSize(icon_size.CP(scale()), icon_size.CP(scale()));
 
-  _text_layout->SetHorizontalInternalMargin(TEXT_INTERNAL_MARGIN.CP(_scale));
-  _expand_layout->SetHorizontalInternalMargin(EXPAND_INTERNAL_MARGIN.CP(_scale));
+  _text_layout->SetHorizontalInternalMargin(TEXT_INTERNAL_MARGIN.CP(scale()));
+  _expand_layout->SetHorizontalInternalMargin(EXPAND_INTERNAL_MARGIN.CP(scale()));
 }
 
 void
 PlacesGroup::UpdateScale(double scale)
 {
-  if (_scale != scale)
-  {
-    RawPixel const icon_size = _style.GetCategoryIconSize();
+  RawPixel const icon_size = _style.GetCategoryIconSize();
 
-    _scale = scale;
-    _name->SetScale(_scale);
-    _expand_label->SetScale(_scale);
+  _name->SetScale(scale);
+  _expand_label->SetScale(scale);
 
-    _icon->SetSize(icon_size.CP(_scale));
-    _icon->ReLoadIcon();
+  _icon->SetSize(icon_size.CP(scale));
+  _icon->ReLoadIcon();
 
-    // FIXME _expand_icon, needs some work here. Not as easy as _icon
+  // FIXME _expand_icon, needs some work here. Not as easy as _icon
 
-    if (_child_view)
-    {
-      _child_view->UpdateScale(scale);
-    }
+  if (_child_view)
+    _child_view->scale = scale;
 
-    ComputeContentSize();
-    UpdatePlacesGroupSize();
-    UpdateResultViewPadding();
-  }
+  ComputeContentSize();
+  UpdatePlacesGroupSize();
+  UpdateResultViewPadding();
 }
 
 void
@@ -326,8 +321,8 @@ PlacesGroup::UpdateResultViewPadding()
     RawPixel const result_top_padding  = _style.GetPlacesGroupResultTopPadding();
     RawPixel const result_left_padding = _style.GetPlacesGroupResultLeftPadding();
 
-    _child_layout->SetTopAndBottomPadding(result_top_padding.CP(_scale), 0);
-    _child_layout->SetLeftAndRightPadding(result_left_padding.CP(_scale), 0);
+    _child_layout->SetTopAndBottomPadding(result_top_padding.CP(scale()), 0);
+    _child_layout->SetLeftAndRightPadding(result_left_padding.CP(scale()), 0);
   }
 }
 
@@ -345,7 +340,7 @@ PlacesGroup::SetChildView(dash::ResultView* view)
   AddChild(view);
 
   _child_view = view;
-  _child_view->UpdateScale(_scale);
+  _child_view->scale = scale();
 
   _child_layout = new nux::VLayout();
   _child_layout->AddView(_child_view, 0);
@@ -468,9 +463,9 @@ long PlacesGroup::ComputeContentSize()
   if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
     _focus_layer.reset(_style.FocusOverlay(geo.width - 
-                                           kHighlightLeftPadding.CP(_scale) -
-                                           kHighlightRightPadding.CP(_scale),
-                                           kHighlightHeight.CP(_scale)));
+                                           kHighlightLeftPadding.CP(scale()) -
+                                           kHighlightRightPadding.CP(scale()),
+                                           kHighlightHeight.CP(scale())));
     _cached_geometry = geo;
   }
   return ret;
@@ -489,10 +484,10 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   {
     nux::Geometry geo(_header_layout->GetGeometry());
     geo.width = base.width -
-                kHighlightRightPadding.CP(_scale) -
-                kHighlightLeftPadding.CP(_scale);
+                kHighlightRightPadding.CP(scale()) -
+                kHighlightLeftPadding.CP(scale());
 
-    geo.x += kHighlightLeftPadding.CP(_scale);
+    geo.x += kHighlightLeftPadding.CP(scale());
 
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);

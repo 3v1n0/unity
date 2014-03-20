@@ -69,6 +69,7 @@ public:
   nux::Property<bool> filters_expanded;
   nux::Property<ScopeViewType> view_type;
   nux::Property<bool> can_refine_search;
+  nux::Property<double> scale;
 
   sigc::signal<void, ResultView::ActivateType, LocalResult const&, GVariant*, std::string const&> result_activated;
 
@@ -86,8 +87,6 @@ public:
   std::vector<ResultViewTexture::Ptr> GetResultTextureContainers();
   void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
 
-  void UpdateScale(double scale);
-
 private:
   void SetupViews(nux::Area* show_filters);
   void SetupCategories(Categories::Ptr const& categories);
@@ -102,7 +101,7 @@ private:
   void OnResultRemoved(Result const& result);
 
   void OnSearchComplete(std::string const& search_string, glib::HintsMap const& hints, glib::Error const& err);
-  
+
   void OnGroupExpanded(PlacesGroup* group);
   void CheckScrollBarState();
   void OnColumnsChanged();
@@ -131,10 +130,11 @@ private:
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 
   void UpdateScopeViewSize();
+  void UpdateScale(double scale);
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
-  
+
   virtual bool AcceptKeyNavFocus();
   virtual std::string GetName() const;
   virtual void AddProperties(debug::IntrospectionData&);
@@ -189,8 +189,6 @@ private:
 
   int current_focus_category_position_;
   glib::Variant current_focus_variant_;
-
-  double scale_;
 
   friend class TestScopeView;
 };

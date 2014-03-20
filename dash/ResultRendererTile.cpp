@@ -93,6 +93,7 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   : ResultRenderer(NUX_FILE_LINE_PARAM)
 {
   UpdateWidthHeight();
+  scale.changed.connect([this] (double) { UpdateWidthHeight(); });
 }
 
 void ResultRendererTile::UpdateWidthHeight()
@@ -101,14 +102,8 @@ void ResultRendererTile::UpdateWidthHeight()
   RawPixel tile_width  = style.GetTileWidth();
   RawPixel tile_height = style.GetTileHeight();
 
-  width  = tile_width.CP(scale_);
-  height = tile_height.CP(scale_);
-}
-
-void ResultRendererTile::UpdateScale(double scale)
-{
-  ResultRenderer::UpdateScale(scale);
-  UpdateWidthHeight();
+  width  = tile_width.CP(scale());
+  height = tile_height.CP(scale());
 }
 
 void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
@@ -130,7 +125,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   RawPixel const tile_highlight_width  = style.GetTileIconHightlightWidth();
   RawPixel const tile_highlight_height = style.GetTileIconHightlightHeight();
 
-  int tile_icon_size = tile_size.CP(scale_);
+  int tile_icon_size = tile_size.CP(scale());
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
@@ -147,13 +142,13 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   }
 
   int icon_left_hand_side = geometry.x + (geometry.width - icon_width) / 2;
-  int icon_top_side = geometry.y + PADDING.CP(scale_) + (tile_icon_size - icon_height) / 2;
+  int icon_top_side = geometry.y + PADDING.CP(scale()) + (tile_icon_size - icon_height) / 2;
 
   // render highlight if its needed
   if (container->prelight && state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
-    int highlight_x =  (geometry.x + geometry.width/2) - tile_highlight_width.CP(scale_)/2;
-    int highlight_y =  (geometry.y + PADDING.CP(scale_) + tile_icon_size / 2) - tile_highlight_height.CP(scale_)/2;
+    int highlight_x =  (geometry.x + geometry.width/2) - tile_highlight_width.CP(scale())/2;
+    int highlight_y =  (geometry.y + PADDING.CP(scale()) + tile_icon_size / 2) - tile_highlight_height.CP(scale())/2;
 
     RenderTexture(GfxContext,
                   highlight_x,
@@ -183,10 +178,10 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   if (container->text)
   {
     RenderTexture(GfxContext,
-                  geometry.x + PADDING.CP(scale_),
-                  geometry.y + tile_icon_size + SPACING.CP(scale_),
-                  tile_width.CP(scale_) - (PADDING.CP(scale_) * 2),
-                  tile_height.CP(scale_) - tile_icon_size - SPACING.CP(scale_),
+                  geometry.x + PADDING.CP(scale()),
+                  geometry.y + tile_icon_size + SPACING.CP(scale()),
+                  tile_width.CP(scale()) - (PADDING.CP(scale()) * 2),
+                  tile_height.CP(scale()) - tile_icon_size - SPACING.CP(scale()),
                   container->text->GetDeviceTexture(),
                   texxform,
                   color,
@@ -197,7 +192,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, int width, int height)
 {
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
-  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale_, scale_);
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale(), scale());
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
   cairo_scale(cr, 1.0f, 1.0f);
@@ -214,8 +209,8 @@ nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, in
                                       0.0f,
                                       0.0f,
                                       CORNER_HIGHTLIGHT_RADIUS,
-                                      width/scale_,
-                                      height/scale_,
+                                      width/scale(),
+                                      height/scale(),
                                       false);
   cairo_fill(cr);
 
@@ -224,7 +219,7 @@ nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, in
 
 int ResultRendererTile::Padding() const
 {
-  return PADDING.CP(scale_);
+  return PADDING.CP(scale());
 }
 
 void ResultRendererTile::Preload(Result const& row)
@@ -292,8 +287,8 @@ void ResultRendererTile::LoadIcon(Result const& row)
   {
     TextureCache& cache = TextureCache::GetDefault();
     BaseTexturePtr texture_prelight(cache.FindTexture("resultview_prelight",
-                                                      tile_highlight_width.CP(scale_),
-                                                      tile_highlight_height.CP(scale_),
+                                                      tile_highlight_width.CP(scale()),
+                                                      tile_highlight_height.CP(scale()),
                                                       sigc::mem_fun(this, &ResultRendererTile::DrawHighlight)));
     container->prelight = texture_prelight;
   }
@@ -304,13 +299,13 @@ void ResultRendererTile::LoadIcon(Result const& row)
   {
     bool use_large_icon = icon.IsType(G_TYPE_FILE_ICON) || !icon.IsType(G_TYPE_THEMED_ICON);
     container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name, 
-                                                                          tile_size.CP(scale_),
+                                                                          tile_size.CP(scale()),
                                                                           use_large_icon ?
-                                                                          tile_size.CP(scale_) : tile_gsize.CP(scale_), slot);
+                                                                          tile_size.CP(scale()) : tile_gsize.CP(scale()), slot);
   }
   else
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name, -1, tile_gsize.CP(scale_), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name, -1, tile_gsize.CP(scale()), slot);
   }
 }
 
@@ -345,7 +340,7 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
     float aspect = static_cast<float>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
     if (aspect < 1.0f)
     {
-      pixbuf_width = tile_size.CP(scale_);
+      pixbuf_width = tile_size.CP(scale());
       pixbuf_height = pixbuf_width * aspect;
 
       if (pixbuf_height > height)
@@ -368,7 +363,7 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
     }
 
     nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, pixbuf_width, pixbuf_height);
-    cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale_, scale_);
+    cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale(), scale());
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
@@ -479,9 +474,9 @@ void ResultRendererTile::LoadText(Result const& row)
   RawPixel const tile_height = style.GetTileHeight();
 
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                    tile_width.CP(scale_) - (PADDING.CP(scale_) * 2),
-                                    tile_height.CP(scale_) - tile_size.CP(scale_) - SPACING.CP(scale_));
-  cairo_surface_set_device_scale(_cairoGraphics.GetSurface(), scale_, scale_);
+                                    tile_width.CP(scale()) - (PADDING.CP(scale()) * 2),
+                                    tile_height.CP(scale()) - tile_size.CP(scale()) - SPACING.CP(scale()));
+  cairo_surface_set_device_scale(_cairoGraphics.GetSurface(), scale(), scale());
 
   cairo_t* cr = _cairoGraphics.GetInternalContext();
 

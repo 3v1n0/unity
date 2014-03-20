@@ -48,14 +48,11 @@ NUX_IMPLEMENT_OBJECT_TYPE(ScopeBar);
 
 ScopeBar::ScopeBar()
   : nux::View(NUX_TRACKER_LOCATION)
-  , scale_(1.0)
+  , scale(1.0)
 {
+  scale.changed.connect(sigc::mem_fun(this, &ScopeBar::UpdateScale));
   SetupBackground();
   SetupLayout();
-}
-
-ScopeBar::~ScopeBar()
-{
 }
 
 void ScopeBar::SetupBackground()
@@ -69,16 +66,11 @@ void ScopeBar::SetupBackground()
 
 void ScopeBar::UpdateScale(double scale)
 {
-  if (scale_ != scale)
-  {
-    scale_ = scale;
+  SetMinimumHeight(SCOPEBAR_HEIGHT.CP(scale));
+  SetMaximumHeight(SCOPEBAR_HEIGHT.CP(scale));
 
-    SetMinimumHeight(SCOPEBAR_HEIGHT.CP(scale_));
-    SetMaximumHeight(SCOPEBAR_HEIGHT.CP(scale_));
-
-    for (auto icon : icons_)
-      icon->UpdateScale(scale_);
-  }
+  for (auto icon : icons_)
+    icon->scale = scale;
 }
 
 void ScopeBar::SetupLayout()
@@ -87,8 +79,8 @@ void ScopeBar::SetupLayout()
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   SetLayout(layout_);
 
-  SetMinimumHeight(SCOPEBAR_HEIGHT.CP(scale_));
-  SetMaximumHeight(SCOPEBAR_HEIGHT.CP(scale_));
+  SetMinimumHeight(SCOPEBAR_HEIGHT.CP(scale()));
+  SetMaximumHeight(SCOPEBAR_HEIGHT.CP(scale()));
 }
 
 void ScopeBar::AddScope(Scope::Ptr const& scope)
@@ -96,7 +88,7 @@ void ScopeBar::AddScope(Scope::Ptr const& scope)
   ScopeBarIcon* icon = new ScopeBarIcon(scope->id, scope->icon_hint);
 
   icon->SetVisible(scope->visible);
-  icon->UpdateScale(scale_);
+  icon->scale = scale();
   scope->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
   icons_.push_back(icon);
   layout_->AddView(icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
@@ -184,7 +176,7 @@ void ScopeBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
       int middle = geo.x + geo.width/2;
       // Nux doesn't draw too well the small triangles, so let's draw a
       // bigger one and clip part of them using the "-1".
-      int size = TRIANGLE_SIZE.CP(scale_);
+      int size = TRIANGLE_SIZE.CP(scale());
       int y = base.y - 1;
 
       nux::GetPainter().Draw2DTriangleColor(graphics_engine,
