@@ -508,9 +508,9 @@ struct Style::Impl
 
     nux::Size extents;
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
-    pango_layout_set_height(layout, (h > 0) ? h * PANGO_SCALE : -1);
+    pango_layout_set_height(layout, (h >= 0) ? h * PANGO_SCALE : -1);
 
-    if (extents.width > w)
+    if (w >= 0 && extents.width > w)
     {
       double out_pixels = extents.width - w;
       double fading_width = std::min<double>(title_fade_, out_pixels);
@@ -528,7 +528,7 @@ struct Style::Impl
     }
     else
     {
-      pango_layout_set_width(layout, w * PANGO_SCALE);
+      pango_layout_set_width(layout, (w >= 0) ? w * PANGO_SCALE : -1);
       gtk_render_layout(ctx_, cr, 0, 0, layout);
     }
 
@@ -571,8 +571,8 @@ struct Style::Impl
       pango_attr_list_unref(text_attribs);
     }
 
-    pango_layout_set_width(layout, w * PANGO_SCALE);
-    pango_layout_set_height(layout, (h > 0) ? h * PANGO_SCALE : -1);
+    pango_layout_set_width(layout, (w >= 0) ? w * PANGO_SCALE : -1);
+    pango_layout_set_height(layout, (h >= 0) ? h * PANGO_SCALE : -1);
     gtk_render_layout(ctx_, cr, 0, 0, layout);
 
     gtk_style_context_restore(ctx_);
