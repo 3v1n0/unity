@@ -20,6 +20,8 @@
 #include "LockScreenController.h"
 
 #include <UnityCore/DBusIndicators.h>
+#include <NuxCore/Logger.h>
+
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
@@ -39,6 +41,8 @@ namespace testing
 {
 const std::string DBUS_NAME = "com.canonical.Unity.Test.DisplayManager";
 }
+
+DECLARE_LOGGER(logger, "unity.locksreen");
 
 Controller::Controller(session::Manager::Ptr const& session_manager,
                        UpstartWrapper::Ptr const& upstart_wrapper,
@@ -145,26 +149,39 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 void Controller::OnLockRequested()
 {
   if (IsLocked())
-    return;
-
-  auto lockscreen_type = Settings::Instance().lockscreen_type();
-
-  if (lockscreen_type == Type::NONE)
   {
-    session_manager_->unlocked.emit();
+    LOG_DEBUG(logger) << "Failed to lock screen: the screen is already locked.";
     return;
   }
 
-  if (lockscreen_type == Type::LIGHTDM)
-  {
-    LockScreenUsingDisplayManager();
-  }
-  else if (lockscreen_type == Type::UNITY)
-  {
-    LockScreenUsingUnity();
-  }
+  lockscreen_timeout_.reset(new glib::Timeout(10, [this](){
+    if (WindowManager::Default().IsScreenGrabbed())
+    {
+      LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";
+      return true; // keep trying
+    }
 
-  session_manager_->locked.emit();
+    auto lockscreen_type = Settings::Instance().lockscreen_type();
+
+    if (lockscreen_type == Type::NONE)
+    {
+      session_manager_->unlocked.emit();
+      return false;
+    }
+
+    if (lockscreen_type == Type::LIGHTDM)
+    {
+      LockScreenUsingDisplayManager();
+    }
+    else if (lockscreen_type == Type::UNITY)
+    {
+      LockScreenUsingUnity();
+    }
+
+    session_manager_->locked.emit();
+
+    return false;
+  }));
 }
 
 void Controller::LockScreenUsingDisplayManager()

@@ -22,6 +22,7 @@
 
 #include <NuxCore/Animation.h>
 #include <UnityCore/ConnectionManager.h>
+#include <UnityCore/GLibSource.h>
 
 #include "LockScreenShieldFactory.h"
 #include "unity-shared/BackgroundEffectHelper.h"
@@ -68,6 +69,8 @@ private:
   connection::Wrapper motion_connection_;
   bool test_mode_;
   BlurType old_blur_type_;
+
+  glib::Source::UniquePtr lockscreen_timeout_;
 };
 
 }
