@@ -27,6 +27,7 @@
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -60,6 +61,7 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
     NeedRedraw();
   });
 
+  Settings::Instance().font_scaling.changed.connect(sigc::mem_fun(this, &ResultView::UpdateFontScale));
   enable_texture_render.changed.connect(sigc::mem_fun(this, &ResultView::OnEnableRenderToTexture));
   scale.changed.connect(sigc::mem_fun(this, &ResultView::UpdateScale));
 }
@@ -86,6 +88,17 @@ void ResultView::UpdateScale(double scale)
   {
     renderer_->scale = scale;
 
+    for (auto const& result : *result_model_)
+      renderer_->ReloadResult(result);
+
+    QueueDraw();
+  }
+}
+
+void ResultView::UpdateFontScale(double scale)
+{
+  if (renderer_)
+  {
     for (auto const& result : *result_model_)
       renderer_->ReloadResult(result);
 
