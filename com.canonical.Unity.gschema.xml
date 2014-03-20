@@ -53,6 +53,12 @@
         on the window decoration, otherwise they will be always shown on the
         unity top panel</description>
     </key>
+    <key type="b" name="app-use-maximum-scale-factor">
+      <default>false</default>
+      <summary>Use the maximum per-monitor scale-factor as application scale factor.</summary>
+      <description>When this is enabled, the applications scale factor will match
+        the scale factor of the monitor with the greater value</description>
+    </key>
   </schema>
   <schema path="/com/canonical/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">

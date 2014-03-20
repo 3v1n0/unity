@@ -37,12 +37,19 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
-const std::string SCALE_FACTOR = "scale-factor";
 const std::string LIM_KEY = "integrated-menus";
+const std::string USE_MAX_SCALE = "app-use-maximum-scale-factor";
+
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
+
 const std::string UI_SETTINGS = "com.ubuntu.user-interface";
+const std::string SCALE_FACTOR = "scale-factor";
+
+const std::string GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
+const std::string GNOME_SCALE_FACTOR = "scaling-factor";
+const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
 const int DEFAULT_LAUNCHER_WIDTH = 64;
 const double DEFAULT_DPI = 96.0f;
@@ -56,10 +63,10 @@ class Settings::Impl : public sigc::trackable
 public:
   Impl(Settings* owner)
     : parent_(owner)
-    , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
-    , ubuntu_settings_(g_settings_new(UI_SETTINGS.c_str()))
+    , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
+    , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
     , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
     , cached_form_factor_(FormFactor::DESKTOP)
     , cached_double_click_activate_(true)
@@ -84,7 +91,12 @@ public:
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
-    signals_.Add<void, GSettings*, const gchar*>(ubuntu_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateEMConverter();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + USE_MAX_SCALE, [this] (GSettings*, const gchar* t) {
       UpdateEMConverter();
     });
 
@@ -160,7 +172,7 @@ public:
     auto* uscreen = UScreen::GetDefault();
 
     if (monitor < 0 || monitor >= uscreen->GetPluggedMonitorsNumber())
-      return DEFAULT_DPI;
+      return -1;
 
     auto const& monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
     double ui_scale = 1.0f;
@@ -183,16 +195,31 @@ public:
   void UpdateDPI()
   {
     glib::Variant dict;
-    g_settings_get(ubuntu_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+    g_settings_get(ui_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+    int min_dpi = 0;
+    int max_dpi = 0;
     bool any_changed = false;
 
     for (unsigned i = 0; i < em_converters_.size(); ++i)
     {
       int dpi = GetDPI(dict, i);
 
+      if (dpi >= 0)
+      {
+        min_dpi = std::min(min_dpi, dpi);
+        max_dpi = std::max(max_dpi, dpi);
+      }
+      else
+      {
+        dpi = DEFAULT_DPI;
+      }
+
       if (em_converters_[i]->SetDPI(dpi))
         any_changed = true;
     }
+
+    int app_dpi = (g_settings_get_boolean(usettings_, USE_MAX_SCALE.c_str())) ? max_dpi : min_dpi;
+    UpdateAppsScaling(static_cast<double>(app_dpi)/DEFAULT_DPI);
 
     if (any_changed)
       parent_->dpi_changed.emit();
@@ -204,12 +231,19 @@ public:
     UpdateDPI();
   }
 
+  void UpdateAppsScaling(double scale)
+  {
+    unsigned integer_scaling = std::max<unsigned>(1, scale);
+    double point_scaling = scale / static_cast<double>(integer_scaling);
+    g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
+    g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), point_scaling);
+  }
+
   Settings* parent_;
-  glib::Object<GSettings> gsettings_;
-  glib::Object<GSettings> ubuntu_settings_;
+  glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> usettings_;
   glib::Object<GSettings> lim_settings_;
-  glib::Object<GSettings> gnome_settings_;
+  glib::Object<GSettings> gnome_ui_settings_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
   std::vector<int> launcher_widths_;
