@@ -100,7 +100,6 @@ void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
     int width = 0, height = 0;
     GetTextureSize(&width, &height);
 
-    nux::Color col(1.0f * opacity, 1.0f * opacity, 1.0f * opacity, opacity);
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
@@ -111,7 +110,7 @@ void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
                          height,
                          texture()->GetDeviceTexture(),
                          texxform,
-                         col);
+                         nux::color::White * opacity);
 
     graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
   }
