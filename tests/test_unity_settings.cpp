@@ -60,7 +60,7 @@ TEST_F(TestUnitySettings, SetFormFactor)
 
 TEST_F(TestUnitySettings, GetFormFactor)
 {
-  EXPECT_EQ(unity_settings->form_factor(), unity::FormFactor::DESKTOP);
+  ASSERT_NE(unity_settings->form_factor(), unity::FormFactor::NETBOOK);
 
   g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::NETBOOK));
   EXPECT_EQ(unity_settings->form_factor(), unity::FormFactor::NETBOOK);
@@ -76,7 +76,6 @@ TEST_F(TestUnitySettings, FormFactorChangedSignal_Extern)
   });
 
   g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::NETBOOK));
-  Utils::WaitUntilMSec(signal_received);
   EXPECT_EQ(new_form_factor, unity::FormFactor::NETBOOK);
 }
 
