@@ -62,6 +62,14 @@
       <description>This value defines the global font scaling used by both
         unity and applications. It will match the current system font scaling.</description>
     </key>
+    <key type="d" name="cursor-scale-factor">
+      <default>1.0</default>
+      <range min="0.5" max="3.0"/>
+      <summary>Mouse cursor scaling.</summary>
+      <description>This value defines the global mouse cursor scaling used by both
+        unity and applications. Changing this value allows to use a custom scaling
+        for the mouse cursor.</description>
+    </key>
     <key type="s" name="app-scale-factor-monitor">
       <default>''</default>
       <summary>The name of the monitor that controls the global app scaling factor.</summary>

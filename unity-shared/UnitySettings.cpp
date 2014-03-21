@@ -45,6 +45,7 @@ const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
 
 const std::string UI_SETTINGS = "com.canonical.Unity.Interface";
 const std::string TEXT_SCALE_FACTOR = "text-scale-factor";
+const std::string CURSOR_SCALE_FACTOR = "cursor-scale-factor";
 const std::string APP_SCALE_MONITOR = "app-scale-factor-monitor";
 const std::string APP_USE_MAX_SCALE = "app-fallback-to-maximum-scale-factor";
 
@@ -76,6 +77,7 @@ public:
     , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
     , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
     , cached_form_factor_(FormFactor::DESKTOP)
+    , cursor_scale_(1.0)
     , cached_double_click_activate_(true)
     , changing_gnome_settings_(false)
     , lowGfx_(false)
@@ -89,6 +91,7 @@ public:
     // The order is important here, DPI is the last thing to be updated
     UpdateLimSetting();
     UpdateTextScaleFactor();
+    UpdateCursorScaleFactor();
     UpdateFontSize();
     UpdateDPI();
 
@@ -114,6 +117,11 @@ public:
 
     signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
       UpdateTextScaleFactor();
+      UpdateDPI();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + CURSOR_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateCursorScaleFactor();
       UpdateDPI();
     });
 
@@ -173,12 +181,6 @@ public:
     parent_->lim_double_click_wait = g_settings_get_uint(lim_settings_, DOUBLE_CLICK_WAIT.c_str());
   }
 
-  void UpdateTextScaleFactor()
-  {
-    parent_->font_scaling = g_settings_get_double(ui_settings_, TEXT_SCALE_FACTOR.c_str());
-    decoration::Style::Get()->font_scale = parent_->font_scaling();
-  }
-
   FormFactor GetFormFactor() const
   {
     return cached_form_factor_;
@@ -214,6 +216,17 @@ public:
 
     for (auto const& em : em_converters_)
       em->SetFontSize(font_size);
+  }
+
+  void UpdateTextScaleFactor()
+  {
+    parent_->font_scaling = g_settings_get_double(ui_settings_, TEXT_SCALE_FACTOR.c_str());
+    decoration::Style::Get()->font_scale = parent_->font_scaling();
+  }
+
+  void UpdateCursorScaleFactor()
+  {
+    cursor_scale_ = g_settings_get_double(ui_settings_, CURSOR_SCALE_FACTOR.c_str());
   }
 
   void UpdateDPI()
@@ -270,7 +283,7 @@ public:
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
     glib::Variant default_cursor_size(g_settings_get_default_value(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str()), glib::StealRef());
-    int cursor_size = std::round(default_cursor_size.GetInt32() * point_scaling);
+    int cursor_size = std::round(default_cursor_size.GetInt32() * point_scaling * cursor_scale_);
     g_settings_set_int(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str(), cursor_size);
     g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
     g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
@@ -287,6 +300,7 @@ public:
   std::vector<EMConverter::Ptr> em_converters_;
   std::vector<int> launcher_widths_;
   FormFactor cached_form_factor_;
+  double cursor_scale_;
   bool cached_double_click_activate_;
   bool changing_gnome_settings_;
   bool lowGfx_;
