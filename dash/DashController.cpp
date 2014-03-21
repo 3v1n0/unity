@@ -92,7 +92,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   SetupWindow();
   UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const&) { Relayout(true); });
 
-  Settings::Instance().form_factor.changed.connect([this](FormFactor)
+  form_factor_changed_ = Settings::Instance().form_factor.changed.connect([this] (FormFactor)
   {
     if (window_ && view_ && visible_)
     {

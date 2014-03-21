@@ -68,7 +68,7 @@ public:
   bool IsCommandLensOpen() const;
   nux::Geometry GetInputWindowGeometry();
   nux::ObjectPtr<DashView> const& Dash() const;
-  
+
   int Monitor() const;
 
 protected:
@@ -108,6 +108,7 @@ private:
   bool need_show_;
 
   connection::Wrapper screen_ungrabbed_slot_;
+  connection::Wrapper form_factor_changed_;
   glib::DBusServer dbus_server_;
   glib::TimeoutSeconds ensure_timeout_;
   nux::animation::AnimateValue<double> timeline_animator_;
