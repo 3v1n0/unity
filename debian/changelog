@@ -1,3 +1,19 @@
+unity (7.1.2+14.04.20140321-0ubuntu1) trusty; urgency=low
+
+  [ Andrea Azzarone ]
+  * Release the lockscreen_timeout (that we use to get the grab
+    properly) on unlock.
+
+  [ Marco Trevisan (Treviño) ]
+  * Dash: Use nux properties for scale and cairo device scaling
+  * UnitySettings: apply the unity scaling factor to global system
+    settings We basically use the integer part of our scaling factor as
+    the Gdk scaling factor, while we apply the point scaling to the Gdk
+    text-scaling-factor. In this way the readable items will match our
+    scaling. (LP: #1295436)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 21 Mar 2014 23:22:23 +0000
+
 unity (7.1.2+14.04.20140320.1-0ubuntu1) trusty; urgency=low
 
   [ Chris Townsend ]
