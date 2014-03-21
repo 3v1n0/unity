@@ -53,6 +53,9 @@ public:
   TestGSettingsScopes():scope_added(0),scope_removed(0),scopes_reordered(0)
   {}
 
+  virtual void SetUp() { Utils::init_gsettings_test_environment(); }
+  virtual void TearDown() { Utils::reset_gsettings_test_environment(); }
+
   void ConnectScope(Scopes* scopes)
   {
     scopes->scope_added.connect([this](Scope::Ptr const& scope, int)
