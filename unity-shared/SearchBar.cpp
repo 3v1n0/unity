@@ -132,12 +132,12 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   , showing_filters(false)
   , can_refine_search(false)
   , live_search_wait(DEFAULT_LIVE_SEARCH_TIMEOUT)
+  , scale(DEFAULT_SCALE)
   , show_filter_hint_(show_filter_hint)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
   , last_width_(-1)
   , last_height_(-1)
-  , scale_(DEFAULT_SCALE)
 {
   dash::Style& style = dash::Style::Instance();
 
@@ -209,15 +209,15 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
     arrow_layout_  = new nux::VLayout();
-    arrow_top_space_ = new nux::SpaceLayout(ARROW_MIN_WIDTH.CP(scale_),
-                                            ARROW_MAX_WIDTH.CP(scale_),
-                                            TOP_ARROW_MIN_HEIGHT.CP(scale_),
-                                            TOP_ARROW_MAX_HEIGHT.CP(scale_));
+    arrow_top_space_ = new nux::SpaceLayout(ARROW_MIN_WIDTH.CP(scale()),
+                                            ARROW_MAX_WIDTH.CP(scale()),
+                                            TOP_ARROW_MIN_HEIGHT.CP(scale()),
+                                            TOP_ARROW_MAX_HEIGHT.CP(scale()));
 
-    arrow_bottom_space_ = new nux::SpaceLayout(ARROW_MIN_WIDTH.CP(scale_),
-                                               ARROW_MAX_WIDTH.CP(scale_),
-                                               BOT_ARROW_MIN_HEIGHT.CP(scale_),
-                                               BOT_ARROW_MAX_HEIGHT.CP(scale_));
+    arrow_bottom_space_ = new nux::SpaceLayout(ARROW_MIN_WIDTH.CP(scale()),
+                                               ARROW_MAX_WIDTH.CP(scale()),
+                                               BOT_ARROW_MIN_HEIGHT.CP(scale()),
+                                               BOT_ARROW_MAX_HEIGHT.CP(scale()));
 
     arrow_layout_->AddView(arrow_top_space_, 0, nux::MINOR_POSITION_CENTER);
     arrow_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
@@ -272,6 +272,7 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_preedit));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
+  scale.changed.connect(sigc::mem_fun(this, &SearchBar::UpdateScale));
   can_refine_search.changed.connect([this] (bool can_refine)
   {
     if (show_filter_hint_)
@@ -292,29 +293,29 @@ void SearchBar::UpdateSearchBarSize()
   RawPixel const icon_width  = icon->GetWidth();
   RawPixel const icon_height = icon->GetHeight();
 
-  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale_),
-                                  SEARCH_ENTRY_RIGHT_BORDER.CP(scale_));
-  layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT.CP(scale_));
+  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale()),
+                                  SEARCH_ENTRY_RIGHT_BORDER.CP(scale()));
+  layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT.CP(scale()));
 
-  entry_layout_->SetLeftAndRightPadding(LEFT_PADDING.CP(scale_),
-                                        RIGHT_PADDING.CP(scale_));
+  entry_layout_->SetLeftAndRightPadding(LEFT_PADDING.CP(scale()),
+                                        RIGHT_PADDING.CP(scale()));
 
-  spinner_->SetMinMaxSize(icon_width.CP(scale_), icon_height.CP(scale_));
-  entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT.CP(scale_));
+  spinner_->SetMinMaxSize(icon_width.CP(scale()), icon_height.CP(scale()));
+  entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT.CP(scale()));
 
-  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale_));
+  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale()));
 
   if (show_filter_hint_)
   {
-    arrow_top_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale_),
-                                     TOP_ARROW_MIN_HEIGHT.CP(scale_));
-    arrow_top_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
-                                     TOP_ARROW_MAX_HEIGHT.CP(scale_));
+    arrow_top_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale()),
+                                     TOP_ARROW_MIN_HEIGHT.CP(scale()));
+    arrow_top_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale()),
+                                     TOP_ARROW_MAX_HEIGHT.CP(scale()));
 
-    arrow_bottom_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale_),
-                                        BOT_ARROW_MIN_HEIGHT.CP(scale_));
-    arrow_bottom_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale_),
-                                        BOT_ARROW_MAX_HEIGHT.CP(scale_));
+    arrow_bottom_space_->SetMinimumSize(ARROW_MIN_WIDTH.CP(scale()),
+                                        BOT_ARROW_MIN_HEIGHT.CP(scale()));
+    arrow_bottom_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale()),
+                                        BOT_ARROW_MAX_HEIGHT.CP(scale()));
   }
 
   // Based on the Font size, the MinHeight is changing in TextEntry. From there the
@@ -330,15 +331,10 @@ void SearchBar::UpdateSearchBarSize()
 
 void SearchBar::UpdateScale(double scale)
 {
-  if (scale_ != scale)
-  {
-    scale_ = scale;
+  hint_->SetScale(scale);
+  show_filters_->SetScale(scale);
 
-    hint_->SetScale(scale_);
-    show_filters_->SetScale(scale_);
-
-    UpdateSearchBarSize();
-  }
+  UpdateSearchBarSize();
 }
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -450,8 +446,8 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
     nux::Geometry geo(expander_view_->GetGeometry());
 
-    geo.y -= (HIGHLIGHT_HEIGHT.CP(scale_) - geo.height) / 2;
-    geo.height = HIGHLIGHT_HEIGHT.CP(scale_);
+    geo.y -= (HIGHLIGHT_HEIGHT.CP(scale()) - geo.height) / 2;
+    geo.height = HIGHLIGHT_HEIGHT.CP(scale());
 
     if (!highlight_layer_)
       highlight_layer_.reset(style.FocusOverlay(geo.width, geo.height));
@@ -548,7 +544,7 @@ void SearchBar::UpdateBackground(bool force)
   geo.width = layered_layout_->GetAbsoluteX() +
               layered_layout_->GetAbsoluteWidth() -
               GetAbsoluteX() +
-              SEARCH_ENTRY_RIGHT_BORDER.CP(scale_);
+              SEARCH_ENTRY_RIGHT_BORDER.CP(scale());
 
   LOG_TRACE(logger) << "height: "
   << geo.height << " - "
@@ -570,7 +566,7 @@ void SearchBar::UpdateBackground(bool force)
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
                                       0.5, 0.5,
-                                      RADIUS.CP(scale_),
+                                      RADIUS.CP(scale()),
                                       last_width_ - 1, last_height_ - 1,
                                       false);
 

@@ -38,16 +38,15 @@ class ScopeBarIcon : public IconTexture
   NUX_DECLARE_OBJECT_TYPE(ScopeBarIcon, IconTexture);
 public:
   ScopeBarIcon(std::string id, std::string icon_hint);
-  ~ScopeBarIcon();
-
-  void UpdateScale(double scale);
 
   nux::Property<std::string> id;
   nux::Property<bool> active;
+  nux::Property<double> scale;
 
 private:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void OnActiveChanged(bool is_active);
+  void UpdateScale(double scale);
 
   // Introspectable
   std::string GetName() const;
@@ -58,8 +57,6 @@ private:
 
   const float inactive_opacity_;
   LayerPtr focus_layer_;
-
-  double scale_;
 };
 
 }

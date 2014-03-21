@@ -70,15 +70,11 @@ public:
   // get a image to drag
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
-  virtual void UpdateScale(double scale);
-
   nux::Property<int> width;
   nux::Property<int> height;
+  nux::Property<double> scale;
 
   sigc::signal<void> NeedsRedraw;
-
-protected:
-  double scale_;
 };
 
 }

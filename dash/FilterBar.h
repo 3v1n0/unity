@@ -44,9 +44,9 @@ public:
   FilterBar(NUX_FILE_LINE_PROTO);
   ~FilterBar();
 
-  void SetFilters(Filters::Ptr const& filters);
+  nux::Property<double> scale;
 
-  void UpdateScale(double scale);
+  void SetFilters(Filters::Ptr const& filters);
 
   void AddFilter(Filter::Ptr const& filter);
   void RemoveFilter(Filter::Ptr const& filter);
@@ -63,12 +63,11 @@ protected:
 
 private:
   void Init();
+  void UpdateScale(double scale);
 
   FilterFactory factory_;
   Filters::Ptr filters_;
   std::map<Filter::Ptr, FilterExpanderLabel*> filter_map_;
-
-  double scale_;
 };
 
 } // namespace dash

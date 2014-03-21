@@ -51,8 +51,6 @@ public:
 
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
-  void UpdateScale(double scale);
-
 protected:
   virtual void LoadText(Result const& row);
 

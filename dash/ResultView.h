@@ -81,14 +81,14 @@ public:
   nux::Property<std::string> unique_id;
   nux::Property<float> desaturation_progress;
   nux::Property<bool> enable_texture_render;
+  nux::Property<double> scale;
+
   sigc::signal<void, LocalResult const&, ActivateType, GVariant*> ResultActivated;
 
   std::string GetName() const;
   ResultIterator GetIteratorAtRow(unsigned row);
   void AddProperties(debug::IntrospectionData&);
   IntrospectableList GetIntrospectableChildren();
-
-  virtual void UpdateScale(double scale);
 
   virtual int GetSelectedIndex() const;
   virtual void SetSelectedIndex(int index);
@@ -123,11 +123,10 @@ protected:
 
   std::vector<ResultViewTexture::Ptr> result_textures_;
 
-  double scale_;
-
 private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
+  void UpdateScale(double scale);
 
   Result cached_result_;
   connection::Manager result_connections_;

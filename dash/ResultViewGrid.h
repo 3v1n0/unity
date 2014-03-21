@@ -51,7 +51,7 @@ public:
 
   virtual int GetSelectedIndex() const;
   virtual void SetSelectedIndex(int index);
-  
+
   virtual unsigned GetIndexAtPosition(int x, int y);
 
   virtual void Activate(LocalResult const& local_result, int index, ActivateType type);
@@ -59,8 +59,6 @@ public:
   virtual void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
 
   virtual void GetResultDimensions(int& rows, int& columns);
-
-  void UpdateScale(double scale);
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -101,6 +99,7 @@ private:
   void QueueLazyLoad();
   void QueueResultsChanged();
   bool DoLazyLoad();
+  void UpdateScale(double scale);
 
   int GetItemsPerRow();
   void SizeReallocate();
@@ -132,7 +131,6 @@ private:
   UBusManager ubus_;
   glib::Source::UniquePtr lazy_load_source_;
   glib::Source::UniquePtr results_changed_idle_;
-
   glib::Source::UniquePtr activate_timer_;
 };
 
