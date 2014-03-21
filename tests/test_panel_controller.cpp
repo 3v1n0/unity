@@ -22,7 +22,6 @@
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "PanelView.h"
-#include "UnitySettings.h"
 #include "mock_menu_manager.h"
 #include "test_uscreen_mock.h"
 #include "launcher/LauncherOptions.h"
@@ -43,7 +42,6 @@ struct TestPanelController : public testing::Test
   }
 
   MockUScreen uscreen;
-  Settings settings;
   Style panel_style;
   menu::MockManager::Ptr menus;
   ui::EdgeBarrierController::Ptr edge_barriers;

@@ -32,7 +32,6 @@
 #include "dash/ApplicationStarter.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/UnitySettings.h"
 
 #include "test_mock_scope.h"
 
@@ -82,7 +81,6 @@ public:
   };
 
 protected:
-  Settings unity_settings_;
   dash::Style dash_style_;
   panel::Style panel_style_;
   MockApplicationStarter::Ptr application_starter_;

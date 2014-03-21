@@ -19,7 +19,6 @@
 
 #include <gmock/gmock.h>
 #include "UnityWindowView.h"
-#include "UnitySettings.h"
 #include "WindowManager.h"
 #include <Nux/VLayout.h>
 
@@ -51,7 +50,6 @@ struct TestUnityWindowView : testing::Test
     nux::Geometry background_geo_;
   };
 
-  Settings settings;
   testing::NiceMock<MockUnityWindowView> view;
 };
 

@@ -22,7 +22,6 @@
 #include <dash/ScopeBar.h>
 
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/UnitySettings.h"
 #include "test_mock_scope.h"
 
 namespace unity
@@ -42,7 +41,6 @@ public:
     EXPECT_EQ(scope_bar.icons_.size(), size);
   }
 
-  unity::Settings settings;
   dash::Style style;
 };
 

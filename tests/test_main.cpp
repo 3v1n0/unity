@@ -7,7 +7,7 @@
 
 #include "logger_helper.h"
 #include "test_utils.h"
-
+#include "UnitySettings.h"
 
 int main(int argc, char** argv)
 {
@@ -22,6 +22,7 @@ int main(int argc, char** argv)
 
   gtk_init(&argc, &argv);
   setlocale(LC_ALL, "C");
+  unity::Settings settings;
 
   nux::NuxInitialize(0);
   std::unique_ptr<nux::WindowThread> win_thread(nux::CreateNuxWindow("Tests",

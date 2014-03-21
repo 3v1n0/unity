@@ -24,7 +24,6 @@
 #include <gtest/gtest.h>
 #include "test_filter_multirange.h"
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/UnitySettings.h"
 
 #include <Nux/Nux.h>
 #include <NuxGraphics/Events.h>
@@ -113,7 +112,6 @@ public:
                           FALSE);
   }
 
-  Settings unity_settings_;
   dash::Style dash_style_;
 
   glib::Object<DeeModel> model_;

@@ -21,8 +21,8 @@
 #include <gio/gio.h>
 #include <gtest/gtest.h>
 
+#include "UnitySettings.h"
 #include "test_utils.h"
-#include "unity-shared/UnitySettings.h"
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
@@ -36,15 +36,17 @@ public:
   unity::glib::Object<GSettings> gsettings;
   std::unique_ptr<unity::Settings> unity_settings;
 
-  void SetUp() override
-  {
-    gsettings = g_settings_new("com.canonical.Unity");
-    unity_settings.reset(new unity::Settings);
-  }
+  TestUnitySettings()
+   : gsettings(g_settings_new("com.canonical.Unity"))
+   , unity_settings(new unity::Settings)
+  {}
 
-  void TearDown() override
+  ~TestUnitySettings()
   {
-    g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::DESKTOP));
+    std::unique_ptr<gchar*[], void(*)(gchar**)> keys(g_settings_list_keys(gsettings), g_strfreev);
+
+    for (int i = 0; keys[i]; ++i)
+      g_settings_reset(gsettings, keys[i]);
   }
 };
 

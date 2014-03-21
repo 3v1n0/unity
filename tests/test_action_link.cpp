@@ -23,7 +23,6 @@
 #include <gtest/gtest.h>
 
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/UnitySettings.h"
 
 #include "dash/previews/ActionLink.cpp"
 #include "test_utils.h"

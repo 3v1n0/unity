@@ -23,7 +23,6 @@
 #include <Nux/Nux.h>
 #include "PanelStyle.h"
 #include "test_standalone_wm.h"
-#include "UnitySettings.h"
 #include "unity-shared/WindowButtons.h"
 #include "unity-shared/WindowButtonPriv.h"
 
@@ -60,7 +59,6 @@ struct TestWindowButtons : public testing::Test
     MOCK_METHOD0(QueueDraw, void());
   };
 
-  Settings settings;
   panel::Style panel_style;
   testing::NiceMock<MockWindowButtons> wbuttons;
   testwrapper::StandaloneWM wm;
@@ -163,7 +161,6 @@ struct TestWindowButton : public testing::Test
     MOCK_METHOD0(QueueDraw, void());
   };
 
-  Settings settings;
   panel::Style panel_style;
   testing::NiceMock<MockWindowButton> button;
 };

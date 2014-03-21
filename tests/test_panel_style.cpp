@@ -25,7 +25,6 @@
 
 #include <Nux/Nux.h>
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/UnitySettings.h"
 
 #include "MultiMonitor.h"
 
@@ -41,7 +40,6 @@ class TestPanelStyle : public Test
 {
 public:
   glib::Object<GSettings> gsettings;
-  Settings unity_settings;
   std::unique_ptr<panel::Style> panel_style_instance;
 
   /* override */ void SetUp()

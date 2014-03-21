@@ -22,7 +22,6 @@
 #include <dash/ScopeView.h>
 #include <dash/PlacesGroup.h>
 #include <unity-shared/DashStyle.h>
-#include <unity-shared/UnitySettings.h>
 #include <UnityCore/Category.h>
 
 #include "MockCategories.h"
@@ -77,7 +76,6 @@ struct TestScopeView : public ::testing::Test
     , scope_view_(new FakeScopeView(scope_))
   {}
 
-  unity::Settings settings;
   dash::Style style;
   MockScopeData::Ptr scope_data_;
   MockScope::Ptr scope_;

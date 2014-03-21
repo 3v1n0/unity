@@ -31,7 +31,6 @@
 #include "SwitcherController.h"
 #include "SwitcherView.h"
 #include "TimeUtil.h"
-#include "unity-shared/UnitySettings.h"
 #include "mock-base-window.h"
 #include "test_standalone_wm.h"
 
@@ -91,9 +90,6 @@ class TestSwitcherController : public testing::Test
 {
 protected:
   TestSwitcherController();
-
-  // required to create hidden secret global variables before test objects
-  unity::Settings unity_settings_;
 
   unity::testwrapper::StandaloneWM WM;
   nux::animation::TickSource tick_source_;

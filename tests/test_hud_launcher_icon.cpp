@@ -21,7 +21,6 @@
 
 #include "HudLauncherIcon.h"
 
-#include "unity-shared/UnitySettings.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -39,7 +38,6 @@ public:
 
 struct TestHudLauncherIcon : testing::Test
 {
-  unity::Settings settings;
   MockHudLauncherIcon hud;
 };
 

@@ -24,7 +24,6 @@
 #include <Nux/HLayout.h>
 #include "PanelIndicatorsView.h"
 #include "PanelStyle.h"
-#include "UnitySettings.h"
 #include "mock_indicators.h"
 
 namespace unity
@@ -52,7 +51,6 @@ struct MockPanelIndicatorsView : PanelIndicatorsView
 
 struct TestPanelIndicatorsView : testing::Test
 {
-  Settings settings_;
   Style style_;
   testing::NiceMock<MockPanelIndicatorsView> indicators;
 };
