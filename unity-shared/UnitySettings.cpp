@@ -103,7 +103,6 @@ public:
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
-      parent_->form_factor.changed.emit(cached_form_factor_);
     });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, const gchar*) {
@@ -158,6 +157,7 @@ public:
   void CacheFormFactor()
   {
     int raw_from_factor = g_settings_get_enum(usettings_, FORM_FACTOR.c_str());
+    FormFactor new_form_factor;
 
     if (raw_from_factor == 0) //Automatic
     {
@@ -165,11 +165,17 @@ public:
       int primary_monitor = uscreen->GetMonitorWithMouse();
       auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
 
-      cached_form_factor_ = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
+      new_form_factor = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
     }
     else
     {
-      cached_form_factor_ = static_cast<FormFactor>(raw_from_factor);
+      new_form_factor = static_cast<FormFactor>(raw_from_factor);
+    }
+
+    if (new_form_factor != cached_form_factor_)
+    {
+      cached_form_factor_ = new_form_factor;
+      parent_->form_factor.changed.emit(cached_form_factor_);
     }
   }
 
@@ -193,7 +199,7 @@ public:
   bool SetFormFactor(FormFactor factor)
   {
     g_settings_set_enum(usettings_, FORM_FACTOR.c_str(), static_cast<int>(factor));
-    return true;
+    return false;
   }
 
   bool GetDoubleClickActivate() const

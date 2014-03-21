@@ -19,7 +19,7 @@
  */
 
 #include <gio/gio.h>
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "UnitySettings.h"
 #include "test_utils.h"
@@ -29,22 +29,35 @@
 
 namespace
 {
-
-class TestUnitySettings : public testing::Test
+struct SigReceiver : sigc::trackable
 {
-public:
+  typedef testing::NiceMock<SigReceiver> Nice;
+
+  SigReceiver(std::shared_ptr<unity::Settings> const& settings)
+  {
+   settings->form_factor.changed.connect(sigc::mem_fun(this, &SigReceiver::FormFactorChanged));
+  }
+
+  MOCK_CONST_METHOD1(FormFactorChanged, void(unity::FormFactor));
+};
+
+struct TestUnitySettings : testing::Test
+{
   unity::glib::Object<GSettings> gsettings;
-  std::unique_ptr<unity::Settings> unity_settings;
+  std::shared_ptr<unity::Settings> unity_settings;
+  SigReceiver::Nice sig_receiver;
 
   TestUnitySettings()
    : gsettings(g_settings_new("com.canonical.Unity"))
-   , unity_settings(new unity::Settings)
+   , unity_settings(std::make_shared<unity::Settings>())
+   , sig_receiver(unity_settings)
   {
     g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::DESKTOP));
   }
 
   ~TestUnitySettings()
   {
+    sig_receiver.notify_callbacks();
     g_settings_reset(gsettings, "form-factor");
   }
 };
@@ -67,41 +80,24 @@ TEST_F(TestUnitySettings, GetFormFactor)
 
 TEST_F(TestUnitySettings, FormFactorChangedSignal_Extern)
 {
-  bool signal_received = false;
-  unity::FormFactor new_form_factor;
-  unity_settings->form_factor.changed.connect([&](unity::FormFactor form_factor) {
-    signal_received = true;
-    new_form_factor = form_factor;
-  });
+  EXPECT_CALL(sig_receiver, FormFactorChanged(unity::FormFactor::NETBOOK));
 
   g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::NETBOOK));
-  EXPECT_EQ(new_form_factor, unity::FormFactor::NETBOOK);
 }
 
 TEST_F(TestUnitySettings, FormFactorChangedSignal_Extern_OtherKeys)
 {
-  bool signal_received = false;
-  unity_settings->form_factor.changed.connect([&](unity::FormFactor form_factor) {
-    signal_received = true;
-  });
+  EXPECT_CALL(sig_receiver, FormFactorChanged(testing::_)).Times(0);
 
   g_settings_set_int(gsettings, "minimize-count", 0);
   Utils::WaitForTimeoutMSec(100);
-  EXPECT_FALSE(signal_received);
 }
 
 TEST_F(TestUnitySettings, FormFactorChangedSignal_Inter)
 {
-  bool signal_received = false;
-  unity::FormFactor new_form_factor;
-  unity_settings->form_factor.changed.connect([&](unity::FormFactor form_factor) {
-    signal_received = true;
-    new_form_factor = form_factor;
-  });
+  EXPECT_CALL(sig_receiver, FormFactorChanged(unity::FormFactor::NETBOOK));
 
   unity_settings->form_factor = unity::FormFactor::NETBOOK;
-  Utils::WaitUntilMSec(signal_received);
-  EXPECT_EQ(new_form_factor, unity::FormFactor::NETBOOK);
 }
 
 }
