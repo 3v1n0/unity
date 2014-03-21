@@ -164,6 +164,7 @@ struct Style::Impl : sigc::trackable
                           nux::ButtonVisualState state);
 
   void Refresh();
+  void UpdateFormFactor(FormFactor);
   void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
 
   // Members
@@ -293,8 +294,12 @@ Style::Impl::Impl(Style* owner)
                        "notify::gtk-font-name",
                        sigc::mem_fun(this, &Impl::OnFontChanged)));
 
-  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Refresh)));
+  auto& settings = Settings::Instance();
+  settings.font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Refresh)));
+  settings.form_factor.changed.connect(sigc::mem_fun(this, &Impl::UpdateFormFactor));
+
   Refresh();
+  UpdateFormFactor(settings.form_factor());
 
   // create fallback font-options
   default_font_options_ = cairo_font_options_create();
@@ -411,12 +416,15 @@ void Style::Impl::Refresh()
   pango_font_description_free(desc);
 }
 
-
 void Style::Impl::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
 {
   Refresh();
 }
 
+void Style::Impl::UpdateFormFactor(FormFactor form_factor)
+{
+  owner_->always_maximised = (form_factor == FormFactor::NETBOOK || form_factor == FormFactor::TV);
+}
 
 Style::Style()
   : always_maximised(false)
@@ -430,15 +438,6 @@ Style::Style()
   {
     style_instance = this;
   }
-
-  auto formfactor_lambda = [this] (FormFactor)
-  {
-    FormFactor formfactor = Settings::Instance().form_factor();
-    always_maximised = (formfactor == FormFactor::NETBOOK || formfactor == FormFactor::TV); 
-  };
-
-  Settings::Instance().form_factor.changed.connect(formfactor_lambda);
-  formfactor_lambda(FormFactor());
 }
 
 Style::~Style ()
