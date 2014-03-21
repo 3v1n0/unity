@@ -393,13 +393,37 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     {
       if (scaleWasActive) // #5 above
       {
-        Focus(arg);
+        if (minimize_window_on_click())
+        {
+          for (auto const& win : GetWindows(WindowFilter::ON_CURRENT_DESKTOP))
+            wm.Minimize(win->window_id());
+        }
+        else
+        {
+          Focus(arg);
+        }
       }
       else // #2 above
       {
         if (arg.source != ActionArg::Source::SWITCHER)
         {
-          Spread(true, 0, false);
+          bool minimized = false;
+
+          if (minimize_window_on_click)
+          {
+            WindowList const& windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP);
+
+            if (windows.size() == 1)
+            {
+              wm.Minimize(windows[0]->window_id());
+              minimized = true;
+            }
+          }
+
+          if (!minimized)
+          {
+            Spread(true, 0, false);
+          }
         }
       }
     }

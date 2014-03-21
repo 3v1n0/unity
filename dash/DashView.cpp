@@ -571,7 +571,7 @@ void DashView::SetupViews()
   scope_bar_->scope_activated.connect(sigc::mem_fun(this, &DashView::OnScopeBarActivated));
   content_layout_->AddView(scope_bar_, 0, nux::MINOR_POSITION_CENTER);
 
-  UpdateDashViewSize();
+  OnDPIChanged();
 }
 
 void DashView::OnDPIChanged()

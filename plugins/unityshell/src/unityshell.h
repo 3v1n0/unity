@@ -278,6 +278,8 @@ private:
 
   void OnDashRealized ();
 
+  void RaiseOSK();
+
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
   void OnSwitcherDetailChanged(bool detail);
