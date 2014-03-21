@@ -52,6 +52,7 @@ const std::string UBUNTU_UI_SETTINGS = "com.ubuntu.user-interface";
 const std::string SCALE_FACTOR = "scale-factor";
 
 const std::string GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
+const std::string GNOME_CURSOR_SIZE = "cursor-size";
 const std::string GNOME_SCALE_FACTOR = "scaling-factor";
 const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
@@ -263,6 +264,9 @@ public:
     unsigned integer_scaling = std::max<unsigned>(1, scale);
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
+    glib::Variant default_cursor_size(g_settings_get_default_value(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str()), glib::StealRef());
+    int cursor_size = std::round(default_cursor_size.GetInt32() * point_scaling);
+    g_settings_set_int(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str(), cursor_size);
     g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
     g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
     changing_gnome_settings_ = false;
