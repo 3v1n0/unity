@@ -1,3 +1,19 @@
+unity (7.1.2+14.04.20140320.1-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * Change the signal for detecting resuming from Suspend from UPower
+    (which is unreliable) to logind. (LP: #1210077)
+
+  [ Brandon Schaefer ]
+  * Use key_code instead of key_sym for the Super+<Num> shortcut. (LP:
+    #1294885)
+
+  [ Andrea Azzarone ]
+  * Wait for the grab before showing the lockscreen. (LP: #1291497)
+  * Do not lock a guest session. (LP: #1295194)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 20 Mar 2014 23:51:55 +0000
+
 unity (7.1.2+14.04.20140318-0ubuntu1) trusty; urgency=low
 
   [ Brandon Schaefer ]

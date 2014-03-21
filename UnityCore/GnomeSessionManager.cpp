@@ -96,7 +96,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
                                                      test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
     login_proxy_->Connect("Lock", [this](GVariant*){
-      manager_->lock_requested.emit();
+      manager_->LockScreen();
     });
 
     login_proxy_->Connect("Unlock", [this](GVariant*){

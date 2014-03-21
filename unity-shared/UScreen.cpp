@@ -28,14 +28,19 @@ UScreen* UScreen::default_screen_ = nullptr;
 UScreen::UScreen()
   : primary_(0)
   , screen_(gdk_screen_get_default(), glib::AddRef())
-  , proxy_("org.freedesktop.UPower",
-           "/org/freedesktop/UPower",
-           "org.freedesktop.UPower",
+  , proxy_("org.freedesktop.login1",
+           "/org/freedesktop/login1",
+           "org.freedesktop.login1.Manager",
            G_BUS_TYPE_SYSTEM)
 {
   size_changed_signal_.Connect(screen_, "size-changed", sigc::mem_fun(this, &UScreen::Changed));
   monitors_changed_signal_.Connect(screen_, "monitors-changed", sigc::mem_fun(this, &UScreen::Changed));
-  proxy_.Connect("Resuming", [this] (GVariant* data) { resuming.emit(); });
+  proxy_.Connect("PrepareForSleep", [this] (GVariant* data) { 
+    gboolean val;
+    g_variant_get(data, "(b)", &val);
+    if (!val)
+      resuming.emit();
+  });
 
   Refresh();
 }

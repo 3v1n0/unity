@@ -3735,6 +3735,10 @@ void UnityScreen::LockscreenRequested()
 
   launcher_controller_->ClearTooltips();
 
+  auto& wm = WindowManager::Default();
+  if (wm.IsScaleActive())
+    wm.TerminateScale();
+
   RaiseOSK();
 }
 
