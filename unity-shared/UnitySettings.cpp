@@ -86,6 +86,7 @@ public:
     CacheDoubleClickActivate();
     UpdateLimSetting();
     UpdateTextScaleFactor();
+    UpdateEMConverter();
 
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateEMConverter))));
 
@@ -99,24 +100,25 @@ public:
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
 
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
+      UpdateLimSetting();
+    });
+
     signals_.Add<void, GSettings*, const gchar*>(ubuntu_ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
-      UpdateEMConverter();
+      UpdateDPI();
     });
 
     signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
       UpdateTextScaleFactor();
+      UpdateDPI();
     });
 
     signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + APP_SCALE_MONITOR, [this] (GSettings*, const gchar* t) {
-      UpdateEMConverter();
+      UpdateDPI();
     });
 
     signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + APP_USE_MAX_SCALE, [this] (GSettings*, const gchar* t) {
-      UpdateEMConverter();
-    });
-
-    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
-      UpdateLimSetting();
+      UpdateDPI();
     });
 
     signals_.Add<void, GSettings*, const gchar*>(gnome_ui_settings_, "changed::" + GNOME_TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
@@ -166,7 +168,6 @@ public:
   {
     parent_->font_scaling = g_settings_get_double(ui_settings_, TEXT_SCALE_FACTOR.c_str());
     decoration::Style::Get()->font_scale = parent_->font_scaling();
-    UpdateEMConverter();
   }
 
   FormFactor GetFormFactor() const
