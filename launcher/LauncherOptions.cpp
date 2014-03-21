@@ -47,6 +47,7 @@ Options::Options()
   , edge_resist(true)
   , show_for_all(false)
   , scroll_inactive_icons(false)
+  , minimize_window_on_click(false)
 {
   auto changed_lambda = [this] {
     changed_idle_.reset(new glib::Idle(glib::Source::Priority::HIGH));
@@ -72,6 +73,7 @@ Options::Options()
   urgent_animation.changed.connect(sigc::hide(changed_lambda));
   edge_resist.changed.connect(sigc::hide(changed_lambda));
   scroll_inactive_icons.changed.connect(sigc::hide(changed_lambda));
+  minimize_window_on_click.changed.connect(sigc::hide(changed_lambda));
 }
 
 }

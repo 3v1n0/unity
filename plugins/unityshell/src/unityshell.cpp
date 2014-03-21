@@ -380,6 +380,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherCaptureMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetScrollInactiveIconsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetLauncherMinimizeWindowNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
@@ -930,7 +931,6 @@ void UnityScreen::DrawPanelUnderDash()
 bool UnityScreen::forcePaintOnTop()
 {
     return !allowWindowPaint ||
-           lockscreen_controller_->IsLocked() ||
           ((switcher_controller_->Visible() ||
             WindowManager::Default().IsExpoActive())
            && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
@@ -2794,7 +2794,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    * fully covers the shell on its output. It does not include regular windows
    * stacked above the shell like DnD icons or Onboard etc.
    */
-  if (G_UNLIKELY(is_nux_window_))
+  if (G_UNLIKELY(is_nux_window_) &&
+     (!uScreen->lockscreen_controller_->IsLocked() ||
+      uScreen->lockscreen_controller_->Opacity() != 1.0f))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
@@ -2851,8 +2853,10 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   if (uScreen->lockscreen_controller_->IsLocked())
   {
-    if (window->type() != CompWindowTypePopupMenuMask ||
-        !uScreen->lockscreen_controller_->HasOpenMenu())
+    if ((window->type() != CompWindowTypePopupMenuMask ||
+        !uScreen->lockscreen_controller_->HasOpenMenu()) &&
+        window->resName() != "onboard" &&
+        !window->minimized())
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need
@@ -3007,6 +3011,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       }
     }
   }
+
+  if (uScreen->lockscreen_controller_->IsLocked())
+    draw_panel_shadow = DrawPanelShadow::NO;
 
   if (draw_panel_shadow == DrawPanelShadow::BELOW_WINDOW)
     uScreen->paintPanelShadow(region);
@@ -3401,6 +3408,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::ScrollInactiveIcons:
       launcher_options->scroll_inactive_icons = optionGetScrollInactiveIcons();
       break;
+    case UnityshellOptions::LauncherMinimizeWindow:
+      launcher_options->minimize_window_on_click = optionGetLauncherMinimizeWindow();
+      break;
     case UnityshellOptions::BackgroundColor:
     {
       auto override_color = NuxColorFromCompizColor(optionGetBackgroundColor());
@@ -3709,16 +3719,7 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
 
 void UnityScreen::OnDashRealized()
 {
-  /* stack any windows named "onboard" above us */
-  for (CompWindow *w : screen->windows ())
-  {
-    if (w->resName() == "onboard")
-    {
-      Window xid = dash_controller_->window()->GetInputWindowId();
-      XSetTransientForHint (screen->dpy(), w->id(), xid);
-      w->raise ();
-    }
-  }
+  RaiseOSK();
 }
 
 void UnityScreen::LockscreenRequested()
@@ -3734,6 +3735,26 @@ void UnityScreen::LockscreenRequested()
   }
 
   launcher_controller_->ClearTooltips();
+
+  auto& adapter = PluginAdapter::Default();
+  if (adapter.IsScaleActive())
+    adapter.TerminateScale();
+
+  RaiseOSK();
+}
+
+void UnityScreen::RaiseOSK()
+{
+  /* stack any windows named "onboard" above us */
+  for (CompWindow *w : screen->windows ())
+  {
+    if (w->resName() == "onboard")
+    {
+      Window xid = dash_controller_->window()->GetInputWindowId();
+      XSetTransientForHint (screen->dpy(), w->id(), xid);
+      w->raise ();
+    }
+  }
 }
 
 /* Start up the launcher */
@@ -3827,6 +3848,7 @@ void UnityScreen::initLauncher()
   });
 
   launcher_controller_->options()->scroll_inactive_icons = optionGetScrollInactiveIcons();
+  launcher_controller_->options()->minimize_window_on_click = optionGetLauncherMinimizeWindow();
 
   ScheduleRelayout(0);
 }
