@@ -82,8 +82,12 @@ public:
     , changing_gnome_settings_(false)
     , lowGfx_(false)
   {
+    parent_->form_factor.SetGetterFunction(sigc::mem_fun(this, &Impl::GetFormFactor));
+    parent_->form_factor.SetSetterFunction(sigc::mem_fun(this, &Impl::SetFormFactor));
+    parent_->double_click_activate.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDoubleClickActivate));
+
     for (unsigned i = 0; i < monitors::MAX; ++i)
-      em_converters_.push_back(std::make_shared<EMConverter>());
+      em_converters_.emplace_back(std::make_shared<EMConverter>());
 
     CacheFormFactor();
     CacheDoubleClickActivate();
@@ -317,17 +321,10 @@ Settings::Settings()
   if (settings_instance)
   {
     LOG_ERROR(logger) << "More than one unity::Settings created.";
+    return;
   }
 
-  else
-  {
-    form_factor.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetFormFactor));
-    form_factor.SetSetterFunction(sigc::mem_fun(*pimpl, &Impl::SetFormFactor));
-
-    double_click_activate.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetDoubleClickActivate));
-
-    settings_instance = this;
-  }
+  settings_instance = this;
 }
 
 Settings::~Settings()
