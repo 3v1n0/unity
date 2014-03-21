@@ -231,6 +231,8 @@ void Controller::ShowShields()
 
 void Controller::OnUnlockRequested()
 {
+  lockscreen_timeout_.release();
+
   if (!IsLocked())
     return;
 
