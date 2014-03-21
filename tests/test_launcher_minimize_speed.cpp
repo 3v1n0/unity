@@ -22,7 +22,6 @@
 
 #include <gio/gio.h>
 #include <gtest/gtest.h>
-#include "test_utils.h"
 
 #include "plugins/unityshell/src/WindowMinimizeSpeedController.h"
 
@@ -36,19 +35,12 @@ class TestLauncherMinimizeSpeed : public Test
 {
 public:
   glib::Object<GSettings> mSettings;
-  WindowMinimizeSpeedController* mController;
-  
+  std::shared_ptr<WindowMinimizeSpeedController> mController;
+
   /* override */ void SetUp()
   {
-    Utils::init_gsettings_test_environment();
     mSettings = g_settings_new("com.canonical.Unity");
-    mController = new WindowMinimizeSpeedController();
-  }
-
-  /* override */ void TearDown()
-  {
-    Utils::reset_gsettings_test_environment();
-    delete mController;
+    mController = std::make_shared<WindowMinimizeSpeedController>();
   }
 };
 

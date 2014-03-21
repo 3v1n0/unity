@@ -35,7 +35,6 @@
 #include "unity-shared/UnitySettings.h"
 
 #include "test_mock_scope.h"
-#include "test_utils.h"
 
 using namespace unity;
 using namespace unity::dash;
@@ -69,9 +68,6 @@ public:
   : application_starter_(std::make_shared<MockApplicationStarter>())
   {}
   virtual ~TestDashView() {}
-
-  virtual void SetUp() { Utils::init_gsettings_test_environment(); }
-  virtual void TearDown() { Utils::reset_gsettings_test_environment(); }
 
   class MockDashView  : public DashView
   {

@@ -24,6 +24,7 @@
 #include "test_utils.h"
 #include "unity-shared/UnitySettings.h"
 
+#include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
 namespace
@@ -35,18 +36,15 @@ public:
   unity::glib::Object<GSettings> gsettings;
   std::unique_ptr<unity::Settings> unity_settings;
 
-  void SetUp()
+  void SetUp() override
   {
-    Utils::init_gsettings_test_environment();
     gsettings = g_settings_new("com.canonical.Unity");
-    g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::DESKTOP));
-
     unity_settings.reset(new unity::Settings);
   }
 
-  void TearDown()
+  void TearDown() override
   {
-    Utils::reset_gsettings_test_environment();
+    g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::DESKTOP));
   }
 };
 
