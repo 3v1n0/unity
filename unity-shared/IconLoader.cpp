@@ -920,11 +920,7 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
   cairo_t* cr = util_cg.GetInternalContext();
 
   glib::String font;
-  int dpi = 0;
-  g_object_get(settings,
-                 "gtk-font-name", &font,
-                 "gtk-xft-dpi", &dpi,
-                 NULL);
+  g_object_get(settings, "gtk-font-name", &font, nullptr);
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
   pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
   pango_font_description_set_size(desc.get(), FONT_SIZE * PANGO_SCALE);
@@ -936,7 +932,7 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
   PangoContext* cxt = pango_layout_get_context(layout);
   GdkScreen* screen = gdk_screen_get_default();
   pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
-  pango_cairo_context_set_resolution(cxt, dpi / (double) PANGO_SCALE);
+  pango_cairo_context_set_resolution(cxt, 96.0 * Settings::Instance().font_scaling());
   pango_layout_context_changed(layout);
 
   PangoRectangle log_rect;
