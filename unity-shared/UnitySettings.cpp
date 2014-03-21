@@ -37,12 +37,26 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
-const std::string SCALE_FACTOR = "scale-factor";
 const std::string LIM_KEY = "integrated-menus";
+
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
-const std::string UI_SETTINGS = "com.ubuntu.user-interface";
+
+const std::string UI_SETTINGS = "com.canonical.Unity.Interface";
+const std::string TEXT_SCALE_FACTOR = "text-scale-factor";
+const std::string CURSOR_SCALE_FACTOR = "cursor-scale-factor";
+const std::string APP_SCALE_MONITOR = "app-scale-factor-monitor";
+const std::string APP_USE_MAX_SCALE = "app-fallback-to-maximum-scale-factor";
+
+const std::string UBUNTU_UI_SETTINGS = "com.ubuntu.user-interface";
+const std::string SCALE_FACTOR = "scale-factor";
+
+const std::string GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
+const std::string GNOME_FONT_NAME = "font-name";
+const std::string GNOME_CURSOR_SIZE = "cursor-size";
+const std::string GNOME_SCALE_FACTOR = "scaling-factor";
+const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
 const int DEFAULT_LAUNCHER_WIDTH = 64;
 const double DEFAULT_DPI = 96.0f;
@@ -56,40 +70,83 @@ class Settings::Impl : public sigc::trackable
 public:
   Impl(Settings* owner)
     : parent_(owner)
-    , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
-    , ubuntu_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
+    , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
+    , ubuntu_ui_settings_(g_settings_new(UBUNTU_UI_SETTINGS.c_str()))
+    , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
     , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
     , cached_form_factor_(FormFactor::DESKTOP)
+    , cursor_scale_(1.0)
     , cached_double_click_activate_(true)
+    , changing_gnome_settings_(false)
     , lowGfx_(false)
   {
+    parent_->form_factor.SetGetterFunction(sigc::mem_fun(this, &Impl::GetFormFactor));
+    parent_->form_factor.SetSetterFunction(sigc::mem_fun(this, &Impl::SetFormFactor));
+    parent_->double_click_activate.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDoubleClickActivate));
+
     for (unsigned i = 0; i < monitors::MAX; ++i)
-      em_converters_.push_back(std::make_shared<EMConverter>());
+      em_converters_.emplace_back(std::make_shared<EMConverter>());
 
     CacheFormFactor();
     CacheDoubleClickActivate();
-    UpdateEMConverter();
-    UpdateLimSetting();
 
-    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateEMConverter))));
+    // The order is important here, DPI is the last thing to be updated
+    UpdateLimSetting();
+    UpdateTextScaleFactor();
+    UpdateCursorScaleFactor();
+    UpdateFontSize();
+    UpdateDPI();
+
+    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
-      parent_->form_factor.changed.emit(cached_form_factor_);
     });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, const gchar*) {
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
-    signals_.Add<void, GSettings*, const gchar*>(ubuntu_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
-      UpdateEMConverter();
-    });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(ubuntu_ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateDPI();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateTextScaleFactor();
+      UpdateDPI();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + CURSOR_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      UpdateCursorScaleFactor();
+      UpdateDPI();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + APP_SCALE_MONITOR, [this] (GSettings*, const gchar* t) {
+      UpdateDPI();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(ui_settings_, "changed::" + APP_USE_MAX_SCALE, [this] (GSettings*, const gchar* t) {
+      UpdateDPI();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(gnome_ui_settings_, "changed::" + GNOME_FONT_NAME, [this] (GSettings*, const gchar* t) {
+      UpdateFontSize();
+      UpdateDPI();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(gnome_ui_settings_, "changed::" + GNOME_TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      if (!changing_gnome_settings_)
+      {
+        double new_scale_factor = g_settings_get_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str());
+        g_settings_set_double(ui_settings_, TEXT_SCALE_FACTOR.c_str(), new_scale_factor);
+      }
     });
 
     signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
@@ -100,6 +157,7 @@ public:
   void CacheFormFactor()
   {
     int raw_from_factor = g_settings_get_enum(usettings_, FORM_FACTOR.c_str());
+    FormFactor new_form_factor;
 
     if (raw_from_factor == 0) //Automatic
     {
@@ -107,11 +165,17 @@ public:
       int primary_monitor = uscreen->GetMonitorWithMouse();
       auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
 
-      cached_form_factor_ = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
+      new_form_factor = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
     }
     else
     {
-      cached_form_factor_ = static_cast<FormFactor>(raw_from_factor);
+      new_form_factor = static_cast<FormFactor>(raw_from_factor);
+    }
+
+    if (new_form_factor != cached_form_factor_)
+    {
+      cached_form_factor_ = new_form_factor;
+      parent_->form_factor.changed.emit(cached_form_factor_);
     }
   }
 
@@ -135,7 +199,7 @@ public:
   bool SetFormFactor(FormFactor factor)
   {
     g_settings_set_enum(usettings_, FORM_FACTOR.c_str(), static_cast<int>(factor));
-    return true;
+    return false;
   }
 
   bool GetDoubleClickActivate() const
@@ -148,28 +212,12 @@ public:
     gint font_size;
     PangoFontDescription* desc;
 
-    desc = pango_font_description_from_string(decoration::Style::Get()->font().c_str());
+    glib::String font_name(g_settings_get_string(gnome_ui_settings_, GNOME_FONT_NAME.c_str()));
+    desc = pango_font_description_from_string(font_name);
     font_size = pango_font_description_get_size(desc);
     pango_font_description_free(desc);
 
     return font_size / 1024;
-  }
-
-  int GetDPI(glib::Variant const& dict, int monitor) const
-  {
-    auto* uscreen = UScreen::GetDefault();
-
-    if (monitor < 0 || monitor >= uscreen->GetPluggedMonitorsNumber())
-      return DEFAULT_DPI;
-
-    auto const& monitor_name = UScreen::GetDefault()->GetMonitorName(monitor);
-    double ui_scale = 1.0f;
-    int value;
-
-    if (g_variant_lookup(dict, monitor_name.c_str(), "i", &value))
-      ui_scale = static_cast<double>(value)/8.0f;
-
-    return (DEFAULT_DPI * ui_scale);
   }
 
   void UpdateFontSize()
@@ -180,41 +228,91 @@ public:
       em->SetFontSize(font_size);
   }
 
+  void UpdateTextScaleFactor()
+  {
+    parent_->font_scaling = g_settings_get_double(ui_settings_, TEXT_SCALE_FACTOR.c_str());
+    decoration::Style::Get()->font_scale = parent_->font_scaling();
+  }
+
+  void UpdateCursorScaleFactor()
+  {
+    cursor_scale_ = g_settings_get_double(ui_settings_, CURSOR_SCALE_FACTOR.c_str());
+  }
+
   void UpdateDPI()
   {
-    glib::Variant dict;
-    g_settings_get(ubuntu_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
+    auto* uscreen = UScreen::GetDefault();
+    double min_scale = 4.0;
+    double max_scale = 0.0;
     bool any_changed = false;
 
-    for (unsigned i = 0; i < em_converters_.size(); ++i)
-    {
-      int dpi = GetDPI(dict, i);
+    glib::Variant dict;
+    g_settings_get(ubuntu_ui_settings_, SCALE_FACTOR.c_str(), "@a{si}", &dict);
 
-      if (em_converters_[i]->SetDPI(dpi))
+    glib::String app_target_monitor(g_settings_get_string(ui_settings_, APP_SCALE_MONITOR.c_str()));
+    double app_target_scale = 0;
+
+    for (unsigned monitor = 0; monitor < em_converters_.size(); ++monitor)
+    {
+      int dpi = DEFAULT_DPI;
+
+      if (monitor < uscreen->GetMonitors().size())
+      {
+        auto const& monitor_name = uscreen->GetMonitorName(monitor);
+        double ui_scale = 1.0f;
+        int value;
+
+        if (g_variant_lookup(dict, monitor_name.c_str(), "i", &value))
+          ui_scale = static_cast<double>(value)/8.0f;
+
+        if (app_target_monitor.Str() == monitor_name)
+          app_target_scale = ui_scale;
+
+        dpi = DEFAULT_DPI * ui_scale;
+        min_scale = std::min(min_scale, ui_scale);
+        max_scale = std::max(max_scale, ui_scale);
+      }
+
+      if (em_converters_[monitor]->SetDPI(dpi))
         any_changed = true;
     }
+
+    if (app_target_scale == 0)
+      app_target_scale = (g_settings_get_boolean(ui_settings_, APP_USE_MAX_SCALE.c_str())) ? max_scale : min_scale;
+
+    UpdateAppsScaling(app_target_scale);
 
     if (any_changed)
       parent_->dpi_changed.emit();
   }
 
-  void UpdateEMConverter()
+  void UpdateAppsScaling(double scale)
   {
-    UpdateFontSize();
-    UpdateDPI();
+    changing_gnome_settings_ = true;
+    unsigned integer_scaling = std::max<unsigned>(1, scale);
+    double point_scaling = scale / static_cast<double>(integer_scaling);
+    double text_scale_factor = parent_->font_scaling() * point_scaling;
+    glib::Variant default_cursor_size(g_settings_get_default_value(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str()), glib::StealRef());
+    int cursor_size = std::round(default_cursor_size.GetInt32() * point_scaling * cursor_scale_);
+    g_settings_set_int(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str(), cursor_size);
+    g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
+    g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
+    changing_gnome_settings_ = false;
   }
 
   Settings* parent_;
-  glib::Object<GSettings> gsettings_;
-  glib::Object<GSettings> ubuntu_settings_;
   glib::Object<GSettings> usettings_;
   glib::Object<GSettings> lim_settings_;
-  glib::Object<GSettings> gnome_settings_;
+  glib::Object<GSettings> ui_settings_;
+  glib::Object<GSettings> ubuntu_ui_settings_;
+  glib::Object<GSettings> gnome_ui_settings_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
   std::vector<int> launcher_widths_;
   FormFactor cached_form_factor_;
+  double cursor_scale_;
   bool cached_double_click_activate_;
+  bool changing_gnome_settings_;
   bool lowGfx_;
 };
 
@@ -229,17 +327,10 @@ Settings::Settings()
   if (settings_instance)
   {
     LOG_ERROR(logger) << "More than one unity::Settings created.";
+    return;
   }
 
-  else
-  {
-    form_factor.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetFormFactor));
-    form_factor.SetSetterFunction(sigc::mem_fun(*pimpl, &Impl::SetFormFactor));
-
-    double_click_activate.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetDoubleClickActivate));
-
-    settings_instance = this;
-  }
+  settings_instance = this;
 }
 
 Settings::~Settings()

@@ -21,7 +21,6 @@
 #include <Nux/NuxTimerTickSource.h>
 
 #include "LauncherIcon.h"
-#include "UnitySettings.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -71,7 +70,6 @@ struct TestLauncherIcon : Test
   nux::NuxTimerTickSource tick_source_;
   nux::animation::AnimationController animation_controller;
   unsigned animations_tick_;
-  unity::Settings settings;
   MockLauncherIcon icon;
 };
 

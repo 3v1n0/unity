@@ -24,7 +24,6 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/TextInput.h"
-#include "unity-shared/UnitySettings.h"
 #include "test_utils.h"
 
 using namespace nux;
@@ -55,7 +54,6 @@ class TestTextInput : public ::testing::Test
        pango_entry = entry->GetPangoEntry();
      }
 
-     unity::Settings unity_settings_;
      dash::Style dash_style_;
      nux::ObjectPtr<TextInputMock> entry;
      StaticCairoText* hint;

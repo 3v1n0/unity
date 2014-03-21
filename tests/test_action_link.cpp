@@ -22,7 +22,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <unity-shared/StaticCairoText.h>
+#include "unity-shared/StaticCairoText.h"
 
 #include "dash/previews/ActionLink.cpp"
 #include "test_utils.h"
@@ -75,6 +75,7 @@ class TestActionLink : public ::testing::Test
     {
       action_link = new ActionLinkMock("action_id", "display_name");
     }
+
     nux::ObjectPtr<ActionLinkMock> action_link;
 };
 

@@ -2855,8 +2855,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   {
     if ((window->type() != CompWindowTypePopupMenuMask ||
         !uScreen->lockscreen_controller_->HasOpenMenu()) &&
-        window->resName() != "onboard" &&
-        !window->minimized())
+        !window->minimized() && window->resName() != "onboard")
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need
@@ -3736,9 +3735,9 @@ void UnityScreen::LockscreenRequested()
 
   launcher_controller_->ClearTooltips();
 
-  auto& adapter = PluginAdapter::Default();
-  if (adapter.IsScaleActive())
-    adapter.TerminateScale();
+  auto& wm = WindowManager::Default();
+  if (wm.IsScaleActive())
+    wm.TerminateScale();
 
   RaiseOSK();
 }

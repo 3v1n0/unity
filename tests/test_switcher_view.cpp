@@ -25,7 +25,6 @@
 #include "MockLauncherIcon.h"
 #include "test_standalone_wm.h"
 #include "unity-shared/IconRenderer.h"
-#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -93,7 +92,6 @@ struct TestSwitcherView : testing::Test
     }
 
   testwrapper::StandaloneWM WM;
-  unity::Settings settings;
   testing::NiceMock<MockSwitcherView> switcher;
 };
 

@@ -23,7 +23,6 @@
 #include <Nux/Nux.h>
 #include "PanelIndicatorEntryDropdownView.h"
 #include "PanelStyle.h"
-#include "UnitySettings.h"
 
 #include "mock_indicators.h"
 #include "test_standalone_wm.h"
@@ -67,7 +66,6 @@ struct TestPanelIndicatorEntryDropdownView : Test
     return PanelIndicatorEntryView::Ptr(new PanelIndicatorEntryView(entry));
   }
 
-  Settings settings_;
   Style style_;
   MockIndicators::Ptr indicators_;
   PanelIndicatorEntryDropdownView dropdown;

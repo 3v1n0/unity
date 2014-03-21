@@ -25,7 +25,6 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UnitySettings.h"
 
 #include "mock_menu_manager.h"
 #include "test_standalone_wm.h"
@@ -39,7 +38,6 @@ using namespace unity::panel;
 class TestPanelView : public testing::Test
 {
 public:
-  Settings unity_settings_;
   Style panel_style_;
   UBusManager ubus_manager_;
   nux::ObjectPtr<MockableBaseWindow> window_;

@@ -27,7 +27,6 @@ using namespace testing;
 #include <unity-shared/DashStyle.h>
 #include <unity-shared/PreviewStyle.h>
 #include <unity-shared/ThumbnailGenerator.h>
-#include "unity-shared/UnitySettings.h"
 
 #include <unity-protocol.h>
 #include "UnityCore/MusicPreview.h"
@@ -89,7 +88,6 @@ public:
   nux::ObjectPtr<nux::BaseWindow> parent_window_;
   dash::Preview::Ptr preview_model_;
 
-  unity::Settings settings;
   previews::Style panel_style;
   dash::Style dash_style;
   ThumbnailGenerator thumbnail_generator;

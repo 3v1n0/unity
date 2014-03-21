@@ -21,7 +21,6 @@
 #include <Nux/Nux.h>
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
-#include "UnitySettings.h"
 #include "UBusMessages.h"
 #include "mock_menu_manager.h"
 #include "test_standalone_wm.h"
@@ -78,7 +77,6 @@ protected:
   // The order is important, i.e. menu_view needs
   // panel::Style that needs Settings
   MockUScreen uscreen;
-  Settings settings;
   panel::Style panelStyle;
   testwrapper::StandaloneWM WM;
   testing::NiceMock<MockPanelMenuView> menu_view;

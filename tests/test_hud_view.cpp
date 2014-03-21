@@ -31,7 +31,6 @@
 #include "hud/HudView.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/UnitySettings.h"
 
 using namespace unity;
 
@@ -40,7 +39,6 @@ namespace
 
 TEST(TestHudView, TestSetQueries)
 {
-  Settings unity_settings;
   dash::Style dash_style;
   panel::Style panel_style;
   nux::ObjectPtr<hud::View> view(new hud::View());

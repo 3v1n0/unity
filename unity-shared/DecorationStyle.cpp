@@ -157,6 +157,7 @@ struct Style::Impl
     parent_->integrated_menus = false;
     parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
     parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+    parent_->font_scale = 1.0;
     SetTitleFont();
 
     UpdateTitlePangoContext(parent_->title_font);
@@ -185,14 +186,12 @@ struct Style::Impl
       LOG_INFO(logger) << "gtk-font-name changed to " << parent_->font();
     });
 
-    signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-dpi", [this] (GtkSettings*, GParamSpec*) {
-      title_pango_ctx_ = gdk_pango_context_get_for_screen(gdk_screen_get_default());
-      menu_item_pango_ctx_ = gdk_pango_context_get_for_screen(gdk_screen_get_default());
+    parent_->font_scale.changed.connect([this] (bool scale) {
       UpdateTitlePangoContext(parent_->title_font);
       UpdateMenuItemPangoContext(parent_->font);
       gtk_style_context_invalidate(ctx_);
       parent_->theme.changed.emit(parent_->theme());
-      LOG_INFO(logger) << "gtk-xft-dpi changed to " << GetSettingValue<int>("gtk-xft-dpi");
+      LOG_INFO(logger) << "font scale changed to " << scale;
     });
 
     signals_.Add<void, GSettings*, gchar*>(settings_, "changed::" + FONT_KEY, [this] (GSettings*, gchar*) {
@@ -255,6 +254,7 @@ struct Style::Impl
     std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
     pango_context_set_font_description(ctx, desc.get());
     pango_context_set_language(ctx, gtk_get_default_language());
+    pango_cairo_context_set_resolution(ctx, 96.0 * parent_->font_scale());
   }
 
   void UpdateTitlePangoContext(std::string const& font)
@@ -508,9 +508,9 @@ struct Style::Impl
 
     nux::Size extents;
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
-    pango_layout_set_height(layout, (h > 0) ? h * PANGO_SCALE : -1);
+    pango_layout_set_height(layout, (h >= 0) ? h * PANGO_SCALE : -1);
 
-    if (extents.width > w)
+    if (w >= 0 && extents.width > w)
     {
       double out_pixels = extents.width - w;
       double fading_width = std::min<double>(title_fade_, out_pixels);
@@ -528,7 +528,7 @@ struct Style::Impl
     }
     else
     {
-      pango_layout_set_width(layout, w * PANGO_SCALE);
+      pango_layout_set_width(layout, (w >= 0) ? w * PANGO_SCALE : -1);
       gtk_render_layout(ctx_, cr, 0, 0, layout);
     }
 
@@ -571,8 +571,8 @@ struct Style::Impl
       pango_attr_list_unref(text_attribs);
     }
 
-    pango_layout_set_width(layout, w * PANGO_SCALE);
-    pango_layout_set_height(layout, (h > 0) ? h * PANGO_SCALE : -1);
+    pango_layout_set_width(layout, (w >= 0) ? w * PANGO_SCALE : -1);
+    pango_layout_set_height(layout, (h >= 0) ? h * PANGO_SCALE : -1);
     gtk_render_layout(ctx_, cr, 0, 0, layout);
 
     gtk_style_context_restore(ctx_);

@@ -25,8 +25,6 @@
 
 #include <Nux/Nux.h>
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/UnitySettings.h"
-#include "test_utils.h"
 
 #include "MultiMonitor.h"
 
@@ -42,22 +40,14 @@ class TestPanelStyle : public Test
 {
 public:
   glib::Object<GSettings> gsettings;
-  Settings unity_settings;
   std::unique_ptr<panel::Style> panel_style_instance;
 
   /* override */ void SetUp()
   {
-    Utils::init_gsettings_test_environment();
-
     gsettings = g_settings_new("org.gnome.desktop.wm.preferences");
     g_settings_set_string(gsettings, "titlebar-font", TITLEBAR_FONT.c_str());
 
     panel_style_instance.reset(new panel::Style());
-  }
-
-  /* override */ void TearDown()
-  {
-    Utils::reset_gsettings_test_environment();
   }
 };
 
@@ -80,7 +70,7 @@ TEST_F(TestPanelStyle, TestChangedSignal)
   sleep(1);
 
   ASSERT_TRUE(signal_received);
-  ASSERT_EQ(panel_style_instance->GetFontDescription(panel::PanelItem::TITLE), "Ubuntu Italic 11");  
+  ASSERT_EQ(panel_style_instance->GetFontDescription(panel::PanelItem::TITLE), "Ubuntu Italic 11");
 
   g_settings_set_string(gsettings, "titlebar-font", old_font);
   g_free (old_font);

@@ -21,7 +21,6 @@
 #include <gmock/gmock.h>
 #include <unity-shared/SearchBarSpinner.h>
 #include <unity-shared/DashStyle.h>
-#include <unity-shared/UnitySettings.h>
 #include "test_utils.h"
 
 using namespace unity;
@@ -34,7 +33,6 @@ class TestSearchBar : public ::testing::Test
 public:
   TestSearchBar() {}
 
-  unity::Settings settings;
   dash::Style style;
 };
 

@@ -22,8 +22,6 @@
 
 #include <gmock/gmock.h>
 
-#include "unity-shared/UnitySettings.h"
-
 #include "DevicesSettings.h"
 #include "test_mock_devices.h"
 #include "test_utils.h"
@@ -60,7 +58,6 @@ struct TestDeviceLauncherSection : Test
     , section_(monitor_, devices_settings_, notifications_)
   {}
 
-  unity::Settings settings_;
   MockVolumeMonitorWrapper::Ptr monitor_;
   DevicesSettings::Ptr devices_settings_;
   DeviceNotificationDisplay::Ptr notifications_;

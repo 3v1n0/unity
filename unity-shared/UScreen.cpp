@@ -36,10 +36,10 @@ UScreen::UScreen()
   size_changed_signal_.Connect(screen_, "size-changed", sigc::mem_fun(this, &UScreen::Changed));
   monitors_changed_signal_.Connect(screen_, "monitors-changed", sigc::mem_fun(this, &UScreen::Changed));
   proxy_.Connect("PrepareForSleep", [this] (GVariant* data) { 
-    bool val;
+    gboolean val;
     g_variant_get(data, "(b)", &val);
     if (!val)
-      resuming.emit(); 
+      resuming.emit();
   });
 
   Refresh();

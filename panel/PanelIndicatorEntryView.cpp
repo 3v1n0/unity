@@ -469,6 +469,7 @@ void PanelIndicatorEntryView::Refresh()
     std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
     pango_context_set_font_description(context, desc.get());
     pango_context_set_language(context, gtk_get_default_language());
+    pango_cairo_context_set_resolution(context, 96.0 * Settings::Instance().font_scaling());
 
     label.erase(std::remove(label.begin(), label.end(), '_'), label.end());
     layout = pango_layout_new(context);

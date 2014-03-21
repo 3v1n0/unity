@@ -32,10 +32,8 @@
 #include "dash/ApplicationStarter.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/UnitySettings.h"
 
 #include "test_mock_scope.h"
-#include "test_utils.h"
 
 using namespace unity;
 using namespace unity::dash;
@@ -70,9 +68,6 @@ public:
   {}
   virtual ~TestDashView() {}
 
-  virtual void SetUp() { Utils::init_gsettings_test_environment(); }
-  virtual void TearDown() { Utils::reset_gsettings_test_environment(); }
-
   class MockDashView  : public DashView
   {
   public:
@@ -86,7 +81,6 @@ public:
   };
 
 protected:
-  Settings unity_settings_;
   dash::Style dash_style_;
   panel::Style panel_style_;
   MockApplicationStarter::Ptr application_starter_;

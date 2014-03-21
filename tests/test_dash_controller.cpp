@@ -20,7 +20,6 @@
 #include "mock-base-window.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 #include "test_utils.h"
 
@@ -46,7 +45,6 @@ protected:
   nux::animation::AnimationController animation_controller;
 
   // required to create hidden secret global variables
-  Settings unity_settings_;
   dash::Style dash_style_;
   panel::Style panel_style_;
 

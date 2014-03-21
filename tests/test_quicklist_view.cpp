@@ -26,7 +26,6 @@
 #include "QuicklistMenuItemLabel.h"
 #include "QuicklistMenuItemRadio.h"
 #include "QuicklistMenuItemSeparator.h"
-#include "unity-shared/UnitySettings.h"
 
 using namespace unity;
 using namespace testing;
@@ -76,7 +75,6 @@ struct TestQuicklistView : public Test
     }
   }
 
-  unity::Settings unity_settings;
   nux::ObjectPtr<QuicklistView> quicklist;
 };
 

@@ -24,7 +24,6 @@
 
 #include "launcher/QuicklistManager.h"
 #include "launcher/QuicklistView.h"
-#include "unity-shared/UnitySettings.h"
 
 namespace {
 
@@ -44,7 +43,6 @@ struct MockQuicklistView : public unity::QuicklistView
 
 TEST(TestQuicklistManager, RegisterQuicklist)
 {
-  unity::Settings unity_settings;
   nux::ObjectWeakPtr<unity::QuicklistView> ptr;
 
   {

@@ -127,6 +127,7 @@ private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
   void UpdateScale(double scale);
+  void UpdateFontScale(double scale);
 
   Result cached_result_;
   connection::Manager result_connections_;

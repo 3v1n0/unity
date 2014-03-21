@@ -28,7 +28,6 @@
 #include <unity-shared/PreviewStyle.h>
 #include <unity-shared/ThumbnailGenerator.h>
 #include <unity-shared/CoverArt.h>
-#include "unity-shared/UnitySettings.h"
 
 #include <unity-protocol.h>
 #include "dash/previews/PaymentPreview.h"
@@ -146,7 +145,6 @@ class TestPaymentPreview : public ::testing::Test
   dash::Preview::Ptr preview_model;
 
   // needed for styles
-  unity::Settings settings;
   dash::Style dash_style;
 
 };

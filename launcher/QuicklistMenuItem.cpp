@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 
 #include "QuicklistMenuItem.h"
 
@@ -320,21 +321,9 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, double width, double
 
   PangoContext* pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx, gdk_screen_get_font_options(screen));
-
-  int dpi = 0;
-  g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
-
-  if (dpi == -1)
-  {
-    // use some default DPI-value
-    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
-  }
-  else
-  {
-    pango_cairo_context_set_resolution(pangoCtx, static_cast<float>(dpi) / static_cast<float>(PANGO_SCALE));
-  }
-
+  pango_cairo_context_set_resolution(pangoCtx, 96.0 * Settings::Instance().font_scaling());
   pango_layout_context_changed(layout);
+
   PangoRectangle log_rect  = {0, 0, 0, 0};
   pango_layout_get_extents(layout, nullptr, &log_rect);
 

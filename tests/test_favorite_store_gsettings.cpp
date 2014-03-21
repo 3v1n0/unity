@@ -23,7 +23,6 @@
 #include <gmock/gmock.h>
 #include <glib.h>
 
-#include "test_utils.h"
 #include "FavoriteStore.h"
 #include "FavoriteStoreGSettings.h"
 
@@ -77,19 +76,11 @@ public:
 
   virtual void SetUp()
   {
-    // set the data directory so gsettings can find the schema
-    Utils::init_gsettings_test_environment();
-
     favorite_store.reset(new internal::FavoriteStoreGSettings());
 
     // Setting the test values
     gsettings_client = g_settings_new(SETTINGS_NAME);
     g_settings_set_strv(gsettings_client, SETTINGS_KEY, base_store_favs);
-  }
-
-  virtual void TearDown()
-  {
-    Utils::reset_gsettings_test_environment();
   }
 };
 
