@@ -58,7 +58,7 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
     if (self->status_ == PAM_NEW_AUTHTOK_REQD)
       self->status_ = pam_chauthtok(self->pam_handle_, PAM_CHANGE_EXPIRED_AUTHTOK);
     if (self->status_ == PAM_SUCCESS)
-      self->status_ = pam_setcred (self->pam_handle_, PAM_REINITIALIZE_CRED);
+      pam_setcred (self->pam_handle_, PAM_REINITIALIZE_CRED);
   });
 
   return true;
