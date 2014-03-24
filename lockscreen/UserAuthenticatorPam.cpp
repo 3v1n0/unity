@@ -53,6 +53,12 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
   g_task_run_in_thread(task, [] (GTask* task, gpointer, gpointer data, GCancellable*) {
     auto self = static_cast<UserAuthenticatorPam*>(data);
     self->status_ = pam_authenticate(self->pam_handle_, 0);
+    if (self->status_ == PAM_SUCCESS)
+      self->status_ = pam_acct_mgmt(self->pam_handle_, 0);
+    if (self->status_ == PAM_NEW_AUTHTOK_REQD)
+      self->status_ = pam_chauthtok(self->pam_handle_, PAM_CHANGE_EXPIRED_AUTHTOK);
+    if (self->status_ == PAM_SUCCESS)
+      self->status_ = pam_setcred (self->pam_handle_, PAM_REINITIALIZE_CRED);
   });
 
   return true;
