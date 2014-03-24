@@ -51,12 +51,11 @@ namespace unity
 {
 namespace
 {
-  const RawPixel ANCHOR_WIDTH  = 10.0_em;
-  const RawPixel TOP_SIZE      =    4_em;
+  const RawPixel ANCHOR_WIDTH  = 10_em;
+  const RawPixel TOP_SIZE      =  4_em;
 
   const RawPixel ANCHOR_HEIGHT = 18_em;
   const RawPixel CORNER_RADIUS =  4_em;
-  const RawPixel PADDING       = 13_em;
   const RawPixel MAX_HEIGHT  = 1000_em;
   const RawPixel MAX_WIDTH   = 1000_em;
 }
@@ -74,7 +73,7 @@ QuicklistView::QuicklistView(int monitor)
   , _anchor_width(ANCHOR_WIDTH)
   , _anchor_height(ANCHOR_HEIGHT)
   , _corner_radius(CORNER_RADIUS)
-  , _padding(PADDING)
+  , _padding(decoration::Style::Get()->ActiveShadowRadius())
   , _left_padding_correction(-1)
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
@@ -1155,21 +1154,13 @@ void QuicklistView::UpdateTexture()
         _top_size = TOP_SIZE;
 
       size_above_anchor = _top_size;
-      int x = CalculateX();
-      int y = CalculateY();
-
-      SetBaseX(x);
-      SetBaseY(y);
+      SetXY(CalculateX(), CalculateY());
     }
     else
     {
       _top_size = 0;
       size_above_anchor = -1;
-      int x = CalculateX();
-      int y = CalculateY();
-
-      SetBaseX(x);
-      SetBaseY(y);
+      SetXY(CalculateX(), CalculateY());
     }
   }
 
