@@ -28,6 +28,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/DecorationStyle.h"
 #include "unity-shared/TextureCache.h"
 #include "GraphicsUtils.h"
 
@@ -258,18 +259,24 @@ struct IconRenderer::LocalTextures
     using namespace local;
     IconSize tex_size = icon_size > 100 ? IconSize::BIG : IconSize::SMALL;
 
+    auto texture_loader = [] (std::string const& basename, int w, int h)
+    {
+      auto const& file = decoration::Style::Get()->ThemedFilePath(basename, {PKGDATADIR"/"});
+      return nux::CreateTexture2DFromFile(file.c_str(), std::max(w, h), true);
+    };
+
     auto& cache = TextureCache::GetDefault();
-    icon_background = cache.FindTexture("launcher_icon_back_"+CONTENT_SIZES[tex_size]+".svg", icon_size);
-    icon_selected_background = cache.FindTexture("launcher_icon_selected_back_"+CONTENT_SIZES[tex_size]+".svg", icon_size);
-    icon_edge = cache.FindTexture("launcher_icon_edge_"+CONTENT_SIZES[tex_size]+".svg", icon_size);
-    icon_shine = cache.FindTexture("launcher_icon_shine_"+CONTENT_SIZES[tex_size]+".svg", icon_size);
+    icon_background = cache.FindTexture("launcher_icon_back_"+CONTENT_SIZES[tex_size], icon_size, -1, texture_loader);
+    icon_selected_background = cache.FindTexture("launcher_icon_selected_back_"+CONTENT_SIZES[tex_size], icon_size, -1, texture_loader);
+    icon_edge = cache.FindTexture("launcher_icon_edge_"+CONTENT_SIZES[tex_size], icon_size, -1, texture_loader);
+    icon_shine = cache.FindTexture("launcher_icon_shine_"+CONTENT_SIZES[tex_size], icon_size, -1, texture_loader);
 
     double icon_glow_size = icon_size * (atof(GLOW_SIZES[tex_size].c_str()) / atof(CONTENT_SIZES[tex_size].c_str()));
-    icon_glow = cache.FindTexture("launcher_icon_glow_"+GLOW_SIZES[tex_size]+".svg", icon_glow_size);
-    icon_shadow = cache.FindTexture("launcher_icon_shadow_"+GLOW_SIZES[tex_size]+".svg", icon_glow_size);
+    icon_glow = cache.FindTexture("launcher_icon_glow_"+GLOW_SIZES[tex_size], icon_glow_size, -1, texture_loader);
+    icon_shadow = cache.FindTexture("launcher_icon_shadow_"+GLOW_SIZES[tex_size], icon_glow_size, -1, texture_loader);
 
-    progress_bar_trough = cache.FindTexture("progress_bar_trough.svg", icon_size);
-    progress_bar_fill = cache.FindTexture("progress_bar_fill.svg", image_size - (icon_size - image_size));
+    progress_bar_trough = cache.FindTexture("progress_bar_trough", icon_size, -1, texture_loader);
+    progress_bar_fill = cache.FindTexture("progress_bar_fill", image_size - (icon_size - image_size), -1, texture_loader);
   }
 
   BaseTexturePtr icon_background;
