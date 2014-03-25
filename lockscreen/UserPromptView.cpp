@@ -125,6 +125,21 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
                                         sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
 }
 
+bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character)
+{
+  if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
+  {
+    for (auto& text_entry : focus_queue_)
+    {
+      text_entry->SetText("");
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 void UserPromptView::ResetLayout()
 {
   focus_queue_.clear();

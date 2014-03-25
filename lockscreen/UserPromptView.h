@@ -64,6 +64,8 @@ protected:
 private:
   void ResetLayout();
 
+  bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
+
   session::Manager::Ptr session_manager_;
   UserAuthenticatorPam user_authenticator_;
   std::shared_ptr<nux::AbstractPaintLayer> bg_layer_;
