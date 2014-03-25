@@ -24,6 +24,7 @@
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/IconRenderer.h"
 #include "unity-shared/UScreen.h"
 
 #include "SwitcherController.h"
@@ -404,7 +405,7 @@ void Controller::Impl::ShowView()
 
 void Controller::Impl::ConstructWindow()
 {
-  sources_.Remove(LAZY_TIMEOUT);
+  // sources_.Remove(LAZY_TIMEOUT);
 
   if (!view_window_)
   {
@@ -437,7 +438,10 @@ void Controller::Impl::ConstructView()
 
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
 
-  view_ = SwitcherView::Ptr(new SwitcherView());
+  if (!icon_renderer_)
+    icon_renderer_ = std::make_shared<ui::IconRenderer>();
+
+  view_ = SwitcherView::Ptr(new SwitcherView(icon_renderer_));
   obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = WindowManager::Default().average_color();
