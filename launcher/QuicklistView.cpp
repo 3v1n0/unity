@@ -42,6 +42,7 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/DecorationStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/UScreen.h"
 
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
@@ -333,27 +334,22 @@ void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
   {
     if (!_item_list.empty())
     {
-      int offscreen_size = GetBaseY() +
-                           GetBaseHeight() -
-                           nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
+      auto* us = UScreen::GetDefault();
+      int ql_monitor = us->GetMonitorAtPosition(_anchorX, _anchorY);
+      auto const& ql_monitor_geo = us->GetMonitorGeometry(ql_monitor);
+      int offscreen_size = GetBaseY() + GetBaseHeight() - (ql_monitor_geo.y + ql_monitor_geo.height);
 
       if (offscreen_size > 0)
         _top_size = offscreen_size + TOP_SIZE;
       else
         _top_size = TOP_SIZE;
 
-      int x = CalculateX();
-      int y = CalculateY();
-
-      SetBaseXY(x, y);
+      SetXY(CalculateX(), CalculateY());
     }
     else
     {
       _top_size = 0;
-      int x = CalculateX();
-      int y = CalculateY();
-
-      SetBaseXY(x, y);
+      SetXY(CalculateX(), CalculateY());
     }
   }
 }
@@ -1134,33 +1130,11 @@ void QuicklistView::UpdateTexture()
   if (!_cairo_text_has_changed)
     return;
 
-  RawPixel size_above_anchor = -1; // equal to size below
+  SetQuicklistPosition(_anchorX, _anchorY);
+
+  RawPixel size_above_anchor = _item_list.empty() ? RawPixel(-1) : _top_size;
   int width = GetBaseWidth();
   int height = GetBaseHeight();
-
-  if (!_enable_quicklist_for_testing)
-  {
-    if (!_item_list.empty())
-    {
-      int offscreen_size = GetBaseY() +
-                           height -
-                           nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
-
-      if (offscreen_size > 0)
-        _top_size = offscreen_size + TOP_SIZE;
-      else
-        _top_size = TOP_SIZE;
-
-      size_above_anchor = _top_size;
-      SetXY(CalculateX(), CalculateY());
-    }
-    else
-    {
-      _top_size = 0;
-      size_above_anchor = -1;
-      SetXY(CalculateX(), CalculateY());
-    }
-  }
 
   auto const& deco_style = decoration::Style::Get();
   float dpi_scale = cv_->DPIScale();
