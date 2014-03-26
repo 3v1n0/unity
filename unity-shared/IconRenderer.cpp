@@ -196,7 +196,7 @@ enum IconSize
   SIZE,
 };
 
-const std::array<int, IconSize::SIZE> CONTENT_SIZES = { 54, 150 };
+const std::array<int, IconSize::SIZE> TILE_SIZES = { 54, 150 };
 const std::array<int, IconSize::SIZE> GLOW_SIZES = { 62, 200 };
 const std::array<int, IconSize::SIZE> MARKER_SIZES = { 19, 37 };
 } // anonymous namespace
@@ -263,15 +263,15 @@ struct IconRenderer::LocalTextures
   {
     using namespace local;
     IconSize tex_size = icon_size > 100 ? IconSize::BIG : IconSize::SMALL;
-    int icon_glow_size = std::round(icon_size * (GLOW_SIZES[tex_size] / static_cast<double>(CONTENT_SIZES[tex_size])));
-    int arrow_size = std::round(icon_size * (MARKER_SIZES[IconSize::SMALL] / static_cast<double>(CONTENT_SIZES[IconSize::SMALL])));
-    int pip_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(CONTENT_SIZES[tex_size])));
+    int icon_glow_size = std::round(icon_size * (GLOW_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
+    int arrow_size = std::round(icon_size * (MARKER_SIZES[IconSize::SMALL] / static_cast<double>(TILE_SIZES[IconSize::SMALL])));
+    int pip_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
 
     texture_files_ = {
-      {&icon_background, "launcher_icon_back_"+std::to_string(CONTENT_SIZES[tex_size]), icon_size},
-      {&icon_selected_background, "launcher_icon_selected_back_"+std::to_string(CONTENT_SIZES[tex_size]), icon_size},
-      {&icon_edge, "launcher_icon_edge_"+std::to_string(CONTENT_SIZES[tex_size]), icon_size},
-      {&icon_shine, "launcher_icon_shine_"+std::to_string(CONTENT_SIZES[tex_size]), icon_size},
+      {&icon_background, "launcher_icon_back_"+std::to_string(TILE_SIZES[tex_size]), icon_size},
+      {&icon_selected_background, "launcher_icon_selected_back_"+std::to_string(TILE_SIZES[tex_size]), icon_size},
+      {&icon_edge, "launcher_icon_edge_"+std::to_string(TILE_SIZES[tex_size]), icon_size},
+      {&icon_shine, "launcher_icon_shine_"+std::to_string(TILE_SIZES[tex_size]), icon_size},
       {&icon_glow, "launcher_icon_glow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
       {&icon_shadow, "launcher_icon_shadow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
       {&icon_shadow, "launcher_icon_shadow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
