@@ -129,9 +129,8 @@ bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sy
 {
   if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
   {
-    auto& focused_entry = focus_queue_.front();
-    if (focused_entry)
-      focused_entry->SetText("");
+    if (!focus_queue_.empty())
+      focus_queue_.front()->SetText("");
 
     return true;
   }
