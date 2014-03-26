@@ -196,9 +196,9 @@ enum IconSize
   SIZE,
 };
 
-const std::array<std::string, IconSize::SIZE> CONTENT_SIZES = { "54", "150" };
-const std::array<std::string, IconSize::SIZE> GLOW_SIZES = { "62", "200" };
-const std::array<std::string, IconSize::SIZE> MARKER_SIZES = { "19", "37" };
+const std::array<int, IconSize::SIZE> CONTENT_SIZES = { 54, 150 };
+const std::array<int, IconSize::SIZE> GLOW_SIZES = { 62, 200 };
+const std::array<int, IconSize::SIZE> MARKER_SIZES = { 19, 37 };
 } // anonymous namespace
 } // local namespace
 
@@ -263,22 +263,22 @@ struct IconRenderer::LocalTextures
   {
     using namespace local;
     IconSize tex_size = icon_size > 100 ? IconSize::BIG : IconSize::SMALL;
-    int icon_glow_size = icon_size * (atof(GLOW_SIZES[tex_size].c_str()) / atof(CONTENT_SIZES[tex_size].c_str()));
-    int arrow_size = icon_size * (atof(MARKER_SIZES[IconSize::SMALL].c_str()) / atof(CONTENT_SIZES[IconSize::SMALL].c_str()));
-    int pip_size = icon_size * (atof(MARKER_SIZES[tex_size].c_str()) / atof(CONTENT_SIZES[tex_size].c_str()));
+    int icon_glow_size = std::round(icon_size * (GLOW_SIZES[tex_size] / static_cast<double>(CONTENT_SIZES[tex_size])));
+    int arrow_size = std::round(icon_size * (MARKER_SIZES[IconSize::SMALL] / static_cast<double>(CONTENT_SIZES[IconSize::SMALL])));
+    int pip_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(CONTENT_SIZES[tex_size])));
 
     texture_files_ = {
-      {&icon_background, "launcher_icon_back_"+CONTENT_SIZES[tex_size], icon_size},
-      {&icon_selected_background, "launcher_icon_selected_back_"+CONTENT_SIZES[tex_size], icon_size},
-      {&icon_edge, "launcher_icon_edge_"+CONTENT_SIZES[tex_size], icon_size},
-      {&icon_shine, "launcher_icon_shine_"+CONTENT_SIZES[tex_size], icon_size},
-      {&icon_glow, "launcher_icon_glow_"+GLOW_SIZES[tex_size], icon_glow_size},
-      {&icon_shadow, "launcher_icon_shadow_"+GLOW_SIZES[tex_size], icon_glow_size},
-      {&icon_shadow, "launcher_icon_shadow_"+GLOW_SIZES[tex_size], icon_glow_size},
-      {&arrow_ltr, "launcher_arrow_ltr_"+MARKER_SIZES[IconSize::SMALL], arrow_size},
-      {&arrow_rtl, "launcher_arrow_rtl_"+MARKER_SIZES[IconSize::SMALL], arrow_size},
-      {&arrow_empty_ltr, "launcher_arrow_outline_ltr_"+MARKER_SIZES[IconSize::SMALL], arrow_size},
-      {&pip_ltr, "launcher_pip_ltr_"+MARKER_SIZES[tex_size], pip_size},
+      {&icon_background, "launcher_icon_back_"+std::to_string(CONTENT_SIZES[tex_size]), icon_size},
+      {&icon_selected_background, "launcher_icon_selected_back_"+std::to_string(CONTENT_SIZES[tex_size]), icon_size},
+      {&icon_edge, "launcher_icon_edge_"+std::to_string(CONTENT_SIZES[tex_size]), icon_size},
+      {&icon_shine, "launcher_icon_shine_"+std::to_string(CONTENT_SIZES[tex_size]), icon_size},
+      {&icon_glow, "launcher_icon_glow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
+      {&icon_shadow, "launcher_icon_shadow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
+      {&icon_shadow, "launcher_icon_shadow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
+      {&arrow_ltr, "launcher_arrow_ltr_"+std::to_string(MARKER_SIZES[IconSize::SMALL]), arrow_size},
+      {&arrow_rtl, "launcher_arrow_rtl_"+std::to_string(MARKER_SIZES[IconSize::SMALL]), arrow_size},
+      {&arrow_empty_ltr, "launcher_arrow_outline_ltr_"+std::to_string(MARKER_SIZES[IconSize::SMALL]), arrow_size},
+      {&pip_ltr, "launcher_pip_ltr_"+std::to_string(MARKER_SIZES[tex_size]), pip_size},
       {&progress_bar_trough, "progress_bar_trough", icon_size},
       {&progress_bar_fill, "progress_bar_fill", image_size - (icon_size - image_size)},
     };
@@ -1031,7 +1031,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     {
       texture = local_textures_->pip_ltr;
 
-      double default_tex_height = atof(local::MARKER_SIZES[local::IconSize::SMALL].c_str());
+      double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
       int offset = std::max(1.0, std::round(2.0 * texture->GetHeight() / default_tex_height));
       markers[0] = markerCenter - offset;
       markers[1] = markerCenter + offset;
@@ -1040,7 +1040,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     {
       texture = local_textures_->pip_ltr;
 
-      double default_tex_height = atof(local::MARKER_SIZES[local::IconSize::SMALL].c_str());
+      double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
       int offset = std::max(1.0, std::round(4.0 * texture->GetHeight() / default_tex_height));
       markers[0] = markerCenter - offset;
       markers[1] = markerCenter;
