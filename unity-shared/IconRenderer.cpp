@@ -26,6 +26,7 @@
 #include <NuxGraphics/GLTextureResourceManager.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/ConnectionManager.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DecorationStyle.h"
@@ -254,10 +255,35 @@ private:
 
 struct IconRenderer::LocalTextures
 {
+  LocalTextures(IconRenderer* parent)
+    : parent_(parent)
+  {
+    theme_conn_ = decoration::Style::Get()->theme.changed.connect([this] (std::string const&) {
+      auto& cache = TextureCache::GetDefault();
+
+      for (auto const& tex_data : texture_files_)
+        cache.Invalidate(tex_data.name, tex_data.size, tex_data.size);
+
+      ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
+    });
+  }
+
   void ReloadIconSizedTextures(int icon_size, int image_size)
   {
     using namespace local;
     IconSize tex_size = icon_size > 100 ? IconSize::BIG : IconSize::SMALL;
+    int icon_glow_size = icon_size * (atof(GLOW_SIZES[tex_size].c_str()) / atof(CONTENT_SIZES[tex_size].c_str()));
+
+    texture_files_ = {
+      {&icon_background, "launcher_icon_back_"+CONTENT_SIZES[tex_size], icon_size},
+      {&icon_selected_background, "launcher_icon_selected_back_"+CONTENT_SIZES[tex_size], icon_size},
+      {&icon_edge, "launcher_icon_edge_"+CONTENT_SIZES[tex_size], icon_size},
+      {&icon_shine, "launcher_icon_shine_"+CONTENT_SIZES[tex_size], icon_size},
+      {&icon_glow, "launcher_icon_glow_"+GLOW_SIZES[tex_size], icon_glow_size},
+      {&icon_shadow, "launcher_icon_shadow_"+GLOW_SIZES[tex_size], icon_glow_size},
+      {&progress_bar_trough, "progress_bar_trough", icon_size},
+      {&progress_bar_fill, "progress_bar_fill", image_size - (icon_size - image_size)},
+    };
 
     auto texture_loader = [] (std::string const& basename, int w, int h)
     {
@@ -266,17 +292,8 @@ struct IconRenderer::LocalTextures
     };
 
     auto& cache = TextureCache::GetDefault();
-    icon_background = cache.FindTexture("launcher_icon_back_"+CONTENT_SIZES[tex_size], icon_size, -1, texture_loader);
-    icon_selected_background = cache.FindTexture("launcher_icon_selected_back_"+CONTENT_SIZES[tex_size], icon_size, -1, texture_loader);
-    icon_edge = cache.FindTexture("launcher_icon_edge_"+CONTENT_SIZES[tex_size], icon_size, -1, texture_loader);
-    icon_shine = cache.FindTexture("launcher_icon_shine_"+CONTENT_SIZES[tex_size], icon_size, -1, texture_loader);
-
-    double icon_glow_size = icon_size * (atof(GLOW_SIZES[tex_size].c_str()) / atof(CONTENT_SIZES[tex_size].c_str()));
-    icon_glow = cache.FindTexture("launcher_icon_glow_"+GLOW_SIZES[tex_size], icon_glow_size, -1, texture_loader);
-    icon_shadow = cache.FindTexture("launcher_icon_shadow_"+GLOW_SIZES[tex_size], icon_glow_size, -1, texture_loader);
-
-    progress_bar_trough = cache.FindTexture("progress_bar_trough", icon_size, -1, texture_loader);
-    progress_bar_fill = cache.FindTexture("progress_bar_fill", image_size - (icon_size - image_size), -1, texture_loader);
+    for (auto const& tex_data : texture_files_)
+      *tex_data.tex_ptr = cache.FindTexture(tex_data.name, tex_data.size, tex_data.size, texture_loader);
   }
 
   BaseTexturePtr icon_background;
@@ -287,6 +304,12 @@ struct IconRenderer::LocalTextures
   BaseTexturePtr icon_shine;
   BaseTexturePtr progress_bar_trough;
   BaseTexturePtr progress_bar_fill;
+
+private:
+  IconRenderer* parent_;
+  struct TextureData { BaseTexturePtr* tex_ptr; std::string name; int size; };
+  std::vector<TextureData> texture_files_;
+  connection::Wrapper theme_conn_;
 };
 
 IconRenderer::IconRenderer()
@@ -294,7 +317,7 @@ IconRenderer::IconRenderer()
   , image_size(0)
   , spacing(0)
   , textures_(TexturesPool::Get())
-  , local_textures_(std::make_shared<LocalTextures>())
+  , local_textures_(std::make_shared<LocalTextures>(this))
 {
   pip_style = OUTSIDE_TILE;
 }
