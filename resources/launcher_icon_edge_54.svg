@@ -138,11 +138,11 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
-     inkscape:cx="-988"
-     inkscape:cy="-573"
+     inkscape:zoom="5.0931703"
+     inkscape:cx="-8.3052396"
+     inkscape:cy="4.3096929"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -190,7 +190,7 @@
          height="52"
          width="52"
          id="rect4389"
-         style="opacity:0.25;color:#000000;fill:url(#linearGradient3693-0);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+         style="opacity:0.12;color:#000000;fill:url(#linearGradient3693-0);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
       <path
          inkscape:connector-curvature="0"
          id="path4391"

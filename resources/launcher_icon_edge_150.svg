@@ -77,19 +77,6 @@
          id="rect5095-2-0"
          style="opacity:0.8;color:#000000;fill:#ff00ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
     </clipPath>
-    <filter
-       style="color-interpolation-filters:sRGB"
-       inkscape:collect="always"
-       id="filter5101-4-0"
-       x="-0.2463889"
-       width="1.4927778"
-       y="-0.23393407"
-       height="1.4678681">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="18.601738"
-         id="feGaussianBlur5103-3-1" />
-    </filter>
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient4100-0"
@@ -164,11 +151,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
-     inkscape:cx="1185.7143"
-     inkscape:cy="249.28571"
+     inkscape:zoom="1.6689301"
+     inkscape:cx="196.38331"
+     inkscape:cy="73.550116"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g5394"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -215,32 +202,6 @@
          x="353.00049"
          y="566"
          ry="11.852053" />
-      <g
-         style="opacity:0.1;display:inline;filter:url(#filter5101-4-0)"
-         clip-path="url(#clipPath5093-8-8)"
-         id="g5086-0"
-         transform="translate(0,250)">
-        <path
-           style="fill:#000000;stroke:none"
-           d="m 427,390 -41.54346,-96.04278 -40.26532,4.19431 -9.6469,51.79965 z"
-           id="path5080-8"
-           inkscape:connector-curvature="0" />
-        <path
-           style="fill:#000000;stroke:none"
-           d="m 427,390 39.82604,-95.83306 37.3293,0 12.58291,35.23215 z"
-           id="path5082-4"
-           inkscape:connector-curvature="0" />
-        <path
-           style="fill:#ffffff;stroke:none"
-           d="m 427,390 -88.51967,36.91666 -1.67772,42.15275 42.36247,15.72864 z"
-           id="path5084-5"
-           inkscape:connector-curvature="0" />
-        <path
-           inkscape:connector-curvature="0"
-           id="path5105-7"
-           d="M 426.80261,390 515.32228,426.91666 517,469.06941 474.63753,484.79805 Z"
-           style="fill:#ffffff;stroke:none" />
-      </g>
       <rect
          y="565"
          x="352"
