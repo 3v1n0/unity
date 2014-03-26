@@ -276,6 +276,7 @@ Controller::Impl::Impl(Controller* obj,
   :  construct_timeout_(load_timeout)
   ,  obj_(obj)
   ,  create_window_(create_window)
+  ,  icon_renderer_(std::make_shared<ui::IconRenderer>())
   ,  main_layout_(nullptr)
   ,  fade_animator_(FADE_DURATION)
 {
@@ -437,9 +438,6 @@ void Controller::Impl::ConstructView()
     return;
 
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
-
-  if (!icon_renderer_)
-    icon_renderer_ = std::make_shared<ui::IconRenderer>();
 
   view_ = SwitcherView::Ptr(new SwitcherView(icon_renderer_));
   obj_->AddChild(view_.GetPointer());
