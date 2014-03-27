@@ -13,11 +13,11 @@
    height="37"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48+devel r"
+   inkscape:version="0.48.4 r9939"
    inkscape:export-filename="test.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
-   sodipodi:docname="launcher_pip_large_rtl.svg">
+   sodipodi:docname="launcher_pip_ltr_37.svg">
   <defs
      id="defs4">
     <clipPath
@@ -31,19 +31,6 @@
          id="rect4221"
          style="opacity:0.12000002;color:#000000;fill:#ff00ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
     </clipPath>
-    <filter
-       inkscape:collect="always"
-       style="color-interpolation-filters:sRGB"
-       id="filter4311"
-       x="-0.19304349"
-       width="1.3860869"
-       y="-0.31714287"
-       height="1.6342857">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="0.925"
-         id="feGaussianBlur4313" />
-    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -52,29 +39,19 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="18.189894"
-     inkscape:cx="20.274419"
-     inkscape:cy="20.594263"
+     inkscape:zoom="40.194368"
+     inkscape:cx="14.599005"
+     inkscape:cy="13.324455"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1855"
-     inkscape:window-height="1056"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
-     inkscape:window-maximized="1"
-     showguides="true"
+     inkscape:window-width="1205"
+     inkscape:window-height="859"
+     inkscape:window-x="416"
+     inkscape:window-y="112"
+     inkscape:window-maximized="0"
+     showguides="false"
      inkscape:guide-bbox="true"
-     inkscape:snap-bbox="true"
-     inkscape:bbox-paths="true"
-     inkscape:bbox-nodes="true"
-     inkscape:snap-bbox-edge-midpoints="true"
-     inkscape:snap-bbox-midpoints="true"
-     inkscape:object-paths="true"
-     inkscape:snap-intersection-paths="true"
-     inkscape:object-nodes="true"
-     inkscape:snap-smooth-nodes="true"
-     inkscape:snap-midpoints="true"
      inkscape:snap-page="true">
     <inkscape:grid
        type="xygrid"
@@ -109,8 +86,8 @@
        inkscape:groupmode="maskhelper"
        id="g4216"
        clip-path="url(#clipPath4219)"
-       style="opacity:0.5;filter:url(#filter4311)"
-       transform="matrix(-1,0,0,1,40,1.1801717e-7)">
+       style="opacity:0.45"
+       transform="matrix(-1,0,0,1,40,0)">
       <path
          style="fill:#000000;stroke:none"
          d="m 20,1030.3622 7,0 4.5,3.5 -4.5,3.5 -7,0 z"
@@ -120,7 +97,7 @@
     </g>
     <path
        style="fill:#ffffff;stroke:none"
-       d="m 20,1030.3622 -7,0 -4.5000003,3.5 4.5000003,3.5 7,0 z"
+       d="m 20,1030.4622 -6.878261,0 -4.421739,3.4 4.421739,3.4 6.878261,0 z"
        id="path4742"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccccc" />
