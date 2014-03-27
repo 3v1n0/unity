@@ -263,30 +263,34 @@ struct IconRenderer::LocalTextures
   {
     using namespace local;
     IconSize tex_size = icon_size > 100 ? IconSize::BIG : IconSize::SMALL;
+    auto const& tile_sufix = std::to_string(TILE_SIZES[tex_size]);
+
     int icon_glow_size = std::round(icon_size * (GLOW_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
-    int arrow_size = std::round(icon_size * (MARKER_SIZES[IconSize::SMALL] / static_cast<double>(TILE_SIZES[IconSize::SMALL])));
-    int pip_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
+    auto const& glow_sufix = std::to_string(GLOW_SIZES[tex_size]);
+
+    int marker_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
+    auto const& marker_sufix = std::to_string(MARKER_SIZES[tex_size]);
 
     texture_files_ = {
-      {&icon_background, "launcher_icon_back_"+std::to_string(TILE_SIZES[tex_size]), icon_size},
-      {&icon_selected_background, "launcher_icon_selected_back_"+std::to_string(TILE_SIZES[tex_size]), icon_size},
-      {&icon_edge, "launcher_icon_edge_"+std::to_string(TILE_SIZES[tex_size]), icon_size},
-      {&icon_shine, "launcher_icon_shine_"+std::to_string(TILE_SIZES[tex_size]), icon_size},
-      {&icon_glow, "launcher_icon_glow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
-      {&icon_shadow, "launcher_icon_shadow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
-      {&icon_shadow, "launcher_icon_shadow_"+std::to_string(GLOW_SIZES[tex_size]), icon_glow_size},
-      {&arrow_ltr, "launcher_arrow_ltr_"+std::to_string(MARKER_SIZES[IconSize::SMALL]), arrow_size},
-      {&arrow_rtl, "launcher_arrow_rtl_"+std::to_string(MARKER_SIZES[IconSize::SMALL]), arrow_size},
-      {&arrow_empty_ltr, "launcher_arrow_outline_ltr_"+std::to_string(MARKER_SIZES[IconSize::SMALL]), arrow_size},
-      {&pip_ltr, "launcher_pip_ltr_"+std::to_string(MARKER_SIZES[tex_size]), pip_size},
+      {&icon_background, "launcher_icon_back_"+tile_sufix, icon_size},
+      {&icon_selected_background, "launcher_icon_selected_back_"+tile_sufix, icon_size},
+      {&icon_edge, "launcher_icon_edge_"+tile_sufix, icon_size},
+      {&icon_glow, "launcher_icon_glow_"+glow_sufix, icon_glow_size},
+      {&icon_shadow, "launcher_icon_shadow_"+glow_sufix, icon_glow_size},
+      {&icon_shine, "launcher_icon_shine_"+tile_sufix, icon_size},
+      {&arrow_ltr, "launcher_arrow_ltr_"+marker_sufix, marker_size},
+      {&arrow_rtl, "launcher_arrow_rtl_"+marker_sufix, marker_size},
+      {&arrow_empty_ltr, "launcher_arrow_outline_ltr_"+marker_sufix, marker_size},
+      {&pip_ltr, "launcher_pip_ltr_"+marker_sufix, marker_size},
       {&progress_bar_trough, "progress_bar_trough", icon_size},
       {&progress_bar_fill, "progress_bar_fill", image_size - (icon_size - image_size)},
     };
 
     auto texture_loader = [] (std::string const& basename, int w, int h)
     {
+      int size = std::max(w, h);
       auto const& file = decoration::Style::Get()->ThemedFilePath(basename, {PKGDATADIR"/"});
-      return nux::CreateTexture2DFromFile(file.c_str(), std::max(w, h), true);
+      return nux::CreateTexture2DFromFile(file.c_str(), (size <= 0 ? -1 : size), true);
     };
 
     auto& cache = TextureCache::GetDefault();
