@@ -31,19 +31,6 @@
          x="20"
          y="1033.3622" />
     </clipPath>
-    <filter
-       inkscape:collect="always"
-       style="color-interpolation-filters:sRGB"
-       id="filter4153"
-       x="-0.192"
-       width="1.384"
-       y="-0.32"
-       height="1.64">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="0.4"
-         id="feGaussianBlur4155" />
-    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -52,9 +39,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="59.292307"
-     inkscape:cx="6.5716789"
-     inkscape:cy="7.9023743"
+     inkscape:zoom="92.64423"
+     inkscape:cx="5.3419409"
+     inkscape:cy="8.5790557"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -102,19 +89,12 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-1033.3622)">
-    <g
-       inkscape:groupmode="maskhelper"
-       id="g4066"
-       clip-path="url(#clipPath4069)"
-       transform="matrix(-1,0,0,1,30,0)"
-       style="opacity:0.5;stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;filter:url(#filter4153)">
-      <path
-         style="color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
-         d="m 20,1039.0622 5,3.8 -5,3.8 z"
-         id="path4097-9"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccc" />
-    </g>
+    <path
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path5726"
+       d="m 10,1047.6622 -6.3157898,-4.8 6.3157898,-4.8 z"
+       style="opacity:0.2;color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
     <path
        style="color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        d="m 10,1039.0622 -5,3.8 5,3.8 z"

@@ -13,11 +13,11 @@
    height="37"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.48+devel r"
    inkscape:export-filename="test.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
-   sodipodi:docname="launcher_pip_ltr_37.svg">
+   sodipodi:docname="launcher_pip_large_rtl.svg">
   <defs
      id="defs4">
     <clipPath
@@ -39,19 +39,29 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="40.194368"
-     inkscape:cx="14.599005"
-     inkscape:cy="13.324455"
+     inkscape:zoom="14.551915"
+     inkscape:cx="18.597168"
+     inkscape:cy="11.945804"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1205"
-     inkscape:window-height="859"
-     inkscape:window-x="416"
-     inkscape:window-y="112"
-     inkscape:window-maximized="0"
-     showguides="false"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     showguides="true"
      inkscape:guide-bbox="true"
+     inkscape:snap-bbox="true"
+     inkscape:bbox-paths="true"
+     inkscape:bbox-nodes="true"
+     inkscape:snap-bbox-edge-midpoints="true"
+     inkscape:snap-bbox-midpoints="true"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:object-nodes="true"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:snap-midpoints="true"
      inkscape:snap-page="true">
     <inkscape:grid
        type="xygrid"
@@ -82,22 +92,15 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-1015.3622)">
-    <g
-       inkscape:groupmode="maskhelper"
-       id="g4216"
-       clip-path="url(#clipPath4219)"
-       style="opacity:0.45"
-       transform="matrix(-1,0,0,1,40,0)">
-      <path
-         style="fill:#000000;stroke:none"
-         d="m 20,1030.3622 7,0 4.5,3.5 -4.5,3.5 -7,0 z"
-         id="path4063"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccccc" />
-    </g>
+    <path
+       sodipodi:nodetypes="cccccc"
+       inkscape:connector-curvature="0"
+       id="path5745"
+       d="m 20,1029.3622 -7.5,0 -5.5,4.5 5.5,4.5 7.5,0 z"
+       style="opacity:0.2;fill:#000000;stroke:none" />
     <path
        style="fill:#ffffff;stroke:none"
-       d="m 20,1030.4622 -6.878261,0 -4.421739,3.4 4.421739,3.4 6.878261,0 z"
+       d="m 20,1030.3622 -7,0 -4.5000003,3.5 4.5000003,3.5 7,0 z"
        id="path4742"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccccc" />

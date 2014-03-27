@@ -52,11 +52,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="47.433846"
-     inkscape:cx="5.1735211"
-     inkscape:cy="7.68017"
+     inkscape:zoom="92.64423"
+     inkscape:cx="2.8593254"
+     inkscape:cy="8.2525377"
      inkscape:document-units="px"
-     inkscape:current-layer="g4066"
+     inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:window-width="1855"
      inkscape:window-height="1056"
@@ -102,18 +102,17 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-1033.3622)">
+    <path
+       style="opacity:0.2;color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+       d="M 0 4.6992188 L 0 8.1953125 L 1.7148438 9.5 L 0 10.804688 L 0 14.300781 L 6.3164062 9.5 L 0 4.6992188 z "
+       transform="translate(0,1033.3622)"
+       id="path5726" />
     <g
        inkscape:groupmode="maskhelper"
        id="g4066"
        clip-path="url(#clipPath4069)"
        transform="translate(-20,0)"
-       style="filter:url(#filter4153);opacity:0.5;stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none">
-      <path
-         style="opacity:1;color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;stroke-miterlimit:4;stroke-dasharray:none"
-         d="M 0 5.6992188 L 0 7.21875 L 3 9.5 L 0 11.78125 L 0 13.300781 L 5 9.5 L 0 5.6992188 z "
-         transform="translate(20,1033.3622)"
-         id="path4097-9" />
-    </g>
+       style="filter:url(#filter4153);opacity:0.5;stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none" />
     <path
        style="opacity:1;color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        d="M 0 5.6992188 L 0 7.21875 L 3 9.5 L 0 11.78125 L 0 13.300781 L 5 9.5 L 0 5.6992188 z "
