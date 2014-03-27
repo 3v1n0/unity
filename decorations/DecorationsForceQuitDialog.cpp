@@ -23,6 +23,7 @@
 #include <glib/gi18n-lib.h>
 #include <UnityCore/GLibWrapper.h>
 #include "DecorationsForceQuitDialog.h"
+#include "DecorationStyle.h"
 
 namespace unity
 {
@@ -100,7 +101,11 @@ GtkWindow* sheet_style_dialog_new()
   gtk_window_set_decorated(self, FALSE);
   gtk_window_set_resizable(self, FALSE);
   gtk_window_set_title(self, "Force Quit Dialog");
-  gtk_container_set_border_width(GTK_CONTAINER(self), 30);
+
+  auto const& deco_style = decoration::Style::Get();
+  auto const& offset = deco_style->ShadowOffset();
+  int max_offset = std::max(std::abs(offset.x), std::abs(offset.y));
+  gtk_container_set_border_width(GTK_CONTAINER(self), deco_style->ActiveShadowRadius()+max_offset);
 
   auto* screen = gtk_window_get_screen(self);
   gtk_widget_set_visual(GTK_WIDGET(self), gdk_screen_get_rgba_visual(screen));
@@ -135,15 +140,27 @@ static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
 GtkWidget* sheet_style_box_new()
 {
   auto* self = GTK_WIDGET(g_object_new(sheet_style_box_get_type(), nullptr));
-  gtk_orientable_set_orientation (GTK_ORIENTABLE(self), GTK_ORIENTATION_VERTICAL);
+  gtk_orientable_set_orientation(GTK_ORIENTABLE(self), GTK_ORIENTATION_VERTICAL);
 
   glib::Object<GtkCssProvider> style(gtk_css_provider_new());
-  gtk_css_provider_load_from_data(style, R"(SheetStyleBox {
-    border-radius: 8px;
+
+  auto const& deco_style = decoration::Style::Get();
+  auto const& radius = deco_style->CornerRadius();
+  auto const& offset = deco_style->ShadowOffset();
+  auto const& color = deco_style->ActiveShadowColor();
+  int decoration_radius = std::max({radius.top, radius.left, radius.right, radius.bottom});
+
+  gtk_css_provider_load_from_data(style, (R"(SheetStyleBox {
     background-color: #f7f6f5;
     color: #4a4a4a;
-    box-shadow: 3px 6px 12px 0px rgba(50, 50, 50, 0.75);
-  })", -1, nullptr);
+    border-radius: )"+std::to_string(decoration_radius)+R"(px;
+    box-shadow: )"+std::to_string(offset.x)+"px "+std::to_string(offset.y)+"px "+
+                   std::to_string(deco_style->ActiveShadowRadius())+"px "+
+                   "rgba("+std::to_string(int(color.red * 255.0))+", "+
+                           std::to_string(int(color.green * 255.0))+", "+
+                           std::to_string(int(color.blue * 255.0))+", "+
+                           std::to_string(int(color.alpha))+'.'+std::to_string(int(color.alpha*10000.0))+')'+R"(;
+  })").c_str(), -1, nullptr);
 
   auto* style_ctx = gtk_widget_get_style_context(self);
   gtk_style_context_add_provider(style_ctx, glib::object_cast<GtkStyleProvider>(style), GTK_STYLE_PROVIDER_PRIORITY_FALLBACK);
@@ -221,7 +238,7 @@ GtkWidget* close_button_new()
   )", -1, nullptr);
 
   auto* style_ctx = gtk_widget_get_style_context(self);
-  gtk_style_context_add_provider(style_ctx, glib::object_cast<GtkStyleProvider>(style), GTK_STYLE_PROVIDER_PRIORITY_FALLBACK);
+  gtk_style_context_add_provider(style_ctx, glib::object_cast<GtkStyleProvider>(style), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
   return self;
 }
