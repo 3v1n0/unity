@@ -45,6 +45,7 @@ public:
   nux::Property<bool> primary;
   nux::Property<int> monitor;
 
+  using MockableBaseWindow::RemoveLayout;
   virtual bool IsIndicatorOpen() const = 0;
 
   sigc::signal<void, int, int> grab_motion;

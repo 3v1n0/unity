@@ -26,8 +26,10 @@
 #include <NuxGraphics/GLTextureResourceManager.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/ConnectionManager.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/DecorationStyle.h"
 #include "unity-shared/TextureCache.h"
 #include "GraphicsUtils.h"
 
@@ -193,6 +195,10 @@ enum IconSize
   BIG,
   SIZE,
 };
+
+const std::array<int, IconSize::SIZE> TILE_SIZES = { 54, 150 };
+const std::array<int, IconSize::SIZE> GLOW_SIZES = { 62, 200 };
+const std::array<int, IconSize::SIZE> MARKER_SIZES = { 19, 37 };
 } // anonymous namespace
 } // local namespace
 
@@ -205,30 +211,6 @@ struct IconRenderer::TexturesPool
   }
 
   nux::ObjectPtr<nux::BaseTexture> RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color);
-
-  BaseTexturePtr pip_ltr;
-  BaseTexturePtr large_pip_ltr;
-  // BaseTexturePtr pip_rtl;
-  // BaseTexturePtr large_pip_rtl;
-  BaseTexturePtr arrow_ltr;
-  BaseTexturePtr arrow_rtl;
-  BaseTexturePtr arrow_empty_ltr;
-  // BaseTexturePtr arrow_empty_rtl;
-
-  // BaseTexturePtr squircle_base;
-  // BaseTexturePtr squircle_base_selected;
-  // BaseTexturePtr squircle_edge;
-  // BaseTexturePtr squircle_glow;
-  // BaseTexturePtr squircle_shadow;
-  // BaseTexturePtr squircle_shine;
-
-  BaseTexturePtr icon_background[local::IconSize::SIZE];
-  BaseTexturePtr icon_selected_background[local::IconSize::SIZE];
-  BaseTexturePtr icon_edge[local::IconSize::SIZE];
-  BaseTexturePtr icon_glow[local::IconSize::SIZE];
-  BaseTexturePtr icon_shadow[local::IconSize::SIZE];
-  BaseTexturePtr icon_shine[local::IconSize::SIZE];
-
   nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
   nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
 #ifndef USE_GLES
@@ -264,15 +246,76 @@ private:
 
 struct IconRenderer::LocalTextures
 {
-  void ReloadIconSizedTextures(int icon_size, int image_size)
+  LocalTextures(IconRenderer* parent)
+    : parent_(parent)
   {
-    auto& cache = TextureCache::GetDefault();
-    progress_bar_trough = cache.FindTexture("progress_bar_trough.svg", icon_size, icon_size);
-    progress_bar_fill = cache.FindTexture("progress_bar_fill.svg", image_size - (icon_size - image_size));
+    theme_conn_ = decoration::Style::Get()->theme.changed.connect([this] (std::string const&) {
+      auto& cache = TextureCache::GetDefault();
+
+      for (auto const& tex_data : texture_files_)
+        cache.Invalidate(tex_data.name, tex_data.size, tex_data.size);
+
+      ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
+    });
   }
 
+  void ReloadIconSizedTextures(int icon_size, int image_size)
+  {
+    using namespace local;
+    IconSize tex_size = icon_size > 100 ? IconSize::BIG : IconSize::SMALL;
+    auto const& tile_sufix = std::to_string(TILE_SIZES[tex_size]);
+
+    int icon_glow_size = std::round(icon_size * (GLOW_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
+    auto const& glow_sufix = std::to_string(GLOW_SIZES[tex_size]);
+
+    int marker_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
+    auto const& marker_sufix = std::to_string(MARKER_SIZES[tex_size]);
+
+    texture_files_ = {
+      {&icon_background, "launcher_icon_back_"+tile_sufix, icon_size},
+      {&icon_selected_background, "launcher_icon_selected_back_"+tile_sufix, icon_size},
+      {&icon_edge, "launcher_icon_edge_"+tile_sufix, icon_size},
+      {&icon_glow, "launcher_icon_glow_"+glow_sufix, icon_glow_size},
+      {&icon_shadow, "launcher_icon_shadow_"+glow_sufix, icon_glow_size},
+      {&icon_shine, "launcher_icon_shine_"+tile_sufix, icon_size},
+      {&arrow_ltr, "launcher_arrow_ltr_"+marker_sufix, marker_size},
+      {&arrow_rtl, "launcher_arrow_rtl_"+marker_sufix, marker_size},
+      {&arrow_empty_ltr, "launcher_arrow_outline_ltr_"+marker_sufix, marker_size},
+      {&pip_ltr, "launcher_pip_ltr_"+marker_sufix, marker_size},
+      {&progress_bar_trough, "progress_bar_trough", icon_size},
+      {&progress_bar_fill, "progress_bar_fill", image_size - (icon_size - image_size)},
+    };
+
+    auto texture_loader = [] (std::string const& basename, int w, int h)
+    {
+      int size = std::max(w, h);
+      auto const& file = decoration::Style::Get()->ThemedFilePath(basename, {PKGDATADIR"/"});
+      return nux::CreateTexture2DFromFile(file.c_str(), (size <= 0 ? -1 : size), true);
+    };
+
+    auto& cache = TextureCache::GetDefault();
+    for (auto const& tex_data : texture_files_)
+      *tex_data.tex_ptr = cache.FindTexture(tex_data.name, tex_data.size, tex_data.size, texture_loader);
+  }
+
+  BaseTexturePtr icon_background;
+  BaseTexturePtr icon_selected_background;
+  BaseTexturePtr icon_edge;
+  BaseTexturePtr icon_glow;
+  BaseTexturePtr icon_shadow;
+  BaseTexturePtr icon_shine;
+  BaseTexturePtr arrow_ltr;
+  BaseTexturePtr arrow_rtl;
+  BaseTexturePtr arrow_empty_ltr;
+  BaseTexturePtr pip_ltr;
   BaseTexturePtr progress_bar_trough;
   BaseTexturePtr progress_bar_fill;
+
+private:
+  IconRenderer* parent_;
+  struct TextureData { BaseTexturePtr* tex_ptr; std::string name; int size; };
+  std::vector<TextureData> texture_files_;
+  connection::Wrapper theme_conn_;
 };
 
 IconRenderer::IconRenderer()
@@ -280,7 +323,7 @@ IconRenderer::IconRenderer()
   , image_size(0)
   , spacing(0)
   , textures_(TexturesPool::Get())
-  , local_textures_(std::make_shared<LocalTextures>())
+  , local_textures_(std::make_shared<LocalTextures>(this))
 {
   pip_style = OUTSIDE_TILE;
 }
@@ -362,20 +405,10 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, ui::IconTextureSource::TRANSFORM_IMAGE);
 
-    // hardcode values for now until SVG's are in place and we can remove this
-    // 200 == size of large glow
-    // 150 == size of large tile
-    // 62 == size of small glow
-    // 54 == size of small tile
-    float icon_glow_size = 0.0f;
-    if (icon_size > 100)
-      icon_glow_size = icon_size * (200.0f / 150.0f);
-    else
-      icon_glow_size = icon_size * (62.0f / 54.0f);
-    w = icon_glow_size;
-    h = icon_glow_size;
-    x = it->render_center.x - icon_glow_size / 2.0f;
-    y = it->render_center.y - icon_glow_size / 2.0f;
+    w = local_textures_->icon_glow->GetWidth();
+    h = local_textures_->icon_glow->GetHeight();
+    x = it->render_center.x - w / 2.0f;
+    y = it->render_center.y - h / 2.0f;
     z = it->render_center.z;
 
     UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, ui::IconTextureSource::TRANSFORM_GLOW);
@@ -470,8 +503,6 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   if (!texture_for_size)
     return;
 
-  local::IconSize size = icon_size > 100 ? local::IconSize::BIG : local::IconSize::SMALL;
-
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
@@ -487,11 +518,11 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   float glow_intensity = arg.glow_intensity * glow_multiplier;
   float shadow_intensity = 0.6f;
 
-  BaseTexturePtr background = textures_->icon_background[size];
-  BaseTexturePtr const& edge = textures_->icon_edge[size];
-  BaseTexturePtr const& glow = textures_->icon_glow[size];
-  BaseTexturePtr const& shine = textures_->icon_shine[size];
-  BaseTexturePtr const& shadow = textures_->icon_shadow[size];
+  BaseTexturePtr background = local_textures_->icon_background;
+  BaseTexturePtr const& edge = local_textures_->icon_edge;
+  BaseTexturePtr const& glow = local_textures_->icon_glow;
+  BaseTexturePtr const& shine = local_textures_->icon_shine;
+  BaseTexturePtr const& shadow = local_textures_->icon_shadow;
 
   nux::Color shortcut_color = arg.colorify;
 
@@ -529,7 +560,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     glow_intensity = 1.0f;
     shadow_intensity = 0.0f;
 
-    background = textures_->icon_selected_background[size];
+    background = local_textures_->icon_selected_background;
   }
   else
   {
@@ -571,7 +602,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_GLOW, monitor));
   }
 
-  auto tile_transform = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
+  auto const& tile_transform = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
 
   // draw tile
   if (backlight_intensity > 0 && !arg.draw_edge_only)
@@ -656,7 +687,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
     RenderElement(GfxContext,
                   arg,
-                  textures_->icon_glow[size]->GetDeviceTexture(),
+                  local_textures_->icon_glow->GetDeviceTexture(),
                   arg.icon->GlowColor(),
                   nux::color::White,
                   fade_out * arg.alpha,
@@ -960,10 +991,8 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int)(arg.rotation.x / (2 * M_PI) * icon_size);
 
-
   if (running > 0)
   {
-    int scale = 1;
     int markerX;
 
     if (pip_style == OUTSIDE_TILE)
@@ -972,7 +1001,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
     else
     {
-      auto bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
+      auto const& bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
       markerX = bounds[0].x + 1;
     }
 
@@ -994,47 +1023,32 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     if (!arg.running_on_viewport)
     {
-      scale = (pip_style == OUTSIDE_TILE) ? 1 : 2;
       markers[0] = markerCenter;
-      texture = textures_->arrow_empty_ltr;
+      texture = local_textures_->arrow_empty_ltr;
     }
     else if (running == 1)
     {
-      scale = (pip_style == OUTSIDE_TILE) ? 1 : 2;
       markers[0] = markerCenter;
-      texture = textures_->arrow_ltr;
+      texture = local_textures_->arrow_ltr;
     }
     else if (running == 2)
     {
-      if (pip_style == OUTSIDE_TILE)
-      {
-        texture = textures_->pip_ltr;
-        markers[0] = markerCenter - 2;
-        markers[1] = markerCenter + 2;
-      }
-      else
-      {
-        texture = textures_->large_pip_ltr;
-        markers[0] = markerCenter - 4;
-        markers[1] = markerCenter + 4;
-      }
+      texture = local_textures_->pip_ltr;
+
+      double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
+      int offset = std::max(1.0, std::round(2.0 * texture->GetHeight() / default_tex_height));
+      markers[0] = markerCenter - offset;
+      markers[1] = markerCenter + offset;
     }
     else
     {
-      if (pip_style == OUTSIDE_TILE)
-      {
-        texture = textures_->pip_ltr;
-        markers[0] = markerCenter - 4;
-        markers[1] = markerCenter;
-        markers[2] = markerCenter + 4;
-      }
-      else
-      {
-        texture = textures_->large_pip_ltr;
-        markers[0] = markerCenter - 8;
-        markers[1] = markerCenter;
-        markers[2] = markerCenter + 8;
-      }
+      texture = local_textures_->pip_ltr;
+
+      double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
+      int offset = std::max(1.0, std::round(4.0 * texture->GetHeight() / default_tex_height));
+      markers[0] = markerCenter - offset;
+      markers[1] = markerCenter;
+      markers[2] = markerCenter + offset;
     }
 
     for (int i = 0; i < 3; i++)
@@ -1044,9 +1058,9 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
         break;
 
       GfxContext.QRP_1Tex(markerX,
-                          center - std::round((texture->GetHeight() * scale) / 2.0f),
-                          texture->GetWidth() * scale,
-                          texture->GetHeight() * scale,
+                          center - std::round(texture->GetHeight() / 2.0f),
+                          texture->GetWidth(),
+                          texture->GetHeight(),
                           texture->GetDeviceTexture(),
                           texxform,
                           color);
@@ -1057,12 +1071,13 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
+    auto const& arrow_rtl = local_textures_->arrow_rtl;
     nux::Color color = nux::color::LightGrey * alpha;
-    GfxContext.QRP_1Tex((geo.x + geo.width) - textures_->arrow_rtl->GetWidth(),
-                        markerCenter - std::round(textures_->arrow_rtl->GetHeight() / 2.0f),
-                        textures_->arrow_rtl->GetWidth(),
-                        textures_->arrow_rtl->GetHeight(),
-                        textures_->arrow_rtl->GetDeviceTexture(),
+    GfxContext.QRP_1Tex((geo.x + geo.width) - arrow_rtl->GetWidth(),
+                        markerCenter - std::round(arrow_rtl->GetHeight() / 2.0f),
+                        arrow_rtl->GetWidth(),
+                        arrow_rtl->GetHeight(),
+                        arrow_rtl->GetDeviceTexture(),
                         texxform,
                         color);
   }
@@ -1237,48 +1252,6 @@ IconRenderer::TexturesPool::TexturesPool()
   , ColorifyColor(0)
   , DesatFactor(0)
 {
-  LoadTexture(pip_ltr, PKGDATADIR"/launcher_pip_ltr.png");
-  LoadTexture(large_pip_ltr, PKGDATADIR"/launcher_pip_large_ltr.png");
-  // LoadTexture(pip_rtl, PKGDATADIR"/launcher_pip_rtl.png");
-  // LoadTexture(large_pip_rtl, PKGDATADIR"/launcher_pip_large_rtl.png");
-  LoadTexture(arrow_ltr, PKGDATADIR"/launcher_arrow_ltr.png");
-  LoadTexture(arrow_rtl, PKGDATADIR"/launcher_arrow_rtl.png");
-  LoadTexture(arrow_empty_ltr, PKGDATADIR"/launcher_arrow_outline_ltr.png");
-  // LoadTexture(arrow_empty_rtl, PKGDATADIR"/launcher_arrow_outline_rtl.png");
-
-  // LoadTexture(squircle_base, PKGDATADIR"/squircle_base_54.png");
-  // LoadTexture(squircle_base_selected, PKGDATADIR"/squircle_base_selected_54.png");
-  // LoadTexture(squircle_edge, PKGDATADIR"/squircle_edge_54.png");
-  // LoadTexture(squircle_glow, PKGDATADIR"/squircle_glow_62.png");
-  // LoadTexture(squircle_shadow, PKGDATADIR"/squircle_shadow_62.png");
-  // LoadTexture(squircle_shine, PKGDATADIR"/squircle_shine_54.png");
-
-  // BaseTexturePtr icon_background[local::IconSize::SIZE];
-  // BaseTexturePtr icon_selected_background[local::IconSize::SIZE];
-  // BaseTexturePtr icon_edge[local::IconSize::SIZE];
-  // BaseTexturePtr icon_glow[local::IconSize::SIZE];
-  // BaseTexturePtr icon_shadow[local::IconSize::SIZE];
-  // BaseTexturePtr icon_shine[local::IconSize::SIZE];
-
-  GenerateTextures(icon_background,
-                   PKGDATADIR"/launcher_icon_back_150.png",
-                   PKGDATADIR"/launcher_icon_back_54.png");
-  GenerateTextures(icon_selected_background,
-                   PKGDATADIR"/launcher_icon_selected_back_150.png",
-                   PKGDATADIR"/launcher_icon_back_54.png");
-  GenerateTextures(icon_edge,
-                   PKGDATADIR"/launcher_icon_edge_150.png",
-                   PKGDATADIR"/launcher_icon_edge_54.png");
-  GenerateTextures(icon_glow,
-                   PKGDATADIR"/launcher_icon_glow_200.png",
-                   PKGDATADIR"/launcher_icon_glow_62.png");
-  GenerateTextures(icon_shadow,
-                   PKGDATADIR"/launcher_icon_shadow_200.png",
-                   PKGDATADIR"/launcher_icon_shadow_62.png");
-  GenerateTextures(icon_shine,
-                   PKGDATADIR"/launcher_icon_shine_150.png",
-                   PKGDATADIR"/launcher_icon_shine_54.png");
-
   SetupShaders();
 }
 

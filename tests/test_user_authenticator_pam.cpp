@@ -45,6 +45,16 @@ int pam_authenticate(pam_handle_t *pamh, int flags)
   return strcmp(resp[0].resp, "password");
 }
 
+int pam_acct_mgmt(pam_handle_t *pamh, int flags)
+{
+  return PAM_SUCCESS;
+}
+
+int pam_setcred(pam_handle_t *pamh, int flags)
+{
+  return PAM_SUCCESS;
+}
+
 namespace
 {
 

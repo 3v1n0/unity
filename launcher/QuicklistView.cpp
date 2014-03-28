@@ -42,6 +42,7 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/DecorationStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/UScreen.h"
 
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
@@ -51,14 +52,16 @@ namespace unity
 {
 namespace
 {
-  const RawPixel ANCHOR_WIDTH  = 10.0_em;
-  const RawPixel TOP_SIZE      =    4_em;
+  const RawPixel ANCHOR_WIDTH  = 10_em;
+  const RawPixel TOP_SIZE      =  4_em;
 
   const RawPixel ANCHOR_HEIGHT = 18_em;
   const RawPixel CORNER_RADIUS =  4_em;
-  const RawPixel PADDING       = 13_em;
   const RawPixel MAX_HEIGHT  = 1000_em;
   const RawPixel MAX_WIDTH   = 1000_em;
+
+  const RawPixel LEFT_PADDING_CORRECTION = -1_em;
+  const RawPixel OFFSET_CORRECTION = -1_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
@@ -69,34 +72,29 @@ QuicklistView::QuicklistView(int monitor)
   , _anchorY(0)
   , _labelText("QuicklistView 1234567890")
   , _top_size(TOP_SIZE)
+  , _padding(decoration::Style::Get()->ActiveShadowRadius())
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
-  , _anchor_width(ANCHOR_WIDTH)
-  , _anchor_height(ANCHOR_HEIGHT)
-  , _corner_radius(CORNER_RADIUS)
-  , _padding(PADDING)
-  , _left_padding_correction(-1)
-  , _offset_correction(-1)
   , _cairo_text_has_changed(true)
   , _current_item_index(-1)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
 
-  _left_space = new nux::SpaceLayout(RawPixel(_padding + _anchor_width + _corner_radius + _left_padding_correction).CP(cv_),
-                                     RawPixel(_padding + _anchor_width + _corner_radius + _left_padding_correction).CP(cv_),
+  _left_space = new nux::SpaceLayout(RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
+                                     RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
                                      1, MAX_HEIGHT.CP(cv_));
 
-  _right_space = new nux::SpaceLayout(_padding.CP(cv_) + _corner_radius.CP(cv_),
-                                      _padding.CP(cv_) + _corner_radius.CP(cv_),
+  _right_space = new nux::SpaceLayout(_padding.CP(cv_) + CORNER_RADIUS.CP(cv_),
+                                      _padding.CP(cv_) + CORNER_RADIUS.CP(cv_),
                                       1, MAX_HEIGHT.CP(cv_));
 
   _top_space = new nux::SpaceLayout(1, MAX_WIDTH.CP(cv_),
-                                    _padding.CP(cv_) + _corner_radius.CP(cv_),
-                                    _padding.CP(cv_) + _corner_radius.CP(cv_));
+                                    _padding.CP(cv_) + CORNER_RADIUS.CP(cv_),
+                                    _padding.CP(cv_) + CORNER_RADIUS.CP(cv_));
 
   _bottom_space = new nux::SpaceLayout(1, MAX_WIDTH.CP(cv_),
-                                       _padding.CP(cv_) + _corner_radius.CP(cv_),
-                                       _padding.CP(cv_) + _corner_radius.CP(cv_));
+                                       _padding.CP(cv_) + CORNER_RADIUS.CP(cv_),
+                                       _padding.CP(cv_) + CORNER_RADIUS.CP(cv_));
 
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_top_space, 0);
@@ -135,7 +133,7 @@ int QuicklistView::CalculateX() const
 
 int QuicklistView::CalculateY() const
 {
-  return _anchorY - (_anchor_height.CP(cv_) / 2) - _top_size.CP(cv_) - _corner_radius.CP(cv_) - _padding.CP(cv_);
+  return _anchorY - (ANCHOR_HEIGHT.CP(cv_) / 2) - _top_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
 }
 
 void
@@ -336,27 +334,22 @@ void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
   {
     if (!_item_list.empty())
     {
-      int offscreen_size = GetBaseY() +
-                           GetBaseHeight() -
-                           nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
+      auto* us = UScreen::GetDefault();
+      int ql_monitor = us->GetMonitorAtPosition(_anchorX, _anchorY);
+      auto const& ql_monitor_geo = us->GetMonitorGeometry(ql_monitor);
+      int offscreen_size = GetBaseY() + GetBaseHeight() - (ql_monitor_geo.y + ql_monitor_geo.height);
 
       if (offscreen_size > 0)
         _top_size = offscreen_size + TOP_SIZE;
       else
         _top_size = TOP_SIZE;
 
-      int x = CalculateX();
-      int y = CalculateY();
-
-      SetBaseXY(x, y);
+      SetXY(CalculateX(), CalculateY());
     }
     else
     {
       _top_size = 0;
-      int x = CalculateX();
-      int y = CalculateY();
-
-      SetBaseXY(x, y);
+      SetXY(CalculateX(), CalculateY());
     }
   }
 }
@@ -447,10 +440,10 @@ void QuicklistView::PreLayoutManagement()
     TotalItemHeight += text_extents.height;
   }
 
-  if (TotalItemHeight < _anchor_height.CP(cv_))
+  if (TotalItemHeight < ANCHOR_HEIGHT.CP(cv_))
   {
-    int b = (_anchor_height.CP(cv_) - TotalItemHeight) / 2 + _padding.CP(cv_) + _corner_radius.CP(cv_);
-    int t = b + _offset_correction.CP(cv_);
+    int b = (ANCHOR_HEIGHT.CP(cv_) - TotalItemHeight) / 2 + _padding.CP(cv_) + CORNER_RADIUS.CP(cv_);
+    int t = b + OFFSET_CORRECTION.CP(cv_);
 
     _top_space->SetMinimumHeight(t);
     _top_space->SetMaximumHeight(t);
@@ -460,8 +453,8 @@ void QuicklistView::PreLayoutManagement()
   }
   else
   {
-    int b = _padding.CP(cv_) + _corner_radius.CP(cv_);
-    int t = b + _offset_correction.CP(cv_);
+    int b = _padding.CP(cv_) + CORNER_RADIUS.CP(cv_);
+    int t = b + OFFSET_CORRECTION.CP(cv_);
 
     _top_space->SetMinimumHeight(t);
     _top_space->SetMaximumHeight(t);
@@ -481,7 +474,7 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
 
   UpdateTexture();
 
-  int x = RawPixel(_padding + _anchor_width + _corner_radius + _offset_correction).CP(cv_);
+  int x = RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + OFFSET_CORRECTION).CP(cv_);
   int y = _top_space->GetMinimumHeight();
 
   for (auto const& item : _item_list)
@@ -1137,41 +1130,11 @@ void QuicklistView::UpdateTexture()
   if (!_cairo_text_has_changed)
     return;
 
-  RawPixel size_above_anchor = -1; // equal to size below
+  SetQuicklistPosition(_anchorX, _anchorY);
+
+  RawPixel size_above_anchor = _item_list.empty() ? RawPixel(-1) : _top_size;
   int width = GetBaseWidth();
   int height = GetBaseHeight();
-
-  if (!_enable_quicklist_for_testing)
-  {
-    if (!_item_list.empty())
-    {
-      int offscreen_size = GetBaseY() +
-                           height -
-                           nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
-
-      if (offscreen_size > 0)
-        _top_size = offscreen_size + TOP_SIZE;
-      else
-        _top_size = TOP_SIZE;
-
-      size_above_anchor = _top_size;
-      int x = CalculateX();
-      int y = CalculateY();
-
-      SetBaseX(x);
-      SetBaseY(y);
-    }
-    else
-    {
-      _top_size = 0;
-      size_above_anchor = -1;
-      int x = CalculateX();
-      int y = CalculateY();
-
-      SetBaseX(x);
-      SetBaseY(y);
-    }
-  }
 
   auto const& deco_style = decoration::Style::Get();
   float dpi_scale = cv_->DPIScale();
@@ -1213,10 +1176,10 @@ void QuicklistView::UpdateTexture()
     cairo_outline.GetSurface(),
     width / dpi_scale,
     height / dpi_scale,
-    _anchor_width,
-    _anchor_height,
+    ANCHOR_WIDTH,
+    ANCHOR_HEIGHT,
     size_above_anchor,
-    _corner_radius,
+    CORNER_RADIUS,
     blur_coef,
     shadow_color,
     1.0f * dpi_scale,
@@ -1228,9 +1191,9 @@ void QuicklistView::UpdateTexture()
     cairo_mask.GetSurface(),
     width / dpi_scale,
     height / dpi_scale,
-    _corner_radius,            // radius,
-    _anchor_width,             // anchor_width,
-    _anchor_height,            // anchor_height,
+    CORNER_RADIUS,             // radius,
+    ANCHOR_WIDTH,              // anchor_width,
+    ANCHOR_HEIGHT,             // anchor_height,
     size_above_anchor,         // upper_size,
     true,                      // negative,
     false,                     // outline,
