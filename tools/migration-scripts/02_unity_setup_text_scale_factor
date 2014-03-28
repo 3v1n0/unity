@@ -22,18 +22,20 @@ from gi.repository import Gio
 import os,sys
 
 GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
-GNOME_UI_SETTINGS_PATH = "/org/gnome/desktop/interface/"
 GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
+
+UNITY_UI_SETTINGS = "com.canonical.Unity.Interface";
+UNITY_UI_SETTINGS_PATH = "/com/canonical/unity/interface/"
+UNITY_TEXT_SCALE_FACTOR = "text-scale-factor";
 
 if GNOME_UI_SETTINGS not in Gio.Settings.list_schemas():
     print("No gnome desktop interface schemas found, no migration needed")
     sys.exit(0)
 
-ui_settings = Gio.Settings(schema=GNOME_UI_SETTINGS, path=GNOME_UI_SETTINGS_PATH)
-text_scale_factor = ui_settings.get_double(GNOME_TEXT_SCALE_FACTOR)
+text_scale_factor = Gio.Settings(schema=GNOME_UI_SETTINGS).get_double(GNOME_TEXT_SCALE_FACTOR)
 
 # gsettings doesn't work directly, the key is somewhat reverted. Work one level under then: dconf!
-# ui_settings.set_int(GNOME_TEXT_SCALE_FACTOR, text_scale_factor)
+# Gio.Settings(schema=UNITY_UI_SETTINGS).set_int(UNITY_TEXT_SCALE_FACTOR, text_scale_factor)
 from subprocess import Popen, PIPE, STDOUT
-p = Popen(("dconf load "+GNOME_UI_SETTINGS_PATH).split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-p.communicate(input="[/]\n"+GNOME_TEXT_SCALE_FACTOR+"={}".format(text_scale_factor).encode('utf-8'))
+p = Popen(("dconf load "+UNITY_UI_SETTINGS_PATH).split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+p.communicate(input="[/]\n"+UNITY_TEXT_SCALE_FACTOR+"={}".format(text_scale_factor).encode('utf-8'))
