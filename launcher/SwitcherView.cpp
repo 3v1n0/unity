@@ -45,7 +45,7 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
-SwitcherView::SwitcherView()
+SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   : render_boxes(false)
   , border_size(50)
   , flat_spacing(20)
@@ -57,7 +57,7 @@ SwitcherView::SwitcherView()
   , animation_length(250)
   , monitor(-1)
   , spread_size(3.5f)
-  , icon_renderer_(std::make_shared<IconRenderer>())
+  , icon_renderer_(renderer)
   , text_view_(new StaticCairoText(""))
   , animation_(animation_length)
   , last_icon_selected_(-1)

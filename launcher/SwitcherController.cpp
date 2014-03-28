@@ -24,6 +24,7 @@
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/IconRenderer.h"
 #include "unity-shared/UScreen.h"
 
 #include "SwitcherController.h"
@@ -275,6 +276,7 @@ Controller::Impl::Impl(Controller* obj,
   :  construct_timeout_(load_timeout)
   ,  obj_(obj)
   ,  create_window_(create_window)
+  ,  icon_renderer_(std::make_shared<ui::IconRenderer>())
   ,  main_layout_(nullptr)
   ,  fade_animator_(FADE_DURATION)
 {
@@ -404,7 +406,7 @@ void Controller::Impl::ShowView()
 
 void Controller::Impl::ConstructWindow()
 {
-  sources_.Remove(LAZY_TIMEOUT);
+  // sources_.Remove(LAZY_TIMEOUT);
 
   if (!view_window_)
   {
@@ -437,7 +439,7 @@ void Controller::Impl::ConstructView()
 
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
 
-  view_ = SwitcherView::Ptr(new SwitcherView());
+  view_ = SwitcherView::Ptr(new SwitcherView(icon_renderer_));
   obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = WindowManager::Default().average_color();

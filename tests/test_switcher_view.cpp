@@ -24,7 +24,6 @@
 #include "SwitcherView.h"
 #include "MockLauncherIcon.h"
 #include "test_standalone_wm.h"
-#include "unity-shared/IconRenderer.h"
 
 namespace unity
 {
@@ -41,6 +40,13 @@ namespace
     WindowList windows_;
   };
 
+  struct MockIconRenderer : ui::AbstractIconRenderer
+  {
+    MOCK_METHOD2(PreprocessIcons, void(std::list<ui::RenderArg>&, nux::Geometry const&));
+    MOCK_METHOD4(RenderIcon, void(nux::GraphicsEngine&, ui::RenderArg const&, nux::Geometry const&, nux::Geometry const&));
+    MOCK_METHOD3(SetTargetSize, void(int tile_size, int image_size, int spacing));
+  };
+
   int rand_coord() { return g_random_int_range(1, 1024); }
 }
 
@@ -48,6 +54,10 @@ struct TestSwitcherView : testing::Test
 {
   struct MockSwitcherView : SwitcherView
   {
+    MockSwitcherView()
+      : SwitcherView(std::make_shared<testing::NiceMock<MockIconRenderer>>())
+    {}
+
     MOCK_METHOD0(QueueDraw, void());
     double GetCurrentProgress() const { return animation_.GetCurrentValue(); }
 

@@ -37,7 +37,7 @@ TextureCache& TextureCache::GetDefault()
 nux::BaseTexture* TextureCache::DefaultTexturesLoader(std::string const& name, int w, int h)
 {
   int size = std::max(w, h);
-  return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name).c_str(), (!size ? -1 : size), true);
+  return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name).c_str(), (size <= 0 ? -1 : size), true);
 }
 
 std::size_t TextureCache::Hash(std::string const& id, int width, int height)
