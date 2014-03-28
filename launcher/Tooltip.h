@@ -30,6 +30,7 @@
 #include "CairoBaseWindow.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -72,8 +73,9 @@ private:
   void NotifyConfigurationChange(int width,
                                  int height);
 
-  int                   _anchorX;
-  int                   _anchorY;
+  int _anchorX;
+  int _anchorY;
+  RawPixel _padding;
 
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
