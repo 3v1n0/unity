@@ -74,6 +74,11 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
       motion_connection_->disconnect();
       uscreen_connection_->block();
       session_manager_->unlocked.emit();
+
+      std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
+        shield->RemoveLayout();
+      });
+
       shields_.clear();
 
       if (Settings::Instance().lockscreen_type() == Type::UNITY)
@@ -231,7 +236,7 @@ void Controller::ShowShields()
 
 void Controller::OnUnlockRequested()
 {
-  lockscreen_timeout_.release();
+  lockscreen_timeout_.reset();
 
   if (!IsLocked())
     return;
