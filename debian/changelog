@@ -1,3 +1,32 @@
+unity (7.1.2+14.04.20140328.1-0ubuntu1) trusty; urgency=low
+
+  [ Robert Ancell ]
+  * Call pam_acct_mgmt and pam_chauthtok when unlocking screen (LP:
+    #1296443)
+
+  [ Stephen M. Webb ]
+  * restart unity-panel-service for only the current session when
+    restarting unity from the command line (LP: #777594)
+
+  [ Brandon Schaefer ]
+  * When we see an escape in lockscreen prompt, clear the password. (LP:
+    #1292647)
+
+  [ Andrea Azzarone ]
+  * Fixes the double lockscreen when switching users. (LP: #1291088)
+
+  [ Marco Trevisan (Treviño) ]
+  * Tooltip, QuicklistView: use the decoration shadow radius for
+    computing padding (LP: #1291407)
+  * 02_unity_setup_text_scale_factor: actually make it working, copy the
+    gnome value to unity (LP: #1298492)
+  * IconRenderer: scale textures when loading them based on the current
+    launcher scaling Add SVG textures for tiles and markers (thanks to
+    Matthieu James) to replace .pngs, also make them themable. (LP:
+    #1297588)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 28 Mar 2014 10:16:02 +0000
+
 unity (7.1.2+14.04.20140321-0ubuntu1) trusty; urgency=low
 
   [ Andrea Azzarone ]
