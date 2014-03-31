@@ -131,7 +131,7 @@ public:
   void DrawSide(Side, WidgetState, cairo_t*, double width, double height);
   void DrawTitle(std::string const&, WidgetState, cairo_t*, double width, double height, nux::Rect const& bg_geo = nux::Rect());
   void DrawMenuItem(WidgetState, cairo_t*, double width, double height);
-  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, double width, double height);
+  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, double width, double height, nux::Rect const& bg_geo = nux::Rect());
   void DrawMenuItemIcon(std::string const&, WidgetState, cairo_t*, int size);
 
 private:

@@ -574,7 +574,7 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
-  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h)
+  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo)
   {
     gtk_style_context_save(ctx_);
     AddContextClassesForMenuItem(ws);
@@ -593,6 +593,7 @@ struct Style::Impl
 
     pango_layout_set_width(layout, (w >= 0) ? w * PANGO_SCALE : -1);
     pango_layout_set_height(layout, (h >= 0) ? h * PANGO_SCALE : -1);
+    DrawTextBackground(ctx_, cr, layout, bg_geo);
     gtk_render_layout(ctx_, cr, 0, 0, layout);
 
     gtk_style_context_restore(ctx_);
@@ -689,9 +690,9 @@ void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, double w, double h)
   impl_->DrawMenuItem(ws, cr, w, h);
 }
 
-void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h)
+void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo)
 {
-  impl_->DrawMenuItemEntry(t, ws, cr, w, h);
+  impl_->DrawMenuItemEntry(t, ws, cr, w, h, bg_geo);
 }
 
 void Style::DrawMenuItemIcon(std::string const& i, WidgetState ws, cairo_t* cr, int s)
