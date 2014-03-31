@@ -77,9 +77,21 @@ void MenuEntry::RenderTexture()
   if (state == WidgetState::PRELIGHT)
     Style::Get()->DrawMenuItem(state, text_ctx, text_ctx.width() / scale(), text_ctx.height() / scale());
 
+  nux::Rect bg_geo(-(horizontal_padding()*scale()), -(vertical_padding()*scale()), GetNaturalWidth(), GetNaturalHeight());
+
+  if (state != WidgetState::PRELIGHT)
+  {
+    if (BasicContainer::Ptr const& top = GetTopParent())
+    {
+      auto const& top_geo = top->Geometry();
+      auto const& geo = Geometry();
+      bg_geo.Set(top_geo.x() - geo.x(), top_geo.y() - geo.y(), top_geo.width(), top_geo.height());
+    }
+  }
+
   cairo_save(text_ctx);
   cairo_translate(text_ctx, horizontal_padding(), vertical_padding());
-  Style::Get()->DrawMenuItemEntry(entry_->label(), state, text_ctx, natural_.width, natural_.height);
+  Style::Get()->DrawMenuItemEntry(entry_->label(), state, text_ctx, natural_.width, natural_.height, bg_geo * (1.0/scale));
   cairo_restore(text_ctx);
   SetTexture(text_ctx);
 }
