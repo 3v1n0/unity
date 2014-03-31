@@ -814,7 +814,9 @@ void PanelMenuView::UpdateTitleTexture(nux::Geometry const& geo, std::string con
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, title_geo_.width, title_geo_.height);
   cairo_surface_set_device_scale(cairo_graphics.GetSurface(), dpi_scale, dpi_scale);
   cairo_t* cr = cairo_graphics.GetInternalContext();
-  style->DrawTitle(label, state, cr, title_geo_.width / dpi_scale, title_geo_.height / dpi_scale);
+
+  nux::Geometry text_bg(-title_geo_.x, -title_geo_.y, geo.width, geo.height);
+  style->DrawTitle(label, state, cr, title_geo_.width / dpi_scale, title_geo_.height / dpi_scale, text_bg * (1.0/dpi_scale));
   title_texture_ = texture_ptr_from_cairo_graphics(cairo_graphics);
 }
 
