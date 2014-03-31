@@ -324,12 +324,13 @@ struct Style::Impl
     return GTK_STATE_FLAG_NORMAL;
   }
 
-  void AddContextClasses(Side s, WidgetState ws)
+  void AddContextClasses(Side s, WidgetState ws, GtkStyleContext* ctx = nullptr)
   {
-    gtk_style_context_add_class(ctx_, "gnome-panel-menu-bar");
-    if (s == Side::TOP) { gtk_style_context_add_class(ctx_, "header-bar"); }
-    gtk_style_context_add_class(ctx_, GetBorderClass(s).c_str());
-    gtk_style_context_set_state(ctx_, GtkStateFromWidgetState(ws));
+    ctx = ctx ? ctx : ctx_;
+    gtk_style_context_add_class(ctx, "gnome-panel-menu-bar");
+    if (s == Side::TOP) { gtk_style_context_add_class(ctx, "header-bar"); }
+    gtk_style_context_add_class(ctx, GetBorderClass(s).c_str());
+    gtk_style_context_set_state(ctx, GtkStateFromWidgetState(ws));
   }
 
   void DrawSide(Side s, WidgetState ws, cairo_t* cr, double w, double h)
@@ -506,7 +507,6 @@ struct Style::Impl
 
     // We need to render the background under the text glyphs, or the edge
     // of the text won't be correctly anti-aliased. See bug #723167
-
     cairo_push_group(cr);
     gtk_render_layout(ctx, cr, 0, 0, layout);
     std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
@@ -517,10 +517,10 @@ struct Style::Impl
     cairo_mask(cr, pat.get());
   }
 
-  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo)
+  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo, GtkStyleContext* ctx)
   {
-    gtk_style_context_save(ctx_);
-    AddContextClasses(Side::TOP, ws);
+    gtk_style_context_save(ctx);
+    AddContextClasses(Side::TOP, ws, ctx);
 
     auto const& layout = BuildPangoLayout(title_pango_ctx_, text);
 
@@ -534,8 +534,8 @@ struct Style::Impl
       double fading_width = std::min<double>(title_fade_, out_pixels);
 
       cairo_push_group(cr);
-      DrawTextBackground(ctx_, cr, layout, bg_geo);
-      gtk_render_layout(ctx_, cr, 0, 0, layout);
+      DrawTextBackground(ctx, cr, layout, bg_geo);
+      gtk_render_layout(ctx, cr, 0, 0, layout);
       cairo_pop_group_to_source(cr);
 
       std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(w - fading_width, 0, w, 0),
@@ -548,11 +548,11 @@ struct Style::Impl
     else
     {
       pango_layout_set_width(layout, (w >= 0) ? w * PANGO_SCALE : -1);
-      DrawTextBackground(ctx_, cr, layout, bg_geo);
-      gtk_render_layout(ctx_, cr, 0, 0, layout);
+      DrawTextBackground(ctx, cr, layout, bg_geo);
+      gtk_render_layout(ctx, cr, 0, 0, layout);
     }
 
-    gtk_style_context_restore(ctx_);
+    gtk_style_context_restore(ctx);
   }
 
   inline void AddContextClassesForMenuItem(WidgetState ws)
@@ -680,9 +680,9 @@ void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, double w, double h)
   impl_->DrawSide(s, ws, cr, w, h);
 }
 
-void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo)
+void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo, GtkStyleContext* ctx)
 {
-  impl_->DrawTitle(t, ws, cr, w, h, bg_geo);
+  impl_->DrawTitle(t, ws, cr, w, h, bg_geo, ctx ? ctx : impl_->ctx_);
 }
 
 void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, double w, double h)
