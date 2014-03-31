@@ -69,7 +69,16 @@ void Title::RenderTexture()
 
   auto state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
   cu::CairoContext text_ctx(texture_size_.width, texture_size_.height, scale());
-  Style::Get()->DrawTitle(text(), state, text_ctx, texture_size_.width / scale(), texture_size_.height / scale());
+  nux::Rect bg_geo(0, 0, texture_size_.width, texture_size_.height);
+
+  if (BasicContainer::Ptr const& top = GetTopParent())
+  {
+    auto const& top_geo = top->Geometry();
+    auto const& geo = Geometry();
+    bg_geo.Set(top_geo.x() - geo.x(), top_geo.y() - geo.y(), top_geo.width(), top_geo.height());
+  }
+
+  Style::Get()->DrawTitle(text(), state, text_ctx, texture_size_.width / scale(), texture_size_.height / scale(), bg_geo * (1.0/scale));
   SetTexture(text_ctx);
 }
 
