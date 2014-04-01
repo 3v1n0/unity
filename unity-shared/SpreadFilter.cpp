@@ -20,10 +20,12 @@
 #include "SpreadFilter.h"
 
 #include <Nux/HLayout.h>
+#include <boost/algorithm/string.hpp>
 #include "AnimationUtils.h"
 #include "SearchBar.h"
 #include "UnitySettings.h"
 #include "WindowManager.h"
+#include "ApplicationManager.h"
 #include "RawPixel.h"
 
 namespace unity
@@ -83,6 +85,7 @@ Filter::Filter()
 
     if (search.empty())
     {
+      UpdateFilteredWindows();
       text.changed.emit(search);
       animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
     }
@@ -91,6 +94,7 @@ Filter::Filter()
   search_bar_->live_search_reached.connect([this] (std::string const& search) {
     if (!search.empty())
     {
+      UpdateFilteredWindows();
       text.changed.emit(search);
       search_bar_->SetSearchFinished();
     }
@@ -111,6 +115,37 @@ bool Filter::Visible() const
 nux::Geometry const& Filter::GetAbsoluteGeometry() const
 {
   return view_window_->GetGeometry();
+}
+
+std::set<uint64_t> const& Filter::FilteredWindows() const
+{
+  return filtered_windows_;
+}
+
+void Filter::UpdateFilteredWindows()
+{
+  auto const& lower_search = boost::to_lower_copy(text());
+  filtered_windows_.clear();
+
+  if (lower_search.empty())
+    return;
+
+  for (auto const& app : ApplicationManager::Default().GetRunningApplications())
+  {
+    if (boost::to_lower_copy(app->title()).find(lower_search) != std::string::npos)
+    {
+      for (auto const& win : app->GetWindows())
+        filtered_windows_.insert(win->window_id());
+
+      continue;
+    }
+
+    for (auto const& win : app->GetWindows())
+    {
+      if (boost::to_lower_copy(win->title()).find(lower_search) != std::string::npos)
+        filtered_windows_.insert(win->window_id());
+    }
+  }
 }
 
 //

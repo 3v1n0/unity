@@ -47,15 +47,20 @@ public:
   bool Visible() const;
   nux::Geometry const& GetAbsoluteGeometry() const;
 
+  std::set<uint64_t> const& FilteredWindows() const;
+
 protected:
   // Introspectable
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
 
 private:
+  void UpdateFilteredWindows();
+
   nux::ObjectPtr<SearchBar> search_bar_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::animation::AnimateValue<double> fade_animator_;
+  std::set<uint64_t> filtered_windows_;
 };
 
 } // namespace spread
