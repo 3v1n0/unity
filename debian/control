@@ -44,7 +44,7 @@ Build-Depends: cmake,
                libunity-misc-dev (>= 4.0.4),
                libupstart-dev,
                libxcb-icccm4-dev,
-               libxfixes-dev (>= 1:5.0.1-1),
+               libxfixes-dev (>= 1:5.0.1),
                libxi-dev (>= 2:1.7.1.901),
                libxpathselect-dev (>=1.4),
                libzeitgeist-2.0-dev,
@@ -54,7 +54,7 @@ Build-Depends: cmake,
                quilt,
                xserver-xorg-video-dummy,
                xsltproc,
-Standards-Version: 3.9.3
+Standards-Version: 3.9.5
 Homepage: https://launchpad.net/unity
 # If you aren't a member of ~unity-team but need to upload packaging changes,
 # just go ahead.  ~unity-team will notice and sync up the code again.
