@@ -184,7 +184,7 @@ GtkWidget* sheet_style_box_new()
   gtk_widget_set_halign(title, GTK_ALIGN_START);
   gtk_box_pack_start(GTK_BOX(content_box), title, FALSE, FALSE, 0);
 
-  auto* subtitle = gtk_label_new(_("Do you want to force application to exit, or wait for it to respond?"));
+  auto* subtitle = gtk_label_new(_("Do you want to force the application to exit, or wait for it to respond?"));
   gtk_widget_set_halign(title, GTK_ALIGN_START);
   gtk_box_pack_start(GTK_BOX(content_box), subtitle, FALSE, FALSE, 0);
 
@@ -193,10 +193,10 @@ GtkWidget* sheet_style_box_new()
   gtk_container_set_border_width(GTK_CONTAINER(buttons_box), 5);
   gtk_button_box_set_layout(GTK_BUTTON_BOX(buttons_box), GTK_BUTTONBOX_END);
 
-  auto* wait_button = gtk_button_new_with_label(_("Wait"));
+  auto* wait_button = gtk_button_new_with_mnemonic(_("_Wait"));
   gtk_container_add(GTK_CONTAINER(buttons_box), wait_button);
 
-  auto* quit_button = gtk_button_new_with_label(_("Quit"));
+  auto* quit_button = gtk_button_new_with_mnemonic(_("_Force Quit"));
   gtk_container_add(GTK_CONTAINER(buttons_box), quit_button);
 
   auto* buttons_aligment = gtk_alignment_new(1, 1, 0, 0);
