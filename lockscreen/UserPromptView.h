@@ -70,6 +70,8 @@ private:
   void ToggleCapsLockBool();
   void CheckIfCapsLockOn();
 
+  int GetWarningIconOffset();
+
   session::Manager::Ptr session_manager_;
   UserAuthenticatorPam user_authenticator_;
   std::shared_ptr<nux::AbstractPaintLayer> bg_layer_;
@@ -84,6 +86,7 @@ private:
   nux::Geometry cached_focused_geo_;
 
   bool caps_lock_on_;
+  int spin_icon_width_;
 };
 
 }

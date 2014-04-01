@@ -25,6 +25,7 @@
 
 #include "LockScreenSettings.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/TextInput.h"
 #include "unity-shared/StaticCairoText.h"
@@ -153,6 +154,10 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   user_authenticator_.AuthenticateStart(session_manager_->UserName(),
                                         sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
 
+  // When we get to HiDPI changes here, we will need to update this width
+  dash::Style& style = dash::Style::Instance();
+  spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
+
   CheckIfCapsLockOn();
 }
 
@@ -275,11 +280,15 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
 
 void UserPromptView::PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux::Geometry const& geo)
 {
-  // FIXME Remove magic!
-  nux::Geometry warning_geo = {geo.x + geo.width - (22 * 2 + 4),
+  nux::Geometry warning_geo = {geo.x + geo.width - GetWarningIconOffset(),
                                geo.y, warning_->GetWidth(), warning_->GetHeight()};
 
   nux::GetPainter().PushLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_));
+}
+
+int UserPromptView::GetWarningIconOffset()
+{
+  return warning_->GetWidth() + spin_icon_width_;
 }
 
 nux::View* UserPromptView::focus_view()
