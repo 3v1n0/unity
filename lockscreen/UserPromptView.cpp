@@ -164,7 +164,9 @@ void UserPromptView::CheckIfCapsLockOn()
 
   // Caps is on 0x1, couldn't find any #define in /usr/include/X11
   if ((state & 0x1) == 1)
-    ToggleCapsLockBool();
+    caps_lock_on_ = true;
+  else
+    caps_lock_on_ = false;
 }
 
 bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character)
@@ -329,6 +331,8 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
   text_input->SetMaximumHeight(Settings::GRID_SIZE);
   prompt_layout_->AddView(text_input, 1);
   focus_queue_.push_back(text_entry);
+
+  CheckIfCapsLockOn();
 
   // Don't remove it, it helps with a11y.
   if (focus_queue_.size() == 1)
