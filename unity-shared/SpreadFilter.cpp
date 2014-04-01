@@ -22,7 +22,9 @@
 #include <Nux/HLayout.h>
 #include "AnimationUtils.h"
 #include "SearchBar.h"
+#include "UnitySettings.h"
 #include "WindowManager.h"
+#include "RawPixel.h"
 
 namespace unity
 {
@@ -32,15 +34,23 @@ namespace
 {
 const unsigned FADE_DURATION = 100;
 const unsigned DEFAULT_SEARCH_WAIT = 300;
-const nux::Point OFFSET(10, 15);
-const nux::Size SIZE(620, 42);
+const RawPixel OFFSET_X = 10_em;
+const RawPixel OFFSET_Y = 15_em;
+const RawPixel WIDTH = 620_em;
+const RawPixel HEIGHT = 42_em;
 }
 
 Filter::Filter()
   : fade_animator_(FADE_DURATION)
 {
+  auto& wm = WindowManager::Default();
+  auto const& work_area = wm.GetWorkAreaGeometry(0);
+  int monitor = wm.MonitorGeometryIn(work_area);
+  auto const& cv = Settings::Instance().em(monitor);
+
   search_bar_ = SearchBar::Ptr(new SearchBar());
-  search_bar_->SetMinMaxSize(SIZE.width, SIZE.height);
+  search_bar_->SetMinMaxSize(WIDTH.CP(cv), HEIGHT.CP(cv));
+  search_bar_->scale = cv->DPIScale();
   search_bar_->live_search_wait = DEFAULT_SEARCH_WAIT;
   text.SetGetterFunction([this] { return search_bar_->search_string(); });
   text.SetSetterFunction([this] (std::string const& t) { search_bar_->search_string = t; return false; });
@@ -51,7 +61,6 @@ Filter::Filter()
   layout->SetHorizontalExternalMargin(0);
   layout->AddView(search_bar_.GetPointer());
 
-  auto const& work_area = WindowManager::Default().GetWorkAreaGeometry(0);
   view_window_ = new nux::BaseWindow(GetName().c_str());
   view_window_->SetLayout(layout);
   view_window_->SetBackgroundColor(nux::color::Transparent);
@@ -61,7 +70,7 @@ Filter::Filter()
   view_window_->SetOpacity(0.0f);
   view_window_->SetEnterFocusInputArea(search_bar_.GetPointer());
   view_window_->SetInputFocus();
-  view_window_->SetXY(OFFSET.x + work_area.x, OFFSET.y + work_area.y);
+  view_window_->SetXY(OFFSET_X.CP(cv) + work_area.x, OFFSET_Y.CP(cv) + work_area.y);
   fade_animator_.updated.connect([this] (double opacity) { view_window_->SetOpacity(opacity); });
 
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
