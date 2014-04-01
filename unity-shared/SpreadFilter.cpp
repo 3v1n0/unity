@@ -44,9 +44,11 @@ Filter::Filter()
   : fade_animator_(FADE_DURATION)
 {
   auto& wm = WindowManager::Default();
+  auto& settings = Settings::Instance();
   auto const& work_area = wm.GetWorkAreaGeometry(0);
   int monitor = wm.MonitorGeometryIn(work_area);
-  auto const& cv = Settings::Instance().em(monitor);
+  int launcher_width = settings.LauncherWidth(monitor);
+  auto const& cv = settings.em(monitor);
 
   search_bar_ = SearchBar::Ptr(new SearchBar());
   search_bar_->SetMinMaxSize(WIDTH.CP(cv), HEIGHT.CP(cv));
@@ -70,7 +72,7 @@ Filter::Filter()
   view_window_->SetOpacity(0.0f);
   view_window_->SetEnterFocusInputArea(search_bar_.GetPointer());
   view_window_->SetInputFocus();
-  view_window_->SetXY(OFFSET_X.CP(cv) + work_area.x, OFFSET_Y.CP(cv) + work_area.y);
+  view_window_->SetXY(OFFSET_X.CP(cv) + std::max(work_area.x, launcher_width), OFFSET_Y.CP(cv) + work_area.y);
   fade_animator_.updated.connect([this] (double opacity) { view_window_->SetOpacity(opacity); });
 
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());
