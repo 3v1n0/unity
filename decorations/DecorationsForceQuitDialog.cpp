@@ -160,6 +160,17 @@ static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
 
     return TRUE;
   };
+
+  GTK_WIDGET_CLASS(klass)->size_allocate = [] (GtkWidget* self, GtkAllocation* a) {
+    GTK_WIDGET_CLASS(sheet_style_dialog_parent_class)->size_allocate(self, a);
+
+    int border = gtk_container_get_border_width(GTK_CONTAINER(self));
+    cairo_rectangle_int_t rect = {border, border, a->width-border*2, a->height-border*2};
+
+    auto* region = cairo_region_create_rectangle(&rect);
+    gtk_widget_input_shape_combine_region(GTK_WIDGET(self), region);
+    cairo_region_destroy(region);
+  };
 }
 
 // BOX Implementation
