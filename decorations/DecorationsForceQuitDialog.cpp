@@ -20,7 +20,9 @@
 #include "config.h"
 
 #include <gtk/gtk.h>
+#include <gdk/gdkx.h>
 #include <glib/gi18n-lib.h>
+#include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include "DecorationsForceQuitDialog.h"
 #include "DecorationStyle.h"
@@ -31,6 +33,8 @@ namespace decoration
 {
 namespace
 {
+DECLARE_LOGGER(logger, "unity.decoration.forcequit.dialog");
+
 const gchar* CLOSE_BUTTON_INACTIVE_FILE = "/usr/share/themes/Radiance/unity/close_focused.svg";
 const gchar* CLOSE_BUTTON_FOCUSED_FILE = "/usr/share/themes/Radiance/unity/close_focused_prelight.svg";
 const gchar* CLOSE_BUTTON_ACTIVE_FILE = "/usr/share/themes/Radiance/unity/close_focused_pressed.svg";
@@ -92,12 +96,13 @@ static void close_button_init(CloseButton*);
 static void close_button_class_init(CloseButtonClass*);
 
 // Dialog implementation
-GtkWindow* sheet_style_dialog_new()
+GtkWidget* sheet_style_dialog_new(Window parent_xid)
 {
   auto* self = GTK_WINDOW(g_object_new(sheet_style_dialog_get_type(), nullptr));
-  // gtk_window_set_skip_taskbar_hint(self, TRUE);
-  // gtk_window_set_skip_pager_hint(self, TRUE);
-  gtk_window_set_position(self, GTK_WIN_POS_CENTER);
+  gtk_window_set_skip_taskbar_hint(self, TRUE);
+  gtk_window_set_skip_pager_hint(self, TRUE);
+  gtk_window_set_position(self, GTK_WIN_POS_CENTER_ON_PARENT);
+  gtk_window_set_type_hint(self, GDK_WINDOW_TYPE_HINT_DIALOG);
   gtk_window_set_decorated(self, FALSE);
   gtk_window_set_resizable(self, FALSE);
   gtk_window_set_title(self, "Force Quit Dialog");
@@ -114,7 +119,28 @@ GtkWindow* sheet_style_dialog_new()
 
   gtk_container_add(GTK_CONTAINER(self), sheet_style_box_new());
 
-  return self;
+  gtk_window_set_modal(self, TRUE);
+  gtk_window_set_destroy_with_parent(self, TRUE);
+
+  auto* gwindow = gtk_widget_get_window(GTK_WIDGET(self));
+  gdk_window_set_functions(gwindow, GDK_FUNC_CLOSE);
+  gtk_widget_realize(GTK_WIDGET(self));
+
+  gdk_error_trap_push();
+  auto* dpy = gdk_x11_get_default_xdisplay();
+  auto xid = gdk_x11_window_get_xid(gwindow);
+  XSetTransientForHint(dpy, xid, parent_xid);
+  XSync(dpy, False);
+
+  if (int error_code = gdk_error_trap_pop())
+  {
+    gchar tmp[1024];
+    XGetErrorText(dpy, error_code, tmp, sizeof(tmp) - 1);
+    tmp[sizeof(tmp) - 1] = '\0';
+    LOG_ERROR(logger) << "Impossible to reparent dialog: " << tmp;
+  }
+
+  return GTK_WIDGET(self);
 }
 
 static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
