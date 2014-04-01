@@ -20,7 +20,6 @@
 #include "SpreadFilter.h"
 
 #include <Nux/HLayout.h>
-#include <boost/algorithm/string.hpp>
 #include "AnimationUtils.h"
 #include "SearchBar.h"
 #include "UnitySettings.h"
@@ -40,6 +39,12 @@ const RawPixel OFFSET_X = 10_em;
 const RawPixel OFFSET_Y = 15_em;
 const RawPixel WIDTH = 620_em;
 const RawPixel HEIGHT = 42_em;
+
+// For some reason std::to_lower or boost::to_lower_copy doesn't seem to handle well utf8
+std::string to_lower_copy(std::string const& str)
+{
+  return glib::String(g_utf8_strdown(str.c_str(), -1)).Str();
+}
 }
 
 Filter::Filter()
@@ -124,7 +129,7 @@ std::set<uint64_t> const& Filter::FilteredWindows() const
 
 void Filter::UpdateFilteredWindows()
 {
-  auto const& lower_search = boost::to_lower_copy(text());
+  auto const& lower_search = to_lower_copy(text());
   filtered_windows_.clear();
 
   if (lower_search.empty())
@@ -132,7 +137,7 @@ void Filter::UpdateFilteredWindows()
 
   for (auto const& app : ApplicationManager::Default().GetRunningApplications())
   {
-    if (boost::to_lower_copy(app->title()).find(lower_search) != std::string::npos)
+    if (to_lower_copy(app->title()).find(lower_search) != std::string::npos)
     {
       for (auto const& win : app->GetWindows())
         filtered_windows_.insert(win->window_id());
@@ -142,7 +147,7 @@ void Filter::UpdateFilteredWindows()
 
     for (auto const& win : app->GetWindows())
     {
-      if (boost::to_lower_copy(win->title()).find(lower_search) != std::string::npos)
+      if (to_lower_copy(win->title()).find(lower_search) != std::string::npos)
         filtered_windows_.insert(win->window_id());
     }
   }
