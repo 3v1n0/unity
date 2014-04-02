@@ -34,6 +34,7 @@
 #include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UScreen.h"
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
@@ -87,6 +88,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   wm.window_moved.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMoved));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
   wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+  UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState))));
 
   EnsureWindowState();
 }
