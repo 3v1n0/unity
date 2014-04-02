@@ -24,8 +24,10 @@
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
+#include <X11/Xatom.h>
 #include "DecorationsForceQuitDialog.h"
 #include "DecorationStyle.h"
+#include "WindowManager.h"
 
 namespace unity
 {
@@ -99,7 +101,6 @@ static void close_button_class_init(CloseButtonClass*);
 GtkWidget* sheet_style_dialog_new(Window parent_xid)
 {
   auto* dpy = gdk_x11_get_default_xdisplay();
-
   auto* self = GTK_WINDOW(g_object_new(sheet_style_dialog_get_type(), nullptr));
   gtk_window_set_skip_taskbar_hint(self, TRUE);
   gtk_window_set_skip_pager_hint(self, TRUE);
@@ -146,6 +147,33 @@ GtkWidget* sheet_style_dialog_new(Window parent_xid)
     tmp[sizeof(tmp) - 1] = '\0';
     LOG_ERROR(logger) << "Impossible to reparent dialog: " << tmp;
   }
+
+  Atom WM_PID = gdk_x11_get_xatom_by_name("_NET_WM_PID");
+  Atom WM_CLIENT_MACHINE = gdk_x11_get_xatom_by_name("WM_CLIENT_MACHINE");
+
+  auto& wm = WindowManager::Default();
+  auto parent_hostname = wm.GetStringProperty(parent_xid, WM_CLIENT_MACHINE);
+  long parent_pid = 0;
+
+  char current_hostname[256];
+  if (gethostname(current_hostname, sizeof(current_hostname)) > -1)
+  {
+    current_hostname[sizeof(current_hostname)-1] = '\0';
+
+    if (current_hostname == parent_hostname)
+    {
+      auto const& pid_list = wm.GetCardinalProperty(parent_xid, WM_PID);
+
+      if (!pid_list.empty())
+        parent_pid = pid_list.front();
+    }
+  }
+
+  XChangeProperty(dpy, xid, WM_CLIENT_MACHINE, XA_STRING, 8, PropModeReplace,
+                  (unsigned char *) parent_hostname.c_str(), parent_hostname.size());
+  XChangeProperty(dpy, xid, WM_PID, XA_CARDINAL, 32, PropModeReplace,
+                  (unsigned char *) &parent_pid, 1);
+  XSync(dpy, False);
 
   return GTK_WIDGET(self);
 }
