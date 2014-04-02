@@ -721,7 +721,12 @@ void Window::Impl::ShowForceQuitDialog(bool show, Time time)
   if (show)
   {
     if (!force_quit_)
+    {
       force_quit_ = std::make_shared<ForceQuitDialog>(win_, time);
+      force_quit_->close_request.connect([this] {
+        force_quit_.reset();
+      });
+    }
 
     force_quit_->time = time;
   }

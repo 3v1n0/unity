@@ -40,6 +40,8 @@ public:
 
   void UpdateDialogPosition();
 
+  sigc::signal<void> close_request;
+
 private:
   struct Impl;
   std::unique_ptr<Impl> impl_;
