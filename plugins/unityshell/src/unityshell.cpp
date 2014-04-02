@@ -525,8 +525,13 @@ void UnityScreen::OnInitiateSpread()
     }
     else
     {
+      CompMatch windows_match;
+      for (auto xid : spread_filter_->FilteredWindows())
+        windows_match |= "xid="+std::to_string(xid);
+
       auto match = sScreen->getCustomMatch();
-      sScreen->relayoutSlots(match & ("ititle="+filter));
+      match &= windows_match;
+      sScreen->relayoutSlots(match);
     }
   });
 

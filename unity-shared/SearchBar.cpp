@@ -332,7 +332,9 @@ void SearchBar::UpdateSearchBarSize()
 void SearchBar::UpdateScale(double scale)
 {
   hint_->SetScale(scale);
-  show_filters_->SetScale(scale);
+
+  if (show_filters_)
+    show_filters_->SetScale(scale);
 
   UpdateSearchBarSize();
 }
