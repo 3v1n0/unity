@@ -46,6 +46,7 @@ extern Manager* manager_;
 class Title;
 class MenuLayout;
 class SlidingLayout;
+class ForceQuitDialog;
 
 namespace cu = compiz_utils;
 
@@ -86,6 +87,7 @@ struct Window::Impl
   void Damage();
   void SetupAppMenu();
   bool ActivateMenu(std::string const&);
+  void ShowForceQuitDialog(bool, Time);
 
 private:
   void UnsetExtents();
@@ -131,6 +133,7 @@ private:
   connection::Wrapper grab_mouse_changed_;
   std::string last_title_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
+  std::shared_ptr<ForceQuitDialog> force_quit_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
   uweak_ptr<MenuLayout> menus_;
