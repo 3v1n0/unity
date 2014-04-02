@@ -69,7 +69,7 @@ struct SheetStyleDialogClass
 };
 
 G_DEFINE_TYPE(SheetStyleDialog, sheet_style_dialog, GTK_TYPE_BOX);
-GtkWidget* sheet_style_dialog_new();
+GtkWidget* sheet_style_dialog_new(Window, long);
 static void sheet_style_dialog_init(SheetStyleDialog*) {}
 static void sheet_style_dialog_class_init(SheetStyleDialogClass*);
 
@@ -97,7 +97,7 @@ GtkWidget* close_button_new();
 static void close_button_init(CloseButton*);
 static void close_button_class_init(CloseButtonClass*);
 
-// Dialog implementation
+// Window implementation
 GtkWidget* sheet_style_window_new(Window parent_xid)
 {
   auto* dpy = gdk_x11_get_default_xdisplay();
@@ -115,38 +115,6 @@ GtkWidget* sheet_style_window_new(Window parent_xid)
   gtk_window_set_wmclass(self, parent_class.res_name, parent_class.res_class);
   XFree(parent_class.res_class);
   XFree(parent_class.res_name);
-
-  auto const& deco_style = decoration::Style::Get();
-  auto const& offset = deco_style->ShadowOffset();
-  int max_offset = std::max(std::abs(offset.x), std::abs(offset.y));
-  gtk_container_set_border_width(GTK_CONTAINER(self), deco_style->ActiveShadowRadius()+max_offset);
-
-  auto* screen = gtk_window_get_screen(self);
-  gtk_widget_set_visual(GTK_WIDGET(self), gdk_screen_get_rgba_visual(screen));
-  gtk_widget_realize(GTK_WIDGET(self));
-  gtk_widget_override_background_color(GTK_WIDGET(self), GTK_STATE_FLAG_NORMAL, nullptr);
-
-  gtk_container_add(GTK_CONTAINER(self), sheet_style_dialog_new());
-
-  gtk_window_set_modal(self, TRUE);
-  gtk_window_set_destroy_with_parent(self, TRUE);
-
-  auto* gwindow = gtk_widget_get_window(GTK_WIDGET(self));
-  gdk_window_set_functions(gwindow, GDK_FUNC_CLOSE);
-  gtk_widget_realize(GTK_WIDGET(self));
-
-  gdk_error_trap_push();
-  auto xid = gdk_x11_window_get_xid(gwindow);
-  XSetTransientForHint(dpy, xid, parent_xid);
-  XSync(dpy, False);
-
-  if (int error_code = gdk_error_trap_pop())
-  {
-    gchar tmp[1024];
-    XGetErrorText(dpy, error_code, tmp, sizeof(tmp) - 1);
-    tmp[sizeof(tmp) - 1] = '\0';
-    LOG_ERROR(logger) << "Impossible to reparent dialog: " << tmp;
-  }
 
   Atom WM_PID = gdk_x11_get_xatom_by_name("_NET_WM_PID");
   Atom WM_CLIENT_MACHINE = gdk_x11_get_xatom_by_name("WM_CLIENT_MACHINE");
@@ -167,6 +135,38 @@ GtkWidget* sheet_style_window_new(Window parent_xid)
       if (!pid_list.empty())
         parent_pid = pid_list.front();
     }
+  }
+
+  auto const& deco_style = decoration::Style::Get();
+  auto const& offset = deco_style->ShadowOffset();
+  int max_offset = std::max(std::abs(offset.x), std::abs(offset.y));
+  gtk_container_set_border_width(GTK_CONTAINER(self), deco_style->ActiveShadowRadius()+max_offset);
+
+  auto* screen = gtk_window_get_screen(self);
+  gtk_widget_set_visual(GTK_WIDGET(self), gdk_screen_get_rgba_visual(screen));
+  gtk_widget_realize(GTK_WIDGET(self));
+  gtk_widget_override_background_color(GTK_WIDGET(self), GTK_STATE_FLAG_NORMAL, nullptr);
+
+  gtk_container_add(GTK_CONTAINER(self), sheet_style_dialog_new(parent_xid, parent_pid));
+
+  gtk_window_set_modal(self, TRUE);
+  gtk_window_set_destroy_with_parent(self, TRUE);
+
+  auto* gwindow = gtk_widget_get_window(GTK_WIDGET(self));
+  gdk_window_set_functions(gwindow, GDK_FUNC_CLOSE);
+  gtk_widget_realize(GTK_WIDGET(self));
+
+  gdk_error_trap_push();
+  auto xid = gdk_x11_window_get_xid(gwindow);
+  XSetTransientForHint(dpy, xid, parent_xid);
+  XSync(dpy, False);
+
+  if (int error_code = gdk_error_trap_pop())
+  {
+    gchar tmp[1024];
+    XGetErrorText(dpy, error_code, tmp, sizeof(tmp) - 1);
+    tmp[sizeof(tmp) - 1] = '\0';
+    LOG_ERROR(logger) << "Impossible to reparent dialog: " << tmp;
   }
 
   XChangeProperty(dpy, xid, WM_CLIENT_MACHINE, XA_STRING, 8, PropModeReplace,
@@ -208,8 +208,31 @@ static void sheet_style_window_class_init(SheetStyleWindowClass* klass)
   };
 }
 
-// BOX Implementation
-GtkWidget* sheet_style_dialog_new()
+// Dialog content Implementation
+void on_force_quit_clicked(GtkButton *button, gint64* kill_data)
+{
+  Display* dpy = gdk_x11_get_default_xdisplay();
+  Window parent_xid = kill_data[0];
+  long parent_pid = kill_data[1];
+
+  gdk_error_trap_push();
+  XSync(dpy, False);
+
+  if (int error_code = gdk_error_trap_pop())
+  {
+    gchar tmp[1024];
+    XGetErrorText(dpy, error_code, tmp, sizeof(tmp) - 1);
+    tmp[sizeof(tmp) - 1] = '\0';
+    LOG_ERROR(logger) << "Impossible to kill window " << parent_xid << ": " << tmp;
+  }
+
+  XKillClient(dpy, parent_xid);
+  XSync(dpy, False);
+
+  kill(parent_pid, 9);
+}
+
+GtkWidget* sheet_style_dialog_new(Window parent_xid, long parent_pid)
 {
   auto* self = GTK_WIDGET(g_object_new(sheet_style_dialog_get_type(), nullptr));
   gtk_orientable_set_orientation(GTK_ORIENTABLE(self), GTK_ORIENTATION_VERTICAL);
@@ -269,8 +292,14 @@ GtkWidget* sheet_style_dialog_new()
   auto* wait_button = gtk_button_new_with_mnemonic(_("_Wait"));
   gtk_container_add(GTK_CONTAINER(buttons_box), wait_button);
 
+  auto *kill_data = g_new(gint64, 2);
+  kill_data[0] = parent_xid;
+  kill_data[1] = parent_pid;
   auto* quit_button = gtk_button_new_with_mnemonic(_("_Force Quit"));
   gtk_container_add(GTK_CONTAINER(buttons_box), quit_button);
+  g_signal_connect_data(quit_button, "clicked", G_CALLBACK(on_force_quit_clicked),
+                        kill_data, [] (gpointer data, GClosure*) { g_free(data); },
+                        static_cast<GConnectFlags>(0));
 
   auto* buttons_aligment = gtk_alignment_new(1, 1, 0, 0);
   gtk_alignment_set_padding(GTK_ALIGNMENT(buttons_aligment), 20, 0, 0, 0);
