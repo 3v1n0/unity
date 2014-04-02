@@ -330,14 +330,11 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       cairo_push_group(cr);
       gdk_cairo_set_source_pixbuf(cr, pixbuf, x, y);
       cairo_paint_with_alpha(cr, (IsIconSensitive() && IsFocused()) ? 1.0 : 0.5);
-
-      cairo_pattern_t* pat = cairo_pop_group(cr);
+      std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
 
       cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
       cairo_rectangle(cr, x, y, width, height);
-      cairo_mask(cr, pat);
-
-      cairo_pattern_destroy(pat);
+      cairo_mask(cr, pat.get());
     }
     else
     {
@@ -395,6 +392,20 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     }
     else
     {
+      if (!IsActive())
+      {
+        // We need to render the background under the text glyphs, or the edge
+        // of the text won't be correctly anti-aliased. See bug #723167
+        cairo_push_group(cr);
+        gtk_render_layout(style_context, cr, x, y, layout);
+        std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
+
+        cairo_push_group(cr);
+        gtk_render_background(style_context, cr, 0, 0, width, height);
+        cairo_pop_group_to_source(cr);
+        cairo_mask(cr, pat.get());
+      }
+
       gtk_render_layout(style_context, cr, x, y, layout);
     }
 

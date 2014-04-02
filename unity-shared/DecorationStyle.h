@@ -21,8 +21,7 @@
 #define UNITY_DECORATION_STYLE
 
 #include <NuxCore/Property.h>
-#include <NuxCore/Point.h>
-#include <NuxCore/Size.h>
+#include <NuxCore/Rect.h>
 #include <cairo/cairo.h>
 
 namespace unity
@@ -130,9 +129,9 @@ public:
   int DoubleClickMaxTimeDelta() const;
 
   void DrawSide(Side, WidgetState, cairo_t*, double width, double height);
-  void DrawTitle(std::string const&, WidgetState, cairo_t*, double width, double height);
+  void DrawTitle(std::string const&, WidgetState, cairo_t*, double width, double height, nux::Rect const& bg_geo = nux::Rect());
   void DrawMenuItem(WidgetState, cairo_t*, double width, double height);
-  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, double width, double height);
+  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, double width, double height, nux::Rect const& bg_geo = nux::Rect());
   void DrawMenuItemIcon(std::string const&, WidgetState, cairo_t*, int size);
 
 private:

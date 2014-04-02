@@ -262,7 +262,7 @@ public:
         double ui_scale = 1.0f;
         int value;
 
-        if (g_variant_lookup(dict, monitor_name.c_str(), "i", &value))
+        if (g_variant_lookup(dict, monitor_name.c_str(), "i", &value) && value > 0)
           ui_scale = static_cast<double>(value)/8.0f;
 
         if (app_target_monitor.Str() == monitor_name)

@@ -499,7 +499,25 @@ struct Style::Impl
     return extents;
   }
 
-  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h)
+  void DrawTextBackground(GtkStyleContext* ctx, cairo_t* cr, glib::Object<PangoLayout> const& layout, nux::Rect const& bg_geo)
+  {
+    if (bg_geo.IsNull())
+      return;
+
+    // We need to render the background under the text glyphs, or the edge
+    // of the text won't be correctly anti-aliased. See bug #723167
+
+    cairo_push_group(cr);
+    gtk_render_layout(ctx, cr, 0, 0, layout);
+    std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
+
+    cairo_push_group(cr);
+    gtk_render_background(ctx, cr, bg_geo.x, bg_geo.y, bg_geo.width, bg_geo.height);
+    cairo_pop_group_to_source(cr);
+    cairo_mask(cr, pat.get());
+  }
+
+  void DrawTitle(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo)
   {
     gtk_style_context_save(ctx_);
     AddContextClasses(Side::TOP, ws);
@@ -516,6 +534,7 @@ struct Style::Impl
       double fading_width = std::min<double>(title_fade_, out_pixels);
 
       cairo_push_group(cr);
+      DrawTextBackground(ctx_, cr, layout, bg_geo);
       gtk_render_layout(ctx_, cr, 0, 0, layout);
       cairo_pop_group_to_source(cr);
 
@@ -529,6 +548,7 @@ struct Style::Impl
     else
     {
       pango_layout_set_width(layout, (w >= 0) ? w * PANGO_SCALE : -1);
+      DrawTextBackground(ctx_, cr, layout, bg_geo);
       gtk_render_layout(ctx_, cr, 0, 0, layout);
     }
 
@@ -554,7 +574,7 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
-  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h)
+  void DrawMenuItemEntry(std::string const& text, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo)
   {
     gtk_style_context_save(ctx_);
     AddContextClassesForMenuItem(ws);
@@ -573,6 +593,7 @@ struct Style::Impl
 
     pango_layout_set_width(layout, (w >= 0) ? w * PANGO_SCALE : -1);
     pango_layout_set_height(layout, (h >= 0) ? h * PANGO_SCALE : -1);
+    DrawTextBackground(ctx_, cr, layout, bg_geo);
     gtk_render_layout(ctx_, cr, 0, 0, layout);
 
     gtk_style_context_restore(ctx_);
@@ -659,9 +680,9 @@ void Style::DrawSide(Side s, WidgetState ws, cairo_t* cr, double w, double h)
   impl_->DrawSide(s, ws, cr, w, h);
 }
 
-void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h)
+void Style::DrawTitle(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo)
 {
-  impl_->DrawTitle(t, ws, cr, w, h);
+  impl_->DrawTitle(t, ws, cr, w, h, bg_geo);
 }
 
 void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, double w, double h)
@@ -669,9 +690,9 @@ void Style::DrawMenuItem(WidgetState ws, cairo_t* cr, double w, double h)
   impl_->DrawMenuItem(ws, cr, w, h);
 }
 
-void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h)
+void Style::DrawMenuItemEntry(std::string const& t, WidgetState ws, cairo_t* cr, double w, double h, nux::Rect const& bg_geo)
 {
-  impl_->DrawMenuItemEntry(t, ws, cr, w, h);
+  impl_->DrawMenuItemEntry(t, ws, cr, w, h, bg_geo);
 }
 
 void Style::DrawMenuItemIcon(std::string const& i, WidgetState ws, cairo_t* cr, int s)
