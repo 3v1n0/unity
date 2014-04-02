@@ -37,9 +37,9 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.decoration.forcequit.dialog");
 
-const gchar* CLOSE_BUTTON_INACTIVE_FILE = "/usr/share/themes/Radiance/unity/close_focused.svg";
-const gchar* CLOSE_BUTTON_FOCUSED_FILE = "/usr/share/themes/Radiance/unity/close_focused_prelight.svg";
-const gchar* CLOSE_BUTTON_ACTIVE_FILE = "/usr/share/themes/Radiance/unity/close_focused_pressed.svg";
+const std::string CLOSE_BUTTON_INACTIVE_FILE = "style_sheet_close_focused";
+const std::string CLOSE_BUTTON_FOCUSED_FILE = "style_sheet_close_focused_prelight";
+const std::string CLOSE_BUTTON_ACTIVE_FILE = "style_sheet_close_focused_pressed";
 
 
 // Dialog
@@ -300,7 +300,8 @@ GtkWidget* close_button_new()
   gtk_widget_set_can_focus(self, FALSE);
   gtk_widget_set_halign(self, GTK_ALIGN_START);
 
-  auto* img = gtk_image_new_from_file(CLOSE_BUTTON_INACTIVE_FILE);
+  auto const& file = decoration::Style::Get()->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
+  auto* img = gtk_image_new_from_file(file.c_str());
   gtk_container_add(GTK_CONTAINER(self), img);
   CLOSE_BUTTON_GET_PRIVATE(self)->img = GTK_IMAGE(img);
 
@@ -329,15 +330,17 @@ static void close_button_class_init(CloseButtonClass* klass)
 
   GTK_WIDGET_CLASS(klass)->state_flags_changed = [] (GtkWidget* self, GtkStateFlags prev_state) {
     auto new_flags = gtk_widget_get_state_flags(self);
-    const gchar* file = CLOSE_BUTTON_INACTIVE_FILE;
+    auto const& deco_style = decoration::Style::Get();
+    auto file = deco_style->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
 
     if (((new_flags & GTK_STATE_FLAG_PRELIGHT) && !gtk_widget_get_can_focus(self)) ||
         (new_flags & GTK_STATE_FLAG_FOCUSED))
     {
-      file = (new_flags & GTK_STATE_FLAG_ACTIVE) ? CLOSE_BUTTON_ACTIVE_FILE : CLOSE_BUTTON_FOCUSED_FILE;
+      auto const& basename = (new_flags & GTK_STATE_FLAG_ACTIVE) ? CLOSE_BUTTON_ACTIVE_FILE : CLOSE_BUTTON_FOCUSED_FILE;
+      file = deco_style->ThemedFilePath(basename, {PKGDATADIR"/"});
     }
 
-    gtk_image_set_from_file(CLOSE_BUTTON_GET_PRIVATE(self)->img, file);
+    gtk_image_set_from_file(CLOSE_BUTTON_GET_PRIVATE(self)->img, file.c_str());
 
     return GTK_WIDGET_CLASS(close_button_parent_class)->state_flags_changed(self, prev_state);
   };
