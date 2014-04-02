@@ -212,8 +212,11 @@ static void sheet_style_window_class_init(SheetStyleWindowClass* klass)
 void on_force_quit_clicked(GtkButton *button, gint64* kill_data)
 {
   Display* dpy = gdk_x11_get_default_xdisplay();
+  GtkWidget* top_level = gtk_widget_get_toplevel(GTK_WIDGET(button));
   Window parent_xid = kill_data[0];
   long parent_pid = kill_data[1];
+
+  gtk_widget_hide(top_level);
 
   gdk_error_trap_push();
   XSync(dpy, False);
@@ -403,7 +406,6 @@ struct ForceQuitDialog::Impl : sigc::trackable
   {
     parent_->time.changed.connect(sigc::mem_fun(this, &Impl::UpdateWindowTime));
     UpdateWindowTime(parent_->time());
-    gtk_widget_show_all(dialog_);
   }
 
   ~Impl()
@@ -414,6 +416,7 @@ struct ForceQuitDialog::Impl : sigc::trackable
   void UpdateWindowTime(Time time)
   {
     gdk_x11_window_set_user_time(gtk_widget_get_window(dialog_), time);
+    gtk_widget_show_all(dialog_);
   }
 
   void UpdateDialogPosition()
