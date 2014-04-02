@@ -98,6 +98,8 @@ static void close_button_class_init(CloseButtonClass*);
 // Dialog implementation
 GtkWidget* sheet_style_dialog_new(Window parent_xid)
 {
+  auto* dpy = gdk_x11_get_default_xdisplay();
+
   auto* self = GTK_WINDOW(g_object_new(sheet_style_dialog_get_type(), nullptr));
   gtk_window_set_skip_taskbar_hint(self, TRUE);
   gtk_window_set_skip_pager_hint(self, TRUE);
@@ -106,6 +108,12 @@ GtkWidget* sheet_style_dialog_new(Window parent_xid)
   gtk_window_set_decorated(self, FALSE);
   gtk_window_set_resizable(self, FALSE);
   gtk_window_set_title(self, "Force Quit Dialog");
+
+  XClassHint parent_class = {nullptr, nullptr};
+  XGetClassHint(dpy, parent_xid, &parent_class);
+  gtk_window_set_wmclass(self, parent_class.res_name, parent_class.res_class);
+  XFree(parent_class.res_class);
+  XFree(parent_class.res_name);
 
   auto const& deco_style = decoration::Style::Get();
   auto const& offset = deco_style->ShadowOffset();
@@ -127,7 +135,6 @@ GtkWidget* sheet_style_dialog_new(Window parent_xid)
   gtk_widget_realize(GTK_WIDGET(self));
 
   gdk_error_trap_push();
-  auto* dpy = gdk_x11_get_default_xdisplay();
   auto xid = gdk_x11_window_get_xid(gwindow);
   XSetTransientForHint(dpy, xid, parent_xid);
   XSync(dpy, False);
