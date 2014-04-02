@@ -43,18 +43,27 @@ const std::string BACKGROUND_COLOR_KEY = "background-color";
 const std::string USER_BG_KEY = "draw-user-backgrounds";
 const std::string DRAW_GRID_KEY = "draw-grid";
 const std::string SHOW_HOSTNAME_KEY = "show-hostname";
+
+const std::string GS_SETTINGS = "org.gnome.desktop.screensaver";
+const std::string IDLE_ACTIVATION_ENABLED_KEY = "idle-activation-enabled";
+const std::string LOCK_DELAY = "lock-delay";
+const std::string LOCK_ENABLED = "lock-enabled";
+const std::string LOCK_ON_SUSPEND = "ubuntu-lock-on-suspend";
 }
 
 struct Settings::Impl
 {
   Impl()
     : greeter_settings_(g_settings_new(GREETER_SETTINGS.c_str()))
-    , signal_(greeter_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateSettings))))
+    , gs_settings_(g_settings_new(GS_SETTINGS.c_str()))
+    , greeter_signal_(greeter_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateGreeterSettings))))
+    , gs_signal_(gs_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateGSSettings))))
   {
-    UpdateSettings();
+    UpdateGreeterSettings();
+    UpdateGSSettings();
   }
 
-  void UpdateSettings()
+  void UpdateGreeterSettings()
   {
     auto* s = settings_instance;
     s->font_name = glib::String(g_settings_get_string(greeter_settings_, FONT_KEY.c_str())).Str();
@@ -66,8 +75,20 @@ struct Settings::Impl
     s->draw_grid = g_settings_get_boolean(greeter_settings_, DRAW_GRID_KEY.c_str()) != FALSE;
   }
 
+  void UpdateGSSettings()
+  {
+    auto* s = settings_instance;
+    s->idle_activation_enabled = g_settings_get_boolean(gs_settings_, IDLE_ACTIVATION_ENABLED_KEY.c_str()) != FALSE;
+    s->lock_enabled = g_settings_get_boolean(gs_settings_, LOCK_ENABLED.c_str()) != FALSE;
+    s->lock_on_suspend = g_settings_get_boolean(gs_settings_, LOCK_ON_SUSPEND.c_str()) != FALSE;
+    s->lock_delay = g_settings_get_int(gs_settings_, LOCK_DELAY.c_str());
+  }
+
   glib::Object<GSettings> greeter_settings_;
-  glib::Signal<void, GSettings*, const gchar*> signal_;
+  glib::Object<GSettings> gs_settings_;
+
+  glib::Signal<void, GSettings*, const gchar*> greeter_signal_;
+  glib::Signal<void, GSettings*, const gchar*> gs_signal_;
 };
 
 Settings::Settings()

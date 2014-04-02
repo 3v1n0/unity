@@ -19,7 +19,7 @@
 
 #include "ScreenSaverDBusManager.h"
 
-#include <iostream>
+#include "LockScreenSettings.h"
 
 namespace unity
 {
@@ -85,7 +85,8 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
 
 
     connections_.Add(session_->presence_status_changed.connect([this] (bool value) {
-      object_->EmitSignal("ActiveChanged", g_variant_new("(b)", value));
+      if (Settings::Instance().idle_activation_enabled())
+          object_->EmitSignal("ActiveChanged", g_variant_new("(b)", value));
     }));
 
     return nullptr;

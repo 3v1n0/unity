@@ -53,6 +53,11 @@ public:
   nux::Property<bool> use_user_background;
   nux::Property<bool> draw_grid;
 
+  nux::Property<bool> idle_activation_enabled;
+  nux::Property<int> lock_delay;
+  nux::Property<bool> lock_enabled;
+  nux::Property<bool> lock_on_suspend;
+
   static const int GRID_SIZE = 40;
 
 private:

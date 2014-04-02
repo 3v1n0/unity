@@ -65,7 +65,7 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
 
   session_manager_->presence_status_changed.connect([this](bool is_idle) {
-    if (is_idle)
+    if (is_idle && Settings::Instance().idle_activation_enabled())
     {
       EnsureFadeWindows(UScreen::GetDefault()->GetMonitors());
       animation::StartOrReverse(fade_windows_animator_, animation::Direction::FORWARD);
