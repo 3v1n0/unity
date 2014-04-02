@@ -310,26 +310,36 @@ static void close_button_class_init(CloseButtonClass* klass)
 
 }
 
-struct ForceQuitDialog::Impl
+struct ForceQuitDialog::Impl : sigc::trackable
 {
-  Impl(CompWindow* win)
-    : win_(win)
-    , dialog_(sheet_style_dialog_new())
+  Impl(ForceQuitDialog* parent, CompWindow* win)
+    : parent_(parent)
+    , win_(win)
+    , dialog_(sheet_style_dialog_new(win_->id()))
   {
-    gtk_widget_show_all(glib::object_cast<GtkWidget>(dialog_));
+    parent_->time.changed.connect(sigc::mem_fun(this, &Impl::UpdateWindowTime));
+    UpdateWindowTime(parent_->time());
+    gtk_widget_show_all(dialog_);
   }
 
   ~Impl()
   {
-    gtk_widget_destroy(glib::object_cast<GtkWidget>(dialog_));
+    gtk_widget_destroy(dialog_);
   }
 
+  void UpdateWindowTime(Time time)
+  {
+    gdk_x11_window_set_user_time(gtk_widget_get_window(dialog_), time);
+  }
+
+  ForceQuitDialog* parent_;
   CompWindow* win_;
-  glib::Object<GtkWindow> dialog_;
+  GtkWidget* dialog_;
 };
 
-ForceQuitDialog::ForceQuitDialog(CompWindow* win)
-  : impl_(new Impl(win))
+ForceQuitDialog::ForceQuitDialog(CompWindow* win, Time tm)
+  : time(tm)
+  , impl_(new Impl(this, win))
 {}
 
 ForceQuitDialog::~ForceQuitDialog()

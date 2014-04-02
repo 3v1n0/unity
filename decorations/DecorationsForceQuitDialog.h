@@ -20,6 +20,7 @@
 #ifndef __UNITY_DECORATIONS_FORCE_QUIT_DIALOG__
 #define __UNITY_DECORATIONS_FORCE_QUIT_DIALOG__
 
+#include <NuxCore/Property.h>
 #include "CompizUtils.h"
 
 namespace unity
@@ -32,8 +33,10 @@ class ForceQuitDialog
 public:
   typedef std::shared_ptr<ForceQuitDialog> Ptr;
 
-  ForceQuitDialog(CompWindow*);
+  ForceQuitDialog(CompWindow*, Time);
   ~ForceQuitDialog();
+
+  nux::Property<Time> time;
 
 private:
   struct Impl;
