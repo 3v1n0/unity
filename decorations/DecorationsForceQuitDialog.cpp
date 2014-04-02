@@ -90,7 +90,7 @@ struct CloseButtonClass
   GtkButtonClass parent_class;
 };
 
-#define CLOSE_BUTTON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), close_button_get_type(), CloseButtonPrivate))
+#define CLOSE_BUTTON(o) (G_TYPE_CHECK_INSTANCE_CAST ((o), close_button_get_type(), CloseButton))
 
 G_DEFINE_TYPE(CloseButton, close_button, GTK_TYPE_BUTTON);
 GtkWidget* close_button_new();
@@ -341,7 +341,7 @@ GtkWidget* close_button_new()
   auto const& file = decoration::Style::Get()->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
   auto* img = gtk_image_new_from_file(file.c_str());
   gtk_container_add(GTK_CONTAINER(self), img);
-  CLOSE_BUTTON_GET_PRIVATE(self)->img = GTK_IMAGE(img);
+  CLOSE_BUTTON(self)->priv->img = GTK_IMAGE(img);
 
   glib::Object<GtkCssProvider> style(gtk_css_provider_new());
   gtk_css_provider_load_from_data(style, R"(
@@ -356,17 +356,20 @@ GtkWidget* close_button_new()
 
 static void close_button_init(CloseButton* self)
 {
-  self->priv = CLOSE_BUTTON_GET_PRIVATE(self);
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE(self, close_button_get_type(), CloseButtonPrivate);
 }
 
 static void close_button_class_init(CloseButtonClass* klass)
 {
   GTK_WIDGET_CLASS(klass)->draw = [] (GtkWidget* self, cairo_t* cr) {
-    gtk_widget_draw(GTK_WIDGET(CLOSE_BUTTON_GET_PRIVATE(self)->img), cr);
+    gtk_widget_draw(GTK_WIDGET(CLOSE_BUTTON(self)->priv->img), cr);
     return TRUE;
   };
 
   GTK_WIDGET_CLASS(klass)->state_flags_changed = [] (GtkWidget* self, GtkStateFlags prev_state) {
+    auto* img = CLOSE_BUTTON(self)->priv->img;
+    if (!img) return;
+
     auto new_flags = gtk_widget_get_state_flags(self);
     auto const& deco_style = decoration::Style::Get();
     auto file = deco_style->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
@@ -378,9 +381,14 @@ static void close_button_class_init(CloseButtonClass* klass)
       file = deco_style->ThemedFilePath(basename, {PKGDATADIR"/"});
     }
 
-    gtk_image_set_from_file(CLOSE_BUTTON_GET_PRIVATE(self)->img, file.c_str());
+    gtk_image_set_from_file(img, file.c_str());
 
     return GTK_WIDGET_CLASS(close_button_parent_class)->state_flags_changed(self, prev_state);
+  };
+
+  G_OBJECT_CLASS(klass)->finalize = [] (GObject* self) {
+    CLOSE_BUTTON(self)->priv->img = nullptr;
+    return G_OBJECT_CLASS(close_button_parent_class)->finalize(self);
   };
 }
 
