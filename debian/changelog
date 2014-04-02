@@ -1,3 +1,9 @@
+unity (7.2.0-0ubuntu2) UNRELEASED; urgency=medium
+
+  * Release 7.2.0.
+
+ -- Stephen M. Webb <stephen.webb@canonical.com>  Mon, 31 Mar 2014 13:58:51 -0400
+
 unity (7.1.2+14.04.20140328.1-0ubuntu1) trusty; urgency=low
 
   [ Robert Ancell ]
@@ -1769,6 +1775,7 @@ unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 3317 (ubuntu-unity/next)
+
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   [ Sebastien Bacher ]
