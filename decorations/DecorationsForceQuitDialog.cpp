@@ -332,6 +332,13 @@ struct ForceQuitDialog::Impl : sigc::trackable
     gdk_x11_window_set_user_time(gtk_widget_get_window(dialog_), time);
   }
 
+  void UpdateDialogPosition()
+  {
+    auto const& win_geo = win_->inputRect();
+    nux::Size walloc(gtk_widget_get_allocated_width(dialog_), gtk_widget_get_allocated_height(dialog_));
+    gtk_window_move(GTK_WINDOW(dialog_), win_geo.centerX() - walloc.width/2, win_geo.centerY() - walloc.height/2);
+  }
+
   ForceQuitDialog* parent_;
   CompWindow* win_;
   GtkWidget* dialog_;
@@ -344,6 +351,11 @@ ForceQuitDialog::ForceQuitDialog(CompWindow* win, Time tm)
 
 ForceQuitDialog::~ForceQuitDialog()
 {}
+
+void ForceQuitDialog::UpdateDialogPosition()
+{
+  impl_->UpdateDialogPosition();
+}
 
 } // decoration namespace
 } // unity namespace

@@ -710,6 +710,12 @@ void Window::Impl::UpdateMonitor()
   }
 }
 
+void Window::Impl::UpdateForceQuitDialogPosition()
+{
+  if (force_quit_)
+    force_quit_->UpdateDialogPosition();
+}
+
 void Window::Impl::ShowForceQuitDialog(bool show, Time time)
 {
   if (show)

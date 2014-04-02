@@ -38,6 +38,8 @@ public:
 
   nux::Property<Time> time;
 
+  void UpdateDialogPosition();
+
 private:
   struct Impl;
   std::unique_ptr<Impl> impl_;
