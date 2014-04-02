@@ -69,7 +69,7 @@ struct SheetStyleDialogClass
 };
 
 G_DEFINE_TYPE(SheetStyleDialog, sheet_style_dialog, GTK_TYPE_BOX);
-GtkWidget* sheet_style_dialog_new(Window, long);
+GtkWidget* sheet_style_dialog_new(ForceQuitDialog*, Window, long);
 static void sheet_style_dialog_init(SheetStyleDialog*) {}
 static void sheet_style_dialog_class_init(SheetStyleDialogClass*);
 
@@ -98,7 +98,7 @@ static void close_button_init(CloseButton*);
 static void close_button_class_init(CloseButtonClass*);
 
 // Window implementation
-GtkWidget* sheet_style_window_new(Window parent_xid)
+GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xid)
 {
   auto* dpy = gdk_x11_get_default_xdisplay();
   auto* self = GTK_WINDOW(g_object_new(sheet_style_window_get_type(), nullptr));
@@ -147,7 +147,7 @@ GtkWidget* sheet_style_window_new(Window parent_xid)
   gtk_widget_realize(GTK_WIDGET(self));
   gtk_widget_override_background_color(GTK_WIDGET(self), GTK_STATE_FLAG_NORMAL, nullptr);
 
-  gtk_container_add(GTK_CONTAINER(self), sheet_style_dialog_new(parent_xid, parent_pid));
+  gtk_container_add(GTK_CONTAINER(self), sheet_style_dialog_new(main_dialog, parent_xid, parent_pid));
 
   gtk_window_set_modal(self, TRUE);
   gtk_window_set_destroy_with_parent(self, TRUE);
@@ -229,10 +229,16 @@ void on_force_quit_clicked(GtkButton *button, gint64* kill_data)
   XKillClient(dpy, parent_xid);
   XSync(dpy, False);
 
-  kill(parent_pid, 9);
+  if (parent_pid > 0)
+    kill(parent_pid, 9);
 }
 
-GtkWidget* sheet_style_dialog_new(Window parent_xid, long parent_pid)
+void on_wait_clicked(GtkButton *button, ForceQuitDialog* main_dialog)
+{
+  main_dialog->close_request.emit();
+}
+
+GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xid, long parent_pid)
 {
   auto* self = GTK_WIDGET(g_object_new(sheet_style_dialog_get_type(), nullptr));
   gtk_orientable_set_orientation(GTK_ORIENTABLE(self), GTK_ORIENTATION_VERTICAL);
@@ -264,8 +270,9 @@ GtkWidget* sheet_style_dialog_new(Window parent_xid, long parent_pid)
   auto* main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
   gtk_container_set_border_width(GTK_CONTAINER(main_box), 4);
 
-  auto *button = close_button_new();
-  gtk_box_pack_start(GTK_BOX(main_box), button, TRUE, TRUE, 0);
+  auto *close_button = close_button_new();
+  g_signal_connect(close_button, "clicked", G_CALLBACK(on_wait_clicked), main_dialog);
+  gtk_box_pack_start(GTK_BOX(main_box), close_button, TRUE, TRUE, 0);
 
   auto* content_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
   gtk_container_set_border_width(GTK_CONTAINER(content_box), 10);
@@ -291,6 +298,7 @@ GtkWidget* sheet_style_dialog_new(Window parent_xid, long parent_pid)
 
   auto* wait_button = gtk_button_new_with_mnemonic(_("_Wait"));
   gtk_container_add(GTK_CONTAINER(buttons_box), wait_button);
+  g_signal_connect(wait_button, "clicked", G_CALLBACK(on_wait_clicked), main_dialog);
 
   auto *kill_data = g_new(gint64, 2);
   kill_data[0] = parent_xid;
@@ -383,7 +391,7 @@ struct ForceQuitDialog::Impl : sigc::trackable
   Impl(ForceQuitDialog* parent, CompWindow* win)
     : parent_(parent)
     , win_(win)
-    , dialog_(sheet_style_window_new(win_->id()))
+    , dialog_(sheet_style_window_new(parent, win_->id()))
   {
     parent_->time.changed.connect(sigc::mem_fun(this, &Impl::UpdateWindowTime));
     UpdateWindowTime(parent_->time());
