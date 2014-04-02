@@ -108,6 +108,8 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
   gtk_window_set_type_hint(self, GDK_WINDOW_TYPE_HINT_DIALOG);
   gtk_window_set_decorated(self, FALSE);
   gtk_window_set_resizable(self, FALSE);
+  gtk_window_set_urgency_hint(self, TRUE);
+  gtk_window_set_deletable(self, FALSE);
   gtk_window_set_title(self, "Force Quit Dialog");
 
   XClassHint parent_class = {nullptr, nullptr};
@@ -180,6 +182,11 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
 
 static void sheet_style_window_class_init(SheetStyleWindowClass* klass)
 {
+  GTK_WIDGET_CLASS(klass)->delete_event = [] (GtkWidget* self, GdkEventAny*) {
+    // Don't destroy the window on delete event
+    return TRUE;
+  };
+
   GTK_WIDGET_CLASS(klass)->draw = [] (GtkWidget* self, cairo_t* cr) {
     GtkAllocation a;
     gtk_widget_get_allocation(self, &a);
