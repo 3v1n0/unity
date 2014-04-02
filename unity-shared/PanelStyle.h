@@ -62,11 +62,11 @@ public:
 
   static Style& Instance();
 
-  GtkStyleContext* GetStyleContext();
+  GtkStyleContext* GetStyleContext(PanelItem);
   BaseTexturePtr GetBackground(int monitor = 0);
   BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state, int monitor = 0);
   BaseTexturePtr GetDashWindowButton(WindowButtonType type, WindowState state, int monitor = 0);
-  std::string GetFontDescription(PanelItem item);
+  std::string GetFontDescription(PanelItem);
 
   int PanelHeight(int monitor = 0) const;
 

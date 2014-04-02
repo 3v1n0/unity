@@ -252,61 +252,30 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
   return pixbuf;
 }
 
-void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width, unsigned int height)
-{
-  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
-
-  gtk_style_context_save(style_context);
-
-  GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-
-  gtk_style_context_set_path(style_context, widget_path);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
-  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
-  gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
-
-  gtk_render_background(style_context, cr, 0, 0, width, height);
-  gtk_render_frame(style_context, cr, 0, 0, width, height);
-
-  gtk_widget_path_free(widget_path);
-
-  gtk_style_context_restore(style_context);
-}
-
 void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, unsigned int height, glib::Object<GdkPixbuf> const& pixbuf, bool icon_scalable, glib::Object<PangoLayout> const& layout)
 {
   int x = padding_;
 
+  auto panel_item = (type_ == MENU) ? panel::PanelItem::MENU : panel::PanelItem::INDICATOR;
+  GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext(panel_item);
+  gtk_style_context_save(style_context);
+
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
+
   if (IsActive())
-    DrawEntryPrelight(cr, width, height);
+  {
+    gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
+    gtk_render_background(style_context, cr, 0, 0, width, height);
+    gtk_render_frame(style_context, cr, 0, 0, width, height);
+  }
+
+  if (!IsFocused())
+    gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
 
   if (pixbuf && IsIconVisible())
   {
-    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
     unsigned int icon_width = gdk_pixbuf_get_width(pixbuf);
-
-    gtk_style_context_save(style_context);
-
-    GtkWidgetPath* widget_path = gtk_widget_path_new();
-    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
-    pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
-    gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
-
-    gtk_style_context_set_path(style_context, widget_path);
-    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
-    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
-
-    if (!IsFocused())
-    {
-      gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
-    }
-    else if (IsActive())
-    {
-      gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
-    }
 
     int y = (height - gdk_pixbuf_get_height(pixbuf)) / 2;
 
@@ -344,9 +313,6 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       cairo_paint_with_alpha(cr, (IsIconSensitive() && IsFocused()) ? 1.0 : 0.5);
     }
 
-    gtk_widget_path_free(widget_path);
-    gtk_style_context_restore(style_context);
-
     if (icon_scalable)
     {
       cairo_restore(cr);
@@ -358,28 +324,6 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
   if (layout)
   {
-    GtkStyleContext* style_context = panel::Style::Instance().GetStyleContext();
-
-    gtk_style_context_save(style_context);
-
-    GtkWidgetPath* widget_path = gtk_widget_path_new();
-    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
-    pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
-    gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
-
-    gtk_style_context_set_path(style_context, widget_path);
-    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
-    gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
-
-    if (!IsFocused())
-    {
-      gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
-    }
-    else if (IsActive())
-    {
-      gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
-    }
-
     nux::Size extents;
     pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
     int y = (height - extents.height) / 2;
@@ -408,10 +352,9 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
 
       gtk_render_layout(style_context, cr, x, y, layout);
     }
-
-    gtk_widget_path_free(widget_path);
-    gtk_style_context_restore(style_context);
   }
+
+  gtk_style_context_restore(style_context);
 }
 
 // We need to do a couple of things here:

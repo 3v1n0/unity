@@ -43,6 +43,7 @@ DECLARE_LOGGER(logger, "unity.panel.style");
 const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
 const int BASE_PANEL_HEIGHT = 24;
+const std::string PANEL_STYLE_CSS_NAME = "UnityPanelWidget";
 
 inline std::string button_id(std::string const& prefix, double scale, WindowButtonType type, WindowState ws)
 {
@@ -79,15 +80,13 @@ Style::Style()
     style_instance = this;
   }
 
-  GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
-  gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
+  std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
+  gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_WIDGET);
+  gtk_widget_path_iter_set_name(widget_path.get(), -1, PANEL_STYLE_CSS_NAME.c_str());
 
-  gtk_style_context_set_path(style_context_, widget_path);
+  gtk_style_context_set_path(style_context_, widget_path.get());
   gtk_style_context_add_class(style_context_, "gnome-panel-menu-bar");
   gtk_style_context_add_class(style_context_, "unity-panel");
-
-  gtk_widget_path_free(widget_path);
 
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Style::DPIChanged));
   auto const& deco_style = decoration::Style::Get();
@@ -161,8 +160,41 @@ void Style::RefreshContext()
   changed.emit();
 }
 
-GtkStyleContext* Style::GetStyleContext()
+GtkStyleContext* Style::GetStyleContext(PanelItem type)
 {
+  auto const* current_path = gtk_style_context_get_path(style_context_);
+
+  switch (type)
+  {
+    case PanelItem::MENU:
+    case PanelItem::INDICATOR:
+      if (gtk_widget_path_is_type(current_path, GTK_TYPE_MENU_ITEM))
+        return style_context_;
+      break;
+    case PanelItem::TITLE:
+      if (gtk_widget_path_get_object_type(current_path) == GTK_TYPE_WIDGET)
+        return style_context_;
+      break;
+  }
+
+  std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
+  gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_WIDGET);
+
+  switch (type)
+  {
+    case PanelItem::MENU:
+    case PanelItem::INDICATOR:
+      gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_MENU_BAR);
+      gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_MENU_ITEM);
+      break;
+    case PanelItem::TITLE:
+      gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_WIDGET);
+      break;
+  }
+
+  gtk_widget_path_iter_set_name(widget_path.get(), -1, PANEL_STYLE_CSS_NAME.c_str());
+  gtk_style_context_set_path(style_context_, widget_path.get());
+
   return style_context_;
 }
 
@@ -179,8 +211,9 @@ BaseTexturePtr Style::GetBackground(int monitor)
 
   // Use the internal context as we know it is good and shiny new.
   cairo_t* cr = context.GetInternalContext();
-  gtk_render_background(style_context_, cr, 0, 0, width, height);
-  gtk_render_frame(style_context_, cr, 0, 0, width, height);
+  GtkStyleContext* style_ctx = GetStyleContext(PanelItem::TITLE);
+  gtk_render_background(style_ctx, cr, 0, 0, width, height);
+  gtk_render_frame(style_ctx, cr, 0, 0, width, height);
 
   bg_texture = texture_ptr_from_cairo_graphics(context);
   return bg_texture;

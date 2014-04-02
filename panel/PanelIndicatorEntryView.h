@@ -99,7 +99,6 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawEntryPrelight(cairo_t* cr, unsigned int w, unsigned int h);
   virtual void DrawEntryContent(cairo_t* cr, unsigned int width, unsigned int height,
                                 glib::Object<GdkPixbuf> const& pixbuf, bool scalable,
                                 glib::Object<PangoLayout> const& layout);
