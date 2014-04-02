@@ -104,6 +104,19 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     });
   }
 
+  {
+    presence_proxy_ = std::make_shared<glib::DBusProxy>("org.gnome.SessionManager",
+                                                        "/org/gnome/SessionManager/Presence",
+                                                        "org.gnome.SessionManager.Presence");
+
+    presence_proxy_->Connect("StatusChanged", [this](GVariant* variant) {
+      auto status = glib::Variant(variant).GetUInt32();
+      bool is_idle = (status == 3);
+      manager_->presence_status_changed.emit(is_idle);
+    });
+
+  }
+
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {
     if (err)
     {

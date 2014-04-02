@@ -52,15 +52,34 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , fade_animator_(FADE_DURATION)
+  , fade_windows_animator_(/* FIXME */ 10000)
   , test_mode_(test_mode)
 {
   uscreen_connection_ = UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
     EnsureShields(monitors);
+    EnsureFadeWindows(monitors);
   });
   uscreen_connection_->block();
 
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
+
+  session_manager_->presence_status_changed.connect([this](bool is_idle) {
+    if (is_idle)
+    {
+      EnsureFadeWindows(UScreen::GetDefault()->GetMonitors());
+      animation::StartOrReverse(fade_windows_animator_, animation::Direction::FORWARD);
+    }
+    else
+    {
+      std::for_each(fade_windows_.begin(), fade_windows_.end(), [](nux::ObjectPtr<nux::BaseWindow> const& window) {
+        window->ShowWindow(false);
+      });
+
+      fade_windows_.clear();
+      animation::SetValue(fade_windows_animator_, 0.0);
+    }
+  });
 
   fade_animator_.updated.connect([this](double value) {
     std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
@@ -87,6 +106,12 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
         indicators_.reset();
       }
     }
+  });
+
+  fade_windows_animator_.updated.connect([this](double value) {
+    std::for_each(fade_windows_.begin(), fade_windows_.end(), [value](nux::ObjectPtr<nux::BaseWindow> const& window) {
+      window->SetOpacity(value);
+    });
   });
 }
 
@@ -148,6 +173,39 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
     primary_shield_->primary = true;
     auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
     motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
+  }
+}
+
+void Controller::EnsureFadeWindows(std::vector<nux::Geometry> const& monitors)
+{
+  int num_monitors = monitors.size();
+  int windows_size = fade_windows_.size();
+
+  fade_windows_.resize(num_monitors);
+
+  for (int i = 0; i < num_monitors; ++i)
+  {
+    auto& window = fade_windows_[i];
+    bool is_new = false;
+
+    if (i >= windows_size)
+    {
+      window = new nux::BaseWindow();
+      window->ShowWindow(true);
+      window->PushToFront();
+      window->SetBackgroundLayer(new nux::ColorLayer(nux::color::Black, true));
+      is_new = true;
+    }
+
+    window->SetGeometry(monitors[i]);
+    window->SetMinMaxSize(monitors[i].width, monitors[i].height);
+
+    if (is_new && fade_windows_animator_.GetCurrentValue() > 0)
+    {
+      window->SetOpacity(fade_windows_animator_.GetCurrentValue());
+      window->ShowWindow(true);
+      window->PushToFront();
+    }
   }
 }
 

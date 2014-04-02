@@ -3813,6 +3813,7 @@ void UnityScreen::initLauncher()
   AddChild(session_controller_.get());
 
   // Setup Lockscreen Controller
+  screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(manager);
   UpdateActivateIndicatorsKey();
 

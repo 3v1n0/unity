@@ -1,3 +1,4 @@
+
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
 * Copyright (C) 2013 Canonical Ltd
@@ -70,6 +71,7 @@ struct GnomeManager::Impl
   glib::DBusServer shell_server_;
   glib::DBusObject::Ptr shell_object_;
   glib::DBusProxy::Ptr login_proxy_;
+  glib::DBusProxy::Ptr presence_proxy_;
 };
 
 } // namespace session

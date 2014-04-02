@@ -64,6 +64,7 @@ public:
   sigc::signal<void, bool /* inhibitors */> logout_requested;
   sigc::signal<void, bool /* inhibitors */> reboot_requested;
   sigc::signal<void, bool /* inhibitors */> shutdown_requested;
+  sigc::signal<void, bool /* is_idle */> presence_status_changed;
 
   sigc::signal<void> cancel_requested;
 };

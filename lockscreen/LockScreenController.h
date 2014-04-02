@@ -49,6 +49,7 @@ private:
   friend class TestLockScreenController;
 
   void EnsureShields(std::vector<nux::Geometry> const& monitors);
+  void EnsureFadeWindows(std::vector<nux::Geometry> const& monitors);
   void LockScreenUsingDisplayManager();
   void LockScreenUsingUnity();
   void ShowShields();
@@ -60,11 +61,16 @@ private:
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
+  std::vector<nux::ObjectPtr<nux::BaseWindow>> fade_windows_; 
+
   session::Manager::Ptr session_manager_;
   indicator::Indicators::Ptr indicators_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
+
   nux::animation::AnimateValue<double> fade_animator_;
+  nux::animation::AnimateValue<double> fade_windows_animator_;
+
   connection::Wrapper uscreen_connection_;
   connection::Wrapper motion_connection_;
   bool test_mode_;
