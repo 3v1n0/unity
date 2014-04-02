@@ -37,41 +37,41 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.decoration.forcequit.dialog");
 
-const std::string CLOSE_BUTTON_INACTIVE_FILE = "style_sheet_close_focused";
-const std::string CLOSE_BUTTON_FOCUSED_FILE = "style_sheet_close_focused_prelight";
-const std::string CLOSE_BUTTON_ACTIVE_FILE = "style_sheet_close_focused_pressed";
+const std::string CLOSE_BUTTON_INACTIVE_FILE = "sheet_style_close_focused";
+const std::string CLOSE_BUTTON_FOCUSED_FILE = "sheet_style_close_focused_prelight";
+const std::string CLOSE_BUTTON_ACTIVE_FILE = "sheet_style_close_focused_pressed";
 
 
 // Dialog
-struct SheetStyleDialog
+struct SheetStyleWindow
 {
   GtkWindow parent_instance;
 };
 
-struct SheetStyleDialogClass
+struct SheetStyleWindowClass
 {
   GtkWindowClass parent_class;
 };
 
-G_DEFINE_TYPE(SheetStyleDialog, sheet_style_dialog, GTK_TYPE_WINDOW);
-static void sheet_style_dialog_init(SheetStyleDialog*) {}
-static void sheet_style_dialog_class_init(SheetStyleDialogClass*);
+G_DEFINE_TYPE(SheetStyleWindow, sheet_style_window, GTK_TYPE_WINDOW);
+static void sheet_style_window_init(SheetStyleWindow*) {}
+static void sheet_style_window_class_init(SheetStyleWindowClass*);
 
 // Box
-struct SheetStyleBox
+struct SheetStyleDialog
 {
   GtkBox parent_instance;
 };
 
-struct SheetStyleBoxClass
+struct SheetStyleDialogClass
 {
   GtkBoxClass parent_class;
 };
 
-G_DEFINE_TYPE(SheetStyleBox, sheet_style_box, GTK_TYPE_BOX);
-GtkWidget* sheet_style_box_new();
-static void sheet_style_box_init(SheetStyleBox*) {}
-static void sheet_style_box_class_init(SheetStyleBoxClass*);
+G_DEFINE_TYPE(SheetStyleDialog, sheet_style_dialog, GTK_TYPE_BOX);
+GtkWidget* sheet_style_dialog_new();
+static void sheet_style_dialog_init(SheetStyleDialog*) {}
+static void sheet_style_dialog_class_init(SheetStyleDialogClass*);
 
 // Close button
 struct CloseButtonPrivate
@@ -98,10 +98,10 @@ static void close_button_init(CloseButton*);
 static void close_button_class_init(CloseButtonClass*);
 
 // Dialog implementation
-GtkWidget* sheet_style_dialog_new(Window parent_xid)
+GtkWidget* sheet_style_window_new(Window parent_xid)
 {
   auto* dpy = gdk_x11_get_default_xdisplay();
-  auto* self = GTK_WINDOW(g_object_new(sheet_style_dialog_get_type(), nullptr));
+  auto* self = GTK_WINDOW(g_object_new(sheet_style_window_get_type(), nullptr));
   gtk_window_set_skip_taskbar_hint(self, TRUE);
   gtk_window_set_skip_pager_hint(self, TRUE);
   gtk_window_set_position(self, GTK_WIN_POS_CENTER_ON_PARENT);
@@ -126,7 +126,7 @@ GtkWidget* sheet_style_dialog_new(Window parent_xid)
   gtk_widget_realize(GTK_WIDGET(self));
   gtk_widget_override_background_color(GTK_WIDGET(self), GTK_STATE_FLAG_NORMAL, nullptr);
 
-  gtk_container_add(GTK_CONTAINER(self), sheet_style_box_new());
+  gtk_container_add(GTK_CONTAINER(self), sheet_style_dialog_new());
 
   gtk_window_set_modal(self, TRUE);
   gtk_window_set_destroy_with_parent(self, TRUE);
@@ -178,7 +178,7 @@ GtkWidget* sheet_style_dialog_new(Window parent_xid)
   return GTK_WIDGET(self);
 }
 
-static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
+static void sheet_style_window_class_init(SheetStyleWindowClass* klass)
 {
   GTK_WIDGET_CLASS(klass)->draw = [] (GtkWidget* self, cairo_t* cr) {
     GtkAllocation a;
@@ -197,7 +197,7 @@ static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
   };
 
   GTK_WIDGET_CLASS(klass)->size_allocate = [] (GtkWidget* self, GtkAllocation* a) {
-    GTK_WIDGET_CLASS(sheet_style_dialog_parent_class)->size_allocate(self, a);
+    GTK_WIDGET_CLASS(sheet_style_window_parent_class)->size_allocate(self, a);
 
     int border = gtk_container_get_border_width(GTK_CONTAINER(self));
     cairo_rectangle_int_t rect = {border, border, a->width-border*2, a->height-border*2};
@@ -209,9 +209,9 @@ static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
 }
 
 // BOX Implementation
-GtkWidget* sheet_style_box_new()
+GtkWidget* sheet_style_dialog_new()
 {
-  auto* self = GTK_WIDGET(g_object_new(sheet_style_box_get_type(), nullptr));
+  auto* self = GTK_WIDGET(g_object_new(sheet_style_dialog_get_type(), nullptr));
   gtk_orientable_set_orientation(GTK_ORIENTABLE(self), GTK_ORIENTATION_VERTICAL);
 
   glib::Object<GtkCssProvider> style(gtk_css_provider_new());
@@ -222,7 +222,7 @@ GtkWidget* sheet_style_box_new()
   auto const& color = deco_style->ActiveShadowColor();
   int decoration_radius = std::max({radius.top, radius.left, radius.right, radius.bottom});
 
-  gtk_css_provider_load_from_data(style, (R"(SheetStyleBox {
+  gtk_css_provider_load_from_data(style, (R"(SheetStyleDialog {
     background-color: #f7f6f5;
     color: #4a4a4a;
     border-radius: )"+std::to_string(decoration_radius)+R"(px;
@@ -236,6 +236,7 @@ GtkWidget* sheet_style_box_new()
 
   auto* style_ctx = gtk_widget_get_style_context(self);
   gtk_style_context_add_provider(style_ctx, glib::object_cast<GtkStyleProvider>(style), GTK_STYLE_PROVIDER_PRIORITY_FALLBACK);
+  gtk_style_context_add_class(style_ctx, "unity-force-quit");
 
   auto* main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
   gtk_container_set_border_width(GTK_CONTAINER(main_box), 4);
@@ -281,13 +282,13 @@ GtkWidget* sheet_style_box_new()
   return self;
 }
 
-static void sheet_style_box_class_init(SheetStyleBoxClass* klass)
+static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
 {
   GTK_WIDGET_CLASS(klass)->draw = [] (GtkWidget* self, cairo_t* cr) {
     GtkAllocation a;
     gtk_widget_get_allocation(self, &a);
     gtk_render_background(gtk_widget_get_style_context(self), cr, 0, 0, a.width, a.height);
-    return GTK_WIDGET_CLASS(sheet_style_box_parent_class)->draw(self, cr);
+    return GTK_WIDGET_CLASS(sheet_style_dialog_parent_class)->draw(self, cr);
   };
 }
 
@@ -353,7 +354,7 @@ struct ForceQuitDialog::Impl : sigc::trackable
   Impl(ForceQuitDialog* parent, CompWindow* win)
     : parent_(parent)
     , win_(win)
-    , dialog_(sheet_style_dialog_new(win_->id()))
+    , dialog_(sheet_style_window_new(win_->id()))
   {
     parent_->time.changed.connect(sigc::mem_fun(this, &Impl::UpdateWindowTime));
     UpdateWindowTime(parent_->time());
