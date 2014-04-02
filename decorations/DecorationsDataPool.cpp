@@ -32,11 +32,11 @@ namespace decoration
 namespace
 {
 DECLARE_LOGGER(logger, "unity.decoration.datapool");
+static DataPool::Ptr instance_;
 const std::string PLUGIN_NAME = "unityshell";
 const int BUTTONS_SIZE = 16;
 const int BUTTONS_PADDING = 1;
 const cu::SimpleTexture::Ptr EMPTY_BUTTON;
-Display* dpy = nullptr;
 
 unsigned EdgeTypeToCursorShape(Edge::Type type)
 {
@@ -67,7 +67,6 @@ unsigned EdgeTypeToCursorShape(Edge::Type type)
 
 DataPool::DataPool()
 {
-  dpy = screen->dpy();
   SetupCursors();
   SetupTextures();
 
@@ -81,18 +80,28 @@ DataPool::DataPool()
 
 DataPool::~DataPool()
 {
+  auto* dpy = screen->dpy();
   for (auto cursor : edge_cursors_)
     XFreeCursor(dpy, cursor);
 }
 
 DataPool::Ptr const& DataPool::Get()
 {
-  static DataPool::Ptr data_pool(new DataPool());
-  return data_pool;
+  if (instance_)
+    return instance_;
+
+  instance_.reset(new DataPool);
+  return instance_;
+}
+
+void DataPool::Reset()
+{
+  instance_.reset();
 }
 
 void DataPool::SetupCursors()
 {
+  auto* dpy = screen->dpy();
   for (unsigned c = 0; c < edge_cursors_.size(); ++c)
     edge_cursors_[c] = XCreateFontCursor(dpy, EdgeTypeToCursorShape(Edge::Type(c)));
 }

@@ -35,6 +35,7 @@ public:
   typedef std::shared_ptr<DataPool> Ptr;
 
   static DataPool::Ptr const& Get();
+  static void Reset();
   virtual ~DataPool();
 
   Cursor EdgeCursor(Edge::Type) const;
