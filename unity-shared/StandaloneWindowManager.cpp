@@ -158,16 +158,16 @@ bool StandaloneWindowManager::IsWindowVerticallyMaximized(Window window_id) cons
   auto window = GetWindowByXid(window_id);
   if (window)
     return window->v_maximized;
- 
+
   return false;
 }
- 
+
 bool StandaloneWindowManager::IsWindowHorizontallyMaximized(Window window_id) const
 {
   auto window = GetWindowByXid(window_id);
   if (window)
     return window->h_maximized;
- 
+
   return false;
 }
 
@@ -284,6 +284,28 @@ void StandaloneWindowManager::Maximize(Window window_id)
   {
     window->maximized = true;
     window->decorated = false;
+  }
+}
+
+void StandaloneWindowManager::VerticallyMaximize(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+  {
+    window->h_maximized = false;
+    window->v_maximized = true;
+    window->decorated = true;
+  }
+}
+
+void StandaloneWindowManager::HorizontallyMaximize(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+  {
+    window->v_maximized = false;
+    window->h_maximized = true;
+    window->decorated = true;
   }
 }
 

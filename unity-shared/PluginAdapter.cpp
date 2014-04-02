@@ -691,7 +691,19 @@ bool PluginAdapter::IsWindowMaximizable(Window window_id) const
 void PluginAdapter::Maximize(Window window_id)
 {
   if (CompWindow* window = m_Screen->findWindow(window_id))
-    window->maximize(MAXIMIZE_STATE);
+    window->maximize(CompWindowStateMaximizedVertMask);
+}
+
+void PluginAdapter::VerticallyMaximize(Window window_id)
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    window->maximize(CompWindowStateMaximizedVertMask);
+}
+
+void PluginAdapter::HorizontallyMaximize(Window window_id)
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    window->maximize(CompWindowStateMaximizedHorzMask);
 }
 
 void PluginAdapter::Restore(Window window_id)

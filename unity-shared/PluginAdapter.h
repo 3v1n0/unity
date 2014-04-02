@@ -137,6 +137,8 @@ public:
 
   void ShowActionMenu(Time, Window, unsigned button, nux::Point const&);
   void Maximize(Window window_id);
+  void VerticallyMaximize(Window window_id);
+  void HorizontallyMaximize(Window window_id);
   void Restore(Window window_id);
   void RestoreAt(Window window_id, int x, int y);
   void Minimize(Window window_id);

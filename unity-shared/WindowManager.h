@@ -101,6 +101,8 @@ public:
 
   virtual void ShowActionMenu(Time, Window, unsigned button, nux::Point const&) = 0;
   virtual void Maximize(Window window_id) = 0;
+  virtual void VerticallyMaximize(Window window_id) = 0;
+  virtual void HorizontallyMaximize(Window window_id) = 0;
   virtual void Restore(Window window_id) = 0;
   virtual void RestoreAt(Window window_id, int x, int y) = 0;
   virtual void Minimize(Window window_id) = 0;
