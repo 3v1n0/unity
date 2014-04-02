@@ -787,6 +787,7 @@ void Window::UpdateDecorationPosition()
   impl_->UpdateMonitor();
   impl_->ComputeShadowQuads();
   impl_->UpdateDecorationTextures();
+  impl_->UpdateForceQuitDialogPosition();
   impl_->dirty_geo_ = false;
 }
 
