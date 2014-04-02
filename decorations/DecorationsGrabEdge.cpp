@@ -37,8 +37,8 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timesta
 {
   if (button != 1)
   {
-    if (button == 3)
-      screen->toolkitAction(Atoms::toolkitActionWindowMenu, timestamp, win_->id(), button, p.x(), p.y());
+    if (button == 2 || button == 3)
+      PerformWMAction(p, button, timestamp);
 
     return;
   }
@@ -51,7 +51,7 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timesta
 
   auto const& style = Style::Get();
   unsigned max_time_delta = std::max(0, style->DoubleClickMaxTimeDelta());
-  bool maximized = false;
+  bool double_clicked = false;
 
   if (timestamp - last_click_time_ < max_time_delta)
   {
@@ -60,13 +60,13 @@ void GrabEdge::ButtonDownEvent(CompPoint const& p, unsigned button, Time timesta
     if (std::abs(p.x() - last_click_pos_.x()) < max_distance &&
         std::abs(p.y() - last_click_pos_.y()) < max_distance)
     {
-      win_->maximize(MAXIMIZE_STATE);
-      maximized = true;
+      PerformWMAction(p, button, timestamp);
+      double_clicked = true;
       button_down_timer_.reset();
     }
   }
 
-  if (!maximized)
+  if (!double_clicked)
   {
     button_down_timer_.reset(new glib::Timeout(style->grab_wait()));
     button_down_timer_->Run([this] {
@@ -94,6 +94,56 @@ void GrabEdge::ButtonUpEvent(CompPoint const&, unsigned button, Time)
 {
   button_down_timer_.reset();
   button_down_ = -1;
+}
+
+void GrabEdge::PerformWMAction(CompPoint const& p, unsigned button, Time timestamp)
+{
+  WMAction action = Style::Get()->WindowManagerAction(WMEvent(button));
+
+  switch (action)
+  {
+    case WMAction::TOGGLE_SHADE:
+      if (win_->state() & CompWindowStateShadedMask)
+        win_->changeState(win_->state() & ~CompWindowStateShadedMask);
+      else
+        win_->changeState(win_->state() | CompWindowStateShadedMask);
+
+      win_->updateAttributes(CompStackingUpdateModeNone);
+      break;
+    case WMAction::TOGGLE_MAXIMIZE:
+      if ((win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+        win_->maximize(0);
+      else
+        win_->maximize(MAXIMIZE_STATE);
+      break;
+    case WMAction::TOGGLE_MAXIMIZE_HORIZONTALLY:
+      if (win_->state() & CompWindowStateMaximizedHorzMask)
+        win_->maximize(0);
+      else
+        win_->maximize(CompWindowStateMaximizedHorzMask);
+      break;
+    case WMAction::TOGGLE_MAXIMIZE_VERTICALLY:
+    if (win_->state() & CompWindowStateMaximizedVertMask)
+        win_->maximize(0);
+      else
+        win_->maximize(CompWindowStateMaximizedVertMask);
+      break;
+    case WMAction::MINIMIZE:
+      win_->minimize();
+      break;
+    case WMAction::SHADE:
+      win_->changeState(win_->state() | CompWindowStateShadedMask);
+      win_->updateAttributes(CompStackingUpdateModeNone);
+      break;
+    case WMAction::MENU:
+      screen->toolkitAction(Atoms::toolkitActionWindowMenu, timestamp, win_->id(), button, p.x(), p.y());
+      break;
+    case WMAction::LOWER:
+      win_->lower();
+      break;
+    default:
+      break;
+  }
 }
 
 bool GrabEdge::IsGrabbed() const

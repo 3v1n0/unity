@@ -44,6 +44,7 @@ public:
 
 protected:
   void AddProperties(debug::IntrospectionData&);
+  void PerformWMAction(CompPoint const&, unsigned button, Time);
 
 private:
   Time last_click_time_;
