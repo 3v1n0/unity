@@ -173,10 +173,10 @@ void PanelMenuView::SetupTitlebarGrabArea()
 {
   titlebar_grab_area_ = new PanelTitlebarGrabArea();
   titlebar_grab_area_->SetParentObject(this);
-  titlebar_grab_area_->activate_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedActivate));
-  titlebar_grab_area_->restore_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedRestore));
-  titlebar_grab_area_->lower_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedLower));
-  titlebar_grab_area_->menu_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedShowActionMenu));
+  titlebar_grab_area_->clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedActivate));
+  titlebar_grab_area_->double_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedDoubleClicked));
+  titlebar_grab_area_->middle_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedMiddleClicked));
+  titlebar_grab_area_->right_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedRightClicked));
   titlebar_grab_area_->grab_started.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
   titlebar_grab_area_->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
   titlebar_grab_area_->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
@@ -1455,44 +1455,79 @@ void PanelMenuView::OnMaximizedActivate(int x, int y)
   }
 }
 
-void PanelMenuView::OnMaximizedRestore(int x, int y)
+void PanelMenuView::MaximizedWindowWMAction(int x, int y, unsigned button)
 {
   Window maximized = GetMaximizedWindow();
 
-  if (maximized != 0)
+  if (!maximized)
+    return;
+
+  using namespace decoration;
+  auto& wm = WindowManager::Default();
+  auto action = decoration::Style::Get()->WindowManagerAction(WMEvent(button));
+
+  switch (action)
   {
-    WindowManager::Default().Restore(maximized);
-    is_inside_ = true;
+    case WMAction::TOGGLE_SHADE:
+      if (wm.IsWindowShaded(maximized))
+        wm.UnShade(maximized);
+      else
+        wm.Shade(maximized);
+      break;
+    case WMAction::TOGGLE_MAXIMIZE:
+      wm.Restore(maximized);
+      is_inside_ = true;
+      break;
+    case WMAction::TOGGLE_MAXIMIZE_HORIZONTALLY:
+      wm.HorizontallyMaximize(maximized);
+      is_inside_ = true;
+      break;
+    case WMAction::TOGGLE_MAXIMIZE_VERTICALLY:
+      wm.VerticallyMaximize(maximized);
+      is_inside_ = true;
+      break;
+    case WMAction::MINIMIZE:
+      wm.Minimize(maximized);
+      is_inside_ = true;
+      break;
+    case WMAction::SHADE:
+      wm.Shade(maximized);
+      break;
+    case WMAction::MENU:
+    {
+      auto const& event = nux::GetGraphicsDisplay()->GetCurrentEvent();
+      auto const& abs_geo = titlebar_grab_area_->GetAbsoluteGeometry();
+      int button = event.GetEventButton();
+      nux::Point click(abs_geo.x + x, abs_geo.y + y);
+      auto& wm = WindowManager::Default();
+      wm.UnGrabMousePointer(event.x11_timestamp, button, click.x, click.y);
+      wm.ShowActionMenu(event.x11_timestamp, maximized, button, click);
+
+      is_inside_ = false;
+      QueueDraw();
+      break;
+    }
+    case WMAction::LOWER:
+      wm.Lower(maximized);
+      break;
+    default:
+      break;
   }
 }
 
-void PanelMenuView::OnMaximizedLower(int x, int y)
+void PanelMenuView::OnMaximizedDoubleClicked(int x, int y)
 {
-  Window maximized = GetMaximizedWindow();
-
-  if (maximized != 0)
-  {
-    WindowManager::Default().Lower(maximized);
-  }
+  MaximizedWindowWMAction(x, y, 1);
 }
 
-void PanelMenuView::OnMaximizedShowActionMenu(int x, int y)
+void PanelMenuView::OnMaximizedMiddleClicked(int x, int y)
 {
-  Window maximized = GetMaximizedWindow();
+  MaximizedWindowWMAction(x, y, 2);
+}
 
-  if (maximized != 0)
-  {
-    auto const& event = nux::GetGraphicsDisplay()->GetCurrentEvent();
-    auto const& abs_geo = titlebar_grab_area_->GetAbsoluteGeometry();
-    int button = event.GetEventButton();
-    nux::Point click(abs_geo.x + x, abs_geo.y + y);
-    auto& wm = WindowManager::Default();
-    wm.UnGrabMousePointer(event.x11_timestamp, button, click.x, click.y);
-    wm.ShowActionMenu(event.x11_timestamp, maximized, button, click);
-
-    is_inside_ = false;
-    QueueDraw();
-  }
+void PanelMenuView::OnMaximizedRightClicked(int x, int y)
+{
+  MaximizedWindowWMAction(x, y, 3);
 }
 
 void PanelMenuView::OnMaximizedGrabStart(int x, int y)
