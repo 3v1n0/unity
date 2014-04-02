@@ -61,6 +61,9 @@ const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "
 const std::string SETTINGS_NAME = "org.gnome.desktop.wm.preferences";
 const std::string FONT_KEY = "titlebar-font";
 const std::string USE_SYSTEM_FONT_KEY = "titlebar-uses-system-font";
+const std::string ACTION_DOUBLE_CLICK = "action-double-click-titlebar";
+const std::string ACTION_MIDDLE_CLICK = "action-middle-click-titlebar";
+const std::string ACTION_RIGHT_CLICK = "action-right-click-titlebar";
 
 const std::string UNITY_SETTINGS_NAME = "com.canonical.Unity.Decorations";
 const std::string GRAB_WAIT_KEY = "grab-wait";
@@ -297,6 +300,49 @@ struct Style::Impl
     TYPE value;
     g_object_get(gtk_settings_get_default(), name.c_str(), &value, nullptr);
     return value;
+  }
+
+  WMAction WMActionFromString(std::string const& action) const
+  {
+    if (action == "toggle-shade")
+      return WMAction::TOGGLE_SHADE;
+    else if (action == "toggle-maximize")
+      return WMAction::TOGGLE_MAXIMIZE;
+    else if (action == "toggle-maximize-horizontally")
+      return WMAction::TOGGLE_MAXIMIZE_HORIZONTALLY;
+    else if (action == "toggle-maximize-vertically")
+      return WMAction::TOGGLE_MAXIMIZE_VERTICALLY;
+    else if (action == "minimize")
+      return WMAction::MINIMIZE;
+    else if (action == "shade")
+      return WMAction::SHADE;
+    else if (action == "menu")
+      return WMAction::MENU;
+    else if (action == "lower")
+      return WMAction::LOWER;
+
+    return WMAction::NONE;
+  }
+
+  WMAction WindowManagerAction(WMEvent event) const
+  {
+    std::string action_setting;
+
+    switch (event)
+    {
+      case WMEvent::DOUBLE_CLICK:
+        action_setting = ACTION_DOUBLE_CLICK;
+        break;
+      case WMEvent::MIDDLE_CLICK:
+        action_setting = ACTION_MIDDLE_CLICK;
+        break;
+      case WMEvent::RIGHT_CLICK:
+        action_setting = ACTION_RIGHT_CLICK;
+        break;
+    }
+
+    glib::String action_string(g_settings_get_string(settings_, action_setting.c_str()));
+    return WMActionFromString(action_string.Str());
   }
 
   inline GtkStateFlags GtkStateFromWidgetState(WidgetState ws)
@@ -774,6 +820,11 @@ unsigned Style::GlowSize() const
 nux::Color const& Style::GlowColor() const
 {
   return impl_->glow_color_;
+}
+
+WMAction Style::WindowManagerAction(WMEvent event) const
+{
+  return impl_->WindowManagerAction(event);
 }
 
 int Style::DoubleClickMaxDistance() const

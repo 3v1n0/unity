@@ -40,6 +40,33 @@ std::ostream& operator<<(std::ostream &os, Alignment const& a)
   return os;
 }
 
+std::ostream& operator<<(std::ostream &os, WMAction const& a)
+{
+  switch (a)
+  {
+    case WMAction::TOGGLE_SHADE:
+      return os << "toggle-shade";
+    case WMAction::TOGGLE_MAXIMIZE:
+      return os << "toggle-maximize";
+    case WMAction::TOGGLE_MAXIMIZE_HORIZONTALLY:
+      return os << "toggle-maximize_horizontally";
+    case WMAction::TOGGLE_MAXIMIZE_VERTICALLY:
+      return os << "toggle-maximize_vertically";
+    case WMAction::MINIMIZE:
+      return os << "minimize";
+    case WMAction::SHADE:
+      return os << "shade";
+    case WMAction::MENU:
+      return os << "menu";
+    case WMAction::LOWER:
+      return os << "lower";
+    case WMAction::NONE:
+      return os << "none";
+  }
+
+  return os;
+}
+
 std::ostream& operator<<(std::ostream &os, Border const& b)
 {
   return os << "top " << b.top << ", left " << b.left << ", right " << b.right << ", bottom " << b.bottom;
@@ -130,6 +157,13 @@ int main(int argc, char* argv[])
   std::cout << "Button 'maximize' state 'backdrop' '" << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP) << "'" << std::endl;
   std::cout << "Button 'maximize' state 'backdrop_prelight' '" << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP_PRELIGHT) << "'" << std::endl;
   std::cout << "Button 'maximize' state 'backdrop_pressed' '" << style->WindowButtonFile(WindowButtonType::MAXIMIZE, WidgetState::BACKDROP_PRESSED) << "'" << std::endl;
+  std::cout << "---" << std::endl;
+
+  std::cout << "---" << std::endl;
+
+  std::cout << "Double click action " << style->WindowManagerAction(WMEvent::DOUBLE_CLICK) << std::endl;
+  std::cout << "Middle click action " << style->WindowManagerAction(WMEvent::MIDDLE_CLICK) << std::endl;
+  std::cout << "Right click action " << style->WindowManagerAction(WMEvent::RIGHT_CLICK) << std::endl;
   std::cout << "---" << std::endl;
 
   std::cout << "Maximum Double click distance " << style->DoubleClickMaxDistance() << "px" << std::endl;
