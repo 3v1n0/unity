@@ -128,6 +128,7 @@ public:
   bool IsWindowMapped(Window window_id) const;
   bool IsWindowVisible(Window window_id) const;
   bool IsWindowOnTop(Window window_id) const;
+  bool IsWindowShaded(Window window_id) const;
   bool IsWindowClosable(Window window_id) const;
   bool IsWindowMinimized(Window window_id) const;
   bool IsWindowMinimizable(Window window_id) const;
@@ -140,6 +141,8 @@ public:
   void RestoreAt(Window window_id, int x, int y);
   void Minimize(Window window_id);
   void UnMinimize(Window window_id);
+  void Shade(Window window_id);
+  void UnShade(Window window_id);
   void Close(Window window_id);
   void Activate(Window window_id);
   void Raise(Window window_id);
