@@ -466,6 +466,7 @@ UnityScreen::~UnityScreen()
 
   unity_a11y_finalize();
   QuicklistManager::Destroy();
+  decoration::DataPool::Reset();
 
   reset_glib_logging();
 }
