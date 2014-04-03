@@ -1,3 +1,24 @@
+unity (7.2.0+14.04.20140403-0ubuntu1) trusty; urgency=low
+
+  [ Stephen M. Webb ]
+  * remove libsyncindicator from services/panel-service.c
+
+  [ Dimitri John Ledkov ]
+  * Drop U1 default shortcuts & indicator-sync recommendation. (LP:
+    #1300916) (LP: #1300916)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher: hide the launcher window when in auto-hide mode if it's
+    not presented (LP: #1301394)
+  * ApplicationLauncherIcon: recompute pips when the screen geometry
+    changes (LP: #1024101)
+  * UnityScreen: reset decoration::DataPool on destruction, otherwise we
+    won't have a valid screen ptr (LP: #1291243)
+  * DecorationsGrabEdge: Only perform tookit actions on right-click (LP:
+    #1301459)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 03 Apr 2014 11:10:36 +0000
+
 unity (7.2.0+14.04.20140402-0ubuntu1) trusty; urgency=medium
 
   [ Stephen M. Webb ]
