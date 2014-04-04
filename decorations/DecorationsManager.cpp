@@ -218,6 +218,20 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
         if (Window::Ptr const& win = GetWindowByXid(event->xclient.window))
           win->impl_->Decorate();
       }
+      else if (event->xclient.message_type == Atoms::toolkitAction)
+      {
+        Atom msg = event->xclient.data.l[0];
+        if (msg == Atoms::toolkitActionForceQuitDialog)
+        {
+          if (Window::Ptr const& win = GetWindowByXid(event->xclient.window))
+          {
+            Time time = event->xclient.data.l[1];
+            bool show = event->xclient.data.l[2];
+            win->impl_->ShowForceQuitDialog(show, time);
+            return true;
+          }
+        }
+      }
       break;
     case MotionNotify:
     case EnterNotify:

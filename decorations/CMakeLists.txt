@@ -33,6 +33,7 @@ set (DECORATION_SOURCES
      DecorationsMenuLayout.cpp
      DecorationsMenuEntry.cpp
      DecorationsMenuDropdown.cpp
+     DecorationsForceQuitDialog.cpp
      DecorationsDataPool.cpp
      )
 
