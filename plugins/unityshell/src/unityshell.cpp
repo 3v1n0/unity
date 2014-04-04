@@ -4285,12 +4285,35 @@ void UnityWindow::OnInitiateSpread()
   close_icon_state_ = decoration::WidgetState::NORMAL;
   middle_clicked_ = false;
   deco_win_->scaled = true;
+
+  if (IsInShowdesktopMode())
+  {
+    if (mShowdesktopHandler)
+    {
+      mShowdesktopHandler->FadeIn();
+    }
+  }
 }
 
 void UnityWindow::OnTerminateSpread()
 {
   CleanupCachedTextures();
   deco_win_->scaled = false;
+
+  if (IsInShowdesktopMode())
+  {
+    if (!(screen->activeWindow() == window->id()))
+    {
+      if (!mShowdesktopHandler)
+        mShowdesktopHandler.reset(new ShowdesktopHandler(static_cast <ShowdesktopHandlerWindowInterface *>(this),
+                                                         static_cast <compiz::WindowInputRemoverLockAcquireInterface *>(this)));
+      mShowdesktopHandler->FadeOut();
+    }
+    else
+    {
+      window->setShowDesktopMode (false);
+    }
+  }
 }
 
 void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix, GLWindowPaintAttrib const& attrib, unsigned mask)
