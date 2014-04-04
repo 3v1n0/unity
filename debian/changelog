@@ -1,3 +1,18 @@
+unity (7.2.0+14.04.20140404-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * Fix issue where windows that are in Show Desktop mode are selected
+    for spread have a blank preview. This fix will Fade Out the window
+    for Spread and Fade In the window again when Spread exits if that
+    window is not chosen. (LP: #1104236)
+
+  [ Marco Trevisan (Treviño) ]
+  * ForceQuitDialog: add a new "sheet style" dialog that is shown when a
+    window hangs Listen to compiz toolkit events and prompt a dialog
+    that allows to force-quit an hanging application. (LP: #698031)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 04 Apr 2014 21:35:41 +0000
+
 unity (7.2.0+14.04.20140403-0ubuntu1) trusty; urgency=low
 
   [ Stephen M. Webb ]
