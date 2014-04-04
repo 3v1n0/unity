@@ -81,7 +81,7 @@ struct Settings::Impl
     s->idle_activation_enabled = g_settings_get_boolean(gs_settings_, IDLE_ACTIVATION_ENABLED_KEY.c_str()) != FALSE;
     s->lock_enabled = g_settings_get_boolean(gs_settings_, LOCK_ENABLED.c_str()) != FALSE;
     s->lock_on_suspend = g_settings_get_boolean(gs_settings_, LOCK_ON_SUSPEND.c_str()) != FALSE;
-    s->lock_delay = g_settings_get_int(gs_settings_, LOCK_DELAY.c_str());
+    s->lock_delay = g_settings_get_uint(gs_settings_, LOCK_DELAY.c_str());
   }
 
   glib::Object<GSettings> greeter_settings_;

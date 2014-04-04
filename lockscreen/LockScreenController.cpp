@@ -113,6 +113,21 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
       window->SetOpacity(value);
     });
   });
+
+  fade_windows_animator_.finished.connect([this]() {
+    if (fade_windows_animator_.GetCurrentValue() == 1.0)
+    {
+      int lock_delay = Settings::Instance().lock_delay() * 1000;
+      lockscreen_delay_timeout_.reset(new glib::Timeout(lock_delay, [this](){
+        OnLockRequested();
+        return false;
+      }));
+    }
+    else
+    {
+      lockscreen_delay_timeout_.reset();
+    }
+  });
 }
 
 void Controller::OnPrimaryShieldMotion(int x, int y)
@@ -163,7 +178,6 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
     {
       shield->SetOpacity(fade_animator_.GetCurrentValue());
       shield->ShowWindow(true);
-      shield->PushToFront();
     }
   }
 
@@ -211,6 +225,12 @@ void Controller::EnsureFadeWindows(std::vector<nux::Geometry> const& monitors)
 
 void Controller::OnLockRequested()
 {
+  if (!Settings::Instance().lock_enabled())
+  {
+    LOG_DEBUG(logger) << "Failed to lock screen: lock is not enabled.";
+    return;
+  }
+
   if (IsLocked())
   {
     LOG_DEBUG(logger) << "Failed to lock screen: the screen is already locked.";

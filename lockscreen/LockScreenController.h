@@ -77,6 +77,7 @@ private:
   BlurType old_blur_type_;
 
   glib::Source::UniquePtr lockscreen_timeout_;
+  glib::Source::UniquePtr lockscreen_delay_timeout_;
 };
 
 }
