@@ -20,7 +20,6 @@
 #ifndef UNITYSHELL_SCREENSAVER_DBUS_MANAGER_H
 #define UNITYSHELL_SCREENSAVER_DBUS_MANAGER_H
 
-#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/SessionManager.h>
 
@@ -35,13 +34,15 @@ public:
   typedef std::shared_ptr<DBusManager> Ptr;
 
   DBusManager(session::Manager::Ptr const& manager);
-  virtual ~DBusManager() = default;
+  void SetActive(bool active);
 
 private:
   session::Manager::Ptr session_;
   glib::DBusServer server_;
   glib::DBusObject::Ptr object_;
-  connection::Manager connections_;
+
+  bool active_;
+  time_t time_;
 };
 
 } // session

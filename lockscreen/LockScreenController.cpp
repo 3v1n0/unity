@@ -44,7 +44,8 @@ const std::string DBUS_NAME = "com.canonical.Unity.Test.DisplayManager";
 
 DECLARE_LOGGER(logger, "unity.locksreen");
 
-Controller::Controller(session::Manager::Ptr const& session_manager,
+Controller::Controller(DBusManager::Ptr const& dbus_manager,
+                       session::Manager::Ptr const& session_manager,
                        UpstartWrapper::Ptr const& upstart_wrapper,
                        ShieldFactoryInterface::Ptr const& shield_factory,
                        bool test_mode)
@@ -65,7 +66,7 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
 
   session_manager_->presence_status_changed.connect([this](bool is_idle) {
-    if (is_idle && Settings::Instance().idle_activation_enabled())
+    if (is_idle)
     {
       EnsureFadeWindows(UScreen::GetDefault()->GetMonitors());
       animation::StartOrReverse(fade_windows_animator_, animation::Direction::FORWARD);
@@ -100,11 +101,8 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
 
       shields_.clear();
 
-      if (Settings::Instance().lockscreen_type() == Type::UNITY)
-      {
-        upstart_wrapper_->Emit("desktop-unlock");
-        indicators_.reset();
-      }
+      upstart_wrapper_->Emit("desktop-unlock");
+      indicators_.reset();
     }
   });
 
@@ -114,18 +112,54 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
     });
   });
 
-  fade_windows_animator_.finished.connect([this]() {
+  fade_windows_animator_.finished.connect([this, dbus_manager]() {
     if (fade_windows_animator_.GetCurrentValue() == 1.0)
     {
+      dbus_manager->SetActive(true);
+
       int lock_delay = Settings::Instance().lock_delay() * 1000;
+
       lockscreen_delay_timeout_.reset(new glib::Timeout(lock_delay, [this](){
         OnLockRequested();
         return false;
       }));
+
+      std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
+        shield->UnGrabPointer();
+        shield->UnGrabKeyboard();
+      });
+
+      std::for_each(fade_windows_.begin(), fade_windows_.end(), [this](nux::ObjectPtr<nux::BaseWindow> const& window) {
+          window->EnableInputWindow(true);
+          window->GrabPointer();
+          window->GrabKeyboard();
+
+          window->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
+            if (!dx && !dy)
+              return;
+
+            session_manager_->presence_status_changed.emit(false);
+          });
+      });
     }
     else
     {
+      dbus_manager->SetActive(false);
       lockscreen_delay_timeout_.reset();
+
+      std::for_each(fade_windows_.begin(), fade_windows_.end(), [this](nux::ObjectPtr<nux::BaseWindow> const& window) {
+        window->UnGrabPointer();
+        window->UnGrabKeyboard();
+      });
+
+      std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
+        if (!shield->primary())
+          return;
+
+        shield->GrabPointer();
+        shield->GrabKeyboard();
+      });
+
     }
   });
 }
@@ -153,8 +187,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 {
   int num_monitors = monitors.size();
   int shields_size = shields_.size();
-  bool unity_mode = (Settings::Instance().lockscreen_type() == Type::UNITY);
-  int primary = unity_mode ? UScreen::GetDefault()->GetMonitorWithMouse() : -1;
+  int primary = UScreen::GetDefault()->GetMonitorWithMouse();
 
   shields_.resize(num_monitors);
 
@@ -181,13 +214,10 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
     }
   }
 
-  if (unity_mode)
-  {
-    primary_shield_ = shields_[primary];
-    primary_shield_->primary = true;
-    auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
-    motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
-  }
+  primary_shield_ = shields_[primary];
+  primary_shield_->primary = true;
+  auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
+  motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
 }
 
 void Controller::EnsureFadeWindows(std::vector<nux::Geometry> const& monitors)
@@ -237,53 +267,33 @@ void Controller::OnLockRequested()
     return;
   }
 
+  std::for_each(fade_windows_.begin(), fade_windows_.end(), [](nux::ObjectPtr<nux::BaseWindow> const& window) {
+    window->ShowWindow(false);
+  });
+
+  fade_windows_.clear();
+  animation::SetValue(fade_windows_animator_, 0.0);
+
   lockscreen_timeout_.reset(new glib::Timeout(10, [this](){
-    if (WindowManager::Default().IsScreenGrabbed())
+
+    bool grabbed_by_fade = false;
+
+    std::for_each(fade_windows_.begin(), fade_windows_.end(), [&grabbed_by_fade](nux::ObjectPtr<nux::BaseWindow> const& window) {
+      grabbed_by_fade = grabbed_by_fade || window->OwnsPointerGrab();
+    });
+
+
+    if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_fade)
     {
       LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";
       return true; // keep trying
     }
 
-    auto lockscreen_type = Settings::Instance().lockscreen_type();
-
-    if (lockscreen_type == Type::NONE)
-    {
-      session_manager_->unlocked.emit();
-      return false;
-    }
-
-    if (lockscreen_type == Type::LIGHTDM)
-    {
-      LockScreenUsingDisplayManager();
-    }
-    else if (lockscreen_type == Type::UNITY)
-    {
-      LockScreenUsingUnity();
-    }
-
+    LockScreenUsingUnity();
     session_manager_->locked.emit();
 
     return false;
   }));
-}
-
-void Controller::LockScreenUsingDisplayManager()
-{
-  // TODO (andy) Move to a different class (DisplayManagerWrapper)
-  const char* session_path = g_getenv("XDG_SESSION_PATH");
-
-  if (!session_path)
-    return;
-
-  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
-                                                 session_path,
-                                                 "org.freedesktop.DisplayManager.Session",
-                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
-
-  proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
-
-  ShowShields();
-  animation::Skip(fade_animator_);
 }
 
 void Controller::LockScreenUsingUnity()
@@ -319,15 +329,7 @@ void Controller::OnUnlockRequested()
   if (!IsLocked())
     return;
 
-  auto lockscreen_type = Settings::Instance().lockscreen_type();
-
-  if (lockscreen_type == Type::NONE)
-    return;
-
   HideShields();
-
-  if (lockscreen_type == Type::LIGHTDM)
-    animation::Skip(fade_animator_);
 }
 
 void Controller::HideShields()

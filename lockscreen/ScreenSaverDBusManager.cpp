@@ -20,6 +20,7 @@
 #include "ScreenSaverDBusManager.h"
 
 #include "LockScreenSettings.h"
+#include "Variant.h"
 
 namespace unity
 {
@@ -44,11 +45,6 @@ R"(<node>
     <method name="SetActive">
       <arg type="b" direction="in" name="value" />
     </method>
-    <method name="ShowMessage">
-      <arg name="summary" direction="in" type="s"/>
-      <arg name="body" direction="in" type="s"/>
-      <arg name="icon" direction="in" type="s"/>
-    </method>
     <signal name="ActiveChanged">
       <arg name="new_value" type="b" />
     </signal>
@@ -59,38 +55,50 @@ R"(<node>
 DBusManager::DBusManager(session::Manager::Ptr const& session)
   : session_(session)
   , server_(dbus::NAME)
+  , active_(false)
+  , time_(0)
 {
   server_.AddObjects(dbus::INTROSPECTION_XML, dbus::OBJECT_PATH);
   object_ = server_.GetObject(dbus::INTERFACE);
 
-  object_->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) -> GVariant* {
+  object_->SetMethodsCallsHandler([this] (std::string const& method, GVariant* variant) -> GVariant* {
     if (method == "Lock")
     {
       session_->LockScreen();
     }
-    else if (method == "SimulateUserActivity")
-    {
-    }
     else if (method == "GetActive")
     {
-      return g_variant_new("(b)", TRUE);
+      return g_variant_new("(b)", active_ ? TRUE : FALSE);
     }
     else if (method == "GetActiveTime")
     {
+      if (time_)
+        return g_variant_new("(u)", time(NULL) - time_);
+      else
+        return g_variant_new("(u)", 0);
     }
     else if (method == "SetActive")
-    {}
-    else if (method == "ShowMessage")
-    {}
-
-
-    connections_.Add(session_->presence_status_changed.connect([this] (bool value) {
-      if (Settings::Instance().idle_activation_enabled())
-          object_->EmitSignal("ActiveChanged", g_variant_new("(b)", value));
-    }));
+    {
+      session_->presence_status_changed.emit(glib::Variant(variant).GetBool());
+    }
 
     return nullptr;
   });
+}
+
+void DBusManager::SetActive(bool active)
+{
+  if (active_ == active)
+    return;
+
+  active_ = active;
+
+  if (active_)
+    time_ = time(nullptr);
+  else
+    time_ = 0;
+
+  object_->EmitSignal("ActiveChanged", g_variant_new("(b)", active_ ? TRUE : FALSE));
 }
 
 } // lockscreen

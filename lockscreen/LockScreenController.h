@@ -25,6 +25,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "LockScreenShieldFactory.h"
+#include "ScreenSaverDBusManager.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 
@@ -36,7 +37,8 @@ namespace lockscreen
 class Controller : public sigc::trackable
 {
 public:
-  Controller(session::Manager::Ptr const& session_manager,
+  Controller(DBusManager::Ptr const& dbus_manager,
+             session::Manager::Ptr const& session_manager,
              UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
@@ -50,7 +52,6 @@ private:
 
   void EnsureShields(std::vector<nux::Geometry> const& monitors);
   void EnsureFadeWindows(std::vector<nux::Geometry> const& monitors);
-  void LockScreenUsingDisplayManager();
   void LockScreenUsingUnity();
   void ShowShields();
   void HideShields();
