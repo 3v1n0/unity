@@ -72,6 +72,9 @@ namespace
 {
 const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
 const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
+
+const std::string GNOME_LOCKDOWN_OPTIONS = "org.gnome.desktop.lockdown";
+const std::string DISABLE_LOCKSCREEN_KEY = "disable-lock-screen";
 }
 
 GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
@@ -80,8 +83,10 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   , can_shutdown_(true)
   , can_suspend_(false)
   , can_hibernate_(false)
+  , lock_disabled_(false)
   , pending_action_(shell::Action::NONE)
   , shell_server_(test_mode_ ? testing::DBUS_NAME : shell::DBUS_NAME)
+  , lockdown_settings_(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()))
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
@@ -143,12 +148,24 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
       LOG_INFO(logger) << "Can shutdown: " << can_shutdown_;
     }
   });
+
+  lock_disabled_changed_.Connect(lockdown_settings_, "changed::"+DISABLE_LOCKSCREEN_KEY, [this] (GSettings*, gchar*) {
+    UpdateLockDisabled();
+  });
+
+  UpdateLockDisabled();
 }
 
 GnomeManager::Impl::~Impl()
 {
   CancelAction();
   ClosedDialog();
+}
+
+void GnomeManager::Impl::UpdateLockDisabled()
+{
+  lock_disabled_ = g_settings_get_boolean(lockdown_settings_, DISABLE_LOCKSCREEN_KEY.c_str()) == TRUE;
+  LOG_INFO(logger) << "Screen locking is now " << (lock_disabled_ ? "disabled" : "enabled");
 }
 
 bool GnomeManager::Impl::InteractiveMode()
@@ -416,7 +433,12 @@ void GnomeManager::LockScreen()
   impl_->EnsureCancelPendingAction();
 
   // FIXME (andy) we should ask gnome-session to emit the logind signal
-  if (UserName().find("guest-") == 0)
+  if (impl_->lock_disabled_)
+  {
+    LOG_INFO(logger) << "Screen locking is disabled by administrator";
+    return;
+  }
+  else if (UserName().find("guest-") == 0)
   {
     LOG_INFO(logger) << "Impossible to lock a guest session";
     return;

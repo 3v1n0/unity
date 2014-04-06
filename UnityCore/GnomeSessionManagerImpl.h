@@ -23,6 +23,7 @@
 #include "GnomeSessionManager.h"
 #include "GLibDBusProxy.h"
 #include "GLibDBusServer.h"
+#include "GLibSignal.h"
 
 namespace unity
 {
@@ -59,17 +60,22 @@ struct GnomeManager::Impl
   void CallLogindMethod(std::string const& method, GVariant* parameters = nullptr, glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
   void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
   bool InteractiveMode();
+  void UpdateLockDisabled();
 
   GnomeManager* manager_;
   bool test_mode_;
   bool can_shutdown_;
   bool can_suspend_;
   bool can_hibernate_;
+  bool lock_disabled_;
 
   shell::Action pending_action_;
   glib::DBusServer shell_server_;
   glib::DBusObject::Ptr shell_object_;
   glib::DBusProxy::Ptr login_proxy_;
+
+  glib::Object<GSettings> lockdown_settings_;
+  glib::Signal<void, GSettings*, gchar*> lock_disabled_changed_;
 };
 
 } // namespace session
