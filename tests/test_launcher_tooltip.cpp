@@ -25,7 +25,6 @@
 #include "unity-shared/StaticCairoText.h"
 #include "launcher/Tooltip.h"
 
-#include <unity-shared/UnitySettings.h>
 #include "test_utils.h"
 
 namespace unity
@@ -73,7 +72,6 @@ class TestTooltip : public ::testing::Test
 protected:
   TestTooltip() : Test()
   {
-    Settings settings;
     tooltip = new TooltipMock();
   }
 

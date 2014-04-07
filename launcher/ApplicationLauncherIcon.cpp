@@ -34,6 +34,7 @@
 #include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UScreen.h"
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
@@ -87,6 +88,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   wm.window_moved.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMoved));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
   wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+  UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState))));
 
   EnsureWindowState();
 }
@@ -393,19 +395,34 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     {
       if (scaleWasActive) // #5 above
       {
-        Focus(arg);
+        if (minimize_window_on_click())
+        {
+          for (auto const& win : GetWindows(WindowFilter::ON_CURRENT_DESKTOP))
+            wm.Minimize(win->window_id());
+        }
+        else
+        {
+          Focus(arg);
+        }
       }
       else // #2 above
       {
         if (arg.source != ActionArg::Source::SWITCHER)
         {
-          WindowList windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP);
+          bool minimized = false;
 
-          if (windows.size() == 1 && minimize_window_on_click)
+          if (minimize_window_on_click)
           {
-            wm.Minimize(windows[0]->window_id());
+            WindowList const& windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP);
+
+            if (windows.size() == 1)
+            {
+              wm.Minimize(windows[0]->window_id());
+              minimized = true;
+            }
           }
-          else
+
+          if (!minimized)
           {
             Spread(true, 0, false);
           }

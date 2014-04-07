@@ -19,8 +19,6 @@
 
 #include <gmock/gmock.h>
 
-#include "unity-shared/UnitySettings.h"
-
 #include "BFBLauncherIcon.h"
 
 using namespace unity;
@@ -39,7 +37,6 @@ public:
 
 struct TestBFBLauncherIcon : testing::Test
 {
-  unity::Settings settings;
   MockBFBLauncherIcon bfb;
 };
 

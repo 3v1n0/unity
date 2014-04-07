@@ -1101,6 +1101,9 @@ void Launcher::SetHidden(bool hide_launcher)
   postreveal_mousemove_delta_x_ = 0;
   postreveal_mousemove_delta_y_ = 0;
 
+  if (!hide_launcher)
+    parent_->ShowWindow(true);
+
   if (nux::GetWindowThread()->IsEmbeddedWindow())
     parent_->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
 
@@ -1672,6 +1675,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute);
   bkg_box.width -= RIGHT_LINE_WIDTH.CP(cv_);
 
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER && bkg_box.x + bkg_box.width <= 0)
+    parent_->ShowWindow(false);
+
   nux::Color clear_colour = nux::Color(0x00000000);
 
   // clear region
@@ -1691,6 +1697,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
 
   float reveal_progress = hide_machine_.reveal_progress;
+
   if ((reveal_progress > 0 || last_reveal_progress_ > 0) && launcher_pressure_effect_.IsValid())
   {
     if (std::abs(last_reveal_progress_ - reveal_progress) <= .1f)

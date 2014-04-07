@@ -42,12 +42,12 @@ ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
   : IconTexture(icon_hint, TEXTURE_SIZE)
   , id(id_)
   , active(false)
+  , scale(DEFAULT_SCALE)
   , inactive_opacity_(0.4f)
-  , scale_(DEFAULT_SCALE)
 {
-  SetMinMaxSize(FOCUS_OVERLAY_WIDTH.CP(scale_), FOCUS_OVERLAY_HEIGHT.CP(scale_));
+  SetMinMaxSize(FOCUS_OVERLAY_WIDTH.CP(scale()), FOCUS_OVERLAY_HEIGHT.CP(scale()));
 
-  focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH.CP(scale_), FOCUS_OVERLAY_HEIGHT.CP(scale_)));
+  focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH.CP(scale()), FOCUS_OVERLAY_HEIGHT.CP(scale())));
 
   SetOpacity(inactive_opacity_);
 
@@ -56,26 +56,21 @@ ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
   active.changed.connect(sigc::mem_fun(this, &ScopeBarIcon::OnActiveChanged));
+  scale.changed.connect(sigc::mem_fun(this, &ScopeBarIcon::UpdateScale));
   key_nav_focus_change.connect([this](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
 }
 
-ScopeBarIcon::~ScopeBarIcon()
-{}
-
 void ScopeBarIcon::UpdateScale(double scale)
 {
-  if (scale_ != scale)
-  {
-    scale_ = scale;
-    int overlay_width  = FOCUS_OVERLAY_WIDTH.CP(scale_);
-    int overlay_height = FOCUS_OVERLAY_HEIGHT.CP(scale_);
+  int overlay_width  = FOCUS_OVERLAY_WIDTH.CP(scale);
+  int overlay_height = FOCUS_OVERLAY_HEIGHT.CP(scale);
 
-    SetMinMaxSize(overlay_width, overlay_height);
-    focus_layer_.reset(Style::Instance().FocusOverlay(overlay_width, overlay_height));
+  SetMinMaxSize(overlay_width, overlay_height);
+  focus_layer_.reset(Style::Instance().FocusOverlay(overlay_width, overlay_height));
 
-    SetSize(TEXTURE_SIZE.CP(scale_));
-    ReLoadIcon();
-  }
+  SetSize(TEXTURE_SIZE.CP(scale));
+  ReLoadIcon();
+  QueueDraw();
 }
 
 void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -105,7 +100,6 @@ void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
     int width = 0, height = 0;
     GetTextureSize(&width, &height);
 
-    nux::Color col(1.0f * opacity, 1.0f * opacity, 1.0f * opacity, opacity);
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
@@ -116,7 +110,7 @@ void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
                          height,
                          texture()->GetDeviceTexture(),
                          texxform,
-                         col);
+                         nux::color::White * opacity);
 
     graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
   }

@@ -113,8 +113,9 @@ def run_unity (verbose, debug, advanced_debug, compiz_path, compiz_args, log_fil
 
     try:
         debug_mode = 2 if advanced_debug else 1 if debug else 0
+        subprocess.call(["stop", "unity-panel-service"])
         unity_instance = process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_file)
-        subprocess.Popen(["killall", "unity-panel-service"])
+        subprocess.call(["start", "unity-panel-service"])
         unity_instance.wait()
     except KeyboardInterrupt, e:
         try:

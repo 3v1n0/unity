@@ -9,8 +9,8 @@ include (cmake/pch.cmake)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
-set (UNITY_MINOR 1)
-set (UNITY_MICRO 2)
+set (UNITY_MINOR 2)
+set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 set (UNITY_COMPONENTS_VERSION "6")
@@ -102,15 +102,14 @@ add_custom_target (pre-distcheck
        && bzr log --gnu-changelog > ChangeLog
        && echo "• Generating AUTHORS"
        && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
-       && echo "• Committing Release"
-       && bzr commit -m\"Release ${UNITY_VERSION}\" --unchanged
-       && echo "• Tagging Release"
-       && bzr tag ${UNITY_VERSION}
        && echo "• Running Distcheck"
   )
 
 add_custom_target (dist
-  COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
+  COMMAND echo "• Creating Tarball"
+       && bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
+       && echo "• Signing Tarball"
+       && gpg --armor --sign --detach-sig ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 add_dependencies(dist pre-distcheck)
@@ -129,19 +128,17 @@ add_custom_target (distcheck
 add_dependencies(distcheck dist)
 
 add_custom_target (post-distcheck
-  COMMAND echo "• Signing Tarball"
-       && gpg --armor --sign --detach-sig ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
-       && echo "• Pushing Branch"
-       && bzr push
-       && echo "• Publishing Tarball"
-       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
-       && echo ""
-       && echo "• Unity ${UNITY_VERSION} Released."
+  COMMAND echo "• Committing Release"
+       && bzr commit -m\"Release ${UNITY_VERSION}\" --unchanged
+       && echo "• Tagging Release"
+       && bzr tag ${UNITY_VERSION}
+       && echo "• Unity ${UNITY_VERSION} is ready for release."
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 add_dependencies(post-distcheck distcheck)
 
 add_custom_target (release)
-add_dependencies (release post-distcheck)
+add_dependencies (release distcheck)
 
 #
 # config.h

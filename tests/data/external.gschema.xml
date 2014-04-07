@@ -53,6 +53,21 @@
     </key>
   </schema>
 
+  <schema id="org.gnome.desktop.interface" path="/org/gnome/desktop/interface/">
+    <key type="u" name="scaling-factor">
+      <default>1</default>
+    </key>
+    <key type="d" name="text-scaling-factor">
+      <default>1.0</default>
+    </key>
+    <key type="s" name="font-name">
+      <default>'Ubuntu 11'</default>
+    </key>
+    <key type="i" name="cursor-size">
+      <default>24</default>
+    </key>
+  </schema>
+
   <schema id="com.canonical.unity-greeter" path="/com/canonical/unity-greeter/">
     <key type="s" name="logo">
       <default>'/usr/share/unity-greeter/logo.png'</default>

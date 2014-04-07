@@ -11,6 +11,7 @@ dash/ScopeView.cpp
 dash/previews/ApplicationPreview.cpp
 dash/previews/PreviewInfoHintWidget.cpp
 dash/previews/SocialPreview.cpp
+decorations/DecorationsForceQuitDialog.cpp
 hud/HudController.cpp
 hud/HudView.cpp
 launcher/ApplicationLauncherIcon.cpp

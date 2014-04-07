@@ -31,7 +31,6 @@ using namespace testing;
 #include "lockscreen/ScreenSaverDBusManager.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
-#include "unity-shared/UnitySettings.h"
 #include "test_mock_session_manager.h"
 #include "test_uscreen_mock.h"
 #include "test_utils.h"
@@ -93,7 +92,6 @@ struct TestLockScreenController : Test
   nux::animation::AnimationController animation_controller;
 
   MockUScreen uscreen;
-  unity::Settings unity_settings;
   unity::panel::Style panel_style;
   unity::lockscreen::Settings lockscreen_settings;
   session::MockManager::Ptr session_manager;

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="149.99998"
+   height="150"
+   id="svg6687"
+   version="1.1"
+   inkscape:version="0.48+devel r"
+   viewBox="0 0 149.99998 150"
+   sodipodi:docname="launcher_icon_shine_150.svg">
+  <defs
+     id="defs6689">
+    <radialGradient
+       r="26"
+       fy="30.96875"
+       fx="32"
+       cy="30.96875"
+       cx="32"
+       gradientTransform="matrix(4.4378697,0,0,2.2891717,494.98835,496.90169)"
+       gradientUnits="userSpaceOnUse"
+       id="radialGradient5161"
+       xlink:href="#linearGradient10250-86-1-5"
+       inkscape:collect="always" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient10250-86-1-5">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop10252-5-2-94" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop10254-4-7-54" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="194.2857"
+     inkscape:cy="469.28571"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata6692">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(474.99999,-851.64791)">
+    <g
+       transform="translate(-1037,286.64791)"
+       style="display:inline"
+       id="g5402"
+       inkscape:export-filename="PNG/launcher_icon_shine_150.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90">
+      <path
+         style="opacity:0.5;color:#000000;fill:url(#radialGradient5161);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+         d="M 574.84375,566 C 568.27771,566 563,571.27771 563,577.84375 l 0,75.0625 148,0 0,-75.0625 C 711,571.27771 705.72229,566 699.15625,566 l -124.3125,0 z"
+         id="path5121"
+         inkscape:connector-curvature="0" />
+      <rect
+         style="opacity:0.31645167;color:#000000;fill:none;stroke:none;stroke-width:4;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+         id="rect5382"
+         width="149.99998"
+         height="150"
+         x="562"
+         y="565" />
+    </g>
+  </g>
+</svg>

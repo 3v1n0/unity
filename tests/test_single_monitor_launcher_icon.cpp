@@ -20,7 +20,6 @@
 #include <gtest/gtest.h>
 
 #include "SingleMonitorLauncherIcon.h"
-#include "unity-shared/UnitySettings.h"
 
 using namespace unity;
 using namespace launcher;
@@ -30,7 +29,6 @@ namespace
 
 struct TestSingleMonitorLauncherIconMock : testing::Test
 {
-  unity::Settings settings;
 };
 
 TEST_F(TestSingleMonitorLauncherIconMock, Construction)

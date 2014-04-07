@@ -24,7 +24,6 @@
 #include "SessionController.h"
 #include "UBusMessages.h"
 #include "UBusWrapper.h"
-#include "UnitySettings.h"
 #include "WindowManager.h"
 #include "test_utils.h"
 
@@ -55,7 +54,6 @@ struct TestSessionController : testing::Test
 
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller;
-  unity::Settings settings;
   MockManager::Ptr manager ;
   ControllerWrap controller;
 };

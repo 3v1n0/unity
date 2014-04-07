@@ -28,7 +28,6 @@
 #include "hud/HudButton.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/UnitySettings.h"
 
 using namespace unity;
 
@@ -37,7 +36,6 @@ namespace
 
 TEST(TestHudButton, TestLabelOpacity)
 {
-  Settings unity_settings;
   dash::Style dash_style;
   nux::ObjectPtr<hud::HudButton> button(new hud::HudButton());
   nux::Layout* layout = button->GetLayout();

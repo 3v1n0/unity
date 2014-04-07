@@ -19,6 +19,7 @@
 
 #include <NuxCore/Logger.h>
 #include "DecorationsPriv.h"
+#include "DecorationsForceQuitDialog.h"
 #include "DecorationsEdgeBorders.h"
 #include "DecorationsGrabEdge.h"
 #include "DecorationsWindowButton.h"
@@ -47,7 +48,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , frame_(0)
   , dirty_geo_(true)
   , monitor_(0)
-  , cv_(unity::Settings::Instance().em())
+  , cv_(Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
     bg_textures_.clear();
@@ -709,6 +710,30 @@ void Window::Impl::UpdateMonitor()
   }
 }
 
+void Window::Impl::UpdateForceQuitDialogPosition()
+{
+  if (force_quit_)
+    force_quit_->UpdateDialogPosition();
+}
+
+void Window::Impl::ShowForceQuitDialog(bool show, Time time)
+{
+  if (show)
+  {
+    if (!force_quit_)
+    {
+      force_quit_ = std::make_shared<ForceQuitDialog>(win_, time);
+      force_quit_->close_request.connect([this] { force_quit_.reset(); });
+    }
+
+    force_quit_->time = time;
+  }
+  else
+  {
+    force_quit_.reset();
+  }
+}
+
 // Public APIs
 
 Window::Window(CompWindow* cwin)
@@ -765,6 +790,7 @@ void Window::UpdateDecorationPosition()
   impl_->UpdateMonitor();
   impl_->ComputeShadowQuads();
   impl_->UpdateDecorationTextures();
+  impl_->UpdateForceQuitDialogPosition();
   impl_->dirty_geo_ = false;
 }
 

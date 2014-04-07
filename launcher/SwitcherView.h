@@ -49,7 +49,7 @@ class SwitcherView : public ui::UnityWindowView
 public:
   typedef nux::ObjectPtr<SwitcherView> Ptr;
 
-  SwitcherView();
+  SwitcherView(ui::AbstractIconRenderer::Ptr const&);
 
   ui::LayoutWindow::Vector const& ExternalTargets() const;
 

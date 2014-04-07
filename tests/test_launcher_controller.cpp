@@ -33,7 +33,6 @@
 #include "VolumeLauncherIcon.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "PanelStyle.h"
-#include "UnitySettings.h"
 #include "UBusMessages.h"
 #include "logger_helper.h"
 #include "test_utils.h"
@@ -279,7 +278,6 @@ protected:
 
   std::shared_ptr<helper::CaptureLogOutput> logger_output_;
   MockUScreen uscreen;
-  Settings settings;
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
   MockXdndManager::Ptr xdnd_manager_;

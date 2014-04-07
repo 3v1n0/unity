@@ -23,7 +23,6 @@
 #include <glib-object.h>
 
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/UnitySettings.h"
 #include "UnityCore/GTKWrapper.h"
 #include "UnityCore/Result.h"
 #include "dash/ResultRendererTile.h"
@@ -72,7 +71,6 @@ class TestResultRenderer : public testing::Test
 public:
   TestResultRenderer() {}
 
-  unity::Settings settings;
   dash::Style style;
 };
 

@@ -23,8 +23,6 @@
 #include "launcher/ExpoLauncherIcon.h"
 #include "test_standalone_wm.h"
 
-#include "unity-shared/UnitySettings.h"
-
 using namespace unity;
 using namespace unity::launcher;
 
@@ -33,7 +31,6 @@ namespace
 
 struct TestExpoLauncherIcon : testing::Test
 {
-  unity::Settings settings;
   ExpoLauncherIcon icon;
   testwrapper::StandaloneWM wm;
 };

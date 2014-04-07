@@ -21,9 +21,10 @@
 #define UNITY_DECORATION_STYLE
 
 #include <NuxCore/Property.h>
-#include <NuxCore/Point.h>
-#include <NuxCore/Size.h>
+#include <NuxCore/Rect.h>
 #include <cairo/cairo.h>
+
+struct _GtkStyleContext;
 
 namespace unity
 {
@@ -99,6 +100,7 @@ public:
   nux::Property<std::string> title_font;
   nux::Property<bool> integrated_menus;
   nux::Property<unsigned> grab_wait;
+  nux::Property<double> font_scale;
 
   decoration::Border const& Border() const;
   decoration::Border const& InputBorder() const;
@@ -129,9 +131,9 @@ public:
   int DoubleClickMaxTimeDelta() const;
 
   void DrawSide(Side, WidgetState, cairo_t*, double width, double height);
-  void DrawTitle(std::string const&, WidgetState, cairo_t*, double width, double height);
+  void DrawTitle(std::string const&, WidgetState, cairo_t*, double width, double height, nux::Rect const& bg_geo = nux::Rect(), _GtkStyleContext* ctx = nullptr);
   void DrawMenuItem(WidgetState, cairo_t*, double width, double height);
-  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, double width, double height);
+  void DrawMenuItemEntry(std::string const&, WidgetState, cairo_t*, double width, double height, nux::Rect const& bg_geo = nux::Rect());
   void DrawMenuItemIcon(std::string const&, WidgetState, cairo_t*, int size);
 
 private:

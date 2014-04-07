@@ -29,7 +29,6 @@ using namespace testing;
 #include "launcher/MockLauncherIcon.h"
 #include "launcher/Launcher.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/UnitySettings.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/UBusMessages.h"
 #include "test_standalone_wm.h"
@@ -187,7 +186,6 @@ public:
     return icons;
   }
 
-  Settings settings;
   panel::Style panel_style;
   MockUScreen uscreen;
   testwrapper::StandaloneWM WM;

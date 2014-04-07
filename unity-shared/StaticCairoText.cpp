@@ -36,12 +36,13 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "CairoTexture.h"
+#include "UnitySettings.h"
 
 using namespace nux;
 
 namespace unity
 {
-struct StaticCairoText::Impl
+struct StaticCairoText::Impl : sigc::trackable
 {
   Impl(StaticCairoText* parent, std::string const& text);
   ~Impl();
@@ -128,8 +129,8 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
   GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
   g_signal_connect(settings, "notify::gtk-font-name",
                    (GCallback)FontChanged, this);
-  g_signal_connect(settings, "notify::gtk-xft-dpi",
-                   (GCallback)FontChanged, this);
+
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::OnFontChanged)));
 }
 
 StaticCairoText::Impl::~Impl()
@@ -552,9 +553,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
   PangoLayout*          layout   = NULL;
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
-  int                   dpi      = 0;
   GdkScreen*            screen   = gdk_screen_get_default();    // is not ref'ed
-  GtkSettings*          settings = gtk_settings_get_default();  // is not ref'ed
 
   if (!need_new_extent_cache_)
   {
@@ -581,19 +580,8 @@ Size StaticCairoText::Impl::GetTextExtents() const
   pango_layout_set_spacing(layout, line_spacing_ * PANGO_SCALE);
 
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
-  pango_cairo_context_set_font_options(pangoCtx,
-                                       gdk_screen_get_font_options(screen));
-  g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
-  if (dpi == -1)
-  {
-    // use some default DPI-value
-    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
-  }
-  else
-  {
-    pango_cairo_context_set_resolution(pangoCtx,
-                                       (float) dpi / (float) PANGO_SCALE);
-  }
+  pango_cairo_context_set_font_options(pangoCtx, gdk_screen_get_font_options(screen));
+  pango_cairo_context_set_resolution(pangoCtx, 96.0 * Settings::Instance().font_scaling());
   pango_layout_context_changed(layout);
 
   PangoRectangle ink_rect, logic_rect;
@@ -721,9 +709,7 @@ void StaticCairoText::Impl::DrawText(CacheTexture::Ptr const& texture)
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
-  int                   dpi        = 0;
   GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-  GtkSettings*          settings   = gtk_settings_get_default();  // not ref'ed
 
   std::string text = text_.substr(texture->start_index, texture->length);
 
@@ -746,22 +732,11 @@ void StaticCairoText::Impl::DrawText(CacheTexture::Ptr const& texture)
   SetAttributes(layout);
 
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
-  pango_cairo_context_set_font_options(pangoCtx,
-                                       gdk_screen_get_font_options(screen));
-  g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
-  if (dpi == -1)
-  {
-    // use some default DPI-value
-    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
-  }
-  else
-  {
-    pango_cairo_context_set_resolution(pangoCtx,
-                                       (float) dpi / (float) PANGO_SCALE);
-  }
+  pango_cairo_context_set_font_options(pangoCtx, gdk_screen_get_font_options(screen));
+  pango_cairo_context_set_resolution(pangoCtx, 96.0 * Settings::Instance().font_scaling());
+  pango_layout_context_changed(layout);
 
   Size result;
-  pango_layout_context_changed(layout);
   pango_layout_get_pixel_size(layout, &result.width, &result.height);
 
   if (std::ceil(result.width * scale_) > parent_->GetMaximumWidth())

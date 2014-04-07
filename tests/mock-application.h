@@ -27,7 +27,6 @@
 
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
-#include "unity-shared/UnitySettings.h"
 
 using namespace testing;
 
@@ -379,7 +378,6 @@ struct TestUnityAppBase : testing::Test
     unity_app_->actions_log_.clear();
   }
 
-  unity::Settings settings;
   MockApplication::Ptr unity_app_;
 };
 

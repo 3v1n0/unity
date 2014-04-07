@@ -21,7 +21,6 @@
 #include "test_mock_session_manager.h"
 #include "SessionButton.h"
 #include "SessionView.h"
-#include "UnitySettings.h"
 
 namespace unity
 {
@@ -91,7 +90,6 @@ struct TestSessionView : testing::Test
     nux::GetWindowCompositor().SetKeyFocusArea(nullptr);
   }
 
-  unity::Settings settings;
   MockManager::Ptr manager;
   ViewWrap view;
 };

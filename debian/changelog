@@ -1,3 +1,107 @@
+unity (7.2.0+14.04.20140404-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * Fix issue where windows that are in Show Desktop mode are selected
+    for spread have a blank preview. This fix will Fade Out the window
+    for Spread and Fade In the window again when Spread exits if that
+    window is not chosen. (LP: #1104236)
+
+  [ Marco Trevisan (Treviño) ]
+  * ForceQuitDialog: add a new "sheet style" dialog that is shown when a
+    window hangs Listen to compiz toolkit events and prompt a dialog
+    that allows to force-quit an hanging application. (LP: #698031)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 04 Apr 2014 21:35:41 +0000
+
+unity (7.2.0+14.04.20140403-0ubuntu1) trusty; urgency=low
+
+  [ Stephen M. Webb ]
+  * remove libsyncindicator from services/panel-service.c
+
+  [ Dimitri John Ledkov ]
+  * Drop U1 default shortcuts & indicator-sync recommendation. (LP:
+    #1300916) (LP: #1300916)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher: hide the launcher window when in auto-hide mode if it's
+    not presented (LP: #1301394)
+  * ApplicationLauncherIcon: recompute pips when the screen geometry
+    changes (LP: #1024101)
+  * UnityScreen: reset decoration::DataPool on destruction, otherwise we
+    won't have a valid screen ptr (LP: #1291243)
+  * DecorationsGrabEdge: Only perform tookit actions on right-click (LP:
+    #1301459)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 03 Apr 2014 11:10:36 +0000
+
+unity (7.2.0+14.04.20140402-0ubuntu1) trusty; urgency=medium
+
+  [ Stephen M. Webb ]
+  * Release 7.2.0.
+
+  [ Marco Trevisan (Treviño) ]
+  * CompizUtils: only shadow-decorate alpha windows that have full
+    decorations as well Since alpha windows might have custom shapes,
+    it's safer not to shadow-decorate them unless they don't provide,
+    for sure, a full decoration. (LP: #1281825)
+  * Panel, Decorations: draw the background under the text glyphs before
+    the text itself (LP: #723167)
+  * PanelMenuView: use panel style context for painting the panel title
+    (LP: #1296866)
+  * SpreadFilter: use launcher width, scale on HiDPI, match also
+    application names Launcher Width is now considered in setting the
+    offset of the scale filter (fixes padding when launcher is in
+    autohide mode). The search bar is correctly scaled when in HiDPI
+    mode. We use ApplicationManager and thus BAMF to match windows by
+    their name or app name. (LP: #1281297)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 02 Apr 2014 11:04:11 +0000
+
+unity (7.1.2+14.04.20140328.1-0ubuntu1) trusty; urgency=low
+
+  [ Robert Ancell ]
+  * Call pam_acct_mgmt and pam_chauthtok when unlocking screen (LP:
+    #1296443)
+
+  [ Stephen M. Webb ]
+  * restart unity-panel-service for only the current session when
+    restarting unity from the command line (LP: #777594)
+
+  [ Brandon Schaefer ]
+  * When we see an escape in lockscreen prompt, clear the password. (LP:
+    #1292647)
+
+  [ Andrea Azzarone ]
+  * Fixes the double lockscreen when switching users. (LP: #1291088)
+
+  [ Marco Trevisan (Treviño) ]
+  * Tooltip, QuicklistView: use the decoration shadow radius for
+    computing padding (LP: #1291407)
+  * 02_unity_setup_text_scale_factor: actually make it working, copy the
+    gnome value to unity (LP: #1298492)
+  * IconRenderer: scale textures when loading them based on the current
+    launcher scaling Add SVG textures for tiles and markers (thanks to
+    Matthieu James) to replace .pngs, also make them themable. (LP:
+    #1297588)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 28 Mar 2014 10:16:02 +0000
+
+unity (7.1.2+14.04.20140321-0ubuntu1) trusty; urgency=low
+
+  [ Andrea Azzarone ]
+  * Release the lockscreen_timeout (that we use to get the grab
+    properly) on unlock.
+
+  [ Marco Trevisan (Treviño) ]
+  * Dash: Use nux properties for scale and cairo device scaling
+  * UnitySettings: apply the unity scaling factor to global system
+    settings We basically use the integer part of our scaling factor as
+    the Gdk scaling factor, while we apply the point scaling to the Gdk
+    text-scaling-factor. In this way the readable items will match our
+    scaling. (LP: #1295436)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 21 Mar 2014 23:22:23 +0000
+
 unity (7.1.2+14.04.20140320.1-0ubuntu1) trusty; urgency=low
 
   [ Chris Townsend ]
@@ -1724,6 +1828,7 @@ unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 3317 (ubuntu-unity/next)
+
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   [ Sebastien Bacher ]

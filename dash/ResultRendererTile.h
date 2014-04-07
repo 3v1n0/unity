@@ -72,11 +72,9 @@ public:
 
   virtual void Preload(Result const& row);
   virtual void Unload(Result const& row);
-  
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
   void ReloadResult(Result const& row);
-  void UpdateScale(double scale) override;
 
   int Padding() const;
 

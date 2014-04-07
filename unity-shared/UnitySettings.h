@@ -54,6 +54,7 @@ public:
   nux::ROProperty<bool> double_click_activate;
   nux::Property<unsigned> lim_movement_thresold;
   nux::Property<unsigned> lim_double_click_wait;
+  nux::Property<double> font_scaling;
 
   sigc::signal<void> dpi_changed;
 

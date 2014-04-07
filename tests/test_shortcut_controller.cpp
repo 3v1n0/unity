@@ -23,7 +23,6 @@ using namespace testing;
 
 #include "shortcuts/BaseWindowRaiser.h"
 #include "shortcuts/ShortcutController.h"
-#include "unity-shared/UnitySettings.h"
 #include "WindowManager.h"
 #include "UBusMessages.h"
 using namespace unity;
@@ -89,7 +88,6 @@ public:
   }
 
   MockUScreen uscreen;
-  Settings unity_settings;
   MockBaseWindowRaiser::Ptr base_window_raiser_;
   AbstractModeller::Ptr modeller_;
   NiceMock<MockShortcutController> controller_;

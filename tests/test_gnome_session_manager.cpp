@@ -134,8 +134,6 @@ struct TestGnomeSessionManager : testing::Test
 {
   static void SetUpTestCase()
   {
-    Utils::init_gsettings_test_environment();
-
     can_shutdown_ = (g_random_int() % 2) ? true : false;
     can_suspend_ = (g_random_int() % 2) ? true : false;
     can_hibernate_ = (g_random_int() % 2) ? true : false;
@@ -246,8 +244,6 @@ struct TestGnomeSessionManager : testing::Test
 
   static void TearDownTestCase()
   {
-    Utils::reset_gsettings_test_environment();
-
     bool cancelled = false;
     bool closed = false;
     shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });

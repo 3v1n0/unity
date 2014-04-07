@@ -465,6 +465,7 @@ UnityScreen::~UnityScreen()
 
   unity_a11y_finalize();
   QuicklistManager::Destroy();
+  decoration::DataPool::Reset();
 
   reset_glib_logging();
 }
@@ -524,8 +525,13 @@ void UnityScreen::OnInitiateSpread()
     }
     else
     {
+      CompMatch windows_match;
+      for (auto xid : spread_filter_->FilteredWindows())
+        windows_match |= "xid="+std::to_string(xid);
+
       auto match = sScreen->getCustomMatch();
-      sScreen->relayoutSlots(match & ("ititle="+filter));
+      match &= windows_match;
+      sScreen->relayoutSlots(match);
     }
   });
 
@@ -2854,8 +2860,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   {
     if ((window->type() != CompWindowTypePopupMenuMask ||
         !uScreen->lockscreen_controller_->HasOpenMenu()) &&
-        window->resName() != "onboard" &&
-        !window->minimized())
+        !window->minimized() && window->resName() != "onboard")
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need
@@ -3732,9 +3737,9 @@ void UnityScreen::LockscreenRequested()
 
   launcher_controller_->ClearTooltips();
 
-  auto& adapter = PluginAdapter::Default();
-  if (adapter.IsScaleActive())
-    adapter.TerminateScale();
+  auto& wm = WindowManager::Default();
+  if (wm.IsScaleActive())
+    wm.TerminateScale();
 
   RaiseOSK();
 }
@@ -4278,12 +4283,35 @@ void UnityWindow::OnInitiateSpread()
   close_icon_state_ = decoration::WidgetState::NORMAL;
   middle_clicked_ = false;
   deco_win_->scaled = true;
+
+  if (IsInShowdesktopMode())
+  {
+    if (mShowdesktopHandler)
+    {
+      mShowdesktopHandler->FadeIn();
+    }
+  }
 }
 
 void UnityWindow::OnTerminateSpread()
 {
   CleanupCachedTextures();
   deco_win_->scaled = false;
+
+  if (IsInShowdesktopMode())
+  {
+    if (!(screen->activeWindow() == window->id()))
+    {
+      if (!mShowdesktopHandler)
+        mShowdesktopHandler.reset(new ShowdesktopHandler(static_cast <ShowdesktopHandlerWindowInterface *>(this),
+                                                         static_cast <compiz::WindowInputRemoverLockAcquireInterface *>(this)));
+      mShowdesktopHandler->FadeOut();
+    }
+    else
+    {
+      window->setShowDesktopMode (false);
+    }
+  }
 }
 
 void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix, GLWindowPaintAttrib const& attrib, unsigned mask)

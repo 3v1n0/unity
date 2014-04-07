@@ -98,6 +98,7 @@ struct Controller::Impl : public sigc::trackable
   // @todo move these view data into the SwitcherView class
   Controller::WindowCreator create_window_;
   MockableBaseWindow::Ptr view_window_;
+  ui::AbstractIconRenderer::Ptr icon_renderer_;
   nux::HLayout* main_layout_;
   nux::animation::AnimateValue<double> fade_animator_;
 

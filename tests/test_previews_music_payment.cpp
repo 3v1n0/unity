@@ -27,7 +27,6 @@
 #include <unity-shared/DashStyle.h>
 #include <unity-shared/PreviewStyle.h>
 #include <unity-shared/ThumbnailGenerator.h>
-#include "unity-shared/UnitySettings.h"
 
 #include <unity-protocol.h>
 #include "dash/previews/MusicPaymentPreview.h"
@@ -125,7 +124,6 @@ class TestMusicPaymentPreview : public ::testing::Test
   UnityProtocolPreviewPaymentType preview_type;
 
   // needed for styles
-  unity::Settings settings;
   dash::Style dash_style;
 
 };

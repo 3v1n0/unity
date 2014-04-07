@@ -23,7 +23,6 @@
 #include <NuxCore/AnimationController.h>
 
 #include "SpreadFilter.h"
-#include "UnitySettings.h"
 #include "DashStyle.h"
 #include "test_utils.h"
 
@@ -64,7 +63,6 @@ struct TestSpreadFilter : Test
     tick_source.tick(big_tick_);
   }
 
-  Settings settings_;
   dash::Style style_;
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller;

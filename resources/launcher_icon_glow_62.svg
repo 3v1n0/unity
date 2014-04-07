@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="62"
+   height="62"
+   id="svg9311"
+   version="1.1"
+   inkscape:version="0.48+devel r"
+   viewBox="0 0 62 62.000001"
+   sodipodi:docname="launcher_icon_glow_62.svg">
+  <defs
+     id="defs9313">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath5112-3">
+      <path
+         style="opacity:0.15;color:#000000;fill:#00ffff;stroke:none;stroke-width:2;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+         d="m 1,25 0,62 62,0 0,-62 -62,0 z m 9,6 44,0 c 1.662,0 3,1.338 3,3 l 0,44 c 0,1.662 -1.338,3 -3,3 L 10,81 C 8.338,81 7,79.662 7,78 L 7,34 c 0,-1.662 1.338,-3 3,-3 z"
+         id="path5114-1"
+         inkscape:connector-curvature="0" />
+    </clipPath>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:collect="always"
+       id="filter4296-4">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="1.56"
+         id="feGaussianBlur4298-5" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="-1812.5715"
+     inkscape:cy="-351.85714"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata9316">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-1531.8572,-118.50504)">
+    <g
+       transform="translate(1250.8572,93.505042)"
+       style="display:inline"
+       id="g4541"
+       inkscape:export-filename="PNG/launcher_icon_glow_62.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90">
+      <rect
+         y="25"
+         x="281"
+         height="62"
+         width="62"
+         id="rect4433-3"
+         style="opacity:0.49000005;color:#000000;fill:none;stroke:none;stroke-width:5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+      <rect
+         ry="4"
+         y="30"
+         x="6"
+         height="52"
+         width="52"
+         id="rect5162-4"
+         style="color:#000000;fill:none;stroke:#ffffff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;filter:url(#filter4296-4);enable-background:accumulate"
+         clip-path="url(#clipPath5112-3)"
+         transform="translate(280,0)" />
+    </g>
+  </g>
+</svg>

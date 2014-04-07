@@ -23,7 +23,6 @@ using namespace testing;
 #include "ShortcutView.h"
 #include "ShortcutModel.h"
 #include "MockShortcutHint.h"
-#include "UnitySettings.h"
 #include "LineSeparator.h"
 
 namespace unity
@@ -54,7 +53,6 @@ struct TestShortcutView : Test
     return std::make_shared<Model>(hints);
   }
 
-  Settings settings;
   MockShortcutView view;
 };
 

@@ -142,24 +142,17 @@ private:
   int CalculateX() const;
   int CalculateY() const;
 
-  //nux::CairoGraphics*   _cairo_graphics;
-  int                   _anchorX;
-  int                   _anchorY;
-  std::string           _labelText;
-  RawPixel              _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
+  int _anchorX;
+  int _anchorY;
+  std::string _labelText;
+  RawPixel _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
+  RawPixel _padding;
 
-  bool                  _mouse_down;
-
+  bool _mouse_down;
   //iIf true, suppress the Quicklist behaviour that is expected in Unity.
   // Keep the Quicklist on screen for testing and automation.
-  bool                  _enable_quicklist_for_testing;
+  bool _enable_quicklist_for_testing;
 
-  RawPixel _anchor_width;
-  RawPixel _anchor_height;
-  RawPixel _corner_radius;
-  RawPixel _padding;
-  RawPixel _left_padding_correction;
-  RawPixel _offset_correction;
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
   nux::VLayout* _item_layout;

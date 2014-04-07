@@ -1,1 +1,2 @@
 tools/migration-scripts/01_unity_change_dconf_path
+tools/migration-scripts/02_unity_setup_text_scale_factor
