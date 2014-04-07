@@ -34,7 +34,8 @@ namespace lockscreen
 {
 namespace
 {
-const unsigned int FADE_DURATION = 400;
+const unsigned int IDLE_FADE_DURATION = 10000;
+const unsigned int LOCK_FADE_DURATION = 400;
 }
 
 namespace testing
@@ -52,14 +53,15 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   : session_manager_(session_manager)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
-  , fade_animator_(FADE_DURATION)
-  , fade_windows_animator_(/* FIXME */ 10000)
+  , fade_animator_(LOCK_FADE_DURATION)
+  , fade_windows_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
 {
   uscreen_connection_ = UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
     EnsureShields(monitors);
     EnsureFadeWindows(monitors);
   });
+
   uscreen_connection_->block();
 
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
