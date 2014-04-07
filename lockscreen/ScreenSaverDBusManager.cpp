@@ -35,7 +35,6 @@ const std::string INTROSPECTION_XML =
 R"(<node>
   <interface name="org.gnome.ScreenSaver">
     <method name="Lock" />
-    <method name="SimulateUserActivity" />
     <method name="GetActive">
       <arg type="b" direction="out" name="value" />
     </method>
