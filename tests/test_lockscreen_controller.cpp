@@ -28,6 +28,7 @@ using namespace testing;
 
 
 #include "lockscreen/LockScreenSettings.h"
+#include "lockscreen/ScreenSaverDBusManager.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UnitySettings.h"
@@ -45,22 +46,8 @@ namespace
 const unsigned ANIMATION_DURATION = 400 * 1000; // in microseconds
 const unsigned TICK_DURATION =  10 * 1000;
 
-const std::string TEST_SERVER_NAME = "com.canonical.Unity.Test.DisplayManager";
-const std::string LIGHTDM_PATH = "/org/freedesktop/DisplayManager/Session0";
-
 }
 
-namespace introspection
-{
-
-const std::string LIGHTDM =
-R"(<node>
-  <interface name="org.freedesktop.DisplayManager.Session">
-    <method name="Lock"/>
-  </interface>
-</node>)";
-
-}
 
 struct MockShield : AbstractShield
 {
@@ -84,22 +71,19 @@ struct TestLockScreenController : Test
   TestLockScreenController()
     : animation_controller(tick_source)
     , session_manager(std::make_shared<NiceMock<session::MockManager>>())
+    , dbus_manager(std::make_shared<DBusManager>(session_manager))
     , upstart_wrapper(std::make_shared<UpstartWrapper>())
     , shield_factory(std::make_shared<ShieldFactoryMock>())
-    , controller(session_manager, upstart_wrapper, shield_factory)
-  {
-    lightdm_ = std::make_shared<glib::DBusServer>(TEST_SERVER_NAME);
-    lightdm_->AddObjects(introspection::LIGHTDM, LIGHTDM_PATH);
-
-    Utils::WaitUntilMSec([] { return lightdm_->IsConnected(); });
-  }
+    , controller(dbus_manager, session_manager, upstart_wrapper, shield_factory)
+  {}
 
   struct ControllerWrap : Controller
   {
-    ControllerWrap(session::Manager::Ptr const& session_manager,
+    ControllerWrap(DBusManager::Ptr const& dbus_manager,
+                   session::Manager::Ptr const& session_manager,
                    UpstartWrapper::Ptr const& upstart_wrapper,
                    ShieldFactoryInterface::Ptr const& shield_factory)
-      : Controller(session_manager, upstart_wrapper, shield_factory, /* test_mode */ true)
+      : Controller(dbus_manager, session_manager, upstart_wrapper, shield_factory, /* test_mode */ true)
     {}
 
     using Controller::shields_;
@@ -112,15 +96,13 @@ struct TestLockScreenController : Test
   unity::Settings unity_settings;
   unity::panel::Style panel_style;
   unity::lockscreen::Settings lockscreen_settings;
-  static glib::DBusServer::Ptr lightdm_;
   session::MockManager::Ptr session_manager;
+  DBusManager::Ptr dbus_manager;
   unity::UpstartWrapper::Ptr upstart_wrapper;
 
   ShieldFactoryMock::Ptr shield_factory;
   ControllerWrap controller;
 };
-
-glib::DBusServer::Ptr TestLockScreenController::lightdm_;
 
 TEST_F(TestLockScreenController, Construct)
 {
@@ -131,7 +113,7 @@ TEST_F(TestLockScreenController, DisconnectUScreenSignalsOnDestruction)
 {
   size_t before = uscreen.changed.size();
   {
-    Controller dummy(session_manager);
+    Controller dummy(dbus_manager, session_manager);
   }
   ASSERT_EQ(before, uscreen.changed.size());
 
@@ -143,7 +125,7 @@ TEST_F(TestLockScreenController, DisconnectSessionManagerSignalsOnDestruction)
 {
   size_t before = session_manager->unlock_requested.size();
   {
-    Controller dummy(session_manager);
+    Controller dummy(dbus_manager, session_manager);
   }
   ASSERT_EQ(before, session_manager->unlock_requested.size());
 
@@ -154,111 +136,6 @@ TEST_F(TestLockScreenController, UScreenChangedIgnoredOnScreenUnlocked)
 {
   uscreen.SetupFakeMultiMonitor(/*primary*/ 0, /*emit_change*/ true);
   EXPECT_TRUE(controller.shields_.empty());
-}
-
-TEST_F(TestLockScreenController, LockScreenTypeNone)
-{
-  lockscreen_settings.lockscreen_type = Type::NONE;
-  session_manager->lock_requested.emit();
-
-  ASSERT_EQ(0, controller.shields_.size());
-}
-
-TEST_F(TestLockScreenController, LockScreenTypeLightdmOnSingleMonitor)
-{
-  g_setenv("XDG_SESSION_PATH", LIGHTDM_PATH.c_str(), true);
-
-  bool lock_called = false;
-
-  lightdm_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
-    if (method == "Lock")
-      lock_called = true;
-
-    return nullptr;
-  });
-
-  lockscreen_settings.lockscreen_type = Type::LIGHTDM;
-  session_manager->lock_requested.emit();
-
-  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
-  Utils::WaitUntilMSec([this]{ return controller.shields_.at(0)->primary() == false; });
-  Utils::WaitUntilMSec(lock_called);
-}
-
-TEST_F(TestLockScreenController, LockScreenTypeLightdmOnMultiMonitor)
-{
-  g_setenv("XDG_SESSION_PATH", LIGHTDM_PATH.c_str(), true);
-
-  bool lock_called = false;
-
-  lightdm_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
-    if (method == "Lock")
-      lock_called = true;
-
-    return nullptr;
-  });
-
-  lockscreen_settings.lockscreen_type = Type::LIGHTDM;
-  uscreen.SetupFakeMultiMonitor(/*primary*/ 0, /*emit_change*/ true);
-  session_manager->lock_requested.emit();
-
-  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == monitors::MAX; });
-
-  for (unsigned int i=0; i < monitors::MAX; ++i)
-    Utils::WaitUntilMSec([this, i]{ return controller.shields_.at(i)->primary() == false; });
-
-  Utils::WaitUntilMSec(lock_called);
-}
-
-TEST_F(TestLockScreenController, UnlockScreenTypeLightdmOnSingleMonitor)
-{
-  g_setenv("XDG_SESSION_PATH", LIGHTDM_PATH.c_str(), true);
-
-  bool lock_called = false;
-
-  lightdm_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
-    if (method == "Lock")
-      lock_called = true;
-
-    return nullptr;
-  });
-
-  lockscreen_settings.lockscreen_type = Type::LIGHTDM;
-  session_manager->lock_requested.emit();
-
-  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
-  Utils::WaitUntilMSec(lock_called);
-
-  session_manager->unlock_requested.emit();
-  tick_source.tick(ANIMATION_DURATION);
-
-  ASSERT_EQ(0, controller.shields_.size());
-}
-
-TEST_F(TestLockScreenController, UnlockScreenTypeLightdmOnMultiMonitor)
-{
-  g_setenv("XDG_SESSION_PATH", LIGHTDM_PATH.c_str(), true);
-
-  bool lock_called = false;
-
-  lightdm_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
-    if (method == "Lock")
-      lock_called = true;
-
-    return nullptr;
-  });
-
-  lockscreen_settings.lockscreen_type = Type::LIGHTDM;
-  uscreen.SetupFakeMultiMonitor(/*primary*/ 0, /*emit_change*/ true);
-  session_manager->lock_requested.emit();
-
-  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == monitors::MAX; });
-  Utils::WaitUntilMSec(lock_called);
-
-  session_manager->unlock_requested.emit();
-  tick_source.tick(ANIMATION_DURATION);
-
-  ASSERT_EQ(0, controller.shields_.size());
 }
 
 TEST_F(TestLockScreenController, LockScreenOnSingleMonitor)
