@@ -112,14 +112,8 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     presence_proxy_->Connect("StatusChanged", [this](GVariant* variant) {
       auto status = glib::Variant(variant).GetUInt32();
       bool is_idle = (status == 3);
-            std::cout << "gnome-session-manager status changed" << is_idle << std::endl;
-
       manager_->presence_status_changed.emit(is_idle);
     });
-
-    auto status = presence_proxy_->GetProperty("status").GetUInt32();
-    bool is_idle = (status == 3);
-    manager_->presence_status_changed.emit(is_idle);
   }
 
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {

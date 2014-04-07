@@ -27,15 +27,6 @@ namespace unity
 namespace lockscreen
 {
 
-enum class Type : int
-{
-  NONE = 0, // Do nothing
-  LIGHTDM, // Fallback to lightdm
-  UNITY // Use custom Unity lockscreen
-};
-
-// TODO (andy) use the same options of unity-greeter
-
 class Settings
 {
 public:
@@ -44,7 +35,6 @@ public:
 
   static Settings& Instance();
 
-  nux::Property<Type> lockscreen_type;
   nux::Property<std::string> font_name;
   nux::Property<std::string> logo;
   nux::Property<std::string> background;
@@ -53,7 +43,6 @@ public:
   nux::Property<bool> use_user_background;
   nux::Property<bool> draw_grid;
 
-  nux::Property<bool> idle_activation_enabled;
   nux::Property<int> lock_delay;
   nux::Property<bool> lock_enabled;
   nux::Property<bool> lock_on_suspend;
