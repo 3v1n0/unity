@@ -110,9 +110,16 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
                                                         "org.gnome.SessionManager.Presence");
 
     presence_proxy_->Connect("StatusChanged", [this](GVariant* variant) {
-      auto status = glib::Variant(variant).GetUInt32();
-      bool is_idle = (status == 3);
-      manager_->presence_status_changed.emit(is_idle);
+      enum class PresenceStatus : unsigned
+      {
+        AVAILABLE = 0,
+        INVISIBLE,
+        BUSY,
+        IDLE
+      };
+
+      auto status = PresenceStatus(glib::Variant(variant).GetUInt32());
+      manager_->presence_status_changed.emit(status == PresenceStatus::IDLE);
     });
   }
 
