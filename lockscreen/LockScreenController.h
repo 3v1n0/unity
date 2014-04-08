@@ -52,6 +52,7 @@ private:
 
   void EnsureShields(std::vector<nux::Geometry> const& monitors);
   void EnsureBlankWindow();
+  void HideBlankWindow();
   void LockScreen();
   void ShowShields();
   void HideShields();

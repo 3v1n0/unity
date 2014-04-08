@@ -241,6 +241,16 @@ void Controller::RequestPromptScreenLock()
   skip_animation_ = false;
 }
 
+void Controller::HideBlankWindow()
+{
+  if (!blank_window_)
+    return;
+
+  blank_window_->ShowWindow(false);
+  blank_window_.Release();
+  animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
+}
+
 void Controller::OnLockRequested()
 {
   if (IsLocked())
@@ -249,13 +259,7 @@ void Controller::OnLockRequested()
     return;
   }
 
-  if (blank_window_)
-  {
-    blank_window_->ShowWindow(false);
-    blank_window_.Release();
-    animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
-  }
-
+  HideBlankWindow();
   bool skip_animation = skip_animation_;
 
   lockscreen_timeout_.reset(new glib::Timeout(10, [this, skip_animation] {
@@ -284,11 +288,9 @@ void Controller::OnPresenceStatusChanged(bool is_idle)
     EnsureBlankWindow();
     animation::StartOrReverse(blank_window_animator_, animation::Direction::FORWARD);
   }
-  else if (blank_window_)
+  else
   {
-    blank_window_->ShowWindow(false);
-    blank_window_.Release();
-    animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
+    HideBlankWindow();
   }
 }
 
@@ -320,6 +322,7 @@ void Controller::ShowShields()
 
 void Controller::SimulateActivity()
 {
+  HideBlankWindow();
   XResetScreenSaver(nux::GetGraphicsDisplay()->GetX11Display());
 }
 
