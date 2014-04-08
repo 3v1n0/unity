@@ -20,6 +20,7 @@
 #ifndef UNITYSHELL_SCREENSAVER_DBUS_MANAGER_H
 #define UNITYSHELL_SCREENSAVER_DBUS_MANAGER_H
 
+#include <NuxCore/Property.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/SessionManager.h>
 
@@ -33,10 +34,13 @@ class DBusManager
 public:
   typedef std::shared_ptr<DBusManager> Ptr;
 
-  DBusManager(session::Manager::Ptr const& manager);
-  void SetActive(bool active);
+  DBusManager(session::Manager::Ptr const&);
+
+  nux::Property<bool> active;
 
 private:
+  void SetActive(bool active);
+
   session::Manager::Ptr session_;
   glib::DBusServer server_;
   glib::DBusObject::Ptr object_;

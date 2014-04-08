@@ -105,7 +105,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   blank_window_animator_.finished.connect([this, dbus_manager] {
     if (blank_window_animator_.GetCurrentValue() == 1.0)
     {
-      dbus_manager->SetActive(true);
+      dbus_manager->active = true;
 
       if (Settings::Instance().lock_on_blank())
       {
@@ -139,7 +139,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     }
     else
     {
-      dbus_manager->SetActive(false);
+      dbus_manager->active = false;
       lockscreen_delay_timeout_.reset();
 
       if (blank_window_)

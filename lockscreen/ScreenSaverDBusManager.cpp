@@ -52,11 +52,12 @@ R"(<node>
 }
 
 DBusManager::DBusManager(session::Manager::Ptr const& session)
-  : session_(session)
+  : active(false)
+  , session_(session)
   , server_(dbus::NAME)
-  , active_(false)
   , time_(0)
 {
+  active.changed.connect(sigc::mem_fun(this, &DBusManager::SetActive));
   server_.AddObjects(dbus::INTROSPECTION_XML, dbus::OBJECT_PATH);
   object_ = server_.GetObject(dbus::INTERFACE);
 
@@ -72,7 +73,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     else if (method == "GetActiveTime")
     {
       if (time_)
-        return g_variant_new("(u)", time(NULL) - time_);
+        return g_variant_new("(u)", time(nullptr) - time_);
       else
         return g_variant_new("(u)", 0);
     }
@@ -87,17 +88,12 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
 
 void DBusManager::SetActive(bool active)
 {
-  if (active_ == active)
-    return;
-
-  active_ = active;
-
-  if (active_)
+  if (active)
     time_ = time(nullptr);
   else
     time_ = 0;
 
-  object_->EmitSignal("ActiveChanged", g_variant_new("(b)", active_ ? TRUE : FALSE));
+  object_->EmitSignal("ActiveChanged", g_variant_new("(b)", active ? TRUE : FALSE));
 }
 
 } // lockscreen
