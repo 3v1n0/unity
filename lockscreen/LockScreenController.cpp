@@ -34,7 +34,7 @@ namespace lockscreen
 {
 namespace
 {
-const unsigned int IDLE_FADE_DURATION = 10000;
+const unsigned int IDLE_FADE_DURATION = 1000;
 const unsigned int LOCK_FADE_DURATION = 400;
 }
 
@@ -102,12 +102,16 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     if (blank_window_animator_.GetCurrentValue() == 1.0)
     {
       dbus_manager->SetActive(true);
-      int lock_delay = Settings::Instance().lock_delay();
 
-      lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
-        session_manager_->lock_requested.emit();
-        return false;
-      }));
+      if (Settings::Instance().lock_enabled())
+      {
+        int lock_delay = Settings::Instance().lock_delay();
+
+        lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
+          session_manager_->lock_requested.emit();
+          return false;
+        }));
+      }
 
       std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
         shield->UnGrabPointer();
@@ -122,7 +126,10 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
         blank_window_->PushToFront();
         blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
           if (dx || dy)
+          {
             session_manager_->presence_status_changed.emit(false);
+            lockscreen_delay_timeout_.reset();
+          }
         });
       }
     }
