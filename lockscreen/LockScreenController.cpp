@@ -102,10 +102,9 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     if (blank_window_animator_.GetCurrentValue() == 1.0)
     {
       dbus_manager->SetActive(true);
+      int lock_delay = Settings::Instance().lock_delay();
 
-      int lock_delay = Settings::Instance().lock_delay() * 1000;
-
-      lockscreen_delay_timeout_.reset(new glib::Timeout(lock_delay, [this] {
+      lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
         session_manager_->lock_requested.emit();
         return false;
       }));
