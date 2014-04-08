@@ -44,6 +44,7 @@ R"(<node>
     <method name="SetActive">
       <arg type="b" direction="in" name="value" />
     </method>
+    <method name="SimulateUserActivity" />
     <signal name="ActiveChanged">
       <arg name="new_value" type="b" />
     </signal>
@@ -80,6 +81,10 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     else if (method == "SetActive")
     {
       session_->presence_status_changed.emit(glib::Variant(variant).GetBool());
+    }
+    else if (method == "SimulateUserActivity")
+    {
+      simulate_activity.emit();
     }
 
     return nullptr;
