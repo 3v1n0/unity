@@ -37,8 +37,7 @@ namespace lockscreen
 class Controller : public sigc::trackable
 {
 public:
-  Controller(DBusManager::Ptr const& dbus_manager,
-             session::Manager::Ptr const& session_manager,
+  Controller(DBusManager::Ptr const&, session::Manager::Ptr const&,
              UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
@@ -57,6 +56,7 @@ private:
   void ShowShields();
   void HideShields();
   void RequestPromptScreenLock();
+  void SimulateActivity();
 
   void OnLockRequested();
   void OnUnlockRequested();
@@ -67,6 +67,7 @@ private:
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
 
+  DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
   indicator::Indicators::Ptr indicators_;
   UpstartWrapper::Ptr upstart_wrapper_;

@@ -46,6 +46,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
                        ShieldFactoryInterface::Ptr const& shield_factory,
                        bool test_mode)
   : opacity([this] { return fade_animator_.GetCurrentValue(); })
+  , dbus_manager_(dbus_manager)
   , session_manager_(session_manager)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
@@ -67,6 +68,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       RequestPromptScreenLock();
   });
 
+  dbus_manager_->simulate_activity.connect(sigc::mem_fun(this, &Controller::SimulateActivity));
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
   session_manager_->presence_status_changed.connect(sigc::mem_fun(this, &Controller::OnPresenceStatusChanged));
@@ -102,10 +104,10 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       blank_window_->SetOpacity(value);
   });
 
-  blank_window_animator_.finished.connect([this, dbus_manager] {
+  blank_window_animator_.finished.connect([this] {
     if (blank_window_animator_.GetCurrentValue() == 1.0)
     {
-      dbus_manager->active = true;
+      dbus_manager_->active = true;
 
       if (Settings::Instance().lock_on_blank())
       {
@@ -139,7 +141,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     }
     else
     {
-      dbus_manager->active = false;
+      dbus_manager_->active = false;
       lockscreen_delay_timeout_.reset();
 
       if (blank_window_)
@@ -314,6 +316,11 @@ void Controller::ShowShields()
   });
 
   animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+}
+
+void Controller::SimulateActivity()
+{
+  XResetScreenSaver(nux::GetGraphicsDisplay()->GetX11Display());
 }
 
 void Controller::OnUnlockRequested()
