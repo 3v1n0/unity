@@ -51,6 +51,7 @@ public:
 
   // <void, primary_monitor, monitors>
   sigc::signal<void, int, std::vector<nux::Geometry> const&> changed;
+  sigc::signal<void> suspending;
   sigc::signal<void> resuming;
 
   const std::string GetMonitorName(int output_number) const;

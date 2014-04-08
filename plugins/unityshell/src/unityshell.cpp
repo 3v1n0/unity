@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
- * unity.cpp
+ * unity.cpp 
  *
  * Copyright (c) 2010-11 Canonical Ltd.
  *
@@ -2801,7 +2801,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    */
   if (G_UNLIKELY(is_nux_window_) &&
      (!uScreen->lockscreen_controller_->IsLocked() ||
-      uScreen->lockscreen_controller_->Opacity() != 1.0f))
+      uScreen->lockscreen_controller_->opacity() != 1.0f))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
@@ -2866,7 +2866,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       // (well, it works too much, as it applies to menus too), so we need
       // to paint the windows at the proper opacity, overriding any other
       // paint plugin (animation, fade?) that might interfere with us.
-      wAttrib.opacity = COMPIZ_COMPOSITE_OPAQUE * (1.0f - uScreen->lockscreen_controller_->Opacity());
+      wAttrib.opacity = COMPIZ_COMPOSITE_OPAQUE * (1.0f - uScreen->lockscreen_controller_->opacity());
       int old_index = gWindow->glPaintGetCurrentIndex();
       gWindow->glPaintSetCurrentIndex(MAXSHORT);
       bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
@@ -3809,6 +3809,7 @@ void UnityScreen::initLauncher()
 
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
+  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::LockscreenRequested));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
@@ -3816,9 +3817,8 @@ void UnityScreen::initLauncher()
   // Setup Lockscreen Controller
   screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, manager);
+  lockscreen_controller_->opacity.changed.connect(sigc::hide(sigc::mem_fun(cScreen, &CompositeScreen::damageScreen)));
   UpdateActivateIndicatorsKey();
-
-  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::LockscreenRequested));
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
