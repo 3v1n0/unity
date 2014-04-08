@@ -53,9 +53,10 @@ private:
 
   void EnsureShields(std::vector<nux::Geometry> const& monitors);
   void EnsureBlankWindow();
-  void LockScreenUsingUnity();
+  void LockScreen();
   void ShowShields();
   void HideShields();
+  void RequestPromptScreenLock();
 
   void OnLockRequested();
   void OnUnlockRequested();
@@ -74,11 +75,13 @@ private:
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
 
+  bool test_mode_;
+  bool skip_animation_;
+  BlurType old_blur_type_;
+
   connection::Wrapper uscreen_connection_;
   connection::Wrapper suspend_connection_;
   connection::Wrapper motion_connection_;
-  bool test_mode_;
-  BlurType old_blur_type_;
 
   glib::Source::UniquePtr lockscreen_timeout_;
   glib::Source::UniquePtr lockscreen_delay_timeout_;

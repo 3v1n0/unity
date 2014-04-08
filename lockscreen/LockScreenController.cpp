@@ -34,7 +34,7 @@ namespace lockscreen
 {
 namespace
 {
-const unsigned int IDLE_FADE_DURATION = 1000;
+const unsigned int IDLE_FADE_DURATION = 10000;
 const unsigned int LOCK_FADE_DURATION = 400;
 }
 
@@ -52,6 +52,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , fade_animator_(LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
+  , skip_animation_(false)
 {
   auto* uscreen = UScreen::GetDefault();
   uscreen_connection_ = uscreen->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
@@ -63,7 +64,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
 
   suspend_connection_ = uscreen->suspending.connect([this] {
     if (Settings::Instance().lock_on_suspend())
-      session_manager_->LockScreen();
+      RequestPromptScreenLock();
   });
 
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
@@ -111,7 +112,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
         int lock_delay = Settings::Instance().lock_delay();
 
         lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
-          session_manager_->LockScreen();
+          RequestPromptScreenLock();
           return false;
         }));
       }
@@ -231,6 +232,13 @@ void Controller::EnsureBlankWindow()
   blank_window_->SetMinMaxSize(screen_geo.width, screen_geo.height);
 }
 
+void Controller::RequestPromptScreenLock()
+{
+  skip_animation_ = true;
+  session_manager_->LockScreen();
+  skip_animation_ = false;
+}
+
 void Controller::OnLockRequested()
 {
   if (IsLocked())
@@ -246,7 +254,9 @@ void Controller::OnLockRequested()
     animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
   }
 
-  lockscreen_timeout_.reset(new glib::Timeout(10, [this] {
+  bool skip_animation = skip_animation_;
+
+  lockscreen_timeout_.reset(new glib::Timeout(10, [this, skip_animation] {
     bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
 
     if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
@@ -255,8 +265,11 @@ void Controller::OnLockRequested()
       return true; // keep trying
     }
 
-    LockScreenUsingUnity();
+    LockScreen();
     session_manager_->locked.emit();
+
+    if (skip_animation)
+      animation::Skip(fade_animator_);
 
     return false;
   }));
@@ -277,7 +290,7 @@ void Controller::OnPresenceStatusChanged(bool is_idle)
   }
 }
 
-void Controller::LockScreenUsingUnity()
+void Controller::LockScreen()
 {
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
