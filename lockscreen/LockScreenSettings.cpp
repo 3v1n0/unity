@@ -49,6 +49,9 @@ const std::string IDLE_ACTIVATION_ENABLED_KEY = "idle-activation-enabled";
 const std::string LOCK_DELAY = "lock-delay";
 const std::string LOCK_ENABLED = "lock-enabled";
 const std::string LOCK_ON_SUSPEND = "ubuntu-lock-on-suspend";
+
+const std::string A11Y_SETTINGS = "org.gnome.desktop.a11y.applications";
+const std::string USE_OSK = "screen-keyboard-enabled";
 }
 
 struct Settings::Impl
@@ -56,11 +59,14 @@ struct Settings::Impl
   Impl()
     : greeter_settings_(g_settings_new(GREETER_SETTINGS.c_str()))
     , gs_settings_(g_settings_new(GS_SETTINGS.c_str()))
+    , a11y_settings_(g_settings_new(A11Y_SETTINGS.c_str()))
     , greeter_signal_(greeter_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateGreeterSettings))))
     , gs_signal_(gs_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateGSSettings))))
+    , osk_signal_(a11y_settings_, ("changed::"+USE_OSK).c_str(), sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateA11YSettings))))
   {
     UpdateGreeterSettings();
     UpdateGSSettings();
+    UpdateA11YSettings();
   }
 
   void UpdateGreeterSettings()
@@ -83,11 +89,19 @@ struct Settings::Impl
     s->lock_delay = g_settings_get_uint(gs_settings_, LOCK_DELAY.c_str());
   }
 
+  void UpdateA11YSettings()
+  {
+    auto* s = settings_instance;
+    s->use_legacy = g_settings_get_boolean(a11y_settings_, USE_OSK.c_str()) != FALSE;
+  }
+
   glib::Object<GSettings> greeter_settings_;
   glib::Object<GSettings> gs_settings_;
+  glib::Object<GSettings> a11y_settings_;
 
   glib::Signal<void, GSettings*, const gchar*> greeter_signal_;
   glib::Signal<void, GSettings*, const gchar*> gs_signal_;
+  glib::Signal<void, GSettings*, const gchar*> osk_signal_;
 };
 
 Settings::Settings()

@@ -106,4 +106,10 @@
       <default>true</default>
     </key>
   </schema>
+
+  <schema path="/org/gnome/desktop/a11y/applications/" id="org.gnome.desktop.a11y.applications">
+    <key type="b" name="screen-keyboard-enabled">
+      <default>false</default>
+    </key>
+  </schema>
 </schemalist>
