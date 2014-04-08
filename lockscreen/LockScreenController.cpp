@@ -72,23 +72,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
 
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
-
-  session_manager_->presence_status_changed.connect([this](bool is_idle) {
-    if (is_idle)
-    {
-      EnsureFadeWindows(UScreen::GetDefault()->GetMonitors());
-      animation::StartOrReverse(fade_windows_animator_, animation::Direction::FORWARD);
-    }
-    else
-    {
-      std::for_each(fade_windows_.begin(), fade_windows_.end(), [](nux::ObjectPtr<nux::BaseWindow> const& window) {
-        window->ShowWindow(false);
-      });
-
-      fade_windows_.clear();
-      animation::SetValue(fade_windows_animator_, animation::Direction::BACKWARD);
-    }
-  });
+  session_manager_->presence_status_changed.connect(sigc::mem_fun(this, &Controller::OnPresenceStatusChanged));
 
   fade_animator_.updated.connect([this](double value) {
     std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
@@ -127,8 +111,8 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
 
       int lock_delay = Settings::Instance().lock_delay() * 1000;
 
-      lockscreen_delay_timeout_.reset(new glib::Timeout(lock_delay, [this](){
-        OnLockRequested();
+      lockscreen_delay_timeout_.reset(new glib::Timeout(lock_delay, [this] {
+        session_manager_->lock_requested.emit();
         return false;
       }));
 
@@ -138,16 +122,16 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       });
 
       std::for_each(fade_windows_.begin(), fade_windows_.end(), [this](nux::ObjectPtr<nux::BaseWindow> const& window) {
-          window->EnableInputWindow(true);
-          window->GrabPointer();
-          window->GrabKeyboard();
+        window->EnableInputWindow(true);
+        window->GrabPointer();
+        window->GrabKeyboard();
 
-          window->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
-            if (!dx && !dy)
-              return;
+        window->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
+          if (!dx && !dy)
+            return;
 
-            session_manager_->presence_status_changed.emit(false);
-          });
+          session_manager_->presence_status_changed.emit(false);
+        });
       });
     }
     else
@@ -302,6 +286,24 @@ void Controller::OnLockRequested()
 
     return false;
   }));
+}
+
+void Controller::OnPresenceStatusChanged(bool is_idle)
+{
+  if (is_idle)
+  {
+    EnsureFadeWindows(UScreen::GetDefault()->GetMonitors());
+    animation::StartOrReverse(fade_windows_animator_, animation::Direction::FORWARD);
+  }
+  else
+  {
+    std::for_each(fade_windows_.begin(), fade_windows_.end(), [](nux::ObjectPtr<nux::BaseWindow> const& window) {
+      window->ShowWindow(false);
+    });
+
+    fade_windows_.clear();
+    animation::SetValue(fade_windows_animator_, animation::Direction::BACKWARD);
+  }
 }
 
 void Controller::LockScreenUsingUnity()

@@ -58,6 +58,7 @@ private:
 
   void OnLockRequested();
   void OnUnlockRequested();
+  void OnPresenceStatusChanged(bool idle);
   void OnPrimaryShieldMotion(int x, int y);
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
