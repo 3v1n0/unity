@@ -43,9 +43,10 @@ public:
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
 
+  nux::ROProperty<double> opacity;
+
   bool IsLocked() const;
   bool HasOpenMenu() const;
-  double Opacity() const;
 
 private:
   friend class TestLockScreenController;

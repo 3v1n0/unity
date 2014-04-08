@@ -45,7 +45,8 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
                        UpstartWrapper::Ptr const& upstart_wrapper,
                        ShieldFactoryInterface::Ptr const& shield_factory,
                        bool test_mode)
-  : session_manager_(session_manager)
+  : opacity([this] { return fade_animator_.GetCurrentValue(); })
+  , session_manager_(session_manager)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , fade_animator_(LOCK_FADE_DURATION)
@@ -73,6 +74,8 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
       shield->SetOpacity(value);
     });
+
+    opacity.changed.emit(value);
   });
 
   fade_animator_.finished.connect([this] {
@@ -332,11 +335,6 @@ void Controller::HideShields()
 bool Controller::IsLocked() const
 {
   return !shields_.empty();
-}
-
-double Controller::Opacity() const
-{
-  return fade_animator_.GetCurrentValue();
 }
 
 bool Controller::HasOpenMenu() const
