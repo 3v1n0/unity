@@ -257,6 +257,15 @@ void Controller::EnsureFadeWindows(std::vector<nux::Geometry> const& monitors)
 
 void Controller::OnLockRequested()
 {
+  if (Settings::Instance().use_legacy())
+  {
+    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+    // By passing the proxy to the lambda we ensure that it will stay alive
+    // until we get the last callback.
+    proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
+    return;
+  }
+
   if (!Settings::Instance().lock_enabled())
   {
     LOG_DEBUG(logger) << "Failed to lock screen: lock is not enabled.";
