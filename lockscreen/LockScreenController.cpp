@@ -80,7 +80,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       });
 
       fade_windows_.clear();
-      animation::SetValue(fade_windows_animator_, 0.0);
+      animation::SetValue(fade_windows_animator_, animation::Direction::BACKWARD);
     }
   });
 
@@ -274,7 +274,7 @@ void Controller::OnLockRequested()
   });
 
   fade_windows_.clear();
-  animation::SetValue(fade_windows_animator_, 0.0);
+  animation::SetValue(fade_windows_animator_, animation::Direction::BACKWARD);
 
   lockscreen_timeout_.reset(new glib::Timeout(10, [this](){
 
