@@ -44,7 +44,7 @@ public:
   nux::Property<bool> draw_grid;
 
   nux::Property<int> lock_delay;
-  nux::Property<bool> lock_enabled;
+  nux::Property<bool> lock_on_blank;
   nux::Property<bool> lock_on_suspend;
 
   static const int GRID_SIZE = 40;

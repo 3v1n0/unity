@@ -106,7 +106,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     {
       dbus_manager->SetActive(true);
 
-      if (Settings::Instance().lock_enabled())
+      if (Settings::Instance().lock_on_blank())
       {
         int lock_delay = Settings::Instance().lock_delay();
 
@@ -233,12 +233,6 @@ void Controller::EnsureBlankWindow()
 
 void Controller::OnLockRequested()
 {
-  if (!Settings::Instance().lock_enabled())
-  {
-    LOG_DEBUG(logger) << "Failed to lock screen: lock is not enabled.";
-    return;
-  }
-
   if (IsLocked())
   {
     LOG_DEBUG(logger) << "Failed to lock screen: the screen is already locked.";
