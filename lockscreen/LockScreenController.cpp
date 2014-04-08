@@ -63,7 +63,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
 
   suspend_connection_ = uscreen->suspending.connect([this] {
     if (Settings::Instance().lock_on_suspend())
-      session_manager_->lock_requested.emit();
+      session_manager_->LockScreen();
   });
 
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
@@ -111,7 +111,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
         int lock_delay = Settings::Instance().lock_delay();
 
         lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
-          session_manager_->lock_requested.emit();
+          session_manager_->LockScreen();
           return false;
         }));
       }
