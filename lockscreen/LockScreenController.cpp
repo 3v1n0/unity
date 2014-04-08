@@ -38,12 +38,7 @@ const unsigned int IDLE_FADE_DURATION = 10000;
 const unsigned int LOCK_FADE_DURATION = 400;
 }
 
-namespace testing
-{
-const std::string DBUS_NAME = "com.canonical.Unity.Test.DisplayManager";
-}
-
-DECLARE_LOGGER(logger, "unity.locksreen");
+DECLARE_LOGGER(logger, "unity.lockscreen");
 
 Controller::Controller(DBusManager::Ptr const& dbus_manager,
                        session::Manager::Ptr const& session_manager,
@@ -54,13 +49,13 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , fade_animator_(LOCK_FADE_DURATION)
-  , fade_windows_animator_(IDLE_FADE_DURATION)
+  , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
 {
   auto* uscreen = UScreen::GetDefault();
   uscreen_connection_ = uscreen->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
     EnsureShields(monitors);
-    EnsureFadeWindows(monitors);
+    EnsureBlankWindow();
   });
 
   uscreen_connection_->block();
@@ -98,14 +93,13 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     }
   });
 
-  fade_windows_animator_.updated.connect([this](double value) {
-    std::for_each(fade_windows_.begin(), fade_windows_.end(), [value](nux::ObjectPtr<nux::BaseWindow> const& window) {
-      window->SetOpacity(value);
-    });
+  blank_window_animator_.updated.connect([this](double value) {
+    if (blank_window_)
+      blank_window_->SetOpacity(value);
   });
 
-  fade_windows_animator_.finished.connect([this, dbus_manager]() {
-    if (fade_windows_animator_.GetCurrentValue() == 1.0)
+  blank_window_animator_.finished.connect([this, dbus_manager] {
+    if (blank_window_animator_.GetCurrentValue() == 1.0)
     {
       dbus_manager->SetActive(true);
 
@@ -121,28 +115,28 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
         shield->UnGrabKeyboard();
       });
 
-      std::for_each(fade_windows_.begin(), fade_windows_.end(), [this](nux::ObjectPtr<nux::BaseWindow> const& window) {
-        window->EnableInputWindow(true);
-        window->GrabPointer();
-        window->GrabKeyboard();
-
-        window->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
-          if (!dx && !dy)
-            return;
-
-          session_manager_->presence_status_changed.emit(false);
+      if (blank_window_)
+      {
+        blank_window_->EnableInputWindow(true);
+        blank_window_->GrabPointer();
+        blank_window_->GrabKeyboard();
+        blank_window_->PushToFront();
+        blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
+          if (dx || dy)
+            session_manager_->presence_status_changed.emit(false);
         });
-      });
+      }
     }
     else
     {
       dbus_manager->SetActive(false);
       lockscreen_delay_timeout_.reset();
 
-      std::for_each(fade_windows_.begin(), fade_windows_.end(), [this](nux::ObjectPtr<nux::BaseWindow> const& window) {
-        window->UnGrabPointer();
-        window->UnGrabKeyboard();
-      });
+      if (blank_window_)
+      {
+        blank_window_->UnGrabPointer();
+        blank_window_->UnGrabKeyboard();
+      }
 
       std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
         if (!shield->primary())
@@ -151,7 +145,6 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
         shield->GrabPointer();
         shield->GrabKeyboard();
       });
-
     }
   });
 }
@@ -212,37 +205,21 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
 }
 
-void Controller::EnsureFadeWindows(std::vector<nux::Geometry> const& monitors)
+void Controller::EnsureBlankWindow()
 {
-  int num_monitors = monitors.size();
-  int windows_size = fade_windows_.size();
+  auto const& screen_geo = UScreen::GetDefault()->GetScreenGeometry();
 
-  fade_windows_.resize(num_monitors);
-
-  for (int i = 0; i < num_monitors; ++i)
+  if (!blank_window_)
   {
-    auto& window = fade_windows_[i];
-    bool is_new = false;
-
-    if (i >= windows_size)
-    {
-      window = new nux::BaseWindow();
-      window->ShowWindow(true);
-      window->PushToFront();
-      window->SetBackgroundLayer(new nux::ColorLayer(nux::color::Black, true));
-      is_new = true;
-    }
-
-    window->SetGeometry(monitors[i]);
-    window->SetMinMaxSize(monitors[i].width, monitors[i].height);
-
-    if (is_new && fade_windows_animator_.GetCurrentValue() > 0)
-    {
-      window->SetOpacity(fade_windows_animator_.GetCurrentValue());
-      window->ShowWindow(true);
-      window->PushToFront();
-    }
+    blank_window_ = new nux::BaseWindow();
+    blank_window_->SetBackgroundLayer(new nux::ColorLayer(nux::color::Black, true));
+    blank_window_->SetOpacity(blank_window_animator_.GetCurrentValue());
+    blank_window_->ShowWindow(true);
+    blank_window_->PushToFront();
   }
+
+  blank_window_->SetGeometry(screen_geo);
+  blank_window_->SetMinMaxSize(screen_geo.width, screen_geo.height);
 }
 
 void Controller::OnLockRequested()
@@ -259,23 +236,17 @@ void Controller::OnLockRequested()
     return;
   }
 
-  std::for_each(fade_windows_.begin(), fade_windows_.end(), [](nux::ObjectPtr<nux::BaseWindow> const& window) {
-    window->ShowWindow(false);
-  });
+  if (blank_window_)
+  {
+    blank_window_->ShowWindow(false);
+    blank_window_.Release();
+    animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
+  }
 
-  fade_windows_.clear();
-  animation::SetValue(fade_windows_animator_, animation::Direction::BACKWARD);
+  lockscreen_timeout_.reset(new glib::Timeout(10, [this] {
+    bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
 
-  lockscreen_timeout_.reset(new glib::Timeout(10, [this](){
-
-    bool grabbed_by_fade = false;
-
-    std::for_each(fade_windows_.begin(), fade_windows_.end(), [&grabbed_by_fade](nux::ObjectPtr<nux::BaseWindow> const& window) {
-      grabbed_by_fade = grabbed_by_fade || window->OwnsPointerGrab();
-    });
-
-
-    if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_fade)
+    if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
     {
       LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";
       return true; // keep trying
@@ -292,17 +263,14 @@ void Controller::OnPresenceStatusChanged(bool is_idle)
 {
   if (is_idle)
   {
-    EnsureFadeWindows(UScreen::GetDefault()->GetMonitors());
-    animation::StartOrReverse(fade_windows_animator_, animation::Direction::FORWARD);
+    EnsureBlankWindow();
+    animation::StartOrReverse(blank_window_animator_, animation::Direction::FORWARD);
   }
-  else
+  else if (blank_window_)
   {
-    std::for_each(fade_windows_.begin(), fade_windows_.end(), [](nux::ObjectPtr<nux::BaseWindow> const& window) {
-      window->ShowWindow(false);
-    });
-
-    fade_windows_.clear();
-    animation::SetValue(fade_windows_animator_, animation::Direction::BACKWARD);
+    blank_window_->ShowWindow(false);
+    blank_window_.Release();
+    animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
   }
 }
 
