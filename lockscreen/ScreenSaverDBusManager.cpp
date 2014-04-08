@@ -20,6 +20,7 @@
 #include "ScreenSaverDBusManager.h"
 
 #include "LockScreenSettings.h"
+#include "GLibDBusProxy.h"
 #include "Variant.h"
 
 namespace unity
@@ -53,12 +54,12 @@ R"(<node>
 
 DBusManager::DBusManager(session::Manager::Ptr const& session)
   : session_(session)
-  , server_(dbus::NAME)
+  , object_(std::make_shared<glib::DBusObject>(dbus::INTROSPECTION_XML, dbus::INTERFACE))
   , active_(false)
   , time_(0)
 {
-  server_.AddObjects(dbus::INTROSPECTION_XML, dbus::OBJECT_PATH);
-  object_ = server_.GetObject(dbus::INTERFACE);
+  // This is a workaround we use to fallback to use gnome-screensaver if the screen reader is enabled
+  Settings::Instance().use_legacy.changed.connect(sigc::hide(sigc::mem_fun(this, &DBusManager::EnsureService)));
 
   object_->SetMethodsCallsHandler([this] (std::string const& method, GVariant* variant) -> GVariant* {
     if (method == "Lock")
@@ -83,6 +84,29 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
 
     return nullptr;
   });
+
+  EnsureService();
+}
+
+void DBusManager::EnsureService()
+{
+  if (!Settings::Instance().use_legacy())
+  {
+    if (!server_)
+    {
+      g_spawn_command_line_sync("killall -q gnome-screensaver", nullptr, nullptr, nullptr, nullptr);
+      server_ = std::make_shared<glib::DBusServer>(dbus::NAME);
+      server_->AddObject(object_, dbus::OBJECT_PATH);
+    }
+  }
+  else
+  {
+    server_.reset();
+    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+    // By passing the proxy to the lambda we ensure that it will stay alive
+    // until we get the last callback.
+    proxy->Call("SimulateUserActivity", nullptr, [proxy] (GVariant*) {});
+  }
 }
 
 void DBusManager::SetActive(bool active)

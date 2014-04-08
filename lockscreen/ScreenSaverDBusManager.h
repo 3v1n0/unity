@@ -28,7 +28,7 @@ namespace unity
 namespace lockscreen
 {
 
-class DBusManager
+class DBusManager : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<DBusManager> Ptr;
@@ -37,8 +37,10 @@ public:
   void SetActive(bool active);
 
 private:
+  void EnsureService();
+
   session::Manager::Ptr session_;
-  glib::DBusServer server_;
+  glib::DBusServer::Ptr server_;
   glib::DBusObject::Ptr object_;
 
   bool active_;
