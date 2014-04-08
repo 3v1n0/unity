@@ -62,7 +62,7 @@ private:
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
-  std::vector<nux::ObjectPtr<nux::BaseWindow>> fade_windows_; 
+  std::vector<nux::ObjectPtr<nux::BaseWindow>> fade_windows_;
 
   session::Manager::Ptr session_manager_;
   indicator::Indicators::Ptr indicators_;
@@ -73,6 +73,7 @@ private:
   nux::animation::AnimateValue<double> fade_windows_animator_;
 
   connection::Wrapper uscreen_connection_;
+  connection::Wrapper suspend_connection_;
   connection::Wrapper motion_connection_;
   bool test_mode_;
   BlurType old_blur_type_;

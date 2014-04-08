@@ -57,12 +57,18 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , fade_windows_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
 {
-  uscreen_connection_ = UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
+  auto* uscreen = UScreen::GetDefault();
+  uscreen_connection_ = uscreen->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
     EnsureShields(monitors);
     EnsureFadeWindows(monitors);
   });
 
   uscreen_connection_->block();
+
+  suspend_connection_ = uscreen->suspending.connect([this] {
+    if (Settings::Instance().lock_on_suspend())
+      session_manager_->lock_requested.emit();
+  });
 
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
