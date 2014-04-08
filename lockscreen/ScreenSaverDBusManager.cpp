@@ -94,7 +94,9 @@ void DBusManager::EnsureService()
   {
     if (!server_)
     {
+      // It would be really nicer to have this controlled by upstart
       g_spawn_command_line_async("killall -q gnome-screensaver", nullptr);
+
       server_ = std::make_shared<glib::DBusServer>(dbus::NAME);
       server_->AddObject(object_, dbus::OBJECT_PATH);
     }
@@ -102,9 +104,9 @@ void DBusManager::EnsureService()
   else
   {
     server_.reset();
+
+    // Let's make GS to restart...
     auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-    // By passing the proxy to the lambda we ensure that it will stay alive
-    // until we get the last callback.
     proxy->CallBegin("SimulateUserActivity", nullptr, [proxy] (GVariant*, glib::Error const&) {});
   }
 }
