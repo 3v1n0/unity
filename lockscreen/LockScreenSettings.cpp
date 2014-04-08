@@ -51,6 +51,7 @@ const std::string LOCK_ENABLED = "lock-enabled";
 const std::string LOCK_ON_SUSPEND = "ubuntu-lock-on-suspend";
 
 const std::string A11Y_SETTINGS = "org.gnome.desktop.a11y.applications";
+const std::string USE_SCREEN_READER = "screen-reader-enabled";
 const std::string USE_OSK = "screen-keyboard-enabled";
 }
 
@@ -62,7 +63,7 @@ struct Settings::Impl
     , a11y_settings_(g_settings_new(A11Y_SETTINGS.c_str()))
     , greeter_signal_(greeter_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateGreeterSettings))))
     , gs_signal_(gs_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateGSSettings))))
-    , osk_signal_(a11y_settings_, ("changed::"+USE_OSK).c_str(), sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateA11YSettings))))
+    , osk_signal_(a11y_settings_, "changed", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateA11YSettings))))
   {
     UpdateGreeterSettings();
     UpdateGSSettings();
@@ -91,8 +92,10 @@ struct Settings::Impl
 
   void UpdateA11YSettings()
   {
-    auto* s = settings_instance;
-    s->use_legacy = g_settings_get_boolean(a11y_settings_, USE_OSK.c_str()) != FALSE;
+    bool legacy = false;
+    legacy = g_settings_get_boolean(a11y_settings_, USE_SCREEN_READER.c_str()) != FALSE;
+    legacy = legacy || g_settings_get_boolean(a11y_settings_, USE_OSK.c_str()) != FALSE;
+    settings_instance->use_legacy = legacy;
   }
 
   glib::Object<GSettings> greeter_settings_;
