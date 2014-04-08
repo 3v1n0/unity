@@ -262,7 +262,7 @@ void Controller::OnLockRequested()
     auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
     // By passing the proxy to the lambda we ensure that it will stay alive
     // until we get the last callback.
-    proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
+    proxy->CallBegin("Lock", nullptr, [proxy] (GVariant*, glib::Error const&) {});
     return;
   }
 
