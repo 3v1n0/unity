@@ -203,7 +203,7 @@ void QuicklistMenuItem::RecvMouseLeave(int x, int y, unsigned long button_flags,
 void QuicklistMenuItem::UpdateTexture()
 {
   auto const& geo = GetGeometry();
-  nux::CairoGraphics cairo(CAIRO_FORMAT_ARGB32, geo.width * _scale, geo.height * _scale);
+  nux::CairoGraphics cairo(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
   cairo_surface_set_device_scale(cairo.GetSurface(), _scale, _scale);
   UpdateTexture(cairo, geo.width / _scale, geo.height / _scale);
 }
