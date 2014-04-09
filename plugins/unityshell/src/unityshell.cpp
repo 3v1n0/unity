@@ -2688,7 +2688,7 @@ bool UnityScreen::initPluginActions()
           option_name == "initiate_group_button" ||
           option_name == "initiate_group_edge" ||
           option_name == "initiate_output_key" ||
-          option_name == "initiate_output_button" || 
+          option_name == "initiate_output_button" ||
           option_name == "initiate_output_edge")
       {
         CompAction* action = &option.value().action();
