@@ -258,6 +258,12 @@ void Controller::RequestPromptScreenLock()
   skip_animation_ = false;
 }
 
+void Controller::ShowBlankWindow()
+{
+  EnsureBlankWindow();
+  animation::StartOrReverse(blank_window_animator_, animation::Direction::FORWARD);
+}
+
 void Controller::HideBlankWindow()
 {
   if (!blank_window_)
@@ -320,8 +326,7 @@ void Controller::OnPresenceStatusChanged(bool is_idle)
 {
   if (is_idle)
   {
-    EnsureBlankWindow();
-    animation::StartOrReverse(blank_window_animator_, animation::Direction::FORWARD);
+    ShowBlankWindow();
   }
   else
   {
@@ -337,8 +342,7 @@ void Controller::OnScreenSaverActivationRequest(bool activate)
 
     if (activate)
     {
-      EnsureBlankWindow();
-      animation::StartOrReverse(blank_window_animator_, animation::Direction::FORWARD);
+      ShowBlankWindow();
       animation::Skip(blank_window_animator_);
     }
     else
@@ -385,11 +389,11 @@ void Controller::SimulateActivity()
 void Controller::OnUnlockRequested()
 {
   lockscreen_timeout_.reset();
+  screensaver_post_lock_timeout_.reset();
 
   if (!IsLocked())
     return;
 
-  screensaver_post_lock_timeout_.reset();
   HideShields();
 }
 

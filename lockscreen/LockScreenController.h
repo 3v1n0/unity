@@ -52,10 +52,11 @@ private:
 
   void EnsureShields(std::vector<nux::Geometry> const& monitors);
   void EnsureBlankWindow();
-  void HideBlankWindow();
   void LockScreen();
   void ShowShields();
   void HideShields();
+  void ShowBlankWindow();
+  void HideBlankWindow();
   void RequestPromptScreenLock();
   void SimulateActivity();
   void ResetPostLockScreenSaver();
