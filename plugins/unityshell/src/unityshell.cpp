@@ -2874,6 +2874,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       gWindow->glPaintSetCurrentIndex(MAXSHORT);
       bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
       gWindow->glPaintSetCurrentIndex(old_index);
+      deco_win_->Paint(matrix, wAttrib, region, mask);
       return ret;
     }
   }
@@ -3820,7 +3821,6 @@ void UnityScreen::initLauncher()
   // Setup Lockscreen Controller
   screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, manager);
-  lockscreen_controller_->opacity.changed.connect(sigc::hide(sigc::mem_fun(cScreen, &CompositeScreen::damageScreen)));
   UpdateActivateIndicatorsKey();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
