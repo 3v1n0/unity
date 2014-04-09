@@ -54,7 +54,6 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , fade_animator_(LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
-  , skip_animation_(false)
 {
   auto* uscreen = UScreen::GetDefault();
   uscreen_connection_ = uscreen->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
@@ -66,12 +65,13 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
 
   suspend_connection_ = uscreen->suspending.connect([this] {
     if (Settings::Instance().lock_on_suspend())
-      RequestPromptScreenLock();
+      session_manager_->PromptLockScreen();
   });
 
   dbus_manager_->simulate_activity.connect(sigc::mem_fun(this, &Controller::SimulateActivity));
   dbus_manager_->request_activate.connect(sigc::mem_fun(this, &Controller::OnScreenSaverActivationRequest));
-  session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
+  session_manager_->lock_requested.connect(sigc::bind(sigc::mem_fun(this, &Controller::OnLockRequested), false));
+  session_manager_->prompt_lock_requested.connect(sigc::bind(sigc::mem_fun(this, &Controller::OnLockRequested), true));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
   session_manager_->presence_status_changed.connect(sigc::mem_fun(this, &Controller::OnPresenceStatusChanged));
 
@@ -117,7 +117,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
         int lock_delay = Settings::Instance().lock_delay();
 
         lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
-          RequestPromptScreenLock();
+          session_manager_->PromptLockScreen();
           return false;
         }));
       }
@@ -251,13 +251,6 @@ void Controller::EnsureBlankWindow()
   blank_window_->SetMinMaxSize(screen_geo.width, screen_geo.height);
 }
 
-void Controller::RequestPromptScreenLock()
-{
-  skip_animation_ = true;
-  session_manager_->LockScreen();
-  skip_animation_ = false;
-}
-
 void Controller::ShowBlankWindow()
 {
   EnsureBlankWindow();
@@ -274,7 +267,7 @@ void Controller::HideBlankWindow()
   animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
 }
 
-void Controller::OnLockRequested()
+void Controller::OnLockRequested(bool prompt)
 {
   if (Settings::Instance().use_legacy())
   {
@@ -292,9 +285,8 @@ void Controller::OnLockRequested()
   }
 
   HideBlankWindow();
-  bool skip_animation = skip_animation_;
 
-  lockscreen_timeout_.reset(new glib::Timeout(10, [this, skip_animation] {
+  lockscreen_timeout_.reset(new glib::Timeout(10, [this, prompt] {
     bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
 
     if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
@@ -306,7 +298,7 @@ void Controller::OnLockRequested()
     LockScreen();
     session_manager_->locked.emit();
 
-    if (skip_animation)
+    if (prompt)
     {
       animation::Skip(fade_animator_);
     }

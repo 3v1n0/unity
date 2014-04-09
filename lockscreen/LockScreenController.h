@@ -57,11 +57,10 @@ private:
   void HideShields();
   void ShowBlankWindow();
   void HideBlankWindow();
-  void RequestPromptScreenLock();
   void SimulateActivity();
   void ResetPostLockScreenSaver();
 
-  void OnLockRequested();
+  void OnLockRequested(bool prompt);
   void OnUnlockRequested();
   void OnPresenceStatusChanged(bool idle);
   void OnScreenSaverActivationRequest(bool activate);
@@ -81,7 +80,6 @@ private:
   nux::animation::AnimateValue<double> blank_window_animator_;
 
   bool test_mode_;
-  bool skip_animation_;
   BlurType old_blur_type_;
 
   connection::Wrapper uscreen_connection_;
