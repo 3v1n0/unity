@@ -62,6 +62,7 @@ private:
   void OnLockRequested();
   void OnUnlockRequested();
   void OnPresenceStatusChanged(bool idle);
+  void OnScreenSaverActivationRequest(bool activate);
   void OnPrimaryShieldMotion(int x, int y);
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
@@ -87,6 +88,7 @@ private:
 
   glib::Source::UniquePtr lockscreen_timeout_;
   glib::Source::UniquePtr lockscreen_delay_timeout_;
+  glib::Source::UniquePtr screensaver_activation_timeout_;
 };
 
 }

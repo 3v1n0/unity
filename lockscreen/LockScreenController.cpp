@@ -69,6 +69,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
 
   dbus_manager_->simulate_activity.connect(sigc::mem_fun(this, &Controller::SimulateActivity));
+  dbus_manager_->request_activate.connect(sigc::mem_fun(this, &Controller::OnScreenSaverActivationRequest));
   session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
   session_manager_->presence_status_changed.connect(sigc::mem_fun(this, &Controller::OnPresenceStatusChanged));
@@ -292,6 +293,27 @@ void Controller::OnPresenceStatusChanged(bool is_idle)
   {
     HideBlankWindow();
   }
+}
+
+void Controller::OnScreenSaverActivationRequest(bool activate)
+{
+  // It looks we need to do this after a small delay, not to get the screen back on
+  screensaver_activation_timeout_.reset(new glib::Timeout(100, [this, activate] {
+    dbus_manager_->active = activate;
+
+    if (activate)
+    {
+      EnsureBlankWindow();
+      animation::StartOrReverse(blank_window_animator_, animation::Direction::FORWARD);
+      animation::Skip(blank_window_animator_);
+    }
+    else
+    {
+      SimulateActivity();
+    }
+
+    return false;
+  }));
 }
 
 void Controller::LockScreen()
