@@ -100,6 +100,10 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     {
       session_->LockScreen();
     }
+    else if (method == "PromptLock")
+    {
+      session_->PromptLockScreen();
+    }
     else if (method == "Logout")
     {
       session_->Logout();
@@ -154,6 +158,9 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
   });
 
   connections_.Add(session_->lock_requested.connect([this] {
+    object_->EmitSignal("LockRequested");
+  }));
+  connections_.Add(session_->prompt_lock_requested.connect([this] {
     object_->EmitSignal("LockRequested");
   }));
   connections_.Add(session_->locked.connect([this] {
