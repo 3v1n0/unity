@@ -36,6 +36,7 @@ namespace
 {
 const unsigned int IDLE_FADE_DURATION = 10000;
 const unsigned int LOCK_FADE_DURATION = 400;
+const unsigned int POST_LOCK_SCREENSAVER_WAIT = 2000;
 }
 
 DECLARE_LOGGER(logger, "unity.lockscreen");
@@ -86,6 +87,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
     {
       motion_connection_->disconnect();
+      key_connection_->disconnect();
       uscreen_connection_->block();
       session_manager_->unlocked.emit();
 
@@ -134,7 +136,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
         blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
           if (dx || dy)
           {
-            session_manager_->presence_status_changed.emit(false);
+            HideBlankWindow();
             lockscreen_delay_timeout_.reset();
           }
         });
@@ -162,6 +164,14 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
 }
 
+void Controller::ResetPostLockScreenSaver()
+{
+  if (opacity() == 1.0)
+    screensaver_post_lock_timeout_.reset();
+
+  HideBlankWindow();
+}
+
 void Controller::OnPrimaryShieldMotion(int x, int y)
 {
   if (!primary_shield_->GetAbsoluteGeometry().IsPointInside(x, y))
@@ -176,9 +186,13 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
       shield->primary = true;
       auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
       motion_connection_ = shield->grab_motion.connect(move_cb);
+      auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
+      key_connection_ = shield->grab_key.connect(key_cb);
       break;
     }
   }
+
+  ResetPostLockScreenSaver();
 }
 
 void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
@@ -216,6 +230,8 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   primary_shield_->primary = true;
   auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
   motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
+  auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
+  key_connection_ = primary_shield_->grab_key.connect(key_cb);
 }
 
 void Controller::EnsureBlankWindow()
@@ -276,7 +292,16 @@ void Controller::OnLockRequested()
     session_manager_->locked.emit();
 
     if (skip_animation)
+    {
       animation::Skip(fade_animator_);
+    }
+    else
+    {
+      screensaver_post_lock_timeout_.reset(new glib::Timeout(POST_LOCK_SCREENSAVER_WAIT, [this] {
+        OnPresenceStatusChanged(true);
+        return false;
+      }));
+    }
 
     return false;
   }));
@@ -355,6 +380,7 @@ void Controller::OnUnlockRequested()
   if (!IsLocked())
     return;
 
+  screensaver_post_lock_timeout_.reset();
   HideShields();
 }
 

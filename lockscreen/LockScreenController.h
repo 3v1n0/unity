@@ -58,6 +58,7 @@ private:
   void HideShields();
   void RequestPromptScreenLock();
   void SimulateActivity();
+  void ResetPostLockScreenSaver();
 
   void OnLockRequested();
   void OnUnlockRequested();
@@ -85,10 +86,12 @@ private:
   connection::Wrapper uscreen_connection_;
   connection::Wrapper suspend_connection_;
   connection::Wrapper motion_connection_;
+  connection::Wrapper key_connection_;
 
   glib::Source::UniquePtr lockscreen_timeout_;
   glib::Source::UniquePtr lockscreen_delay_timeout_;
   glib::Source::UniquePtr screensaver_activation_timeout_;
+  glib::Source::UniquePtr screensaver_post_lock_timeout_;
 };
 
 }
