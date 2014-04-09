@@ -116,61 +116,19 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
 
   blank_window_animator_.finished.connect([this] {
-    if (blank_window_animator_.GetCurrentValue() == 1.0)
+    bool shown = blank_window_animator_.GetCurrentValue() == 1.0;
+    BlankWindowGrabEnable(shown);
+    dbus_manager_->active = shown;
+    lockscreen_delay_timeout_.reset();
+
+    if (shown && Settings::Instance().lock_on_blank())
     {
-      dbus_manager_->active = true;
+      int lock_delay = Settings::Instance().lock_delay();
 
-      if (Settings::Instance().lock_on_blank())
-      {
-        int lock_delay = Settings::Instance().lock_delay();
-
-        lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
-          session_manager_->PromptLockScreen();
-          return false;
-        }));
-      }
-
-      std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-        shield->UnGrabPointer();
-        shield->UnGrabKeyboard();
-      });
-
-      if (blank_window_)
-      {
-        blank_window_->EnableInputWindow(true);
-        blank_window_->GrabPointer();
-        blank_window_->GrabKeyboard();
-        blank_window_->PushToFront();
-
-        blank_window_->mouse_move.connect([this](int, int, int, int, unsigned long, unsigned long) {
-          HideBlankWindow();
-        });
-        blank_window_->key_down.connect([this] (unsigned long, unsigned long e, unsigned long, const char*, unsigned short) {
-          HideBlankWindow();
-        });
-        blank_window_->mouse_down.connect([this] (int, int, unsigned long, unsigned long) {
-          HideBlankWindow();
-        });
-      }
-    }
-    else
-    {
-      dbus_manager_->active = false;
-      lockscreen_delay_timeout_.reset();
-
-      if (blank_window_)
-      {
-        blank_window_->UnGrabPointer();
-        blank_window_->UnGrabKeyboard();
-      }
-
-      std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
-        if (!shield->primary())
-          return;
-
-        shield->GrabPointer();
-        shield->GrabKeyboard();
-      });
+      lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
+        session_manager_->PromptLockScreen();
+        return false;
+      }));
     }
   });
 }
@@ -277,6 +235,50 @@ void Controller::HideBlankWindow()
   blank_window_.Release();
   animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
   lockscreen_delay_timeout_.reset();
+}
+
+void Controller::BlankWindowGrabEnable(bool grab)
+{
+  if (!blank_window_)
+    return;
+
+  if (grab)
+  {
+    for (auto const& shield : shields_)
+    {
+      shield->UnGrabPointer();
+      shield->UnGrabKeyboard();
+    }
+
+    blank_window_->EnableInputWindow(true);
+    blank_window_->GrabPointer();
+    blank_window_->GrabKeyboard();
+    blank_window_->PushToFront();
+
+    blank_window_->mouse_move.connect([this](int, int, int, int, unsigned long, unsigned long) {
+      HideBlankWindow();
+    });
+    blank_window_->key_down.connect([this] (unsigned long, unsigned long e, unsigned long, const char*, unsigned short) {
+      HideBlankWindow();
+    });
+    blank_window_->mouse_down.connect([this] (int, int, unsigned long, unsigned long) {
+      HideBlankWindow();
+    });
+  }
+  else
+  {
+    blank_window_->UnGrabPointer();
+    blank_window_->UnGrabKeyboard();
+
+    for (auto const& shield : shields_)
+    {
+      if (!shield->primary())
+        continue;
+
+      shield->GrabPointer();
+      shield->GrabKeyboard();
+    }
+  }
 }
 
 void Controller::OnLockRequested(bool prompt)

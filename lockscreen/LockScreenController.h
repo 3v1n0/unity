@@ -57,6 +57,7 @@ private:
   void HideShields();
   void ShowBlankWindow();
   void HideBlankWindow();
+  void BlankWindowGrabEnable(bool grab);
   void SimulateActivity();
   void ResetPostLockScreenSaver();
 
