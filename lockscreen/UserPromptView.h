@@ -56,6 +56,8 @@ public:
   void AddMessage(std::string const& message, nux::Color const& color);
   void AuthenticationCb(bool authenticated);
 
+  void CheckIfCapsLockOn();
+
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
@@ -68,7 +70,6 @@ private:
 
   void PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux::Geometry const& geo);
   void ToggleCapsLockBool();
-  void CheckIfCapsLockOn();
 
   int GetWarningIconOffset();
 

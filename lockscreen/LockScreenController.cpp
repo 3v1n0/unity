@@ -101,6 +101,7 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
 
       primary_shield_->primary = false;
       primary_shield_ = shield;
+      primary_shield_->CheckCapsLockPrompt();
       shield->primary = true;
       auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
       motion_connection_ = shield->grab_motion.connect(move_cb);
