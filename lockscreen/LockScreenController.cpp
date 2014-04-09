@@ -339,14 +339,7 @@ void Controller::OnLockRequested(bool prompt)
 
 void Controller::OnPresenceStatusChanged(bool is_idle)
 {
-  if (is_idle)
-  {
-    ShowBlankWindow();
-  }
-  else
-  {
-    HideBlankWindow();
-  }
+  is_idle ? ShowBlankWindow() : HideBlankWindow();
 }
 
 void Controller::OnScreenSaverActivationRequest(bool activate)

@@ -49,7 +49,6 @@ private:
   glib::DBusServer::Ptr server_;
   glib::DBusObject::Ptr object_;
 
-  bool active_;
   time_t time_;
 };
 

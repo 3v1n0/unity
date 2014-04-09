@@ -64,25 +64,22 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
   // This is a workaround we use to fallback to use gnome-screensaver if the screen reader is enabled
   Settings::Instance().use_legacy.changed.connect(sigc::hide(sigc::mem_fun(this, &DBusManager::EnsureService)));
 
-  object_->SetMethodsCallsHandler([this] (std::string const& method, GVariant* variant) -> GVariant* {
+  object_->SetMethodsCallsHandler([this] (std::string const& method, GVariant* parameters) -> GVariant* {
     if (method == "Lock")
     {
       session_->LockScreen();
     }
     else if (method == "GetActive")
     {
-      return g_variant_new("(b)", active_ ? TRUE : FALSE);
+      return g_variant_new("(b)", active() ? TRUE : FALSE);
     }
     else if (method == "GetActiveTime")
     {
-      if (time_)
-        return g_variant_new("(u)", time(nullptr) - time_);
-      else
-        return g_variant_new("(u)", 0);
+      return g_variant_new("(u)", time_ ? (time(nullptr) - time_) : 0);
     }
     else if (method == "SetActive")
     {
-      request_activate.emit(glib::Variant(variant).GetBool());
+      request_activate.emit(glib::Variant(parameters).GetBool());
     }
     else if (method == "SimulateUserActivity")
     {
@@ -117,11 +114,7 @@ void DBusManager::EnsureService()
 
 void DBusManager::SetActive(bool active)
 {
-  if (active)
-    time_ = time(nullptr);
-  else
-    time_ = 0;
-
+  time_ = active ? time(nullptr) : 0;
   object_->EmitSignal("ActiveChanged", g_variant_new("(b)", active ? TRUE : FALSE));
 }
 
