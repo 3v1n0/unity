@@ -501,10 +501,11 @@ struct DBusServer::Impl
     , owner_name_(0)
   {}
 
-  Impl(DBusServer* server, std::string const& name, GBusType bus_type)
+  Impl(DBusServer* server, std::string const& name, GBusType bus_type,
+       GBusNameOwnerFlags flags)
     : Impl(server, name)
   {
-    owner_name_ = g_bus_own_name(bus_type, name.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
+    owner_name_ = g_bus_own_name(bus_type, name.c_str(), flags,
       [] (GDBusConnection* conn, const gchar* name, gpointer data)
       {
         auto self = static_cast<DBusServer::Impl*>(data);
@@ -665,8 +666,8 @@ struct DBusServer::Impl
   std::vector<std::pair<DBusObject::Ptr, std::string>> pending_objects_;
 };
 
-DBusServer::DBusServer(std::string const& name, GBusType bus_type)
-  : impl_(new DBusServer::Impl(this, name, bus_type))
+DBusServer::DBusServer(std::string const& name, GBusType bus_type, GBusNameOwnerFlags flags)
+  : impl_(new DBusServer::Impl(this, name, bus_type, flags))
 {}
 
 DBusServer::DBusServer(GBusType bus_type)
