@@ -72,6 +72,9 @@ namespace
 {
 const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
 const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
+
+const std::string GNOME_LOCKDOWN_OPTIONS = "org.gnome.desktop.lockdown";
+const std::string DISABLE_LOCKSCREEN_KEY = "disable-lock-screen";
 }
 
 GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
@@ -435,7 +438,12 @@ void GnomeManager::LockScreen()
   impl_->EnsureCancelPendingAction();
 
   // FIXME (andy) we should ask gnome-session to emit the logind signal
-  if (UserName().find("guest-") == 0)
+  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
+
+  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str())) {
+    return;
+  }
+  else if (UserName().find("guest-") == 0)
   {
     LOG_INFO(logger) << "Impossible to lock a guest session";
     return;
