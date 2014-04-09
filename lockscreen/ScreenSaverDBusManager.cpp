@@ -101,10 +101,7 @@ void DBusManager::EnsureService()
   {
     if (!server_)
     {
-      // It would be really nicer to have this controlled by upstart
-      g_spawn_command_line_async("killall -q gnome-screensaver", nullptr);
-
-      server_ = std::make_shared<glib::DBusServer>(dbus::NAME);
+      server_ = std::make_shared<glib::DBusServer>(dbus::NAME, G_BUS_TYPE_SESSION, G_BUS_NAME_OWNER_FLAGS_REPLACE);
       server_->AddObject(object_, dbus::OBJECT_PATH);
     }
   }
