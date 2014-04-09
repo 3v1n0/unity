@@ -284,22 +284,31 @@ void Controller::OnLockRequested(bool prompt)
     return;
   }
 
-  HideBlankWindow();
+  if (prompt)
+  {
+    EnsureBlankWindow();
+    blank_window_->SetOpacity(1.0);
+  }
 
   lockscreen_timeout_.reset(new glib::Timeout(10, [this, prompt] {
     bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
 
     if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
     {
+      HideBlankWindow();
       LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";
       return true; // keep trying
     }
+
+    if (!prompt)
+      HideBlankWindow();
 
     LockScreen();
     session_manager_->locked.emit();
 
     if (prompt)
     {
+      HideBlankWindow();
       animation::Skip(fade_animator_);
     }
     else
@@ -383,15 +392,15 @@ void Controller::OnUnlockRequested()
   lockscreen_timeout_.reset();
   screensaver_post_lock_timeout_.reset();
 
-  if (!IsLocked())
-    return;
-
-  HideShields();
   HideBlankWindow();
+  HideShields();
 }
 
 void Controller::HideShields()
 {
+  if (!IsLocked())
+    return;
+
   std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
     shield->UnGrabPointer();
     shield->UnGrabKeyboard();
