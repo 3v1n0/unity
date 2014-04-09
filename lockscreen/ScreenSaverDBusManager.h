@@ -20,6 +20,7 @@
 #ifndef UNITYSHELL_SCREENSAVER_DBUS_MANAGER_H
 #define UNITYSHELL_SCREENSAVER_DBUS_MANAGER_H
 
+#include <NuxCore/Property.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/SessionManager.h>
 
@@ -33,10 +34,15 @@ class DBusManager : public sigc::trackable
 public:
   typedef std::shared_ptr<DBusManager> Ptr;
 
-  DBusManager(session::Manager::Ptr const& manager);
-  void SetActive(bool active);
+  DBusManager(session::Manager::Ptr const&);
+
+  nux::Property<bool> active;
+
+  sigc::signal<void> simulate_activity;
+  sigc::signal<void, bool> request_activate;
 
 private:
+  void SetActive(bool active);
   void EnsureService();
 
   session::Manager::Ptr session_;

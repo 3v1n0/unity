@@ -37,8 +37,7 @@ namespace lockscreen
 class Controller : public sigc::trackable
 {
 public:
-  Controller(DBusManager::Ptr const& dbus_manager,
-             session::Manager::Ptr const& session_manager,
+  Controller(DBusManager::Ptr const&, session::Manager::Ptr const&,
              UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
@@ -53,19 +52,25 @@ private:
 
   void EnsureShields(std::vector<nux::Geometry> const& monitors);
   void EnsureBlankWindow();
-  void LockScreenUsingUnity();
+  void HideBlankWindow();
+  void LockScreen();
   void ShowShields();
   void HideShields();
+  void RequestPromptScreenLock();
+  void SimulateActivity();
+  void ResetPostLockScreenSaver();
 
   void OnLockRequested();
   void OnUnlockRequested();
   void OnPresenceStatusChanged(bool idle);
+  void OnScreenSaverActivationRequest(bool activate);
   void OnPrimaryShieldMotion(int x, int y);
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
 
+  DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
   indicator::Indicators::Ptr indicators_;
   UpstartWrapper::Ptr upstart_wrapper_;
@@ -74,14 +79,19 @@ private:
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
 
+  bool test_mode_;
+  bool skip_animation_;
+  BlurType old_blur_type_;
+
   connection::Wrapper uscreen_connection_;
   connection::Wrapper suspend_connection_;
   connection::Wrapper motion_connection_;
-  bool test_mode_;
-  BlurType old_blur_type_;
+  connection::Wrapper key_connection_;
 
   glib::Source::UniquePtr lockscreen_timeout_;
   glib::Source::UniquePtr lockscreen_delay_timeout_;
+  glib::Source::UniquePtr screensaver_activation_timeout_;
+  glib::Source::UniquePtr screensaver_post_lock_timeout_;
 };
 
 }

@@ -1984,6 +1984,9 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 
+  if (g_strcmp0(plugin, "scale") == 0)
+    g_print("Scale event %s\n",event);
+
   if (adapter.IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
       super_keypressed_)
   {
@@ -2685,7 +2688,7 @@ bool UnityScreen::initPluginActions()
           option_name == "initiate_group_button" ||
           option_name == "initiate_group_edge" ||
           option_name == "initiate_output_key" ||
-          option_name == "initiate_output_button" ||
+          option_name == "initiate_output_button" || 
           option_name == "initiate_output_edge")
       {
         CompAction* action = &option.value().action();

@@ -85,7 +85,7 @@ struct Settings::Impl
   void UpdateGSSettings()
   {
     auto* s = settings_instance;
-    s->lock_enabled = g_settings_get_boolean(gs_settings_, LOCK_ENABLED.c_str()) != FALSE;
+    s->lock_on_blank = g_settings_get_boolean(gs_settings_, LOCK_ENABLED.c_str()) != FALSE;
     s->lock_on_suspend = g_settings_get_boolean(gs_settings_, LOCK_ON_SUSPEND.c_str()) != FALSE;
     s->lock_delay = g_settings_get_uint(gs_settings_, LOCK_DELAY.c_str());
   }
