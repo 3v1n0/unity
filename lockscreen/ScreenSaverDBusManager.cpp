@@ -80,7 +80,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "SetActive")
     {
-      session_->presence_status_changed.emit(glib::Variant(variant).GetBool());
+      request_activate.emit(glib::Variant(variant).GetBool());
     }
     else if (method == "SimulateUserActivity")
     {
