@@ -41,6 +41,7 @@ public:
   virtual std::string HostName() const = 0;
 
   virtual void LockScreen() = 0;
+  virtual void PromptLockScreen() = 0;
   virtual void Logout() = 0;
   virtual void Reboot() = 0;
   virtual void Shutdown() = 0;
@@ -59,6 +60,7 @@ public:
 
   sigc::signal<void> lock_requested;
   sigc::signal<void> unlock_requested;
+  sigc::signal<void> prompt_lock_requested;
   sigc::signal<void> locked;
   sigc::signal<void> unlocked;
   sigc::signal<void, bool /* inhibitors */> logout_requested;

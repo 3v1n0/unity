@@ -400,6 +400,26 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
   });
 }
 
+void GnomeManager::Impl::LockScreen(bool prompt)
+{
+  EnsureCancelPendingAction();
+
+  // FIXME (andy) we should ask gnome-session to emit the logind signal
+  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
+
+  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
+  {
+    return;
+  }
+  else if (manager_->UserName().find("guest-") == 0)
+  {
+    LOG_INFO(logger) << "Impossible to lock a guest session";
+    return;
+  }
+
+  prompt ? manager_->prompt_lock_requested.emit() : manager_->lock_requested.emit();
+}
+
 // Public implementation
 
 GnomeManager::GnomeManager()
@@ -435,20 +455,12 @@ std::string GnomeManager::HostName() const
 
 void GnomeManager::LockScreen()
 {
-  impl_->EnsureCancelPendingAction();
+  impl_->LockScreen(false);
+}
 
-  // FIXME (andy) we should ask gnome-session to emit the logind signal
-  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
-
-  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str())) {
-    return;
-  }
-  else if (UserName().find("guest-") == 0)
-  {
-    LOG_INFO(logger) << "Impossible to lock a guest session";
-    return;
-  }
-  lock_requested.emit();
+void GnomeManager::PromptLockScreen()
+{
+  impl_->LockScreen(true);
 }
 
 void GnomeManager::Logout()

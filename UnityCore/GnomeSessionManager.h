@@ -38,6 +38,7 @@ public:
   std::string HostName() const;
 
   void LockScreen();
+  void PromptLockScreen();
   void Logout();
   void Reboot();
   void Shutdown();

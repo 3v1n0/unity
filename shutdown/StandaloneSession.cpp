@@ -41,6 +41,7 @@ public:
   std::string HostName() const { return "tricky"; }
 
   void LockScreen() { std::cout << "LockScreen" << std::endl; }
+  void PromptLockScreen() { std::cout << "PromptLockScreen" << std::endl; }
   void Logout() { std::cout << "Logout" << std::endl; }
   void Reboot() { std::cout << "Reboot" << std::endl; }
   void Shutdown() { std::cout << "Shutdown" << std::endl; }

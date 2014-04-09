@@ -34,6 +34,7 @@ struct MockManager : Manager
   MOCK_CONST_METHOD0(HostName, std::string());
 
   MOCK_METHOD0(LockScreen, void());
+  MOCK_METHOD0(PromptLockScreen, void());
   MOCK_METHOD0(Logout, void());
   MOCK_METHOD0(Reboot, void());
   MOCK_METHOD0(Shutdown, void());

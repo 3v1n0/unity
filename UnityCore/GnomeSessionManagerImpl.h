@@ -52,6 +52,7 @@ struct GnomeManager::Impl
   void CancelAction();
   void ClosedDialog();
   void EnsureCancelPendingAction();
+  void LockScreen(bool prompt);
 
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
