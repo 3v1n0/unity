@@ -37,6 +37,14 @@ namespace
 const unsigned int IDLE_FADE_DURATION = 10000;
 const unsigned int LOCK_FADE_DURATION = 400;
 const unsigned int POST_LOCK_SCREENSAVER_WAIT = 2000;
+
+class BlankWindow : public nux::BaseWindow
+{
+public:
+  BlankWindow() : nux::BaseWindow("UnityScreensaver") {}
+  bool AcceptKeyNavFocus() override { return true; }
+  bool InspectKeyEvent(unsigned int, unsigned int, const char*) override { return true; };
+};
 }
 
 DECLARE_LOGGER(logger, "unity.lockscreen");
@@ -133,12 +141,15 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
         blank_window_->GrabPointer();
         blank_window_->GrabKeyboard();
         blank_window_->PushToFront();
-        blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
-          if (dx || dy)
-          {
-            HideBlankWindow();
-            lockscreen_delay_timeout_.reset();
-          }
+
+        blank_window_->mouse_move.connect([this](int, int, int, int, unsigned long, unsigned long) {
+          HideBlankWindow();
+        });
+        blank_window_->key_down.connect([this] (unsigned long, unsigned long e, unsigned long, const char*, unsigned short) {
+          HideBlankWindow();
+        });
+        blank_window_->mouse_down.connect([this] (int, int, unsigned long, unsigned long) {
+          HideBlankWindow();
         });
       }
     }
@@ -240,7 +251,7 @@ void Controller::EnsureBlankWindow()
 
   if (!blank_window_)
   {
-    blank_window_ = new nux::BaseWindow();
+    blank_window_ = new BlankWindow();
     blank_window_->SetBackgroundLayer(new nux::ColorLayer(nux::color::Black, true));
     blank_window_->SetOpacity(blank_window_animator_.GetCurrentValue());
     blank_window_->ShowWindow(true);
@@ -265,6 +276,7 @@ void Controller::HideBlankWindow()
   blank_window_->ShowWindow(false);
   blank_window_.Release();
   animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
+  lockscreen_delay_timeout_.reset();
 }
 
 void Controller::OnLockRequested(bool prompt)
