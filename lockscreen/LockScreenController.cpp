@@ -395,6 +395,7 @@ void Controller::OnUnlockRequested()
     return;
 
   HideShields();
+  HideBlankWindow();
 }
 
 void Controller::HideShields()
