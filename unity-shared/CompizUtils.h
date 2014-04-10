@@ -113,7 +113,6 @@ private:
 
 bool IsWindowShadowDecorable(CompWindow*);
 bool IsWindowFullyDecorable(CompWindow*);
-bool WindowHasMotifDecorations(CompWindow*);
 
 } // compiz_utils namespace
 } // unity namespace
