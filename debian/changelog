@@ -1,3 +1,28 @@
+unity (7.2.0+14.04.20140410-0ubuntu1) trusty; urgency=low
+
+  [ CI bot ]
+  * GnomeSessionManager: impelement gnome session dbus interface and a
+    fader to blank the screen (LP: #1291088)
+  * ScreenSaverDBusManager: start/stop gnome-screensaver if we don't/do
+    handle the locking This allows to just use the fallback gnome-
+    screensaver lockscreen if we need to use it. (LP: #1303712)
+  * Session: Don't lock the screen if screen locking is disabled by
+    org.gnome.desktop.lockdown disable-lock-screen. (LP: #1292154)
+
+  [ Andrea Azzarone ]
+  * LockScreen: add ability to show without fading in on some system
+    calls Also, if locking is not enabled, calling Lock causes the
+    screensaver to be initiated. Many cleanups and misc fixes. (LP:
+    #1292575)
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreen: add ability to show without fading in on some system
+    calls Also, if locking is not enabled, calling Lock causes the
+    screensaver to be initiated. Many cleanups and misc fixes. (LP:
+    #1292575)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 10 Apr 2014 12:45:15 +0000
+
 unity (7.2.0+14.04.20140404-0ubuntu1) trusty; urgency=low
 
   [ Chris Townsend ]
