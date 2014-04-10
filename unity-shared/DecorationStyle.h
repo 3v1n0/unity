@@ -68,6 +68,26 @@ enum class WindowButtonType : unsigned
   Size
 };
 
+enum class WMEvent
+{
+  DOUBLE_CLICK = 1,
+  MIDDLE_CLICK = 2,
+  RIGHT_CLICK = 3
+};
+
+enum class WMAction
+{
+  TOGGLE_SHADE,
+  TOGGLE_MAXIMIZE,
+  TOGGLE_MAXIMIZE_HORIZONTALLY,
+  TOGGLE_MAXIMIZE_VERTICALLY,
+  MINIMIZE,
+  SHADE,
+  MENU,
+  LOWER,
+  NONE
+};
+
 struct Border
 {
   Border(int top, int left, int right, int bottom)
@@ -127,6 +147,7 @@ public:
   std::string WindowButtonFile(WindowButtonType, WidgetState) const;
   void DrawWindowButton(WindowButtonType, WidgetState, cairo_t*, double width, double height);
 
+  WMAction WindowManagerAction(WMEvent) const;
   int DoubleClickMaxDistance() const;
   int DoubleClickMaxTimeDelta() const;
 

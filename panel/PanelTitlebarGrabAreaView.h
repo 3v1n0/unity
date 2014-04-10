@@ -43,10 +43,10 @@ public:
   void SetGrabbed(bool enabled);
   bool IsGrabbed();
 
-  sigc::signal<void, int, int> lower_request;
-  sigc::signal<void, int, int> activate_request;
-  sigc::signal<void, int, int> restore_request;
-  sigc::signal<void, int, int> menu_request;
+  sigc::signal<void, int, int> clicked;
+  sigc::signal<void, int, int> middle_clicked;
+  sigc::signal<void, int, int> double_clicked;
+  sigc::signal<void, int, int> right_clicked;
   sigc::signal<void, int, int> grab_started;
   sigc::signal<void, int, int> grab_move;
   sigc::signal<void, int, int> grab_end;

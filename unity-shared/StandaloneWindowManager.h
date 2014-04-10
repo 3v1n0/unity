@@ -52,6 +52,7 @@ public:
   nux::Property<bool> v_maximized;
   nux::Property<bool> h_maximized;
   nux::Property<bool> minimized;
+  nux::Property<bool> shaded;
   nux::Property<bool> decorated;
   nux::Property<bool> has_decorations;
   nux::Property<bool> on_top;
@@ -83,6 +84,7 @@ public:
   virtual bool IsWindowMapped(Window window_id) const;
   virtual bool IsWindowVisible(Window window_id) const;
   virtual bool IsWindowOnTop(Window window_id) const;
+  virtual bool IsWindowShaded(Window window_id) const;
   virtual bool IsWindowClosable(Window window_id) const;
   virtual bool IsWindowMinimized(Window window_id) const;
   virtual bool IsWindowMinimizable(Window window_id) const;
@@ -94,10 +96,14 @@ public:
 
   virtual void ShowActionMenu(Time, Window, unsigned button, nux::Point const&) {}
   virtual void Maximize(Window window_id);
+  virtual void VerticallyMaximize(Window window_id);
+  virtual void HorizontallyMaximize(Window window_id);
   virtual void Restore(Window window_id);
   virtual void RestoreAt(Window window_id, int x, int y);
   virtual void Minimize(Window window_id);
   virtual void UnMinimize(Window window_id);
+  virtual void Shade(Window window_id);
+  virtual void UnShade(Window window_id);
   virtual void Close(Window window_id);
 
   virtual void Activate(Window window_id);

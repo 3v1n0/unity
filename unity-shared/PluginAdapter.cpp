@@ -573,6 +573,14 @@ bool PluginAdapter::IsWindowVisible(Window window_id) const
   return false;
 }
 
+bool PluginAdapter::IsWindowShaded(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return (window->state() & CompWindowStateShadedMask);
+
+  return false;
+}
+
 bool PluginAdapter::IsWindowOnTop(Window window_id) const
 {
   if (window_id == GetTopMostValidWindowInViewport())
@@ -683,7 +691,19 @@ bool PluginAdapter::IsWindowMaximizable(Window window_id) const
 void PluginAdapter::Maximize(Window window_id)
 {
   if (CompWindow* window = m_Screen->findWindow(window_id))
-    window->maximize(MAXIMIZE_STATE);
+    window->maximize(CompWindowStateMaximizedVertMask);
+}
+
+void PluginAdapter::VerticallyMaximize(Window window_id)
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    window->maximize(CompWindowStateMaximizedVertMask);
+}
+
+void PluginAdapter::HorizontallyMaximize(Window window_id)
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    window->maximize(CompWindowStateMaximizedHorzMask);
 }
 
 void PluginAdapter::Restore(Window window_id)
@@ -728,6 +748,26 @@ void PluginAdapter::UnMinimize(Window window_id)
   CompWindow* window = m_Screen->findWindow(window_id);
   if (window && (window->actions() & CompWindowActionMinimizeMask))
     window->unminimize();
+}
+
+void PluginAdapter::Shade(Window window_id)
+{
+  CompWindow* window = m_Screen->findWindow(window_id);
+  if (window && (window->actions() & CompWindowActionShadeMask))
+  {
+    window->changeState(window->state() | CompWindowStateShadedMask);
+    window->updateAttributes(CompStackingUpdateModeNone);
+  }
+}
+
+void PluginAdapter::UnShade(Window window_id)
+{
+  CompWindow* window = m_Screen->findWindow(window_id);
+  if (window && (window->actions() & CompWindowActionShadeMask))
+  {
+    window->changeState(window->state() & ~CompWindowStateShadedMask);
+    window->updateAttributes(CompStackingUpdateModeNone);
+  }
 }
 
 void PluginAdapter::Close(Window window_id)

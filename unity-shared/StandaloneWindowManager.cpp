@@ -45,6 +45,7 @@ StandaloneWindow::StandaloneWindow(Window xid)
   , v_maximized(false)
   , h_maximized(false)
   , minimized(false)
+  , shaded(false)
   , decorated(true)
   , has_decorations(true)
   , on_top(false)
@@ -72,15 +73,16 @@ StandaloneWindow::StandaloneWindow(Window xid)
   maximized.SetSetterFunction([this] (bool value) {
     if (maximized() == value)
       return false;
- 
+
     v_maximized = value;
     h_maximized = value;
     decorated = !value;
     return true;
   });
- 
+
   v_maximized.changed.connect([this] (bool value) { maximized.changed.emit(maximized()); });
   h_maximized.changed.connect([this] (bool value) { maximized.changed.emit(maximized()); });
+  shaded.changed.connect([this] (bool value) { minimized = value; });
 }
 
 WindowManagerPtr create_window_manager()
@@ -156,16 +158,16 @@ bool StandaloneWindowManager::IsWindowVerticallyMaximized(Window window_id) cons
   auto window = GetWindowByXid(window_id);
   if (window)
     return window->v_maximized;
- 
+
   return false;
 }
- 
+
 bool StandaloneWindowManager::IsWindowHorizontallyMaximized(Window window_id) const
 {
   auto window = GetWindowByXid(window_id);
   if (window)
     return window->h_maximized;
- 
+
   return false;
 }
 
@@ -282,6 +284,28 @@ void StandaloneWindowManager::Maximize(Window window_id)
   {
     window->maximized = true;
     window->decorated = false;
+  }
+}
+
+void StandaloneWindowManager::VerticallyMaximize(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+  {
+    window->h_maximized = false;
+    window->v_maximized = true;
+    window->decorated = true;
+  }
+}
+
+void StandaloneWindowManager::HorizontallyMaximize(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+  {
+    window->v_maximized = false;
+    window->h_maximized = true;
+    window->decorated = true;
   }
 }
 
@@ -588,6 +612,30 @@ std::vector<long> StandaloneWindowManager::GetCardinalProperty(Window, Atom) con
 {
   return std::vector<long>();
 }
+
+bool StandaloneWindowManager::IsWindowShaded(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->shaded;
+
+  return false;
+}
+
+void StandaloneWindowManager::Shade(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    window->shaded = true;
+}
+
+void StandaloneWindowManager::UnShade(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    window->shaded = false;
+}
+
 
 
 // Mock functions

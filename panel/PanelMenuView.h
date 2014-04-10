@@ -105,12 +105,13 @@ private:
   void OnWindowMoved(Window xid);
 
   void OnMaximizedActivate(int x, int y);
-  void OnMaximizedRestore(int x, int y);
-  void OnMaximizedLower(int x, int y);
-  void OnMaximizedShowActionMenu(int x, int y);
+  void OnMaximizedDoubleClicked(int x, int y);
+  void OnMaximizedMiddleClicked(int x, int y);
+  void OnMaximizedRightClicked(int x, int y);
   void OnMaximizedGrabStart(int x, int y);
   void OnMaximizedGrabMove(int x, int y);
   void OnMaximizedGrabEnd(int x, int y);
+  void MaximizedWindowWMAction(int x, int y, unsigned button);
 
   void FullRedraw();
   std::string GetCurrentTitle() const;

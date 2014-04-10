@@ -44,7 +44,7 @@ PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   mouse_double_click.connect([this] (int x, int y, unsigned long button_flags, unsigned long)
   {
     if (nux::GetEventButton(button_flags) == 1)
-      restore_request.emit(x, y);
+      double_clicked.emit(x, y);
   });
 }
 
@@ -105,11 +105,11 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
   }
   else if (mouse_down_button_ == 2)
   {
-    lower_request.emit(x, y);
+    middle_clicked.emit(x, y);
   }
   else if (mouse_down_button_ == 3)
   {
-    menu_request.emit(x, y);
+    right_clicked.emit(x, y);
   }
 }
 
@@ -122,7 +122,7 @@ void PanelTitlebarGrabArea::OnMouseUp(int x, int y, unsigned long button_flags, 
     if (mouse_down_timer_)
     {
       mouse_down_timer_.reset();
-      activate_request.emit(x, y);
+      clicked.emit(x, y);
     }
 
     if (grab_started_)

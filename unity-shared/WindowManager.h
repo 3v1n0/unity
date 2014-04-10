@@ -89,6 +89,7 @@ public:
   virtual bool IsWindowMapped(Window window_id) const = 0;
   virtual bool IsWindowVisible(Window window_id) const = 0;
   virtual bool IsWindowOnTop(Window window_id) const = 0;
+  virtual bool IsWindowShaded(Window window_id) const = 0;
   virtual bool IsWindowClosable(Window window_id) const = 0;
   virtual bool IsWindowMinimized(Window window_id) const = 0;
   virtual bool IsWindowMinimizable(Window window_id) const = 0;
@@ -100,10 +101,14 @@ public:
 
   virtual void ShowActionMenu(Time, Window, unsigned button, nux::Point const&) = 0;
   virtual void Maximize(Window window_id) = 0;
+  virtual void VerticallyMaximize(Window window_id) = 0;
+  virtual void HorizontallyMaximize(Window window_id) = 0;
   virtual void Restore(Window window_id) = 0;
   virtual void RestoreAt(Window window_id, int x, int y) = 0;
   virtual void Minimize(Window window_id) = 0;
   virtual void UnMinimize(Window window_id) = 0;
+  virtual void Shade(Window window_id) = 0;
+  virtual void UnShade(Window window_id) = 0;
   virtual void Close(Window window_id) = 0;
 
   virtual void Activate(Window window_id) = 0;
