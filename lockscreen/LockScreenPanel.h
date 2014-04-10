@@ -78,6 +78,8 @@ private:
   typedef std::pair<unsigned int, unsigned int> Accelerator;
   Accelerator ParseAcceleratorString(std::string const& string) const;
 
+  void ParseAccelerators();
+
   Accelerator activate_indicator_;
   Accelerator volume_mute_;
   Accelerator volume_down_;
@@ -107,13 +109,14 @@ private:
                unsigned long key_code,
                unsigned long state);
 
-  std::shared_ptr<glib::DBusProxy> indicator_sound_actions_;
-  std::shared_ptr<glib::DBusProxy> indicator_keyboard_actions_;
-
   /* This is just for telling an indicator to do something. */
-  void Activate(std::shared_ptr<glib::DBusProxy> indicator,
-                std::string const& action,
-                glib::Variant const& parameter = glib::Variant()) const;
+  void ActivateIndicatorAction(std::string const& bus_name,
+                               std::string const& object_path,
+                               std::string const& action,
+                               glib::Variant const& parameter = glib::Variant()) const;
+
+  void ActivateKeyboardAction(std::string const& action, glib::Variant const& parameter = glib::Variant()) const;
+  void ActivateSoundAction(std::string const& action, glib::Variant const& parameter = glib::Variant()) const;
 };
 
 } // lockscreen namespace

@@ -48,6 +48,12 @@ const std::string INPUT_SWITCH_SCHEMA    = "org.gnome.desktop.wm.keybindings";
 const std::string INPUT_SWITCH_PREVIOUS  = "switch-input-source-backward";
 const std::string INPUT_SWITCH_NEXT      = "switch-input-source";
 
+const std::string INDICATOR_KEYBOARD_BUS_NAME = "com.canonical.indicator.keyboard";
+const std::string INDICATOR_KEYBOARD_OBJECT_PATH = "/com/canonical/indicator/keyboard";
+const std::string INDICATOR_SOUND_BUS_NAME = "com.canonical.indicator.sound";
+const std::string INDICATOR_SOUND_OBJECT_PATH = "/com/canonical/indicator/sound";
+const std::string INDICATOR_ACTION_INTERFACE = "org.gtk.Actions";
+
 const unsigned int MODIFIERS = nux::KEY_MODIFIER_SHIFT |
                                nux::KEY_MODIFIER_CAPS_LOCK |
                                nux::KEY_MODIFIER_CTRL |
@@ -105,44 +111,10 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
     QueueRelayout();
   });
 
-  activate_indicator_ = WindowManager::Default().activate_indicators_key();
-  volume_mute_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_MUTE.c_str())));
-  volume_down_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_DOWN.c_str())));
-  volume_up_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_UP.c_str())));
-
-  auto variant = glib::Variant(g_settings_get_value(input_switch_settings_, INPUT_SWITCH_PREVIOUS.c_str()), glib::StealRef());
-
-  if (g_variant_n_children(variant) > 0)
-  {
-    const gchar *accelerator;
-    g_variant_get_child(variant, 0, "&s", &accelerator);
-    previous_source_ = ParseAcceleratorString(accelerator);
-  }
-  else
-    previous_source_ = std::make_pair(0, 0);
-
-  variant = glib::Variant(g_settings_get_value(input_switch_settings_, INPUT_SWITCH_NEXT.c_str()), glib::StealRef());
-
-  if (g_variant_n_children(variant) > 0)
-  {
-    const gchar *accelerator;
-    g_variant_get_child(variant, 0, "&s", &accelerator);
-    next_source_ = ParseAcceleratorString(accelerator);
-  }
-  else
-    next_source_ = std::make_pair(0, 0);
+  ParseAccelerators();
 
   key_down.connect(sigc::mem_fun(this, &Panel::OnKeyDown));
   key_up.connect(sigc::mem_fun(this, &Panel::OnKeyUp));
-
-  indicator_sound_actions_ = std::make_shared<glib::DBusProxy>("com.canonical.indicator.sound",
-                                                               "/com/canonical/indicator/sound",
-                                                               "org.gtk.Actions",
-                                                               G_BUS_TYPE_SESSION);
-  indicator_keyboard_actions_ = std::make_shared<glib::DBusProxy>("com.canonical.indicator.keyboard",
-                                                                  "/com/canonical/indicator/keyboard",
-                                                                  "org.gtk.Actions",
-                                                                  G_BUS_TYPE_SESSION);
 }
 
 void Panel::BuildTexture()
@@ -294,6 +266,36 @@ Panel::Accelerator Panel::ParseAcceleratorString(std::string const& string) cons
   return std::make_pair(nux_modifiers, nux_key);
 }
 
+void Panel::ParseAccelerators()
+{
+  activate_indicator_ = WindowManager::Default().activate_indicators_key();
+  volume_mute_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_MUTE.c_str())));
+  volume_down_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_DOWN.c_str())));
+  volume_up_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_UP.c_str())));
+
+  auto variant = glib::Variant(g_settings_get_value(input_switch_settings_, INPUT_SWITCH_PREVIOUS.c_str()), glib::StealRef());
+
+  if (g_variant_n_children(variant) > 0)
+  {
+    const gchar *accelerator;
+    g_variant_get_child(variant, 0, "&s", &accelerator);
+    previous_source_ = ParseAcceleratorString(accelerator);
+  }
+  else
+    previous_source_ = std::make_pair(0, 0);
+
+  variant = glib::Variant(g_settings_get_value(input_switch_settings_, INPUT_SWITCH_NEXT.c_str()), glib::StealRef());
+
+  if (g_variant_n_children(variant) > 0)
+  {
+    const gchar *accelerator;
+    g_variant_get_child(variant, 0, "&s", &accelerator);
+    next_source_ = ParseAcceleratorString(accelerator);
+  }
+  else
+    next_source_ = std::make_pair(0, 0);
+}
+
 bool Panel::WillHandleKeyEvent(unsigned int event_type, unsigned long key_sym, unsigned long modifiers)
 {
   auto is_press = event_type == nux::EVENT_KEY_DOWN;
@@ -416,9 +418,10 @@ void Panel::OnKeyUp(unsigned int key_sym,
   }
 }
 
-void Panel::Activate(std::shared_ptr<glib::DBusProxy> indicator,
-                     std::string const& action,
-                     glib::Variant const& parameter) const
+void Panel::ActivateIndicatorAction(std::string const& bus_name,
+                                    std::string const& object_path,
+                                    std::string const& action,
+                                    glib::Variant const& parameter = glib::Variant()) const;
 {
   GVariantBuilder builder;
 
@@ -432,7 +435,18 @@ void Panel::Activate(std::shared_ptr<glib::DBusProxy> indicator,
 
   g_variant_builder_add_parsed(&builder, "@a{sv} []");
 
-  indicator->Call("Activate", g_variant_builder_end(&builder));
+  auto proxy = std::make_shared<glib::DBusProxy>(bus_name, object_path, INDICATOR_ACTION_INTERFACE, G_BUS_TYPE_SESSION);
+  proxy->CallBegin("Activate", g_variant_builder_end(&builder), [proxy] (GVariant*, glib::Error const&) {});
+}
+
+void Panel::ActivateKeyboardAction(std::string const& action, glib::Variant const& parameter) const
+{
+  ActivateIndicatorAction(INDICATOR_KEYBOARD_BUS_NAME, INDICATOR_KEYBOARD_OBJECT_PATH, action, parameter);
+}
+
+void Panel::ActivateSoundAction(std::string const& action, glib::Variant const& parameter) const
+{
+  ActivateIndicatorAction(INDICATOR_SOUND_BUS_NAME, INDICATOR_SOUND_OBJECT_PATH, action, parameter);
 }
 
 }
