@@ -409,11 +409,13 @@ void GnomeManager::Impl::LockScreen(bool prompt)
 
   if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
   {
+    manager_->ScreenSaverActivate();
     return;
   }
   else if (manager_->UserName().find("guest-") == 0)
   {
     LOG_INFO(logger) << "Impossible to lock a guest session";
+    manager_->ScreenSaverActivate();
     return;
   }
 
