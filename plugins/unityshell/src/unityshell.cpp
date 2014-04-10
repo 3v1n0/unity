@@ -2217,14 +2217,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   screen->addAction(&scroll_up);
   screen->addAction(&scroll_down);
 
-  if (!optionGetAltTabBiasViewport())
-  {
-    if (show_mode == switcher::ShowMode::CURRENT_VIEWPORT)
-      show_mode = switcher::ShowMode::ALL;
-    else
-      show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
-  }
-
   menus_->show_menus = false;
   SetUpAndShowSwitcher(show_mode);
 
@@ -2234,6 +2226,14 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
   RaiseInputWindows();
+
+  if (!optionGetAltTabBiasViewport())
+  {
+    if (show_mode == switcher::ShowMode::CURRENT_VIEWPORT)
+      show_mode = switcher::ShowMode::ALL;
+    else
+      show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
+  }
 
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
                                                       switcher_controller_->IsShowDesktopDisabled());
