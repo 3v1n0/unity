@@ -77,7 +77,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
 
   dbus_manager_->simulate_activity.connect(sigc::mem_fun(this, &Controller::SimulateActivity));
-  dbus_manager_->request_activate.connect(sigc::mem_fun(this, &Controller::OnScreenSaverActivationRequest));
+  session_manager_->screensaver_requested.connect(sigc::mem_fun(this, &Controller::OnScreenSaverActivationRequest));
   session_manager_->lock_requested.connect(sigc::bind(sigc::mem_fun(this, &Controller::OnLockRequested), false));
   session_manager_->prompt_lock_requested.connect(sigc::bind(sigc::mem_fun(this, &Controller::OnLockRequested), true));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
@@ -356,6 +356,13 @@ void Controller::OnPresenceStatusChanged(bool is_idle)
 
 void Controller::OnScreenSaverActivationRequest(bool activate)
 {
+  if (Settings::Instance().use_legacy())
+  {
+    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+    proxy->CallBegin("SetActive", g_variant_new("(b)", activate != FALSE), [proxy] (GVariant*, glib::Error const&) {});
+    return;
+  }
+
   // It looks we need to do this after a small delay, not to get the screen back on
   screensaver_activation_timeout_.reset(new glib::Timeout(100, [this, activate] {
     if (dbus_manager_->active() == activate)

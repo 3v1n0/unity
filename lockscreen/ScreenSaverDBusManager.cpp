@@ -79,7 +79,10 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "SetActive")
     {
-      request_activate.emit(glib::Variant(parameters).GetBool());
+      if (glib::Variant(parameters).GetBool())
+        session_->ScreenSaverActivate();
+      else
+        session_->ScreenSaverDeactivate();
     }
     else if (method == "SimulateUserActivity")
     {

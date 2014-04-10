@@ -39,7 +39,6 @@ public:
   nux::Property<bool> active;
 
   sigc::signal<void> simulate_activity;
-  sigc::signal<void, bool> request_activate;
 
 private:
   void SetActive(bool active);

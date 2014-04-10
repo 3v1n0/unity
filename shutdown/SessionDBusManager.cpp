@@ -42,6 +42,8 @@ R"(<node>
     </method>
     <method name="Lock" />
     <method name="PromptLock" />
+    <method name="ActivateScreenSaver" />
+    <method name="DeactivateScreenSaver" />
     <method name="Logout" />
     <method name="RequestLogout" />
     <method name="Reboot" />
@@ -104,6 +106,14 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     else if (method == "PromptLock")
     {
       session_->PromptLockScreen();
+    }
+    else if (method == "ActivateScreenSaver")
+    {
+      session_->ScreenSaverActivate();
+    }
+    else if (method == "DeactivateScreenSaver")
+    {
+      session_->ScreenSaverDeactivate();
     }
     else if (method == "Logout")
     {

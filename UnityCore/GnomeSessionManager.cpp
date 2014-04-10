@@ -453,6 +453,16 @@ std::string GnomeManager::HostName() const
   return glib::gchar_to_string(g_get_host_name());
 }
 
+void GnomeManager::ScreenSaverActivate()
+{
+  screensaver_requested.emit(true);
+}
+
+void GnomeManager::ScreenSaverDeactivate()
+{
+  screensaver_requested.emit(false);
+}
+
 void GnomeManager::LockScreen()
 {
   impl_->LockScreen(false);
@@ -558,7 +568,7 @@ void GnomeManager::Suspend()
   impl_->EnsureCancelPendingAction();
   impl_->CallLogindMethod("Suspend", g_variant_new("(b)", FALSE), [this] (GVariant* variant, glib::Error const& err) {
     // fallback to UPower
-    if (err) 
+    if (err)
       impl_->CallUPowerMethod("Suspend");
   });
 }

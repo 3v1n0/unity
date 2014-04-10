@@ -40,6 +40,8 @@ public:
   std::string UserName() const { return "marco"; }
   std::string HostName() const { return "tricky"; }
 
+  void ScreenSaverActivate() { std::cout << "ScreenSaverActivate" << std::endl; }
+  void ScreenSaverDeactivate() { std::cout << "ScreenSaverDeactivate" << std::endl; }
   void LockScreen() { std::cout << "LockScreen" << std::endl; }
   void PromptLockScreen() { std::cout << "PromptLockScreen" << std::endl; }
   void Logout() { std::cout << "Logout" << std::endl; }

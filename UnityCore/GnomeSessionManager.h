@@ -37,6 +37,8 @@ public:
   std::string UserName() const;
   std::string HostName() const;
 
+  void ScreenSaverActivate();
+  void ScreenSaverDeactivate();
   void LockScreen();
   void PromptLockScreen();
   void Logout();
