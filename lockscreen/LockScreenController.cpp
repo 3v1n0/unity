@@ -304,7 +304,7 @@ void Controller::OnLockRequested(bool prompt)
     blank_window_->SetOpacity(1.0);
   }
 
-  lockscreen_timeout_.reset(new glib::Timeout(10, [this, prompt] {
+  lockscreen_timeout_.reset(new glib::Timeout(30, [this, prompt] {
     bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
 
     if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
