@@ -24,10 +24,11 @@ set (LOCKSCREEN_SOURCES
      LockScreenShield.cpp
      LockScreenShieldFactory.cpp
      LockScreenPanel.cpp
+     ScreenSaverDBusManager.cpp
      UserAuthenticatorPam.cpp
      UserPromptView.cpp
      )
 
 add_library (lockscreen-lib STATIC ${LOCKSCREEN_SOURCES})
-add_dependencies (lockscreen-lib unity-core-${UNITY_API_VERSION} unity-shared panel-lib pam)
+add_dependencies (lockscreen-lib unity-core-${UNITY_API_VERSION} unity-shared pam)
 add_pch(pch/lockscreen_pch.hh lockscreen-lib)

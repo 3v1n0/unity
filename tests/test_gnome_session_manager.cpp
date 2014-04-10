@@ -44,6 +44,9 @@ const std::string SESSION_MANAGER_PATH = "/org/gnome/SessionManager";
 
 const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
 const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
+
+const std::string GNOME_LOCKDOWN_OPTIONS = "org.gnome.desktop.lockdown";
+const std::string DISABLE_LOCKSCREEN_KEY = "disable-lock-screen";
 }
 
 namespace introspection
@@ -289,6 +292,12 @@ struct TestGnomeSessionManager : testing::Test
     ASSERT_TRUE(SettingsAvailable());
     glib::Object<GSettings> setting(g_settings_new(SESSION_OPTIONS.c_str()));
     g_settings_set_boolean(setting, SUPPRESS_DIALOGS_KEY.c_str(), enable ? FALSE : TRUE);
+  }
+
+  void DisableScreenLocking(bool disable)
+  {
+    glib::Object<GSettings> setting(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
+    g_settings_set_boolean(setting, DISABLE_LOCKSCREEN_KEY.c_str(), disable ? TRUE : FALSE);
   }
 
   enum class Action : unsigned
@@ -1008,6 +1017,23 @@ TEST_F(TestGnomeSessionManager, LogindUnLock)
 
   Utils::WaitUntilMSec(unlock_emitted);
   EXPECT_TRUE(unlock_emitted);
+}
+
+TEST_F(TestGnomeSessionManager, NoLockWhenLockingDisabled)
+{
+  bool lock_emitted = false;
+
+  manager->lock_requested.connect([&lock_emitted]()
+  {
+    lock_emitted = true;
+  });
+
+  DisableScreenLocking(true);
+
+  manager->LockScreen();
+  EXPECT_FALSE(lock_emitted);
+
+  DisableScreenLocking(false);
 }
 
 } // Namespace

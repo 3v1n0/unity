@@ -175,6 +175,8 @@ nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsi
 {
   if (primary)
   {
+    grab_key.emit(modifiers, key_code);
+
     if (panel_view_)
     {
       modifiers &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL | nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);

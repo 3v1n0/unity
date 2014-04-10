@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
- * unity.cpp
+ * unity.cpp 
  *
  * Copyright (c) 2010-11 Canonical Ltd.
  *
@@ -350,7 +350,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-     optionSetLockScreenTypeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetAltTabForwardAllInitiate(boost::bind(&UnityScreen::altTabForwardAllInitiate, this, _1, _2, _3));
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
@@ -1985,6 +1984,9 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 
+  if (g_strcmp0(plugin, "scale") == 0)
+    g_print("Scale event %s\n",event);
+
   if (adapter.IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
       super_keypressed_)
   {
@@ -2802,7 +2804,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    */
   if (G_UNLIKELY(is_nux_window_) &&
      (!uScreen->lockscreen_controller_->IsLocked() ||
-      uScreen->lockscreen_controller_->Opacity() != 1.0f))
+      uScreen->lockscreen_controller_->opacity() != 1.0f))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
@@ -2867,11 +2869,12 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       // (well, it works too much, as it applies to menus too), so we need
       // to paint the windows at the proper opacity, overriding any other
       // paint plugin (animation, fade?) that might interfere with us.
-      wAttrib.opacity = COMPIZ_COMPOSITE_OPAQUE * (1.0f - uScreen->lockscreen_controller_->Opacity());
+      wAttrib.opacity = COMPIZ_COMPOSITE_OPAQUE * (1.0f - uScreen->lockscreen_controller_->opacity());
       int old_index = gWindow->glPaintGetCurrentIndex();
       gWindow->glPaintSetCurrentIndex(MAXSHORT);
       bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
       gWindow->glPaintSetCurrentIndex(old_index);
+      deco_win_->Paint(matrix, wAttrib, region, mask);
       return ret;
     }
   }
@@ -3567,9 +3570,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::EdgePassedDisabledMs:
       launcher_options->edge_passed_disabled_ms = optionGetEdgePassedDisabledMs();
       break;
-    case UnityshellOptions::LockScreenType:
-      lockscreen_settings_.lockscreen_type = static_cast<lockscreen::Type>(optionGetLockScreenType());
-      break;
     case UnityshellOptions::PanelFirstMenu:
       UpdateActivateIndicatorsKey();
       break;
@@ -3813,15 +3813,15 @@ void UnityScreen::initLauncher()
 
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
+  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::LockscreenRequested));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
 
   // Setup Lockscreen Controller
-  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(manager);
+  screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
+  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, manager);
   UpdateActivateIndicatorsKey();
-
-  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::LockscreenRequested));
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin

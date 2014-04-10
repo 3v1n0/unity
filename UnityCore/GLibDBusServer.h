@@ -81,7 +81,7 @@ public:
   typedef std::shared_ptr<DBusServer> Ptr;
 
   DBusServer(GBusType bus_type = G_BUS_TYPE_SESSION);
-  DBusServer(std::string const& name, GBusType bus_type = G_BUS_TYPE_SESSION);
+  DBusServer(std::string const& name, GBusType bus_type = G_BUS_TYPE_SESSION, GBusNameOwnerFlags flags = G_BUS_NAME_OWNER_FLAGS_NONE);
   virtual ~DBusServer();
 
   void AddObjects(std::string const& introspection_xml, std::string const& path);

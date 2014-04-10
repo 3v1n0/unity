@@ -40,7 +40,10 @@ public:
   virtual std::string UserName() const = 0;
   virtual std::string HostName() const = 0;
 
+  virtual void ScreenSaverActivate() = 0;
+  virtual void ScreenSaverDeactivate() = 0;
   virtual void LockScreen() = 0;
+  virtual void PromptLockScreen() = 0;
   virtual void Logout() = 0;
   virtual void Reboot() = 0;
   virtual void Shutdown() = 0;
@@ -59,11 +62,14 @@ public:
 
   sigc::signal<void> lock_requested;
   sigc::signal<void> unlock_requested;
+  sigc::signal<void> prompt_lock_requested;
   sigc::signal<void> locked;
   sigc::signal<void> unlocked;
   sigc::signal<void, bool /* inhibitors */> logout_requested;
   sigc::signal<void, bool /* inhibitors */> reboot_requested;
   sigc::signal<void, bool /* inhibitors */> shutdown_requested;
+  sigc::signal<void, bool /* is_idle */> presence_status_changed;
+  sigc::signal<void, bool /* active */> screensaver_requested;
 
   sigc::signal<void> cancel_requested;
 };

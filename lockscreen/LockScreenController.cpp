@@ -34,44 +34,69 @@ namespace lockscreen
 {
 namespace
 {
-const unsigned int FADE_DURATION = 400;
-}
+const unsigned int IDLE_FADE_DURATION = 10000;
+const unsigned int LOCK_FADE_DURATION = 400;
+const unsigned int POST_LOCK_SCREENSAVER_WAIT = 2;
 
-namespace testing
+class BlankWindow : public nux::BaseWindow
 {
-const std::string DBUS_NAME = "com.canonical.Unity.Test.DisplayManager";
+public:
+  BlankWindow() : nux::BaseWindow("UnityScreensaver") {}
+  bool AcceptKeyNavFocus() override { return true; }
+  bool InspectKeyEvent(unsigned int, unsigned int, const char*) override { return true; };
+};
 }
 
-DECLARE_LOGGER(logger, "unity.locksreen");
+DECLARE_LOGGER(logger, "unity.lockscreen");
 
-Controller::Controller(session::Manager::Ptr const& session_manager,
+Controller::Controller(DBusManager::Ptr const& dbus_manager,
+                       session::Manager::Ptr const& session_manager,
                        UpstartWrapper::Ptr const& upstart_wrapper,
                        ShieldFactoryInterface::Ptr const& shield_factory,
                        bool test_mode)
-  : session_manager_(session_manager)
+  : opacity([this] { return fade_animator_.GetCurrentValue(); })
+  , dbus_manager_(dbus_manager)
+  , session_manager_(session_manager)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
-  , fade_animator_(FADE_DURATION)
+  , fade_animator_(LOCK_FADE_DURATION)
+  , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
+  , prompt_activation_(false)
 {
-  uscreen_connection_ = UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
+  auto* uscreen = UScreen::GetDefault();
+  uscreen_connection_ = uscreen->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
     EnsureShields(monitors);
+    EnsureBlankWindow();
   });
+
   uscreen_connection_->block();
 
-  session_manager_->lock_requested.connect(sigc::mem_fun(this, &Controller::OnLockRequested));
+  suspend_connection_ = uscreen->suspending.connect([this] {
+    if (Settings::Instance().lock_on_suspend())
+      session_manager_->PromptLockScreen();
+  });
+
+  dbus_manager_->simulate_activity.connect(sigc::mem_fun(this, &Controller::SimulateActivity));
+  session_manager_->screensaver_requested.connect(sigc::mem_fun(this, &Controller::OnScreenSaverActivationRequest));
+  session_manager_->lock_requested.connect(sigc::bind(sigc::mem_fun(this, &Controller::OnLockRequested), false));
+  session_manager_->prompt_lock_requested.connect(sigc::bind(sigc::mem_fun(this, &Controller::OnLockRequested), true));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
+  session_manager_->presence_status_changed.connect(sigc::mem_fun(this, &Controller::OnPresenceStatusChanged));
 
   fade_animator_.updated.connect([this](double value) {
     std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
       shield->SetOpacity(value);
     });
+
+    opacity.changed.emit(value);
   });
 
   fade_animator_.finished.connect([this] {
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
     {
       motion_connection_->disconnect();
+      key_connection_->disconnect();
       uscreen_connection_->block();
       session_manager_->unlocked.emit();
 
@@ -81,13 +106,45 @@ Controller::Controller(session::Manager::Ptr const& session_manager,
 
       shields_.clear();
 
-      if (Settings::Instance().lockscreen_type() == Type::UNITY)
-      {
-        upstart_wrapper_->Emit("desktop-unlock");
-        indicators_.reset();
-      }
+      upstart_wrapper_->Emit("desktop-unlock");
+      indicators_.reset();
+    }
+    else if (!prompt_activation_)
+    {
+      screensaver_post_lock_timeout_.reset(new glib::TimeoutSeconds(POST_LOCK_SCREENSAVER_WAIT, [this] {
+        OnPresenceStatusChanged(true);
+        return false;
+      }));
     }
   });
+
+  blank_window_animator_.updated.connect([this](double value) {
+    if (blank_window_)
+      blank_window_->SetOpacity(value);
+  });
+
+  blank_window_animator_.finished.connect([this] {
+    bool shown = blank_window_animator_.GetCurrentValue() == 1.0;
+    BlankWindowGrabEnable(shown);
+    dbus_manager_->active = shown;
+    lockscreen_delay_timeout_.reset();
+
+    if (shown && Settings::Instance().lock_on_blank())
+    {
+      int lock_delay = Settings::Instance().lock_delay();
+
+      lockscreen_delay_timeout_.reset(new glib::TimeoutSeconds(lock_delay, [this] {
+        session_manager_->PromptLockScreen();
+        return false;
+      }));
+    }
+  });
+}
+
+void Controller::ResetPostLockScreenSaver()
+{
+  screensaver_post_lock_timeout_.reset();
+  HideBlankWindow();
 }
 
 void Controller::OnPrimaryShieldMotion(int x, int y)
@@ -104,17 +161,20 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
       shield->primary = true;
       auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
       motion_connection_ = shield->grab_motion.connect(move_cb);
+      auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
+      key_connection_ = shield->grab_key.connect(key_cb);
       break;
     }
   }
+
+  ResetPostLockScreenSaver();
 }
 
 void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 {
   int num_monitors = monitors.size();
   int shields_size = shields_.size();
-  bool unity_mode = (Settings::Instance().lockscreen_type() == Type::UNITY);
-  int primary = unity_mode ? UScreen::GetDefault()->GetMonitorWithMouse() : -1;
+  int primary = UScreen::GetDefault()->GetMonitorWithMouse();
 
   shields_.resize(num_monitors);
 
@@ -138,77 +198,192 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
     {
       shield->SetOpacity(fade_animator_.GetCurrentValue());
       shield->ShowWindow(true);
-      shield->PushToFront();
     }
   }
 
-  if (unity_mode)
+  primary_shield_ = shields_[primary];
+  primary_shield_->primary = true;
+  auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
+  motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
+  auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
+  key_connection_ = primary_shield_->grab_key.connect(key_cb);
+}
+
+void Controller::EnsureBlankWindow()
+{
+  auto const& screen_geo = UScreen::GetDefault()->GetScreenGeometry();
+
+  if (!blank_window_)
   {
-    primary_shield_ = shields_[primary];
-    primary_shield_->primary = true;
-    auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
-    motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
+    blank_window_ = new BlankWindow();
+    blank_window_->SetBackgroundLayer(new nux::ColorLayer(nux::color::Black, true));
+    blank_window_->SetOpacity(blank_window_animator_.GetCurrentValue());
+    blank_window_->ShowWindow(true);
+    blank_window_->PushToFront();
+  }
+
+  blank_window_->SetGeometry(screen_geo);
+  blank_window_->SetMinMaxSize(screen_geo.width, screen_geo.height);
+}
+
+void Controller::ShowBlankWindow()
+{
+  if (blank_window_ && blank_window_->GetOpacity() == 1.0)
+    return;
+
+  EnsureBlankWindow();
+  animation::StartOrReverse(blank_window_animator_, animation::Direction::FORWARD);
+}
+
+void Controller::HideBlankWindow()
+{
+  if (!blank_window_)
+    return;
+
+  blank_window_->ShowWindow(false);
+  blank_window_.Release();
+  animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
+  lockscreen_delay_timeout_.reset();
+}
+
+void Controller::BlankWindowGrabEnable(bool grab)
+{
+  if (!blank_window_)
+    return;
+
+  if (grab)
+  {
+    for (auto const& shield : shields_)
+    {
+      shield->UnGrabPointer();
+      shield->UnGrabKeyboard();
+    }
+
+    blank_window_->EnableInputWindow(true);
+    blank_window_->GrabPointer();
+    blank_window_->GrabKeyboard();
+    blank_window_->PushToFront();
+
+    blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
+      if ((dx || dy) && !lockscreen_timeout_) HideBlankWindow();
+    });
+    blank_window_->key_down.connect([this] (unsigned long, unsigned long e, unsigned long, const char*, unsigned short) {
+      if (!lockscreen_timeout_) HideBlankWindow();
+    });
+    blank_window_->mouse_down.connect([this] (int, int, unsigned long, unsigned long) {
+      if (!lockscreen_timeout_) HideBlankWindow();
+    });
+  }
+  else
+  {
+    blank_window_->UnGrabPointer();
+    blank_window_->UnGrabKeyboard();
+
+    for (auto const& shield : shields_)
+    {
+      if (!shield->primary())
+        continue;
+
+      shield->GrabPointer();
+      shield->GrabKeyboard();
+    }
   }
 }
 
-void Controller::OnLockRequested()
+void Controller::OnLockRequested(bool prompt)
 {
+  if (Settings::Instance().use_legacy())
+  {
+    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+    proxy->CallBegin("Lock", nullptr, [proxy] (GVariant*, glib::Error const&) {});
+    return;
+  }
+
   if (IsLocked())
   {
     LOG_DEBUG(logger) << "Failed to lock screen: the screen is already locked.";
     return;
   }
 
-  lockscreen_timeout_.reset(new glib::Timeout(10, [this](){
-    if (WindowManager::Default().IsScreenGrabbed())
+  if (prompt)
+  {
+    EnsureBlankWindow();
+    blank_window_->SetOpacity(1.0);
+  }
+
+  prompt_activation_ = prompt;
+
+  lockscreen_timeout_.reset(new glib::Timeout(30, [this] {
+    bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
+
+    if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
     {
+      HideBlankWindow();
       LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";
       return true; // keep trying
     }
 
-    auto lockscreen_type = Settings::Instance().lockscreen_type();
+    if (!prompt_activation_)
+      HideBlankWindow();
 
-    if (lockscreen_type == Type::NONE)
-    {
-      session_manager_->unlocked.emit();
-      return false;
-    }
-
-    if (lockscreen_type == Type::LIGHTDM)
-    {
-      LockScreenUsingDisplayManager();
-    }
-    else if (lockscreen_type == Type::UNITY)
-    {
-      LockScreenUsingUnity();
-    }
-
+    LockScreen();
     session_manager_->locked.emit();
+
+    if (prompt_activation_)
+    {
+      animation::Skip(fade_animator_);
+      HideBlankWindow();
+    }
+
+    lockscreen_timeout_.reset();
+    return false;
+  }));
+}
+
+void Controller::OnPresenceStatusChanged(bool is_idle)
+{
+  if (Settings::Instance().use_legacy())
+    return;
+
+  if (is_idle)
+  {
+    ShowBlankWindow();
+  }
+  else if (!lockscreen_timeout_)
+  {
+    HideBlankWindow();
+  }
+}
+
+void Controller::OnScreenSaverActivationRequest(bool activate)
+{
+  if (Settings::Instance().use_legacy())
+  {
+    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+    proxy->CallBegin("SetActive", g_variant_new("(b)", activate != FALSE), [proxy] (GVariant*, glib::Error const&) {});
+    return;
+  }
+
+  // It looks we need to do this after a small delay, not to get the screen back on
+  screensaver_activation_timeout_.reset(new glib::Timeout(100, [this, activate] {
+    if (dbus_manager_->active() == activate)
+      return false;
+
+    if (activate)
+    {
+      ShowBlankWindow();
+      animation::Skip(blank_window_animator_);
+    }
+    else
+    {
+      SimulateActivity();
+    }
 
     return false;
   }));
 }
 
-void Controller::LockScreenUsingDisplayManager()
-{
-  // TODO (andy) Move to a different class (DisplayManagerWrapper)
-  const char* session_path = g_getenv("XDG_SESSION_PATH");
-
-  if (!session_path)
-    return;
-
-  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
-                                                 session_path,
-                                                 "org.freedesktop.DisplayManager.Session",
-                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
-
-  proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
-
-  ShowShields();
-  animation::Skip(fade_animator_);
-}
-
-void Controller::LockScreenUsingUnity()
+void Controller::LockScreen()
 {
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
@@ -234,26 +409,26 @@ void Controller::ShowShields()
   animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }
 
+void Controller::SimulateActivity()
+{
+  HideBlankWindow();
+  XResetScreenSaver(nux::GetGraphicsDisplay()->GetX11Display());
+}
+
 void Controller::OnUnlockRequested()
 {
   lockscreen_timeout_.reset();
+  screensaver_post_lock_timeout_.reset();
 
-  if (!IsLocked())
-    return;
-
-  auto lockscreen_type = Settings::Instance().lockscreen_type();
-
-  if (lockscreen_type == Type::NONE)
-    return;
-
+  HideBlankWindow();
   HideShields();
-
-  if (lockscreen_type == Type::LIGHTDM)
-    animation::Skip(fade_animator_);
 }
 
 void Controller::HideShields()
 {
+  if (!IsLocked())
+    return;
+
   std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
     shield->UnGrabPointer();
     shield->UnGrabKeyboard();
@@ -268,11 +443,6 @@ void Controller::HideShields()
 bool Controller::IsLocked() const
 {
   return !shields_.empty();
-}
-
-double Controller::Opacity() const
-{
-  return fade_animator_.GetCurrentValue();
 }
 
 bool Controller::HasOpenMenu() const
