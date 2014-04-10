@@ -41,6 +41,7 @@ R"(<node>
       <arg type="s" direction="out" name="hostname" />
     </method>
     <method name="Lock" />
+    <method name="PromptLock" />
     <method name="Logout" />
     <method name="RequestLogout" />
     <method name="Reboot" />
