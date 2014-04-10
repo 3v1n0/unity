@@ -219,5 +219,17 @@ TEST_F(TestShortcutController, UnsetFirstRunOnHide)
   EXPECT_FALSE(controller_.view_->closable());
 }
 
+TEST_F(TestShortcutController, CloseRequestIsHandled)
+{
+  controller_.first_run = true;
+  controller_.ConstructView();
+  controller_.Show();
+  controller_.OnShowTimer();
+  tick_source_.tick(100 * 1000);
+  controller_.view_->request_close.emit();
+
+  EXPECT_FALSE(controller_.Visible());
+}
+
 }
 }

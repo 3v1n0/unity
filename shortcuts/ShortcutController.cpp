@@ -157,6 +157,7 @@ void Controller::ConstructView()
   view_->SetModel(modeller_->GetCurrentModel());
   view_->background_color = WindowManager::Default().average_color();
   view_->closable = first_run();
+  view_->request_close.connect(sigc::mem_fun(this, &Controller::Hide));
 
   if (!view_window_)
   {
