@@ -1984,9 +1984,6 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 
-  if (g_strcmp0(plugin, "scale") == 0)
-    g_print("Scale event %s\n",event);
-
   if (adapter.IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
       super_keypressed_)
   {

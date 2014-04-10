@@ -22,8 +22,10 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <UnityCore/Indicators.h>
+#include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibSource.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Indicators.h>
 #include <UnityCore/SessionManager.h>
 
 namespace unity
@@ -43,6 +45,8 @@ public:
 
   nux::Property<bool> active;
   nux::Property<int> monitor;
+
+  bool WillHandleKeyEvent(unsigned int event_type, unsigned long key_sym, unsigned long modifiers);
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) override;
@@ -67,6 +71,52 @@ private:
   bool needs_geo_sync_;
   nux::Point tracked_pointer_pos_;
   glib::Source::UniquePtr track_menu_pointer_timeout_;
+
+  glib::Object<GSettings> media_key_settings_;
+  glib::Object<GSettings> input_switch_settings_;
+
+  typedef std::pair<unsigned int, unsigned int> Accelerator;
+  Accelerator ParseAcceleratorString(std::string const& string) const;
+
+  void ParseAccelerators();
+
+  Accelerator activate_indicator_;
+  Accelerator volume_mute_;
+  Accelerator volume_down_;
+  Accelerator volume_up_;
+  Accelerator previous_source_;
+  Accelerator next_source_;
+
+  /* We only want to activate the indicator on key press OR key
+   * release, never both, so we'll need to keep track of the last
+   * action that occurred. However, holding the keys down should
+   * allow multiple activations, for example, when the volume
+   * down button is held down. */
+  Accelerator last_action_;
+
+  bool IsMatch(bool is_press,
+               unsigned int key_sym,
+               unsigned int modifiers,
+               Accelerator const& accelerator) const;
+
+  void OnKeyDown(unsigned long event,
+                 unsigned long key_sym,
+                 unsigned long state,
+                 const char* text,
+                 unsigned short repeat);
+
+  void OnKeyUp(unsigned int key_sym,
+               unsigned long key_code,
+               unsigned long state);
+
+  /* This is just for telling an indicator to do something. */
+  void ActivateIndicatorAction(std::string const& bus_name,
+                               std::string const& object_path,
+                               std::string const& action,
+                               glib::Variant const& parameter = glib::Variant()) const;
+
+  void ActivateKeyboardAction(std::string const& action, glib::Variant const& parameter = glib::Variant()) const;
+  void ActivateSoundAction(std::string const& action, glib::Variant const& parameter = glib::Variant()) const;
 };
 
 } // lockscreen namespace

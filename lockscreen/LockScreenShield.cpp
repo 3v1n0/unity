@@ -177,20 +177,14 @@ UserPromptView* Shield::CreatePromptView()
   return prompt_view;
 }
 
-nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsigned long modifiers)
+nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long key_sym, unsigned long modifiers)
 {
   if (primary)
   {
-    grab_key.emit(modifiers, key_code);
+    grab_key.emit(modifiers, key_sym);
 
-    if (panel_view_)
-    {
-      modifiers &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL | nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
-      auto const& indicators_key = WindowManager::Default().activate_indicators_key();
-
-      if (indicators_key.first == modifiers && indicators_key.second == key_code)
-        return panel_view_;
-    }
+    if (panel_view_ && panel_view_->WillHandleKeyEvent(etype, key_sym, modifiers))
+      return panel_view_;
 
     if (prompt_view_)
     {
