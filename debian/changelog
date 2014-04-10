@@ -1,3 +1,46 @@
+unity (7.2.0+14.04.20140410.1-0ubuntu1) trusty; urgency=low
+
+  [ Sami Jaktholm ]
+  * Shortcuts: Listen and react to view close requests. (LP: #1297842)
+
+  [ Brandon Schaefer ]
+  * When we detect caps lock, or caps lock is pressed, render a warning
+    icon to show its on. (LP: #1291737)
+
+  [ Marco Trevisan (Treviño) ]
+  * DecorationsGrabEdge, PanelMenuView: perform proper WM action on
+    clicks, based on user settings (LP: #1283849)
+
+  [ Alfred Neumayer ]
+  * Alt-Tab has always respected the alt-tab-bias-viewport setting, but
+    the 3-finger gesture to switch between windows has not, even though
+    it does the same thing. They should behave the same way depending on
+    the CCSM setting. (LP: #1303060)
+  * Launcher: Show and hide the launcher window OnDragUpdate() to fix
+    the gesture animations (LP: #1303141)
+  * If the dash has not been opened before, a 4 finger tap will result
+    in a dash with no selected scope. Instead, set up the window and
+    view of the dash by sending DASH_ABOUT_TO_SHOW (same happens when
+    hovering the mouse pointer over the BFB icon) and open the home
+    scope. (LP: #1303468)
+
+  [ CI bot ]
+  * LockScreen: add ability to show without fading in on some system
+    calls Also, if locking is not enabled, calling Lock causes the
+    screensaver to be initiated. Many cleanups and misc fixes. (LP:
+    #1292575)
+
+  [ William Hua ]
+  * Enable sound buttons and input source switching under lock screen.
+
+  [ Eleni Maria Stea ]
+  * It fixes the quicklist menu appearance. (LP: #1298859)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 10 Apr 2014 17:43:46 +0000
+
 unity (7.2.0+14.04.20140410-0ubuntu1) trusty; urgency=low
 
   [ CI bot ]
