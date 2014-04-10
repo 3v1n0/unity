@@ -21,6 +21,7 @@
 
 #include <boost/algorithm/string/trim.hpp>
 #include <Nux/HLayout.h>
+#include <UnityCore/Variant.h>
 
 #include "LockScreenSettings.h"
 #include "panel/PanelIndicatorsView.h"
@@ -38,6 +39,20 @@ namespace lockscreen
 namespace
 {
 const RawPixel PADDING = 5_em;
+
+const std::string MEDIA_KEYS_SCHEMA      = "org.gnome.settings-daemon.plugins.media-keys";
+const std::string MEDIA_KEYS_VOLUME_MUTE = "volume-mute";
+const std::string MEDIA_KEYS_VOLUME_DOWN = "volume-down";
+const std::string MEDIA_KEYS_VOLUME_UP   = "volume-up";
+const std::string INPUT_SWITCH_SCHEMA    = "org.gnome.desktop.wm.keybindings";
+const std::string INPUT_SWITCH_PREVIOUS  = "switch-input-source-backward";
+const std::string INPUT_SWITCH_NEXT      = "switch-input-source";
+
+const unsigned int MODIFIERS = nux::KEY_MODIFIER_SHIFT |
+                               nux::KEY_MODIFIER_CAPS_LOCK |
+                               nux::KEY_MODIFIER_CTRL |
+                               nux::KEY_MODIFIER_ALT |
+                               nux::KEY_MODIFIER_SUPER;
 }
 
 using namespace indicator;
@@ -49,6 +64,8 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
   , monitor(monitor_)
   , indicators_(indicators)
   , needs_geo_sync_(true)
+  , media_key_settings_(g_settings_new(MEDIA_KEYS_SCHEMA.c_str()))
+  , input_switch_settings_(g_settings_new(INPUT_SWITCH_SCHEMA.c_str()))
 {
   double scale = unity::Settings::Instance().em(monitor)->DPIScale();
   auto* layout = new nux::HLayout();
@@ -87,6 +104,45 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
     BuildTexture();
     QueueRelayout();
   });
+
+  activate_indicator_ = WindowManager::Default().activate_indicators_key();
+  volume_mute_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_MUTE.c_str())));
+  volume_down_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_DOWN.c_str())));
+  volume_up_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_UP.c_str())));
+
+  auto variant = glib::Variant(g_settings_get_value(input_switch_settings_, INPUT_SWITCH_PREVIOUS.c_str()), glib::StealRef());
+
+  if (g_variant_n_children(variant) > 0)
+  {
+    const gchar *accelerator;
+    g_variant_get_child(variant, 0, "&s", &accelerator);
+    previous_source_ = ParseAcceleratorString(accelerator);
+  }
+  else
+    previous_source_ = std::make_pair(0, 0);
+
+  variant = glib::Variant(g_settings_get_value(input_switch_settings_, INPUT_SWITCH_NEXT.c_str()), glib::StealRef());
+
+  if (g_variant_n_children(variant) > 0)
+  {
+    const gchar *accelerator;
+    g_variant_get_child(variant, 0, "&s", &accelerator);
+    next_source_ = ParseAcceleratorString(accelerator);
+  }
+  else
+    next_source_ = std::make_pair(0, 0);
+
+  key_down.connect(sigc::mem_fun(this, &Panel::OnKeyDown));
+  key_up.connect(sigc::mem_fun(this, &Panel::OnKeyUp));
+
+  indicator_sound_actions_ = std::make_shared<glib::DBusProxy>("com.canonical.indicator.sound",
+                                                               "/com/canonical/indicator/sound",
+                                                               "org.gtk.Actions",
+                                                               G_BUS_TYPE_SESSION);
+  indicator_keyboard_actions_ = std::make_shared<glib::DBusProxy>("com.canonical.indicator.keyboard",
+                                                                  "/com/canonical/indicator/keyboard",
+                                                                  "org.gtk.Actions",
+                                                                  G_BUS_TYPE_SESSION);
 }
 
 void Panel::BuildTexture()
@@ -215,10 +271,168 @@ void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   }
 }
 
+Panel::Accelerator Panel::ParseAcceleratorString(std::string const& string) const
+{
+  guint gtk_key;
+  GdkModifierType gtk_modifiers;
+  gtk_accelerator_parse(string.c_str(), &gtk_key, &gtk_modifiers);
+
+  unsigned int nux_key = gtk_key;
+  unsigned int nux_modifiers = 0;
+
+  if (gtk_modifiers & GDK_SHIFT_MASK)
+    nux_modifiers |= nux::KEY_MODIFIER_SHIFT;
+  if (gtk_modifiers & GDK_LOCK_MASK)
+    nux_modifiers |= nux::KEY_MODIFIER_CAPS_LOCK;
+  if (gtk_modifiers & GDK_CONTROL_MASK)
+    nux_modifiers |= nux::KEY_MODIFIER_CTRL;
+  if (gtk_modifiers & GDK_MOD1_MASK)
+    nux_modifiers |= nux::KEY_MODIFIER_ALT;
+  if (gtk_modifiers & GDK_SUPER_MASK)
+    nux_modifiers |= nux::KEY_MODIFIER_SUPER;
+
+  return std::make_pair(nux_modifiers, nux_key);
+}
+
+bool Panel::WillHandleKeyEvent(unsigned int event_type, unsigned long key_sym, unsigned long modifiers)
+{
+  auto is_press = event_type == nux::EVENT_KEY_DOWN;
+
+  /* If we're just pressing a key, and no modifiers are pressed, then
+   * we can start accepting new actions again. */
+  if (is_press && (modifiers & MODIFIERS) == 0)
+    last_action_ = std::make_pair(0, 0);
+
+  return IsMatch(is_press, key_sym, modifiers, activate_indicator_) ||
+         IsMatch(is_press, key_sym, modifiers, volume_mute_) ||
+         IsMatch(is_press, key_sym, modifiers, volume_down_) ||
+         IsMatch(is_press, key_sym, modifiers, volume_up_) ||
+         IsMatch(is_press, key_sym, modifiers, previous_source_) ||
+         IsMatch(is_press, key_sym, modifiers, next_source_);
+}
+
 bool Panel::InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char*)
 {
-  ActivateFirst();
   return true;
+}
+
+bool Panel::IsMatch(bool is_press,
+                    unsigned int key_sym,
+                    unsigned int state,
+                    Accelerator const& accelerator) const
+{
+  /* Do the easy check, just compare key codes and modifiers.
+   * TODO: Check permutations of modifier-only shortcuts. */
+  return key_sym == accelerator.second && (state & MODIFIERS) == accelerator.first;
+}
+
+void Panel::OnKeyDown(unsigned long event,
+                      unsigned long key_sym,
+                      unsigned long state,
+                      const char* text,
+                      unsigned short repeat)
+{
+  if (IsMatch(true, key_sym, state, activate_indicator_))
+  {
+    ActivateFirst();
+    last_action_ = activate_indicator_;
+  }
+  else if (IsMatch(true, key_sym, state, volume_mute_))
+  {
+    Activate(indicator_sound_actions_, "mute");
+    last_action_ = volume_mute_;
+  }
+  else if (IsMatch(true, key_sym, state, volume_down_))
+  {
+    Activate(indicator_sound_actions_, "scroll", g_variant_new_int32(-1));
+    last_action_ = volume_down_;
+  }
+  else if (IsMatch(true, key_sym, state, volume_up_))
+  {
+    Activate(indicator_sound_actions_, "scroll", g_variant_new_int32(+1));
+    last_action_ = volume_up_;
+  }
+  else if (IsMatch(true, key_sym, state, previous_source_))
+  {
+    Activate(indicator_keyboard_actions_, "locked_scroll", g_variant_new_int32(-1));
+    last_action_ = previous_source_;
+  }
+  else if (IsMatch(true, key_sym, state, next_source_))
+  {
+    Activate(indicator_keyboard_actions_, "locked_scroll", g_variant_new_int32(+1));
+    last_action_ = next_source_;
+  }
+}
+
+void Panel::OnKeyUp(unsigned int key_sym,
+                    unsigned long key_code,
+                    unsigned long state)
+{
+  /* We only want to act if we didn't activate the action on key
+   * down. Once we see the key up, we can start accepting actions
+   * again. */
+
+  if (IsMatch(false, key_sym, state, activate_indicator_))
+  {
+    if (last_action_ != activate_indicator_)
+      ActivateFirst();
+
+    last_action_ = std::make_pair(0, 0);
+  }
+  else if (IsMatch(false, key_sym, state, volume_mute_))
+  {
+    if (last_action_ != volume_mute_)
+      Activate(indicator_sound_actions_, "mute");
+
+    last_action_ = std::make_pair(0, 0);
+  }
+  else if (IsMatch(false, key_sym, state, volume_down_))
+  {
+    if (last_action_ != volume_down_)
+      Activate(indicator_sound_actions_, "scroll", g_variant_new_int32(-1));
+
+    last_action_ = std::make_pair(0, 0);
+  }
+  else if (IsMatch(false, key_sym, state, volume_up_))
+  {
+    if (last_action_ != volume_up_)
+      Activate(indicator_sound_actions_, "scroll", g_variant_new_int32(+1));
+
+    last_action_ = std::make_pair(0, 0);
+  }
+  else if (IsMatch(false, key_sym, state, previous_source_))
+  {
+    if (last_action_ != previous_source_)
+      Activate(indicator_keyboard_actions_, "locked_scroll", g_variant_new_int32(-1));
+
+    last_action_ = std::make_pair(0, 0);
+  }
+  else if (IsMatch(false, key_sym, state, next_source_))
+  {
+    if (last_action_ != next_source_)
+      Activate(indicator_keyboard_actions_, "locked_scroll", g_variant_new_int32(+1));
+
+    last_action_ = std::make_pair(0, 0);
+  }
+}
+
+void Panel::Activate(std::shared_ptr<glib::DBusProxy> indicator,
+                     std::string const& action,
+                     glib::Variant const& parameter) const
+{
+  GVariantBuilder builder;
+
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("(sava{sv})"));
+  g_variant_builder_add(&builder, "s", action.c_str());
+
+  if (parameter)
+    g_variant_builder_add_parsed(&builder, "[%v]", (GVariant*) parameter);
+  else
+    g_variant_builder_add_parsed(&builder, "@av []");
+
+  g_variant_builder_add_parsed(&builder, "@a{sv} []");
+
+  indicator->Call("Activate", g_variant_builder_end(&builder));
 }
 
 }
