@@ -222,6 +222,9 @@ void Controller::EnsureBlankWindow()
 
 void Controller::ShowBlankWindow()
 {
+  if (blank_window_ && blank_window_->GetOpacity() == 1.0)
+    return;
+
   EnsureBlankWindow();
   animation::StartOrReverse(blank_window_animator_, animation::Direction::FORWARD);
 }
@@ -255,14 +258,14 @@ void Controller::BlankWindowGrabEnable(bool grab)
     blank_window_->GrabKeyboard();
     blank_window_->PushToFront();
 
-    blank_window_->mouse_move.connect([this](int, int, int, int, unsigned long, unsigned long) {
-      HideBlankWindow();
+    blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
+      if ((dx || dy) && !lockscreen_timeout_) HideBlankWindow();
     });
     blank_window_->key_down.connect([this] (unsigned long, unsigned long e, unsigned long, const char*, unsigned short) {
-      HideBlankWindow();
+      if (!lockscreen_timeout_) HideBlankWindow();
     });
     blank_window_->mouse_down.connect([this] (int, int, unsigned long, unsigned long) {
-      HideBlankWindow();
+      if (!lockscreen_timeout_) HideBlankWindow();
     });
   }
   else
@@ -286,8 +289,6 @@ void Controller::OnLockRequested(bool prompt)
   if (Settings::Instance().use_legacy())
   {
     auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-    // By passing the proxy to the lambda we ensure that it will stay alive
-    // until we get the last callback.
     proxy->CallBegin("Lock", nullptr, [proxy] (GVariant*, glib::Error const&) {});
     return;
   }
@@ -322,8 +323,8 @@ void Controller::OnLockRequested(bool prompt)
 
     if (prompt)
     {
-      HideBlankWindow();
       animation::Skip(fade_animator_);
+      HideBlankWindow();
     }
     else
     {
@@ -333,20 +334,32 @@ void Controller::OnLockRequested(bool prompt)
       }));
     }
 
+    lockscreen_timeout_.reset();
     return false;
   }));
 }
 
 void Controller::OnPresenceStatusChanged(bool is_idle)
 {
-  is_idle ? ShowBlankWindow() : HideBlankWindow();
+  if (Settings::Instance().use_legacy())
+    return;
+
+  if (is_idle)
+  {
+    ShowBlankWindow();
+  }
+  else if (!lockscreen_timeout_)
+  {
+    HideBlankWindow();
+  }
 }
 
 void Controller::OnScreenSaverActivationRequest(bool activate)
 {
   // It looks we need to do this after a small delay, not to get the screen back on
   screensaver_activation_timeout_.reset(new glib::Timeout(100, [this, activate] {
-    dbus_manager_->active = activate;
+    if (dbus_manager_->active() == activate)
+      return false;
 
     if (activate)
     {
