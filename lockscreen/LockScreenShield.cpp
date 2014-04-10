@@ -175,7 +175,7 @@ nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long key_sym, unsig
 {
   if (primary)
   {
-    grab_key.emit(modifiers, key_code);
+    grab_key.emit(modifiers, key_sym);
 
     if (panel_view_ && panel_view_->WillHandleKeyEvent(etype, key_sym, modifiers))
       return panel_view_;

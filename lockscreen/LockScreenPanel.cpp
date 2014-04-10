@@ -341,27 +341,27 @@ void Panel::OnKeyDown(unsigned long event,
   }
   else if (IsMatch(true, key_sym, state, volume_mute_))
   {
-    Activate(indicator_sound_actions_, "mute");
+    ActivateSoundAction("mute");
     last_action_ = volume_mute_;
   }
   else if (IsMatch(true, key_sym, state, volume_down_))
   {
-    Activate(indicator_sound_actions_, "scroll", g_variant_new_int32(-1));
+    ActivateSoundAction("scroll", g_variant_new_int32(-1));
     last_action_ = volume_down_;
   }
   else if (IsMatch(true, key_sym, state, volume_up_))
   {
-    Activate(indicator_sound_actions_, "scroll", g_variant_new_int32(+1));
+    ActivateSoundAction("scroll", g_variant_new_int32(+1));
     last_action_ = volume_up_;
   }
   else if (IsMatch(true, key_sym, state, previous_source_))
   {
-    Activate(indicator_keyboard_actions_, "locked_scroll", g_variant_new_int32(-1));
+    ActivateKeyboardAction("locked_scroll", g_variant_new_int32(-1));
     last_action_ = previous_source_;
   }
   else if (IsMatch(true, key_sym, state, next_source_))
   {
-    Activate(indicator_keyboard_actions_, "locked_scroll", g_variant_new_int32(+1));
+    ActivateKeyboardAction("locked_scroll", g_variant_new_int32(+1));
     last_action_ = next_source_;
   }
 }
@@ -384,35 +384,35 @@ void Panel::OnKeyUp(unsigned int key_sym,
   else if (IsMatch(false, key_sym, state, volume_mute_))
   {
     if (last_action_ != volume_mute_)
-      Activate(indicator_sound_actions_, "mute");
+      ActivateSoundAction("mute");
 
     last_action_ = std::make_pair(0, 0);
   }
   else if (IsMatch(false, key_sym, state, volume_down_))
   {
     if (last_action_ != volume_down_)
-      Activate(indicator_sound_actions_, "scroll", g_variant_new_int32(-1));
+      ActivateSoundAction("scroll", g_variant_new_int32(-1));
 
     last_action_ = std::make_pair(0, 0);
   }
   else if (IsMatch(false, key_sym, state, volume_up_))
   {
     if (last_action_ != volume_up_)
-      Activate(indicator_sound_actions_, "scroll", g_variant_new_int32(+1));
+      ActivateSoundAction("scroll", g_variant_new_int32(+1));
 
     last_action_ = std::make_pair(0, 0);
   }
   else if (IsMatch(false, key_sym, state, previous_source_))
   {
     if (last_action_ != previous_source_)
-      Activate(indicator_keyboard_actions_, "locked_scroll", g_variant_new_int32(-1));
+      ActivateKeyboardAction("locked_scroll", g_variant_new_int32(-1));
 
     last_action_ = std::make_pair(0, 0);
   }
   else if (IsMatch(false, key_sym, state, next_source_))
   {
     if (last_action_ != next_source_)
-      Activate(indicator_keyboard_actions_, "locked_scroll", g_variant_new_int32(+1));
+      ActivateKeyboardAction("locked_scroll", g_variant_new_int32(+1));
 
     last_action_ = std::make_pair(0, 0);
   }
@@ -421,7 +421,7 @@ void Panel::OnKeyUp(unsigned int key_sym,
 void Panel::ActivateIndicatorAction(std::string const& bus_name,
                                     std::string const& object_path,
                                     std::string const& action,
-                                    glib::Variant const& parameter = glib::Variant()) const;
+                                    glib::Variant const& parameter) const
 {
   GVariantBuilder builder;
 
