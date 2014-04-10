@@ -48,11 +48,15 @@ const std::string INPUT_SWITCH_SCHEMA    = "org.gnome.desktop.wm.keybindings";
 const std::string INPUT_SWITCH_PREVIOUS  = "switch-input-source-backward";
 const std::string INPUT_SWITCH_NEXT      = "switch-input-source";
 
-const std::string INDICATOR_KEYBOARD_BUS_NAME = "com.canonical.indicator.keyboard";
+const std::string INDICATOR_KEYBOARD_BUS_NAME    = "com.canonical.indicator.keyboard";
 const std::string INDICATOR_KEYBOARD_OBJECT_PATH = "/com/canonical/indicator/keyboard";
-const std::string INDICATOR_SOUND_BUS_NAME = "com.canonical.indicator.sound";
-const std::string INDICATOR_SOUND_OBJECT_PATH = "/com/canonical/indicator/sound";
-const std::string INDICATOR_ACTION_INTERFACE = "org.gtk.Actions";
+const std::string INDICATOR_SOUND_BUS_NAME       = "com.canonical.indicator.sound";
+const std::string INDICATOR_SOUND_OBJECT_PATH    = "/com/canonical/indicator/sound";
+const std::string INDICATOR_ACTION_INTERFACE     = "org.gtk.Actions";
+
+const std::string INDICATOR_KEYBOARD_ACTION_SCROLL = "locked_scroll";
+const std::string INDICATOR_SOUND_ACTION_SCROLL    = "scroll";
+const std::string INDICATOR_SOUND_ACTION_MUTE      = "mute";
 
 const unsigned int MODIFIERS = nux::KEY_MODIFIER_SHIFT |
                                nux::KEY_MODIFIER_CAPS_LOCK |
@@ -341,27 +345,27 @@ void Panel::OnKeyDown(unsigned long event,
   }
   else if (IsMatch(true, key_sym, state, volume_mute_))
   {
-    ActivateSoundAction("mute");
+    ActivateSoundAction(INDICATOR_SOUND_ACTION_MUTE);
     last_action_ = volume_mute_;
   }
   else if (IsMatch(true, key_sym, state, volume_down_))
   {
-    ActivateSoundAction("scroll", g_variant_new_int32(-1));
+    ActivateSoundAction(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(-1));
     last_action_ = volume_down_;
   }
   else if (IsMatch(true, key_sym, state, volume_up_))
   {
-    ActivateSoundAction("scroll", g_variant_new_int32(+1));
+    ActivateSoundAction(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(+1));
     last_action_ = volume_up_;
   }
   else if (IsMatch(true, key_sym, state, previous_source_))
   {
-    ActivateKeyboardAction("locked_scroll", g_variant_new_int32(-1));
+    ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(-1));
     last_action_ = previous_source_;
   }
   else if (IsMatch(true, key_sym, state, next_source_))
   {
-    ActivateKeyboardAction("locked_scroll", g_variant_new_int32(+1));
+    ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(+1));
     last_action_ = next_source_;
   }
 }
@@ -384,35 +388,35 @@ void Panel::OnKeyUp(unsigned int key_sym,
   else if (IsMatch(false, key_sym, state, volume_mute_))
   {
     if (last_action_ != volume_mute_)
-      ActivateSoundAction("mute");
+      ActivateSoundAction(INDICATOR_SOUND_ACTION_MUTE);
 
     last_action_ = std::make_pair(0, 0);
   }
   else if (IsMatch(false, key_sym, state, volume_down_))
   {
     if (last_action_ != volume_down_)
-      ActivateSoundAction("scroll", g_variant_new_int32(-1));
+      ActivateSoundAction(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(-1));
 
     last_action_ = std::make_pair(0, 0);
   }
   else if (IsMatch(false, key_sym, state, volume_up_))
   {
     if (last_action_ != volume_up_)
-      ActivateSoundAction("scroll", g_variant_new_int32(+1));
+      ActivateSoundAction(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(+1));
 
     last_action_ = std::make_pair(0, 0);
   }
   else if (IsMatch(false, key_sym, state, previous_source_))
   {
     if (last_action_ != previous_source_)
-      ActivateKeyboardAction("locked_scroll", g_variant_new_int32(-1));
+      ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(-1));
 
     last_action_ = std::make_pair(0, 0);
   }
   else if (IsMatch(false, key_sym, state, next_source_))
   {
     if (last_action_ != next_source_)
-      ActivateKeyboardAction("locked_scroll", g_variant_new_int32(+1));
+      ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(+1));
 
     last_action_ = std::make_pair(0, 0);
   }
