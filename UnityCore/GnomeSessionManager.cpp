@@ -72,6 +72,9 @@ namespace
 {
 const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
 const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
+
+const std::string GNOME_LOCKDOWN_OPTIONS = "org.gnome.desktop.lockdown";
+const std::string DISABLE_LOCKSCREEN_KEY = "disable-lock-screen";
 }
 
 GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
@@ -96,11 +99,30 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
                                                      test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
     login_proxy_->Connect("Lock", [this](GVariant*){
-      manager_->LockScreen();
+      manager_->PromptLockScreen();
     });
 
     login_proxy_->Connect("Unlock", [this](GVariant*){
       manager_->unlock_requested.emit();
+    });
+  }
+
+  {
+    presence_proxy_ = std::make_shared<glib::DBusProxy>("org.gnome.SessionManager",
+                                                        "/org/gnome/SessionManager/Presence",
+                                                        "org.gnome.SessionManager.Presence");
+
+    presence_proxy_->Connect("StatusChanged", [this](GVariant* variant) {
+      enum class PresenceStatus : unsigned
+      {
+        AVAILABLE = 0,
+        INVISIBLE,
+        BUSY,
+        IDLE
+      };
+
+      auto status = PresenceStatus(glib::Variant(variant).GetUInt32());
+      manager_->presence_status_changed.emit(status == PresenceStatus::IDLE);
     });
   }
 
@@ -378,6 +400,28 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
   });
 }
 
+void GnomeManager::Impl::LockScreen(bool prompt)
+{
+  EnsureCancelPendingAction();
+
+  // FIXME (andy) we should ask gnome-session to emit the logind signal
+  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
+
+  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
+  {
+    manager_->ScreenSaverActivate();
+    return;
+  }
+  else if (manager_->UserName().find("guest-") == 0)
+  {
+    LOG_INFO(logger) << "Impossible to lock a guest session";
+    manager_->ScreenSaverActivate();
+    return;
+  }
+
+  prompt ? manager_->prompt_lock_requested.emit() : manager_->lock_requested.emit();
+}
+
 // Public implementation
 
 GnomeManager::GnomeManager()
@@ -411,17 +455,24 @@ std::string GnomeManager::HostName() const
   return glib::gchar_to_string(g_get_host_name());
 }
 
+void GnomeManager::ScreenSaverActivate()
+{
+  screensaver_requested.emit(true);
+}
+
+void GnomeManager::ScreenSaverDeactivate()
+{
+  screensaver_requested.emit(false);
+}
+
 void GnomeManager::LockScreen()
 {
-  impl_->EnsureCancelPendingAction();
+  impl_->LockScreen(false);
+}
 
-  // FIXME (andy) we should ask gnome-session to emit the logind signal
-  if (UserName().find("guest-") == 0)
-  {
-    LOG_INFO(logger) << "Impossible to lock a guest session";
-    return;
-  }
-  lock_requested.emit();
+void GnomeManager::PromptLockScreen()
+{
+  impl_->LockScreen(true);
 }
 
 void GnomeManager::Logout()
@@ -519,7 +570,7 @@ void GnomeManager::Suspend()
   impl_->EnsureCancelPendingAction();
   impl_->CallLogindMethod("Suspend", g_variant_new("(b)", FALSE), [this] (GVariant* variant, glib::Error const& err) {
     // fallback to UPower
-    if (err) 
+    if (err)
       impl_->CallUPowerMethod("Suspend");
   });
 }

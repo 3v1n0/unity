@@ -1,3 +1,4 @@
+
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
 * Copyright (C) 2013 Canonical Ltd
@@ -51,6 +52,7 @@ struct GnomeManager::Impl
   void CancelAction();
   void ClosedDialog();
   void EnsureCancelPendingAction();
+  void LockScreen(bool prompt);
 
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
@@ -70,6 +72,7 @@ struct GnomeManager::Impl
   glib::DBusServer shell_server_;
   glib::DBusObject::Ptr shell_object_;
   glib::DBusProxy::Ptr login_proxy_;
+  glib::DBusProxy::Ptr presence_proxy_;
 };
 
 } // namespace session

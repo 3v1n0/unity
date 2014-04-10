@@ -49,6 +49,7 @@ public:
   virtual bool IsIndicatorOpen() const = 0;
 
   sigc::signal<void, int, int> grab_motion;
+  sigc::signal<void, unsigned long, unsigned long> grab_key;
 
 protected:
   session::Manager::Ptr session_manager_;

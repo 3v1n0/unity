@@ -65,6 +65,7 @@
 #include "UScreen.h"
 #include "DebugDBusInterface.h"
 #include "ScreenIntrospection.h"
+#include "ScreenSaverDBusManager.h"
 #include "SwitcherController.h"
 #include "SessionController.h"
 #include "SessionDBusManager.h"
@@ -342,6 +343,7 @@ private:
   shortcut::Controller::Ptr shortcut_controller_;
   session::DBusManager::Ptr session_dbus_manager_;
   session::Controller::Ptr  session_controller_;
+  lockscreen::DBusManager::Ptr screensaver_dbus_manager_;
   std::shared_ptr<lockscreen::Controller> lockscreen_controller_;
   debug::DebugDBusInterface debugger_;
   std::unique_ptr<BGHash>   bghash_;
