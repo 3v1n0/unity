@@ -224,6 +224,13 @@ void Launcher::OnDragUpdate(const nux::GestureEvent &event)
 {
   drag_out_delta_x_ =
     CLAMP(drag_out_delta_x_ + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
+  if(options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE)
+  {
+    if(drag_out_delta_x_ > 0.0f)
+      parent_->ShowWindow(true);
+    else
+      parent_->ShowWindow(false);
+  }
   QueueDraw();
 }
 
