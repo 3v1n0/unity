@@ -81,6 +81,7 @@ private:
   nux::animation::AnimateValue<double> blank_window_animator_;
 
   bool test_mode_;
+  bool prompt_activation_;
   BlurType old_blur_type_;
 
   connection::Wrapper uscreen_connection_;

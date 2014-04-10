@@ -36,7 +36,7 @@ namespace
 {
 const unsigned int IDLE_FADE_DURATION = 10000;
 const unsigned int LOCK_FADE_DURATION = 400;
-const unsigned int POST_LOCK_SCREENSAVER_WAIT = 2000;
+const unsigned int POST_LOCK_SCREENSAVER_WAIT = 2;
 
 class BlankWindow : public nux::BaseWindow
 {
@@ -62,6 +62,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , fade_animator_(LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
+  , prompt_activation_(false)
 {
   auto* uscreen = UScreen::GetDefault();
   uscreen_connection_ = uscreen->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
@@ -108,6 +109,13 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       upstart_wrapper_->Emit("desktop-unlock");
       indicators_.reset();
     }
+    else if (!prompt_activation_)
+    {
+      screensaver_post_lock_timeout_.reset(new glib::TimeoutSeconds(POST_LOCK_SCREENSAVER_WAIT, [this] {
+        OnPresenceStatusChanged(true);
+        return false;
+      }));
+    }
   });
 
   blank_window_animator_.updated.connect([this](double value) {
@@ -135,9 +143,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
 
 void Controller::ResetPostLockScreenSaver()
 {
-  if (opacity() == 1.0)
-    screensaver_post_lock_timeout_.reset();
-
+  screensaver_post_lock_timeout_.reset();
   HideBlankWindow();
 }
 
@@ -305,7 +311,9 @@ void Controller::OnLockRequested(bool prompt)
     blank_window_->SetOpacity(1.0);
   }
 
-  lockscreen_timeout_.reset(new glib::Timeout(30, [this, prompt] {
+  prompt_activation_ = prompt;
+
+  lockscreen_timeout_.reset(new glib::Timeout(30, [this] {
     bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
 
     if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
@@ -315,23 +323,16 @@ void Controller::OnLockRequested(bool prompt)
       return true; // keep trying
     }
 
-    if (!prompt)
+    if (!prompt_activation_)
       HideBlankWindow();
 
     LockScreen();
     session_manager_->locked.emit();
 
-    if (prompt)
+    if (prompt_activation_)
     {
       animation::Skip(fade_animator_);
       HideBlankWindow();
-    }
-    else
-    {
-      screensaver_post_lock_timeout_.reset(new glib::Timeout(POST_LOCK_SCREENSAVER_WAIT, [this] {
-        OnPresenceStatusChanged(true);
-        return false;
-      }));
     }
 
     lockscreen_timeout_.reset();
