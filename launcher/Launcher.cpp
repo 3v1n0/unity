@@ -1101,7 +1101,7 @@ void Launcher::SetHidden(bool hide_launcher)
   postreveal_mousemove_delta_x_ = 0;
   postreveal_mousemove_delta_y_ = 0;
 
-  if (!hide_launcher)
+  if (!hide_launcher || drag_out_delta_x_ > 0.0f)
     parent_->ShowWindow(true);
 
   if (nux::GetWindowThread()->IsEmbeddedWindow())
