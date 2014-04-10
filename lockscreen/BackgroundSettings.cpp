@@ -110,7 +110,7 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
     int width = geo.width;
     int height = geo.height;
     int grid_x_offset = GetGridOffset(width);
-    int grid_y_offset = GetGridOffset(height) + panel::Style().Instance().PanelHeight(monitor);
+    int grid_y_offset = GetGridOffset(height) + panel::Style::Instance().PanelHeight(monitor);
 
     // overlay grid
     cairo_surface_t* overlay_surface = cairo_surface_create_similar(cairo_graphics.GetSurface(),
