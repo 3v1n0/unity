@@ -46,8 +46,8 @@ GestureDeliveryRequest UnityGestureTarget::GestureEvent(const nux::GestureEvent 
   else if (event.GetGestureClasses() == TAP_GESTURE
       && event.type == EVENT_GESTURE_END)
   {
-      UBusManager::SendMessage(UBUS_DASH_ABOUT_TO_SHOW);
-      UBusManager::SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
+    UBusManager::SendMessage(UBUS_DASH_ABOUT_TO_SHOW);
+    UBusManager::SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
   }
 
   return GestureDeliveryRequest::NONE;
