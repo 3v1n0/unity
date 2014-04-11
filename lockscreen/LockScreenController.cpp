@@ -242,8 +242,9 @@ void Controller::HideBlankWindow()
     return;
 
   blank_window_->ShowWindow(false);
-  blank_window_.Release();
   animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
+
+  blank_window_.Release();
   lockscreen_delay_timeout_.reset();
 }
 
