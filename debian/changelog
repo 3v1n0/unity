@@ -1,3 +1,11 @@
+unity (7.2.0+14.04.20140411-0ubuntu1) trusty; urgency=low
+
+  [ Sami Jaktholm ]
+  * Lockscreen: Give proper grabs to the shield before releasing
+    blank_window_. (LP: #1306417)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Apr 2014 09:00:46 +0000
+
 unity (7.2.0+14.04.20140410.1-0ubuntu1) trusty; urgency=low
 
   [ Sami Jaktholm ]
