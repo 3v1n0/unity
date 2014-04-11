@@ -54,7 +54,6 @@ struct GnomeManager::Impl
   void EnsureCancelPendingAction();
   void LockScreen(bool prompt);
 
-
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
                               glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
