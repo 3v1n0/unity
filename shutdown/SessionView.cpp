@@ -110,7 +110,7 @@ void View::UpdateText()
   auto const& real_name = manager_->RealName();
   auto const& name = (real_name.empty() ? manager_->UserName() : real_name);
 
-  other_users_msg = _("Other users are currently logged in to this computer,"
+  other_users_msg = _("Other users are currently logged in to this computer, "
                       "shutting down now will also close these other sessions.\n");
 
   if (mode() == Mode::SHUTDOWN)
