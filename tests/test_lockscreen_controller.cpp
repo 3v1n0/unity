@@ -43,6 +43,7 @@ namespace
 {
 
 const unsigned ANIMATION_DURATION = 400 * 1000; // in microseconds
+const unsigned BLANK_ANIMATION_DURATION = 10000 * 1000;
 const unsigned TICK_DURATION =  10 * 1000;
 
 }
@@ -87,6 +88,7 @@ struct TestLockScreenController : Test
     {}
 
     using Controller::shields_;
+    using Controller::blank_window_;
   };
 
   nux::NuxTimerTickSource tick_source;
@@ -225,6 +227,27 @@ TEST_F(TestLockScreenController, UnlockScreenOnMultiMonitor)
   tick_source.tick(ANIMATION_DURATION);
 
   EXPECT_TRUE(controller.shields_.empty());
+}
+
+TEST_F(TestLockScreenController, ShieldHasGrabAfterBlank)
+{
+
+  // Lock...
+  session_manager->lock_requested.emit();
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
+  ASSERT_EQ(1, controller.shields_.size());
+
+  // ...and let the screen blank.
+  session_manager->presence_status_changed.emit(true);
+  tick_source.tick(BLANK_ANIMATION_DURATION);
+
+  ASSERT_TRUE(controller.blank_window_->GetOpacity() == 1.0);
+  ASSERT_TRUE(controller.blank_window_->OwnsPointerGrab());
+
+  // Wake the screen
+  dbus_manager->simulate_activity.emit();
+
+  EXPECT_TRUE(controller.shields_.at(0)->OwnsPointerGrab());
 }
 
 } // lockscreen
