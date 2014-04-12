@@ -3868,6 +3868,11 @@ launcher::Controller::Ptr UnityScreen::launcher_controller()
   return launcher_controller_;
 }
 
+std::shared_ptr<lockscreen::Controller> UnityScreen::lockscreen_controller()
+{
+  return lockscreen_controller_;
+}
+
 void UnityScreen::InitGesturesSupport()
 {
   std::unique_ptr<nux::GestureBroker> gesture_broker(new UnityGestureBroker);
