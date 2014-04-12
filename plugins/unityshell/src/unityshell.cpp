@@ -2222,6 +2222,9 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
+  if(lockscreen_controller_->IsLocked())
+    return;
+
   RaiseInputWindows();
 
   if (!optionGetAltTabBiasViewport())
