@@ -222,20 +222,22 @@ void Launcher::OnDragStart(const nux::GestureEvent &event)
 
 void Launcher::OnDragUpdate(const nux::GestureEvent &event)
 {
-  drag_out_delta_x_ =
-    CLAMP(drag_out_delta_x_ + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
-
   auto& wm = WindowManager::Default();
-  if(options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && !dash_is_open_ &&
-     !wm.IsScaleActive() && !wm.IsExpoActive())
+
+  if (options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE &&
+    !wm.IsScaleActive() && !wm.IsExpoActive() &&
+    !dash_is_open_ && !hud_is_open_)
   {
+    drag_out_delta_x_ =
+      CLAMP(drag_out_delta_x_ + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
+
     if(drag_out_delta_x_ > 0.0f)
       parent_->ShowWindow(true);
     else
       parent_->ShowWindow(false);
-  }
 
-  QueueDraw();
+    QueueDraw();
+  }
 }
 
 void Launcher::OnDragFinish(const nux::GestureEvent &event)
