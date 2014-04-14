@@ -71,6 +71,7 @@ private:
   void PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux::Geometry const& geo);
   void ToggleCapsLockBool();
 
+  void LoadWarningIcon(int icon_size);
   int GetWarningIconOffset();
 
   session::Manager::Ptr session_manager_;
@@ -83,7 +84,7 @@ private:
   StaticCairoText* invalid_login_;
   std::deque<IMTextEntry*> focus_queue_;
 
-  nux::BaseTexture* warning_;
+  nux::ObjectPtr<nux::BaseTexture> warning_;
   nux::Geometry cached_focused_geo_;
 
   bool caps_lock_on_;

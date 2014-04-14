@@ -26,7 +26,6 @@
 #include "LockScreenSettings.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/PreviewStyle.h"
 #include "unity-shared/TextInput.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/RawPixel.h"
@@ -40,9 +39,12 @@ namespace
 const RawPixel PADDING              = 10_em;
 const RawPixel LAYOUT_MARGIN        = 10_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
-const RawPixel PROMPT_LAYOUT_MARGIN = 5_em;
+const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
+const RawPixel DEFAULT_ICON_SIZE    = 22_em;
 
 const int PROMPT_FONT_SIZE     = 13;
+
+std::string WARNING_ICON = "dialog-warning-symbolic";
 
 nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
 {
@@ -147,19 +149,45 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
     ResetLayout();
   });
 
-  dash::previews::Style& preview_style = dash::previews::Style::Instance();
+  // When we get to HiDPI changes here, we will need to update this width
+  dash::Style& style = dash::Style::Instance();
+  spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
 
-  warning_ = preview_style.GetWarningIcon();
+  LoadWarningIcon(DEFAULT_ICON_SIZE);
+
   ResetLayout();
 
   user_authenticator_.AuthenticateStart(session_manager_->UserName(),
                                         sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
 
-  // When we get to HiDPI changes here, we will need to update this width
-  dash::Style& style = dash::Style::Instance();
-  spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
-
   CheckIfCapsLockOn();
+}
+
+void UserPromptView::LoadWarningIcon(int icon_size)
+{
+  nux::Geometry const& geo = GetGeometry();
+
+  int x = geo.x + geo.width - icon_size + spin_icon_width_;
+  int y = geo.y;
+
+  auto* theme = gtk_icon_theme_get_default();
+  GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
+  glib::Error error;
+  glib::Object<GdkPixbuf> pixbuf(gtk_icon_theme_load_icon(theme, WARNING_ICON.c_str(), icon_size, flags, &error));
+
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
+  cairo_t* cr = cg.GetInternalContext();
+
+  cairo_push_group(cr);
+  gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+  cairo_paint_with_alpha(cr, 1.0);
+  std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
+
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_rectangle(cr, x, y, icon_size, icon_size);
+  cairo_mask(cr, pat.get());
+
+  warning_ = texture_ptr_from_cairo_graphics(cg);
 }
 
 void UserPromptView::CheckIfCapsLockOn()
@@ -284,7 +312,7 @@ void UserPromptView::PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux:
   nux::Geometry warning_geo = {geo.x + geo.width - GetWarningIconOffset(),
                                geo.y, warning_->GetWidth(), warning_->GetHeight()};
 
-  nux::GetPainter().PushDrawLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_));
+  nux::GetPainter().PushDrawLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_.GetPointer()));
 }
 
 int UserPromptView::GetWarningIconOffset()
