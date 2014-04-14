@@ -2535,7 +2535,6 @@ void Launcher::ProcessDndLeave()
 {
 #ifdef USE_X11
   SetStateMouseOverLauncher(false);
-
   DndHoveredIconReset();
 #endif
 }
@@ -2792,6 +2791,8 @@ void Launcher::UnsetDndQuirk()
 
   hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+  hide_machine_.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
+  animation::StartOrReverse(dnd_hide_animation_, animation::Direction::BACKWARD);
 #endif
 }
 
