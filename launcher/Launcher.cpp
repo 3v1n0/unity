@@ -2791,8 +2791,12 @@ void Launcher::UnsetDndQuirk()
 
   hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
-  hide_machine_.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
-  animation::StartOrReverse(dnd_hide_animation_, animation::Direction::BACKWARD);
+
+  if (hide_machine_.GetQuirk(LauncherHideMachine::DND_PUSHED_OFF))
+  {
+    hide_machine_.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
+    animation::StartOrReverse(dnd_hide_animation_, animation::Direction::BACKWARD);
+  }
 #endif
 }
 
