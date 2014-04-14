@@ -231,11 +231,6 @@ void Launcher::OnDragUpdate(const nux::GestureEvent &event)
     drag_out_delta_x_ =
       CLAMP(drag_out_delta_x_ + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
 
-    if(drag_out_delta_x_ > 0.0f)
-      parent_->ShowWindow(true);
-    else
-      parent_->ShowWindow(false);
-
     QueueDraw();
   }
 }
@@ -1114,9 +1109,6 @@ void Launcher::SetHidden(bool hide_launcher)
   postreveal_mousemove_delta_x_ = 0;
   postreveal_mousemove_delta_y_ = 0;
 
-  if (!hide_launcher)
-    parent_->ShowWindow(true);
-
   if (nux::GetWindowThread()->IsEmbeddedWindow())
     parent_->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
 
@@ -1687,9 +1679,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute);
   bkg_box.width -= RIGHT_LINE_WIDTH.CP(cv_);
-
-  if (options()->hide_mode != LAUNCHER_HIDE_NEVER && bkg_box.x + bkg_box.width <= 0)
-    parent_->ShowWindow(false);
 
   nux::Color clear_colour = nux::Color(0x00000000);
 
