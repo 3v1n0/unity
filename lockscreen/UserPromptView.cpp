@@ -90,8 +90,9 @@ nux::AbstractPaintLayer* CreateWarningLayer(nux::BaseTexture* texture)
 
   nux::ROPConfig rop;
   rop.Blend = true;
+
   rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  rop.DstBlend = GL_SRC_ALPHA;
 
   return (new nux::TextureLayer(texture->GetDeviceTexture(),
                                 texxform,
@@ -260,6 +261,9 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
     nux::GetPainter().PushLayer(graphics_engine, geo, bg_layer_.get());
   }
 
+  if (GetLayout())
+    GetLayout()->ProcessDraw(graphics_engine, force_draw);
+
   if (caps_lock_on_)
   {
     for (auto const& text_entry : focus_queue_)
@@ -268,9 +272,6 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
     if (focus_queue_.empty())
       PaintWarningIcon(graphics_engine, cached_focused_geo_);
   }
-
-  if (GetLayout())
-    GetLayout()->ProcessDraw(graphics_engine, force_draw);
 
   if (!IsFullRedraw())
     nux::GetPainter().PopBackground();
@@ -283,7 +284,7 @@ void UserPromptView::PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux:
   nux::Geometry warning_geo = {geo.x + geo.width - GetWarningIconOffset(),
                                geo.y, warning_->GetWidth(), warning_->GetHeight()};
 
-  nux::GetPainter().PushLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_));
+  nux::GetPainter().PushDrawLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_));
 }
 
 int UserPromptView::GetWarningIconOffset()
