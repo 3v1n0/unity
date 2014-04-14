@@ -180,8 +180,8 @@ bool IsWindowShadowDecorable(CompWindow* win)
   if (win->region().numRects() != 1) // Non rectangular windows
     return false;
 
-  if (win->overrideRedirect() && win->alpha())
-    return false;
+  if (win->alpha())
+    return WindowHasMotifDecorations(win);
 
   return true;
 }
@@ -192,6 +192,14 @@ bool IsWindowFullyDecorable(CompWindow* win)
     return false;
 
   if (!IsWindowShadowDecorable(win))
+    return false;
+
+  return WindowHasMotifDecorations(win);
+}
+
+bool WindowHasMotifDecorations(CompWindow* win)
+{
+  if (!win)
     return false;
 
   if (win->overrideRedirect())
