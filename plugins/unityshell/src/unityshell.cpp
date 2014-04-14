@@ -2222,6 +2222,9 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
+  if(lockscreen_controller_->IsLocked())
+    return;
+
   RaiseInputWindows();
 
   if (!optionGetAltTabBiasViewport())
@@ -3863,6 +3866,11 @@ switcher::Controller::Ptr UnityScreen::switcher_controller()
 launcher::Controller::Ptr UnityScreen::launcher_controller()
 {
   return launcher_controller_;
+}
+
+std::shared_ptr<lockscreen::Controller> UnityScreen::lockscreen_controller()
+{
+  return lockscreen_controller_;
 }
 
 void UnityScreen::InitGesturesSupport()
