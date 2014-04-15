@@ -2787,10 +2787,10 @@ void Launcher::UnsetDndQuirk()
     }
   }
 
-  std::cout << "drag_out_delta_x_: " << drag_out_delta_x_ << std::endl;
-
   hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   animation::SetValue(dnd_hide_animation_, animation::Direction::BACKWARD);
+  hide_machine_.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, drag_out_delta_x_ >= DRAG_OUT_PIXELS - 90.0f);
+  SetHidden(drag_out_delta_x_ < DRAG_OUT_PIXELS - 90.0f);
 #endif
 }
 
