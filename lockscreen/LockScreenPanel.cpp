@@ -53,13 +53,13 @@ const std::string INDICATOR_KEYBOARD_OBJECT_PATH = "/com/canonical/indicator/key
 const std::string INDICATOR_SOUND_BUS_NAME       = "com.canonical.indicator.sound";
 const std::string INDICATOR_SOUND_OBJECT_PATH    = "/com/canonical/indicator/sound";
 const std::string INDICATOR_ACTION_INTERFACE     = "org.gtk.Actions";
+const std::string INDICATOR_METHOD_ACTIVATE      = "Activate";
 
 const std::string INDICATOR_KEYBOARD_ACTION_SCROLL = "locked_scroll";
 const std::string INDICATOR_SOUND_ACTION_SCROLL    = "scroll";
 const std::string INDICATOR_SOUND_ACTION_MUTE      = "mute";
 
 const unsigned int MODIFIERS = nux::KEY_MODIFIER_SHIFT |
-                               nux::KEY_MODIFIER_CAPS_LOCK |
                                nux::KEY_MODIFIER_CTRL |
                                nux::KEY_MODIFIER_ALT |
                                nux::KEY_MODIFIER_SUPER;
@@ -74,8 +74,6 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
   , monitor(monitor_)
   , indicators_(indicators)
   , needs_geo_sync_(true)
-  , media_key_settings_(g_settings_new(MEDIA_KEYS_SCHEMA.c_str()))
-  , input_switch_settings_(g_settings_new(INPUT_SWITCH_SCHEMA.c_str()))
 {
   double scale = unity::Settings::Instance().em(monitor)->DPIScale();
   auto* layout = new nux::HLayout();
@@ -247,37 +245,72 @@ void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   }
 }
 
+Panel::Accelerator::Accelerator(unsigned int keysym, unsigned int keycode, unsigned int modifiers)
+  : keysym_(keysym)
+  , keycode_(keycode)
+  , modifiers_(modifiers)
+  , active_(true)
+  , activated_(false)
+  , match_(false)
+{
+}
+
+void Panel::Accelerator::Reset()
+{
+  active_ = true;
+  activated_ = false;
+  match_ = false;
+}
+
 Panel::Accelerator Panel::ParseAcceleratorString(std::string const& string) const
 {
-  guint gtk_key;
-  GdkModifierType gtk_modifiers;
-  gtk_accelerator_parse(string.c_str(), &gtk_key, &gtk_modifiers);
+  Accelerator accelerator;
 
-  unsigned int nux_key = gtk_key;
-  unsigned int nux_modifiers = 0;
+  guint gtk_keysym;
+  guint* gtk_keycodes;
+  GdkModifierType gtk_modifiers;
+  gtk_accelerator_parse_with_keycode(string.c_str(), &gtk_keysym, &gtk_keycodes, &gtk_modifiers);
+
+  /* gtk_accelerator_parse_with_keycode() might fail if the key isn't in the default key map.
+   * In that case, try it again without looking for keycodes. */
+  if (gtk_keysym == 0 && gtk_modifiers == 0)
+  {
+    g_free(gtk_keycodes);
+    gtk_keycodes = NULL;
+    gtk_accelerator_parse(string.c_str(), &gtk_keysym, &gtk_modifiers);
+  }
+
+  accelerator.keysym_ = gtk_keysym;
+
+  if (gtk_keycodes != NULL)
+    accelerator.keycode_ = gtk_keycodes[0];
+
+  g_free(gtk_keycodes);
 
   if (gtk_modifiers & GDK_SHIFT_MASK)
-    nux_modifiers |= nux::KEY_MODIFIER_SHIFT;
-  if (gtk_modifiers & GDK_LOCK_MASK)
-    nux_modifiers |= nux::KEY_MODIFIER_CAPS_LOCK;
+    accelerator.modifiers_ |= nux::KEY_MODIFIER_SHIFT;
   if (gtk_modifiers & GDK_CONTROL_MASK)
-    nux_modifiers |= nux::KEY_MODIFIER_CTRL;
+    accelerator.modifiers_ |= nux::KEY_MODIFIER_CTRL;
   if (gtk_modifiers & GDK_MOD1_MASK)
-    nux_modifiers |= nux::KEY_MODIFIER_ALT;
+    accelerator.modifiers_ |= nux::KEY_MODIFIER_ALT;
   if (gtk_modifiers & GDK_SUPER_MASK)
-    nux_modifiers |= nux::KEY_MODIFIER_SUPER;
+    accelerator.modifiers_ |= nux::KEY_MODIFIER_SUPER;
 
-  return std::make_pair(nux_modifiers, nux_key);
+  return accelerator;
 }
 
 void Panel::ParseAccelerators()
 {
-  activate_indicator_ = WindowManager::Default().activate_indicators_key();
-  volume_mute_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_MUTE.c_str())));
-  volume_down_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_DOWN.c_str())));
-  volume_up_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings_, MEDIA_KEYS_VOLUME_UP.c_str())));
+  auto media_key_settings = glib::Object<GSettings>(g_settings_new(MEDIA_KEYS_SCHEMA.c_str()));
+  auto input_switch_settings = glib::Object<GSettings>(g_settings_new(INPUT_SWITCH_SCHEMA.c_str()));
+  auto activate_indicators_key = WindowManager::Default().activate_indicators_key();
 
-  auto variant = glib::Variant(g_settings_get_value(input_switch_settings_, INPUT_SWITCH_PREVIOUS.c_str()), glib::StealRef());
+  activate_indicator_ = Accelerator(activate_indicators_key.second, 0, activate_indicators_key.first);
+  volume_mute_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings, MEDIA_KEYS_VOLUME_MUTE.c_str())));
+  volume_down_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings, MEDIA_KEYS_VOLUME_DOWN.c_str())));
+  volume_up_ = ParseAcceleratorString(glib::String(g_settings_get_string(media_key_settings, MEDIA_KEYS_VOLUME_UP.c_str())));
+
+  auto variant = glib::Variant(g_settings_get_value(input_switch_settings, INPUT_SWITCH_PREVIOUS.c_str()), glib::StealRef());
 
   if (g_variant_n_children(variant) > 0)
   {
@@ -286,9 +319,9 @@ void Panel::ParseAccelerators()
     previous_source_ = ParseAcceleratorString(accelerator);
   }
   else
-    previous_source_ = std::make_pair(0, 0);
+    previous_source_ = Accelerator();
 
-  variant = glib::Variant(g_settings_get_value(input_switch_settings_, INPUT_SWITCH_NEXT.c_str()), glib::StealRef());
+  variant = glib::Variant(g_settings_get_value(input_switch_settings, INPUT_SWITCH_NEXT.c_str()), glib::StealRef());
 
   if (g_variant_n_children(variant) > 0)
   {
@@ -297,24 +330,114 @@ void Panel::ParseAccelerators()
     next_source_ = ParseAcceleratorString(accelerator);
   }
   else
-    next_source_ = std::make_pair(0, 0);
+    next_source_ = Accelerator();
 }
 
-bool Panel::WillHandleKeyEvent(unsigned int event_type, unsigned long key_sym, unsigned long modifiers)
+bool Panel::WillHandleKeyEvent(unsigned int event_type, unsigned long keysym, unsigned long modifiers)
 {
   auto is_press = event_type == nux::EVENT_KEY_DOWN;
 
-  /* If we're just pressing a key, and no modifiers are pressed, then
-   * we can start accepting new actions again. */
-  if (is_press && (modifiers & MODIFIERS) == 0)
-    last_action_ = std::make_pair(0, 0);
+  /* Update modifier states on key press. */
+  if (is_press)
+  {
+    switch (keysym)
+    {
+    case GDK_KEY_Shift_L:
+      left_shift = is_press;
+      break;
+    case GDK_KEY_Shift_R:
+      right_shift = is_press;
+      break;
+    case GDK_KEY_Control_L:
+      left_control = is_press;
+      break;
+    case GDK_KEY_Control_R:
+      right_control = is_press;
+      break;
+    case GDK_KEY_Alt_L:
+      left_alt = is_press;
+      break;
+    case GDK_KEY_Alt_R:
+      right_alt = is_press;
+      break;
+    case GDK_KEY_Super_L:
+      left_super = is_press;
+      break;
+    case GDK_KEY_Super_R:
+      right_super = is_press;
+      break;
+    }
+  }
 
-  return IsMatch(is_press, key_sym, modifiers, activate_indicator_) ||
-         IsMatch(is_press, key_sym, modifiers, volume_mute_) ||
-         IsMatch(is_press, key_sym, modifiers, volume_down_) ||
-         IsMatch(is_press, key_sym, modifiers, volume_up_) ||
-         IsMatch(is_press, key_sym, modifiers, previous_source_) ||
-         IsMatch(is_press, key_sym, modifiers, next_source_);
+  /* If we're just pressing a key and no modifiers are pressed,
+   * then we can start accepting new actions again. */
+  if (is_press && (modifiers & MODIFIERS) == 0)
+  {
+    activate_indicator_.Reset();
+    volume_mute_.Reset();
+    volume_down_.Reset();
+    volume_up_.Reset();
+    previous_source_.Reset();
+    next_source_.Reset();
+  }
+
+  /* We may have to disable the accelerator if this press invalidates it.
+   * An example is pressing Ctrl+Alt+T which should cancel a Ctrl+Alt
+   * accelerator. */
+  MaybeDisableAccelerator(is_press, keysym, modifiers, activate_indicator_);
+  MaybeDisableAccelerator(is_press, keysym, modifiers, volume_mute_);
+  MaybeDisableAccelerator(is_press, keysym, modifiers, volume_down_);
+  MaybeDisableAccelerator(is_press, keysym, modifiers, volume_up_);
+  MaybeDisableAccelerator(is_press, keysym, modifiers, previous_source_);
+  MaybeDisableAccelerator(is_press, keysym, modifiers, next_source_);
+
+  /* We store the match here because IsMatch() is only valid here,
+   * and not in the OnKeyDown()/OnKeyUp() functions. */
+  activate_indicator_.match_ = IsMatch(is_press, keysym, modifiers, activate_indicator_);
+  volume_mute_.match_ = IsMatch(is_press, keysym, modifiers, volume_mute_);
+  volume_down_.match_ = IsMatch(is_press, keysym, modifiers, volume_down_);
+  volume_up_.match_ = IsMatch(is_press, keysym, modifiers, volume_up_);
+  previous_source_.match_ = IsMatch(is_press, keysym, modifiers, previous_source_);
+  next_source_.match_ = IsMatch(is_press, keysym, modifiers, next_source_);
+
+  /* Update modifier states on key release. */
+  if (!is_press)
+  {
+    switch (keysym)
+    {
+    case GDK_KEY_Shift_L:
+      left_shift = is_press;
+      break;
+    case GDK_KEY_Shift_R:
+      right_shift = is_press;
+      break;
+    case GDK_KEY_Control_L:
+      left_control = is_press;
+      break;
+    case GDK_KEY_Control_R:
+      right_control = is_press;
+      break;
+    case GDK_KEY_Alt_L:
+      left_alt = is_press;
+      break;
+    case GDK_KEY_Alt_R:
+      right_alt = is_press;
+      break;
+    case GDK_KEY_Super_L:
+      left_super = is_press;
+      break;
+    case GDK_KEY_Super_R:
+      right_super = is_press;
+      break;
+    }
+  }
+
+  return activate_indicator_.match_ ||
+         volume_mute_.match_        ||
+         volume_down_.match_        ||
+         volume_up_.match_          ||
+         previous_source_.match_    ||
+         next_source_.match_;
 }
 
 bool Panel::InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char*)
@@ -322,103 +445,328 @@ bool Panel::InspectKeyEvent(unsigned int event_type, unsigned int keysym, const 
   return true;
 }
 
+bool Panel::IsModifier(unsigned int keysym) const
+{
+  return ToModifier(keysym);
+}
+
+unsigned int Panel::ToModifier(unsigned int keysym) const
+{
+  switch (keysym)
+  {
+  case GDK_KEY_Shift_L:
+  case GDK_KEY_Shift_R:
+    return nux::KEY_MODIFIER_SHIFT;
+  case GDK_KEY_Control_L:
+  case GDK_KEY_Control_R:
+    return nux::KEY_MODIFIER_CTRL;
+  case GDK_KEY_Alt_L:
+  case GDK_KEY_Alt_R:
+    return nux::KEY_MODIFIER_ALT;
+  case GDK_KEY_Super_L:
+  case GDK_KEY_Super_R:
+    return nux::KEY_MODIFIER_SUPER;
+  default:
+    return 0;
+  }
+}
+
+void Panel::MaybeDisableAccelerator(bool is_press,
+                                    unsigned int keysym,
+                                    unsigned int state,
+                                    Accelerator& accelerator) const
+{
+  auto is_modifier_only = accelerator.keysym_ == 0 && accelerator.keycode_ == 0 && accelerator.modifiers_ != 0;
+  auto keysym_modifier = ToModifier(accelerator.keysym_);
+
+  if (is_modifier_only || keysym_modifier)
+  {
+    if (is_press)
+    {
+      /* We may have to disable the accelerator if this press invalidates it.
+       * An example is pressing Ctrl+Alt+T for a Ctrl+Alt accelerator. */
+
+      if (!IsModifier(keysym))
+      {
+        /* We pressed a non-modifier key: disable the accelerator. */
+        accelerator.active_ = false;
+      }
+      else if (keysym != accelerator.keysym_ && (ToModifier(keysym) & accelerator.modifiers_) == 0)
+      {
+        /* We pressed a modifier key that isn't the keysym or one of the modifiers: disable the accelerator. */
+        accelerator.active_ = false;
+      }
+    }
+  }
+}
+
+/* This function is only valid in WillHandleKeyEvent because
+ * that's the only place the modifier key state is valid. */
+
 bool Panel::IsMatch(bool is_press,
-                    unsigned int key_sym,
+                    unsigned int keysym,
                     unsigned int state,
                     Accelerator const& accelerator) const
 {
-  /* Do the easy check, just compare key codes and modifiers.
-   * TODO: Check permutations of modifier-only shortcuts. */
-  return key_sym == accelerator.second && (state & MODIFIERS) == accelerator.first;
+  state &= MODIFIERS;
+
+  /* Inactive accelerators never match. */
+  if (!accelerator.active_)
+    return false;
+
+  /* Do the easiest check and compare keysyms.
+   * But we must be careful with modifier-only accelerators. */
+  if (keysym == accelerator.keysym_)
+  {
+    if (!IsModifier(keysym))
+    {
+      /* A non-modifier key was pressed/released, so just compare modifiers. */
+      if (state == accelerator.modifiers_)
+        return true;
+    }
+    else if (!is_press)
+    {
+      /* A modifier key was released, so compare modifiers ignoring that key. */
+
+      auto is_mirror_pressed = false;
+
+      switch (keysym)
+      {
+        case GDK_KEY_Shift_L:
+          is_mirror_pressed = right_shift;
+          break;
+        case GDK_KEY_Shift_R:
+          is_mirror_pressed = left_shift;
+          break;
+        case GDK_KEY_Control_L:
+          is_mirror_pressed = right_control;
+          break;
+        case GDK_KEY_Control_R:
+          is_mirror_pressed = left_control;
+          break;
+        case GDK_KEY_Alt_L:
+          is_mirror_pressed = right_alt;
+          break;
+        case GDK_KEY_Alt_R:
+          is_mirror_pressed = left_alt;
+          break;
+        case GDK_KEY_Super_L:
+          is_mirror_pressed = right_super;
+          break;
+        case GDK_KEY_Super_R:
+          is_mirror_pressed = left_super;
+          break;
+      }
+
+      if (is_mirror_pressed)
+      {
+        /* We can just compare the state directly. */
+        if (state == accelerator.modifiers_)
+          return true;
+      }
+      else
+      {
+        /* We must pretend the state doesn't include keysym's modifier. */
+        if ((state & ~ToModifier(keysym)) == accelerator.modifiers_)
+          return true;
+      }
+    }
+  }
+
+  auto is_modifier_only = accelerator.keysym_ == 0 && accelerator.keycode_ == 0 && accelerator.modifiers_ != 0;
+  auto keysym_modifier = ToModifier(accelerator.keysym_);
+
+  if (is_modifier_only || keysym_modifier)
+  {
+    /* The accelerator consists of only modifier keys. */
+
+    if (!is_press && IsModifier(keysym))
+    {
+      /* We're releasing a modifier key. */
+
+      if (is_modifier_only)
+      {
+        /* Just ensure the states match in this case. */
+        if (state == accelerator.modifiers_)
+        {
+          /* TODO: We would normally return true here, but for some reason
+           * compiz handles it. This is bad because it means we have to do
+           * nothing in this case where we would normally handle it.... */
+          return false;
+        }
+      }
+      else if (keysym_modifier)
+      {
+        auto is_keysym_pressed = false;
+        auto is_mirror_pressed = false;
+
+        /* Check that accelerator.keysym_ is pressed. */
+        switch (accelerator.keysym_)
+        {
+        case GDK_KEY_Shift_L:
+          is_keysym_pressed = left_shift;
+          is_mirror_pressed = right_shift;
+          break;
+        case GDK_KEY_Shift_R:
+          is_keysym_pressed = right_shift;
+          is_mirror_pressed = left_shift;
+          break;
+        case GDK_KEY_Control_L:
+          is_keysym_pressed = left_control;
+          is_mirror_pressed = right_control;
+          break;
+        case GDK_KEY_Control_R:
+          is_keysym_pressed = right_control;
+          is_mirror_pressed = left_control;
+          break;
+        case GDK_KEY_Alt_L:
+          is_keysym_pressed = left_alt;
+          is_mirror_pressed = right_alt;
+          break;
+        case GDK_KEY_Alt_R:
+          is_keysym_pressed = right_alt;
+          is_mirror_pressed = left_alt;
+          break;
+        case GDK_KEY_Super_L:
+          is_keysym_pressed = left_super;
+          is_mirror_pressed = right_super;
+          break;
+        case GDK_KEY_Super_R:
+          is_keysym_pressed = right_super;
+          is_mirror_pressed = left_super;
+          break;
+        }
+
+        if (is_keysym_pressed)
+        {
+          /* If the mirror key is not pressed, clear it from the state. */
+          if (!is_mirror_pressed)
+            state &= ~ToModifier(accelerator.keysym_);
+
+          /* Check that the states are matching. */
+          if (state == accelerator.modifiers_)
+            return true;
+        }
+      }
+    }
+  }
+  else if (accelerator.keycode_ != 0 && state == accelerator.modifiers_)
+  {
+    /* The keysyms might be different, but the keycodes might be the same.
+     * For example, if the switching shortcut is Ctrl+A, we want Ctrl+Q to
+     * match on an AZERTY layout. Otherwise, you can't cycle through a full
+     * list of keyboard layouts with one accelerator. Or the accelerator may
+     * not even have a keysym at all. Either way, check for both these cases.
+     * Note that we don't want to check this for the modifier-only case, as
+     * it's already handled specially above. */
+
+    gint n_keys;
+    GdkKeymapKey *keys;
+
+    if (gdk_keymap_get_entries_for_keyval(gdk_keymap_get_default(), keysym, &keys, &n_keys))
+    {
+      auto is_match = false;
+
+      for (auto i = 0; i < n_keys && !is_match; i++)
+        is_match = keys[i].keycode == accelerator.keycode_;
+
+      g_free(keys);
+
+      if (is_match)
+        return true;
+    }
+  }
+
+  return false;
 }
 
 void Panel::OnKeyDown(unsigned long event,
-                      unsigned long key_sym,
+                      unsigned long keysym,
                       unsigned long state,
                       const char* text,
                       unsigned short repeat)
 {
-  if (IsMatch(true, key_sym, state, activate_indicator_))
+  if (activate_indicator_.match_)
   {
     ActivateFirst();
-    last_action_ = activate_indicator_;
+    activate_indicator_.activated_ = true;
   }
-  else if (IsMatch(true, key_sym, state, volume_mute_))
+  else if (volume_mute_.match_)
   {
     ActivateSoundAction(INDICATOR_SOUND_ACTION_MUTE);
-    last_action_ = volume_mute_;
+    volume_mute_.activated_ = true;
   }
-  else if (IsMatch(true, key_sym, state, volume_down_))
+  else if (volume_down_.match_)
   {
     ActivateSoundAction(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(-1));
-    last_action_ = volume_down_;
+    volume_down_.activated_ = true;
   }
-  else if (IsMatch(true, key_sym, state, volume_up_))
+  else if (volume_up_.match_)
   {
     ActivateSoundAction(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(+1));
-    last_action_ = volume_up_;
+    volume_up_.activated_ = true;
   }
-  else if (IsMatch(true, key_sym, state, previous_source_))
-  {
-    ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(-1));
-    last_action_ = previous_source_;
-  }
-  else if (IsMatch(true, key_sym, state, next_source_))
+  else if (previous_source_.match_)
   {
     ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(+1));
-    last_action_ = next_source_;
+    previous_source_.activated_ = true;
+  }
+  else if (next_source_.match_)
+  {
+    ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(-1));
+    next_source_.activated_ = true;
   }
 }
 
-void Panel::OnKeyUp(unsigned int key_sym,
-                    unsigned long key_code,
+void Panel::OnKeyUp(unsigned int keysym,
+                    unsigned long keycode,
                     unsigned long state)
 {
   /* We only want to act if we didn't activate the action on key
    * down. Once we see the key up, we can start accepting actions
    * again. */
 
-  if (IsMatch(false, key_sym, state, activate_indicator_))
+  if (activate_indicator_.match_)
   {
-    if (last_action_ != activate_indicator_)
+    if (!activate_indicator_.activated_)
       ActivateFirst();
 
-    last_action_ = std::make_pair(0, 0);
+    activate_indicator_.Reset();
   }
-  else if (IsMatch(false, key_sym, state, volume_mute_))
+  else if (volume_mute_.match_)
   {
-    if (last_action_ != volume_mute_)
+    if (!volume_mute_.activated_)
       ActivateSoundAction(INDICATOR_SOUND_ACTION_MUTE);
 
-    last_action_ = std::make_pair(0, 0);
+    volume_mute_.Reset();
   }
-  else if (IsMatch(false, key_sym, state, volume_down_))
+  else if (volume_down_.match_)
   {
-    if (last_action_ != volume_down_)
+    if (!volume_down_.activated_)
       ActivateSoundAction(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(-1));
 
-    last_action_ = std::make_pair(0, 0);
+    volume_down_.Reset();
   }
-  else if (IsMatch(false, key_sym, state, volume_up_))
+  else if (volume_up_.match_)
   {
-    if (last_action_ != volume_up_)
+    if (!volume_up_.activated_)
       ActivateSoundAction(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(+1));
 
-    last_action_ = std::make_pair(0, 0);
+    volume_up_.Reset();
   }
-  else if (IsMatch(false, key_sym, state, previous_source_))
+  else if (previous_source_.match_)
   {
-    if (last_action_ != previous_source_)
-      ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(-1));
-
-    last_action_ = std::make_pair(0, 0);
-  }
-  else if (IsMatch(false, key_sym, state, next_source_))
-  {
-    if (last_action_ != next_source_)
+    if (!previous_source_.activated_)
       ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(+1));
 
-    last_action_ = std::make_pair(0, 0);
+    previous_source_.Reset();
+  }
+  else if (next_source_.match_)
+  {
+    if (!next_source_.activated_)
+      ActivateKeyboardAction(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(-1));
+
+    next_source_.Reset();
   }
 }
 
@@ -440,7 +788,7 @@ void Panel::ActivateIndicatorAction(std::string const& bus_name,
   g_variant_builder_add_parsed(&builder, "@a{sv} []");
 
   auto proxy = std::make_shared<glib::DBusProxy>(bus_name, object_path, INDICATOR_ACTION_INTERFACE, G_BUS_TYPE_SESSION);
-  proxy->CallBegin("Activate", g_variant_builder_end(&builder), [proxy] (GVariant*, glib::Error const&) {});
+  proxy->CallBegin(INDICATOR_METHOD_ACTIVATE, g_variant_builder_end(&builder), [proxy] (GVariant*, glib::Error const&) {});
 }
 
 void Panel::ActivateKeyboardAction(std::string const& action, glib::Variant const& parameter) const

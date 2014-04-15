@@ -46,7 +46,7 @@ public:
   nux::Property<bool> active;
   nux::Property<int> monitor;
 
-  bool WillHandleKeyEvent(unsigned int event_type, unsigned long key_sym, unsigned long modifiers);
+  bool WillHandleKeyEvent(unsigned int event_type, unsigned long keysym, unsigned long modifiers);
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) override;
@@ -72,10 +72,30 @@ private:
   nux::Point tracked_pointer_pos_;
   glib::Source::UniquePtr track_menu_pointer_timeout_;
 
-  glib::Object<GSettings> media_key_settings_;
-  glib::Object<GSettings> input_switch_settings_;
+  unsigned int left_shift : 1;
+  unsigned int right_shift : 1;
+  unsigned int left_control : 1;
+  unsigned int right_control : 1;
+  unsigned int left_alt : 1;
+  unsigned int right_alt : 1;
+  unsigned int left_super : 1;
+  unsigned int right_super : 1;
 
-  typedef std::pair<unsigned int, unsigned int> Accelerator;
+  class Accelerator
+  {
+  public:
+    unsigned int keysym_;
+    unsigned int keycode_;
+    unsigned int modifiers_;
+    bool active_;
+    bool activated_;
+    bool match_;
+
+    explicit Accelerator(unsigned int keysym = 0, unsigned int keycode = 0, unsigned int modifiers = 0);
+
+    void Reset();
+  };
+
   Accelerator ParseAcceleratorString(std::string const& string) const;
 
   void ParseAccelerators();
@@ -87,26 +107,27 @@ private:
   Accelerator previous_source_;
   Accelerator next_source_;
 
-  /* We only want to activate the indicator on key press OR key
-   * release, never both, so we'll need to keep track of the last
-   * action that occurred. However, holding the keys down should
-   * allow multiple activations, for example, when the volume
-   * down button is held down. */
-  Accelerator last_action_;
+  bool IsModifier(unsigned int keysym) const;
+  unsigned int ToModifier(unsigned int keysym) const;
+
+  void MaybeDisableAccelerator(bool is_press,
+                               unsigned int keysym,
+                               unsigned int modifiers,
+                               Accelerator& accelerator) const;
 
   bool IsMatch(bool is_press,
-               unsigned int key_sym,
+               unsigned int keysym,
                unsigned int modifiers,
                Accelerator const& accelerator) const;
 
   void OnKeyDown(unsigned long event,
-                 unsigned long key_sym,
+                 unsigned long keysym,
                  unsigned long state,
                  const char* text,
                  unsigned short repeat);
 
-  void OnKeyUp(unsigned int key_sym,
-               unsigned long key_code,
+  void OnKeyUp(unsigned int keysym,
+               unsigned long keycode,
                unsigned long state);
 
   /* This is just for telling an indicator to do something. */
