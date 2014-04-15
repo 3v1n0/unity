@@ -809,13 +809,11 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     }
   }
 
-  float drag_hide_progress = dnd_hide_animation_.GetCurrentValue();
-  if (options()->hide_mode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
   {
+    float drag_hide_progress = dnd_hide_animation_.GetCurrentValue();
     autohide_offset -= geo.width * 0.25f * drag_hide_progress;
-
-    if (drag_hide_progress >= 1.0f)
-      hide_machine_.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, true);
+    hide_machine_.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, (drag_hide_progress >= 1.0f));
   }
 
   // Inform the painter where to paint the box
@@ -2789,14 +2787,10 @@ void Launcher::UnsetDndQuirk()
     }
   }
 
-  hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
-  hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+  std::cout << "drag_out_delta_x_: " << drag_out_delta_x_ << std::endl;
 
-  if (hide_machine_.GetQuirk(LauncherHideMachine::DND_PUSHED_OFF))
-  {
-    hide_machine_.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
-    animation::StartOrReverse(dnd_hide_animation_, animation::Direction::BACKWARD);
-  }
+  hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+  animation::SetValue(dnd_hide_animation_, animation::Direction::BACKWARD);
 #endif
 }
 
