@@ -40,11 +40,8 @@ const RawPixel PADDING              = 10_em;
 const RawPixel LAYOUT_MARGIN        = 10_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
 const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
-const RawPixel DEFAULT_ICON_SIZE    = 22_em;
 
-const int PROMPT_FONT_SIZE     = 13;
-
-std::string WARNING_ICON = "dialog-warning-symbolic";
+const int PROMPT_FONT_SIZE = 13;
 
 nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
 {
@@ -74,29 +71,6 @@ nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   return (new nux::TextureLayer(texture_ptr_from_cairo_graphics(cg)->GetDeviceTexture(),
-                                texxform,
-                                nux::color::White,
-                                true,
-                                rop));
-}
-
-nux::AbstractPaintLayer* CreateWarningLayer(nux::BaseTexture* texture)
-{
-  // Create the texture layer
-  nux::TexCoordXForm texxform;
-
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  texxform.min_filter = nux::TEXFILTER_LINEAR;
-  texxform.mag_filter = nux::TEXFILTER_LINEAR;
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_SRC_ALPHA;
-
-  return (new nux::TextureLayer(texture->GetDeviceTexture(),
                                 texxform,
                                 nux::color::White,
                                 true,
@@ -149,46 +123,23 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
     ResetLayout();
   });
 
-  // When we get to HiDPI changes here, we will need to update this width
-  dash::Style& style = dash::Style::Instance();
-  spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
-
-  LoadWarningIcon(DEFAULT_ICON_SIZE);
-
   ResetLayout();
 
   user_authenticator_.AuthenticateStart(session_manager_->UserName(),
                                         sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
 
+  caps_lock_on_.changed.connect([this] (bool changed) {
+    for (auto const& text_input : focus_queue_)
+    {
+      if (text_input)
+        text_input->caps_lock_on = changed;
+    }
+  });
+
   CheckIfCapsLockOn();
 }
 
-void UserPromptView::LoadWarningIcon(int icon_size)
-{
-  nux::Geometry const& geo = GetGeometry();
 
-  int x = geo.x + geo.width - icon_size + spin_icon_width_;
-  int y = geo.y;
-
-  auto* theme = gtk_icon_theme_get_default();
-  GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
-  glib::Error error;
-  glib::Object<GdkPixbuf> pixbuf(gtk_icon_theme_load_icon(theme, WARNING_ICON.c_str(), icon_size, flags, &error));
-
-  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
-  cairo_t* cr = cg.GetInternalContext();
-
-  cairo_push_group(cr);
-  gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
-  cairo_paint_with_alpha(cr, 1.0);
-  std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
-
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_rectangle(cr, x, y, icon_size, icon_size);
-  cairo_mask(cr, pat.get());
-
-  warning_ = texture_ptr_from_cairo_graphics(cg);
-}
 
 void UserPromptView::CheckIfCapsLockOn()
 {
@@ -208,7 +159,7 @@ bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sy
   if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
   {
     if (!focus_queue_.empty())
-      focus_queue_.front()->SetText("");
+      focus_queue_.front()->text_entry()->SetText("");
 
     return true;
   }
@@ -292,32 +243,10 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
   if (GetLayout())
     GetLayout()->ProcessDraw(graphics_engine, force_draw);
 
-  if (caps_lock_on_)
-  {
-    for (auto const& text_entry : focus_queue_)
-      PaintWarningIcon(graphics_engine, text_entry->GetGeometry());
-
-    if (focus_queue_.empty())
-      PaintWarningIcon(graphics_engine, cached_focused_geo_);
-  }
-
   if (!IsFullRedraw())
     nux::GetPainter().PopBackground();
 
   graphics_engine.PopClippingRectangle();
-}
-
-void UserPromptView::PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux::Geometry const& geo)
-{
-  nux::Geometry warning_geo = {geo.x + geo.width - GetWarningIconOffset(),
-                               geo.y, warning_->GetWidth(), warning_->GetHeight()};
-
-  nux::GetPainter().PushDrawLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_.GetPointer()));
-}
-
-int UserPromptView::GetWarningIconOffset()
-{
-  return warning_->GetWidth() + spin_icon_width_;
 }
 
 nux::View* UserPromptView::focus_view()
@@ -326,10 +255,10 @@ nux::View* UserPromptView::focus_view()
     return nullptr;
 
   for (auto* view : focus_queue_)
-    if (view->HasKeyboardFocus())
+    if (view->text_entry()->HasKeyboardFocus())
       return view;
 
-  return focus_queue_.front();
+  return focus_queue_.front()->text_entry();
 }
 
 void UserPromptView::ToggleCapsLockBool()
@@ -359,6 +288,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
 
   text_input->input_hint = SanitizeMessage(message);
   text_input->hint_font_size = PROMPT_FONT_SIZE;
+  text_input->caps_lock_on = caps_lock_on_();
   text_entry->SetPasswordMode(!visible);
   text_entry->SetPasswordChar("•");
   text_entry->SetToggleCursorVisibilityOnKeyFocus(true);
@@ -368,7 +298,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
   text_input->SetMinimumHeight(Settings::GRID_SIZE);
   text_input->SetMaximumHeight(Settings::GRID_SIZE);
   prompt_layout_->AddView(text_input, 1);
-  focus_queue_.push_back(text_entry);
+  focus_queue_.push_back(text_input);
 
   CheckIfCapsLockOn();
 

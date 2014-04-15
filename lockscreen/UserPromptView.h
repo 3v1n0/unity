@@ -68,10 +68,8 @@ private:
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
   void RecvKeyUp(unsigned int, unsigned long, unsigned long);
 
-  void PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux::Geometry const& geo);
   void ToggleCapsLockBool();
 
-  void LoadWarningIcon(int icon_size);
   int GetWarningIconOffset();
 
   session::Manager::Ptr session_manager_;
@@ -82,13 +80,11 @@ private:
   StaticCairoText* message_;
   StaticCairoText* error_;
   StaticCairoText* invalid_login_;
-  std::deque<IMTextEntry*> focus_queue_;
+  std::deque<TextInput*> focus_queue_;
 
-  nux::ObjectPtr<nux::BaseTexture> warning_;
   nux::Geometry cached_focused_geo_;
 
-  bool caps_lock_on_;
-  int spin_icon_width_;
+  nux::Property<bool> caps_lock_on_;
 };
 
 }

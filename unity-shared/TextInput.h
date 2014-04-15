@@ -70,6 +70,7 @@ public:
   nux::Property<int> hint_font_size;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
+  nux::Property<bool> caps_lock_on;
 
 private:
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
@@ -82,6 +83,11 @@ private:
 
   void AddProperties(debug::IntrospectionData&);
   bool AcceptKeyNavFocus();
+
+  bool ShouldBeHighlighted();
+
+  void LoadWarningIcon(int icon_size);
+  void PaintWarningIcon(nux::GraphicsEngine& graphics_engine);
 
 protected:
   void OnInputHintChanged();
@@ -101,8 +107,6 @@ protected:
 
 private:
 
-  bool ShouldBeHighlighted();
-
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
@@ -111,8 +115,11 @@ private:
 
   int last_width_;
   int last_height_;
+  int spin_icon_width_;
 
   glib::SignalManager sig_manager_;
+
+  nux::ObjectPtr<nux::BaseTexture> warning_;
 
 };
 

@@ -18,6 +18,11 @@
  */
 
 #include "TextInput.h"
+#include "unity-shared/DashStyle.h"
+#include "unity-shared/RawPixel.h"
+
+namespace unity
+{
 
 namespace
 {
@@ -29,6 +34,10 @@ const int TEXT_INPUT_RIGHT_BORDER = 10;
 
 const int HIGHLIGHT_HEIGHT = 24;
 
+const RawPixel DEFAULT_ICON_SIZE = 22_em;
+
+std::string WARNING_ICON = "dialog-warning-symbolic";
+
 // Fonts
 const std::string HINT_LABEL_DEFAULT_FONT_NAME = "Ubuntu";
 const int HINT_LABEL_FONT_SIZE = 11;
@@ -38,18 +47,39 @@ const int PANGO_ENTRY_FONT_SIZE = 14;
 
 }
 
-namespace unity
-{
-
 nux::logging::Logger logger("unity.textinput");
 
 NUX_IMPLEMENT_OBJECT_TYPE(TextInput);
+
+nux::AbstractPaintLayer* CreateWarningLayer(nux::BaseTexture* texture)
+{
+  // Create the texture layer
+  nux::TexCoordXForm texxform;
+
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.min_filter = nux::TEXFILTER_LINEAR;
+  texxform.mag_filter = nux::TEXFILTER_LINEAR;
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  return (new nux::TextureLayer(texture->GetDeviceTexture(),
+                                texxform,
+                                nux::color::White,
+                                true,
+                                rop));
+}
 
 TextInput::TextInput(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , input_hint("")
   , hint_font_name(HINT_LABEL_DEFAULT_FONT_NAME)
   , hint_font_size(HINT_LABEL_FONT_SIZE)
+  , caps_lock_on(false)
   , bg_layer_(new nux::ColorLayer(nux::Color(0xff595853), true))
   , last_width_(-1)
   , last_height_(-1)
@@ -101,6 +131,11 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_preedit));
   input_hint.changed.connect([this](std::string const& s) { OnInputHintChanged(); });
 
+  // When we get to HiDPI changes here, we will need to update this width
+  dash::Style& style = dash::Style::Instance();
+  spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
+
+  LoadWarningIcon(DEFAULT_ICON_SIZE);
 }
 
 void TextInput::SetSpinnerVisible(bool visible)
@@ -116,6 +151,33 @@ void TextInput::SetSpinnerState(SpinnerState spinner_state)
 void TextInput::UpdateHintFont()
 {
   hint_->SetFont((hint_font_name() + " " + std::to_string(hint_font_size())).c_str());
+}
+
+void TextInput::LoadWarningIcon(int icon_size)
+{
+  nux::Geometry const& geo = GetGeometry();
+
+  int x = geo.x + geo.width - icon_size + spin_icon_width_;
+  int y = geo.y;
+
+  auto* theme = gtk_icon_theme_get_default();
+  GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
+  glib::Error error;
+  glib::Object<GdkPixbuf> pixbuf(gtk_icon_theme_load_icon(theme, WARNING_ICON.c_str(), icon_size, flags, &error));
+
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
+  cairo_t* cr = cg.GetInternalContext();
+
+  cairo_push_group(cr);
+  gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+  cairo_paint_with_alpha(cr, 1.0);
+  std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
+
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_rectangle(cr, x, y, icon_size, icon_size);
+  cairo_mask(cr, pat.get());
+
+  warning_ = texture_ptr_from_cairo_graphics(cg);
 }
 
 void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -187,6 +249,9 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
+  if (caps_lock_on)
+    PaintWarningIcon(GfxContext);
+
   if (!IsFullRedraw())
   {
     gPainter.PopBackground();
@@ -197,6 +262,17 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
 
   GfxContext.PopClippingRectangle();
+}
+
+void TextInput::PaintWarningIcon(nux::GraphicsEngine& graphics_engine)
+{
+  nux::Geometry const& geo = GetGeometry();
+  int icon_offset = warning_->GetWidth() + spin_icon_width_ + LEFT_INTERNAL_PADDING;
+
+  nux::Geometry warning_geo = {geo.x + geo.width - icon_offset,
+                               geo.y + TEXT_INPUT_RIGHT_BORDER, warning_->GetWidth(), warning_->GetHeight()};
+
+  nux::GetPainter().PushDrawLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_.GetPointer()));
 }
 
 void TextInput::UpdateBackground(bool force)
