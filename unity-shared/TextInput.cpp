@@ -20,6 +20,7 @@
 #include "TextInput.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/RawPixel.h"
+#include "unity-shared/PreviewStyle.h"
 
 namespace unity
 {
@@ -165,19 +166,28 @@ void TextInput::LoadWarningIcon(int icon_size)
   glib::Error error;
   glib::Object<GdkPixbuf> pixbuf(gtk_icon_theme_load_icon(theme, WARNING_ICON.c_str(), icon_size, flags, &error));
 
-  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
-  cairo_t* cr = cg.GetInternalContext();
+  if (pixbuf != nullptr)
+  {
+    nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
+    cairo_t* cr = cg.GetInternalContext();
 
-  cairo_push_group(cr);
-  gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
-  cairo_paint_with_alpha(cr, 1.0);
-  std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
+    cairo_push_group(cr);
+    gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+    cairo_paint_with_alpha(cr, 1.0);
+    std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
 
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_rectangle(cr, x, y, icon_size, icon_size);
-  cairo_mask(cr, pat.get());
+    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+    cairo_rectangle(cr, x, y, icon_size, icon_size);
+    cairo_mask(cr, pat.get());
 
-  warning_ = texture_ptr_from_cairo_graphics(cg);
+    warning_ = texture_ptr_from_cairo_graphics(cg);
+  }
+  // Use fallback icon (this one is a png, and does not scale!)
+  else
+  {
+    dash::previews::Style& preview_style = dash::previews::Style::Instance();
+    warning_ = preview_style.GetWarningIcon();
+  }
 }
 
 void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -266,13 +276,20 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void TextInput::PaintWarningIcon(nux::GraphicsEngine& graphics_engine)
 {
+  nux::Geometry warning_geo = GetWaringIconGeometry();
+
+  nux::GetPainter().PushDrawLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_.GetPointer()));
+}
+
+nux::Geometry TextInput::GetWaringIconGeometry() const
+{
   nux::Geometry const& geo = GetGeometry();
   int icon_offset = warning_->GetWidth() + spin_icon_width_ + LEFT_INTERNAL_PADDING;
 
   nux::Geometry warning_geo = {geo.x + geo.width - icon_offset,
                                geo.y + TEXT_INPUT_RIGHT_BORDER, warning_->GetWidth(), warning_->GetHeight()};
 
-  nux::GetPainter().PushDrawLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_.GetPointer()));
+  return warning_geo;
 }
 
 void TextInput::UpdateBackground(bool force)

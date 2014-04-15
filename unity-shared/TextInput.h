@@ -89,6 +89,8 @@ private:
   void LoadWarningIcon(int icon_size);
   void PaintWarningIcon(nux::GraphicsEngine& graphics_engine);
 
+  nux::Geometry GetWaringIconGeometry() const;
+
 protected:
   void OnInputHintChanged();
   void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
