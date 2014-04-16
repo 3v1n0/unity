@@ -87,7 +87,10 @@ private:
   bool ShouldBeHighlighted();
 
   void LoadWarningIcon(int icon_size);
+  void LoadWarningTooltip();
+
   void PaintWarningIcon(nux::GraphicsEngine& graphics_engine);
+  void PaintWarningTooltip(nux::GraphicsEngine& graphics_engine);
 
   nux::Geometry GetWaringIconGeometry() const;
 
@@ -108,6 +111,7 @@ protected:
   IMTextEntry* pango_entry_;
 
 private:
+  void CheckMouseInsideWarningIcon();
 
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
@@ -118,10 +122,12 @@ private:
   int last_width_;
   int last_height_;
   int spin_icon_width_;
+  bool mouse_over_warning_icon_;
 
   glib::SignalManager sig_manager_;
 
   nux::ObjectPtr<nux::BaseTexture> warning_;
+  nux::ObjectPtr<nux::BaseTexture> warning_tooltip_;
 
 };
 
