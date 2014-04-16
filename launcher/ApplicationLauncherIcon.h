@@ -83,7 +83,6 @@ protected:
   void AddProperties(debug::IntrospectionData&);
   void OnAcceptDrop(DndData const& dnd_data);
   void OnDndEnter();
-  void OnDndHovered();
   void OnDndLeave();
   void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
