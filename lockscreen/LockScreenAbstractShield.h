@@ -47,7 +47,6 @@ public:
 
   using MockableBaseWindow::RemoveLayout;
   virtual bool IsIndicatorOpen() const = 0;
-  virtual void CheckCapsLockPrompt() = 0;
 
   sigc::signal<void, int, int> grab_motion;
   sigc::signal<void, unsigned long, unsigned long> grab_key;

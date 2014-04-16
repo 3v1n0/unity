@@ -56,7 +56,6 @@ struct MockShield : AbstractShield
   {}
 
   MOCK_CONST_METHOD0(IsIndicatorOpen, bool());
-  MOCK_METHOD0(CheckCapsLockPrompt, void());
 };
 
 struct ShieldFactoryMock : ShieldFactoryInterface
