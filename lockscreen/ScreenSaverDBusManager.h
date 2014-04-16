@@ -29,7 +29,7 @@ namespace unity
 namespace lockscreen
 {
 
-class DBusManager : public sigc::trackable
+class DBusManager
 {
 public:
   typedef std::shared_ptr<DBusManager> Ptr;
