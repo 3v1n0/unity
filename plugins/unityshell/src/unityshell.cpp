@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
- * unity.cpp 
+ * unityshell.cpp
  *
  * Copyright (c) 2010-11 Canonical Ltd.
  *
@@ -26,6 +26,7 @@
 #include <Nux/WindowCompositor.h>
 
 #include <UnityCore/DBusIndicators.h>
+#include <UnityCore/DesktopUtilities.h>
 #include <UnityCore/GnomeSessionManager.h>
 #include <UnityCore/ScopeProxyInterface.h>
 
@@ -58,6 +59,7 @@
 #include "decorations/DecorationsManager.h"
 
 #include <glib/gi18n-lib.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -142,6 +144,7 @@ const RawPixel SCALE_PADDING = 40_em;
 const RawPixel SCALE_SPACING = 20_em;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 const std::string FIRST_RUN_STAMP = "first_run.stamp";
+const std::string LOCKED_STAMP = "locked.stamp";
 } // namespace local
 } // anon namespace
 
@@ -3727,7 +3730,7 @@ void UnityScreen::OnDashRealized()
   RaiseOSK();
 }
 
-void UnityScreen::LockscreenRequested()
+void UnityScreen::OnLockScreenRequested()
 {
   if (switcher_controller_->Visible())
   {
@@ -3746,6 +3749,35 @@ void UnityScreen::LockscreenRequested()
     wm.TerminateScale();
 
   RaiseOSK();
+}
+
+void UnityScreen::OnLockedScreen()
+{
+  auto const& cache_dir = DesktopUtilities::GetCacheDirectory();
+
+  if (cache_dir.empty())
+    return;
+
+  glib::Error error;
+  g_file_set_contents((cache_dir+local::LOCKED_STAMP).c_str(), "", 0, &error);
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to save the unity locked stamp file: " << error;
+  }
+}
+
+void UnityScreen::OnUnlockedSCreen()
+{
+  auto const& cache_dir = DesktopUtilities::GetCacheDirectory();
+
+  if (cache_dir.empty())
+    return;
+
+  if (g_unlink((cache_dir+local::LOCKED_STAMP).c_str()) < 0)
+  {
+    LOG_ERROR(logger) << "Impossible to delete the unity locked stamp file";
+  }
 }
 
 void UnityScreen::RaiseOSK()
@@ -3813,7 +3845,9 @@ void UnityScreen::initLauncher()
 
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
-  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::LockscreenRequested));
+  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  manager->locked.connect(sigc::mem_fun(this, &UnityScreen::OnLockedScreen));
+  manager->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnUnlockedSCreen));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
@@ -3822,6 +3856,9 @@ void UnityScreen::initLauncher()
   screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, manager);
   UpdateActivateIndicatorsKey();
+
+  if (g_file_test((DesktopUtilities::GetCacheDirectory()+local::LOCKED_STAMP).c_str(), G_FILE_TEST_EXISTS))
+    manager->PromptLockScreen();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
@@ -3907,8 +3944,8 @@ CompAction::Vector& UnityScreen::getActions()
 void UnityScreen::ShowFirstRunHints()
 {
   sources_.AddTimeoutSeconds(1, [this] {
-    auto const& cache_dir = glib::gchar_to_string(g_get_user_cache_dir())+"/unity/";
-    if (!g_file_test((cache_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
+    auto const& cache_dir = DesktopUtilities::GetCacheDirectory();
+    if (!cache_dir.empty() && !g_file_test((cache_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
     {
       // We focus the panel, so the shortcut hint will be hidden at first user input
       auto const& panels = panel_controller_->panels();
@@ -3920,19 +3957,12 @@ void UnityScreen::ShowFirstRunHints()
       shortcut_controller_->first_run = true;
       shortcut_controller_->Show();
 
-      if (g_mkdir_with_parents(cache_dir.c_str(), 0700) >= 0)
-      {
-        glib::Error error;
-        g_file_set_contents((cache_dir+local::FIRST_RUN_STAMP).c_str(), "", 0, &error);
+      glib::Error error;
+      g_file_set_contents((cache_dir+local::FIRST_RUN_STAMP).c_str(), "", 0, &error);
 
-        if (error)
-        {
-          LOG_ERROR(logger) << "Impossible to save the unity stamp file: " << error;
-        }
-      }
-      else
+      if (error)
       {
-        LOG_ERROR(logger) << "Impossible to create unity cache folder!";
+        LOG_ERROR(logger) << "Impossible to save the unity stamp file: " << error;
       }
     }
     return false;

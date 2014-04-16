@@ -232,7 +232,9 @@ public:
 
   void OnMinimizeDurationChanged();
 
-  void LockscreenRequested();
+  void OnLockScreenRequested();
+  void OnLockedScreen();
+  void OnUnlockedSCreen();
 
   switcher::Controller::Ptr switcher_controller();
   launcher::Controller::Ptr launcher_controller();
