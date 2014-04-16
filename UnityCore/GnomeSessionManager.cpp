@@ -126,6 +126,19 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     });
   }
 
+  {
+    dm_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.DisplayManager",
+                                                  "/org/freedesktop/DisplayManager",
+                                                  "org.freedesktop.DisplayManager",
+                                                  G_BUS_TYPE_SYSTEM);
+
+    dm_proxy_->Connect("SessionAdded", sigc::hide(sigc::mem_fun(this, &Impl::UpdateHaveOtherOpenSessions)));
+    dm_proxy_->Connect("SessionRemoved", sigc::hide(sigc::mem_fun(this, &Impl::UpdateHaveOtherOpenSessions)));
+
+    manager_->have_other_open_sessions = false;
+    UpdateHaveOtherOpenSessions();
+  }
+
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {
     if (err)
     {
@@ -420,6 +433,15 @@ void GnomeManager::Impl::LockScreen(bool prompt)
   }
 
   prompt ? manager_->prompt_lock_requested.emit() : manager_->lock_requested.emit();
+}
+
+void GnomeManager::Impl::UpdateHaveOtherOpenSessions()
+{
+  dm_proxy_->GetProperty("Sessions", [this](GVariant* variant) {
+      GVariantIter *sessions;
+      g_variant_get(variant, "ao", &sessions);
+      manager_->have_other_open_sessions = g_variant_iter_n_children(sessions) > 1;
+  });
 }
 
 // Public implementation

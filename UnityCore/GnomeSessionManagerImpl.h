@@ -61,6 +61,7 @@ struct GnomeManager::Impl
   void CallLogindMethod(std::string const& method, GVariant* parameters = nullptr, glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
   void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
   bool InteractiveMode();
+  void UpdateHaveOtherOpenSessions();
 
   GnomeManager* manager_;
   bool test_mode_;
@@ -73,6 +74,7 @@ struct GnomeManager::Impl
   glib::DBusObject::Ptr shell_object_;
   glib::DBusProxy::Ptr login_proxy_;
   glib::DBusProxy::Ptr presence_proxy_;
+  glib::DBusProxy::Ptr dm_proxy_;
 };
 
 } // namespace session
