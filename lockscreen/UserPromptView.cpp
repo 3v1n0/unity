@@ -348,6 +348,11 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
     nux::GetWindowCompositor().SetKeyFocusArea(text_entry);
 
   text_entry->activated.connect([this, text_input, promise](){
+    auto* text_entry = text_input->text_entry();
+
+    if (!text_entry->GetInputEventSensitivity())
+      return;
+
     if (focus_queue_.size() == 1)
     {
       text_input->SetSpinnerVisible(true);
@@ -355,7 +360,6 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
     }
 
     focus_queue_.pop_front();
-    auto* text_entry = text_input->text_entry();
     cached_focused_geo_ = text_entry->GetGeometry();
     text_entry->SetInputEventSensitivity(false);
     QueueRelayout();
