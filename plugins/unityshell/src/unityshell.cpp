@@ -3836,8 +3836,10 @@ void UnityScreen::initLauncher()
     CompOption::Value v(launcher_width);
     screen->setOptionForPlugin("expo", "x_offset", v);
 
-    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
-      screen->setOptionForPlugin("scale", "x_offset", v);
+    if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
+      v.set(0);
+
+    screen->setOptionForPlugin("scale", "x_offset", v);
   };
 
   for (auto const& launcher : launcher_controller_->launchers())
