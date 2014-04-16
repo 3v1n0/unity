@@ -110,10 +110,11 @@ public:
     UNFOLDED,
     STARTING,
     SHIMMER,
-    CENTER_SAVED,
-    PROGRESS,
     DESAT,
+    GLOW,
+    PROGRESS,
     PULSE_ONCE,
+    CENTER_SAVED,
 
     LAST
   };
