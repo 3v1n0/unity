@@ -38,7 +38,7 @@ public:
   Manager() = default;
   virtual ~Manager() = default;
 
-  nux::Property<bool> have_other_open_sessions;
+  nux::ROProperty<bool> have_other_open_sessions;
 
   virtual std::string RealName() const = 0;
   virtual std::string UserName() const = 0;

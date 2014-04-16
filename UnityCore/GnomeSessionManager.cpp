@@ -85,6 +85,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   , can_hibernate_(false)
   , pending_action_(shell::Action::NONE)
   , shell_server_(test_mode_ ? testing::DBUS_NAME : shell::DBUS_NAME)
+  , open_sessions_(0)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
@@ -135,8 +136,11 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     dm_proxy_->Connect("SessionAdded", sigc::hide(sigc::mem_fun(this, &Impl::UpdateHaveOtherOpenSessions)));
     dm_proxy_->Connect("SessionRemoved", sigc::hide(sigc::mem_fun(this, &Impl::UpdateHaveOtherOpenSessions)));
 
-    manager_->have_other_open_sessions = false;
     UpdateHaveOtherOpenSessions();
+
+    manager_->have_other_open_sessions.SetGetterFunction([this]() {
+      return open_sessions_ > 1;
+    });
   }
 
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {
@@ -440,7 +444,7 @@ void GnomeManager::Impl::UpdateHaveOtherOpenSessions()
   dm_proxy_->GetProperty("Sessions", [this](GVariant* variant) {
       GVariantIter *sessions;
       g_variant_get(variant, "ao", &sessions);
-      manager_->have_other_open_sessions = g_variant_iter_n_children(sessions) > 1;
+      open_sessions_ = g_variant_iter_n_children(sessions);
   });
 }
 

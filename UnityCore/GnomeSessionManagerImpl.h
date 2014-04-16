@@ -75,6 +75,8 @@ struct GnomeManager::Impl
   glib::DBusProxy::Ptr login_proxy_;
   glib::DBusProxy::Ptr presence_proxy_;
   glib::DBusProxy::Ptr dm_proxy_;
+
+  int open_sessions_;
 };
 
 } // namespace session
