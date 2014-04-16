@@ -30,6 +30,7 @@ class DesktopUtilities
 {
 public:
   static std::string GetUserDataDirectory();
+  static std::string GetCacheDirectory();
   static std::vector<std::string> GetSystemDataDirectories();
   static std::vector<std::string> GetDataDirectories();
 

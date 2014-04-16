@@ -23,12 +23,17 @@
 
 #include <glib.h>
 #include <gio/gdesktopappinfo.h>
+#include <NuxCore/Logger.h>
 
 #include "DesktopUtilities.h"
 #include "GLibWrapper.h"
 
 namespace unity
 {
+namespace
+{
+DECLARE_LOGGER(logger, "unity.desktop.utilities");
+}
 
 std::string DesktopUtilities::GetUserDataDirectory()
 {
@@ -46,6 +51,18 @@ std::string DesktopUtilities::GetUserDataDirectory()
     return std::string(home).append(subdir);
   }
 
+  return "";
+}
+
+std::string DesktopUtilities::GetCacheDirectory()
+{
+  const char *cache_dir = g_get_user_cache_dir();
+  auto unity_cache = glib::gchar_to_string(cache_dir).append(G_DIR_SEPARATOR_S "unity" G_DIR_SEPARATOR_S);
+
+  if (g_mkdir_with_parents(unity_cache.c_str(), 0700) >= 0)
+    return unity_cache;
+
+  LOG_ERROR(logger) << "Impossible to create unity cache folder '"<< unity_cache <<"' !";
   return "";
 }
 
