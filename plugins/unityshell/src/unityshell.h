@@ -232,7 +232,8 @@ public:
 
   void OnMinimizeDurationChanged();
 
-  void LockscreenRequested();
+  void OnLockScreenRequested();
+  void SaveLockStamp(bool);
 
   switcher::Controller::Ptr switcher_controller();
   launcher::Controller::Ptr launcher_controller();
