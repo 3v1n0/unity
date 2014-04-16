@@ -517,6 +517,7 @@ void UnityScreen::initAltTabNextWindow()
 
 void UnityScreen::OnInitiateSpread()
 {
+  scale_just_activated_ = super_keypressed_;
   spread_filter_ = std::make_shared<spread::Filter>();
   spread_filter_->text.changed.connect([this] (std::string const& filter) {
     if (filter.empty())
@@ -1982,12 +1983,6 @@ void UnityScreen::handleCompizEvent(const char* plugin,
   if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
   {
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
-  }
-
-  if (super_keypressed_ && g_strcmp0(plugin, "scale") == 0 &&
-      g_strcmp0(event, "activate") == 0)
-  {
-    scale_just_activated_ = CompOption::getBoolOptionNamed(option, "active");
   }
 
   screen->handleCompizEvent(plugin, event, option);
