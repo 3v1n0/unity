@@ -35,23 +35,24 @@ public:
   typedef std::shared_ptr<DBusManager> Ptr;
 
   DBusManager(session::Manager::Ptr const&);
+  ~DBusManager();
 
   nux::Property<bool> active;
 
   sigc::signal<void> simulate_activity;
 
+protected:
+  struct TestMode {};
+  DBusManager(session::Manager::Ptr const&, TestMode const&);
+
 private:
-  void SetActive(bool active);
-  void EnsureService();
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 
-  session::Manager::Ptr session_;
-  glib::DBusServer::Ptr server_;
-  glib::DBusObject::Ptr object_;
-
-  time_t time_;
+  friend struct TestScreenSaverDBusManager;
 };
 
-} // session
+} // lockscreen
 } // unity
 
 #endif

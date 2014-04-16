@@ -348,6 +348,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
     nux::GetWindowCompositor().SetKeyFocusArea(text_entry);
 
   text_entry->activated.connect([this, text_input, promise](){
+    std::cout << "text entry activated" << std::endl;
     if (focus_queue_.size() == 1)
     {
       text_input->SetSpinnerVisible(true);

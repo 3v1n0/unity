@@ -18,6 +18,7 @@
  */
 
 #include "ScreenSaverDBusManager.h"
+#include "ScreenSaverDBusManagerImpl.h"
 
 #include "LockScreenSettings.h"
 #include "GLibDBusProxy.h"
@@ -30,6 +31,7 @@ namespace lockscreen
 namespace dbus
 {
 const std::string NAME = "org.gnome.ScreenSaver";
+const std::string TEST_NAME = "org.gnome.Test.ScreenSaver";
 const std::string INTERFACE = "org.gnome.ScreenSaver";
 const std::string OBJECT_PATH = "/org/gnome/ScreenSaver";
 const std::string INTROSPECTION_XML =
@@ -53,16 +55,22 @@ R"(<node>
 </node>)";
 }
 
-DBusManager::DBusManager(session::Manager::Ptr const& session)
-  : active(false)
+//
+// Start Private Implementation
+//
+
+DBusManager::Impl::Impl(DBusManager* manager, session::Manager::Ptr const& session, bool test_mode)
+  : manager_(manager)
   , session_(session)
+  , test_mode_(test_mode)
   , object_(std::make_shared<glib::DBusObject>(dbus::INTROSPECTION_XML, dbus::INTERFACE))
   , time_(0)
 {
-  active.changed.connect(sigc::mem_fun(this, &DBusManager::SetActive));
+  manager_->active = false;
+  manager_->active.changed.connect(sigc::mem_fun(this, &DBusManager::Impl::SetActive));
 
   // This is a workaround we use to fallback to use gnome-screensaver if the screen reader is enabled
-  Settings::Instance().use_legacy.changed.connect(sigc::hide(sigc::mem_fun(this, &DBusManager::EnsureService)));
+  Settings::Instance().use_legacy.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::EnsureService)));
 
   object_->SetMethodsCallsHandler([this] (std::string const& method, GVariant* parameters) -> GVariant* {
     if (method == "Lock")
@@ -71,7 +79,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "GetActive")
     {
-      return g_variant_new("(b)", active() ? TRUE : FALSE);
+      return g_variant_new("(b)", manager_->active() ? TRUE : FALSE);
     }
     else if (method == "GetActiveTime")
     {
@@ -86,7 +94,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "SimulateUserActivity")
     {
-      simulate_activity.emit();
+      manager_->simulate_activity.emit();
     }
 
     return nullptr;
@@ -95,13 +103,14 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
   EnsureService();
 }
 
-void DBusManager::EnsureService()
+void DBusManager::Impl::EnsureService()
 {
   if (!Settings::Instance().use_legacy())
   {
     if (!server_)
     {
-      server_ = std::make_shared<glib::DBusServer>(dbus::NAME, G_BUS_TYPE_SESSION, G_BUS_NAME_OWNER_FLAGS_REPLACE);
+      server_ = std::make_shared<glib::DBusServer>(test_mode_ ? dbus::TEST_NAME : dbus::NAME,
+                                                   G_BUS_TYPE_SESSION, G_BUS_NAME_OWNER_FLAGS_REPLACE);
       server_->AddObject(object_, dbus::OBJECT_PATH);
     }
   }
@@ -115,11 +124,26 @@ void DBusManager::EnsureService()
   }
 }
 
-void DBusManager::SetActive(bool active)
+void DBusManager::Impl::SetActive(bool active)
 {
   time_ = active ? time(nullptr) : 0;
   object_->EmitSignal("ActiveChanged", g_variant_new("(b)", active ? TRUE : FALSE));
 }
+
+//
+// End private implemenation
+//
+
+DBusManager::DBusManager(session::Manager::Ptr const& session)
+  : impl_(new Impl(this, session, /* test_mode */ false))
+{}
+
+DBusManager::DBusManager(session::Manager::Ptr const& session, DBusManager::TestMode const&)
+  : impl_(new Impl(this, session, /* test_mode */ true))
+{}
+
+DBusManager::~DBusManager()
+{}
 
 } // lockscreen
 } // unity

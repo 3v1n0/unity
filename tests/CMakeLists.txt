@@ -269,6 +269,7 @@ if (ENABLE_X_SUPPORT)
                  test_resultviewgrid.cpp
                  test_scope_bar.cpp
                  test_scope_view.cpp
+                 test_screensaver_dbus_manager.cpp
                  test_searchbar.cpp
                  test_session_button.cpp
                  test_session_controller.cpp
