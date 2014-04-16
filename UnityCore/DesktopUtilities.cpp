@@ -54,7 +54,7 @@ std::string DesktopUtilities::GetUserDataDirectory()
   return "";
 }
 
-std::string DesktopUtilities::GetCacheDirectory()
+std::string DesktopUtilities::GetUserCacheDirectory()
 {
   const char *cache_dir = g_get_user_cache_dir();
   auto unity_cache = glib::gchar_to_string(cache_dir).append(G_DIR_SEPARATOR_S "unity" G_DIR_SEPARATOR_S);
@@ -63,6 +63,18 @@ std::string DesktopUtilities::GetCacheDirectory()
     return unity_cache;
 
   LOG_ERROR(logger) << "Impossible to create unity cache folder '"<< unity_cache <<"' !";
+  return "";
+}
+
+std::string DesktopUtilities::GetUserRuntimeDirectory()
+{
+  const char *runtime_dir = g_get_user_runtime_dir();
+  auto unity_runtime = glib::gchar_to_string(runtime_dir).append(G_DIR_SEPARATOR_S "unity" G_DIR_SEPARATOR_S);
+
+  if (g_mkdir_with_parents(unity_runtime.c_str(), 0700) >= 0)
+    return unity_runtime;
+
+  LOG_ERROR(logger) << "Impossible to create unity runtime folder '"<< unity_runtime <<"' !";
   return "";
 }
 
