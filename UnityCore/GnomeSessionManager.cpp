@@ -444,7 +444,13 @@ void GnomeManager::Impl::UpdateHaveOtherOpenSessions()
   dm_proxy_->GetProperty("Sessions", [this](GVariant* variant) {
       GVariantIter *sessions;
       g_variant_get(variant, "ao", &sessions);
-      open_sessions_ = g_variant_iter_n_children(sessions);
+      int open_sessions = g_variant_iter_n_children(sessions);
+
+      if (open_sessions_ != open_sessions)
+      {
+        open_sessions_ = open_sessions;
+        manager_->have_other_open_sessions.changed.emit(open_sessions_);
+      }
   });
 }
 
