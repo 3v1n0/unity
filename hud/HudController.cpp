@@ -102,6 +102,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   WindowManager& wm = WindowManager::Default();
   wm.screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
   wm.initiate_spread.connect(sigc::mem_fun(this, &Controller::HideHud));
+  wm.screen_viewport_switch_started.connect(sigc::mem_fun(this, &Controller::HideHud));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
   timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));

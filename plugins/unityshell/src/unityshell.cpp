@@ -1978,13 +1978,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
 {
   PluginAdapter& adapter = PluginAdapter::Default();
   adapter.NotifyCompizEvent(plugin, event, option);
-  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
-
-  if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
-  {
-    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
-  }
-
+  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent(plugin, event, option);
   screen->handleCompizEvent(plugin, event, option);
 }
 
