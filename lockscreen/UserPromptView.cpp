@@ -368,7 +368,6 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
     std::string const& password = text_entry->GetText();
     if (promise)
       promise->set_value(password);
-    }
   });
 
   GetLayout()->ComputeContentPosition(0, 0);
