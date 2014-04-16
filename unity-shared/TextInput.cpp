@@ -20,7 +20,6 @@
 #include "TextInput.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/RawPixel.h"
-#include "unity-shared/PanelStyle.h"
 #include "unity-shared/PreviewStyle.h"
 
 namespace unity
@@ -41,7 +40,6 @@ const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
 
 std::string WARNING_ICON    = "dialog-warning-symbolic";
-std::string TOOLTIP_MESSAGE = "Caps lock is on";
 // Fonts
 const std::string HINT_LABEL_DEFAULT_FONT_NAME = "Ubuntu";
 const int HINT_LABEL_FONT_SIZE = 11;
@@ -141,27 +139,27 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
 
   pango_entry_->mouse_move.connect([this] (int x, int y, int dx, int dy, int button, int key_flags) {
-    CheckMouseInsideWarningIcon();
+    CheckMouseInsideWarningIcon(x, y);
   });
 
   pango_entry_->mouse_enter.connect([this] (int x, int y, int button, int key_flags) {
-    CheckMouseInsideWarningIcon();
+    CheckMouseInsideWarningIcon(x, y);
   });
 
   pango_entry_->mouse_leave.connect([this] (int x, int y, int button, int key_flags) {
-    CheckMouseInsideWarningIcon();
+    CheckMouseInsideWarningIcon(x, y);
   });
 
   LoadWarningIcon(DEFAULT_ICON_SIZE);
   LoadWarningTooltip();
 }
 
-void TextInput::CheckMouseInsideWarningIcon()
+void TextInput::CheckMouseInsideWarningIcon(int x, int y)
 {
-  nux::Point const& mouse  = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-  nux::Geometry const& geo = GetWaringIconGeometry();
+  nux::Geometry const& geo       = GetWaringIconGeometry();
+  nux::Geometry const& pango_geo = pango_entry_->GetGeometry();
 
-  if (geo.IsPointInside(mouse.x, mouse.y))
+  if (geo.IsPointInside(x + pango_geo.x, y + pango_geo.y))
   {
     mouse_over_warning_icon_ = true;
     QueueDraw();
@@ -245,7 +243,7 @@ void TextInput::LoadWarningTooltip()
   pango_context_set_language(context, gtk_get_default_language());
 
   pango_layout_set_height(layout, -1); //avoid wrap lines
-  pango_layout_set_text(layout, TOOLTIP_MESSAGE.c_str(), -1);
+  pango_layout_set_text(layout, _("Caps lock is on"), -1);
 
   nux::Size extents;
   pango_layout_get_pixel_size(layout, &extents.width, &extents.height);

@@ -94,6 +94,8 @@ private:
 
   nux::Geometry GetWaringIconGeometry() const;
 
+  void CheckMouseInsideWarningIcon(int x, int y);
+
 protected:
   void OnInputHintChanged();
   void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -111,8 +113,6 @@ protected:
   IMTextEntry* pango_entry_;
 
 private:
-  void CheckMouseInsideWarningIcon();
-
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
