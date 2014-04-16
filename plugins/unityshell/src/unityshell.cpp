@@ -469,6 +469,7 @@ UnityScreen::~UnityScreen()
   unity_a11y_finalize();
   QuicklistManager::Destroy();
   decoration::DataPool::Reset();
+  SaveLockStamp(false);
 
   reset_glib_logging();
 }
@@ -3751,32 +3752,29 @@ void UnityScreen::OnLockScreenRequested()
   RaiseOSK();
 }
 
-void UnityScreen::OnLockedScreen()
+void UnityScreen::SaveLockStamp(bool save)
 {
-  auto const& cache_dir = DesktopUtilities::GetCacheDirectory();
+  auto const& cache_dir = DesktopUtilities::GetUserRuntimeDirectory();
 
   if (cache_dir.empty())
     return;
 
-  glib::Error error;
-  g_file_set_contents((cache_dir+local::LOCKED_STAMP).c_str(), "", 0, &error);
-
-  if (error)
+  if (save)
   {
-    LOG_ERROR(logger) << "Impossible to save the unity locked stamp file: " << error;
+    glib::Error error;
+    g_file_set_contents((cache_dir+local::LOCKED_STAMP).c_str(), "", 0, &error);
+
+    if (error)
+    {
+      LOG_ERROR(logger) << "Impossible to save the unity locked stamp file: " << error;
+    }
   }
-}
-
-void UnityScreen::OnUnlockedSCreen()
-{
-  auto const& cache_dir = DesktopUtilities::GetCacheDirectory();
-
-  if (cache_dir.empty())
-    return;
-
-  if (g_unlink((cache_dir+local::LOCKED_STAMP).c_str()) < 0)
+  else
   {
-    LOG_ERROR(logger) << "Impossible to delete the unity locked stamp file";
+    if (g_unlink((cache_dir+local::LOCKED_STAMP).c_str()) < 0)
+    {
+      LOG_ERROR(logger) << "Impossible to delete the unity locked stamp file";
+    }
   }
 }
 
@@ -3846,8 +3844,8 @@ void UnityScreen::initLauncher()
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
   manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  manager->locked.connect(sigc::mem_fun(this, &UnityScreen::OnLockedScreen));
-  manager->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnUnlockedSCreen));
+  manager->locked.connect(sigc::bind(sigc::mem_fun(this, &UnityScreen::SaveLockStamp), true));
+  manager->unlocked.connect(sigc::bind(sigc::mem_fun(this, &UnityScreen::SaveLockStamp), false));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
@@ -3857,7 +3855,7 @@ void UnityScreen::initLauncher()
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, manager);
   UpdateActivateIndicatorsKey();
 
-  if (g_file_test((DesktopUtilities::GetCacheDirectory()+local::LOCKED_STAMP).c_str(), G_FILE_TEST_EXISTS))
+  if (g_file_test((DesktopUtilities::GetUserRuntimeDirectory()+local::LOCKED_STAMP).c_str(), G_FILE_TEST_EXISTS))
     manager->PromptLockScreen();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
@@ -3944,7 +3942,7 @@ CompAction::Vector& UnityScreen::getActions()
 void UnityScreen::ShowFirstRunHints()
 {
   sources_.AddTimeoutSeconds(1, [this] {
-    auto const& cache_dir = DesktopUtilities::GetCacheDirectory();
+    auto const& cache_dir = DesktopUtilities::GetUserCacheDirectory();
     if (!cache_dir.empty() && !g_file_test((cache_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
     {
       // We focus the panel, so the shortcut hint will be hidden at first user input
