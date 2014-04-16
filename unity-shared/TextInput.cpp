@@ -40,8 +40,8 @@ const RawPixel TOOLTIP_Y_OFFSET  =  3_em;
 const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
 
-std::string WARNING_ICON = "dialog-warning-symbolic";
-
+std::string WARNING_ICON    = "dialog-warning-symbolic";
+std::string TOOLTIP_MESSAGE = "Caps lock is on";
 // Fonts
 const std::string HINT_LABEL_DEFAULT_FONT_NAME = "Ubuntu";
 const int HINT_LABEL_FONT_SIZE = 11;
@@ -245,7 +245,7 @@ void TextInput::LoadWarningTooltip()
   pango_context_set_language(context, gtk_get_default_language());
 
   pango_layout_set_height(layout, -1); //avoid wrap lines
-  pango_layout_set_text(layout, "Caps lock is on", -1);
+  pango_layout_set_text(layout, TOOLTIP_MESSAGE.c_str(), -1);
 
   nux::Size extents;
   pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
