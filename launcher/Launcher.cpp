@@ -157,6 +157,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   hide_machine_.should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
   hide_machine_.reveal_progress.changed.connect(redraw_cb);
   hover_machine_.should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
+  bg_effect_helper_.enabled.changed.connect(redraw_cb);
 
   mouse_down.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
@@ -1170,6 +1171,9 @@ void Launcher::OnSpreadChanged()
   bool active = wm.IsScaleActive();
   hide_machine_.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, active);
   bg_effect_helper_.enabled = active;
+
+  if (hide_machine_.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
+    return;
 
   if (active && icon_under_mouse_)
     icon_under_mouse_->HideTooltip();
