@@ -190,15 +190,34 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
     _vp_switch_started = false;
     screen_viewport_switch_ended.emit();
   }
-  else if (IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
-           g_strcmp0(event, "activate") == 0)
+  else if (g_strcmp0(plugin, "scale") == 0 && g_strcmp0(event, "activate") == 0)
   {
-    // If the scale plugin is activated again while is already grabbing the screen
-    // it means that is switching the view (i.e. switching from a spread application
-    // to another), so we need to notify our clients that it has really terminated
-    // and initiated again.
-    terminate_spread.emit();
-    initiate_spread.emit();
+    bool new_state = CompOption::getBoolOptionNamed(option, "active");
+
+    if (_spread_state != new_state)
+    {
+      _spread_state = new_state;
+      _spread_state ? initiate_spread.emit() : terminate_spread.emit();
+
+      if (!_spread_state)
+        _spread_windows_state = false;
+    }
+    else if (_spread_state && new_state)
+    {
+      // If the scale plugin is activated again while is already grabbing the screen
+      // it means that is switching the view (i.e. switching from a spread application
+      // to another), so we need to notify our clients that it has really terminated
+      // and initiated again.
+
+      bool old_windows_state = _spread_windows_state;
+      _spread_state = false;
+      _spread_windows_state = false;
+      terminate_spread.emit();
+
+      _spread_state = true;
+      _spread_windows_state = old_windows_state;
+      initiate_spread.emit();
+    }
   }
 }
 
