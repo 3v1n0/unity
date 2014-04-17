@@ -23,6 +23,7 @@ set (LOCKSCREEN_SOURCES
      LockScreenSettings.cpp
      LockScreenShield.cpp
      LockScreenShieldFactory.cpp
+     LockScreenAccelerators.cpp
      LockScreenPanel.cpp
      ScreenSaverDBusManager.cpp
      UserAuthenticatorPam.cpp

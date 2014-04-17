@@ -60,6 +60,8 @@ private:
   void BlankWindowGrabEnable(bool grab);
   void SimulateActivity();
   void ResetPostLockScreenSaver();
+  void ActivatePanel();
+  void ParseAccelerators();
 
   void OnLockRequested(bool prompt);
   void OnUnlockRequested();
@@ -74,6 +76,7 @@ private:
   DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
   indicator::Indicators::Ptr indicators_;
+  Accelerators::Ptr accelerators_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
 
