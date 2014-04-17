@@ -72,7 +72,6 @@ public:
   nux::Property<int> hint_font_size;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
-  nux::Property<bool> caps_lock_on;
   nux::Property<bool> show_caps_lock;
 
 private:
@@ -117,6 +116,7 @@ private:
   nux::LayeredLayout* layered_layout_;
   SearchBarSpinner* spinner_;
 
+  nux::Property<bool> caps_lock_on;
   int last_width_;
   int last_height_;
 
