@@ -129,6 +129,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
     if (show_caps_lock)
     {
       warning->SetVisible(on);
+      QueueRelayout();
       QueueDraw();
     }
   });
