@@ -129,7 +129,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
     if (show_caps_lock)
     {
       warning->SetVisible(on);
-      QueueRelayout();
+      QueueDraw();
     }
   });
 
@@ -348,20 +348,14 @@ void TextInput::UpdateBackground(bool force)
   texture2D->UnReference();
 }
 
-void TextInput::ToggleCapsLock()
-{
-  caps_lock_on = !caps_lock_on;
-  QueueDraw();
-}
-
 void TextInput::OnKeyUp(unsigned keysym,
                         unsigned long keycode,
                         unsigned long state)
 {
   if (!caps_lock_on && keysym == NUX_VK_CAPITAL)
-    ToggleCapsLock();
+    caps_lock_on = true;
   else if (caps_lock_on && keysym == NUX_VK_CAPITAL)
-    ToggleCapsLock();
+    caps_lock_on = false;
 }
 
 void TextInput::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)

@@ -89,7 +89,6 @@ private:
 
   bool ShouldBeHighlighted();
   void CheckIfCapsLockOn();
-  void ToggleCapsLock();
 
   nux::ObjectPtr<nux::BaseTexture> LoadWarningIcon(int icon_size);
 
