@@ -3844,7 +3844,7 @@ void UnityScreen::initLauncher()
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
   manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  manager->locked.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  manager->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
   manager->locked.connect(sigc::bind(sigc::mem_fun(this, &UnityScreen::SaveLockStamp), true));
   manager->unlocked.connect(sigc::bind(sigc::mem_fun(this, &UnityScreen::SaveLockStamp), false));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
