@@ -121,4 +121,25 @@
       <default>false</default>
     </key>
   </schema>
+
+  <schema id="org.gnome.settings-daemon.plugins.media-keys" path="/org/gnome/settings-daemon/plugins/media-keys/">
+    <key type="s" name="volume-mute">
+      <default>'XF86AudioMute'</default>
+    </key>
+    <key type="s" name="volume-down">
+      <default>'XF86AudioLowerVolume'</default>
+    </key>
+    <key type="s" name="volume-up">
+      <default>'XF86AudioRaiseVolume'</default>
+    </key>
+  </schema>
+
+  <schema id="org.gnome.desktop.wm.keybindings" path="/org/gnome/desktop/wm/keybindings/">
+    <key type="as" name="switch-input-source-backward">
+      <default>["&lt;Shift&gt;&lt;Super&gt;space"]</default>
+    </key>
+    <key type="as" name="switch-input-source">
+      <default>["&lt;Super&gt;space"]</default>
+    </key>
+  </schema>
 </schemalist>

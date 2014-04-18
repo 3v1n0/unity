@@ -26,7 +26,47 @@ namespace unity
 namespace lockscreen
 {
 
-static unsigned int KeysymToModifier(unsigned int keysym)
+enum class PressedState : unsigned int
+{
+  NothingPressed      = 0x00,
+  LeftShiftPressed    = 0x01,
+  LeftControlPressed  = 0x02,
+  LeftAltPressed      = 0x04,
+  LeftSuperPressed    = 0x08,
+  RightShiftPressed   = 0x10,
+  RightControlPressed = 0x20,
+  RightAltPressed     = 0x40,
+  RightSuperPressed   = 0x80
+};
+
+PressedState operator~(PressedState const& first)
+{
+  return static_cast<PressedState>(~static_cast<unsigned int>(first));
+}
+
+PressedState operator&(PressedState const& first, PressedState const& second)
+{
+  return static_cast<PressedState>(static_cast<unsigned int>(first) & static_cast<unsigned int>(second));
+}
+
+PressedState operator|(PressedState const& first, PressedState const& second)
+{
+  return static_cast<PressedState>(static_cast<unsigned int>(first) | static_cast<unsigned int>(second));
+}
+
+PressedState& operator&=(PressedState& first, PressedState const& second)
+{
+  return first = first & second;
+}
+
+PressedState& operator|=(PressedState& first, PressedState const& second)
+{
+  return first = first | second;
+}
+
+namespace
+{
+unsigned int KeysymToModifier(unsigned int keysym)
 {
   switch (keysym)
   {
@@ -47,32 +87,32 @@ static unsigned int KeysymToModifier(unsigned int keysym)
   return 0;
 }
 
-static unsigned int KeysymToPressedMask(unsigned int keysym)
+PressedState KeysymToPressedState(unsigned int keysym)
 {
   switch (keysym)
   {
   case GDK_KEY_Shift_L:
-    return LeftShiftPressed;
+    return PressedState::LeftShiftPressed;
   case GDK_KEY_Shift_R:
-    return RightShiftPressed;
+    return PressedState::RightShiftPressed;
   case GDK_KEY_Control_L:
-    return LeftControlPressed;
+    return PressedState::LeftControlPressed;
   case GDK_KEY_Control_R:
-    return RightControlPressed;
+    return PressedState::RightControlPressed;
   case GDK_KEY_Alt_L:
-    return LeftAltPressed;
+    return PressedState::LeftAltPressed;
   case GDK_KEY_Alt_R:
-    return RightAltPressed;
+    return PressedState::RightAltPressed;
   case GDK_KEY_Super_L:
-    return LeftSuperPressed;
+    return PressedState::LeftSuperPressed;
   case GDK_KEY_Super_R:
-    return RightSuperPressed;
+    return PressedState::RightSuperPressed;
   }
 
-  return 0;
+  return PressedState::NothingPressed;
 }
 
-static unsigned int KeysymToMirrorKeysym(unsigned int keysym)
+unsigned int KeysymToMirrorKeysym(unsigned int keysym)
 {
   switch (keysym)
   {
@@ -96,6 +136,7 @@ static unsigned int KeysymToMirrorKeysym(unsigned int keysym)
 
   return 0;
 }
+} // namespace
 
 Accelerator::Accelerator(unsigned int keysym,
                          unsigned int keycode,
@@ -153,7 +194,7 @@ bool Accelerator::operator==(Accelerator const& accelerator) const
 
 bool Accelerator::HandleKeyPress(unsigned int keysym,
                                  unsigned int modifiers,
-                                 unsigned int press_state)
+                                 PressedState pressed_state)
 {
   auto is_modifier_only = keysym_ == 0 && keycode_ == 0 && modifiers_ != 0;
   auto is_modifier_keysym = KeysymToModifier(keysym_);
@@ -227,7 +268,7 @@ bool Accelerator::HandleKeyPress(unsigned int keysym,
   return false;
 
 activate:
-  Activate.emit();
+  activated.emit();
   activated_ = true;
 
   return true;
@@ -235,7 +276,7 @@ activate:
 
 bool Accelerator::HandleKeyRelease(unsigned int keysym,
                                    unsigned int modifiers,
-                                   unsigned int press_state)
+                                   PressedState pressed_state)
 {
   auto is_modifier_only = keysym_ == 0 && keycode_ == 0 && modifiers_ != 0;
   auto is_modifier_keysym = KeysymToModifier(keysym_);
@@ -258,7 +299,7 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
     {
       /* We released a modifier key. */
       auto mirror_keysym = KeysymToMirrorKeysym(keysym);
-      auto is_mirror_pressed = press_state & KeysymToPressedMask(mirror_keysym);
+      auto is_mirror_pressed = (pressed_state & KeysymToPressedState(mirror_keysym)) != PressedState::NothingPressed;
 
       /* Ctrl+Shift_R is different from Ctrl+Shift+Shift_R, so we must detect
        * if the mirror key was pressed or not. */
@@ -296,12 +337,12 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
       else
       {
         /* The accelerator has a modifier keysym. */
-        auto is_keysym_pressed = press_state & KeysymToPressedMask(keysym_);
+        auto is_keysym_pressed = (pressed_state & KeysymToPressedState(keysym_)) != PressedState::NothingPressed;
 
         if (is_keysym_pressed)
         {
           auto mirror_keysym = KeysymToMirrorKeysym(keysym_);
-          auto is_mirror_pressed = press_state & KeysymToPressedMask(mirror_keysym);
+          auto is_mirror_pressed = (pressed_state & KeysymToPressedState(mirror_keysym)) != PressedState::NothingPressed;
 
           /* Ctrl+Shift_R is different from Ctrl+Shift+Shift_R, so we must detect
            * if the mirror key was pressed or not. */
@@ -350,14 +391,14 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
   return false;
 
 activate:
-  Activate.emit();
+  activated.emit();
   activated_ = false;
 
   return true;
 }
 
 Accelerators::Accelerators()
-  : press_state_(0)
+  : pressed_state_(PressedState::NothingPressed)
 {
 }
 
@@ -366,12 +407,12 @@ void Accelerators::Clear()
   accelerators_.clear();
 }
 
-void Accelerators::Add(Accelerator const& accelerator)
+void Accelerators::Add(Accelerator::Ptr const& accelerator)
 {
   accelerators_.push_back(accelerator);
 }
 
-void Accelerators::Remove(Accelerator const& accelerator)
+void Accelerators::Remove(Accelerator::Ptr const& accelerator)
 {
   accelerators_.remove(accelerator);
 }
@@ -387,35 +428,35 @@ bool Accelerators::HandleKeyPress(unsigned int keysym,
   switch (keysym)
   {
   case GDK_KEY_Shift_L:
-    press_state_ |= LeftShiftPressed;
+    pressed_state_ |= PressedState::LeftShiftPressed;
     break;
   case GDK_KEY_Shift_R:
-    press_state_ |= RightShiftPressed;
+    pressed_state_ |= PressedState::RightShiftPressed;
     break;
   case GDK_KEY_Control_L:
-    press_state_ |= LeftControlPressed;
+    pressed_state_ |= PressedState::LeftControlPressed;
     break;
   case GDK_KEY_Control_R:
-    press_state_ |= RightControlPressed;
+    pressed_state_ |= PressedState::RightControlPressed;
     break;
   case GDK_KEY_Alt_L:
-    press_state_ |= LeftAltPressed;
+    pressed_state_ |= PressedState::LeftAltPressed;
     break;
   case GDK_KEY_Alt_R:
-    press_state_ |= RightAltPressed;
+    pressed_state_ |= PressedState::RightAltPressed;
     break;
   case GDK_KEY_Super_L:
-    press_state_ |= LeftSuperPressed;
+    pressed_state_ |= PressedState::LeftSuperPressed;
     break;
   case GDK_KEY_Super_R:
-    press_state_ |= RightSuperPressed;
+    pressed_state_ |= PressedState::RightSuperPressed;
     break;
   }
 
   auto handled = false;
 
   for (auto& accelerator : accelerators_)
-    handled = accelerator.HandleKeyPress(keysym, modifiers, press_state_) || handled;
+    handled = accelerator->HandleKeyPress(keysym, modifiers, pressed_state_) || handled;
 
   return handled;
 }
@@ -431,33 +472,33 @@ bool Accelerators::HandleKeyRelease(unsigned int keysym,
   auto handled = false;
 
   for (auto& accelerator : accelerators_)
-    handled = accelerator.HandleKeyRelease(keysym, modifiers, press_state_) || handled;
+    handled = accelerator->HandleKeyRelease(keysym, modifiers, pressed_state_) || handled;
 
   switch (keysym)
   {
   case GDK_KEY_Shift_L:
-    press_state_ &= ~LeftShiftPressed;
+    pressed_state_ &= ~PressedState::LeftShiftPressed;
     break;
   case GDK_KEY_Shift_R:
-    press_state_ &= ~RightShiftPressed;
+    pressed_state_ &= ~PressedState::RightShiftPressed;
     break;
   case GDK_KEY_Control_L:
-    press_state_ &= ~LeftControlPressed;
+    pressed_state_ &= ~PressedState::LeftControlPressed;
     break;
   case GDK_KEY_Control_R:
-    press_state_ &= ~RightControlPressed;
+    pressed_state_ &= ~PressedState::RightControlPressed;
     break;
   case GDK_KEY_Alt_L:
-    press_state_ &= ~LeftAltPressed;
+    pressed_state_ &= ~PressedState::LeftAltPressed;
     break;
   case GDK_KEY_Alt_R:
-    press_state_ &= ~RightAltPressed;
+    pressed_state_ &= ~PressedState::RightAltPressed;
     break;
   case GDK_KEY_Super_L:
-    press_state_ &= ~LeftSuperPressed;
+    pressed_state_ &= ~PressedState::LeftSuperPressed;
     break;
   case GDK_KEY_Super_R:
-    press_state_ &= ~RightSuperPressed;
+    pressed_state_ &= ~PressedState::RightSuperPressed;
     break;
   }
 

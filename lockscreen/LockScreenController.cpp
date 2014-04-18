@@ -38,24 +38,6 @@ const unsigned int IDLE_FADE_DURATION = 10000;
 const unsigned int LOCK_FADE_DURATION = 400;
 const unsigned int POST_LOCK_SCREENSAVER_WAIT = 2;
 
-const char* MEDIA_KEYS_SCHEMA                = "org.gnome.settings-daemon.plugins.media-keys";
-const char* MEDIA_KEYS_KEY_VOLUME_MUTE       = "volume-mute";
-const char* MEDIA_KEYS_KEY_VOLUME_DOWN       = "volume-down";
-const char* MEDIA_KEYS_KEY_VOLUME_UP         = "volume-up";
-const char* INPUT_SWITCH_SCHEMA              = "org.gnome.desktop.wm.keybindings";
-const char* INPUT_SWITCH_KEY_PREVIOUS_SOURCE = "switch-input-source-backward";
-const char* INPUT_SWITCH_KEY_NEXT_SOURCE     = "switch-input-source";
-
-const char* INDICATOR_ACTION_INTERFACE       = "org.gtk.Actions";
-const char* INDICATOR_METHOD_ACTIVATE        = "Activate";
-const char* INDICATOR_SOUND_BUS_NAME         = "com.canonical.indicator.sound";
-const char* INDICATOR_SOUND_OBJECT_PATH      = "/com/canonical/indicator/sound";
-const char* INDICATOR_SOUND_ACTION_MUTE      = "mute";
-const char* INDICATOR_SOUND_ACTION_SCROLL    = "scroll";
-const char* INDICATOR_KEYBOARD_BUS_NAME      = "com.canonical.indicator.keyboard";
-const char* INDICATOR_KEYBOARD_OBJECT_PATH   = "/com/canonical/indicator/keyboard";
-const char* INDICATOR_KEYBOARD_ACTION_SCROLL = "locked_scroll";
-
 class BlankWindow : public nux::BaseWindow
 {
 public:
@@ -75,7 +57,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   : opacity([this] { return fade_animator_.GetCurrentValue(); })
   , dbus_manager_(dbus_manager)
   , session_manager_(session_manager)
-  , accelerators_(new Accelerators)
+  , accelerator_controller_(new AcceleratorController)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , fade_animator_(LOCK_FADE_DURATION)
@@ -166,111 +148,6 @@ void Controller::ActivatePanel()
     primary_shield_->ActivatePanel();
 }
 
-static void ActivateIndicator(std::string const& bus_name,
-                              std::string const& object_path,
-                              std::string const& action_name,
-                              glib::Variant const& parameters)
-{
-  GVariantBuilder builder;
-
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("(sava{sv})"));
-  g_variant_builder_add(&builder, "s", action_name.c_str());
-
-  if (parameters)
-    g_variant_builder_add_parsed(&builder, "[%v]", (GVariant*) parameters);
-  else
-    g_variant_builder_add_parsed(&builder, "@av []");
-
-  g_variant_builder_add_parsed(&builder, "@a{sv} []");
-
-  auto proxy = std::make_shared<glib::DBusProxy>(bus_name, object_path, INDICATOR_ACTION_INTERFACE, G_BUS_TYPE_SESSION);
-  proxy->CallBegin(INDICATOR_METHOD_ACTIVATE, g_variant_builder_end(&builder), [proxy] (GVariant*, glib::Error const&) {});
-}
-
-static void ActivateIndicatorSound(std::string const& action_name,
-                                   glib::Variant const& parameters)
-{
-  ActivateIndicator(INDICATOR_SOUND_BUS_NAME,
-                    INDICATOR_SOUND_OBJECT_PATH,
-                    action_name,
-                    parameters);
-}
-
-static void MuteIndicatorSound()
-{
-  ActivateIndicatorSound(INDICATOR_SOUND_ACTION_MUTE, nullptr);
-}
-
-static void ScrollIndicatorSound(int offset)
-{
-  ActivateIndicatorSound(INDICATOR_SOUND_ACTION_SCROLL, g_variant_new_int32(offset));
-}
-
-static void ActivateIndicatorKeyboard(std::string const& action_name,
-                                      glib::Variant const& parameters)
-{
-  ActivateIndicator(INDICATOR_KEYBOARD_BUS_NAME,
-                    INDICATOR_KEYBOARD_OBJECT_PATH,
-                    action_name,
-                    parameters);
-}
-
-static void ScrollIndicatorKeyboard(int offset)
-{
-  ActivateIndicatorKeyboard(INDICATOR_KEYBOARD_ACTION_SCROLL, g_variant_new_int32(-offset));
-}
-
-void Controller::ParseAccelerators()
-{
-  accelerators_->Clear();
-
-  auto media_keys_settings = glib::Object<GSettings>(g_settings_new(MEDIA_KEYS_SCHEMA));
-  auto input_switch_settings = glib::Object<GSettings>(g_settings_new(INPUT_SWITCH_SCHEMA));
-
-  auto activate_panel = WindowManager::Default().activate_indicators_key();
-  auto accelerator = Accelerator(activate_panel.second, 0, activate_panel.first);
-  accelerator.Activate.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));
-  accelerators_->Add(accelerator);
-
-  accelerator = Accelerator(glib::String(g_settings_get_string(media_keys_settings, MEDIA_KEYS_KEY_VOLUME_MUTE)));
-  accelerator.Activate.connect(std::function<void ()>(MuteIndicatorSound));
-  accelerators_->Add(accelerator);
-
-  accelerator = Accelerator(glib::String(g_settings_get_string(media_keys_settings, MEDIA_KEYS_KEY_VOLUME_DOWN)));
-  accelerator.Activate.connect(std::bind(ScrollIndicatorSound, -1));
-  accelerators_->Add(accelerator);
-
-  accelerator = Accelerator(glib::String(g_settings_get_string(media_keys_settings, MEDIA_KEYS_KEY_VOLUME_UP)));
-  accelerator.Activate.connect(std::bind(ScrollIndicatorSound, +1));
-  accelerators_->Add(accelerator);
-
-  auto variant = glib::Variant(g_settings_get_value(input_switch_settings, INPUT_SWITCH_KEY_PREVIOUS_SOURCE), glib::StealRef());
-
-  if (g_variant_n_children(variant) > 0)
-  {
-    const gchar* string;
-
-    g_variant_get_child(variant, 0, "&s", &string);
-
-    accelerator = Accelerator(string);
-    accelerator.Activate.connect(std::bind(ScrollIndicatorKeyboard, -1));
-    accelerators_->Add(accelerator);
-  }
-
-  variant = glib::Variant(g_settings_get_value(input_switch_settings, INPUT_SWITCH_KEY_NEXT_SOURCE), glib::StealRef());
-
-  if (g_variant_n_children(variant) > 0)
-  {
-    const gchar* string;
-
-    g_variant_get_child(variant, 0, "&s", &string);
-
-    accelerator = Accelerator(string);
-    accelerator.Activate.connect(std::bind(ScrollIndicatorKeyboard, +1));
-    accelerators_->Add(accelerator);
-  }
-}
-
 void Controller::ResetPostLockScreenSaver()
 {
   screensaver_post_lock_timeout_.reset();
@@ -316,7 +193,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     if (i >= shields_size)
     {
-      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerators_, i, i == primary);
+      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), i, i == primary);
       is_new = true;
     }
 
@@ -520,7 +397,12 @@ void Controller::LockScreen()
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
 
-  ParseAccelerators();
+  accelerator_controller_->ReloadAccelerators();
+  auto activate_key = WindowManager::Default().activate_indicators_key();
+  auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
+  accelerator->activated.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));
+  accelerator_controller_->GetAccelerators()->Add(accelerator);
+
   ShowShields();
 }
 

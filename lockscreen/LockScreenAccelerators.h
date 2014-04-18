@@ -25,35 +25,27 @@ namespace unity
 namespace lockscreen
 {
 
-enum
-{
-  LeftShiftPressed    = 0x01,
-  LeftControlPressed  = 0x02,
-  LeftAltPressed      = 0x04,
-  LeftSuperPressed    = 0x08,
-  RightShiftPressed   = 0x10,
-  RightControlPressed = 0x20,
-  RightAltPressed     = 0x40,
-  RightSuperPressed   = 0x80
-};
+enum class PressedState : unsigned int;
 
 class Accelerator
 {
 public:
+  typedef std::shared_ptr<Accelerator> Ptr;
+
   Accelerator(unsigned int keysym, unsigned int keycode, unsigned int modifiers);
   explicit Accelerator(std::string const& string);
 
   bool operator==(Accelerator const& accelerator) const;
 
-  sigc::signal<void> Activate;
+  sigc::signal<void> activated;
 
 private:
   bool HandleKeyPress(unsigned int keysym,
                       unsigned int modifiers,
-                      unsigned int press_state);
+                      PressedState pressed_state);
   bool HandleKeyRelease(unsigned int keysym,
                         unsigned int modifiers,
-                        unsigned int press_state);
+                        PressedState pressed_state);
 
   unsigned int keysym_;
   unsigned int keycode_;
@@ -74,8 +66,8 @@ public:
 
   void Clear();
 
-  void Add(Accelerator const& accelerator);
-  void Remove(Accelerator const& accelerator);
+  void Add(Accelerator::Ptr const& accelerator);
+  void Remove(Accelerator::Ptr const& accelerator);
 
   bool HandleKeyPress(unsigned int keysym,
                       unsigned int modifiers);
@@ -83,9 +75,9 @@ public:
                         unsigned int modifiers);
 
 private:
-  std::list<Accelerator> accelerators_;
+  std::list<Accelerator::Ptr> accelerators_;
 
-  unsigned int press_state_;
+  PressedState pressed_state_;
 };
 
 } // lockscreen namespace
