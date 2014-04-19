@@ -108,7 +108,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   }
 
   {
-    presence_proxy_ = std::make_shared<glib::DBusProxy>("org.gnome.SessionManager",
+    presence_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.gnome.SessionManager",
                                                         "/org/gnome/SessionManager/Presence",
                                                         "org.gnome.SessionManager.Presence");
 
@@ -404,7 +404,6 @@ void GnomeManager::Impl::LockScreen(bool prompt)
 {
   EnsureCancelPendingAction();
 
-  // FIXME (andy) we should ask gnome-session to emit the logind signal
   glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
 
   if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
@@ -467,12 +466,12 @@ void GnomeManager::ScreenSaverDeactivate()
 
 void GnomeManager::LockScreen()
 {
-  impl_->LockScreen(false);
+  impl_->LockScreen(/* prompt */ false);
 }
 
 void GnomeManager::PromptLockScreen()
 {
-  impl_->LockScreen(true);
+  impl_->LockScreen(/* prompt */ true);
 }
 
 void GnomeManager::Logout()

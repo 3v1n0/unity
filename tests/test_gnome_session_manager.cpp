@@ -41,6 +41,7 @@ const std::string LOGIND_MANAGER_PATH = "/org/freedesktop/login1";
 const std::string LOGIND_SESSION_PATH = "/org/freedesktop/login1/session/id0";
 const std::string CONSOLE_KIT_PATH = "/org/freedesktop/ConsoleKit/Manager";
 const std::string SESSION_MANAGER_PATH = "/org/gnome/SessionManager";
+const std::string SESSION_MANAGER_PRESENCE_PATH = "/org/gnome/SessionManager/Presence";
 
 const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
 const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
@@ -125,6 +126,17 @@ R"(<node>
   </interface>
 </node>
 )";
+
+const std::string SESSION_MANAGER_PRESENCE =
+R"(<node>
+  <interface name="org.gnome.SessionManager.Presence">
+    <signal name="StatusChanged">
+      <arg name="new_status" type="u" />
+    </signal>
+  </interface>
+</node>
+)";
+
 }
 
 struct MockGnomeSessionManager : session::GnomeManager {
@@ -185,6 +197,7 @@ struct TestGnomeSessionManager : testing::Test
 
     session_manager_ = std::make_shared<DBusServer>();
     session_manager_->AddObjects(introspection::SESSION_MANAGER, SESSION_MANAGER_PATH);
+    session_manager_->AddObjects(introspection::SESSION_MANAGER_PRESENCE, SESSION_MANAGER_PRESENCE_PATH);
     session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
       if (method == "CanShutdown")
       {
@@ -372,6 +385,45 @@ TEST_F(TestGnomeSessionManager, UserName)
   EXPECT_EQ(manager->UserName(), g_get_user_name());
 }
 
+TEST_F(TestGnomeSessionManager, HostName)
+{
+  EXPECT_EQ(manager->HostName(), g_get_host_name());
+}
+
+TEST_F(TestGnomeSessionManager, ScreenSaverActivate)
+{
+  bool signal_emitted = false;
+  bool signal_value = false;
+
+  manager->screensaver_requested.connect([&signal_emitted, &signal_value] (bool value) {
+    signal_emitted = true;
+    signal_value = value;
+  });
+
+  manager->ScreenSaverActivate();
+
+  Utils::WaitUntilMSec(signal_emitted);
+  ASSERT_TRUE(signal_emitted);
+  ASSERT_TRUE(signal_value);
+}
+
+
+TEST_F(TestGnomeSessionManager, ScreenSaverDeactivate)
+{
+  bool signal_emitted = false;
+  bool signal_value = true;
+
+  manager->screensaver_requested.connect([&signal_emitted, &signal_value] (bool value) {
+    signal_emitted = true;
+    signal_value = value;
+  });
+
+  manager->ScreenSaverDeactivate();
+
+  Utils::WaitUntilMSec(signal_emitted);
+  ASSERT_FALSE(signal_value);
+}
+
 TEST_F(TestGnomeSessionManager, LockScreen)
 {
   bool lock_emitted = false;
@@ -385,6 +437,20 @@ TEST_F(TestGnomeSessionManager, LockScreen)
 
   Utils::WaitUntilMSec(lock_emitted);
   EXPECT_TRUE(lock_emitted);
+}
+
+TEST_F(TestGnomeSessionManager, PromptLockScreen)
+{
+  bool signal_emitted = false;
+
+  manager->prompt_lock_requested.connect([&signal_emitted]() {
+    signal_emitted = true;
+  });
+
+  manager->PromptLockScreen();
+
+  Utils::WaitUntilMSec(signal_emitted);
+  EXPECT_TRUE(signal_emitted);
 }
 
 TEST_F(TestGnomeSessionManager, Logout)
@@ -989,19 +1055,19 @@ TEST_F(TestGnomeSessionManager, CancelRequested)
   EXPECT_TRUE(closed);
 }
 
-TEST_F(TestGnomeSessionManager, DISABLED_LogindLock)
+TEST_F(TestGnomeSessionManager, LogindLock)
 {
-  bool lock_emitted = false;
+  bool signal_emitted = false;
 
-  manager->lock_requested.connect([&lock_emitted]()
+  manager->prompt_lock_requested.connect([&signal_emitted]()
   {
-    lock_emitted = true;
+    signal_emitted = true;
   });
 
   logind_->GetObject("org.freedesktop.login1.Session")->EmitSignal("Lock");
 
-  Utils::WaitUntilMSec(lock_emitted);
-  EXPECT_TRUE(lock_emitted);
+  Utils::WaitUntilMSec(signal_emitted);
+  EXPECT_TRUE(signal_emitted);
 }
 
 TEST_F(TestGnomeSessionManager, LogindUnLock)
@@ -1022,18 +1088,51 @@ TEST_F(TestGnomeSessionManager, LogindUnLock)
 TEST_F(TestGnomeSessionManager, NoLockWhenLockingDisabled)
 {
   bool lock_emitted = false;
+  bool screensaver_emitted = false;
+  bool screensaver_value = false;
 
-  manager->lock_requested.connect([&lock_emitted]()
-  {
+  manager->lock_requested.connect([&lock_emitted]() {
     lock_emitted = true;
   });
 
-  DisableScreenLocking(true);
+  manager->screensaver_requested.connect([&screensaver_emitted, &screensaver_value] (bool value) {
+    screensaver_emitted = true;
+    screensaver_value = value;
+  });
 
+  DisableScreenLocking(true);
   manager->LockScreen();
+
+  Utils::WaitUntilMSec(screensaver_emitted);
+  EXPECT_TRUE(screensaver_value);
   EXPECT_FALSE(lock_emitted);
 
   DisableScreenLocking(false);
+}
+
+TEST_F(TestGnomeSessionManager, PresenceStatusChanged)
+{
+  bool signal_emitted = false;
+  bool idle = false;
+
+  manager->presence_status_changed.connect([&signal_emitted, &idle] (bool is_idle) {
+    signal_emitted = true;
+    idle = is_idle;
+  });
+
+  session_manager_->GetObject("org.gnome.SessionManager.Presence")->EmitSignal("StatusChanged", g_variant_new("(u)", 3));
+
+  Utils::WaitUntilMSec(signal_emitted);
+  ASSERT_TRUE(signal_emitted);
+  ASSERT_TRUE(idle);
+
+  signal_emitted = false;
+
+  session_manager_->GetObject("org.gnome.SessionManager.Presence")->EmitSignal("StatusChanged", g_variant_new("(u)", 0));
+
+  Utils::WaitUntilMSec(signal_emitted);
+  ASSERT_TRUE(signal_emitted);
+  ASSERT_FALSE(idle);
 }
 
 } // Namespace
