@@ -18,9 +18,12 @@
  */
 
 #include "TextInput.h"
+#include "unity-shared/IconTexture.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/PreviewStyle.h"
+
+#include <X11/XKBlib.h>
 
 namespace unity
 {
@@ -38,6 +41,9 @@ const int HIGHLIGHT_HEIGHT = 24;
 const RawPixel TOOLTIP_Y_OFFSET  =  3_em;
 const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
+
+// Caps is on 0x1, couldn't find any #define in /usr/include/X11
+const int CAPS_STATE_ON = 0x1;
 
 std::string WARNING_ICON    = "dialog-warning-symbolic";
 // Fonts
@@ -81,8 +87,9 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , input_hint("")
   , hint_font_name(HINT_LABEL_DEFAULT_FONT_NAME)
   , hint_font_size(HINT_LABEL_FONT_SIZE)
-  , caps_lock_on(false)
+  , show_caps_lock(false)
   , bg_layer_(new nux::ColorLayer(nux::Color(0xff595853), true))
+  , caps_lock_on(false)
   , last_width_(-1)
   , last_height_(-1)
   , mouse_over_warning_icon_(false)
@@ -107,6 +114,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
   pango_entry_->cursor_moved.connect([this](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &TextInput::OnMouseButtonDown));
+  pango_entry_->key_up.connect(sigc::mem_fun(this, &TextInput::OnKeyUp));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &TextInput::OnEndKeyFocus));
   pango_entry_->text_changed.connect([this](nux::TextEntry*) {
     hint_->SetVisible(input_string().empty());
@@ -118,6 +126,22 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE));
+  warning_->SetVisible(caps_lock_on());
+  layout_->AddView(warning_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  caps_lock_on.changed.connect([this] (bool on) {
+    if (show_caps_lock)
+    {
+      warning_->SetVisible(on);
+      QueueRelayout();
+      QueueDraw();
+    }
+  });
+
+  show_caps_lock.changed.connect([this] (bool changed) {
+    CheckIfCapsLockOn();
+  });
 
   spinner_ = new SearchBarSpinner();
   spinner_->SetVisible(false);
@@ -138,37 +162,29 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   dash::Style& style = dash::Style::Instance();
   spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
 
-  pango_entry_->mouse_move.connect([this] (int x, int y, int dx, int dy, int button, int key_flags) {
-    CheckMouseInsideWarningIcon(x, y);
+  warning_->mouse_enter.connect([this] (int x, int y, int button, int key_flags) {
+    mouse_over_warning_icon_ = true;
+    QueueDraw();
   });
 
-  pango_entry_->mouse_enter.connect([this] (int x, int y, int button, int key_flags) {
-    CheckMouseInsideWarningIcon(x, y);
+  warning_->mouse_leave.connect([this] (int x, int y, int button, int key_flags) {
+    mouse_over_warning_icon_ = false;
+    QueueDraw();
   });
 
-  pango_entry_->mouse_leave.connect([this] (int x, int y, int button, int key_flags) {
-    CheckMouseInsideWarningIcon(x, y);
-  });
-
-  LoadWarningIcon(DEFAULT_ICON_SIZE);
   LoadWarningTooltip();
 }
 
-void TextInput::CheckMouseInsideWarningIcon(int x, int y)
+void TextInput::CheckIfCapsLockOn()
 {
-  nux::Geometry const& geo       = GetWaringIconGeometry();
-  nux::Geometry const& pango_geo = pango_entry_->GetGeometry();
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+  unsigned int state = 0;
+  XkbGetIndicatorState(dpy, XkbUseCoreKbd, &state);
 
-  if (geo.IsPointInside(x + pango_geo.x, y + pango_geo.y))
-  {
-    mouse_over_warning_icon_ = true;
-    QueueDraw();
-  }
+  if ((state & CAPS_STATE_ON) == 1)
+    caps_lock_on = true;
   else
-  {
-    mouse_over_warning_icon_ = false;
-    QueueDraw();
-  }
+    caps_lock_on = false;
 }
 
 void TextInput::SetSpinnerVisible(bool visible)
@@ -186,13 +202,8 @@ void TextInput::UpdateHintFont()
   hint_->SetFont((hint_font_name() + " " + std::to_string(hint_font_size())).c_str());
 }
 
-void TextInput::LoadWarningIcon(int icon_size)
+nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)
 {
-  nux::Geometry const& geo = GetGeometry();
-
-  int x = geo.x + geo.width - icon_size + spin_icon_width_;
-  int y = geo.y;
-
   auto* theme = gtk_icon_theme_get_default();
   GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
   glib::Error error;
@@ -209,16 +220,16 @@ void TextInput::LoadWarningIcon(int icon_size)
     std::shared_ptr<cairo_pattern_t> pat(cairo_pop_group(cr), cairo_pattern_destroy);
 
     cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-    cairo_rectangle(cr, x, y, icon_size, icon_size);
+    cairo_rectangle(cr, 0, 0, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
     cairo_mask(cr, pat.get());
 
-    warning_ = texture_ptr_from_cairo_graphics(cg);
+    return texture_ptr_from_cairo_graphics(cg);
   }
   // Use fallback icon (this one is a png, and does not scale!)
   else
   {
     dash::previews::Style& preview_style = dash::previews::Style::Instance();
-    warning_ = preview_style.GetWarningIcon();
+    return nux::ObjectPtr<nux::BaseTexture>(preview_style.GetWarningIcon());
   }
 }
 
@@ -328,13 +339,8 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
-  if (caps_lock_on)
-  {
-    PaintWarningIcon(GfxContext);
-
-    if (mouse_over_warning_icon_)
+  if (caps_lock_on && mouse_over_warning_icon_)
       PaintWarningTooltip(GfxContext);
-  }
 
   if (!IsFullRedraw())
   {
@@ -348,16 +354,9 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void TextInput::PaintWarningIcon(nux::GraphicsEngine& graphics_engine)
-{
-  nux::Geometry warning_geo = GetWaringIconGeometry();
-
-  nux::GetPainter().PushDrawLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_.GetPointer()));
-}
-
 void TextInput::PaintWarningTooltip(nux::GraphicsEngine& graphics_engine)
 {
-  nux::Geometry warning_geo = GetWaringIconGeometry();
+  nux::Geometry warning_geo = warning_->GetGeometry();
 
   nux::Geometry tooltip_geo = {warning_geo.x - (warning_tooltip_->GetWidth() + TOOLTIP_OFFSET / 2),
                                warning_geo.y - TOOLTIP_Y_OFFSET,
@@ -365,17 +364,6 @@ void TextInput::PaintWarningTooltip(nux::GraphicsEngine& graphics_engine)
                                warning_tooltip_->GetHeight()};
 
   nux::GetPainter().PushDrawLayer(graphics_engine, tooltip_geo, CreateWarningLayer(warning_tooltip_.GetPointer()));
-}
-
-nux::Geometry TextInput::GetWaringIconGeometry() const
-{
-  nux::Geometry const& geo = GetGeometry();
-  int icon_offset = warning_->GetWidth() + spin_icon_width_ + LEFT_INTERNAL_PADDING;
-
-  nux::Geometry warning_geo = {geo.x + geo.width - icon_offset,
-                               geo.y + TEXT_INPUT_RIGHT_BORDER, warning_->GetWidth(), warning_->GetHeight()};
-
-  return warning_geo;
 }
 
 void TextInput::UpdateBackground(bool force)
@@ -431,6 +419,16 @@ void TextInput::UpdateBackground(bool force)
                                         rop));
 
   texture2D->UnReference();
+}
+
+void TextInput::OnKeyUp(unsigned keysym,
+                        unsigned long keycode,
+                        unsigned long state)
+{
+  if (!caps_lock_on && keysym == NUX_VK_CAPITAL)
+    caps_lock_on = true;
+  else if (caps_lock_on && keysym == NUX_VK_CAPITAL)
+    caps_lock_on = false;
 }
 
 void TextInput::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)

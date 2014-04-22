@@ -21,7 +21,6 @@
 
 #include <boost/algorithm/string/trim.hpp>
 #include <Nux/VLayout.h>
-#include <X11/XKBlib.h>
 
 #include "LockScreenSettings.h"
 #include "unity-shared/CairoTexture.h"
@@ -101,7 +100,6 @@ std::string SanitizeMessage(std::string const& message)
 UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
   , session_manager_(session_manager)
-  , caps_lock_on_(false)
 {
   user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
     AddPrompt(message, /* visible */ true, promise);
@@ -127,31 +125,6 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
 
   user_authenticator_.AuthenticateStart(session_manager_->UserName(),
                                         sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
-
-  caps_lock_on_.changed.connect([this] (bool changed) {
-    for (auto const& text_input : focus_queue_)
-    {
-      if (text_input)
-        text_input->caps_lock_on = changed;
-    }
-  });
-
-  CheckIfCapsLockOn();
-}
-
-
-
-void UserPromptView::CheckIfCapsLockOn()
-{
-  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
-  unsigned int state = 0;
-  XkbGetIndicatorState(dpy, XkbUseCoreKbd, &state);
-
-  // Caps is on 0x1, couldn't find any #define in /usr/include/X11
-  if ((state & 0x1) == 1)
-    caps_lock_on_ = true;
-  else
-    caps_lock_on_ = false;
 }
 
 bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character)
@@ -261,26 +234,6 @@ nux::View* UserPromptView::focus_view()
   return focus_queue_.front()->text_entry();
 }
 
-void UserPromptView::ToggleCapsLockBool()
-{
-  caps_lock_on_ = !caps_lock_on_;
-  QueueDraw();
-}
-
-void UserPromptView::RecvKeyUp(unsigned keysym,
-                               unsigned long keycode,
-                               unsigned long state)
-{
-  if (!caps_lock_on_ && keysym == NUX_VK_CAPITAL)
-  {
-    ToggleCapsLockBool();
-  }
-  else if (caps_lock_on_ && keysym == NUX_VK_CAPITAL)
-  {
-    ToggleCapsLockBool();
-  }
-}
-
 void UserPromptView::AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const& promise)
 {
   auto* text_input = new unity::TextInput();
@@ -288,19 +241,15 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
 
   text_input->input_hint = SanitizeMessage(message);
   text_input->hint_font_size = PROMPT_FONT_SIZE;
-  text_input->caps_lock_on = caps_lock_on_();
+  text_input->show_caps_lock = true;
   text_entry->SetPasswordMode(!visible);
   text_entry->SetPasswordChar("•");
   text_entry->SetToggleCursorVisibilityOnKeyFocus(true);
-
-  text_entry->key_up.connect(sigc::mem_fun(this, &UserPromptView::RecvKeyUp));
 
   text_input->SetMinimumHeight(Settings::GRID_SIZE);
   text_input->SetMaximumHeight(Settings::GRID_SIZE);
   prompt_layout_->AddView(text_input, 1);
   focus_queue_.push_back(text_input);
-
-  CheckIfCapsLockOn();
 
   // Don't remove it, it helps with a11y.
   if (focus_queue_.size() == 1)

@@ -62,6 +62,8 @@ public:
   void SetSpinnerVisible(bool visible);
   void SetSpinnerState(SpinnerState spinner_state);
 
+  void EnableCapsLockWarning() const;
+
   IMTextEntry* text_entry() const;
 
   nux::RWProperty<std::string> input_string;
@@ -70,7 +72,7 @@ public:
   nux::Property<int> hint_font_size;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
-  nux::Property<bool> caps_lock_on;
+  nux::Property<bool> show_caps_lock;
 
 private:
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
@@ -86,19 +88,18 @@ private:
 
   bool ShouldBeHighlighted();
 
-  void LoadWarningIcon(int icon_size);
+  nux::Geometry GetWaringIconGeometry() const;
+  void CheckIfCapsLockOn();
+
+  nux::ObjectPtr<nux::BaseTexture> LoadWarningIcon(int icon_size);
   void LoadWarningTooltip();
 
-  void PaintWarningIcon(nux::GraphicsEngine& graphics_engine);
   void PaintWarningTooltip(nux::GraphicsEngine& graphics_engine);
-
-  nux::Geometry GetWaringIconGeometry() const;
-
-  void CheckMouseInsideWarningIcon(int x, int y);
 
 protected:
   void OnInputHintChanged();
   void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnKeyUp(unsigned keysym, unsigned long keycode, unsigned long state);
   void OnEndKeyFocus();
 
   // getters & setters
@@ -119,6 +120,7 @@ private:
   nux::LayeredLayout* layered_layout_;
   SearchBarSpinner* spinner_;
 
+  nux::Property<bool> caps_lock_on;
   int last_width_;
   int last_height_;
   int spin_icon_width_;
@@ -126,9 +128,8 @@ private:
 
   glib::SignalManager sig_manager_;
 
-  nux::ObjectPtr<nux::BaseTexture> warning_;
+  IconTexture* warning_;
   nux::ObjectPtr<nux::BaseTexture> warning_tooltip_;
-
 };
 
 }
