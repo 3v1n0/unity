@@ -158,10 +158,6 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_preedit));
   input_hint.changed.connect([this](std::string const& s) { OnInputHintChanged(); });
 
-  // When we get to HiDPI changes here, we will need to update this width
-  dash::Style& style = dash::Style::Instance();
-  spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
-
   warning_->mouse_enter.connect([this] (int x, int y, int button, int key_flags) {
     mouse_over_warning_icon_ = true;
     QueueDraw();

@@ -123,7 +123,6 @@ private:
   nux::Property<bool> caps_lock_on;
   int last_width_;
   int last_height_;
-  int spin_icon_width_;
   bool mouse_over_warning_icon_;
 
   glib::SignalManager sig_manager_;
