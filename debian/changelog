@@ -1,3 +1,35 @@
+unity (7.2.0+14.04.20140416-0ubuntu1) trusty; urgency=low
+
+  [ Andrea Azzarone ]
+  * Do not allow to activate twice the same entry! (LP: #1308572)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: save a locked.stamp file when locking/unlocking, to
+    relock on startup This makes unity to relocks if it was locked
+    before crashing... (LP: #1308572)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 16 Apr 2014 22:41:19 +0000
+
+unity (7.2.0+14.04.20140414.1-0ubuntu1) trusty; urgency=low
+
+  [ Alfred Neumayer ]
+  * Security issue: Gestures on the lock screen allow to peek inside
+    running applications. As with keyboard input, gestures should be
+    blocked while the screen is locked. (LP: #1303041)
+
+  [ Sami Jaktholm ]
+  * Scale: Correctly detect the activation of a scale and set
+    scale_just_activated_ to true properly. (LP: #1288789)
+
+  [ Marco Trevisan (Treviño) ]
+  * CompizUtils: only shadow-decorate alpha windows that have full
+    decorations as well Since alpha windows might have custom shapes,
+    it's safer not to shadow-decorate them unless they don't provide,
+    for sure, a full decoration. This fixes, between the others, the
+    unity force-quit dialog. (LP: #1281825)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Apr 2014 14:22:11 +0000
+
 unity (7.2.0+14.04.20140411-0ubuntu1) trusty; urgency=low
 
   [ Sami Jaktholm ]

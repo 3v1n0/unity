@@ -232,10 +232,12 @@ public:
 
   void OnMinimizeDurationChanged();
 
-  void LockscreenRequested();
+  void OnLockScreenRequested();
+  void SaveLockStamp(bool);
 
   switcher::Controller::Ptr switcher_controller();
   launcher::Controller::Ptr launcher_controller();
+  std::shared_ptr<lockscreen::Controller> lockscreen_controller();
 
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
 
