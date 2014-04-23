@@ -125,10 +125,10 @@ private:
   int last_height_;
   bool mouse_over_warning_icon_;
 
-  glib::SignalManager sig_manager_;
-
   IconTexture* warning_;
   nux::ObjectPtr<nux::BaseTexture> warning_tooltip_;
+
+  glib::SignalManager sig_manager_;
 };
 
 }

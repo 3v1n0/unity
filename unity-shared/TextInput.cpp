@@ -140,6 +140,9 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   });
 
   show_caps_lock.changed.connect([this] (bool changed) {
+    if (!warning_tooltip_.IsValid())
+      LoadWarningTooltip();
+
     CheckIfCapsLockOn();
   });
 
@@ -167,8 +170,6 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
     mouse_over_warning_icon_ = false;
     QueueDraw();
   });
-
-  LoadWarningTooltip();
 }
 
 void TextInput::CheckIfCapsLockOn()
