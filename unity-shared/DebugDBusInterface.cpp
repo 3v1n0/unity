@@ -84,7 +84,8 @@ namespace local
       {
         if (!g_variant_is_of_type(prop_value, G_VARIANT_TYPE_STRING))
         {
-          LOG_WARNING(logger) << "Unable to match '"<< name << "', it's not a string property.";
+          LOG_WARNING(logger) << "Unable to match '"<< name << "', '" <<
+                                  prop_value << "' is not a string property.";
           return false;
         }
 
@@ -102,7 +103,8 @@ namespace local
       {
         if (!g_variant_is_of_type(prop_value, G_VARIANT_TYPE_BOOLEAN))
         {
-          LOG_WARNING(logger) << "Unable to match '"<< name << "', it's not a boolean property.";
+          LOG_WARNING(logger) << "Unable to match '"<< name << "', '" <<
+                                  prop_value << "' is not a boolean property.";
           return false;
         }
 
@@ -138,32 +140,12 @@ namespace local
           case G_VARIANT_CLASS_UINT64:
             return static_cast<uint64_t>(value) == prop_value.GetUInt64();
         default:
-          LOG_WARNING(logger) << "Unable to match '"<< name << "' against property of unknown integer type.";
+          LOG_WARNING(logger) << "Unable to match '"<< name << "', '" <<
+                                  prop_value << "' is not a known integer property.";
         };
       }
 
       return false;
-    }
-
-    glib::Variant UnpackPropertyValue(glib::Variant const& value) const
-    {
-      if (value)
-      {
-        if (g_variant_is_of_type(value, G_VARIANT_TYPE_ARRAY))
-        {
-          if (g_variant_n_children(value) == 2)
-          {
-            glib::Variant child(g_variant_get_child_value(value, 1), glib::StealRef());
-            return UnpackPropertyValue(child);
-          }
-        }
-        else if (g_variant_is_of_type(value, G_VARIANT_TYPE_VARIANT))
-        {
-          return UnpackPropertyValue(value.GetVariant());
-        }
-      }
-
-      return value;
     }
 
     glib::Variant GetPropertyValue(std::string const& name) const
@@ -173,7 +155,24 @@ namespace local
 
       IntrospectionData introspection;
       node_->AddProperties(introspection);
-      return UnpackPropertyValue(g_variant_lookup_value(glib::Variant(introspection.Get()), name.c_str(), nullptr));
+
+      glib::Variant value(g_variant_lookup_value(glib::Variant(introspection.Get()), name.c_str(), nullptr), glib::StealRef());
+
+      if (!value)
+        return nullptr;
+
+      if (!g_variant_is_of_type(value, G_VARIANT_TYPE_ARRAY) || g_variant_n_children(value) != 2)
+      {
+        LOG_ERROR(logger) << "Property value for '"<< name << "' should be a 2-sized array, got instead '" << value << "'";
+        return nullptr;
+      }
+
+      glib::Variant child(g_variant_get_child_value(value, 1), glib::StealRef());
+
+      if (g_variant_is_of_type(child, G_VARIANT_TYPE_VARIANT))
+        return child.GetVariant();
+
+      return child;
     }
 
     std::vector<xpathselect::Node::Ptr> Children() const
