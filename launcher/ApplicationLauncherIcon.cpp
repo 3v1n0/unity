@@ -383,10 +383,10 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
   if (!IsRunning() || (IsRunning() && !user_visible)) // #1 above
   {
-    if (GetQuirk(Quirk::STARTING))
+    if (GetQuirk(Quirk::STARTING, arg.monitor))
       return;
 
-    SetQuirk(Quirk::STARTING, true);
+    SetQuirk(Quirk::STARTING, true, arg.monitor);
     OpenInstanceLauncherIcon(arg.timestamp);
   }
   else // app is running
