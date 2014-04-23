@@ -1703,6 +1703,8 @@ void UnityScreen::handleEvent(XEvent* event)
         wm.OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
         wm.OnScreenUngrabbed();
+      else if (!screen->grabbed() && event->xfocus.mode == NotifyWhileGrabbed)
+        wm.OnScreenGrabbed();
 
       if (_key_nav_mode_requested)
       {
