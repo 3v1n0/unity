@@ -49,6 +49,7 @@ public:
 
   Button(Action, NUX_FILE_LINE_PROTO);
 
+  nux::Property<double> scale;
   nux::Property<bool> highlighted;
   nux::ROProperty<Action> action;
   nux::ROProperty<std::string> label;

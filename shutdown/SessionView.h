@@ -22,9 +22,11 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 
 #include "UnityCore/SessionManager.h"
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/UnityWindowView.h"
 #include "UnityCore/SessionManager.h"
 
@@ -71,6 +73,9 @@ protected:
 private:
   friend class TestSessionView;
 
+  void UpdateEMConverter();
+  void UpdateViewSize();
+
   void UpdateText();
   void Populate();
   void AddButton(Button*);
@@ -78,6 +83,7 @@ private:
   Manager::Ptr manager_;
   StaticCairoText* title_;
   StaticCairoText* subtitle_;
+  nux::VLayout* main_layout_;
   nux::HLayout* buttons_layout_;
   nux::InputArea* key_focus_area_;
 };

@@ -23,6 +23,8 @@
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/IconTexture.h"
+#include "unity-shared/UnitySettings.h"
+
 #include "Introspectable.h"
 #include "UnityWindowStyle.h"
 #include <sigc++/sigc++.h>
@@ -50,6 +52,8 @@ public:
 
   nux::ObjectPtr<nux::InputArea> GetBoundingArea();
 
+  nux::Property<int> monitor;
+
   sigc::signal<void> request_close;
 
 protected:
@@ -67,6 +71,8 @@ protected:
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
+
+  EMConverter::Ptr cv_;
 
 private:
   friend class TestUnityWindowView;

@@ -23,6 +23,8 @@
 #include <Nux/VLayout.h>
 #include <glib/gi18n-lib.h>
 
+#include "unity-shared/RawPixel.h"
+
 namespace unity
 {
 namespace session
@@ -30,9 +32,10 @@ namespace session
 
 namespace style
 {
-  const std::string FONT = "Ubuntu Light 12";
+  std::string const FONT = "Ubuntu Light 12";
 
-  const unsigned BUTTON_SPACE = 9;
+  RawPixel const BUTTON_SPACE         =   9_em;
+  RawPixel const DEFAULT_TEXTURE_SIZE = 168_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Button);
@@ -85,6 +88,15 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   main_layout->SetSpaceBetweenChildren(style::BUTTON_SPACE);
   SetLayout(main_layout);
+
+  scale.changed.connect([this, main_layout, texture_prefix] (double new_scale) {
+    main_layout->SetSpaceBetweenChildren(style::BUTTON_SPACE.CP(new_scale));
+    label_view_->SetScale(new_scale);
+
+    normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), style::DEFAULT_TEXTURE_SIZE.CP(new_scale), true));
+    highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), style::DEFAULT_TEXTURE_SIZE.CP(new_scale), true));
+    image_view_->SetTexture(highlighted ? highlight_tex_ : normal_tex_);
+  });
 
   image_view_ = new IconTexture(normal_tex_);
   image_view_->SetInputEventSensitivity(false);

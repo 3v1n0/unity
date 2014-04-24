@@ -32,6 +32,8 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , style(UnityWindowStyle::Get())
   , closable(false)
+  , monitor(0)
+  , cv_(Settings::Instance().em())
   , internal_layout_(nullptr)
   , bg_helper_(this)
 {
@@ -43,6 +45,10 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
       return true;
     }
     return false;
+  });
+
+  monitor.changed.connect([this] (int new_monitor){
+    cv_ = Settings::Instance().em(new_monitor);
   });
 
   live_background = false;
