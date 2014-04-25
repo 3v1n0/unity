@@ -143,6 +143,7 @@ const int FRAMES_TO_REDRAW_ON_RESUME = 10;
 const RawPixel SCALE_PADDING = 40_em;
 const RawPixel SCALE_SPACING = 20_em;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
+const std::string HUD_UNGRAB_WAIT = "hud-ungrab-wait";
 const std::string FIRST_RUN_STAMP = "first_run.stamp";
 const std::string LOCKED_STAMP = "locked.stamp";
 } // namespace local
@@ -2498,17 +2499,8 @@ bool UnityScreen::ShowHud()
 {
   if (switcher_controller_->Visible())
   {
-    LOG_ERROR(logger) << "this should never happen";
+    LOG_ERROR(logger) << "Switcher is visible when showing HUD: this should never happen";
     return false; // early exit if the switcher is open
-  }
-
-  auto& wm = WindowManager::Default();
-
-  if (wm.IsTopWindowFullscreenOnMonitorWithMouse() ||
-      lockscreen_controller_->IsLocked() ||
-      wm.IsScreenGrabbed())
-  {
-    return false;
   }
 
   if (hud_controller_->IsVisible())
@@ -2517,6 +2509,27 @@ bool UnityScreen::ShowHud()
   }
   else
   {
+    auto& wm = WindowManager::Default();
+
+    if (wm.IsTopWindowFullscreenOnMonitorWithMouse() ||
+        lockscreen_controller_->IsLocked())
+    {
+      return false;
+    }
+
+    if (wm.IsScreenGrabbed())
+    {
+      hud_ungrab_slot_ = wm.screen_ungrabbed.connect([this] { ShowHud(); });
+
+      // Let's wait ungrab event for maximum a couple of seconds...
+      sources_.AddTimeoutSeconds(2, [this] {
+        hud_ungrab_slot_->disconnect();
+        return false;
+      }, local::HUD_UNGRAB_WAIT);
+
+      return false;
+    }
+
     // Handles closing KeyNav (Alt+F1) if the hud is about to show
     if (launcher_controller_->KeyNavIsActive())
       launcher_controller_->KeyNavTerminate(false);
@@ -2527,6 +2540,7 @@ bool UnityScreen::ShowHud()
     if (QuicklistManager::Default()->Current())
       QuicklistManager::Default()->Current()->Hide();
 
+    hud_ungrab_slot_->disconnect();
     hud_controller_->ShowHud();
   }
 
