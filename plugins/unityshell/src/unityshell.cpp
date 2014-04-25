@@ -2248,7 +2248,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
-  if(lockscreen_controller_->IsLocked())
+  if (lockscreen_controller_->IsLocked())
     return;
 
   RaiseInputWindows();
@@ -2497,6 +2497,9 @@ bool UnityScreen::SaveInputThenFocus(const guint xid)
 
 bool UnityScreen::ShowHud()
 {
+  if (lockscreen_controller_->IsLocked())
+    return true;
+
   if (switcher_controller_->Visible())
   {
     LOG_ERROR(logger) << "Switcher is visible when showing HUD: this should never happen";
@@ -2511,11 +2514,8 @@ bool UnityScreen::ShowHud()
   {
     auto& wm = WindowManager::Default();
 
-    if (wm.IsTopWindowFullscreenOnMonitorWithMouse() ||
-        lockscreen_controller_->IsLocked())
-    {
+    if (wm.IsTopWindowFullscreenOnMonitorWithMouse())
       return false;
-    }
 
     if (wm.IsScreenGrabbed())
     {
