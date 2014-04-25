@@ -51,7 +51,7 @@ public:
 
   nux::BaseWindow* window() const;
 
-  gboolean CheckShortcutActivation(const char* key_string);
+  bool CheckShortcutActivation(const char* key_string);
   std::vector<char> GetAllShortcuts();
 
   nux::Property<bool> use_primary;
@@ -60,7 +60,7 @@ public:
 
   void HideDash();
   void QuicklyHideDash();
-  void ShowDash();
+  bool ShowDash();
 
   void ReFocusKeyInput();
 
@@ -86,7 +86,6 @@ private:
   void Relayout(bool check_monitor =false);
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);
-  void OnScreenUngrabbed();
   void OnExternalShowDash(GVariant* variant);
   void OnExternalHideDash(GVariant* variant);
   void OnActivateRequest(GVariant* variant);
@@ -103,14 +102,13 @@ private:
   nux::ObjectPtr<ResizingBaseWindow> window_;
   nux::ObjectPtr<DashView> view_;
   int monitor_;
-
   bool visible_;
-  bool need_show_;
 
   connection::Wrapper screen_ungrabbed_slot_;
   connection::Wrapper form_factor_changed_;
   glib::DBusServer dbus_server_;
   glib::TimeoutSeconds ensure_timeout_;
+  glib::Source::UniquePtr grab_wait_;
   nux::animation::AnimateValue<double> timeline_animator_;
   UBusManager ubus_manager_;
 };

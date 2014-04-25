@@ -1457,8 +1457,8 @@ std::vector<char> DashView::GetAllShortcuts()
   {
     for (Scope::Ptr scope: scopes_->GetScopes())
     {
-      std::string shortcut = scope->shortcut;
-      if(shortcut.size() > 0)
+      std::string const& shortcut = scope->shortcut;
+      if (!shortcut.empty())
         result.push_back(shortcut.at(0));
     }
   }
