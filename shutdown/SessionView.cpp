@@ -82,8 +82,6 @@ View::View(Manager::Ptr const& manager)
     if (new_mode == Mode::SHUTDOWN && !manager_->CanShutdown())
       new_mode = Mode::LOGOUT;
 
-    UpdateEMConverter();
-
     if (target != new_mode)
     {
       target = new_mode;
@@ -94,30 +92,19 @@ View::View(Manager::Ptr const& manager)
   });
 
   mode.changed.connect([this] (Mode m) {
-    UpdateEMConverter();
     UpdateText();
     Populate();
   });
 
   monitor.changed.connect([this] (bool changed) {
-    UpdateEMConverter();
+    UpdateViewSize();
   });
 
-  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &View::UpdateEMConverter));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &View::UpdateViewSize));
 
   UpdateViewSize();
   UpdateText();
   Populate();
-}
-
-void View::UpdateEMConverter()
-{
-  int mouse_monitor = UScreen::GetDefault()->GetMonitorWithMouse();
-  if (monitor != mouse_monitor)
-  {
-    monitor = mouse_monitor;
-    UpdateViewSize();
-  }
 }
 
 void View::UpdateViewSize()
@@ -133,7 +120,7 @@ void View::UpdateViewSize()
 
   for (auto* area : buttons_layout_->GetChildren())
   {
-    auto* button = (Button*)area;
+    auto* button = static_cast<Button*>(area);
     button->scale = cv_->DPIScale();
   }
 }
@@ -241,7 +228,6 @@ void View::Populate()
       if (manager_->CanHibernate())
       {
         button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
-        button->scale = cv_->DPIScale();
         button->scale = cv_->DPIScale();
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
         AddButton(button);

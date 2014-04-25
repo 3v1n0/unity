@@ -73,7 +73,6 @@ protected:
 private:
   friend class TestSessionView;
 
-  void UpdateEMConverter();
   void UpdateViewSize();
 
   void UpdateText();

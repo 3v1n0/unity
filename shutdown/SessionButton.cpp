@@ -23,8 +23,6 @@
 #include <Nux/VLayout.h>
 #include <glib/gi18n-lib.h>
 
-#include "unity-shared/RawPixel.h"
-
 namespace unity
 {
 namespace session
@@ -42,10 +40,12 @@ NUX_IMPLEMENT_OBJECT_TYPE(Button);
 
 Button::Button(Action action, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , highlighted(false)
   , action([this] { return action_; })
   , label([this] { return label_view_->GetText(); })
   , action_(action)
+  , texture_size_(-1)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
@@ -81,8 +81,8 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
       break;
   }
 
-  normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), -1, true));
-  highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), -1, true));
+  GetDefaultMaxTextureSize(texture_prefix);
+  UpdateTextures(texture_prefix);
 
   auto main_layout = new nux::VLayout();
   main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
@@ -93,8 +93,7 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
     main_layout->SetSpaceBetweenChildren(style::BUTTON_SPACE.CP(new_scale));
     label_view_->SetScale(new_scale);
 
-    normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), style::DEFAULT_TEXTURE_SIZE.CP(new_scale), true));
-    highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), style::DEFAULT_TEXTURE_SIZE.CP(new_scale), true));
+    UpdateTextures(texture_prefix);
     image_view_->SetTexture(highlighted ? highlight_tex_ : normal_tex_);
   });
 
@@ -121,6 +120,22 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
     image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
     label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
   });
+}
+
+void Button::UpdateTextures(std::string const& texture_prefix)
+{
+  normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), texture_size_.CP(scale), true));
+  highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), texture_size_.CP(scale), true));
+}
+
+void Button::GetDefaultMaxTextureSize(std::string const& texture_prefix)
+{
+  nux::Size size;
+  auto const& texture_name = (texture_prefix + ".png");
+  gdk_pixbuf_get_file_info(texture_name.c_str(), &size.width, &size.height);
+  int max_size = std::max(std::round(size.width * scale), std::round(size.height * scale));
+
+  texture_size_ = max_size;
 }
 
 void Button::Draw(nux::GraphicsEngine& ctx, bool force)

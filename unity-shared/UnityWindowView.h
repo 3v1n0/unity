@@ -43,6 +43,7 @@ public:
   nux::Property<nux::Color> background_color;
   nux::Property<UnityWindowStyle::Ptr> style;
   nux::Property<bool> closable;
+  nux::Property<int> monitor;
 
   UnityWindowView(NUX_FILE_LINE_PROTO);
   virtual ~UnityWindowView();
@@ -51,8 +52,6 @@ public:
   nux::Layout* GetLayout() override;
 
   nux::ObjectPtr<nux::InputArea> GetBoundingArea();
-
-  nux::Property<int> monitor;
 
   sigc::signal<void> request_close;
 

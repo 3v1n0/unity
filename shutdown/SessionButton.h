@@ -26,6 +26,7 @@
 
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/RawPixel.h"
 #include "unity-shared/StaticCairoText.h"
 
 namespace unity
@@ -66,11 +67,15 @@ protected:
 private:
   friend class TestSessionButton;
 
+  void UpdateTextures(std::string const& texture_prefix);
+  void GetDefaultMaxTextureSize(std::string const& texture_prefix);
+
   Action action_;
   IconTexture* image_view_;
   StaticCairoText* label_view_;
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
+  RawPixel texture_size_;
 };
 
 } // namespace session
