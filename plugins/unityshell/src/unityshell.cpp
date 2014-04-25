@@ -2067,6 +2067,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
+  bool tap_handled = false;
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
 
@@ -2095,6 +2096,24 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     {
       QuicklistManager::Default()->Current()->Hide();
     }
+
+    if (!dash_controller_->IsVisible())
+    {
+      if (!adapter.IsTopWindowFullscreenOnMonitorWithMouse())
+      {
+        if (dash_controller_->ShowDash())
+        {
+          tap_handled = true;
+          ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                    g_variant_new("(sus)", "home.scope", dash::GOTO_DASH_URI, ""));
+        }
+      }
+    }
+    else
+    {
+      dash_controller_->HideDash();
+      tap_handled = true;
+    }
   }
 
   super_keypressed_ = false;
@@ -2108,7 +2127,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  return true;
+  return (was_tap && tap_handled) || !was_tap;
 }
 
 bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
@@ -2483,15 +2502,18 @@ bool UnityScreen::ShowHud()
     return false; // early exit if the switcher is open
   }
 
-  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse() ||
-      lockscreen_controller_->IsLocked())
+  auto& wm = WindowManager::Default();
+
+  if (wm.IsTopWindowFullscreenOnMonitorWithMouse() ||
+      lockscreen_controller_->IsLocked() ||
+      wm.IsScreenGrabbed())
   {
     return false;
   }
 
   if (hud_controller_->IsVisible())
   {
-    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    hud_controller_->HideHud();
   }
   else
   {
@@ -2499,8 +2521,7 @@ bool UnityScreen::ShowHud()
     if (launcher_controller_->KeyNavIsActive())
       launcher_controller_->KeyNavTerminate(false);
 
-    // If an overlay is open, it must be the dash! Close it!
-    if (launcher_controller_->IsOverlayOpen())
+    if (dash_controller_->IsVisible())
       dash_controller_->HideDash();
 
     if (QuicklistManager::Default()->Current())
