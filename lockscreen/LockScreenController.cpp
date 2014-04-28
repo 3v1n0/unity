@@ -57,7 +57,6 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   : opacity([this] { return fade_animator_.GetCurrentValue(); })
   , dbus_manager_(dbus_manager)
   , session_manager_(session_manager)
-  , accelerator_controller_(new AcceleratorController)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , fade_animator_(LOCK_FADE_DURATION)
@@ -108,6 +107,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       shields_.clear();
 
       upstart_wrapper_->Emit("desktop-unlock");
+      accelerator_controller_.reset();
       indicators_.reset();
     }
     else if (!prompt_activation_)
@@ -397,7 +397,7 @@ void Controller::LockScreen()
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
 
-  accelerator_controller_->ReloadAccelerators();
+  accelerator_controller_ = std::make_shared<AcceleratorController>();
   auto activate_key = WindowManager::Default().activate_indicators_key();
   auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
   accelerator->activated.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));

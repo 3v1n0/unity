@@ -34,7 +34,6 @@ public:
 
   AcceleratorController();
 
-  void ReloadAccelerators() const;
   Accelerators::Ptr const& GetAccelerators() const;
 
 private:

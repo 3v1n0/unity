@@ -94,13 +94,6 @@ void ScrollIndicatorKeyboard(int offset)
 AcceleratorController::AcceleratorController()
   : accelerators_(new Accelerators)
 {
-  ReloadAccelerators();
-}
-
-void AcceleratorController::ReloadAccelerators() const
-{
-  accelerators_->Clear();
-
   auto settings = glib::Object<GSettings>(g_settings_new(MEDIA_KEYS_SCHEMA));
 
   auto accelerator = std::make_shared<Accelerator>(glib::String(g_settings_get_string(settings, MEDIA_KEYS_KEY_VOLUME_MUTE)));
