@@ -40,6 +40,9 @@ public:
   sigc::signal<void> activated;
 
 private:
+  bool KeyPressActivate();
+  bool KeyReleaseActivate();
+
   bool HandleKeyPress(unsigned int keysym,
                       unsigned int modifiers,
                       PressedState pressed_state);

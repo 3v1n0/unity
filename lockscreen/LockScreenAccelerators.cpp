@@ -192,6 +192,22 @@ bool Accelerator::operator==(Accelerator const& accelerator) const
       && modifiers_ == accelerator.modifiers_;
 }
 
+bool Accelerator::KeyPressActivate()
+{
+  activated.emit();
+  activated_ = true;
+
+  return true;
+}
+
+bool Accelerator::KeyReleaseActivate()
+{
+  activated.emit();
+  activated_ = false;
+
+  return true;
+}
+
 bool Accelerator::HandleKeyPress(unsigned int keysym,
                                  unsigned int modifiers,
                                  PressedState pressed_state)
@@ -236,7 +252,7 @@ bool Accelerator::HandleKeyPress(unsigned int keysym,
     {
       /* The modifiers match. Check if the keysyms match. */
       if (keysym == keysym_)
-        goto activate;
+        return KeyPressActivate();
       else
       {
         /* Otherwise, check if the keycodes match. Maybe the accelerator
@@ -255,7 +271,8 @@ bool Accelerator::HandleKeyPress(unsigned int keysym,
             if (key[i].keycode == keycode_)
             {
               g_free(key);
-              goto activate;
+
+              return KeyPressActivate();
             }
           }
 
@@ -266,12 +283,6 @@ bool Accelerator::HandleKeyPress(unsigned int keysym,
   }
 
   return false;
-
-activate:
-  activated.emit();
-  activated_ = true;
-
-  return true;
 }
 
 bool Accelerator::HandleKeyRelease(unsigned int keysym,
@@ -293,7 +304,7 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
     {
       /* We released a non-modifier key. */
       if (modifiers == modifiers_)
-        goto activate;
+        return KeyReleaseActivate();
     }
     else
     {
@@ -307,13 +318,13 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
       {
         /* The mirrored modifier is pressed. */
         if (modifiers == modifiers_)
-          goto activate;
+          return KeyReleaseActivate();
       }
       else
       {
         /* The mirrored modifier wasn't pressed. Compare modifiers without it. */
         if ((modifiers & ~KeysymToModifier(mirror_keysym)) == modifiers_)
-          goto activate;
+          return KeyReleaseActivate();
       }
     }
   }
@@ -328,9 +339,9 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
       {
         /* The accelerator has no keysym or keycode. */
 
-        /* TODO: Normally we would goto activate here, but compiz is
-         * intercepting this case and handling it. This is bad because now we
-         * can't do anything here. Otherwise we'll do the same action twice. */
+        /* TODO: Normally we would activate here, but compiz is intercepting
+         * this case and handling it. This is bad because now we can't do
+         * anything here. Otherwise we'll do the same action twice. */
         if (modifiers == modifiers_)
           return false;
       }
@@ -350,13 +361,13 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
           {
             /* The mirrored modifier is pressed. */
             if (modifiers == modifiers_)
-              goto activate;
+              return KeyReleaseActivate();
           }
           else
           {
             /* The mirrored modifier wasn't pressed. Compare modifiers without it. */
             if ((modifiers & ~KeysymToModifier(mirror_keysym)) == modifiers_)
-              goto activate;
+              return KeyReleaseActivate();
           }
         }
       }
@@ -380,7 +391,8 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
         if (key[i].keycode == keycode_)
         {
           g_free(key);
-          goto activate;
+
+          return KeyReleaseActivate();
         }
       }
 
@@ -389,12 +401,6 @@ bool Accelerator::HandleKeyRelease(unsigned int keysym,
   }
 
   return false;
-
-activate:
-  activated.emit();
-  activated_ = false;
-
-  return true;
 }
 
 Accelerators::Accelerators()
