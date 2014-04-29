@@ -3760,6 +3760,9 @@ void UnityScreen::OnScreenLocked()
     }
   }
 
+  for (auto& action : getActions())
+    screen->removeAction(&action);
+
   // We notify that super has been released, to avoid to leave unity in inconsistent state
   showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, getOptions());
 }
@@ -3773,6 +3776,9 @@ void UnityScreen::OnScreenUnlocked()
     if (option.isAction())
       screen->addAction(&option.value().action());
   }
+
+  for (auto& action : getActions())
+    screen->addAction(&action);
 }
 
 void UnityScreen::SaveLockStamp(bool save)
