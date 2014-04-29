@@ -2159,13 +2159,23 @@ panel_service_show_entry_common (PanelService *self,
       g_signal_connect_after (priv->last_menu, "move-current",
                               G_CALLBACK (on_active_menu_move_current), self);
 
+      gtk_menu_shell_set_take_focus (GTK_MENU_SHELL (priv->last_menu), TRUE);
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, button, CurrentTime);
-      gtk_menu_reposition (priv->last_menu);
+
+      if (!gtk_widget_is_visible (GTK_WIDGET (priv->last_menu)))
+        {
+          /* If the menu is not visible at this point, it's very likely that's
+           * due to a keyboard grab, so let's try with a menu with no key-grab */
+          gtk_menu_shell_set_take_focus (GTK_MENU_SHELL (priv->last_menu), FALSE);
+          gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, button, CurrentTime);
+        }
 
       GdkWindow *gdkwin = NULL;
 
       if (gtk_widget_is_visible (GTK_WIDGET (priv->last_menu)))
         gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
+
+      gtk_menu_reposition (priv->last_menu);
 
       if (gdkwin != NULL)
         {
