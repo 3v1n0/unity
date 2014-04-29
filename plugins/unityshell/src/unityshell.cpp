@@ -2027,9 +2027,6 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
                                           CompAction::State state,
                                           CompOption::Vector& options)
 {
-  if (lockscreen_controller_->IsLocked())
-    return true;
-
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
@@ -2226,9 +2223,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
-  if(lockscreen_controller_->IsLocked())
-    return;
-
   RaiseInputWindows();
 
   if (!optionGetAltTabBiasViewport())
@@ -2481,8 +2475,7 @@ bool UnityScreen::ShowHud()
     return false; // early exit if the switcher is open
   }
 
-  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse() ||
-      lockscreen_controller_->IsLocked())
+  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
   {
     return false;
   }
@@ -3752,6 +3745,36 @@ void UnityScreen::OnLockScreenRequested()
   RaiseOSK();
 }
 
+void UnityScreen::OnScreenLocked()
+{
+  SaveLockStamp(true);
+
+  for (auto& option : getOptions())
+  {
+    if (option.isAction())
+    {
+      auto& value = option.value();
+
+      if (value != mOptions[UnityshellOptions::PanelFirstMenu].value())
+        screen->removeAction(&value.action());
+    }
+  }
+
+  // We notify that super has been released, to avoid to leave unity in inconsistent state
+  showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, getOptions());
+}
+
+void UnityScreen::OnScreenUnlocked()
+{
+  SaveLockStamp(false);
+
+  for (auto& option : getOptions())
+  {
+    if (option.isAction())
+      screen->addAction(&option.value().action());
+  }
+}
+
 void UnityScreen::SaveLockStamp(bool save)
 {
   auto const& cache_dir = DesktopUtilities::GetUserRuntimeDirectory();
@@ -3845,8 +3868,8 @@ void UnityScreen::initLauncher()
   auto manager = std::make_shared<session::GnomeManager>();
   manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
   manager->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  manager->locked.connect(sigc::bind(sigc::mem_fun(this, &UnityScreen::SaveLockStamp), true));
-  manager->unlocked.connect(sigc::bind(sigc::mem_fun(this, &UnityScreen::SaveLockStamp), false));
+  manager->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
+  manager->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
