@@ -3763,8 +3763,9 @@ void UnityScreen::OnScreenLocked()
   for (auto& action : getActions())
     screen->removeAction(&action);
 
-  // We notify that super has been released, to avoid to leave unity in inconsistent state
+  // We notify that super/alt have been released, to avoid to leave unity in inconsistent state
   showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, getOptions());
+  showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, getOptions());
 }
 
 void UnityScreen::OnScreenUnlocked()
