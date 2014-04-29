@@ -154,8 +154,19 @@ Panel* Shield::CreatePanel()
       }
       else
       {
-        GrabPointer();
-        GrabKeyboard();
+        auto& wc = nux::GetWindowCompositor();
+
+        if (!wc.GrabPointerAdd(this) || !wc.GrabKeyboardAdd(this))
+        {
+          regrab_conn_ = WindowManager::Default().screen_ungrabbed.connect([this] {
+            if (primary())
+            {
+              GrabPointer();
+              GrabKeyboard();
+            }
+            regrab_conn_->disconnect();
+          });
+        }
       }
     }
   });
