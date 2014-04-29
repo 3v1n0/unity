@@ -2159,10 +2159,14 @@ panel_service_show_entry_common (PanelService *self,
       g_signal_connect_after (priv->last_menu, "move-current",
                               G_CALLBACK (on_active_menu_move_current), self);
 
-      gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
+      gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, button, CurrentTime);
       gtk_menu_reposition (priv->last_menu);
 
-      GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
+      GdkWindow *gdkwin = NULL;
+
+      if (gtk_widget_is_visible (GTK_WIDGET (priv->last_menu)))
+        gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
+
       if (gdkwin != NULL)
         {
           gint left=0, top=0, width=0, height=0;
@@ -2182,10 +2186,7 @@ panel_service_show_entry_common (PanelService *self,
         }
       else
         {
-          priv->last_left = 0;
-          priv->last_right = 0;
-          priv->last_top = 0;
-          priv->last_bottom = 0;
+          on_active_menu_hidden (priv->last_menu, self);
         }
     }
 
