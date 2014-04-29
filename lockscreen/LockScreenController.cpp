@@ -160,6 +160,7 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
       primary_shield_ = shield;
       primary_shield_->CheckCapsLockPrompt();
       shield->primary = true;
+      nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
       auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
       motion_connection_ = shield->grab_motion.connect(move_cb);
       auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
@@ -220,7 +221,7 @@ void Controller::EnsureBlankWindow()
     blank_window_->SetBackgroundLayer(new nux::ColorLayer(nux::color::Black, true));
     blank_window_->SetOpacity(blank_window_animator_.GetCurrentValue());
     blank_window_->ShowWindow(true);
-    blank_window_->PushToFront();
+    nux::GetWindowCompositor().SetAlwaysOnFrontWindow(blank_window_.GetPointer());
   }
 
   blank_window_->SetGeometry(screen_geo);
@@ -264,7 +265,7 @@ void Controller::BlankWindowGrabEnable(bool grab)
     blank_window_->EnableInputWindow(true);
     blank_window_->GrabPointer();
     blank_window_->GrabKeyboard();
-    blank_window_->PushToFront();
+    nux::GetWindowCompositor().SetAlwaysOnFrontWindow(blank_window_.GetPointer());
 
     blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
       if ((dx || dy) && !lockscreen_timeout_) HideBlankWindow();
@@ -408,6 +409,7 @@ void Controller::ShowShields()
     shield->PushToFront();
   });
 
+  nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
   animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }
 
