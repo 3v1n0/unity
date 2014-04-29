@@ -64,26 +64,32 @@ void initialize_event_common(EVENT* ev, XIDeviceEvent* xiev)
 }
 
 template <typename EVENT_TYPE>
-void initialize_event(EVENT_TYPE* ev, XIDeviceEvent* xiev);
+void initialize_event(XEvent* ev, XIDeviceEvent* xiev);
 
 template <>
-void initialize_event(XButtonEvent* bev, XIDeviceEvent* xiev)
+void initialize_event<XButtonEvent>(XEvent* ev, XIDeviceEvent* xiev)
 {
-  bev->type = (xiev->evtype == XI_ButtonPress) ? ButtonPress : ButtonRelease;
+  XButtonEvent* bev = &ev->xbutton;
+  ev->type = (xiev->evtype == XI_ButtonPress) ? ButtonPress : ButtonRelease;
+  initialize_event_common(bev, xiev);
   bev->button = xiev->detail;
 }
 
 template <>
-void initialize_event(XKeyEvent* kev, XIDeviceEvent* xiev)
+void initialize_event<XKeyEvent>(XEvent* ev, XIDeviceEvent* xiev)
 {
-  kev->type = (xiev->evtype == XI_KeyPress) ? KeyPress : KeyRelease;
+  XKeyEvent* kev = &ev->xkey;
+  ev->type = (xiev->evtype == XI_KeyPress) ? KeyPress : KeyRelease;
+  initialize_event_common(kev, xiev);
   kev->keycode = xiev->detail;
 }
 
 template <>
-void initialize_event(XMotionEvent* mev, XIDeviceEvent* xiev)
+void initialize_event<XMotionEvent>(XEvent* ev, XIDeviceEvent* xiev)
 {
-  mev->type = MotionNotify;
+  XMotionEvent* mev = &ev->xmotion;
+  ev->type = MotionNotify;
+  initialize_event_common(mev, xiev);
   mev->is_hint = NotifyNormal;
 
   for (int i = 0; i < xiev->buttons.mask_len * 8; ++i)
@@ -94,28 +100,6 @@ void initialize_event(XMotionEvent* mev, XIDeviceEvent* xiev)
       break;
     }
   }
-}
-
-template <typename EVENT_TYPE>
-inline XEvent convert_event(XIDeviceEvent* xiev)
-{
-  EVENT_TYPE ev;
-  initialize_event(&ev, xiev);
-  initialize_event_common(&ev, xiev);
-
-  return *(reinterpret_cast<XEvent*>(&ev));
-}
-
-template <>
-inline XEvent convert_event<XMotionEvent>(XIDeviceEvent* xiev)
-{
-  // For some reason we get a memory error if using the standard convert_event
-  // function here, so it's just better to add a customized version
-  XEvent xev;
-  initialize_event(&xev.xmotion, xiev);
-  initialize_event_common(&xev.xmotion, xiev);
-
-  return xev;
 }
 }
 
@@ -271,7 +255,8 @@ struct Monitor::Impl
     if (!XGetEventData(xiev.xany.display, cookie))
       return false;
 
-    XEvent event = convert_event<EVENT_TYPE>(reinterpret_cast<XIDeviceEvent*>(cookie->data));
+    XEvent event;
+    initialize_event<EVENT_TYPE>(&event, reinterpret_cast<XIDeviceEvent*>(cookie->data));
 
     for (auto it = callbacks.begin(); it != callbacks.end();)
     {
@@ -311,7 +296,7 @@ Monitor::Monitor()
 {
   if (instance_)
   {
-    LOG_ERROR(logger) << "More than one input::Monitor created.";
+    LOG_WARN(logger) << "More than one input::Monitor created.";
     return;
   }
 
