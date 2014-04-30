@@ -77,6 +77,8 @@ unsigned int KeysymToModifier(unsigned int keysym)
   case GDK_KEY_Control_L:
   case GDK_KEY_Control_R:
     return nux::KEY_MODIFIER_CTRL;
+  case GDK_KEY_Meta_L:
+  case GDK_KEY_Meta_R:
   case GDK_KEY_Alt_L:
   case GDK_KEY_Alt_R:
     return nux::KEY_MODIFIER_ALT;
@@ -100,8 +102,10 @@ PressedState KeysymToPressedState(unsigned int keysym)
     return PressedState::LeftControlPressed;
   case GDK_KEY_Control_R:
     return PressedState::RightControlPressed;
+  case GDK_KEY_Meta_L:
   case GDK_KEY_Alt_L:
     return PressedState::LeftAltPressed;
+  case GDK_KEY_Meta_R:
   case GDK_KEY_Alt_R:
     return PressedState::RightAltPressed;
   case GDK_KEY_Super_L:
@@ -125,6 +129,10 @@ unsigned int KeysymToMirrorKeysym(unsigned int keysym)
     return GDK_KEY_Control_R;
   case GDK_KEY_Control_R:
     return GDK_KEY_Control_L;
+  case GDK_KEY_Meta_L:
+    return GDK_KEY_Meta_R;
+  case GDK_KEY_Meta_R:
+    return GDK_KEY_Meta_L;
   case GDK_KEY_Alt_L:
     return GDK_KEY_Alt_R;
   case GDK_KEY_Alt_R:
@@ -180,7 +188,7 @@ Accelerator::Accelerator(std::string const& string)
     modifiers_ |= nux::KEY_MODIFIER_SHIFT;
   if (modifiers & GDK_CONTROL_MASK)
     modifiers_ |= nux::KEY_MODIFIER_CTRL;
-  if (modifiers & GDK_MOD1_MASK)
+  if ((modifiers & GDK_MOD1_MASK) || (modifiers & GDK_META_MASK))
     modifiers_ |= nux::KEY_MODIFIER_ALT;
   if (modifiers & GDK_SUPER_MASK)
     modifiers_ |= nux::KEY_MODIFIER_SUPER;
@@ -446,9 +454,11 @@ bool Accelerators::HandleKeyPress(unsigned int keysym,
   case GDK_KEY_Control_R:
     pressed_state_ |= PressedState::RightControlPressed;
     break;
+  case GDK_KEY_Meta_L:
   case GDK_KEY_Alt_L:
     pressed_state_ |= PressedState::LeftAltPressed;
     break;
+  case GDK_KEY_Meta_R:
   case GDK_KEY_Alt_R:
     pressed_state_ |= PressedState::RightAltPressed;
     break;
@@ -495,9 +505,11 @@ bool Accelerators::HandleKeyRelease(unsigned int keysym,
   case GDK_KEY_Control_R:
     pressed_state_ &= ~PressedState::RightControlPressed;
     break;
+  case GDK_KEY_Meta_L:
   case GDK_KEY_Alt_L:
     pressed_state_ &= ~PressedState::LeftAltPressed;
     break;
+  case GDK_KEY_Meta_R:
   case GDK_KEY_Alt_R:
     pressed_state_ &= ~PressedState::RightAltPressed;
     break;
