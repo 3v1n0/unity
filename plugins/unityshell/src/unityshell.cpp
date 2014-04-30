@@ -3727,20 +3727,29 @@ void UnityScreen::OnDashRealized()
 void UnityScreen::OnLockScreenRequested()
 {
   if (switcher_controller_->Visible())
-  {
     switcher_controller_->Hide(false);
-  }
-  else if (launcher_controller_->IsOverlayOpen())
-  {
+
+  if (dash_controller_->IsVisible())
     dash_controller_->HideDash();
+
+  if (hud_controller_->IsVisible())
     hud_controller_->HideHud();
-  }
 
   launcher_controller_->ClearTooltips();
 
+  if (launcher_controller_->KeyNavIsActive())
+    launcher_controller_->KeyNavTerminate(false);
+
+  if (QuicklistManager::Default()->Current())
+    QuicklistManager::Default()->Current()->Hide();
+
   auto& wm = WindowManager::Default();
+
   if (wm.IsScaleActive())
     wm.TerminateScale();
+
+  if (wm.IsExpoActive())
+    wm.TerminateExpo();
 
   RaiseOSK();
 }
