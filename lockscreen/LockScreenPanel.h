@@ -69,8 +69,6 @@ private:
   bool needs_geo_sync_;
   nux::Point tracked_pointer_pos_;
   glib::Source::UniquePtr track_menu_pointer_timeout_;
-
-  bool activate_panel_;
 };
 
 } // lockscreen namespace

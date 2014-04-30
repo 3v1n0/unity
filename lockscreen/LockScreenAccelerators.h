@@ -20,6 +20,9 @@
 #ifndef UNITY_LOCKSCREEN_ACCELERATORS
 #define UNITY_LOCKSCREEN_ACCELERATORS
 
+#include <memory>
+#include <sigc++/signal.h>
+
 namespace unity
 {
 namespace lockscreen
@@ -78,7 +81,7 @@ public:
                         unsigned int modifiers);
 
 private:
-  std::list<Accelerator::Ptr> accelerators_;
+  std::vector<Accelerator::Ptr> accelerators_;
 
   PressedState pressed_state_;
 };

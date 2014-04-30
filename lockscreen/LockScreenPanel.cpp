@@ -49,7 +49,6 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
   , monitor(monitor_)
   , indicators_(indicators)
   , needs_geo_sync_(true)
-  , activate_panel_(false)
 {
   double scale = unity::Settings::Instance().em(monitor)->DPIScale();
   auto* layout = new nux::HLayout();
@@ -149,12 +148,6 @@ void Panel::OnEntryActivateRequest(std::string const& entry_id)
     indicators_view_->ActivateEntry(entry_id, 0);
 }
 
-void Panel::ActivateFirst()
-{
-  if (GetInputEventSensitivity())
-    indicators_view_->ActivateIfSensitive();
-}
-
 void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const&)
 {
   if (!GetInputEventSensitivity() || (!panel.empty() && panel != GetPanelName()))
@@ -218,18 +211,13 @@ void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
 bool Panel::InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char*)
 {
-  if (activate_panel_)
-  {
-    ActivateFirst();
-    activate_panel_ = false;
-  }
-
   return true;
 }
 
 void Panel::ActivatePanel()
 {
-  activate_panel_ = true;
+  if (GetInputEventSensitivity())
+    indicators_view_->ActivateIfSensitive();
 }
 
 }

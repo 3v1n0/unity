@@ -19,6 +19,7 @@
 
 #include "LockScreenAccelerators.h"
 
+#include <NuxGraphics/Events.h>
 #include <gtk/gtk.h>
 
 namespace unity
@@ -420,7 +421,7 @@ void Accelerators::Add(Accelerator::Ptr const& accelerator)
 
 void Accelerators::Remove(Accelerator::Ptr const& accelerator)
 {
-  accelerators_.remove(accelerator);
+  accelerators_.erase(std::remove(accelerators_.begin(), accelerators_.end(), accelerator), accelerators_.end());
 }
 
 bool Accelerators::HandleKeyPress(unsigned int keysym,
