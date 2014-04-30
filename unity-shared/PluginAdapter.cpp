@@ -248,7 +248,8 @@ void MultiActionList::Initiate(std::string const& name, CompOption::Vector const
     argument.push_back(arg);
 
   /* Initiate the selected action with the arguments */
-  action->initiate()(action, state, argument);
+  if (CompAction::CallBack const& initiate_cb = primary_action_->initiate())
+    initiate_cb(action, 0, argument);
 }
 
 void MultiActionList::InitiateAll(CompOption::Vector const& extra_args, int state) const
@@ -291,8 +292,11 @@ void MultiActionList::TerminateAll(CompOption::Vector const& extra_args) const
 
   if (primary_action_)
   {
-    primary_action_->terminate()(primary_action_, CompAction::StateCancel, argument);
-    return;
+    if (CompAction::CallBack const& terminate_cb = primary_action_->terminate())
+    {
+      terminate_cb(primary_action_, CompAction::StateCancel, argument);
+      return;
+    }
   }
 
   for (auto const& it : actions_)
@@ -304,7 +308,8 @@ void MultiActionList::TerminateAll(CompOption::Vector const& extra_args) const
                            CompAction::StateTermEdge |
                            CompAction::StateTermEdgeDnd))
     {
-      action->terminate()(action, 0, argument);
+      if (CompAction::CallBack const& terminate_cb = primary_action_->terminate())
+        terminate_cb(action, 0, argument);
     }
   }
 }
