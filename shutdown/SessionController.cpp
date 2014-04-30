@@ -181,11 +181,13 @@ void Controller::Hide()
 void Controller::CloseWindow()
 {
   view_window_->PushToBack();
-  view_window_->ShowWindow(false);
   view_window_->UnGrabPointer();
   view_window_->UnGrabKeyboard();
+  view_window_->ShowWindow(false);
   view_window_->EnableInputWindow(false);
-  view_->live_background = false;
+
+  view_ = nullptr;
+  view_window_ = nullptr;
 
   nux::GetWindowCompositor().SetKeyFocusArea(nullptr);
   WindowManager::Default().RestoreInputFocus();
