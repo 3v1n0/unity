@@ -69,8 +69,13 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     EnsureShields(monitors);
     EnsureBlankWindow();
   });
-
   uscreen_connection_->block();
+
+  hidden_window_connection_ = nux::GetWindowCompositor().sigHiddenViewWindow.connect([this] (nux::BaseWindow*) {
+    // Another view (i.e. the shutdown dialog) might have taken the role of AlwaysOnFront window
+    nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
+  });
+  hidden_window_connection_->block();
 
   suspend_connection_ = uscreen->suspending.connect([this] {
     if (Settings::Instance().lock_on_suspend())
@@ -98,6 +103,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       motion_connection_->disconnect();
       key_connection_->disconnect();
       uscreen_connection_->block();
+      hidden_window_connection_->block();
       session_manager_->unlocked.emit();
 
       std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
@@ -402,6 +408,7 @@ void Controller::ShowShields()
   WindowManager::Default().SaveInputFocus();
   EnsureShields(UScreen::GetDefault()->GetMonitors());
   uscreen_connection_->unblock();
+  hidden_window_connection_->unblock();
 
   std::for_each(shields_.begin(), shields_.end(), [] (nux::ObjectPtr<Shield> const& shield) {
     shield->SetOpacity(0.0f);
