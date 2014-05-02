@@ -86,6 +86,7 @@ private:
 
   connection::Wrapper uscreen_connection_;
   connection::Wrapper suspend_connection_;
+  connection::Wrapper hidden_window_connection_;
   connection::Wrapper motion_connection_;
   connection::Wrapper key_connection_;
 

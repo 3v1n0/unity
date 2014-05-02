@@ -2029,9 +2029,6 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
                                           CompAction::State state,
                                           CompOption::Vector& options)
 {
-  if (lockscreen_controller_->IsLocked())
-    return true;
-
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
@@ -2228,9 +2225,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
-  if(lockscreen_controller_->IsLocked())
-    return;
-
   RaiseInputWindows();
 
   if (!optionGetAltTabBiasViewport())
@@ -2483,8 +2477,7 @@ bool UnityScreen::ShowHud()
     return false; // early exit if the switcher is open
   }
 
-  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse() ||
-      lockscreen_controller_->IsLocked())
+  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
   {
     return false;
   }
@@ -3736,22 +3729,68 @@ void UnityScreen::OnDashRealized()
 void UnityScreen::OnLockScreenRequested()
 {
   if (switcher_controller_->Visible())
-  {
     switcher_controller_->Hide(false);
-  }
-  else if (launcher_controller_->IsOverlayOpen())
-  {
+
+  if (dash_controller_->IsVisible())
     dash_controller_->HideDash();
+
+  if (hud_controller_->IsVisible())
     hud_controller_->HideHud();
-  }
 
   launcher_controller_->ClearTooltips();
 
+  if (launcher_controller_->KeyNavIsActive())
+    launcher_controller_->KeyNavTerminate(false);
+
+  if (QuicklistManager::Default()->Current())
+    QuicklistManager::Default()->Current()->Hide();
+
   auto& wm = WindowManager::Default();
+
   if (wm.IsScaleActive())
     wm.TerminateScale();
 
+  if (wm.IsExpoActive())
+    wm.TerminateExpo();
+
   RaiseOSK();
+}
+
+void UnityScreen::OnScreenLocked()
+{
+  SaveLockStamp(true);
+
+  for (auto& option : getOptions())
+  {
+    if (option.isAction())
+    {
+      auto& value = option.value();
+
+      if (value != mOptions[UnityshellOptions::PanelFirstMenu].value())
+        screen->removeAction(&value.action());
+    }
+  }
+
+  for (auto& action : getActions())
+    screen->removeAction(&action);
+
+  // We notify that super/alt have been released, to avoid to leave unity in inconsistent state
+  showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, getOptions());
+  showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, getOptions());
+}
+
+void UnityScreen::OnScreenUnlocked()
+{
+  SaveLockStamp(false);
+
+  for (auto& option : getOptions())
+  {
+    if (option.isAction())
+      screen->addAction(&option.value().action());
+  }
+
+  for (auto& action : getActions())
+    screen->addAction(&action);
 }
 
 void UnityScreen::SaveLockStamp(bool save)
@@ -3846,8 +3885,9 @@ void UnityScreen::initLauncher()
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
   manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  manager->locked.connect(sigc::bind(sigc::mem_fun(this, &UnityScreen::SaveLockStamp), true));
-  manager->unlocked.connect(sigc::bind(sigc::mem_fun(this, &UnityScreen::SaveLockStamp), false));
+  manager->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  manager->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
+  manager->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
