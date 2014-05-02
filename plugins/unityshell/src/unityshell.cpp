@@ -1187,6 +1187,20 @@ bool UnityWindow::IsMinimized ()
   return window->minimized ();
 }
 
+bool UnityWindow::CanBypassLockScreen() const
+{
+  if (window->type() == CompWindowTypePopupMenuMask &&
+      uScreen->lockscreen_controller_->HasOpenMenu())
+  {
+    return true;
+  }
+
+  if (window == uScreen->onboard_)
+    return true;
+
+  return false;
+}
+
 void UnityWindow::DoOverrideFrameRegion(CompRegion &region)
 {
   unsigned int oldUpdateFrameRegionIndex = window->updateFrameRegionGetCurrentIndex();
@@ -2859,9 +2873,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   if (uScreen->lockscreen_controller_->IsLocked())
   {
-    if ((window->type() != CompWindowTypePopupMenuMask ||
-        !uScreen->lockscreen_controller_->HasOpenMenu()) &&
-        !window->minimized() && window != uScreen->onboard_)
+    if (!window->minimized() && !CanBypassLockScreen())
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need
@@ -2957,10 +2969,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     uScreen->paintDisplay();
   }
-  else if (locked &&
-           ((window_type == CompWindowTypePopupMenuMask &&
-             uScreen->lockscreen_controller_->HasOpenMenu()) ||
-            window == uScreen->onboard_))
+  else if (locked && CanBypassLockScreen())
   {
     uScreen->paintDisplay();
   }
