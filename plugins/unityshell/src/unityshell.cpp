@@ -3762,20 +3762,29 @@ void UnityScreen::OnDashRealized()
 void UnityScreen::OnLockScreenRequested()
 {
   if (switcher_controller_->Visible())
-  {
     switcher_controller_->Hide(false);
-  }
-  else if (launcher_controller_->IsOverlayOpen())
-  {
+
+  if (dash_controller_->IsVisible())
     dash_controller_->HideDash();
+
+  if (hud_controller_->IsVisible())
     hud_controller_->HideHud();
-  }
 
   launcher_controller_->ClearTooltips();
 
+  if (launcher_controller_->KeyNavIsActive())
+    launcher_controller_->KeyNavTerminate(false);
+
+  if (QuicklistManager::Default()->Current())
+    QuicklistManager::Default()->Current()->Hide();
+
   auto& wm = WindowManager::Default();
+
   if (wm.IsScaleActive())
     wm.TerminateScale();
+
+  if (wm.IsExpoActive())
+    wm.TerminateExpo();
 
   RaiseOSK();
 }
@@ -3795,8 +3804,12 @@ void UnityScreen::OnScreenLocked()
     }
   }
 
-  // We notify that super has been released, to avoid to leave unity in inconsistent state
+  for (auto& action : getActions())
+    screen->removeAction(&action);
+
+  // We notify that super/alt have been released, to avoid to leave unity in inconsistent state
   showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, getOptions());
+  showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, getOptions());
 }
 
 void UnityScreen::OnScreenUnlocked()
@@ -3808,6 +3821,9 @@ void UnityScreen::OnScreenUnlocked()
     if (option.isAction())
       screen->addAction(&option.value().action());
   }
+
+  for (auto& action : getActions())
+    screen->addAction(&action);
 }
 
 void UnityScreen::SaveLockStamp(bool save)

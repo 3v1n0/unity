@@ -149,6 +149,7 @@ Panel* Shield::CreatePanel()
     {
       if (active)
       {
+        regrab_conn_->disconnect();
         UnGrabPointer();
         UnGrabKeyboard();
       }
