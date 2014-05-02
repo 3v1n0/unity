@@ -69,8 +69,13 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     EnsureShields(monitors);
     EnsureBlankWindow();
   });
-
   uscreen_connection_->block();
+
+  hidden_window_connection_ = nux::GetWindowCompositor().sigHiddenViewWindow.connect([this] (nux::BaseWindow*) {
+    // Another view (i.e. the shutdown dialog) might have taken the role of AlwaysOnFront window
+    nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
+  });
+  hidden_window_connection_->block();
 
   suspend_connection_ = uscreen->suspending.connect([this] {
     if (Settings::Instance().lock_on_suspend())
@@ -98,6 +103,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       motion_connection_->disconnect();
       key_connection_->disconnect();
       uscreen_connection_->block();
+      hidden_window_connection_->block();
       session_manager_->unlocked.emit();
 
       std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
@@ -160,6 +166,7 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
       primary_shield_ = shield;
       primary_shield_->CheckCapsLockPrompt();
       shield->primary = true;
+      nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
       auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
       motion_connection_ = shield->grab_motion.connect(move_cb);
       auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
@@ -220,7 +227,7 @@ void Controller::EnsureBlankWindow()
     blank_window_->SetBackgroundLayer(new nux::ColorLayer(nux::color::Black, true));
     blank_window_->SetOpacity(blank_window_animator_.GetCurrentValue());
     blank_window_->ShowWindow(true);
-    blank_window_->PushToFront();
+    nux::GetWindowCompositor().SetAlwaysOnFrontWindow(blank_window_.GetPointer());
   }
 
   blank_window_->SetGeometry(screen_geo);
@@ -264,7 +271,7 @@ void Controller::BlankWindowGrabEnable(bool grab)
     blank_window_->EnableInputWindow(true);
     blank_window_->GrabPointer();
     blank_window_->GrabKeyboard();
-    blank_window_->PushToFront();
+    nux::GetWindowCompositor().SetAlwaysOnFrontWindow(blank_window_.GetPointer());
 
     blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
       if ((dx || dy) && !lockscreen_timeout_) HideBlankWindow();
@@ -401,6 +408,7 @@ void Controller::ShowShields()
   WindowManager::Default().SaveInputFocus();
   EnsureShields(UScreen::GetDefault()->GetMonitors());
   uscreen_connection_->unblock();
+  hidden_window_connection_->unblock();
 
   std::for_each(shields_.begin(), shields_.end(), [] (nux::ObjectPtr<Shield> const& shield) {
     shield->SetOpacity(0.0f);
@@ -408,6 +416,7 @@ void Controller::ShowShields()
     shield->PushToFront();
   });
 
+  nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
   animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }
 

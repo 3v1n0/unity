@@ -105,7 +105,8 @@ TEST_F(TestSessionController, Hide)
   tick_source.tick(ANIMATION_DURATION);
 
   EXPECT_FALSE(controller.Visible());
-  EXPECT_FALSE(controller.view_->live_background());
+  EXPECT_FALSE(controller.view_window_.IsValid());
+  EXPECT_FALSE(controller.view_.IsValid());
 }
 
 struct Inhibited : TestSessionController, testing::WithParamInterface<bool> {};
