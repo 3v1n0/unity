@@ -101,7 +101,7 @@ using util::Timer;
 DECLARE_LOGGER(logger, "unity.shell.compiz");
 namespace
 {
-UnityScreen* uScreen = 0;
+UnityScreen* uScreen = nullptr;
 
 void reset_glib_logging();
 void configure_logging();
@@ -167,6 +167,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
   , force_draw_countdown_(0)
+  , firstWindowAboveShell(nullptr)
+  , onboard_(nullptr)
   , grab_index_(0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -2859,7 +2861,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   {
     if ((window->type() != CompWindowTypePopupMenuMask ||
         !uScreen->lockscreen_controller_->HasOpenMenu()) &&
-        !window->minimized() && window->resName() != "onboard")
+        !window->minimized() && window != uScreen->onboard_)
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need
@@ -2958,8 +2960,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   else if (locked &&
            ((window_type == CompWindowTypePopupMenuMask &&
              uScreen->lockscreen_controller_->HasOpenMenu()) ||
-            (window_type == CompWindowTypeUtilMask &&
-             window->resName() == "onboard")))
+            window == uScreen->onboard_))
   {
     uScreen->paintDisplay();
   }
@@ -3827,14 +3828,14 @@ void UnityScreen::SaveLockStamp(bool save)
 
 void UnityScreen::RaiseOSK()
 {
-  /* stack any windows named "onboard" above us */
-  for (CompWindow *w : screen->windows ())
+  /* stack the onboard window above us */
+  if (onboard_)
   {
-    if (w->resName() == "onboard")
+    if (nux::BaseWindow* dash = dash_controller_->window())
     {
-      Window xid = dash_controller_->window()->GetInputWindowId();
-      XSetTransientForHint (screen->dpy(), w->id(), xid);
-      w->raise ();
+      Window xid = dash->GetInputWindowId();
+      XSetTransientForHint(screen->dpy(), onboard_->id(), xid);
+      onboard_->raise();
     }
   }
 }
@@ -4081,23 +4082,10 @@ UnityWindow::UnityWindow(CompWindow* window)
   if (window->state() & CompWindowStateFullscreenMask)
     uScreen->fullscreen_windows_.push_back(window);
 
-  /* We might be starting up so make sure that
-   * we don't deref the dashcontroller that doesnt
-   * exist */
-  dash::Controller::Ptr dp = uScreen->dash_controller_;
-
-  if (dp)
+  if (window->type() == CompWindowTypeUtilMask && window->resName() == "onboard")
   {
-    nux::BaseWindow* w = dp->window ();
-
-    if (w)
-    {
-      if (window->resName() == "onboard")
-      {
-        Window xid = dp->window()->GetInputWindowId();
-        XSetTransientForHint (screen->dpy(), window->id(), xid);
-      }
-    }
+    uScreen->onboard_ = window;
+    uScreen->RaiseOSK();
   }
 }
 
@@ -4477,6 +4465,9 @@ UnityWindow::~UnityWindow()
 
   if (window->state () & CompWindowStateFullscreenMask)
     uScreen->fullscreen_windows_.remove(window);
+
+  if (window == uScreen->onboard_)
+    uScreen->onboard_ = nullptr;
 
   uScreen->fake_decorated_windows_.erase(this);
   PluginAdapter::Default().OnWindowClosed(window);

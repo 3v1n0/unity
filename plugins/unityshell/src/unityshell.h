@@ -393,6 +393,7 @@ private:
   CompRegion nuxRegion;
   CompRegion fullscreenRegion;
   CompWindow* firstWindowAboveShell;
+  CompWindow* onboard_;
 
   ::GLFramebufferObject *oldFbo;
 
