@@ -24,7 +24,6 @@
 #include <glib/gi18n-lib.h>
 
 #include <unity-shared/RawPixel.h>
-#include <unity-shared/UScreen.h>
 
 namespace unity
 {
@@ -96,7 +95,7 @@ View::View(Manager::Ptr const& manager)
     Populate();
   });
 
-  monitor.changed.connect([this] (bool changed) {
+  monitor.changed.connect([this] (int monitor) {
     UpdateViewSize();
   });
 

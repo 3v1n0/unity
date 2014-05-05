@@ -68,14 +68,13 @@ private:
   friend class TestSessionButton;
 
   void UpdateTextures(std::string const& texture_prefix);
-  void GetDefaultMaxTextureSize(std::string const& texture_prefix);
+  RawPixel GetDefaultMaxTextureSize(std::string const& texture_prefix) const;
 
   Action action_;
   IconTexture* image_view_;
   StaticCairoText* label_view_;
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
-  RawPixel texture_size_;
 };
 
 } // namespace session

@@ -45,7 +45,6 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   , action([this] { return action_; })
   , label([this] { return label_view_->GetText(); })
   , action_(action)
-  , texture_size_(-1)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
@@ -81,7 +80,6 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
       break;
   }
 
-  GetDefaultMaxTextureSize(texture_prefix);
   UpdateTextures(texture_prefix);
 
   auto main_layout = new nux::VLayout();
@@ -124,18 +122,20 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
 
 void Button::UpdateTextures(std::string const& texture_prefix)
 {
-  normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), texture_size_.CP(scale), true));
-  highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), texture_size_.CP(scale), true));
+  RawPixel const texture_size = GetDefaultMaxTextureSize(texture_prefix);
+
+  normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), texture_size.CP(scale), true));
+  highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), texture_size.CP(scale), true));
 }
 
-void Button::GetDefaultMaxTextureSize(std::string const& texture_prefix)
+RawPixel Button::GetDefaultMaxTextureSize(std::string const& texture_prefix) const
 {
   nux::Size size;
   auto const& texture_name = (texture_prefix + ".png");
   gdk_pixbuf_get_file_info(texture_name.c_str(), &size.width, &size.height);
-  int max_size = std::max(std::round(size.width * scale), std::round(size.height * scale));
+  RawPixel max_size = std::max(std::round(size.width * scale), std::round(size.height * scale));
 
-  texture_size_ = max_size;
+  return max_size;
 }
 
 void Button::Draw(nux::GraphicsEngine& ctx, bool force)
