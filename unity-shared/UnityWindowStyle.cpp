@@ -23,12 +23,51 @@
 
 namespace unity {
 namespace ui {
+namespace
+{
+  const char* const SWITCHER_TOP    = PKGDATADIR"/switcher_top.png";
+  const char* const SWITCHER_LEFT   = PKGDATADIR"/switcher_left.png";
+  const char* const SWITCHER_CORNER = PKGDATADIR"/switcher_corner.png";
+
+  const char* const DIALOG_CLOSE     = PKGDATADIR"/dialog_close.png";
+  const char* const DIALOG_HIGHLIGHT = PKGDATADIR"/dialog_close_highlight.png";
+  const char* const DIALOG_PRESS     = PKGDATADIR"/dialog_close_press.png";
+}
 
 UnityWindowStyle::UnityWindowStyle()
+  : scale(1.0)
 {
-  background_top_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true));
-  background_left_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true));
-  background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
+  ReloadIcons();
+
+  scale.changed.connect([this] (double new_scale) {
+    ReloadIcons();
+  });
+}
+
+void UnityWindowStyle::ReloadIcons()
+{
+  background_top_.Adopt(LoadTexture(SWITCHER_TOP));
+  background_left_.Adopt(LoadTexture(SWITCHER_LEFT));
+  background_corner_.Adopt(LoadTexture(SWITCHER_CORNER));
+
+  close_icon_.Adopt(LoadTexture(DIALOG_CLOSE));
+  close_icon_highlighted_.Adopt(LoadTexture(DIALOG_HIGHLIGHT));
+  close_icon_pressed_.Adopt(LoadTexture(DIALOG_PRESS));
+}
+
+nux::BaseTexture* UnityWindowStyle::LoadTexture(const char* const texture_name) const
+{
+  RawPixel max_size = GetDefaultMaxTextureSize(texture_name);
+  return nux::CreateTexture2DFromFile(texture_name, max_size.CP(scale), true);
+}
+
+RawPixel UnityWindowStyle::GetDefaultMaxTextureSize(const char* const texture_name) const
+{
+  nux::Size size;
+  gdk_pixbuf_get_file_info(texture_name, &size.width, &size.height);
+  RawPixel max_size = std::max(std::round(size.width * scale), std::round(size.height * scale));
+
+  return max_size;
 }
 
 UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
@@ -53,27 +92,18 @@ int UnityWindowStyle::GetCloseButtonPadding() const
   return 3;
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon()
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon() const
 {
-  if (!close_icon_)
-    close_icon_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close.png", -1, true));
-
   return close_icon_;
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconHighligted()
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconHighligted() const
 {
-  if (!close_icon_highlighted_)
-    close_icon_highlighted_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_highlight.png", -1, true));
-
   return close_icon_highlighted_;
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconPressed()
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconPressed() const
 {
-  if (!close_icon_pressed_)
-    close_icon_pressed_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_press.png", -1, true));
-
   return close_icon_pressed_;
 }
 

@@ -24,6 +24,8 @@
 #include <sigc++/sigc++.h>
 #include <Nux/Nux.h>
 
+#include "RawPixel.h"
+
 namespace unity {
 namespace ui {
 
@@ -35,9 +37,9 @@ public:
 
   static UnityWindowStyle::Ptr const& Get();
 
-  BaseTexturePtr GetCloseIcon();
-  BaseTexturePtr GetCloseIconHighligted();
-  BaseTexturePtr GetCloseIconPressed();
+  BaseTexturePtr GetCloseIcon() const;
+  BaseTexturePtr GetCloseIconHighligted() const;
+  BaseTexturePtr GetCloseIconPressed() const;
   int GetCloseButtonPadding() const;
 
   BaseTexturePtr GetBackgroundTop() const;
@@ -46,8 +48,14 @@ public:
   int GetBorderSize() const;
   int GetInternalOffset() const;
 
+  nux::Property<double> scale;
+
 private:
   UnityWindowStyle();
+
+  void ReloadIcons();
+  nux::BaseTexture* LoadTexture(const char* const texture_name) const;
+  RawPixel GetDefaultMaxTextureSize(const char* const texture_name) const;
 
   BaseTexturePtr background_top_;
   BaseTexturePtr background_left_;

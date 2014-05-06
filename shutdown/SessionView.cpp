@@ -114,6 +114,9 @@ void View::UpdateViewSize()
 
   title_->SetScale(cv_->DPIScale());
   subtitle_->SetScale(cv_->DPIScale());
+  style()->scale = cv_->DPIScale();
+
+  ReloadCloseButtonTexture();
 
   buttons_layout_->SetSpaceBetweenChildren(cv_->CP(style::BUTTONS_SPACE));
 

@@ -67,6 +67,8 @@ protected:
   virtual nux::Geometry GetBlurredBackgroundGeometry();
   void SetBackgroundHelperGeometryGetter(BackgroundEffectHelper::GeometryGetterFunc const&);
 
+  void ReloadCloseButtonTexture();
+
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);

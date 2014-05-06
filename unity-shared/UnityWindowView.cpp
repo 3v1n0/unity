@@ -115,6 +115,11 @@ nux::Area* UnityWindowView::FindKeyFocusArea(unsigned etype, unsigned long key_c
   return View::FindKeyFocusArea(etype, key_code, modifiers);
 }
 
+void UnityWindowView::ReloadCloseButtonTexture()
+{
+  OnClosableChanged(closable);
+}
+
 void UnityWindowView::OnClosableChanged(bool closable)
 {
   if (!closable)
