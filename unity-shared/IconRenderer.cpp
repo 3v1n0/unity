@@ -265,7 +265,7 @@ struct IconRenderer::LocalTextures
     IconSize tex_size = icon_size > 100 ? IconSize::BIG : IconSize::SMALL;
     auto const& tile_sufix = std::to_string(TILE_SIZES[tex_size]);
 
-    int icon_glow_size = std::round(icon_size * (GLOW_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
+    int icon_glow_size = GLOW_SIZES[tex_size];
     auto const& glow_sufix = std::to_string(GLOW_SIZES[tex_size]);
 
     int marker_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
@@ -405,8 +405,8 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, ui::IconTextureSource::TRANSFORM_IMAGE);
 
-    w = local_textures_->icon_glow->GetWidth();
-    h = local_textures_->icon_glow->GetHeight();
+    local::IconSize tex_size = icon_size > 100 ? local::IconSize::BIG : local::IconSize::SMALL;
+    w = h = icon_size * (local::GLOW_SIZES[tex_size] / static_cast<double>(local::TILE_SIZES[tex_size]));
     x = it->render_center.x - w / 2.0f;
     y = it->render_center.y - h / 2.0f;
     z = it->render_center.z;
