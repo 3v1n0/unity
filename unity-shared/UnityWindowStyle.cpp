@@ -65,7 +65,7 @@ RawPixel UnityWindowStyle::GetDefaultMaxTextureSize(const char* const texture_na
 {
   nux::Size size;
   gdk_pixbuf_get_file_info(texture_name, &size.width, &size.height);
-  RawPixel max_size = std::max(std::round(size.width * scale), std::round(size.height * scale));
+  RawPixel max_size = std::max(std::round(size.width), std::round(size.height));
 
   return max_size;
 }

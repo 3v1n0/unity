@@ -166,7 +166,8 @@ bool UnityWindowView::SetLayout(nux::Layout* layout)
 {
   if (layout && layout->IsLayout())
   {
-    int offset = style()->GetInternalOffset();
+    int offset_raw = style()->GetInternalOffset();
+    int offset = cv_->CP(offset_raw);
 
     // We wrap the internal layout adding some padding, so that inherited classes
     // can ignore the offsets we define here.
@@ -191,7 +192,9 @@ nux::Layout* UnityWindowView::GetLayout()
 
 nux::Geometry UnityWindowView::GetInternalBackground()
 {
-  int offset = style()->GetInternalOffset();
+  int offset_raw = style()->GetInternalOffset();
+  int offset = cv_->CP(offset_raw);
+
   return GetBackgroundGeometry().GetExpand(-offset, -offset);
 }
 
@@ -341,7 +344,8 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
 {
-  int border = style()->GetBorderSize();
+  int border_raw = style()->GetBorderSize();
+  int border = cv_->CP(border_raw);
 
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -387,8 +391,10 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + geo.height - border,
                        border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
 
-  int top_width = style()->GetBackgroundTop()->GetWidth();
-  int top_height = style()->GetBackgroundTop()->GetHeight();
+  int top_width_raw  = style()->GetBackgroundTop()->GetWidth();
+  int top_height_raw = style()->GetBackgroundTop()->GetHeight();
+  int top_width  = cv_->CP(top_width_raw);
+  int top_height = cv_->CP(top_height_raw);
 
   // Draw TOP BORDER
   texxform.u0 = 0;
@@ -408,9 +414,10 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_v_coord = true;
   GfxContext.QRP_1Tex (geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, style()->GetBackgroundTop()->GetDeviceTexture(), texxform, nux::color::White);
 
-
-  int left_width = style()->GetBackgroundLeft()->GetWidth();
-  int left_height = style()->GetBackgroundLeft()->GetHeight();
+  int left_width_raw  = style()->GetBackgroundLeft()->GetWidth();
+  int left_height_raw = style()->GetBackgroundLeft()->GetHeight();
+  int left_width  = cv_->CP(left_width_raw);
+  int left_height = cv_->CP(left_height_raw);
 
   // Draw LEFT BORDER
   texxform.u0 = 0;
