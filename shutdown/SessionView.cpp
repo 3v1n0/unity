@@ -114,7 +114,6 @@ void View::UpdateViewSize()
 
   title_->SetScale(cv_->DPIScale());
   subtitle_->SetScale(cv_->DPIScale());
-  style()->scale = cv_->DPIScale();
 
   ReloadCloseButtonTexture();
 

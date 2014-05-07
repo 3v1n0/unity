@@ -16,6 +16,7 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  *              Marco Trevisan <marco.trevisan@canonical.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
 #ifndef UNITYWINDOWSTYLE_H
@@ -26,8 +27,21 @@
 
 #include "RawPixel.h"
 
-namespace unity {
-namespace ui {
+namespace unity
+{
+namespace ui
+{
+
+enum class WindowTextureType : unsigned
+{
+  BACKGROUND_TOP,
+  BACKGROUND_LEFT,
+  BACKGROUND_CORNER,
+  CLOSE_ICON,
+  CLOSE_ICON_HIGHLIGHTED,
+  CLOSE_ICON_PRESSED,
+  Size
+};
 
 class UnityWindowStyle
 {
@@ -37,35 +51,25 @@ public:
 
   static UnityWindowStyle::Ptr const& Get();
 
-  BaseTexturePtr GetCloseIcon() const;
-  BaseTexturePtr GetCloseIconHighligted() const;
-  BaseTexturePtr GetCloseIconPressed() const;
+  BaseTexturePtr GetTexture(double scale, WindowTextureType const& type);
   int GetCloseButtonPadding() const;
-
-  BaseTexturePtr GetBackgroundTop() const;
-  BaseTexturePtr GetBackgroundLeft() const;
-  BaseTexturePtr GetBackgroundCorner() const;
   int GetBorderSize() const;
   int GetInternalOffset() const;
-
-  nux::Property<double> scale;
 
 private:
   UnityWindowStyle();
 
   void ReloadIcons();
-  nux::BaseTexture* LoadTexture(const char* const texture_name) const;
+  void LoadAllTextureInScale(double scale);
+  nux::BaseTexture* LoadTexture(double scale, const char* const texture_name) const;
   RawPixel GetDefaultMaxTextureSize(const char* const texture_name) const;
 
-  BaseTexturePtr background_top_;
-  BaseTexturePtr background_left_;
-  BaseTexturePtr background_corner_;
-  BaseTexturePtr close_icon_;
-  BaseTexturePtr close_icon_highlighted_;
-  BaseTexturePtr close_icon_pressed_;
+  typedef std::array<BaseTexturePtr, size_t(WindowTextureType::Size)> UnityWindowTextures;
+  std::unordered_map<double, UnityWindowTextures> unity_window_textures_;
+
 };
 
-}
-}
+} // namespace ui
+} // namespace unity
 
 #endif

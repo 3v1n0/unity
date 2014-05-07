@@ -16,13 +16,18 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  *              Marco Trevisan <marco.trevisan@canonical.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
+
+#include <NuxCore/Logger.h>
 
 #include "UnityWindowStyle.h"
 #include "config.h"
 
-namespace unity {
-namespace ui {
+namespace unity
+{
+namespace ui
+{
 namespace
 {
   const char* const SWITCHER_TOP    = PKGDATADIR"/switcher_top.png";
@@ -32,30 +37,31 @@ namespace
   const char* const DIALOG_CLOSE     = PKGDATADIR"/dialog_close.png";
   const char* const DIALOG_HIGHLIGHT = PKGDATADIR"/dialog_close_highlight.png";
   const char* const DIALOG_PRESS     = PKGDATADIR"/dialog_close_press.png";
+
+  double const DEFAULT_SCALE = 1.0;
 }
+
+DECLARE_LOGGER(logger, "unity.ui.unity.window.style");
 
 UnityWindowStyle::UnityWindowStyle()
-  : scale(1.0)
 {
-  ReloadIcons();
-
-  scale.changed.connect([this] (double new_scale) {
-    ReloadIcons();
-  });
+  LoadAllTextureInScale(DEFAULT_SCALE);
 }
 
-void UnityWindowStyle::ReloadIcons()
+void UnityWindowStyle::LoadAllTextureInScale(double scale)
 {
-  background_top_.Adopt(LoadTexture(SWITCHER_TOP));
-  background_left_.Adopt(LoadTexture(SWITCHER_LEFT));
-  background_corner_.Adopt(LoadTexture(SWITCHER_CORNER));
+  auto& window_textures = unity_window_textures_[scale];
 
-  close_icon_.Adopt(LoadTexture(DIALOG_CLOSE));
-  close_icon_highlighted_.Adopt(LoadTexture(DIALOG_HIGHLIGHT));
-  close_icon_pressed_.Adopt(LoadTexture(DIALOG_PRESS));
+  window_textures[unsigned(WindowTextureType::BACKGROUND_TOP)]    = LoadTexture(scale, SWITCHER_TOP);
+  window_textures[unsigned(WindowTextureType::BACKGROUND_LEFT)]   = LoadTexture(scale, SWITCHER_LEFT);
+  window_textures[unsigned(WindowTextureType::BACKGROUND_CORNER)] = LoadTexture(scale, SWITCHER_CORNER);
+
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON)]             = LoadTexture(scale, DIALOG_CLOSE);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON_HIGHLIGHTED)] = LoadTexture(scale, DIALOG_HIGHLIGHT);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON_PRESSED)]     = LoadTexture(scale, DIALOG_PRESS);
 }
 
-nux::BaseTexture* UnityWindowStyle::LoadTexture(const char* const texture_name) const
+nux::BaseTexture* UnityWindowStyle::LoadTexture(double scale, const char* const texture_name) const
 {
   RawPixel max_size = GetDefaultMaxTextureSize(texture_name);
   return nux::CreateTexture2DFromFile(texture_name, max_size.CP(scale), true);
@@ -92,36 +98,23 @@ int UnityWindowStyle::GetCloseButtonPadding() const
   return 3;
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon() const
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetTexture(double scale, WindowTextureType const& type)
 {
-  return close_icon_;
+  auto it = unity_window_textures_.find(scale);
+  if (it == unity_window_textures_.end())
+  {
+    LoadAllTextureInScale(scale);
+
+    it = unity_window_textures_.find(scale);
+    if (it == unity_window_textures_.end())
+    {
+      LOG_ERROR(logger) << "Failed to create unity window style textures, for scale size: " << scale;
+      return BaseTexturePtr(nullptr);
+    }
+  }
+
+  return it->second[unsigned(type)];
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconHighligted() const
-{
-  return close_icon_highlighted_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconPressed() const
-{
-  return close_icon_pressed_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundTop() const
-{
-  return background_top_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundLeft() const
-{
-  return background_left_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundCorner() const
-{
-  return background_corner_;
-}
-
-
-}
-}
+} // namespace ui
+} // namespace unity
