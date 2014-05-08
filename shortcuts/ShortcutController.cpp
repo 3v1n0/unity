@@ -75,9 +75,7 @@ void Controller::OnModelUpdated(Model::Ptr const& model)
   if (Visible())
   {
     model->Fill();
-    auto uscreen = UScreen::GetDefault();
-    int monitor = uscreen->GetMonitorAtPosition(view_window_->GetX(), view_window_->GetX());
-    auto const& offset = GetOffsetPerMonitor(monitor);
+    auto const& offset = GetOffsetPerMonitor(view_->monitor());
 
     if (offset.x < 0 || offset.y < 0)
     {
@@ -110,8 +108,8 @@ bool Controller::OnShowTimer()
   modeller_->GetCurrentModel()->Fill();
   EnsureView();
 
-  int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
-  auto const& offset = GetOffsetPerMonitor(monitor);
+  view_->monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  auto const& offset = GetOffsetPerMonitor(view_->monitor());
 
   if (offset.x < 0 || offset.y < 0)
     return false;
