@@ -65,7 +65,6 @@ public:
   nux::Property<int> vertical_size;
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
-  nux::Property<int> monitor;
   nux::Property<double> spread_size;
 
   void SkipAnimation();

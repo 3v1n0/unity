@@ -37,7 +37,7 @@ namespace switcher
 
 namespace
 {
-  unsigned int const VERTICAL_PADDING = 45;
+  RawPixel const VERTICAL_PADDING = 45_em;
   unsigned int const SPREAD_OFFSET = 100;
   unsigned int const EXTRA_ICON_SPACE = 10;
   unsigned int const MAX_DIRECTIONS_CHANGED = 3;
@@ -52,10 +52,9 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   , icon_size(128)
   , minimum_spacing(10)
   , tile_size(150)
-  , vertical_size(tile_size + VERTICAL_PADDING * 2)
+  , vertical_size(tile_size + VERTICAL_PADDING.CP(cv_) * 2)
   , text_size(15)
   , animation_length(250)
-  , monitor(-1)
   , spread_size(3.5f)
   , icon_renderer_(renderer)
   , text_view_(new StaticCairoText(""))
@@ -75,6 +74,7 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
 
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
+  monitor.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
 
   mouse_move.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseMove));
   mouse_down.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseDown));
@@ -164,15 +164,15 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
     text_view_->SetText(model->Selection()->tooltip_text(), true);
 }
 
-void SwitcherView::OnIconSizeChanged (int size)
+void SwitcherView::OnIconSizeChanged(int size)
 {
   icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
 }
 
-void SwitcherView::OnTileSizeChanged (int size)
+void SwitcherView::OnTileSizeChanged(int size)
 {
   icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
-  vertical_size = tile_size + VERTICAL_PADDING * 2;
+  vertical_size = tile_size + VERTICAL_PADDING.CP(cv_) * 2;
 }
 
 void SwitcherView::StartAnimation()
@@ -699,7 +699,10 @@ bool SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, 
   background_geo.height = vertical_size;
 
   if (text_view_->IsVisible())
+  {
     background_geo.height += text_size;
+    text_view_->SetBaseY(background_geo.y + background_geo.height - VERTICAL_PADDING.CP(cv_));
+  }
 
   if (model_)
   {
@@ -953,7 +956,6 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   if (text_view_->IsVisible())
   {
     nux::GetPainter().PushPaintLayerStack();
-    text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
     text_view_->Draw(GfxContext, force_draw);
     nux::GetPainter().PopPaintLayerStack();
   }
