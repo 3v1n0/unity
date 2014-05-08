@@ -16,19 +16,64 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  *              Marco Trevisan <marco.trevisan@canonical.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
+
+#include <NuxCore/Logger.h>
 
 #include "UnityWindowStyle.h"
 #include "config.h"
 
-namespace unity {
-namespace ui {
+namespace unity
+{
+namespace ui
+{
+namespace
+{
+  const char* const SWITCHER_TOP    = PKGDATADIR"/switcher_top.png";
+  const char* const SWITCHER_LEFT   = PKGDATADIR"/switcher_left.png";
+  const char* const SWITCHER_CORNER = PKGDATADIR"/switcher_corner.png";
+
+  const char* const DIALOG_CLOSE     = PKGDATADIR"/dialog_close.png";
+  const char* const DIALOG_HIGHLIGHT = PKGDATADIR"/dialog_close_highlight.png";
+  const char* const DIALOG_PRESS     = PKGDATADIR"/dialog_close_press.png";
+
+  double const DEFAULT_SCALE = 1.0;
+}
+
+DECLARE_LOGGER(logger, "unity.ui.unity.window.style");
 
 UnityWindowStyle::UnityWindowStyle()
 {
-  background_top_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true));
-  background_left_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true));
-  background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
+  LoadAllTextureInScale(DEFAULT_SCALE);
+}
+
+void UnityWindowStyle::LoadAllTextureInScale(double scale)
+{
+  auto& window_textures = unity_window_textures_[scale];
+
+  window_textures[unsigned(WindowTextureType::BACKGROUND_TOP)]    = LoadTexture(scale, SWITCHER_TOP);
+  window_textures[unsigned(WindowTextureType::BACKGROUND_LEFT)]   = LoadTexture(scale, SWITCHER_LEFT);
+  window_textures[unsigned(WindowTextureType::BACKGROUND_CORNER)] = LoadTexture(scale, SWITCHER_CORNER);
+
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON)]             = LoadTexture(scale, DIALOG_CLOSE);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON_HIGHLIGHTED)] = LoadTexture(scale, DIALOG_HIGHLIGHT);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON_PRESSED)]     = LoadTexture(scale, DIALOG_PRESS);
+}
+
+nux::BaseTexture* UnityWindowStyle::LoadTexture(double scale, const char* const texture_name) const
+{
+  RawPixel max_size = GetDefaultMaxTextureSize(texture_name);
+  return nux::CreateTexture2DFromFile(texture_name, max_size.CP(scale), true);
+}
+
+RawPixel UnityWindowStyle::GetDefaultMaxTextureSize(const char* const texture_name) const
+{
+  nux::Size size;
+  gdk_pixbuf_get_file_info(texture_name, &size.width, &size.height);
+  RawPixel max_size = std::max(std::round(size.width), std::round(size.height));
+
+  return max_size;
 }
 
 UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
@@ -53,45 +98,23 @@ int UnityWindowStyle::GetCloseButtonPadding() const
   return 3;
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon()
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetTexture(double scale, WindowTextureType const& type)
 {
-  if (!close_icon_)
-    close_icon_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close.png", -1, true));
+  auto it = unity_window_textures_.find(scale);
+  if (it == unity_window_textures_.end())
+  {
+    LoadAllTextureInScale(scale);
 
-  return close_icon_;
+    it = unity_window_textures_.find(scale);
+    if (it == unity_window_textures_.end())
+    {
+      LOG_ERROR(logger) << "Failed to create unity window style textures, for scale size: " << scale;
+      return BaseTexturePtr(nullptr);
+    }
+  }
+
+  return it->second[unsigned(type)];
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconHighligted()
-{
-  if (!close_icon_highlighted_)
-    close_icon_highlighted_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_highlight.png", -1, true));
-
-  return close_icon_highlighted_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconPressed()
-{
-  if (!close_icon_pressed_)
-    close_icon_pressed_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_press.png", -1, true));
-
-  return close_icon_pressed_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundTop() const
-{
-  return background_top_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundLeft() const
-{
-  return background_left_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundCorner() const
-{
-  return background_corner_;
-}
-
-
-}
-}
+} // namespace ui
+} // namespace unity

@@ -151,6 +151,8 @@ void Controller::ConstructView()
   {
     view_->size_changed.connect([this] (nux::Area*, int, int) {
       int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+      view_->monitor = monitor;
+
       auto const& offset = GetOffsetPerMonitor(monitor);
       view_window_->SetXY(offset.x, offset.y);
     });
