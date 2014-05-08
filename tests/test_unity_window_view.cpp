@@ -29,6 +29,10 @@ namespace unity
 {
 namespace ui
 {
+namespace
+{
+  double const SCALE = 1.0;
+}
 
 struct TestUnityWindowView : testing::Test
 {
@@ -82,7 +86,7 @@ TEST_F(TestUnityWindowView, Closable)
   view.closable = true;
   ASSERT_NE(view.close_button_, nullptr);
 
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(SCALE, WindowTextureType::CLOSE_ICON));
   EXPECT_EQ(view.close_button_->GetParentObject(), &view);
 
   int padding = view.style()->GetCloseButtonPadding();
@@ -96,16 +100,16 @@ TEST_F(TestUnityWindowView, CloseButtonStates)
   ASSERT_NE(view.close_button_, nullptr);
 
   view.close_button_->mouse_enter.emit(0, 0, 0, 0);
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIconHighligted());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(SCALE, WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
 
   view.close_button_->mouse_leave.emit(0, 0, 0, 0);
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(SCALE, WindowTextureType::CLOSE_ICON));
 
   view.close_button_->mouse_down.emit(0, 0, 0, 0);
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIconPressed());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(SCALE, WindowTextureType::CLOSE_ICON_PRESSED));
 
   view.close_button_->mouse_up.emit(0, 0, 0, 0);
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(SCALE, WindowTextureType::CLOSE_ICON));
 }
 
 TEST_F(TestUnityWindowView, CloseButtonClicksRequestsClose)

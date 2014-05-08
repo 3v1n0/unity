@@ -101,8 +101,8 @@ void Controller::Show(View::Mode mode, bool inhibitors)
   view_->live_background = true;
 
   view_window_->ShowWindow(true);
-  view_window_->PushToFront();
   view_window_->SetInputFocus();
+  nux::GetWindowCompositor().SetAlwaysOnFrontWindow(view_window_.GetPointer());
   nux::GetWindowCompositor().SetKeyFocusArea(view_->key_focus_area());
   animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }
@@ -177,17 +177,19 @@ void Controller::CancelAndHide()
 
 void Controller::Hide()
 {
-  animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+  if (view_window_)
+    animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
 }
 
 void Controller::CloseWindow()
 {
-  view_window_->PushToBack();
-  view_window_->ShowWindow(false);
   view_window_->UnGrabPointer();
   view_window_->UnGrabKeyboard();
+  view_window_->ShowWindow(false);
   view_window_->EnableInputWindow(false);
-  view_->live_background = false;
+
+  view_ = nullptr;
+  view_window_ = nullptr;
 
   nux::GetWindowCompositor().SetKeyFocusArea(nullptr);
   WindowManager::Default().RestoreInputFocus();
