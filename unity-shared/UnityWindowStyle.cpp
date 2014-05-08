@@ -21,7 +21,9 @@
 
 #include <NuxCore/Logger.h>
 
+#include "UnitySettings.h"
 #include "UnityWindowStyle.h"
+#include "UScreen.h"
 #include "config.h"
 
 namespace unity
@@ -38,7 +40,6 @@ namespace
   const char* const DIALOG_HIGHLIGHT = PKGDATADIR"/dialog_close_highlight.png";
   const char* const DIALOG_PRESS     = PKGDATADIR"/dialog_close_press.png";
 
-  double const DEFAULT_SCALE = 1.0;
 
   RawPixel const INTERNAL_OFFSET = 20_em;
   RawPixel const BORDER_SIZE     = 30_em;
@@ -49,7 +50,17 @@ DECLARE_LOGGER(logger, "unity.ui.unity.window.style");
 
 UnityWindowStyle::UnityWindowStyle()
 {
-  LoadAllTextureInScale(DEFAULT_SCALE);
+  unsigned monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+  auto& settings = Settings::Instance();
+
+  // Pre-load scale values per monitor
+  for (unsigned i = 0; i < monitors; ++i)
+  {
+    double scale = settings.Instance().em(i)->DPIScale();
+
+    if (unity_window_textures_.find(scale) == unity_window_textures_.end())
+      LoadAllTextureInScale(scale);
+  }
 }
 
 void UnityWindowStyle::LoadAllTextureInScale(double scale)
