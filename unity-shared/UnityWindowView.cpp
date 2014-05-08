@@ -73,7 +73,7 @@ void UnityWindowView::OnDPIChanged()
 
   if (internal_layout_)
   {
-    int offset = cv_->CP(style()->GetInternalOffset());
+    int offset = style()->GetInternalOffset(scale);
     view_layout_->SetPadding(offset, offset);
   }
 }
@@ -140,9 +140,8 @@ void UnityWindowView::OnClosableChanged(bool closable)
     return;
   }
 
-  auto const& texture = style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON);
-  int padding_raw = style()->GetCloseButtonPadding();
-  int padding = cv_->CP(padding_raw);
+  auto const& texture = style()->GetTexture(scale, WindowTextureType::CLOSE_ICON);
+  int padding = style()->GetCloseButtonPadding(scale);
 
   close_button_ = new IconTexture(texture);
   close_button_->SetBaseXY(padding, padding);
@@ -150,29 +149,29 @@ void UnityWindowView::OnClosableChanged(bool closable)
 
   close_button_->mouse_enter.connect([this](int, int, unsigned long, unsigned long) {
     if (close_button_->IsMouseOwner())
-      close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON_PRESSED));
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_PRESSED));
     else
-      close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
   });
 
   close_button_->mouse_leave.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON));
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
   });
 
   close_button_->mouse_down.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON_PRESSED));
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_PRESSED));
   });
 
   close_button_->mouse_up.connect([this](int, int, unsigned long, unsigned long) {
     bool inside = close_button_->IsMouseInside();
     if (inside)
-      close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
     else
-      close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON));
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
   });
 
   close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON));
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
     request_close.emit();
   });
 
@@ -183,7 +182,7 @@ bool UnityWindowView::SetLayout(nux::Layout* layout)
 {
   if (layout && layout->IsLayout())
   {
-    int offset = cv_->CP(style()->GetInternalOffset());
+    int offset = style()->GetInternalOffset(scale);
 
     // We wrap the internal layout adding some padding, so that inherited classes
     // can ignore the offsets we define here.
@@ -208,7 +207,7 @@ nux::Layout* UnityWindowView::GetLayout()
 
 nux::Geometry UnityWindowView::GetInternalBackground()
 {
-  int offset = cv_->CP(style()->GetInternalOffset());
+  int offset = style()->GetInternalOffset(scale);
   return GetBackgroundGeometry().GetExpand(-offset, -offset);
 }
 
@@ -358,8 +357,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
 {
-  int border = cv_->CP(style()->GetBorderSize());
-  float scale = cv_->DPIScale();
+  int border = style()->GetBorderSize(scale);
 
   auto background_corner_textrue = style()->GetTexture(scale, WindowTextureType::BACKGROUND_CORNER)->GetDeviceTexture();
 

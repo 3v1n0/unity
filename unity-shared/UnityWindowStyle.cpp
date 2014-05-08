@@ -39,6 +39,10 @@ namespace
   const char* const DIALOG_PRESS     = PKGDATADIR"/dialog_close_press.png";
 
   double const DEFAULT_SCALE = 1.0;
+
+  RawPixel const INTERNAL_OFFSET = 20_em;
+  RawPixel const BORDER_SIZE     = 30_em;
+  RawPixel const CLOSE_PADDING   =  3_em;
 }
 
 DECLARE_LOGGER(logger, "unity.ui.unity.window.style");
@@ -83,19 +87,19 @@ UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
   return instance;
 }
 
-int UnityWindowStyle::GetBorderSize() const
+int UnityWindowStyle::GetBorderSize(double scale) const
 {
-  return 30; // as measured from textures
+  return BORDER_SIZE.CP(scale); // as measured from textures
 }
 
-int UnityWindowStyle::GetInternalOffset() const
+int UnityWindowStyle::GetInternalOffset(double scale) const
 {
-  return 20;
+  return INTERNAL_OFFSET.CP(scale);
 }
 
-int UnityWindowStyle::GetCloseButtonPadding() const
+int UnityWindowStyle::GetCloseButtonPadding(double scale) const
 {
-  return 3;
+  return CLOSE_PADDING.CP(scale);
 }
 
 UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetTexture(double scale, WindowTextureType const& type)

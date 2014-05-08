@@ -52,9 +52,9 @@ public:
   static UnityWindowStyle::Ptr const& Get();
 
   BaseTexturePtr GetTexture(double scale, WindowTextureType const& type);
-  int GetCloseButtonPadding() const;
-  int GetBorderSize() const;
-  int GetInternalOffset() const;
+  int GetCloseButtonPadding(double scale) const;
+  int GetBorderSize(double scale) const;
+  int GetInternalOffset(double scale) const;
 
 private:
   UnityWindowStyle();
