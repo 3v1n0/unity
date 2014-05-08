@@ -78,6 +78,7 @@ protected:
 private:
   friend class TestUnityWindowView;
 
+  void OnDPIChanged();
   void OnClosableChanged(bool closable);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
