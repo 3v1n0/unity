@@ -131,7 +131,7 @@ RawPixel Button::GetDefaultMaxTextureSize(std::string const& texture_prefix) con
   nux::Size size;
   auto const& texture_name = (texture_prefix + ".png");
   gdk_pixbuf_get_file_info(texture_name.c_str(), &size.width, &size.height);
-  RawPixel max_size = std::max(std::round(size.width * scale), std::round(size.height * scale));
+  RawPixel max_size = std::max(size.width, size.height);
 
   return max_size;
 }
