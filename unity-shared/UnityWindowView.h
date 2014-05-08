@@ -44,6 +44,7 @@ public:
   nux::Property<UnityWindowStyle::Ptr> style;
   nux::Property<bool> closable;
   nux::Property<int> monitor;
+  nux::Property<double> scale;
 
   UnityWindowView(NUX_FILE_LINE_PROTO);
   virtual ~UnityWindowView();
@@ -73,8 +74,6 @@ protected:
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
 
-  EMConverter::Ptr cv_;
-
 private:
   friend class TestUnityWindowView;
 
@@ -82,6 +81,7 @@ private:
   void OnClosableChanged(bool closable);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
+  EMConverter::Ptr cv_;
   nux::Layout *internal_layout_;
   BackgroundEffectHelper bg_helper_;
   nux::ObjectPtr<nux::InputArea> bounding_area_;

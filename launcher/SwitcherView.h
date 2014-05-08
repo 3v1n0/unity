@@ -134,8 +134,9 @@ private:
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);
 
-  void OnIconSizeChanged (int size);
-  void OnTileSizeChanged (int size);
+  void OnIconSizeChanged(int size);
+  void OnTileSizeChanged(int size);
+  void OnScaleChanged(double scale);
 
   nux::Geometry UpdateRenderTargets(float progress);
   void ResizeRenderTargets(nux::Geometry const& layout_geo, float progress);

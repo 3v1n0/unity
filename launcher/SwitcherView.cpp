@@ -52,7 +52,7 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   , icon_size(128)
   , minimum_spacing(10)
   , tile_size(150)
-  , vertical_size(tile_size + VERTICAL_PADDING.CP(cv_) * 2)
+  , vertical_size(tile_size + VERTICAL_PADDING.CP(scale()) * 2)
   , text_size(15)
   , animation_length(250)
   , spread_size(3.5f)
@@ -72,9 +72,9 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
 
-  icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
-  tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
-  monitor.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
+  icon_size.changed.connect(sigc::mem_fun(this, &SwitcherView::OnIconSizeChanged));
+  tile_size.changed.connect(sigc::mem_fun(this, &SwitcherView::OnTileSizeChanged));
+  scale.changed.connect(sigc::mem_fun(this, &SwitcherView::OnScaleChanged));
 
   mouse_move.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseMove));
   mouse_down.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseDown));
@@ -172,7 +172,12 @@ void SwitcherView::OnIconSizeChanged(int size)
 void SwitcherView::OnTileSizeChanged(int size)
 {
   icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
-  vertical_size = tile_size + VERTICAL_PADDING.CP(cv_) * 2;
+  vertical_size = tile_size + VERTICAL_PADDING.CP(scale()) * 2;
+}
+
+void SwitcherView::OnScaleChanged(double scale)
+{
+  vertical_size = tile_size + VERTICAL_PADDING.CP(scale) * 2;
 }
 
 void SwitcherView::StartAnimation()
@@ -701,7 +706,7 @@ bool SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, 
   if (text_view_->IsVisible())
   {
     background_geo.height += text_size;
-    text_view_->SetBaseY(background_geo.y + background_geo.height - VERTICAL_PADDING.CP(cv_));
+    text_view_->SetBaseY(background_geo.y + background_geo.height - VERTICAL_PADDING.CP(scale()));
   }
 
   if (model_)

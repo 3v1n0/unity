@@ -24,7 +24,6 @@
 #include <glib/gi18n-lib.h>
 
 #include "unity-shared/RawPixel.h"
-#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -96,8 +95,7 @@ View::View(Manager::Ptr const& manager)
     Populate();
   });
 
-  monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateViewSize)));
-  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &View::UpdateViewSize));
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateViewSize)));
 
   UpdateViewSize();
   UpdateText();
@@ -106,21 +104,21 @@ View::View(Manager::Ptr const& manager)
 
 void View::UpdateViewSize()
 {
-  main_layout_->SetTopAndBottomPadding(cv_->CP(style::TOP_PADDING), cv_->CP(style::BOTTOM_PADDING));
-  main_layout_->SetLeftAndRightPadding(cv_->CP(style::LEFT_RIGHT_PADDING));
-  main_layout_->SetSpaceBetweenChildren(cv_->CP(style::MAIN_SPACE));
+  main_layout_->SetTopAndBottomPadding(style::TOP_PADDING.CP(scale()), style::BOTTOM_PADDING.CP(scale()));
+  main_layout_->SetLeftAndRightPadding(style::LEFT_RIGHT_PADDING.CP(scale()));
+  main_layout_->SetSpaceBetweenChildren(style::MAIN_SPACE.CP(scale()));
 
-  title_->SetScale(cv_->DPIScale());
-  subtitle_->SetScale(cv_->DPIScale());
+  title_->SetScale(scale());
+  subtitle_->SetScale(scale());
 
   ReloadCloseButtonTexture();
 
-  buttons_layout_->SetSpaceBetweenChildren(cv_->CP(style::BUTTONS_SPACE));
+  buttons_layout_->SetSpaceBetweenChildren(style::BUTTONS_SPACE.CP(scale()));
 
   for (auto* area : buttons_layout_->GetChildren())
   {
     auto* button = static_cast<Button*>(area);
-    button->scale = cv_->DPIScale();
+    button->scale = scale();
   }
 }
 
@@ -198,7 +196,7 @@ void View::Populate()
   if (mode() == Mode::LOGOUT)
   {
     auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
-    button->scale = cv_->DPIScale();
+    button->scale = scale();
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
     AddButton(button);
 
@@ -212,14 +210,14 @@ void View::Populate()
     if (mode() == Mode::FULL)
     {
       auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
-      button->scale = cv_->DPIScale();
+      button->scale = scale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
       AddButton(button);
 
       if (manager_->CanSuspend())
       {
         button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
-        button->scale = cv_->DPIScale();
+        button->scale = scale();
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
         AddButton(button);
       }
@@ -227,7 +225,7 @@ void View::Populate()
       if (manager_->CanHibernate())
       {
         button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
-        button->scale = cv_->DPIScale();
+        button->scale = scale();
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
         AddButton(button);
       }
@@ -236,12 +234,12 @@ void View::Populate()
     if (manager_->CanShutdown())
     {
       auto *button = new Button(Button::Action::REBOOT, NUX_TRACKER_LOCATION);
-      button->scale = cv_->DPIScale();
+      button->scale = scale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
       AddButton(button);
 
       button = new Button(Button::Action::SHUTDOWN, NUX_TRACKER_LOCATION);
-      button->scale = cv_->DPIScale();
+      button->scale = scale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
       key_focus_area_ = (mode() == Mode::SHUTDOWN) ? button : key_focus_area_;
       AddButton(button);
@@ -249,7 +247,7 @@ void View::Populate()
     else if (mode() == Mode::FULL)
     {
       auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
-      button->scale = cv_->DPIScale();
+      button->scale = scale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
       AddButton(button);
     }
