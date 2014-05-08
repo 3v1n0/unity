@@ -31,9 +31,7 @@ namespace session
 namespace style
 {
   std::string const FONT = "Ubuntu Light 12";
-
-  RawPixel const BUTTON_SPACE         =   9_em;
-  RawPixel const DEFAULT_TEXTURE_SIZE = 168_em;
+  RawPixel const BUTTON_SPACE = 9_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Button);
