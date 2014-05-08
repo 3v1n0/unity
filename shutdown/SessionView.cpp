@@ -23,7 +23,8 @@
 #include <UnityCore/GLibWrapper.h>
 #include <glib/gi18n-lib.h>
 
-#include <unity-shared/RawPixel.h>
+#include "unity-shared/RawPixel.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -95,10 +96,7 @@ View::View(Manager::Ptr const& manager)
     Populate();
   });
 
-  monitor.changed.connect([this] (int monitor) {
-    UpdateViewSize();
-  });
-
+  monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateViewSize)));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &View::UpdateViewSize));
 
   UpdateViewSize();

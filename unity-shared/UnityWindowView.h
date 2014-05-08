@@ -23,7 +23,7 @@
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/UnitySettings.h"
+#include "unity-shared/EMConverter.h"
 
 #include "Introspectable.h"
 #include "UnityWindowStyle.h"
