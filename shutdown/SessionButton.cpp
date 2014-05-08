@@ -30,15 +30,17 @@ namespace session
 
 namespace style
 {
-  const std::string FONT = "Ubuntu Light 12";
+  std::string const FONT = "Ubuntu Light 12";
 
-  const unsigned BUTTON_SPACE = 9;
+  RawPixel const BUTTON_SPACE         =   9_em;
+  RawPixel const DEFAULT_TEXTURE_SIZE = 168_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Button);
 
 Button::Button(Action action, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , highlighted(false)
   , action([this] { return action_; })
   , label([this] { return label_view_->GetText(); })
@@ -78,13 +80,20 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
       break;
   }
 
-  normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), -1, true));
-  highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), -1, true));
+  UpdateTextures(texture_prefix);
 
   auto main_layout = new nux::VLayout();
   main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   main_layout->SetSpaceBetweenChildren(style::BUTTON_SPACE);
   SetLayout(main_layout);
+
+  scale.changed.connect([this, main_layout, texture_prefix] (double new_scale) {
+    main_layout->SetSpaceBetweenChildren(style::BUTTON_SPACE.CP(new_scale));
+    label_view_->SetScale(new_scale);
+
+    UpdateTextures(texture_prefix);
+    image_view_->SetTexture(highlighted ? highlight_tex_ : normal_tex_);
+  });
 
   image_view_ = new IconTexture(normal_tex_);
   image_view_->SetInputEventSensitivity(false);
@@ -109,6 +118,24 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
     image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
     label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
   });
+}
+
+void Button::UpdateTextures(std::string const& texture_prefix)
+{
+  RawPixel const texture_size = GetDefaultMaxTextureSize(texture_prefix);
+
+  normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), texture_size.CP(scale), true));
+  highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), texture_size.CP(scale), true));
+}
+
+RawPixel Button::GetDefaultMaxTextureSize(std::string const& texture_prefix) const
+{
+  nux::Size size;
+  auto const& texture_name = (texture_prefix + ".png");
+  gdk_pixbuf_get_file_info(texture_name.c_str(), &size.width, &size.height);
+  RawPixel max_size = std::max(std::round(size.width * scale), std::round(size.height * scale));
+
+  return max_size;
 }
 
 void Button::Draw(nux::GraphicsEngine& ctx, bool force)
