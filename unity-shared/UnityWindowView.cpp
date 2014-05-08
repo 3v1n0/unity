@@ -33,8 +33,7 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   , style(UnityWindowStyle::Get())
   , closable(false)
   , monitor(0)
-  , scale(1.0)
-  , cv_(Settings::Instance().em())
+  , scale(Settings::Instance().em()->DPIScale())
   , internal_layout_(nullptr)
   , bg_helper_(this)
 {
@@ -49,7 +48,6 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   });
 
   live_background = false;
-  scale = cv_->DPIScale();
 
   monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged)));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged));
@@ -68,8 +66,7 @@ UnityWindowView::~UnityWindowView()
 
 void UnityWindowView::OnDPIChanged()
 {
-  cv_ = Settings::Instance().em(monitor());
-  scale = cv_->DPIScale();
+  scale = Settings::Instance().em(monitor())->DPIScale();
 
   if (internal_layout_)
   {
@@ -208,6 +205,7 @@ nux::Layout* UnityWindowView::GetLayout()
 nux::Geometry UnityWindowView::GetInternalBackground()
 {
   int offset = style()->GetInternalOffset(scale);
+
   return GetBackgroundGeometry().GetExpand(-offset, -offset);
 }
 
