@@ -1,3 +1,48 @@
+unity (7.2.0+14.04.20140423-0ubuntu1.2) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: more lock screen bypass issues, and regression with
+    shutdown dialog (LP: #1314247)
+    - debian/patches/lp1314247.patch: improve popup menu handling in
+      lockscreen/LockScreenShield.cpp, lockscreen/LockScreenPanel.cpp,
+      services/panel-service.c, plugins/unityshell/src/unityshell.cpp,
+      lockscreen/LockScreenController.*, shutdown/SessionController.cpp,
+      tests/test_session_controller.cpp.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 30 Apr 2014 11:11:18 -0400
+
+unity (7.2.0+14.04.20140423-0ubuntu1.1) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: lock screen bypass (LP: #1313885)
+    - debian/patches/lp1313885.patch: improve lockscreen logic in
+      lockscreen/LockScreenController.cpp, lockscreen/LockScreenShield.*,
+      plugins/unityshell/src/unityshell.*.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Mon, 28 Apr 2014 22:29:13 -0400
+
+unity (7.2.0+14.04.20140423-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * When setting the STARTING quirk for Application Launcher icons, only
+    do it for the monitor specified in the passed in args. (LP:
+    #1291362)
+
+  [ Andrea Azzarone ]
+  * Close dash/hud/etc. on signal locked too. (LP: #1308850)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 23 Apr 2014 14:40:24 +0000
+
+unity (7.2.0+14.04.20140416-0ubuntu1) trusty; urgency=low
+
+  [ Andrea Azzarone ]
+  * Do not allow to activate twice the same entry! (LP: #1308572)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: save a locked.stamp file when locking/unlocking, to
+    relock on startup This makes unity to relocks if it was locked
+    before crashing... (LP: #1308572)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 16 Apr 2014 22:41:19 +0000
+
 unity (7.2.0+14.04.20140414.1-0ubuntu1) trusty; urgency=low
 
   [ Alfred Neumayer ]

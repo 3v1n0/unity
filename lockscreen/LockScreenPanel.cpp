@@ -192,6 +192,13 @@ void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_
     return;
 
   bool active = !entry_id.empty();
+
+  if (active && !WindowManager::Default().IsScreenGrabbed())
+  {
+    // The menu didn't grab the keyboard, let's take it back.
+    nux::GetWindowCompositor().GrabKeyboardAdd(static_cast<nux::BaseWindow*>(GetTopLevelViewWindow()));
+  }
+
   if (active && !track_menu_pointer_timeout_)
   {
     track_menu_pointer_timeout_.reset(new glib::Timeout(16));

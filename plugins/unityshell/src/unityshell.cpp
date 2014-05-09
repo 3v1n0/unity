@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
- * unity.cpp 
+ * unityshell.cpp
  *
  * Copyright (c) 2010-11 Canonical Ltd.
  *
@@ -26,6 +26,7 @@
 #include <Nux/WindowCompositor.h>
 
 #include <UnityCore/DBusIndicators.h>
+#include <UnityCore/DesktopUtilities.h>
 #include <UnityCore/GnomeSessionManager.h>
 #include <UnityCore/ScopeProxyInterface.h>
 
@@ -58,6 +59,7 @@
 #include "decorations/DecorationsManager.h"
 
 #include <glib/gi18n-lib.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -142,6 +144,7 @@ const RawPixel SCALE_PADDING = 40_em;
 const RawPixel SCALE_SPACING = 20_em;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 const std::string FIRST_RUN_STAMP = "first_run.stamp";
+const std::string LOCKED_STAMP = "locked.stamp";
 } // namespace local
 } // anon namespace
 
@@ -466,6 +469,7 @@ UnityScreen::~UnityScreen()
   unity_a11y_finalize();
   QuicklistManager::Destroy();
   decoration::DataPool::Reset();
+  SaveLockStamp(false);
 
   reset_glib_logging();
 }
@@ -2023,9 +2027,6 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
                                           CompAction::State state,
                                           CompOption::Vector& options)
 {
-  if (lockscreen_controller_->IsLocked())
-    return true;
-
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
@@ -2222,9 +2223,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
-  if(lockscreen_controller_->IsLocked())
-    return;
-
   RaiseInputWindows();
 
   if (!optionGetAltTabBiasViewport())
@@ -2477,8 +2475,7 @@ bool UnityScreen::ShowHud()
     return false; // early exit if the switcher is open
   }
 
-  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse() ||
-      lockscreen_controller_->IsLocked())
+  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
   {
     return false;
   }
@@ -3727,25 +3724,97 @@ void UnityScreen::OnDashRealized()
   RaiseOSK();
 }
 
-void UnityScreen::LockscreenRequested()
+void UnityScreen::OnLockScreenRequested()
 {
   if (switcher_controller_->Visible())
-  {
     switcher_controller_->Hide(false);
-  }
-  else if (launcher_controller_->IsOverlayOpen())
-  {
+
+  if (dash_controller_->IsVisible())
     dash_controller_->HideDash();
+
+  if (hud_controller_->IsVisible())
     hud_controller_->HideHud();
-  }
 
   launcher_controller_->ClearTooltips();
 
+  if (launcher_controller_->KeyNavIsActive())
+    launcher_controller_->KeyNavTerminate(false);
+
+  if (QuicklistManager::Default()->Current())
+    QuicklistManager::Default()->Current()->Hide();
+
   auto& wm = WindowManager::Default();
+
   if (wm.IsScaleActive())
     wm.TerminateScale();
 
+  if (wm.IsExpoActive())
+    wm.TerminateExpo();
+
   RaiseOSK();
+}
+
+void UnityScreen::OnScreenLocked()
+{
+  SaveLockStamp(true);
+
+  for (auto& option : getOptions())
+  {
+    if (option.isAction())
+    {
+      auto& value = option.value();
+
+      if (value != mOptions[UnityshellOptions::PanelFirstMenu].value())
+        screen->removeAction(&value.action());
+    }
+  }
+
+  for (auto& action : getActions())
+    screen->removeAction(&action);
+
+  // We notify that super/alt have been released, to avoid to leave unity in inconsistent state
+  showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, getOptions());
+  showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, getOptions());
+}
+
+void UnityScreen::OnScreenUnlocked()
+{
+  SaveLockStamp(false);
+
+  for (auto& option : getOptions())
+  {
+    if (option.isAction())
+      screen->addAction(&option.value().action());
+  }
+
+  for (auto& action : getActions())
+    screen->addAction(&action);
+}
+
+void UnityScreen::SaveLockStamp(bool save)
+{
+  auto const& cache_dir = DesktopUtilities::GetUserRuntimeDirectory();
+
+  if (cache_dir.empty())
+    return;
+
+  if (save)
+  {
+    glib::Error error;
+    g_file_set_contents((cache_dir+local::LOCKED_STAMP).c_str(), "", 0, &error);
+
+    if (error)
+    {
+      LOG_ERROR(logger) << "Impossible to save the unity locked stamp file: " << error;
+    }
+  }
+  else
+  {
+    if (g_unlink((cache_dir+local::LOCKED_STAMP).c_str()) < 0)
+    {
+      LOG_ERROR(logger) << "Impossible to delete the unity locked stamp file";
+    }
+  }
 }
 
 void UnityScreen::RaiseOSK()
@@ -3813,7 +3882,10 @@ void UnityScreen::initLauncher()
 
   // Setup Session Controller
   auto manager = std::make_shared<session::GnomeManager>();
-  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::LockscreenRequested));
+  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  manager->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  manager->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
+  manager->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
   AddChild(session_controller_.get());
@@ -3822,6 +3894,9 @@ void UnityScreen::initLauncher()
   screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, manager);
   UpdateActivateIndicatorsKey();
+
+  if (g_file_test((DesktopUtilities::GetUserRuntimeDirectory()+local::LOCKED_STAMP).c_str(), G_FILE_TEST_EXISTS))
+    manager->PromptLockScreen();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
@@ -3907,8 +3982,8 @@ CompAction::Vector& UnityScreen::getActions()
 void UnityScreen::ShowFirstRunHints()
 {
   sources_.AddTimeoutSeconds(1, [this] {
-    auto const& cache_dir = glib::gchar_to_string(g_get_user_cache_dir())+"/unity/";
-    if (!g_file_test((cache_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
+    auto const& cache_dir = DesktopUtilities::GetUserCacheDirectory();
+    if (!cache_dir.empty() && !g_file_test((cache_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
     {
       // We focus the panel, so the shortcut hint will be hidden at first user input
       auto const& panels = panel_controller_->panels();
@@ -3920,19 +3995,12 @@ void UnityScreen::ShowFirstRunHints()
       shortcut_controller_->first_run = true;
       shortcut_controller_->Show();
 
-      if (g_mkdir_with_parents(cache_dir.c_str(), 0700) >= 0)
-      {
-        glib::Error error;
-        g_file_set_contents((cache_dir+local::FIRST_RUN_STAMP).c_str(), "", 0, &error);
+      glib::Error error;
+      g_file_set_contents((cache_dir+local::FIRST_RUN_STAMP).c_str(), "", 0, &error);
 
-        if (error)
-        {
-          LOG_ERROR(logger) << "Impossible to save the unity stamp file: " << error;
-        }
-      }
-      else
+      if (error)
       {
-        LOG_ERROR(logger) << "Impossible to create unity cache folder!";
+        LOG_ERROR(logger) << "Impossible to save the unity stamp file: " << error;
       }
     }
     return false;
