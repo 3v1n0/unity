@@ -79,6 +79,7 @@ View::View(Manager::Ptr const& manager)
   GetBoundingArea()->mouse_click.connect([this] (int, int, unsigned long, unsigned long) { request_close.emit(); });
 
   have_inhibitors.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateText)));
+  manager_->have_other_open_sessions.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateText)));
 
   mode.SetSetterFunction([this] (Mode& target, Mode new_mode) {
     if (new_mode == Mode::SHUTDOWN && !manager_->CanShutdown())
@@ -104,24 +105,32 @@ View::View(Manager::Ptr const& manager)
 
 void View::UpdateText()
 {
-  const char* message = nullptr;
+  std::string message;
+  std::string other_users_msg;
   auto const& real_name = manager_->RealName();
   auto const& name = (real_name.empty() ? manager_->UserName() : real_name);
+
+  other_users_msg = _("Other users are logged in. Restarting or shutting down will close their open applications and may cause them to lose work.\n\n");
 
   if (mode() == Mode::SHUTDOWN)
   {
     title_->SetText(_("Shut Down"));
     title_->SetVisible(true);
 
+    if (manager_->have_other_open_sessions())
+    {
+      message += other_users_msg;
+    }
+
     if (have_inhibitors())
     {
-      message = _("Hi %s, you have open files that you might want to save " \
-                  "before shutting down. Are you sure you want to continue?");
+      message += _("Hi %s, you have open files that you might want to save " \
+                   "before shutting down. Are you sure you want to continue?");
     }
     else
     {
-      message = _("Goodbye, %s. Are you sure you want to close all programs " \
-                  "and shut down the computer?");
+      message += _("Goodbye, %s. Are you sure you want to close all programs " \
+                   "and shut down the computer?");
     }
   }
   else if (mode() == Mode::LOGOUT)
@@ -144,27 +153,32 @@ void View::UpdateText()
   {
     title_->SetVisible(false);
 
+    if (manager_->have_other_open_sessions())
+    {
+      message += other_users_msg;
+    }
+
     if (have_inhibitors())
     {
       if (buttons_layout_->GetChildren().size() > 3)
       {
         // We have enough buttons to show the message without a new line.
-        message = _("Hi %s, you have open files you might want to save. " \
+        message += _("Hi %s, you have open files you might want to save. " \
                     "Would you like to…");
       }
       else
       {
-        message = _("Hi %s, you have open files you might want to save.\n" \
+        message += _("Hi %s, you have open files you might want to save.\n" \
                     "Would you like to…");
       }
     }
     else
     {
-      message = _("Goodbye, %s. Would you like to…");
+      message += _("Goodbye, %s. Would you like to…");
     }
   }
 
-  subtitle_->SetText(glib::String(g_strdup_printf(message, name.c_str())).Str());
+  subtitle_->SetText(glib::String(g_strdup_printf(message.c_str(), name.c_str())).Str());
 }
 
 void View::Populate()
