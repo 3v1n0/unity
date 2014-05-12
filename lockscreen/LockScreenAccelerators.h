@@ -22,6 +22,8 @@
 
 #include <memory>
 #include <sigc++/signal.h>
+#include <vector>
+
 
 namespace unity
 {
