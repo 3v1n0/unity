@@ -393,6 +393,7 @@ private:
   CompRegion nuxRegion;
   CompRegion fullscreenRegion;
   CompWindow* firstWindowAboveShell;
+  CompWindow* onboard_;
 
   ::GLFramebufferObject *oldFbo;
 
@@ -519,6 +520,7 @@ private:
   bool IsInShowdesktopMode ();
   bool IsShaded ();
   bool IsMinimized ();
+  bool CanBypassLockScreen() const;
   void DoOverrideFrameRegion (CompRegion &r);
 
   void DoHide ();
