@@ -1,3 +1,52 @@
+unity (7.2.0+14.10.20140512.4-0ubuntu1) utopic; urgency=low
+
+  [ Stephen M. Webb ]
+  * lockscreen/LockScreenAccelerators.h: added required header for
+    std:vector definition
+  * disabled precompiled headers on arm64 Ubuntu package builds (LP:
+    #1317276)
+
+  [ Brandon Schaefer ]
+  * Set the max width, so our static text wraps. So we don't end up
+    rendering text out of the view area. (LP: #1312749)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: toggle activation of all the unity compiz actions when
+    locking the screen Also, make sure that the lockscreen views are
+    treated as "always-on-front" windows by nux (and this applies to
+    both visibility and events).
+  * PanelService: emit an invalid EntryActivated signal if the menu
+    hasn't actually been shown In addition, if the menu is not visible
+    after the first popup call, try to show a menu without keyboard
+    focus. This will make possible to see menus also when there's a key-
+    grab (although they will be without keyboard support). Finally,
+    reset the menu state, if that failed.
+  * UnityScreen: always paint the lockscreen above, just add menu and
+    onboard as exceptions Some code cleanup, factorizing similar code.
+    (LP: #1313280)
+  * UnityScreen: don't try to show Dash/Hud if the screen is grabbed
+    Also move the dash opening out from LauncherController, and get rid
+    of UBus as first initialization source, as it can only slow things
+    down here. (LP: #741869)
+  * PluginAdapter: make sure we don't try to call an invalid
+    initiate/terminate callback function (LP: #1221673)
+  * DebugDBusInterface: match properties if they are in the AP array
+    form [<type>, <value>] (LP: #1307748)
+
+  [ William Hua ]
+  * Add proper support for modifier-only shortcuts on the lock screen.
+    (LP: #1291461)
+
+  [ Jinkyu Yi ]
+  * Dash: Fix problem at checking blacklisted unicode range (LP:
+    #1251193)
+
+  [ Andrea Azzarone ]
+  * Add a warning in the session dialog if other sessions are still
+    open. (LP: #1281058)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 May 2014 22:03:27 +0000
+
 unity (7.2.0+14.04.20140423-0ubuntu2) utopic; urgency=medium
 
   * debian/control: depends on autopilot-desktop-legacy rather than
