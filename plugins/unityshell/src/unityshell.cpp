@@ -143,6 +143,7 @@ const int FRAMES_TO_REDRAW_ON_RESUME = 10;
 const RawPixel SCALE_PADDING = 40_em;
 const RawPixel SCALE_SPACING = 20_em;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
+const std::string HUD_UNGRAB_WAIT = "hud-ungrab-wait";
 const std::string FIRST_RUN_STAMP = "first_run.stamp";
 const std::string LOCKED_STAMP = "locked.stamp";
 } // namespace local
@@ -1720,6 +1721,8 @@ void UnityScreen::handleEvent(XEvent* event)
         wm.OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
         wm.OnScreenUngrabbed();
+      else if (!screen->grabbed() && event->xfocus.mode == NotifyWhileGrabbed)
+        wm.OnScreenGrabbed();
 
       if (_key_nav_mode_requested)
       {
@@ -2079,6 +2082,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
+  bool tap_handled = false;
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
 
@@ -2107,6 +2111,24 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     {
       QuicklistManager::Default()->Current()->Hide();
     }
+
+    if (!dash_controller_->IsVisible())
+    {
+      if (!adapter.IsTopWindowFullscreenOnMonitorWithMouse())
+      {
+        if (dash_controller_->ShowDash())
+        {
+          tap_handled = true;
+          ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                    g_variant_new("(sus)", "home.scope", dash::GOTO_DASH_URI, ""));
+        }
+      }
+    }
+    else
+    {
+      dash_controller_->HideDash();
+      tap_handled = true;
+    }
   }
 
   super_keypressed_ = false;
@@ -2120,7 +2142,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  return true;
+  return (was_tap && tap_handled) || !was_tap;
 }
 
 bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
@@ -2488,32 +2510,45 @@ bool UnityScreen::ShowHud()
 {
   if (switcher_controller_->Visible())
   {
-    LOG_ERROR(logger) << "this should never happen";
+    LOG_ERROR(logger) << "Switcher is visible when showing HUD: this should never happen";
     return false; // early exit if the switcher is open
-  }
-
-  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
-  {
-    return false;
   }
 
   if (hud_controller_->IsVisible())
   {
-    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    hud_controller_->HideHud();
   }
   else
   {
+    auto& wm = WindowManager::Default();
+
+    if (wm.IsTopWindowFullscreenOnMonitorWithMouse())
+      return false;
+
+    if (wm.IsScreenGrabbed())
+    {
+      hud_ungrab_slot_ = wm.screen_ungrabbed.connect([this] { ShowHud(); });
+
+      // Let's wait ungrab event for maximum a couple of seconds...
+      sources_.AddTimeoutSeconds(2, [this] {
+        hud_ungrab_slot_->disconnect();
+        return false;
+      }, local::HUD_UNGRAB_WAIT);
+
+      return false;
+    }
+
     // Handles closing KeyNav (Alt+F1) if the hud is about to show
     if (launcher_controller_->KeyNavIsActive())
       launcher_controller_->KeyNavTerminate(false);
 
-    // If an overlay is open, it must be the dash! Close it!
-    if (launcher_controller_->IsOverlayOpen())
+    if (dash_controller_->IsVisible())
       dash_controller_->HideDash();
 
     if (QuicklistManager::Default()->Current())
       QuicklistManager::Default()->Current()->Hide();
 
+    hud_ungrab_slot_->disconnect();
     hud_controller_->ShowHud();
   }
 

@@ -422,6 +422,7 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+  connection::Wrapper hud_ungrab_slot_;
 
   CompRegion buffered_compiz_damage_this_frame_;
   CompRegion buffered_compiz_damage_last_frame_;
