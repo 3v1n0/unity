@@ -66,7 +66,6 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , create_window_(create_window)
   , monitor_(0)
   , visible_(false)
-  , need_show_(false)
   , dbus_server_(dbus::BUS_NAME)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
@@ -262,20 +261,14 @@ void Controller::OnMouseDownOutsideWindow(int x, int y,
   HideDash();
 }
 
-void Controller::OnScreenUngrabbed()
-{
-  LOG_DEBUG(logger) << "On Screen Ungrabbed called";
-  if (need_show_)
-  {
-    EnsureDash();
-    ShowDash();
-  }
-}
-
 void Controller::OnExternalShowDash(GVariant* variant)
 {
   EnsureDash();
-  visible_ ? HideDash() : ShowDash();
+
+  if (!visible_)
+    ShowDash();
+  else
+    HideDash();
 }
 
 void Controller::OnExternalHideDash(GVariant* variant)
@@ -283,31 +276,44 @@ void Controller::OnExternalHideDash(GVariant* variant)
   HideDash();
 }
 
-void Controller::ShowDash()
+bool Controller::ShowDash()
 {
-  EnsureDash();
-  WindowManager& wm = WindowManager::Default();
   // Don't want to show at the wrong time
-  if (visible_ || wm.IsExpoActive() || wm.IsScaleActive())
-    return;
+  if (visible_)
+    return false;
+
+  WindowManager& wm = WindowManager::Default();
+
+  if (wm.IsExpoActive())
+    wm.TerminateExpo();
 
   // We often need to wait for the mouse/keyboard to be available while a plugin
   // is finishing it's animations/cleaning up. In these cases, we patiently wait
   // for the screen to be available again before honouring the request.
   if (wm.IsScreenGrabbed())
   {
-    screen_ungrabbed_slot_ = wm.screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
-    need_show_ = true;
-    return;
+    screen_ungrabbed_slot_ = wm.screen_ungrabbed.connect([this] {
+      grab_wait_.reset();
+      ShowDash();
+    });
+
+    // Let's wait ungrab event for maximum a couple of seconds...
+    grab_wait_.reset(new glib::TimeoutSeconds(2, [this] {
+      screen_ungrabbed_slot_->disconnect();
+      return false;
+    }));
+
+    return false;
   }
 
+  EnsureDash();
   monitor_ = GetIdealMonitor();
+  screen_ungrabbed_slot_->disconnect();
   int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
   view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
   view_->AboutToShow(monitor_);
   FocusWindow();
 
-  need_show_ = false;
   visible_ = true;
 
   StartShowHideTimeline();
@@ -316,6 +322,7 @@ void Controller::ShowDash()
 
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
+  return true;
 }
 
 void Controller::FocusWindow()
@@ -346,8 +353,6 @@ void Controller::HideDash()
 {
   if (!visible_)
    return;
-
-  screen_ungrabbed_slot_->disconnect();
 
   EnsureDash();
 
@@ -394,7 +399,7 @@ void Controller::OnActivateRequest(GVariant* variant)
   view_->OnActivateRequest(variant);
 }
 
-gboolean Controller::CheckShortcutActivation(const char* key_string)
+bool Controller::CheckShortcutActivation(const char* key_string)
 {
   if (!key_string)
     return false;
