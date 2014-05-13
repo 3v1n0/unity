@@ -128,8 +128,8 @@ nux::LinearLayout* View::CreateSectionLayout(std::string const& section_name)
   section_name_view->SetFont(FONT_NAME+" "+std::to_string(SECTION_NAME_FONT_SIZE));
   section_name_view->SetLines(-1);
   section_name_view->SetScale(scale);
-  const int top_space = RawPixel(10).CP(scale);
-  const int bottom_space = RawPixel(15).CP(scale);
+  const int top_space = (10_em).CP(scale);
+  const int bottom_space = (15_em).CP(scale);
   layout->AddView(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddView(section_name_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddView(new nux::SpaceLayout(bottom_space, bottom_space, bottom_space, bottom_space), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
@@ -227,8 +227,8 @@ void View::RenderColumns()
   int i = 0;
   int column_idx = 0;
   auto const& columns = columns_layout_->GetChildren();
-  const int top_space = RawPixel(23).CP(scale);
-  const int bottom_space = RawPixel(20).CP(scale);
+  const int top_space = (23_em).CP(scale);
+  const int bottom_space = (20_em).CP(scale);
 
   for (auto const& category : model_->categories())
   {
