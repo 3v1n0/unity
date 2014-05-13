@@ -52,16 +52,17 @@ const unsigned TICK_DURATION =  10 * 1000;
 struct MockShield : AbstractShield
 {
   MockShield()
-    : AbstractShield(nullptr, nullptr, 0, false)
+    : AbstractShield(nullptr, nullptr, nullptr, 0, false)
   {}
 
   MOCK_CONST_METHOD0(IsIndicatorOpen, bool());
   MOCK_METHOD0(CheckCapsLockPrompt, void());
+  MOCK_METHOD0(ActivatePanel, void());
 };
 
 struct ShieldFactoryMock : ShieldFactoryInterface
 {
-  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, int, bool) override
+  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, Accelerators::Ptr const&, int, bool) override
   {
     return nux::ObjectPtr<AbstractShield>(new MockShield());
   }

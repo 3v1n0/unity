@@ -113,6 +113,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       shields_.clear();
 
       upstart_wrapper_->Emit("desktop-unlock");
+      accelerator_controller_.reset();
       indicators_.reset();
     }
     else if (!prompt_activation_)
@@ -145,6 +146,12 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       }));
     }
   });
+}
+
+void Controller::ActivatePanel()
+{
+  if (primary_shield_.IsValid())
+    primary_shield_->ActivatePanel();
 }
 
 void Controller::ResetPostLockScreenSaver()
@@ -193,7 +200,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     if (i >= shields_size)
     {
-      shield = shield_factory_->CreateShield(session_manager_, indicators_, i, i == primary);
+      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), i, i == primary);
       is_new = true;
     }
 
@@ -396,6 +403,12 @@ void Controller::LockScreen()
 {
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
+
+  accelerator_controller_ = std::make_shared<AcceleratorController>();
+  auto activate_key = WindowManager::Default().activate_indicators_key();
+  auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
+  accelerator->activated.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));
+  accelerator_controller_->GetAccelerators()->Add(accelerator);
 
   ShowShields();
 }

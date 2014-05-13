@@ -1199,18 +1199,6 @@ bool Controller::AboutToShowDash(int was_tap, int when) const
 void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
   int tap_duration = when - pimpl->launcher_key_press_time_;
-  WindowManager& wm = WindowManager::Default();
-
-  if (tap_duration < options()->super_tap_duration && was_tap &&
-      !wm.IsTopWindowFullscreenOnMonitorWithMouse())
-  {
-    LOG_DEBUG(logger) << "Quick tap, sending activation request.";
-    pimpl->SendHomeActivationRequest();
-  }
-  else
-  {
-    LOG_DEBUG(logger) << "Tap too long: " << tap_duration;
-  }
 
   pimpl->sources_.Remove(local::LABELS_TIMEOUT);
   pimpl->sources_.Remove(local::KEYPRESS_TIMEOUT);

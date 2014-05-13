@@ -101,7 +101,7 @@ using util::Timer;
 DECLARE_LOGGER(logger, "unity.shell.compiz");
 namespace
 {
-UnityScreen* uScreen = 0;
+UnityScreen* uScreen = nullptr;
 
 void reset_glib_logging();
 void configure_logging();
@@ -143,6 +143,7 @@ const int FRAMES_TO_REDRAW_ON_RESUME = 10;
 const RawPixel SCALE_PADDING = 40_em;
 const RawPixel SCALE_SPACING = 20_em;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
+const std::string HUD_UNGRAB_WAIT = "hud-ungrab-wait";
 const std::string FIRST_RUN_STAMP = "first_run.stamp";
 const std::string LOCKED_STAMP = "locked.stamp";
 } // namespace local
@@ -167,6 +168,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
   , force_draw_countdown_(0)
+  , firstWindowAboveShell(nullptr)
+  , onboard_(nullptr)
   , grab_index_(0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -939,7 +942,8 @@ void UnityScreen::DrawPanelUnderDash()
 
 bool UnityScreen::forcePaintOnTop()
 {
-    return !allowWindowPaint ||
+  return !allowWindowPaint ||
+         lockscreen_controller_->IsLocked() ||
           ((switcher_controller_->Visible() ||
             WindowManager::Default().IsExpoActive())
            && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
@@ -1182,6 +1186,20 @@ bool UnityWindow::IsShaded ()
 bool UnityWindow::IsMinimized ()
 {
   return window->minimized ();
+}
+
+bool UnityWindow::CanBypassLockScreen() const
+{
+  if (window->type() == CompWindowTypePopupMenuMask &&
+      uScreen->lockscreen_controller_->HasOpenMenu())
+  {
+    return true;
+  }
+
+  if (window == uScreen->onboard_)
+    return true;
+
+  return false;
 }
 
 void UnityWindow::DoOverrideFrameRegion(CompRegion &region)
@@ -1703,6 +1721,8 @@ void UnityScreen::handleEvent(XEvent* event)
         wm.OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
         wm.OnScreenUngrabbed();
+      else if (!screen->grabbed() && event->xfocus.mode == NotifyWhileGrabbed)
+        wm.OnScreenGrabbed();
 
       if (_key_nav_mode_requested)
       {
@@ -2062,6 +2082,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
+  bool tap_handled = false;
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
 
@@ -2090,6 +2111,24 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     {
       QuicklistManager::Default()->Current()->Hide();
     }
+
+    if (!dash_controller_->IsVisible())
+    {
+      if (!adapter.IsTopWindowFullscreenOnMonitorWithMouse())
+      {
+        if (dash_controller_->ShowDash())
+        {
+          tap_handled = true;
+          ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                    g_variant_new("(sus)", "home.scope", dash::GOTO_DASH_URI, ""));
+        }
+      }
+    }
+    else
+    {
+      dash_controller_->HideDash();
+      tap_handled = true;
+    }
   }
 
   super_keypressed_ = false;
@@ -2103,7 +2142,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  return true;
+  return (was_tap && tap_handled) || !was_tap;
 }
 
 bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
@@ -2471,32 +2510,45 @@ bool UnityScreen::ShowHud()
 {
   if (switcher_controller_->Visible())
   {
-    LOG_ERROR(logger) << "this should never happen";
+    LOG_ERROR(logger) << "Switcher is visible when showing HUD: this should never happen";
     return false; // early exit if the switcher is open
-  }
-
-  if (PluginAdapter::Default().IsTopWindowFullscreenOnMonitorWithMouse())
-  {
-    return false;
   }
 
   if (hud_controller_->IsVisible())
   {
-    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    hud_controller_->HideHud();
   }
   else
   {
+    auto& wm = WindowManager::Default();
+
+    if (wm.IsTopWindowFullscreenOnMonitorWithMouse())
+      return false;
+
+    if (wm.IsScreenGrabbed())
+    {
+      hud_ungrab_slot_ = wm.screen_ungrabbed.connect([this] { ShowHud(); });
+
+      // Let's wait ungrab event for maximum a couple of seconds...
+      sources_.AddTimeoutSeconds(2, [this] {
+        hud_ungrab_slot_->disconnect();
+        return false;
+      }, local::HUD_UNGRAB_WAIT);
+
+      return false;
+    }
+
     // Handles closing KeyNav (Alt+F1) if the hud is about to show
     if (launcher_controller_->KeyNavIsActive())
       launcher_controller_->KeyNavTerminate(false);
 
-    // If an overlay is open, it must be the dash! Close it!
-    if (launcher_controller_->IsOverlayOpen())
+    if (dash_controller_->IsVisible())
       dash_controller_->HideDash();
 
     if (QuicklistManager::Default()->Current())
       QuicklistManager::Default()->Current()->Hide();
 
+    hud_ungrab_slot_->disconnect();
     hud_controller_->ShowHud();
   }
 
@@ -2799,9 +2851,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    * fully covers the shell on its output. It does not include regular windows
    * stacked above the shell like DnD icons or Onboard etc.
    */
-  if (G_UNLIKELY(is_nux_window_) &&
-     (!uScreen->lockscreen_controller_->IsLocked() ||
-      uScreen->lockscreen_controller_->opacity() != 1.0f))
+  if (G_UNLIKELY(is_nux_window_))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
@@ -2858,9 +2908,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   if (uScreen->lockscreen_controller_->IsLocked())
   {
-    if ((window->type() != CompWindowTypePopupMenuMask ||
-        !uScreen->lockscreen_controller_->HasOpenMenu()) &&
-        !window->minimized() && window->resName() != "onboard")
+    if (!window->minimized() && !CanBypassLockScreen())
     {
       // For some reasons PAINT_WINDOW_NO_CORE_INSTANCE_MASK doesn't work here
       // (well, it works too much, as it applies to menus too), so we need
@@ -2933,6 +2981,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 {
   auto window_state = window->state();
   auto window_type = window->type();
+  bool locked = uScreen->lockscreen_controller_->IsLocked();
 
   if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window_type == CompWindowTypeNormalMask)
   {
@@ -2949,9 +2998,13 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   }
 
   if (uScreen->doShellRepaint &&
-      !uScreen->forcePaintOnTop () &&
       window == uScreen->firstWindowAboveShell &&
+      !uScreen->forcePaintOnTop() &&
       !uScreen->fullscreenRegion.contains(window->geometry()))
+  {
+    uScreen->paintDisplay();
+  }
+  else if (locked && CanBypassLockScreen())
   {
     uScreen->paintDisplay();
   }
@@ -3017,7 +3070,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  if (uScreen->lockscreen_controller_->IsLocked())
+  if (locked)
     draw_panel_shadow = DrawPanelShadow::NO;
 
   if (draw_panel_shadow == DrawPanelShadow::BELOW_WINDOW)
@@ -3819,14 +3872,14 @@ void UnityScreen::SaveLockStamp(bool save)
 
 void UnityScreen::RaiseOSK()
 {
-  /* stack any windows named "onboard" above us */
-  for (CompWindow *w : screen->windows ())
+  /* stack the onboard window above us */
+  if (onboard_)
   {
-    if (w->resName() == "onboard")
+    if (nux::BaseWindow* dash = dash_controller_->window())
     {
-      Window xid = dash_controller_->window()->GetInputWindowId();
-      XSetTransientForHint (screen->dpy(), w->id(), xid);
-      w->raise ();
+      Window xid = dash->GetInputWindowId();
+      XSetTransientForHint(screen->dpy(), onboard_->id(), xid);
+      onboard_->raise();
     }
   }
 }
@@ -4073,23 +4126,10 @@ UnityWindow::UnityWindow(CompWindow* window)
   if (window->state() & CompWindowStateFullscreenMask)
     uScreen->fullscreen_windows_.push_back(window);
 
-  /* We might be starting up so make sure that
-   * we don't deref the dashcontroller that doesnt
-   * exist */
-  dash::Controller::Ptr dp = uScreen->dash_controller_;
-
-  if (dp)
+  if (window->type() == CompWindowTypeUtilMask && window->resName() == "onboard")
   {
-    nux::BaseWindow* w = dp->window ();
-
-    if (w)
-    {
-      if (window->resName() == "onboard")
-      {
-        Window xid = dp->window()->GetInputWindowId();
-        XSetTransientForHint (screen->dpy(), window->id(), xid);
-      }
-    }
+    uScreen->onboard_ = window;
+    uScreen->RaiseOSK();
   }
 }
 
@@ -4469,6 +4509,9 @@ UnityWindow::~UnityWindow()
 
   if (window->state () & CompWindowStateFullscreenMask)
     uScreen->fullscreen_windows_.remove(window);
+
+  if (window == uScreen->onboard_)
+    uScreen->onboard_ = nullptr;
 
   uScreen->fake_decorated_windows_.erase(this);
   PluginAdapter::Default().OnWindowClosed(window);

@@ -424,7 +424,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
 bool IsBlacklistedChar(gunichar uni_c)
 {
   if ((uni_c >= 0x1000 && uni_c <= 0x109F) ||
-      (uni_c >= 0xAA60 && uni_c >= 0xAA7B))
+      (uni_c >= 0xAA60 && uni_c <= 0xAA7B))
   {
     return true;
   }
