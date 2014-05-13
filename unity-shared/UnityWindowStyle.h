@@ -63,6 +63,9 @@ private:
   void LoadAllTextureInScale(double scale);
   nux::BaseTexture* LoadTexture(double scale, const char* const texture_name) const;
   RawPixel GetDefaultMaxTextureSize(const char* const texture_name) const;
+ 
+  void OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors);
+  void CleanUpUnusedTextures();
 
   typedef std::array<BaseTexturePtr, size_t(WindowTextureType::Size)> UnityWindowTextures;
   std::unordered_map<double, UnityWindowTextures> unity_window_textures_;
