@@ -41,7 +41,7 @@ namespace
   const RawPixel INTER_SPACE_SHORTKEY_DESCRIPTION = 10_em;
   const RawPixel SHORTKEY_COLUMN_WIDTH = 150_em;
   const RawPixel DESCRIPTION_COLUMN_WIDTH = 265_em;
-  const RawPixel LINE_SPACING = 5_em;
+  const RawPixel LINE_SPACING = 3_em;
   const RawPixel MAIN_HORIZONTAL_PADDING = 30_em;
   const RawPixel MAIN_VERTICAL_PADDING = 18_em;
   const RawPixel MAIN_CHILDREN_SPACE = 20_em;
