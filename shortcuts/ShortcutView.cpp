@@ -40,9 +40,9 @@ namespace
   const unsigned SHORTKEY_ENTRY_FONT_SIZE = 9;
   const RawPixel INTER_SPACE_SHORTKEY_DESCRIPTION = 10_em;
   const RawPixel SHORTKEY_COLUMN_DEFAULT_WIDTH = 150_em;
-  const RawPixel SHORTKEY_COLUMN_MAX_WIDTH = 300_em;
+  const RawPixel SHORTKEY_COLUMN_MAX_WIDTH = 350_em;
   const RawPixel DESCRIPTION_COLUMN_DEFAULT_WIDTH = 265_em;
-  const RawPixel DESCRIPTION_COLUMN_MAX_WIDTH = 450_em;
+  const RawPixel DESCRIPTION_COLUMN_MAX_WIDTH = 500_em;
   const RawPixel LINE_SPACING = 3_em;
   const RawPixel MAIN_HORIZONTAL_PADDING = 30_em;
   const RawPixel MAIN_VERTICAL_PADDING = 18_em;
