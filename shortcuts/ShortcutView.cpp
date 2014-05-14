@@ -76,7 +76,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View()
   : ui::UnityWindowView()
-  , queue_render_(false)
 {
   auto main_layout = new nux::VLayout();
   main_layout->SetPadding(MAIN_HORIZONTAL_PADDING.CP(scale), MAIN_VERTICAL_PADDING.CP(scale));
@@ -161,8 +160,15 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint, StaticCa
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION.CP(scale));
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  view->key_changed_conn_ = hint->shortkey.changed.connect([this] (std::string const&) {
-    queue_render_ = true;
+  view->key_changed_conn_ = hint->shortkey.changed.connect([this, view, shortkey_view] (std::string const& key) {
+    std::string escaped = glib::String(g_markup_escape_text(key.c_str(), -1)).Str();
+
+    if (!escaped.empty())
+      escaped = "<b>"+escaped+"</b>";
+
+    shortkey_view->SetText(escaped);
+    shortkey_view->SetVisible(!escaped.empty());
+    view->SetVisible(shortkey_view->IsVisible());
     QueueRelayout();
     QueueDraw();
   });
@@ -204,19 +210,44 @@ nux::Geometry View::GetBackgroundGeometry()
 
 void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip)
 {
-  if (queue_render_)
-    RenderColumns();
-
   view_layout_->ProcessDraw(GfxContext, force_draw);
+}
+
+void View::PreLayoutManagement()
+{
+  UnityWindowView::PreLayoutManagement();
+
+  for (auto const& column : shortkeys_)
+  {
+    int min_width = SHORTKEY_COLUMN_DEFAULT_WIDTH.CP(scale);
+
+    for (auto* shortkey : column)
+      min_width = std::min(std::max(min_width, shortkey->GetTextExtents().width), shortkey->GetMaximumWidth());
+
+    for (auto* shortkey : column)
+      shortkey->SetMinimumWidth(min_width);
+  }
+
+  for (auto const& column : descriptions_)
+  {
+    int min_width = DESCRIPTION_COLUMN_DEFAULT_WIDTH.CP(scale);
+
+    for (auto* description : column)
+      min_width = std::min(std::max(min_width, description->GetTextExtents().width), description->GetMaximumWidth());
+
+    for (auto* description : column)
+      description->SetMinimumWidth(min_width);
+  }
 }
 
 void View::RenderColumns()
 {
   columns_layout_->Clear();
+  shortkeys_.clear();
+  descriptions_.clear();
 
   if (!model_)
   {
-    queue_render_ = false;
     ComputeContentSize();
     QueueRelayout();
     return;
@@ -227,37 +258,14 @@ void View::RenderColumns()
   auto const& columns = columns_layout_->GetChildren();
   auto const& categories = model_->categories();
   const int categories_per_column = model_->categories_per_column();
+  const int columns_number = categories.size() / categories_per_column + 1;
   const int top_space = (23_em).CP(scale);
   const int bottom_space = (20_em).CP(scale);
-
-  const int columns_number = categories.size() / categories_per_column + 1;
   const int max_shortkeys_width = SHORTKEY_COLUMN_MAX_WIDTH.CP(scale);
   const int max_descriptions_width = DESCRIPTION_COLUMN_MAX_WIDTH.CP(scale);
-  std::vector<int> shortkeys_width(columns_number, SHORTKEY_COLUMN_DEFAULT_WIDTH.CP(scale));
-  std::vector<int> descriptions_width(columns_number, DESCRIPTION_COLUMN_DEFAULT_WIDTH.CP(scale));
-  std::unordered_map<AbstractHint::Ptr, StaticCairoText*> shortkeys;
-  std::unordered_map<AbstractHint::Ptr, StaticCairoText*> descriptions;
 
-  for (auto const& category : categories)
-  {
-    column_idx = i/categories_per_column;
-
-    for (auto const& hint : model_->hints().at(category))
-    {
-      auto* shortkey = CreateShortcutTextView(hint->shortkey(), true);
-      shortkeys_width[column_idx] = std::min(std::max(shortkeys_width[column_idx], shortkey->GetTextExtents().width), max_shortkeys_width);
-      shortkeys.insert({hint, shortkey});
-
-      auto* description = CreateShortcutTextView(hint->description(), false);
-      descriptions_width[column_idx] = std::min(std::max(descriptions_width[column_idx], description->GetTextExtents().width), max_descriptions_width);
-      descriptions.insert({hint, description});
-    }
-
-    ++i;
-  }
-
-  i = 0;
-  column_idx = 0;
+  shortkeys_.resize(columns_number);
+  descriptions_.resize(columns_number);
 
   for (auto const& category : categories)
   {
@@ -270,13 +278,13 @@ void View::RenderColumns()
 
     for (auto const& hint : model_->hints().at(category))
     {
-      StaticCairoText* shortkey = shortkeys[hint];
-      shortkey->SetMinimumWidth(shortkeys_width[column_idx]);
-      shortkey->SetMaximumWidth(shortkeys_width[column_idx]);
+      StaticCairoText* shortkey = CreateShortcutTextView(hint->shortkey(), true);
+      shortkey->SetMaximumWidth(max_shortkeys_width);
+      shortkeys_[column_idx].push_back(shortkey);
 
-      StaticCairoText* description = descriptions[hint];
-      description->SetMinimumWidth(descriptions_width[column_idx]);
-      description->SetMaximumWidth(descriptions_width[column_idx]);
+      StaticCairoText* description = CreateShortcutTextView(hint->description(), false);
+      description->SetMaximumWidth(max_descriptions_width);
+      descriptions_[column_idx].push_back(description);
 
       nux::View* view = CreateShortKeyEntryView(hint, shortkey, description);
       intermediate_layout->AddView(view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
@@ -311,7 +319,6 @@ void View::RenderColumns()
     ++i;
   }
 
-  queue_render_ = false;
   ComputeContentSize();
   QueueRelayout();
 }

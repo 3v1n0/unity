@@ -49,8 +49,9 @@ public:
 
 protected:
   // Protected methods
-  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
-  nux::Geometry GetBackgroundGeometry();
+  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip) override;
+  nux::Geometry GetBackgroundGeometry() override;
+  void PreLayoutManagement() override;
 
   // Introspectable methods
   std::string GetName() const;
@@ -67,7 +68,8 @@ private:
   // Private members
   Model::Ptr model_;
   nux::HLayout* columns_layout_;
-  bool queue_render_;
+  std::vector<std::vector<StaticCairoText*>> shortkeys_;
+  std::vector<std::vector<StaticCairoText*>> descriptions_;
 
   friend class TestShortcutView;
 };
