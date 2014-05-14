@@ -39,8 +39,10 @@ namespace
   const unsigned SECTION_NAME_FONT_SIZE = 12;
   const unsigned SHORTKEY_ENTRY_FONT_SIZE = 9;
   const RawPixel INTER_SPACE_SHORTKEY_DESCRIPTION = 10_em;
-  const RawPixel SHORTKEY_COLUMN_WIDTH = 150_em;
-  const RawPixel DESCRIPTION_COLUMN_WIDTH = 265_em;
+  const RawPixel SHORTKEY_COLUMN_DEFAULT_WIDTH = 150_em;
+  const RawPixel SHORTKEY_COLUMN_MAX_WIDTH = 300_em;
+  const RawPixel DESCRIPTION_COLUMN_DEFAULT_WIDTH = 265_em;
+  const RawPixel DESCRIPTION_COLUMN_MAX_WIDTH = 450_em;
   const RawPixel LINE_SPACING = 3_em;
   const RawPixel MAIN_HORIZONTAL_PADDING = 30_em;
   const RawPixel MAIN_VERTICAL_PADDING = 18_em;
@@ -229,11 +231,13 @@ void View::RenderColumns()
   const int top_space = (23_em).CP(scale);
   const int bottom_space = (20_em).CP(scale);
 
-  int columns_number = categories.size() / categories_per_column + 1;
-  std::vector<int> max_shortkeys_width(columns_number, SHORTKEY_COLUMN_WIDTH.CP(scale));
-  std::vector<int> max_descriptions_width(columns_number, DESCRIPTION_COLUMN_WIDTH.CP(scale));
-  std::map<AbstractHint::Ptr, StaticCairoText*> shortkeys;
-  std::map<AbstractHint::Ptr, StaticCairoText*> descriptions;
+  const int columns_number = categories.size() / categories_per_column + 1;
+  const int max_shortkeys_width = SHORTKEY_COLUMN_MAX_WIDTH.CP(scale);
+  const int max_descriptions_width = DESCRIPTION_COLUMN_MAX_WIDTH.CP(scale);
+  std::vector<int> shortkeys_width(columns_number, SHORTKEY_COLUMN_DEFAULT_WIDTH.CP(scale));
+  std::vector<int> descriptions_width(columns_number, DESCRIPTION_COLUMN_DEFAULT_WIDTH.CP(scale));
+  std::unordered_map<AbstractHint::Ptr, StaticCairoText*> shortkeys;
+  std::unordered_map<AbstractHint::Ptr, StaticCairoText*> descriptions;
 
   for (auto const& category : categories)
   {
@@ -242,11 +246,11 @@ void View::RenderColumns()
     for (auto const& hint : model_->hints().at(category))
     {
       auto* shortkey = CreateShortcutTextView(hint->shortkey(), true);
-      max_shortkeys_width[column_idx] = std::max(max_shortkeys_width[column_idx], shortkey->GetTextExtents().width);
+      shortkeys_width[column_idx] = std::min(std::max(shortkeys_width[column_idx], shortkey->GetTextExtents().width), max_shortkeys_width);
       shortkeys.insert({hint, shortkey});
 
       auto* description = CreateShortcutTextView(hint->description(), false);
-      max_descriptions_width[column_idx] = std::max(max_descriptions_width[column_idx], description->GetTextExtents().width);
+      descriptions_width[column_idx] = std::min(std::max(descriptions_width[column_idx], description->GetTextExtents().width), max_descriptions_width);
       descriptions.insert({hint, description});
     }
 
@@ -268,12 +272,12 @@ void View::RenderColumns()
     for (auto const& hint : model_->hints().at(category))
     {
       StaticCairoText* shortkey = shortkeys[hint];
-      shortkey->SetMinimumWidth(max_shortkeys_width[column_idx]);
-      shortkey->SetMaximumWidth(max_shortkeys_width[column_idx]);
+      shortkey->SetMinimumWidth(shortkeys_width[column_idx]);
+      shortkey->SetMaximumWidth(shortkeys_width[column_idx]);
 
       StaticCairoText* description = descriptions[hint];
-      description->SetMinimumWidth(max_descriptions_width[column_idx]);
-      description->SetMaximumWidth(max_descriptions_width[column_idx]);
+      description->SetMinimumWidth(descriptions_width[column_idx]);
+      description->SetMaximumWidth(descriptions_width[column_idx]);
 
       nux::View* view = CreateShortKeyEntryView(hint, shortkey, description);
       intermediate_layout->AddView(view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
