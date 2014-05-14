@@ -184,7 +184,6 @@ StaticCairoText* View::CreateShortcutTextView(std::string const& text, bool bold
   text_view->SetFont(FONT_NAME+" "+std::to_string(SHORTKEY_ENTRY_FONT_SIZE));
   text_view->SetLines(-1);
   text_view->SetScale(scale);
-
   text_view->SetVisible(!escaped.empty());
 
   return text_view;
