@@ -26,6 +26,8 @@
 #include "UScreen.h"
 #include "config.h"
 
+#include <unordered_set>
+
 namespace unity
 {
 namespace ui
@@ -106,21 +108,22 @@ void UnityWindowStyle::CleanUpUnusedTextures()
 {
   unsigned monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
   auto& settings = Settings::Instance();
-  std::vector<double> used_scales;
-  std::vector<double> clean_up_scales;
+  std::unordered_set<double> used_scales;
 
   for (unsigned i = 0; i < monitors; ++i)
-    used_scales.push_back(settings.Instance().em(i)->DPIScale());
+    used_scales.insert(settings.em(i)->DPIScale());
 
-  for (auto& text_list : unity_window_textures_)
+  for (auto it = unity_window_textures_.begin(); it != unity_window_textures_.end();)
   {
-    auto it = std::find(used_scales.begin(), used_scales.end(), text_list.first);
-    if (it == used_scales.end())
-      clean_up_scales.push_back(text_list.first);
+    if (used_scales.find(it->first) == used_scales.end())
+    {
+      it = unity_window_textures_.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
   }
-
-  for (auto const& removed_scale : clean_up_scales)
-    unity_window_textures_.erase(removed_scale);
 }
 
 UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
