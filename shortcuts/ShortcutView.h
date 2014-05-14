@@ -29,6 +29,8 @@
 
 namespace unity
 {
+class StaticCairoText;
+
 namespace shortcut
 {
 
@@ -56,7 +58,8 @@ protected:
 private:
   // Private methods
   nux::LinearLayout* CreateSectionLayout(std::string const& section_name);
-  nux::View* CreateShortKeyEntryView(AbstractHint::Ptr const& hint);
+  nux::View* CreateShortKeyEntryView(AbstractHint::Ptr const&, StaticCairoText* shortkey, StaticCairoText* description);
+  StaticCairoText* CreateShortcutTextView(std::string const& text, bool bold);
   nux::LinearLayout* CreateIntermediateLayout();
 
   void RenderColumns();
@@ -64,6 +67,7 @@ private:
   // Private members
   Model::Ptr model_;
   nux::HLayout* columns_layout_;
+  bool queue_render_;
 
   friend class TestShortcutView;
 };

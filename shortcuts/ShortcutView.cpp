@@ -39,8 +39,8 @@ namespace
   const unsigned SECTION_NAME_FONT_SIZE = 12;
   const unsigned SHORTKEY_ENTRY_FONT_SIZE = 9;
   const RawPixel INTER_SPACE_SHORTKEY_DESCRIPTION = 10_em;
-  const RawPixel SHORTKEY_COLUMN_WIDTH = 200_em;
-  const RawPixel DESCRIPTION_COLUMN_WIDTH = 300_em;
+  const RawPixel SHORTKEY_COLUMN_WIDTH = 150_em;
+  const RawPixel DESCRIPTION_COLUMN_WIDTH = 265_em;
   const RawPixel LINE_SPACING = 5_em;
   const RawPixel MAIN_HORIZONTAL_PADDING = 30_em;
   const RawPixel MAIN_VERTICAL_PADDING = 18_em;
@@ -74,6 +74,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View()
   : ui::UnityWindowView()
+  , queue_render_(false)
 {
   auto main_layout = new nux::VLayout();
   main_layout->SetPadding(MAIN_HORIZONTAL_PADDING.CP(scale), MAIN_VERTICAL_PADDING.CP(scale));
@@ -137,7 +138,7 @@ nux::LinearLayout* View::CreateSectionLayout(std::string const& section_name)
   return layout;
 }
 
-nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
+nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint, StaticCairoText* shortkey_view, StaticCairoText* description_view)
 {
   auto* view = new SectionView(NUX_TRACKER_LOCATION);
 
@@ -147,52 +148,44 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
   nux::HLayout* shortkey_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   nux::HLayout* description_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  glib::String shortkey(g_markup_escape_text(hint->shortkey().c_str(), -1));
-
-  std::string skey = "<b>"+shortkey.Str()+"</b>";
-  auto* shortkey_view = new StaticCairoText(skey, NUX_TRACKER_LOCATION);
-  shortkey_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
-  shortkey_view->SetFont(FONT_NAME+" "+std::to_string(SHORTKEY_ENTRY_FONT_SIZE));
-  shortkey_view->SetLines(-1);
-  shortkey_view->SetScale(scale);
-  shortkey_view->SetMinimumWidth(SHORTKEY_COLUMN_WIDTH.CP(scale));
-  shortkey_view->SetMaximumWidth(SHORTKEY_COLUMN_WIDTH.CP(scale));
-
-  glib::String es_desc(g_markup_escape_text(hint->description().c_str(), -1));
-
-  auto* description_view = new StaticCairoText(es_desc.Str(), NUX_TRACKER_LOCATION);
-  description_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
-  description_view->SetFont(FONT_NAME+" "+std::to_string(SHORTKEY_ENTRY_FONT_SIZE));
-  description_view->SetLines(-1);
-  description_view->SetScale(scale);
-  description_view->SetMinimumWidth(DESCRIPTION_COLUMN_WIDTH.CP(scale));
-  description_view->SetMaximumWidth(DESCRIPTION_COLUMN_WIDTH.CP(scale));
-
   shortkey_layout->AddView(shortkey_view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   shortkey_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
-  shortkey_layout->SetMinimumWidth(SHORTKEY_COLUMN_WIDTH.CP(scale));
-  shortkey_layout->SetMaximumWidth(SHORTKEY_COLUMN_WIDTH.CP(scale));
 
   description_layout->AddView(description_view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
-  description_layout->SetMinimumWidth(DESCRIPTION_COLUMN_WIDTH.CP(scale));
-  description_layout->SetMaximumWidth(DESCRIPTION_COLUMN_WIDTH.CP(scale));
 
   layout->AddLayout(shortkey_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddLayout(description_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION.CP(scale));
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  view->key_changed_conn_ = hint->shortkey.changed.connect([this, view, shortkey_view] (std::string const& new_key) {
-    bool enabled = !new_key.empty();
-    shortkey_view->SetText(enabled ? "<b>"+new_key+"</b>" : "");
-    view->SetVisible(enabled);
+  view->key_changed_conn_ = hint->shortkey.changed.connect([this] (std::string const&) {
+    queue_render_ = true;
     QueueRelayout();
+    QueueDraw();
   });
 
-  view->SetVisible(!shortkey.Str().empty());
+  view->SetVisible(shortkey_view->IsVisible());
 
   return view;
+}
+
+StaticCairoText* View::CreateShortcutTextView(std::string const& text, bool bold)
+{
+  std::string escaped = glib::String(g_markup_escape_text(text.c_str(), -1)).Str();
+
+  if (bold && !text.empty())
+    escaped = "<b>"+escaped+"</b>";
+
+  auto* text_view = new StaticCairoText(escaped, NUX_TRACKER_LOCATION);
+  text_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
+  text_view->SetFont(FONT_NAME+" "+std::to_string(SHORTKEY_ENTRY_FONT_SIZE));
+  text_view->SetLines(-1);
+  text_view->SetScale(scale);
+
+  text_view->SetVisible(!escaped.empty());
+
+  return text_view;
 }
 
 nux::LinearLayout* View::CreateIntermediateLayout()
@@ -210,6 +203,9 @@ nux::Geometry View::GetBackgroundGeometry()
 
 void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip)
 {
+  if (queue_render_)
+    RenderColumns();
+
   view_layout_->ProcessDraw(GfxContext, force_draw);
 }
 
@@ -219,6 +215,7 @@ void View::RenderColumns()
 
   if (!model_)
   {
+    queue_render_ = false;
     ComputeContentSize();
     QueueRelayout();
     return;
@@ -227,13 +224,42 @@ void View::RenderColumns()
   int i = 0;
   int column_idx = 0;
   auto const& columns = columns_layout_->GetChildren();
+  auto const& categories = model_->categories();
+  const int categories_per_column = model_->categories_per_column();
   const int top_space = (23_em).CP(scale);
   const int bottom_space = (20_em).CP(scale);
 
-  for (auto const& category : model_->categories())
+  int columns_number = categories.size() / categories_per_column + 1;
+  std::vector<int> max_shortkeys_width(columns_number, SHORTKEY_COLUMN_WIDTH.CP(scale));
+  std::vector<int> max_descriptions_width(columns_number, DESCRIPTION_COLUMN_WIDTH.CP(scale));
+  std::map<AbstractHint::Ptr, StaticCairoText*> shortkeys;
+  std::map<AbstractHint::Ptr, StaticCairoText*> descriptions;
+
+  for (auto const& category : categories)
+  {
+    column_idx = i/categories_per_column;
+
+    for (auto const& hint : model_->hints().at(category))
+    {
+      auto* shortkey = CreateShortcutTextView(hint->shortkey(), true);
+      max_shortkeys_width[column_idx] = std::max(max_shortkeys_width[column_idx], shortkey->GetTextExtents().width);
+      shortkeys.insert({hint, shortkey});
+
+      auto* description = CreateShortcutTextView(hint->description(), false);
+      max_descriptions_width[column_idx] = std::max(max_descriptions_width[column_idx], description->GetTextExtents().width);
+      descriptions.insert({hint, description});
+    }
+
+    ++i;
+  }
+
+  i = 0;
+  column_idx = 0;
+
+  for (auto const& category : categories)
   {
     // Computing column index based on current index
-    column_idx = i/model_->categories_per_column();
+    column_idx = i/categories_per_column;
 
     nux::LinearLayout* section_layout = CreateSectionLayout(category);
     nux::LinearLayout* intermediate_layout = CreateIntermediateLayout();
@@ -241,13 +267,21 @@ void View::RenderColumns()
 
     for (auto const& hint : model_->hints().at(category))
     {
-      nux::View* view = CreateShortKeyEntryView(hint);
+      StaticCairoText* shortkey = shortkeys[hint];
+      shortkey->SetMinimumWidth(max_shortkeys_width[column_idx]);
+      shortkey->SetMaximumWidth(max_shortkeys_width[column_idx]);
+
+      StaticCairoText* description = descriptions[hint];
+      description->SetMinimumWidth(max_descriptions_width[column_idx]);
+      description->SetMaximumWidth(max_descriptions_width[column_idx]);
+
+      nux::View* view = CreateShortKeyEntryView(hint, shortkey, description);
       intermediate_layout->AddView(view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
     }
 
     section_layout->AddLayout(intermediate_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-    if ((i + 1) % model_->categories_per_column() != 0 && category != model_->categories().back())
+    if ((i + 1) % categories_per_column != 0 && category != categories.back())
     {
       // Add a line with some padding after and before each category that is not
       // the last of the column.
@@ -271,9 +305,10 @@ void View::RenderColumns()
 
     column->AddView(section_layout, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
-    i++;
+    ++i;
   }
 
+  queue_render_ = false;
   ComputeContentSize();
   QueueRelayout();
 }
