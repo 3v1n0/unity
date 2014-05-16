@@ -608,6 +608,9 @@ std::string StandaloneWindowManager::GetStringProperty(Window, Atom) const
   return std::string();
 }
 
+void StandaloneWindowManager::SetCardinalProperty(Window, Atom, std::vector<long> const&)
+{}
+
 std::vector<long> StandaloneWindowManager::GetCardinalProperty(Window, Atom) const
 {
   return std::vector<long>();
