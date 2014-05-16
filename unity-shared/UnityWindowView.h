@@ -23,6 +23,7 @@
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/IconTexture.h"
+
 #include "Introspectable.h"
 #include "UnityWindowStyle.h"
 #include <sigc++/sigc++.h>
@@ -41,6 +42,8 @@ public:
   nux::Property<nux::Color> background_color;
   nux::Property<UnityWindowStyle::Ptr> style;
   nux::Property<bool> closable;
+  nux::Property<int> monitor;
+  nux::Property<double> scale;
 
   UnityWindowView(NUX_FILE_LINE_PROTO);
   virtual ~UnityWindowView();
@@ -64,6 +67,8 @@ protected:
   virtual nux::Geometry GetBlurredBackgroundGeometry();
   void SetBackgroundHelperGeometryGetter(BackgroundEffectHelper::GeometryGetterFunc const&);
 
+  void ReloadCloseButtonTexture();
+
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
@@ -71,6 +76,7 @@ protected:
 private:
   friend class TestUnityWindowView;
 
+  void OnDPIChanged();
   void OnClosableChanged(bool closable);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 

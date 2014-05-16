@@ -32,6 +32,8 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , style(UnityWindowStyle::Get())
   , closable(false)
+  , monitor(0)
+  , scale(Settings::Instance().em()->DPIScale())
   , internal_layout_(nullptr)
   , bg_helper_(this)
 {
@@ -47,6 +49,8 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
 
   live_background = false;
 
+  monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged)));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged));
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
   background_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
 }
@@ -58,6 +62,17 @@ UnityWindowView::~UnityWindowView()
 
   if (bounding_area_)
     bounding_area_->UnParentObject();
+}
+
+void UnityWindowView::OnDPIChanged()
+{
+  scale = Settings::Instance().em(monitor())->DPIScale();
+
+  if (internal_layout_)
+  {
+    int offset = style()->GetInternalOffset(scale);
+    view_layout_->SetPadding(offset, offset);
+  }
 }
 
 void UnityWindowView::SetBackgroundHelperGeometryGetter(BackgroundEffectHelper::GeometryGetterFunc const& func)
@@ -109,6 +124,11 @@ nux::Area* UnityWindowView::FindKeyFocusArea(unsigned etype, unsigned long key_c
   return View::FindKeyFocusArea(etype, key_code, modifiers);
 }
 
+void UnityWindowView::ReloadCloseButtonTexture()
+{
+  OnClosableChanged(closable);
+}
+
 void UnityWindowView::OnClosableChanged(bool closable)
 {
   if (!closable)
@@ -117,34 +137,38 @@ void UnityWindowView::OnClosableChanged(bool closable)
     return;
   }
 
-  auto const& texture = style()->GetCloseIcon();
-  int padding = style()->GetCloseButtonPadding();
+  auto const& texture = style()->GetTexture(scale, WindowTextureType::CLOSE_ICON);
+  int padding = style()->GetCloseButtonPadding(scale);
+
   close_button_ = new IconTexture(texture);
   close_button_->SetBaseXY(padding, padding);
   close_button_->SetParentObject(this);
 
   close_button_->mouse_enter.connect([this](int, int, unsigned long, unsigned long) {
     if (close_button_->IsMouseOwner())
-      close_button_->SetTexture(style()->GetCloseIconPressed());
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_PRESSED));
     else
-      close_button_->SetTexture(style()->GetCloseIconHighligted());
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
   });
 
   close_button_->mouse_leave.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetCloseIcon());
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
   });
 
   close_button_->mouse_down.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetCloseIconPressed());
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_PRESSED));
   });
 
   close_button_->mouse_up.connect([this](int, int, unsigned long, unsigned long) {
     bool inside = close_button_->IsMouseInside();
-    close_button_->SetTexture(inside ? style()->GetCloseIconHighligted() : style()->GetCloseIcon());
+    if (inside)
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
+    else
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
   });
 
   close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetCloseIcon());
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
     request_close.emit();
   });
 
@@ -155,7 +179,7 @@ bool UnityWindowView::SetLayout(nux::Layout* layout)
 {
   if (layout && layout->IsLayout())
   {
-    int offset = style()->GetInternalOffset();
+    int offset = style()->GetInternalOffset(scale);
 
     // We wrap the internal layout adding some padding, so that inherited classes
     // can ignore the offsets we define here.
@@ -180,7 +204,8 @@ nux::Layout* UnityWindowView::GetLayout()
 
 nux::Geometry UnityWindowView::GetInternalBackground()
 {
-  int offset = style()->GetInternalOffset();
+  int offset = style()->GetInternalOffset(scale);
+
   return GetBackgroundGeometry().GetExpand(-offset, -offset);
 }
 
@@ -330,7 +355,9 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
 {
-  int border = style()->GetBorderSize();
+  int border = style()->GetBorderSize(scale);
+
+  auto background_corner_textrue = style()->GetTexture(scale, WindowTextureType::BACKGROUND_CORNER)->GetDeviceTexture();
 
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -344,7 +371,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.u1 = border;
   texxform.v1 = border;
   GfxContext.QRP_1Tex (geo.x, geo.y,
-                       border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
+                       border, border, background_corner_textrue, texxform, nux::color::White);
 
   // Draw TOP-RIGHT CORNER
   texxform.u0 = 0;
@@ -354,7 +381,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_u_coord = true;
   texxform.flip_v_coord = false;
   GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y,
-                       border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
+                       border, border, background_corner_textrue, texxform, nux::color::White);
 
   // Draw BOTTOM-LEFT CORNER
   texxform.u0 = 0;
@@ -364,7 +391,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_u_coord = false;
   texxform.flip_v_coord = true;
   GfxContext.QRP_1Tex (geo.x, geo.y + geo.height - border,
-                       border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
+                       border, border, background_corner_textrue, texxform, nux::color::White);
 
   // Draw BOTTOM-RIGHT CORNER
   texxform.u0 = 0;
@@ -374,10 +401,11 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_u_coord = true;
   texxform.flip_v_coord = true;
   GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + geo.height - border,
-                       border, border, style()->GetBackgroundCorner()->GetDeviceTexture(), texxform, nux::color::White);
+                       border, border, background_corner_textrue, texxform, nux::color::White);
 
-  int top_width = style()->GetBackgroundTop()->GetWidth();
-  int top_height = style()->GetBackgroundTop()->GetHeight();
+  auto background_top = style()->GetTexture(scale, WindowTextureType::BACKGROUND_TOP);
+  int top_width  = background_top->GetWidth();
+  int top_height = background_top->GetHeight();
 
   // Draw TOP BORDER
   texxform.u0 = 0;
@@ -386,7 +414,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.v1 = top_height;
   texxform.flip_u_coord = false;
   texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex (geo.x + border, geo.y, geo.width - border - border, border, style()->GetBackgroundTop()->GetDeviceTexture(), texxform, nux::color::White);
+  GfxContext.QRP_1Tex (geo.x + border, geo.y, geo.width - border - border, border, background_top->GetDeviceTexture(), texxform, nux::color::White);
 
   // Draw BOTTOM BORDER
   texxform.u0 = 0;
@@ -395,11 +423,11 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.v1 = top_height;
   texxform.flip_u_coord = false;
   texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex (geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, style()->GetBackgroundTop()->GetDeviceTexture(), texxform, nux::color::White);
+  GfxContext.QRP_1Tex (geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, background_top->GetDeviceTexture(), texxform, nux::color::White);
 
-
-  int left_width = style()->GetBackgroundLeft()->GetWidth();
-  int left_height = style()->GetBackgroundLeft()->GetHeight();
+  auto background_left = style()->GetTexture(scale, WindowTextureType::BACKGROUND_LEFT);
+  int left_width  = background_left->GetWidth();
+  int left_height = background_left->GetHeight();
 
   // Draw LEFT BORDER
   texxform.u0 = 0;
@@ -408,7 +436,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.v1 = left_height;
   texxform.flip_u_coord = false;
   texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex (geo.x, geo.y + border, border, geo.height - border - border, style()->GetBackgroundLeft()->GetDeviceTexture(), texxform, nux::color::White);
+  GfxContext.QRP_1Tex (geo.x, geo.y + border, border, geo.height - border - border, background_left->GetDeviceTexture(), texxform, nux::color::White);
 
   // Draw RIGHT BORDER
   texxform.u0 = 0;
@@ -417,7 +445,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.v1 = left_height;
   texxform.flip_u_coord = true;
   texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + border, border, geo.height - border - border, style()->GetBackgroundLeft()->GetDeviceTexture(), texxform, nux::color::White);
+  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + border, border, geo.height - border - border, background_left->GetDeviceTexture(), texxform, nux::color::White);
 
   GfxContext.GetRenderStates().SetBlend(false);
 }
