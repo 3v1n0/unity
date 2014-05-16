@@ -115,9 +115,18 @@ void View::UpdateViewSize()
   ReloadCloseButtonTexture();
 
   buttons_layout_->SetSpaceBetweenChildren(style::BUTTONS_SPACE.CP(scale()));
+  auto const& buttons = buttons_layout_->GetChildren();
 
-  for (auto* area : buttons_layout_->GetChildren())
+  for (auto* area : buttons)
     static_cast<Button*>(area)->scale = scale();
+
+  if (buttons.size() == 1)
+  {
+    auto* button = buttons.front();
+    button->ComputeContentSize();
+    int padding = button->GetWidth()/2 + style::MAIN_SPACE.CP(scale())/2;
+    buttons_layout_->SetLeftAndRightPadding(padding, padding);
+  }
 }
 
 void View::UpdateText()
@@ -202,6 +211,7 @@ void View::PopulateButtons()
 {
   debug::Introspectable::RemoveAllChildren();
   buttons_layout_->Clear();
+  buttons_layout_->SetLeftAndRightPadding(0, 0);
   key_focus_area_ = this;
 
   if (mode() == Mode::LOGOUT)
