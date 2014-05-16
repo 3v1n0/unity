@@ -70,11 +70,11 @@ void Controller::OnModelUpdated(Model::Ptr const& model)
   if (!view_)
     return;
 
+  model->Fill();
   view_->SetModel(model);
 
   if (Visible())
   {
-    model->Fill();
     auto const& offset = GetOffsetPerMonitor(view_->monitor());
 
     if (offset.x < 0 || offset.y < 0)
