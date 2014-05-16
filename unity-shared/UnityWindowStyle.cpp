@@ -21,8 +21,12 @@
 
 #include <NuxCore/Logger.h>
 
+#include "UnitySettings.h"
 #include "UnityWindowStyle.h"
+#include "UScreen.h"
 #include "config.h"
+
+#include <unordered_set>
 
 namespace unity
 {
@@ -38,14 +42,31 @@ namespace
   const char* const DIALOG_HIGHLIGHT = PKGDATADIR"/dialog_close_highlight.png";
   const char* const DIALOG_PRESS     = PKGDATADIR"/dialog_close_press.png";
 
-  double const DEFAULT_SCALE = 1.0;
+
+  RawPixel const INTERNAL_OFFSET = 20_em;
+  RawPixel const BORDER_SIZE     = 30_em;
+  RawPixel const CLOSE_PADDING   =  3_em;
 }
 
 DECLARE_LOGGER(logger, "unity.ui.unity.window.style");
 
+
 UnityWindowStyle::UnityWindowStyle()
 {
-  LoadAllTextureInScale(DEFAULT_SCALE);
+  unsigned monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+  auto& settings = Settings::Instance();
+
+  // Pre-load scale values per monitor
+  for (unsigned i = 0; i < monitors; ++i)
+  {
+    double scale = settings.Instance().em(i)->DPIScale();
+
+    if (unity_window_textures_.find(scale) == unity_window_textures_.end())
+      LoadAllTextureInScale(scale);
+  }
+
+  settings.Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowStyle::CleanUpUnusedTextures));
+  UScreen::GetDefault()->changed.connect(sigc::mem_fun(this, &UnityWindowStyle::OnMonitorChanged));
 }
 
 void UnityWindowStyle::LoadAllTextureInScale(double scale)
@@ -76,6 +97,35 @@ RawPixel UnityWindowStyle::GetDefaultMaxTextureSize(const char* const texture_na
   return max_size;
 }
 
+void UnityWindowStyle::OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors)
+{
+  CleanUpUnusedTextures();
+}
+
+// Get current in use scale values, if a scaled value is allocated, but
+// not in use clean up the scaled textures in unity_window_textures
+void UnityWindowStyle::CleanUpUnusedTextures()
+{
+  unsigned monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+  auto& settings = Settings::Instance();
+  std::unordered_set<double> used_scales;
+
+  for (unsigned i = 0; i < monitors; ++i)
+    used_scales.insert(settings.em(i)->DPIScale());
+
+  for (auto it = unity_window_textures_.begin(); it != unity_window_textures_.end();)
+  {
+    if (used_scales.find(it->first) == used_scales.end())
+    {
+      it = unity_window_textures_.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+}
+
 UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
 {
   // This is set only the first time;
@@ -83,19 +133,19 @@ UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
   return instance;
 }
 
-int UnityWindowStyle::GetBorderSize() const
+int UnityWindowStyle::GetBorderSize(double scale) const
 {
-  return 30; // as measured from textures
+  return BORDER_SIZE.CP(scale); // as measured from textures
 }
 
-int UnityWindowStyle::GetInternalOffset() const
+int UnityWindowStyle::GetInternalOffset(double scale) const
 {
-  return 20;
+  return INTERNAL_OFFSET.CP(scale);
 }
 
-int UnityWindowStyle::GetCloseButtonPadding() const
+int UnityWindowStyle::GetCloseButtonPadding(double scale) const
 {
-  return 3;
+  return CLOSE_PADDING.CP(scale);
 }
 
 UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetTexture(double scale, WindowTextureType const& type)

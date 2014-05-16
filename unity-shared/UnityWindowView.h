@@ -23,7 +23,6 @@
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/EMConverter.h"
 
 #include "Introspectable.h"
 #include "UnityWindowStyle.h"
@@ -81,7 +80,6 @@ private:
   void OnClosableChanged(bool closable);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
-  EMConverter::Ptr cv_;
   nux::Layout *internal_layout_;
   BackgroundEffectHelper bg_helper_;
   nux::ObjectPtr<nux::InputArea> bounding_area_;
