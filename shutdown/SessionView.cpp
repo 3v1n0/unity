@@ -98,6 +98,7 @@ View::View(Manager::Ptr const& manager)
 
 void View::UpdateContents()
 {
+  SetVisible(true);
   PopulateButtons();
   UpdateText();
   UpdateViewSize();
@@ -274,6 +275,14 @@ void View::PopulateButtons()
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
       AddButton(button);
     }
+  }
+
+  cancel_idle_.reset();
+  if (buttons_layout_->GetChildren().empty())
+  {
+    // There's nothing to show here, let's cancel the action and hide
+    SetVisible(false);
+    cancel_idle_.reset(new glib::Idle([this] { request_close.emit(); return false; }));
   }
 }
 

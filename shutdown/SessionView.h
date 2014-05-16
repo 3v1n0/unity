@@ -25,10 +25,10 @@
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 
-#include "UnityCore/SessionManager.h"
+#include <UnityCore/GLibSource.h>
+#include <UnityCore/SessionManager.h>
 #include "unity-shared/EMConverter.h"
 #include "unity-shared/UnityWindowView.h"
-#include "UnityCore/SessionManager.h"
 
 namespace unity
 {
@@ -85,6 +85,7 @@ private:
   nux::VLayout* main_layout_;
   nux::HLayout* buttons_layout_;
   nux::InputArea* key_focus_area_;
+  glib::Source::UniquePtr cancel_idle_;
 };
 
 } // namespace session
