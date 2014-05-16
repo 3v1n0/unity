@@ -59,6 +59,7 @@ public:
   virtual bool CanShutdown() const = 0;
   virtual bool CanSuspend() const = 0;
   virtual bool CanHibernate() const = 0;
+  virtual bool HasInhibitors() const = 0;
 
   virtual void CancelAction() = 0;
 

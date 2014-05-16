@@ -451,6 +451,39 @@ void GnomeManager::Impl::UpdateHaveOtherOpenSessions()
   });
 }
 
+bool GnomeManager::Impl::HasInhibitors()
+{
+  glib::Error error;
+  glib::Object<GDBusConnection> bus(g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the session bus, to fetch the inhibitors: " << error;
+    return false;
+  }
+
+  enum class Inhibited : unsigned
+  {
+    LOGOUT = 1,
+    USER_SWITCH = 2,
+    SUSPEND = 4,
+    IDLE_SET = 8
+  };
+
+  glib::Variant inhibitors(g_dbus_connection_call_sync(bus, test_mode_ ? testing::DBUS_NAME.c_str() : "org.gnome.SessionManager",
+                                                       "/org/gnome/SessionManager", "org.gnome.SessionManager",
+                                                       "IsInhibited", g_variant_new("(u)", Inhibited::LOGOUT), nullptr,
+                                                       G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the inhibitors: " << error;
+    return false;
+  }
+
+  return inhibitors.GetBool();
+}
+
 // Public implementation
 
 GnomeManager::GnomeManager()
@@ -643,6 +676,11 @@ bool GnomeManager::CanSuspend() const
 bool GnomeManager::CanHibernate() const
 {
   return impl_->can_hibernate_;
+}
+
+bool GnomeManager::HasInhibitors() const
+{
+  return impl_->HasInhibitors();
 }
 
 void GnomeManager::CancelAction()

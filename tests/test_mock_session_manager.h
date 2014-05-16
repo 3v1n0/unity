@@ -48,6 +48,7 @@ struct MockManager : Manager
   MOCK_CONST_METHOD0(CanShutdown, bool());
   MOCK_CONST_METHOD0(CanSuspend, bool());
   MOCK_CONST_METHOD0(CanHibernate, bool());
+  MOCK_CONST_METHOD0(HasInhibitors, bool());
 };
 
 } // session

@@ -51,6 +51,7 @@ public:
   bool CanShutdown() const;
   bool CanSuspend() const;
   bool CanHibernate() const;
+  bool HasInhibitors() const;
 
   void CancelAction();
 
