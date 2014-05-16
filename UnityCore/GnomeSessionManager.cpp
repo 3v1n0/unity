@@ -659,6 +659,8 @@ bool GnomeManager::CanLock() const
   {
     return false;
   }
+  else if (is_locked())
+    return false;
 
   return true;
 }
