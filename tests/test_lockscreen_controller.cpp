@@ -251,5 +251,21 @@ TEST_F(TestLockScreenController, ShieldHasGrabAfterBlank)
   EXPECT_TRUE(controller.shields_.at(0)->OwnsPointerGrab());
 }
 
+TEST_F(TestLockScreenController, LockScreenClearsClipboard)
+{
+  session_manager->lock_requested.emit();
+
+  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
+
+  GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+  glib::String clipboard_content(gtk_clipboard_wait_for_text(clip));
+
+  clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+  glib::String primary_content(gtk_clipboard_wait_for_text(clip));
+
+  EXPECT_TRUE(clipboard_content.Str().empty());
+  EXPECT_TRUE(primary_content.Str().empty());
+}
+
 } // lockscreen
 } // unity
