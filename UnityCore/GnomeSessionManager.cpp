@@ -651,16 +651,11 @@ bool GnomeManager::CanLock() const
 {
   glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
 
-  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
+  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()) ||
+      UserName().find("guest-") == 0 || is_locked())
   {
     return false;
   }
-  else if (UserName().find("guest-") == 0)
-  {
-    return false;
-  }
-  else if (is_locked())
-    return false;
 
   return true;
 }
