@@ -73,10 +73,10 @@ protected:
 private:
   friend class TestSessionView;
 
-  void UpdateViewSize();
-
+  void PopulateButtons();
   void UpdateText();
-  void Populate();
+  void UpdateContents();
+  void UpdateViewSize();
   void AddButton(Button*);
 
   Manager::Ptr manager_;

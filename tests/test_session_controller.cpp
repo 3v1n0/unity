@@ -41,6 +41,7 @@ struct TestSessionController : testing::Test
     , manager(std::make_shared<testing::NiceMock<MockManager>>())
     , controller(manager)
   {
+    ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(true));
     ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(true));
   }
 

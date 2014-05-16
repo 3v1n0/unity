@@ -91,16 +91,16 @@ View::View(Manager::Ptr const& manager)
     return false;
   });
 
-  mode.changed.connect([this] (Mode m) {
-    UpdateText();
-    Populate();
-  });
-
+  mode.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateContents)));
   scale.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateViewSize)));
+  UpdateContents();
+}
 
-  UpdateViewSize();
+void View::UpdateContents()
+{
+  PopulateButtons();
   UpdateText();
-  Populate();
+  UpdateViewSize();
 }
 
 void View::UpdateViewSize()
@@ -117,10 +117,7 @@ void View::UpdateViewSize()
   buttons_layout_->SetSpaceBetweenChildren(style::BUTTONS_SPACE.CP(scale()));
 
   for (auto* area : buttons_layout_->GetChildren())
-  {
-    auto* button = static_cast<Button*>(area);
-    button->scale = scale();
-  }
+    static_cast<Button*>(area)->scale = scale();
 }
 
 void View::UpdateText()
@@ -201,7 +198,7 @@ void View::UpdateText()
   subtitle_->SetText(glib::String(g_strdup_printf(message.c_str(), name.c_str())).Str());
 }
 
-void View::Populate()
+void View::PopulateButtons()
 {
   debug::Introspectable::RemoveAllChildren();
   buttons_layout_->Clear();
@@ -209,12 +206,17 @@ void View::Populate()
 
   if (mode() == Mode::LOGOUT)
   {
-    auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
-    button->scale = scale();
-    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
-    AddButton(button);
+    if (manager_->is_locked())
+      return;
 
-    button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
+    if (manager_->CanLock())
+    {
+      auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
+      AddButton(button);
+    }
+
+    auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
     key_focus_area_ = button;
     AddButton(button);
@@ -223,23 +225,23 @@ void View::Populate()
   {
     if (mode() == Mode::FULL)
     {
-      auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
-      button->scale = scale();
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
-      AddButton(button);
+      if (manager_->CanLock())
+      {
+        auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
+        button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
+        AddButton(button);
+      }
 
       if (manager_->CanSuspend())
       {
-        button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
-        button->scale = scale();
+        auto* button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
         AddButton(button);
       }
 
       if (manager_->CanHibernate())
       {
-        button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
-        button->scale = scale();
+        auto* button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
         AddButton(button);
       }
@@ -248,20 +250,17 @@ void View::Populate()
     if (manager_->CanShutdown())
     {
       auto *button = new Button(Button::Action::REBOOT, NUX_TRACKER_LOCATION);
-      button->scale = scale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
       AddButton(button);
 
       button = new Button(Button::Action::SHUTDOWN, NUX_TRACKER_LOCATION);
-      button->scale = scale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
       key_focus_area_ = (mode() == Mode::SHUTDOWN) ? button : key_focus_area_;
       AddButton(button);
     }
-    else if (mode() == Mode::FULL)
+    else if (mode() == Mode::FULL && !manager_->is_locked())
     {
       auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
-      button->scale = scale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
       AddButton(button);
     }
@@ -270,6 +269,7 @@ void View::Populate()
 
 void View::AddButton(Button* button)
 {
+  button->scale = scale();
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
   debug::Introspectable::AddChild(button);
