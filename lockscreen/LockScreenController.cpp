@@ -404,7 +404,7 @@ void Controller::LockScreen()
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
 
-  accelerator_controller_ = std::make_shared<AcceleratorController>();
+  accelerator_controller_ = std::make_shared<AcceleratorController>(session_manager_);
   auto activate_key = WindowManager::Default().activate_indicators_key();
   auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
   accelerator->activated.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));

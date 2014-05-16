@@ -32,6 +32,17 @@ const char* const MEDIA_KEYS_SCHEMA                = "org.gnome.settings-daemon.
 const char* const MEDIA_KEYS_KEY_VOLUME_MUTE       = "volume-mute";
 const char* const MEDIA_KEYS_KEY_VOLUME_DOWN       = "volume-down";
 const char* const MEDIA_KEYS_KEY_VOLUME_UP         = "volume-up";
+
+const char* const POWER_SCHEMA                     = "org.gnome.settings-daemon.plugins.power";
+const char* const SUSPEND_BUTTON_ACTION_KEY        = "button-suspend";
+const char* const SLEEP_BUTTON_ACTION_KEY          = "button-sleep";
+const char* const HIBERNATE_BUTTON_ACTION_KEY      = "button-hibernate";
+const char* const POWER_BUTTON_ACTION_KEY          = "button-power";
+const char* const POWER_KEY_SUSPEND                = "XF86Suspend";
+const char* const POWER_KEY_SLEEP                  = "XF86Sleep";
+const char* const POWER_KEY_HIBERNATE              = "XF86Hibernate";
+const char* const POWER_KEY_POWEROFF               = "XF86PowerOff";
+
 const char* const INPUT_SWITCH_SCHEMA              = "org.gnome.desktop.wm.keybindings";
 const char* const INPUT_SWITCH_KEY_PREVIOUS_SOURCE = "switch-input-source-backward";
 const char* const INPUT_SWITCH_KEY_NEXT_SOURCE     = "switch-input-source";
@@ -89,15 +100,32 @@ void ScrollIndicatorKeyboard(int offset)
                     INDICATOR_KEYBOARD_ACTION_SCROLL,
                     g_variant_new_int32(-offset));
 }
+
+void PowerAction(session::Manager::Ptr const& session, const char *action_key)
+{
+  glib::Object<GSettings> settings(g_settings_new(POWER_SCHEMA));
+  auto const& action = glib::String(g_settings_get_string(settings, action_key)).Str();
+
+  if (action == "interactive")
+    session->shutdown_requested.emit(session->HasInhibitors());
+  else if (action == "shutdown")
+    session->reboot_requested.emit(session->HasInhibitors());
+  else if (action == "suspend")
+    session->Suspend();
+  else if (action == "hibernate")
+    session->Hibernate();
+  else if (action == "blank")
+    session->ScreenSaverActivate();
+}
 } // namespace
 
-AcceleratorController::AcceleratorController()
+AcceleratorController::AcceleratorController(session::Manager::Ptr const& session)
   : accelerators_(new Accelerators)
 {
   auto settings = glib::Object<GSettings>(g_settings_new(MEDIA_KEYS_SCHEMA));
 
   auto accelerator = std::make_shared<Accelerator>(glib::String(g_settings_get_string(settings, MEDIA_KEYS_KEY_VOLUME_MUTE)));
-  accelerator->activated.connect(std::function<void ()>(MuteIndicatorSound));
+  accelerator->activated.connect(std::function<void()>(MuteIndicatorSound));
   accelerators_->Add(accelerator);
 
   accelerator = std::make_shared<Accelerator>(glib::String(g_settings_get_string(settings, MEDIA_KEYS_KEY_VOLUME_DOWN)));
@@ -106,6 +134,22 @@ AcceleratorController::AcceleratorController()
 
   accelerator = std::make_shared<Accelerator>(glib::String(g_settings_get_string(settings, MEDIA_KEYS_KEY_VOLUME_UP)));
   accelerator->activated.connect(std::bind(ScrollIndicatorSound, +1));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_SUSPEND);
+  accelerator->activated.connect(std::bind(PowerAction, session, SUSPEND_BUTTON_ACTION_KEY));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_SLEEP);
+  accelerator->activated.connect(std::bind(PowerAction, session, SLEEP_BUTTON_ACTION_KEY));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_HIBERNATE);
+  accelerator->activated.connect(std::bind(PowerAction, session, HIBERNATE_BUTTON_ACTION_KEY));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_POWEROFF);
+  accelerator->activated.connect(std::bind(PowerAction, session, POWER_BUTTON_ACTION_KEY));
   accelerators_->Add(accelerator);
 
   settings = glib::Object<GSettings>(g_settings_new(INPUT_SWITCH_SCHEMA));

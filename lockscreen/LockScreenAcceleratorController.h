@@ -20,6 +20,7 @@
 #ifndef UNITY_LOCKSCREEN_ACCELERATOR_CONTROLLER
 #define UNITY_LOCKSCREEN_ACCELERATOR_CONTROLLER
 
+#include <UnityCore/SessionManager.h>
 #include "LockScreenAccelerators.h"
 
 namespace unity
@@ -32,7 +33,7 @@ class AcceleratorController
 public:
   typedef std::shared_ptr<AcceleratorController> Ptr;
 
-  AcceleratorController();
+  AcceleratorController(session::Manager::Ptr const&);
 
   Accelerators::Ptr const& GetAccelerators() const;
 
