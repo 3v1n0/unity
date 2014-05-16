@@ -104,7 +104,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       key_connection_->disconnect();
       uscreen_connection_->block();
       hidden_window_connection_->block();
-      session_manager_->unlocked.emit();
+      session_manager_->is_locked = false;
 
       std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
         shield->RemoveLayout();
@@ -343,7 +343,7 @@ void Controller::OnLockRequested(bool prompt)
       HideBlankWindow();
 
     LockScreen();
-    session_manager_->locked.emit();
+    session_manager_->is_locked = true;
 
     if (prompt_activation_)
     {
