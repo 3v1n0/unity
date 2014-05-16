@@ -91,6 +91,11 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
+  manager_->is_locked = false;
+  manager_->is_locked.changed.connect([this] (bool locked) {
+    locked ? manager_->locked.emit() : manager_->unlocked.emit();
+  });
+
   {
     const char* session_id = test_mode_ ? "id0" : g_getenv("XDG_SESSION_ID");
 
@@ -421,21 +426,13 @@ void GnomeManager::Impl::LockScreen(bool prompt)
 {
   EnsureCancelPendingAction();
 
+  if (!manager_->CanLock())
+  {
+    manager_->ScreenSaverActivate();
+    return;
+  }
+
   // FIXME (andy) we should ask gnome-session to emit the logind signal
-  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
-
-  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
-  {
-    manager_->ScreenSaverActivate();
-    return;
-  }
-  else if (manager_->UserName().find("guest-") == 0)
-  {
-    LOG_INFO(logger) << "Impossible to lock a guest session";
-    manager_->ScreenSaverActivate();
-    return;
-  }
-
   prompt ? manager_->prompt_lock_requested.emit() : manager_->lock_requested.emit();
 }
 
@@ -615,6 +612,22 @@ void GnomeManager::Hibernate()
     if (err)
       impl_->CallUPowerMethod("Hibernate");
   });
+}
+
+bool GnomeManager::CanLock() const
+{
+  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
+
+  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
+  {
+    return false;
+  }
+  else if (UserName().find("guest-") == 0)
+  {
+    return false;
+  }
+
+  return true;
 }
 
 bool GnomeManager::CanShutdown() const

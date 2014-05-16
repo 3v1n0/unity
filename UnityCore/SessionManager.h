@@ -39,6 +39,7 @@ public:
   virtual ~Manager() = default;
 
   nux::ROProperty<bool> have_other_open_sessions;
+  nux::Property<bool> is_locked;
 
   virtual std::string RealName() const = 0;
   virtual std::string UserName() const = 0;
@@ -54,6 +55,7 @@ public:
   virtual void Suspend() = 0;
   virtual void Hibernate() = 0;
 
+  virtual bool CanLock() const = 0;
   virtual bool CanShutdown() const = 0;
   virtual bool CanSuspend() const = 0;
   virtual bool CanHibernate() const = 0;

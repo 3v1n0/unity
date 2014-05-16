@@ -44,6 +44,7 @@ struct MockManager : Manager
   MOCK_METHOD0(Hibernate, void());
   MOCK_METHOD0(CancelAction, void());
 
+  MOCK_CONST_METHOD0(CanLock, bool());
   MOCK_CONST_METHOD0(CanShutdown, bool());
   MOCK_CONST_METHOD0(CanSuspend, bool());
   MOCK_CONST_METHOD0(CanHibernate, bool());
