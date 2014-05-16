@@ -127,7 +127,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "RequestLogout")
     {
-      session_->logout_requested.emit(false);
+      session_->logout_requested.emit(session_->HasInhibitors());
     }
     else if (method == "Reboot")
     {
@@ -135,7 +135,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "RequestReboot")
     {
-      session_->reboot_requested.emit(false);
+      session_->reboot_requested.emit(session_->HasInhibitors());
     }
     else if (method == "Shutdown")
     {
@@ -143,7 +143,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "RequestShutdown")
     {
-      session_->shutdown_requested.emit(false);
+      session_->shutdown_requested.emit(session_->HasInhibitors());
     }
     else if (method == "Suspend")
     {
