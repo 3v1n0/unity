@@ -23,6 +23,7 @@
 #include <NuxCore/Logger.h>
 #include <X11/extensions/XInput2.h>
 #include <UnityCore/GLibSource.h>
+#include <core/screen.h>
 #include <unordered_set>
 #include <glib.h>
 
@@ -110,7 +111,7 @@ struct Monitor::Impl
     , event_filter_set_(false)
     , invoking_callbacks_(false)
   {
-    Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+    Display *dpy = screen->dpy();
     int event_base, error_base;
 
     if (XQueryExtension(dpy, "XInputExtension", &xi_opcode_, &event_base, &error_base))
