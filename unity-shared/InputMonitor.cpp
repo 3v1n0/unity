@@ -108,6 +108,7 @@ struct Monitor::Impl
   Impl()
     : xi_opcode_(0)
     , event_filter_set_(false)
+    , invoking_callbacks_(false)
   {
     Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
     int event_base, error_base;
@@ -153,6 +154,14 @@ struct Monitor::Impl
 
   void UnregisterClient(EventCallback const& cb)
   {
+    if (invoking_callbacks_)
+    {
+      // Delay the event removal if we're currently invoking a callback
+      // not to break the callbacks loop
+      removal_queue_.insert(cb);
+      return;
+    }
+
     pointer_callbacks_.erase(cb);
     key_callbacks_.erase(cb);
     UpdateEventMonitor();
@@ -257,6 +266,7 @@ struct Monitor::Impl
 
     XEvent event;
     initialize_event<EVENT_TYPE>(&event, reinterpret_cast<XIDeviceEvent*>(cookie->data));
+    invoking_callbacks_ = true;
 
     for (auto it = callbacks.begin(); it != callbacks.end();)
     {
@@ -271,8 +281,21 @@ struct Monitor::Impl
     }
 
     XFreeEventData(xiev.xany.display, cookie);
+    invoking_callbacks_ = false;
 
-    if (callbacks.empty())
+    // A callback might unregister itself on the event callback, causing the
+    // above callbacks loop to crash, so in this case we save the event in the
+    // removal queue and eventually we unregistered these callbacks.
+    bool update_event_monitor = false;
+    for (auto it = removal_queue_.begin(); it != removal_queue_.end(); it = removal_queue_.erase(it))
+    {
+      auto const& cb = *it;
+      pointer_callbacks_.erase(cb);
+      key_callbacks_.erase(cb);
+      update_event_monitor = true;
+    }
+
+    if (callbacks.empty() || update_event_monitor)
     {
       idle_removal_.reset(new glib::Idle([this] {
         UpdateEventMonitor();
@@ -287,9 +310,11 @@ struct Monitor::Impl
 
   int xi_opcode_;
   bool event_filter_set_;
+  bool invoking_callbacks_;
   glib::Source::UniquePtr idle_removal_;
   std::unordered_set<EventCallback> pointer_callbacks_;
   std::unordered_set<EventCallback> key_callbacks_;
+  std::unordered_set<EventCallback> removal_queue_;
 };
 
 Monitor::Monitor()
