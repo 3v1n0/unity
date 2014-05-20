@@ -32,7 +32,9 @@ enum class Events : unsigned
 {
   POINTER = (1 << 0),
   KEYS = (1 << 1),
-  ALL = POINTER | KEYS
+  BARRIER = (1 << 2),
+  INPUT = POINTER | KEYS,
+  ALL = POINTER | KEYS | BARRIER
 };
 
 class Monitor : public sigc::trackable

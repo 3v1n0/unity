@@ -38,7 +38,7 @@ DECLARE_LOGGER(logger, "unity.input.monitor");
 Monitor* instance_ = nullptr;
 
 const unsigned XINPUT_MAJOR_VERSION = 2;
-const unsigned XINPUT_MINOR_VERSION = 2;
+const unsigned XINPUT_MINOR_VERSION = 3;
 
 bool operator&(Events l, Events r)
 {
@@ -64,8 +64,8 @@ void initialize_event_common(EVENT* ev, XIDeviceEvent* xiev)
   ev->same_screen = True;
 }
 
-template <typename EVENT_TYPE>
-void initialize_event(XEvent* ev, XIDeviceEvent* xiev);
+template <typename EVENT_TYPE, typename NATIVE_TYPE>
+void initialize_event(XEvent* ev, NATIVE_TYPE* xiev);
 
 template <>
 void initialize_event<XButtonEvent>(XEvent* ev, XIDeviceEvent* xiev)
@@ -102,6 +102,18 @@ void initialize_event<XMotionEvent>(XEvent* ev, XIDeviceEvent* xiev)
     }
   }
 }
+
+template <>
+void initialize_event<XGenericEventCookie>(XEvent* ev, XIBarrierEvent* xiev)
+{
+  XGenericEventCookie* cev = &ev->xcookie;
+  cev->type = GenericEvent;
+  cev->serial = xiev->serial;
+  cev->send_event = xiev->send_event;
+  cev->display = xiev->display;
+  cev->evtype = xiev->evtype;
+  cev->data = xiev;
+}
 }
 
 struct Monitor::Impl
@@ -137,19 +149,25 @@ struct Monitor::Impl
     {
       pointer_callbacks_.clear();
       key_callbacks_.clear();
+      barrier_callbacks_.clear();
       UpdateEventMonitor();
     }
   }
 
   void RegisterClient(Events type, EventCallback const& cb)
   {
+    bool added = false;
+
     if (type & Events::POINTER)
-      pointer_callbacks_.insert(cb);
+      added = pointer_callbacks_.insert(cb).second || added;
 
     if (type & Events::KEYS)
-      key_callbacks_.insert(cb);
+      added = key_callbacks_.insert(cb).second || added;
 
-    if (!pointer_callbacks_.empty() || !key_callbacks_.empty())
+    if (type & Events::BARRIER)
+      added = barrier_callbacks_.insert(cb).second || added;
+
+    if (added)
       UpdateEventMonitor();
   }
 
@@ -163,58 +181,50 @@ struct Monitor::Impl
       return;
     }
 
-    pointer_callbacks_.erase(cb);
-    key_callbacks_.erase(cb);
-    UpdateEventMonitor();
+    bool removed = false;
+    removed = pointer_callbacks_.erase(cb) > 0 || removed;
+    removed = key_callbacks_.erase(cb) > 0 || removed;
+    removed = barrier_callbacks_.erase(cb) > 0 || removed;
+
+    if (removed)
+      UpdateEventMonitor();
   }
 
   void UpdateEventMonitor()
   {
     auto* dpy = nux::GetGraphicsDisplay()->GetX11Display();
     Window root = DefaultRootWindow(dpy);
-    XIEventMask* mask = nullptr;
 
-    int masks_size = 0;
-    std::unique_ptr<XIEventMask[], int(*)(void*)> selected(XIGetSelectedEvents(dpy, root, &masks_size), XFree);
+    unsigned char master_dev_bits[XIMaskLen(XI_LASTEVENT)] = { 0 };
+    XIEventMask master_dev = { XIAllMasterDevices, sizeof(master_dev_bits), master_dev_bits };
 
-    for (int i = 0; i < masks_size; ++i)
+    if (!barrier_callbacks_.empty())
     {
-      if (selected[i].deviceid == XIAllDevices)
-      {
-        mask = &(selected[i]);
-        break;
-      }
+      XISetMask(master_dev.mask, XI_BarrierHit);
+      XISetMask(master_dev.mask, XI_BarrierLeave);
     }
 
-    if (!mask)
-    {
-      ++masks_size;
-      auto* new_selected = g_new(XIEventMask, masks_size);
-      g_memmove(new_selected, selected.get(), sizeof(XIEventMask) * (masks_size - 1));
-      selected.reset(new_selected);
-      mask = &(selected[masks_size-1]);
-    }
-
-    unsigned char mask_bits[XIMaskLen(XI_LASTEVENT)] = { 0 };
-    *mask = { XIAllDevices, sizeof(mask_bits), mask_bits };
+    unsigned char all_devs_bits[XIMaskLen(XI_LASTEVENT)] = { 0 };
+    XIEventMask all_devs = { XIAllDevices, sizeof(all_devs_bits), all_devs_bits };
 
     if (!pointer_callbacks_.empty())
     {
-      XISetMask(mask->mask, XI_Motion);
-      XISetMask(mask->mask, XI_ButtonPress);
-      XISetMask(mask->mask, XI_ButtonRelease);
+      XISetMask(all_devs.mask, XI_Motion);
+      XISetMask(all_devs.mask, XI_ButtonPress);
+      XISetMask(all_devs.mask, XI_ButtonRelease);
     }
 
     if (!key_callbacks_.empty())
     {
-      XISetMask(mask->mask, XI_KeyPress);
-      XISetMask(mask->mask, XI_KeyRelease);
+      XISetMask(all_devs.mask, XI_KeyPress);
+      XISetMask(all_devs.mask, XI_KeyRelease);
     }
 
-    XISelectEvents(dpy, root, selected.get(), masks_size);
+    XIEventMask selected[] = {master_dev, all_devs};
+    XISelectEvents(dpy, root, selected, G_N_ELEMENTS(selected));
     XSync(dpy, False);
 
-    if (!pointer_callbacks_.empty() || !key_callbacks_.empty())
+    if (!pointer_callbacks_.empty() || !key_callbacks_.empty() || !barrier_callbacks_.empty())
     {
       if (!event_filter_set_)
       {
@@ -252,12 +262,16 @@ struct Monitor::Impl
       case XI_KeyRelease:
         handled = InvokeCallbacks<XKeyEvent>(key_callbacks_, event);
         break;
+      case XI_BarrierHit:
+      case XI_BarrierLeave:
+        handled = InvokeCallbacks<XGenericEventCookie, XIBarrierEvent>(barrier_callbacks_, event);
+        break;
     }
 
     return handled;
   }
 
-  template <typename EVENT_TYPE>
+  template <typename EVENT_TYPE, typename NATIVE_TYPE = XIDeviceEvent>
   bool InvokeCallbacks(std::unordered_set<EventCallback>& callbacks, XEvent& xiev)
   {
     XGenericEventCookie *cookie = &xiev.xcookie;
@@ -266,7 +280,7 @@ struct Monitor::Impl
       return false;
 
     XEvent event;
-    initialize_event<EVENT_TYPE>(&event, reinterpret_cast<XIDeviceEvent*>(cookie->data));
+    initialize_event<EVENT_TYPE>(&event, reinterpret_cast<NATIVE_TYPE*>(cookie->data));
     invoking_callbacks_ = true;
 
     for (auto it = callbacks.begin(); it != callbacks.end();)
@@ -293,6 +307,7 @@ struct Monitor::Impl
       auto const& cb = *it;
       pointer_callbacks_.erase(cb);
       key_callbacks_.erase(cb);
+      barrier_callbacks_.erase(cb);
       update_event_monitor = true;
     }
 
@@ -315,6 +330,7 @@ struct Monitor::Impl
   glib::Source::UniquePtr idle_removal_;
   std::unordered_set<EventCallback> pointer_callbacks_;
   std::unordered_set<EventCallback> key_callbacks_;
+  std::unordered_set<EventCallback> barrier_callbacks_;
   std::unordered_set<EventCallback> removal_queue_;
 };
 
