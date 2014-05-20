@@ -318,6 +318,9 @@ void Controller::HideBlankWindow()
   blank_window_->ShowWindow(false);
   animation::SetValue(blank_window_animator_, animation::Direction::BACKWARD);
 
+  if (prompt_activation_)
+    BlankWindowGrabEnable(false);
+
   blank_window_.Release();
   lockscreen_delay_timeout_.reset();
 }
