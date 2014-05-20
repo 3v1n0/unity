@@ -21,7 +21,6 @@
 
 #include <UnityCore/DBusIndicators.h>
 #include <NuxCore/Logger.h>
-#include <gtk/gtk.h>
 
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
@@ -416,9 +415,6 @@ void Controller::LockScreen()
 
 void Controller::ShowShields()
 {
-  StoreClipboard();
-  ClearClipboard();
-
   old_blur_type_ = BackgroundEffectHelper::blur_type;
   BackgroundEffectHelper::blur_type = BLUR_NONE;
 
@@ -435,34 +431,6 @@ void Controller::ShowShields()
 
   nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
   animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
-}
-
-void Controller::StoreClipboard()
-{
-  GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-  selection_text_ = glib::String(gtk_clipboard_wait_for_text(clip)).Str();
-
-  clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-  primary_text_ = glib::String(gtk_clipboard_wait_for_text(clip)).Str();
-
-}
-
-void Controller::ClearClipboard()
-{
-  GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-  gtk_clipboard_set_text(clip, "", -1);
-
-  clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-  gtk_clipboard_set_text(clip, "", -1);
-}
-
-void Controller::RestoreClipboard()
-{
-  GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-  gtk_clipboard_set_text(clip, selection_text_.c_str(), -1);
-
-  clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-  gtk_clipboard_set_text(clip, primary_text_.c_str(), -1);
 }
 
 void Controller::SimulateActivity()
@@ -494,8 +462,6 @@ void Controller::HideShields()
   animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
 
   BackgroundEffectHelper::blur_type = old_blur_type_;
-
-  RestoreClipboard();
 }
 
 bool Controller::IsLocked() const

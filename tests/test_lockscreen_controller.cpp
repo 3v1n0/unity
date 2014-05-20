@@ -232,6 +232,7 @@ TEST_F(TestLockScreenController, UnlockScreenOnMultiMonitor)
 
 TEST_F(TestLockScreenController, ShieldHasGrabAfterBlank)
 {
+
   // Lock...
   session_manager->lock_requested.emit();
   Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
@@ -248,29 +249,6 @@ TEST_F(TestLockScreenController, ShieldHasGrabAfterBlank)
   dbus_manager->simulate_activity.emit();
 
   EXPECT_TRUE(controller.shields_.at(0)->OwnsPointerGrab());
-}
-
-TEST_F(TestLockScreenController, Clipboard)
-{
-  GtkClipboard* clipboard_clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-  GtkClipboard* primary_clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-
-  gtk_clipboard_set_text(clipboard_clip, "selection", -1);
-  gtk_clipboard_set_text(primary_clip, "primary", -1);
-
-  session_manager->lock_requested.emit();
-  Utils::WaitUntilMSec([this]{ return controller.shields_.size() == 1; });
-
-  EXPECT_TRUE(glib::String(gtk_clipboard_wait_for_text(clipboard_clip)).Str().empty());
-  EXPECT_TRUE(glib::String(gtk_clipboard_wait_for_text(primary_clip)).Str().empty());
-
-  session_manager->unlock_requested.emit();
-  tick_source.tick(ANIMATION_DURATION);
-  EXPECT_TRUE(controller.shields_.empty());
-
-  EXPECT_EQ("selection", glib::String(gtk_clipboard_wait_for_text(clipboard_clip)).Str());
-  EXPECT_EQ("primary", glib::String(gtk_clipboard_wait_for_text(primary_clip)).Str());
-
 }
 
 } // lockscreen

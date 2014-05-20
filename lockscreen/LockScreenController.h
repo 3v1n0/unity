@@ -63,10 +63,6 @@ private:
   void ResetPostLockScreenSaver();
   void ActivatePanel();
 
-  void StoreClipboard();
-  void ClearClipboard();
-  void RestoreClipboard();
-
   void OnLockRequested(bool prompt);
   void OnUnlockRequested();
   void OnPresenceStatusChanged(bool idle);
@@ -90,9 +86,6 @@ private:
   bool test_mode_;
   bool prompt_activation_;
   BlurType old_blur_type_;
-
-  std::string selection_text_;
-  std::string primary_text_;
 
   connection::Wrapper uscreen_connection_;
   connection::Wrapper suspend_connection_;
