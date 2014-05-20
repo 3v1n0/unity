@@ -57,6 +57,7 @@
 #include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
 #include "ShortcutController.h"
+#include "InputMonitor.h"
 #include "LauncherController.h"
 #include "LockScreenController.h"
 #include "LockScreenSettings.h"
@@ -330,6 +331,7 @@ private:
   internal::FavoriteStoreGSettings favorite_store_;
   ThumbnailGenerator thumbnail_generator_;
   lockscreen::Settings lockscreen_settings_;
+  input::Monitor input_monitor_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
