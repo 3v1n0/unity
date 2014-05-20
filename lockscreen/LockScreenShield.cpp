@@ -119,8 +119,6 @@ nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsign
 {
   if (primary)
   {
-    grab_key.emit(modifiers, keysym);
-
     if (accelerators_)
     {
       if (etype == nux::EVENT_KEY_DOWN)

@@ -81,11 +81,6 @@ BaseShield::BaseShield(session::Manager::Ptr const& session,
     background_layer_.reset();
     UpdateBackgroundTexture();
   });
-
-  mouse_move.connect([this] (int x, int y, int, int, unsigned long, unsigned long) {
-    auto const& abs_geo = GetAbsoluteGeometry();
-    grab_motion.emit(abs_geo.x + x, abs_geo.y + y);
-  });
 }
 
 bool BaseShield::HasGrab() const

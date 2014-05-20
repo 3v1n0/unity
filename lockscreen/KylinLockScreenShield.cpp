@@ -81,8 +81,6 @@ nux::Area* KylinShield::FindKeyFocusArea(unsigned etype, unsigned long keysym, u
 {
   if (primary)
   {
-    grab_key.emit(modifiers, keysym);
-
     if (prompt_view_)
     {
       auto* focus_view = prompt_view_->focus_view();

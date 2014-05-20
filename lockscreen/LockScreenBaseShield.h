@@ -54,8 +54,6 @@ public:
 
   sigc::signal<void> grabbed;
   sigc::signal<void> grab_failed;
-  sigc::signal<void, int, int> grab_motion;
-  sigc::signal<void, unsigned long, unsigned long> grab_key;
 
 protected:
   virtual bool AcceptKeyNavFocus() { return false; }
