@@ -23,8 +23,8 @@
 #include <NuxCore/Logger.h>
 #include <X11/extensions/XInput2.h>
 #include <UnityCore/GLibSource.h>
-#include <core/screen.h>
 #include <unordered_set>
+#include <gdk/gdkx.h>
 #include <glib.h>
 
 namespace unity
@@ -123,7 +123,7 @@ struct Monitor::Impl
     , event_filter_set_(false)
     , invoking_callbacks_(false)
   {
-    Display *dpy = screen->dpy();
+    Display *dpy = gdk_x11_get_default_xdisplay();
     int event_base, error_base;
 
     if (XQueryExtension(dpy, "XInputExtension", &xi_opcode_, &event_base, &error_base))
