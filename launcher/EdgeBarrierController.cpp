@@ -168,19 +168,25 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
   if (parent_->force_disable())
     return;
 
-  bool edge_resist = parent_->sticky_edges();
+  size_t monitors_size = layout.size();
   auto launcher_position = Settings::Instance().launcher_position();
+  bool edge_resist = parent_->sticky_edges();
+  bool needs_barrier = edge_resist && monitors_size > 1;
+  bool needs_vertical_barrier = needs_barrier;
 
-  for (unsigned i = 0; i < layout.size(); i++)
+  if (parent_->options()->hide_mode() != launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER)
+    needs_vertical_barrier = true;
+
+  for (unsigned i = 0; i < layout.size(); ++i)
   {
-    auto vertical_barrier = vertical_barriers_[i];
-    auto horizontal_barrier = horizontal_barriers_[i];
-    auto monitor = layout[i];
+    auto const& vertical_barrier = vertical_barriers_[i];
+    auto const& horizontal_barrier = horizontal_barriers_[i];
+    auto const& monitor = layout[i];
 
     vertical_barrier->DestroyBarrier();
     horizontal_barrier->DestroyBarrier();
 
-    if (edge_resist)
+    if (needs_barrier)
     {
       horizontal_barrier->x1 = monitor.x;
       horizontal_barrier->x2 = monitor.x + monitor.width;
@@ -195,7 +201,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
       horizontal_barrier->ConstructBarrier();
     }
 
-    if (!edge_resist && parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER)
+    if (!needs_vertical_barrier)
       continue;
 
     if (launcher_position == LauncherPosition::LEFT)
@@ -222,7 +228,10 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     vertical_barrier->ConstructBarrier();
   }
 
-  input::Monitor::Get().RegisterClient(input::Events::BARRIER, sigc::mem_fun(this, &Impl::HandleEvent));
+  if (needs_barrier || needs_vertical_barrier)
+    input::Monitor::Get().RegisterClient(input::Events::BARRIER, sigc::mem_fun(this, &Impl::HandleEvent));
+  else
+    input::Monitor::Get().UnregisterClient(sigc::mem_fun(this, &Impl::HandleEvent));
 
   float decay_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * .3f) + 1;
   decaymulator_.rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
@@ -245,11 +254,11 @@ void EdgeBarrierController::Impl::HandleEvent(XEvent const& xevent)
 
 PointerBarrierWrapper::Ptr EdgeBarrierController::Impl::FindBarrierEventOwner(XIBarrierEvent* barrier_event)
 {
-  for (auto barrier : vertical_barriers_)
+  for (auto const& barrier : vertical_barriers_)
     if (barrier->OwnsBarrierEvent(barrier_event->barrier))
       return barrier;
 
-  for (auto barrier : horizontal_barriers_)
+  for (auto const& barrier : horizontal_barriers_)
     if (barrier->OwnsBarrierEvent(barrier_event->barrier))
       return barrier;
 
