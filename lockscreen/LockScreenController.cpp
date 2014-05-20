@@ -21,6 +21,7 @@
 
 #include <UnityCore/DBusIndicators.h>
 #include <NuxCore/Logger.h>
+#include <gtk/gtk.h>
 
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
@@ -415,6 +416,8 @@ void Controller::LockScreen()
 
 void Controller::ShowShields()
 {
+  ClearClipboard();
+
   old_blur_type_ = BackgroundEffectHelper::blur_type;
   BackgroundEffectHelper::blur_type = BLUR_NONE;
 
@@ -431,6 +434,15 @@ void Controller::ShowShields()
 
   nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
   animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+}
+
+void Controller::ClearClipboard()
+{
+  GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+  gtk_clipboard_set_text(clip, "", -1);
+
+  clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+  gtk_clipboard_set_text(clip, "", -1);
 }
 
 void Controller::SimulateActivity()

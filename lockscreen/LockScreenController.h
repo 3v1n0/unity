@@ -62,6 +62,7 @@ private:
   void SimulateActivity();
   void ResetPostLockScreenSaver();
   void ActivatePanel();
+  void ClearClipboard();
 
   void OnLockRequested(bool prompt);
   void OnUnlockRequested();
