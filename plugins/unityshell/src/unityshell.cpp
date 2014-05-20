@@ -2906,7 +2906,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   GLWindowPaintAttrib wAttrib = attrib;
 
-  if (uScreen->lockscreen_controller_->IsLocked())
+  if (uScreen->lockscreen_controller_->IsLocked() && uScreen->lockscreen_controller_->opacity() == 1.0)
   {
     if (!window->minimized() && !CanBypassLockScreen())
     {
@@ -2914,7 +2914,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       // (well, it works too much, as it applies to menus too), so we need
       // to paint the windows at the proper opacity, overriding any other
       // paint plugin (animation, fade?) that might interfere with us.
-      wAttrib.opacity = COMPIZ_COMPOSITE_OPAQUE * (1.0f - uScreen->lockscreen_controller_->opacity());
+      wAttrib.opacity = 0.0;
       int old_index = gWindow->glPaintGetCurrentIndex();
       gWindow->glPaintSetCurrentIndex(MAXSHORT);
       bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
