@@ -24,6 +24,7 @@
 #include "Decaymulator.h"
 #include <NuxCore/Logger.h>
 #include "unity-shared/UScreen.h"
+#include "unity-shared/InputMonitor.h"
 #include "UnityCore/GLibSource.h"
 
 namespace unity
@@ -35,50 +36,12 @@ namespace
 {
   int const Y_BREAK_BUFFER = 20;
   int const X_BREAK_BUFFER = 20;
-  int const MAJOR = 2;
-  int const MINOR = 3;
 }
 
 DECLARE_LOGGER(logger, "unity.edge_barrier_controller");
 
-int GetXI2OpCode()
-{
-  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
-
-  int opcode, event_base, error_base;
-  if (!XQueryExtension(dpy, "XFIXES",
-                       &opcode,
-                       &event_base,
-                       &error_base))
-  {
-    LOG_ERROR(logger) << "Missing XFixes";
-    return -1;
-  }
-
-  if (!XQueryExtension (dpy, "XInputExtension",
-                        &opcode,
-                        &event_base,
-                        &error_base))
-  {
-    LOG_ERROR(logger) << "Missing XInput";
-    return -1;
-  }
-
-  int maj = MAJOR;
-  int min = MINOR;
-
-  if (XIQueryVersion(dpy, &maj, &min) == BadRequest)
-  {
-    LOG_ERROR(logger) << "Need XInput version 2.3";
-    return -1;
-  }
-
-  return opcode;
-}
-
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
-  : xi2_opcode_(-1)
-  , edge_overcome_pressure_(0)
+  : edge_overcome_pressure_(0)
   , parent_(parent)
 {
   UScreen *uscreen = UScreen::GetDefault();
@@ -114,8 +77,6 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     options->option_changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged));
     SetupBarriers(UScreen::GetDefault()->GetMonitors());
   });
-
-  xi2_opcode_ = GetXI2OpCode();
 }
 
 EdgeBarrierController::Impl::~Impl()
@@ -183,18 +144,6 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
   }
 }
 
-void SetupXI2Events()
-{
-  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
-
-  unsigned char mask_bits[XIMaskLen (XI_LASTEVENT)] = { 0 };
-  XIEventMask mask = { XIAllMasterDevices, sizeof (mask_bits), mask_bits };
-
-  XISetMask(mask.mask, XI_BarrierHit);
-  XISetMask(mask.mask, XI_BarrierLeave);
-  XISelectEvents (dpy, DefaultRootWindow(dpy), &mask, 1);
-}
-
 void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const& layout)
 {
   bool edge_resist = parent_->sticky_edges();
@@ -238,8 +187,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     vertical_barrier->ConstructBarrier();
   }
 
-  SetupXI2Events();
-  AddEventFilter();
+  input::Monitor::Get().RegisterClient(input::Events::BARRIER, sigc::mem_fun(this, &Impl::HandleEvent));
 
   float decay_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * .3f) + 1;
   decaymulator_.rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
@@ -248,56 +196,16 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
   edge_overcome_pressure_ = parent_->options()->edge_overcome_pressure() * overcome_responsiveness_mult;
 }
 
-void EdgeBarrierController::Impl::AddEventFilter()
+void EdgeBarrierController::Impl::HandleEvent(XEvent const& xevent)
 {
-  // Remove an old one, if it exists
-  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
+  if (xevent.xcookie.evtype != XI_BarrierHit)
+    return;
 
-  nux::GraphicsDisplay::EventFilterArg event_filter;
-  event_filter.filter = &HandleEventCB;
-  event_filter.data = this;
+  auto* barrier_event = reinterpret_cast<XIBarrierEvent*>(xevent.xcookie.data);
+  PointerBarrierWrapper::Ptr const& wrapper = FindBarrierEventOwner(barrier_event);
 
-  nux::GetGraphicsDisplay()->AddEventFilter(event_filter);
-}
-
-bool EdgeBarrierController::Impl::HandleEvent(XEvent& xevent)
-{
-  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
-  XGenericEventCookie *cookie = &xevent.xcookie;
-  bool ret = false;
-
-  switch (cookie->evtype)
-  {
-    case (XI_BarrierHit):
-    {
-      if (XGetEventData(dpy, cookie))
-      {
-        XIBarrierEvent* barrier_event = (XIBarrierEvent*)cookie->data;
-        PointerBarrierWrapper::Ptr wrapper = FindBarrierEventOwner(barrier_event);
-
-        if (wrapper)
-          ret = wrapper->HandleBarrierEvent(barrier_event);
-      }
-
-      XFreeEventData(dpy, cookie);
-      break;
-    }
-    default:
-      break;
-  }
-
-  return ret;
-}
-
-bool EdgeBarrierController::Impl::HandleEventCB(XEvent xevent, void* data)
-{
-  auto edge_barrier_controller = static_cast<EdgeBarrierController::Impl*>(data);
-  int const xi2_opcode = edge_barrier_controller->xi2_opcode_;
-
-  if (xevent.type != GenericEvent || xevent.xcookie.extension != xi2_opcode)
-    return false;
-
-  return edge_barrier_controller->HandleEvent(xevent);
+  if (wrapper)
+    wrapper->HandleBarrierEvent(barrier_event);
 }
 
 PointerBarrierWrapper::Ptr EdgeBarrierController::Impl::FindBarrierEventOwner(XIBarrierEvent* barrier_event)
