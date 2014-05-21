@@ -58,8 +58,8 @@ void initialize_event_common(EVENT* ev, XIDeviceEvent* xiev)
   ev->time = xiev->time;
   ev->x = std::round(xiev->event_x);
   ev->y = std::round(xiev->event_y);
-  ev->x_root = std::round(xiev->root_y);
-  ev->y_root = std::round(xiev->root_x);
+  ev->x_root = std::round(xiev->root_x);
+  ev->y_root = std::round(xiev->root_y);
   ev->state = xiev->mods.effective;
   ev->same_screen = True;
 }
