@@ -154,7 +154,7 @@ struct Monitor::Impl
     }
   }
 
-  void RegisterClient(Events type, EventCallback const& cb)
+  bool RegisterClient(Events type, EventCallback const& cb)
   {
     bool added = false;
 
@@ -169,16 +169,18 @@ struct Monitor::Impl
 
     if (added)
       UpdateEventMonitor();
+
+    return added;
   }
 
-  void UnregisterClient(EventCallback const& cb)
+  bool UnregisterClient(EventCallback const& cb)
   {
     if (invoking_callbacks_)
     {
       // Delay the event removal if we're currently invoking a callback
       // not to break the callbacks loop
       removal_queue_.insert(cb);
-      return;
+      return false;
     }
 
     bool removed = false;
@@ -188,6 +190,8 @@ struct Monitor::Impl
 
     if (removed)
       UpdateEventMonitor();
+
+    return removed;
   }
 
   void UpdateEventMonitor()
@@ -362,14 +366,14 @@ Monitor& Monitor::Get()
   return *instance_;
 }
 
-void Monitor::RegisterClient(Events events, EventCallback const& cb)
+bool Monitor::RegisterClient(Events events, EventCallback const& cb)
 {
-  impl_->RegisterClient(events, cb);
+  return impl_->RegisterClient(events, cb);
 }
 
-void Monitor::UnregisterClient(EventCallback const& cb)
+bool Monitor::UnregisterClient(EventCallback const& cb)
 {
-  impl_->UnregisterClient(cb);
+  return impl_->UnregisterClient(cb);
 }
 
 } // input namespace

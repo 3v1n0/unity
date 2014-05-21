@@ -47,8 +47,8 @@ public:
   Monitor();
   virtual ~Monitor();
 
-  void RegisterClient(Events, EventCallback const&);
-  void UnregisterClient(EventCallback const&);
+  bool RegisterClient(Events, EventCallback const&);
+  bool UnregisterClient(EventCallback const&);
 
 private:
   Monitor(Monitor const&) = delete;
