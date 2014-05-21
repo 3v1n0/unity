@@ -198,12 +198,8 @@ void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_
 
   if (active)
   {
-    if (im.RegisterClient(input::Events::POINTER, event_cb))
-    {
-      auto const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-      if (GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y))
-        indicators_view_->ActivateEntryAt(mouse.x, mouse.y);
-    }
+    indicators_view_->ActivateEntry(entry_id);
+    im.RegisterClient(input::Events::POINTER, event_cb);
   }
   else
   {
