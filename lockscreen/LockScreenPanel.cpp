@@ -25,6 +25,7 @@
 #include "LockScreenSettings.h"
 #include "panel/PanelIndicatorsView.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/InputMonitor.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/RawPixel.h"
@@ -192,28 +193,29 @@ void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_
     nux::GetWindowCompositor().GrabKeyboardAdd(static_cast<nux::BaseWindow*>(GetTopLevelViewWindow()));
   }
 
-  if (active && !track_menu_pointer_timeout_)
-  {
-    track_menu_pointer_timeout_.reset(new glib::Timeout(16));
-    track_menu_pointer_timeout_->Run([this] {
-      nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-      if (tracked_pointer_pos_ != mouse)
-      {
-        if (GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y))
-          indicators_view_->ActivateEntryAt(mouse.x, mouse.y);
+  auto& im = input::Monitor::Get();
+  auto const& event_cb = sigc::mem_fun(this, &Panel::OnEntryEvent);
 
-        tracked_pointer_pos_ = mouse;
-      }
-
-      return true;
-    });
-  }
-  else if (!active)
+  if (active)
   {
-    track_menu_pointer_timeout_.reset();
-    tracked_pointer_pos_ = {-1, -1};
-    this->active = false;
+    if (im.RegisterClient(input::Events::POINTER, event_cb))
+    {
+      auto const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+      if (GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y))
+        indicators_view_->ActivateEntryAt(mouse.x, mouse.y);
+    }
   }
+  else
+  {
+    im.UnregisterClient(event_cb);
+    this->active = active;
+  }
+}
+
+void Panel::OnEntryEvent(XEvent const& e)
+{
+  if (e.type == MotionNotify && GetAbsoluteGeometry().IsPointInside(e.xmotion.x, e.xmotion.y))
+    indicators_view_->ActivateEntryAt(e.xmotion.x, e.xmotion.y);
 }
 
 void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)

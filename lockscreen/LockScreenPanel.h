@@ -58,6 +58,7 @@ private:
   void OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& geo);
   void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
   void OnEntryActivateRequest(std::string const& entry_id);
+  void OnEntryEvent(XEvent const&);
 
   void BuildTexture();
   std::string GetPanelName() const;
@@ -65,10 +66,7 @@ private:
   indicator::Indicators::Ptr indicators_;
   panel::PanelIndicatorsView* indicators_view_;
   nux::ObjectPtr<nux::BaseTexture> bg_texture_;
-
   bool needs_geo_sync_;
-  nux::Point tracked_pointer_pos_;
-  glib::Source::UniquePtr track_menu_pointer_timeout_;
 };
 
 } // lockscreen namespace
