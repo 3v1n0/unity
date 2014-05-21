@@ -198,8 +198,8 @@ void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_
 
   if (active)
   {
-    indicators_view_->ActivateEntry(entry_id);
-    im.RegisterClient(input::Events::POINTER, event_cb);
+    if (im.RegisterClient(input::Events::POINTER, event_cb))
+      indicators_view_->ActivateEntry(entry_id);
   }
   else
   {
