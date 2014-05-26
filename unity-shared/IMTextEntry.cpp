@@ -27,7 +27,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
   : TextEntry("", NUX_TRACKER_LOCATION)
-  , clipboard_enabled(false)
+  , clipboard_enabled(true)
 {}
 
 void IMTextEntry::CopyClipboard()
