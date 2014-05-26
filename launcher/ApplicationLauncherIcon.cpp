@@ -70,6 +70,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   , _startup_notification_timestamp(0)
   , _last_scroll_timestamp(0)
   , _progressive_scroll(0)
+  , _number_of_app_windows(0)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
@@ -513,6 +514,19 @@ std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
   return windows;
 }
 
+long unsigned int ApplicationLauncherIcon::GetNumberOfAppWindows()
+{
+  return _number_of_app_windows;
+}
+
+void ApplicationLauncherIcon::SetNumberOfAppWindows(long unsigned int number_of_app_windows)
+{
+  if (_number_of_app_windows == number_of_app_windows)
+    return;
+
+  _number_of_app_windows = number_of_app_windows;
+}
+
 void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
 {
   for (auto const& window: app_->GetWindows())
@@ -723,6 +737,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 
 void ApplicationLauncherIcon::EnsureWindowState()
 {
+  long unsigned int number_of_app_windows = app_->GetWindows().size();
   std::bitset<monitors::MAX> monitors;
 
   for (auto& window: app_->GetWindows())
@@ -746,7 +761,16 @@ void ApplicationLauncherIcon::EnsureWindowState()
   }
 
   for (unsigned i = 0; i < monitors::MAX; i++)
+  {
     SetWindowVisibleOnMonitor(monitors[i], i);
+
+    if (number_of_app_windows != GetNumberOfAppWindows())
+    {
+      SetNumberOfAppWindows(number_of_app_windows);
+
+      EmitNeedsRedraw(i);
+    }
+  }
 
   WindowsChanged.emit();
 }
