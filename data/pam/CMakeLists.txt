@@ -1,0 +1,1 @@
+install(FILES unity.pam DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/pam.d RENAME unity)
