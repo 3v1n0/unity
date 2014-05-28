@@ -123,9 +123,6 @@ private:
   void UpdateBackgroundColor();
   void UpdateDesktopQuickList();
 
-  long unsigned int GetNumberOfAppWindows();
-  void SetNumberOfAppWindows(long unsigned int number_of_app_windows);
-  
   void OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp);
   void Focus(ActionArg arg);
   bool Spread(bool current_desktop, int state, bool force);
@@ -143,7 +140,6 @@ private:
   Time _startup_notification_timestamp;
   Time _last_scroll_timestamp;
   unsigned int _progressive_scroll;
-  long unsigned int _number_of_app_windows;
   std::set<std::string> _supported_types;
   std::vector<glib::Object<DbusmenuMenuitem>> _menu_items;
   std::vector<glib::Object<DbusmenuMenuitem>> _menu_items_windows;
