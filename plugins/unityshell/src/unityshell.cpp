@@ -3037,7 +3037,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
     else
     {
-      if (window->id() == active_window || decoration::Style::Get()->integrated_menus())
+      if (window->id() == active_window)
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
         uScreen->is_desktop_active_ = false;
@@ -3055,6 +3055,10 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
           }
         }
+      }
+      else if (decoration::Style::Get()->integrated_menus())
+      {
+        draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
       }
       else
       {
