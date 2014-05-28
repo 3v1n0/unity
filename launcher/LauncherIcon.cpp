@@ -738,10 +738,7 @@ void LauncherIcon::SetNumberOfWindowsVisibleOnMonitor(int number_of_windows, int
   if (_number_of_visible_windows[monitor] == number_of_windows)
     return;
 
-  if (!_has_visible_window[monitor] && number_of_windows > 0)
-    _has_visible_window[monitor] = true;
-  else if (_has_visible_window[monitor] && number_of_windows == 0)
-    _has_visible_window[monitor] = false;
+  _has_visible_window[monitor] = (number_of_windows > 0);
 
   _number_of_visible_windows[monitor] = number_of_windows;
 

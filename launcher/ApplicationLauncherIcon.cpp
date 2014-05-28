@@ -737,8 +737,6 @@ void ApplicationLauncherIcon::EnsureWindowState()
       {
         for (unsigned j; j < monitors::MAX; j++)
             ++number_of_windows_on_monitor[j];
-
-        break;
       }
       else
       {
