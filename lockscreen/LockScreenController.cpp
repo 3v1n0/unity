@@ -204,10 +204,17 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
       is_new = true;
     }
 
-    shield->SetGeometry(monitors[i]);
-    shield->SetMinMaxSize(monitors[i].width, monitors[i].height);
+    auto old_geo = shield->GetGeometry();
+    auto new_geo = monitors[i];
+
+    shield->SetGeometry(new_geo);
+    shield->SetMinMaxSize(new_geo.width, new_geo.height);
     shield->primary = (i == primary);
     shield->monitor = i;
+
+    // XXX: manually emit nux::Area::geometry_changed beucase nux can fail to emit it.
+    if (old_geo != new_geo)
+      shield->geometry_changed.emit(shield.GetPointer(), new_geo);
 
     if (is_new && fade_animator_.GetCurrentValue() > 0)
     {
