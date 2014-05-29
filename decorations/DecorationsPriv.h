@@ -96,6 +96,7 @@ private:
   void UpdateFrame();
   void CreateFrame(nux::Geometry const&);
   void UpdateFrameGeo(nux::Geometry const&);
+  void UpdateFrameActions();
   void UnsetFrame();
   void SetupWindowControls();
   void CleanupWindowControls();
@@ -122,8 +123,10 @@ private:
   ::CompositeWindow* cwin_;
   ::GLWindow* glwin_;
   ::Window frame_;
-  bool dirty_geo_;
   int monitor_;
+  bool dirty_geo_;
+  unsigned last_mwm_decor_;
+  unsigned last_actions_;
 
   CompRect last_shadow_rect_;
   Quads shadow_quads_;

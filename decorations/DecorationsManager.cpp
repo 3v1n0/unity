@@ -272,13 +272,11 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
   {
     case PropertyNotify:
     {
-      if (event->xproperty.atom == Atoms::mwmHints)
+      if (event->xproperty.atom == Atoms::mwmHints ||
+          event->xproperty.atom == Atoms::wmAllowedActions)
       {
         if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
-        {
-          win->impl_->CleanupWindowControls();
-          win->Update();
-        }
+          win->impl_->UpdateFrameActions();
       }
       else if (event->xproperty.atom == XA_WM_NAME ||
                event->xproperty.atom == Atoms::wmName ||

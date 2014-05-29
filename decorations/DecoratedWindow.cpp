@@ -46,8 +46,10 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , cwin_(CompositeWindow::get(win_))
   , glwin_(GLWindow::get(win_))
   , frame_(0)
-  , dirty_geo_(true)
   , monitor_(0)
+  , dirty_geo_(true)
+  , last_mwm_decor_(0)
+  , last_actions_(0)
   , cv_(Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
@@ -108,6 +110,8 @@ Window::Impl::~Impl()
 void Window::Impl::Update()
 {
   ShouldBeDecorated() ? Decorate() : Undecorate();
+  last_mwm_decor_ = win_->mwmDecor();
+  last_actions_ = win_->actions();
 }
 
 void Window::Impl::Decorate()
@@ -183,6 +187,15 @@ void Window::Impl::UpdateFrame()
 
   if (frame_geo_ != frame_geo)
     UpdateFrameGeo(frame_geo);
+}
+
+void Window::Impl::UpdateFrameActions()
+{
+  if (win_->mwmDecor() != last_mwm_decor_ || win_->actions() != last_actions_)
+  {
+    CleanupWindowControls();
+    Update();
+  }
 }
 
 void Window::Impl::CreateFrame(nux::Geometry const& frame_geo)
