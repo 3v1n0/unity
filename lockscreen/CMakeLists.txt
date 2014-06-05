@@ -24,6 +24,8 @@ set (LOCKSCREEN_SOURCES
      LockScreenShield.cpp
      LockScreenShieldFactory.cpp
      LockScreenPanel.cpp
+     LockScreenAcceleratorController.cpp
+     LockScreenAccelerators.cpp
      ScreenSaverDBusManager.cpp
      UserAuthenticatorPam.cpp
      UserPromptView.cpp

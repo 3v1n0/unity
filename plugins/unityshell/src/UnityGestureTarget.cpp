@@ -38,6 +38,9 @@ UnityGestureTarget::UnityGestureTarget()
 
 GestureDeliveryRequest UnityGestureTarget::GestureEvent(const nux::GestureEvent &event)
 {
+  if (UnityScreen::get(screen)->lockscreen_controller()->IsLocked())
+    return GestureDeliveryRequest::NONE;
+
   if (event.GetGestureClasses() & DRAG_GESTURE)
   {
     if (launcher.IsValid())

@@ -25,6 +25,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "LockScreenShieldFactory.h"
+#include "LockScreenAcceleratorController.h"
 #include "ScreenSaverDBusManager.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
@@ -60,6 +61,7 @@ private:
   void BlankWindowGrabEnable(bool grab);
   void SimulateActivity();
   void ResetPostLockScreenSaver();
+  void ActivatePanel();
 
   void OnLockRequested(bool prompt);
   void OnUnlockRequested();
@@ -74,6 +76,7 @@ private:
   DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
   indicator::Indicators::Ptr indicators_;
+  AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
 
@@ -86,6 +89,7 @@ private:
 
   connection::Wrapper uscreen_connection_;
   connection::Wrapper suspend_connection_;
+  connection::Wrapper hidden_window_connection_;
   connection::Wrapper motion_connection_;
   connection::Wrapper key_connection_;
 

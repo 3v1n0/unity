@@ -1,3 +1,124 @@
+unity (7.2.0+14.10.20140512.4-0ubuntu1) utopic; urgency=low
+
+  [ Stephen M. Webb ]
+  * lockscreen/LockScreenAccelerators.h: added required header for
+    std:vector definition
+  * disabled precompiled headers on arm64 Ubuntu package builds (LP:
+    #1317276)
+
+  [ Brandon Schaefer ]
+  * Set the max width, so our static text wraps. So we don't end up
+    rendering text out of the view area. (LP: #1312749)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: toggle activation of all the unity compiz actions when
+    locking the screen Also, make sure that the lockscreen views are
+    treated as "always-on-front" windows by nux (and this applies to
+    both visibility and events).
+  * PanelService: emit an invalid EntryActivated signal if the menu
+    hasn't actually been shown In addition, if the menu is not visible
+    after the first popup call, try to show a menu without keyboard
+    focus. This will make possible to see menus also when there's a key-
+    grab (although they will be without keyboard support). Finally,
+    reset the menu state, if that failed.
+  * UnityScreen: always paint the lockscreen above, just add menu and
+    onboard as exceptions Some code cleanup, factorizing similar code.
+    (LP: #1313280)
+  * UnityScreen: don't try to show Dash/Hud if the screen is grabbed
+    Also move the dash opening out from LauncherController, and get rid
+    of UBus as first initialization source, as it can only slow things
+    down here. (LP: #741869)
+  * PluginAdapter: make sure we don't try to call an invalid
+    initiate/terminate callback function (LP: #1221673)
+  * DebugDBusInterface: match properties if they are in the AP array
+    form [<type>, <value>] (LP: #1307748)
+
+  [ William Hua ]
+  * Add proper support for modifier-only shortcuts on the lock screen.
+    (LP: #1291461)
+
+  [ Jinkyu Yi ]
+  * Dash: Fix problem at checking blacklisted unicode range (LP:
+    #1251193)
+
+  [ Andrea Azzarone ]
+  * Add a warning in the session dialog if other sessions are still
+    open. (LP: #1281058)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 May 2014 22:03:27 +0000
+
+unity (7.2.0+14.04.20140423-0ubuntu2) utopic; urgency=medium
+
+  * debian/control: depends on autopilot-desktop-legacy rather than
+    autopilot-desktop.
+
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Thu, 01 May 2014 00:32:05 -0400
+
+unity (7.2.0+14.04.20140423-0ubuntu1.2) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: more lock screen bypass issues, and regression with
+    shutdown dialog (LP: #1314247)
+    - debian/patches/lp1314247.patch: improve popup menu handling in
+      lockscreen/LockScreenShield.cpp, lockscreen/LockScreenPanel.cpp,
+      services/panel-service.c, plugins/unityshell/src/unityshell.cpp,
+      lockscreen/LockScreenController.*, shutdown/SessionController.cpp,
+      tests/test_session_controller.cpp.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 30 Apr 2014 11:11:18 -0400
+
+unity (7.2.0+14.04.20140423-0ubuntu1.1) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: lock screen bypass (LP: #1313885)
+    - debian/patches/lp1313885.patch: improve lockscreen logic in
+      lockscreen/LockScreenController.cpp, lockscreen/LockScreenShield.*,
+      plugins/unityshell/src/unityshell.*.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Mon, 28 Apr 2014 22:29:13 -0400
+
+unity (7.2.0+14.04.20140423-0ubuntu1) trusty; urgency=low
+
+  [ Chris Townsend ]
+  * When setting the STARTING quirk for Application Launcher icons, only
+    do it for the monitor specified in the passed in args. (LP:
+    #1291362)
+
+  [ Andrea Azzarone ]
+  * Close dash/hud/etc. on signal locked too. (LP: #1308850)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 23 Apr 2014 14:40:24 +0000
+
+unity (7.2.0+14.04.20140416-0ubuntu1) trusty; urgency=low
+
+  [ Andrea Azzarone ]
+  * Do not allow to activate twice the same entry! (LP: #1308572)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: save a locked.stamp file when locking/unlocking, to
+    relock on startup This makes unity to relocks if it was locked
+    before crashing... (LP: #1308572)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 16 Apr 2014 22:41:19 +0000
+
+unity (7.2.0+14.04.20140414.1-0ubuntu1) trusty; urgency=low
+
+  [ Alfred Neumayer ]
+  * Security issue: Gestures on the lock screen allow to peek inside
+    running applications. As with keyboard input, gestures should be
+    blocked while the screen is locked. (LP: #1303041)
+
+  [ Sami Jaktholm ]
+  * Scale: Correctly detect the activation of a scale and set
+    scale_just_activated_ to true properly. (LP: #1288789)
+
+  [ Marco Trevisan (Treviño) ]
+  * CompizUtils: only shadow-decorate alpha windows that have full
+    decorations as well Since alpha windows might have custom shapes,
+    it's safer not to shadow-decorate them unless they don't provide,
+    for sure, a full decoration. This fixes, between the others, the
+    unity force-quit dialog. (LP: #1281825)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Apr 2014 14:22:11 +0000
+
 unity (7.2.0+14.04.20140411-0ubuntu1) trusty; urgency=low
 
   [ Sami Jaktholm ]

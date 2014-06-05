@@ -36,8 +36,8 @@ namespace unity
 namespace lockscreen
 {
 
-Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, int monitor_num, bool is_primary)
-  : AbstractShield(session_manager, indicators, monitor_num, is_primary)
+Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, Accelerators::Ptr const& accelerators, int monitor_num, bool is_primary)
+  : AbstractShield(session_manager, indicators, accelerators, monitor_num, is_primary)
   , bg_settings_(std::make_shared<BackgroundSettings>())
   , prompt_view_(nullptr)
   , panel_view_(nullptr)
@@ -143,13 +143,25 @@ Panel* Shield::CreatePanel()
     {
       if (active)
       {
+        regrab_conn_->disconnect();
         UnGrabPointer();
         UnGrabKeyboard();
       }
       else
       {
-        GrabPointer();
-        GrabKeyboard();
+        auto& wc = nux::GetWindowCompositor();
+
+        if (!wc.GrabPointerAdd(this) || !wc.GrabKeyboardAdd(this))
+        {
+          regrab_conn_ = WindowManager::Default().screen_ungrabbed.connect([this] {
+            if (primary())
+            {
+              GrabPointer();
+              GrabKeyboard();
+            }
+            regrab_conn_->disconnect();
+          });
+        }
       }
     }
   });
@@ -171,14 +183,25 @@ UserPromptView* Shield::CreatePromptView()
   return prompt_view;
 }
 
-nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long key_sym, unsigned long modifiers)
+nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsigned long modifiers)
 {
   if (primary)
   {
-    grab_key.emit(modifiers, key_sym);
+    grab_key.emit(modifiers, keysym);
 
-    if (panel_view_ && panel_view_->WillHandleKeyEvent(etype, key_sym, modifiers))
-      return panel_view_;
+    if (accelerators_)
+    {
+      if (etype == nux::EVENT_KEY_DOWN)
+      {
+        if (accelerators_->HandleKeyPress(keysym, modifiers))
+          return panel_view_;
+      }
+      else if (etype == nux::EVENT_KEY_UP)
+      {
+        if (accelerators_->HandleKeyRelease(keysym, modifiers))
+          return panel_view_;
+      }
+    }
 
     if (prompt_view_)
     {
@@ -210,6 +233,12 @@ nux::Area* Shield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType
 bool Shield::IsIndicatorOpen() const
 {
   return panel_view_ ? panel_view_->active() : false;
+}
+
+void Shield::ActivatePanel()
+{
+  if (panel_view_)
+    panel_view_->ActivatePanel();
 }
 
 }

@@ -25,6 +25,7 @@
 #include <UnityCore/Indicators.h>
 
 #include "unity-shared/MockableBaseWindow.h"
+#include "LockScreenAccelerators.h"
 
 namespace unity
 {
@@ -34,12 +35,13 @@ namespace lockscreen
 class AbstractShield : public MockableBaseWindow
 {
 public:
-  AbstractShield(session::Manager::Ptr const& session, indicator::Indicators::Ptr const& indicators, int monitor_num, bool is_primary)
+  AbstractShield(session::Manager::Ptr const& session, indicator::Indicators::Ptr const& indicators, Accelerators::Ptr const& accelerators, int monitor_num, bool is_primary)
     : MockableBaseWindow("Unity Lockscreen")
     , primary(is_primary)
     , monitor(monitor_num)
     , session_manager_(session)
     , indicators_(indicators)
+    , accelerators_(accelerators)
   {}
 
   nux::Property<bool> primary;
@@ -47,6 +49,7 @@ public:
 
   using MockableBaseWindow::RemoveLayout;
   virtual bool IsIndicatorOpen() const = 0;
+  virtual void ActivatePanel() = 0;
 
   sigc::signal<void, int, int> grab_motion;
   sigc::signal<void, unsigned long, unsigned long> grab_key;
@@ -54,6 +57,7 @@ public:
 protected:
   session::Manager::Ptr session_manager_;
   indicator::Indicators::Ptr indicators_;
+  Accelerators::Ptr accelerators_;
 };
 
 } // lockscreen
