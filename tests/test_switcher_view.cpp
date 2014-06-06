@@ -118,7 +118,6 @@ TEST_F(TestSwitcherView, Initiate)
   EXPECT_EQ(switcher.text_size, 15);
   EXPECT_EQ(switcher.animation_length, 250);
   EXPECT_EQ(switcher.monitor, 0);
-  EXPECT_EQ(switcher.spread_size, 3.5f);
   ASSERT_NE(switcher.text_view_, nullptr);
   ASSERT_NE(switcher.icon_renderer_, nullptr);
   EXPECT_EQ(switcher.icon_renderer_->pip_style, ui::OVER_TILE);
