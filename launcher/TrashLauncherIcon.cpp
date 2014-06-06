@@ -173,6 +173,7 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   }
 
   SetQuirk(LauncherIcon::Quirk::PULSE_ONCE, true);
+  FullyAnimateQuirkDelayed(100, LauncherIcon::Quirk::SHIMMER);
 }
 
 std::string TrashLauncherIcon::GetName() const

@@ -524,6 +524,7 @@ void UnityScreen::initAltTabNextWindow()
 
 void UnityScreen::OnInitiateSpread()
 {
+  scale_just_activated_ = super_keypressed_;
   spread_filter_ = std::make_shared<spread::Filter>();
   spread_filter_->text.changed.connect([this] (std::string const& filter) {
     if (filter.empty())
@@ -2001,19 +2002,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
 {
   PluginAdapter& adapter = PluginAdapter::Default();
   adapter.NotifyCompizEvent(plugin, event, option);
-  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
-
-  if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
-  {
-    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
-  }
-
-  if (super_keypressed_ && g_strcmp0(plugin, "scale") == 0 &&
-      g_strcmp0(event, "activate") == 0)
-  {
-    scale_just_activated_ = CompOption::getBoolOptionNamed(option, "active");
-  }
-
+  compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent(plugin, event, option);
   screen->handleCompizEvent(plugin, event, option);
 }
 
@@ -3964,8 +3953,10 @@ void UnityScreen::initLauncher()
     CompOption::Value v(launcher_width);
     screen->setOptionForPlugin("expo", "x_offset", v);
 
-    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
-      screen->setOptionForPlugin("scale", "x_offset", v);
+    if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
+      v.set(0);
+
+    screen->setOptionForPlugin("scale", "x_offset", v);
   };
 
   for (auto const& launcher : launcher_controller_->launchers())

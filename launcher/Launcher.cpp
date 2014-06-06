@@ -157,6 +157,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   hide_machine_.should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
   hide_machine_.reveal_progress.changed.connect(redraw_cb);
   hover_machine_.should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
+  bg_effect_helper_.enabled.changed.connect(redraw_cb);
 
   mouse_down.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
@@ -599,7 +600,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, RenderArg& 
   else
     urgent_progress = CLAMP(urgent_progress * 3.0f - 2.0f, 0.0f, 1.0f);  // we want to go 3x faster than the urgent normal cycle
 
-  arg.glow_intensity = urgent_progress;
+  arg.glow_intensity = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::GLOW, monitor()) + urgent_progress;
 
   if (options()->urgent_animation() == URGENT_ANIMATION_WIGGLE)
   {
@@ -1169,6 +1170,9 @@ void Launcher::OnSpreadChanged()
   hide_machine_.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, active);
   bg_effect_helper_.enabled = active;
 
+  if (hide_machine_.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
+    return;
+
   if (active && icon_under_mouse_)
     icon_under_mouse_->HideTooltip();
 
@@ -1590,6 +1594,7 @@ void Launcher::SetupIconAnimations(AbstractLauncherIcon::Ptr const& icon)
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::CENTER_SAVED, ANIM_DURATION, monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PROGRESS, ANIM_DURATION, monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::DESAT, ANIM_DURATION_SHORT_SHORT, monitor());
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::GLOW, ANIM_DURATION_SHORT, monitor());
 
   if (options()->urgent_animation() == URGENT_ANIMATION_WIGGLE)
     icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::URGENT, (ANIM_DURATION_SHORT * WIGGLE_CYCLES), monitor());
@@ -2521,7 +2526,10 @@ void Launcher::DndHoveredIconReset()
   }
 
   if (!steal_drag_ && dnd_hovered_icon_)
+  {
     dnd_hovered_icon_->SendDndLeave();
+    dnd_hovered_icon_->SetQuirk(AbstractLauncherIcon::Quirk::GLOW, false, monitor());
+  }
 
   steal_drag_ = false;
   drag_edge_touching_ = false;
@@ -2578,7 +2586,10 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
         mouse_position_.y <= (parent_->GetGeometry().height - icon_size_.CP(cv_) - 2 * SPACE_BETWEEN_ICONS.CP(cv_)))
     {
       if (dnd_hovered_icon_)
-          dnd_hovered_icon_->SendDndLeave();
+      {
+        dnd_hovered_icon_->SendDndLeave();
+        dnd_hovered_icon_->SetQuirk(AbstractLauncherIcon::Quirk::GLOW, false, monitor());
+      }
 
       animation::StartOrReverse(dnd_hide_animation_, animation::Direction::FORWARD);
       drag_edge_touching_ = true;
@@ -2637,6 +2648,9 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       {
         hovered_icon->SendDndEnter();
         drag_action_ = hovered_icon->QueryAcceptDrop(dnd_data_);
+
+        if (drag_action_ != nux::DNDACTION_NONE)
+          hovered_icon->SetQuirk(AbstractLauncherIcon::Quirk::GLOW, true, monitor());
       }
       else
       {
@@ -2644,7 +2658,10 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       }
 
       if (dnd_hovered_icon_)
+      {
         dnd_hovered_icon_->SendDndLeave();
+        dnd_hovered_icon_->SetQuirk(AbstractLauncherIcon::Quirk::GLOW, false, monitor());
+      }
 
       dnd_hovered_icon_ = hovered_icon;
     }
