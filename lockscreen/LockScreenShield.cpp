@@ -86,12 +86,6 @@ void Shield::UpdateBackgroundTexture()
   }
 }
 
-void Shield::CheckCapsLockPrompt()
-{
-  if (prompt_view_)
-    prompt_view_->CheckIfCapsLockOn();
-}
-
 void Shield::ShowPrimaryView()
 {
   GrabPointer();

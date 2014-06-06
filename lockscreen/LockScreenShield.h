@@ -39,7 +39,6 @@ public:
   Shield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, Accelerators::Ptr const&, int monitor, bool is_primary);
 
   bool IsIndicatorOpen() const override;
-  void CheckCapsLockPrompt() override;
   void ActivatePanel() override;
 
 protected:

@@ -171,7 +171,6 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
 
       primary_shield_->primary = false;
       primary_shield_ = shield;
-      primary_shield_->CheckCapsLockPrompt();
       shield->primary = true;
       nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
       auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
