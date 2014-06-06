@@ -87,9 +87,14 @@ private:
   bool AcceptKeyNavFocus();
 
   bool ShouldBeHighlighted();
+
+  nux::Geometry GetWaringIconGeometry() const;
   void CheckIfCapsLockOn();
 
   nux::ObjectPtr<nux::BaseTexture> LoadWarningIcon(int icon_size);
+  void LoadWarningTooltip();
+
+  void PaintWarningTooltip(nux::GraphicsEngine& graphics_engine);
 
 protected:
   void OnInputHintChanged();
@@ -109,7 +114,6 @@ protected:
   IMTextEntry* pango_entry_;
 
 private:
-
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
@@ -119,6 +123,10 @@ private:
   nux::Property<bool> caps_lock_on;
   int last_width_;
   int last_height_;
+  bool mouse_over_warning_icon_;
+
+  IconTexture* warning_;
+  nux::ObjectPtr<nux::BaseTexture> warning_tooltip_;
 
   glib::SignalManager sig_manager_;
 };

@@ -38,10 +38,14 @@ const int TEXT_INPUT_RIGHT_BORDER = 10;
 
 const int HIGHLIGHT_HEIGHT = 24;
 
+const RawPixel TOOLTIP_Y_OFFSET  =  3_em;
+const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
 
-std::string WARNING_ICON = "dialog-warning-symbolic";
+// Caps is on 0x1, couldn't find any #define in /usr/include/X11
+const int CAPS_STATE_ON = 0x1;
 
+std::string WARNING_ICON    = "dialog-warning-symbolic";
 // Fonts
 const std::string HINT_LABEL_DEFAULT_FONT_NAME = "Ubuntu";
 const int HINT_LABEL_FONT_SIZE = 11;
@@ -88,6 +92,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , caps_lock_on(false)
   , last_width_(-1)
   , last_height_(-1)
+  , mouse_over_warning_icon_(false)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, TEXT_INPUT_RIGHT_BORDER);
@@ -122,19 +127,22 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  auto* warning = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE));
-  warning->SetVisible(caps_lock_on());
-  layout_->AddView(warning, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  caps_lock_on.changed.connect([this, warning] (bool on) {
+  warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE));
+  warning_->SetVisible(caps_lock_on());
+  layout_->AddView(warning_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  caps_lock_on.changed.connect([this] (bool on) {
     if (show_caps_lock)
     {
-      warning->SetVisible(on);
+      warning_->SetVisible(on);
       QueueRelayout();
       QueueDraw();
     }
   });
 
   show_caps_lock.changed.connect([this] (bool changed) {
+    if (!warning_tooltip_.IsValid())
+      LoadWarningTooltip();
+
     CheckIfCapsLockOn();
   });
 
@@ -152,6 +160,16 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   im_active.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_active));
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_preedit));
   input_hint.changed.connect([this](std::string const& s) { OnInputHintChanged(); });
+
+  warning_->mouse_enter.connect([this] (int x, int y, int button, int key_flags) {
+    mouse_over_warning_icon_ = true;
+    QueueDraw();
+  });
+
+  warning_->mouse_leave.connect([this] (int x, int y, int button, int key_flags) {
+    mouse_over_warning_icon_ = false;
+    QueueDraw();
+  });
 }
 
 void TextInput::CheckIfCapsLockOn()
@@ -160,8 +178,7 @@ void TextInput::CheckIfCapsLockOn()
   unsigned int state = 0;
   XkbGetIndicatorState(dpy, XkbUseCoreKbd, &state);
 
-  // Caps is on 0x1, couldn't find any #define in /usr/include/X11
-  if ((state & 0x1) == 1)
+  if ((state & CAPS_STATE_ON) == 1)
     caps_lock_on = true;
   else
     caps_lock_on = false;
@@ -211,6 +228,44 @@ nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)
     dash::previews::Style& preview_style = dash::previews::Style::Instance();
     return nux::ObjectPtr<nux::BaseTexture>(preview_style.GetWarningIcon());
   }
+}
+
+void TextInput::LoadWarningTooltip()
+{
+  glib::String font_name;
+  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
+
+  glib::Object<GtkStyleContext> style_context(gtk_style_context_new());
+  std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
+  gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_TOOLTIP);
+
+  gtk_style_context_set_path(style_context, widget_path.get());
+  gtk_style_context_add_class(style_context, "tooltip");
+
+  glib::Object<PangoLayout> layout;
+  glib::Object<PangoContext> context(gdk_pango_context_get_for_screen(gdk_screen_get_default()));
+  layout = pango_layout_new(context);
+
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
+  pango_context_set_font_description(context, desc.get());
+  pango_context_set_language(context, gtk_get_default_language());
+
+  pango_layout_set_height(layout, -1); //avoid wrap lines
+  pango_layout_set_text(layout, _("Caps lock is on"), -1);
+
+  nux::Size extents;
+  pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
+  extents.width  += TOOLTIP_OFFSET;
+  extents.height += TOOLTIP_OFFSET;
+
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, extents.width, extents.height);
+  cairo_t* cr = cg.GetInternalContext();
+
+  gtk_render_background(style_context, cr, 0, 0, extents.width, extents.height);
+  gtk_render_frame(style_context, cr, 0, 0, extents.width, extents.height);
+  gtk_render_layout(style_context, cr, TOOLTIP_OFFSET/2, TOOLTIP_OFFSET/2, layout);
+
+  warning_tooltip_ = texture_ptr_from_cairo_graphics(cg);
 }
 
 void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -270,7 +325,6 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::GetPainter().PushLayer(GfxContext, highlight_layer_->GetGeometry(), highlight_layer_.get());
   }
 
-
   if (!IsFullRedraw())
   {
     gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_.get());
@@ -282,6 +336,9 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
+  if (caps_lock_on && mouse_over_warning_icon_)
+      PaintWarningTooltip(GfxContext);
+
   if (!IsFullRedraw())
   {
     gPainter.PopBackground();
@@ -292,6 +349,18 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
 
   GfxContext.PopClippingRectangle();
+}
+
+void TextInput::PaintWarningTooltip(nux::GraphicsEngine& graphics_engine)
+{
+  nux::Geometry warning_geo = warning_->GetGeometry();
+
+  nux::Geometry tooltip_geo = {warning_geo.x - (warning_tooltip_->GetWidth() + TOOLTIP_OFFSET / 2),
+                               warning_geo.y - TOOLTIP_Y_OFFSET,
+                               warning_tooltip_->GetWidth(),
+                               warning_tooltip_->GetHeight()};
+
+  nux::GetPainter().PushDrawLayer(graphics_engine, tooltip_geo, CreateWarningLayer(warning_tooltip_.GetPointer()));
 }
 
 void TextInput::UpdateBackground(bool force)
