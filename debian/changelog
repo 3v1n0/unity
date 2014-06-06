@@ -1,3 +1,33 @@
+unity (7.2.0+14.10.20140606.1-0ubuntu1) utopic; urgency=low
+
+  [ Alfred Neumayer ]
+  * Restore the launcher position by reversing the animation and
+    unsetting the DND_PUSHED_OFF quirk. (LP: #1304882)
+
+  [ Brandon Schaefer ]
+  * TextInput: move the warning icon inside the input field, render it
+    white (LP: #1307738)
+  * ShutdownView: Scale up the Buttons and Text plus Borders of the
+    UnityWindowView. (LP: #1308323)
+  * Lockscreen warning icon needs a tooltip to say what the warning is
+    about! (LP: #1308288)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: Focus and, in case, Spread the windows on
+    DnD After 1 second that an user is over an icon, that icon should
+    focus the relative application and Spread its windows if it has more
+    than one opened. Correctly handle the DnD scale in launcher, and
+    apply glow to the icon under pointer. (LP: #607796)
+  * SwitcherView: use RawPixel's for the size values and convert them to
+    match current scaling (LP: #1317348)
+
+  [ Chris Townsend ]
+  * Fix issue where scaling the edge illumination up and down with the
+    size of the Launcher icons would cause the illumination border to be
+    offset and smaller than the icon. (LP: #1309739)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 06 Jun 2014 13:55:32 +0000
+
 unity (7.2.0+14.10.20140512.4-0ubuntu1) utopic; urgency=low
 
   [ Stephen M. Webb ]
