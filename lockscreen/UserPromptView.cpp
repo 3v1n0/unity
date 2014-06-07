@@ -245,6 +245,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
   text_entry->SetPasswordMode(!visible);
   text_entry->SetPasswordChar("•");
   text_entry->SetToggleCursorVisibilityOnKeyFocus(true);
+  text_entry->clipboard_enabled = false;
 
   text_input->SetMinimumHeight(Settings::GRID_SIZE);
   text_input->SetMaximumHeight(Settings::GRID_SIZE);

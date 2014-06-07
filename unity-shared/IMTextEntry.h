@@ -33,6 +33,8 @@ class IMTextEntry : public nux::TextEntry
 public:
   IMTextEntry();
 
+  nux::Property<bool> clipboard_enabled;
+
   bool im_preedit();
 
 protected:
