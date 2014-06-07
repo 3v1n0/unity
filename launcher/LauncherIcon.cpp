@@ -80,6 +80,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _shortcut(0)
   , _allow_quicklist_to_show(true)
   , _center(monitors::MAX)
+  , _number_of_visible_windows(monitors::MAX)
   , _quirks(monitors::MAX)
   , _quirk_animations(monitors::MAX, decltype(_quirk_animations)::value_type(unsigned(Quirk::LAST)))
   , _last_stable(monitors::MAX)
@@ -732,12 +733,15 @@ std::pair<int, nux::Point3> LauncherIcon::GetCenterForMonitor(int monitor) const
   return {-1, nux::Point3()};
 }
 
-void LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
+void LauncherIcon::SetNumberOfWindowsVisibleOnMonitor(int number_of_windows, int monitor)
 {
-  if (_has_visible_window[monitor] == val)
+  if (_number_of_visible_windows[monitor] == number_of_windows)
     return;
 
-  _has_visible_window[monitor] = val;
+  _has_visible_window[monitor] = (number_of_windows > 0);
+
+  _number_of_visible_windows[monitor] = number_of_windows;
+
   EmitNeedsRedraw(monitor);
 }
 

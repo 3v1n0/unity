@@ -724,7 +724,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 
 void ApplicationLauncherIcon::EnsureWindowState()
 {
-  std::bitset<monitors::MAX> monitors;
+  std::vector<int> number_of_windows_on_monitor(monitors::MAX);
 
   for (auto& window: app_->GetWindows())
   {
@@ -736,18 +736,18 @@ void ApplicationLauncherIcon::EnsureWindowState()
       // If monitor is -1 (or negative), show on all monitors.
       if (monitor < 0)
       {
-        monitors.set();
-        break;
+        for (unsigned j; j < monitors::MAX; j++)
+            ++number_of_windows_on_monitor[j];
       }
       else
       {
-        monitors[monitor] = true;
+        ++number_of_windows_on_monitor[monitor];
       }
     }
   }
 
   for (unsigned i = 0; i < monitors::MAX; i++)
-    SetWindowVisibleOnMonitor(monitors[i], i);
+    SetNumberOfWindowsVisibleOnMonitor(number_of_windows_on_monitor[i], i);
 
   WindowsChanged.emit();
 }
