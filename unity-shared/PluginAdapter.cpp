@@ -1245,7 +1245,21 @@ int PluginAdapter::GetViewportVSize() const
 
 bool PluginAdapter::IsScreenGrabbed() const
 {
-  return m_Screen->grabbed();
+  if (m_Screen->grabbed())
+    return true;
+
+  auto* dpy = m_Screen->dpy();
+  auto ret = XGrabKeyboard(dpy, m_Screen->root(), True, GrabModeAsync, GrabModeAsync, CurrentTime);
+
+  if (ret == GrabSuccess)
+  {
+    XUngrabKeyboard(dpy, CurrentTime);
+
+    if (CompWindow* w = m_Screen->findWindow(m_Screen->activeWindow()))
+      w->moveInputFocusTo();
+  }
+
+  return (ret == AlreadyGrabbed);
 }
 
 bool PluginAdapter::IsViewPortSwitchStarted() const

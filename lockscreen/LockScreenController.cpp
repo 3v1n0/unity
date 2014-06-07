@@ -329,9 +329,9 @@ void Controller::OnLockRequested(bool prompt)
   prompt_activation_ = prompt;
 
   lockscreen_timeout_.reset(new glib::Timeout(30, [this] {
-    bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
+    bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsKeyboardGrab());
 
-    if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
+    if (!grabbed_by_blank && WindowManager::Default().IsScreenGrabbed())
     {
       HideBlankWindow();
       LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";
