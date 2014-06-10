@@ -268,7 +268,7 @@ void MultiActionList::Initiate(std::string const& name, CompOption::Vector const
 
   /* Initiate the selected action with the arguments */
   if (CompAction::CallBack const& initiate_cb = primary_action_->initiate())
-    initiate_cb(action, 0, argument);
+    initiate_cb(action, state, argument);
 }
 
 void MultiActionList::InitiateAll(CompOption::Vector const& extra_args, int state) const
