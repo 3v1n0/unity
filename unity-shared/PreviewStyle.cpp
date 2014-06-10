@@ -31,6 +31,33 @@
 
 namespace unity
 {
+
+RawPixel clamp (int x, int low, int high)
+{
+  return RawPixel(CLAMP(x, low, high));
+}
+
+RawPixel clamp (RawPixel x, int low, int high)
+{
+  if (x > RawPixel(high))
+    return RawPixel(high);
+
+  if (x < RawPixel(low))
+    return RawPixel(low);
+
+  return x;
+}
+
+RawPixel max_rawpixel (RawPixel a, RawPixel b)
+{
+  return MAX((double)a, (double)b);
+}
+
+RawPixel min_rawpixel (RawPixel a, RawPixel b)
+{
+  return MIN((double)a, (double)b);
+}
+
 namespace dash
 {
 namespace previews
@@ -40,8 +67,8 @@ namespace
 {
 Style* style_instance = nullptr;
 
-const int preview_width = 770;
-const int preview_height = 380;
+const RawPixel preview_width = 770_em;
+const RawPixel preview_height = 380_em;
 
 typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
@@ -153,100 +180,99 @@ nux::AbstractPaintLayer* Style::GetBackgroundLayer() const
   return new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.1f), true, rop);
 }
 
-int Style::GetNavigatorWidth() const
+RawPixel Style::GetNavigatorWidth() const
 {
-  return 42;
+  return 42_em;
 }
 
-int Style::GetNavigatorIconSize() const
+RawPixel Style::GetNavigatorIconSize() const
 {
-  return 24;  
+  return 24_em;
 }
 
-int Style::GetPreviewWidth() const
+RawPixel Style::GetPreviewWidth() const
 {
-  return preview_width;
+  return RawPixel(preview_width);
 }
 
-int Style::GetPreviewHeight() const
+RawPixel Style::GetPreviewHeight() const
 {
-  return preview_height;
+  return RawPixel(preview_height);
 }
 
-
-int Style::GetPreviewTopPadding() const
+RawPixel Style::GetPreviewTopPadding() const
 {
-  return 100;
+  return 100_em;
 }
 
-int Style::GetDetailsTopMargin() const
+RawPixel Style::GetDetailsTopMargin() const
 {
-  return 5;
+  return 5_em;
 }
 
-int Style::GetDetailsBottomMargin() const
+RawPixel Style::GetDetailsBottomMargin() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetDetailsRightMargin() const
+RawPixel Style::GetDetailsRightMargin() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetDetailsLeftMargin() const
+RawPixel Style::GetDetailsLeftMargin() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetPanelSplitWidth() const
+RawPixel Style::GetPanelSplitWidth() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetAppIconAreaWidth() const
+RawPixel Style::GetAppIconAreaWidth() const
 {
-  return 105;
+  return 105_em;
 }
 
-int Style::GetSpaceBetweenTitleAndSubtitle() const
+RawPixel Style::GetSpaceBetweenTitleAndSubtitle() const
 {
-  return 6;
+  return 6_em;
 }
 
-int Style::GetSpaceBetweenIconAndDetails() const
+RawPixel Style::GetSpaceBetweenIconAndDetails() const
 {
-  return 18;
+  return 18_em;
 }
 
-int Style::GetTrackHeight() const
+RawPixel Style::GetTrackHeight() const
 {
-  return 28;
+  return 28_em;
 }
 
-int Style::GetMusicDurationWidth() const
+RawPixel Style::GetMusicDurationWidth() const
 {
-  return 40;
+  return 40_em;
 }
 
-int Style::GetActionButtonHeight() const
+RawPixel Style::GetActionButtonHeight() const
 {
-  return 34;
+  return 34_em;
 }
 
-int Style::GetActionButtonMaximumWidth() const
+RawPixel Style::GetActionButtonMaximumWidth() const
 {
-  return 175;
+  return 175_em;
 }
 
-int Style::GetSpaceBetweenActions() const
+RawPixel Style::GetSpaceBetweenActions() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetTrackBarHeight() const
+RawPixel Style::GetTrackBarHeight() const
 {
-  return 25;
+  return 25_em;
 }
 
 float Style::GetAppImageAspectRatio() const
@@ -254,24 +280,24 @@ float Style::GetAppImageAspectRatio() const
   return 1.0;
 }
 
-int Style::GetDetailsPanelMinimumWidth() const
+RawPixel Style::GetDetailsPanelMinimumWidth() const
 {
-  return 300;
+  return 300_em;
 }
 
-int Style::GetInfoHintIconSizeWidth() const
+RawPixel Style::GetInfoHintIconSizeWidth() const
 {
-  return 24;
+  return 24_em;
 }
 
-int Style::GetInfoHintNameMinimumWidth() const
+RawPixel Style::GetInfoHintNameMinimumWidth() const
 {
-  return 100;
+  return 100_em;
 }
 
-int Style::GetInfoHintNameMaximumWidth() const
+RawPixel Style::GetInfoHintNameMaximumWidth() const
 {
-  return 160;
+  return 160_em;
 }
 
 float Style::GetDescriptionLineSpacing() const
@@ -279,19 +305,19 @@ float Style::GetDescriptionLineSpacing() const
   return 2.0;
 }
 
-int Style::GetDescriptionLineCount() const
+RawPixel Style::GetDescriptionLineCount() const
 {
-  return 20;
+  return 20_em;
 }
 
-int Style::GetRatingWidgetHeight() const
+RawPixel Style::GetRatingWidgetHeight() const
 {
-  return 36;
+  return 36_em;
 }
 
-int Style::GetStatusIconSize() const
+RawPixel Style::GetStatusIconSize() const
 {
-  return 12;
+  return 12_em;
 }
 
 std::string Style::payment_title_font() const
@@ -344,39 +370,39 @@ nux::Color Style::payment_error_color() const
   return nux::Color(255, 0, 0);
 }
 
-int Style::GetPaymentIconAreaWidth() const
+RawPixel Style::GetPaymentIconAreaWidth() const
 {
-  return 64;
+  return 64_em;
 }
 
-int Style::GetPaymentTextInputHeight() const
+RawPixel Style::GetPaymentTextInputHeight() const
 {
-  return 40;
+  return 40_em;
 }
 
-int Style::GetPaymentLockWidth() const
+RawPixel Style::GetPaymentLockWidth() const
 {
-  return 22;
+  return 22_em;
 }
 
-int Style::GetPaymentLockHeight() const
+RawPixel Style::GetPaymentLockHeight() const
 {
-  return 22;
+  return 22_em;
 }
 
-int Style::GetPaymentHeaderWidth() const
+RawPixel Style::GetPaymentHeaderWidth() const
 {
-  return 850;
+  return 850_em;
 }
 
-int Style::GetPaymentHeaderSpace() const
+RawPixel Style::GetPaymentHeaderSpace() const
 {
-  return 0;
+  return 0_em;
 }
 
-int Style::GetPaymentFormSpace() const
+RawPixel Style::GetPaymentFormSpace() const
 {
-  return 5;
+  return 5_em;
 }
 
 std::string Style::u1_warning_font() const
@@ -389,14 +415,14 @@ float Style::GetVideoImageAspectRatio() const
   return float(540)/380;
 }
 
-int Style::GetAvatarAreaWidth() const
+RawPixel Style::GetAvatarAreaWidth() const
 {
-  return 100;
+  return 100_em;
 }
 
-int Style::GetAvatarAreaHeight() const
+RawPixel Style::GetAvatarAreaHeight() const
 {
-  return 100;  
+  return 100_em;
 }
 
 std::string Style::content_font() const
