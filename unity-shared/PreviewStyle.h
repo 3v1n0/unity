@@ -39,12 +39,6 @@ namespace nux
 
 namespace unity
 {
-
-RawPixel clamp (int x, int low, int high);
-RawPixel clamp (RawPixel x, int low, int high);
-RawPixel max_rawpixel(RawPixel a, RawPixel b);
-RawPixel min_rawpixel(RawPixel a, RawPixel b);
-
 namespace dash
 {
 namespace previews

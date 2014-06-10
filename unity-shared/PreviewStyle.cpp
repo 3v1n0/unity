@@ -31,33 +31,6 @@
 
 namespace unity
 {
-
-RawPixel clamp (int x, int low, int high)
-{
-  return RawPixel(CLAMP(x, low, high));
-}
-
-RawPixel clamp (RawPixel x, int low, int high)
-{
-  if (x > RawPixel(high))
-    return RawPixel(high);
-
-  if (x < RawPixel(low))
-    return RawPixel(low);
-
-  return x;
-}
-
-RawPixel max_rawpixel (RawPixel a, RawPixel b)
-{
-  return MAX((double)a, (double)b);
-}
-
-RawPixel min_rawpixel (RawPixel a, RawPixel b)
-{
-  return MIN((double)a, (double)b);
-}
-
 namespace dash
 {
 namespace previews
@@ -192,12 +165,12 @@ RawPixel Style::GetNavigatorIconSize() const
 
 RawPixel Style::GetPreviewWidth() const
 {
-  return RawPixel(preview_width);
+  return preview_width;
 }
 
 RawPixel Style::GetPreviewHeight() const
 {
-  return RawPixel(preview_height);
+  return preview_height;
 }
 
 RawPixel Style::GetPreviewTopPadding() const
