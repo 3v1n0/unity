@@ -41,17 +41,19 @@ namespace previews
 DECLARE_LOGGER(logger, "unity.dash.preview.infohintwidget");
 namespace
 {
-const int layout_spacing = 12;
+const RawPixel layout_spacing = 12_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewInfoHintWidget);
 
 PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size)
 : View(NUX_TRACKER_LOCATION)
+, scale(1.0)
 , icon_size_(icon_size)
 , preview_model_(preview_model)
 {
   SetupViews();
+  scale.changed.connect(sigc::mem_fun(this, &PreviewInfoHintWidget::UpdateScale));
 }
 
 PreviewInfoHintWidget::~PreviewInfoHintWidget()
@@ -150,43 +152,42 @@ void PreviewInfoHintWidget::SetupViews()
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
-  nux::VLayout* layout = new nux::VLayout();
-  layout->SetSpaceBetweenChildren(6);
+  layout_ = new nux::VLayout();
+  layout_->SetSpaceBetweenChildren((6_em).CP(scale));
 
   for (dash::Preview::InfoHintPtr info_hint : preview_model_->GetInfoHints())
   {
-    nux::HLayout* hint_layout = new nux::HLayout();
-    hint_layout->SetSpaceBetweenChildren(layout_spacing);
+    hint_layout_ = new nux::HLayout();
+    hint_layout_->SetSpaceBetweenChildren(layout_spacing.CP(scale));
 
-    StaticCairoTextPtr info_name;
     if (!info_hint->display_name.empty())
     {
       // The "%s" is used in the dash preview to display the "<hint>: <value>" infos
       std::string tmp_display_name = glib::String(g_strdup_printf (_("%s:"), info_hint->display_name.c_str())).Str();
 
-      info_name = new StaticCairoText(tmp_display_name, true, NUX_TRACKER_LOCATION);
-      info_name->SetFont(style.info_hint_bold_font());
-      info_name->SetLines(-1);
-      info_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
-      info_name->mouse_click.connect(on_mouse_down);
-      hint_layout->AddView(info_name.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
+      info_name_ = new StaticCairoText(tmp_display_name, true, NUX_TRACKER_LOCATION);
+      info_name_->SetFont(style.info_hint_bold_font());
+      info_name_->SetLines(-1);
+      info_name_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
+      info_name_->mouse_click.connect(on_mouse_down);
+      hint_layout_->AddView(info_name_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
     }
 
-    StaticCairoTextPtr info_value(new StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION));
-    info_value->SetFont(style.info_hint_font());
-    info_value->SetLines(-1);
-    info_value->mouse_click.connect(on_mouse_down);
-    hint_layout->AddView(info_value.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
+    info_value_ = new StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION);
+    info_value_->SetFont(style.info_hint_font());
+    info_value_->SetLines(-1);
+    info_value_->mouse_click.connect(on_mouse_down);
+    hint_layout_->AddView(info_value_.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
 
-    InfoHint info_hint_views(info_name, info_value);
+    InfoHint info_hint_views(info_name_, info_value_);
     info_hints_.push_back(info_hint_views);
 
-    layout->AddLayout(hint_layout, 0);
+    layout_->AddLayout(hint_layout_, 0);
   }
 
   mouse_click.connect(on_mouse_down);
 
-  SetLayout(layout);
+  SetLayout(layout_);
 }
 
 
@@ -198,10 +199,10 @@ void PreviewInfoHintWidget::PreLayoutManagement()
   int info_hint_width = 0;
   for (InfoHint const& info_hint : info_hints_)
   {
-    int width = style.GetInfoHintNameMinimumWidth();
+    RawPixel width = style.GetInfoHintNameMinimumWidth();
     if (info_hint.first)
     {
-      width = info_hint.first->GetTextExtents().width;
+      width = (RawPixel)info_hint.first->GetTextExtents().width;
 
       if (width < style.GetInfoHintNameMinimumWidth())
         width = style.GetInfoHintNameMinimumWidth();
@@ -215,25 +216,43 @@ void PreviewInfoHintWidget::PreLayoutManagement()
     }
   }
 
-  int info_value_width = geo.width;
-  info_value_width -= layout_spacing;
-  info_value_width -= info_hint_width;
-  info_value_width = MAX(0, info_value_width);
+  RawPixel info_value_width = geo.width;
+  info_value_width = info_value_width - layout_spacing;
+  info_value_width = info_value_width - info_hint_width;
+  info_value_width = std::max(0_em, info_value_width);
 
   for (InfoHint const& info_hint : info_hints_)
   {
     if (info_hint.first)
     {
-      info_hint.first->SetMinimumWidth(info_hint_width);
-      info_hint.first->SetMaximumWidth(info_hint_width);
+      info_hint.first->SetMinimumWidth(((RawPixel)info_hint_width).CP(scale));
+      info_hint.first->SetMaximumWidth(((RawPixel)info_hint_width).CP(scale));
     }
     if (info_hint.second)
     {
-      info_hint.second->SetMaximumWidth(info_value_width);
+      info_hint.second->SetMaximumWidth(info_value_width.CP(scale));
     }
   }
 
   View::PreLayoutManagement();
+}
+
+void PreviewInfoHintWidget::UpdateScale(double scale)
+{
+  if (info_name_)
+    info_name_->SetScale(scale);
+
+  if (info_value_)
+    info_value_->SetScale(scale);
+
+  if (layout_)
+    layout_->SetSpaceBetweenChildren((6_em).CP(scale));
+
+  if (hint_layout_)
+    hint_layout_->SetSpaceBetweenChildren(layout_spacing.CP(scale));
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews

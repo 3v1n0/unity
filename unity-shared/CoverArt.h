@@ -58,6 +58,9 @@ public:
 
   void SetFont(std::string const& font);
 
+  void UpdateScale(double scale);
+  nux::Property<double> scale;
+
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);

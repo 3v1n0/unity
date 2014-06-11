@@ -74,6 +74,9 @@ public:
   sigc::signal<void> navigate_right;
   sigc::signal<void> request_close;
 
+  nux::Property<double> scale;
+  void UpdateScale(double scale);
+
   bool AcceptKeyNavFocus();
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);

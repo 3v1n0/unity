@@ -58,7 +58,8 @@ class PreviewContent : public nux::Layout, public debug::Introspectable
 {
 public:
   PreviewContent(PreviewContainer*const parent)
-  : parent_(parent)
+  : scale(1.0)
+  , parent_(parent)
   , progress_(0.0)
   , curve_progress_(0.0)
   , animating_(false)
@@ -75,7 +76,18 @@ public:
     });
     Style& style = previews::Style::Instance();
 
-    spin_= style.GetSearchSpinIcon(32);
+    spin_= style.GetSearchSpinIcon(32_em);
+
+    scale.changed.connect(sigc::mem_fun(this, &PreviewContent::UpdateScale));
+  }
+
+  void UpdateScale(double scale)
+  {
+    Style& style = previews::Style::Instance();
+    spin_ = style.GetSearchSpinIcon((32_em).CP(scale));
+
+    for (auto* area : GetChildren())
+      static_cast<previews::Preview*>(area)->scale = scale;
   }
 
   // From debug::Introspectable
@@ -107,6 +119,7 @@ public:
       AddChild(preview.GetPointer());
       AddView(preview.GetPointer());
       preview->SetVisible(false);
+      preview->scale = scale();
     }
     else
     {
@@ -355,6 +368,7 @@ public:
   sigc::signal<void> start_navigation;
   sigc::signal<void> continue_navigation;
   sigc::signal<void> end_navigation;
+  nux::Property<double> scale;
 
 private:
   PreviewContainer*const parent_;
@@ -394,6 +408,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PreviewContainer);
 
 PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , preview_layout_(nullptr)
   , nav_disabled_(Navigation::NONE)
   , navigation_progress_speed_(0.0)
@@ -408,6 +423,7 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
 
   key_down.connect(sigc::mem_fun(this, &PreviewContainer::OnKeyDown));
   mouse_click.connect(sigc::mem_fun(this, &PreviewContainer::OnMouseDown));
+  scale.changed.connect(sigc::mem_fun(this, &PreviewContainer::UpdateScale));
 }
 
 PreviewContainer::~PreviewContainer()
@@ -692,6 +708,12 @@ void PreviewContainer::OnMouseDown(int x, int y, unsigned long button_flags, uns
 nux::Geometry PreviewContainer::GetLayoutGeometry() const
 {
   return layout_content_->GetAbsoluteGeometry();  
+}
+
+void PreviewContainer::UpdateScale(double scale)
+{
+  if (preview_layout_)
+    preview_layout_->scale = scale;
 }
 
 } // namespace previews

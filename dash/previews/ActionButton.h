@@ -59,6 +59,9 @@ public:
   std::string GetLabel() const;
   std::string GetExtraText() const;
 
+  void UpdateScale(double scale);
+  nux::Property<double> scale;
+
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
