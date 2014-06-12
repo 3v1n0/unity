@@ -75,7 +75,7 @@ public:
   virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   nux::Property<double> scale;
-  void UpdateScale(double scale);
+  virtual void UpdateScale(double scale);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
