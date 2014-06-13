@@ -31,8 +31,8 @@ namespace unity
 {
 namespace
 {
-const RawPixel kMinButtonHeight = 34_em;
-const RawPixel kMinButtonWidth  = 48_em;
+const RawPixel MIN_BUTTON_HEIGHT = 34_em;
+const RawPixel MIN_BUTTON_WIDTH  = 48_em;
 
 const RawPixel icon_size  = 24_em;
 }
@@ -97,8 +97,8 @@ void ActionButton::InitTheme()
     cr_focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
   }
 
-  SetMinimumHeight(kMinButtonHeight.CP(scale));
-  SetMinimumWidth(kMinButtonWidth.CP(scale));
+  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(scale));
+  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
 }
 
 void ActionButton::SetExtraHint(std::string const& extra_hint, std::string const& font_hint)
@@ -316,8 +316,8 @@ std::string ActionButton::GetExtraText() const
 
 void ActionButton::UpdateScale(double scale)
 {
-  SetMinimumHeight(kMinButtonHeight.CP(scale));
-  SetMinimumWidth(kMinButtonWidth.CP(scale));
+  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(scale));
+  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
 
   if (image_)
   {

@@ -301,14 +301,11 @@ void Preview::UpdateScale(double scale)
   if (preview_info_hints_)
     preview_info_hints_->scale = scale;
 
-  if (!action_buttons_.empty())
+  for (nux::AbstractButton* button : action_buttons_)
   {
-    for (nux::AbstractButton* button : action_buttons_)
-    {
-      ActionButton* bn = dynamic_cast<ActionButton*>(button);
-      if (bn)
-        bn->scale = scale;
-    }
+    ActionButton* bn = dynamic_cast<ActionButton*>(button);
+    if (bn)
+      bn->scale = scale;
   }
 
   QueueRelayout();
