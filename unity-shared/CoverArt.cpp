@@ -259,15 +259,16 @@ void CoverArt::IconLoaded(std::string const& texid,
       return;
     }
 
-    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, ((RawPixel)pixbuf_width).CP(scale),
-        ((RawPixel)pixbuf_height).CP(scale));
+    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, RawPixel(pixbuf_width).CP(scale), RawPixel(pixbuf_height).CP(scale));
+    cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
+
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
-    float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
-    cairo_scale(cr, scale, scale);
+    float size_ratio = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
+    cairo_scale(cr, size_ratio, size_ratio);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
     gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);

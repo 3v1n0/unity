@@ -59,7 +59,6 @@ public:
   std::string GetLabel() const;
   std::string GetExtraText() const;
 
-  void UpdateScale(double scale);
   nux::Property<double> scale;
 
 protected:
@@ -98,6 +97,8 @@ private:
   nux::ObjectPtr<IconTexture> image_;
   nux::ObjectPtr<unity::StaticCairoText> static_text_;
   nux::ObjectPtr<unity::StaticCairoText> extra_text_;
+
+  void UpdateScale(double scale);
 };
 
 } // namespace dash

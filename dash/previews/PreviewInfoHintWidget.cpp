@@ -42,6 +42,7 @@ DECLARE_LOGGER(logger, "unity.dash.preview.infohintwidget");
 namespace
 {
 const RawPixel layout_spacing = 12_em;
+const RawPixel children_spacing = 6_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewInfoHintWidget);
@@ -153,7 +154,7 @@ void PreviewInfoHintWidget::SetupViews()
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
   layout_ = new nux::VLayout();
-  layout_->SetSpaceBetweenChildren((6_em).CP(scale));
+  layout_->SetSpaceBetweenChildren(children_spacing.CP(scale));
 
   for (dash::Preview::InfoHintPtr info_hint : preview_model_->GetInfoHints())
   {
@@ -196,7 +197,7 @@ void PreviewInfoHintWidget::PreLayoutManagement()
   previews::Style& style = previews::Style::Instance();
   nux::Geometry const& geo = GetGeometry();
   
-  int info_hint_width = 0;
+  RawPixel info_hint_width = 0;
   for (InfoHint const& info_hint : info_hints_)
   {
     RawPixel width = style.GetInfoHintNameMinimumWidth();
@@ -216,17 +217,14 @@ void PreviewInfoHintWidget::PreLayoutManagement()
     }
   }
 
-  RawPixel info_value_width = geo.width;
-  info_value_width = info_value_width - layout_spacing;
-  info_value_width = info_value_width - info_hint_width;
-  info_value_width = std::max(0_em, info_value_width);
+  RawPixel info_value_width(std::max(0, geo.width - layout_spacing - info_hint_width));
 
   for (InfoHint const& info_hint : info_hints_)
   {
     if (info_hint.first)
     {
-      info_hint.first->SetMinimumWidth(((RawPixel)info_hint_width).CP(scale));
-      info_hint.first->SetMaximumWidth(((RawPixel)info_hint_width).CP(scale));
+      info_hint.first->SetMinimumWidth(info_hint_width.CP(scale));
+      info_hint.first->SetMaximumWidth(info_hint_width.CP(scale));
     }
     if (info_hint.second)
     {
@@ -246,7 +244,7 @@ void PreviewInfoHintWidget::UpdateScale(double scale)
     info_value_->SetScale(scale);
 
   if (layout_)
-    layout_->SetSpaceBetweenChildren((6_em).CP(scale));
+    layout_->SetSpaceBetweenChildren(children_spacing.CP(scale));
 
   if (hint_layout_)
     hint_layout_->SetSpaceBetweenChildren(layout_spacing.CP(scale));

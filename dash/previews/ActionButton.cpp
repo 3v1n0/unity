@@ -31,10 +31,10 @@ namespace unity
 {
 namespace
 {
-RawPixel kMinButtonHeight = 34_em;
-RawPixel kMinButtonWidth  = 48_em;
+const RawPixel kMinButtonHeight = 34_em;
+const RawPixel kMinButtonWidth  = 48_em;
 
-RawPixel icon_size  = 24_em;
+const RawPixel icon_size  = 24_em;
 }
 
 namespace dash

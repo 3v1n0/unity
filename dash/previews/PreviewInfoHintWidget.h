@@ -58,7 +58,6 @@ public:
 
   sigc::signal<void> request_close() const { return preview_container_.request_close; }
 
-  void UpdateScale(double scale);
   nux::Property<double> scale;
 
 protected:
@@ -93,6 +92,8 @@ protected:
 
 private:
   PreviewContainer preview_container_;
+
+  void UpdateScale(double scale);
 };
 
 } // namespace previews

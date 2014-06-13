@@ -75,7 +75,6 @@ public:
   sigc::signal<void> request_close;
 
   nux::Property<double> scale;
-  void UpdateScale(double scale);
 
   bool AcceptKeyNavFocus();
 
@@ -104,6 +103,8 @@ private:
   bool QueueAnimation();
 
 private:
+  void UpdateScale(double scale);
+
   // View related
   nux::HLayout* layout_content_;
   PreviewNavigator* nav_left_;

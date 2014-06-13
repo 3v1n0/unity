@@ -75,7 +75,6 @@ public:
   virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   nux::Property<double> scale;
-  virtual void UpdateScale(double scale);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
@@ -90,6 +89,8 @@ protected:
   virtual bool AcceptKeyNavFocus() { return false; }
 
   virtual void SetupViews() = 0;
+
+  virtual void UpdateScale(double scale);
 
   nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);

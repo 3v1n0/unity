@@ -52,6 +52,8 @@ const int ANIM_DURATION_LONG = 500;
 const int PREVIEW_SPINNER_WAIT = 2000;
 
 const std::string ANIMATION_IDLE = "animation-idle";
+
+const RawPixel SPIN_ICON_SIZE = 32_em;
 }
 
 class PreviewContent : public nux::Layout, public debug::Introspectable
@@ -76,7 +78,7 @@ public:
     });
     Style& style = previews::Style::Instance();
 
-    spin_= style.GetSearchSpinIcon(32_em);
+    spin_= style.GetSearchSpinIcon(SPIN_ICON_SIZE);
 
     scale.changed.connect(sigc::mem_fun(this, &PreviewContent::UpdateScale));
   }
@@ -84,7 +86,7 @@ public:
   void UpdateScale(double scale)
   {
     Style& style = previews::Style::Instance();
-    spin_ = style.GetSearchSpinIcon((32_em).CP(scale));
+    spin_ = style.GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
 
     for (auto* area : GetChildren())
       static_cast<previews::Preview*>(area)->scale = scale;
