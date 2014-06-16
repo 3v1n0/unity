@@ -41,6 +41,9 @@ public:
   virtual void SetRating(float rating);
   virtual float GetRating() const;
 
+  int star_size_;
+  int star_gap_;
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -67,8 +70,6 @@ protected:
   bool editable_;
   float rating_;
   int focused_star_;
-  int star_size_;
-  int star_gap_;
 };
 
 } // namespace unity

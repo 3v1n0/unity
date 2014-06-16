@@ -249,6 +249,34 @@ void PreviewInfoHintWidget::UpdateScale(double scale)
   if (hint_layout_)
     hint_layout_->SetSpaceBetweenChildren(layout_spacing.CP(scale));
 
+  previews::Style& style = previews::Style::Instance();
+  nux::Geometry const& geo = GetGeometry();
+  RawPixel info_hint_width(style.GetInfoHintNameMinimumWidth());
+  for (InfoHint const& info_hint : info_hints_)
+  {
+    if (info_hint.first)
+    {
+      info_hint_width = (RawPixel)info_hint.first->GetTextExtents().width;
+      if (info_hint_width < style.GetInfoHintNameMinimumWidth())
+        info_hint_width = style.GetInfoHintNameMinimumWidth();
+      else if (info_hint_width > style.GetInfoHintNameMaximumWidth())
+        info_hint_width = style.GetInfoHintNameMaximumWidth();
+    }
+    info_hint_width = std::max(0_em, info_hint_width);
+  }
+  RawPixel info_value_width(geo.width - layout_spacing - info_hint_width);
+  info_value_width = std::max(0_em, info_value_width);
+  for (InfoHint const& info_hint : info_hints_)
+  {
+    if (info_hint.first)
+    {
+      info_hint.first->SetMinimumWidth(info_hint_width.CP(scale));
+      info_hint.first->SetMaximumWidth(info_hint_width.CP(scale));
+    }
+    if (info_hint.second)
+      info_hint.second->SetMaximumWidth(info_value_width.CP(scale));
+  }
+
   QueueRelayout();
   QueueDraw();
 }
