@@ -42,7 +42,7 @@ DECLARE_LOGGER(logger, "unity.dash.previews.coverart");
 
 namespace
 {
-const int ICON_SIZE = 256;
+const RawPixel ICON_SIZE = 256_em;
 const int IMAGE_TIMEOUT = 30;
 }
 
@@ -50,6 +50,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
 
 CoverArt::CoverArt()
   : View(NUX_TRACKER_LOCATION)
+  , scale (1.0)
   , overlay_text_(nullptr)
   , thumb_handle_(0)
   , slot_handle_(0)
@@ -58,6 +59,7 @@ CoverArt::CoverArt()
   , rotation_(0.0)
 {
   SetupViews();
+  scale.changed.connect(sigc::mem_fun(this, &CoverArt::UpdateScale));
 }
 
 CoverArt::~CoverArt()
@@ -118,12 +120,12 @@ void CoverArt::SetImage(std::string const& image_hint)
     if (icon.IsType(G_TYPE_ICON))
     {
       StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
+      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE.CP(scale), ICON_SIZE.CP(scale), sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
     else
     {
       StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
+      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, ICON_SIZE.CP(scale), ICON_SIZE.CP(scale), sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
   }
   else
@@ -257,14 +259,16 @@ void CoverArt::IconLoaded(std::string const& texid,
       return;
     }
 
-    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, pixbuf_width, pixbuf_height);
+    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, RawPixel(pixbuf_width).CP(scale), RawPixel(pixbuf_height).CP(scale));
+    cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
+
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
-    float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
-    cairo_scale(cr, scale, scale);
+    float size_ratio = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
+    cairo_scale(cr, size_ratio, size_ratio);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
     gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
@@ -494,6 +498,14 @@ bool CoverArt::OnFrameTimeout()
 
   frame_timeout_.reset();
   return false;
+}
+
+void CoverArt::UpdateScale(double scale)
+{
+  if (overlay_text_)
+    overlay_text_->SetScale(scale);
+
+  QueueDraw();
 }
 
 }
