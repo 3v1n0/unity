@@ -720,7 +720,7 @@ void PreviewContainer::UpdateScale(double scale)
   if (preview_layout_)
   {
     preview_layout_->scale = scale;
-    preview_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
+    preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
   }
 
   if (layout_content_)
@@ -734,8 +734,8 @@ void PreviewContainer::UpdateScale(double scale)
 
   if (nav_right_)
   {
-    nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
-    nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
+    nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+    nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   }
 }
 
