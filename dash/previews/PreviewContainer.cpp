@@ -54,6 +54,7 @@ const int PREVIEW_SPINNER_WAIT = 2000;
 const std::string ANIMATION_IDLE = "animation-idle";
 
 const RawPixel SPIN_ICON_SIZE = 32_em;
+const RawPixel CHILDREN_SPACE = 6_em;
 }
 
 class PreviewContent : public nux::Layout, public debug::Introspectable
@@ -479,7 +480,7 @@ void PreviewContainer::SetupViews()
   layout->AddLayout(new nux::SpaceLayout(0,0,style.GetPreviewTopPadding(),style.GetPreviewTopPadding()));
 
   layout_content_ = new nux::HLayout();
-  layout_content_->SetSpaceBetweenChildren(6);
+  layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE);
   layout->AddLayout(layout_content_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   layout_content_->AddSpace(0, 1);
@@ -714,8 +715,28 @@ nux::Geometry PreviewContainer::GetLayoutGeometry() const
 
 void PreviewContainer::UpdateScale(double scale)
 {
+  previews::Style& style = previews::Style::Instance();
+
   if (preview_layout_)
+  {
     preview_layout_->scale = scale;
+    preview_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
+  }
+
+  if (layout_content_)
+    layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+
+  if (nav_left_)
+  {
+    nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+    nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+  }
+
+  if (nav_right_)
+  {
+    nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
+    nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
+  }
 }
 
 } // namespace previews
