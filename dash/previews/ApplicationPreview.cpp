@@ -306,9 +306,9 @@ void ApplicationPreview::PreLayoutManagement()
 
   nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
-  if ((RawPixel)(geo.width - geo_art.width) - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
+  if (RawPixel(geo.width - geo_art.width) - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
     geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
-  image_->SetMinMaxSize(RawPixel(geo_art.width),(RawPixel)( geo_art.height));
+  image_->SetMinMaxSize(RawPixel(geo_art.width), RawPixel( geo_art.height));
 
   RawPixel details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
   RawPixel top_app_info_max_width = MAX(0, details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails());
