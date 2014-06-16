@@ -91,9 +91,9 @@ protected:
   nux::HLayout* hint_layout_;
 
 private:
-  PreviewContainer preview_container_;
-
   void UpdateScale(double scale);
+  
+  PreviewContainer preview_container_;
 };
 
 } // namespace previews
