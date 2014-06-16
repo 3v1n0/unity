@@ -50,6 +50,12 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.previews.ErrorPreview");
 
+const RawPixel title_data_max_size = 76_em;
+const RawPixel title_data_children_space = 10_em;
+const RawPixel line_spacing = 10_em;
+const RawPixel title_max_width = 480_em;
+const RawPixel children_space = 5_em;
+const RawPixel buttons_data_space = 20_em;
 }
 
 const std::string ErrorPreview::CANCEL_ACTION = "cancel";
@@ -73,6 +79,9 @@ ErrorPreview::ErrorPreview(dash::Preview::Ptr preview_model)
 {
   PaymentPreview::SetupBackground();
   SetupViews();
+
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &ErrorPreview::UpdateScale));
 }
 
 ErrorPreview::~ErrorPreview()
@@ -114,6 +123,7 @@ void ErrorPreview::LoadActions()
   for (dash::Preview::ActionPtr action : preview_model_->GetActions())
   {
     nux::ObjectPtr<ActionButton> button = this->CreateButton(action);
+    button->scale = scale();
     button->activate.connect(sigc::mem_fun(this, &ErrorPreview::OnActionActivated));
     buttons_map_.insert(std::make_pair(action->id, button));
   }
@@ -123,8 +133,8 @@ nux::Layout* ErrorPreview::GetTitle()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout* title_data_layout = new nux::VLayout();
-  title_data_layout->SetMaximumHeight(76);
-  title_data_layout->SetSpaceBetweenChildren(10);
+  title_data_layout->SetMaximumHeight(title_data_max_size.CP(scale));
+  title_data_layout->SetSpaceBetweenChildren(title_data_children_space.CP(scale));
 
   title_ = new StaticCairoText(
           preview_model_->title.Get(), true,
@@ -133,7 +143,7 @@ nux::Layout* ErrorPreview::GetTitle()
   title_->SetFont(style.payment_title_font());
   title_->SetLines(-1);
   title_->SetFont(style.title_font());
-  title_->SetMaximumWidth(480);
+  title_->SetMaximumWidth(title_max_width.CP(scale));
   title_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
   title_data_layout->AddView(title_.GetPointer(), 1);
 
@@ -151,9 +161,9 @@ nux::Layout* ErrorPreview::GetPrice()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *prize_data_layout = new nux::VLayout();
-  prize_data_layout->SetMaximumHeight(76);
-  prize_data_layout->SetSpaceBetweenChildren(5);
-  prize_data_layout->SetPadding(0, 10, 0, 0);
+  prize_data_layout->SetMaximumHeight(title_data_max_size.CP(scale));
+  prize_data_layout->SetSpaceBetweenChildren(children_space.CP(scale));
+  prize_data_layout->SetPadding(0, title_data_children_space.CP(scale), 0, 0);
 
   purchase_prize_ = new StaticCairoText(
           error_preview_model_->purchase_prize.Get(), true,
@@ -188,16 +198,17 @@ nux::Layout* ErrorPreview::GetBody()
   nux::HLayout *intro_layout = new nux::HLayout();
   nux::VLayout *icon_layout = new nux::VLayout();
 
-  icon_layout->SetPadding(78, 10, 90, 43);
-  intro_layout->SetPadding(75, 20, 0, 0);
-  intro_layout->SetSpaceBetweenChildren(5);
+  icon_layout->SetPadding((78_em).CP(scale), (10_em).CP(scale), (90_em).CP(scale), (43_em).CP(scale));
+  intro_layout->SetPadding((75_em).CP(scale), (20_em).CP(scale), 0, 0);
+  intro_layout->SetSpaceBetweenChildren(children_space.CP(scale));
 
   intro_ = new StaticCairoText(
               error_preview_model_->header.Get(), true,
           NUX_TRACKER_LOCATION);
   intro_->SetFont(style.payment_intro_font().c_str());
+  intro_->SetScale(scale);
   intro_->SetLines(-3);
-  intro_->SetLineSpacing(10);
+  intro_->SetLineSpacing(line_spacing.CP(scale));
   intro_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
 
   intro_layout->AddView(intro_.GetPointer());//, 0, nux::MINOR_POSITION_CENTER);
@@ -220,9 +231,9 @@ nux::Layout* ErrorPreview::GetFooter()
   actions_buffer_h->AddSpace(0, 1);
 
   nux::HLayout* buttons_data_layout = new TabIteratorHLayout(tab_iterator_);
-  buttons_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+  buttons_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions().CP(scale));
 
-  buttons_data_layout->AddSpace(20, 1);
+  buttons_data_layout->AddSpace(buttons_data_space.CP(scale), 1);
   if(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer()){
     ActionButton* button = (ActionButton*)buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer();
     buttons_data_layout->AddView(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer(),
@@ -249,12 +260,12 @@ void ErrorPreview::PreLayoutManagement()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  int width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  RawPixel width = MAX(0_em, RawPixel(geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin()));
 
-  if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
-  if(header_layout_) { header_layout_->SetMaximumWidth(width); }
-  if(intro_) { intro_->SetMaximumWidth(width - 110); }
-  if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
+  if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width.CP(scale)); }
+  if(header_layout_) { header_layout_->SetMaximumWidth(width.CP(scale)); }
+  if(intro_) { intro_->SetMaximumWidth(RawPixel(width - 110_em).CP(scale)); }
+  if(footer_layout_) { footer_layout_->SetMaximumWidth(width.CP(scale)); }
 
   Preview::PreLayoutManagement();
 }
@@ -274,6 +285,34 @@ void ErrorPreview::SetupViews()
   PaymentPreview::SetupViews();
 }
 
+void ErrorPreview::UpdateScale(double scale)
+{
+  if (intro_)
+    intro_->SetScale(scale);
+
+  if (purchase_hint_)
+    purchase_hint_->SetScale(scale);
+  if (purchase_prize_)
+    purchase_prize_->SetScale(scale);
+  if (purchase_type_)
+    purchase_type_->SetScale(scale);
+
+  if (warning_texture_)
+  {
+    previews::Style& style = dash::previews::Style::Instance();
+    RawPixel width(style.GetWarningIcon()->GetWidth());
+    RawPixel height(style.GetWarningIcon()->GetHeight());
+
+    RawPixel max_size(MAX(width, height).CP(scale));
+    warning_texture_->SetSize(max_size);
+    warning_texture_->ReLoadIcon();
+  }
+
+  if (title_)
+    title_->SetMaximumWidth(title_max_width.CP(scale));
+
+  Preview::UpdateScale(scale);
+}
 
 }
 }
