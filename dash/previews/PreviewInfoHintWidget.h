@@ -58,6 +58,8 @@ public:
 
   sigc::signal<void> request_close() const { return preview_container_.request_close; }
 
+  nux::Property<double> scale;
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -82,7 +84,15 @@ protected:
   dash::Preview::Ptr preview_model_;
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
+  StaticCairoTextPtr info_name_;
+  StaticCairoTextPtr info_value_;
+
+  nux::VLayout* layout_;
+  nux::HLayout* hint_layout_;
+
 private:
+  void UpdateScale(double scale);
+  
   PreviewContainer preview_container_;
 };
 
