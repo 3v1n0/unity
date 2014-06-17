@@ -223,19 +223,23 @@ void GenericPreview::PreLayoutManagement()
 
   nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
-  if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
-    geo_art.width = std::max(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
-  image_->SetMinMaxSize(RawPixel(geo_art.width).CP(scale), RawPixel(geo_art.height).CP(scale));
+  int content_width = geo.width - style.GetPanelSplitWidth().CP(scale)
+                                - style.GetDetailsLeftMargin().CP(scale)
+                                - style.GetDetailsRightMargin().CP(scale);
 
-  RawPixel details_width(std::max(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin()));
+  if (content_width - geo_art.width < style.GetDetailsPanelMinimumWidth().CP(scale))
+    geo_art.width = std::max(0, content_width - style.GetDetailsPanelMinimumWidth().CP(scale));
 
-  if (title_) { title_->SetMaximumWidth(details_width.CP(scale)); }
-  if (subtitle_) { subtitle_->SetMaximumWidth(details_width.CP(scale)); }
-  if (description_) { description_->SetMaximumWidth(details_width.CP(scale)); }
+  image_->SetMinMaxSize(geo_art.width, geo_art.height);
+  int details_width = std::max(0, content_width - geo_art.width);
+
+  if (title_) { title_->SetMaximumWidth(details_width); }
+  if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
+  if (description_) { description_->SetMaximumWidth(details_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    button->SetMinMaxSize(CLAMP(RawPixel((details_width - style.GetSpaceBetweenActions()) / 2).CP(scale), 0, style.GetActionButtonMaximumWidth().CP(scale)), style.GetActionButtonHeight().CP(scale));
+    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale)), style.GetActionButtonHeight().CP(scale));
   }
 
   Preview::PreLayoutManagement();
