@@ -1,3 +1,33 @@
+unity (7.2.0+14.10.20140607-0ubuntu1) utopic; urgency=low
+
+  [ Chris Townsend ]
+  * Fix issue where the number of Launcher icon pips are not always
+    properly updated when a new window of an already running application
+    is opened. (LP: #1283775)
+  * Fix issue where the Panel shadow would get drawn over drop down
+    windows in full screen windows. (LP: #1316005)
+
+  [ Andrea Azzarone ]
+  * Clear the clipboard when locking the screen. (LP: #1308911)
+  * Disable switcher gestures if screen is locked. Fixed a regression.
+    (LP: #1321043)
+  * Pass the correct options to showLauncherKeyTerminate in
+    UnityScreen::OnLockScreen (LP: #1320438)
+  * Fix skype indicator blinking. (LP: #1310200)
+
+  [ Marco Trevisan (Treviño) ]
+  * PluginAdapter: try to grab the screen to make sure that the screen
+    is not grabbed FocusIn event with NotifyGrab mode is not always
+    triggered by X when a window takes the grab, then we need to ensure
+    that there's no grab by trying to get one. We only care about
+    keyboard here, since pointer grabs don't affect us in general. (LP:
+    #741869)
+  * ShortcutView: use RawPixel's for the size values and convert them to
+    match current scaling Plus dinamically allocate horizontal space,
+    not to cut the text. (LP: #924840)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 07 Jun 2014 16:27:46 +0000
+
 unity (7.2.0+14.10.20140606.1-0ubuntu1) utopic; urgency=low
 
   [ Alfred Neumayer ]

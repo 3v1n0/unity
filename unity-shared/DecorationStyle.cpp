@@ -169,7 +169,9 @@ struct Style::Impl
 
     GtkSettings* settings = gtk_settings_get_default();
     signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*, GParamSpec*) {
+#if !GTK_CHECK_VERSION(3, 11, 0)
       gtk_style_context_invalidate(ctx_);
+#endif
       UpdateThemedValues();
       parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
       LOG_INFO(logger) << "gtk-theme-name changed to " << parent_->theme();
@@ -192,7 +194,9 @@ struct Style::Impl
     parent_->font_scale.changed.connect([this] (bool scale) {
       UpdateTitlePangoContext(parent_->title_font);
       UpdateMenuItemPangoContext(parent_->font);
+#if !GTK_CHECK_VERSION(3, 11, 0)
       gtk_style_context_invalidate(ctx_);
+#endif
       parent_->theme.changed.emit(parent_->theme());
       LOG_INFO(logger) << "font scale changed to " << scale;
     });

@@ -27,10 +27,14 @@ NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
   : TextEntry("", NUX_TRACKER_LOCATION)
+  , clipboard_enabled(true)
 {}
 
 void IMTextEntry::CopyClipboard()
 {
+  if (!clipboard_enabled())
+    return;
+
   int start, end;
 
   if (GetSelectionBounds(&start, &end))
@@ -52,6 +56,9 @@ void IMTextEntry::PastePrimaryClipboard()
 
 void IMTextEntry::Paste(bool primary)
 {
+  if (!clipboard_enabled())
+    return;
+
   GdkAtom origin = primary ? GDK_SELECTION_PRIMARY : GDK_SELECTION_CLIPBOARD;
   GtkClipboard* clip = gtk_clipboard_get(origin);
 

@@ -3026,7 +3026,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
     else
     {
-      if (window->id() == active_window || decoration::Style::Get()->integrated_menus())
+      if (window->id() == active_window)
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
         uScreen->is_desktop_active_ = false;
@@ -3044,6 +3044,10 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
           }
         }
+      }
+      else if (decoration::Style::Get()->integrated_menus())
+      {
+        draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
       }
       else
       {
@@ -3815,8 +3819,12 @@ void UnityScreen::OnScreenLocked()
     screen->removeAction(&action);
 
   // We notify that super/alt have been released, to avoid to leave unity in inconsistent state
-  showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, getOptions());
-  showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, getOptions());
+  CompOption::Vector options(8);
+  options[7].setName("time", CompOption::TypeInt);
+  options[7].value().set((int) screen->getCurrentTime());
+
+  showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, options);
+  showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, options);
 }
 
 void UnityScreen::OnScreenUnlocked()

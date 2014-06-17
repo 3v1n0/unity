@@ -77,6 +77,7 @@ class GesturalWindowSwitcher : public nux::GestureTarget
   private:
     GesturalWindowSwitcherPrivate* p;
 };
+
 typedef std::shared_ptr<GesturalWindowSwitcher> ShPtGesturalWindowSwitcher;
 
 } // namespace unity

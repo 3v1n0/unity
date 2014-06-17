@@ -29,6 +29,8 @@
 
 namespace unity
 {
+class StaticCairoText;
+
 namespace shortcut
 {
 
@@ -47,8 +49,9 @@ public:
 
 protected:
   // Protected methods
-  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
-  nux::Geometry GetBackgroundGeometry();
+  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip) override;
+  nux::Geometry GetBackgroundGeometry() override;
+  void PreLayoutManagement() override;
 
   // Introspectable methods
   std::string GetName() const;
@@ -56,7 +59,8 @@ protected:
 private:
   // Private methods
   nux::LinearLayout* CreateSectionLayout(std::string const& section_name);
-  nux::View* CreateShortKeyEntryView(AbstractHint::Ptr const& hint);
+  nux::View* CreateShortKeyEntryView(AbstractHint::Ptr const&, StaticCairoText* shortkey, StaticCairoText* description);
+  StaticCairoText* CreateShortcutTextView(std::string const& text, bool bold);
   nux::LinearLayout* CreateIntermediateLayout();
 
   void RenderColumns();
@@ -64,6 +68,8 @@ private:
   // Private members
   Model::Ptr model_;
   nux::HLayout* columns_layout_;
+  std::vector<std::vector<StaticCairoText*>> shortkeys_;
+  std::vector<std::vector<StaticCairoText*>> descriptions_;
 
   friend class TestShortcutView;
 };

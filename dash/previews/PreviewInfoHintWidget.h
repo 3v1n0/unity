@@ -48,22 +48,21 @@ public:
   NUX_DECLARE_OBJECT_TYPE(PreviewInfoHintWidget, nux::View);
 
   PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size);
-  virtual ~PreviewInfoHintWidget();
+
+  nux::Property<double> scale;
 
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
-  
+
   void PreLayoutManagement();
 
   sigc::signal<void> request_close() const { return preview_container_.request_close; }
 
-  nux::Property<double> scale;
-
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupBackground();
@@ -76,19 +75,11 @@ protected:
 
 protected:
   int icon_size_;
+  nux::HLayout* layout_;
+  nux::VLayout* info_names_layout_;
+  nux::VLayout* info_values_layout_;
 
-  typedef nux::ObjectPtr<unity::StaticCairoText> StaticCairoTextPtr;
-  typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> InfoHint; 
-  std::list<InfoHint> info_hints_;
-  
   dash::Preview::Ptr preview_model_;
-  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
-
-  StaticCairoTextPtr info_name_;
-  StaticCairoTextPtr info_value_;
-
-  nux::VLayout* layout_;
-  nux::HLayout* hint_layout_;
 
 private:
   PreviewContainer preview_container_;
