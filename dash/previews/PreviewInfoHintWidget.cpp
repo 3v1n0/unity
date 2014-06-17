@@ -61,10 +61,6 @@ PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, i
   scale.changed.connect(sigc::mem_fun(this, &PreviewInfoHintWidget::UpdateScale));
 }
 
-PreviewInfoHintWidget::~PreviewInfoHintWidget()
-{
-}
-
 void PreviewInfoHintWidget::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
 }

@@ -48,7 +48,6 @@ public:
   NUX_DECLARE_OBJECT_TYPE(PreviewInfoHintWidget, nux::View);
 
   PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size);
-  virtual ~PreviewInfoHintWidget();
 
   nux::Property<double> scale;
 
