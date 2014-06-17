@@ -235,7 +235,7 @@ void GenericPreview::PreLayoutManagement()
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    button->SetMinMaxSize(CLAMP(RawPixel((details_width - style.GetSpaceBetweenActions()) / 2), 0_em, style.GetActionButtonMaximumWidth()).CP(scale), style.GetActionButtonHeight().CP(scale));
+    button->SetMinMaxSize(CLAMP(RawPixel((details_width - style.GetSpaceBetweenActions()) / 2).CP(scale), 0, style.GetActionButtonMaximumWidth().CP(scale)), style.GetActionButtonHeight().CP(scale));
   }
 
   Preview::PreLayoutManagement();
