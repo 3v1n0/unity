@@ -304,8 +304,7 @@ void ErrorPreview::UpdateScale(double scale)
     RawPixel width(style.GetWarningIcon()->GetWidth());
     RawPixel height(style.GetWarningIcon()->GetHeight());
 
-    RawPixel max_size(MAX(width, height).CP(scale));
-    warning_texture_->SetSize(max_size);
+    warning_texture_->SetSize(std::max(width, height).CP(scale));
     warning_texture_->ReLoadIcon();
   }
 
