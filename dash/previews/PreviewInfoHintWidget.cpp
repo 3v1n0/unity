@@ -17,6 +17,7 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  *
  */
 
@@ -41,7 +42,8 @@ namespace previews
 DECLARE_LOGGER(logger, "unity.dash.preview.infohintwidget");
 namespace
 {
-const int layout_spacing = 12;
+const int LAYOUT_SPACING = 12;
+const int HINTS_SPACING = 6;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewInfoHintWidget);
@@ -49,6 +51,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(PreviewInfoHintWidget);
 PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size)
 : View(NUX_TRACKER_LOCATION)
 , icon_size_(icon_size)
+, info_names_layout_(nullptr)
+, info_values_layout_(nullptr)
 , preview_model_(preview_model)
 {
   SetupViews();
@@ -96,7 +100,7 @@ std::string StringFromVariant(GVariant* variant)
 {
     std::stringstream ss;
     const GVariantType* info_hint_type = g_variant_get_type(variant);
-    
+
     if (g_variant_type_equal(info_hint_type, G_VARIANT_TYPE_BOOLEAN))
     {
       ss << g_variant_get_int16(variant);
@@ -144,44 +148,41 @@ std::string StringFromVariant(GVariant* variant)
 void PreviewInfoHintWidget::SetupViews()
 {
   RemoveLayout();
-  info_hints_.clear();
-
-  previews::Style& style = previews::Style::Instance();
+  auto& style = previews::Style::Instance();
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
-  nux::VLayout* layout = new nux::VLayout();
-  layout->SetSpaceBetweenChildren(6);
+  auto* layout = new nux::HLayout();
+  layout->SetSpaceBetweenChildren(LAYOUT_SPACING);
 
-  for (dash::Preview::InfoHintPtr info_hint : preview_model_->GetInfoHints())
+  auto *hint_vlayout = new nux::VLayout();
+  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING);
+  layout->AddLayout(hint_vlayout);
+  info_names_layout_ = hint_vlayout;
+
+  hint_vlayout = new nux::VLayout();
+  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING);
+  layout->AddLayout(hint_vlayout);
+  info_values_layout_ = hint_vlayout;
+
+  for (dash::Preview::InfoHintPtr const& info_hint : preview_model_->GetInfoHints())
   {
-    nux::HLayout* hint_layout = new nux::HLayout();
-    hint_layout->SetSpaceBetweenChildren(layout_spacing);
+    // The "%s" is used in the dash preview to display the "<hint>: <value>" infos
+    auto const& name = glib::String(g_strdup_printf (_("%s:"), info_hint->display_name.c_str())).Str();
+    auto* info_name = new StaticCairoText(name == ":" ? "" : name, true, NUX_TRACKER_LOCATION);
+    info_name->SetFont(style.info_hint_bold_font());
+    info_name->SetLines(-1);
+    info_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
+    info_name->SetMinimumWidth(style.GetInfoHintNameMinimumWidth());
+    info_name->SetMaximumWidth(style.GetInfoHintNameMaximumWidth());
+    info_name->mouse_click.connect(on_mouse_down);
+    info_names_layout_->AddView(info_name, 1, nux::MINOR_POSITION_RIGHT);
 
-    StaticCairoTextPtr info_name;
-    if (!info_hint->display_name.empty())
-    {
-      // The "%s" is used in the dash preview to display the "<hint>: <value>" infos
-      std::string tmp_display_name = glib::String(g_strdup_printf (_("%s:"), info_hint->display_name.c_str())).Str();
-
-      info_name = new StaticCairoText(tmp_display_name, true, NUX_TRACKER_LOCATION);
-      info_name->SetFont(style.info_hint_bold_font());
-      info_name->SetLines(-1);
-      info_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
-      info_name->mouse_click.connect(on_mouse_down);
-      hint_layout->AddView(info_name.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
-    }
-
-    StaticCairoTextPtr info_value(new StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION));
+    auto* info_value = new StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION);
     info_value->SetFont(style.info_hint_font());
     info_value->SetLines(-1);
     info_value->mouse_click.connect(on_mouse_down);
-    hint_layout->AddView(info_value.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
-
-    InfoHint info_hint_views(info_name, info_value);
-    info_hints_.push_back(info_hint_views);
-
-    layout->AddLayout(hint_layout, 0);
+    info_values_layout_->AddView(info_value, 1, nux::MINOR_POSITION_LEFT);
   }
 
   mouse_click.connect(on_mouse_down);
@@ -192,45 +193,14 @@ void PreviewInfoHintWidget::SetupViews()
 
 void PreviewInfoHintWidget::PreLayoutManagement()
 {
-  previews::Style& style = previews::Style::Instance();
-  nux::Geometry const& geo = GetGeometry();
-  
-  int info_hint_width = 0;
-  for (InfoHint const& info_hint : info_hints_)
+  if (info_names_layout_ && info_values_layout_)
   {
-    int width = style.GetInfoHintNameMinimumWidth();
-    if (info_hint.first)
-    {
-      width = info_hint.first->GetTextExtents().width;
+    nux::Geometry const& geo = GetGeometry();
+    info_names_layout_->SetMaximumWidth(info_names_layout_->GetContentWidth());
+    int max_width = geo.width - info_names_layout_->GetWidth() - LAYOUT_SPACING -1;
 
-      if (width < style.GetInfoHintNameMinimumWidth())
-        width = style.GetInfoHintNameMinimumWidth();
-      else if (width > style.GetInfoHintNameMaximumWidth())
-        width = style.GetInfoHintNameMaximumWidth();
-    }
-
-    if (info_hint_width < width)
-    {
-      info_hint_width = width;
-    }
-  }
-
-  int info_value_width = geo.width;
-  info_value_width -= layout_spacing;
-  info_value_width -= info_hint_width;
-  info_value_width = MAX(0, info_value_width);
-
-  for (InfoHint const& info_hint : info_hints_)
-  {
-    if (info_hint.first)
-    {
-      info_hint.first->SetMinimumWidth(info_hint_width);
-      info_hint.first->SetMaximumWidth(info_hint_width);
-    }
-    if (info_hint.second)
-    {
-      info_hint.second->SetMaximumWidth(info_value_width);
-    }
+    for (auto value : info_values_layout_->GetChildren())
+      value->SetMaximumWidth(max_width);
   }
 
   View::PreLayoutManagement();

@@ -53,7 +53,7 @@ public:
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
-  
+
   void PreLayoutManagement();
 
   sigc::signal<void> request_close() const { return preview_container_.request_close; }
@@ -61,7 +61,7 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupBackground();
@@ -74,11 +74,8 @@ protected:
 
 protected:
   int icon_size_;
-
-  typedef nux::ObjectPtr<unity::StaticCairoText> StaticCairoTextPtr;
-  typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> InfoHint; 
-  std::list<InfoHint> info_hints_;
-  
+  nux::Layout *info_names_layout_;
+  nux::Layout *info_values_layout_;
   dash::Preview::Ptr preview_model_;
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
