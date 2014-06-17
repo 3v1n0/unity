@@ -42,20 +42,23 @@ namespace previews
 DECLARE_LOGGER(logger, "unity.dash.preview.infohintwidget");
 namespace
 {
-const int LAYOUT_SPACING = 12;
-const int HINTS_SPACING = 6;
+const RawPixel LAYOUT_SPACING = 12_em;
+const RawPixel HINTS_SPACING = 6_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewInfoHintWidget);
 
 PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size)
 : View(NUX_TRACKER_LOCATION)
+, scale(1.0)
 , icon_size_(icon_size)
+, layout_(nullptr)
 , info_names_layout_(nullptr)
 , info_values_layout_(nullptr)
 , preview_model_(preview_model)
 {
   SetupViews();
+  scale.changed.connect(sigc::mem_fun(this, &PreviewInfoHintWidget::UpdateScale));
 }
 
 PreviewInfoHintWidget::~PreviewInfoHintWidget()
@@ -152,17 +155,17 @@ void PreviewInfoHintWidget::SetupViews()
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
-  auto* layout = new nux::HLayout();
-  layout->SetSpaceBetweenChildren(LAYOUT_SPACING);
+  layout_ = new nux::HLayout();
+  layout_->SetSpaceBetweenChildren(LAYOUT_SPACING.CP(scale));
 
   auto *hint_vlayout = new nux::VLayout();
-  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING);
-  layout->AddLayout(hint_vlayout);
+  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
+  layout_->AddLayout(hint_vlayout);
   info_names_layout_ = hint_vlayout;
 
   hint_vlayout = new nux::VLayout();
-  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING);
-  layout->AddLayout(hint_vlayout);
+  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
+  layout_->AddLayout(hint_vlayout);
   info_values_layout_ = hint_vlayout;
 
   for (dash::Preview::InfoHintPtr const& info_hint : preview_model_->GetInfoHints())
@@ -173,8 +176,8 @@ void PreviewInfoHintWidget::SetupViews()
     info_name->SetFont(style.info_hint_bold_font());
     info_name->SetLines(-1);
     info_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
-    info_name->SetMinimumWidth(style.GetInfoHintNameMinimumWidth());
-    info_name->SetMaximumWidth(style.GetInfoHintNameMaximumWidth());
+    info_name->SetMinimumWidth(style.GetInfoHintNameMinimumWidth().CP(scale));
+    info_name->SetMaximumWidth(style.GetInfoHintNameMaximumWidth().CP(scale));
     info_name->mouse_click.connect(on_mouse_down);
     info_names_layout_->AddView(info_name, 1, nux::MINOR_POSITION_RIGHT);
 
@@ -187,7 +190,7 @@ void PreviewInfoHintWidget::SetupViews()
 
   mouse_click.connect(on_mouse_down);
 
-  SetLayout(layout);
+  SetLayout(layout_);
 }
 
 
@@ -197,13 +200,38 @@ void PreviewInfoHintWidget::PreLayoutManagement()
   {
     nux::Geometry const& geo = GetGeometry();
     info_names_layout_->SetMaximumWidth(info_names_layout_->GetContentWidth());
-    int max_width = geo.width - info_names_layout_->GetWidth() - LAYOUT_SPACING -1;
+    int max_width = geo.width - info_names_layout_->GetWidth() - LAYOUT_SPACING.CP(scale) -1;
 
     for (auto value : info_values_layout_->GetChildren())
       value->SetMaximumWidth(max_width);
   }
 
   View::PreLayoutManagement();
+}
+
+void PreviewInfoHintWidget::UpdateScale(double scale)
+{
+  if (layout_)
+    layout_->SetSpaceBetweenChildren(LAYOUT_SPACING.CP(scale));
+
+  if (info_names_layout_)
+  {
+    info_names_layout_->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
+
+    for (auto* area : info_names_layout_->GetChildren())
+      static_cast<StaticCairoText*>(area)->SetScale(scale);
+  }
+
+  if (info_values_layout_)
+  {
+    info_values_layout_->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
+
+    for (auto* area : info_values_layout_->GetChildren())
+      static_cast<StaticCairoText*>(area)->SetScale(scale);
+  }
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews

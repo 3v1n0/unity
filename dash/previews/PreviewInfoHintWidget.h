@@ -50,6 +50,8 @@ public:
   PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size);
   virtual ~PreviewInfoHintWidget();
 
+  nux::Property<double> scale;
+
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
@@ -74,13 +76,16 @@ protected:
 
 protected:
   int icon_size_;
-  nux::Layout *info_names_layout_;
-  nux::Layout *info_values_layout_;
+  nux::HLayout* layout_;
+  nux::VLayout* info_names_layout_;
+  nux::VLayout* info_values_layout_;
+
   dash::Preview::Ptr preview_model_;
-  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
 private:
   PreviewContainer preview_container_;
+
+  void UpdateScale(double scale);
 };
 
 } // namespace previews
