@@ -210,6 +210,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
   glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint4(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
@@ -232,6 +233,9 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("d", 12.1));
+
+  if (nav_iter % 2 == 0)
+    unity_protocol_preview_add_info_hint(proto_obj, "desc", "Very long long description", iconHint4, g_variant_new("s", "So looong description that does not fit into"));
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
               glib::StealRef());
