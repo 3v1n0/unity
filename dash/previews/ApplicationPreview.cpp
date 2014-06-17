@@ -306,9 +306,9 @@ void ApplicationPreview::PreLayoutManagement()
 
   nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
-  int content_width = geo.width - geo_art.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale);
-  if (content_width < style.GetDetailsPanelMinimumWidth().CP(scale))
-    geo_art.width = std::max(0, content_width);
+  int content_width = geo.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale);
+  if (content_width - geo_art.width < style.GetDetailsPanelMinimumWidth().CP(scale))
+    geo_art.width = std::max(0, content_width - style.GetDetailsPanelMinimumWidth().CP(scale));
 
   image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
