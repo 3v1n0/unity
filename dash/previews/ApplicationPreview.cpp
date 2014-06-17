@@ -308,7 +308,7 @@ void ApplicationPreview::PreLayoutManagement()
 
   int content_width = geo.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale);
   if (content_width - geo_art.width < style.GetDetailsPanelMinimumWidth().CP(scale))
-    geo_art.width = std::max(0, content_width - style.GetDetailsPanelMinimumWidth());
+    geo_art.width = std::max(0, content_width - style.GetDetailsPanelMinimumWidth().CP(scale));
 
   image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
