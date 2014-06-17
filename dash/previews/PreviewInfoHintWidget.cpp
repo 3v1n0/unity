@@ -175,6 +175,7 @@ void PreviewInfoHintWidget::SetupViews()
     auto* info_name = new StaticCairoText(name == ":" ? "" : name, true, NUX_TRACKER_LOCATION);
     info_name->SetFont(style.info_hint_bold_font());
     info_name->SetLines(-1);
+    info_name->SetScale(scale);
     info_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
     info_name->SetMinimumWidth(style.GetInfoHintNameMinimumWidth().CP(scale));
     info_name->SetMaximumWidth(style.GetInfoHintNameMaximumWidth().CP(scale));
@@ -184,6 +185,7 @@ void PreviewInfoHintWidget::SetupViews()
     auto* info_value = new StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION);
     info_value->SetFont(style.info_hint_font());
     info_value->SetLines(-1);
+    info_value->SetScale(scale);
     info_value->mouse_click.connect(on_mouse_down);
     info_values_layout_->AddView(info_value, 1, nux::MINOR_POSITION_LEFT);
   }
