@@ -50,12 +50,12 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.previews.ErrorPreview");
 
-const RawPixel title_data_max_size = 76_em;
-const RawPixel title_data_children_space = 10_em;
-const RawPixel line_spacing = 10_em;
-const RawPixel title_max_width = 480_em;
-const RawPixel children_space = 5_em;
-const RawPixel buttons_data_space = 20_em;
+const RawPixel TITLE_DATA_MAX_SIZE = 76_em;
+const RawPixel TITLE_DATA_CHILDREN_SPACE = 10_em;
+const RawPixel LINE_SPACING = 10_em;
+const RawPixel TITLE_MAX_WIDTH = 480_em;
+const RawPixel CHILDREN_SPACE = 5_em;
+const RawPixel BUTTONS_DATA_SPACE = 20_em;
 }
 
 const std::string ErrorPreview::CANCEL_ACTION = "cancel";
@@ -133,8 +133,8 @@ nux::Layout* ErrorPreview::GetTitle()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout* title_data_layout = new nux::VLayout();
-  title_data_layout->SetMaximumHeight(title_data_max_size.CP(scale));
-  title_data_layout->SetSpaceBetweenChildren(title_data_children_space.CP(scale));
+  title_data_layout->SetMaximumHeight(TITLE_DATA_MAX_SIZE.CP(scale));
+  title_data_layout->SetSpaceBetweenChildren(TITLE_DATA_CHILDREN_SPACE.CP(scale));
 
   title_ = new StaticCairoText(
           preview_model_->title.Get(), true,
@@ -143,7 +143,7 @@ nux::Layout* ErrorPreview::GetTitle()
   title_->SetFont(style.payment_title_font());
   title_->SetLines(-1);
   title_->SetFont(style.title_font());
-  title_->SetMaximumWidth(title_max_width.CP(scale));
+  title_->SetMaximumWidth(TITLE_MAX_WIDTH.CP(scale));
   title_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
   title_data_layout->AddView(title_.GetPointer(), 1);
 
@@ -161,9 +161,9 @@ nux::Layout* ErrorPreview::GetPrice()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *prize_data_layout = new nux::VLayout();
-  prize_data_layout->SetMaximumHeight(title_data_max_size.CP(scale));
-  prize_data_layout->SetSpaceBetweenChildren(children_space.CP(scale));
-  prize_data_layout->SetPadding(0, title_data_children_space.CP(scale), 0, 0);
+  prize_data_layout->SetMaximumHeight(TITLE_DATA_MAX_SIZE.CP(scale));
+  prize_data_layout->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+  prize_data_layout->SetPadding(0, TITLE_DATA_CHILDREN_SPACE.CP(scale), 0, 0);
 
   purchase_prize_ = new StaticCairoText(
           error_preview_model_->purchase_prize.Get(), true,
@@ -200,7 +200,7 @@ nux::Layout* ErrorPreview::GetBody()
 
   icon_layout->SetPadding((78_em).CP(scale), (10_em).CP(scale), (90_em).CP(scale), (43_em).CP(scale));
   intro_layout->SetPadding((75_em).CP(scale), (20_em).CP(scale), 0, 0);
-  intro_layout->SetSpaceBetweenChildren(children_space.CP(scale));
+  intro_layout->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
   intro_ = new StaticCairoText(
               error_preview_model_->header.Get(), true,
@@ -208,7 +208,7 @@ nux::Layout* ErrorPreview::GetBody()
   intro_->SetFont(style.payment_intro_font().c_str());
   intro_->SetScale(scale);
   intro_->SetLines(-3);
-  intro_->SetLineSpacing(line_spacing.CP(scale));
+  intro_->SetLineSpacing(LINE_SPACING.CP(scale));
   intro_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
 
   intro_layout->AddView(intro_.GetPointer());//, 0, nux::MINOR_POSITION_CENTER);
@@ -233,7 +233,7 @@ nux::Layout* ErrorPreview::GetFooter()
   nux::HLayout* buttons_data_layout = new TabIteratorHLayout(tab_iterator_);
   buttons_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions().CP(scale));
 
-  buttons_data_layout->AddSpace(buttons_data_space.CP(scale), 1);
+  buttons_data_layout->AddSpace(BUTTONS_DATA_SPACE.CP(scale), 1);
   if(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer()){
     ActionButton* button = (ActionButton*)buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer();
     buttons_data_layout->AddView(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer(),
@@ -309,7 +309,7 @@ void ErrorPreview::UpdateScale(double scale)
   }
 
   if (title_)
-    title_->SetMaximumWidth(title_max_width.CP(scale));
+    title_->SetMaximumWidth(TITLE_MAX_WIDTH.CP(scale));
 
   Preview::UpdateScale(scale);
 }
