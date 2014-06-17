@@ -56,6 +56,7 @@ const RawPixel LINE_SPACING = 10_em;
 const RawPixel TITLE_MAX_WIDTH = 480_em;
 const RawPixel CHILDREN_SPACE = 5_em;
 const RawPixel BUTTONS_DATA_SPACE = 20_em;
+const RawPixel INTRO_SPACE = 110_em;
 }
 
 const std::string ErrorPreview::CANCEL_ACTION = "cancel";
@@ -260,12 +261,12 @@ void ErrorPreview::PreLayoutManagement()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  RawPixel width = MAX(0_em, RawPixel(geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin()));
+  int width = std::max(0, geo.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale));
 
-  if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width.CP(scale)); }
-  if(header_layout_) { header_layout_->SetMaximumWidth(width.CP(scale)); }
-  if(intro_) { intro_->SetMaximumWidth(RawPixel(width - 110_em).CP(scale)); }
-  if(footer_layout_) { footer_layout_->SetMaximumWidth(width.CP(scale)); }
+  if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
+  if(header_layout_) { header_layout_->SetMaximumWidth(width); }
+  if(intro_) { intro_->SetMaximumWidth(width - INTRO_SPACE.CP(scale)); }
+  if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
 
   Preview::PreLayoutManagement();
 }
