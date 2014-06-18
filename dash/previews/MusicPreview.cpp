@@ -57,6 +57,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(MusicPreview);
 
 MusicPreview::MusicPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, actions_layout_(nullptr)
+, image_data_layout_(nullptr)
+, icon_layout_(nullptr)
 {
   SetupViews();
   UpdateScale(scale);
@@ -317,9 +320,6 @@ void MusicPreview::OnNavigateOut()
 void MusicPreview::UpdateScale(double scale)
 {
   Preview::UpdateScale(scale);
-
-  if (image_)
-    image_->scale = scale;
 
   if (preview_info_hints_)
     preview_info_hints_->scale = scale;

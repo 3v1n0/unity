@@ -440,9 +440,9 @@ void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation dire
   if (preview_view)
   {
     preview_view->request_close().connect([this]() { request_close.emit(); });
+    preview_layout_->PushPreview(preview_view, direction);
   }
   
-  preview_layout_->PushPreview(preview_view, direction);
 }
 
 void PreviewContainer::DisableNavButton(Navigation button)
