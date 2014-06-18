@@ -39,6 +39,9 @@ namespace
 
 nux::logging::Logger logger("unity.dash.previews.payment.preview");
 
+const RawPixel CONTENT_DATA_CHILDREN_SPACE = 5_em;
+const RawPixel CONTENT_DATA_PADDING = 10_em;
+const RawPixel OVERLAY_LAYOUT_SPACE = 20_em;
 }
 
 class OverlaySpinner : public unity::debug::Introspectable, public nux::View
@@ -183,7 +186,13 @@ PaymentPreview::PaymentPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
 , data_(nullptr)
 , full_data_layout_(nullptr)
+, content_data_layout_(nullptr)
+, overlay_layout_(nullptr)
+, header_layout_(nullptr)
+, body_layout_(nullptr)
+, footer_layout_(nullptr)
 {
+  UpdateScale(scale);
 }
 
 std::string PaymentPreview::GetName() const
@@ -327,8 +336,8 @@ void PaymentPreview::SetupViews()
 
   // layout to be used to show the info
   content_data_layout_ = new nux::VLayout();
-  content_data_layout_->SetSpaceBetweenChildren(5);
-  content_data_layout_->SetPadding(10, 10, 0, 10);
+  content_data_layout_->SetSpaceBetweenChildren(CONTENT_DATA_CHILDREN_SPACE.CP(scale));
+  content_data_layout_->SetPadding(CONTENT_DATA_PADDING.CP(scale), CONTENT_DATA_PADDING.CP(scale), 0, CONTENT_DATA_PADDING.CP(scale));
 
   header_layout_ = GetHeader();
 
@@ -344,19 +353,38 @@ void PaymentPreview::SetupViews()
 
   // layout to draw an overlay
   overlay_layout_ = new nux::VLayout();
-  StaticCairoText* calculating = new StaticCairoText(
+  calculating_ = new StaticCairoText(
                                    "Performing purchase", true,
                                    NUX_TRACKER_LOCATION);
+  calculating_->SetScale(scale);
 
   OverlaySpinner* spinner_ = new OverlaySpinner();
-  overlay_layout_->AddSpace(20, 1);
-  overlay_layout_->AddView(calculating, 0, nux::MINOR_POSITION_CENTER);
+  overlay_layout_->AddSpace(OVERLAY_LAYOUT_SPACE.CP(scale), 1);
+  overlay_layout_->AddView(calculating_, 0, nux::MINOR_POSITION_CENTER);
   overlay_layout_->AddView(spinner_, 1, nux::MINOR_POSITION_CENTER);
-  overlay_layout_->AddSpace(20, 1);
+  overlay_layout_->AddSpace(OVERLAY_LAYOUT_SPACE.CP(scale), 1);
 
   full_data_layout_->AddLayout(overlay_layout_.GetPointer());
 
   SetLayout(full_data_layout_.GetPointer());
+}
+
+void PaymentPreview::UpdateScale(double scale)
+{
+  Preview::UpdateScale(scale);
+
+  if (calculating_)
+    calculating_->SetScale(scale);
+
+  if (overlay_layout_)
+    overlay_layout_->AddSpace(OVERLAY_LAYOUT_SPACE.CP(scale), 1);
+
+  if (content_data_layout_)
+  {
+    content_data_layout_->SetSpaceBetweenChildren(CONTENT_DATA_CHILDREN_SPACE.CP(scale));
+    content_data_layout_->SetPadding(CONTENT_DATA_PADDING.CP(scale), CONTENT_DATA_PADDING.CP(scale), 0, CONTENT_DATA_PADDING.CP(scale));
+  }
+
 }
 
 }

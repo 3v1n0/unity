@@ -460,6 +460,10 @@ void MusicPaymentPreview::SetupViews()
   PaymentPreview::SetupViews();
 }
 
+void MusicPaymentPreview::UpdateScale(double scale)
+{
+  PaymentPreview::UpdateScale(scale);
+}
 
 }
 }
