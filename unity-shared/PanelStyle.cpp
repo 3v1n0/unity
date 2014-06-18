@@ -154,7 +154,9 @@ void Style::DPIChanged()
 
 void Style::RefreshContext()
 {
+#if !GTK_CHECK_VERSION(3, 11, 0)
   gtk_style_context_invalidate(style_context_);
+#endif
   bg_textures_.assign(monitors::MAX, BaseTexturePtr());
 
   changed.emit();

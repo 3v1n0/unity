@@ -286,8 +286,13 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
 
   auto* content_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
   gtk_container_set_border_width(GTK_CONTAINER(content_box), 10);
+#if GTK_CHECK_VERSION(3, 11, 0)
+  gtk_widget_set_margin_start(content_box, 20);
+  gtk_widget_set_margin_end(content_box, 20);
+#else
   gtk_widget_set_margin_left(content_box, 20);
   gtk_widget_set_margin_right(content_box, 20);
+#endif
   gtk_container_add(GTK_CONTAINER(main_box), content_box);
 
   auto* title = gtk_label_new(_("This window is not responding"));

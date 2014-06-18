@@ -52,13 +52,17 @@ const int ANIM_DURATION_LONG = 500;
 const int PREVIEW_SPINNER_WAIT = 2000;
 
 const std::string ANIMATION_IDLE = "animation-idle";
+
+const RawPixel SPIN_ICON_SIZE = 32_em;
+const RawPixel CHILDREN_SPACE = 6_em;
 }
 
 class PreviewContent : public nux::Layout, public debug::Introspectable
 {
 public:
   PreviewContent(PreviewContainer*const parent)
-  : parent_(parent)
+  : scale(1.0)
+  , parent_(parent)
   , progress_(0.0)
   , curve_progress_(0.0)
   , animating_(false)
@@ -75,7 +79,18 @@ public:
     });
     Style& style = previews::Style::Instance();
 
-    spin_= style.GetSearchSpinIcon(32);
+    spin_= style.GetSearchSpinIcon(SPIN_ICON_SIZE);
+
+    scale.changed.connect(sigc::mem_fun(this, &PreviewContent::UpdateScale));
+  }
+
+  void UpdateScale(double scale)
+  {
+    Style& style = previews::Style::Instance();
+    spin_ = style.GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
+
+    for (auto* area : GetChildren())
+      static_cast<previews::Preview*>(area)->scale = scale;
   }
 
   // From debug::Introspectable
@@ -107,6 +122,7 @@ public:
       AddChild(preview.GetPointer());
       AddView(preview.GetPointer());
       preview->SetVisible(false);
+      preview->scale = scale();
     }
     else
     {
@@ -355,6 +371,7 @@ public:
   sigc::signal<void> start_navigation;
   sigc::signal<void> continue_navigation;
   sigc::signal<void> end_navigation;
+  nux::Property<double> scale;
 
 private:
   PreviewContainer*const parent_;
@@ -394,6 +411,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PreviewContainer);
 
 PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , preview_layout_(nullptr)
   , nav_disabled_(Navigation::NONE)
   , navigation_progress_speed_(0.0)
@@ -408,6 +426,7 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
 
   key_down.connect(sigc::mem_fun(this, &PreviewContainer::OnKeyDown));
   mouse_click.connect(sigc::mem_fun(this, &PreviewContainer::OnMouseDown));
+  scale.changed.connect(sigc::mem_fun(this, &PreviewContainer::UpdateScale));
 }
 
 PreviewContainer::~PreviewContainer()
@@ -421,9 +440,9 @@ void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation dire
   if (preview_view)
   {
     preview_view->request_close().connect([this]() { request_close.emit(); });
+    preview_layout_->PushPreview(preview_view, direction);
   }
   
-  preview_layout_->PushPreview(preview_view, direction);
 }
 
 void PreviewContainer::DisableNavButton(Navigation button)
@@ -461,7 +480,7 @@ void PreviewContainer::SetupViews()
   layout->AddLayout(new nux::SpaceLayout(0,0,style.GetPreviewTopPadding(),style.GetPreviewTopPadding()));
 
   layout_content_ = new nux::HLayout();
-  layout_content_->SetSpaceBetweenChildren(6);
+  layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE);
   layout->AddLayout(layout_content_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   layout_content_->AddSpace(0, 1);
@@ -599,7 +618,8 @@ bool PreviewContainer::QueueAnimation()
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
   float progress = GetSwipeAnimationProgress(current);
-  preview_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
+  if (preview_layout_)
+    preview_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
   last_progress_time_ = current;
 
   QueueDraw();
@@ -692,6 +712,32 @@ void PreviewContainer::OnMouseDown(int x, int y, unsigned long button_flags, uns
 nux::Geometry PreviewContainer::GetLayoutGeometry() const
 {
   return layout_content_->GetAbsoluteGeometry();  
+}
+
+void PreviewContainer::UpdateScale(double scale)
+{
+  previews::Style& style = previews::Style::Instance();
+
+  if (preview_layout_)
+  {
+    preview_layout_->scale = scale;
+    preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
+  }
+
+  if (layout_content_)
+    layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+
+  if (nav_left_)
+  {
+    nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+    nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+  }
+
+  if (nav_right_)
+  {
+    nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+    nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+  }
 }
 
 } // namespace previews
