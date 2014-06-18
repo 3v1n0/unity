@@ -229,6 +229,13 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
       {
         glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
         info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
+
+        if (!info)
+        {
+          // Maybe the icon was just added to the theme, see if a rescan helps.
+          gtk_icon_theme_rescan_if_needed(theme);
+          info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
+        }
       }
       else
       {

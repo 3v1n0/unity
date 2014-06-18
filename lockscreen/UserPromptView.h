@@ -56,8 +56,6 @@ public:
   void AddMessage(std::string const& message, nux::Color const& color);
   void AuthenticationCb(bool authenticated);
 
-  void CheckIfCapsLockOn();
-
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
@@ -66,12 +64,6 @@ private:
   void ResetLayout();
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
-  void RecvKeyUp(unsigned int, unsigned long, unsigned long);
-
-  void PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux::Geometry const& geo);
-  void ToggleCapsLockBool();
-
-  int GetWarningIconOffset();
 
   session::Manager::Ptr session_manager_;
   UserAuthenticatorPam user_authenticator_;
@@ -81,13 +73,9 @@ private:
   StaticCairoText* message_;
   StaticCairoText* error_;
   StaticCairoText* invalid_login_;
-  std::deque<IMTextEntry*> focus_queue_;
+  std::deque<TextInput*> focus_queue_;
 
-  nux::BaseTexture* warning_;
   nux::Geometry cached_focused_geo_;
-
-  bool caps_lock_on_;
-  int spin_icon_width_;
 };
 
 }

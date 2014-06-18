@@ -104,7 +104,9 @@ Controller::Controller(Controller::WindowCreator const& create_window)
     }
   });
 
-  WindowManager::Default().initiate_spread.connect(sigc::mem_fun(this, &Controller::HideDash));
+  auto& wm = WindowManager::Default();
+  wm.initiate_spread.connect(sigc::mem_fun(this, &Controller::HideDash));
+  wm.screen_viewport_switch_started.connect(sigc::mem_fun(this, &Controller::HideDash));
 
   dbus_server_.AddObjects(dbus::INTROSPECTION, dbus::PATH);
   dbus_server_.GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) {

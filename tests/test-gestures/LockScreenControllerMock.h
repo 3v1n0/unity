@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011-2012 Canonical Ltd
+ * Copyright (C) 2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,38 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Marco Trevisan <marco.trevisan@canonical.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef IM_TEXT_ENTRY_H
-#define IM_TEXT_ENTRY_H
+#ifndef LOCK_SCREEN_CONTROLLER_MOCK_H
+#define LOCK_SCREEN_CONTROLLER_MOCK_H
 
-#include <Nux/Nux.h>
-#include <Nux/TextEntry.h>
+#include <memory>
 
 namespace unity
 {
-
-class IMTextEntry : public nux::TextEntry
+namespace lockscreen
 {
-  NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntry);
+
+class ControllerMock
+{
 public:
-  IMTextEntry();
+  typedef std::shared_ptr<ControllerMock> Ptr;
 
-  nux::Property<bool> clipboard_enabled;
-
-  bool im_preedit();
-
-protected:
-  virtual void InsertText(std::string const& text);
-  virtual void CopyClipboard();
-  virtual void PasteClipboard();
-  virtual void PastePrimaryClipboard();
-
-  void Paste(bool primary = false);
+  bool IsLocked() {
+    return false;
+  }
 };
 
+}
 }
 
 #endif

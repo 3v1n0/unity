@@ -171,7 +171,6 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
 
       primary_shield_->primary = false;
       primary_shield_ = shield;
-      primary_shield_->CheckCapsLockPrompt();
       shield->primary = true;
       nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
       auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
@@ -330,9 +329,9 @@ void Controller::OnLockRequested(bool prompt)
   prompt_activation_ = prompt;
 
   lockscreen_timeout_.reset(new glib::Timeout(30, [this] {
-    bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
+    bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsKeyboardGrab());
 
-    if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
+    if (!grabbed_by_blank && WindowManager::Default().IsScreenGrabbed())
     {
       HideBlankWindow();
       LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";

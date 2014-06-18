@@ -410,6 +410,7 @@ void VolumeLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   pimpl_->CopyFilesToVolume(dnd_data.Uris(), timestamp);
   SetQuirk(Quirk::PULSE_ONCE, true);
+  FullyAnimateQuirkDelayed(100, LauncherIcon::Quirk::SHIMMER);
 }
 
 //

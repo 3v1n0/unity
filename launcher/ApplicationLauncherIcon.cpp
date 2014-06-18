@@ -49,9 +49,10 @@ namespace
 // We use the "bamf-" prefix since the manager is protected, to avoid name clash
 const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
 const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
-//const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
+const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
 const std::string DEFAULT_ICON = "application-default-icon";
 const int MAXIMUM_QUICKLIST_WIDTH = 300;
+const int COMPIZ_SCALE_DND_SPREAD = 1 << 7;
 
 enum MenuItemType
 {
@@ -723,7 +724,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 
 void ApplicationLauncherIcon::EnsureWindowState()
 {
-  std::bitset<monitors::MAX> monitors;
+  std::vector<int> number_of_windows_on_monitor(monitors::MAX);
 
   for (auto& window: app_->GetWindows())
   {
@@ -735,18 +736,18 @@ void ApplicationLauncherIcon::EnsureWindowState()
       // If monitor is -1 (or negative), show on all monitors.
       if (monitor < 0)
       {
-        monitors.set();
-        break;
+        for (unsigned j; j < monitors::MAX; j++)
+            ++number_of_windows_on_monitor[j];
       }
       else
       {
-        monitors[monitor] = true;
+        ++number_of_windows_on_monitor[monitor];
       }
     }
   }
 
   for (unsigned i = 0; i < monitors::MAX; i++)
-    SetWindowVisibleOnMonitor(monitors[i], i);
+    SetNumberOfWindowsVisibleOnMonitor(number_of_windows_on_monitor[i], i);
 
   WindowsChanged.emit();
 }
@@ -1157,28 +1158,28 @@ std::string ApplicationLauncherIcon::GetRemoteUri() const
   return _remote_uri;
 }
 
-void ApplicationLauncherIcon::OnDndHovered()
-{
-  // for now, let's not do this, it turns out to be quite buggy
-  //if (IsRunning())
-  //  Spread(CompAction::StateInitEdgeDnd, true);
-}
-
 void ApplicationLauncherIcon::OnDndEnter()
 {
-  /* Disabled, since the DND code is currently disabled as well.
-  _source_manager.AddTimeout(1000, [this] {
-    OnDndHovered();
+  auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+
+  _source_manager.AddTimeout(1000, [this, timestamp] {
+    WindowManager::Default().TerminateScale();
+
+    if (!IsRunning())
+      return false;
+
+    Focus(ActionArg(ActionArg::Source::LAUNCHER, 1, timestamp));
+
+    if (GetWindows(WindowFilter::ON_CURRENT_DESKTOP).size() > 1)
+      Spread(true, COMPIZ_SCALE_DND_SPREAD, false);
+
     return false;
   }, ICON_DND_OVER_TIMEOUT);
-  */
 }
 
 void ApplicationLauncherIcon::OnDndLeave()
 {
-  /* Disabled, since the DND code is currently disabled as well.
   _source_manager.Remove(ICON_DND_OVER_TIMEOUT);
-  */
 }
 
 bool ApplicationLauncherIcon::IsFileManager()

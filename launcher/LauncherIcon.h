@@ -226,7 +226,7 @@ protected:
 
   void SetProgress(float progress);
 
-  void SetWindowVisibleOnMonitor(bool val, int monitor);
+  void SetNumberOfWindowsVisibleOnMonitor(int number_of_windows, int monitor);
 
   void Present(float urgency, int length, int monitor = -1);
 
@@ -338,6 +338,7 @@ private:
 
   std::vector<nux::Point3> _center;
   std::bitset<monitors::MAX> _has_visible_window;
+  std::vector<int> _number_of_visible_windows;
   std::vector<std::bitset<std::size_t(Quirk::LAST)>> _quirks;
   std::vector<std::vector<std::shared_ptr<Animation>>> _quirk_animations;
   std::vector<nux::Point3> _last_stable;
