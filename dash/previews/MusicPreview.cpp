@@ -235,7 +235,7 @@ void MusicPreview::SetupViews()
         previews::Style& style = dash::previews::Style::Instance();
         nux::HLayout* actions_layout = new nux::HLayout();
         icon_layout_ = new nux::VLayout();
-        icon_layout_->SetLeftAndRightPadding(ICON_LEFT_RIGHT_PADDING.CP(scale));
+        icon_layout_->SetLeftAndRightPadding(std::max(ICON_LEFT_RIGHT_PADDING.CP(scale), 0));
 
         warning_texture_ = new IconTexture(style.GetWarningIcon());
         icon_layout_->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
@@ -298,8 +298,7 @@ void MusicPreview::PreLayoutManagement()
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    int action_width = CLAMP(RawPixel((details_width - style.GetSpaceBetweenActions()) /
-      2), 0_em, style.GetActionButtonMaximumWidth());
+    int action_width = CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale));
     // do not use SetMinMax because width has to be able to grow
     button->SetMinimumWidth(action_width);
     button->SetMinimumHeight(style.GetActionButtonHeight().CP(scale));
@@ -347,7 +346,7 @@ void MusicPreview::UpdateScale(double scale)
     actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
 
   if (icon_layout_)
-    icon_layout_->SetLeftAndRightPadding(ICON_LEFT_RIGHT_PADDING.CP(scale));
+    icon_layout_->SetLeftAndRightPadding(std::max(ICON_LEFT_RIGHT_PADDING.CP(scale), 0));
 }
 
 } // namespace previews

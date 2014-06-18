@@ -618,7 +618,8 @@ bool PreviewContainer::QueueAnimation()
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
   float progress = GetSwipeAnimationProgress(current);
-  preview_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
+  if (preview_layout_)
+    preview_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
   last_progress_time_ = current;
 
   QueueDraw();
