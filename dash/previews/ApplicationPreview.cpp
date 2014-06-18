@@ -73,6 +73,14 @@ NUX_IMPLEMENT_OBJECT_TYPE(ApplicationPreview);
 
 ApplicationPreview::ApplicationPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, title_subtitle_layout_(nullptr)
+, image_data_layout_(nullptr)
+, main_app_info_(nullptr)
+, icon_layout_(nullptr)
+, app_data_layout_(nullptr)
+, app_updated_copywrite_layout_(nullptr)
+, app_info_layout_(nullptr)
+, actions_layout_(nullptr)
 {
   SetupViews();
 }

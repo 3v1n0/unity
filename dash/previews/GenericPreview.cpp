@@ -64,6 +64,10 @@ NUX_IMPLEMENT_OBJECT_TYPE(GenericPreview);
 
 GenericPreview::GenericPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, image_data_layout_(nullptr)
+, preview_info_layout_(nullptr)
+, preview_data_layout_(nullptr)
+, actions_layout_(nullptr)
 {
   SetupViews();
   UpdateScale(scale);
