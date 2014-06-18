@@ -25,23 +25,25 @@
 #include <Nux/HLayout.h>
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
-
-namespace
-{
-const int kMinButtonHeight = 34;
-const int kMinButtonWidth  = 48;
-
-const int icon_size  = 24;
-}
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
+namespace
+{
+const RawPixel MIN_BUTTON_HEIGHT = 34_em;
+const RawPixel MIN_BUTTON_WIDTH  = 48_em;
+
+const RawPixel icon_size  = 24_em;
+}
+
 namespace dash
 {
 DECLARE_LOGGER(logger, "unity.dash.preview.action");
 
 ActionButton::ActionButton(std::string const& action_hint, std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , action_hint_(action_hint)
   , image_(nullptr)
 {
@@ -49,6 +51,7 @@ ActionButton::ActionButton(std::string const& action_hint, std::string const& la
   SetAcceptKeyNavFocusOnMouseEnter(true);
   Init();
   BuildLayout(label, icon_hint, "");
+  scale.changed.connect(sigc::mem_fun(this, &ActionButton::UpdateScale));
 }
 
 ActionButton::~ActionButton()
@@ -94,8 +97,8 @@ void ActionButton::InitTheme()
     cr_focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
   }
 
-  SetMinimumHeight(kMinButtonHeight);
-  SetMinimumWidth(kMinButtonWidth);
+  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(scale));
+  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
 }
 
 void ActionButton::SetExtraHint(std::string const& extra_hint, std::string const& font_hint)
@@ -123,13 +126,13 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
     if (!icon_hint_.empty())
     {
-      image_ = new IconTexture(icon_hint, icon_size);
+      image_ = new IconTexture(icon_hint, icon_size.CP(scale));
       image_->texture_updated.connect([this](nux::ObjectPtr<nux::BaseTexture> const&)
       {
         BuildLayout(label_, icon_hint_, extra_hint_);
       });
       image_->SetInputEventSensitivity(false);
-      image_->SetMinMaxSize(icon_size, icon_size);
+      image_->SetMinMaxSize(icon_size.CP(scale), icon_size.CP(scale));
     }
   }
 
@@ -310,6 +313,29 @@ std::string ActionButton::GetExtraText() const
 {
   return extra_hint_;
 }
+
+void ActionButton::UpdateScale(double scale)
+{
+  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(scale));
+  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
+
+  if (image_)
+  {
+    image_->SetSize(icon_size.CP(scale));
+    image_->SetMinMaxSize(icon_size.CP(scale), icon_size.CP(scale));
+    image_->ReLoadIcon();
+  }
+
+  if (static_text_)
+    static_text_->SetScale(scale);
+
+  if (extra_text_)
+    extra_text_->SetScale(scale);
+
+  QueueRelayout();
+  QueueDraw();
+}
+
 
 } // namespace dash
 } // namespace unity

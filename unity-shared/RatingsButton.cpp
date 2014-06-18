@@ -36,11 +36,11 @@ namespace unity
 {
 RatingsButton::RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
+  , star_size_(star_size)
+  , star_gap_(star_gap)
   , editable_(true)
   , rating_(0.0)
   , focused_star_(-1)
-  , star_size_(star_size)
-  , star_gap_(star_gap)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);

@@ -238,7 +238,7 @@ void DashView::BuildPreview(Preview::Ptr model)
       preview_container_->SetParentObject(this);
     }
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-
+    preview_container_->scale = cv_->DPIScale();
     preview_container_->SetGeometry(scopes_layout_->GetGeometry());
     preview_displaying_ = true;
 
@@ -263,8 +263,12 @@ void DashView::BuildPreview(Preview::Ptr model)
   }
   else
   {
-    // got a new preview whilst already displaying, we probably clicked a navigation button.
-    preview_container_->Preview(model, preview_navigation_mode_); // TODO
+    if (preview_container_)
+    {
+      // got a new preview whilst already displaying, we probably clicked a navigation button.
+      preview_container_->Preview(model, preview_navigation_mode_); // TODO
+      preview_container_->scale = cv_->DPIScale();
+    }
   }
 
   if (G_LIKELY(preview_state_machine_.left_results() > 0 && preview_state_machine_.right_results() > 0))
@@ -585,6 +589,9 @@ void DashView::OnDPIChanged()
 
   search_bar_->scale = scale;
   scope_bar_->scale = scale;
+
+  if (preview_container_)
+    preview_container_->scale = cv_->DPIScale();
 }
 
 void DashView::UpdateDashViewSize()
