@@ -249,8 +249,8 @@ void MusicPreview::SetupViews()
         warning_msg_->SetFont(style.u1_warning_font().c_str());
         warning_msg_->SetLines(-2);
         warning_msg_->SetScale(scale);
-        warning_msg_->SetMinimumHeight(WARNING_MIN_HEIGHT);
-        warning_msg_->SetMaximumWidth(WARNING_MAX_WIDTH);
+        warning_msg_->SetMinimumHeight(WARNING_MIN_HEIGHT.CP(scale));
+        warning_msg_->SetMaximumWidth(WARNING_MAX_WIDTH.CP(scale));
 
         actions_layout->AddView(warning_msg_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
 
@@ -326,7 +326,11 @@ void MusicPreview::UpdateScale(double scale)
     preview_info_hints_->scale = scale;
 
   if (warning_msg_)
+  {
     warning_msg_->SetScale(scale);
+    warning_msg_->SetMinimumHeight(WARNING_MIN_HEIGHT.CP(scale));
+    warning_msg_->SetMaximumWidth(WARNING_MAX_WIDTH.CP(scale));
+  }
 
   previews::Style& style = dash::previews::Style::Instance();
 
