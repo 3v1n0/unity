@@ -9,7 +9,7 @@ include (cmake/pch.cmake)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
-set (UNITY_MINOR 2)
+set (UNITY_MINOR 3)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
