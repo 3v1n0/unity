@@ -1,3 +1,1653 @@
+2014-06-18  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	bump upstream to 7.3.0
+
+2014-06-07  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.10.20140607-0ubuntu1
+
+2014-06-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix skype indicator blinking. Fixes: 1310200
+
+2014-05-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix skype indicator blinking.
+
+2014-06-07  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fix issue where the Panel shadow would get drawn over drop down windows in full screen windows. Fixes: 1316005
+
+2014-05-28  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fix issue where the Panel shadow would get drawn over drop down windows in full screen windows.
+
+2014-06-07  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fix issue where the number of Launcher icon pips are not always properly updated when a new window of an already running application is opened. Fixes: 1283775
+
+2014-05-28  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Get rid of break statement since we need to continue the loop.
+	Relax if/else if logic and just assign boolean regardless what the current value is.
+
+2014-05-28  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Create a new method that replaces SetWindowVisibleOnMonitor() which also keeps the number of visible windows per monitor for a particular app.
+	Also, remove some of the helper functions added in a previous commit.
+
+2014-05-27  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Use counter for calculating number of app windows in a viewport and also check if the number of app windows has changed outside of the for loop in order to update Launcher pips for all Launchers in multi-monitor scenarios.
+
+2014-05-26  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fix issue where the number of Launcher icon pips are not always properly updated when a new window of an already running application is opened.
+
+2014-06-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Pass the correct options to showLauncherKeyTerminate in UnityScreen::OnLockScreen Fixes: 1320438
+
+2014-05-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Pass the correct options to showLauncherKeyTerminate in UnityScreen::OnLockScreen.
+
+2014-06-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable switcher gestures if screen is locked. Fixed a regression. Fixes: 1321043
+
+2014-05-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove unwated changes.
+
+2014-05-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable switcher gestures if screen is locked. Fixed a regression.
+
+2014-05-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Restore clibpoard on unlock. Update tests too.
+
+2014-05-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Clear the clipboard when locking the screen.
+
+2014-05-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Clear the clipboard when locking the screen.
+
+2014-06-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Clear the clipboard when locking the screen. Fixes: 1308911
+
+2014-05-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Enable clipboard by default.
+
+2014-05-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable clibpoard during lockscreen.
+
+2014-06-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: use RawPixel's for the size values and convert them to match current scaling
+	
+	Plus dinamically allocate horizontal space, not to cut the text. Fixes: 924840, 1317356, 1317869
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/dynamic-shortcut-hint
+
+2014-05-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: increase max column widths to make sure they will work with big text
+
+2014-05-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: adjust column maximum width inside PreLayoutManagement instead that when filling the model
+
+2014-05-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: some cleanup
+
+2014-05-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: define maximum columns width, way longer than before
+
+2014-05-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: reduce the line spacing to match old values
+	
+	This migtht be caused by the StaticCairoText usage, and this spacing actually matches design
+
+2014-05-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutController: always fill the model before setting it
+
+2014-05-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: compute maximum columns width based on text size
+	
+	In this way the text won't be truncated. The text size is computed per each column
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~brandontschaefer/unity/shutdown-dialog-hi-dpi
+
+2014-05-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: use string literal to build RawPixel's
+
+2014-05-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: use RawPixel's for the size values and convert them to match current scaling
+
+2014-06-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: try to grab the screen to make sure that the screen is not grabbed
+	
+	FocusIn event with NotifyGrab mode is not always triggered by X when a window
+	takes the grab, then we need to ensure that there's no grab by trying to get one.
+	We only care about keyboard here, since pointer grabs don't affect us in general. Fixes: 741869, 1305586
+
+2014-05-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: don't try to lock if there's a keyboard grab around
+
+2014-05-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: try to grab the screen to make sure that the screen is not grabbed
+	
+	FocusIn event with NotifyGrab mode is not always triggered by X when a window
+	takes the grab, then we need to ensure that there's no grab by trying to get one.
+	We only care about keyboard here, since pointer grabs don't affect us in general.
+
+2014-06-06  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.10.20140606.1-0ubuntu1
+
+2014-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: use RawPixel's for the size values and convert them to match current scaling Fixes: 1317348
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSwitcherView: remove obsolete property check
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: use RawPixel's for the size values and convert them to match current scaling
+
+2014-06-06  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fix issue where scaling the edge illumination up and down with the size of the Launcher icons would cause the illumination border to be offset and smaller than the icon. Fixes: 1309739
+
+2014-05-08  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Revert the last change and instead, use the icon glow .png file instead of the .svg since Gdk does not seem to be able to handle properly scaling the svg file.
+
+2014-05-06  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fix issue where scaling the edge illumination up and down with the size of the Launcher icons would cause the illumination border to be offset and smaller than the icon.
+
+2014-06-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Lockscreen warning icon needs a tooltip to say what the warning is about! Fixes: 1308288
+
+2014-04-23  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Load the warning icon only when we enable show caps lock.
+
+2014-04-22  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Remove spin_icon_width
+
+2014-04-22  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merge from parent. Fix conflicts.
+
+2014-04-22  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merge trunk
+
+2014-04-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fix multi monitor issue
+	* Fix translation issue
+
+2014-04-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* No magic strings!
+
+2014-04-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Add a nice warning tooltip
+
+2014-06-06  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	ShutdownView: Scale up the Buttons and Text plus Borders of the UnityWindowView. Fixes: 1308323
+
+2014-05-13  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Much better way to clean up textures
+
+2014-05-13  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Clean up unused textures when a dpi changes, or a monitor changes
+
+2014-05-08  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Pre-load textures based on scale value of monitors
+
+2014-05-08  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Merge Marcos branch again
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindowView: don't keep EMConverter around, we don't need it... Let's use just scale
+
+2014-05-08  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Move the CP() call for the const sizes to UnityWindowStyle
+
+2014-05-08  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Merge Marcos branch
+	* Merge trunk
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionButton: don't scale the button size twice...
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionButton: remove useless definition
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindowView: only expose scale instead of the EMConverter, so we get proper notifications
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutController: set the monitor property
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindowView: don't include UnitySettings in the header...
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: use the UnityWindowView monitor value and scale padding correctly
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	RawPixel: no need to round here, EMConverter will do it
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EMConverter: just multiply the pixels per DPIScale, it's simpler and safer
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindowView: make sure we update the internal offset correctly
+
+2014-05-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~brandontschaefer/unity/shutdown-dialog-hi-dpi
+
+2014-05-07  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Use a map to map textures based on scale size, so we only load scale sizes we need,
+	and still cache them. Good for multi monitor.
+
+2014-05-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Scale the borders
+
+2014-05-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Scale the closeable window button as well.
+	* TODO Window border, a bit more tricky...
+
+2014-05-05  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fix reviews issues.
+
+2014-05-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Undo changes that aren't part of branch
+
+2014-04-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merge trunk
+
+2014-04-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes based on review
+
+2014-04-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* First stage of Shutdown Dialog HiDPI Support
+
+2014-06-06  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	TextInput: move the warning icon inside the input field, render it white Fixes: 1307738
+
+2014-06-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Merge trunk
+
+2014-04-17  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Need the relayout, otherwise the icon is late to show
+
+2014-04-17  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Make caps_lock_on private
+
+2014-04-17  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Move QueueDraw to the changed callback.
+	* Remove ToggleCapsLock
+
+2014-04-16  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Move over detectiong caps lock to TextInput.cpp as well.
+	* Steal Marcos code that puts the Warning icon into a layout (Thanks!)
+
+2014-04-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Use a fallback icon
+
+2014-04-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Move the warning icon over the TextInput.
+	* This will make adjusting the IMTextEntry width a bit easier (still a TODO)
+
+2014-04-14  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Use the gnome theme to load the warning icon. Looks better, and will scale :)
+
+2014-04-14  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* make sure we draw the waring icon above the text entry
+
+2014-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: Focus and, in case, Spread the windows on DnD
+	
+	After 1 second that an user is over an icon, that icon should focus the relative
+	application and Spread its windows if it has more than one opened.
+	
+	Correctly handle the DnD scale in launcher, and apply glow to the icon under pointer. Fixes: 607796, 727902, 754580, 839728
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	{Trash,Volume}LauncherIcon: also shimmer on drop-accept
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: glow launcher icons under the dnd if they accept dropping on them
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: add GLOW quirk
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	{Dash,Hud}Controller: use wm signals instead of UBus to hide on VP switch
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: initialize scale_just_activated_ on OnInitiateSpread
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: don't desaturate the icons when spread is started during DnD
+	
+	Also make sure we redraw when bg_effect_helper status changes
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: make sure we always set the scale "x_offset" value
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: listen to compiz scale events also for setting scale active/disactive
+	
+	This will allow to get the scale status also when it doesn't take the grab (like in the DnD case)
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: Focus and, in case, Spread the application windows after some DnD over the icon
+	
+	After 1 second that an user is over an icon, that icon should focus the relative application and Spread its windows
+	if it has more than one opened
+
+2014-06-06  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Restore the launcher position by reversing the animation and unsetting the DND_PUSHED_OFF quirk. Fixes: 1304882
+
+2014-04-16  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Remove redundant SetHidden()
+
+2014-04-15  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Unhide the launcher if it was manually dragged out before DND.
+
+2014-04-15  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Base change on Trevinhos patch.
+
+2014-04-14  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	The animation shouldn't get reversed twice as that looks odd.
+
+2014-04-14  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Unset DND_PUSHED_OFF and reverse the animation to make launcher reappear after DND.
+
+2014-05-12  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.10.20140512.4-0ubuntu1
+
+2014-05-12  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	disabled precompiled headers on arm64 Ubuntu package builds Fixes: 1317276
+
+2014-05-12  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	disabled precompiled headers for arm64 arch, it seems to cause random ICEs
+
+2014-05-12  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	lockscreen/LockScreenAccelerators.h: added required header for std:vector definition 
+
+2014-05-12  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	added missing header for std::vector definition
+
+2014-05-12  Mathieu Trudel-Lapierre  <mathieu-tl@ubuntu.com>
+
+	Sync with distro upload for 7.2.0+14.04.20140423-0ubuntu2
+	- replace autopilot-desktop Depends in unity-autopilot with autopilot-desktop-legacy. 
+
+2014-05-07  Mathieu Trudel-Lapierre  <mathieu-tl@ubuntu.com>
+
+	Sync with distro
+
+2014-05-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a warning in the session dialog if other sessions are still open. Fixes: 1281058
+
+2014-05-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update string.
+
+2014-05-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2014-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Send the changed event.
+
+2014-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use a ROProperty.
+
+2014-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add an extra /n.
+
+2014-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix string.
+
+2014-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove new line.
+
+2014-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a warning in the session dialog if other sessions are still open.
+
+2014-05-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Set the max width, so our static text wraps. So we don't end up rendering text out of the view area. Fixes: 1312749
+
+2014-04-25  Jonas Schwabe
+
+	* Set the max width, so the static text wraps (and doesn't go out of the view!)
+
+2014-05-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DebugDBusInterface: match properties if they are in the AP array form [<type>, <value>] Fixes: 1307748
+
+2014-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DebugDBusInterface: GetPropertyValue should return a proper value only if we've a valid array
+	
+	Improve debugging messages and fix leaks.
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DebugDBusInterface: match properties if they are in the AP array form [<type>, <value>]
+
+2014-05-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: make sure we don't try to call an invalid initiate/terminate callback function Fixes: 1221673
+
+2014-04-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: make sure we don't try to call an invalid initiate/terminate callback function
+
+2014-05-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: don't try to show Dash/Hud if the screen is grabbed
+	
+	Also move the dash opening out from LauncherController, and get rid of UBus
+	as first initialization source, as it can only slow things down here. Fixes: 741869
+
+2014-05-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Mergin with trunk
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/lockscreen-keys-disable
+
+2014-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: Get the Hud initialization event if unity is locked
+
+2014-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: if the screen is grabbed when showing the Hud, wait for ungrab for a couple of seconds
+
+2014-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: don't try to show Dash/Hud if the screen is grabbed
+	
+	Also move the dash opening out from LauncherController, and get rid of UBus
+	as first initialization source, that can only slow things down here.
+
+2014-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: return a bool in ShowDash, wait for ungrab for 2 seconds maximum
+	
+	Now if the screen is grabbed, we just wait a couple of seconds the ungrab-event.
+	If that happens in such timeframe then we show the dash, otherwise we ignore the request.
+	
+	Also return a bool weather we've shown the dash or not.
+
+2014-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: notify grab also when the screen is not grabbed but we got a NotifyWhileGrabbed event
+
+2014-05-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: always paint the lockscreen above, just add menu and onboard as exceptions
+	
+	Some code cleanup, factorizing similar code. Fixes: 1313280
+
+2014-05-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: add just one function that computes if a window can bypass lockscreen
+
+2014-05-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: use a better (and cheaper) way to recognize Onboard window
+
+2014-05-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: always paint the lockscreen above, just add menu and onboard as exceptions
+
+2014-05-12  Jinkyu Yi  <jincreator@jincreator.net>
+
+	Dash: Fix problem at checking blacklisted unicode range Fixes: 1251193
+
+2014-05-04  Jinkyu Yi  <jincreator@jincreator.net>
+
+	Dash: Fix problem at checking blacklisted unicode range. Fixes: 1251193
+
+2014-05-12  William Hua  <william.hua@canonical.com>
+
+	Add proper support for modifier-only shortcuts on the lock screen. Fixes: 1291461
+
+2014-04-30  William Hua  <william.hua@canonical.com>
+
+	Treat Meta modifier as Alt.
+
+2014-04-30  William Hua  <william.hua@canonical.com>
+
+	Minor revisions.
+
+2014-04-29  William Hua  <william.hua@canonical.com>
+
+	Destroy accelerator controller between locks.
+
+2014-04-29  William Hua  <william.hua@canonical.com>
+
+	Remove gotos.
+
+2014-04-18  William Hua  <william.hua@canonical.com>
+
+	Make a separate controller just for accelerators.
+
+2014-04-18  William Hua  <william.hua@canonical.com>
+
+	Rip everything out and start anew.
+
+2014-04-15  William Hua  <william.hua@canonical.com>
+
+	Add proper support for modifier-only shortcuts on the lock screen.
+
+2014-05-02  Marc Deslauriers  <marc.deslauriers@ubuntu.com>
+
+	debian/changelog: sync with distro
+
+2014-05-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: emit an invalid EntryActivated signal if the menu hasn't actually been shown
+	
+	In addition, if the menu is not visible after the first popup call, try to show a menu
+	without keyboard focus. This will make possible to see menus also when there's a key-grab
+	(although they will be without keyboard support).
+	
+	Finally, reset the menu state, if that failed.
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenPanel: if a menu is opened, and the screen is not grabbed, give the grab back to the Shield.
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: cleanup the menu popup code, avoid unnecessary calls to gtk_widget_is_visible
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: if the menu is not visible, try to show a menu without keyboard focus
+	
+	This will make possible to see menus also when there's a key-grab.
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: emit an invalid EntryActivated signal if the menu has not actually been shown
+	
+	And also reset the menu state, if that failed
+
+2014-05-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: toggle activation of all the unity compiz actions when locking the screen
+	
+	Also, make sure that the lockscreen views are treated as "always-on-front" windows by nux
+	(and this applies to both visibility and events).
+
+2014-04-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSessionController: verify correctly the new Hide method
+
+2014-04-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: set the primary shield as the always on front window when another basewindow hides
+	
+	That window might have set itself as the always on front window, so we should restore our role
+
+2014-04-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionController: set the dialog as the nux always on front view
+
+2014-04-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionController: delete the views when hidden, we don't need to keep them around
+
+2014-04-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: make sure we reset all the unity views before locking
+
+2014-04-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: also send the terminate action to Alt pressure on lock
+
+2014-04-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: toggle all the unity (and thus the Gnome) key bindings when locking
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: don't try to regrab again if we've been just requested to ungrab
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: wait for the next ungrab-event if we can't grab when panel is not active anymore
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: toggle activation of all the unity compiz actions when locking the screen
+
+2014-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: set the blank window or the primary shield as the always-on-front window
+	
+	In this way nux won't draw anything above it, nor will pass events to the underneath windows
+
+2014-04-23  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140423-0ubuntu1
+
+2014-04-23  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When setting the STARTING quirk for Application Launcher icons, only do it for the monitor specified in the passed in args. Fixes: 1291362
+
+2014-04-21  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When setting the STARTING quirk for Application Launcher icons, only do it for the monitor specified in the passed in args.
+
+2014-04-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Close dash/hud/etc. on signal locked too. Fixes: 1308850
+
+2014-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use prompt_lock_requested signal.
+
+2014-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Close dash/hud/etc. on signal locked too.
+
+2014-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Close dash/hud/etc. on signal locked too.
+
+2014-04-16  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140416-0ubuntu1
+
+2014-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Do not allow to activate twice the same entry! Fixes: 1308572
+
+2014-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor change.
+
+2014-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix ident.
+
+2014-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Do not allow to activate two times the same entry!
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: save a locked.stamp file when locking/unlocking, to relock on startup
+	
+	This makes unity to relocks if it was locked before crashing... Fixes: 1308572
+
+2014-04-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: Save lock file stamp in $XDG_RUNTIME_DIR, cleanup it on destroy
+
+2014-04-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopUtilities: add GetUserRuntimeDirectory to fetch $XDG_RUNTIME_DIR
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: save a locked.stamp file when locking/unlocking, to relock on startup
+
+2014-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopUtilities: add GetCacheDirectory, to fetch and create an unity cache dir
+
+2014-04-14  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140414.1-0ubuntu1
+
+2014-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	
+	CompizUtils: only shadow-decorate alpha windows that have full decorations as well
+	
+	Since alpha windows might have custom shapes, it's safer not to shadow-decorate them
+	unless they don't provide, for sure, a full decoration.
+	
+	This fixes, between the others, the unity force-quit dialog. Fixes: 1281825, 1307524
+
+2014-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: only shadow-decorate alpha windows that have full decorations as well
+	
+	Since alpha windows might have custom shapes, it's safer not to shadow-decorate them
+	unless they don't provide, for sure, a full decoration.
+	
+	This fixes, between the others, the unity force-quit dialog.
+
+2014-04-14  Sami Jaktholm  <sjakthol@outlook.com>
+
+	Scale: Correctly detect the activation of a scale and set scale_just_activated_
+	to true properly. Fixes: 1288789
+
+2014-04-11  Sami Jaktholm  <sjakthol@outlook.com>
+
+	Scale: Correctly detect the activation of a scale and set scale_just_activated_
+	to true properly.
+
+2014-04-14  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Security issue: Gestures on the lock screen allow to peek inside running applications.
+	As with keyboard input, gestures should be blocked while the screen is locked. Fixes: 1303041, 1306973
+
+2014-04-14  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Stop hiding the launchers parent window for now as it breaks urgent icon wiggling and hint shadow.
+
+2014-04-13  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Don't queue up drawing if the gestures are ignored.
+
+2014-04-12  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Make the lockscreen_controller accessible to other classes and don't allow 4 finger gestures in the lock screen.
+
+2014-04-12  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Should not even try to show the switcher if the screen is locked.
+
+2014-04-12  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Forgot a variable
+
+2014-04-12  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Also, don't hide the launcher window if expo or scale are active.
+
+2014-04-12  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Really shouldn't hide the launcher window if the dash is open.
+
+2014-04-11  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140411-0ubuntu1
+
+2014-04-11  Sami Jaktholm  <sjakthol@outlook.com>
+
+	Lockscreen: Give proper grabs to the shield before releasing blank_window_. Fixes: 1306417
+
+2014-04-11  Sami Jaktholm  <sjakthol@outlook.com>
+
+	Lockscreen: Give proper grabs to the shield before releasing blank_window_.
+
+2014-04-10  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140410.1-0ubuntu1
+
+2014-04-10  William Hua  <william.hua@canonical.com>
+
+	Enable sound buttons and input source switching under lock screen. 
+
+2014-04-11  William Hua  <william.hua@canonical.com>
+
+	Clean up.
+
+2014-04-11  William Hua  <william.hua@canonical.com>
+
+	Fix merge errors.
+
+2014-04-11  William Hua  <william.hua@canonical.com>
+
+	Minor changes.
+
+2014-04-11  William Hua  <william.hua@canonical.com>
+
+	Merge trunk.
+
+2014-04-11  William Hua  <william.hua@canonical.com>
+
+	Enable sound and input source shortcuts on lock screen.
+
+2014-04-10  CI bot  <ps-jenkins@lists.canonical.com>
+
+	LockScreen: add ability to show without fading in on some system calls
+	
+	Also, if locking is not enabled, calling Lock causes the screensaver to be initiated.
+	Many cleanups and misc fixes. Fixes: 1292575, 1305194
+
+2014-04-10  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	It fixes the quicklist menu appearance. Fixes: 1298859
+
+2014-04-09  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed quicklist scaling
+
+2014-04-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	When we detect caps lock, or caps lock is pressed, render a warning icon to show its on. Fixes: 1291737
+
+2014-04-09  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Make sure we update the caps lock detector when we change primary sheilds
+
+2014-04-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Get rid of magic numbers, have to get the width of the cached
+	spin icon width, so we can place the warning icon in the right spot
+
+2014-04-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Check if caps is on each time we make a new Prompt, as it can change
+	when authenticating, and we need to know.
+
+2014-04-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Detect if caps lock is on, and check if caps lock is pressed.
+	If so, then render a warning icon.
+
+2014-04-10  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	If the dash has not been opened before, a 4 finger tap will result in a dash with no selected scope.
+	Instead, set up the window and view of the dash by sending DASH_ABOUT_TO_SHOW (same happens when hovering the mouse pointer over the BFB icon)
+	and open the home scope. Fixes: 1303468
+
+2014-04-10  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	UnityGestureTarget.cpp: Remove spaces
+
+2014-04-10  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	4 finger tap: Set up the dash window and its view, show the home scope afterwards.
+
+2014-04-10  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Launcher: Show and hide the launcher window OnDragUpdate() to fix the gesture animations Fixes: 1303141
+
+2014-04-10  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Only hide/unhide launcher window if autohide mode is on.
+
+2014-04-10  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Actually, Hide/Un-Hide launcher window in OnDragUpdate.
+
+2014-04-10  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Un-hide launcher window when dragging out using 4 finger gesture: https://bugs.launchpad.net/unity/+bug/1303141
+
+2014-04-10  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Alt-Tab has always respected the alt-tab-bias-viewport setting, but the 3-finger gesture to switch between windows has not, even though it does the same thing.
+	They should behave the same way depending on the CCSM setting. Fixes: 1303060
+
+2014-04-07  Alfred Neumayer  <dev.beidl@gmail.com>
+
+	Make 3 finger window switch gesture respect the alt-tab-bias-viewport setting by moving the check to SetUpAndShowSwitcher.
+
+2014-04-10  Sami Jaktholm  <sjakthol@outlook.com>
+
+	Shortcuts: Listen and react to view close requests. Fixes: 1297842
+
+2014-04-05  Sami Jaktholm  <sjakthol@outlook.com>
+
+	Shortcuts: Listen and react to view close requests.
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsGrabEdge, PanelMenuView: perform proper WM action on clicks, based on user settings Fixes: 1283849
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use generic actions based on WM settings for double,middle and right clicks
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add methods to {Horizontally,Vertically}Maximize a window
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add window shading methods
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsGrabEdge: perform proper WM action on clicks, based on user settings
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationStyle: add WindowManagerAction to get WM click options
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/right-left-click-maximize-fix
+
+2014-04-10  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140410-0ubuntu1
+
+2014-04-10  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Session: Don't lock the screen if screen locking is disabled by
+	org.gnome.desktop.lockdown disable-lock-screen. Fixes: 1292154
+
+2014-04-10  CI bot  <ps-jenkins@lists.canonical.com>
+
+	ScreenSaverDBusManager: start/stop gnome-screensaver if we don't/do handle the locking
+	
+	This allows to just use the fallback gnome-screensaver lockscreen if we need to use it. Fixes: 1303712
+
+2014-04-10  CI bot  <ps-jenkins@lists.canonical.com>
+
+	GnomeSessionManager: impelement gnome session dbus interface and a fader to blank the screen Fixes: 1291088, 1292041, 1292078, 1292446, 1292451
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreen: add ability to show without fading in on some system calls
+	
+	Also, if locking is not enabled, calling Lock causes the screensaver to be initiated.
+	Many cleanups and misc fixes. Fixes: 1292575, 1305194
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: fire screensaver_post_lock_timeout_ when the view is fully visible
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeSessionManager: if it's impossible to lock a session, start the screensaver on lock
+	
+	This is what most of apps expect, and thus we do that. Although it's not really that coherent.
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionManager: add ScreenSaver{Activate,Deactivate} and relevant signals and export them
+	
+	Update LockScreenController and dbus apis to match this
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: remove some racy code, avoid to emit multiple signals
+	
+	And fix pre-lock blank window
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: increase the lockscreen timeout wait to be bigger to a frame duration
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionDBusManager: export PromptLock method on the dbus
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BackgroundSettings: don't create new panel style instances, use the actual instance
+
+2014-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScreenSaverDBusManager: get rid of the old active_ bool variable, that caused undefined behavior
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: even more cleanup, move blank window grabbing to own function
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: we need to paint also the decorations of the windows, when in lock-mode
+	
+	Othewise their texture won't be rebuilt and this will lead to wrong textures.
+	Also, we don't need to damage the screen when lock opacity changes as it's done by nux.
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: also hide BlankWindow on mouse and keyboard down events
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: show a blank window unless we don't have the lockscreen ready on prompt requests
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionDBusManager: add support for "PromptLock"
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeSessionManager: use prompt lockscreen on logind lock requests
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: add support to PromptLockScreen
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionManager: add PromptLockScreen method and signal, to require a fast lock (with no fading)
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~sjakthol/unity/fix-1292154
+
+2014-04-06  Sami Jaktholm  <sjakthol@outlook.com>
+
+	Don't cache the value and watch for changes. Check the setting every time instead.
+
+2014-04-06  Sami Jaktholm  <sjakthol@outlook.com>
+
+	Session: Don't lock the screen if screen locking is disabled by
+	org.gnome.desktop.lockdown disable-lock-screen.
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with parent
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: make sure whe hide the blank window on unlock
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~laney/unity/g-s-replace
+	
+	Remves the ugly killall
+
+2014-04-09  Iain Lane  <iain@orangesquash.org.uk>
+
+	Take over as the owner of the gnome-screensaver interface, if necessary.
+
+2014-04-09  Iain Lane  <iain@orangesquash.org.uk>
+
+	Allow skipping of the tests with DEB_BUILD_OPTIONS=nocheck
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with parent branch
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: add ShowBlankWindow method
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: ops, remove wrong change
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with parent branch
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: start the screensaver after few seconds that the user has locked his session, if there's no more interaction
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: emit a signal when we receive a keyboard input
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: immediately start the screensaver on SetActive dbus call
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScreenSaverDBusManager: add request_activate signal that is emitted on remote activation request
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: some cleanup, and HideBlankWindow on simulate user activity
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: keep track of dbus_manager and reset screensaver on simulate-user activity
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScreenSaverDBusManager: implement SimulateUserActivity
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScreenSaverDBusManager: use a nux property for active state
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: don't animate when locking the screen on suspend or screensaver
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: we can lock the screen if the GS setting is disabled
+	
+	Also rename the setting to be more understandable
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with parent branch
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: always call LockScreen of SessionManager as it has some checks
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: damage the screen when the lockscreen opacity changes
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: use a ROProperty for opacity
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: only try to lock if locking is enabled
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: use timeout seconds for lock delay
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: only use one window to blank the screen, it's not needed to have one per monitor
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: move OnPresenceStatusChanged into a function
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: lock the screen on suspend if ubuntu is configured to do so
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Uscreen: emit suspending signal on PrepareForSleep
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: use direction to set the animation value
+
+2014-04-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ExternalGschema: add missing external settings
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenSettings: also use legacy lockscreen if screen reader is enabled
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScreenSaverDBusManager: add some comments
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScreenSaverDBusManager: use async calls
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: call gnome-screensaver to lock the screen if we use a legacy lockscreen
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScreenSaverDBusManager: start/stop gnome-screensaver if we don't/do handle the locking
+
+2014-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenSettings: add use_fallback option, that is on if OSK is active
+	
+	This is to workaround on screen keyboard issues
+
+2014-04-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Add GS schemas to external list
+
+2014-04-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeSessionManager: use enum class PresenceStatus instead of magic numbers
+
+2014-04-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2014-04-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove magic numbers.
+
+2014-04-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Do not implement SimulateUserActivity.
+
+2014-04-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update tests.
+
+2014-04-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Start cleaning lockscreen code.
+
+2014-04-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix. Code style is still WIP.
+
+2014-04-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Lock the screen after a delay.
+
+2014-04-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add the first settings.
+
+2014-04-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Initial commit to implement g-s dbus interface in unity.
+
+2014-04-04  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140404-0ubuntu1
+
+2014-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: add a new "sheet style" dialog that is shown when a window hangs
+	
+	Listen to compiz toolkit events and prompt a dialog that allows to force-quit an
+	hanging application. Fixes: 698031, 1299061, 1299080
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: make sure that the dialog is not deletable by WM
+	
+	For this to be safe we need also to ignore the delete events
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	POTFILES: include DecorationsForceQuitDialog.cpp
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: let's do one line things!
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: make sure we hide the dialog before we killed the parent window
+	
+	It must be hidden before than the parent, in case the window is not really killed,
+	it will be shown anyway later.
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: avoid warnings on close, due to finalized close button
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: emit close_request signal on close and "Wait" button
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: add close_request signal and destroy window when it  gets called
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: add missing call to UpdateForceQuitDialogPosition
+	
+	Maybe it was removed due to a shelved change...
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: implement actual window killing by using both XKillClient and kill -9
+	
+	Yeah, now
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: use proper class names (mostly for theming)
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: use themed button textures
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: set the dialog pid/hostname to match the ones of the parent window
+	
+	In this way we don't confuse BAMF about the ownership of the dialog.
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: use the same window class of the real parent window
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: keep the dialog centered on parent window when its geometry changes
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsManager.cpp: show a forcequit dialog when we get a toolkitActionForceQuitDialog ClientMessage
+	
+	These events are triggered directly by compiz, so we only have to catch them!
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: add ShowForceQuitDialog method to show a forcequit dialog on given window
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: set dialog X time to match the one of the close event
+	
+	In this way we correctly handle the focus-stealing prevention
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: set shape area to ignore input events outside the actual dialog
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: set parent window as its actual parent X-side, and center on it
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: fix label strings
+
+2014-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2014-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: obey to style for shadows
+
+2014-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: add first basic gtk implementation of the force-quit dialog
+
+2014-04-04  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fix issue where windows that are in Show Desktop mode are selected for spread have a blank preview. This fix will Fade Out the window for Spread and Fade In the window again when Spread exits if that window is not chosen. Fixes: 1104236
+
+2014-04-04  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fix issue where windows that are in Show Desktop mode are selected for spread have a blank preview.  This fix will Fade Out the window for Spread and Fade In the window again when Spread exits if that window is not chosen.
+
+2014-04-03  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140403-0ubuntu1
+
+2014-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsGrabEdge: Only perform tookit actions on right-click Fixes: 1301459
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsGrabEdge: Only perform tookit actions on right-click
+
+2014-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: reset decoration::DataPool on destruction, otherwise we won't have a valid screen ptr Fixes: 1291243
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: reset decoration::DataPool on destruction, otherwise we won't have screen ptr valid
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsDataPool: add static Reset method that allows to reset our textures
+
+2014-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: recompute pips when the screen geometry changes Fixes: 1024101
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: recompute pips when the screen geometry changes
+
+2014-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: hide the launcher window when in auto-hide mode if it's not presented Fixes: 1301394
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: hide the launcher window when in auto-hide mode if it's not presented
+
+2014-04-03  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	remove libsyncindicator from services/panel-service.c 
+
+2014-04-02  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	remove libsyncindicator.so (lp: #1300916)
+
+2014-04-03  Dimitri John Ledkov  <dimitri.ledkov@canonical.com>
+
+	Drop U1 default shortcuts & indicator-sync recommendation. (LP: #1300916) Fixes: 1300916
+
+2014-04-02  Dimitri John Ledkov  <dimitri.ledkov@canonical.com>
+
+	Drop U1 default shortcuts & indicator-sync recommendation. (LP: #1300916)
+
+2014-04-02  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.2.0+14.04.20140402-0ubuntu1
+
+2014-04-02  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	bump to release 7.2.0 
+
+2014-04-01  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	debian/control: fix some style warnings in package description
+
+2014-04-01  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	debian/changelog: fix syntax to silence a lintian warning
+
+2014-04-01  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	debian/control(Standards-Version): bump to 3.9.5 (no changes)
+
+2014-03-31  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	release 7.2.0
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadFilter: use launcher width, scale on HiDPI, match also application names
+	
+	Launcher Width is now considered in setting the offset of the scale filter (fixes
+	padding when launcher is in autohide mode).
+	The search bar is correctly scaled when in HiDPI mode.
+	We use ApplicationManager and thus BAMF to match windows by their name or app name. Fixes: 1281297, 1282001, 1300763, 1300842
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadFilter: use casefold instead that tolower as it's meant for equalty checks as we do here
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadFilter: implement our own to_lower_copy that works with utf8
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: match the scaled windows based on the SpreadFilter matches
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadFilter: compute a list of filtered windows using both window and application name
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadFilter: take in consideration the launcher width when setting the spread offset
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadFilter :Scale the internal searchbar to match DPI settings
+
+2014-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: fix crash when trying to update the show filter scale in a filterless-search bar
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use panel style context for painting the panel title Fixes: 1296866
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: add "panel-title" class to the panel style context when drawing title
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: return a Style context with different widget path in GetStyleContext based on type
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use panel style context for painting the panel title
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationStyle: allow to use a different style context in DrawTitle
+	
+	Panel will need to use a different one
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel, Decorations: draw the background under the text glyphs before the text itself Fixes: 723167
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnitySettings: never allow values minor or equal to 0 as UI scale
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuEntry: draw background under text glyphs
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsTitle: draw background under text glyphs
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationStyle: draw text glyphs background on menu items
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: draw the background under the text glyphs
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationStyle: add support for drawing the text background under the glyphs
+
+2014-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: draw the background under the text glyphs
+
+2014-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: only shadow-decorate alpha windows that have full decorations as well
+	
+	Since alpha windows might have custom shapes, it's safer not to shadow-decorate them
+	unless they don't provide, for sure, a full decoration. Fixes: 1281825
+
+2014-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: only shadow-decorate alpha windows that have full decorations as well
+	
+	Since alpha windows might have custom shapes, it's safer not to shadow-decorate them
+	unless they don't provide, for sure, a full decoration.
+
 2014-03-28  CI bot  <ps-jenkins@lists.canonical.com>
 
 	Releasing 7.1.2+14.04.20140328.1-0ubuntu1
