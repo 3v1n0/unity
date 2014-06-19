@@ -53,14 +53,20 @@ R"(<node>
     <method name="Suspend" />
     <method name="Hibernate" />
     <method name="CancelAction" />
+    <method name="IsLocked">
+      <arg type="b" direction="out" name="is_locked" />
+    </method>
+    <method name="CanLock">
+      <arg type="b" direction="out" name="can_lock" />
+    </method>
     <method name="CanShutdown">
-      <arg type="b" direction="out" name="canshutdown" />
+      <arg type="b" direction="out" name="can_shutdown" />
     </method>
     <method name="CanSuspend">
-      <arg type="b" direction="out" name="cansuspend" />
+      <arg type="b" direction="out" name="can_suspend" />
     </method>
     <method name="CanHibernate">
-      <arg type="b" direction="out" name="canhibernate" />
+      <arg type="b" direction="out" name="can_hibernate" />
     </method>
 
     <signal name="LockRequested" />
@@ -121,7 +127,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "RequestLogout")
     {
-      session_->logout_requested.emit(false);
+      session_->logout_requested.emit(session_->HasInhibitors());
     }
     else if (method == "Reboot")
     {
@@ -129,7 +135,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "RequestReboot")
     {
-      session_->reboot_requested.emit(false);
+      session_->reboot_requested.emit(session_->HasInhibitors());
     }
     else if (method == "Shutdown")
     {
@@ -137,7 +143,7 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
     }
     else if (method == "RequestShutdown")
     {
-      session_->shutdown_requested.emit(false);
+      session_->shutdown_requested.emit(session_->HasInhibitors());
     }
     else if (method == "Suspend")
     {
@@ -152,17 +158,25 @@ DBusManager::DBusManager(session::Manager::Ptr const& session)
       session_->CancelAction();
       session_->cancel_requested.emit();
     }
+    else if (method == "IsLocked")
+    {
+      return g_variant_new("(b)", session_->is_locked() != false);
+    }
+    else if (method == "CanLock")
+    {
+      return g_variant_new("(b)", session_->CanLock() != false);
+    }
     else if (method == "CanShutdown")
     {
-      return g_variant_new("(b)", session_->CanShutdown() != FALSE);
+      return g_variant_new("(b)", session_->CanShutdown() != false);
     }
     else if (method == "CanSuspend")
     {
-      return g_variant_new("(b)", session_->CanSuspend() != FALSE);
+      return g_variant_new("(b)", session_->CanSuspend() != false);
     }
     else if (method == "CanHibernate")
     {
-      return g_variant_new("(b)", session_->CanHibernate() != FALSE);
+      return g_variant_new("(b)", session_->CanHibernate() != false);
     }
 
     return nullptr;

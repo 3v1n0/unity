@@ -137,6 +137,7 @@ TEST_F(TestSessionView, ModeChangeOnShutdownUnsupported)
 
 TEST_F(TestSessionView, FullModeButtons)
 {
+  ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(true));
   ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(true));
   ON_CALL(*manager, CanSuspend()).WillByDefault(testing::Return(true));
   ON_CALL(*manager, CanHibernate()).WillByDefault(testing::Return(true));
@@ -166,6 +167,11 @@ TEST_F(TestSessionView, FullModeButtons)
   view.mode.changed.emit(View::Mode::FULL);
 
   EXPECT_EQ(view.GetButtonByAction(Button::Action::HIBERNATE), nullptr);
+
+  ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(false));
+  view.mode.changed.emit(View::Mode::FULL);
+
+  EXPECT_EQ(view.GetButtonByAction(Button::Action::LOCK), nullptr);
 }
 
 TEST_F(TestSessionView, ShutdownModeButtons)
@@ -181,11 +187,22 @@ TEST_F(TestSessionView, ShutdownModeButtons)
 
 TEST_F(TestSessionView, LogoutModeButtons)
 {
+  ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(true));
   view.mode = View::Mode::LOGOUT;
 
   EXPECT_EQ(view.GetButtons().size(), 2);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::LOCK), 0);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::LOGOUT), 1);
+  EXPECT_EQ(view.key_focus_area(), view.GetButtonByAction(Button::Action::LOGOUT));
+}
+
+TEST_F(TestSessionView, LogoutLightModeButtons)
+{
+  ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(false));
+  view.mode = View::Mode::LOGOUT;
+
+  EXPECT_EQ(view.GetButtons().size(), 1);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::LOGOUT), 0);
   EXPECT_EQ(view.key_focus_area(), view.GetButtonByAction(Button::Action::LOGOUT));
 }
 
@@ -213,8 +230,9 @@ TEST_F(TestSessionView, ButtonsActivateRequestsHide)
 {
   bool request_hide = false;
   view.request_hide.connect([&request_hide] { request_hide = true; });
+  view.mode = View::Mode::LOGOUT;
 
-  auto button = view.GetButtonByAction(Button::Action::LOCK);
+  auto button = view.GetButtonByAction(Button::Action::LOGOUT);
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 
@@ -223,7 +241,8 @@ TEST_F(TestSessionView, ButtonsActivateRequestsHide)
 
 TEST_F(TestSessionView, ButtonsActivateDeselectButton)
 {
-  auto button = view.GetButtonByAction(Button::Action::LOCK);
+  view.mode = View::Mode::LOGOUT;
+  auto button = view.GetButtonByAction(Button::Action::LOGOUT);
   ASSERT_NE(button, nullptr);
   button->highlighted = true;
   button->activated.emit();
@@ -233,6 +252,8 @@ TEST_F(TestSessionView, ButtonsActivateDeselectButton)
 
 TEST_F(TestSessionView, LockButtonActivateLocks)
 {
+  ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(true));
+  view.mode = View::Mode::LOGOUT;
   EXPECT_CALL(*manager, LockScreen());
   auto button = view.GetButtonByAction(Button::Action::LOCK);
   ASSERT_NE(button, nullptr);

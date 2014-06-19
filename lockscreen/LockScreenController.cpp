@@ -104,7 +104,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       key_connection_->disconnect();
       uscreen_connection_->block();
       hidden_window_connection_->block();
-      session_manager_->unlocked.emit();
+      session_manager_->is_locked = false;
 
       std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
         shield->RemoveLayout();
@@ -349,7 +349,7 @@ void Controller::OnLockRequested(bool prompt)
       HideBlankWindow();
 
     LockScreen();
-    session_manager_->locked.emit();
+    session_manager_->is_locked = true;
 
     if (prompt_activation_)
     {
@@ -410,7 +410,7 @@ void Controller::LockScreen()
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
 
-  accelerator_controller_ = std::make_shared<AcceleratorController>();
+  accelerator_controller_ = std::make_shared<AcceleratorController>(session_manager_);
   auto activate_key = WindowManager::Default().activate_indicators_key();
   auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
   accelerator->activated.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));
