@@ -100,7 +100,19 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
 
     # kill a previous compiz if was there (this is a hack as compiz can
     # sometimes get stuck and not exit on --replace)
-    subprocess.call (["pkill", "-9", "compiz"])
+    display = "DISPLAY=" + os.environ["DISPLAY"]
+    pids = [pid for pid in os.listdir("/proc") if pid.isdigit()]
+
+    for pid in pids:
+        try:
+            pid_path = os.path.join("/proc", pid)
+            cmdline = open(os.path.join(pid_path, "cmdline"), "rb").read()
+            if "compiz" in str(cmdline):
+                compiz_env = open(os.path.join(pid_path, "environ"), "rb").read()
+                if display in compiz_env:
+                    subprocess.call (["kill", "-9", pid])
+        except IOError:
+            continue
 
     # shell = True as it's the simpest way to | tee.
     # In this case, we need a string and not a list
