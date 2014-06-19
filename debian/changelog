@@ -1,8 +1,30 @@
-unity (7.3.0-0ubuntu1) UNRELEASED; urgency=low
+unity (7.3.0+14.10.20140619-0ubuntu1) utopic; urgency=low
 
+  [ Stephen M. Webb ]
   * bump upstream to 7.3.0
 
- -- Stephen M. Webb <stephen.webb@bregmasoft.ca>  Wed, 18 Jun 2014 09:06:46 -0400
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Andrea Azzarone ]
+  * Remove cross fade effect during lock/unlocking. A simple fading
+    works just fine. (LP: #1312107)
+  * Manually emit nux::Area::geometry_changed beucase nux can fail to
+    emit it. (LP: #1292391)
+
+  [ Marco Trevisan (Treviño) ]
+  * {Panel,Decoration}Style: don't call deprecated
+    gtk_style_context_invalidate function in gtk >= 3.11
+  * PluginAdapter: pass the state to compiz plugins activations Fixes
+    Scale triggering on DnD (LP: #1328615)
+  * LockScreenAcceleratorController: do ther configured action on power
+    special keys press We finally can suspend, shutdown, hibernate or
+    start the screensaver when the screen is locked, using the Suspend,
+    Sleep, Hibernate and PowerOff hardware keys. Also the Shutdown
+    dialog doesn't allow now to lock the session if it is not allowed by
+    settings. (LP: #1306211)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 19 Jun 2014 18:41:55 +0000
 
 unity (7.2.0+14.10.20140607-0ubuntu1) utopic; urgency=low
 
