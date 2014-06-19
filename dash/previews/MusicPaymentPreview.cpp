@@ -90,6 +90,7 @@ MusicPaymentPreview::MusicPaymentPreview(dash::Preview::Ptr preview_model)
 {
   SetupViews();
   PaymentPreview::SetupBackground();
+  UpdateScale(scale);
 }
 
 std::string MusicPaymentPreview::GetName() const
