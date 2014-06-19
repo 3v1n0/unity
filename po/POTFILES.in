@@ -48,5 +48,6 @@ unity-shared/CoverArt.cpp
 unity-shared/DashStyle.cpp
 unity-shared/PreviewStyle.cpp
 unity-shared/SearchBar.cpp
+unity-shared/TextInput.cpp
 unity-shared/UScreen.cpp
 gnome/50-unity-launchers.xml.in

@@ -14,42 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#include <cmath>
-#include "RawPixel.h"
+#ifndef LOCK_SCREEN_CONTROLLER_MOCK_H
+#define LOCK_SCREEN_CONTROLLER_MOCK_H
+
+#include <memory>
 
 namespace unity
 {
-
-RawPixel operator"" _em(long double pixel)
+namespace lockscreen
 {
-  return RawPixel(pixel);
+
+class ControllerMock
+{
+public:
+  typedef std::shared_ptr<ControllerMock> Ptr;
+
+  bool IsLocked() {
+    return false;
+  }
+};
+
+}
 }
 
-RawPixel operator"" _em(unsigned long long pixel)
-{
-  return RawPixel(pixel);
-}
-
-RawPixel::RawPixel(double raw_pixel)
-  : raw_pixel_(raw_pixel)
-{}
-
-int RawPixel::CP(EMConverter::Ptr const& converter) const
-{
-  return converter->CP(raw_pixel_);
-}
-
-int RawPixel::CP(double scale) const
-{
-  return std::round(raw_pixel_ * scale);
-}
-
-RawPixel::operator int() const
-{
-  return std::round(raw_pixel_);
-}
-
-} // namesapce unity
+#endif

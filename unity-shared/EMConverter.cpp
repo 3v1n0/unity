@@ -17,6 +17,7 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
+#include <cmath>
 #include "EMConverter.h"
 
 namespace unity
@@ -104,8 +105,7 @@ double EMConverter::PixelsToBaseEM(int pixels) const
 
 double EMConverter::CP(int pixels) const
 {
-  double pixels_em = PixelsToBaseEM(pixels);
-  return EMToPixels(pixels_em);
+  return std::round(pixels * DPIScale());
 }
 
 double EMConverter::DPIScale() const
