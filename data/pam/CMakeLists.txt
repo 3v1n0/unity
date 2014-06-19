@@ -1,1 +1,1 @@
-install(FILES unity DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/pam.d)
+install(FILES unity DESTINATION ${CMAKE_SYSCONFDIR}/pam.d)
