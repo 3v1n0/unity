@@ -514,6 +514,20 @@ void MusicPaymentPreview::UpdateScale(double scale)
   previews::Style& style = dash::previews::Style::Instance();
   if (lock_texture_)
     lock_texture_->SetSize(std::max(style.GetPaymentLockWidth().CP(scale), style.GetPaymentLockHeight().CP(scale)));
+
+  if (form_layout_)
+  {
+    form_layout_->SetSpaceBetweenChildren(TITLE_CHILDREN_SPACE.CP(scale));
+    form_layout_->SetMinimumHeight(FORM_MIN_HEIGHT.CP(scale));
+    form_layout_->SetLeftAndRightPadding(FORM_PADDING.CP(scale));
+    form_layout_->SetTopAndBottomPadding(TITLE_CHILDREN_SPACE.CP(scale));
+  }
+
+  if (password_entry_)
+  {
+    password_entry_->SetMinimumHeight(PASSWORD_MIN_HEIGHT.CP(scale));
+    password_entry_->SetMinimumWidth(PASSWORD_MIN_WIDTH.CP(scale));
+  }
 }
 
 }
