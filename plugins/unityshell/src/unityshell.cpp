@@ -3826,8 +3826,12 @@ void UnityScreen::OnScreenLocked()
     screen->removeAction(&action);
 
   // We notify that super/alt have been released, to avoid to leave unity in inconsistent state
-  showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, getOptions());
-  showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, getOptions());
+  CompOption::Vector options(8);
+  options[7].setName("time", CompOption::TypeInt);
+  options[7].value().set((int) screen->getCurrentTime());
+
+  showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, options);
+  showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, options);
 }
 
 void UnityScreen::OnScreenUnlocked()
