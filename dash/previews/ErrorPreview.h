@@ -94,6 +94,8 @@ protected:
   void PreLayoutManagement();
 
   virtual void SetupViews();
+  virtual void UpdateScale(double scale);
+
   // content elements
   nux::ObjectPtr<CoverArt> image_;
   nux::ObjectPtr<StaticCairoText> intro_;
