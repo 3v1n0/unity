@@ -62,6 +62,9 @@ const RawPixel PASSWORD_MIN_WIDTH = 240_em;
 const RawPixel ACTIONS_CHILDREN_SPACE_MAX = 16_em;
 const RawPixel ACTIONS_CHILDREN_SPACE_MIN = 8_em;
 const RawPixel BUTTONS_SPACE = 20_em;
+const RawPixel HEADER_CHILDREN_SPACE = 10_em;
+const RawPixel HEADER_MAX_SIZE = 76_em;
+const RawPixel BODY_CHILDREN_SPACE = 20_em;
 }
 
 // static string definitions
@@ -141,6 +144,7 @@ void MusicPaymentPreview::LoadActions()
               || MusicPaymentPreview::FORGOT_PASSWORD_ACTION == action_id)
       {
         nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
+        link->scale = scale();
         link->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionLinkActivated));
 
@@ -151,6 +155,7 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionButton> button = this->CreateButton(action);
         button->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionActivated));
+        button->scale = scale();
 
         buttons_map_.insert(std::make_pair(action->id, button));
       }
@@ -229,7 +234,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *body_layout = new  nux::VLayout();
-  body_layout->SetSpaceBetweenChildren(20);
+  body_layout->SetSpaceBetweenChildren(BODY_CHILDREN_SPACE.CP(scale));
 
   intro_ = new StaticCairoText(
           payment_preview_model_->header.Get(), true,
@@ -515,6 +520,12 @@ void MusicPaymentPreview::UpdateScale(double scale)
   if (lock_texture_)
     lock_texture_->SetSize(std::max(style.GetPaymentLockWidth().CP(scale), style.GetPaymentLockHeight().CP(scale)));
 
+  if (password_entry_)
+  {
+    password_entry_->SetMinimumHeight(PASSWORD_MIN_HEIGHT.CP(scale));
+    password_entry_->SetMinimumWidth(PASSWORD_MIN_WIDTH.CP(scale));
+  }
+
   if (form_layout_)
   {
     form_layout_->SetSpaceBetweenChildren(TITLE_CHILDREN_SPACE.CP(scale));
@@ -523,11 +534,6 @@ void MusicPaymentPreview::UpdateScale(double scale)
     form_layout_->SetTopAndBottomPadding(TITLE_CHILDREN_SPACE.CP(scale));
   }
 
-  if (password_entry_)
-  {
-    password_entry_->SetMinimumHeight(PASSWORD_MIN_HEIGHT.CP(scale));
-    password_entry_->SetMinimumWidth(PASSWORD_MIN_WIDTH.CP(scale));
-  }
 }
 
 }

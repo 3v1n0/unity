@@ -42,6 +42,12 @@ nux::logging::Logger logger("unity.dash.previews.payment.preview");
 const RawPixel CONTENT_DATA_CHILDREN_SPACE = 5_em;
 const RawPixel CONTENT_DATA_PADDING = 10_em;
 const RawPixel OVERLAY_LAYOUT_SPACE = 20_em;
+const RawPixel HEADER_CHILDREN_SPACE = 10_em;
+const RawPixel HEADER_MAX_SIZE = 76_em;
+const RawPixel IMAGE_MIN_MAX_SIZE = 64_em;
+const RawPixel HEADER_SPACE = 10_em;
+const RawPixel LINK_MIN_WIDTH = 178_em;
+const RawPixel LINK_MAX_HEIGHT = 34_em;
 }
 
 class OverlaySpinner : public unity::debug::Introspectable, public nux::View
@@ -208,18 +214,18 @@ void PaymentPreview::AddProperties(debug::IntrospectionData& introspection)
 nux::Layout* PaymentPreview::GetHeader()
 {
   nux::HLayout* header_data_layout = new nux::HLayout();
-  header_data_layout->SetSpaceBetweenChildren(10);
-  header_data_layout->SetMaximumHeight(76);
-  header_data_layout->SetMinimumHeight(76);
+  header_data_layout->SetSpaceBetweenChildren(HEADER_CHILDREN_SPACE.CP(scale));
+  header_data_layout->SetMaximumHeight(HEADER_MAX_SIZE.CP(scale));
+  header_data_layout->SetMinimumHeight(HEADER_MAX_SIZE.CP(scale));
 
   image_ = new CoverArt();
-  image_->SetMinMaxSize(64, 64);
+  image_->SetMinMaxSize(IMAGE_MIN_MAX_SIZE.CP(scale), IMAGE_MIN_MAX_SIZE.CP(scale));
   AddChild(image_.GetPointer());
   UpdateCoverArtImage(image_.GetPointer());
 
   header_data_layout->AddView(image_.GetPointer(), 0);
   header_data_layout->AddLayout(GetTitle(), 0);
-  header_data_layout->AddSpace(10, 1);
+  header_data_layout->AddSpace(HEADER_SPACE.CP(scale), 1);
   header_data_layout->AddLayout(GetPrice(), 0);
   return header_data_layout;
 }
@@ -232,8 +238,8 @@ nux::ObjectPtr<ActionLink> PaymentPreview::CreateLink(dash::Preview::ActionPtr a
   link = new ActionLink(action->id,
          action->display_name, NUX_TRACKER_LOCATION);
   link->font_hint.Set(style.payment_form_labels_font().c_str());
-  link->SetMinimumWidth(178);
-  link->SetMaximumHeight(34);
+  link->SetMinimumWidth(LINK_MIN_WIDTH.CP(scale));
+  link->SetMaximumHeight(LINK_MAX_HEIGHT.CP(scale));
   return link;
 }
 
@@ -248,8 +254,8 @@ nux::ObjectPtr<ActionButton> PaymentPreview::CreateButton(dash::Preview::ActionP
            NUX_TRACKER_LOCATION);
   button->SetFont(style.action_font());
   button->SetExtraHint(action->extra_text, style.action_extra_font());
-  button->SetMinimumWidth(178);
-  button->SetMaximumHeight(34);
+  button->SetMinimumWidth(LINK_MIN_WIDTH.CP(scale));
+  button->SetMaximumHeight(LINK_MAX_HEIGHT.CP(scale));
   return button;
 }
 
@@ -356,7 +362,6 @@ void PaymentPreview::SetupViews()
   calculating_ = new StaticCairoText(
                                    "Performing purchase", true,
                                    NUX_TRACKER_LOCATION);
-  calculating_->SetScale(scale);
 
   OverlaySpinner* spinner_ = new OverlaySpinner();
   overlay_layout_->AddSpace(OVERLAY_LAYOUT_SPACE.CP(scale), 1);
@@ -376,15 +381,11 @@ void PaymentPreview::UpdateScale(double scale)
   if (calculating_)
     calculating_->SetScale(scale);
 
-  if (overlay_layout_)
-    overlay_layout_->AddSpace(OVERLAY_LAYOUT_SPACE.CP(scale), 1);
-
   if (content_data_layout_)
   {
     content_data_layout_->SetSpaceBetweenChildren(CONTENT_DATA_CHILDREN_SPACE.CP(scale));
     content_data_layout_->SetPadding(CONTENT_DATA_PADDING.CP(scale), CONTENT_DATA_PADDING.CP(scale), 0, CONTENT_DATA_PADDING.CP(scale));
   }
-
 }
 
 }
