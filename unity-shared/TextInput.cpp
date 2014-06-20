@@ -88,7 +88,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , input_hint("")
   , hint_font_name(HINT_LABEL_DEFAULT_FONT_NAME)
   , hint_font_size(HINT_LABEL_FONT_SIZE)
-  , show_activiator(true)
+  , show_activator(false)
   , show_caps_lock(false)
   , bg_layer_(new nux::ColorLayer(nux::Color(0xff595853), true))
   , caps_lock_on(false)
@@ -149,12 +149,12 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
     CheckIfCapsLockOn();
   });
 
-  // Activiator
+  // Activator
   activator_ = new IconTexture(LoadActivatorIcon(DEFAULT_ICON_SIZE));
-  activator_->SetVisible(show_activiator());
+  activator_->SetVisible(show_activator());
   layout_->AddView(activator_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  show_activiator.changed.connect([this] (bool value) {
+  show_activator.changed.connect([this] (bool value) {
     activator_->SetVisible(value);
   });
 
@@ -208,7 +208,7 @@ void TextInput::SetSpinnerVisible(bool visible)
   if (visible)
     activator_->SetVisible(false);
   else
-    activator_->SetVisible(show_activiator());
+    activator_->SetVisible(show_activator());
 }
 
 void TextInput::SetSpinnerState(SpinnerState spinner_state)

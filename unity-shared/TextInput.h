@@ -72,7 +72,7 @@ public:
   nux::Property<int> hint_font_size;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
-  nux::Property<bool> show_activiator;
+  nux::Property<bool> show_activator;
   nux::Property<bool> show_caps_lock;
 
 private:
