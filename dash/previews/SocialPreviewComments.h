@@ -67,12 +67,12 @@ protected:
   virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupViews();
-  void UpdateScale(double scale);
 
   virtual std::string GetName() const;
   virtual void AddProperties(debug::IntrospectionData&);
 
 private:
+  void UpdateScale(double scale);
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 

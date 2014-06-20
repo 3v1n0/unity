@@ -339,8 +339,8 @@ void SocialPreview::UpdateScale(double scale)
   if (actions_layout_)
     actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
 
-//  if (content_)
-//    content_->scale = scale;
+  if (content_)
+    content_->scale = scale;
 
   if (comments_)
     comments_->scale = scale;
