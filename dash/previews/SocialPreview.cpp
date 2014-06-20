@@ -264,7 +264,7 @@ void SocialPreview::SetupViews()
 
     full_data_layout_->AddLayout(actions_layout_, 0);
     /////////////////////
-  
+
   image_data_layout_->AddView(social_content_layout_, 0);
   image_data_layout_->AddLayout(full_data_layout_, 1);
 
@@ -339,8 +339,11 @@ void SocialPreview::UpdateScale(double scale)
   if (actions_layout_)
     actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
 
-//  if (content_);
-//  if (comments_);
+//  if (content_)
+//    content_->scale = scale;
+
+  if (comments_)
+    comments_->scale = scale;
 }
 
 } // namespace previews

@@ -50,6 +50,8 @@ public:
 
   sigc::signal<void> request_close() const { return preview_container_.request_close; }
 
+  nux::Property<double> scale;
+
 protected:
 
   typedef nux::ObjectPtr<StaticCairoText> StaticCairoTextPtr;
@@ -65,6 +67,7 @@ protected:
   virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupViews();
+  void UpdateScale(double scale);
 
   virtual std::string GetName() const;
   virtual void AddProperties(debug::IntrospectionData&);
@@ -74,6 +77,14 @@ private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
   PreviewContainer preview_container_;
+
+  nux::VLayout* layout_;
+  nux::HLayout* name_layout_;
+
+  StaticCairoTextPtr comment_name_;
+  StaticCairoTextPtr comment_time_;
+  StaticCairoTextPtr comment_value_;
+
 };
 
 }
