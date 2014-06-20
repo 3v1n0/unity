@@ -533,7 +533,6 @@ void MusicPaymentPreview::UpdateScale(double scale)
     form_layout_->SetLeftAndRightPadding(FORM_PADDING.CP(scale));
     form_layout_->SetTopAndBottomPadding(TITLE_CHILDREN_SPACE.CP(scale));
   }
-
 }
 
 }

@@ -306,6 +306,10 @@ void Preview::UpdateScale(double scale)
     ActionButton* bn = dynamic_cast<ActionButton*>(button);
     if (bn)
       bn->scale = scale;
+
+    ActionLink* link = dynamic_cast<ActionLink*>(button);
+    if (link)
+      link->scale = scale;
   }
 
   QueueRelayout();
