@@ -57,7 +57,7 @@ public:
 DECLARE_LOGGER(logger, "unity.dash.preview.music.track");
 namespace
 {
-const int layout_spacing = 6;
+const RawPixel LAYOUT_SPACING = 6_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Track);
@@ -126,12 +126,15 @@ private:
 
 Track::Track(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , play_state_(PlayerState::STOPPED)
   , progress_(0.0)
   , mouse_over_(false)
 {
   SetupBackground();
   SetupViews();
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &Track::UpdateScale));
 }
 
 std::string Track::GetName() const
@@ -435,10 +438,16 @@ void Track::PreLayoutManagement()
   track_status_layout_->SetMinimumWidth(geo.height);
   track_status_layout_->SetMaximumWidth(geo.height);
 
-  const int max_width = std::max(GetGeometry().width - geo.height - style.GetMusicDurationWidth() - layout_spacing*2, 0);
+  const int max_width = std::max(GetGeometry().width - geo.height - style.GetMusicDurationWidth().CP(scale) - LAYOUT_SPACING.CP(scale)*2, 0);
   title_->SetMaximumWidth(max_width);
 
   View::PreLayoutManagement();
+}
+
+void Track::UpdateScale(double scale)
+{
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews

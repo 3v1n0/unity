@@ -55,6 +55,8 @@ public:
 
   void Update(dash::Track const& track_row);
 
+  nux::Property<double> scale;
+
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -100,6 +102,9 @@ protected:
 
   bool mouse_over_;
   connection::Wrapper player_connection_;
+
+private:
+  void UpdateScale(double scale);
 };
 
 }
