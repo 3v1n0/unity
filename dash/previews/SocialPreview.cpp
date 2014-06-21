@@ -49,6 +49,13 @@ namespace previews
 {
 DECLARE_LOGGER(logger, "unity.dash.preview.social");
 
+namespace
+{
+  const RawPixel CHILDREN_SPACE = 16_em;
+  const RawPixel ICON_CHILDREN_SPACE = 3_em;
+  const RawPixel SOCIAL_INFO_CHILDREN_SPACE = 12_em;
+}
+
 class DetailsScrollView : public nux::ScrollView
 {
 public:
@@ -64,8 +71,16 @@ NUX_IMPLEMENT_OBJECT_TYPE(SocialPreview);
 
 SocialPreview::SocialPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, image_data_layout_(nullptr)
+, main_social_info_(nullptr)
+, social_content_layout_(nullptr)
+, social_data_layout_(nullptr)
+, social_info_layout_(nullptr)
+, icon_layout_(nullptr)
+, actions_layout_(nullptr)
 {
   SetupViews();
+  UpdateScale(scale);
 }
 
 SocialPreview::~SocialPreview()
@@ -122,23 +137,22 @@ void SocialPreview::SetupViews()
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
 
-  nux::HLayout* image_data_layout = new nux::HLayout();
-  image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
+  image_data_layout_ = new nux::HLayout();
+  image_data_layout_->SetSpaceBetweenChildren(style.GetPanelSplitWidth().CP(scale));
 
-  nux::VLayout* social_content_layout = new nux::VLayout();
-  social_content_layout->SetSpaceBetweenChildren(16);
-  
+  nux::VLayout* social_content_layout_ = new nux::VLayout();
+  social_content_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
   if (social_preview_model->description.Get().length() > 0)
   {
     content_ = new SocialPreviewContent(social_preview_model->description, NUX_TRACKER_LOCATION);
     content_->request_close().connect([this]() { preview_container_->request_close.emit(); });
-    social_content_layout->AddView(content_.GetPointer(), 1);
+    social_content_layout_->AddView(content_.GetPointer(), 1);
   } else {
     image_ = new CoverArt();
     AddChild(image_.GetPointer());
     UpdateCoverArtImage(image_.GetPointer());
-    social_content_layout->AddView(image_.GetPointer(), 1);
+    social_content_layout_->AddView(image_.GetPointer(), 1);
   }
 
   /////////////////////
@@ -146,34 +160,35 @@ void SocialPreview::SetupViews()
     /////////////////////
     // Social Data Panel
     full_data_layout_ = new nux::VLayout();
-    full_data_layout_->SetPadding(style.GetDetailsTopMargin(), 0, style.GetDetailsBottomMargin(), style.GetDetailsLeftMargin());
-    full_data_layout_->SetSpaceBetweenChildren(16);
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
+    full_data_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
       /////////////////////
       // Main Social Info
-      nux::HLayout* main_social_info = new nux::HLayout();
-      main_social_info->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails());
+      main_social_info_ = new nux::HLayout();
+      main_social_info_->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails().CP(scale));
 
         /////////////////////
         // Icon Layout
-        nux::VLayout* icon_layout = new nux::VLayout();
-        icon_layout->SetSpaceBetweenChildren(3);
-        avatar_ = new IconTexture(social_preview_model->avatar.Get().RawPtr() ? g_icon_to_string(social_preview_model->avatar.Get().RawPtr()) : "", MIN(style.GetAvatarAreaWidth(), style.GetAvatarAreaHeight()));
+        icon_layout_ = new nux::VLayout();
+        icon_layout_->SetSpaceBetweenChildren(ICON_CHILDREN_SPACE.CP(scale));
+        avatar_ = new IconTexture(social_preview_model->avatar.Get().RawPtr() ? g_icon_to_string(social_preview_model->avatar.Get().RawPtr()) : "", MIN(style.GetAvatarAreaWidth().CP(scale), style.GetAvatarAreaHeight().CP(scale)));
         AddChild(avatar_.GetPointer());
-        avatar_->SetMinMaxSize(style.GetAvatarAreaWidth(), style.GetAvatarAreaHeight());
+        avatar_->SetMinMaxSize(style.GetAvatarAreaWidth().CP(scale), style.GetAvatarAreaHeight().CP(scale));
         avatar_->mouse_click.connect(on_mouse_down);
-        icon_layout->AddView(avatar_.GetPointer(), 0);
+        icon_layout_->AddView(avatar_.GetPointer(), 0);
 
         /////////////////////
 
         /////////////////////
         // Data
-        nux::VLayout* social_data_layout = new nux::VLayout();
-        social_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
+        social_data_layout_ = new nux::VLayout();
+        social_data_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
 
         title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         AddChild(title_.GetPointer());
         title_->SetLines(-1);
+        title_->SetScale(scale);
         title_->SetFont(style.title_font().c_str());
         title_->mouse_click.connect(on_mouse_down);
 
@@ -181,17 +196,18 @@ void SocialPreview::SetupViews()
         AddChild(subtitle_.GetPointer());
         subtitle_->SetFont(style.content_font().c_str());
         subtitle_->SetLines(-1);
+        subtitle_->SetScale(scale);
         subtitle_->mouse_click.connect(on_mouse_down);
 
-        social_data_layout->AddView(title_.GetPointer(), 0);
-        social_data_layout->AddView(subtitle_.GetPointer(), 0);
-        social_data_layout->AddSpace(0, 1);
+        social_data_layout_->AddView(title_.GetPointer(), 0);
+        social_data_layout_->AddView(subtitle_.GetPointer(), 0);
+        social_data_layout_->AddSpace(0, 1);
 
         // buffer space
         /////////////////////
 
-      main_social_info->AddLayout(icon_layout, 0);
-      main_social_info->AddLayout(social_data_layout, 1);
+      main_social_info_->AddLayout(icon_layout_, 0);
+      main_social_info_->AddLayout(social_data_layout_, 1);
       /////////////////////
 
       /////////////////////
@@ -200,16 +216,16 @@ void SocialPreview::SetupViews()
       social_info->EnableHorizontalScrollBar(false);
       social_info->mouse_click.connect(on_mouse_down);
 
-      nux::VLayout* social_info_layout = new nux::VLayout();
-      social_info_layout->SetSpaceBetweenChildren(12);
-      social_info->SetLayout(social_info_layout);
+      social_info_layout_ = new nux::VLayout();
+      social_info_layout_->SetSpaceBetweenChildren(SOCIAL_INFO_CHILDREN_SPACE.CP(scale));
+      social_info->SetLayout(social_info_layout_);
 
       if (!preview_model_->GetInfoHints().empty())
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetAvatarAreaWidth());
         AddChild(preview_info_hints_.GetPointer());
         preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
-        social_info_layout->AddView(preview_info_hints_.GetPointer(), 0);
+        social_info_layout_->AddView(preview_info_hints_.GetPointer(), 0);
       }
       /////////////////////
       // Comments/Replies
@@ -232,29 +248,29 @@ void SocialPreview::SetupViews()
         AddChild(comments_.GetPointer());
         comments_->request_close().connect([this]() { preview_container_->request_close.emit(); });
         comments_layout->AddView(comments_.GetPointer());
-        social_info_layout->AddView(comments_layout, 0);
+        social_info_layout_->AddView(comments_layout, 0);
       }
 
       /////////////////////
       // Actions
       action_buttons_.clear();
-      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
-      actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+      actions_layout_ = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
+      actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
       ///////////////////
 
-    full_data_layout_->AddLayout(main_social_info, 0, nux::MINOR_POSITION_START);
+    full_data_layout_->AddLayout(main_social_info_, 0, nux::MINOR_POSITION_START);
     full_data_layout_->AddView(social_info, 1, nux::MINOR_POSITION_START);
     //full_data_layout_->AddView(comments_.GetPointer(), 1, nux::MINOR_POSITION_START);
 
-    full_data_layout_->AddLayout(actions_layout, 0);
+    full_data_layout_->AddLayout(actions_layout_, 0);
     /////////////////////
-  
-  image_data_layout->AddView(social_content_layout, 0);
-  image_data_layout->AddLayout(full_data_layout_, 1);
+
+  image_data_layout_->AddView(social_content_layout_, 0);
+  image_data_layout_->AddLayout(full_data_layout_, 1);
 
   mouse_click.connect(on_mouse_down);
 
-  SetLayout(image_data_layout);
+  SetLayout(image_data_layout_);
 }
 
 void SocialPreview::PreLayoutManagement()
@@ -280,10 +296,54 @@ void SocialPreview::PreLayoutManagement()
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+    button->SetMinMaxSize(CLAMP(RawPixel((details_width - style.GetSpaceBetweenActions()) / 2), 0_em, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
   }
 
   Preview::PreLayoutManagement();
+}
+
+void SocialPreview::UpdateScale(double scale)
+{
+  Preview::UpdateScale(scale);
+
+  if (preview_info_hints_)
+    preview_info_hints_->scale = scale;
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  if (avatar_)
+  {
+    avatar_->SetMinMaxSize(style.GetAvatarAreaWidth().CP(scale), style.GetAvatarAreaHeight().CP(scale));
+    avatar_->SetSize(MIN(style.GetAvatarAreaWidth().CP(scale), style.GetAvatarAreaHeight().CP(scale)));
+    avatar_->ReLoadIcon();
+  }
+
+  if (image_data_layout_)
+    image_data_layout_->SetSpaceBetweenChildren(style.GetPanelSplitWidth().CP(scale));
+
+  if (social_content_layout_)
+    social_content_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+
+  if (main_social_info_)
+    main_social_info_->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails().CP(scale));
+
+  if (icon_layout_)
+    icon_layout_->SetSpaceBetweenChildren(ICON_CHILDREN_SPACE.CP(scale));
+
+  if (social_data_layout_)
+    social_data_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
+
+  if (social_info_layout_)
+    social_info_layout_->SetSpaceBetweenChildren(SOCIAL_INFO_CHILDREN_SPACE.CP(scale));
+
+  if (actions_layout_)
+    actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
+
+  if (content_)
+    content_->scale = scale;
+
+  if (comments_)
+    comments_->scale = scale;
 }
 
 } // namespace previews

@@ -59,6 +59,8 @@ public:
   std::string GetLabel() const;
   std::string GetExtraText() const;
 
+  nux::Property<double> scale;
+
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -95,6 +97,8 @@ private:
   nux::ObjectPtr<IconTexture> image_;
   nux::ObjectPtr<unity::StaticCairoText> static_text_;
   nux::ObjectPtr<unity::StaticCairoText> extra_text_;
+
+  void UpdateScale(double scale);
 };
 
 } // namespace dash

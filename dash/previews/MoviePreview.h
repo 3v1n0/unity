@@ -55,9 +55,14 @@ protected:
   virtual void OnNavigateInComplete();
 
   virtual void SetupViews();
-  
+  virtual void UpdateScale(double scale);
+
 protected:
   nux::ObjectPtr<PreviewRatingsWidget> rating_;
+
+  nux::HLayout* image_data_layout_;
+  nux::VLayout* preview_info_layout_;
+  nux::Layout* actions_layout_;
 };
 
 }
