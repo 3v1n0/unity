@@ -62,13 +62,13 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void PreLayoutManagement();
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
- 
+
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
-  
+
   void SetupBackground();
   void SetupViews();
 
@@ -99,6 +99,8 @@ protected:
   nux::View* status_pause_layout_;
   nux::View* track_number_layout_;
   nux::LayeredLayout* track_status_layout_;
+  IconTexture* status_play_;
+  IconTexture* status_pause_;
 
   bool mouse_over_;
   connection::Wrapper player_connection_;
