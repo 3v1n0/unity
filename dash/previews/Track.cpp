@@ -459,11 +459,22 @@ void Track::UpdateScale(double scale)
   if (duration_)
     duration_->SetScale(scale);
 
-  //if (status_play_);
-  //if (status_pause_);
-
   if (title_layout_)
     title_layout_->SetLeftAndRightPadding(TITLE_PADDING.CP(scale));
+
+  previews::Style& style = previews::Style::Instance();
+
+  if (status_play_)
+  {
+    status_play_->SetSize(style.GetStatusIconSize().CP(scale));
+    status_play_->ReLoadIcon();
+  }
+
+  if (status_pause_)
+  {
+    status_pause_->SetSize(style.GetStatusIconSize().CP(scale));
+    status_pause_->ReLoadIcon();
+  }
 
   QueueRelayout();
   QueueDraw();
