@@ -154,12 +154,12 @@ void PreviewInfoHintWidget::SetupViews()
   layout_ = new nux::HLayout();
   layout_->SetSpaceBetweenChildren(LAYOUT_SPACING.CP(scale));
 
-  hint_vlayout_ = new nux::VLayout();
-  hint_vlayout_->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
-  layout_->AddLayout(hint_vlayout_);
-  info_names_layout_ = hint_vlayout_;
-
   auto *hint_vlayout = new nux::VLayout();
+  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
+  layout_->AddLayout(hint_vlayout);
+  info_names_layout_ = hint_vlayout;
+
+  hint_vlayout = new nux::VLayout();
   hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
   layout_->AddLayout(hint_vlayout);
   info_values_layout_ = hint_vlayout;
