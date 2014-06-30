@@ -25,6 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include <Nux/VLayout.h>
 #include <UnityCore/Preview.h>
 #include "Preview.h"
 #include "unity-shared/Introspectable.h"
@@ -116,7 +117,9 @@ private:
   struct timespec  last_progress_time_;
   float navigation_progress_speed_;
   int navigation_count_;
-  
+
+  nux::SpaceLayout* space_layout_;
+
   glib::Source::UniquePtr animation_timer_;
   friend class PreviewContent;
 };

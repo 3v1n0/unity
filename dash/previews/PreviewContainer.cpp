@@ -23,7 +23,6 @@
 #include "PreviewContainer.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/TimeUtil.h"
@@ -436,7 +435,7 @@ PreviewContainer::~PreviewContainer()
 void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation direction)
 {
   previews::Preview::Ptr preview_view = preview_model ? previews::Preview::PreviewForModel(preview_model) : previews::Preview::Ptr();
-  
+
   if (preview_view)
   {
     preview_view->request_close().connect([this]() { request_close.emit(); });
@@ -477,29 +476,31 @@ void PreviewContainer::SetupViews()
 
   nux::VLayout* layout = new nux::VLayout();
   SetLayout(layout);
-  layout->AddLayout(new nux::SpaceLayout(0,0,style.GetPreviewTopPadding(),style.GetPreviewTopPadding()));
+
+  space_layout_ = new nux::SpaceLayout(0,0,style.GetPreviewTopPadding().CP(scale),style.GetPreviewTopPadding().CP(scale));
+  layout->AddLayout(space_layout_);
 
   layout_content_ = new nux::HLayout();
-  layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE);
+  layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
   layout->AddLayout(layout_content_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   layout_content_->AddSpace(0, 1);
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
   AddChild(nav_left_);
-  nav_left_->SetMinimumWidth(style.GetNavigatorWidth());
-  nav_left_->SetMaximumWidth(style.GetNavigatorWidth());
+  nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   nav_left_->activated.connect([this]() { navigate_left.emit(); });
   layout_content_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   preview_layout_ = new PreviewContent(this);
-  preview_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
+  preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
   AddChild(preview_layout_);
   layout_content_->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
   AddChild(nav_right_);
-  nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
-  nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
+  nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   nav_right_->activated.connect([this]() { navigate_right.emit(); });
   layout_content_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout_content_->AddSpace(0, 1);
@@ -723,6 +724,9 @@ void PreviewContainer::UpdateScale(double scale)
     preview_layout_->scale = scale;
     preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
   }
+
+  if (space_layout_)
+    space_layout_->SetPadding(0,0,style.GetPreviewTopPadding().CP(scale),style.GetPreviewTopPadding().CP(scale));
 
   if (layout_content_)
     layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
