@@ -68,6 +68,7 @@ protected:
   nux::Layout* actions_layout_;
   nux::HLayout* image_data_layout_;
   nux::VLayout* icon_layout_;
+  nux::VLayout* album_data_layout_;
  };
 
 }

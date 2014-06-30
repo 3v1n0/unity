@@ -162,8 +162,8 @@ void MusicPreview::SetupViews()
 
       /////////////////////
       // Music Info
-      nux::VLayout* album_data_layout = new nux::VLayout();
-      album_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
+      album_data_layout_ = new nux::VLayout();
+      album_data_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
 
       title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       AddChild(title_.GetPointer());
@@ -171,7 +171,7 @@ void MusicPreview::SetupViews()
       title_->SetLines(-1);
       title_->SetScale(scale);
       title_->mouse_click.connect(on_mouse_down);
-      album_data_layout->AddView(title_.GetPointer(), 1);
+      album_data_layout_->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
@@ -181,7 +181,7 @@ void MusicPreview::SetupViews()
         subtitle_->SetLines(-1);
         subtitle_->SetScale(scale);
         subtitle_->mouse_click.connect(on_mouse_down);
-        album_data_layout->AddView(subtitle_.GetPointer(), 1);
+        album_data_layout_->AddView(subtitle_.GetPointer(), 1);
       }
 
       /////////////////////
@@ -265,7 +265,7 @@ void MusicPreview::SetupViews()
       if (hints_layout) hint_actions_layout->AddView(hints_layout, 1);
       hint_actions_layout->AddView(actions_layout_, 0);
 
-    full_data_layout_->AddLayout(album_data_layout, 0);
+    full_data_layout_->AddLayout(album_data_layout_, 0);
     if (tracks_)
     {
       full_data_layout_->AddView(tracks_.GetPointer(), 1);
@@ -345,6 +345,9 @@ void MusicPreview::UpdateScale(double scale)
     full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
     full_data_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
   }
+
+  if (album_data_layout_)
+    album_data_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
 
   if (actions_layout_)
     actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
