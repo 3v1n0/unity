@@ -34,12 +34,19 @@ namespace dash
 {
 namespace previews
 {
+
+namespace
+{
+  const RawPixel CHILDREN_SPACE = 1_em;
+}
+
 DECLARE_LOGGER(logger, "unity.dash.preview.music.tracks");
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tracks);
 
 Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
   : ScrollView(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , tracks_(tracks)
 {
   SetupViews();
@@ -54,6 +61,8 @@ Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
     for (std::size_t i = 0; i < tracks_->count.Get(); ++i)
       OnTrackAdded(tracks_->RowAtIndex(i));
   }
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &Tracks::UpdateScale));
 }
 
 std::string Tracks::GetName() const
@@ -84,6 +93,7 @@ void Tracks::OnTrackUpdated(dash::Track const& track_row)
     return;
 
   pos->second->Update(track_row);
+  pos->second->scale = scale();
 }
 
 void Tracks::OnTrackAdded(dash::Track const& track_row)
@@ -100,8 +110,9 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
   AddChild(track_view.GetPointer());
 
   track_view->Update(track_row);
-  track_view->SetMinimumHeight(style.GetTrackHeight());
-  track_view->SetMaximumHeight(style.GetTrackHeight());
+  track_view->SetMinimumHeight(style.GetTrackHeight().CP(scale));
+  track_view->SetMaximumHeight(style.GetTrackHeight().CP(scale));
+  track_view->scale = scale();
   layout_->AddView(track_view.GetPointer(), 0);
 
   m_tracks[track_uri] = track_view;
@@ -111,7 +122,7 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
 void Tracks::OnTrackRemoved(dash::Track const& track_row)
 {
   LOG_TRACE(logger) << "OnTrackRemoved for " << track_row.title.Get();
-  
+
   auto pos = m_tracks.find(track_row.uri.Get());
   if (pos == m_tracks.end())
     return;
@@ -119,6 +130,20 @@ void Tracks::OnTrackRemoved(dash::Track const& track_row)
   RemoveChild(pos->second.GetPointer());
   layout_->RemoveChildObject(pos->second.GetPointer());
   ComputeContentSize();
+}
+
+void Tracks::UpdateScale(double scale)
+{
+  for (std::map<std::string, previews::Track::Ptr>::iterator it = m_tracks.begin(); it != m_tracks.end(); ++it)
+  {
+    it->second->scale = scale;
+  }
+
+  if (layout_)
+  {
+    layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin().CP(scale), 0, 0);
+    layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+  }
 }
 
 } // namespace previews
