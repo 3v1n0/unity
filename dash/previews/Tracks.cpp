@@ -135,9 +135,7 @@ void Tracks::OnTrackRemoved(dash::Track const& track_row)
 void Tracks::UpdateScale(double scale)
 {
   for (std::map<std::string, previews::Track::Ptr>::iterator it = m_tracks.begin(); it != m_tracks.end(); ++it)
-  {
     it->second->scale = scale;
-  }
 
   if (layout_)
   {

@@ -192,6 +192,7 @@ void MusicPreview::SetupViews()
       if (tracks_model)
       {
         tracks_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
+        tracks_->scale = scale();
         AddChild(tracks_.GetPointer());
         tracks_->mouse_click.connect(on_mouse_down);
       }
@@ -320,6 +321,9 @@ void MusicPreview::OnNavigateOut()
 void MusicPreview::UpdateScale(double scale)
 {
   Preview::UpdateScale(scale);
+
+  if (tracks_)
+    tracks_->scale = scale;
 
   if (preview_info_hints_)
     preview_info_hints_->scale = scale;
