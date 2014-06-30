@@ -81,8 +81,8 @@ void Tracks::SetupViews()
   SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
   EnableHorizontalScrollBar(false);
   layout_ = new nux::VLayout();
-  layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin(), 0, 0);
-  layout_->SetSpaceBetweenChildren(1);
+  layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin().CP(scale), 0, 0);
+  layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
   SetLayout(layout_);
 }
 
