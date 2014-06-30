@@ -512,7 +512,7 @@ void PreviewContainer::SetupViews()
     // reset animation clock.
     if (navigation_count_ == 0)
       clock_gettime(CLOCK_MONOTONIC, &last_progress_time_);
-  
+
     float navigation_progress_remaining = CLAMP((1.0 - preview_layout_->GetAnimationProgress()) + navigation_count_, 1.0f, 10.0f);
     navigation_count_++;
 

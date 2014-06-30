@@ -78,6 +78,7 @@ protected:
   nux::HLayout* layout_;
   nux::VLayout* info_names_layout_;
   nux::VLayout* info_values_layout_;
+  nux::VLayout* hint_vlayout_;
 
   dash::Preview::Ptr preview_model_;
 

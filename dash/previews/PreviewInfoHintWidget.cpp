@@ -154,15 +154,15 @@ void PreviewInfoHintWidget::SetupViews()
   layout_ = new nux::HLayout();
   layout_->SetSpaceBetweenChildren(LAYOUT_SPACING.CP(scale));
 
-  auto *hint_vlayout = new nux::VLayout();
-  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
-  layout_->AddLayout(hint_vlayout);
-  info_names_layout_ = hint_vlayout;
+  hint_vlayout_ = new nux::VLayout();
+  hint_vlayout_->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
+  layout_->AddLayout(hint_vlayout_);
+  info_names_layout_ = hint_vlayout_;
 
-  hint_vlayout = new nux::VLayout();
-  hint_vlayout->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
-  layout_->AddLayout(hint_vlayout);
-  info_values_layout_ = hint_vlayout;
+  hint_vlayout_ = new nux::VLayout();
+  hint_vlayout_->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
+  layout_->AddLayout(hint_vlayout_);
+  info_values_layout_ = hint_vlayout_;
 
   for (dash::Preview::InfoHintPtr const& info_hint : preview_model_->GetInfoHints())
   {
@@ -211,6 +211,9 @@ void PreviewInfoHintWidget::UpdateScale(double scale)
 {
   if (layout_)
     layout_->SetSpaceBetweenChildren(LAYOUT_SPACING.CP(scale));
+
+  if (hint_vlayout_)
+    hint_vlayout_->SetSpaceBetweenChildren(HINTS_SPACING.CP(scale));
 
   if (info_names_layout_)
   {
