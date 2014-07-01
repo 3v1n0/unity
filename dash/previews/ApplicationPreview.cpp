@@ -153,7 +153,7 @@ void ApplicationPreview::SetupViews()
     // App Data Panel
     full_data_layout_ = new nux::VLayout();
     full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
-    full_data_layout_->SetSpaceBetweenChildren(DATA_SPACE_CHILDREN);
+    full_data_layout_->SetSpaceBetweenChildren(DATA_SPACE_CHILDREN.CP(scale));
 
       /////////////////////
       // Main App Info
@@ -174,6 +174,7 @@ void ApplicationPreview::SetupViews()
         if (app_preview_model->rating >= 0) {
           app_rating_ = new PreviewRatingsWidget();
           AddChild(app_rating_.GetPointer());
+          app_rating_->scale = scale();
           app_rating_->SetMaximumHeight(style.GetRatingWidgetHeight().CP(scale));
           app_rating_->SetMinimumHeight(style.GetRatingWidgetHeight().CP(scale));
           app_rating_->SetRating(app_preview_model->rating);
@@ -262,7 +263,7 @@ void ApplicationPreview::SetupViews()
       app_info->mouse_click.connect(on_mouse_down);
 
       app_info_layout_ = new nux::VLayout();
-      app_info_layout_->SetSpaceBetweenChildren(INFO_SPACE_CHILDREN);
+      app_info_layout_->SetSpaceBetweenChildren(INFO_SPACE_CHILDREN.CP(scale));
       app_info->SetLayout(app_info_layout_);
 
       if (!preview_model_->description.Get().empty())
@@ -279,7 +280,7 @@ void ApplicationPreview::SetupViews()
 
       if (!preview_model_->GetInfoHints().empty())
       {
-        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth().CP(scale));
         AddChild(preview_info_hints_.GetPointer());
         preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
         app_info_layout_->AddView(preview_info_hints_.GetPointer());
@@ -290,7 +291,7 @@ void ApplicationPreview::SetupViews()
       // Actions
       action_buttons_.clear();
       nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
-      actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+      actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
       ///////////////////
 
     full_data_layout_->AddLayout(main_app_info_, 0);
