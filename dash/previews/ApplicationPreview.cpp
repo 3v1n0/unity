@@ -296,13 +296,13 @@ void ApplicationPreview::SetupViews()
       /////////////////////
       // Actions
       action_buttons_.clear();
-      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
-      actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
+      actions_layout_ = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
+      actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
       ///////////////////
 
     full_data_layout_->AddLayout(main_app_info_, 0);
     full_data_layout_->AddView(app_info, 1);
-    full_data_layout_->AddLayout(actions_layout, 0);
+    full_data_layout_->AddLayout(actions_layout_, 0);
     /////////////////////
 
   image_data_layout_->AddView(image_.GetPointer(), 0);
@@ -396,6 +396,9 @@ void ApplicationPreview::UpdateScale(double scale)
 
   if (app_info_layout_)
     app_info_layout_->SetSpaceBetweenChildren(INFO_SPACE_CHILDREN.CP(scale));
+
+  if (actions_layout_)
+    actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
 
   if (app_updated_copywrite_layout_)
     app_updated_copywrite_layout_->SetSpaceBetweenChildren(COPYRIGHT_SPACE_CHILDREN.CP(scale));
