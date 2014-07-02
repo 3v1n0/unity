@@ -68,6 +68,7 @@ private:
   void UpdateTexture();
 
   void SetupViews();
+  void UpdateScale(double scale);
 
 private:
   const Orientation direction_;
@@ -81,7 +82,6 @@ private:
   };
   VisualState visual_state_;
 
-  void UpdateScale(double scale);
 };
 
 } // namespace previews

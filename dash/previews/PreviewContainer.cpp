@@ -617,7 +617,7 @@ float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current
 bool PreviewContainer::QueueAnimation()
 {
   animation_timer_.reset();
-  
+
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
   float progress = GetSwipeAnimationProgress(current);
