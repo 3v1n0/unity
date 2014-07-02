@@ -487,6 +487,7 @@ void PreviewContainer::SetupViews()
   layout_content_->AddSpace(0, 1);
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
   AddChild(nav_left_);
+  nav_left_->scale = scale();
   nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
   nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   nav_left_->activated.connect([this]() { navigate_left.emit(); });
@@ -499,6 +500,7 @@ void PreviewContainer::SetupViews()
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
   AddChild(nav_right_);
+  nav_right_->scale = scale();
   nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
   nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   nav_right_->activated.connect([this]() { navigate_right.emit(); });
@@ -712,7 +714,7 @@ void PreviewContainer::OnMouseDown(int x, int y, unsigned long button_flags, uns
 
 nux::Geometry PreviewContainer::GetLayoutGeometry() const
 {
-  return layout_content_->GetAbsoluteGeometry();  
+  return layout_content_->GetAbsoluteGeometry();
 }
 
 void PreviewContainer::UpdateScale(double scale)
@@ -733,15 +735,20 @@ void PreviewContainer::UpdateScale(double scale)
 
   if (nav_left_)
   {
+    nav_left_->scale = scale;
     nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
     nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   }
 
   if (nav_right_)
   {
+    nav_right_->scale = scale;
     nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
     nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   }
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews
