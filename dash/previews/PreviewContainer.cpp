@@ -556,7 +556,7 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
     gfx_engine.GetRenderStates().SetBlend(false);
     gfx_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   }
-  
+
     // rely on the compiz event loop to come back to us in a nice throttling
   if (AnimationInProgress())
   {

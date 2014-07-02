@@ -368,9 +368,9 @@ void ApplicationPreview::UpdateScale(double scale)
 
   if (app_rating_)
   {
-    app_rating_->scale = scale;
     app_rating_->SetMaximumHeight(style.GetRatingWidgetHeight().CP(scale));
     app_rating_->SetMinimumHeight(style.GetRatingWidgetHeight().CP(scale));
+    app_rating_->scale = scale;
   }
 
   if (image_data_layout_)

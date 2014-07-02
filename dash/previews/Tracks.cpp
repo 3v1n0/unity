@@ -134,8 +134,14 @@ void Tracks::OnTrackRemoved(dash::Track const& track_row)
 
 void Tracks::UpdateScale(double scale)
 {
+  previews::Style& style = dash::previews::Style::Instance();
+
   for (std::map<std::string, previews::Track::Ptr>::iterator it = m_tracks.begin(); it != m_tracks.end(); ++it)
+  {
     it->second->scale = scale;
+    it->second->SetMinimumHeight(style.GetTrackHeight().CP(scale));
+    it->second->SetMaximumHeight(style.GetTrackHeight().CP(scale));
+  }
 
   if (layout_)
   {
