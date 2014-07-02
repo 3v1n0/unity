@@ -133,7 +133,7 @@ void PreviewRatingsWidget::UpdateScale(double scale)
 
   if (ratings_)
   {
-    ratings_->star_gap_ = RATINGS_SIZE.CP(scale);
+    ratings_->star_size_ = RATINGS_SIZE.CP(scale);
     ratings_->star_gap_ = RATINGS_GAP.CP(scale);
   }
 
