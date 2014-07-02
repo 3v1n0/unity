@@ -141,6 +141,8 @@ void Tracks::UpdateScale(double scale)
     it->second->scale = scale;
     it->second->SetMinimumHeight(style.GetTrackHeight().CP(scale));
     it->second->SetMaximumHeight(style.GetTrackHeight().CP(scale));
+    it->second->SetMinimumWidth(style.GetTrackHeight().CP(scale));
+    it->second->SetMaximumWidth(style.GetTrackHeight().CP(scale));
   }
 
   if (layout_)
