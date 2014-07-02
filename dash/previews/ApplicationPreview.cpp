@@ -145,6 +145,7 @@ void ApplicationPreview::SetupViews()
   /////////////////////
   // Image
   image_ = new CoverArt();
+  image_->scale = scale();
   AddChild(image_.GetPointer());
   UpdateCoverArtImage(image_.GetPointer());
   /////////////////////
@@ -197,6 +198,7 @@ void ApplicationPreview::SetupViews()
         title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         AddChild(title_.GetPointer());
         title_->SetLines(-1);
+        title_->SetScale(scale);
         title_->SetFont(style.title_font().c_str());
         title_->mouse_click.connect(on_mouse_down);
         title_subtitle_layout_->AddView(title_.GetPointer(), 1);
@@ -207,6 +209,7 @@ void ApplicationPreview::SetupViews()
           AddChild(subtitle_.GetPointer());
           subtitle_->SetFont(style.subtitle_size_font().c_str());
           subtitle_->SetLines(-1);
+          subtitle_->SetScale(scale);
           subtitle_->mouse_click.connect(on_mouse_down);
           title_subtitle_layout_->AddView(subtitle_.GetPointer(), 1);
         }
@@ -220,6 +223,7 @@ void ApplicationPreview::SetupViews()
           AddChild(license_.GetPointer());
           license_->SetFont(style.app_license_font().c_str());
           license_->SetLines(-1);
+          license_->SetScale(scale);
           license_->mouse_click.connect(on_mouse_down);
           app_updated_copywrite_layout_->AddView(license_.GetPointer(), 1);
         }
@@ -232,6 +236,7 @@ void ApplicationPreview::SetupViews()
           last_update_ = new StaticCairoText(last_update.str(), true, NUX_TRACKER_LOCATION);
           AddChild(last_update_.GetPointer());
           last_update_->SetFont(style.app_last_update_font().c_str());
+          last_update_->SetScale(scale);
           last_update_->mouse_click.connect(on_mouse_down);
           app_updated_copywrite_layout_->AddView(last_update_.GetPointer(), 1);
         }
@@ -242,6 +247,7 @@ void ApplicationPreview::SetupViews()
           AddChild(copywrite_.GetPointer());
           copywrite_->SetFont(style.app_copywrite_font().c_str());
           copywrite_->SetLines(-1);
+          copywrite_->SetScale(scale);
           copywrite_->mouse_click.connect(on_mouse_down);
           app_updated_copywrite_layout_->AddView(copywrite_.GetPointer(), 1);
         }
@@ -298,7 +304,7 @@ void ApplicationPreview::SetupViews()
     full_data_layout_->AddView(app_info, 1);
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
-  
+
   image_data_layout_->AddView(image_.GetPointer(), 0);
   image_data_layout_->AddLayout(full_data_layout_, 1);
 
@@ -341,6 +347,8 @@ void ApplicationPreview::PreLayoutManagement()
 
 void ApplicationPreview::UpdateScale(double scale)
 {
+  Preview::UpdateScale(scale);
+
   previews::Style& style = dash::previews::Style::Instance();
 
   if (app_icon_)
@@ -383,13 +391,14 @@ void ApplicationPreview::UpdateScale(double scale)
   if (app_data_layout_)
     app_data_layout_->SetSpaceBetweenChildren(DATA_SPACE_CHILDREN.CP(scale));
 
+  if (title_subtitle_layout_)
+    title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
+
   if (app_info_layout_)
     app_info_layout_->SetSpaceBetweenChildren(INFO_SPACE_CHILDREN.CP(scale));
 
   if (app_updated_copywrite_layout_)
     app_updated_copywrite_layout_->SetSpaceBetweenChildren(COPYRIGHT_SPACE_CHILDREN.CP(scale));
-
-  Preview::UpdateScale(scale);
 }
 
 } // namespace previews
