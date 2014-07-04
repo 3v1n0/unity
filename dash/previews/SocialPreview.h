@@ -64,6 +64,7 @@ protected:
 
   nux::HLayout* image_data_layout_;
   nux::HLayout* main_social_info_;
+  nux::HLayout* comments_layout_;
   nux::VLayout* social_content_layout_;
   nux::VLayout* social_data_layout_;
   nux::VLayout* social_info_layout_;
