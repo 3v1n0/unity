@@ -22,6 +22,7 @@ import glib
 import glob
 from optparse import OptionParser
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -107,7 +108,7 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
         try:
             pid_path = os.path.join("/proc", pid)
             cmdline = open(os.path.join(pid_path, "cmdline"), "rb").read()
-            if "compiz" in str(cmdline):
+            if re.match(r"^compiz\b", cmdline)
                 compiz_env = open(os.path.join(pid_path, "environ"), "rb").read()
                 if display in compiz_env:
                     subprocess.call (["kill", "-9", pid])
