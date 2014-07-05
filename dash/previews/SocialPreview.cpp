@@ -73,6 +73,7 @@ SocialPreview::SocialPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
 , image_data_layout_(nullptr)
 , main_social_info_(nullptr)
+, comments_layout_(nullptr)
 , social_content_layout_(nullptr)
 , social_data_layout_(nullptr)
 , social_info_layout_(nullptr)
@@ -148,7 +149,9 @@ void SocialPreview::SetupViews()
     content_ = new SocialPreviewContent(social_preview_model->description, NUX_TRACKER_LOCATION);
     content_->request_close().connect([this]() { preview_container_->request_close.emit(); });
     social_content_layout_->AddView(content_.GetPointer(), 1);
-  } else {
+  }
+  else
+  {
     image_ = new CoverArt();
     AddChild(image_.GetPointer());
     UpdateCoverArtImage(image_.GetPointer());
@@ -172,7 +175,7 @@ void SocialPreview::SetupViews()
         // Icon Layout
         icon_layout_ = new nux::VLayout();
         icon_layout_->SetSpaceBetweenChildren(ICON_CHILDREN_SPACE.CP(scale));
-        avatar_ = new IconTexture(social_preview_model->avatar.Get().RawPtr() ? g_icon_to_string(social_preview_model->avatar.Get().RawPtr()) : "", MIN(style.GetAvatarAreaWidth().CP(scale), style.GetAvatarAreaHeight().CP(scale)));
+        avatar_ = new IconTexture(social_preview_model->avatar() ? g_icon_to_string(social_preview_model->avatar()) : "", MIN(style.GetAvatarAreaWidth().CP(scale), style.GetAvatarAreaHeight().CP(scale)));
         AddChild(avatar_.GetPointer());
         avatar_->SetMinMaxSize(style.GetAvatarAreaWidth().CP(scale), style.GetAvatarAreaHeight().CP(scale));
         avatar_->mouse_click.connect(on_mouse_down);
@@ -277,17 +280,21 @@ void SocialPreview::SetupViews()
 void SocialPreview::PreLayoutManagement()
 {
   nux::Geometry geo = GetGeometry();
-
   previews::Style& style = dash::previews::Style::Instance();
 
   nux::Geometry geo_content(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
-  if (geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
-    geo_content.width = std::max(0, geo.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale) - style.GetDetailsPanelMinimumWidth().CP(scale));
+  int content_width = geo.width - style.GetPanelSplitWidth().CP(scale)
+                                - style.GetDetailsLeftMargin().CP(scale)
+                                - style.GetDetailsRightMargin().CP(scale);
+
+  if (content_width - geo_content.width < style.GetDetailsPanelMinimumWidth().CP(scale))
+    geo_content.width = std::max(0, content_width - style.GetDetailsPanelMinimumWidth().CP(scale));
+
   if (content_) { content_->SetMinMaxSize(geo_content.width, geo_content.height); }
   if (image_) { image_->SetMinMaxSize(geo_content.width, geo_content.height); }
 
-  int details_width = std::max(0, geo.width - geo_content.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale));
+  int details_width = std::max(0, content_width - geo_content.width);
   int top_social_info_max_width = std::max(0, details_width - style.GetAppIconAreaWidth().CP(scale) - style.GetSpaceBetweenIconAndDetails().CP(scale));
 
   if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
@@ -295,10 +302,11 @@ void SocialPreview::PreLayoutManagement()
   if (comments_) { comments_->SetMaximumWidth(top_social_info_max_width); }
   if (comments_hint_) { comments_hint_->SetMinimumWidth(style.GetInfoHintNameMinimumWidth().CP(scale)); }
 
+  int button_w = CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale));
+  int button_h = style.GetActionButtonHeight().CP(scale);
+
   for (nux::AbstractButton* button : action_buttons_)
-  {
-    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale)), style.GetActionButtonHeight().CP(scale));
-  }
+    button->SetMinMaxSize(button_w, button_h);
 
   Preview::PreLayoutManagement();
 }
@@ -309,9 +317,6 @@ void SocialPreview::UpdateScale(double scale)
 
   if (preview_info_hints_)
     preview_info_hints_->scale = scale;
-
-  if (comments_hint_)
-    comments_hint_->SetScale(scale);
 
   previews::Style& style = dash::previews::Style::Instance();
 
@@ -351,6 +356,9 @@ void SocialPreview::UpdateScale(double scale)
 
   if (comments_layout_)
     comments_layout_->SetSpaceBetweenChildren(SOCIAL_INFO_CHILDREN_SPACE.CP(scale));
+
+  if (comments_hint_)
+    comments_hint_->SetScale(scale);
 }
 
 } // namespace previews
