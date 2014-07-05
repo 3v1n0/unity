@@ -195,11 +195,13 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
 void ActionButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   Style::Instance().Button(cr, faked_state, "", -1, Alignment::CENTER, true);
 }
 
 void ActionButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
 {
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   Style::Instance().ButtonFocusOverlay(cr, 0.20f);
 }
 
