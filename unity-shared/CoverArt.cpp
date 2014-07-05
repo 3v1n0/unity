@@ -453,6 +453,7 @@ void CoverArt::SetupViews()
   overlay_text_->SetTextAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   overlay_text_->SetFont("Ubuntu 14");
   overlay_text_->SetLines(-3);
+  overlay_text_->SetScale(scale);
   overlay_text_->SetText(_("No Image Available"));
 
   dash::Style& style = dash::Style::Instance();

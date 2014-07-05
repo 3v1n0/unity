@@ -241,10 +241,11 @@ void GenericPreview::PreLayoutManagement()
   if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
   if (description_) { description_->SetMaximumWidth(details_width); }
 
+  int button_w = CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale));
+  int button_h = style.GetActionButtonHeight().CP(scale);
+
   for (nux::AbstractButton* button : action_buttons_)
-  {
-    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale)), style.GetActionButtonHeight().CP(scale));
-  }
+    button->SetMinMaxSize(button_w, button_h);
 
   Preview::PreLayoutManagement();
 }

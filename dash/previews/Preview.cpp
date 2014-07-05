@@ -303,12 +303,10 @@ void Preview::UpdateScale(double scale)
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    ActionButton* bn = dynamic_cast<ActionButton*>(button);
-    if (bn)
+    if (ActionButton* bn = dynamic_cast<ActionButton*>(button))
       bn->scale = scale;
 
-    ActionLink* link = dynamic_cast<ActionLink*>(button);
-    if (link)
+    if (ActionLink* link = dynamic_cast<ActionLink*>(button))
       link->scale = scale;
   }
 

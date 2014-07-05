@@ -180,7 +180,6 @@ void TestRunner::Init ()
 
   dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
   container_->Preview(preview_model, previews::Navigation::RIGHT);
-
 }
 
 void TestRunner::NavRight()

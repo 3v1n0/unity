@@ -102,7 +102,7 @@ void ActionButton::InitTheme()
 }
 
 void ActionButton::SetExtraHint(std::string const& extra_hint, std::string const& font_hint)
-{  
+{
   extra_font_hint_= font_hint;
   if (extra_text_)
   {

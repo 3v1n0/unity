@@ -198,10 +198,10 @@ void PreviewInfoHintWidget::PreLayoutManagement()
   {
     nux::Geometry const& geo = GetGeometry();
     info_names_layout_->SetMaximumWidth(info_names_layout_->GetContentWidth());
-    int max_width = geo.width - info_names_layout_->GetWidth() - LAYOUT_SPACING.CP(scale) -1;
+    int max_width = std::max(0, geo.width - info_names_layout_->GetWidth() - LAYOUT_SPACING.CP(scale) -1);
 
     for (auto value : info_values_layout_->GetChildren())
-      value->SetMaximumWidth(max_width > 0 ? max_width : 0);
+      value->SetMaximumWidth(max_width);
   }
 
   View::PreLayoutManagement();

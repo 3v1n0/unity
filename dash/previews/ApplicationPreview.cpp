@@ -321,7 +321,9 @@ void ApplicationPreview::PreLayoutManagement()
 
   nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
-  int content_width = geo.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale);
+  int content_width = geo.width - style.GetPanelSplitWidth().CP(scale)
+                                - style.GetDetailsLeftMargin().CP(scale)
+                                - style.GetDetailsRightMargin().CP(scale);
   if (content_width - geo_art.width < style.GetDetailsPanelMinimumWidth().CP(scale))
     geo_art.width = std::max(0, content_width - style.GetDetailsPanelMinimumWidth().CP(scale));
 
@@ -337,10 +339,11 @@ void ApplicationPreview::PreLayoutManagement()
   if (copywrite_) { copywrite_->SetMaximumWidth(top_app_info_max_width); }
   if (description_) { description_->SetMaximumWidth(details_width); }
 
+  int button_w = CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale));
+  int button_h = style.GetActionButtonHeight().CP(scale);
+
   for (nux::AbstractButton* button : action_buttons_)
-  {
-    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale)), style.GetActionButtonHeight().CP(scale));
-  }
+    button->SetMinMaxSize(button_w, button_h);
 
   Preview::PreLayoutManagement();
 }

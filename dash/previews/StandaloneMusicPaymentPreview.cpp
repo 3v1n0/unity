@@ -147,7 +147,6 @@ TestRunner::~TestRunner ()
 void TestRunner::Init ()
 {
   container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
-//  container_->scale = 1.62;
   container_->request_close.connect([this]() { exit(0); });
   container_->DisableNavButton(previews::Navigation::BOTH);
 
@@ -190,8 +189,7 @@ void TestRunner::Init ()
               glib::StealRef());
 
   dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
-  if (container_)
-    container_->Preview(preview_model, previews::Navigation::LEFT);
+  container_->Preview(preview_model, previews::Navigation::LEFT);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
