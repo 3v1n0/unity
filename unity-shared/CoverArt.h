@@ -58,6 +58,8 @@ public:
 
   void SetFont(std::string const& font);
 
+  nux::Property<double> scale;
+
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -80,6 +82,8 @@ protected:
   virtual void AddProperties(debug::IntrospectionData&);
 
 private:
+  void UpdateScale(double scale);
+
   nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
   StaticCairoText* overlay_text_;
 

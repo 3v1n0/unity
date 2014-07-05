@@ -52,12 +52,14 @@ public:
 
   void SetReviews(int count);
 
+  nux::Property<double> scale;
+
   sigc::signal<void> request_close() const { return preview_container_.request_close; }
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
   // From debug::Introspectable
@@ -65,8 +67,12 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
 private:
+  void UpdateScale(double scale);
+
   RatingsButton* ratings_;
   StaticCairoText* reviews_;
+
+  nux::VLayout* layout_;
 
   PreviewContainer preview_container_;
 };

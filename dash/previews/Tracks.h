@@ -52,6 +52,8 @@ public:
 
   Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
 
+  nux::Property<double> scale;
+
 protected:
   virtual bool AcceptKeyNavFocus() { return false; }
 
@@ -71,6 +73,9 @@ protected:
   nux::VLayout* layout_;
   std::map<std::string, previews::Track::Ptr> m_tracks;
   connection::Manager sig_conn_;
+
+private:
+  void UpdateScale(double scale);
 };
 
 }

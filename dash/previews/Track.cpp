@@ -37,6 +37,13 @@ namespace dash
 namespace previews
 {
 
+DECLARE_LOGGER(logger, "unity.dash.preview.music.track");
+namespace
+{
+const RawPixel LAYOUT_SPACING = 6_em;
+const RawPixel TITLE_PADDING = 3_em;
+}
+
 class TmpView : public nux::View
 {
 public:
@@ -53,12 +60,6 @@ public:
   virtual bool AcceptKeyNavFocus() { return false; }
 
 };
-
-DECLARE_LOGGER(logger, "unity.dash.preview.music.track");
-namespace
-{
-const int layout_spacing = 6;
-}
 
 NUX_IMPLEMENT_OBJECT_TYPE(Track);
 
@@ -126,12 +127,15 @@ private:
 
 Track::Track(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , play_state_(PlayerState::STOPPED)
   , progress_(0.0)
   , mouse_over_(false)
 {
   SetupBackground();
   SetupViews();
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &Track::UpdateScale));
 }
 
 std::string Track::GetName() const
@@ -202,23 +206,25 @@ void Track::SetupViews()
   layout->SetLeftAndRightPadding(0,0);
 
   nux::BaseTexture* tex_play = style.GetPlayIcon();
-  IconTexture* status_play = new IconTexture(tex_play, style.GetStatusIconSize(), style.GetStatusIconSize());
-  status_play->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
+  status_play_ = new IconTexture(tex_play, style.GetStatusIconSize().CP(scale), style.GetStatusIconSize().CP(scale));
+  status_play_->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
 
   nux::BaseTexture* tex_pause = style.GetPauseIcon();
-  IconTexture* status_pause = new IconTexture(tex_pause, style.GetStatusIconSize(), style.GetStatusIconSize());
-  status_pause->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
+  status_pause_ = new IconTexture(tex_pause, style.GetStatusIconSize().CP(scale), style.GetStatusIconSize().CP(scale));
+  status_pause_->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
 
   track_number_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   track_number_->SetTextAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetTextVerticalAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetLines(-1);
+  track_number_->SetScale(scale);
   track_number_->SetFont(style.track_font());
 
   title_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   title_->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
   title_->SetTextVerticalAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   title_->SetLines(-1);
+  title_->SetScale(scale);
   title_->SetFont(style.track_font());
 
   duration_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
@@ -226,6 +232,7 @@ void Track::SetupViews()
   duration_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
   duration_->SetTextVerticalAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   duration_->SetLines(-1);
+  duration_->SetScale(scale);
   duration_->SetFont(style.track_font());
   duration_->SetMaximumWidth(style.GetMusicDurationWidth());
   duration_->SetMaximumWidth(style.GetMusicDurationWidth());
@@ -234,13 +241,13 @@ void Track::SetupViews()
   status_play_layout_ = new TmpView();
   status_play_layout_->SetLayout(new nux::HLayout());
   status_play_layout_->GetLayout()->AddSpace(0, 1);
-  status_play_layout_->GetLayout()->AddView(status_play, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  status_play_layout_->GetLayout()->AddView(status_play_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   status_play_layout_->GetLayout()->AddSpace(0, 1);
 
   status_pause_layout_ = new TmpView();
   status_pause_layout_->SetLayout(new nux::HLayout());
   status_pause_layout_->GetLayout()->AddSpace(0, 1);
-  status_pause_layout_->GetLayout()->AddView(status_pause, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  status_pause_layout_->GetLayout()->AddView(status_pause_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   status_pause_layout_->GetLayout()->AddSpace(0, 1);
 
   track_number_layout_ = new TmpView();
@@ -256,7 +263,7 @@ void Track::SetupViews()
   track_status_layout_->SetActiveLayer(track_number_layout_);
 
   title_layout_ = new nux::HLayout();
-  title_layout_->SetLeftAndRightPadding(3);
+  title_layout_->SetLeftAndRightPadding(TITLE_PADDING.CP(scale));
   title_layout_->AddView(title_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   title_layout_->AddSpace(0, 0);
 
@@ -316,7 +323,7 @@ void Track::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
     progress_layer_->SetGeometry(geo_progress);
     nux::GetPainter().RenderSinglePaintLayer(gfx_engine, progress_layer_->GetGeometry(), progress_layer_.get());
   }
-  
+
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 }
 
@@ -435,10 +442,42 @@ void Track::PreLayoutManagement()
   track_status_layout_->SetMinimumWidth(geo.height);
   track_status_layout_->SetMaximumWidth(geo.height);
 
-  const int max_width = std::max(GetGeometry().width - geo.height - style.GetMusicDurationWidth() - layout_spacing*2, 0);
+  const int max_width = std::max(GetGeometry().width - geo.height - style.GetMusicDurationWidth().CP(scale) - LAYOUT_SPACING.CP(scale)*2, 0);
   title_->SetMaximumWidth(max_width);
 
   View::PreLayoutManagement();
+}
+
+void Track::UpdateScale(double scale)
+{
+  if (track_number_)
+    track_number_->SetScale(scale);
+
+  if (title_)
+    title_->SetScale(scale);
+
+  if (duration_)
+    duration_->SetScale(scale);
+
+  if (title_layout_)
+    title_layout_->SetLeftAndRightPadding(TITLE_PADDING.CP(scale));
+
+  previews::Style& style = previews::Style::Instance();
+
+  if (status_play_)
+  {
+    status_play_->SetSize(style.GetStatusIconSize().CP(scale));
+    status_play_->ReLoadIcon();
+  }
+
+  if (status_pause_)
+  {
+    status_pause_->SetSize(style.GetStatusIconSize().CP(scale));
+    status_pause_->ReLoadIcon();
+  }
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews
