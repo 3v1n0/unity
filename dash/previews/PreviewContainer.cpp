@@ -735,16 +735,16 @@ void PreviewContainer::UpdateScale(double scale)
 
   if (nav_left_)
   {
-    nav_left_->scale = scale;
     nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
     nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+    nav_left_->scale = scale;
   }
 
   if (nav_right_)
   {
-    nav_right_->scale = scale;
     nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
     nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+    nav_right_->scale = scale;
   }
 
   QueueRelayout();

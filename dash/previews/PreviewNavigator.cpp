@@ -188,7 +188,10 @@ void PreviewNavigator::UpdateScale(double scale)
   previews::Style& style = dash::previews::Style::Instance();
 
   if (texture_)
-    texture_->SetSize(style.GetNavigatorIconSize().CP(scale));
+  {
+    int icon_size = style.GetNavigatorIconSize().CP(scale);
+    texture_->SetMinMaxSize(icon_size, icon_size);
+  }
 
   QueueRelayout();
   QueueDraw();
