@@ -197,9 +197,7 @@ PaymentPreview::PaymentPreview(dash::Preview::Ptr preview_model)
 , header_layout_(nullptr)
 , body_layout_(nullptr)
 , footer_layout_(nullptr)
-{
-  UpdateScale(scale);
-}
+{}
 
 std::string PaymentPreview::GetName() const
 {
@@ -371,6 +369,7 @@ void PaymentPreview::SetupViews()
 
   full_data_layout_->AddLayout(overlay_layout_.GetPointer());
 
+  UpdateScale(scale);
   SetLayout(full_data_layout_.GetPointer());
 }
 
