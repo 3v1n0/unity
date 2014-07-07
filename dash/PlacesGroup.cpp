@@ -231,6 +231,7 @@ PlacesGroup::UpdatePlacesGroupSize()
    _space_layout->SetMaximumSize(top_space, top_space);
 
   _header_layout->SetSpaceBetweenChildren(SPACE_BETWEEN_CHILDREN.CP(scale()));
+  _header_layout->SetLeftAndRightPadding(RawPixel(_style.GetCategoryHeaderLeftPadding()).CP(scale), 0);
 
   _icon->SetMinMaxSize(icon_size.CP(scale()), icon_size.CP(scale()));
 
@@ -244,6 +245,8 @@ PlacesGroup::UpdateScale(double scale)
   RawPixel const icon_size = _style.GetCategoryIconSize();
 
   _name->SetScale(scale);
+  auto const& name_extents = _name->GetTextExtents();
+  _name->SetMinMaxSize(name_extents.width, name_extents.height);
   _expand_label->SetScale(scale);
 
   _icon->SetSize(icon_size.CP(scale));
@@ -310,7 +313,7 @@ PlacesGroup::GetExpandLabel()
 void
 PlacesGroup::SetIcon(std::string const& path_to_emblem)
 {
-  _icon->SetByIconName(path_to_emblem, _style.GetCategoryIconSize());
+  _icon->SetByIconName(path_to_emblem, RawPixel(_style.GetCategoryIconSize()).CP(scale));
 }
 
 void
@@ -462,7 +465,7 @@ long PlacesGroup::ComputeContentSize()
   // only the width matters
   if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
-    _focus_layer.reset(_style.FocusOverlay(geo.width - 
+    _focus_layer.reset(_style.FocusOverlay(geo.width -
                                            kHighlightLeftPadding.CP(scale()) -
                                            kHighlightRightPadding.CP(scale()),
                                            kHighlightHeight.CP(scale())));
