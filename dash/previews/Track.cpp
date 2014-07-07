@@ -56,7 +56,7 @@ public:
     if (GetCompositionLayout())
       GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
   }
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
 };
@@ -134,7 +134,6 @@ Track::Track(NUX_FILE_LINE_DECL)
 {
   SetupBackground();
   SetupViews();
-  UpdateScale(scale);
   scale.changed.connect(sigc::mem_fun(this, &Track::UpdateScale));
 }
 
@@ -234,8 +233,8 @@ void Track::SetupViews()
   duration_->SetLines(-1);
   duration_->SetScale(scale);
   duration_->SetFont(style.track_font());
-  duration_->SetMaximumWidth(style.GetMusicDurationWidth());
-  duration_->SetMaximumWidth(style.GetMusicDurationWidth());
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
   // Layouts
   // stick text fields in a layout so they don't alter thier geometry.
   status_play_layout_ = new TmpView();
@@ -450,31 +449,16 @@ void Track::PreLayoutManagement()
 
 void Track::UpdateScale(double scale)
 {
-  if (track_number_)
-    track_number_->SetScale(scale);
-
-  if (title_)
-    title_->SetScale(scale);
-
-  if (duration_)
-    duration_->SetScale(scale);
-
-  if (title_layout_)
-    title_layout_->SetLeftAndRightPadding(TITLE_PADDING.CP(scale));
-
-  previews::Style& style = previews::Style::Instance();
-
-  if (status_play_)
-  {
-    int size = style.GetStatusIconSize().CP(scale);
-    status_play_->SetMinMaxSize(size, size);
-  }
-
-  if (status_pause_)
-  {
-    int size = style.GetStatusIconSize().CP(scale);
-    status_pause_->SetMinMaxSize(size, size);
-  }
+  auto& style = Style::Instance();
+  int icon_size = style.GetStatusIconSize().CP(scale);
+  track_number_->SetScale(scale);
+  title_->SetScale(scale);
+  duration_->SetScale(scale);
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
+  title_layout_->SetLeftAndRightPadding(TITLE_PADDING.CP(scale));
+  status_play_->SetMinMaxSize(icon_size, icon_size);
+  status_pause_->SetMinMaxSize(icon_size, icon_size);
 
   QueueRelayout();
   QueueDraw();
