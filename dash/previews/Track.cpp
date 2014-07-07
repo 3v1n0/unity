@@ -466,14 +466,14 @@ void Track::UpdateScale(double scale)
 
   if (status_play_)
   {
-    status_play_->SetSize(style.GetStatusIconSize().CP(scale));
-    status_play_->ReLoadIcon();
+    int size = style.GetStatusIconSize().CP(scale);
+    status_play_->SetMinMaxSize(size, size);
   }
 
   if (status_pause_)
   {
-    status_pause_->SetSize(style.GetStatusIconSize().CP(scale));
-    status_pause_->ReLoadIcon();
+    int size = style.GetStatusIconSize().CP(scale);
+    status_pause_->SetMinMaxSize(size, size);
   }
 
   QueueRelayout();
