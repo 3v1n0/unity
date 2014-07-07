@@ -191,6 +191,7 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
     show_filters_->SetTextColor(nux::color::White);
     show_filters_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
+    show_filters_->SetScale(scale);
     show_filters_->SetLines(-1);
 
     nux::BaseTexture* arrow;
