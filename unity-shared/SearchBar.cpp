@@ -156,7 +156,7 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  hint_ = new StaticCairoText(" ");
+  hint_ = new StaticCairoText("");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetFont(HINT_LABEL_DEFAULT_FONT.c_str());
   hint_layout->AddView(hint_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -326,6 +326,8 @@ void SearchBar::UpdateSearchBarSize()
 
 void SearchBar::UpdateScale(double scale)
 {
+  hint_->SetMinimumSize(nux::AREA_MIN_WIDTH, nux::AREA_MIN_HEIGHT);
+  hint_->SetMaximumSize(nux::AREA_MAX_WIDTH, nux::AREA_MAX_HEIGHT);
   hint_->SetScale(scale);
   spinner_->scale = scale;
 

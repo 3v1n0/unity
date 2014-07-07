@@ -170,6 +170,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
 
   _name = new StaticCairoText("", NUX_TRACKER_LOCATION);
   _name->SetFont(NAME_LABEL_FONT);
+  _name->SetLines(-1);
   _name->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_END);
   _name->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
   _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
@@ -182,6 +183,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
 
   _expand_label = new StaticCairoText("", NUX_TRACKER_LOCATION);
   _expand_label->SetFont(EXPANDER_LABEL_FONT);
+  _expand_label->SetLines(-1);
   _expand_label->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor(kExpandDefaultTextColor);
@@ -242,9 +244,9 @@ PlacesGroup::UpdateScale(double scale)
 {
   RawPixel const icon_size = _style.GetCategoryIconSize();
 
+  _name->SetMinimumSize(nux::AREA_MIN_WIDTH, nux::AREA_MIN_HEIGHT);
+  _name->SetMaximumSize(nux::AREA_MAX_WIDTH, nux::AREA_MAX_HEIGHT);
   _name->SetScale(scale);
-  auto const& name_extents = _name->GetTextExtents();
-  _name->SetMinMaxSize(name_extents.width, name_extents.height);
   _expand_label->SetScale(scale);
 
   _icon->SetSize(icon_size.CP(scale));
