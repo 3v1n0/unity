@@ -37,7 +37,6 @@
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/BGHash.h"
-#include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/OverlayRenderer.h"
 #include "unity-shared/SearchBar.h"
@@ -62,6 +61,8 @@ class DashView : public nux::View, public unity::debug::Introspectable
 public:
   DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& application_starter);
   ~DashView();
+
+  nux::Property<double> scale;
 
   void AboutToShow(int monitor);
   void AboutToHide();
@@ -131,6 +132,7 @@ private:
   nux::Geometry GetRenderAbsoluteGeometry() const;
 
   void UpdateDashViewSize();
+  void UpdateScale(double scale);
   void OnDPIChanged();
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
@@ -195,7 +197,6 @@ private:
 
   nux::ObjectPtr<OverlayWindowButtons> overlay_window_buttons_;
 
-  EMConverter::Ptr cv_;
   int monitor_;
 
   friend class TestDashView;
