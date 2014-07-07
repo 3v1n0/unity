@@ -263,12 +263,9 @@ void DashView::BuildPreview(Preview::Ptr model)
   }
   else
   {
-    if (preview_container_)
-    {
-      // got a new preview whilst already displaying, we probably clicked a navigation button.
-      preview_container_->Preview(model, preview_navigation_mode_); // TODO
-      preview_container_->scale = cv_->DPIScale();
-    }
+    // got a new preview whilst already displaying, we probably clicked a navigation button.
+    preview_container_->Preview(model, preview_navigation_mode_); // TODO
+    preview_container_->scale = cv_->DPIScale();
   }
 
   if (G_LIKELY(preview_state_machine_.left_results() > 0 && preview_state_machine_.right_results() > 0))
