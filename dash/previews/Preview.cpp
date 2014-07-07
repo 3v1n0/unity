@@ -24,7 +24,6 @@
 #include "TabIterator.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/CoverArt.h"
-#include "unity-shared/UnitySettings.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
@@ -102,7 +101,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Preview);
 
 Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
-  , scale(Settings::Instance().em()->DPIScale())
+  , scale(1.0f)
   , preview_model_(preview_model)
   , tab_iterator_(new TabIterator())
   , full_data_layout_(nullptr)
@@ -112,7 +111,6 @@ Preview::Preview(dash::Preview::Ptr preview_model)
   , preview_container_(new PreviewContainer)
 {
   scale.changed.connect(sigc::mem_fun(this, &Preview::UpdateScale));
-  UpdateScale(scale);
 }
 
 Preview::~Preview()
