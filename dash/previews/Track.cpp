@@ -231,10 +231,10 @@ void Track::SetupViews()
   duration_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
   duration_->SetTextVerticalAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   duration_->SetLines(-1);
+  duration_->SetMinimumWidth(style.GetMusicDurationWidth().CP(scale));
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
   duration_->SetScale(scale);
   duration_->SetFont(style.track_font());
-  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
-  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
   // Layouts
   // stick text fields in a layout so they don't alter thier geometry.
   status_play_layout_ = new TmpView();
@@ -453,9 +453,9 @@ void Track::UpdateScale(double scale)
   int icon_size = style.GetStatusIconSize().CP(scale);
   track_number_->SetScale(scale);
   title_->SetScale(scale);
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
+  duration_->SetMinimumWidth(style.GetMusicDurationWidth().CP(scale));
   duration_->SetScale(scale);
-  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
-  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
   title_layout_->SetLeftAndRightPadding(TITLE_PADDING.CP(scale));
   status_play_->SetMinMaxSize(icon_size, icon_size);
   status_pause_->SetMinMaxSize(icon_size, icon_size);
