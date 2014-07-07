@@ -133,8 +133,6 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   SetAcceptKeyNavFocusOnMouseEnter(false);
   scale.changed.connect(sigc::mem_fun(this, &PlacesGroup::UpdateScale));
 
-  nux::BaseTexture* arrow = _style.GetGroupExpandIcon();
-
   _background = _style.GetCategoryBackground();
   _background_nofilters = _style.GetCategoryBackgroundNoFilters();
 
@@ -189,11 +187,11 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _expand_label->SetTextColor(kExpandDefaultTextColor);
   _expand_label_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
+  _expand_icon = new IconTexture(_style.GetGroupExpandIcon());
+  _expand_icon->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
-  _expand_icon->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetVisible(false);
-  _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   SetLayout(_group_layout);
 
@@ -252,7 +250,8 @@ PlacesGroup::UpdateScale(double scale)
   _icon->SetSize(icon_size.CP(scale));
   _icon->ReLoadIcon();
 
-  // FIXME _expand_icon, needs some work here. Not as easy as _icon
+  auto const& arrow = _expand_icon->texture();
+  _expand_icon->SetMinMaxSize(RawPixel(arrow->GetWidth()).CP(scale), RawPixel(arrow->GetHeight()).CP(scale));
 
   if (_child_view)
     _child_view->scale = scale;
@@ -282,7 +281,6 @@ PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDi
 
 void
 
-// FIXME _expand_icon, needs some work here. Not as easy as _icon
 PlacesGroup::SetName(std::string const& name)
 {
   if (_cached_name != name)
@@ -597,6 +595,9 @@ PlacesGroup::SetExpanded(bool is_expanded)
     _expand_icon->SetTexture(_style.GetGroupUnexpandIcon());
   else
     _expand_icon->SetTexture(_style.GetGroupExpandIcon());
+
+  auto const& tex = _expand_icon->texture();
+  _expand_icon->SetMinMaxSize(RawPixel(tex->GetWidth()).CP(scale), RawPixel(tex->GetHeight()).CP(scale));
 
   expanded.emit(this);
 }
