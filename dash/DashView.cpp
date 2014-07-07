@@ -235,7 +235,7 @@ void DashView::BuildPreview(Preview::Ptr model)
 
     if (!preview_container_)
     {
-      preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+      preview_container_ = new previews::PreviewContainer();
       preview_container_->SetRedirectRenderingToTexture(true);
       AddChild(preview_container_.GetPointer());
       preview_container_->SetParentObject(this);
