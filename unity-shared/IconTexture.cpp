@@ -226,21 +226,17 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (_draw_mode == DrawMode::STRETCH_WITH_ASPECT)
     {
       nux::Geometry imageDest = geo;
-      
-      float geo_apsect = float(geo.GetWidth()) / geo.GetHeight();
+
+      float geo_apsect = float(geo.width) / geo.width;
       float image_aspect = float(_texture_cached->GetWidth()) / _texture_cached->GetHeight();
 
       if (image_aspect > geo_apsect)
       {
         imageDest.SetHeight(float(imageDest.GetWidth()) / image_aspect);
-      } 
+      }
       if (image_aspect < geo_apsect)
       {
         imageDest.SetWidth(image_aspect * imageDest.GetHeight());
-      }
-      else
-      {
-        imageDest = nux::Geometry(0, 0, _texture_cached->GetWidth(), _texture_cached->GetHeight());
       }
 
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
