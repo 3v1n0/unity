@@ -38,40 +38,35 @@
 #include "unity-shared/ThumbnailGenerator.h"
 #include "UnityCore/GSettingsScopes.h"
 
-#define WIDTH 1024
-#define HEIGHT 768
+const unity::RawPixel WIDTH(1024);
+const unity::RawPixel HEIGHT(768);
 
 using namespace unity::dash;
 
 class TestRunner
 {
 public:
-  TestRunner ();
-  ~TestRunner ();
+  TestRunner(double scale)
+    : scale_(scale)
+  {}
 
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
+  double scale_;
   nux::Layout *layout;
 };
-
-TestRunner::TestRunner ()
-{
-}
-
-TestRunner::~TestRunner ()
-{
-}
 
 void TestRunner::Init ()
 {
   layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  DashView* view = new DashView(std::make_shared<unity::dash::GSettingsScopes>(), 
+  DashView* view = new DashView(std::make_shared<unity::dash::GSettingsScopes>(),
                                 std::make_shared<unity::ApplicationStarterImp>());
+  view->scale = scale_;
   view->DisableBlur();
-  view->SetMinMaxSize(WIDTH, HEIGHT);
+  view->SetMinMaxSize(WIDTH.CP(scale_), HEIGHT.CP(scale_));
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
-  layout->SetMinMaxSize(WIDTH, HEIGHT);
+  layout->SetMinMaxSize(WIDTH.CP(scale_), HEIGHT.CP(scale_));
 
   view->AboutToShow(0);
 
@@ -101,10 +96,11 @@ int main(int argc, char **argv)
   unity::Settings settings;
   unity::dash::Style dash_style;
   unity::panel::Style panel_style;
+  double scale = argc > 1 ? atof(argv[1]) : 1.0f;
 
-  TestRunner *test_runner = new TestRunner ();
+  TestRunner *test_runner = new TestRunner(scale);
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),
-                            WIDTH, HEIGHT,
+                            WIDTH.CP(scale), HEIGHT.CP(scale),
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
