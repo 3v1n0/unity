@@ -250,6 +250,7 @@ void ScopeView::SetupViews(nux::Area* show_filters)
   no_results_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   no_results_->SetTextColor(nux::color::White);
   no_results_->SetVisible(false);
+  no_results_->SetScale(scale);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   fscroll_view_ = new ScopeScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
@@ -299,6 +300,7 @@ void ScopeView::UpdateScale(double scale)
     group->scale = scale;
 
   filter_bar_->scale = scale;
+  no_results_->SetScale(scale);
 }
 
 void ScopeView::SetupCategories(Categories::Ptr const& categories)
