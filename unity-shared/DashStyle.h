@@ -153,11 +153,6 @@ public:
 
   nux::Color const& GetTextColor() const;
 
-  // TODO nux::Property<int>
-  int  GetDefaultNColumns() const;
-  void SetDefaultNColumns(int n_cols);
-  sigc::signal<void> columns_changed;
-
   RawPixel GetTileGIconSize() const;
   RawPixel GetTileImageSize() const;
   RawPixel GetTileWidth() const;
@@ -253,11 +248,9 @@ public:
   RawPixel GetCategorySeparatorLeftPadding() const;
   RawPixel GetCategorySeparatorRightPadding() const;
 
-  bool GetUseBlur() const;
-
-
   sigc::signal<void> changed;
 
+  nux::Property<int> columns_number;
   nux::Property<bool> always_maximised;
   nux::Property<bool> preview_mode;
 

@@ -217,7 +217,6 @@ struct Style::Impl : sigc::trackable
 
   int text_width_;
   int text_height_;
-  int number_of_columns_;
 
   LazyLoadTexture category_texture_;
   LazyLoadTexture category_texture_no_filters_;
@@ -268,7 +267,6 @@ Style::Impl::Impl(Style* owner)
   , text_color_(nux::color::White)
   , text_width_(0)
   , text_height_(0)
-  , number_of_columns_(6)
   , category_texture_("/category_gradient.png")
   , category_texture_no_filters_("/category_gradient_no_refine.png")
   , dash_bottom_texture_("/dash_bottom_border_tile.png")
@@ -437,7 +435,8 @@ void Style::Impl::UpdateFormFactor(FormFactor form_factor)
 }
 
 Style::Style()
-  : always_maximised(false)
+  : columns_number(6)
+  , always_maximised(false)
   , pimpl(new Impl(this))
 {
   if (style_instance)
@@ -2152,21 +2151,6 @@ RawPixel Style::GetScrollbarGarnishSize() const
 nux::Color const& Style::GetTextColor() const
 {
   return pimpl->text_color_;
-}
-
-int Style::GetDefaultNColumns() const
-{
-  return pimpl->number_of_columns_;
-}
-
-void Style::SetDefaultNColumns(int n_cols)
-{
-  if (pimpl->number_of_columns_ == n_cols)
-    return;
-
-  pimpl->number_of_columns_ = n_cols;
-
-  columns_changed.emit();
 }
 
 RawPixel Style::GetTileGIconSize() const
