@@ -2126,7 +2126,7 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
-int Style::GetButtonGarnishSize()
+RawPixel Style::GetButtonGarnishSize() const
 {
   int maxBlurSize = 0;
 
@@ -2139,12 +2139,12 @@ int Style::GetButtonGarnishSize()
   return 2 * maxBlurSize;
 }
 
-int Style::GetSeparatorGarnishSize()
+RawPixel Style::GetSeparatorGarnishSize() const
 {
   return pimpl->separator_blur_size_;
 }
 
-int Style::GetScrollbarGarnishSize()
+RawPixel Style::GetScrollbarGarnishSize() const
 {
   return pimpl->scrollbar_blur_size_;
 }
@@ -2154,7 +2154,7 @@ nux::Color const& Style::GetTextColor() const
   return pimpl->text_color_;
 }
 
-int  Style::GetDefaultNColumns() const
+int Style::GetDefaultNColumns() const
 {
   return pimpl->number_of_columns_;
 }
@@ -2169,53 +2169,53 @@ void Style::SetDefaultNColumns(int n_cols)
   columns_changed.emit();
 }
 
-int Style::GetTileGIconSize() const
+RawPixel Style::GetTileGIconSize() const
 {
   return 64;
 }
 
-int Style::GetTileImageSize() const
+RawPixel Style::GetTileImageSize() const
 {
   return 96;
 }
 
-int Style::GetTileWidth() const
+RawPixel Style::GetTileWidth() const
 {
   return std::max(pimpl->text_width_, 150);
 }
 
-int Style::GetTileHeight() const
+RawPixel Style::GetTileHeight() const
 {
   return std::max(GetTileImageSize() + (pimpl->text_height_ * 2) + 15,
                   GetTileImageSize() + 32); // magic design numbers.
 }
 
-int Style::GetTileIconHightlightHeight() const
+RawPixel Style::GetTileIconHightlightHeight() const
 {
   return 106;
 }
 
-int Style::GetTileIconHightlightWidth() const
+RawPixel Style::GetTileIconHightlightWidth() const
 {
   return 106;
 }
 
-int Style::GetHomeTileIconSize() const
+RawPixel Style::GetHomeTileIconSize() const
 {
   return 104;
 }
 
-int Style::GetHomeTileWidth() const
+RawPixel Style::GetHomeTileWidth() const
 {
   return pimpl->text_width_ * 1.2;
 }
 
-int Style::GetHomeTileHeight() const
+RawPixel Style::GetHomeTileHeight() const
 {
   return GetHomeTileIconSize() + (pimpl->text_height_ * 5);
 }
 
-int Style::GetTextLineHeight() const
+RawPixel Style::GetTextLineHeight() const
 {
   return pimpl->text_height_;
 }
@@ -2366,149 +2366,147 @@ nux::BaseTexture* Style::GetDashShine()
   return pimpl->dash_shine_.texture();
 }
 
-int Style::GetDashBottomTileHeight() const
+RawPixel Style::GetDashBottomTileHeight() const
 {
   return 30;
 }
 
-int Style::GetDashRightTileWidth() const
+RawPixel Style::GetDashRightTileWidth() const
 {
   return 30;
 }
 
-int Style::GetVSeparatorSize() const
+RawPixel Style::GetVSeparatorSize() const
 {
   return 1;
 }
 
-int Style::GetHSeparatorSize() const
+RawPixel Style::GetHSeparatorSize() const
 {
   return 1;
-
 }
 
-int Style::GetFilterBarWidth() const
+RawPixel Style::GetFilterBarWidth() const
 {
   return 300;
 }
 
-
-int Style::GetFilterBarLeftPadding() const
+RawPixel Style::GetFilterBarLeftPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterBarRightPadding() const
+RawPixel Style::GetFilterBarRightPadding() const
 {
   return 5;
 }
 
-int Style::GetDashViewTopPadding() const
+RawPixel Style::GetDashViewTopPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarLeftPadding() const
+RawPixel Style::GetSearchBarLeftPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarRightPadding() const
+RawPixel Style::GetSearchBarRightPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarHeight() const
+RawPixel Style::GetSearchBarHeight() const
 {
   return 42;
 }
 
-int Style::GetFilterResultsHighlightRightPadding() const
+RawPixel Style::GetFilterResultsHighlightRightPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterResultsHighlightLeftPadding() const
+RawPixel Style::GetFilterResultsHighlightLeftPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterBarTopPadding() const
+RawPixel Style::GetFilterBarTopPadding() const
 {
   return 10;
 }
 
-int Style::GetFilterHighlightPadding() const
+RawPixel Style::GetFilterHighlightPadding() const
 {
   return 2;
 }
 
-int Style::GetSpaceBetweenFilterWidgets() const
+RawPixel Style::GetSpaceBetweenFilterWidgets() const
 {
   return 12;
 }
 
-int Style::GetAllButtonHeight() const
+RawPixel Style::GetAllButtonHeight() const
 {
   return 30;
 }
 
-int Style::GetFilterButtonHeight() const
+RawPixel Style::GetFilterButtonHeight() const
 {
   return 30;
 }
 
-int Style::GetSpaceBetweenScopeAndFilters() const
+RawPixel Style::GetSpaceBetweenScopeAndFilters() const
 {
   return 10;
 }
 
-int Style::GetFilterViewRightPadding() const
+RawPixel Style::GetFilterViewRightPadding() const
 {
   return 10;
 }
 
-int Style::GetScrollbarWidth() const
+RawPixel Style::GetScrollbarWidth() const
 {
   return 3;
 }
 
-int Style::GetCategoryIconSize() const
+RawPixel Style::GetCategoryIconSize() const
 {
   return 22;
 }
 
-int Style::GetCategoryHighlightHeight() const
+RawPixel Style::GetCategoryHighlightHeight() const
 {
   return 24;
 }
 
-int Style::GetPlacesGroupTopSpace() const
+RawPixel Style::GetPlacesGroupTopSpace() const
 {
   return 7;
 }
 
-int Style::GetPlacesGroupResultTopPadding() const
+RawPixel Style::GetPlacesGroupResultTopPadding() const
 {
   return 2;
 }
 
-int Style::GetPlacesGroupResultLeftPadding() const
+RawPixel Style::GetPlacesGroupResultLeftPadding() const
 {
   return 25;
 }
 
-int Style::GetCategoryHeaderLeftPadding() const
+RawPixel Style::GetCategoryHeaderLeftPadding() const
 {
   return 19;
 }
 
-int Style::GetCategorySeparatorLeftPadding() const
+RawPixel Style::GetCategorySeparatorLeftPadding() const
 {
   return 15;
 }
 
-int Style::GetCategorySeparatorRightPadding() const
+RawPixel Style::GetCategorySeparatorRightPadding() const
 {
   return 15;
 }
