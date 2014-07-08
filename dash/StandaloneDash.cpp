@@ -36,47 +36,50 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/ThumbnailGenerator.h"
-#include "UnityCore/GSettingsScopes.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/UBusServer.h"
+#include <UnityCore/GSettingsScopes.h>
+#include <UnityCore/ScopeProxyInterface.h>
 
-#define WIDTH 1024
-#define HEIGHT 768
+const unity::RawPixel WIDTH(1024);
+const unity::RawPixel HEIGHT(768);
 
 using namespace unity::dash;
 
 class TestRunner
 {
 public:
-  TestRunner ();
-  ~TestRunner ();
+  TestRunner(std::string const& scope, double scale)
+    : scope_(scope)
+    , scale_(scale)
+  {}
 
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
+  std::string scope_;
+  double scale_;
   nux::Layout *layout;
 };
-
-TestRunner::TestRunner ()
-{
-}
-
-TestRunner::~TestRunner ()
-{
-}
 
 void TestRunner::Init ()
 {
   layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  DashView* view = new DashView(std::make_shared<unity::dash::GSettingsScopes>(), 
+  DashView* view = new DashView(std::make_shared<unity::dash::GSettingsScopes>(),
                                 std::make_shared<unity::ApplicationStarterImp>());
+  view->scale = scale_;
   view->DisableBlur();
-  view->SetMinMaxSize(WIDTH, HEIGHT);
+  view->SetMinMaxSize(WIDTH.CP(scale_), HEIGHT.CP(scale_));
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
-  layout->SetMinMaxSize(WIDTH, HEIGHT);
+  layout->SetMinMaxSize(WIDTH.CP(scale_), HEIGHT.CP(scale_));
 
   view->AboutToShow(0);
 
   nux::GetWindowThread()->SetLayout (layout);
   nux::GetWindowCompositor().SetKeyFocusArea(view->default_focus());
+
+  unity::UBusServer().SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                  g_variant_new("(sus)", scope_.c_str(), GOTO_DASH_URI, ""));
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -102,9 +105,25 @@ int main(int argc, char **argv)
   unity::dash::Style dash_style;
   unity::panel::Style panel_style;
 
-  TestRunner *test_runner = new TestRunner ();
+  double scale = 1.0;
+  unity::glib::String scope;
+  unity::glib::Error err;
+
+  GOptionEntry args_parsed[] =
+  {
+    { "scope", 's', 0, G_OPTION_ARG_STRING, &scope, "The default scope ", "S" },
+    { "scaling-factor", 'f', 0, G_OPTION_ARG_DOUBLE, &scale, "The dash scaling factor", "F" },
+    { NULL }
+  };
+
+  std::shared_ptr<GOptionContext> ctx(g_option_context_new("Standalone Dash"), g_option_context_free);
+  g_option_context_add_main_entries(ctx.get(), args_parsed, NULL);
+  if (!g_option_context_parse(ctx.get(), &argc, &argv, &err))
+    std::cerr << "Got error when parsing arguments: " << err << std::endl;
+
+  TestRunner *test_runner = new TestRunner(scope.Str(), scale);
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),
-                            WIDTH, HEIGHT,
+                            WIDTH.CP(scale), HEIGHT.CP(scale),
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);

@@ -87,22 +87,19 @@ void ActionButton::Init()
 
 void ActionButton::InitTheme()
 {
-  if (!cr_active_)
-  {
-    nux::Geometry const& geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
-    cr_prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
-    cr_active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-    cr_focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
-  }
+  cr_prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+  cr_active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+  cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+  cr_focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
 
   SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(scale));
   SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
 }
 
 void ActionButton::SetExtraHint(std::string const& extra_hint, std::string const& font_hint)
-{  
+{
   extra_font_hint_= font_hint;
   if (extra_text_)
   {
@@ -195,11 +192,13 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
 void ActionButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   Style::Instance().Button(cr, faked_state, "", -1, Alignment::CENTER, true);
 }
 
 void ActionButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
 {
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   Style::Instance().ButtonFocusOverlay(cr, 0.20f);
 }
 
@@ -316,8 +315,7 @@ std::string ActionButton::GetExtraText() const
 
 void ActionButton::UpdateScale(double scale)
 {
-  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(scale));
-  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
+  InitTheme();
 
   if (image_)
   {

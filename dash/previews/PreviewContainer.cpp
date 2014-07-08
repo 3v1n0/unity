@@ -76,17 +76,14 @@ public:
       // Need to update the preview geometries when updating the container geo.
       UpdateAnimationProgress(progress_, curve_progress_);
     });
-    Style& style = previews::Style::Instance();
 
-    spin_= style.GetSearchSpinIcon(SPIN_ICON_SIZE);
-
+    spin_ = Style::Instance().GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
     scale.changed.connect(sigc::mem_fun(this, &PreviewContent::UpdateScale));
   }
 
   void UpdateScale(double scale)
   {
-    Style& style = previews::Style::Instance();
-    spin_ = style.GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
+    spin_ = Style::Instance().GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
 
     for (auto* area : GetChildren())
       static_cast<previews::Preview*>(area)->scale = scale;
@@ -441,7 +438,6 @@ void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation dire
     preview_view->request_close().connect([this]() { request_close.emit(); });
     preview_layout_->PushPreview(preview_view, direction);
   }
-  
 }
 
 void PreviewContainer::DisableNavButton(Navigation button)
@@ -477,8 +473,7 @@ void PreviewContainer::SetupViews()
   nux::VLayout* layout = new nux::VLayout();
   SetLayout(layout);
 
-  space_layout_ = new nux::SpaceLayout(0,0,style.GetPreviewTopPadding().CP(scale),style.GetPreviewTopPadding().CP(scale));
-  layout->AddLayout(space_layout_);
+  layout->SetTopAndBottomPadding(style.GetPreviewTopPadding().CP(scale), 0);
 
   layout_content_ = new nux::HLayout();
   layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
@@ -721,31 +716,20 @@ void PreviewContainer::UpdateScale(double scale)
 {
   previews::Style& style = previews::Style::Instance();
 
-  if (preview_layout_)
-  {
-    preview_layout_->scale = scale;
-    preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
-  }
+  GetLayout()->SetTopAndBottomPadding(style.GetPreviewTopPadding().CP(scale), 0);
 
-  if (space_layout_)
-    space_layout_->SetPadding(0,0,style.GetPreviewTopPadding().CP(scale),style.GetPreviewTopPadding().CP(scale));
+  preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
+  preview_layout_->scale = scale;
 
-  if (layout_content_)
-    layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+  layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
-  if (nav_left_)
-  {
-    nav_left_->scale = scale;
-    nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
-    nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
-  }
+  nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_left_->scale = scale;
 
-  if (nav_right_)
-  {
-    nav_right_->scale = scale;
-    nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
-    nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
-  }
+  nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_right_->scale = scale;
 
   QueueRelayout();
   QueueDraw();

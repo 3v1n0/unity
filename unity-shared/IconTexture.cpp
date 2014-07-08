@@ -226,21 +226,17 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (_draw_mode == DrawMode::STRETCH_WITH_ASPECT)
     {
       nux::Geometry imageDest = geo;
-      
-      float geo_apsect = float(geo.GetWidth()) / geo.GetHeight();
+
+      float geo_apsect = float(geo.width) / geo.width;
       float image_aspect = float(_texture_cached->GetWidth()) / _texture_cached->GetHeight();
 
       if (image_aspect > geo_apsect)
       {
         imageDest.SetHeight(float(imageDest.GetWidth()) / image_aspect);
-      } 
+      }
       if (image_aspect < geo_apsect)
       {
         imageDest.SetWidth(image_aspect * imageDest.GetHeight());
-      }
-      else
-      {
-        imageDest = nux::Geometry(0, 0, _texture_cached->GetWidth(), _texture_cached->GetHeight());
       }
 
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
@@ -252,11 +248,10 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       texxform.u1 = imageDest.width;
       texxform.v1 = imageDest.height;
 
-      int border_width = 1;
-      GfxContext.QRP_1Tex(geo.x + (float(geo.GetWidth() - imageDest.GetWidth()) / 2) + border_width,
-                          geo.y + (float(geo.GetHeight() - imageDest.GetHeight()) / 2) + border_width,
-                          imageDest.width - (border_width * 2),
-                          imageDest.height - (border_width * 2),
+      GfxContext.QRP_1Tex(geo.x + (float(geo.GetWidth() - imageDest.GetWidth()) / 2),
+                          geo.y + (float(geo.GetHeight() - imageDest.GetHeight()) / 2),
+                          imageDest.width,
+                          imageDest.height,
                           _texture_cached.GetPointer()->GetDeviceTexture(),
                           texxform,
                           col);

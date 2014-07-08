@@ -46,13 +46,12 @@ public:
   NUX_DECLARE_OBJECT_TYPE(SocialPreviewContent, nux::View);
 
   SocialPreviewContent(std::string const& text, NUX_FILE_LINE_PROTO);
-  virtual ~SocialPreviewContent();
+
+  nux::Property<double> scale;
 
   void SetText(std::string const& text);
 
   sigc::signal<void> request_close() const { return preview_container_.request_close; }
-
-  nux::Property<double> scale;
 
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);

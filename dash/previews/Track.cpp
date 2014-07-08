@@ -56,7 +56,7 @@ public:
     if (GetCompositionLayout())
       GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
   }
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
 };
@@ -134,7 +134,6 @@ Track::Track(NUX_FILE_LINE_DECL)
 {
   SetupBackground();
   SetupViews();
-  UpdateScale(scale);
   scale.changed.connect(sigc::mem_fun(this, &Track::UpdateScale));
 }
 
@@ -232,10 +231,10 @@ void Track::SetupViews()
   duration_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
   duration_->SetTextVerticalAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   duration_->SetLines(-1);
+  duration_->SetMinimumWidth(style.GetMusicDurationWidth().CP(scale));
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
   duration_->SetScale(scale);
   duration_->SetFont(style.track_font());
-  duration_->SetMaximumWidth(style.GetMusicDurationWidth());
-  duration_->SetMaximumWidth(style.GetMusicDurationWidth());
   // Layouts
   // stick text fields in a layout so they don't alter thier geometry.
   status_play_layout_ = new TmpView();
@@ -450,31 +449,16 @@ void Track::PreLayoutManagement()
 
 void Track::UpdateScale(double scale)
 {
-  if (track_number_)
-    track_number_->SetScale(scale);
-
-  if (title_)
-    title_->SetScale(scale);
-
-  if (duration_)
-    duration_->SetScale(scale);
-
-  if (title_layout_)
-    title_layout_->SetLeftAndRightPadding(TITLE_PADDING.CP(scale));
-
-  previews::Style& style = previews::Style::Instance();
-
-  if (status_play_)
-  {
-    status_play_->SetSize(style.GetStatusIconSize().CP(scale));
-    status_play_->ReLoadIcon();
-  }
-
-  if (status_pause_)
-  {
-    status_pause_->SetSize(style.GetStatusIconSize().CP(scale));
-    status_pause_->ReLoadIcon();
-  }
+  auto& style = Style::Instance();
+  int icon_size = style.GetStatusIconSize().CP(scale);
+  track_number_->SetScale(scale);
+  title_->SetScale(scale);
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth().CP(scale));
+  duration_->SetMinimumWidth(style.GetMusicDurationWidth().CP(scale));
+  duration_->SetScale(scale);
+  title_layout_->SetLeftAndRightPadding(TITLE_PADDING.CP(scale));
+  status_play_->SetMinMaxSize(icon_size, icon_size);
+  status_pause_->SetMinMaxSize(icon_size, icon_size);
 
   QueueRelayout();
   QueueDraw();

@@ -59,6 +59,7 @@ const std::string GNOME_SCALE_FACTOR = "scaling-factor";
 const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
 const int DEFAULT_LAUNCHER_WIDTH = 64;
+const int MINIMUM_DESKTOP_HEIGHT = 800;
 const double DEFAULT_DPI = 96.0f;
 }
 
@@ -89,15 +90,15 @@ public:
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
-    CacheFormFactor();
-    CacheDoubleClickActivate();
-
     // The order is important here, DPI is the last thing to be updated
     UpdateLimSetting();
     UpdateTextScaleFactor();
     UpdateCursorScaleFactor();
     UpdateFontSize();
     UpdateDPI();
+
+    CacheFormFactor();
+    CacheDoubleClickActivate();
 
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
@@ -164,8 +165,9 @@ public:
       auto uscreen = UScreen::GetDefault();
       int primary_monitor = uscreen->GetMonitorWithMouse();
       auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
+      double monitor_scaling = parent_->em(primary_monitor)->DPIScale();
 
-      new_form_factor = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
+      new_form_factor = (geo.height * monitor_scaling) >= MINIMUM_DESKTOP_HEIGHT ? FormFactor::DESKTOP : FormFactor::NETBOOK;
     }
     else
     {

@@ -37,10 +37,9 @@ namespace previews
 
 namespace
 {
-  const RawPixel CHILDREN_SPACE = 1_em;
-}
-
 DECLARE_LOGGER(logger, "unity.dash.preview.music.tracks");
+const RawPixel CHILDREN_SPACE = 1_em;
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tracks);
 
@@ -134,22 +133,23 @@ void Tracks::OnTrackRemoved(dash::Track const& track_row)
 
 void Tracks::UpdateScale(double scale)
 {
-  previews::Style& style = dash::previews::Style::Instance();
+  int track_height = Style::Instance().GetTrackHeight().CP(scale);
 
-  for (std::map<std::string, previews::Track::Ptr>::iterator it = m_tracks.begin(); it != m_tracks.end(); ++it)
+  for (auto const& track : m_tracks)
   {
-    it->second->scale = scale;
-    it->second->SetMinimumHeight(style.GetTrackHeight().CP(scale));
-    it->second->SetMaximumHeight(style.GetTrackHeight().CP(scale));
-    it->second->SetMinimumWidth(style.GetTrackHeight().CP(scale));
-    it->second->SetMaximumWidth(style.GetTrackHeight().CP(scale));
+    track.second->SetMinimumHeight(track_height);
+    track.second->SetMaximumHeight(track_height);
+    track.second->scale = scale;
   }
 
   if (layout_)
   {
-    layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin().CP(scale), 0, 0);
+    layout_->SetPadding(0, Style::Instance().GetDetailsRightMargin().CP(scale), 0, 0);
     layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
   }
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews

@@ -92,6 +92,16 @@ inline double _align(double val, bool odd=true)
   }
 }
 
+template <typename T>
+inline void get_actual_cairo_size(cairo_t* cr, T* width, T* height)
+{
+  double w_scale, h_scale;
+  auto* surface = cairo_get_target(cr);
+  cairo_surface_get_device_scale(surface, &w_scale, &h_scale);
+  *width = cairo_image_surface_get_width(surface) / w_scale;
+  *height = cairo_image_surface_get_height(surface) / h_scale;
+}
+
 class LazyLoadTexture
 {
 public:
@@ -682,9 +692,8 @@ void Style::Impl::Blur(cairo_t* cr, int size)
   cairo_surface_flush(surface);
 
   pixels = cairo_image_surface_get_data(surface);
-  width  = cairo_image_surface_get_width(surface);
-  height = cairo_image_surface_get_height(surface);
   format = cairo_image_surface_get_format(surface);
+  get_actual_cairo_size(cr, &width, &height);
 
   switch (format)
   {
@@ -782,8 +791,8 @@ void Style::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
 {
   double x  = 0.0;
   double y  = 0.0;
-  double w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h  = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   /*double xt = 0.0;
     double yt = 0.0;*/
 
@@ -830,8 +839,11 @@ void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
 {
   double x  = 2.0;
   double y  = 2.0;
-  double w  = cairo_image_surface_get_width(cairo_get_target(cr)) - 4.0;
-  double h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  w -= 4.0;
+  h -= 4.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -1212,8 +1224,10 @@ void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
 {
   double   x  = 0.0;
   double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -1446,9 +1460,7 @@ void Style::Impl::Text(cairo_t*    cr,
   gchar*                fontName    = NULL;
   //double                horizMargin = 10.0;
 
-  w = cairo_image_surface_get_width(cairo_get_target(cr));
-  h = cairo_image_surface_get_height(cairo_get_target(cr));
-
+  get_actual_cairo_size(cr, &w, &h);
   w -= 2 * horizMargin;
 
   if (!screen)
@@ -1577,6 +1589,8 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   const unsigned char* data       = NULL;
   int                  width      = 0;
   int                  height     = 0;
+  double               w_scale    = 0;
+  double               h_scale    = 0;
   int                  stride     = 0;
   unsigned char*       buffer     = NULL;
   cairo_surface_t*     surface    = NULL;
@@ -1586,9 +1600,9 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   // aquire info about image-surface
   target = cairo_get_target(cr);
   data   = cairo_image_surface_get_data(target);
-  width  = cairo_image_surface_get_width(target);
-  height = cairo_image_surface_get_height(target);
   stride = cairo_image_surface_get_stride(target);
+  get_actual_cairo_size(cr, &width, &height);
+  cairo_surface_get_device_scale(target, &w_scale, &h_scale);
   cairo_format_t format = cairo_image_surface_get_format(target);
 
   // get buffer
@@ -1621,6 +1635,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   }
 
   // blur and blend overlay onto initial image-surface
+  cairo_surface_set_device_scale(surface, w_scale, h_scale);
   Blur(blurred_cr, blurSize);
   cairo_set_source_surface(cr, surface, 0.0, 0.0);
   old = SetBlendMode(cr, mode);
@@ -1649,8 +1664,8 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
    garnish = GetButtonGarnishSize();
 
   //ButtonOutlinePath(cr, true);
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
 
@@ -1743,8 +1758,8 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   if (zeromargin == false)
     garnish = GetButtonGarnishSize();
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   double x = garnish;
   double y = garnish;
@@ -1854,8 +1869,8 @@ bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   nux::Color color(nux::color::White);
   color.alpha = alpha;
@@ -1891,10 +1906,11 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
     return false;
 
   //ButtonOutlinePathSegment(cr, segment);
-  double   x  = 0.0;
-  double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  double x  = 0.0;
+  double y  = 2.0;
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
 	if (segment == Segment::LEFT)
 	{
@@ -1969,8 +1985,9 @@ bool Style::MultiRangeFocusOverlay(cairo_t* cr,
 
   double   x  = 0.0;
   double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
   if (segment == Segment::LEFT)
   {
@@ -2062,8 +2079,8 @@ bool Style::SeparatorVert(cairo_t* cr)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   double x = w / 2.0;
   double y = 2.0;
 
@@ -2090,8 +2107,8 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   double x = 2.0;
   double y = h / 2.0;
 

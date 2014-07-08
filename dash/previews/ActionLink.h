@@ -47,7 +47,6 @@ public:
   nux::RWProperty<StaticCairoText::AlignState> text_aligment;
   nux::RWProperty<StaticCairoText::UnderlineState> underline_state;
   nux::RWProperty<std::string> font_hint;
-
   nux::Property<double> scale;
 
   void Activate() {}
