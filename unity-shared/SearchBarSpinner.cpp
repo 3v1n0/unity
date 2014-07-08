@@ -45,15 +45,18 @@ SearchBarSpinner::SearchBarSpinner()
 
   rotate_.Identity();
   rotate_.Rotate_z(0.0);
+  UpdateScale(scale);
 
-  scale.changed.connect([this] (double scale) {
-    SetMinMaxSize(RawPixel(magnify_->GetWidth()).CP(scale), RawPixel(magnify_->GetHeight()).CP(scale));
-    QueueDraw();
-  });
+  scale.changed.connect(sigc::mem_fun(this, &SearchBarSpinner::UpdateScale));
 }
 
-void
-SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void SearchBarSpinner::UpdateScale(double scale)
+{
+  SetMinMaxSize(RawPixel(magnify_->GetWidth()).CP(scale), RawPixel(magnify_->GetHeight()).CP(scale));
+  QueueDraw();
+}
+
+void SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
   nux::TexCoordXForm texxform;

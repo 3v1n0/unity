@@ -64,6 +64,7 @@ protected:
 
 private:
   bool OnFrameTimeout();
+  void UpdateScale(double);
 
   SpinnerState state_;
 
