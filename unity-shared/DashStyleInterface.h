@@ -48,7 +48,7 @@ public:
   virtual RawPixel GetCategoryHeaderLeftPadding() const = 0;
   virtual RawPixel GetPlacesGroupTopSpace() const = 0;
   virtual RawPixel GetPlacesGroupResultTopPadding() const = 0;
-  virtual RawPixel GetPlacesGroupResultLeftPadding() const = 0;  
+  virtual RawPixel GetPlacesGroupResultLeftPadding() const = 0;
 };
 
 }

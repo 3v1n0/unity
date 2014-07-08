@@ -24,7 +24,6 @@
 
 #include "LockScreenSettings.h"
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/DashStyle.h"
 #include "unity-shared/TextInput.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/RawPixel.h"

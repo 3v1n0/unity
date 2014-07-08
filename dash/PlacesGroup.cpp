@@ -158,11 +158,10 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  _header_layout->SetLeftAndRightPadding(_style.GetCategoryHeaderLeftPadding(), 0);
+  _header_layout->SetLeftAndRightPadding(_style.GetCategoryHeaderLeftPadding().CP(scale), 0);
   _header_view->SetLayout(_header_layout);
 
-  RawPixel const icon_size = _style.GetCategoryIconSize();
-  _icon = new IconTexture("", icon_size.CP(scale()));
+  _icon = new IconTexture("", _style.GetCategoryIconSize().CP(scale));
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -223,17 +222,16 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
 void
 PlacesGroup::UpdatePlacesGroupSize()
 {
-   RawPixel const icon_size = _style.GetCategoryIconSize();
-   RawPixel const group_top = _style.GetPlacesGroupTopSpace();
+   int icon_size = _style.GetCategoryIconSize().CP(scale);
+   int top_space = _style.GetPlacesGroupTopSpace().CP(scale);
 
-   int top_space = group_top.CP(scale());
    _space_layout->SetMinimumSize(top_space, top_space);
    _space_layout->SetMaximumSize(top_space, top_space);
 
   _header_layout->SetSpaceBetweenChildren(SPACE_BETWEEN_CHILDREN.CP(scale()));
-  _header_layout->SetLeftAndRightPadding(RawPixel(_style.GetCategoryHeaderLeftPadding()).CP(scale), 0);
+  _header_layout->SetLeftAndRightPadding(_style.GetCategoryHeaderLeftPadding().CP(scale), 0);
 
-  _icon->SetMinMaxSize(icon_size.CP(scale()), icon_size.CP(scale()));
+  _icon->SetMinMaxSize(icon_size, icon_size);
 
   _text_layout->SetHorizontalInternalMargin(TEXT_INTERNAL_MARGIN.CP(scale()));
   _expand_layout->SetHorizontalInternalMargin(EXPAND_INTERNAL_MARGIN.CP(scale()));
@@ -242,14 +240,12 @@ PlacesGroup::UpdatePlacesGroupSize()
 void
 PlacesGroup::UpdateScale(double scale)
 {
-  RawPixel const icon_size = _style.GetCategoryIconSize();
-
   _name->SetMinimumSize(nux::AREA_MIN_WIDTH, nux::AREA_MIN_HEIGHT);
   _name->SetMaximumSize(nux::AREA_MAX_WIDTH, nux::AREA_MAX_HEIGHT);
   _name->SetScale(scale);
   _expand_label->SetScale(scale);
 
-  _icon->SetSize(icon_size.CP(scale));
+  _icon->SetSize(_style.GetCategoryIconSize().CP(scale));
   _icon->ReLoadIcon();
 
   auto const& arrow = _expand_icon->texture();
@@ -313,7 +309,7 @@ PlacesGroup::GetExpandLabel()
 void
 PlacesGroup::SetIcon(std::string const& path_to_emblem)
 {
-  _icon->SetByIconName(path_to_emblem, RawPixel(_style.GetCategoryIconSize()).CP(scale));
+  _icon->SetByIconName(path_to_emblem, _style.GetCategoryIconSize().CP(scale));
 }
 
 void
@@ -321,11 +317,8 @@ PlacesGroup::UpdateResultViewPadding()
 {
   if (_child_layout)
   {
-    RawPixel const result_top_padding  = _style.GetPlacesGroupResultTopPadding();
-    RawPixel const result_left_padding = _style.GetPlacesGroupResultLeftPadding();
-
-    _child_layout->SetTopAndBottomPadding(result_top_padding.CP(scale()), 0);
-    _child_layout->SetLeftAndRightPadding(result_left_padding.CP(scale()), 0);
+    _child_layout->SetTopAndBottomPadding(_style.GetPlacesGroupResultTopPadding().CP(scale), 0);
+    _child_layout->SetLeftAndRightPadding(_style.GetPlacesGroupResultLeftPadding().CP(scale), 0);
   }
 }
 

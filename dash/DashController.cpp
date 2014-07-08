@@ -468,8 +468,8 @@ nux::Geometry Controller::GetInputWindowGeometry()
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
 
   nux::Geometry geo(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
-  geo.width += style.GetDashRightTileWidth();
-  geo.height += style.GetDashBottomTileHeight();
+  geo.width += style.GetDashRightTileWidth().CP(view_->scale());
+  geo.height += style.GetDashBottomTileHeight().CP(view_->scale());
   return geo;
 }
 
