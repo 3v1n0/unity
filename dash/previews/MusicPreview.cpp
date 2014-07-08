@@ -283,8 +283,8 @@ void MusicPreview::PreLayoutManagement()
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    int action_width = CLAMP((details_width - style.GetSpaceBetweenActions()) /
-      2, 0, style.GetActionButtonMaximumWidth());
+    int action_width = CLAMP(RawPixel((details_width - style.GetSpaceBetweenActions()) /
+      2), 0_em, style.GetActionButtonMaximumWidth());
     // do not use SetMinMax because width has to be able to grow
     button->SetMinimumWidth(action_width);
     button->SetMinimumHeight(style.GetActionButtonHeight());
