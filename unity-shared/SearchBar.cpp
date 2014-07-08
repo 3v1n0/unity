@@ -42,6 +42,7 @@ const double DEFAULT_SCALE = 1.0;
 const float DEFAULT_ICON_OPACITY = 1.0f;
 const int DEFAULT_LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
+const int CORNER_RADIUS = 5;
 
 const RawPixel SPACE_BETWEEN_SPINNER_AND_TEXT    =  5_em;
 const RawPixel SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10_em;
@@ -540,7 +541,6 @@ void SearchBar::SetSearchFinished()
 
 void SearchBar::UpdateBackground(bool force)
 {
-  RawPixel const RADIUS = 5;
   nux::Geometry geo(GetGeometry());
   geo.width = layered_layout_->GetAbsoluteX() +
               layered_layout_->GetAbsoluteWidth() -
@@ -563,12 +563,13 @@ void SearchBar::UpdateBackground(bool force)
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, last_width_, last_height_);
   cairo_t* cr = cairo_graphics.GetInternalContext();
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
 
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
                                       0.5, 0.5,
-                                      RADIUS.CP(scale()),
-                                      last_width_ - 1, last_height_ - 1,
+                                      CORNER_RADIUS,
+                                      (last_width_/scale) - 1, (last_height_/scale) - 1,
                                       false);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
