@@ -290,7 +290,7 @@ RawPixel Style::GetRatingWidgetHeight() const
 
 RawPixel Style::GetStatusIconSize() const
 {
-  return 12_em;
+  return 10_em;
 }
 
 std::string Style::payment_title_font() const
