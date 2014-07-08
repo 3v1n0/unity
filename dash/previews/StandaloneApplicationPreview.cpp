@@ -162,9 +162,9 @@ void TestRunner::Init ()
     description << "Application description " << i << std::endl;
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
@@ -207,10 +207,10 @@ void TestRunner::NavRight()
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
-  glib::Object<GIcon> iconHint4(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint4(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
@@ -259,9 +259,9 @@ void TestRunner::NavLeft()
   The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
    // creates a generic preview object
-    glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-    glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-    glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+    glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
+    glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
+    glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
 
     GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));

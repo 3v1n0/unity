@@ -157,7 +157,7 @@ void TestRunner::Init ()
   const char* description = "Lorem ipsum dolor sit amet, id eruditi referrentur cum, et est enim persequeris. Munere docendi intellegebat pro id, nam no delenit facilisis similique, ut usu eros aliquando. Electram postulant accusamus ut ius, cum ad impedit facilis mediocrem. At cum tamquam.";
 
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/sunflower.jpg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
   glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/icons/unity-icon-theme/places/svg/service-twitter.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
@@ -191,7 +191,7 @@ void TestRunner::NavRight()
 
  // creates a generic preview object
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/astronaut.jpg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
@@ -226,7 +226,7 @@ void TestRunner::NavLeft()
   const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
 
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/soccerball.png", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
