@@ -35,8 +35,16 @@ namespace unity
 DECLARE_LOGGER(logger, "unity.overlayrenderer");
 namespace
 {
-const int INNER_CORNER_RADIUS = 5;
+const RawPixel INNER_CORNER_RADIUS = 5_em;
 const int EXCESS_BORDER = 10;
+
+const nux::Color LINE_COLOR = nux::color::White * 0.07f;
+const RawPixel GRADIENT_HEIGHT = 50_em;
+const RawPixel VERTICAL_PADDING = 20_em;
+
+// Now that we mask the corners of the dash,
+// draw longer lines to fill the minimal gaps
+const RawPixel CORNER_OVERLAP = 3_em;
 }
 
 // Impl class
@@ -88,6 +96,7 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
   : visible(false)
   , parent(parent_)
 {
+  parent_->scale = 1.0;
   UpdateTextures();
 }
 
@@ -427,6 +436,7 @@ void OverlayRenderer::UpdateBlurBackgroundSize(nux::Geometry const& content_geo,
 void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry, bool force_edges)
 {
   nux::Geometry geo(content_geo);
+  double scale = parent->scale;
 
   nux::Geometry larger_content_geo = content_geo;
   nux::Geometry larger_absolute_geo = absolute_geo;
@@ -480,32 +490,22 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   gfx_context.GetRenderStates().SetBlend(true);
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  const double line_opacity = 0.1f;
-  const int gradient_height = 50;
-  const int vertical_padding = 20;
-
-  // Now that we mask the corners of the dash,
-  // draw longer lines to fill the minimal gaps
-  const int corner_overlap = 3;
-
-  nux::Color line_color = nux::color::White * line_opacity;
-
   // Vertical lancher/dash separator
   nux::GetPainter().Paint2DQuadColor(gfx_context,
                                      nux::Geometry(geometry.x,
-                                     geometry.y + vertical_padding,
-                                     style.GetVSeparatorSize(),
-                                     gradient_height),
+                                       geometry.y + VERTICAL_PADDING.CP(scale),
+                                       style.GetVSeparatorSize().CP(scale),
+                                       GRADIENT_HEIGHT.CP(scale)),
                                      nux::color::Transparent,
-                                     line_color * 0.7f, // less opacity
-                                     line_color * 0.7f, // less opacity
+                                     LINE_COLOR,
+                                     LINE_COLOR,
                                      nux::color::Transparent);
   nux::GetPainter().Draw2DLine(gfx_context,
                                geometry.x,
-                               geometry.y + vertical_padding + gradient_height,
-                               style.GetVSeparatorSize(),
-                               geometry.y + content_geo.height + INNER_CORNER_RADIUS + corner_overlap,
-                               line_color * 0.7f); // less opacity
+                               geometry.y + VERTICAL_PADDING.CP(scale) + GRADIENT_HEIGHT.CP(scale),
+                               style.GetVSeparatorSize().CP(scale),
+                               geometry.y + content_geo.height + INNER_CORNER_RADIUS.CP(scale) + CORNER_OVERLAP.CP(scale),
+                               LINE_COLOR);
 
   //Draw the background
   bg_darken_layer_->SetGeometry(larger_content_geo);
@@ -925,9 +925,7 @@ void OverlayRendererImpl::DrawContentCleanup(nux::GraphicsEngine& gfx_context, n
 
 OverlayRenderer::OverlayRenderer()
   : pimpl_(new OverlayRendererImpl(this))
-{
-
-}
+{}
 
 
 OverlayRenderer::~OverlayRenderer()
