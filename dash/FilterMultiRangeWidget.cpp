@@ -67,6 +67,9 @@ FilterMultiRangeWidget::FilterMultiRangeWidget(NUX_FILE_LINE_DECL)
 
   scale.changed.connect([this] (double scale) {
     if (all_button_) all_button_->scale = scale;
+
+    for (auto const& button : buttons_)
+      button->scale = scale;
   });
 }
 
@@ -94,7 +97,7 @@ void FilterMultiRangeWidget::SetFilter(Filter::Ptr const& filter)
   };
   show_button_func(filter_->show_all_button);
   filter_->show_all_button.changed.connect(show_button_func);
-  
+
   expanded = !filter_->collapsed();
 
   filter_->option_added.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::OnOptionAdded));
@@ -158,6 +161,7 @@ void FilterMultiRangeWidget::OnActiveChanged(bool value)
 void FilterMultiRangeWidget::OnOptionAdded(FilterOption::Ptr const& new_filter)
 {
   FilterMultiRangeButtonPtr button(new FilterMultiRangeButton(NUX_TRACKER_LOCATION));
+  button->scale = scale();
   button->SetFilter(new_filter);
   layout_->AddView(button.GetPointer());
   buttons_.push_back(button);
