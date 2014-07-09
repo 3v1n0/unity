@@ -87,6 +87,8 @@ public:
 
     for (auto* area : GetChildren())
       static_cast<previews::Preview*>(area)->scale = scale;
+
+    QueueDraw();
   }
 
   // From debug::Introspectable
