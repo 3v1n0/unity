@@ -28,7 +28,7 @@ namespace dash
 {
 namespace
 {
-const RawPixel MIN_BUTTON_HEIGHT = 30_em;
+const RawPixel BUTTON_HEIGHT = 30_em;
 const RawPixel MIN_BUTTON_WIDTH  = 48_em;
 const int FONT_SIZE_PX = 15; // 15px == 11pt
 }
@@ -82,7 +82,10 @@ void FilterBasicButton::InitTheme()
   focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &FilterBasicButton::RedrawFocusOverlay)));
 
   SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
-  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(scale));
+  ApplyMinWidth();
+
+  SetMinimumHeight(BUTTON_HEIGHT.CP(scale));
+  SetMaximumHeight(BUTTON_HEIGHT.CP(scale));
 }
 
 void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
