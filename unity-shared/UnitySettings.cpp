@@ -163,9 +163,9 @@ public:
     if (raw_from_factor == 0) //Automatic
     {
       auto uscreen = UScreen::GetDefault();
-      int primary_monitor = uscreen->GetMonitorWithMouse();
+      int primary_monitor = uscreen->GetPrimaryMonitor();
       auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
-      double monitor_scaling = parent_->em(primary_monitor)->DPIScale();
+      double monitor_scaling = em(primary_monitor)->DPIScale();
 
       new_form_factor = (geo.height * monitor_scaling) >= MINIMUM_DESKTOP_HEIGHT ? FormFactor::DESKTOP : FormFactor::NETBOOK;
     }
@@ -239,6 +239,17 @@ public:
   void UpdateCursorScaleFactor()
   {
     cursor_scale_ = g_settings_get_double(ui_settings_, CURSOR_SCALE_FACTOR.c_str());
+  }
+
+  EMConverter::Ptr const& em(int monitor) const
+  {
+    if (monitor < 0 || monitor >= (int)monitors::MAX)
+    {
+      LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning index 0 monitor instead.";
+      return em_converters_[0];
+    }
+
+    return em_converters_[monitor];
   }
 
   void UpdateDPI()
@@ -363,13 +374,7 @@ void Settings::SetLowGfxMode(const bool low_gfx)
 
 EMConverter::Ptr const& Settings::em(int monitor) const
 {
-  if (monitor < 0 || monitor >= (int)monitors::MAX)
-  {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning index 0 monitor instead.";
-    return pimpl->em_converters_[0];
-  }
-
-  return pimpl->em_converters_[monitor];
+  return pimpl->em(monitor);
 }
 
 void Settings::SetLauncherWidth(int launcher_width, int monitor)
