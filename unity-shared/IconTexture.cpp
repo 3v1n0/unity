@@ -243,16 +243,10 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
       texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
-      texxform.u0 = 0;
-      texxform.v0 = 0;
-      texxform.u1 = imageDest.width;
-      texxform.v1 = imageDest.height;
-
-      int border_width = 1;
-      GfxContext.QRP_1Tex(geo.x + (float(geo.GetWidth() - imageDest.GetWidth()) / 2) + border_width,
-                          geo.y + (float(geo.GetHeight() - imageDest.GetHeight()) / 2) + border_width,
-                          imageDest.width - (border_width * 2),
-                          imageDest.height - (border_width * 2),
+      GfxContext.QRP_1Tex(geo.x + (float(geo.GetWidth() - imageDest.GetWidth()) / 2),
+                          geo.y + (float(geo.GetHeight() - imageDest.GetHeight()) / 2),
+                          imageDest.width,
+                          imageDest.height,
                           _texture_cached.GetPointer()->GetDeviceTexture(),
                           texxform,
                           col);

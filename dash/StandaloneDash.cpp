@@ -90,8 +90,6 @@ void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
 
 int main(int argc, char **argv)
 {
-  nux::WindowThread* wt = NULL;
-
   gtk_init (&argc, &argv);
 
   unity::BGHash bghash;
@@ -122,16 +120,13 @@ int main(int argc, char **argv)
     std::cerr << "Got error when parsing arguments: " << err << std::endl;
 
   TestRunner *test_runner = new TestRunner(scope.Str(), scale);
-  wt = nux::CreateGUIThread(TEXT("Unity Dash"),
-                            WIDTH.CP(scale), HEIGHT.CP(scale),
-                            0,
-                            &TestRunner::InitWindowThread,
-                            test_runner);
+  std::unique_ptr<nux::WindowThread> wt(nux::CreateGUIThread(TEXT("Unity Dash"),
+                                        WIDTH.CP(scale), HEIGHT.CP(scale),
+                                        0, &TestRunner::InitWindowThread, test_runner));
 
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller(tick_source);
+  wt->Run(nullptr);
 
-  wt->Run (NULL);
-  delete wt;
-  return 0;
+  return EXIT_SUCCESS;
 }

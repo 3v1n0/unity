@@ -39,11 +39,13 @@
 #include "PreviewContainer.h"
 
 
-#define WIDTH 972
-#define HEIGHT 452
+const unity::RawPixel WIDTH(1000);
+const unity::RawPixel HEIGHT(600);
 
 using namespace unity;
 using namespace unity::dash;
+
+static double scale = 1.0;
 
 class DummyView : public nux::View
 {
@@ -146,6 +148,7 @@ void TestRunner::Init ()
   container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
   container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
   container_->request_close.connect([this]() { exit(0); });
+  container_->scale = scale;
 
   DummyView* dummyView = new DummyView(container_.GetPointer());
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -162,9 +165,9 @@ void TestRunner::Init ()
     description << "Application description " << i << std::endl;
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
@@ -207,10 +210,10 @@ void TestRunner::NavRight()
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
-  glib::Object<GIcon> iconHint4(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint4(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
@@ -259,9 +262,9 @@ void TestRunner::NavLeft()
   The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
    // creates a generic preview object
-    glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-    glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-    glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+    glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
+    glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
+    glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
 
     GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
@@ -317,10 +320,22 @@ int main(int argc, char **argv)
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
   unity::ThumbnailGenerator thumbnail_generator;
+  unity::glib::Error err;
+
+  GOptionEntry args_parsed[] =
+  {
+    { "scaling-factor", 's', 0, G_OPTION_ARG_DOUBLE, &scale, "The dash scaling factor", "F" },
+    { NULL }
+  };
+
+  std::shared_ptr<GOptionContext> ctx(g_option_context_new("Unity Preview"), g_option_context_free);
+  g_option_context_add_main_entries(ctx.get(), args_parsed, NULL);
+  if (!g_option_context_parse(ctx.get(), &argc, &argv, &err))
+    std::cerr << "Got error when parsing arguments: " << err << std::endl;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),
-                            WIDTH, HEIGHT,
+                            WIDTH.CP(scale), HEIGHT.CP(scale),
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
