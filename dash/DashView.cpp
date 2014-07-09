@@ -36,7 +36,6 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/PreviewStyle.h"
-#include "unity-shared/RawPixel.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"

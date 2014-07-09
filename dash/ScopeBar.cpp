@@ -27,7 +27,6 @@
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/RawPixel.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity

@@ -31,7 +31,6 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/RawPixel.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
