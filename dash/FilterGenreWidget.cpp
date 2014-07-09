@@ -65,6 +65,10 @@ FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
   }
 
   SetContents(genre_layout_);
+
+  scale.changed.connect([this] (double scale) {
+    if (all_button_) all_button_->scale = scale;
+  });
 }
 
 FilterGenre::~FilterGenre()
@@ -81,11 +85,14 @@ void FilterGenre::SetFilter(Filter::Ptr const& filter)
     all_button_ = show_all_button ? new FilterAllButton(NUX_TRACKER_LOCATION) : nullptr;
     SetRightHandView(all_button_);
     if (all_button_)
+    {
+      all_button_->scale = scale();
       all_button_->SetFilter(filter_);
+    }
   };
   show_button_func(filter_->show_all_button);
   filter_->show_all_button.changed.connect(show_button_func);
-  
+
   expanded = !filter_->collapsed();
 
   filter_->option_added.connect(sigc::mem_fun(this, &FilterGenre::OnOptionAdded));

@@ -60,6 +60,10 @@ FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
 
   layout->AddView(ratings_);
 
+  scale.changed.connect([this] (double scale) {
+    if (all_button_) all_button_->scale = scale;
+  });
+
   SetContents(layout);
 }
 
@@ -77,7 +81,10 @@ void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
     all_button_ = show_all_button ? new FilterAllButton(NUX_TRACKER_LOCATION) : nullptr;
     SetRightHandView(all_button_);
     if (all_button_)
+    {
+      all_button_->scale = scale();
       all_button_->SetFilter(filter_);
+    }
   };
   show_button_func(filter_->show_all_button);
   filter_->show_all_button.changed.connect(show_button_func);
