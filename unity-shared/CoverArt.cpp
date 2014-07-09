@@ -43,6 +43,7 @@ DECLARE_LOGGER(logger, "unity.dash.previews.coverart");
 namespace
 {
 const RawPixel ICON_SIZE = 256_em;
+const RawPixel THUMBNAIL_SIZE = 512_em;
 const int IMAGE_TIMEOUT = 30;
 }
 
@@ -136,7 +137,7 @@ void CoverArt::SetImage(std::string const& image_hint)
 
 void CoverArt::GenerateImage(std::string const& uri)
 {
-  notifier_ = ThumbnailGenerator::Instance().GetThumbnail(uri, 512);
+  notifier_ = ThumbnailGenerator::Instance().GetThumbnail(uri, THUMBNAIL_SIZE.CP(scale));
   if (notifier_)
   {
     StartWaiting();
@@ -146,7 +147,7 @@ void CoverArt::GenerateImage(std::string const& uri)
   else
   {
     StopWaiting();
-    SetNoImageAvailable();    
+    SetNoImageAvailable();
   }
 }
 
@@ -170,7 +171,7 @@ void CoverArt::StartWaiting()
     SetNoImageAvailable();
     return false;
   }));
-  
+
   QueueDraw();
 }
 
@@ -188,7 +189,7 @@ void CoverArt::SetNoImageAvailable()
     GetLayout()->RemoveChildObject(overlay_text_);
     GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));
     ComputeContentSize();
-    
+
     QueueDraw();
   }
 }
@@ -223,7 +224,7 @@ void CoverArt::IconLoaded(std::string const& texid,
     GetLayout()->RemoveChildObject(overlay_text_);
 
   if (pixbuf_width == pixbuf_height)
-  {    
+  {
     // quick path for square icons
     texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
@@ -353,7 +354,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
       if (image_aspect > base_apsect)
       {
         imageDest.SetHeight(float(imageDest.GetWidth()) / image_aspect);
-      } 
+      }
       if (image_aspect < base_apsect)
       {
         imageDest.SetWidth(image_aspect * imageDest.GetHeight());
@@ -364,15 +365,9 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
       imageDest = nux::Geometry(0, 0, texture_screenshot_->GetWidth(), texture_screenshot_->GetHeight());
     }
 
-
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
     texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
-
-    texxform.u0 = 0;
-    texxform.v0 = 0;
-    texxform.u1 = imageDest.width;
-    texxform.v1 = imageDest.height;
 
     gfx_engine.QRP_1Tex(base.x + (float(base.GetWidth() - imageDest.GetWidth()) / 2),
                         base.y + (float(base.GetHeight() - imageDest.GetHeight()) / 2),
@@ -387,15 +382,15 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
     if (waiting_)
     {
       nux::TexCoordXForm texxform;
-      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-      texxform.min_filter = nux::TEXFILTER_LINEAR;
-      texxform.mag_filter = nux::TEXFILTER_LINEAR;
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
+      texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+      texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
-      nux::Geometry spin_geo(base.x + ((base.width - spin_->GetWidth()) / 2),
-                             base.y + ((base.height - spin_->GetHeight()) / 2),
-                             spin_->GetWidth(),
-                             spin_->GetHeight());
+      nux::Size spin_size(RawPixel(spin_->GetWidth()).CP(scale), RawPixel(spin_->GetHeight()).CP(scale));
+      nux::Geometry spin_geo(base.x + ((base.width - spin_size.width) / 2),
+                             base.y + ((base.height - spin_size.height) / 2),
+                             spin_size.width,
+                             spin_size.height);
       // Geometry (== Rect) uses integers which were rounded above,
       // hence an extra 0.5 offset for odd sizes is needed
       // because pure floating point is not being used.
@@ -429,7 +424,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
       }
     }
   }
-  
+
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
   if (GetLayout())
