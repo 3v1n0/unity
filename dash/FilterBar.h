@@ -42,7 +42,6 @@ class FilterBar : public nux::View, public debug::Introspectable
   NUX_DECLARE_OBJECT_TYPE(FilterBar, nux::View);
 public:
   FilterBar(NUX_FILE_LINE_PROTO);
-  ~FilterBar();
 
   nux::Property<double> scale;
 
@@ -62,7 +61,6 @@ protected:
   virtual void AddProperties(debug::IntrospectionData&);
 
 private:
-  void Init();
   void UpdateScale(double scale);
 
   FilterFactory factory_;
