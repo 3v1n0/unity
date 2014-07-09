@@ -71,6 +71,9 @@ void ScopeBar::UpdateScale(double scale)
 
   for (auto icon : icons_)
     icon->scale = scale;
+
+  QueueDraw();
+  QueueRelayout();
 }
 
 void ScopeBar::SetupLayout()
