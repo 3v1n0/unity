@@ -38,7 +38,6 @@ const unsigned DEFAULT_SEARCH_WAIT = 300;
 const RawPixel OFFSET_X = 10_em;
 const RawPixel OFFSET_Y = 15_em;
 const RawPixel WIDTH = 620_em;
-const RawPixel HEIGHT = 42_em;
 
 // For some reason std::to_lower or boost::to_lower_copy doesn't seem to handle well utf8
 std::string casefold_copy(std::string const& str)
@@ -58,7 +57,8 @@ Filter::Filter()
   auto const& cv = settings.em(monitor);
 
   search_bar_ = SearchBar::Ptr(new SearchBar());
-  search_bar_->SetMinMaxSize(WIDTH.CP(cv), HEIGHT.CP(cv));
+  search_bar_->SetMinimumWidth(WIDTH.CP(cv));
+  search_bar_->SetMaximumWidth(WIDTH.CP(cv));
   search_bar_->scale = cv->DPIScale();
   search_bar_->live_search_wait = DEFAULT_SEARCH_WAIT;
   text.SetGetterFunction([this] { return search_bar_->search_string(); });

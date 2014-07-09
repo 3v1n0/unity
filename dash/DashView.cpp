@@ -606,12 +606,7 @@ void DashView::UpdateDashViewSize()
   layout_->SetTopAndBottomPadding(style.GetHSeparatorSize().CP(scale), 0);
 
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding().CP(scale), 0);
-
   search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding().CP(scale), 0);
-
-  int search_bar_height = style.GetSearchBarHeight().CP(scale);
-  search_bar_->SetMinimumHeight(search_bar_height);
-  search_bar_->SetMaximumHeight(search_bar_height);
 }
 
 void DashView::SetupUBusConnections()
