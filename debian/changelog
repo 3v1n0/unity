@@ -1,3 +1,28 @@
+unity (7.3.0+14.10.20140708-0ubuntu1) utopic; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Stephen M. Webb ]
+  * reduce the scope of the kill command when restarting compiz (LP:
+    #1324114)
+
+  [ Eleni Maria Stea ]
+  * Changed the PreviewStyle.h/cpp to use em sizes (RawPixel).
+  * Added scale factor to Preview (base class), preview container and to
+    the components they contain.
+  * Scaled the ApplicationPreview and the containing widgets and
+    components.
+  * Scaled GenericPreview and its widgets.
+  * scaled ErrorPreview
+  * Scaled MoviePreview and widgets
+
+  [ Pawel Szubert ]
+  * reduce the scope of the kill command when restarting compiz (LP:
+    #1324114)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 08 Jul 2014 14:35:37 +0000
+
 unity (7.3.0+14.10.20140619-0ubuntu1) utopic; urgency=low
 
   [ Stephen M. Webb ]
