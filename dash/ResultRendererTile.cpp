@@ -31,7 +31,6 @@
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/TextureCache.h"
-#include "unity-shared/RawPixel.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity

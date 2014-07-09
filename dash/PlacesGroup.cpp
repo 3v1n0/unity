@@ -33,7 +33,6 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/RawPixel.h"
 
 #include "ResultView.h"
 #include "ResultViewGrid.h"

@@ -22,7 +22,6 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/RawPixel.h"
 #include "FilterExpanderLabel.h"
 
 namespace unity
