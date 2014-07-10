@@ -170,20 +170,20 @@ public:
   BaseTexturePtr const& GetCategoryBackground() const;
   BaseTexturePtr const& GetCategoryBackgroundNoFilters() const;
 
-  BaseTexturePtr const& GetDashBottomTile() const;
-  BaseTexturePtr const& GetDashBottomTileMask() const;
-  BaseTexturePtr const& GetDashRightTile() const;
-  BaseTexturePtr const& GetDashRightTileMask() const;
+  BaseTexturePtr GetDashBottomTile(double scale) const;
+  BaseTexturePtr GetDashBottomTileMask(double scale) const;
+  BaseTexturePtr GetDashRightTile(double scale) const;
+  BaseTexturePtr GetDashRightTileMask(double scale) const;
+  BaseTexturePtr GetDashLeftTile(double scale) const;
+  BaseTexturePtr GetDashTopTile(double scale) const;
+
   BaseTexturePtr const& GetDashCorner() const;
   BaseTexturePtr const& GetDashCornerMask() const;
   BaseTexturePtr const& GetDashFullscreenIcon() const;
-  BaseTexturePtr const& GetDashLeftEdge() const;
   BaseTexturePtr const& GetDashLeftCorner() const;
   BaseTexturePtr const& GetDashLeftCornerMask() const;
-  BaseTexturePtr const& GetDashLeftTile() const;
   BaseTexturePtr const& GetDashTopCorner() const;
   BaseTexturePtr const& GetDashTopCornerMask() const;
-  BaseTexturePtr const& GetDashTopTile() const;
 
   RawPixel GetDashBottomTileHeight() const;
   RawPixel GetDashRightTileWidth() const;
