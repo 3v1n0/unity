@@ -142,6 +142,8 @@ void FilterMultiRangeButton::InitTheme()
 
   SetMinimumHeight(Style::Instance().GetFilterButtonHeight().CP(scale) + (3_em).CP(scale));
   theme_init_ = true;
+
+  QueueDraw();
 }
 
 void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
