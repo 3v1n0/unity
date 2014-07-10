@@ -27,6 +27,7 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/GraphicsUtils.h"
 #include "PreviewNavigator.h"
 #include <boost/math/constants/constants.hpp>
@@ -51,8 +52,6 @@ const int ANIM_DURATION_LONG = 500;
 const int PREVIEW_SPINNER_WAIT = 2000;
 
 const std::string ANIMATION_IDLE = "animation-idle";
-
-const RawPixel SPIN_ICON_SIZE = 32_em;
 const RawPixel CHILDREN_SPACE = 6_em;
 }
 
@@ -77,13 +76,13 @@ public:
       UpdateAnimationProgress(progress_, curve_progress_);
     });
 
-    spin_ = Style::Instance().GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
+    spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
     scale.changed.connect(sigc::mem_fun(this, &PreviewContent::UpdateScale));
   }
 
   void UpdateScale(double scale)
   {
-    spin_ = Style::Instance().GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
+    spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
 
     for (auto* area : GetChildren())
       static_cast<previews::Preview*>(area)->scale = scale;

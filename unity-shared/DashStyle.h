@@ -189,10 +189,10 @@ public:
 
   BaseTexturePtr const& GetDashShine() const;
 
-  BaseTexturePtr const& GetSearchMagnifyIcon() const;
-  BaseTexturePtr const& GetSearchCircleIcon() const;
-  BaseTexturePtr const& GetSearchCloseIcon() const;
-  BaseTexturePtr const& GetSearchSpinIcon() const;
+  BaseTexturePtr GetSearchMagnifyIcon(double scale) const;
+  BaseTexturePtr GetSearchCircleIcon(double scale) const;
+  BaseTexturePtr GetSearchCloseIcon(double scale) const;
+  BaseTexturePtr GetSearchSpinIcon(double scale) const;
 
   BaseTexturePtr const& GetGroupUnexpandIcon() const;
   BaseTexturePtr const& GetGroupExpandIcon() const;

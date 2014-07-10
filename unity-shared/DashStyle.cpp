@@ -228,11 +228,6 @@ struct Style::Impl : sigc::trackable
 
   LazyLoadTexture dash_shine_;
 
-  LazyLoadTexture search_magnify_texture_;
-  LazyLoadTexture search_circle_texture_;
-  LazyLoadTexture search_close_texture_;
-  LazyLoadTexture search_spin_texture_;
-
   LazyLoadTexture information_texture_;
 
   LazyLoadTexture refine_gradient_corner_;
@@ -261,10 +256,6 @@ Style::Impl::Impl(Style* owner)
   , category_texture_("/category_gradient.png")
   , category_texture_no_filters_("/category_gradient_no_refine.png")
   , dash_shine_("/dash_sheen.png")
-  , search_magnify_texture_("/search_magnify.png")
-  , search_circle_texture_("/search_circle.svg", 32)
-  , search_close_texture_("/search_close.svg", 32)
-  , search_spin_texture_("/search_spin.svg", 32)
   , information_texture_("/information_icon.svg")
   , refine_gradient_corner_("/refine_gradient_corner.png")
   , refine_gradient_dash_("/refine_gradient_dash.png")
@@ -2160,6 +2151,26 @@ BaseTexturePtr Style::GetDashTopCorner(double scale) const
 BaseTexturePtr Style::GetDashTopCornerMask(double scale) const
 {
   return pimpl->LoadScaledTexture("dash_top_right_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetSearchMagnifyIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_magnify.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchCircleIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_circle.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchCloseIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_close.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchSpinIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_spin.svg", scale);
 }
 
 

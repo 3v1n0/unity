@@ -68,10 +68,10 @@ private:
 
   SpinnerState state_;
 
-  nux::BaseTexture* magnify_;
-  nux::BaseTexture* circle_;
-  nux::BaseTexture* close_;
-  nux::BaseTexture* spin_;
+  nux::ObjectPtr<nux::BaseTexture> magnify_;
+  nux::ObjectPtr<nux::BaseTexture> circle_;
+  nux::ObjectPtr<nux::BaseTexture> close_;
+  nux::ObjectPtr<nux::BaseTexture> spin_;
 
   glib::Source::UniquePtr spinner_timeout_;
   glib::Source::UniquePtr frame_timeout_;

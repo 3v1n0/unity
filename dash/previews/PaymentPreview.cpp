@@ -23,6 +23,7 @@
 #include <NuxCore/Logger.h>
 #include "PaymentPreview.h"
 #include "unity-shared/CoverArt.h"
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/PreviewStyle.h"
 
 namespace unity
@@ -56,6 +57,8 @@ class OverlaySpinner : public unity::debug::Introspectable, public nux::View
 public:
   OverlaySpinner();
 
+  nux::Property<double> scale;
+
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -70,7 +73,7 @@ protected:
 private:
   bool OnFrameTimeout();
 
-  nux::BaseTexture* spin_;
+  nux::ObjectPtr<nux::BaseTexture> spin_;
 
   glib::Source::UniquePtr frame_timeout_;
 
@@ -81,15 +84,19 @@ private:
 NUX_IMPLEMENT_OBJECT_TYPE(OverlaySpinner);
 
 OverlaySpinner::OverlaySpinner()
-  : nux::View(NUX_TRACKER_LOCATION),
-    rotation_(0.0f)
+  : nux::View(NUX_TRACKER_LOCATION)
+  , scale(1.0)
+  , rotation_(0.0f)
 {
-  previews::Style& style = dash::previews::Style::Instance();
-
-  spin_ = style.GetSearchSpinIcon();
+  spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
 
   rotate_.Identity();
   rotate_.Rotate_z(0.0);
+
+  scale.changed.connect([this] (double scale) {
+    spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
+    QueueDraw();
+  });
 }
 
 void OverlaySpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -366,6 +373,7 @@ void PaymentPreview::SetupViews()
   overlay_layout_->AddView(calculating_, 0, nux::MINOR_POSITION_CENTER);
   overlay_layout_->AddView(spinner_, 1, nux::MINOR_POSITION_CENTER);
   overlay_layout_->AddSpace(OVERLAY_LAYOUT_SPACE.CP(scale), 1);
+  scale.changed.connect([this, spinner_] (double scale) { spinner_->scale = scale; });
 
   full_data_layout_->AddLayout(overlay_layout_.GetPointer());
 
