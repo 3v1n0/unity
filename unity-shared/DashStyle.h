@@ -177,13 +177,12 @@ public:
   BaseTexturePtr GetDashLeftTile(double scale) const;
   BaseTexturePtr GetDashTopTile(double scale) const;
 
-  BaseTexturePtr const& GetDashCorner() const;
-  BaseTexturePtr const& GetDashCornerMask() const;
-  BaseTexturePtr const& GetDashFullscreenIcon() const;
-  BaseTexturePtr const& GetDashLeftCorner() const;
-  BaseTexturePtr const& GetDashLeftCornerMask() const;
-  BaseTexturePtr const& GetDashTopCorner() const;
-  BaseTexturePtr const& GetDashTopCornerMask() const;
+  BaseTexturePtr GetDashCorner(double scale) const;
+  BaseTexturePtr GetDashCornerMask(double scale) const;
+  BaseTexturePtr GetDashLeftCorner(double scale) const;
+  BaseTexturePtr GetDashLeftCornerMask(double scale) const;
+  BaseTexturePtr GetDashTopCorner(double scale) const;
+  BaseTexturePtr GetDashTopCornerMask(double scale) const;
 
   RawPixel GetDashBottomTileHeight() const;
   RawPixel GetDashRightTileWidth() const;

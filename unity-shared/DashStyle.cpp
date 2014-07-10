@@ -225,13 +225,6 @@ struct Style::Impl : sigc::trackable
 
   LazyLoadTexture category_texture_;
   LazyLoadTexture category_texture_no_filters_;
-  LazyLoadTexture dash_corner_texture_;
-  LazyLoadTexture dash_corner_texture_mask_;
-  LazyLoadTexture dash_fullscreen_icon_;
-  LazyLoadTexture dash_left_corner_;
-  LazyLoadTexture dash_left_corner_mask_;
-  LazyLoadTexture dash_top_corner_;
-  LazyLoadTexture dash_top_corner_mask_;
 
   LazyLoadTexture dash_shine_;
 
@@ -267,13 +260,6 @@ Style::Impl::Impl(Style* owner)
   , text_height_(0)
   , category_texture_("/category_gradient.png")
   , category_texture_no_filters_("/category_gradient_no_refine.png")
-  , dash_corner_texture_("/dash_bottom_right_corner.png")
-  , dash_corner_texture_mask_("/dash_bottom_right_corner_mask.png")
-  , dash_fullscreen_icon_("/dash_fullscreen_icon.png")
-  , dash_left_corner_("/dash_bottom_left_corner.png")
-  , dash_left_corner_mask_("/dash_bottom_left_corner_mask.png")
-  , dash_top_corner_("/dash_top_right_corner.png")
-  , dash_top_corner_mask_("/dash_top_right_corner_mask.png")
   , dash_shine_("/dash_sheen.png")
   , search_magnify_texture_("/search_magnify.png")
   , search_circle_texture_("/search_circle.svg", 32)
@@ -2146,6 +2132,37 @@ BaseTexturePtr Style::GetDashTopTile(double scale) const
   return pimpl->LoadScaledTexture("dash_top_tile.png", scale);
 }
 
+BaseTexturePtr Style::GetDashCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_right_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_right_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_left_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_left_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashTopCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_top_right_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashTopCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_top_right_corner_mask.png", scale);
+}
+
+
 RawPixel Style::GetButtonGarnishSize() const
 {
   int maxBlurSize = 0;
@@ -2234,61 +2251,6 @@ BaseTexturePtr const& Style::GetCategoryBackground() const
 BaseTexturePtr const& Style::GetCategoryBackgroundNoFilters() const
 {
   return pimpl->category_texture_no_filters_.texture(); 
-}
-
-BaseTexturePtr const& Style::GetDashCorner() const
-{
-  return pimpl->dash_corner_texture_.texture();
-}
-
-BaseTexturePtr const& Style::GetDashCornerMask() const
-{
-  return pimpl->dash_corner_texture_mask_.texture();
-}
-
-BaseTexturePtr const& Style::GetDashLeftCorner() const
-{
-  return pimpl->dash_left_corner_.texture();
-}
-
-BaseTexturePtr const& Style::GetDashLeftCornerMask() const
-{
-  return pimpl->dash_left_corner_mask_.texture();
-}
-
-BaseTexturePtr const& Style::GetDashTopCorner() const
-{
-  return pimpl->dash_top_corner_.texture();
-}
-
-BaseTexturePtr const& Style::GetDashTopCornerMask() const
-{
-  return pimpl->dash_top_corner_mask_.texture();
-}
-
-BaseTexturePtr const& Style::GetDashFullscreenIcon() const
-{
-  return pimpl->dash_fullscreen_icon_.texture();
-}
-
-BaseTexturePtr const& Style::GetSearchMagnifyIcon() const
-{
-  return pimpl->search_magnify_texture_.texture();
-}
-
-BaseTexturePtr const& Style::GetSearchCircleIcon() const
-{
-  return pimpl->search_circle_texture_.texture();
-}
-
-BaseTexturePtr const& Style::GetSearchCloseIcon() const
-{
-  return pimpl->search_close_texture_.texture();
-}
-
-BaseTexturePtr const& Style::GetSearchSpinIcon() const
-{
-  return pimpl->search_spin_texture_.texture();
 }
 
 BaseTexturePtr const& Style::GetInformationTexture() const
