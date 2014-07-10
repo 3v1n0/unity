@@ -63,9 +63,7 @@ RatingsButton::RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_DECL)
   key_nav_focus_activate.connect([this](nux::Area*) { SetRating(static_cast<float>(focused_star_+1)/NUM_STARS); });
   key_down.connect(sigc::mem_fun(this, &RatingsButton::OnKeyDown));
 
-  scale.changed.connect([this] (double scale) {
-    QueueDraw();
-  });
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &RatingsButton::QueueDraw)));
 }
 
 void RatingsButton::SetEditable(bool editable)
