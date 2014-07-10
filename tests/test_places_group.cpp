@@ -89,6 +89,15 @@ public:
 
     ON_CALL(dash_style_, GetPlacesGroupTopSpace())
          .WillByDefault(Return(7_em));
+
+    ON_CALL(dash_style_, GetCategoryIconSize())
+         .WillByDefault(Return(0_em));
+
+    ON_CALL(dash_style_, GetPlacesGroupResultTopPadding())
+         .WillByDefault(Return(0_em));
+
+    ON_CALL(dash_style_, GetPlacesGroupResultLeftPadding())
+         .WillByDefault(Return(0_em));
   }
 
   NiceMock<MockDashStyle> dash_style_;
