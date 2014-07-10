@@ -38,10 +38,10 @@ SearchBarSpinner::SearchBarSpinner()
 {
   dash::Style& style = dash::Style::Instance();
 
-  magnify_ = style.GetSearchMagnifyIcon();
-  circle_ = style.GetSearchCircleIcon();
-  close_ = style.GetSearchCloseIcon();
-  spin_ = style.GetSearchSpinIcon();
+  magnify_ = style.GetSearchMagnifyIcon().GetPointer();
+  circle_ = style.GetSearchCircleIcon().GetPointer();
+  close_ = style.GetSearchCloseIcon().GetPointer();
+  spin_ = style.GetSearchSpinIcon().GetPointer();
 
   rotate_.Identity();
   rotate_.Rotate_z(0.0);

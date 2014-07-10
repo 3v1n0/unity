@@ -452,7 +452,7 @@ void CoverArt::SetupViews()
   overlay_text_->SetText(_("No Image Available"));
 
   dash::Style& style = dash::Style::Instance();
-  spin_ = style.GetSearchSpinIcon();
+  spin_ = style.GetSearchSpinIcon().GetPointer();
 
   rotate_matrix_.Identity();
   rotate_matrix_.Rotate_z(0.0);

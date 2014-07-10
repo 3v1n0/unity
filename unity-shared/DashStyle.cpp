@@ -48,8 +48,6 @@
 
 #define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
 
-typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
-
 namespace unity
 {
 namespace dash
@@ -106,7 +104,7 @@ class LazyLoadTexture
 {
 public:
   LazyLoadTexture(std::string const& filename, int size = -1);
-  nux::BaseTexture* texture();
+  BaseTexturePtr const& texture();
 private:
   void LoadTexture();
 private:
@@ -2205,147 +2203,147 @@ RawPixel Style::GetTextLineHeight() const
 }
 
 
-nux::BaseTexture* Style::GetCategoryBackground()
+BaseTexturePtr const& Style::GetCategoryBackground() const
 {
   return pimpl->category_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetCategoryBackgroundNoFilters()
+BaseTexturePtr const& Style::GetCategoryBackgroundNoFilters() const
 {
   return pimpl->category_texture_no_filters_.texture(); 
 }
 
-nux::BaseTexture* Style::GetDashBottomTile()
+BaseTexturePtr const& Style::GetDashBottomTile() const
 {
   return pimpl->dash_bottom_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetDashBottomTileMask()
+BaseTexturePtr const& Style::GetDashBottomTileMask() const
 {
   return pimpl->dash_bottom_texture_mask_.texture();
 }
 
-nux::BaseTexture* Style::GetDashRightTile()
+BaseTexturePtr const& Style::GetDashRightTile() const
 {
   return pimpl->dash_right_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetDashRightTileMask()
+BaseTexturePtr const& Style::GetDashRightTileMask() const
 {
   return pimpl->dash_right_texture_mask_.texture();
 }
 
-nux::BaseTexture* Style::GetDashCorner()
+BaseTexturePtr const& Style::GetDashCorner() const
 {
   return pimpl->dash_corner_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetDashCornerMask()
+BaseTexturePtr const& Style::GetDashCornerMask() const
 {
   return pimpl->dash_corner_texture_mask_.texture();
 }
 
-nux::BaseTexture* Style::GetDashLeftEdge()
+BaseTexturePtr const& Style::GetDashLeftEdge() const
 {
   return pimpl->dash_left_edge_.texture();
 }
 
-nux::BaseTexture* Style::GetDashLeftCorner()
+BaseTexturePtr const& Style::GetDashLeftCorner() const
 {
   return pimpl->dash_left_corner_.texture();
 }
 
-nux::BaseTexture* Style::GetDashLeftCornerMask()
+BaseTexturePtr const& Style::GetDashLeftCornerMask() const
 {
   return pimpl->dash_left_corner_mask_.texture();
 }
 
-nux::BaseTexture* Style::GetDashLeftTile()
+BaseTexturePtr const& Style::GetDashLeftTile() const
 {
   return pimpl->dash_left_tile_.texture();
 }
 
-nux::BaseTexture* Style::GetDashTopCorner()
+BaseTexturePtr const& Style::GetDashTopCorner() const
 {
   return pimpl->dash_top_corner_.texture();
 }
 
-nux::BaseTexture* Style::GetDashTopCornerMask()
+BaseTexturePtr const& Style::GetDashTopCornerMask() const
 {
   return pimpl->dash_top_corner_mask_.texture();
 }
 
-nux::BaseTexture* Style::GetDashTopTile()
+BaseTexturePtr const& Style::GetDashTopTile() const
 {
   return pimpl->dash_top_tile_.texture();
 }
 
-nux::BaseTexture* Style::GetDashFullscreenIcon()
+BaseTexturePtr const& Style::GetDashFullscreenIcon() const
 {
   return pimpl->dash_fullscreen_icon_.texture();
 }
 
-nux::BaseTexture* Style::GetSearchMagnifyIcon()
+BaseTexturePtr const& Style::GetSearchMagnifyIcon() const
 {
   return pimpl->search_magnify_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetSearchCircleIcon()
+BaseTexturePtr const& Style::GetSearchCircleIcon() const
 {
   return pimpl->search_circle_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetSearchCloseIcon()
+BaseTexturePtr const& Style::GetSearchCloseIcon() const
 {
   return pimpl->search_close_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetSearchSpinIcon()
+BaseTexturePtr const& Style::GetSearchSpinIcon() const
 {
   return pimpl->search_spin_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetInformationTexture()
+BaseTexturePtr const& Style::GetInformationTexture() const
 {
   return pimpl->information_texture_.texture(); 
 }
 
-nux::BaseTexture* Style::GetRefineTextureCorner()
+BaseTexturePtr const& Style::GetRefineTextureCorner() const
 {
   return pimpl->refine_gradient_corner_.texture();
 }
 
-nux::BaseTexture* Style::GetRefineTextureDash()
+BaseTexturePtr const& Style::GetRefineTextureDash() const
 {
   return pimpl->refine_gradient_dash_.texture(); 
 }
 
-nux::BaseTexture* Style::GetGroupUnexpandIcon()
+BaseTexturePtr const& Style::GetGroupUnexpandIcon() const
 {
   return pimpl->group_unexpand_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetGroupExpandIcon()
+BaseTexturePtr const& Style::GetGroupExpandIcon() const
 {
   return pimpl->group_expand_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarDeselectedIcon()
+BaseTexturePtr const& Style::GetStarDeselectedIcon() const
 {
   return pimpl->star_deselected_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarSelectedIcon()
+BaseTexturePtr const& Style::GetStarSelectedIcon() const
 {
   return pimpl->star_selected_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarHighlightIcon()
+BaseTexturePtr const& Style::GetStarHighlightIcon() const
 {
   return pimpl->star_highlight_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetDashShine()
+BaseTexturePtr const& Style::GetDashShine() const
 {
   return pimpl->dash_shine_.texture();
 }
@@ -2504,11 +2502,11 @@ LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
 {
 }
 
-nux::BaseTexture* LazyLoadTexture::texture()
+BaseTexturePtr const& LazyLoadTexture::texture()
 {
   if (!texture_)
     LoadTexture();
-  return texture_.GetPointer();
+  return texture_;
 }
 
 void LazyLoadTexture::LoadTexture()

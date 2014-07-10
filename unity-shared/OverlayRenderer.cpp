@@ -142,9 +142,9 @@ void OverlayRendererImpl::UpdateTextures()
   }
 
   bg_darken_layer_ = std::make_shared<nux::ColorLayer>(darken_colour, false, rop);
-  bg_shine_texture_ = unity::dash::Style::Instance().GetDashShine()->GetDeviceTexture();
+  bg_shine_texture_ = dash::Style::Instance().GetDashShine()->GetDeviceTexture();
 
-  nux::BaseTexture* bg_refine_tex = unity::dash::Style::Instance().GetRefineTextureDash();
+  auto const& bg_refine_tex = dash::Style::Instance().GetRefineTextureDash();
   if (bg_refine_tex)
   {
     rop.Blend = true;
@@ -544,9 +544,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       int gradien_width = std::min(bg_refine_gradient_->GetDeviceTexture()->GetWidth(), larger_content_geo.width);
       int gradien_height = std::min(bg_refine_gradient_->GetDeviceTexture()->GetHeight(), larger_content_geo.height);
 
-      nux::Geometry geo_refine(larger_content_geo.x + larger_content_geo.width - gradien_width, 
+      nux::Geometry geo_refine(larger_content_geo.x + larger_content_geo.width - gradien_width,
                                larger_content_geo.y,
-                               gradien_width, 
+                               gradien_width,
                                gradien_height);
 
       bg_refine_gradient_->SetGeometry(geo_refine);
@@ -566,18 +566,18 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
       dash::Style& style = dash::Style::Instance();
-      nux::BaseTexture* bottom = style.GetDashBottomTile();
-      nux::BaseTexture* bottom_mask = style.GetDashBottomTileMask();
-      nux::BaseTexture* right = style.GetDashRightTile();
-      nux::BaseTexture* right_mask = style.GetDashRightTileMask();
-      nux::BaseTexture* corner = style.GetDashCorner();
-      nux::BaseTexture* corner_mask = style.GetDashCornerMask();
-      nux::BaseTexture* left_corner = style.GetDashLeftCorner();
-      nux::BaseTexture* left_corner_mask = style.GetDashLeftCornerMask();
-      nux::BaseTexture* left_tile = style.GetDashLeftTile();
-      nux::BaseTexture* top_corner = style.GetDashTopCorner();
-      nux::BaseTexture* top_corner_mask = style.GetDashTopCornerMask();
-      nux::BaseTexture* top_tile = style.GetDashTopTile();
+      auto const& bottom = style.GetDashBottomTile();
+      auto const& bottom_mask = style.GetDashBottomTileMask();
+      auto const& right = style.GetDashRightTile();
+      auto const& right_mask = style.GetDashRightTileMask();
+      auto const& corner = style.GetDashCorner();
+      auto const& corner_mask = style.GetDashCornerMask();
+      auto const& left_corner = style.GetDashLeftCorner();
+      auto const& left_corner_mask = style.GetDashLeftCornerMask();
+      auto const& left_tile = style.GetDashLeftTile();
+      auto const& top_corner = style.GetDashTopCorner();
+      auto const& top_corner_mask = style.GetDashTopCornerMask();
+      auto const& top_tile = style.GetDashTopTile();
       nux::TexCoordXForm texxform;
 
       int left_corner_offset = 10;

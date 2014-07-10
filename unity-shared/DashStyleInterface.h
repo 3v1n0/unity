@@ -26,6 +26,7 @@
 namespace nux {
   class AbstractPaintLayer;
   class BaseTexture;
+  template <class T> class ObjectPtr;
 }
 
 namespace unity {
@@ -38,11 +39,11 @@ public:
 
   virtual nux::AbstractPaintLayer* FocusOverlay(int width, int height) = 0;
 
-  virtual nux::BaseTexture* GetCategoryBackground() = 0;
-  virtual nux::BaseTexture* GetCategoryBackgroundNoFilters() = 0;
+  virtual nux::ObjectPtr<nux::BaseTexture> const& GetCategoryBackground() const = 0;
+  virtual nux::ObjectPtr<nux::BaseTexture> const& GetCategoryBackgroundNoFilters() const = 0;
 
-  virtual nux::BaseTexture* GetGroupUnexpandIcon() = 0;
-  virtual nux::BaseTexture* GetGroupExpandIcon() = 0;
+  virtual nux::ObjectPtr<nux::BaseTexture> const& GetGroupUnexpandIcon() const = 0;
+  virtual nux::ObjectPtr<nux::BaseTexture> const& GetGroupExpandIcon() const = 0;
 
   virtual RawPixel GetCategoryIconSize() const = 0;
   virtual RawPixel GetCategoryHeaderLeftPadding() const = 0;

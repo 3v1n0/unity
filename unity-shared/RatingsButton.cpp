@@ -126,7 +126,7 @@ void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   for (int index = 0; index < NUM_STARS; ++index)
   {
     dash::Style& style = dash::Style::Instance();
-    nux::BaseTexture* texture = style.GetStarSelectedIcon();
+    auto texture = style.GetStarSelectedIcon();
     if (index < total_full_stars)
     {
       if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
