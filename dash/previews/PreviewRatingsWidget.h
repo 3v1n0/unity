@@ -45,7 +45,6 @@ class PreviewRatingsWidget : public debug::Introspectable, public nux::View
   NUX_DECLARE_OBJECT_TYPE(PreviewRatingsWidget, nux::View);
 public:
   PreviewRatingsWidget(NUX_FILE_LINE_PROTO);
-  virtual ~PreviewRatingsWidget();
 
   void SetRating(float rating);
   float GetRating() const;
