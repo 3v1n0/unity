@@ -3952,8 +3952,8 @@ void UnityScreen::initLauncher()
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
 
-    int launcher_width = w - 1;
-    Launcher const* const launcher = static_cast<Launcher*>(area);
+    auto* launcher = static_cast<Launcher*>(area);
+    int launcher_width = w - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
 
     unity::Settings::Instance().SetLauncherWidth(launcher_width, launcher->monitor);
     shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(launcher->monitor));
@@ -3970,7 +3970,6 @@ void UnityScreen::initLauncher()
   for (auto const& launcher : launcher_controller_->launchers())
   {
     launcher->size_changed.connect(on_launcher_size_changed);
-
     on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
   }
 
