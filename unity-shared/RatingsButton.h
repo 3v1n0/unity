@@ -64,7 +64,6 @@ private:
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void UpdateRatingToMouse(int x);
 
-
 protected:
   RawPixel star_size_;
   RawPixel star_gap_;

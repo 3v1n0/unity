@@ -59,6 +59,7 @@ RatingsButton::RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_DECL)
 
     QueueDraw();
   });
+
   key_nav_focus_activate.connect([this](nux::Area*) { SetRating(static_cast<float>(focused_star_+1)/NUM_STARS); });
   key_down.connect(sigc::mem_fun(this, &RatingsButton::OnKeyDown));
 
@@ -77,7 +78,7 @@ void RatingsButton::SetEditable(bool editable)
 
 void RatingsButton::SetRating(float rating)
 {
-  rating_  = rating;
+  rating_ = rating;
   QueueDraw();
 }
 
@@ -88,7 +89,7 @@ float RatingsButton::GetRating() const
 
 void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  int rating =  static_cast<int>(rating_ * NUM_STARS);
+  int rating =  static_cast<int>(GetRating() * NUM_STARS);
   // FIXME: 9/26/2011
   // We should probably support an API for saying whether the ratings
   // should or shouldn't support half stars...but our only consumer at
@@ -284,7 +285,7 @@ void RatingsButton::AddProperties(debug::IntrospectionData& introspection)
 {
   introspection
     .add(GetAbsoluteGeometry())
-    .add("rating", rating_)
+    .add("rating", GetRating())
     .add("focused-star", focused_star_)
     .add("editable", editable_);
 }
