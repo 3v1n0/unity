@@ -1,3 +1,29 @@
+unity (7.3.0+14.10.20140711-0ubuntu1) utopic; urgency=low
+
+  [ Eleni Maria Stea ]
+  * Previews: scale the dash preview contents to match current monitor
+    scaling Improved also the scaling of search-bar, spinner, categories
+    and many other components. (LP: #1339629)
+
+  [ Marco Trevisan (Treviño) ]
+  * Previews: scale the dash preview contents to match current monitor
+    scaling Improved also the scaling of search-bar, spinner, categories
+    and many other components. (LP: #1339629)
+  * DashStyle: return RawPixel's instead of integers for sizes, and
+    avoid duplication in code
+  * FilterWidgets: add support for scaling (LP: #1340171)
+  * OverlayRendering: correctly scale the overlays borders and edges to
+    match settings DashStyle has been modified to return smart pointers
+    of textures that are loaded depending on the scale level. The cache
+    will make sure that we don't duplicate the textures and that they
+    get removed when not needed anymore. Also thanks to this the
+    SearchBarSpinner textures (and the other spinners as well) uses the
+    SVGs scaled at the proper size (I desgined a new SVG for the
+    magnifier, as we only had a PNG). (LP: #1283415)
+  * Hud: scale to match current DPI settings for monitor (LP: #1340477)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Jul 2014 19:59:35 +0000
+
 unity (7.3.0+14.10.20140708-0ubuntu1) utopic; urgency=low
 
   [ Ubuntu daily release ]
