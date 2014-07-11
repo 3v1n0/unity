@@ -77,6 +77,13 @@ public:
   nux::Property<double> scale;
 
 protected:
+  struct ScrollView : nux::ScrollView
+  {
+    nux::RWProperty<double> scale;
+    ScrollView(NUX_FILE_LINE_PROTO);
+    using nux::ScrollView::SetVScrollBar;
+  };
+
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
 
