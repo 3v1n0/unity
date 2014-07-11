@@ -50,7 +50,7 @@ public:
 
   void SetSkipDraw(bool skip_draw);
 
-  nux::Property<std::string> label;
+  nux::ROProperty<std::string> label;
   nux::Property<bool> is_rounded;
   nux::Property<bool> fake_focused;
   nux::Property<double> scale;

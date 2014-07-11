@@ -55,6 +55,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(HudButton);
 
 HudButton::HudButton(NUX_FILE_LINE_DECL)
   : nux::Button(NUX_FILE_LINE_PARAM)
+  , label([this] { return query_ ? query_->formatted_text : ""; })
   , is_rounded(false)
   , fake_focused(false)
   , scale(1.0)
