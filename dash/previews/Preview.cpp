@@ -23,7 +23,6 @@
 #include "Preview.h"
 #include "TabIterator.h"
 #include "unity-shared/IntrospectableWrappers.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/CoverArt.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -312,22 +311,6 @@ void Preview::UpdateScale(double scale)
 
   QueueRelayout();
   QueueDraw();
-}
-
-
-Preview::ScrollView::ScrollView(NUX_FILE_LINE_DECL)
-  : nux::ScrollView(NUX_FILE_LINE_PARAM)
-{
-  auto* scrollbar = new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION);
-  SetVScrollBar(scrollbar);
-  scale.SetGetterFunction([scrollbar] { return scrollbar->scale(); });
-  scale.SetSetterFunction([scrollbar] (double scale) {
-    if (scrollbar->scale() == scale)
-      return false;
-
-    scrollbar->scale = scale;
-    return true;
-  });
 }
 
 } // preview

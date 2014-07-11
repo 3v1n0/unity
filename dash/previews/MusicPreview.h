@@ -24,6 +24,7 @@
 #define MUSICPREVIEW_H
 
 #include "Preview.h"
+#include "unity-shared/OverlayScrollView.h"
 #include "unity-shared/IconTexture.h"
 
 namespace unity
