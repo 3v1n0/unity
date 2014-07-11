@@ -45,8 +45,7 @@ void Icon::SetIcon(std::string const& icon_name, unsigned int icon_size, unsigne
   IconTexture::SetByIconName(icon_name, icon_size);
   icon_renderer_.SetTargetSize(tile_size, icon_size, 0);
 
-  SetMinimumHeight(tile_size + padding);
-  SetMinimumWidth(tile_size + padding);
+  SetMinMaxSize(tile_size + padding, tile_size + padding);
 }
 
 void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
