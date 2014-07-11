@@ -67,10 +67,10 @@ private:
 
   void OnMouseDown(int x, int y, unsigned int button_flags, unsigned int key_flags);
   void OnMouseUp(int x, int y, unsigned int button_flags, unsigned int key_flags);
-
   void OnMouseMove(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags);
-
   void OnMouseDrag(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags);
+  void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
+
   void MouseDraggingOverlay(int y, int dy);
 
   bool IsMouseInTopHalfOfThumb(int y);
