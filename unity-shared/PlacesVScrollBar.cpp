@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,44 +15,53 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include <Nux/Nux.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/RawPixel.h"
 #include "PlacesVScrollBar.h"
-
-using unity::texture_from_cairo_graphics;
 
 namespace unity
 {
 namespace dash
 {
+namespace
+{
+const RawPixel BUTTONS_HEIGHT = 15_em;
+const RawPixel WIDTH = 3_em;
+}
 
 PlacesVScrollBar::PlacesVScrollBar(NUX_FILE_LINE_DECL)
-  : VScrollBar(NUX_FILE_LINE_PARAM),
-    _slider_texture(NULL)
+  : nux::VScrollBar(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
 {
-  _scroll_up_button->SetMaximumHeight(15);
-  _scroll_up_button->SetMinimumHeight(15);
-
-  _scroll_down_button->SetMaximumHeight(15);
-  _scroll_down_button->SetMinimumHeight(15);
-
-  _slider->SetMinimumWidth(3);
-  _slider->SetMaximumWidth(3);
-  SetMinimumWidth(3);
-  SetMaximumWidth(3);
+  UpdateSize();
+  scale.changed.connect([this] (double scale) {
+    UpdateSize();
+    QueueRelayout();
+    QueueDraw();
+  });
 }
 
-PlacesVScrollBar::~PlacesVScrollBar()
+void PlacesVScrollBar::UpdateSize()
 {
-  if (_slider_texture)
-    _slider_texture->UnReference();
+  _scroll_up_button->SetMaximumHeight(BUTTONS_HEIGHT.CP(scale));
+  _scroll_up_button->SetMinimumHeight(BUTTONS_HEIGHT.CP(scale));
+
+  _scroll_down_button->SetMaximumHeight(BUTTONS_HEIGHT.CP(scale));
+  _scroll_down_button->SetMinimumHeight(BUTTONS_HEIGHT.CP(scale));
+
+  _slider->SetMinimumWidth(WIDTH.CP(scale));
+  _slider->SetMaximumWidth(WIDTH.CP(scale));
+  SetMinimumWidth(WIDTH.CP(scale));
+  SetMaximumWidth(WIDTH.CP(scale));
 }
 
-void
-PlacesVScrollBar::PreLayoutManagement()
+void PlacesVScrollBar::PreLayoutManagement()
 {
   nux::VScrollBar::PreLayoutManagement();
 }
@@ -69,8 +78,8 @@ PlacesVScrollBar::PostLayoutManagement(long LayoutResult)
 void
 PlacesVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  if(!RedirectedAncestor())
-  {  
+  if (!RedirectedAncestor())
+  {
     DrawScrollbar(graphics_engine);
   }
 }
@@ -78,15 +87,19 @@ PlacesVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 void
 PlacesVScrollBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  if(RedirectedAncestor())
-  {   
-    DrawScrollbar(graphics_engine); 
+  if (RedirectedAncestor())
+  {
+    DrawScrollbar(graphics_engine);
   }
 }
 
 void
 PlacesVScrollBar::DrawScrollbar(nux::GraphicsEngine& graphics_engine)
 {
+  // check if textures have been computed... if they haven't, exit function
+  if (!slider_texture_)
+    return;
+
   nux::Color color = nux::color::White;
   nux::Geometry const& base  = GetGeometry();
   nux::TexCoordXForm texxform;
@@ -95,9 +108,6 @@ PlacesVScrollBar::DrawScrollbar(nux::GraphicsEngine& graphics_engine)
   unsigned int alpha = 0, src = 0, dest = 0;
   graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
 
-  // check if textures have been computed... if they haven't, exit function
-  if (!_slider_texture)
-    return;
 
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
 
@@ -112,7 +122,7 @@ PlacesVScrollBar::DrawScrollbar(nux::GraphicsEngine& graphics_engine)
                         slider_geo.y,
                         slider_geo.width,
                         slider_geo.height,
-                        _slider_texture->GetDeviceTexture(),
+                        slider_texture_->GetDeviceTexture(),
                         texxform,
                         color);
   }
@@ -123,35 +133,26 @@ PlacesVScrollBar::DrawScrollbar(nux::GraphicsEngine& graphics_engine)
 
 void PlacesVScrollBar::UpdateTexture()
 {
-  nux::CairoGraphics* cairoGraphics = NULL;
-  cairo_t*            cr            = NULL;
-
   // update texture of slider
   int width  = _slider->GetBaseWidth();
   int height = _slider->GetBaseHeight();
-  cairoGraphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cairoGraphics->GetContext();
+
+  if (slider_texture_ && slider_texture_->GetWidth() == width && slider_texture_->GetHeight() == height)
+    return;
+
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  auto* cr = cg.GetContext();
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairoGraphics->DrawRoundedRectangle(cr,
-                                      1.0f,
-                                      0.0,
-                                      0.0,
-                                      1.5,
-                                      3.0,
-                                      (double) height - 3.0);
+  cg.DrawRoundedRectangle(cr, 1.0f, 0.0, 0.0, 1.5, 3.0, static_cast<double>(height)/scale() - 3.0);
   cairo_fill(cr);
 
-  if (_slider_texture)
-    _slider_texture->UnReference();
-  _slider_texture = texture_from_cairo_graphics(*cairoGraphics);
-
-  cairo_destroy(cr);
-  delete cairoGraphics;
+  slider_texture_ = texture_ptr_from_cairo_graphics(cg);
 }
 
 } // namespace dash
