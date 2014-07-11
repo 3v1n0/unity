@@ -365,7 +365,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
       imageDest = nux::Geometry(0, 0, texture_screenshot_->GetWidth(), texture_screenshot_->GetHeight());
     }
 
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
     texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
