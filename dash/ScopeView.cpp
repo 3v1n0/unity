@@ -29,7 +29,7 @@
 #include "ResultRendererHorizontalTile.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
+#include "unity-shared/OverlayScrollView.h"
 #include "unity-shared/GraphicsUtils.h"
 
 #include "config.h"
@@ -51,27 +51,14 @@ const double DEFAULT_SCALE         = 1.0;
 }
 
 // This is so we can access some protected members in scrollview.
-class ScopeScrollView: public nux::ScrollView
+class ScopeScrollView: public dash::ScrollView
 {
 public:
-  nux::RWProperty<double> scale;
-
-  ScopeScrollView(PlacesVScrollBar* scroll_bar, NUX_FILE_LINE_DECL)
-    : nux::ScrollView(NUX_FILE_LINE_PARAM)
+  ScopeScrollView(NUX_FILE_LINE_DECL)
+    : ScrollView(NUX_FILE_LINE_PARAM)
     , right_area_(nullptr)
     , up_area_(nullptr)
   {
-    scale.SetGetterFunction([scroll_bar] { return scroll_bar->scale(); });
-    scale.SetSetterFunction([scroll_bar] (double scale) {
-      if (scroll_bar->scale() == scale)
-        return false;
-
-      scroll_bar->scale = scale;
-      return true;
-    });
-
-    SetVScrollBar(scroll_bar);
-
     OnVisibleChanged.connect([this] (nux::Area* /*area*/, bool visible) {
       if (m_horizontal_scrollbar_enable)
         _hscrollbar->SetVisible(visible);
@@ -247,7 +234,7 @@ void ScopeView::SetupViews(nux::Area* show_filters)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new ScopeScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
+  scroll_view_ = new ScopeScrollView(NUX_TRACKER_LOCATION);
   scroll_view_->scale = scale();
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
@@ -263,7 +250,7 @@ void ScopeView::SetupViews(nux::Area* show_filters)
   no_results_->SetScale(scale);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
-  fscroll_view_ = new ScopeScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
+  fscroll_view_ = new ScopeScrollView(NUX_TRACKER_LOCATION);
   fscroll_view_->scale = scale();
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
