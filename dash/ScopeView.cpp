@@ -31,7 +31,6 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/RawPixel.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -277,19 +276,17 @@ void ScopeView::UpdateScopeViewSize()
 {
   dash::Style const& style = dash::Style::Instance();
 
-  RawPixel const scope_filter_space = style.GetSpaceBetweenScopeAndFilters();
-  RawPixel const right_padding      = style.GetFilterViewRightPadding();
-  RawPixel const filter_width       = style.GetFilterBarWidth() +
-                                      style.GetFilterBarLeftPadding() +
-                                      style.GetFilterBarRightPadding();
+  int right_padding = style.GetFilterViewRightPadding().CP(scale);
+  int filter_width  = style.GetFilterBarWidth().CP(scale) +
+                      style.GetFilterBarLeftPadding().CP(scale) +
+                      style.GetFilterBarRightPadding().CP(scale);
 
-  double scale = this->scale();
-  layout_->SetSpaceBetweenChildren(scope_filter_space.CP(scale));
+  layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenScopeAndFilters().CP(scale));
 
-  fscroll_view_->SetMinimumWidth(filter_width.CP(scale) + right_padding.CP(scale));
-  fscroll_view_->SetMaximumWidth(filter_width.CP(scale) + right_padding.CP(scale));
-  filter_bar_->SetMinimumWidth(filter_width.CP(scale));
-  filter_bar_->SetMaximumWidth(filter_width.CP(scale));
+  fscroll_view_->SetMinimumWidth(filter_width + right_padding);
+  fscroll_view_->SetMaximumWidth(filter_width + right_padding);
+  filter_bar_->SetMinimumWidth(filter_width);
+  filter_bar_->SetMaximumWidth(filter_width);
 }
 
 void ScopeView::UpdateScale(double scale)

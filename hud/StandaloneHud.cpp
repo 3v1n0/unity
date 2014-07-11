@@ -30,9 +30,12 @@
 #include "HudView.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/PanelStyle.h"
 #include <NuxCore/Logger.h>
 
 DECLARE_LOGGER(logger, "unity.tests.hud");
+
+using namespace unity;
 
 class TestRunner
 {
@@ -44,7 +47,6 @@ public:
   void Init ();
   nux::Layout *layout;
   unity::hud::View* hud_view_;
-  unity::Settings dash_settings_;
 
 private:
   unity::hud::Hud hud_service_;
@@ -64,7 +66,7 @@ void TestRunner::Init ()
   LOG_WARNING(logger) << "test init";
   layout = new nux::VLayout();
 
-  hud_view_ = new unity::hud::View();
+  hud_view_ = new hud::View();
 
   layout->AddView (hud_view_, 1, nux::MINOR_POSITION_START);
   nux::GetWindowCompositor().SetKeyFocusArea(hud_view_->default_focus());
@@ -135,15 +137,16 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
-  
+
   // Slightly higher as we're more likely to test things we know will fail
   nux::logging::configure_logging("unity.hud=debug");
-  
+
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   LOG_DEBUG(logger) << "starting the standalone hud";
   // The instances for the pseudo-singletons.
   unity::Settings settings;
-  unity::dash::Style dash_style;
+  panel::Style panel_style;
+  dash::Style dash_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Hud Prototype Test"),

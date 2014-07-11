@@ -36,7 +36,6 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/PreviewStyle.h"
-#include "unity-shared/RawPixel.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
@@ -493,6 +492,7 @@ void DashView::AboutToShow(int monitor)
 
   overlay_window_buttons_->Show();
 
+  renderer_.scale = scale();
   renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
   renderer_.AboutToShow();
 }
@@ -500,7 +500,7 @@ void DashView::AboutToShow(int monitor)
 void DashView::AboutToHide()
 {
   if (BackgroundEffectHelper::blur_type == BLUR_STATIC)
-  { 
+  {
     content_geo_ = {0, 0, 0, 0};
     renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
   }
@@ -589,6 +589,7 @@ void DashView::UpdateScale(double scale)
 
   search_bar_->scale = scale;
   scope_bar_->scale = scale;
+  renderer_.scale = scale;
 
   if (preview_container_)
     preview_container_->scale = scale;
@@ -600,21 +601,16 @@ void DashView::UpdateDashViewSize()
 {
   dash::Style const& style = dash::Style::Instance();
 
-  RawPixel const v_separator_size = style.GetVSeparatorSize();
-  RawPixel const h_separator_size = style.GetHSeparatorSize();
-  RawPixel const view_top_padding = style.GetDashViewTopPadding();
+  layout_->SetLeftAndRightPadding(style.GetVSeparatorSize().CP(scale), 0);
+  layout_->SetTopAndBottomPadding(style.GetHSeparatorSize().CP(scale), 0);
 
-  RawPixel const search_bar_left_padding = style.GetSearchBarLeftPadding();
-  RawPixel const search_bar_height       = style.GetSearchBarHeight();
+  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding().CP(scale), 0);
 
-  layout_->SetLeftAndRightPadding(v_separator_size.CP(scale), 0);
-  layout_->SetTopAndBottomPadding(h_separator_size.CP(scale), 0);
+  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding().CP(scale), 0);
 
-  content_layout_->SetTopAndBottomPadding(view_top_padding.CP(scale), 0);
-
-  search_bar_layout_->SetLeftAndRightPadding(search_bar_left_padding.CP(scale), 0);
-  search_bar_->SetMinimumHeight(search_bar_height.CP(scale));
-  search_bar_->SetMaximumHeight(search_bar_height.CP(scale));
+  int search_bar_height = style.GetSearchBarHeight().CP(scale);
+  search_bar_->SetMinimumHeight(search_bar_height);
+  search_bar_->SetMaximumHeight(search_bar_height);
 }
 
 void DashView::SetupUBusConnections()
@@ -635,7 +631,7 @@ void DashView::Relayout()
   content_geo_ = GetBestFitGeometry(geo);
   dash::Style& style = dash::Style::Instance();
 
-  RawPixel const top_padding = style.GetDashViewTopPadding();
+  int top_padding = style.GetDashViewTopPadding().CP(scale);
 
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
@@ -643,18 +639,17 @@ void DashView::Relayout()
   scopes_layout_->SetMaximumHeight (std::max(0, content_geo_.height -
                                                 search_bar_->GetGeometry().height -
                                                 scope_bar_->GetGeometry().height -
-                                                top_padding.CP(scale)));
+                                                top_padding));
 
   scopes_layout_->SetMinimumHeight (std::max(0, content_geo_.height -
                                                 search_bar_->GetGeometry().height -
                                                 scope_bar_->GetGeometry().height -
-                                                top_padding.CP(scale)));
+                                                top_padding));
 
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.y + content_geo_.height);
 
   // Minus the padding that gets added to the left
-  RawPixel const tile_width = style.GetTileWidth();
-  style.SetDefaultNColumns(floorf((content_geo_.width - (32_em).CP(scale)) / tile_width.CP(scale)));
+  style.columns_number = floorf((content_geo_.width - (32_em).CP(scale)) / style.GetTileWidth().CP(scale));
 
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
@@ -675,33 +670,24 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   int panel_height = renderer_.y_offset;
 
   int width = 0, height = 0;
-  RawPixel const tile_width  = style.GetTileWidth();
-  RawPixel const tile_height = style.GetTileHeight();
-  RawPixel const group_top_space    = style.GetPlacesGroupTopSpace();
-  RawPixel const category_icon_size = style.GetCategoryIconSize();
-  RawPixel const group_top_padding  = style.GetPlacesGroupResultTopPadding();
+  int tile_width = style.GetTileWidth().CP(scale);
 
-  int category_height = (group_top_space.CP(scale) + category_icon_size.CP(scale) +
-                         group_top_padding.CP(scale) + tile_height.CP(scale));
+  int category_height = (style.GetPlacesGroupTopSpace().CP(scale) +
+                         style.GetCategoryIconSize().CP(scale) +
+                         style.GetPlacesGroupResultTopPadding().CP(scale) +
+                         style.GetTileHeight().CP(scale));
 
   int half = for_geo.width / 2;
 
   // if default dash size is bigger than half a screens worth of items, go for that.
-  while ((width += tile_width.CP(scale)) < half)
-    ;
+  while ((width += tile_width) < half);
 
-  RawPixel const v_separator_size   = style.GetVSeparatorSize();
-  RawPixel const group_left_padding = style.GetPlacesGroupResultLeftPadding();
+  width = std::max(width, tile_width * DASH_TILE_HORIZONTAL_COUNT);
+  width += style.GetVSeparatorSize().CP(scale);
+  width += style.GetPlacesGroupResultLeftPadding().CP(scale) + DASH_RESULT_RIGHT_PAD.CP(scale);
 
-  width = std::max(width, tile_width.CP(scale) * DASH_TILE_HORIZONTAL_COUNT);
-  width += v_separator_size.CP(scale);
-  width += group_left_padding.CP(scale) + DASH_RESULT_RIGHT_PAD.CP(scale);
-
-  RawPixel const h_separator_size = style.GetHSeparatorSize();
-  RawPixel const top_padding      = style.GetDashViewTopPadding();
-
-  height = h_separator_size.CP(scale);
-  height += top_padding.CP(scale);
+  height = style.GetHSeparatorSize().CP(scale);
+  height += style.GetDashViewTopPadding().CP(scale);
   height += search_bar_->GetGeometry().height;
   height += category_height * DASH_DEFAULT_CATEGORY_COUNT; // adding three categories
   height += scope_bar_->GetGeometry().height;
@@ -1145,11 +1131,8 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
   if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
   {
     dash::Style& style = dash::Style::Instance();
-    RawPixel const right_title_width  = style.GetDashRightTileWidth();
-    RawPixel const bottom_title_width = style.GetDashBottomTileHeight();
-
-    geo.width  += right_title_width.CP(scale);
-    geo.height += bottom_title_width.CP(scale);
+    geo.width  += style.GetDashRightTileWidth().CP(scale);
+    geo.height += style.GetDashBottomTileHeight().CP(scale);
   }
 }
 
@@ -1509,9 +1492,6 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
   int num_rows = 1; // The search bar
   std::vector<bool> button_on_monitor;
 
-  RawPixel const right_title_width  = style.GetDashRightTileWidth();
-  RawPixel const bottom_title_width = style.GetDashBottomTileHeight();
-
   if (active_scope_view_.IsValid())
     num_rows += active_scope_view_->GetNumRows();
 
@@ -1530,8 +1510,8 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
   introspection.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height))
                .add("num_rows", num_rows)
                .add("form_factor", form_factor)
-               .add("right-border-width", right_title_width.CP(scale))
-               .add("bottom-border-height", bottom_title_width.CP(scale))
+               .add("right-border-width", style.GetDashRightTileWidth().CP(scale))
+               .add("bottom-border-height", style.GetDashBottomTileHeight().CP(scale))
                .add("preview_displaying", preview_displaying_)
                .add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_)
                .add("dash_maximized", style.always_maximised())

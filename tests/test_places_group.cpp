@@ -46,12 +46,12 @@ public:
   MOCK_METHOD0(GetGroupExpandIcon, nux::BaseTexture*());
   MOCK_METHOD0(GetGroupUnexpandIcon, nux::BaseTexture*());
 
-  MOCK_CONST_METHOD0(GetCategoryIconSize, int());
-  MOCK_CONST_METHOD0(GetCategoryHeaderLeftPadding, int());
+  MOCK_CONST_METHOD0(GetCategoryIconSize, RawPixel());
+  MOCK_CONST_METHOD0(GetCategoryHeaderLeftPadding, RawPixel());
 
-  MOCK_CONST_METHOD0(GetPlacesGroupTopSpace, int());
-  MOCK_CONST_METHOD0(GetPlacesGroupResultTopPadding, int());
-  MOCK_CONST_METHOD0(GetPlacesGroupResultLeftPadding, int());
+  MOCK_CONST_METHOD0(GetPlacesGroupTopSpace, RawPixel());
+  MOCK_CONST_METHOD0(GetPlacesGroupResultTopPadding, RawPixel());
+  MOCK_CONST_METHOD0(GetPlacesGroupResultLeftPadding, RawPixel());
 
   nux::ObjectPtr<nux::BaseTexture> base_texture_;
 };
@@ -85,10 +85,19 @@ public:
          .WillByDefault(Return(dash_style_.base_texture_.GetPointer()));
 
     ON_CALL(dash_style_, GetCategoryHeaderLeftPadding())
-         .WillByDefault(Return(19));
+         .WillByDefault(Return(19_em));
 
     ON_CALL(dash_style_, GetPlacesGroupTopSpace())
-         .WillByDefault(Return(7));
+         .WillByDefault(Return(7_em));
+
+    ON_CALL(dash_style_, GetCategoryIconSize())
+         .WillByDefault(Return(0_em));
+
+    ON_CALL(dash_style_, GetPlacesGroupResultTopPadding())
+         .WillByDefault(Return(0_em));
+
+    ON_CALL(dash_style_, GetPlacesGroupResultLeftPadding())
+         .WillByDefault(Return(0_em));
   }
 
   NiceMock<MockDashStyle> dash_style_;

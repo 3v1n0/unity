@@ -25,7 +25,6 @@
 #include <Nux/HLayout.h>
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
