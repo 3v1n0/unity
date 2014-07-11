@@ -19,32 +19,44 @@
 
 #include <Nux/Nux.h>
 
-#include "PlacesOverlayVScrollBar.h"
 #include "CairoTexture.h"
-
-namespace
-{
-  int const PROXIMITY = 7;
-  int const SCROLL_ANIMATION = 400;
-  int const MAX_CONNECTOR_ANIMATION = 200;
-}
+#include "PlacesOverlayVScrollBar.h"
+#include "RawPixel.h"
 
 namespace unity
 {
 namespace dash
 {
+namespace
+{
+  const RawPixel PROXIMITY = 7_em;
+  const int SCROLL_ANIMATION = 400;
+  const int MAX_CONNECTOR_ANIMATION = 200;
+  const nux::Color CONNECTOR_COLOR = nux::color::Gray;
+}
+
+class PlacesOverlayVScrollBar::ProximityArea : public nux::InputAreaProximity, public sigc::trackable
+{
+public:
+  ProximityArea(nux::InputArea* area, unsigned prox)
+    : nux::InputAreaProximity(area, prox)
+    , proximity([this] { return proximity_; }, [this] (unsigned px) { proximity_ = px; return false; })
+  {}
+
+  nux::RWProperty<unsigned> proximity;
+};
 
 PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   : PlacesVScrollBar(NUX_FILE_LINE_PARAM)
   , overlay_window_(new VScrollBarOverlayWindow(_track->GetAbsoluteGeometry()))
-  , area_prox_(this, PROXIMITY)
+  , area_prox_(std::make_shared<ProximityArea>(this, PROXIMITY.CP(scale)))
   , thumb_above_slider_(false)
   , connector_height_(0)
   , mouse_down_offset_(0)
   , delta_update_(0)
 {
-  area_prox_.mouse_near.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseNear));
-  area_prox_.mouse_beyond.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseBeyond));
+  area_prox_->mouse_near.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseNear));
+  area_prox_->mouse_beyond.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseBeyond));
 
   overlay_window_->mouse_enter.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseEnter));
   overlay_window_->mouse_leave.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseLeave));
@@ -58,6 +70,10 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   _track->geometry_changed.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnTrackGeometryChanged));
   OnVisibleChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnVisibilityChanged));
   OnSensitiveChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnSensitivityChanged));
+
+  scale.changed.connect([this] (double scale) {
+    area_prox_->proximity = PROXIMITY.CP(scale);
+  });
 }
 
 void PlacesOverlayVScrollBar::OnTrackGeometryChanged(nux::Area* /*area*/, nux::Geometry& /*geo*/)
@@ -410,30 +426,25 @@ void PlacesOverlayVScrollBar::UpdateConnectorTexture()
   if (connector_height_ < 0)
     return;
 
-  int width = 3;
+  int width = _slider->GetWidth();
   int height = connector_height_;
-  float const radius = 1.5f;
-  float const aspect = 1.0f;
 
-  cairo_t* cr = NULL;
-
-  nux::color::RedGreenBlue const& connector_bg = nux::color::Gray;
+  if (connector_texture_ && connector_texture_->GetWidth() == width && connector_texture_->GetHeight() == height)
+    return;
 
   nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cairoGraphics.GetInternalContext();
-  cairo_save(cr);
+  cairo_t* cr = cairoGraphics.GetInternalContext();
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_save(cr);
+  cairo_set_source_rgba(cr, CONNECTOR_COLOR.red, CONNECTOR_COLOR.green, CONNECTOR_COLOR.blue, 0.8);
+  cairo_rectangle(cr, 0, 0, static_cast<double>(width)/scale(), static_cast<double>(height)/scale());
+  cairo_fill(cr);
 
-  cairo_set_source_rgba(cr, connector_bg.red, connector_bg.green, connector_bg.blue, 0.8);
-  cairoGraphics.DrawRoundedRectangle(cr, aspect, 0.0f, 0.0f, radius, width, height);
-  cairo_fill_preserve(cr);
-
-  connector_texture_.Adopt(texture_from_cairo_graphics(cairoGraphics));
+  connector_texture_ = texture_ptr_from_cairo_graphics(cairoGraphics);
 
   QueueDraw();
 }
