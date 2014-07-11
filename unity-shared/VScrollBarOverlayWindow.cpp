@@ -31,15 +31,15 @@ namespace unity
 
 namespace
 {
-  int const THUMB_WIDTH = 21;
-  int const THUMB_HEIGHT = 68;
-  int const THUMB_RADIUS = 3;
-  int const ANIMATION_DURATION = 90;
+  const RawPixel THUMB_WIDTH = 21_em;
+  const RawPixel THUMB_HEIGHT = 68_em;
+  const int THUMB_RADIUS = 3;
+  const int ANIMATION_DURATION = 90;
 }
-
 
 VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
   : nux::BaseWindow("")
+  , scale(1.0)
   , content_size_(geo)
   , content_offset_x_(0)
   , mouse_offset_y_(0)
@@ -47,7 +47,7 @@ VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
   , current_action_(ThumbAction::NONE)
   , show_animator_(ANIMATION_DURATION)
 {
-  Area::SetGeometry(content_size_.x, content_size_.y, THUMB_WIDTH, content_size_.height);
+  Area::SetGeometry(content_size_.x, content_size_.y, THUMB_WIDTH.CP(scale), content_size_.height);
   SetBackgroundColor(nux::color::Transparent);
 
   show_animator_.updated.connect(sigc::mem_fun(this, &BaseWindow::SetOpacity));
@@ -58,6 +58,17 @@ VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
 
   SetOpacity(0.0f);
   UpdateTexture();
+
+  scale.changed.connect([this] (double scale) {
+    UpdateContentGeometry();
+    UpdateTexture();
+  });
+}
+
+void VScrollBarOverlayWindow::UpdateContentGeometry()
+{
+  UpdateMouseOffsetX();
+  Area::SetGeometry(content_size_.x + content_offset_x_, content_size_.y, THUMB_WIDTH.CP(scale), content_size_.height);
 }
 
 void VScrollBarOverlayWindow::UpdateGeometry(nux::Geometry const& geo)
@@ -67,9 +78,7 @@ void VScrollBarOverlayWindow::UpdateGeometry(nux::Geometry const& geo)
       content_size_.height != geo.height)
   {
     content_size_ = geo;
-    UpdateMouseOffsetX();
-
-    Area::SetGeometry(content_size_.x + content_offset_x_, content_size_.y, THUMB_WIDTH, content_size_.height);
+    UpdateContentGeometry();
   }
 }
 
@@ -91,8 +100,8 @@ int VScrollBarOverlayWindow::GetValidOffsetYValue(int new_offset) const
 {
   if (new_offset < 0)
     return 0;
-  else if (new_offset > content_size_.height - THUMB_HEIGHT)
-    return content_size_.height - THUMB_HEIGHT;
+  else if (new_offset > content_size_.height - THUMB_HEIGHT.CP(scale))
+    return content_size_.height - THUMB_HEIGHT.CP(scale);
 
   return new_offset;
 }
@@ -102,15 +111,15 @@ void VScrollBarOverlayWindow::UpdateMouseOffsetX()
   int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
   nux::Geometry const& geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
-  if (content_size_.x + THUMB_WIDTH > geo.x + geo.width)
-    content_offset_x_ = geo.x + geo.width - (content_size_.x + THUMB_WIDTH);
+  if (content_size_.x + THUMB_WIDTH.CP(scale) > geo.x + geo.width)
+    content_offset_x_ = geo.x + geo.width - (content_size_.x + THUMB_WIDTH.CP(scale));
   else
     content_offset_x_ = 0;
 }
 
 bool VScrollBarOverlayWindow::IsMouseInsideThumb(int y) const
 {
-  nux::Geometry const thumb(0, mouse_offset_y_, THUMB_WIDTH, THUMB_HEIGHT);
+  nux::Geometry const thumb(0, mouse_offset_y_, THUMB_WIDTH.CP(scale), THUMB_HEIGHT.CP(scale));
   return thumb.IsPointInside(0,y);
 }
 
@@ -121,7 +130,7 @@ bool VScrollBarOverlayWindow::IsMouseBeingDragged() const
 
 int VScrollBarOverlayWindow::GetThumbHeight() const
 {
-  return THUMB_HEIGHT;
+  return THUMB_HEIGHT.CP(scale);
 }
 
 int VScrollBarOverlayWindow::GetThumbOffsetY() const
@@ -133,7 +142,7 @@ nux::Geometry VScrollBarOverlayWindow::GetThumbGeometry() const
 {
   return nux::Geometry(content_size_.x + content_offset_x_,
                        content_size_.y + mouse_offset_y_,
-                       THUMB_WIDTH, THUMB_HEIGHT);
+                       THUMB_WIDTH.CP(scale), THUMB_HEIGHT.CP(scale));
 }
 
 void VScrollBarOverlayWindow::MouseDown()
@@ -267,7 +276,7 @@ void VScrollBarOverlayWindow::Draw(nux::GraphicsEngine& graphics_engine, bool fo
   if (!thumb_texture_)
     return;
 
-  nux::Geometry base(0, mouse_offset_y_, THUMB_WIDTH, THUMB_HEIGHT);
+  nux::Geometry base(0, mouse_offset_y_, THUMB_WIDTH.CP(scale), THUMB_HEIGHT.CP(scale));
   nux::TexCoordXForm texxform;
 
   graphics_engine.QRP_1Tex(base.x,
@@ -372,7 +381,7 @@ void DrawLineSeperator(cairo_t* cr, nux::color::RedGreenBlue const& top,
 }
 
 
-void DrawArrow (cairo_t* cr, nux::color::RedGreenBlue const& rgb, double x, double y, double width, double height)
+void DrawArrow(cairo_t* cr, nux::color::RedGreenBlue const& rgb, double x, double y, double width, double height)
 {
   cairo_save (cr);
 
@@ -417,36 +426,29 @@ void VScrollBarOverlayWindow::UpdateTexture()
 {
   int width  = THUMB_WIDTH;
   int height = THUMB_HEIGHT;
-  int radius = THUMB_RADIUS;
 
   float const aspect = 1.0f;
   float current_x = 0.0f;
   float current_y = 0.0f;
 
-  cairo_t*            cr            = NULL;
-  cairo_pattern_t*    pat           = NULL;
+  auto const& bg = nux::color::WhiteSmoke;
+  auto const& bg_selected = nux::color::White;
+  auto const& bg_active = nux::color::Gray;
+  auto const& arrow_color = nux::color::DarkSlateGray;
 
-  nux::color::RedGreenBlue const& bg = nux::color::WhiteSmoke;
-  nux::color::RedGreenBlue const& bg_selected = nux::color::White;
-  nux::color::RedGreenBlue const& bg_active = nux::color::Gray;
-  nux::color::RedGreenBlue const& arrow_color = nux::color::DarkSlateGray;
+  auto const& bg_arrow_up = ProduceColorShade(bg, 0.86);
+  auto const& bg_arrow_down = ProduceColorShade(bg, 1.1);
+  auto const& bg_shadow = ProduceColorShade(bg, 0.2);
 
-  nux::color::RedGreenBlue const& bg_arrow_up = ProduceColorShade(bg, 0.86);
-  nux::color::RedGreenBlue const& bg_arrow_down = ProduceColorShade(bg, 1.1);
-  nux::color::RedGreenBlue const& bg_shadow = ProduceColorShade(bg, 0.2);
+  auto const& bg_dark_line = ProduceColorShade(bg, 0.4);
+  auto const& bg_bright_line = ProduceColorShade(bg, 1.2);
 
-  nux::color::RedGreenBlue const& bg_dark_line = ProduceColorShade(bg, 0.4);
-  nux::color::RedGreenBlue const& bg_bright_line = ProduceColorShade(bg, 1.2);
-
-  nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cairoGraphics.GetInternalContext();
-
-  cairo_save(cr);
+  nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, THUMB_WIDTH.CP(scale), THUMB_HEIGHT.CP(scale));
+  cairo_t* cr = cairoGraphics.GetInternalContext();
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
-
-  cairo_save(cr);
 
   cairo_translate (cr, 0.5, 0.5);
   width--;
@@ -455,15 +457,14 @@ void VScrollBarOverlayWindow::UpdateTexture()
   cairo_set_line_width (cr, 1.0);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_save(cr);
 
   // Draw backgound
   SetSourceRGB(cr, bg, 1.0);
-  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius, width, height);
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, THUMB_RADIUS, width, height);
   cairo_fill_preserve(cr);
 
   // Draw shaded background
-  pat = cairo_pattern_create_linear(0, 0, 0, height);
+  cairo_pattern_t* pat = cairo_pattern_create_linear(0, 0, 0, height);
 
   PatternAddRGBStop(pat, bg_arrow_up, 0.0, 0.8);
   PatternAddRGBStop(pat, bg_arrow_down, 1.0, 0.8);
@@ -502,7 +503,7 @@ void VScrollBarOverlayWindow::UpdateTexture()
 
   current_x += 0.5;
   current_y += 0.5;
-  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius - 1, width - 1, height - 1);
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, THUMB_RADIUS - 1, width - 1, height - 1);
 
   if (HasState(ThumbState::INSIDE_SLIDER))
     SetSourceRGB(cr, bg_selected, 1.0);
@@ -545,12 +546,12 @@ void VScrollBarOverlayWindow::UpdateTexture()
 
   current_x += 0.5;
   current_y += 0.5;
-  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius, width- 2, height - 2);
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, THUMB_RADIUS, width- 2, height - 2);
   cairo_stroke(cr);
 
   current_x += 1.0;
   current_y += 1.0;
-  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius - 1, width - 4, height- 4);
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, THUMB_RADIUS - 1, width - 4, height- 4);
   SetSourceRGB(cr, bg_bright_line, 0.6);
   cairo_stroke(cr);
 
@@ -558,7 +559,7 @@ void VScrollBarOverlayWindow::UpdateTexture()
   DrawLineSeperator(cr, bg_dark_line, bg_bright_line, width, height);
   DrawBothArrows(cr, arrow_color, width, height);
 
-  thumb_texture_.Adopt(unity::texture_from_cairo_graphics(cairoGraphics));
+  thumb_texture_ = texture_ptr_from_cairo_graphics(cairoGraphics);
 
   QueueDraw();
 }

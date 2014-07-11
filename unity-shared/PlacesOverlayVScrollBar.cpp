@@ -58,6 +58,7 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   area_prox_->mouse_near.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseNear));
   area_prox_->mouse_beyond.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseBeyond));
 
+  overlay_window_->scale = scale();
   overlay_window_->mouse_enter.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseEnter));
   overlay_window_->mouse_leave.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseLeave));
   overlay_window_->mouse_down.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseDown));
@@ -73,6 +74,7 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
 
   scale.changed.connect([this] (double scale) {
     area_prox_->proximity = PROXIMITY.CP(scale);
+    overlay_window_->scale = scale;
   });
 }
 
