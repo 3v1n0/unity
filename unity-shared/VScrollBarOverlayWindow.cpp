@@ -49,6 +49,7 @@ VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
 {
   Area::SetGeometry(content_size_.x, content_size_.y, THUMB_WIDTH.CP(scale), content_size_.height);
   SetBackgroundColor(nux::color::Transparent);
+  SetAcceptMouseWheelEvent(true);
 
   show_animator_.updated.connect(sigc::mem_fun(this, &BaseWindow::SetOpacity));
   show_animator_.finished.connect([this] {
