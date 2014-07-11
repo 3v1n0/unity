@@ -36,10 +36,10 @@ namespace unity
 namespace lockscreen
 {
 
-Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, int monitor_num, bool is_primary)
+Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, nux::ObjectPtr<UserPromptView> const& prompt_view, int monitor_num, bool is_primary)
   : AbstractShield(session_manager, indicators, monitor_num, is_primary)
   , bg_settings_(std::make_shared<BackgroundSettings>())
-  , prompt_view_(nullptr)
+  , prompt_view_(prompt_view)
   , panel_view_(nullptr)
 {
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
@@ -99,6 +99,10 @@ void Shield::ShowPrimaryView()
 
   if (primary_layout_)
   {
+    if (prompt_view_ && prompt_view_->GetParentObject())
+      static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+    prompt_layout_->AddView(prompt_view_.GetPointer());
+
     SetLayout(primary_layout_.GetPointer());
     return;
   }
@@ -109,15 +113,16 @@ void Shield::ShowPrimaryView()
 
   main_layout->AddView(CreatePanel());
 
-  nux::HLayout* prompt_layout = new nux::HLayout();
-  prompt_layout->SetLeftAndRightPadding(2 * Settings::GRID_SIZE);
+  prompt_layout_ = new nux::HLayout();
+  prompt_layout_->SetLeftAndRightPadding(2 * Settings::GRID_SIZE);
 
-  prompt_view_ = CreatePromptView();
-  prompt_layout->AddView(prompt_view_);
+  if (prompt_view_ && prompt_view_->GetParentObject())
+    static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+  prompt_layout_->AddView(prompt_view_.GetPointer());
 
   // 10 is just a random number to center the prompt view.
   main_layout->AddSpace(0, 10);
-  main_layout->AddLayout(prompt_layout);
+  main_layout->AddLayout(prompt_layout_.GetPointer());
   main_layout->AddSpace(0, 10);
 }
 
@@ -173,20 +178,6 @@ Panel* Shield::CreatePanel()
   });
 
   return panel_view_;
-}
-
-UserPromptView* Shield::CreatePromptView()
-{
-  auto* prompt_view = new UserPromptView(session_manager_);
-
-  auto width = 8 * Settings::GRID_SIZE;
-  auto height = 3 * Settings::GRID_SIZE;
-
-  prompt_view->SetMinimumWidth(width);
-  prompt_view->SetMaximumWidth(width);
-  prompt_view->SetMinimumHeight(height);
-
-  return prompt_view;
 }
 
 nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long key_sym, unsigned long modifiers)

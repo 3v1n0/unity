@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
+#include "lockscreen/UserPromptView.h"
 #include "lockscreen/LockScreenController.h"
 
 #include <Nux/NuxTimerTickSource.h>
@@ -29,6 +30,7 @@ using namespace testing;
 
 #include "lockscreen/LockScreenSettings.h"
 #include "lockscreen/ScreenSaverDBusManager.h"
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
 #include "test_mock_session_manager.h"
@@ -61,7 +63,7 @@ struct MockShield : AbstractShield
 
 struct ShieldFactoryMock : ShieldFactoryInterface
 {
-  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, int, bool) override
+  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, nux::ObjectPtr<UserPromptView> const&, int, bool) override
   {
     return nux::ObjectPtr<AbstractShield>(new MockShield());
   }
@@ -95,6 +97,7 @@ struct TestLockScreenController : Test
   nux::animation::AnimationController animation_controller;
 
   MockUScreen uscreen;
+  unity::dash::Style dash_style;
   unity::panel::Style panel_style;
   unity::lockscreen::Settings lockscreen_settings;
   session::MockManager::Ptr session_manager;
