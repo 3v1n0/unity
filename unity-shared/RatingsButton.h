@@ -27,6 +27,7 @@
 #include <Nux/Nux.h>
 #include <Nux/ToggleButton.h>
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -35,14 +36,12 @@ class RatingsButton : public unity::debug::Introspectable, public nux::ToggleBut
 {
 public:
   RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_PROTO);
-  virtual ~RatingsButton();
+
+  nux::Property<double> scale;
 
   void SetEditable(bool editable);
   virtual void SetRating(float rating);
   virtual float GetRating() const;
-
-  int star_size_;
-  int star_gap_;
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -65,8 +64,9 @@ private:
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void UpdateRatingToMouse(int x);
 
-
 protected:
+  RawPixel star_size_;
+  RawPixel star_gap_;
   bool editable_;
   float rating_;
   int focused_star_;

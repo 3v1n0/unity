@@ -367,8 +367,6 @@ void View::AboutToHide()
 
 void View::SetupViews()
 {
-  dash::Style& style = dash::Style::Instance();
-
   nux::VLayout* super_layout = new nux::VLayout();
   layout_ = new nux::HLayout();
   {
@@ -388,8 +386,6 @@ void View::SetupViews()
 
       // add the search bar to the composite
       search_bar_ = new unity::SearchBar(true);
-      search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
-      search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
       search_bar_->search_hint = _("Type your command");
       search_bar_->live_search_reached.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());

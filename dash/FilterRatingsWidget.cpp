@@ -33,15 +33,14 @@
 #include "FilterRatingsButton.h"
 #include "FilterRatingsWidget.h"
 
-namespace
-{
-const int star_size      = 28;
-}
-
 namespace unity
 {
 namespace dash
 {
+namespace
+{
+const RawPixel STAR_SIZE = 28_em;
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
 
@@ -49,22 +48,30 @@ FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
 : FilterExpanderLabel(_("Rating"), NUX_FILE_LINE_PARAM)
 , all_button_(nullptr)
 {
-  dash::Style& style = dash::Style::Instance();
-  const int top_padding    = style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding() - 1; // -1 (PNGs have an 1px top padding)
-  const int bottom_padding = style.GetFilterHighlightPadding();
-
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout->SetTopAndBottomPadding(top_padding, bottom_padding);
   ratings_ = new FilterRatingsButton(NUX_TRACKER_LOCATION);
-  ratings_->SetMinimumHeight(star_size);
 
   layout->AddView(ratings_);
 
+  UpdateSize();
   SetContents(layout);
+
+  scale.changed.connect([this] (double scale) {
+    if (all_button_) all_button_->scale = scale;
+    UpdateSize();
+  });
 }
 
-FilterRatingsWidget::~FilterRatingsWidget()
+void FilterRatingsWidget::UpdateSize()
 {
+  dash::Style& style = dash::Style::Instance();
+  int top_padding = style.GetSpaceBetweenFilterWidgets().CP(scale) - style.GetFilterHighlightPadding().CP(scale) - (1_em).CP(scale); // -1 (PNGs have an 1px top padding)
+  int bottom_padding = style.GetFilterHighlightPadding().CP(scale);
+  static_cast<nux::VLayout*>(GetLayout())->SetTopAndBottomPadding(top_padding, bottom_padding);
+
+  ratings_->scale = scale();
+  ratings_->SetMinimumHeight(STAR_SIZE.CP(scale));
+  ratings_->ApplyMinHeight();
 }
 
 void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
@@ -77,7 +84,10 @@ void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
     all_button_ = show_all_button ? new FilterAllButton(NUX_TRACKER_LOCATION) : nullptr;
     SetRightHandView(all_button_);
     if (all_button_)
+    {
+      all_button_->scale = scale();
       all_button_->SetFilter(filter_);
+    }
   };
   show_button_func(filter_->show_all_button);
   filter_->show_all_button.changed.connect(show_button_func);

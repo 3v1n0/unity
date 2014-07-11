@@ -46,7 +46,6 @@ class FilterGenre : public FilterExpanderLabel
   NUX_DECLARE_OBJECT_TYPE(FilterGenre, FilterExpanderLabel);
 public:
   FilterGenre(int columns, NUX_FILE_LINE_PROTO);
-  virtual ~FilterGenre();
 
   void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
@@ -59,6 +58,7 @@ protected:
 private:
   void OnOptionAdded(FilterOption::Ptr const& new_filter);
   void OnOptionRemoved(FilterOption::Ptr const& removed_filter);
+  void UpdateSize(int columns);
 
   nux::GridHLayout* genre_layout_;
   FilterAllButton* all_button_;

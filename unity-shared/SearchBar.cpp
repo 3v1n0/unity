@@ -62,6 +62,8 @@ const RawPixel TOP_ARROW_MAX_HEIGHT = 12_em;
 const RawPixel BOT_ARROW_MIN_HEIGHT = 8_em;
 const RawPixel BOT_ARROW_MAX_HEIGHT = 8_em;
 
+const RawPixel FILTER_HORIZONTAL_MARGIN = 8_em;
+
 // Fonts
 const std::string HINT_LABEL_FONT_SIZE = "20px";
 const std::string HINT_LABEL_FONT_STYLE = "Italic";
@@ -195,19 +197,12 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     show_filters_->SetScale(scale);
     show_filters_->SetLines(-1);
 
-    nux::BaseTexture* arrow;
-    arrow = style.GetGroupExpandIcon();
-    expand_icon_ = new IconTexture(arrow,
-                                   arrow->GetWidth(),
-                                   arrow->GetHeight());
+    expand_icon_ = new IconTexture(style.GetGroupExpandIcon());
     expand_icon_->SetOpacity(DEFAULT_ICON_OPACITY);
-    expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
+    expand_icon_->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
     expand_icon_->SetVisible(false);
 
     filter_layout_ = new nux::HLayout();
-    filter_layout_->SetHorizontalInternalMargin(8);
-    filter_layout_->SetLeftAndRightPadding(style.GetFilterResultsHighlightLeftPadding(),
-                                           style.GetFilterResultsHighlightRightPadding());
     filter_layout_->SetContentDistribution(nux::MAJOR_POSITION_END);
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
@@ -232,14 +227,6 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     expander_view_->SetVisible(false);
     expander_view_->SetLayout(filter_layout_);
     layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
-
-    int width = style.GetFilterBarWidth() +
-                style.GetFilterResultsHighlightLeftPadding() +
-                style.GetFilterResultsHighlightRightPadding();
-
-    expander_view_->SetMaximumWidth(width);
-    expander_view_->SetMinimumWidth(width);
-    show_filters_->SetMaximumWidth(style.GetFilterBarWidth() - arrow_layout_->GetBaseWidth() - 8);
 
     // Lambda functions
     auto mouse_expand = [this](int, int, unsigned long, unsigned long)
@@ -291,6 +278,8 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
 
 void SearchBar::UpdateSearchBarSize()
 {
+  auto& style = dash::Style::Instance();
+
   layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale()),
                                   SEARCH_ENTRY_RIGHT_BORDER.CP(scale()));
   layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT.CP(scale()));
@@ -313,6 +302,21 @@ void SearchBar::UpdateSearchBarSize()
                                         BOT_ARROW_MIN_HEIGHT.CP(scale()));
     arrow_bottom_space_->SetMaximumSize(ARROW_MAX_WIDTH.CP(scale()),
                                         BOT_ARROW_MAX_HEIGHT.CP(scale()));
+
+    int highlight_left_padding = style.GetFilterResultsHighlightLeftPadding().CP(scale);
+    int highlight_right_padding = style.GetFilterResultsHighlightRightPadding().CP(scale);
+    int filter_bar_width = style.GetFilterBarWidth().CP(scale);
+
+    filter_layout_->SetHorizontalInternalMargin(FILTER_HORIZONTAL_MARGIN.CP(scale));
+    filter_layout_->SetLeftAndRightPadding(highlight_left_padding, highlight_right_padding);
+    show_filters_->SetMaximumWidth(filter_bar_width - arrow_layout_->GetBaseWidth() - (8_em).CP(scale));
+
+    int width = filter_bar_width + highlight_right_padding + highlight_right_padding;
+    expander_view_->SetMaximumWidth(width);
+    expander_view_->SetMinimumWidth(width);
+
+    auto const& arrow = expand_icon_->texture();
+    expand_icon_->SetMinMaxSize(RawPixel(arrow->GetWidth()).CP(scale), RawPixel(arrow->GetHeight()).CP(scale));
   }
 
   // Based on the Font size, the MinHeight is changing in TextEntry. From there the
@@ -324,6 +328,10 @@ void SearchBar::UpdateSearchBarSize()
   pango_entry_->SetMaximumHeight(entry_min);
   layered_layout_->SetMinimumHeight(entry_min);
   layered_layout_->SetMaximumHeight(entry_min);
+
+  int search_bar_height = style.GetSearchBarHeight().CP(scale);
+  SetMinimumHeight(search_bar_height);
+  SetMaximumHeight(search_bar_height);
 }
 
 void SearchBar::UpdateScale(double scale)
@@ -333,7 +341,7 @@ void SearchBar::UpdateScale(double scale)
   hint_->SetScale(scale);
   spinner_->scale = scale;
 
-  if (show_filters_)
+  if (show_filter_hint_)
     show_filters_->SetScale(scale);
 
   UpdateSearchBarSize();
@@ -371,11 +379,7 @@ void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 
 void SearchBar::OnSearchHintChanged()
 {
-  gchar* tmp = g_markup_escape_text(search_hint().c_str(), -1);
-
-  hint_->SetText(tmp);
-
-  g_free(tmp);
+  hint_->SetText(glib::String(g_markup_escape_text(search_hint().c_str(), -1)).Str());
 }
 
 void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
@@ -422,6 +426,9 @@ void SearchBar::OnShowingFiltersChanged(bool is_showing)
       expand_icon_->SetTexture(style.GetGroupUnexpandIcon());
     else
       expand_icon_->SetTexture(style.GetGroupExpandIcon());
+
+    auto const& arrow = expand_icon_->texture();
+    expand_icon_->SetMinMaxSize(RawPixel(arrow->GetWidth()).CP(scale), RawPixel(arrow->GetHeight()).CP(scale));
   }
 }
 

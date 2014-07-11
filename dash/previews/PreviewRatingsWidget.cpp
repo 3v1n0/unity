@@ -29,6 +29,7 @@
 #include "unity-shared/RatingsButton.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/DashStyle.h"
 #include "PreviewRatingsWidget.h"
 
 namespace unity
@@ -41,8 +42,8 @@ namespace previews
 namespace
 {
   const RawPixel CHILDREN_SPACE = 3_em;
-  const RawPixel RATINGS_SIZE = 18_em;
-  const RawPixel RATINGS_GAP = 2_em;
+  const int RATINGS_SIZE = 18;
+  const int RATINGS_GAP = 2;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewRatingsWidget);
@@ -58,9 +59,10 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
-  ratings_ = new RatingsButton(RATINGS_SIZE.CP(scale), RATINGS_GAP.CP(scale));
+  ratings_ = new RatingsButton(RATINGS_SIZE, RATINGS_GAP);
   ratings_->SetEditable(false);
   ratings_->mouse_click.connect(on_mouse_down);
+  ratings_->scale = scale();
   layout_->AddView(ratings_);
 
   reviews_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
@@ -75,10 +77,6 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
 
   UpdateScale(scale);
   scale.changed.connect(sigc::mem_fun(this, &PreviewRatingsWidget::UpdateScale));
-}
-
-PreviewRatingsWidget::~PreviewRatingsWidget()
-{
 }
 
 void PreviewRatingsWidget::SetRating(float rating)
@@ -128,19 +126,10 @@ void PreviewRatingsWidget::AddProperties(debug::IntrospectionData& introspection
 
 void PreviewRatingsWidget::UpdateScale(double scale)
 {
-  if (reviews_)
-    reviews_->SetScale(scale);
-
-  if (ratings_)
-  {
-    ratings_->star_size_ = RATINGS_SIZE.CP(scale);
-    ratings_->star_gap_ = RATINGS_GAP.CP(scale);
-  }
-
+  reviews_->SetScale(scale);
+  ratings_->scale = scale;
   preview_container_.scale = scale;
-
-  if (layout_)
-    layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+  layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
   QueueRelayout();
   QueueDraw();
