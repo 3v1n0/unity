@@ -48,8 +48,6 @@
 
 #define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
 
-typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
-
 namespace unity
 {
 namespace dash
@@ -106,7 +104,7 @@ class LazyLoadTexture
 {
 public:
   LazyLoadTexture(std::string const& filename, int size = -1);
-  nux::BaseTexture* texture();
+  BaseTexturePtr const& texture();
 private:
   void LoadTexture();
 private:
@@ -177,6 +175,13 @@ struct Style::Impl : sigc::trackable
   void UpdateFormFactor(FormFactor);
   void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
 
+  BaseTexturePtr LoadScaledTexture(std::string const& name, double scale)
+  {
+    int w, h;
+    gdk_pixbuf_get_file_info((PKGDATADIR"/" + name).c_str(), &w, &h);
+    return TextureCache::GetDefault().FindTexture(name, RawPixel(w).CP(scale), RawPixel(h).CP(scale));
+  }
+
   // Members
   Style* owner_;
 
@@ -220,27 +225,8 @@ struct Style::Impl : sigc::trackable
 
   LazyLoadTexture category_texture_;
   LazyLoadTexture category_texture_no_filters_;
-  LazyLoadTexture dash_bottom_texture_;
-  LazyLoadTexture dash_bottom_texture_mask_;
-  LazyLoadTexture dash_right_texture_;
-  LazyLoadTexture dash_right_texture_mask_;
-  LazyLoadTexture dash_corner_texture_;
-  LazyLoadTexture dash_corner_texture_mask_;
-  LazyLoadTexture dash_fullscreen_icon_;
-  LazyLoadTexture dash_left_edge_;
-  LazyLoadTexture dash_left_corner_;
-  LazyLoadTexture dash_left_corner_mask_;
-  LazyLoadTexture dash_left_tile_;
-  LazyLoadTexture dash_top_corner_;
-  LazyLoadTexture dash_top_corner_mask_;
-  LazyLoadTexture dash_top_tile_;
 
   LazyLoadTexture dash_shine_;
-
-  LazyLoadTexture search_magnify_texture_;
-  LazyLoadTexture search_circle_texture_;
-  LazyLoadTexture search_close_texture_;
-  LazyLoadTexture search_spin_texture_;
 
   LazyLoadTexture information_texture_;
 
@@ -269,25 +255,7 @@ Style::Impl::Impl(Style* owner)
   , text_height_(0)
   , category_texture_("/category_gradient.png")
   , category_texture_no_filters_("/category_gradient_no_refine.png")
-  , dash_bottom_texture_("/dash_bottom_border_tile.png")
-  , dash_bottom_texture_mask_("/dash_bottom_border_tile_mask.png")
-  , dash_right_texture_("/dash_right_border_tile.png")
-  , dash_right_texture_mask_("/dash_right_border_tile_mask.png")
-  , dash_corner_texture_("/dash_bottom_right_corner.png")
-  , dash_corner_texture_mask_("/dash_bottom_right_corner_mask.png")
-  , dash_fullscreen_icon_("/dash_fullscreen_icon.png")
-  , dash_left_edge_("/dash_left_edge.png")
-  , dash_left_corner_("/dash_bottom_left_corner.png")
-  , dash_left_corner_mask_("/dash_bottom_left_corner_mask.png")
-  , dash_left_tile_("/dash_left_tile.png")
-  , dash_top_corner_("/dash_top_right_corner.png")
-  , dash_top_corner_mask_("/dash_top_right_corner_mask.png")
-  , dash_top_tile_("/dash_top_tile.png")
   , dash_shine_("/dash_sheen.png")
-  , search_magnify_texture_("/search_magnify.png")
-  , search_circle_texture_("/search_circle.svg", 32)
-  , search_close_texture_("/search_close.svg", 32)
-  , search_spin_texture_("/search_spin.svg", 32)
   , information_texture_("/information_icon.svg")
   , refine_gradient_corner_("/refine_gradient_corner.png")
   , refine_gradient_dash_("/refine_gradient_dash.png")
@@ -2125,6 +2093,87 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
+BaseTexturePtr Style::GetDashBottomTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_border_tile.png", scale);
+}
+
+BaseTexturePtr Style::GetDashBottomTileMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_border_tile_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashRightTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_right_border_tile.png", scale);
+}
+
+BaseTexturePtr Style::GetDashRightTileMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_right_border_tile_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_left_tile.png", scale);
+}
+
+BaseTexturePtr Style::GetDashTopTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_top_tile.png", scale);
+}
+
+BaseTexturePtr Style::GetDashCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_right_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_right_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_left_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_left_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashTopCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_top_right_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashTopCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_top_right_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetSearchMagnifyIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_magnify.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchCircleIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_circle.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchCloseIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_close.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchSpinIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_spin.svg", scale);
+}
+
+
 RawPixel Style::GetButtonGarnishSize() const
 {
   int maxBlurSize = 0;
@@ -2205,147 +2254,57 @@ RawPixel Style::GetTextLineHeight() const
 }
 
 
-nux::BaseTexture* Style::GetCategoryBackground()
+BaseTexturePtr const& Style::GetCategoryBackground() const
 {
   return pimpl->category_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetCategoryBackgroundNoFilters()
+BaseTexturePtr const& Style::GetCategoryBackgroundNoFilters() const
 {
   return pimpl->category_texture_no_filters_.texture(); 
 }
 
-nux::BaseTexture* Style::GetDashBottomTile()
-{
-  return pimpl->dash_bottom_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashBottomTileMask()
-{
-  return pimpl->dash_bottom_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashRightTile()
-{
-  return pimpl->dash_right_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashRightTileMask()
-{
-  return pimpl->dash_right_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashCorner()
-{
-  return pimpl->dash_corner_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashCornerMask()
-{
-  return pimpl->dash_corner_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftEdge()
-{
-  return pimpl->dash_left_edge_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftCorner()
-{
-  return pimpl->dash_left_corner_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftCornerMask()
-{
-  return pimpl->dash_left_corner_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftTile()
-{
-  return pimpl->dash_left_tile_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopCorner()
-{
-  return pimpl->dash_top_corner_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopCornerMask()
-{
-  return pimpl->dash_top_corner_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopTile()
-{
-  return pimpl->dash_top_tile_.texture();
-}
-
-nux::BaseTexture* Style::GetDashFullscreenIcon()
-{
-  return pimpl->dash_fullscreen_icon_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchMagnifyIcon()
-{
-  return pimpl->search_magnify_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchCircleIcon()
-{
-  return pimpl->search_circle_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchCloseIcon()
-{
-  return pimpl->search_close_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchSpinIcon()
-{
-  return pimpl->search_spin_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetInformationTexture()
+BaseTexturePtr const& Style::GetInformationTexture() const
 {
   return pimpl->information_texture_.texture(); 
 }
 
-nux::BaseTexture* Style::GetRefineTextureCorner()
+BaseTexturePtr const& Style::GetRefineTextureCorner() const
 {
   return pimpl->refine_gradient_corner_.texture();
 }
 
-nux::BaseTexture* Style::GetRefineTextureDash()
+BaseTexturePtr const& Style::GetRefineTextureDash() const
 {
   return pimpl->refine_gradient_dash_.texture(); 
 }
 
-nux::BaseTexture* Style::GetGroupUnexpandIcon()
+BaseTexturePtr const& Style::GetGroupUnexpandIcon() const
 {
   return pimpl->group_unexpand_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetGroupExpandIcon()
+BaseTexturePtr const& Style::GetGroupExpandIcon() const
 {
   return pimpl->group_expand_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarDeselectedIcon()
+BaseTexturePtr const& Style::GetStarDeselectedIcon() const
 {
   return pimpl->star_deselected_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarSelectedIcon()
+BaseTexturePtr const& Style::GetStarSelectedIcon() const
 {
   return pimpl->star_selected_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarHighlightIcon()
+BaseTexturePtr const& Style::GetStarHighlightIcon() const
 {
   return pimpl->star_highlight_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetDashShine()
+BaseTexturePtr const& Style::GetDashShine() const
 {
   return pimpl->dash_shine_.texture();
 }
@@ -2504,11 +2463,11 @@ LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
 {
 }
 
-nux::BaseTexture* LazyLoadTexture::texture()
+BaseTexturePtr const& LazyLoadTexture::texture()
 {
   if (!texture_)
     LoadTexture();
-  return texture_.GetPointer();
+  return texture_;
 }
 
 void LazyLoadTexture::LoadTexture()

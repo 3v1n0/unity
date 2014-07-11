@@ -28,7 +28,7 @@ namespace unity
 class RawPixel
 {
 public:
-  RawPixel(double raw_pixel);
+  RawPixel(double raw_pixel = 0);
 
   int CP(EMConverter::Ptr const&) const;
   int CP(double scale) const;

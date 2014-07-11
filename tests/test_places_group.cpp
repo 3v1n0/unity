@@ -40,11 +40,11 @@ public:
   }
 
   MOCK_METHOD2(FocusOverlay, nux::AbstractPaintLayer*(int width, int height));
-  MOCK_METHOD0(GetCategoryBackground, nux::BaseTexture*());
-  MOCK_METHOD0(GetCategoryBackgroundNoFilters, nux::BaseTexture*());
+  MOCK_CONST_METHOD0(GetCategoryBackground, nux::ObjectPtr<nux::BaseTexture> const&());
+  MOCK_CONST_METHOD0(GetCategoryBackgroundNoFilters, nux::ObjectPtr<nux::BaseTexture> const&());
 
-  MOCK_METHOD0(GetGroupExpandIcon, nux::BaseTexture*());
-  MOCK_METHOD0(GetGroupUnexpandIcon, nux::BaseTexture*());
+  MOCK_CONST_METHOD0(GetGroupExpandIcon, nux::ObjectPtr<nux::BaseTexture> const&());
+  MOCK_CONST_METHOD0(GetGroupUnexpandIcon, nux::ObjectPtr<nux::BaseTexture> const&());
 
   MOCK_CONST_METHOD0(GetCategoryIconSize, RawPixel());
   MOCK_CONST_METHOD0(GetCategoryHeaderLeftPadding, RawPixel());
@@ -72,17 +72,17 @@ public:
     ON_CALL(dash_style_, FocusOverlay(_, _))
       .WillByDefault(Return(new nux::ColorLayer(nux::color::White)));
 
-    ON_CALL(dash_style_, GetCategoryBackground())
-      .WillByDefault(Return(dash_style_.base_texture_.GetPointer()));
+    ON_CALL(Const(dash_style_), GetCategoryBackground())
+      .WillByDefault(ReturnRef(dash_style_.base_texture_));
 
-    ON_CALL(dash_style_, GetCategoryBackgroundNoFilters())
-      .WillByDefault(Return(dash_style_.base_texture_.GetPointer()));
+    ON_CALL(Const(dash_style_), GetCategoryBackgroundNoFilters())
+      .WillByDefault(ReturnRef(dash_style_.base_texture_));
 
-    ON_CALL(dash_style_, GetGroupExpandIcon())
-      .WillByDefault(Return(dash_style_.base_texture_.GetPointer()));
+    ON_CALL(Const(dash_style_), GetGroupExpandIcon())
+      .WillByDefault(ReturnRef(dash_style_.base_texture_));
 
-    ON_CALL(dash_style_, GetGroupUnexpandIcon())
-         .WillByDefault(Return(dash_style_.base_texture_.GetPointer()));
+    ON_CALL(Const(dash_style_), GetGroupUnexpandIcon())
+         .WillByDefault(ReturnRef(dash_style_.base_texture_));
 
     ON_CALL(dash_style_, GetCategoryHeaderLeftPadding())
          .WillByDefault(Return(19_em));

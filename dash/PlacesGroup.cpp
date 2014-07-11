@@ -132,8 +132,8 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   SetAcceptKeyNavFocusOnMouseEnter(false);
   scale.changed.connect(sigc::mem_fun(this, &PlacesGroup::UpdateScale));
 
-  _background = _style.GetCategoryBackground();
-  _background_nofilters = _style.GetCategoryBackgroundNoFilters();
+  _background = _style.GetCategoryBackground().GetPointer();
+  _background_nofilters = _style.GetCategoryBackgroundNoFilters().GetPointer();
 
   nux::ROPConfig rop;
   rop.Blend = true;
@@ -141,8 +141,8 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   nux::TexCoordXForm texxform;
-  _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
-                          texxform, 
+  _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
+                          texxform,
                           nux::color::White,
                           false,
                           rop));

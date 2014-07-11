@@ -3952,8 +3952,8 @@ void UnityScreen::initLauncher()
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
 
-    int launcher_width = w - 1;
-    Launcher const* const launcher = static_cast<Launcher*>(area);
+    auto* launcher = static_cast<Launcher*>(area);
+    int launcher_width = w - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
 
     unity::Settings::Instance().SetLauncherWidth(launcher_width, launcher->monitor);
     shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(launcher->monitor));
@@ -3967,17 +3967,21 @@ void UnityScreen::initLauncher()
     screen->setOptionForPlugin("scale", "x_offset", v);
   };
 
-  for (auto const& launcher : launcher_controller_->launchers())
-  {
-    launcher->size_changed.connect(on_launcher_size_changed);
+  auto check_launchers_size = [this, on_launcher_size_changed] {
+    launcher_size_connections_.Clear();
 
-    on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
-  }
-
-  UScreen::GetDefault()->changed.connect([this, on_launcher_size_changed] (int, std::vector<nux::Geometry> const&) {
     for (auto const& launcher : launcher_controller_->launchers())
+    {
+      launcher_size_connections_.Add(launcher->size_changed.connect(on_launcher_size_changed));
       on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
+    }
+  };
+
+  UScreen::GetDefault()->changed.connect([this, check_launchers_size] (int, std::vector<nux::Geometry> const&) {
+    check_launchers_size();
   });
+
+  check_launchers_size();
 
   launcher_controller_->options()->scroll_inactive_icons = optionGetScrollInactiveIcons();
   launcher_controller_->options()->minimize_window_on_click = optionGetLauncherMinimizeWindow();

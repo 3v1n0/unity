@@ -36,13 +36,6 @@ SearchBarSpinner::SearchBarSpinner()
   , search_timeout_(-1)
   , rotation_(0.0f)
 {
-  dash::Style& style = dash::Style::Instance();
-
-  magnify_ = style.GetSearchMagnifyIcon();
-  circle_ = style.GetSearchCircleIcon();
-  close_ = style.GetSearchCloseIcon();
-  spin_ = style.GetSearchSpinIcon();
-
   rotate_.Identity();
   rotate_.Rotate_z(0.0);
   UpdateScale(scale);
@@ -52,7 +45,14 @@ SearchBarSpinner::SearchBarSpinner()
 
 void SearchBarSpinner::UpdateScale(double scale)
 {
-  SetMinMaxSize(RawPixel(magnify_->GetWidth()).CP(scale), RawPixel(magnify_->GetHeight()).CP(scale));
+  auto& style = dash::Style::Instance();
+
+  magnify_ = style.GetSearchMagnifyIcon(scale);
+  circle_ = style.GetSearchCircleIcon(scale);
+  close_ = style.GetSearchCloseIcon(scale);
+  spin_ = style.GetSearchSpinIcon(scale);
+
+  SetMinMaxSize(magnify_->GetWidth(), magnify_->GetHeight());
   QueueDraw();
 }
 
@@ -65,7 +65,7 @@ void SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   nux::GetPainter().PaintBackground(GfxContext, geo);
 
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
   texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
@@ -77,8 +77,7 @@ void SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (state_ == STATE_READY)
   {
-    nux::Size magnifier_size(RawPixel(magnify_->GetWidth()).CP(scale),
-                             RawPixel(magnify_->GetHeight()).CP(scale));
+    nux::Size magnifier_size(magnify_->GetWidth(), magnify_->GetHeight());
 
     GfxContext.QRP_1Tex(geo.x + ((geo.width - magnifier_size.width) / 2),
                         geo.y + ((geo.height - magnifier_size.height) / 2),
@@ -90,8 +89,7 @@ void SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else if (state_ == STATE_SEARCHING)
   {
-    nux::Size spin_size(RawPixel(spin_->GetWidth()).CP(scale),
-                        RawPixel(spin_->GetHeight()).CP(scale));
+    nux::Size spin_size(spin_->GetWidth(), spin_->GetHeight());
     nux::Geometry spin_geo(geo.x + ((geo.width - spin_size.width) / 2),
                            geo.y + ((geo.height - spin_size.height) / 2),
                            spin_size.width,
@@ -124,8 +122,7 @@ void SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    nux::Size circle_size(RawPixel(circle_->GetWidth()).CP(scale),
-                          RawPixel(circle_->GetHeight()).CP(scale));
+    nux::Size circle_size(circle_->GetWidth(), circle_->GetHeight());
     GfxContext.QRP_1Tex(geo.x + ((geo.width - circle_size.width) / 2),
                         geo.y + ((geo.height - circle_size.height) / 2),
                         circle_size.width,
@@ -134,8 +131,7 @@ void SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         texxform,
                         nux::color::White);
 
-    nux::Size close_size(RawPixel(close_->GetWidth()).CP(scale),
-                         RawPixel(close_->GetHeight()).CP(scale));
+    nux::Size close_size(close_->GetWidth(), close_->GetHeight());
     GfxContext.QRP_1Tex(geo.x + ((geo.width - close_size.width) / 2),
                         geo.y + ((geo.height - close_size.height) / 2),
                         close_size.width,

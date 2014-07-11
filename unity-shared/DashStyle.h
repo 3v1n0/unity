@@ -37,6 +37,7 @@ namespace unity
 {
 namespace dash
 {
+typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
 enum class StockIcon {
   CHECKMARK,
@@ -166,44 +167,44 @@ public:
 
   RawPixel GetTextLineHeight() const;
 
-  nux::BaseTexture* GetCategoryBackground();
-  nux::BaseTexture* GetCategoryBackgroundNoFilters();
-  nux::BaseTexture* GetDashBottomTile();
-  nux::BaseTexture* GetDashBottomTileMask();
-  nux::BaseTexture* GetDashRightTile();
-  nux::BaseTexture* GetDashRightTileMask();
-  nux::BaseTexture* GetDashCorner();
-  nux::BaseTexture* GetDashCornerMask();
-  nux::BaseTexture* GetDashFullscreenIcon();
-  nux::BaseTexture* GetDashLeftEdge();
-  nux::BaseTexture* GetDashLeftCorner();
-  nux::BaseTexture* GetDashLeftCornerMask();
-  nux::BaseTexture* GetDashLeftTile();
-  nux::BaseTexture* GetDashTopCorner();
-  nux::BaseTexture* GetDashTopCornerMask();
-  nux::BaseTexture* GetDashTopTile();
+  BaseTexturePtr const& GetCategoryBackground() const;
+  BaseTexturePtr const& GetCategoryBackgroundNoFilters() const;
+
+  BaseTexturePtr GetDashBottomTile(double scale) const;
+  BaseTexturePtr GetDashBottomTileMask(double scale) const;
+  BaseTexturePtr GetDashRightTile(double scale) const;
+  BaseTexturePtr GetDashRightTileMask(double scale) const;
+  BaseTexturePtr GetDashLeftTile(double scale) const;
+  BaseTexturePtr GetDashTopTile(double scale) const;
+
+  BaseTexturePtr GetDashCorner(double scale) const;
+  BaseTexturePtr GetDashCornerMask(double scale) const;
+  BaseTexturePtr GetDashLeftCorner(double scale) const;
+  BaseTexturePtr GetDashLeftCornerMask(double scale) const;
+  BaseTexturePtr GetDashTopCorner(double scale) const;
+  BaseTexturePtr GetDashTopCornerMask(double scale) const;
 
   RawPixel GetDashBottomTileHeight() const;
   RawPixel GetDashRightTileWidth() const;
 
-  nux::BaseTexture* GetDashShine();
+  BaseTexturePtr const& GetDashShine() const;
 
-  nux::BaseTexture* GetSearchMagnifyIcon();
-  nux::BaseTexture* GetSearchCircleIcon();
-  nux::BaseTexture* GetSearchCloseIcon();
-  nux::BaseTexture* GetSearchSpinIcon();
+  BaseTexturePtr GetSearchMagnifyIcon(double scale) const;
+  BaseTexturePtr GetSearchCircleIcon(double scale) const;
+  BaseTexturePtr GetSearchCloseIcon(double scale) const;
+  BaseTexturePtr GetSearchSpinIcon(double scale) const;
 
-  nux::BaseTexture* GetGroupUnexpandIcon();
-  nux::BaseTexture* GetGroupExpandIcon();
+  BaseTexturePtr const& GetGroupUnexpandIcon() const;
+  BaseTexturePtr const& GetGroupExpandIcon() const;
 
-  nux::BaseTexture* GetStarDeselectedIcon();
-  nux::BaseTexture* GetStarSelectedIcon();
-  nux::BaseTexture* GetStarHighlightIcon();
+  BaseTexturePtr const& GetStarDeselectedIcon() const;
+  BaseTexturePtr const& GetStarSelectedIcon() const;
+  BaseTexturePtr const& GetStarHighlightIcon() const;
 
-  nux::BaseTexture* GetInformationTexture();
+  BaseTexturePtr const& GetInformationTexture() const;
 
-  nux::BaseTexture* GetRefineTextureCorner();
-  nux::BaseTexture* GetRefineTextureDash();
+  BaseTexturePtr const& GetRefineTextureCorner() const;
+  BaseTexturePtr const& GetRefineTextureDash() const;
 
   // Returns the width of the separator between the dash and the launcher.
   RawPixel GetVSeparatorSize() const;

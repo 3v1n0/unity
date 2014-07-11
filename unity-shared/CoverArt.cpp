@@ -51,7 +51,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
 
 CoverArt::CoverArt()
   : View(NUX_TRACKER_LOCATION)
-  , scale (1.0)
+  , scale(1.0)
   , overlay_text_(nullptr)
   , thumb_handle_(0)
   , slot_handle_(0)
@@ -382,11 +382,11 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
     if (waiting_)
     {
       nux::TexCoordXForm texxform;
-      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
       texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
       texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
-      nux::Size spin_size(RawPixel(spin_->GetWidth()).CP(scale), RawPixel(spin_->GetHeight()).CP(scale));
+      nux::Size spin_size(spin_->GetWidth(), spin_->GetHeight());
       nux::Geometry spin_geo(base.x + ((base.width - spin_size.width) / 2),
                              base.y + ((base.height - spin_size.height) / 2),
                              spin_size.width,
@@ -451,8 +451,7 @@ void CoverArt::SetupViews()
   overlay_text_->SetScale(scale);
   overlay_text_->SetText(_("No Image Available"));
 
-  dash::Style& style = dash::Style::Instance();
-  spin_ = style.GetSearchSpinIcon();
+  spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
 
   rotate_matrix_.Identity();
   rotate_matrix_.Rotate_z(0.0);
@@ -500,6 +499,8 @@ void CoverArt::UpdateScale(double scale)
 {
   if (overlay_text_)
     overlay_text_->SetScale(scale);
+
+  spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
 
   QueueDraw();
 }

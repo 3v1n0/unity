@@ -36,7 +36,10 @@ DECLARE_LOGGER(logger, "unity.overlayrenderer");
 namespace
 {
 const RawPixel INNER_CORNER_RADIUS = 5_em;
-const int EXCESS_BORDER = 10;
+const RawPixel EXCESS_BORDER = 10_em;
+
+const RawPixel LEFT_CORNER_OFFSET = 10_em;
+const RawPixel TOP_CORNER_OFFSET = 10_em;
 
 const nux::Color LINE_COLOR = nux::color::White * 0.07f;
 const RawPixel GRADIENT_HEIGHT = 50_em;
@@ -53,8 +56,9 @@ class OverlayRendererImpl : public sigc::trackable
 public:
   OverlayRendererImpl(OverlayRenderer *parent_);
 
-  void ComputeLargerGeometries(nux::Geometry& larger_absolute_geo, nux::Geometry& larger_content_geo, bool force_edges);
   void UpdateTextures();
+  void LoadScaledTextures();
+  void ComputeLargerGeometries(nux::Geometry& larger_absolute_geo, nux::Geometry& larger_content_geo, bool force_edges);
   void OnBgColorChanged(nux::Color const& new_color);
 
   void Draw(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry, bool force_draw);
@@ -70,6 +74,20 @@ public:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
 
   std::unique_ptr<nux::TextureLayer> bg_refine_gradient_;
+
+  nux::ObjectPtr<nux::BaseTexture> bottom_texture_;
+  nux::ObjectPtr<nux::BaseTexture> bottom_texture_mask_;
+  nux::ObjectPtr<nux::BaseTexture> right_texture_;
+  nux::ObjectPtr<nux::BaseTexture> right_texture_mask_;
+  nux::ObjectPtr<nux::BaseTexture> left_texture_;
+  nux::ObjectPtr<nux::BaseTexture> top_texture_;
+
+  nux::ObjectPtr<nux::BaseTexture> corner_;
+  nux::ObjectPtr<nux::BaseTexture> corner_mask_;
+  nux::ObjectPtr<nux::BaseTexture> left_corner_;
+  nux::ObjectPtr<nux::BaseTexture> left_corner_mask_;
+  nux::ObjectPtr<nux::BaseTexture> top_corner_;
+  nux::ObjectPtr<nux::BaseTexture> top_corner_mask_;
 
   // temporary variable that stores the number of backgrounds we have rendered
   int bgs;
@@ -96,8 +114,29 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
   : visible(false)
   , parent(parent_)
 {
-  parent_->scale = 1.0;
+  parent->scale = Settings::Instance().em()->DPIScale();
+  parent->scale.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
   UpdateTextures();
+  LoadScaledTextures();
+}
+
+void OverlayRendererImpl::LoadScaledTextures()
+{
+  double scale = parent->scale;
+  auto& style = dash::Style::Instance();
+  bottom_texture_ = style.GetDashBottomTile(scale);
+  bottom_texture_mask_ = style.GetDashBottomTileMask(scale);
+  right_texture_ = style.GetDashRightTile(scale);
+  right_texture_mask_ = style.GetDashRightTileMask(scale);
+  left_texture_ = style.GetDashLeftTile(scale);
+  top_texture_ = style.GetDashTopTile(scale);
+
+  corner_ = style.GetDashCorner(scale);
+  corner_mask_ = style.GetDashCornerMask(scale);
+  left_corner_ = style.GetDashLeftCorner(scale);
+  left_corner_mask_ = style.GetDashLeftCornerMask(scale);
+  top_corner_ = style.GetDashTopCorner(scale);
+  top_corner_mask_ = style.GetDashTopCornerMask(scale);
 }
 
 void OverlayRendererImpl::OnBgColorChanged(nux::Color const& new_color)
@@ -142,9 +181,10 @@ void OverlayRendererImpl::UpdateTextures()
   }
 
   bg_darken_layer_ = std::make_shared<nux::ColorLayer>(darken_colour, false, rop);
-  bg_shine_texture_ = unity::dash::Style::Instance().GetDashShine()->GetDeviceTexture();
+  bg_shine_texture_ = dash::Style::Instance().GetDashShine()->GetDeviceTexture();
 
-  nux::BaseTexture* bg_refine_tex = unity::dash::Style::Instance().GetRefineTextureDash();
+  auto const& bg_refine_tex = dash::Style::Instance().GetRefineTextureDash();
+
   if (bg_refine_tex)
   {
     rop.Blend = true;
@@ -406,7 +446,7 @@ void OverlayRendererImpl::RenderInverseMask(nux::GraphicsEngine& gfx_context, in
 
 void OverlayRendererImpl::ComputeLargerGeometries(nux::Geometry& larger_absolute_geo, nux::Geometry& larger_content_geo, bool force_edges)
 {
-  int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
+  int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER.CP(parent->scale) : 0;
   larger_absolute_geo.OffsetSize(excess_border, excess_border);
   larger_content_geo.OffsetSize(excess_border, excess_border);
 }
@@ -544,9 +584,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       int gradien_width = std::min(bg_refine_gradient_->GetDeviceTexture()->GetWidth(), larger_content_geo.width);
       int gradien_height = std::min(bg_refine_gradient_->GetDeviceTexture()->GetHeight(), larger_content_geo.height);
 
-      nux::Geometry geo_refine(larger_content_geo.x + larger_content_geo.width - gradien_width, 
+      nux::Geometry geo_refine(larger_content_geo.x + larger_content_geo.width - gradien_width,
                                larger_content_geo.y,
-                               gradien_width, 
+                               gradien_width,
                                gradien_height);
 
       bg_refine_gradient_->SetGeometry(geo_refine);
@@ -565,36 +605,38 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.GetRenderStates().SetBlend(true);
       gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-      dash::Style& style = dash::Style::Instance();
-      nux::BaseTexture* bottom = style.GetDashBottomTile();
-      nux::BaseTexture* bottom_mask = style.GetDashBottomTileMask();
-      nux::BaseTexture* right = style.GetDashRightTile();
-      nux::BaseTexture* right_mask = style.GetDashRightTileMask();
-      nux::BaseTexture* corner = style.GetDashCorner();
-      nux::BaseTexture* corner_mask = style.GetDashCornerMask();
-      nux::BaseTexture* left_corner = style.GetDashLeftCorner();
-      nux::BaseTexture* left_corner_mask = style.GetDashLeftCornerMask();
-      nux::BaseTexture* left_tile = style.GetDashLeftTile();
-      nux::BaseTexture* top_corner = style.GetDashTopCorner();
-      nux::BaseTexture* top_corner_mask = style.GetDashTopCornerMask();
-      nux::BaseTexture* top_tile = style.GetDashTopTile();
       nux::TexCoordXForm texxform;
+      auto const& bottom = bottom_texture_;
+      auto const& bottom_mask = bottom_texture_mask_;
+      auto const& right = right_texture_;
+      auto const& right_mask = right_texture_mask_;
+      auto const& corner = corner_;
+      auto const& corner_mask = corner_mask_;
+      auto const& left_corner = left_corner_;
+      auto const& left_corner_mask = left_corner_mask_;
+      auto const& left_tile = left_texture_;
+      auto const& top_corner = top_corner_;
+      auto const& top_corner_mask = top_corner_mask_;
+      auto const& top_tile = top_texture_;
 
-      int left_corner_offset = 10;
-      int top_corner_offset = 10;
+      int left_corner_offset = LEFT_CORNER_OFFSET.CP(scale);
+      int top_corner_offset = TOP_CORNER_OFFSET.CP(scale);
+      nux::Size corner_size(corner->GetWidth(), corner->GetHeight());
+      nux::Size top_corner_size(top_corner->GetWidth(), top_corner->GetHeight());
+      nux::Size left_corner_size(left_corner->GetWidth(), left_corner->GetHeight());
 
-      geo.width += corner->GetWidth() - 10;
-      geo.height += corner->GetHeight() - 10;
+      geo.width += corner_size.width - left_corner_offset;
+      geo.height += corner_size.height - top_corner_offset;
       {
         // Corner
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
         // Selectively erase blur region in the curbe
-        gfx_context.QRP_ColorModTexAlpha(geo.x + (geo.width - corner->GetWidth()),
-                                         geo.y + (geo.height - corner->GetHeight()),
-                                         corner->GetWidth(),
-                                         corner->GetHeight(),
+        gfx_context.QRP_ColorModTexAlpha(geo.x + (geo.width - corner_size.width),
+                                         geo.y + (geo.height - corner_size.height),
+                                         corner_size.width,
+                                         corner_size.height,
                                          corner_mask->GetDeviceTexture(),
                                          texxform,
                                          nux::color::Black);
@@ -602,10 +644,10 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Write correct alpha
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
-        RenderInverseMask(gfx_context, geo.x + (geo.width - corner->GetWidth()),
-                             geo.y + (geo.height - corner->GetHeight()),
-                             corner->GetWidth(),
-                             corner->GetHeight(),
+        RenderInverseMask(gfx_context, geo.x + (geo.width - corner_size.width),
+                             geo.y + (geo.height - corner_size.height),
+                             corner_size.width,
+                             corner_size.height,
                              corner_mask->GetDeviceTexture(),
                              texxform,
                              nux::color::White);
@@ -614,24 +656,24 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
         gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
 
-        gfx_context.QRP_1Tex(geo.x + (geo.width - corner->GetWidth()),
-                             geo.y + (geo.height - corner->GetHeight()),
-                             corner->GetWidth(),
-                             corner->GetHeight(),
+        gfx_context.QRP_1Tex(geo.x + (geo.width - corner_size.width),
+                             geo.y + (geo.height - corner_size.height),
+                             corner_size.width,
+                             corner_size.height,
                              corner->GetDeviceTexture(),
                              texxform,
                              nux::color::White);
       }
       {
         // Bottom repeated texture
-        int real_width = geo.width - (left_corner->GetWidth() - left_corner_offset) - corner->GetWidth();
+        int real_width = geo.width - (left_corner_size.width - left_corner_offset) - corner_size.width;
         int offset = real_width % bottom->GetWidth();
 
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
         // Selectively erase blur region in the curbe
-        gfx_context.QRP_ColorModTexAlpha(left_corner->GetWidth() - left_corner_offset - offset,
+        gfx_context.QRP_ColorModTexAlpha(left_corner_size.width - left_corner_offset - offset,
                                          geo.y + (geo.height - bottom->GetHeight()),
                                          real_width + offset,
                                          bottom->GetHeight(),
@@ -642,7 +684,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Write correct alpha
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
-        RenderInverseMask(gfx_context, left_corner->GetWidth() - left_corner_offset - offset,
+        RenderInverseMask(gfx_context, left_corner_size.width - left_corner_offset - offset,
                              geo.y + (geo.height - bottom->GetHeight()),
                              real_width + offset,
                              bottom->GetHeight(),
@@ -654,7 +696,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
         gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
 
-        gfx_context.QRP_1Tex(left_corner->GetWidth() - left_corner_offset - offset,
+        gfx_context.QRP_1Tex(left_corner_size.width - left_corner_offset - offset,
                              geo.y + (geo.height - bottom->GetHeight()),
                              real_width + offset,
                              bottom->GetHeight(),
@@ -669,9 +711,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
         // Selectively erase blur region in the curbe
         gfx_context.QRP_ColorModTexAlpha(geo.x - left_corner_offset,
-                                         geo.y + (geo.height - left_corner->GetHeight()),
-                                         left_corner->GetWidth(),
-                                         left_corner->GetHeight(),
+                                         geo.y + (geo.height - left_corner_size.height),
+                                         left_corner_size.width,
+                                         left_corner_size.height,
                                          left_corner_mask->GetDeviceTexture(),
                                          texxform,
                                          nux::color::Black);
@@ -680,9 +722,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
         RenderInverseMask(gfx_context, geo.x - left_corner_offset,
-                             geo.y + (geo.height - left_corner->GetHeight()),
-                             left_corner->GetWidth(),
-                             left_corner->GetHeight(),
+                             geo.y + (geo.height - left_corner_size.height),
+                             left_corner_size.width,
+                             left_corner_size.height,
                              left_corner_mask->GetDeviceTexture(),
                              texxform,
                              nux::color::White);
@@ -692,9 +734,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
 
         gfx_context.QRP_1Tex(geo.x - left_corner_offset,
-                             geo.y + (geo.height - left_corner->GetHeight()),
-                             left_corner->GetWidth(),
-                             left_corner->GetHeight(),
+                             geo.y + (geo.height - left_corner_size.height),
+                             left_corner_size.width,
+                             left_corner_size.height,
                              left_corner->GetDeviceTexture(),
                              texxform,
                              nux::color::White);
@@ -708,7 +750,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
-        gfx_context.QRP_1Tex(geo.x - 10,
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
                              geo.y + geo.height,
                              left_tile->GetWidth(),
                              real_height + offset,
@@ -723,9 +765,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
         // Selectively erase blur region in the curbe
         gfx_context.QRP_ColorModTexAlpha(geo.x + geo.width - right->GetWidth(),
-                                         geo.y + top_corner->GetHeight() - top_corner_offset,
+                                         geo.y + top_corner_size.height - top_corner_offset,
                                          right->GetWidth(),
-                                         geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
+                                         geo.height - corner_size.height - (top_corner_size.height - top_corner_offset),
                                          right_mask->GetDeviceTexture(),
                                          texxform,
                                          nux::color::Black);
@@ -734,9 +776,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
         RenderInverseMask(gfx_context, geo.x + geo.width - right->GetWidth(),
-                             geo.y + top_corner->GetHeight() - top_corner_offset,
+                             geo.y + top_corner_size.height - top_corner_offset,
                              right->GetWidth(),
-                             geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
+                             geo.height - corner_size.height - (top_corner_size.height - top_corner_offset),
                              right_mask->GetDeviceTexture(),
                              texxform,
                              nux::color::White);
@@ -746,9 +788,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
 
         gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
-                             geo.y + top_corner->GetHeight() - top_corner_offset,
+                             geo.y + top_corner_size.height - top_corner_offset,
                              right->GetWidth(),
-                             geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
+                             geo.height - corner_size.height - (top_corner_size.height - top_corner_offset),
                              right->GetDeviceTexture(),
                              texxform,
                              nux::color::White);
@@ -761,8 +803,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Selectively erase blur region in the curbe
         gfx_context.QRP_ColorModTexAlpha(geo.x + geo.width - right->GetWidth(),
                                         geo.y - top_corner_offset,
-                                        top_corner->GetWidth(),
-                                        top_corner->GetHeight(),
+                                        top_corner_size.width,
+                                        top_corner_size.height,
                                         top_corner_mask->GetDeviceTexture(),
                                         texxform,
                                         nux::color::Black);
@@ -772,8 +814,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
         RenderInverseMask(gfx_context, geo.x + geo.width - right->GetWidth(),
                                         geo.y - top_corner_offset,
-                                        top_corner->GetWidth(),
-                                        top_corner->GetHeight(),
+                                        top_corner_size.width,
+                                        top_corner_size.height,
                                         top_corner_mask->GetDeviceTexture(),
                                         texxform,
                                         nux::color::White);
@@ -783,8 +825,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
         gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
                              geo.y - top_corner_offset,
-                             top_corner->GetWidth(),
-                             top_corner->GetHeight(),
+                             top_corner_size.width,
+                             top_corner_size.height,
                              top_corner->GetDeviceTexture(),
                              texxform,
                              nux::color::White);
@@ -796,7 +838,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
         gfx_context.QRP_1Tex(geo.x + geo.width,
-                             geo.y - 10,
+                             geo.y - top_corner_offset,
                              geometry.width - (geo.x + geo.width),
                              top_tile->GetHeight(),
                              top_tile->GetDeviceTexture(),
