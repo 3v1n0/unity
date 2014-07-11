@@ -37,6 +37,8 @@ DECLARE_LOGGER(logger, "unity.tests.hud");
 
 using namespace unity;
 
+static double scale = 1.0;
+
 class TestRunner
 {
 public:
@@ -67,6 +69,7 @@ void TestRunner::Init ()
   layout = new nux::VLayout();
 
   hud_view_ = new hud::View();
+  hud_view_->scale = scale;
 
   layout->AddView (hud_view_, 1, nux::MINOR_POSITION_START);
   nux::GetWindowCompositor().SetKeyFocusArea(hud_view_->default_focus());
@@ -86,15 +89,15 @@ void TestRunner::Init ()
         break;
       }
     }
- 
+
    hud_view_->SetIcon(icon_name, 42, 52, 0);
 
   });
 
   hud_view_->query_activated.connect([this] (unity::hud::Query::Ptr query) {
     hud_service_.ExecuteQuery(query, 0);
-  });  
-  
+  });
+
   hud_view_->query_selected.connect([this] (unity::hud::Query::Ptr query) {
     hud_view_->SetIcon(query->icon_name, 42, 52, 0);
   });
@@ -147,13 +150,23 @@ int main(int argc, char **argv)
   unity::Settings settings;
   panel::Style panel_style;
   dash::Style dash_style;
+  unity::glib::Error err;
+
+  GOptionEntry args_parsed[] =
+  {
+    { "scaling-factor", 'f', 0, G_OPTION_ARG_DOUBLE, &scale, "The dash scaling factor", "F" },
+    { NULL }
+  };
+
+  std::shared_ptr<GOptionContext> ctx(g_option_context_new("Standalone Hud"), g_option_context_free);
+  g_option_context_add_main_entries(ctx.get(), args_parsed, NULL);
+  if (!g_option_context_parse(ctx.get(), &argc, &argv, &err))
+    std::cerr << "Got error when parsing arguments: " << err << std::endl;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Hud Prototype Test"),
-                            1200, 768,
-                            0,
-                            &TestRunner::InitWindowThread,
-                            test_runner);
+                            (1200_em).CP(scale), (768_em).CP(scale), 0,
+                            &TestRunner::InitWindowThread, test_runner);
 
   st = nux::CreateSystemThread (NULL, ControlThread, wt);
 
