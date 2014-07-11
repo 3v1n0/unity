@@ -107,6 +107,8 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
   timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Controller::OnDPIChanged));
+
   EnsureHud();
 }
 
@@ -140,6 +142,7 @@ void Controller::SetupHudView()
 {
   LOG_DEBUG(logger) << "SetupHudView called";
   view_ = create_view_();
+  view_->scale = Settings::Instance().em(monitor_index_)->DPIScale();
 
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   layout_->AddView(view_, 1, nux::MINOR_POSITION_START);
@@ -206,7 +209,11 @@ void Controller::SetIcon(std::string const& icon_name)
   int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
 
   if (view_)
-    view_->SetIcon(icon_name, tile_size, icon_size, launcher_width - tile_size);
+  {
+    double scale = view_->scale();
+    int tsize = tile_size().CP(scale);
+    view_->SetIcon(icon_name, tsize, icon_size().CP(scale), launcher_width - tsize);
+  }
 
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
 }
@@ -344,6 +351,7 @@ void Controller::ShowHud()
   {
     Relayout();
     monitor_index_ = ideal_monitor;
+    view_->scale = Settings::Instance().em(monitor_index_)->DPIScale();
   }
 
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
@@ -506,6 +514,12 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
 
   SetIcon(icon_name);
   view_->SearchFinished();
+}
+
+void Controller::OnDPIChanged()
+{
+  if (view_)
+    view_->scale = Settings::Instance().em(monitor_index_)->DPIScale();
 }
 
 // Introspectable
