@@ -44,6 +44,8 @@ class SearchBarSpinner : public unity::debug::Introspectable, public nux::View
 public:
   SearchBarSpinner();
 
+  nux::Property<double> scale;
+
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -62,6 +64,7 @@ protected:
 
 private:
   bool OnFrameTimeout();
+  void UpdateScale(double);
 
   SpinnerState state_;
 

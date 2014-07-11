@@ -101,7 +101,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Preview);
 
 Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
-  , scale(1.0)
+  , scale(1.0f)
   , preview_model_(preview_model)
   , tab_iterator_(new TabIterator())
   , full_data_layout_(nullptr)
@@ -110,7 +110,6 @@ Preview::Preview(dash::Preview::Ptr preview_model)
   , subtitle_(nullptr)
   , preview_container_(new PreviewContainer)
 {
-  preview_container_->scale = scale();
   scale.changed.connect(sigc::mem_fun(this, &Preview::UpdateScale));
 }
 
@@ -303,9 +302,11 @@ void Preview::UpdateScale(double scale)
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    ActionButton* bn = dynamic_cast<ActionButton*>(button);
-    if (bn)
+    if (ActionButton* bn = dynamic_cast<ActionButton*>(button))
       bn->scale = scale;
+
+    if (ActionLink* link = dynamic_cast<ActionLink*>(button))
+      link->scale = scale;
   }
 
   QueueRelayout();

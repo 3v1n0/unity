@@ -62,7 +62,7 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
   ratings_->SetEditable(false);
   ratings_->mouse_click.connect(on_mouse_down);
   layout_->AddView(ratings_);
-  
+
   reviews_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   reviews_->SetFont(style.user_rating_font());
   reviews_->SetScale(scale);
@@ -73,6 +73,7 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
 
   SetLayout(layout_);
 
+  UpdateScale(scale);
   scale.changed.connect(sigc::mem_fun(this, &PreviewRatingsWidget::UpdateScale));
 }
 
@@ -132,7 +133,7 @@ void PreviewRatingsWidget::UpdateScale(double scale)
 
   if (ratings_)
   {
-    ratings_->star_gap_ = RATINGS_SIZE.CP(scale);
+    ratings_->star_size_ = RATINGS_SIZE.CP(scale);
     ratings_->star_gap_ = RATINGS_GAP.CP(scale);
   }
 

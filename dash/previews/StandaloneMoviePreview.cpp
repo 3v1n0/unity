@@ -39,11 +39,13 @@
 #include "PreviewContainer.h"
 
 
-#define WIDTH 972
-#define HEIGHT 452
+const unity::RawPixel WIDTH(1000);
+const unity::RawPixel HEIGHT(600);
 
 using namespace unity;
 using namespace unity::dash;
+
+static double scale = 1.0;
 
 class DummyView : public nux::View
 {
@@ -145,6 +147,7 @@ void TestRunner::Init ()
   container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
   container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
   container_->request_close.connect([this]() { exit(0); });
+  container_->scale = scale;
 
   DummyView* dummyView = new DummyView(container_.GetPointer());
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -234,10 +237,22 @@ int main(int argc, char **argv)
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
   unity::ThumbnailGenerator thumbnail_generator;
+  unity::glib::Error err;
+
+  GOptionEntry args_parsed[] =
+  {
+    { "scaling-factor", 's', 0, G_OPTION_ARG_DOUBLE, &scale, "The dash scaling factor", "F" },
+    { NULL }
+  };
+
+  std::shared_ptr<GOptionContext> ctx(g_option_context_new("Unity Preview"), g_option_context_free);
+  g_option_context_add_main_entries(ctx.get(), args_parsed, NULL);
+  if (!g_option_context_parse(ctx.get(), &argc, &argv, &err))
+    std::cerr << "Got error when parsing arguments: " << err << std::endl;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),
-                            WIDTH, HEIGHT,
+                            WIDTH.CP(scale), HEIGHT.CP(scale),
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);

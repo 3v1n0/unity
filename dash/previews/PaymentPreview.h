@@ -106,6 +106,7 @@ protected:
 
   virtual void LoadActions() = 0;
   virtual void SetupViews();
+  virtual void UpdateScale(double scale) override;
   virtual void SetupBackground();
 
   nux::ObjectPtr<nux::LayeredLayout> full_data_layout_;
@@ -114,6 +115,8 @@ protected:
   nux::ObjectPtr<nux::Layout> header_layout_;
   nux::ObjectPtr<nux::Layout> body_layout_;
   nux::ObjectPtr<nux::Layout> footer_layout_;
+
+  StaticCairoText* calculating_;
 
   // content elements
   nux::ObjectPtr<CoverArt> image_;

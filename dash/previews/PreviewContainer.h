@@ -25,6 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include <Nux/VLayout.h>
 #include <UnityCore/Preview.h>
 #include "Preview.h"
 #include "unity-shared/Introspectable.h"
@@ -93,7 +94,7 @@ protected:
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
-  
+
 private:
   void SetupViews();
 
@@ -116,7 +117,7 @@ private:
   struct timespec  last_progress_time_;
   float navigation_progress_speed_;
   int navigation_count_;
-  
+
   glib::Source::UniquePtr animation_timer_;
   friend class PreviewContent;
 };

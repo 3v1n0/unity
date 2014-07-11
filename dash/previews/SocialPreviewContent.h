@@ -46,7 +46,8 @@ public:
   NUX_DECLARE_OBJECT_TYPE(SocialPreviewContent, nux::View);
 
   SocialPreviewContent(std::string const& text, NUX_FILE_LINE_PROTO);
-  virtual ~SocialPreviewContent();
+
+  nux::Property<double> scale;
 
   void SetText(std::string const& text);
 
@@ -76,6 +77,8 @@ protected:
   virtual void AddProperties(debug::IntrospectionData&);
 
 private:
+  void UpdateScale(double scale);
+
   nux::ObjectPtr<StaticCairoText> text_;
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;

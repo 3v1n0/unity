@@ -23,7 +23,6 @@
 #include "PreviewContainer.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/TimeUtil.h"
@@ -77,20 +76,19 @@ public:
       // Need to update the preview geometries when updating the container geo.
       UpdateAnimationProgress(progress_, curve_progress_);
     });
-    Style& style = previews::Style::Instance();
 
-    spin_= style.GetSearchSpinIcon(SPIN_ICON_SIZE);
-
+    spin_ = Style::Instance().GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
     scale.changed.connect(sigc::mem_fun(this, &PreviewContent::UpdateScale));
   }
 
   void UpdateScale(double scale)
   {
-    Style& style = previews::Style::Instance();
-    spin_ = style.GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
+    spin_ = Style::Instance().GetSearchSpinIcon(SPIN_ICON_SIZE.CP(scale));
 
     for (auto* area : GetChildren())
       static_cast<previews::Preview*>(area)->scale = scale;
+
+    QueueDraw();
   }
 
   // From debug::Introspectable
@@ -436,13 +434,12 @@ PreviewContainer::~PreviewContainer()
 void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation direction)
 {
   previews::Preview::Ptr preview_view = preview_model ? previews::Preview::PreviewForModel(preview_model) : previews::Preview::Ptr();
-  
+
   if (preview_view)
   {
     preview_view->request_close().connect([this]() { request_close.emit(); });
+    preview_layout_->PushPreview(preview_view, direction);
   }
-  
-  preview_layout_->PushPreview(preview_view, direction);
 }
 
 void PreviewContainer::DisableNavButton(Navigation button)
@@ -477,29 +474,32 @@ void PreviewContainer::SetupViews()
 
   nux::VLayout* layout = new nux::VLayout();
   SetLayout(layout);
-  layout->AddLayout(new nux::SpaceLayout(0,0,style.GetPreviewTopPadding(),style.GetPreviewTopPadding()));
+
+  layout->SetTopAndBottomPadding(style.GetPreviewTopPadding().CP(scale), 0);
 
   layout_content_ = new nux::HLayout();
-  layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE);
+  layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
   layout->AddLayout(layout_content_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   layout_content_->AddSpace(0, 1);
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
   AddChild(nav_left_);
-  nav_left_->SetMinimumWidth(style.GetNavigatorWidth());
-  nav_left_->SetMaximumWidth(style.GetNavigatorWidth());
+  nav_left_->scale = scale();
+  nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   nav_left_->activated.connect([this]() { navigate_left.emit(); });
   layout_content_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   preview_layout_ = new PreviewContent(this);
-  preview_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
+  preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
   AddChild(preview_layout_);
   layout_content_->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
   AddChild(nav_right_);
-  nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
-  nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
+  nav_right_->scale = scale();
+  nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
   nav_right_->activated.connect([this]() { navigate_right.emit(); });
   layout_content_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout_content_->AddSpace(0, 1);
@@ -511,7 +511,7 @@ void PreviewContainer::SetupViews()
     // reset animation clock.
     if (navigation_count_ == 0)
       clock_gettime(CLOCK_MONOTONIC, &last_progress_time_);
-  
+
     float navigation_progress_remaining = CLAMP((1.0 - preview_layout_->GetAnimationProgress()) + navigation_count_, 1.0f, 10.0f);
     navigation_count_++;
 
@@ -553,7 +553,7 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
     gfx_engine.GetRenderStates().SetBlend(false);
     gfx_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   }
-  
+
     // rely on the compiz event loop to come back to us in a nice throttling
   if (AnimationInProgress())
   {
@@ -614,11 +614,12 @@ float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current
 bool PreviewContainer::QueueAnimation()
 {
   animation_timer_.reset();
-  
+
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
   float progress = GetSwipeAnimationProgress(current);
-  preview_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
+  if (preview_layout_)
+    preview_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
   last_progress_time_ = current;
 
   QueueDraw();
@@ -710,33 +711,30 @@ void PreviewContainer::OnMouseDown(int x, int y, unsigned long button_flags, uns
 
 nux::Geometry PreviewContainer::GetLayoutGeometry() const
 {
-  return layout_content_->GetAbsoluteGeometry();  
+  return layout_content_->GetAbsoluteGeometry();
 }
 
 void PreviewContainer::UpdateScale(double scale)
 {
   previews::Style& style = previews::Style::Instance();
 
-  if (preview_layout_)
-  {
-    preview_layout_->scale = scale;
-    preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
-  }
+  GetLayout()->SetTopAndBottomPadding(style.GetPreviewTopPadding().CP(scale), 0);
 
-  if (layout_content_)
-    layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+  preview_layout_->SetMinMaxSize(style.GetPreviewWidth().CP(scale), style.GetPreviewHeight().CP(scale));
+  preview_layout_->scale = scale;
 
-  if (nav_left_)
-  {
-    nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
-    nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
-  }
+  layout_content_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
-  if (nav_right_)
-  {
-    nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
-    nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
-  }
+  nav_left_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_left_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_left_->scale = scale;
+
+  nav_right_->SetMinimumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_right_->SetMaximumWidth(style.GetNavigatorWidth().CP(scale));
+  nav_right_->scale = scale;
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews
