@@ -19,11 +19,16 @@
 
 #include "OverlayScrollView.h"
 #include "PlacesOverlayVScrollBar.h"
+#include "RawPixel.h"
 
 namespace unity
 {
 namespace dash
 {
+namespace
+{
+  const RawPixel MOUSE_WHEEL_SCROLL_SIZE = 32_em;
+}
 
 ScrollView::ScrollView(NUX_FILE_LINE_DECL)
   : nux::ScrollView(NUX_FILE_LINE_PARAM)
@@ -38,6 +43,12 @@ ScrollView::ScrollView(NUX_FILE_LINE_DECL)
 
     scrollbar->scale = scale;
     return true;
+  });
+
+  m_MouseWheelScrollSize = MOUSE_WHEEL_SCROLL_SIZE.CP(scale);
+
+  scale.changed.connect([this] (double scale) {
+    m_MouseWheelScrollSize = MOUSE_WHEEL_SCROLL_SIZE.CP(scale);
   });
 }
 
