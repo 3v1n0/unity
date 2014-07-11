@@ -54,20 +54,23 @@ const double DEFAULT_SCALE         = 1.0;
 class ScopeScrollView: public nux::ScrollView
 {
 public:
-  nux::Property<double> scale;
+  nux::RWProperty<double> scale;
 
   ScopeScrollView(PlacesVScrollBar* scroll_bar, NUX_FILE_LINE_DECL)
     : nux::ScrollView(NUX_FILE_LINE_PARAM)
-    , scale(DEFAULT_SCALE)
     , right_area_(nullptr)
     , up_area_(nullptr)
   {
-    scroll_bar->scale = scale();
-    SetVScrollBar(scroll_bar);
+    scale.SetGetterFunction([scroll_bar] { return scroll_bar->scale(); });
+    scale.SetSetterFunction([scroll_bar] (double scale) {
+      if (scroll_bar->scale() == scale)
+        return false;
 
-    scale.changed.connect([scroll_bar] (double scale) {
       scroll_bar->scale = scale;
+      return true;
     });
+
+    SetVScrollBar(scroll_bar);
 
     OnVisibleChanged.connect([this] (nux::Area* /*area*/, bool visible) {
       if (m_horizontal_scrollbar_enable)
