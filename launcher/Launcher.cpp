@@ -2196,11 +2196,11 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 
 void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long key_flags)
 {
-  if (!hovered_ || abs(wheel_delta) != NUX_MOUSEWHEEL_DELTA)
+  if (!hovered_)
     return;
 
   bool alt_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_ALT);
-  if (alt_pressed)
+  if (alt_pressed && abs(wheel_delta) != NUX_MOUSEWHEEL_DELTA)
   {
     ScrollLauncher(wheel_delta);
   }
