@@ -26,12 +26,13 @@
 
 #include "unity-shared/MockableBaseWindow.h"
 #include "LockScreenAccelerators.h"
-#include "UserPromptView.h"
 
 namespace unity
 {
 namespace lockscreen
 {
+
+class UserPromptView;
 
 class AbstractShield : public MockableBaseWindow
 {
