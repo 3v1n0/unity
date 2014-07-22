@@ -35,6 +35,8 @@ namespace unity
 namespace lockscreen
 {
 
+class UserPromptView;
+
 class Controller : public sigc::trackable
 {
 public:
@@ -51,6 +53,7 @@ public:
 private:
   friend class TestLockScreenController;
 
+  UserPromptView* CreatePromptView();
   void EnsureShields(std::vector<nux::Geometry> const& monitors);
   void EnsureBlankWindow();
   void LockScreen();
@@ -79,6 +82,7 @@ private:
   AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
+  nux::ObjectPtr<UserPromptView> prompt_view_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
