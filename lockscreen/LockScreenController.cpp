@@ -24,7 +24,6 @@
 
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
-#include "UserPromptView.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
