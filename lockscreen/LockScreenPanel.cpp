@@ -82,7 +82,9 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
   indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Panel::OnEntryActivateRequest));
 
   monitor.changed.connect([this, hostname] (int monitor) {
-    hostname->SetScale(unity::Settings::Instance().em(monitor)->DPIScale());
+    double scale = unity::Settings::Instance().em(monitor)->DPIScale();
+    hostname->SetScale(scale);
+    static_cast<nux::HLayout*>(GetLayout())->SetLeftAndRightPadding(PADDING.CP(scale), 0);
     indicators_view_->SetMonitor(monitor);
     BuildTexture();
     QueueRelayout();
