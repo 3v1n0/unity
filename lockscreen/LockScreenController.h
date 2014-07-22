@@ -27,7 +27,6 @@
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
 #include "ScreenSaverDBusManager.h"
-#include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 
@@ -77,6 +76,7 @@ private:
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
+  nux::ObjectWeakPtr<UserPromptView> prompt_view_;
 
   DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
@@ -84,7 +84,6 @@ private:
   AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
-  nux::ObjectPtr<UserPromptView> prompt_view_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;

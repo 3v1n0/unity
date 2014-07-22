@@ -24,6 +24,7 @@
 
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
+#include "UserPromptView.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
@@ -190,9 +191,16 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   int shields_size = shields_.size();
   int primary = UScreen::GetDefault()->GetMonitorWithMouse();
 
+  // Keep a reference of the old prompt_view
+  nux::ObjectPtr<UserPromptView> prompt_view(prompt_view_.GetPointer());
+
   shields_.resize(num_monitors);
 
-  prompt_view_ = test_mode_ ? nullptr : CreatePromptView();
+  if (!prompt_view)
+  {
+    prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
+    prompt_view_ = prompt_view.GetPointer();
+  }
 
   for (int i = 0; i < num_monitors; ++i)
   {
@@ -201,7 +209,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     if (i >= shields_size)
     {
-      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), prompt_view_, i, i == primary);
+      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), prompt_view, i, i == primary);
       is_new = true;
     }
 
