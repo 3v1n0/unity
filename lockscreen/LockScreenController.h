@@ -41,6 +41,8 @@ class UserPromptView;
 class Controller : public sigc::trackable
 {
 public:
+  typedef std::shared_ptr<Controller> Ptr;
+
   Controller(DBusManager::Ptr const&, session::Manager::Ptr const&,
              UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
