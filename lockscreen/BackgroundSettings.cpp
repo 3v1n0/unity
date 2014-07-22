@@ -35,7 +35,7 @@ namespace
 {
 const std::string SETTINGS_NAME = "org.gnome.desktop.background";
 
-constexpr int GetGridOffset(int size) { return (size % Settings::GRID_SIZE) / 2; }
+inline int GetGridOffset(int size) { return (size % Settings::GRID_SIZE) / 2; }
 }
 
 BackgroundSettings::BackgroundSettings()
