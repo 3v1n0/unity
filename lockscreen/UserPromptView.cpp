@@ -100,6 +100,13 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
   , session_manager_(session_manager)
 {
+  auto width = 8 * Settings::GRID_SIZE;
+  auto height = 3 * Settings::GRID_SIZE;
+
+  SetMinimumWidth(width);
+  SetMaximumWidth(width);
+  SetMinimumHeight(height);
+
   user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
     AddPrompt(message, /* visible */ true, promise);
   });

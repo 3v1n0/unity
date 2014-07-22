@@ -56,7 +56,6 @@ public:
 private:
   friend class TestLockScreenController;
 
-  UserPromptView* CreatePromptView();
   void EnsureShields(std::vector<nux::Geometry> const& monitors);
   void EnsureBlankWindow();
   void LockScreen();

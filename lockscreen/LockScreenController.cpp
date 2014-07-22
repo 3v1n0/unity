@@ -154,20 +154,6 @@ void Controller::ActivatePanel()
     primary_shield_->ActivatePanel();
 }
 
-UserPromptView* Controller::CreatePromptView()
-{
-  auto* prompt_view = new UserPromptView(session_manager_);
-
-  auto width = 8 * Settings::GRID_SIZE;
-  auto height = 3 * Settings::GRID_SIZE;
-
-  prompt_view->SetMinimumWidth(width);
-  prompt_view->SetMaximumWidth(width);
-  prompt_view->SetMinimumHeight(height);
-
-  return prompt_view;
-}
-
 void Controller::ResetPostLockScreenSaver()
 {
   screensaver_post_lock_timeout_.reset();
