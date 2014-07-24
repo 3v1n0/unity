@@ -45,6 +45,7 @@ public:
     : MockableBaseWindow("Unity Lockscreen")
     , primary(is_primary)
     , monitor(monitor_num)
+    , scale(1.0)
     , session_manager_(session)
     , indicators_(indicators)
     , accelerators_(accelerators)
@@ -53,6 +54,7 @@ public:
 
   nux::Property<bool> primary;
   nux::Property<int> monitor;
+  nux::Property<double> scale;
 
   using MockableBaseWindow::RemoveLayout;
   virtual bool IsIndicatorOpen() const = 0;

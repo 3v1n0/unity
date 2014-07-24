@@ -32,6 +32,7 @@ class BackgroundSettings;
 class UserAuthenticator;
 class UserPromptView;
 class Panel;
+class CofView;
 
 class Shield : public AbstractShield
 {
@@ -64,6 +65,7 @@ private:
   connection::Wrapper panel_active_conn_;
   connection::Wrapper regrab_conn_;
   Panel* panel_view_;
+  CofView* cof_view_;
 };
 
 }

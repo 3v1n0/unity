@@ -29,6 +29,7 @@
 #include "LockScreenSettings.h"
 #include "UserPromptView.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity
@@ -44,7 +45,9 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
   : AbstractShield(session_manager, indicators, accelerators, prompt_view, monitor_num, is_primary)
   , bg_settings_(std::make_shared<BackgroundSettings>())
   , panel_view_(nullptr)
+  , cof_view_(nullptr)
 {
+  scale = unity::Settings::Instance().em(monitor)->DPIScale();
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
 
   EnableInputWindow(true);
@@ -52,6 +55,8 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
   geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdateBackgroundTexture();});
 
   monitor.changed.connect([this] (int monitor) {
+    scale = unity::Settings::Instance().em(monitor)->DPIScale();
+
     if (panel_view_)
       panel_view_->monitor = monitor;
 
@@ -69,6 +74,17 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
     if (panel_view_) panel_view_->SetInputEventSensitivity(is_primary);
     QueueRelayout();
     QueueDraw();
+  });
+
+  scale.changed.connect([this] (double scale) {
+    if (prompt_view_)
+      prompt_view_->scale = scale;
+
+    if (cof_view_)
+      cof_view_->scale = scale;
+
+    if (prompt_layout_)
+      prompt_layout_->SetLeftAndRightPadding(2 * Settings::GRID_SIZE.CP(scale));
   });
 
   mouse_move.connect([this] (int x, int y, int, int, unsigned long, unsigned long) {
@@ -98,8 +114,8 @@ void Shield::ShowPrimaryView()
   {
     if (prompt_view_ && prompt_view_->GetParentObject())
       static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
-    prompt_layout_->AddView(prompt_view_.GetPointer());
 
+    prompt_layout_->AddView(prompt_view_.GetPointer());
     SetLayout(primary_layout_.GetPointer());
     return;
   }
@@ -111,10 +127,12 @@ void Shield::ShowPrimaryView()
   main_layout->AddView(CreatePanel());
 
   prompt_layout_ = new nux::HLayout();
-  prompt_layout_->SetLeftAndRightPadding(2 * Settings::GRID_SIZE);
+  prompt_view_->scale = scale();
+  prompt_layout_->SetLeftAndRightPadding(2 * Settings::GRID_SIZE.CP(scale));
 
   if (prompt_view_ && prompt_view_->GetParentObject())
     static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+
   prompt_layout_->AddView(prompt_view_.GetPointer());
 
   // 10 is just a random number to center the prompt view.
@@ -136,8 +154,9 @@ void Shield::ShowSecondaryView()
   SetLayout(cof_layout_.GetPointer());
 
   // The circle of friends
-  CofView* cof_view = new CofView();
-  main_layout->AddView(cof_view);
+  cof_view_ = new CofView();
+  cof_view_->scale = scale();
+  main_layout->AddView(cof_view_);
 }
 
 Panel* Shield::CreatePanel()
