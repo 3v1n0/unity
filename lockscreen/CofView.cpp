@@ -18,6 +18,7 @@
 */
 
 #include "CofView.h"
+#include "unity-shared/RawPixel.h"
 
 #include "config.h"
 
@@ -25,11 +26,23 @@ namespace unity
 {
 namespace lockscreen
 {
+namespace
+{
+const std::string COF_FILE = "cof.png";
+}
 
 CofView::CofView()
   // FIXME (andy) if we get an svg cof we can make it fullscreen independent.
-  : IconTexture(PKGDATADIR"/cof.png", 66)
-{}
+  : IconTexture(PKGDATADIR"/"+COF_FILE, -1)
+  , scale(1.0)
+{
+  scale.changed.connect([this] (double scale) {
+    int w, h;
+    gdk_pixbuf_get_file_info((PKGDATADIR"/" + COF_FILE).c_str(), &w, &h);
+    SetSize(RawPixel(std::max(w, h)).CP(scale));
+    ReLoadIcon();
+  });
+}
 
 nux::Area* CofView::FindAreaUnderMouse(nux::Point const& mouse_position,
                                        nux::NuxEventType event_type)

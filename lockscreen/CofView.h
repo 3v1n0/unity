@@ -27,10 +27,12 @@ namespace unity
 namespace lockscreen
 {
 
-class CofView : public unity::IconTexture
+class CofView : public IconTexture
 {
 public:
   CofView();
+
+  nux::Property<double> scale;
 
   nux::Area* FindAreaUnderMouse(nux::Point const& mouse_position,
                                 nux::NuxEventType event_type) override;
