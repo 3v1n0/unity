@@ -98,6 +98,7 @@ std::string SanitizeMessage(std::string const& message)
 
 UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
+  , scale(1.0)
   , session_manager_(session_manager)
 {
   auto width = 8 * Settings::GRID_SIZE;

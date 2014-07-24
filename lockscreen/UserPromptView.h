@@ -48,7 +48,8 @@ class UserPromptView : public nux::View
 {
 public:
   UserPromptView(session::Manager::Ptr const& session_manager);
-  ~UserPromptView() {};
+
+  nux::Property<double> scale;
 
   nux::View* focus_view();
 
