@@ -63,6 +63,7 @@ protected:
 
 private:
   void ResetLayout();
+  void UpdateSize();
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
 
