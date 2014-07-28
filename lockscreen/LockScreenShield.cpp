@@ -77,7 +77,7 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
   });
 
   scale.changed.connect([this] (double scale) {
-    if (prompt_view_)
+    if (prompt_view_ && primary())
       prompt_view_->scale = scale;
 
     if (cof_view_)
@@ -112,8 +112,13 @@ void Shield::ShowPrimaryView()
 
   if (primary_layout_)
   {
-    if (prompt_view_ && prompt_view_->GetParentObject())
-      static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+    if (prompt_view_)
+    {
+      prompt_view_->scale = scale();
+
+      if (prompt_view_->GetParentObject())
+        static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+    }
 
     prompt_layout_->AddView(prompt_view_.GetPointer());
     SetLayout(primary_layout_.GetPointer());
@@ -127,11 +132,15 @@ void Shield::ShowPrimaryView()
   main_layout->AddView(CreatePanel());
 
   prompt_layout_ = new nux::HLayout();
-  prompt_view_->scale = scale();
   prompt_layout_->SetLeftAndRightPadding(2 * Settings::GRID_SIZE.CP(scale));
 
-  if (prompt_view_ && prompt_view_->GetParentObject())
-    static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+  if (prompt_view_)
+  {
+    prompt_view_->scale = scale();
+
+    if (prompt_view_->GetParentObject())
+      static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+  }
 
   prompt_layout_->AddView(prompt_view_.GetPointer());
 
