@@ -20,36 +20,26 @@
 #ifndef TEXTINPUT_H
 #define TEXTINPUT_H
 
-#include "config.h"
-
-#include <glib/gi18n-lib.h>
-#include <gtk/gtk.h>
-
 #include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/LayeredLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/TextEntry.h>
-#include <NuxCore/Logger.h>
-#include <NuxCore/Property.h>
 #include <UnityCore/GLibSignal.h>
-#include <UnityCore/GLibSource.h>
 
-#include "CairoTexture.h"
-#include "unity-shared/IconTexture.h"
-#include "unity-shared/IMTextEntry.h"
-#include "unity-shared/Introspectable.h"
-#include "unity-shared/SearchBarSpinner.h"
-#include "unity-shared/StaticCairoText.h"
+#include "Introspectable.h"
+#include "IMTextEntry.h"
+#include "SearchBarSpinner.h"
 
 namespace nux
 {
 class AbstractPaintLayer;
+class LayeredLayout;
 class LinearLayout;
+class HLayout;
 }
 
 namespace unity
 {
+class IconTexture;
+class StaticCairoText;
+class SearchBarSpinner;
 
 class TextInput : public unity::debug::Introspectable, public nux::View
 {
@@ -75,7 +65,7 @@ public:
   nux::Property<bool> show_caps_lock;
 
 private:
-  void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+  void OnFontChanged();
   void UpdateHintFont();
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);

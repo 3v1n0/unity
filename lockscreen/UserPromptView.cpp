@@ -19,6 +19,9 @@
 
 #include "UserPromptView.h"
 
+#include "config.h"
+#include <glib/gi18n-lib.h>
+
 #include <boost/algorithm/string/trim.hpp>
 #include <Nux/VLayout.h>
 

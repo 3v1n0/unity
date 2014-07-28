@@ -17,11 +17,24 @@
  * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  */
 
+#include "config.h"
 #include "TextInput.h"
-#include "unity-shared/IconTexture.h"
-#include "unity-shared/DashStyle.h"
-#include "unity-shared/RawPixel.h"
-#include "unity-shared/PreviewStyle.h"
+
+#include <gtk/gtk.h>
+#include <glib/gi18n-lib.h>
+
+#include <Nux/LayeredLayout.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <NuxCore/Logger.h>
+
+#include "CairoTexture.h"
+#include "StaticCairoText.h"
+#include "IconTexture.h"
+#include "IMTextEntry.h"
+#include "DashStyle.h"
+#include "PreviewStyle.h"
+#include "RawPixel.h"
 
 #include <X11/XKBlib.h>
 

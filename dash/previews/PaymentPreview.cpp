@@ -20,8 +20,10 @@
  *              Manuel de la Pena <manuel.delapena@canonical.com>
  *
  */
-#include <NuxCore/Logger.h>
 #include "PaymentPreview.h"
+
+#include <Nux/VLayout.h>
+#include <NuxCore/Logger.h>
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PreviewStyle.h"
