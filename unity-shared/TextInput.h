@@ -64,6 +64,7 @@ public:
   nux::ROProperty<bool> im_preedit;
   nux::Property<bool> show_activator;
   nux::Property<bool> show_caps_lock;
+  nux::Property<double> scale;
 
 private:
   void OnFontChanged();
@@ -71,6 +72,7 @@ private:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   void UpdateBackground(bool force);
+  void UpdateScale(double);
 
   std::string GetName() const;
 
@@ -109,13 +111,13 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
+  nux::HLayout* hint_layout_;
   nux::LayeredLayout* layered_layout_;
   SearchBarSpinner* spinner_;
 
   nux::Property<bool> caps_lock_on;
   int last_width_;
   int last_height_;
-  bool mouse_over_warning_icon_;
 
   IconTexture* warning_;
   IconTexture* activator_;
