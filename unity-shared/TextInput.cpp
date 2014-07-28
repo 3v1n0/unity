@@ -149,10 +149,9 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
     "notify::gtk-font-name", sigc::mem_fun(this, &TextInput::OnFontChanged));
   OnFontChanged(gtk_settings_get_default());
 
-  sig_manager_.Add<void, GdkKeymap*, gpointer>(gdk_keymap_get_default(),
-    "state-changed", [this](GdkKeymap*, gpointer){
-      CheckIfCapsLockOn();
-    });
+  sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) {
+    CheckIfCapsLockOn();
+  });
 
   input_string.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_input_string));
   input_string.SetSetterFunction(sigc::mem_fun(this, &TextInput::set_input_string));
