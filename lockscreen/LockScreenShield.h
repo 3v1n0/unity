@@ -55,6 +55,7 @@ private:
   void UpdateBackgroundTexture();
   void ShowPrimaryView();
   void ShowSecondaryView();
+  void UpdateScale();
   Panel* CreatePanel();
 
   std::shared_ptr<BackgroundSettings> bg_settings_;

@@ -47,15 +47,16 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
   , panel_view_(nullptr)
   , cof_view_(nullptr)
 {
-  scale = unity::Settings::Instance().em(monitor)->DPIScale();
+  UpdateScale();
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
 
   EnableInputWindow(true);
 
+  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Shield::UpdateScale));
   geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdateBackgroundTexture();});
 
   monitor.changed.connect([this] (int monitor) {
-    scale = unity::Settings::Instance().em(monitor)->DPIScale();
+    UpdateScale();
 
     if (panel_view_)
       panel_view_->monitor = monitor;
@@ -97,6 +98,11 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
     auto const& abs_geo = GetAbsoluteGeometry();
     grab_motion.emit(abs_geo.x + x, abs_geo.y + y);
   });
+}
+
+void Shield::UpdateScale()
+{
+  scale = unity::Settings::Instance().em(monitor)->DPIScale();
 }
 
 void Shield::UpdateBackgroundTexture()
