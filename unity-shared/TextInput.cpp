@@ -234,7 +234,7 @@ void TextInput::CheckIfCapsLockOn()
 void TextInput::SetSpinnerVisible(bool visible)
 {
   spinner_->SetVisible(visible);
-  activator_->SetVisible(visible || show_activator());
+  activator_->SetVisible(!visible && show_activator());
 }
 
 void TextInput::SetSpinnerState(SpinnerState spinner_state)
