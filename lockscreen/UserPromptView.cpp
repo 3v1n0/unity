@@ -46,8 +46,8 @@ const int PROMPT_FONT_SIZE = 13;
 nux::AbstractPaintLayer* CrateBackgroundLayer(double width, double height, double scale)
 {
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
   cairo_t* cr = cg.GetInternalContext();
-  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
 
   cairo_set_source_rgba(cr, 0.1, 0.1, 0.1, 0.4);
 

@@ -313,9 +313,9 @@ void TextInput::LoadWarningTooltip()
   extents.height += TOOLTIP_OFFSET;
 
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, RawPixel(extents.width).CP(scale), RawPixel(extents.height).CP(scale));
+  cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
   cairo_t* cr = cg.GetInternalContext();
 
-  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   gtk_render_background(style_context, cr, 0, 0, extents.width, extents.height);
   gtk_render_frame(style_context, cr, 0, 0, extents.width, extents.height);
   gtk_render_layout(style_context, cr, TOOLTIP_OFFSET/2, TOOLTIP_OFFSET/2, layout);
@@ -434,8 +434,8 @@ void TextInput::UpdateBackground(bool force)
   last_height_ = geo.height;
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, last_width_, last_height_);
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
   cairo_t* cr = cairo_graphics.GetInternalContext();
-  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
 
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
