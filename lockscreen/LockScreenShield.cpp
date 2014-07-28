@@ -88,6 +88,9 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
 
     if (prompt_layout_)
       prompt_layout_->SetLeftAndRightPadding(2 * Settings::GRID_SIZE.CP(scale));
+
+    background_layer_.reset();
+    UpdateBackgroundTexture();
   });
 
   mouse_move.connect([this] (int x, int y, int, int, unsigned long, unsigned long) {
