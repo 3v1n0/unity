@@ -319,6 +319,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
   text_input->input_hint = SanitizeMessage(message);
   text_input->hint_font_size = PROMPT_FONT_SIZE;
   text_input->show_caps_lock = true;
+  text_input->show_activator = true;
   text_entry->SetPasswordMode(!visible);
   text_entry->SetPasswordChar("•");
   text_entry->SetToggleCursorVisibilityOnKeyFocus(true);
