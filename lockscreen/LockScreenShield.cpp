@@ -68,6 +68,9 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
     {
       UnGrabPointer();
       UnGrabKeyboard();
+
+      if (prompt_layout_)
+        prompt_layout_->RemoveChildObject(prompt_view_.GetPointer());
     }
 
     is_primary ? ShowPrimaryView() : ShowSecondaryView();
@@ -115,12 +118,9 @@ void Shield::ShowPrimaryView()
     if (prompt_view_)
     {
       prompt_view_->scale = scale();
-
-      if (prompt_view_->GetParentObject())
-        static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+      prompt_layout_->AddView(prompt_view_.GetPointer());
     }
 
-    prompt_layout_->AddView(prompt_view_.GetPointer());
     SetLayout(primary_layout_.GetPointer());
     return;
   }
@@ -137,12 +137,8 @@ void Shield::ShowPrimaryView()
   if (prompt_view_)
   {
     prompt_view_->scale = scale();
-
-    if (prompt_view_->GetParentObject())
-      static_cast<nux::Layout*>(prompt_view_->GetParentObject())->RemoveChildObject(prompt_view_.GetPointer());
+    prompt_layout_->AddView(prompt_view_.GetPointer());
   }
-
-  prompt_layout_->AddView(prompt_view_.GetPointer());
 
   // 10 is just a random number to center the prompt view.
   main_layout->AddSpace(0, 10);
