@@ -22,6 +22,7 @@
 
 #include <Nux/Nux.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibSource.h>
 
 #include "Introspectable.h"
 #include "IMTextEntry.h"
@@ -123,6 +124,7 @@ private:
   IconTexture* activator_;
   nux::ObjectPtr<nux::BaseTexture> warning_tooltip_;
 
+  glib::Source::UniquePtr tooltip_timeout_;
   glib::SignalManager sig_manager_;
 };
 

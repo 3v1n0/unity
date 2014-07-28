@@ -45,6 +45,7 @@ namespace unity
 namespace
 {
 const int BORDER_RADIUS = 5;
+const int TOOLTIP_WAIT = 500;
 const RawPixel SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10_em;
 const RawPixel LEFT_INTERNAL_PADDING = 6_em;
 const RawPixel TEXT_INPUT_RIGHT_BORDER = 10_em;
@@ -65,11 +66,7 @@ const int HINT_LABEL_FONT_SIZE = 11;
 const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
 const RawPixel PANGO_ENTRY_FONT_SIZE = 14_em;
 
-}
-
 nux::logging::Logger logger("unity.textinput");
-
-NUX_IMPLEMENT_OBJECT_TYPE(TextInput);
 
 std::shared_ptr<nux::AbstractPaintLayer> CreateWarningLayer(nux::BaseTexture* texture)
 {
@@ -89,6 +86,9 @@ std::shared_ptr<nux::AbstractPaintLayer> CreateWarningLayer(nux::BaseTexture* te
 
   return std::make_shared<nux::TextureLayer>(texture->GetDeviceTexture(), texxform, nux::color::White, true, rop);
 }
+}
+
+NUX_IMPLEMENT_OBJECT_TYPE(TextInput);
 
 TextInput::TextInput(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
@@ -182,11 +182,15 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   input_hint.changed.connect([this](std::string const& s) { OnInputHintChanged(); });
 
   warning_->mouse_enter.connect([this] (int x, int y, int button, int key_flags) {
-    QueueDraw();
+    tooltip_timeout_.reset(new glib::Timeout(TOOLTIP_WAIT, [this] {
+      tooltip_timeout_.reset();
+      QueueDraw();
+      return false;
+    }));
   });
 
   warning_->mouse_leave.connect([this] (int x, int y, int button, int key_flags) {
-    QueueDraw();
+    tooltip_timeout_ ? tooltip_timeout_.reset() : QueueDraw();
   });
 }
 
@@ -388,7 +392,7 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
-  if (caps_lock_on && warning_->IsMouseInside())
+  if (caps_lock_on && warning_->IsMouseInside() && !tooltip_timeout_)
     PaintWarningTooltip(GfxContext);
 
   if (!IsFullRedraw())
