@@ -20,11 +20,13 @@
 #include "SpreadFilter.h"
 
 #include <Nux/HLayout.h>
+#include <UnityCore/GLibWrapper.h>
+
 #include "AnimationUtils.h"
+#include "ApplicationManager.h"
 #include "SearchBar.h"
 #include "UnitySettings.h"
 #include "WindowManager.h"
-#include "ApplicationManager.h"
 #include "RawPixel.h"
 
 namespace unity

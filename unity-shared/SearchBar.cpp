@@ -20,17 +20,24 @@
 #include "config.h"
 
 #include <Nux/Nux.h>
+#include <Nux/LayeredLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include <Nux/TextEntry.h>
 #include <NuxCore/Logger.h>
 
+#include <gtk/gtk.h>
 #include <glib/gi18n-lib.h>
 
 #include "SearchBar.h"
 #include "CairoTexture.h"
 #include "DashStyle.h"
 #include "GraphicsUtils.h"
+#include "IconTexture.h"
+#include "IMTextEntry.h"
 #include "RawPixel.h"
+#include "SearchBarSpinner.h"
+#include "StaticCairoText.h"
 #include "UnitySettings.h"
 
 namespace unity
@@ -252,9 +259,8 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     expand_icon_->mouse_click.connect(mouse_expand);
   }
 
-  sig_manager_.Add<void, GtkSettings*, GParamSpec*>(gtk_settings_get_default(), "notify::gtk-font-name",
-                                                    sigc::mem_fun(this, &SearchBar::OnFontChanged));
-  OnFontChanged(gtk_settings_get_default());
+  sig_manager_.Add<void, GtkSettings*>(gtk_settings_get_default(), "notify::gtk-font-name", sigc::hide(sigc::mem_fun(this, &SearchBar::OnFontChanged)));
+  OnFontChanged();
 
   search_hint.changed.connect([this](std::string const& s) { OnSearchHintChanged(); });
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
@@ -347,13 +353,13 @@ void SearchBar::UpdateScale(double scale)
   UpdateSearchBarSize();
 }
 
-void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
+void SearchBar::OnFontChanged()
 {
   glib::String font_name;
   PangoFontDescription* desc;
   std::ostringstream font_desc;
 
-  g_object_get(settings, "gtk-font-name", &font_name, NULL);
+  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
 
   desc = pango_font_description_from_string(font_name.Value());
   if (desc)
@@ -586,7 +592,7 @@ void SearchBar::UpdateBackground(bool force)
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
   cairo_stroke(cr);
 
-  nux::BaseTexture* texture2D = texture_from_cairo_graphics(cairo_graphics);
+  auto texture2D = texture_ptr_from_cairo_graphics(cairo_graphics);
 
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -602,8 +608,6 @@ void SearchBar::UpdateBackground(bool force)
                                         nux::color::White,
                                         true,
                                         rop));
-
-  texture2D->UnReference();
 }
 
 void SearchBar::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)

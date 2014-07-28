@@ -22,8 +22,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <NuxGraphics/GraphicsEngine.h>
-#include <Nux/TextureArea.h>
 #include <NuxCore/Math/Matrix4.h>
 #include <UnityCore/GLibSource.h>
 #include "unity-shared/Introspectable.h"
