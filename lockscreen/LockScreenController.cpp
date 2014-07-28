@@ -218,7 +218,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     shield->SetGeometry(new_geo);
     shield->SetMinMaxSize(new_geo.width, new_geo.height);
-    shield->primary = (i == primary);
+    shield->primary = false;
     shield->monitor = i;
 
     // XXX: manually emit nux::Area::geometry_changed beucase nux can fail to emit it.
