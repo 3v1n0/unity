@@ -101,6 +101,9 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
   , scale(1.0)
   , session_manager_(session_manager)
+  , username_(nullptr)
+  , msg_layout_(nullptr)
+  , prompt_layout_(nullptr)
 {
   user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
     AddPrompt(message, /* visible */ true, promise);
@@ -139,7 +142,47 @@ void UserPromptView::UpdateSize()
   SetMinimumWidth(width);
   SetMaximumWidth(width);
   SetMinimumHeight(height);
-  ResetLayout();
+
+  if (nux::Layout* layout = GetLayout())
+  {
+    layout->SetLeftAndRightPadding(PADDING.CP(scale));
+    layout->SetTopAndBottomPadding(PADDING.CP(scale));
+    static_cast<nux::VLayout*>(layout)->SetVerticalInternalMargin(LAYOUT_MARGIN.CP(scale));
+  }
+
+  if (username_)
+  {
+    username_->SetScale(scale);
+  }
+
+  if (msg_layout_)
+  {
+    msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN.CP(scale));
+
+    for (auto* area : msg_layout_->GetChildren())
+    {
+      area->SetMaximumWidth(width);
+      static_cast<StaticCairoText*>(area)->SetScale(scale);
+    }
+  }
+
+  if (prompt_layout_)
+  {
+    prompt_layout_->SetVerticalInternalMargin(PROMPT_LAYOUT_MARGIN.CP(scale));
+
+    for (auto* area : prompt_layout_->GetChildren())
+    {
+      auto* text_input = static_cast<TextInput*>(area);
+      text_input->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
+      text_input->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+    }
+  }
+
+  bg_layer_.reset();
+
+  ComputeContentSize();
+  QueueRelayout();
+  QueueDraw();
 }
 
 bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character)
@@ -168,10 +211,10 @@ void UserPromptView::ResetLayout()
   auto const& real_name = session_manager_->RealName();
   auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
 
-  unity::StaticCairoText* username = new unity::StaticCairoText(name);
-  username->SetScale(scale);
-  username->SetFont("Ubuntu "+std::to_string(PROMPT_FONT_SIZE));
-  GetLayout()->AddView(username);
+  username_ = new unity::StaticCairoText(name);
+  username_->SetScale(scale);
+  username_->SetFont("Ubuntu "+std::to_string(PROMPT_FONT_SIZE));
+  GetLayout()->AddView(username_);
 
   msg_layout_ = new nux::VLayout();
   msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN.CP(scale));
@@ -204,6 +247,21 @@ void UserPromptView::AuthenticationCb(bool authenticated)
   }
 }
 
+void UserPromptView::EnsureBGLayer()
+{
+  auto const& geo = GetGeometry();
+
+  if (bg_layer_)
+  {
+    auto const& layer_geo = bg_layer_->GetGeometry();
+
+    if (layer_geo.width == geo.width && layer_geo.height == geo.height)
+      return;
+  }
+
+  bg_layer_.reset(CrateBackgroundLayer(geo.width, geo.height, scale));
+}
+
 void UserPromptView::Draw(nux::GraphicsEngine& graphics_engine, bool /* force_draw */)
 {
   nux::Geometry const& geo = GetGeometry();
@@ -211,7 +269,7 @@ void UserPromptView::Draw(nux::GraphicsEngine& graphics_engine, bool /* force_dr
   graphics_engine.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(graphics_engine, geo);
 
-  bg_layer_.reset(CrateBackgroundLayer(geo.width, geo.height, scale));
+  EnsureBGLayer();
   nux::GetPainter().PushDrawLayer(graphics_engine, geo, bg_layer_.get());
 
   nux::GetPainter().PopBackground();
@@ -225,7 +283,7 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
 
   if (!IsFullRedraw())
   {
-    bg_layer_.reset(CrateBackgroundLayer(geo.width, geo.height, scale));
+    EnsureBGLayer();
     nux::GetPainter().PushLayer(graphics_engine, geo, bg_layer_.get());
   }
 

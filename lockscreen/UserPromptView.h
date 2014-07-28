@@ -64,17 +64,16 @@ protected:
 private:
   void ResetLayout();
   void UpdateSize();
+  void EnsureBGLayer();
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
 
   session::Manager::Ptr session_manager_;
   UserAuthenticatorPam user_authenticator_;
   std::shared_ptr<nux::AbstractPaintLayer> bg_layer_;
+  StaticCairoText* username_;
   nux::VLayout* msg_layout_;
   nux::VLayout* prompt_layout_;
-  StaticCairoText* message_;
-  StaticCairoText* error_;
-  StaticCairoText* invalid_login_;
   std::deque<TextInput*> focus_queue_;
 
   nux::Geometry cached_focused_geo_;
