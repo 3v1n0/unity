@@ -41,7 +41,6 @@ const RawPixel PADDING              = 10_em;
 const RawPixel LAYOUT_MARGIN        = 10_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
 const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
-
 const int PROMPT_FONT_SIZE = 13;
 
 nux::AbstractPaintLayer* CrateBackgroundLayer(double width, double height, double scale)
@@ -154,9 +153,7 @@ void UserPromptView::UpdateSize()
   }
 
   if (username_)
-  {
     username_->SetScale(scale);
-  }
 
   if (msg_layout_)
   {
@@ -178,6 +175,7 @@ void UserPromptView::UpdateSize()
       auto* text_input = static_cast<TextInput*>(area);
       text_input->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
       text_input->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+      text_input->scale = scale();
     }
   }
 
@@ -316,6 +314,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
   auto* text_input = new unity::TextInput();
   auto* text_entry = text_input->text_entry();
 
+  text_input->scale = scale();
   text_input->input_hint = SanitizeMessage(message);
   text_input->hint_font_size = PROMPT_FONT_SIZE;
   text_input->show_caps_lock = true;
