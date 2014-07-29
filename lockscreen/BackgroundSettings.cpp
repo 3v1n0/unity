@@ -109,8 +109,8 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
 
   if (settings.draw_grid())
   {
-    int width = s_width;
-    int height = s_height;
+    double width = s_width;
+    double height = s_height;
     int grid_x_offset = GetGridOffset(width);
     int grid_y_offset = GetGridOffset(height) + panel::Style::Instance().PanelHeight(monitor);
 
