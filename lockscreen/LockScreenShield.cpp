@@ -90,17 +90,15 @@ void Shield::GrabScreen(bool cancel_on_failure)
 {
   auto& wc = nux::GetWindowCompositor();
 
-  if (!wc.GrabPointerAdd(this) || !wc.GrabKeyboardAdd(this))
+  if (wc.GrabPointerAdd(this) && wc.GrabKeyboardAdd(this))
   {
-    regrab_conn_ = WindowManager::Default().screen_ungrabbed.connect([this] {
-
-      auto& wc = nux::GetWindowCompositor();
-      if (wc.GrabPointerAdd(this) && wc.GrabKeyboardAdd(this))
-      {
-        regrab_conn_->disconnect();
-        regrab_timeout_.reset();
-      }
-    });
+    regrab_conn_->disconnect();
+    regrab_timeout_.reset();
+  }
+  else
+  {
+    auto const& retry_cb = sigc::bind(sigc::mem_fun(this, &Shield::GrabScreen), false);
+    regrab_conn_ = WindowManager::Default().screen_ungrabbed.connect(retry_cb);
 
     if (cancel_on_failure)
     {
