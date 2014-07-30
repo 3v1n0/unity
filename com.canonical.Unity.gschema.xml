@@ -124,7 +124,7 @@
     </key>
     <key type="as" name="favorite-scopes">
       <default>[ 'scope://clickscope', 'scope://musicaggregator', 'scope://videoaggregator' ]</default>
-      <summary>List of scope ids specifying which scopes should be displayed in the dash.</summary>
+      <summary>List of scope queries specifying what should be displayed in the dash.</summary>
       <description>List of favorite scopes displayed in the dash.</description>
     </key>
   </schema>
