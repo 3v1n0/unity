@@ -21,7 +21,6 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
-#include <NuxCore/Logger.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSignal.h>
 
@@ -32,7 +31,6 @@ namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon.volume");
 
 //
 // Start private implementation

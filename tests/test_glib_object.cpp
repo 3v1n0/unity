@@ -44,11 +44,6 @@ bool IsGOBject(TestObjectWrapper const& g_obj)
   return IsGOBject(g_obj.RawPtr());
 }
 
-bool IsNotGOBject(TestGObject* t_obj)
-{
-  return !IsGOBject(t_obj);
-}
-
 bool IsNotGOBject(TestObjectWrapper const& g_obj)
 {
   return !IsGOBject(g_obj);

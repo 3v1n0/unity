@@ -21,12 +21,10 @@
 #include "TextureCache.h"
 
 #include <sstream>
-#include <NuxCore/Logger.h>
 #include "config.h"
 
 namespace unity
 {
-DECLARE_LOGGER(logger, "unity.internal.texturecache");
 namespace
 {
 // Stolen from boost

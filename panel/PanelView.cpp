@@ -21,7 +21,6 @@
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 
-#include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/PanelStyle.h"
@@ -33,8 +32,6 @@
 #include "PanelIndicatorsView.h"
 
 #include "PanelView.h"
-
-DECLARE_LOGGER(logger, "unity.panel.view");
 
 namespace
 {

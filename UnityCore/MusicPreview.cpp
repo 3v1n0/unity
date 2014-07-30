@@ -29,7 +29,6 @@ namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.musicpreview");
 
 class MusicPreview::Impl
 {
