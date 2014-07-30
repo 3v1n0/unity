@@ -121,12 +121,29 @@ Description: Services for the Unity interface
  .
  This package contains the D-Bus service used for unity.
 
+Package: unity-schemas
+Architecture: any
+Depends: ${misc:Depends},
+         libglib2.0-bin,
+Replaces: libunity-core-6.0-9 (<< 7.3.0),
+Breaks: libunity-core-6.0-9 (<< 7.3.0),
+Description: Interface designed for efficiency of space and interaction.
+ Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
+ community, Unity is all about the combination of familiarity and the future. We
+ bring together visual design, analysis of user experience testing, modern
+ graphics technologies and a deep understanding of the free software landscape
+ to produce what we hope will be the lightest, most elegant and most delightful
+ way to use your PC.
+ .
+ This package contains the configuration schemas used by unity.
+
 Package: libunity-core-6.0-9
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          unity-services (= ${binary:Version}),
+         unity-schemas (= ${binary:Version}),
 Conflicts: unity-common, libunity-core-6.0-6, libunity-core-6.0-7, libunity-core-6.0-8
 Replaces: unity-common, libunity-core-6.0-6, libunity-core-6.0-7, libunity-core-6.0-8
 Provides: unity-common, unity-common-7.0

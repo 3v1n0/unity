@@ -122,6 +122,11 @@
       <summary>List of scope ids specifying which scopes should be created and the order to display them in.</summary>
       <description>The scopes listed in the scope bar will be ordered according to this list.</description>
     </key>
+    <key type="as" name="favorite-scopes">
+      <default>[ 'clickscope', 'musicaggregator', 'videoaggregator' ]</default>
+      <summary>List of scope ids specifying which scopes should be displayed in the dash.</summary>
+      <description>List of favorite scopes displayed in the dash.</description>
+    </key>
   </schema>
   <schema path="/com/canonical/unity/decorations/" id="com.canonical.Unity.Decorations" gettext-domain="unity">
     <key type="u" name="grab-wait">
