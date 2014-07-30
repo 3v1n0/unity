@@ -39,6 +39,7 @@ namespace lockscreen
 namespace
 {
 DECLARE_LOGGER(logger, "unity.lockscreen.shield");
+const unsigned MAX_GRAB_WAIT = 50;
 }
 
 Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, Accelerators::Ptr const& accelerators, int monitor_num, bool is_primary)
@@ -102,7 +103,7 @@ void Shield::GrabScreen(bool cancel_on_failure)
 
     if (cancel_on_failure)
     {
-      regrab_timeout_.reset(new glib::Timeout(50, [this] {
+      regrab_timeout_.reset(new glib::Timeout(MAX_GRAB_WAIT, [this] {
         LOG_ERROR(logger) << "Impossible to get the grab to lock the screen";
         session_manager_->unlock_requested.emit();
         return false;
