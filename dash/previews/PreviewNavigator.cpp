@@ -22,7 +22,6 @@
 
 
 #include "PreviewNavigator.h"
-#include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <unity-shared/IconTexture.h>
@@ -34,7 +33,6 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.navigator");
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewNavigator);
 

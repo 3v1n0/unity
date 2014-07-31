@@ -21,7 +21,6 @@
 
 #include "unity-shared/DashStyle.h"
 #include "ActionButton.h"
-#include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
@@ -38,7 +37,6 @@ const RawPixel icon_size  = 24_em;
 
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.action");
 
 ActionButton::ActionButton(std::string const& action_hint, std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)

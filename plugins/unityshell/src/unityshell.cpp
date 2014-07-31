@@ -109,8 +109,11 @@ void capture_g_log_calls(const gchar* log_domain,
                          GLogLevelFlags log_level,
                          const gchar* message,
                          gpointer user_data);
+
+#ifndef USE_GLES
 gboolean is_extension_supported(const gchar* extensions, const gchar* extension);
 gfloat get_opengl_version_f32(const gchar* version_string);
+#endif
 
 inline CompRegion CompRegionFromNuxGeo(nux::Geometry const& geo)
 {
@@ -4597,6 +4600,8 @@ void configure_logging()
 
 /* Checks whether an extension is supported by the GLX or OpenGL implementation
  * given the extension name and the list of supported extensions. */
+
+#ifndef USE_GLES
 gboolean is_extension_supported(const gchar* extensions, const gchar* extension)
 {
   if (extensions != NULL && extension != NULL)
@@ -4635,6 +4640,7 @@ gfloat get_opengl_version_f32(const gchar* version_string)
   else
     return 0.0f;
 }
+#endif
 
 nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)
 {

@@ -27,7 +27,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
-#include <NuxCore/Logger.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <UnityCore/GLibWrapper.h>
@@ -45,7 +44,6 @@ namespace hud
 
 namespace
 {
-DECLARE_LOGGER(logger, "unity.hud.button");
 const RawPixel HLAYOUT_LEFT_PADDING = 46_em;
 const RawPixel HEIGHT = 42_em;
 const char* const button_font = "Ubuntu 13"; // 17px = 13

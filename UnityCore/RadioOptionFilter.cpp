@@ -19,13 +19,10 @@
 
 #include "RadioOptionFilter.h"
 
-#include <NuxCore/Logger.h>
-
 namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.filter.radiooption");
 
 RadioOptionFilter::RadioOptionFilter(DeeModel* model, DeeModelIter* iter)
 : Filter(model, iter)

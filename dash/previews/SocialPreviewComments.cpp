@@ -23,7 +23,6 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PreviewStyle.h"
 #include <UnityCore/SocialPreview.h>
-#include <NuxCore/Logger.h>
 #include <Nux/Layout.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
@@ -36,7 +35,6 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.social.comments");
 
 namespace
 {
