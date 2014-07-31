@@ -66,6 +66,7 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   overlay_window_->mouse_click.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseClick));
   overlay_window_->mouse_move.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseMove));
   overlay_window_->mouse_drag.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseDrag));
+  overlay_window_->mouse_wheel.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseWheel));
   overlay_window_->sigHidden.connect(sigc::hide(sigc::mem_fun(this, &PlacesOverlayVScrollBar::ResetConnector)));
 
   _track->geometry_changed.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnTrackGeometryChanged));
@@ -369,6 +370,12 @@ void PlacesOverlayVScrollBar::OnMouseDrag(int /*x*/, int y, int /*dx*/, int dy, 
 {
   animation_.Stop();
   MouseDraggingOverlay(y, dy);
+}
+
+void PlacesOverlayVScrollBar::OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state)
+{
+  mouse_wheel.emit(x, y, delta, mouse_state, key_state);
+  UpdateConnectorPosition();
 }
 
 void PlacesOverlayVScrollBar::MouseDraggingOverlay(int y, int dy)
