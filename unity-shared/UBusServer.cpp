@@ -16,6 +16,8 @@
  * Authored by: Michal Hruby <michal.hruby@canonical.com>
  */
 
+#include <algorithm>
+
 #include "UBusServer.h"
 
 namespace unity
