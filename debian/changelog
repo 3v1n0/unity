@@ -1,3 +1,43 @@
+unity (7.3.0+14.10.20140731.1-0ubuntu1) utopic; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Brandon Schaefer ]
+  * Fixes FTBFS caused by gcc 4.9. Mostly unused functions. (LP:
+    #1350052)
+
+  [ Andrea Azzarone ]
+  * == Problem == Lockscreen capslock detection doesn't work well with
+    remapped capslocks == Fix == Use gdk keymap to get the state of the
+    caps lock. (LP: #1347735)
+
+  [ Marco Trevisan (Treviño) ]
+  * PlacesOverlayVScrollBar and VScrollBarOverlayWindow: add support for
+    scaling Add a new ScrollView class to create ScrollViews with an
+    OverlayScrollbar and with scaling support. Using them in dash Scopes
+    and Previews. (LP: #1340996)
+  * LockScreenShield: Add GrabScreen function and retry to make sure we
+    really get grab It might happen that the grab is not possible
+    because the PluginAdapter::IsScreenGrabbed request has still not
+    being fully processed, and thus nux is not able to grab the
+    pointer/keyboard. By doing this we instead try to grab the screen,
+    and if this is not happening, we wait a little until we don't get
+    the ungrab event. In this way, if we eventually get the grab, all
+    will work as expected. Otherwise, we cancel the lock request (very
+    unlikely to happen). (LP: #1349128)
+  * PlacesOverlayVScrollBar: redirect the mouse wheel scroll events
+    coming from the thumb to the scrollview This will make the
+    scrollview to handle then and perform the same scrolling action it
+    would do otherwise. (LP: #1340992)
+  * This has a "soft" dependency on lp:~3v1n0/nux/horizontal-scroll-
+    delta/+merge/227070, this means that this code would just work as it
+    used to do (except for the SwitcerView fix) if that nux branch is
+    not used, while it will support correctly horizontal scroll events
+    when both the branches are used. (LP: #1342208)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 31 Jul 2014 18:40:00 +0000
+
 unity (7.3.0+14.10.20140711-0ubuntu1) utopic; urgency=low
 
   [ Eleni Maria Stea ]
