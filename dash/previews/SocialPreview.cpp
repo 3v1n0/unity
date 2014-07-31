@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/SocialPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -56,17 +55,6 @@ namespace
   const RawPixel SOCIAL_INFO_CHILDREN_SPACE = 12_em;
 }
 
-class DetailsScrollView : public nux::ScrollView
-{
-public:
-  DetailsScrollView(NUX_FILE_LINE_PROTO)
-  : ScrollView(NUX_FILE_LINE_PARAM)
-  {
-    SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
-  }
-
-};
-
 NUX_IMPLEMENT_OBJECT_TYPE(SocialPreview);
 
 SocialPreview::SocialPreview(dash::Preview::Ptr preview_model)
@@ -77,6 +65,7 @@ SocialPreview::SocialPreview(dash::Preview::Ptr preview_model)
 , social_content_layout_(nullptr)
 , social_data_layout_(nullptr)
 , social_info_layout_(nullptr)
+, social_info_scroll_(nullptr)
 , icon_layout_(nullptr)
 , actions_layout_(nullptr)
 {
@@ -215,7 +204,9 @@ void SocialPreview::SetupViews()
 
       /////////////////////
       // Details
-      nux::ScrollView* social_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
+      auto* social_info = new ScrollView(NUX_TRACKER_LOCATION);
+      social_info_scroll_ = social_info;
+      social_info->scale = scale();
       social_info->EnableHorizontalScrollBar(false);
       social_info->mouse_click.connect(on_mouse_down);
 
@@ -344,6 +335,9 @@ void SocialPreview::UpdateScale(double scale)
 
   if (social_info_layout_)
     social_info_layout_->SetSpaceBetweenChildren(SOCIAL_INFO_CHILDREN_SPACE.CP(scale));
+
+  if (social_info_scroll_)
+    social_info_scroll_->scale = scale;
 
   if (actions_layout_)
     actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));

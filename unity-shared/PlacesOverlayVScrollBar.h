@@ -80,7 +80,7 @@ private:
 
   void UpdateConnectorPosition();
   void ResetConnector();
-  
+
   void UpdateStepY();
 
   void SetupAnimation(int start, int stop, int milliseconds);
@@ -93,7 +93,9 @@ private:
   void UpdateConnectorTexture();
 
   nux::ObjectPtr<VScrollBarOverlayWindow> overlay_window_;
-  nux::InputAreaProximity area_prox_;
+
+  class ProximityArea;
+  std::shared_ptr<ProximityArea> area_prox_;
 
   nux::animation::AnimateValue<int> animation_;
   connection::Wrapper tweening_connection_;

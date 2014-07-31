@@ -27,6 +27,7 @@
 #include <Nux/ScrollView.h>
 #include <UnityCore/Tracks.h>
 #include <UnityCore/ConnectionManager.h>
+#include "unity-shared/OverlayScrollView.h"
 #include "unity-shared/Introspectable.h"
 #include "Track.h"
 
@@ -44,15 +45,13 @@ class Track;
 namespace previews
 {
 
-class Tracks : public debug::Introspectable, public nux::ScrollView
+class Tracks : public debug::Introspectable, public dash::ScrollView
 {
 public:
   typedef nux::ObjectPtr<Tracks> Ptr;
   NUX_DECLARE_OBJECT_TYPE(Tracks, nux::View);
 
   Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
-
-  nux::Property<double> scale;
 
 protected:
   virtual bool AcceptKeyNavFocus() { return false; }

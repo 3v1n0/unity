@@ -23,7 +23,6 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
@@ -49,23 +48,13 @@ namespace
 
 DECLARE_LOGGER(logger, "unity.dash.preview.generic");
 
-class DetailsScrollView : public nux::ScrollView
-{
-public:
-  DetailsScrollView(NUX_FILE_LINE_PROTO)
-  : ScrollView(NUX_FILE_LINE_PARAM)
-  {
-    SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
-  }
-
-};
-
 NUX_IMPLEMENT_OBJECT_TYPE(GenericPreview);
 
 GenericPreview::GenericPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
 , image_data_layout_(nullptr)
 , preview_info_layout_(nullptr)
+, preview_info_scroll_(nullptr)
 , preview_data_layout_(nullptr)
 , actions_layout_(nullptr)
 {
@@ -85,7 +74,7 @@ void GenericPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
 
-  gfx_engine.PopClippingRectangle(); 
+  gfx_engine.PopClippingRectangle();
 }
 
 void GenericPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -169,7 +158,9 @@ void GenericPreview::SetupViews()
 
       /////////////////////
       // Description
-      nux::ScrollView* preview_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
+      auto* preview_info = new ScrollView(NUX_TRACKER_LOCATION);
+      preview_info_scroll_ = preview_info;
+      preview_info->scale = scale();
       preview_info->EnableHorizontalScrollBar(false);
       preview_info->mouse_click.connect(on_mouse_down);
 
@@ -254,6 +245,9 @@ void GenericPreview::UpdateScale(double scale)
 {
   if (image_)
     image_->scale = scale;
+
+  if (preview_info_scroll_)
+    preview_info_scroll_->scale = scale;
 
   if (preview_info_hints_)
     preview_info_hints_->scale = scale;

@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/ApplicationPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -58,17 +57,6 @@ namespace
 
 DECLARE_LOGGER(logger, "unity.dash.preview.application");
 
-class DetailsScrollView : public nux::ScrollView
-{
-public:
-  DetailsScrollView(NUX_FILE_LINE_PROTO)
-  : ScrollView(NUX_FILE_LINE_PARAM)
-  {
-    SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
-  }
-
-};
-
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationPreview);
 
 ApplicationPreview::ApplicationPreview(dash::Preview::Ptr preview_model)
@@ -80,6 +68,7 @@ ApplicationPreview::ApplicationPreview(dash::Preview::Ptr preview_model)
 , app_data_layout_(nullptr)
 , app_updated_copywrite_layout_(nullptr)
 , app_info_layout_(nullptr)
+, app_info_scroll_(nullptr)
 , actions_layout_(nullptr)
 {
   SetupViews();
@@ -172,7 +161,8 @@ void ApplicationPreview::SetupViews()
         app_icon_->mouse_click.connect(on_mouse_down);
         icon_layout_->AddView(app_icon_.GetPointer(), 0);
 
-        if (app_preview_model->rating >= 0) {
+        if (app_preview_model->rating >= 0)
+        {
           app_rating_ = new PreviewRatingsWidget();
           AddChild(app_rating_.GetPointer());
           app_rating_->scale = scale();
@@ -264,7 +254,9 @@ void ApplicationPreview::SetupViews()
 
       /////////////////////
       // Description
-      nux::ScrollView* app_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
+      auto* app_info = new ScrollView(NUX_TRACKER_LOCATION);
+      app_info_scroll_ = app_info; 
+      app_info->scale = scale();
       app_info->EnableHorizontalScrollBar(false);
       app_info->mouse_click.connect(on_mouse_down);
 
@@ -362,10 +354,15 @@ void ApplicationPreview::UpdateScale(double scale)
     app_icon_->ReLoadIcon();
   }
 
+  if (app_info_scroll_)
+    app_info_scroll_->scale = scale;
+
   if (license_)
     license_->SetScale(scale);
+
   if (last_update_)
     last_update_->SetScale(scale);
+
   if (copywrite_)
     copywrite_->SetScale(scale);
 
