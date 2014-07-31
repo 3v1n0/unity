@@ -19,6 +19,7 @@
 
 #include "LockScreenShield.h"
 
+#include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/PaintLayer.h>
@@ -35,6 +36,11 @@ namespace unity
 {
 namespace lockscreen
 {
+namespace
+{
+DECLARE_LOGGER(logger, "unity.lockscreen.shield");
+const unsigned MAX_GRAB_WAIT = 50;
+}
 
 Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, Accelerators::Ptr const& accelerators, int monitor_num, bool is_primary)
   : AbstractShield(session_manager, indicators, accelerators, monitor_num, is_primary)
@@ -56,12 +62,7 @@ Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicato
   });
 
   primary.changed.connect([this] (bool is_primary) {
-    if (!is_primary)
-    {
-      UnGrabPointer();
-      UnGrabKeyboard();
-    }
-
+    regrab_conn_->disconnect();
     is_primary ? ShowPrimaryView() : ShowSecondaryView();
     if (panel_view_) panel_view_->SetInputEventSensitivity(is_primary);
     QueueRelayout();
@@ -86,17 +87,41 @@ void Shield::UpdateBackgroundTexture()
   }
 }
 
+void Shield::GrabScreen(bool cancel_on_failure)
+{
+  auto& wc = nux::GetWindowCompositor();
+
+  if (wc.GrabPointerAdd(this) && wc.GrabKeyboardAdd(this))
+  {
+    regrab_conn_->disconnect();
+    regrab_timeout_.reset();
+  }
+  else
+  {
+    auto const& retry_cb = sigc::bind(sigc::mem_fun(this, &Shield::GrabScreen), false);
+    regrab_conn_ = WindowManager::Default().screen_ungrabbed.connect(retry_cb);
+
+    if (cancel_on_failure)
+    {
+      regrab_timeout_.reset(new glib::Timeout(MAX_GRAB_WAIT, [this] {
+        LOG_ERROR(logger) << "Impossible to get the grab to lock the screen";
+        session_manager_->unlock_requested.emit();
+        return false;
+      }));
+    }
+  }
+}
+
 void Shield::ShowPrimaryView()
 {
-  GrabPointer();
-  GrabKeyboard();
-
   if (primary_layout_)
   {
+    GrabScreen(false);
     SetLayout(primary_layout_.GetPointer());
     return;
   }
 
+  GrabScreen(true);
   nux::Layout* main_layout = new nux::VLayout();
   primary_layout_ = main_layout;
   SetLayout(primary_layout_.GetPointer());
@@ -149,19 +174,7 @@ Panel* Shield::CreatePanel()
       }
       else
       {
-        auto& wc = nux::GetWindowCompositor();
-
-        if (!wc.GrabPointerAdd(this) || !wc.GrabKeyboardAdd(this))
-        {
-          regrab_conn_ = WindowManager::Default().screen_ungrabbed.connect([this] {
-            if (primary())
-            {
-              GrabPointer();
-              GrabKeyboard();
-            }
-            regrab_conn_->disconnect();
-          });
-        }
+        GrabScreen(false);
       }
     }
   });

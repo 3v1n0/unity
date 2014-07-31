@@ -45,9 +45,9 @@ public:
   bool AcceptKeyNavFocus() override { return true; }
   bool InspectKeyEvent(unsigned int, unsigned int, const char*) override { return true; };
 };
-}
 
 DECLARE_LOGGER(logger, "unity.lockscreen");
+}
 
 Controller::Controller(DBusManager::Ptr const& dbus_manager,
                        session::Manager::Ptr const& session_manager,
