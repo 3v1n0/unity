@@ -352,6 +352,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   GetInverseScreenPerspectiveMatrix(ViewMatrix, ProjectionMatrix, geo.width, geo.height, 0.1f, 1000.0f, DEGTORAD(90));
 
   nux::Matrix4 const& PremultMatrix = ProjectionMatrix * ViewMatrix;
+  int monitor = this->monitor();
 
   std::list<RenderArg>::iterator it;
   int i;

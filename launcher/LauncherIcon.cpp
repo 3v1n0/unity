@@ -69,7 +69,6 @@ glib::Object<GtkIconTheme> LauncherIcon::_unity_theme;
 LauncherIcon::LauncherIcon(IconType type)
   : _icon_type(type)
   , _sticky(false)
-  , _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0.0f)
   , _sort_priority(DefaultPriority(type))
@@ -966,8 +965,7 @@ AbstractLauncherIcon::MenuItemsVector LauncherIcon::GetMenus()
   return result;
 }
 
-nux::BaseTexture*
-LauncherIcon::Emblem()
+nux::BaseTexture* LauncherIcon::Emblem() const
 {
   return _emblem.GetPointer();
 }
@@ -1007,6 +1005,7 @@ LauncherIcon::SetEmblemText(std::string const& text)
 
   int width = 32;
   int height = 8 * 2;
+  int font_width = width - 4;
   int font_height = height - 5;
 
 
@@ -1028,7 +1027,7 @@ LauncherIcon::SetEmblemText(std::string const& text)
   pango_layout_set_font_description(layout, desc);
   pango_font_description_free(desc);
 
-  pango_layout_set_width(layout, pango_units_from_double(width - 4.0f));
+  pango_layout_set_width(layout, pango_units_from_double(font_width));
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
   pango_layout_set_markup_with_accel(layout, text.c_str(), -1, '_', NULL);
@@ -1077,26 +1076,34 @@ LauncherIcon::DeleteEmblem()
   SetEmblem(BaseTexturePtr());
 }
 
-void
-LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
+void LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
-  if (std::find(_entry_list.begin(), _entry_list.end(), remote) != _entry_list.end())
+  if (!remote || std::find(_remote_entries.begin(), _remote_entries.end(), remote) != _remote_entries.end())
     return;
 
-  _entry_list.push_front(remote);
+  _remote_entries.push_back(remote);
   AddChild(remote.get());
+  SelectEntryRemote(remote);
+}
 
-  remote->emblem_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
-  remote->count_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged));
-  remote->progress_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressChanged));
-  remote->quicklist_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteQuicklistChanged));
+void LauncherIcon::SelectEntryRemote(LauncherEntryRemote::Ptr const& remote)
+{
+  if (!remote)
+    return;
 
-  remote->emblem_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged));
-  remote->count_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
-  remote->progress_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
+  auto& cm = _remote_connections;
+  cm.Clear();
 
-  remote->urgent_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteUrgentChanged));
+  cm.Add(remote->emblem_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged)));
+  cm.Add(remote->count_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged)));
+  cm.Add(remote->progress_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressChanged)));
+  cm.Add(remote->quicklist_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteQuicklistChanged)));
 
+  cm.Add(remote->emblem_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged)));
+  cm.Add(remote->count_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged)));
+  cm.Add(remote->progress_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged)));
+
+  cm.Add(remote->urgent_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteUrgentChanged)));
 
   if (remote->EmblemVisible())
     OnRemoteEmblemVisibleChanged(remote.get());
@@ -1113,28 +1120,30 @@ LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
   OnRemoteQuicklistChanged(remote.get());
 }
 
-void
-LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
+void LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
-  if (std::find(_entry_list.begin(), _entry_list.end(), remote) == _entry_list.end())
+  auto remote_it = std::find(_remote_entries.begin(), _remote_entries.end(), remote);
+
+  if (remote_it == _remote_entries.end())
     return;
 
-  _entry_list.remove(remote);
-  RemoveChild(remote.get());
-
-  DeleteEmblem();
   SetQuirk(Quirk::PROGRESS, false);
 
-  if (_remote_urgent)
+  if (remote->Urgent())
     SetQuirk(Quirk::URGENT, false);
 
+  _remote_entries.erase(remote_it);
+  RemoveChild(remote.get());
+  DeleteEmblem();
   _remote_menus = nullptr;
+
+  if (!_remote_entries.empty())
+    SelectEntryRemote(_remote_entries.back());
 }
 
 void
 LauncherIcon::OnRemoteUrgentChanged(LauncherEntryRemote* remote)
 {
-  _remote_urgent = remote->Urgent();
   SetQuirk(Quirk::URGENT, remote->Urgent());
 }
 

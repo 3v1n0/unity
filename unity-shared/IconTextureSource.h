@@ -63,12 +63,10 @@ public:
   bool HadEmblem(int monitor) const;
 
   virtual nux::Color BackgroundColor() const = 0;
-
   virtual nux::Color GlowColor() = 0;
-
   virtual nux::BaseTexture* TextureForSize(int size) = 0;
 
-  virtual nux::BaseTexture* Emblem() = 0;
+  virtual nux::BaseTexture* Emblem() const;
 
 private:
   std::vector<bool> skip_;

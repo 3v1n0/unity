@@ -155,13 +155,13 @@ public:
 
   nux::BaseTexture* TextureForSize(int size);
 
-  nux::BaseTexture* Emblem();
+  nux::BaseTexture* Emblem() const override;
 
   MenuItemsVector Menus();
 
-  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
-
-  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote);
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const&);
+  void SelectEntryRemote(LauncherEntryRemote::Ptr const&);
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const&);
 
   nux::DndAction QueryAcceptDrop(DndData const& dnd_data)
   {
@@ -325,7 +325,6 @@ private:
   void OnTooltipEnabledChanged(bool value);
 
   bool _sticky;
-  bool _remote_urgent;
   float _present_urgency;
   float _progress;
   int _sort_priority;
@@ -347,7 +346,8 @@ private:
 
   BaseTexturePtr _emblem;
 
-  std::list<LauncherEntryRemote::Ptr> _entry_list;
+  std::vector<LauncherEntryRemote::Ptr> _remote_entries;
+  connection::Manager _remote_connections;
   glib::Object<DbusmenuClient> _remote_menus;
 
   static glib::Object<GtkIconTheme> _unity_theme;

@@ -91,5 +91,10 @@ bool IconTextureSource::HadEmblem(int monitor) const
   return had_emblem_[monitor];
 }
 
+nux::BaseTexture* IconTextureSource::Emblem() const
+{
+  return nullptr;
+}
+
 }
 }

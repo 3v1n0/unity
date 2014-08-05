@@ -109,11 +109,6 @@ nux::Color HudIconTextureSource::GlowColor()
  return nux::Color(0.0f, 0.0f, 0.0f, 0.0f); 
 }
 
-nux::BaseTexture* HudIconTextureSource::Emblem()
-{
-  return nullptr;
-}
-
 }
 }
 
