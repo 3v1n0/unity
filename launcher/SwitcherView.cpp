@@ -74,6 +74,7 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   icon_renderer_->pip_style = OVER_TILE;
   icon_renderer_->monitor = monitors::MAX;
   icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
+  icon_renderer_->scale = scale();
 
   text_view_->SetMaximumWidth(tile_size * TEXT_TILE_MULTIPLIER);
   text_view_->SetLines(1);
@@ -194,6 +195,7 @@ void SwitcherView::OnScaleChanged(double scale)
   tile_size = TILE_SIZE.CP(scale);
   text_size = TEXT_SIZE.CP(scale);
   vertical_size = tile_size + VERTICAL_PADDING.CP(scale) * 2;
+  icon_renderer_->scale = scale;
 }
 
 void SwitcherView::StartAnimation()
