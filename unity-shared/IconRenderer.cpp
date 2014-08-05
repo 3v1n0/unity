@@ -431,8 +431,8 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
       float w = icon_size;
       float h = icon_size;
 
-      float emb_w = emblem->GetWidth();
-      float emb_h = emblem->GetHeight();
+      float emb_w = std::round(emblem->GetWidth() * scale());
+      float emb_h = std::round(emblem->GetHeight() * scale());
 
       x = it->render_center.x + (icon_size * 0.50f - emb_w - icon_size * 0.05f); // puts right edge of emblem just over the edge of the launcher icon
       y = it->render_center.y - icon_size * 0.50f;     // y = top left corner position of emblem
@@ -727,7 +727,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   nux::color::White,
                   nux::color::White,
                   arg.alpha,
-                  force_filter,
+                  force_filter || scale != 1.0,
                   arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_EMBLEM, monitor));
   }
 
