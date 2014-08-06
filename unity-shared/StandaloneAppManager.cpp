@@ -31,8 +31,6 @@
 using namespace std;
 using namespace unity;
 
-DECLARE_LOGGER(logger, "unity.appmanager.test");
-
 GMainLoop *loop;
 
 void dump_app(ApplicationPtr const& app, std::string const& prefix = "")

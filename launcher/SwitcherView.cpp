@@ -49,6 +49,7 @@ namespace
 
   unsigned int const ANIMATION_LENGTH = 250;
   unsigned int const MAX_DIRECTIONS_CHANGED = 3;
+  unsigned int const SCROLL_WHEEL_EVENTS_DISTANCE = 75;
   double const TEXT_TILE_MULTIPLIER = 3.5;
 }
 
@@ -69,6 +70,7 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   , animation_(animation_length)
   , last_icon_selected_(-1)
   , last_detail_icon_selected_(-1)
+  , last_mouse_scroll_time_(0)
   , check_mouse_first_time_(true)
 {
   icon_renderer_->pip_style = OVER_TILE;
@@ -437,6 +439,13 @@ void SwitcherView::HandleMouseUp(int x, int y, int button)
 
 void SwitcherView::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
 {
+  auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+
+  if (timestamp - last_mouse_scroll_time_ <= SCROLL_WHEEL_EVENTS_DISTANCE)
+    return;
+
+  last_mouse_scroll_time_ = timestamp;
+
   if (model_->detail_selection)
   {
     HandleDetailMouseWheel(wheel_delta);
@@ -449,7 +458,7 @@ void SwitcherView::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigne
 
 void SwitcherView::HandleDetailMouseWheel(int wheel_delta)
 {
-  if (wheel_delta > 0)
+  if (wheel_delta < 0)
   {
     model_->NextDetail();
   }
@@ -461,7 +470,7 @@ void SwitcherView::HandleDetailMouseWheel(int wheel_delta)
 
 void SwitcherView::HandleMouseWheel(int wheel_delta)
 {
-  if (wheel_delta > 0)
+  if (wheel_delta < 0)
   {
     model_->Next();
   }

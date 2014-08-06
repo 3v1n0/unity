@@ -24,6 +24,7 @@
 #define SOCIALPREVIEW_H
 
 #include "Preview.h"
+#include "unity-shared/OverlayScrollView.h"
 
 namespace unity
 {
@@ -68,6 +69,7 @@ protected:
   nux::VLayout* social_content_layout_;
   nux::VLayout* social_data_layout_;
   nux::VLayout* social_info_layout_;
+  ScrollView* social_info_scroll_;
   nux::VLayout* icon_layout_;
   nux::Layout* actions_layout_;
 

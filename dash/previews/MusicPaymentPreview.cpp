@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/PlacesVScrollBar.h"
 #include "config.h"
 
 #include <glib/gi18n-lib.h>
@@ -74,17 +73,6 @@ const std::string MusicPaymentPreview::CHANGE_PAYMENT_ACTION = "change_payment_m
 const std::string MusicPaymentPreview::FORGOT_PASSWORD_ACTION = "forgot_password";
 const std::string MusicPaymentPreview::CANCEL_PURCHASE_ACTION = "cancel_purchase";
 const std::string MusicPaymentPreview::PURCHASE_ALBUM_ACTION = "purchase_album";
-
-class DetailsScrollView : public nux::ScrollView
-{
-public:
-  DetailsScrollView(NUX_FILE_LINE_PROTO)
-  : ScrollView(NUX_FILE_LINE_PARAM)
-  {
-    SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
-  }
-
-};
 
 NUX_IMPLEMENT_OBJECT_TYPE(MusicPaymentPreview)
 

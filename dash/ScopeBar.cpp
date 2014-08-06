@@ -18,7 +18,6 @@
 
 #include <glib/gstdio.h>
 #include "ScopeBar.h"
-#include <NuxCore/Logger.h>
 #include "config.h"
 #include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
@@ -33,7 +32,6 @@ namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.scopebar");
 namespace
 {
 // according to Q design the inner area of the scopebar should be 40px

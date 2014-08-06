@@ -32,7 +32,8 @@ class VScrollBarOverlayWindow : public nux::BaseWindow
 {
 public:
   VScrollBarOverlayWindow(nux::Geometry const& geo);
-  virtual ~VScrollBarOverlayWindow() {}
+
+  nux::Property<double> scale;
 
   void UpdateGeometry(nux::Geometry const& geo);
   void SetThumbOffsetY(int y);
@@ -85,6 +86,7 @@ private:
 
   void MouseDragging();
   void UpdateMouseOffsetX();
+  void UpdateContentGeometry();
   int GetValidOffsetYValue(int y) const;
 
   void ShouldShow();

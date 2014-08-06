@@ -26,7 +26,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/PlacesVScrollBar.h"
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
@@ -61,17 +60,6 @@ const RawPixel INTRO_SPACE = 110_em;
 
 const std::string ErrorPreview::CANCEL_ACTION = "cancel";
 const std::string ErrorPreview::GO_TO_U1_ACTION = "open_u1_link";
-
-class DetailsScrollView : public nux::ScrollView
-{
-public:
-  DetailsScrollView(NUX_FILE_LINE_PROTO)
-  : ScrollView(NUX_FILE_LINE_PARAM)
-  {
-    SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
-  }
-
-};
 
 NUX_IMPLEMENT_OBJECT_TYPE(ErrorPreview)
 

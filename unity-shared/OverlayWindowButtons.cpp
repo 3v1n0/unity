@@ -45,7 +45,7 @@ OverlayWindowButtons::OverlayWindowButtons()
   SetBackgroundColor(nux::color::Transparent);
 }
 
-bool OverlayWindowButtons::IsVisibleOnMonitor(unsigned int monitor) const
+bool OverlayWindowButtons::IsVisibleOnMonitor(int monitor) const
 {
   if (window_buttons_->monitor == monitor)
     return true;

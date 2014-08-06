@@ -24,13 +24,10 @@
 #include "StandaloneWindowManager.h"
 #include "UScreen.h"
 
-#include <NuxCore/Logger.h>
-
 // Entirely stubs for now, unless we need this functionality at some point
 
 namespace unity
 {
-DECLARE_LOGGER(logger, "unity.wm");
 
 StandaloneWindow::StandaloneWindow(Window xid)
   : xid(xid)

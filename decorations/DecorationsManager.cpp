@@ -20,7 +20,6 @@
 #include "DecorationsPriv.h"
 
 #include <core/atoms.h>
-#include <NuxCore/Logger.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/DBusIndicators.h>
 #include <X11/Xatom.h>
@@ -34,8 +33,6 @@ Manager* manager_ = nullptr;
 
 namespace
 {
-DECLARE_LOGGER(logger, "unity.decoration.manager");
-
 namespace atom
 {
 Atom _NET_REQUEST_FRAME_EXTENTS = 0;

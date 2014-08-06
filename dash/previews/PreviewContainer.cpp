@@ -21,7 +21,6 @@
  */
 
 #include "PreviewContainer.h"
-#include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
@@ -39,7 +38,6 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.container");
 
 Navigation operator&(const Navigation lhs, const Navigation rhs)
 {
