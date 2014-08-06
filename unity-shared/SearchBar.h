@@ -32,6 +32,7 @@ namespace nux
 class AbstractPaintLayer;
 class LayeredLayout;
 class LinearLayout;
+class SpaceLayout;
 class VLayout;
 }
 
