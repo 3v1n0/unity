@@ -36,6 +36,7 @@
 #include "PreviewStyle.h"
 #include "RawPixel.h"
 #include "TextureCache.h"
+#include "UnitySettings.h"
 
 namespace unity
 {
@@ -295,6 +296,7 @@ void TextInput::LoadWarningTooltip()
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
   pango_context_set_font_description(context, desc.get());
   pango_context_set_language(context, gtk_get_default_language());
+  pango_cairo_context_set_resolution(context, 96.0 * Settings::Instance().font_scaling());
 
   pango_layout_set_height(layout, -1); //avoid wrap lines
   pango_layout_set_text(layout, _("Caps lock is on"), -1);
