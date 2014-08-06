@@ -27,6 +27,7 @@
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
 #include "ScreenSaverDBusManager.h"
+#include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 
