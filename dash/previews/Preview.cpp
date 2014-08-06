@@ -313,6 +313,6 @@ void Preview::UpdateScale(double scale)
   QueueDraw();
 }
 
-}
-}
-}
+} // preview
+} // dash
+} // unity

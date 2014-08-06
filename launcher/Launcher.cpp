@@ -2200,7 +2200,7 @@ void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned lo
     return;
 
   bool alt_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_ALT);
-  if (alt_pressed)
+  if (alt_pressed && abs(wheel_delta) != NUX_MOUSEWHEEL_DELTA)
   {
     ScrollLauncher(wheel_delta);
   }

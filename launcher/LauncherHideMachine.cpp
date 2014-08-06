@@ -19,14 +19,10 @@
 
 #include "LauncherHideMachine.h"
 
-#include <NuxCore/Logger.h>
-
 namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.hide");
-
 namespace
 {
 const unsigned int HIDE_DELAY_TIMEOUT_LENGTH = 400;

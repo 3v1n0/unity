@@ -46,6 +46,9 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define N_TIMEOUT_SLOTS 50
 #define MAX_INDICATOR_ENTRIES 100
 
+#define NUX_VERTICAL_SCROLL_DELTA 120
+#define NUX_HORIZONTAL_SCROLL_DELTA (NUX_VERTICAL_SCROLL_DELTA ^ 2)
+
 #define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
 #define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
 #define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
@@ -2399,9 +2402,28 @@ panel_service_scroll_entry (PanelService   *self,
   entry = get_indicator_entry_by_id (self, entry_id);
   g_return_if_fail (entry);
 
-  GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
+  GdkScrollDirection direction = G_MAXINT;
 
-  object = get_entry_parent_indicator (entry);
-  g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
-                        abs(delta/120), direction);
+  switch (delta)
+    {
+      case NUX_VERTICAL_SCROLL_DELTA:
+        direction = INDICATOR_OBJECT_SCROLL_UP;
+        break;
+      case -NUX_VERTICAL_SCROLL_DELTA:
+        direction = INDICATOR_OBJECT_SCROLL_DOWN;
+        break;
+      case NUX_HORIZONTAL_SCROLL_DELTA:
+        direction = INDICATOR_OBJECT_SCROLL_LEFT;
+        break;
+      case -NUX_HORIZONTAL_SCROLL_DELTA:
+        direction = INDICATOR_OBJECT_SCROLL_RIGHT;
+        break;
+      }
+
+  if (direction != G_MAXINT)
+    {
+      object = get_entry_parent_indicator (entry);
+      g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED,
+                            entry, 1, direction);
+    }
 }

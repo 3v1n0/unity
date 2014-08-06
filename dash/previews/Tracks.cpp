@@ -24,7 +24,6 @@
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include "unity-shared/IntrospectableWrappers.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/PreviewStyle.h"
 #include <UnityCore/Track.h>
 
@@ -45,7 +44,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(Tracks);
 
 Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
   : ScrollView(NUX_FILE_LINE_PARAM)
-  , scale(1.0)
   , tracks_(tracks)
 {
   SetupViews();
@@ -60,6 +58,7 @@ Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
     for (std::size_t i = 0; i < tracks_->count.Get(); ++i)
       OnTrackAdded(tracks_->RowAtIndex(i));
   }
+
   UpdateScale(scale);
   scale.changed.connect(sigc::mem_fun(this, &Tracks::UpdateScale));
 }
@@ -77,7 +76,6 @@ void Tracks::AddProperties(debug::IntrospectionData& introspection)
 
 void Tracks::SetupViews()
 {
-  SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
   EnableHorizontalScrollBar(false);
   layout_ = new nux::VLayout();
   layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin().CP(scale), 0, 0);

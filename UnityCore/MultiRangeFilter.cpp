@@ -19,13 +19,10 @@
 
 #include "MultiRangeFilter.h"
 
-#include <NuxCore/Logger.h>
-
 namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.filter.multirange");
 
 MultiRangeFilter::MultiRangeFilter(DeeModel* model, DeeModelIter* iter)
 : Filter(model, iter)

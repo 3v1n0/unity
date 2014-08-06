@@ -22,7 +22,6 @@
 
 #include "Track.h"
 #include "unity-shared/IntrospectableWrappers.h"
-#include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
 #include <unity-shared/StaticCairoText.h>
@@ -37,7 +36,6 @@ namespace dash
 namespace previews
 {
 
-DECLARE_LOGGER(logger, "unity.dash.preview.music.track");
 namespace
 {
 const RawPixel LAYOUT_SPACING = 6_em;

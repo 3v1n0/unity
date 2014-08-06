@@ -35,15 +35,6 @@ bool IsValidPixbuf(GdkPixbuf *pixbuf)
   return GDK_IS_PIXBUF (pixbuf);
 }
 
-gboolean TimeoutReached (gpointer data)
-{
-  bool *b = static_cast<bool*>(data);
-
-  *b = true;
-
-  return FALSE;
-}
-
 struct LoadResult
 {
   glib::Object<GdkPixbuf> pixbuf;

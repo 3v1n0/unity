@@ -26,7 +26,6 @@
 
 #include "PreviewInfoHintWidget.h"
 #include "unity-shared/IntrospectableWrappers.h"
-#include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <unity-shared/StaticCairoText.h>
@@ -39,7 +38,6 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.infohintwidget");
 namespace
 {
 const RawPixel LAYOUT_SPACING = 12_em;

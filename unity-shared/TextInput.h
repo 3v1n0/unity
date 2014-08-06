@@ -94,7 +94,6 @@ private:
 protected:
   void OnInputHintChanged();
   void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnKeyUp(unsigned keysym, unsigned long keycode, unsigned long state);
   void OnEndKeyFocus();
 
   // getters & setters

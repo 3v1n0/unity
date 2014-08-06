@@ -24,6 +24,7 @@
 #define MOVIEPREVIEW_H
 
 #include "Preview.h"
+#include "unity-shared/OverlayScrollView.h"
 
 namespace unity
 {
@@ -62,6 +63,7 @@ protected:
 
   nux::HLayout* image_data_layout_;
   nux::VLayout* preview_info_layout_;
+  ScrollView* preview_info_scroll_;
   nux::Layout* actions_layout_;
 };
 

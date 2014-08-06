@@ -21,6 +21,7 @@
 #define UNITY_LOCKSCREEN_SHIELD_H
 
 #include <UnityCore/ConnectionManager.h>
+#include <UnityCore/GLibSource.h>
 #include "LockScreenAbstractShield.h"
 
 namespace unity
@@ -53,6 +54,7 @@ protected:
 
 private:
   void UpdateBackgroundTexture();
+  void GrabScreen(bool cancel_on_failure);
   void ShowPrimaryView();
   void ShowSecondaryView();
   void UpdateScale();
@@ -65,6 +67,7 @@ private:
   nux::ObjectPtr<nux::Layout> cof_layout_;
   connection::Wrapper panel_active_conn_;
   connection::Wrapper regrab_conn_;
+  glib::Source::UniquePtr regrab_timeout_;
   Panel* panel_view_;
   CofView* cof_view_;
 };
