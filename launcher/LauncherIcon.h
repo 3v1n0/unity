@@ -154,10 +154,11 @@ public:
   }
 
   nux::BaseTexture* TextureForSize(int size);
-
   nux::BaseTexture* Emblem() const override;
+  nux::BaseTexture* CountTexture(double scale) const override;
 
   MenuItemsVector Menus();
+  unsigned Count() const;
 
   void InsertEntryRemote(LauncherEntryRemote::Ptr const&);
   void SelectEntryRemote(LauncherEntryRemote::Ptr const&);
@@ -323,6 +324,8 @@ private:
   void LoadQuicklist();
 
   void OnTooltipEnabledChanged(bool value);
+  void BuildCountTextures();
+  void DrawCountTexture(unsigned count, double scale);
 
   bool _sticky;
   float _present_urgency;
@@ -345,6 +348,7 @@ private:
   time::Spec _last_action;
 
   BaseTexturePtr _emblem;
+  std::unordered_map <double, BaseTexturePtr> _counts;
 
   std::vector<LauncherEntryRemote::Ptr> _remote_entries;
   connection::Manager _remote_connections;
