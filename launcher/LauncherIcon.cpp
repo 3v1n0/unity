@@ -61,7 +61,7 @@ const std::string PRESENT_TIMEOUT = "present-timeout";
 const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
 
 const int COUNT_WIDTH = 32;
-const int COUNT_HEIGHT = 8 * 2;
+const int COUNT_HEIGHT = 16;
 const int COUNT_FONT_WIDTH = COUNT_WIDTH - 4;
 const int COUNT_FONT_HEIGHT = COUNT_HEIGHT - 5;
 }
@@ -104,6 +104,7 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::BuildCountTextures));
+  icon_size.changed.connect(sigc::hide(sigc::mem_fun(this, &LauncherIcon::BuildCountTextures)));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -1040,13 +1041,9 @@ void LauncherIcon::BuildCountTextures()
   }
 }
 
-void LauncherIcon::DrawCountTexture(unsigned count, double scale)
+void LauncherIcon::DrawCountTexture(unsigned count, double global_scale)
 {
   auto const& count_text = (count / 10000 != 0) ? "****" : std::to_string(count);
-
-  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(COUNT_WIDTH * scale), std::round(COUNT_HEIGHT * scale));
-  cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
-  cairo_t* cr = cg.GetInternalContext();
 
   glib::Object<PangoContext> pango_ctx(gdk_pango_context_get());
   glib::Object<PangoLayout> layout(pango_layout_new(pango_ctx));
@@ -1065,9 +1062,15 @@ void LauncherIcon::DrawCountTexture(unsigned count, double scale)
   PangoRectangle ink_rect;
   pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
 
+  double scale = icon_size / 54.0 * global_scale;
+
   /* DRAW OUTLINE */
   float radius = COUNT_HEIGHT / 2.0f - 1.0f;
   float inset = radius + 1.0f;
+
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(COUNT_WIDTH * scale), std::round(COUNT_HEIGHT * scale));
+  cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
+  cairo_t* cr = cg.GetInternalContext();
 
   cairo_move_to(cr, inset, COUNT_HEIGHT - 1.0f);
   cairo_arc(cr, inset, inset, radius, 0.5 * M_PI, 1.5 * M_PI);
@@ -1088,7 +1091,7 @@ void LauncherIcon::DrawCountTexture(unsigned count, double scale)
                     (COUNT_HEIGHT - ink_rect.height) / 2.0 - ink_rect.y);
   pango_cairo_show_layout(cr, layout);
 
-  _counts[scale] = texture_ptr_from_cairo_graphics(cg);
+  _counts[global_scale] = texture_ptr_from_cairo_graphics(cg);
 }
 
 void
