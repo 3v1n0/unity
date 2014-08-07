@@ -1052,7 +1052,7 @@ void LauncherIcon::DrawCountTexture(unsigned count, double scale)
   glib::Object<PangoLayout> layout(pango_layout_new(pango_ctx));
 
   glib::String font_name;
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
+  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, nullptr);
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
   pango_font_description_set_absolute_size(desc.get(), pango_units_from_double(COUNT_FONT_HEIGHT));
   pango_layout_set_font_description(layout, desc.get());
@@ -1060,10 +1060,10 @@ void LauncherIcon::DrawCountTexture(unsigned count, double scale)
   pango_layout_set_width(layout, pango_units_from_double(COUNT_FONT_WIDTH));
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
-  pango_layout_set_markup_with_accel(layout, count_text.c_str(), -1, '_', NULL);
+  pango_layout_set_markup_with_accel(layout, count_text.c_str(), -1, '_', nullptr);
 
-  PangoRectangle logical_rect, ink_rect;
-  pango_layout_get_extents(layout, &logical_rect, &ink_rect);
+  PangoRectangle ink_rect;
+  pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
 
   /* DRAW OUTLINE */
   float radius = COUNT_HEIGHT / 2.0f - 1.0f;
@@ -1084,9 +1084,8 @@ void LauncherIcon::DrawCountTexture(unsigned count, double scale)
   cairo_set_line_width(cr, 1.0f);
 
   /* DRAW TEXT */
-  cairo_move_to(cr,
-                static_cast<int>((COUNT_WIDTH - pango_units_to_double(logical_rect.width)) / 2.0f),
-                static_cast<int>((COUNT_HEIGHT - pango_units_to_double(logical_rect.height)) / 2.0f - pango_units_to_double(logical_rect.y)));
+  cairo_move_to(cr, (COUNT_WIDTH - ink_rect.width) / 2.0 - ink_rect.x,
+                    (COUNT_HEIGHT - ink_rect.height) / 2.0 - ink_rect.y);
   pango_cairo_show_layout(cr, layout);
 
   _counts[scale] = texture_ptr_from_cairo_graphics(cg);
