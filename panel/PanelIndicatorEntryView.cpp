@@ -426,7 +426,7 @@ void PanelIndicatorEntryView::Refresh()
       }
     }
 
-    glib::Object<PangoContext> context(gdk_pango_context_get_for_screen(gdk_screen_get_default()));
+    glib::Object<PangoContext> context(gdk_pango_context_get());
     std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
     pango_context_set_font_description(context, desc.get());
     pango_context_set_language(context, gtk_get_default_language());

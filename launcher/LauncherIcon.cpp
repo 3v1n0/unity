@@ -103,7 +103,7 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::BuildCountTextures));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::BuildCountTextures));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -1047,7 +1047,9 @@ void LauncherIcon::DrawCountTexture(unsigned count, double scale)
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(COUNT_WIDTH * scale), std::round(COUNT_HEIGHT * scale));
   cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
   cairo_t* cr = cg.GetInternalContext();
-  glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
+
+  glib::Object<PangoContext> pango_ctx(gdk_pango_context_get());
+  glib::Object<PangoLayout> layout(pango_layout_new(pango_ctx));
 
   glib::String font_name;
   g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
@@ -1059,10 +1061,6 @@ void LauncherIcon::DrawCountTexture(unsigned count, double scale)
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
   pango_layout_set_markup_with_accel(layout, count_text.c_str(), -1, '_', NULL);
-
-  auto* screen = gdk_screen_get_default();
-  auto* pango_ctx = pango_layout_get_context(layout);  // is not ref'ed
-  pango_cairo_context_set_font_options(pango_ctx, gdk_screen_get_font_options(screen));
 
   PangoRectangle logical_rect, ink_rect;
   pango_layout_get_extents(layout, &logical_rect, &ink_rect);

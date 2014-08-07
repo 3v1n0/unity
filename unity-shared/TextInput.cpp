@@ -234,9 +234,8 @@ void TextInput::LoadWarningTooltip()
   gtk_style_context_set_path(style_context, widget_path.get());
   gtk_style_context_add_class(style_context, "tooltip");
 
-  glib::Object<PangoLayout> layout;
-  glib::Object<PangoContext> context(gdk_pango_context_get_for_screen(gdk_screen_get_default()));
-  layout = pango_layout_new(context);
+  glib::Object<PangoContext> context(gdk_pango_context_get());
+  glib::Object<PangoLayout> layout(pango_layout_new(context));
 
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
   pango_context_set_font_description(context, desc.get());
