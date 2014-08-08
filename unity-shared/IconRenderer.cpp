@@ -200,7 +200,7 @@ const std::array<int, IconSize::SIZE> TILE_SIZES = { 54, 150 };
 const std::array<int, IconSize::SIZE> GLOW_SIZES = { 62, 200 };
 const std::array<int, IconSize::SIZE> MARKER_SIZES = { 19, 37 };
 
-constexpr double count_scaling(double icon_size) { return icon_size / TILE_SIZES[local::IconSize::SMALL]; }
+constexpr double count_scaling(double icon_size, bool switcher) { return icon_size / (TILE_SIZES[local::IconSize::SMALL] * (switcher ? 2.0 : 1.0)); }
 } // anonymous namespace
 } // local namespace
 
@@ -431,7 +431,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     float emb_w, emb_h;
     nux::BaseTexture* emblem = launcher_icon->Emblem();
 
-    if (nux::BaseTexture* count_texture = launcher_icon->CountTexture(local::count_scaling(icon_size)))
+    if (nux::BaseTexture* count_texture = launcher_icon->CountTexture(local::count_scaling(icon_size, pip_style != OUTSIDE_TILE)))
     {
       emblem = count_texture;
       emb_w = emblem->GetWidth();
@@ -733,7 +733,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   tile_transform);
   }
 
-  if (nux::BaseTexture* count_texture = arg.icon->CountTexture(local::count_scaling(icon_size)))
+  if (nux::BaseTexture* count_texture = arg.icon->CountTexture(local::count_scaling(icon_size, pip_style != OUTSIDE_TILE)))
   {
     RenderElement(GfxContext,
                   arg,
