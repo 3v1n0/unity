@@ -70,7 +70,7 @@ public:
   virtual nux::BaseTexture* TextureForSize(int size) = 0;
 
   virtual unsigned Count() const;
-  virtual nux::BaseTexture* CountTexture(double scale) const;
+  virtual nux::BaseTexture* CountTexture(double scale);
   virtual nux::BaseTexture* Emblem() const;
 
 private:

@@ -112,7 +112,7 @@ nux::BaseTexture* IconTextureSource::Emblem() const
   return nullptr;
 }
 
-nux::BaseTexture* IconTextureSource::CountTexture(double scale) const
+nux::BaseTexture* IconTextureSource::CountTexture(double scale)
 {
   return nullptr;
 }

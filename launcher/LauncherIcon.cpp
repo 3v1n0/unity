@@ -103,8 +103,8 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
-  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::BuildCountTextures));
-  icon_size.changed.connect(sigc::hide(sigc::mem_fun(this, &LauncherIcon::BuildCountTextures)));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::CleanCountTextures));
+  icon_size.changed.connect(sigc::hide(sigc::mem_fun(this, &LauncherIcon::CleanCountTextures)));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -977,14 +977,21 @@ nux::BaseTexture* LauncherIcon::Emblem() const
   return _emblem.GetPointer();
 }
 
-nux::BaseTexture* LauncherIcon::CountTexture(double scale) const
+nux::BaseTexture* LauncherIcon::CountTexture(double scale)
 {
+  int count = Count();
+
+  if (!count)
+    return nullptr;
+
   auto it = _counts.find(scale);
 
   if (it != _counts.end())
     return it->second.GetPointer();
 
-  return nullptr;
+  auto const& texture = DrawCountTexture(count, scale);
+  _counts[scale] = texture;
+  return texture.GetPointer();
 }
 
 unsigned LauncherIcon::Count() const
@@ -1021,27 +1028,12 @@ LauncherIcon::SetEmblemIconName(std::string const& name)
   emblem->UnReference();
 }
 
-void LauncherIcon::BuildCountTextures()
+void LauncherIcon::CleanCountTextures()
 {
   _counts.clear();
-  unsigned count = Count();
-
-  if (count <= 0)
-    return;
-
-  unsigned monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
-  auto& settings = Settings::Instance();
-
-  for (unsigned monitor = 0; monitor < monitors; ++monitor)
-  {
-    double scale = settings.em(monitor)->DPIScale();
-
-    if (_counts.find(scale) == _counts.end())
-      DrawCountTexture(count, scale);
-  }
 }
 
-void LauncherIcon::DrawCountTexture(unsigned count, double global_scale)
+BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
 {
   auto const& count_text = (count / 10000 != 0) ? "****" : std::to_string(count);
 
@@ -1061,8 +1053,6 @@ void LauncherIcon::DrawCountTexture(unsigned count, double global_scale)
 
   PangoRectangle ink_rect;
   pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
-
-  double scale = icon_size / 54.0 * global_scale;
 
   /* DRAW OUTLINE */
   float radius = COUNT_HEIGHT / 2.0f - 1.0f;
@@ -1091,7 +1081,7 @@ void LauncherIcon::DrawCountTexture(unsigned count, double global_scale)
                     (COUNT_HEIGHT - ink_rect.height) / 2.0 - ink_rect.y);
   pango_cairo_show_layout(cr, layout);
 
-  _counts[global_scale] = texture_ptr_from_cairo_graphics(cg);
+  return texture_ptr_from_cairo_graphics(cg);
 }
 
 void
@@ -1186,7 +1176,7 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (!remote->CountVisible())
     return;
 
-  BuildCountTextures();
+  CleanCountTextures();
   EmitNeedsRedraw();
 }
 
@@ -1217,7 +1207,7 @@ LauncherIcon::OnRemoteEmblemVisibleChanged(LauncherEntryRemote* remote)
 void
 LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
-  BuildCountTextures();
+  CleanCountTextures();
   EmitNeedsRedraw();
 }
 
