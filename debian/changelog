@@ -1,3 +1,9 @@
+unity (7.3.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Split out dconf schemas into separate package
+
+ -- Michal Hruby <michal.hruby@canonical.com>  Wed, 30 Jul 2014 12:17:06 +0100
+
 unity (7.3.0+14.10.20140731.1-0ubuntu1) utopic; urgency=low
 
   [ Ubuntu daily release ]
@@ -2204,7 +2210,6 @@ unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 3317 (ubuntu-unity/next)
-
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   [ Sebastien Bacher ]
