@@ -18,6 +18,8 @@
 
 #include "UScreen.h"
 #include <NuxCore/Logger.h>
+#include <NuxCore/NuxCore.h>
+#include <NuxGraphics/GraphicsDisplay.h>
 
 namespace unity
 {
@@ -60,17 +62,8 @@ UScreen* UScreen::GetDefault()
 
 int UScreen::GetMonitorWithMouse() const
 {
-  GdkDevice* device;
-  GdkDisplay *display;
-  int x;
-  int y;
-
-  display = gdk_display_get_default();
-  device = gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(display));
-
-  gdk_device_get_position(device, nullptr, &x, &y);
-
-  return GetMonitorAtPosition(x, y);
+  auto const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  return GetMonitorAtPosition(mouse.x, mouse.y);
 }
 
 int UScreen::GetPrimaryMonitor() const
@@ -80,6 +73,23 @@ int UScreen::GetPrimaryMonitor() const
 
 int UScreen::GetMonitorAtPosition(int x, int y) const
 {
+  int monitors = gdk_screen_get_n_monitors(screen_);
+
+  for (int i = 0; i < monitors; ++i)
+  {
+    GdkRectangle rect = { 0 };
+    gdk_screen_get_monitor_geometry(screen_, i, &rect);
+
+    float scale = gdk_screen_get_monitor_scale_factor(screen_, i);
+    nux::Geometry geo(rect.x, rect.y, rect.width, rect.height);
+
+    if (scale != 1.0)
+      geo = geo * scale;
+
+    if (geo.IsPointInside(x, y))
+      return i;
+  }
+
   return gdk_screen_get_monitor_at_point(screen_, x, y);
 }
 
@@ -151,7 +161,10 @@ void UScreen::Refresh()
     gdk_screen_get_monitor_geometry(screen_, i, &rect);
 
     float scale = gdk_screen_get_monitor_scale_factor(screen_, i);
-    nux::Geometry geo(rect.x*scale, rect.y*scale, rect.width*scale, rect.height*scale);
+    nux::Geometry geo(rect.x, rect.y, rect.width, rect.height);
+
+    if (scale != 1.0)
+      geo = geo * scale;
 
     // Check for mirrored displays
     if (geo == last_geo)
