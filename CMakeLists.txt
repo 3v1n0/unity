@@ -259,6 +259,7 @@ set(UNITY_STANDALONE_LADD ${UNITY_STANDALONE_LADD} ${UNITY_PROTOCOL_PRIVATE_LIB}
 add_subdirectory(unity-shared)
 add_subdirectory(dash)
 add_subdirectory(launcher)
+add_subdirectory(data)
 if (ENABLE_X_SUPPORT)
   add_subdirectory(hud)
   add_subdirectory(lockscreen)
