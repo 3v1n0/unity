@@ -1005,11 +1005,13 @@ bool PluginAdapter::InShowDesktop() const
 void PluginAdapter::OnShowDesktop()
 {
   _in_show_desktop = true;
+  show_desktop_changed.emit();
 }
 
 void PluginAdapter::OnLeaveDesktop()
 {
   _in_show_desktop = false;
+  show_desktop_changed.emit();
 }
 
 void PluginAdapter::UpdateShowDesktopState()
