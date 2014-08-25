@@ -174,6 +174,10 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
     CheckIfCapsLockOn();
   });
 
+  sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) {
+    CheckIfCapsLockOn();
+  });
+
   input_string.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_input_string));
   input_string.SetSetterFunction(sigc::mem_fun(this, &TextInput::set_input_string));
   im_active.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_im_active));

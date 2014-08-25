@@ -1,7 +1,6 @@
 usr/lib/libunity-core*.so.*
 usr/lib/unity/*.py
 usr/share/ccsm
-usr/share/glib-2.0
 usr/share/gnome-control-center/
 usr/share/unity
 debian/unity-crashdb.conf etc/apport/crashdb.conf.d/

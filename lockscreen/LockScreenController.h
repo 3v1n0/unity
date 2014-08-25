@@ -76,8 +76,8 @@ private:
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
-  nux::ObjectPtr<nux::BaseWindow> blank_window_;
   nux::ObjectWeakPtr<UserPromptView> prompt_view_;
+  nux::ObjectPtr<nux::BaseWindow> blank_window_;
 
   DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
