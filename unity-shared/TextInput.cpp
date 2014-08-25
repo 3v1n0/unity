@@ -22,6 +22,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/TextureCache.h"
 
 namespace unity
 {
@@ -82,6 +83,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , input_hint("")
   , hint_font_name(HINT_LABEL_DEFAULT_FONT_NAME)
   , hint_font_size(HINT_LABEL_FONT_SIZE)
+  , show_activator(false)
   , show_caps_lock(false)
   , bg_layer_(new nux::ColorLayer(nux::Color(0xff595853), true))
   , caps_lock_on(false)
@@ -121,6 +123,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
+  // Caps lock warning
   warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE));
   warning_->SetVisible(caps_lock_on());
   layout_->AddView(warning_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -140,6 +143,20 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
     CheckIfCapsLockOn();
   });
 
+  // Activator
+  activator_ = new IconTexture(LoadActivatorIcon(DEFAULT_ICON_SIZE));
+  activator_->SetVisible(show_activator());
+  layout_->AddView(activator_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
+  show_activator.changed.connect([this] (bool value) {
+    activator_->SetVisible(value);
+  });
+
+  activator_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
+    pango_entry_->activated.emit();
+  });
+
+  // Spinner
   spinner_ = new SearchBarSpinner();
   spinner_->SetVisible(false);
   spinner_->SetMinMaxSize(22, 22);
@@ -179,6 +196,11 @@ void TextInput::CheckIfCapsLockOn()
 void TextInput::SetSpinnerVisible(bool visible)
 {
   spinner_->SetVisible(visible);
+
+  if (visible)
+    activator_->SetVisible(false);
+  else
+    activator_->SetVisible(show_activator());
 }
 
 void TextInput::SetSpinnerState(SpinnerState spinner_state)
@@ -189,6 +211,12 @@ void TextInput::SetSpinnerState(SpinnerState spinner_state)
 void TextInput::UpdateHintFont()
 {
   hint_->SetFont((hint_font_name() + " " + std::to_string(hint_font_size())).c_str());
+}
+
+nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(int icon_size)
+{
+  TextureCache& cache = TextureCache::GetDefault();
+  return cache.FindTexture("arrow_right.png", icon_size, icon_size);
 }
 
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)

@@ -33,6 +33,7 @@
 #include "MultiMonitor.h"
 #include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
 
@@ -1168,6 +1169,7 @@ void ApplicationLauncherIcon::OnDndEnter()
     if (!IsRunning())
       return false;
 
+    UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
     Focus(ActionArg(ActionArg::Source::LAUNCHER, 1, timestamp));
 
     if (GetWindows(WindowFilter::ON_CURRENT_DESKTOP).size() > 1)

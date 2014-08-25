@@ -2512,6 +2512,16 @@ bool UnityScreen::ShowHud()
   }
   else
   {
+    // Handles closing KeyNav (Alt+F1) if the hud is about to show
+    if (launcher_controller_->KeyNavIsActive())
+      launcher_controller_->KeyNavTerminate(false);
+
+    if (dash_controller_->IsVisible())
+      dash_controller_->HideDash();
+
+    if (QuicklistManager::Default()->Current())
+      QuicklistManager::Default()->Current()->Hide();
+
     auto& wm = WindowManager::Default();
 
     if (wm.IsTopWindowFullscreenOnMonitorWithMouse())
@@ -2529,16 +2539,6 @@ bool UnityScreen::ShowHud()
 
       return false;
     }
-
-    // Handles closing KeyNav (Alt+F1) if the hud is about to show
-    if (launcher_controller_->KeyNavIsActive())
-      launcher_controller_->KeyNavTerminate(false);
-
-    if (dash_controller_->IsVisible())
-      dash_controller_->HideDash();
-
-    if (QuicklistManager::Default()->Current())
-      QuicklistManager::Default()->Current()->Hide();
 
     hud_ungrab_slot_->disconnect();
     hud_controller_->ShowHud();
