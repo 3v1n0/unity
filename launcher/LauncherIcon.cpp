@@ -62,6 +62,7 @@ const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
 
 const int COUNT_WIDTH = 32;
 const int COUNT_HEIGHT = 16;
+const int COUNT_PADDING = 2;
 const int COUNT_FONT_WIDTH = COUNT_WIDTH - 4;
 const int COUNT_FONT_HEIGHT = COUNT_HEIGHT - 5;
 }
@@ -1057,14 +1058,15 @@ BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
   /* DRAW OUTLINE */
   float radius = COUNT_HEIGHT / 2.0f - 1.0f;
   float inset = radius + 1.0f;
+  float count_width = ink_rect.width + inset + COUNT_PADDING * 2;
 
-  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(COUNT_WIDTH * scale), std::round(COUNT_HEIGHT * scale));
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(count_width * scale), std::round(COUNT_HEIGHT * scale));
   cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
   cairo_t* cr = cg.GetInternalContext();
 
   cairo_move_to(cr, inset, COUNT_HEIGHT - 1.0f);
   cairo_arc(cr, inset, inset, radius, 0.5 * M_PI, 1.5 * M_PI);
-  cairo_arc(cr, COUNT_WIDTH - inset, inset, radius, 1.5 * M_PI, 0.5 * M_PI);
+  cairo_arc(cr, count_width - inset, inset, radius, 1.5 * M_PI, 0.5 * M_PI);
   cairo_line_to(cr, inset, COUNT_HEIGHT - 1.0f);
 
   cairo_set_source_rgba(cr, 0.35f, 0.35f, 0.35f, 1.0f);
@@ -1077,7 +1079,7 @@ BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
   cairo_set_line_width(cr, 1.0f);
 
   /* DRAW TEXT */
-  cairo_move_to(cr, (COUNT_WIDTH - ink_rect.width) / 2.0 - ink_rect.x,
+  cairo_move_to(cr, (count_width - ink_rect.width) / 2.0 - ink_rect.x,
                     (COUNT_HEIGHT - ink_rect.height) / 2.0 - ink_rect.y);
   pango_cairo_show_layout(cr, layout);
 
