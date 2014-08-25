@@ -22,8 +22,6 @@
 
 #include "SimpleLauncherIcon.h"
 
-#include <NuxCore/Logger.h>
-
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -31,8 +29,6 @@ namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon");
-
 NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
 
 SimpleLauncherIcon::SimpleLauncherIcon(IconType type)

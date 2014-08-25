@@ -151,7 +151,6 @@ public:
   nux::BaseTexture* GetPlayIcon();
   nux::BaseTexture* GetPauseIcon();
   nux::BaseTexture* GetLockIcon();
-  nux::BaseTexture* GetSearchSpinIcon(int size = -1);
 
   ////////////////////////////////
   // Payment Preview

@@ -98,7 +98,6 @@ public:
   , preview_nav_right_texture_("/preview_next.svg")
   , preview_play_texture_("/preview_play.svg")
   , preview_pause_texture_("/preview_pause.svg")
-  , preview_spin_texture_("/search_spin.svg")
   , warning_icon_texture_("/warning_icon.png")
   {
   }
@@ -110,7 +109,6 @@ public:
   LazyLoadTexture<32> preview_nav_right_texture_;
   LazyLoadTexture<32> preview_play_texture_;
   LazyLoadTexture<32> preview_pause_texture_;
-  LazyLoadTexture<32> preview_spin_texture_;
   LazyLoadTexture<22> warning_icon_texture_;
 };
 
@@ -290,7 +288,7 @@ RawPixel Style::GetRatingWidgetHeight() const
 
 RawPixel Style::GetStatusIconSize() const
 {
-  return 12_em;
+  return 10_em;
 }
 
 std::string Style::payment_title_font() const
@@ -501,11 +499,6 @@ nux::BaseTexture* Style::GetLockIcon()
 nux::BaseTexture* Style::GetWarningIcon()
 {
   return pimpl->warning_icon_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchSpinIcon(int size)
-{
-  return pimpl->preview_spin_texture_.texture(size);
 }
 
 

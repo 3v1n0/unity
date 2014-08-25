@@ -35,6 +35,11 @@ namespace unity
 {
 namespace dash
 {
+namespace
+{
+const RawPixel CHILDREN_SPACE = 12_em;
+const RawPixel CHILDREN_SPACE_SMALLER = 10_em;
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
 
@@ -42,33 +47,41 @@ FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
 : FilterExpanderLabel(_("Categories"), NUX_FILE_LINE_PARAM)
 , all_button_(nullptr)
 {
-  dash::Style& style = dash::Style::Instance();
-
   InitTheme();
-
 
   genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
   genre_layout_->ForceChildrenSize(true);
   genre_layout_->MatchContentSize(true);
-  genre_layout_->SetTopAndBottomPadding(style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding(), style.GetFilterHighlightPadding());
   genre_layout_->EnablePartialVisibility(false);
+
+  UpdateSize(columns);
+  SetContents(genre_layout_);
+
+  scale.changed.connect([this, columns] (double scale) {
+    if (all_button_) all_button_->scale = scale;
+
+    for (auto* button : buttons_)
+      button->scale = scale;
+
+    UpdateSize(columns);
+  });
+}
+
+void FilterGenre::UpdateSize(int columns)
+{
+  auto& style = dash::Style::Instance();
+  genre_layout_->SetTopAndBottomPadding(style.GetSpaceBetweenFilterWidgets().CP(scale) - style.GetFilterHighlightPadding().CP(scale), style.GetFilterHighlightPadding().CP(scale));
 
   if (columns == 3)
   {
-    genre_layout_->SetChildrenSize((style.GetFilterBarWidth() - 12 * 2) / 3, style.GetFilterButtonHeight());
-    genre_layout_->SetSpaceBetweenChildren (12, 12);
+    genre_layout_->SetChildrenSize((style.GetFilterBarWidth().CP(scale) - CHILDREN_SPACE.CP(scale) * 2) / 3, style.GetFilterButtonHeight().CP(scale));
+    genre_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale), CHILDREN_SPACE.CP(scale));
   }
   else
   {
-    genre_layout_->SetChildrenSize((style.GetFilterBarWidth() - 10 ) / 2, style.GetFilterButtonHeight());
-    genre_layout_->SetSpaceBetweenChildren (10, 12);
+    genre_layout_->SetChildrenSize((style.GetFilterBarWidth().CP(scale) - CHILDREN_SPACE_SMALLER.CP(scale)) / 2, style.GetFilterButtonHeight().CP(scale));
+    genre_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE_SMALLER.CP(scale), CHILDREN_SPACE.CP(scale));
   }
-
-  SetContents(genre_layout_);
-}
-
-FilterGenre::~FilterGenre()
-{
 }
 
 void FilterGenre::SetFilter(Filter::Ptr const& filter)
@@ -81,11 +94,14 @@ void FilterGenre::SetFilter(Filter::Ptr const& filter)
     all_button_ = show_all_button ? new FilterAllButton(NUX_TRACKER_LOCATION) : nullptr;
     SetRightHandView(all_button_);
     if (all_button_)
+    {
+      all_button_->scale = scale();
       all_button_->SetFilter(filter_);
+    }
   };
   show_button_func(filter_->show_all_button);
   filter_->show_all_button.changed.connect(show_button_func);
-  
+
   expanded = !filter_->collapsed();
 
   filter_->option_added.connect(sigc::mem_fun(this, &FilterGenre::OnOptionAdded));
@@ -106,6 +122,7 @@ void FilterGenre::OnOptionAdded(FilterOption::Ptr const& new_filter)
   std::string label(escape.Value());
 
   FilterGenreButton* button = new FilterGenreButton(label, NUX_TRACKER_LOCATION);
+  button->scale = scale();
   button->SetFilter(new_filter);
   genre_layout_->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   buttons_.push_back(button);
@@ -121,7 +138,7 @@ void FilterGenre::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
     {
       genre_layout_->RemoveChildObject(*it);
       buttons_.erase(it);
-      
+
       QueueRelayout();
       break;
     }

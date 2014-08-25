@@ -47,28 +47,20 @@ FilterBar::FilterBar(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , scale(DEFAULT_SCALE)
 {
-  Init();
-}
-
-FilterBar::~FilterBar()
-{
-}
-
-void FilterBar::Init()
-{
-  dash::Style& style = dash::Style::Instance();
-
-  nux::LinearLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout->SetTopAndBottomPadding(style.GetFilterBarTopPadding() - style.GetFilterHighlightPadding());
-  layout->SetSpaceBetweenChildren(style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding());
+  SetLayout(new nux::VLayout(NUX_TRACKER_LOCATION));
   scale.changed.connect(sigc::mem_fun(this, &FilterBar::UpdateScale));
-  SetLayout(layout);
+  UpdateScale(scale);
 }
 
 void FilterBar::UpdateScale(double scale)
 {
   for (auto& filters : filter_map_)
     filters.second->scale = scale;
+
+  auto& style = dash::Style::Instance();
+  auto* layout = static_cast<nux::VLayout*>(GetLayout());
+  layout->SetTopAndBottomPadding(style.GetFilterBarTopPadding().CP(scale) - style.GetFilterHighlightPadding().CP(scale));
+  layout->SetSpaceBetweenChildren(style.GetSpaceBetweenFilterWidgets().CP(scale) - style.GetFilterHighlightPadding().CP(scale));
 }
 
 void FilterBar::SetFilters(Filters::Ptr const& filters)
@@ -118,9 +110,7 @@ void FilterBar::ClearFilters()
 }
 
 void FilterBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-{
-
-}
+{}
 
 void FilterBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {

@@ -23,7 +23,6 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PreviewStyle.h"
 #include <UnityCore/SocialPreview.h>
-#include <NuxCore/Logger.h>
 #include <Nux/Layout.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
@@ -36,24 +35,22 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.social.comments");
 
 namespace
 {
-const int layout_spacing = 12;
+const RawPixel LAYOUT_SPACING = 12_em;
+const RawPixel CHILDREN_SPACE = 6_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SocialPreviewComments);
 
 SocialPreviewComments::SocialPreviewComments(dash::Preview::Ptr preview_model, NUX_FILE_LINE_DECL)
 : View(NUX_FILE_LINE_PARAM)
+, scale(1.0)
 , preview_model_(preview_model)
 {
   SetupViews();
-}
-
-SocialPreviewComments::~SocialPreviewComments()
-{
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &SocialPreviewComments::SetupViews)));
 }
 
 void SocialPreviewComments::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -85,24 +82,20 @@ void SocialPreviewComments::PreLayoutManagement()
   nux::Geometry const& geo = GetGeometry();
 
   int comment_width = 0;
+  int minimum_detail_width = style.GetDetailsPanelMinimumWidth().CP(scale);
+
   for (Comment const& comment : comments_)
   {
-    int width = style.GetDetailsPanelMinimumWidth();
-    if (comment.first)
-    {
-      width = comment.first->GetTextExtents().width;
+    int width = minimum_detail_width;
 
-      if (width < style.GetDetailsPanelMinimumWidth())
-        width = style.GetDetailsPanelMinimumWidth();
-    }
+    if (comment.first)
+      width = std::max(minimum_detail_width, comment.first->GetTextExtents().width);
 
     if (comment_width < width)
-    {
       comment_width = width;
-    }
   }
 
-  int comment_value_width = MAX(0, geo.width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int comment_value_width = MAX(0, geo.width - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale));
 
   for (Comment const& comment : comments_)
   {
@@ -122,7 +115,6 @@ void SocialPreviewComments::SetupViews()
 {
   dash::SocialPreview* social_preview_model = dynamic_cast<dash::SocialPreview*>(preview_model_.get());
 
-
   RemoveLayout();
   comments_.clear();
 
@@ -131,13 +123,12 @@ void SocialPreviewComments::SetupViews()
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
   nux::VLayout* layout = new nux::VLayout();
-  layout->SetSpaceBetweenChildren(6);
+  layout->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
   for (dash::SocialPreview::CommentPtr comment : social_preview_model->GetComments())
   {
-
     nux::HLayout* name_layout = new nux::HLayout();
-    name_layout->SetSpaceBetweenChildren(layout_spacing);
+    name_layout->SetSpaceBetweenChildren(LAYOUT_SPACING.CP(scale));
 
     StaticCairoTextPtr comment_name;
     if (!comment->display_name.empty())
@@ -145,6 +136,7 @@ void SocialPreviewComments::SetupViews()
       comment_name = new StaticCairoText(comment->display_name, true, NUX_TRACKER_LOCATION);
       comment_name->SetFont(style.info_hint_bold_font());
       comment_name->SetLines(-1);
+      comment_name->SetScale(scale);
       comment_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
       comment_name->mouse_click.connect(on_mouse_down);
       name_layout->AddView(comment_name.GetPointer(), 0, nux::MINOR_POSITION_START);
@@ -156,19 +148,20 @@ void SocialPreviewComments::SetupViews()
       comment_time = new StaticCairoText(comment->time, true, NUX_TRACKER_LOCATION);
       comment_time->SetFont(style.info_hint_font());
       comment_time->SetLines(-1);
+      comment_time->SetScale(scale);
       comment_time->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
       comment_time->mouse_click.connect(on_mouse_down);
       name_layout->AddView(comment_time.GetPointer(), 0, nux::MINOR_POSITION_START);
     }
 
-
     nux::HLayout* comment_layout = new nux::HLayout();
-    comment_layout->SetSpaceBetweenChildren(layout_spacing);
+    comment_layout->SetSpaceBetweenChildren(LAYOUT_SPACING.CP(scale));
 
     StaticCairoTextPtr comment_value(new StaticCairoText(comment->content, false, NUX_TRACKER_LOCATION));
 
     comment_value->SetFont(style.info_hint_font());
     comment_value->SetLines(-7);
+    comment_value->SetScale(scale);
     comment_value->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
     comment_value->mouse_click.connect(on_mouse_down);
     comment_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_START);
@@ -182,7 +175,6 @@ void SocialPreviewComments::SetupViews()
   mouse_click.connect(on_mouse_down);
 
   SetLayout(layout);
-
 }
 
 std::string SocialPreviewComments::GetName() const

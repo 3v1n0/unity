@@ -146,7 +146,6 @@ class TestPaymentPreview : public ::testing::Test
 
   // needed for styles
   dash::Style dash_style;
-
 };
 
 TEST_F(TestPaymentPreview, GetHeaderCallsCorrectMethods)
@@ -157,7 +156,7 @@ TEST_F(TestPaymentPreview, GetHeaderCallsCorrectMethods)
   ON_CALL(*preview.GetPointer(), GetPrice()).WillByDefault(Return(new nux::VLayout()));
   EXPECT_CALL(*preview.GetPointer(), GetPrice()).Times(1);
 
-  preview->GetHeader();
+  preview->GetHeader()->UnReference();
 }
 
 TEST_F(TestPaymentPreview, SetupViewsCallCorrectMethods)

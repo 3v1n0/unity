@@ -46,7 +46,6 @@ public:
   typedef nux::ObjectPtr<View> Ptr;
 
   View();
-  ~View();
 
   void ResetToDefault();
 
@@ -62,7 +61,7 @@ public:
   void AboutToHide();
 
   void SetMonitorOffset(int x, int y);
-  
+
   nux::Geometry GetContentGeometry();
 
 protected:
@@ -86,6 +85,7 @@ private:
 
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
   void UpdateLayoutGeometry();
+  void UpdateScale(double);
 
   void ProcessGrowShrink();
 

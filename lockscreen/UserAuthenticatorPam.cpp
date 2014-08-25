@@ -70,8 +70,7 @@ bool UserAuthenticatorPam::InitPam()
   conversation.conv = ConversationFunction;
   conversation.appdata_ptr = static_cast<void*>(this);
 
-  // FIXME (andy) We should install our own unityshell pam file.
-  return pam_start("lightdm", username_.c_str(),
+  return pam_start("unity", username_.c_str(),
                    &conversation, &pam_handle_) == PAM_SUCCESS;
 }
 

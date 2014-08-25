@@ -19,13 +19,10 @@
 
 #include "CheckOptionFilter.h"
 
-#include <NuxCore/Logger.h>
-
 namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.filter.checkoption");
 
 CheckOptionFilter::CheckOptionFilter(DeeModel* model, DeeModelIter* iter)
 : Filter(model, iter)

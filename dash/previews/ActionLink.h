@@ -47,6 +47,7 @@ public:
   nux::RWProperty<StaticCairoText::AlignState> text_aligment;
   nux::RWProperty<StaticCairoText::UnderlineState> underline_state;
   nux::RWProperty<std::string> font_hint;
+  nux::Property<double> scale;
 
   void Activate() {}
   void Deactivate() {}
@@ -90,8 +91,7 @@ protected:
   StaticCairoText::UnderlineState underline_;
 private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
-
-
+  void UpdateScale(double scale);
 };
 
 } // namespace dash

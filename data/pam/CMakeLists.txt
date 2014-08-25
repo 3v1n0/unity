@@ -1,0 +1,1 @@
+install(FILES unity DESTINATION ${CMAKE_SYSCONFDIR}/pam.d)

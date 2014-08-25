@@ -36,7 +36,6 @@
 #include "PlacesGroup.h"
 #include "ResultViewGrid.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/PlacesVScrollBar.h"
 
 namespace unity
 {

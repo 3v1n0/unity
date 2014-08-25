@@ -1254,6 +1254,7 @@ bool PluginAdapter::IsScreenGrabbed() const
   if (ret == GrabSuccess)
   {
     XUngrabKeyboard(dpy, CurrentTime);
+    XFlush(dpy);
 
     if (CompWindow* w = m_Screen->findWindow(m_Screen->activeWindow()))
       w->moveInputFocusTo();

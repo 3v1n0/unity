@@ -72,6 +72,7 @@ public:
   nux::Property<int> hint_font_size;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
+  nux::Property<bool> show_activator;
   nux::Property<bool> show_caps_lock;
 
 private:
@@ -91,6 +92,7 @@ private:
   nux::Geometry GetWaringIconGeometry() const;
   void CheckIfCapsLockOn();
 
+  nux::ObjectPtr<nux::BaseTexture> LoadActivatorIcon(int icon_size);
   nux::ObjectPtr<nux::BaseTexture> LoadWarningIcon(int icon_size);
   void LoadWarningTooltip();
 
@@ -99,7 +101,6 @@ private:
 protected:
   void OnInputHintChanged();
   void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnKeyUp(unsigned keysym, unsigned long keycode, unsigned long state);
   void OnEndKeyFocus();
 
   // getters & setters
@@ -126,6 +127,7 @@ private:
   bool mouse_over_warning_icon_;
 
   IconTexture* warning_;
+  IconTexture* activator_;
   nux::ObjectPtr<nux::BaseTexture> warning_tooltip_;
 
   glib::SignalManager sig_manager_;

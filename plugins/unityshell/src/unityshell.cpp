@@ -109,8 +109,11 @@ void capture_g_log_calls(const gchar* log_domain,
                          GLogLevelFlags log_level,
                          const gchar* message,
                          gpointer user_data);
+
+#ifndef USE_GLES
 gboolean is_extension_supported(const gchar* extensions, const gchar* extension);
 gfloat get_opengl_version_f32(const gchar* version_string);
+#endif
 
 inline CompRegion CompRegionFromNuxGeo(nux::Geometry const& geo)
 {
@@ -2509,6 +2512,16 @@ bool UnityScreen::ShowHud()
   }
   else
   {
+    // Handles closing KeyNav (Alt+F1) if the hud is about to show
+    if (launcher_controller_->KeyNavIsActive())
+      launcher_controller_->KeyNavTerminate(false);
+
+    if (dash_controller_->IsVisible())
+      dash_controller_->HideDash();
+
+    if (QuicklistManager::Default()->Current())
+      QuicklistManager::Default()->Current()->Hide();
+
     auto& wm = WindowManager::Default();
 
     if (wm.IsTopWindowFullscreenOnMonitorWithMouse())
@@ -2526,16 +2539,6 @@ bool UnityScreen::ShowHud()
 
       return false;
     }
-
-    // Handles closing KeyNav (Alt+F1) if the hud is about to show
-    if (launcher_controller_->KeyNavIsActive())
-      launcher_controller_->KeyNavTerminate(false);
-
-    if (dash_controller_->IsVisible())
-      dash_controller_->HideDash();
-
-    if (QuicklistManager::Default()->Current())
-      QuicklistManager::Default()->Current()->Hide();
 
     hud_ungrab_slot_->disconnect();
     hud_controller_->ShowHud();
@@ -3821,7 +3824,7 @@ void UnityScreen::OnScreenLocked()
   // We notify that super/alt have been released, to avoid to leave unity in inconsistent state
   CompOption::Vector options(8);
   options[7].setName("time", CompOption::TypeInt);
-  options[7].value().set((int) screen->getCurrentTime());
+  options[7].value().set<int>(screen->getCurrentTime());
 
   showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, options);
   showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, options);
@@ -3952,8 +3955,8 @@ void UnityScreen::initLauncher()
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
 
-    int launcher_width = w - 1;
-    Launcher const* const launcher = static_cast<Launcher*>(area);
+    auto* launcher = static_cast<Launcher*>(area);
+    int launcher_width = w - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
 
     unity::Settings::Instance().SetLauncherWidth(launcher_width, launcher->monitor);
     shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(launcher->monitor));
@@ -3967,17 +3970,21 @@ void UnityScreen::initLauncher()
     screen->setOptionForPlugin("scale", "x_offset", v);
   };
 
-  for (auto const& launcher : launcher_controller_->launchers())
-  {
-    launcher->size_changed.connect(on_launcher_size_changed);
+  auto check_launchers_size = [this, on_launcher_size_changed] {
+    launcher_size_connections_.Clear();
 
-    on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
-  }
-
-  UScreen::GetDefault()->changed.connect([this, on_launcher_size_changed] (int, std::vector<nux::Geometry> const&) {
     for (auto const& launcher : launcher_controller_->launchers())
+    {
+      launcher_size_connections_.Add(launcher->size_changed.connect(on_launcher_size_changed));
       on_launcher_size_changed(launcher.GetPointer(), launcher->GetWidth(), launcher->GetHeight());
+    }
+  };
+
+  UScreen::GetDefault()->changed.connect([this, check_launchers_size] (int, std::vector<nux::Geometry> const&) {
+    check_launchers_size();
   });
+
+  check_launchers_size();
 
   launcher_controller_->options()->scroll_inactive_icons = optionGetScrollInactiveIcons();
   launcher_controller_->options()->minimize_window_on_click = optionGetLauncherMinimizeWindow();
@@ -4593,6 +4600,8 @@ void configure_logging()
 
 /* Checks whether an extension is supported by the GLX or OpenGL implementation
  * given the extension name and the list of supported extensions. */
+
+#ifndef USE_GLES
 gboolean is_extension_supported(const gchar* extensions, const gchar* extension)
 {
   if (extensions != NULL && extension != NULL)
@@ -4631,6 +4640,7 @@ gfloat get_opengl_version_f32(const gchar* version_string)
   else
     return 0.0f;
 }
+#endif
 
 nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)
 {
