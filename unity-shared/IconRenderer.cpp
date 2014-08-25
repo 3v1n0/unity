@@ -366,7 +366,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
         it->logical_center == launcher_icon->LastLogicalCenter(monitor) &&
         it->rotation == launcher_icon->LastRotation(monitor) &&
         it->skip == launcher_icon->WasSkipping(monitor) &&
-        (launcher_icon->Count() != 0) == launcher_icon->HadCount(monitor) &&
+        launcher_icon->Count() == launcher_icon->LastCount(monitor) &&
         (launcher_icon->Emblem() != nullptr) == launcher_icon->HadEmblem(monitor))
     {
       continue;
@@ -376,7 +376,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     launcher_icon->RememberRotation(monitor, it->rotation);
     launcher_icon->RememberSkip(monitor, it->skip);
     launcher_icon->RememberEmblem(monitor, launcher_icon->Emblem() != nullptr);
-    launcher_icon->RememberCount(monitor, launcher_icon->Count() != 0);
+    launcher_icon->RememberCount(monitor, launcher_icon->Count());
 
     float w = icon_size;
     float h = icon_size;
