@@ -1046,7 +1046,7 @@ BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
   pango_layout_set_height(layout, -1);
   pango_layout_set_wrap(layout, PANGO_WRAP_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
-  pango_layout_set_markup_with_accel(layout, std::to_string(count).c_str(), -1, '_', nullptr);
+  pango_layout_set_text(layout, std::to_string(count).c_str(), -1);
 
   PangoRectangle ink_rect;
   pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
