@@ -66,6 +66,20 @@ std::string DesktopUtilities::GetUserCacheDirectory()
   return "";
 }
 
+std::string DesktopUtilities::GetUserConfigDirectory()
+{
+  const char *config_dir = g_get_user_config_dir();
+  auto unity_config = glib::gchar_to_string(config_dir).append(G_DIR_SEPARATOR_S "unity" G_DIR_SEPARATOR_S);
+
+  printf("CONFIG %s\n", unity_config.c_str());
+
+  if (g_mkdir_with_parents(unity_config.c_str(), 0700) >= 0)
+    return unity_config;
+
+  LOG_ERROR(logger) << "Impossible to create unity config folder '"<< unity_config <<"' !";
+  return "";
+}
+
 std::string DesktopUtilities::GetUserRuntimeDirectory()
 {
   const char *runtime_dir = g_get_user_runtime_dir();
