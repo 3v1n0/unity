@@ -31,6 +31,7 @@
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DecorationStyle.h"
 #include "unity-shared/TextureCache.h"
+#include "unity-shared/UnitySettings.h"
 #include "GraphicsUtils.h"
 
 #include <gtk/gtk.h>
@@ -257,6 +258,10 @@ struct IconRenderer::LocalTextures
 
       ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
     });
+
+    font_scaling_conn_ = Settings::Instance().font_scaling.changed.connect([] (double) {
+      ui::IconRenderer::DestroyShortcutTextures();
+    });
   }
 
   void ReloadIconSizedTextures(int icon_size, int image_size)
@@ -316,6 +321,7 @@ private:
   struct TextureData { BaseTexturePtr* tex_ptr; std::string name; int size; };
   std::vector<TextureData> texture_files_;
   connection::Wrapper theme_conn_;
+  connection::Wrapper font_scaling_conn_;
 };
 
 IconRenderer::IconRenderer()
@@ -791,23 +797,23 @@ nux::ObjectPtr<nux::BaseTexture> IconRenderer::TexturesPool::RenderLabelTexture(
   cairo_set_source_rgba(cr, bg_color.red, bg_color.green, bg_color.blue, 0.20f);
   cairo_fill(cr);
 
-  const double text_ratio = 0.75;
-  double text_size = label_size * text_ratio;
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
   g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name),
                                              pango_font_description_free);
-  pango_font_description_set_absolute_size(desc.get(), text_size * PANGO_SCALE);
+  const double text_ratio = 0.75;
+  int text_size = pango_units_from_double(label_size * text_ratio * Settings::Instance().font_scaling());
+  pango_font_description_set_absolute_size(desc.get(), text_size);
   pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_text(layout, &label, 1);
 
-  nux::Size extents;
-  pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
+  PangoRectangle ink_rect;
+  pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
 
   // position and paint text
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  double x = label_x - std::round((extents.width - label_w) / 2.0f);
-  double y = label_y - std::round((extents.height - label_h) / 2.0f);
+  double x = label_x - std::round((ink_rect.width - label_w) / 2.0f) - ink_rect.x;
+  double y = label_y - std::round((ink_rect.height - label_h) / 2.0f) - ink_rect.y;
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
