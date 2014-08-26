@@ -101,8 +101,11 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
-  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::CleanCountTextures));
-  icon_size.changed.connect(sigc::hide(sigc::mem_fun(this, &LauncherIcon::CleanCountTextures)));
+
+  auto const& count_rebuild_cb = sigc::mem_fun(this, &LauncherIcon::CleanCountTextures);
+  Settings::Instance().dpi_changed.connect(count_rebuild_cb);
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(count_rebuild_cb));
+  icon_size.changed.connect(sigc::hide(count_rebuild_cb));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -1029,6 +1032,7 @@ LauncherIcon::SetEmblemIconName(std::string const& name)
 void LauncherIcon::CleanCountTextures()
 {
   _counts.clear();
+  EmitNeedsRedraw();
 }
 
 BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
@@ -1039,7 +1043,8 @@ BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
   glib::String font_name;
   g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, nullptr);
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
-  pango_font_description_set_absolute_size(desc.get(), pango_units_from_double(COUNT_FONT_SIZE));
+  int font_size = pango_units_from_double(Settings::Instance().font_scaling() * COUNT_FONT_SIZE);
+  pango_font_description_set_absolute_size(desc.get(), font_size);
   pango_layout_set_font_description(layout, desc.get());
 
   pango_layout_set_width(layout, pango_units_from_double(icon_size() * 0.75));
@@ -1176,7 +1181,6 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
     return;
 
   CleanCountTextures();
-  EmitNeedsRedraw();
 }
 
 void
@@ -1207,7 +1211,6 @@ void
 LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   CleanCountTextures();
-  EmitNeedsRedraw();
 }
 
 void
