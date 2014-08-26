@@ -540,6 +540,12 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon::Ptr const& ic
     arg.backlight_intensity = 0.7f;
   }
 
+  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::PROGRESS, monitor))
+  {
+    arg.progress_bias = 0.0;
+    arg.progress = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
+  }
+
   return arg;
 }
 
