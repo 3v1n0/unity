@@ -65,7 +65,7 @@ const RawPixel BOT_ARROW_MAX_HEIGHT = 8_em;
 const RawPixel FILTER_HORIZONTAL_MARGIN = 8_em;
 
 // Fonts
-const std::string HINT_LABEL_FONT_SIZE = "20px";
+const std::string HINT_LABEL_FONT_SIZE = "15"; // == 20px
 const std::string HINT_LABEL_FONT_STYLE = "Italic";
 const std::string HINT_LABEL_DEFAULT_FONT = "Ubuntu " + HINT_LABEL_FONT_STYLE + " " + HINT_LABEL_FONT_SIZE;
 
