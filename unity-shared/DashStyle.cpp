@@ -383,9 +383,9 @@ void Style::Impl::Refresh()
   ::pango_layout_context_changed(layout);
 
   PangoRectangle log_rect;
-  ::pango_layout_get_extents(layout, NULL, &log_rect);
-  text_width_ = log_rect.width / PANGO_SCALE;
-  text_height_ = log_rect.height / PANGO_SCALE;
+  ::pango_layout_get_pixel_extents(layout, NULL, &log_rect);
+  text_width_ = log_rect.width;
+  text_height_ = log_rect.height;
 
   owner_->changed.emit();
 
@@ -1396,10 +1396,10 @@ void Style::Impl::GetTextExtents(int& width,
 
   pango_cairo_context_set_resolution(pangoCtx, 96.0 * Settings::Instance().font_scaling());
   pango_layout_context_changed(layout);
-  pango_layout_get_extents(layout, &inkRect, NULL);
+  pango_layout_get_pixel_extents(layout, &inkRect, NULL);
 
-  width  = inkRect.width / PANGO_SCALE;
-  height = inkRect.height / PANGO_SCALE;
+  width  = inkRect.width;
+  height = inkRect.height;
 
   // clean up
   pango_font_description_free(desc);
@@ -1444,11 +1444,8 @@ void Style::Impl::Text(cairo_t*    cr,
 
   if (text_size > 0)
   {
-    pango_font_description_set_absolute_size(desc, text_size * PANGO_SCALE);
-  }
-  else if (desc)
-  {
-    text_size = pango_font_description_get_size(desc) / PANGO_SCALE;
+    text_size = pango_units_from_double(Settings::Instance().font_scaling() * text_size);
+    pango_font_description_set_absolute_size(desc, text_size);
   }
 
   PangoWeight weight;
