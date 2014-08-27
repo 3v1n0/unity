@@ -1516,8 +1516,6 @@ void Launcher::SetLauncherMinimizeWindow(bool click_to_minimize)
 
 void Launcher::SetIconSize(int tile_size, int icon_size)
 {
-  ui::IconRenderer::DestroyShortcutTextures();
-
   icon_size_ = tile_size;
   icon_renderer_->scale = cv_->DPIScale();
   icon_renderer_->SetTargetSize(icon_size_.CP(cv_), RawPixel(icon_size).CP(cv_), SPACE_BETWEEN_ICONS.CP(cv_));
