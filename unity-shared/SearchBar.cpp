@@ -263,6 +263,7 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   im_preedit.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_preedit));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
   scale.changed.connect(sigc::mem_fun(this, &SearchBar::UpdateScale));
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &SearchBar::UpdateSearchBarSize)));
   can_refine_search.changed.connect([this] (bool can_refine)
   {
     if (show_filter_hint_)
@@ -289,7 +290,8 @@ void SearchBar::UpdateSearchBarSize()
 
   entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT.CP(scale()));
 
-  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale()));
+  double font_scaling = scale() * Settings::Instance().font_scaling();
+  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(font_scaling));
 
   if (show_filter_hint_)
   {
@@ -329,7 +331,7 @@ void SearchBar::UpdateSearchBarSize()
   layered_layout_->SetMinimumHeight(entry_min);
   layered_layout_->SetMaximumHeight(entry_min);
 
-  int search_bar_height = style.GetSearchBarHeight().CP(scale);
+  int search_bar_height = style.GetSearchBarHeight().CP(font_scaling);
   SetMinimumHeight(search_bar_height);
   SetMaximumHeight(search_bar_height);
 }
@@ -359,7 +361,7 @@ void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
   if (desc)
   {
     pango_entry_->SetFontFamily(pango_font_description_get_family(desc));
-    pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
+    pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale * Settings::Instance().font_scaling()));
     pango_entry_->SetFontOptions(gdk_screen_get_font_options(gdk_screen_get_default()));
 
     font_desc << pango_font_description_get_family(desc) << " " << HINT_LABEL_FONT_STYLE << " " << HINT_LABEL_FONT_SIZE;
