@@ -21,10 +21,12 @@
 #define UNITYSHELL_DASH_STYLE_INTERFACE_H
 
 #include <memory>
+#include "unity-shared/RawPixel.h"
 
 namespace nux {
   class AbstractPaintLayer;
   class BaseTexture;
+  template <class T> class ObjectPtr;
 }
 
 namespace unity {
@@ -37,17 +39,17 @@ public:
 
   virtual nux::AbstractPaintLayer* FocusOverlay(int width, int height) = 0;
 
-  virtual nux::BaseTexture* GetCategoryBackground() = 0;
-  virtual nux::BaseTexture* GetCategoryBackgroundNoFilters() = 0;
+  virtual nux::ObjectPtr<nux::BaseTexture> const& GetCategoryBackground() const = 0;
+  virtual nux::ObjectPtr<nux::BaseTexture> const& GetCategoryBackgroundNoFilters() const = 0;
 
-  virtual nux::BaseTexture* GetGroupUnexpandIcon() = 0;
-  virtual nux::BaseTexture* GetGroupExpandIcon() = 0;
+  virtual nux::ObjectPtr<nux::BaseTexture> const& GetGroupUnexpandIcon() const = 0;
+  virtual nux::ObjectPtr<nux::BaseTexture> const& GetGroupExpandIcon() const = 0;
 
-  virtual int GetCategoryIconSize() const = 0;
-  virtual int GetCategoryHeaderLeftPadding() const = 0;
-  virtual int GetPlacesGroupTopSpace() const = 0;
-  virtual int GetPlacesGroupResultTopPadding() const = 0;
-  virtual int GetPlacesGroupResultLeftPadding() const = 0;  
+  virtual RawPixel GetCategoryIconSize() const = 0;
+  virtual RawPixel GetCategoryHeaderLeftPadding() const = 0;
+  virtual RawPixel GetPlacesGroupTopSpace() const = 0;
+  virtual RawPixel GetPlacesGroupResultTopPadding() const = 0;
+  virtual RawPixel GetPlacesGroupResultLeftPadding() const = 0;
 };
 
 }

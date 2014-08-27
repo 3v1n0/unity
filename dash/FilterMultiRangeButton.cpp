@@ -33,28 +33,17 @@ namespace dash
 
 namespace
 {
-const int kFontSizePx = 10;
-
-const int kLayoutPadLeftRight = 4;
-const int kLayoutPadtopBottom = 2;
+const int FONT_SIZE_PX = 10;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRangeButton);
 
 FilterMultiRangeButton::FilterMultiRangeButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , theme_init_(false)
   , has_arrow_(MultiRangeArrow::NONE)
   , side_(MultiRangeSide::CENTER)
-{
-  Init();
-}
-
-FilterMultiRangeButton::~FilterMultiRangeButton()
-{
-}
-
-void FilterMultiRangeButton::Init()
 {
   InitTheme();
   // Controlled by parent widget
@@ -64,6 +53,8 @@ void FilterMultiRangeButton::Init()
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
   key_nav_focus_change.connect([this](nux::Area*, bool, nux::KeyNavDirection) { QueueDraw(); });
   key_nav_focus_activate.connect([this](nux::Area* area) { Active() ? Deactivate() : Activate(); });
+
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &FilterMultiRangeButton::InitTheme)));
 }
 
 void FilterMultiRangeButton::OnActivated(nux::Area* area)
@@ -133,27 +124,26 @@ long FilterMultiRangeButton::ComputeContentSize()
 
 void FilterMultiRangeButton::InitTheme()
 {
-  if (!active_[MapKey(MultiRangeArrow::LEFT, MultiRangeSide::LEFT)])
+  nux::Geometry const& geo = GetGeometry();
+
+  std::vector<MultiRangeSide> sides = {MultiRangeSide::LEFT, MultiRangeSide::RIGHT, MultiRangeSide::CENTER};
+  std::vector<MultiRangeArrow> arrows = {MultiRangeArrow::LEFT, MultiRangeArrow::RIGHT, MultiRangeArrow::BOTH, MultiRangeArrow::NONE};
+
+  for (auto arrow : arrows)
   {
-    nux::Geometry const& geo = GetGeometry();
-
-    std::vector<MultiRangeSide> sides = {MultiRangeSide::LEFT, MultiRangeSide::RIGHT, MultiRangeSide::CENTER};
-    std::vector<MultiRangeArrow> arrows = {MultiRangeArrow::LEFT, MultiRangeArrow::RIGHT, MultiRangeArrow::BOTH, MultiRangeArrow::NONE};
-
-    for (auto arrow : arrows)
+    for (auto side : sides)
     {
-      for (auto side : sides)
-      {
-        active_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED, arrow, side)));
-        normal_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL, arrow, side)));
-        prelight_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT, arrow, side)));
-        focus_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawFocusOverlay), arrow, side)));
-      }
+      active_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED, arrow, side)));
+      normal_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL, arrow, side)));
+      prelight_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT, arrow, side)));
+      focus_[MapKey(arrow, side)].reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterMultiRangeButton::RedrawFocusOverlay), arrow, side)));
     }
   }
 
-  SetMinimumHeight(dash::Style::Instance().GetFilterButtonHeight() + 3);
+  SetMinimumHeight(Style::Instance().GetFilterButtonHeight().CP(scale) + (3_em).CP(scale));
   theme_init_ = true;
+
+  QueueDraw();
 }
 
 void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
@@ -187,8 +177,9 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
   else
     segment = Segment::RIGHT;
 
-  Style::Instance().MultiRangeSegment(cr, faked_state, name, kFontSizePx, arrow, segment);
-  NeedRedraw();
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
+  Style::Instance().MultiRangeSegment(cr, faked_state, name, FONT_SIZE_PX, arrow, segment);
+  QueueDraw();
 }
 
 void FilterMultiRangeButton::RedrawFocusOverlay(nux::Geometry const& geom,
@@ -214,6 +205,7 @@ void FilterMultiRangeButton::RedrawFocusOverlay(nux::Geometry const& geom,
   else
     segment = Segment::RIGHT;
 
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   Style::Instance().MultiRangeFocusOverlay(cr, arrow, segment);
   QueueDraw();
 }

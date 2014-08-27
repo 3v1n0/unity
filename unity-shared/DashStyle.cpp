@@ -48,8 +48,6 @@
 
 #define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
 
-typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
-
 namespace unity
 {
 namespace dash
@@ -92,11 +90,21 @@ inline double _align(double val, bool odd=true)
   }
 }
 
+template <typename T>
+inline void get_actual_cairo_size(cairo_t* cr, T* width, T* height)
+{
+  double w_scale, h_scale;
+  auto* surface = cairo_get_target(cr);
+  cairo_surface_get_device_scale(surface, &w_scale, &h_scale);
+  *width = cairo_image_surface_get_width(surface) / w_scale;
+  *height = cairo_image_surface_get_height(surface) / h_scale;
+}
+
 class LazyLoadTexture
 {
 public:
   LazyLoadTexture(std::string const& filename, int size = -1);
-  nux::BaseTexture* texture();
+  BaseTexturePtr const& texture();
 private:
   void LoadTexture();
 private:
@@ -167,6 +175,13 @@ struct Style::Impl : sigc::trackable
   void UpdateFormFactor(FormFactor);
   void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
 
+  BaseTexturePtr LoadScaledTexture(std::string const& name, double scale)
+  {
+    int w, h;
+    gdk_pixbuf_get_file_info((PKGDATADIR"/" + name).c_str(), &w, &h);
+    return TextureCache::GetDefault().FindTexture(name, RawPixel(w).CP(scale), RawPixel(h).CP(scale));
+  }
+
   // Members
   Style* owner_;
 
@@ -207,31 +222,11 @@ struct Style::Impl : sigc::trackable
 
   int text_width_;
   int text_height_;
-  int number_of_columns_;
 
   LazyLoadTexture category_texture_;
   LazyLoadTexture category_texture_no_filters_;
-  LazyLoadTexture dash_bottom_texture_;
-  LazyLoadTexture dash_bottom_texture_mask_;
-  LazyLoadTexture dash_right_texture_;
-  LazyLoadTexture dash_right_texture_mask_;
-  LazyLoadTexture dash_corner_texture_;
-  LazyLoadTexture dash_corner_texture_mask_;
-  LazyLoadTexture dash_fullscreen_icon_;
-  LazyLoadTexture dash_left_edge_;
-  LazyLoadTexture dash_left_corner_;
-  LazyLoadTexture dash_left_corner_mask_;
-  LazyLoadTexture dash_left_tile_;
-  LazyLoadTexture dash_top_corner_;
-  LazyLoadTexture dash_top_corner_mask_;
-  LazyLoadTexture dash_top_tile_;
 
   LazyLoadTexture dash_shine_;
-
-  LazyLoadTexture search_magnify_texture_;
-  LazyLoadTexture search_circle_texture_;
-  LazyLoadTexture search_close_texture_;
-  LazyLoadTexture search_spin_texture_;
 
   LazyLoadTexture information_texture_;
 
@@ -258,28 +253,9 @@ Style::Impl::Impl(Style* owner)
   , text_color_(nux::color::White)
   , text_width_(0)
   , text_height_(0)
-  , number_of_columns_(6)
   , category_texture_("/category_gradient.png")
   , category_texture_no_filters_("/category_gradient_no_refine.png")
-  , dash_bottom_texture_("/dash_bottom_border_tile.png")
-  , dash_bottom_texture_mask_("/dash_bottom_border_tile_mask.png")
-  , dash_right_texture_("/dash_right_border_tile.png")
-  , dash_right_texture_mask_("/dash_right_border_tile_mask.png")
-  , dash_corner_texture_("/dash_bottom_right_corner.png")
-  , dash_corner_texture_mask_("/dash_bottom_right_corner_mask.png")
-  , dash_fullscreen_icon_("/dash_fullscreen_icon.png")
-  , dash_left_edge_("/dash_left_edge.png")
-  , dash_left_corner_("/dash_bottom_left_corner.png")
-  , dash_left_corner_mask_("/dash_bottom_left_corner_mask.png")
-  , dash_left_tile_("/dash_left_tile.png")
-  , dash_top_corner_("/dash_top_right_corner.png")
-  , dash_top_corner_mask_("/dash_top_right_corner_mask.png")
-  , dash_top_tile_("/dash_top_tile.png")
   , dash_shine_("/dash_sheen.png")
-  , search_magnify_texture_("/search_magnify.png")
-  , search_circle_texture_("/search_circle.svg", 32)
-  , search_close_texture_("/search_close.svg", 32)
-  , search_spin_texture_("/search_spin.svg", 32)
   , information_texture_("/information_icon.svg")
   , refine_gradient_corner_("/refine_gradient_corner.png")
   , refine_gradient_dash_("/refine_gradient_dash.png")
@@ -427,7 +403,8 @@ void Style::Impl::UpdateFormFactor(FormFactor form_factor)
 }
 
 Style::Style()
-  : always_maximised(false)
+  : columns_number(6)
+  , always_maximised(false)
   , pimpl(new Impl(this))
 {
   if (style_instance)
@@ -682,9 +659,8 @@ void Style::Impl::Blur(cairo_t* cr, int size)
   cairo_surface_flush(surface);
 
   pixels = cairo_image_surface_get_data(surface);
-  width  = cairo_image_surface_get_width(surface);
-  height = cairo_image_surface_get_height(surface);
   format = cairo_image_surface_get_format(surface);
+  get_actual_cairo_size(cr, &width, &height);
 
   switch (format)
   {
@@ -782,8 +758,8 @@ void Style::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
 {
   double x  = 0.0;
   double y  = 0.0;
-  double w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h  = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   /*double xt = 0.0;
     double yt = 0.0;*/
 
@@ -830,8 +806,11 @@ void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
 {
   double x  = 2.0;
   double y  = 2.0;
-  double w  = cairo_image_surface_get_width(cairo_get_target(cr)) - 4.0;
-  double h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  w -= 4.0;
+  h -= 4.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -1212,8 +1191,10 @@ void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
 {
   double   x  = 0.0;
   double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -1446,9 +1427,7 @@ void Style::Impl::Text(cairo_t*    cr,
   gchar*                fontName    = NULL;
   //double                horizMargin = 10.0;
 
-  w = cairo_image_surface_get_width(cairo_get_target(cr));
-  h = cairo_image_surface_get_height(cairo_get_target(cr));
-
+  get_actual_cairo_size(cr, &w, &h);
   w -= 2 * horizMargin;
 
   if (!screen)
@@ -1577,6 +1556,8 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   const unsigned char* data       = NULL;
   int                  width      = 0;
   int                  height     = 0;
+  double               w_scale    = 0;
+  double               h_scale    = 0;
   int                  stride     = 0;
   unsigned char*       buffer     = NULL;
   cairo_surface_t*     surface    = NULL;
@@ -1586,9 +1567,9 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   // aquire info about image-surface
   target = cairo_get_target(cr);
   data   = cairo_image_surface_get_data(target);
-  width  = cairo_image_surface_get_width(target);
-  height = cairo_image_surface_get_height(target);
   stride = cairo_image_surface_get_stride(target);
+  get_actual_cairo_size(cr, &width, &height);
+  cairo_surface_get_device_scale(target, &w_scale, &h_scale);
   cairo_format_t format = cairo_image_surface_get_format(target);
 
   // get buffer
@@ -1621,6 +1602,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   }
 
   // blur and blend overlay onto initial image-surface
+  cairo_surface_set_device_scale(surface, w_scale, h_scale);
   Blur(blurred_cr, blurSize);
   cairo_set_source_surface(cr, surface, 0.0, 0.0);
   old = SetBlendMode(cr, mode);
@@ -1649,8 +1631,8 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
    garnish = GetButtonGarnishSize();
 
   //ButtonOutlinePath(cr, true);
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
 
@@ -1743,8 +1725,8 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   if (zeromargin == false)
     garnish = GetButtonGarnishSize();
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   double x = garnish;
   double y = garnish;
@@ -1854,8 +1836,8 @@ bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   nux::Color color(nux::color::White);
   color.alpha = alpha;
@@ -1891,10 +1873,11 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
     return false;
 
   //ButtonOutlinePathSegment(cr, segment);
-  double   x  = 0.0;
-  double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  double x  = 0.0;
+  double y  = 2.0;
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
 	if (segment == Segment::LEFT)
 	{
@@ -1969,8 +1952,9 @@ bool Style::MultiRangeFocusOverlay(cairo_t* cr,
 
   double   x  = 0.0;
   double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
   if (segment == Segment::LEFT)
   {
@@ -2062,8 +2046,8 @@ bool Style::SeparatorVert(cairo_t* cr)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   double x = w / 2.0;
   double y = 2.0;
 
@@ -2090,8 +2074,8 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   double x = 2.0;
   double y = h / 2.0;
 
@@ -2109,7 +2093,88 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
-int Style::GetButtonGarnishSize()
+BaseTexturePtr Style::GetDashBottomTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_border_tile.png", scale);
+}
+
+BaseTexturePtr Style::GetDashBottomTileMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_border_tile_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashRightTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_right_border_tile.png", scale);
+}
+
+BaseTexturePtr Style::GetDashRightTileMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_right_border_tile_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_left_tile.png", scale);
+}
+
+BaseTexturePtr Style::GetDashTopTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_top_tile.png", scale);
+}
+
+BaseTexturePtr Style::GetDashCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_right_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_right_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_left_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_bottom_left_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetDashTopCorner(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_top_right_corner.png", scale);
+}
+
+BaseTexturePtr Style::GetDashTopCornerMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_top_right_corner_mask.png", scale);
+}
+
+BaseTexturePtr Style::GetSearchMagnifyIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_magnify.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchCircleIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_circle.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchCloseIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_close.svg", scale);
+}
+
+BaseTexturePtr Style::GetSearchSpinIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_spin.svg", scale);
+}
+
+
+RawPixel Style::GetButtonGarnishSize() const
 {
   int maxBlurSize = 0;
 
@@ -2122,12 +2187,12 @@ int Style::GetButtonGarnishSize()
   return 2 * maxBlurSize;
 }
 
-int Style::GetSeparatorGarnishSize()
+RawPixel Style::GetSeparatorGarnishSize() const
 {
   return pimpl->separator_blur_size_;
 }
 
-int Style::GetScrollbarGarnishSize()
+RawPixel Style::GetScrollbarGarnishSize() const
 {
   return pimpl->scrollbar_blur_size_;
 }
@@ -2137,361 +2202,254 @@ nux::Color const& Style::GetTextColor() const
   return pimpl->text_color_;
 }
 
-int  Style::GetDefaultNColumns() const
-{
-  return pimpl->number_of_columns_;
-}
-
-void Style::SetDefaultNColumns(int n_cols)
-{
-  if (pimpl->number_of_columns_ == n_cols)
-    return;
-
-  pimpl->number_of_columns_ = n_cols;
-
-  columns_changed.emit();
-}
-
-int Style::GetTileGIconSize() const
+RawPixel Style::GetTileGIconSize() const
 {
   return 64;
 }
 
-int Style::GetTileImageSize() const
+RawPixel Style::GetTileImageSize() const
 {
   return 96;
 }
 
-int Style::GetTileWidth() const
+RawPixel Style::GetTileWidth() const
 {
   return std::max(pimpl->text_width_, 150);
 }
 
-int Style::GetTileHeight() const
+RawPixel Style::GetTileHeight() const
 {
   return std::max(GetTileImageSize() + (pimpl->text_height_ * 2) + 15,
                   GetTileImageSize() + 32); // magic design numbers.
 }
 
-int Style::GetTileIconHightlightHeight() const
+RawPixel Style::GetTileIconHightlightHeight() const
 {
   return 106;
 }
 
-int Style::GetTileIconHightlightWidth() const
+RawPixel Style::GetTileIconHightlightWidth() const
 {
   return 106;
 }
 
-int Style::GetHomeTileIconSize() const
+RawPixel Style::GetHomeTileIconSize() const
 {
   return 104;
 }
 
-int Style::GetHomeTileWidth() const
+RawPixel Style::GetHomeTileWidth() const
 {
   return pimpl->text_width_ * 1.2;
 }
 
-int Style::GetHomeTileHeight() const
+RawPixel Style::GetHomeTileHeight() const
 {
   return GetHomeTileIconSize() + (pimpl->text_height_ * 5);
 }
 
-int Style::GetTextLineHeight() const
+RawPixel Style::GetTextLineHeight() const
 {
   return pimpl->text_height_;
 }
 
 
-nux::BaseTexture* Style::GetCategoryBackground()
+BaseTexturePtr const& Style::GetCategoryBackground() const
 {
   return pimpl->category_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetCategoryBackgroundNoFilters()
+BaseTexturePtr const& Style::GetCategoryBackgroundNoFilters() const
 {
   return pimpl->category_texture_no_filters_.texture(); 
 }
 
-nux::BaseTexture* Style::GetDashBottomTile()
-{
-  return pimpl->dash_bottom_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashBottomTileMask()
-{
-  return pimpl->dash_bottom_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashRightTile()
-{
-  return pimpl->dash_right_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashRightTileMask()
-{
-  return pimpl->dash_right_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashCorner()
-{
-  return pimpl->dash_corner_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashCornerMask()
-{
-  return pimpl->dash_corner_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftEdge()
-{
-  return pimpl->dash_left_edge_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftCorner()
-{
-  return pimpl->dash_left_corner_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftCornerMask()
-{
-  return pimpl->dash_left_corner_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftTile()
-{
-  return pimpl->dash_left_tile_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopCorner()
-{
-  return pimpl->dash_top_corner_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopCornerMask()
-{
-  return pimpl->dash_top_corner_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopTile()
-{
-  return pimpl->dash_top_tile_.texture();
-}
-
-nux::BaseTexture* Style::GetDashFullscreenIcon()
-{
-  return pimpl->dash_fullscreen_icon_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchMagnifyIcon()
-{
-  return pimpl->search_magnify_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchCircleIcon()
-{
-  return pimpl->search_circle_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchCloseIcon()
-{
-  return pimpl->search_close_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchSpinIcon()
-{
-  return pimpl->search_spin_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetInformationTexture()
+BaseTexturePtr const& Style::GetInformationTexture() const
 {
   return pimpl->information_texture_.texture(); 
 }
 
-nux::BaseTexture* Style::GetRefineTextureCorner()
+BaseTexturePtr const& Style::GetRefineTextureCorner() const
 {
   return pimpl->refine_gradient_corner_.texture();
 }
 
-nux::BaseTexture* Style::GetRefineTextureDash()
+BaseTexturePtr const& Style::GetRefineTextureDash() const
 {
   return pimpl->refine_gradient_dash_.texture(); 
 }
 
-nux::BaseTexture* Style::GetGroupUnexpandIcon()
+BaseTexturePtr const& Style::GetGroupUnexpandIcon() const
 {
   return pimpl->group_unexpand_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetGroupExpandIcon()
+BaseTexturePtr const& Style::GetGroupExpandIcon() const
 {
   return pimpl->group_expand_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarDeselectedIcon()
+BaseTexturePtr const& Style::GetStarDeselectedIcon() const
 {
   return pimpl->star_deselected_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarSelectedIcon()
+BaseTexturePtr const& Style::GetStarSelectedIcon() const
 {
   return pimpl->star_selected_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarHighlightIcon()
+BaseTexturePtr const& Style::GetStarHighlightIcon() const
 {
   return pimpl->star_highlight_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetDashShine()
+BaseTexturePtr const& Style::GetDashShine() const
 {
   return pimpl->dash_shine_.texture();
 }
 
-int Style::GetDashBottomTileHeight() const
+RawPixel Style::GetDashBottomTileHeight() const
 {
   return 30;
 }
 
-int Style::GetDashRightTileWidth() const
+RawPixel Style::GetDashRightTileWidth() const
 {
   return 30;
 }
 
-int Style::GetVSeparatorSize() const
+RawPixel Style::GetVSeparatorSize() const
 {
   return 1;
 }
 
-int Style::GetHSeparatorSize() const
+RawPixel Style::GetHSeparatorSize() const
 {
   return 1;
-
 }
 
-int Style::GetFilterBarWidth() const
+RawPixel Style::GetFilterBarWidth() const
 {
   return 300;
 }
 
-
-int Style::GetFilterBarLeftPadding() const
+RawPixel Style::GetFilterBarLeftPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterBarRightPadding() const
+RawPixel Style::GetFilterBarRightPadding() const
 {
   return 5;
 }
 
-int Style::GetDashViewTopPadding() const
+RawPixel Style::GetDashViewTopPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarLeftPadding() const
+RawPixel Style::GetSearchBarLeftPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarRightPadding() const
+RawPixel Style::GetSearchBarRightPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarHeight() const
+RawPixel Style::GetSearchBarHeight() const
 {
   return 42;
 }
 
-int Style::GetFilterResultsHighlightRightPadding() const
+RawPixel Style::GetFilterResultsHighlightRightPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterResultsHighlightLeftPadding() const
+RawPixel Style::GetFilterResultsHighlightLeftPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterBarTopPadding() const
+RawPixel Style::GetFilterBarTopPadding() const
 {
   return 10;
 }
 
-int Style::GetFilterHighlightPadding() const
+RawPixel Style::GetFilterHighlightPadding() const
 {
   return 2;
 }
 
-int Style::GetSpaceBetweenFilterWidgets() const
+RawPixel Style::GetSpaceBetweenFilterWidgets() const
 {
   return 12;
 }
 
-int Style::GetAllButtonHeight() const
+RawPixel Style::GetAllButtonHeight() const
 {
   return 30;
 }
 
-int Style::GetFilterButtonHeight() const
+RawPixel Style::GetFilterButtonHeight() const
 {
   return 30;
 }
 
-int Style::GetSpaceBetweenScopeAndFilters() const
+RawPixel Style::GetSpaceBetweenScopeAndFilters() const
 {
   return 10;
 }
 
-int Style::GetFilterViewRightPadding() const
+RawPixel Style::GetFilterViewRightPadding() const
 {
   return 10;
 }
 
-int Style::GetScrollbarWidth() const
+RawPixel Style::GetScrollbarWidth() const
 {
   return 3;
 }
 
-int Style::GetCategoryIconSize() const
+RawPixel Style::GetCategoryIconSize() const
 {
   return 22;
 }
 
-int Style::GetCategoryHighlightHeight() const
+RawPixel Style::GetCategoryHighlightHeight() const
 {
   return 24;
 }
 
-int Style::GetPlacesGroupTopSpace() const
+RawPixel Style::GetPlacesGroupTopSpace() const
 {
   return 7;
 }
 
-int Style::GetPlacesGroupResultTopPadding() const
+RawPixel Style::GetPlacesGroupResultTopPadding() const
 {
   return 2;
 }
 
-int Style::GetPlacesGroupResultLeftPadding() const
+RawPixel Style::GetPlacesGroupResultLeftPadding() const
 {
   return 25;
 }
 
-int Style::GetCategoryHeaderLeftPadding() const
+RawPixel Style::GetCategoryHeaderLeftPadding() const
 {
   return 19;
 }
 
-int Style::GetCategorySeparatorLeftPadding() const
+RawPixel Style::GetCategorySeparatorLeftPadding() const
 {
   return 15;
 }
 
-int Style::GetCategorySeparatorRightPadding() const
+RawPixel Style::GetCategorySeparatorRightPadding() const
 {
   return 15;
 }
@@ -2505,11 +2463,11 @@ LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
 {
 }
 
-nux::BaseTexture* LazyLoadTexture::texture()
+BaseTexturePtr const& LazyLoadTexture::texture()
 {
   if (!texture_)
     LoadTexture();
-  return texture_.GetPointer();
+  return texture_;
 }
 
 void LazyLoadTexture::LoadTexture()

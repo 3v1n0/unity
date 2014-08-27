@@ -189,14 +189,14 @@ class SwitcherController(UnityIntrospectionObject, KeybindingsHelper):
     def next_via_mouse(self):
         """Move to the next icon using the mouse scroll wheel."""
         logger.debug("Selecting next item in switcher with mouse scroll wheel.")
-        self._mouse.press(6)
-        self._mouse.release(6)
+        self._mouse.press(7)
+        self._mouse.release(7)
 
     def previous_via_mouse(self):
         """Move to the previous icon using the mouse scroll wheel."""
         logger.debug("Selecting previous item in switcher with mouse scroll wheel.")
-        self._mouse.press(7)
-        self._mouse.release(7)
+        self._mouse.press(6)
+        self._mouse.release(6)
 
     @property
     def detail_selection_index(self):

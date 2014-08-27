@@ -1,3 +1,106 @@
+unity (7.3.1+14.10.20140811-0ubuntu1) utopic; urgency=medium
+
+  [ Michal Hruby ]
+  * Split out dconf schemas into separate package
+
+  [ Brandon Schaefer ]
+  * Make sure we check if the Quicklist or Alt+F1 key nav is open (so we
+    can close them) Bore checking if something as a WM grab. As we cant
+    open the hud is in Quicklist or KeyNav anymore. (LP: #1353167)
+
+  [ Stephen M. Webb ]
+  * Changed log message on failure to open xpathselect library from an
+    error to a warning. The xpathselect library is used for
+    introspection during automated test runs. It is not an error for
+    this library to be unavailable in normal successful operating
+    conditions. (LP: #1345296)
+
+  [ Andrea Azzarone ]
+  * Add an arrow activator in the lockscreen. (LP: #1332509)
+  * Allow a distinct pam config file for greeter and for lock-screen.
+    (LP: #1305440)
+
+  [ Marco Trevisan (Treviño) ]
+  * Autopilot, Switcher: use correct right/left scroll buttons for
+    next/prev mouse selection (LP: #1353383)
+  * UScreen, PanelService: get monitor at position, ignoring pre-
+    multipled Gdk scale factor Get monitor position based on absolute
+    coordinates, ignoring the pre-multipled scaling factor that Gdk
+    applies to all the monitor sizes. In this way we get the proper
+    monitor index for absolute coordinates, independently from the
+    scaling factor. (LP: #1351591)
+  * ApplicationLauncherIcon: make sure we close the dash if DnD is
+    accepted And we're about to focus the application window(s) (LP:
+    #1350331)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 11 Aug 2014 12:31:11 +0000
+
+unity (7.3.0+14.10.20140731.1-0ubuntu1) utopic; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Brandon Schaefer ]
+  * Fixes FTBFS caused by gcc 4.9. Mostly unused functions. (LP:
+    #1350052)
+
+  [ Andrea Azzarone ]
+  * == Problem == Lockscreen capslock detection doesn't work well with
+    remapped capslocks == Fix == Use gdk keymap to get the state of the
+    caps lock. (LP: #1347735)
+
+  [ Marco Trevisan (Treviño) ]
+  * PlacesOverlayVScrollBar and VScrollBarOverlayWindow: add support for
+    scaling Add a new ScrollView class to create ScrollViews with an
+    OverlayScrollbar and with scaling support. Using them in dash Scopes
+    and Previews. (LP: #1340996)
+  * LockScreenShield: Add GrabScreen function and retry to make sure we
+    really get grab It might happen that the grab is not possible
+    because the PluginAdapter::IsScreenGrabbed request has still not
+    being fully processed, and thus nux is not able to grab the
+    pointer/keyboard. By doing this we instead try to grab the screen,
+    and if this is not happening, we wait a little until we don't get
+    the ungrab event. In this way, if we eventually get the grab, all
+    will work as expected. Otherwise, we cancel the lock request (very
+    unlikely to happen). (LP: #1349128)
+  * PlacesOverlayVScrollBar: redirect the mouse wheel scroll events
+    coming from the thumb to the scrollview This will make the
+    scrollview to handle then and perform the same scrolling action it
+    would do otherwise. (LP: #1340992)
+  * This has a "soft" dependency on lp:~3v1n0/nux/horizontal-scroll-
+    delta/+merge/227070, this means that this code would just work as it
+    used to do (except for the SwitcerView fix) if that nux branch is
+    not used, while it will support correctly horizontal scroll events
+    when both the branches are used. (LP: #1342208)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 31 Jul 2014 18:40:00 +0000
+
+unity (7.3.0+14.10.20140711-0ubuntu1) utopic; urgency=low
+
+  [ Eleni Maria Stea ]
+  * Previews: scale the dash preview contents to match current monitor
+    scaling Improved also the scaling of search-bar, spinner, categories
+    and many other components. (LP: #1339629)
+
+  [ Marco Trevisan (Treviño) ]
+  * Previews: scale the dash preview contents to match current monitor
+    scaling Improved also the scaling of search-bar, spinner, categories
+    and many other components. (LP: #1339629)
+  * DashStyle: return RawPixel's instead of integers for sizes, and
+    avoid duplication in code
+  * FilterWidgets: add support for scaling (LP: #1340171)
+  * OverlayRendering: correctly scale the overlays borders and edges to
+    match settings DashStyle has been modified to return smart pointers
+    of textures that are loaded depending on the scale level. The cache
+    will make sure that we don't duplicate the textures and that they
+    get removed when not needed anymore. Also thanks to this the
+    SearchBarSpinner textures (and the other spinners as well) uses the
+    SVGs scaled at the proper size (I desgined a new SVG for the
+    magnifier, as we only had a PNG). (LP: #1283415)
+  * Hud: scale to match current DPI settings for monitor (LP: #1340477)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Jul 2014 19:59:35 +0000
+
 unity (7.3.0+14.10.20140708-0ubuntu1) utopic; urgency=low
 
   [ Ubuntu daily release ]
@@ -2138,7 +2241,6 @@ unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 3317 (ubuntu-unity/next)
-
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   [ Sebastien Bacher ]

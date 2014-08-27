@@ -17,7 +17,6 @@
  */
 
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/RawPixel.h"
 #include "ScopeBarIcon.h"
 
 #include "config.h"

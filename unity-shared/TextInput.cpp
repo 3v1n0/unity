@@ -22,8 +22,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/PreviewStyle.h"
-
-#include <X11/XKBlib.h>
+#include "unity-shared/TextureCache.h"
 
 namespace unity
 {
@@ -41,9 +40,6 @@ const int HIGHLIGHT_HEIGHT = 24;
 const RawPixel TOOLTIP_Y_OFFSET  =  3_em;
 const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
-
-// Caps is on 0x1, couldn't find any #define in /usr/include/X11
-const int CAPS_STATE_ON = 0x1;
 
 std::string WARNING_ICON    = "dialog-warning-symbolic";
 // Fonts
@@ -87,6 +83,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , input_hint("")
   , hint_font_name(HINT_LABEL_DEFAULT_FONT_NAME)
   , hint_font_size(HINT_LABEL_FONT_SIZE)
+  , show_activator(false)
   , show_caps_lock(false)
   , bg_layer_(new nux::ColorLayer(nux::Color(0xff595853), true))
   , caps_lock_on(false)
@@ -114,7 +111,6 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
   pango_entry_->cursor_moved.connect([this](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &TextInput::OnMouseButtonDown));
-  pango_entry_->key_up.connect(sigc::mem_fun(this, &TextInput::OnKeyUp));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &TextInput::OnEndKeyFocus));
   pango_entry_->text_changed.connect([this](nux::TextEntry*) {
     hint_->SetVisible(input_string().empty());
@@ -127,6 +123,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
+  // Caps lock warning
   warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE));
   warning_->SetVisible(caps_lock_on());
   layout_->AddView(warning_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -146,6 +143,20 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
     CheckIfCapsLockOn();
   });
 
+  // Activator
+  activator_ = new IconTexture(LoadActivatorIcon(DEFAULT_ICON_SIZE));
+  activator_->SetVisible(show_activator());
+  layout_->AddView(activator_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
+  show_activator.changed.connect([this] (bool value) {
+    activator_->SetVisible(value);
+  });
+
+  activator_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
+    pango_entry_->activated.emit();
+  });
+
+  // Spinner
   spinner_ = new SearchBarSpinner();
   spinner_->SetVisible(false);
   spinner_->SetMinMaxSize(22, 22);
@@ -154,6 +165,10 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   sig_manager_.Add<void, GtkSettings*, GParamSpec*>(gtk_settings_get_default(),
     "notify::gtk-font-name", sigc::mem_fun(this, &TextInput::OnFontChanged));
   OnFontChanged(gtk_settings_get_default());
+
+  sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) {
+    CheckIfCapsLockOn();
+  });
 
   input_string.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_input_string));
   input_string.SetSetterFunction(sigc::mem_fun(this, &TextInput::set_input_string));
@@ -174,19 +189,18 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
 
 void TextInput::CheckIfCapsLockOn()
 {
-  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
-  unsigned int state = 0;
-  XkbGetIndicatorState(dpy, XkbUseCoreKbd, &state);
-
-  if ((state & CAPS_STATE_ON) == 1)
-    caps_lock_on = true;
-  else
-    caps_lock_on = false;
+  GdkKeymap* keymap = gdk_keymap_get_default();
+  caps_lock_on = gdk_keymap_get_caps_lock_state(keymap) == FALSE ? false : true;
 }
 
 void TextInput::SetSpinnerVisible(bool visible)
 {
   spinner_->SetVisible(visible);
+
+  if (visible)
+    activator_->SetVisible(false);
+  else
+    activator_->SetVisible(show_activator());
 }
 
 void TextInput::SetSpinnerState(SpinnerState spinner_state)
@@ -197,6 +211,12 @@ void TextInput::SetSpinnerState(SpinnerState spinner_state)
 void TextInput::UpdateHintFont()
 {
   hint_->SetFont((hint_font_name() + " " + std::to_string(hint_font_size())).c_str());
+}
+
+nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(int icon_size)
+{
+  TextureCache& cache = TextureCache::GetDefault();
+  return cache.FindTexture("arrow_right.png", icon_size, icon_size);
 }
 
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)
@@ -416,16 +436,6 @@ void TextInput::UpdateBackground(bool force)
                                         rop));
 
   texture2D->UnReference();
-}
-
-void TextInput::OnKeyUp(unsigned keysym,
-                        unsigned long keycode,
-                        unsigned long state)
-{
-  if (!caps_lock_on && keysym == NUX_VK_CAPITAL)
-    caps_lock_on = true;
-  else if (caps_lock_on && keysym == NUX_VK_CAPITAL)
-    caps_lock_on = false;
 }
 
 void TextInput::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)

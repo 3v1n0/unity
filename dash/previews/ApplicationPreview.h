@@ -24,6 +24,7 @@
 #define APPLICATIONPREVIEW_H
 
 #include "Preview.h"
+#include "unity-shared/OverlayScrollView.h"
 
 namespace unity
 {
@@ -64,6 +65,7 @@ protected:
   nux::VLayout* app_data_layout_;
   nux::VLayout* app_updated_copywrite_layout_;
   nux::VLayout* app_info_layout_;
+  ScrollView* app_info_scroll_;
   nux::Layout* actions_layout_;
 
   nux::ObjectPtr<IconTexture> app_icon_;

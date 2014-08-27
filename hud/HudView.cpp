@@ -31,6 +31,7 @@
 #include "unity-shared/Introspectable.h"
 
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/WindowManager.h"
 
@@ -41,18 +42,17 @@ namespace hud
 DECLARE_LOGGER(logger, "unity.hud.view");
 namespace
 {
-const int grow_anim_length = 90 * 1000;
-const int pause_before_grow_length = 32 * 1000;
+const int GROW_ANIM_LENGTH = 90 * 1000;
+const int PAUSE_BEFORE_GROW_LENGTH = 32 * 1000;
 
-const int default_width = 960;
-const int default_height = 276;
-const int content_width = 939;
+const RawPixel DEFAULT_WIDTH = 960_em;
+const RawPixel DEFAULT_HEIGHT = 276_em;
+const RawPixel CONTENT_WIDTH = 939_em;
 
-const int top_padding = 11;
-const int bottom_padding = 10;
-const int left_padding = 11;
-const int right_padding = 0;
-
+const RawPixel TOP_PADDING = 11_em;
+const RawPixel BOTTOM_PADDING = 10_em;
+const RawPixel LEFT_PADDING = 11_em;
+const RawPixel RIGHT_PADDING = 0_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
@@ -70,6 +70,8 @@ View::View()
   , keyboard_stole_focus_(false)
   , overlay_window_buttons_(new OverlayWindowButtons())
 {
+  scale = Settings::Instance().em()->DPIScale();
+  renderer_.scale = scale();
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
@@ -120,12 +122,9 @@ View::View()
   });
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
+  scale.changed.connect(sigc::mem_fun(this, &View::UpdateScale));
 
   QueueDraw();
-}
-
-View::~View()
-{
 }
 
 void View::SetMonitorOffset(int x, int y)
@@ -140,9 +139,9 @@ void View::ProcessGrowShrink()
   int target_height = content_layout_->GetGeometry().height;
 
   // only animate if we are after our defined pause time
-  if (diff > pause_before_grow_length)
+  if (diff > PAUSE_BEFORE_GROW_LENGTH)
   {
-    float progress = (diff - pause_before_grow_length) / grow_anim_length;
+    float progress = (diff - PAUSE_BEFORE_GROW_LENGTH) / GROW_ANIM_LENGTH;
     int last_height = last_known_height_;
     int new_height = 0;
 
@@ -167,7 +166,7 @@ void View::ProcessGrowShrink()
     button->SetSkipDraw((button->GetAbsoluteY() + button->GetBaseHeight()) > (GetAbsoluteY() + current_height_));
   }
 
-  if (diff > grow_anim_length + pause_before_grow_length)
+  if (diff > GROW_ANIM_LENGTH + PAUSE_BEFORE_GROW_LENGTH)
   {
     // ensure we are at our final location and update last known height
     current_height_ = target_height;
@@ -232,9 +231,10 @@ void View::SetQueries(Hud::Queries queries)
 
     HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
+    button->scale = scale();
     button->SetInputEventSensitivity(false);
-    button->SetMinimumWidth(content_width);
-    button->SetMaximumWidth(content_width);
+    button->SetMinimumWidth(CONTENT_WIDTH.CP(scale));
+    button->SetMaximumWidth(CONTENT_WIDTH.CP(scale));
     button->SetQuery(query);
 
     button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_START);
@@ -292,7 +292,7 @@ void View::SetIcon(std::string const& icon_name, unsigned int tile_size, unsigne
   icon_->SetIcon(icon_name, size, tile_size, padding);
 
   /* We need to compute this value manually, since the _content_layout height changes */
-  int content_height = search_bar_->GetBaseHeight() + top_padding + bottom_padding;
+  int content_height = search_bar_->GetBaseHeight() + TOP_PADDING.CP(scale) + BOTTOM_PADDING.CP(scale);
   icon_->SetMinimumHeight(std::max(icon_->GetMinimumHeight(), content_height));
 
   QueueDraw();
@@ -327,10 +327,8 @@ void View::ShowEmbeddedIcon(bool show)
 // look tight
 nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
-  //FIXME - remove magic values, replace with scalable text depending on DPI
-  // requires smarter font settings really...
-  int width = default_width;
-  int height = default_height;
+  int width = DEFAULT_WIDTH.CP(scale);
+  int height = DEFAULT_HEIGHT.CP(scale);
 
   if (show_embedded_icon_)
     width += icon_->GetGeometry().width;
@@ -367,8 +365,6 @@ void View::AboutToHide()
 
 void View::SetupViews()
 {
-  dash::Style& style = dash::Style::Instance();
-
   nux::VLayout* super_layout = new nux::VLayout();
   layout_ = new nux::HLayout();
   {
@@ -383,20 +379,20 @@ void View::SetupViews()
     content_layout_ = new nux::VLayout();
     {
       // Set the layout paddings
-      content_layout_->SetLeftAndRightPadding(left_padding, right_padding);
-      content_layout_->SetTopAndBottomPadding(top_padding, bottom_padding);
+      content_layout_->SetLeftAndRightPadding(LEFT_PADDING.CP(scale), RIGHT_PADDING.CP(scale));
+      content_layout_->SetTopAndBottomPadding(TOP_PADDING.CP(scale), BOTTOM_PADDING.CP(scale));
 
       // add the search bar to the composite
       search_bar_ = new unity::SearchBar(true);
-      search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
-      search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
+      search_bar_->scale = scale();
       search_bar_->search_hint = _("Type your command");
       search_bar_->live_search_reached.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_START);
 
       button_views_ = new nux::VLayout();
-      button_views_->SetMaximumWidth(content_width);
+      button_views_->SetMinimumWidth(CONTENT_WIDTH.CP(scale));
+      button_views_->SetMaximumWidth(CONTENT_WIDTH.CP(scale));
 
       content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_START);
     }
@@ -491,11 +487,11 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
     if (!buttons_.empty()) // See bug #1008603.
     {
-      int height = 3;
-      int x = search_bar_->GetBaseX() + 1;
+      int height = (3_em).CP(scale);
+      int x = search_bar_->GetBaseX() + (1_em).CP(scale);
       int y = search_bar_->GetBaseY() + search_bar_->GetBaseHeight() - height;
       nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
-      x += content_width - 1;
+      x += CONTENT_WIDTH.CP(scale) - (1_em).CP(scale);
       nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
     }
 
@@ -791,6 +787,26 @@ nux::Geometry View::GetContentGeometry()
   return geo;
 }
 
+void View::UpdateScale(double scale)
+{
+  content_layout_->SetLeftAndRightPadding(LEFT_PADDING.CP(scale), RIGHT_PADDING.CP(scale));
+  content_layout_->SetTopAndBottomPadding(TOP_PADDING.CP(scale), BOTTOM_PADDING.CP(scale));
+
+  button_views_->SetMinimumWidth(CONTENT_WIDTH.CP(scale));
+  button_views_->SetMaximumWidth(CONTENT_WIDTH.CP(scale));
+
+  for (auto const& button : buttons_)
+  {
+    button->SetMinimumWidth(CONTENT_WIDTH.CP(scale));
+    button->SetMaximumWidth(CONTENT_WIDTH.CP(scale));
+    button->scale = scale;
+  }
+
+  renderer_.scale = scale;
+  search_bar_->scale = scale;
+  UpdateLayoutGeometry();
+  QueueDraw();
+}
 
 }
 }

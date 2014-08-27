@@ -45,7 +45,6 @@ class PreviewRatingsWidget : public debug::Introspectable, public nux::View
   NUX_DECLARE_OBJECT_TYPE(PreviewRatingsWidget, nux::View);
 public:
   PreviewRatingsWidget(NUX_FILE_LINE_PROTO);
-  virtual ~PreviewRatingsWidget();
 
   void SetRating(float rating);
   float GetRating() const;
@@ -59,7 +58,7 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
   // From debug::Introspectable

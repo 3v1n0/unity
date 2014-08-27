@@ -67,10 +67,10 @@ private:
 
   void OnMouseDown(int x, int y, unsigned int button_flags, unsigned int key_flags);
   void OnMouseUp(int x, int y, unsigned int button_flags, unsigned int key_flags);
-
   void OnMouseMove(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags);
-
   void OnMouseDrag(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags);
+  void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
+
   void MouseDraggingOverlay(int y, int dy);
 
   bool IsMouseInTopHalfOfThumb(int y);
@@ -80,7 +80,7 @@ private:
 
   void UpdateConnectorPosition();
   void ResetConnector();
-  
+
   void UpdateStepY();
 
   void SetupAnimation(int start, int stop, int milliseconds);
@@ -93,7 +93,9 @@ private:
   void UpdateConnectorTexture();
 
   nux::ObjectPtr<VScrollBarOverlayWindow> overlay_window_;
-  nux::InputAreaProximity area_prox_;
+
+  class ProximityArea;
+  std::shared_ptr<ProximityArea> area_prox_;
 
   nux::animation::AnimateValue<int> animation_;
   connection::Wrapper tweening_connection_;

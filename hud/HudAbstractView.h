@@ -40,6 +40,9 @@ public:
   typedef nux::ObjectPtr<AbstractView> Ptr;
 
   AbstractView();
+  ~AbstractView() = default;
+
+  nux::Property<double> scale;
 
   virtual void AboutToShow() = 0;
   virtual void AboutToHide() = 0;

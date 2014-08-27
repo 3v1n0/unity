@@ -36,7 +36,7 @@ namespace unity
 namespace hud
 {
 
-class HudButton : public nux::Button, public unity::debug::Introspectable 
+class HudButton : public nux::Button, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(HudButton, nux::Button);
 
@@ -45,14 +45,15 @@ public:
 
   HudButton(NUX_FILE_LINE_PROTO);
 
-  void SetQuery(Query::Ptr query);
-  std::shared_ptr<Query> GetQuery();
+  void SetQuery(Query::Ptr const&);
+  Query::Ptr const& GetQuery() const;
 
   void SetSkipDraw(bool skip_draw);
 
-  nux::Property<std::string> label;
+  nux::ROProperty<std::string> label;
   nux::Property<bool> is_rounded;
   nux::Property<bool> fake_focused;
+  nux::Property<double> scale;
 
 protected:
   virtual bool AcceptKeyNavFocus();

@@ -54,8 +54,9 @@ class FilterMultiRangeButton : public nux::ToggleButton
 {
   NUX_DECLARE_OBJECT_TYPE(FilterMultiRangeButton, nux::ToggleButton);
 public:
-  FilterMultiRangeButton (NUX_FILE_LINE_PROTO);
-  virtual ~FilterMultiRangeButton();
+  FilterMultiRangeButton(NUX_FILE_LINE_PROTO);
+
+  nux::Property<double> scale;
 
   void SetFilter(FilterOption::Ptr const& filter);
   FilterOption::Ptr GetFilter();
@@ -69,7 +70,6 @@ protected:
 
 private:
   void InitTheme();
-  void Init();
 
   void RedrawTheme(nux::Geometry const& geom,
                    cairo_t* cr,

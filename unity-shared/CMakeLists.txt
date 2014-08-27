@@ -44,6 +44,7 @@ set (UNITY_SHARED_SOURCES
      LineSeparator.cpp
      MenuManager.cpp
      OverlayRenderer.cpp
+     OverlayScrollView.cpp
      OverlayWindowButtons.cpp
      PanelStyle.cpp
      PlacesVScrollBar.cpp

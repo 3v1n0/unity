@@ -40,12 +40,15 @@ namespace dash
 
 ActionLink::ActionLink(std::string const& action_hint, std::string const& label, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , action_hint_(action_hint)
   , aligment_(StaticCairoText::NUX_ALIGN_CENTRE)
   , underline_(StaticCairoText::NUX_UNDERLINE_SINGLE)
 {
   Init();
   BuildLayout(label);
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &ActionLink::UpdateScale));
 }
 
 std::string ActionLink::GetName() const
@@ -109,6 +112,7 @@ void ActionLink::BuildLayout(std::string const& label)
       static_text_ = new StaticCairoText(label_, true, NUX_TRACKER_LOCATION);
       if (!font_hint_.empty())
         static_text_->SetFont(font_hint_);
+      static_text_->SetScale(scale);
       static_text_->SetInputEventSensitivity(false);
       static_text_->SetTextAlignment(aligment_);
       static_text_->SetUnderline(underline_);
@@ -241,6 +245,15 @@ std::string ActionLink::get_font_hint()
 std::string ActionLink::GetLabel() const
 {
   return label_;
+}
+
+void ActionLink::UpdateScale(double scale)
+{
+  if (static_text_)
+    static_text_->SetScale(scale);
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace dash

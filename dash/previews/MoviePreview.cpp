@@ -23,7 +23,6 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/MoviePreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -50,21 +49,14 @@ namespace
 
 DECLARE_LOGGER(logger, "unity.dash.preview.movie");
 
-class DetailsScrollView : public nux::ScrollView
-{
-public:
-  DetailsScrollView(NUX_FILE_LINE_PROTO)
-  : ScrollView(NUX_FILE_LINE_PARAM)
-  {
-    SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
-  }
-
-};
-
 NUX_IMPLEMENT_OBJECT_TYPE(MoviePreview);
 
 MoviePreview::MoviePreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, image_data_layout_(nullptr)
+, preview_info_layout_(nullptr)
+, preview_info_scroll_(nullptr)
+, actions_layout_(nullptr)
 {
   SetupViews();
 }
@@ -184,7 +176,9 @@ void MoviePreview::SetupViews()
 
       /////////////////////
       // Description
-      nux::ScrollView* preview_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
+      auto* preview_info = new ScrollView(NUX_TRACKER_LOCATION);
+      preview_info_scroll_ = preview_info;
+      preview_info->scale = scale();
       preview_info->EnableHorizontalScrollBar(false);
       preview_info->mouse_click.connect(on_mouse_down);
 
@@ -292,6 +286,9 @@ void MoviePreview::UpdateScale(double scale)
     rating_->SetMaximumHeight(style.GetRatingWidgetHeight().CP(scale));
     rating_->SetMinimumHeight(style.GetRatingWidgetHeight().CP(scale));
   }
+
+  if (preview_info_scroll_)
+    preview_info_scroll_->scale = scale;
 
   if (preview_info_layout_)
     preview_info_layout_->SetSpaceBetweenChildren(PREVIEW_INFO_CHILDREN_SPACE);

@@ -22,7 +22,6 @@
 
 
 #include "PreviewNavigator.h"
-#include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <unity-shared/IconTexture.h>
@@ -34,18 +33,21 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.navigator");
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewNavigator);
 
 PreviewNavigator::PreviewNavigator(Orientation direction, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , direction_(direction)
   , texture_(nullptr)
   , visual_state_(VisualState::NORMAL)
 {
   SetupViews();
   UpdateTexture();
+
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &PreviewNavigator::UpdateScale));
 }
 
 void PreviewNavigator::SetEnabled(bool enabled)
@@ -97,7 +99,7 @@ void PreviewNavigator::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
 void PreviewNavigator::SetupViews()
 {
   previews::Style& style = dash::previews::Style::Instance();
-  
+
   if (direction_ == Orientation::LEFT || direction_ == Orientation::RIGHT)
   {
     nux::VLayout* vlayout = new nux::VLayout();
@@ -107,9 +109,9 @@ void PreviewNavigator::SetupViews()
     layout_ = hlayout;
 
     if (direction_ == Orientation::LEFT)
-      texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), style.GetNavigatorIconSize(), style.GetNavigatorIconSize());
-    else 
-      texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), style.GetNavigatorIconSize(), style.GetNavigatorIconSize());
+      texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), style.GetNavigatorIconSize().CP(scale), style.GetNavigatorIconSize().CP(scale));
+    else
+      texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), style.GetNavigatorIconSize().CP(scale), style.GetNavigatorIconSize().CP(scale));
     texture_->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
 
     vlayout->AddSpace(0,1);
@@ -138,7 +140,7 @@ void PreviewNavigator::SetupViews()
   if (texture_)
   {
     AddChild(texture_);
-    layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);    
+    layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
     texture_->mouse_click.connect([this](int, int, unsigned long, unsigned long) { activated.emit(); });
     texture_->mouse_enter.connect(sigc::mem_fun(this, &PreviewNavigator::TexRecvMouseEnter));
@@ -179,6 +181,19 @@ void PreviewNavigator::UpdateTexture()
   }
 }
 
+void PreviewNavigator::UpdateScale(double scale)
+{
+  previews::Style& style = dash::previews::Style::Instance();
+
+  if (texture_)
+  {
+    int icon_size = style.GetNavigatorIconSize().CP(scale);
+    texture_->SetMinMaxSize(icon_size, icon_size);
+  }
+
+  QueueRelayout();
+  QueueDraw();
+}
 
 } // namespace previews
 } // namespace dash
