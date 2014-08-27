@@ -20,6 +20,7 @@
  */
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/UnitySettings.h"
 #include "FilterBasicButton.h"
 
 namespace unity
@@ -70,6 +71,7 @@ FilterBasicButton::FilterBasicButton(std::string const& label, nux::TextureArea*
   });
 
   scale.changed.connect(sigc::mem_fun(this, &FilterBasicButton::UpdateScale));
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &FilterBasicButton::InitTheme)));
 }
 
 void FilterBasicButton::InitTheme()
@@ -81,11 +83,12 @@ void FilterBasicButton::InitTheme()
   normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
   focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &FilterBasicButton::RedrawFocusOverlay)));
 
-  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
+  double font_scaling = Settings::Instance().font_scaling() * scale;
+  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(font_scaling));
   ApplyMinWidth();
 
-  SetMinimumHeight(BUTTON_HEIGHT.CP(scale));
-  SetMaximumHeight(BUTTON_HEIGHT.CP(scale));
+  SetMinimumHeight(BUTTON_HEIGHT.CP(font_scaling));
+  SetMaximumHeight(BUTTON_HEIGHT.CP(font_scaling));
 }
 
 void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
