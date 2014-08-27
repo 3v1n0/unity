@@ -117,7 +117,6 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
 
   pango_entry_ = new IMTextEntry();
   pango_entry_->SetFontFamily(PANGO_ENTRY_DEFAULT_FONT_FAMILY.c_str());
-  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale));
   pango_entry_->cursor_moved.connect([this](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &TextInput::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &TextInput::OnEndKeyFocus));
@@ -131,6 +130,8 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  UpdateSize();
 
   // Caps lock warning
   warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE.CP(scale)));
@@ -147,6 +148,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
 
   show_caps_lock.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::CheckIfCapsLockOn)));
   scale.changed.connect(sigc::mem_fun(this, &TextInput::UpdateScale));
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateSize)));
 
   // Activator
   activator_ = new IconTexture(LoadActivatorIcon(DEFAULT_ICON_SIZE.CP(scale)));
@@ -197,21 +199,25 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   });
 }
 
+void TextInput::UpdateSize()
+{
+  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale * Settings::Instance().font_scaling()));
+  int entry_min = pango_entry_->GetMinimumHeight();
+  pango_entry_->SetMaximumHeight(entry_min);
+  layered_layout_->SetMinimumHeight(entry_min);
+  layered_layout_->SetMaximumHeight(entry_min);
+}
+
 void TextInput::UpdateScale(double scale)
 {
   layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), TEXT_INPUT_RIGHT_BORDER.CP(scale));
   layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT.CP(scale));
 
-  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale));
-
-  int entry_min = pango_entry_->GetMinimumHeight();
-  pango_entry_->SetMaximumHeight(entry_min);
-  layered_layout_->SetMinimumHeight(entry_min);
-  layered_layout_->SetMaximumHeight(entry_min);
+  UpdateSize();
 
   hint_layout_->SetLeftAndRightPadding(HINT_PADDING.CP(scale), HINT_PADDING.CP(scale));
   hint_->SetScale(scale);
-  hint_->SetMaximumHeight(entry_min);
+  hint_->SetMaximumHeight(pango_entry_->GetMinimumHeight());
 
   spinner_->scale = scale;
   activator_->SetTexture(LoadActivatorIcon(DEFAULT_ICON_SIZE.CP(scale)));
@@ -332,8 +338,8 @@ void TextInput::OnFontChanged()
   if (desc)
   {
     pango_entry_->SetFontFamily(pango_font_description_get_family(desc));
-    pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale));
     pango_entry_->SetFontOptions(gdk_screen_get_font_options(gdk_screen_get_default()));
+    UpdateSize();
 
     if (hint_font_name() == HINT_LABEL_DEFAULT_FONT_NAME)
     {

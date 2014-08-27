@@ -74,6 +74,7 @@ private:
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   void UpdateBackground(bool force);
   void UpdateScale(double);
+  void UpdateSize();
 
   std::string GetName() const;
 
