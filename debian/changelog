@@ -1,3 +1,34 @@
+unity (7.3.1+14.10.20140904-0ubuntu1) utopic; urgency=low
+
+  [ Martin Pitt ]
+  * Adjust upstart dependency to upstart-bin. (LP: #1351306)
+
+  [ Brandon Schaefer ]
+  * When Show Desktop is active, it will set the tooltip icon as
+    "Restore Windows". This is per workspace. So each time show_destop
+    bool is updated in PluginAdapter, the Show Desktop icon will update
+    its tooltip if needed. (LP: #1237132)
+  * Use CONFIG instead of CACHE to store the first_run.stamp
+
+  [ Stephen M. Webb ]
+  * update the unity manpage (LP: #1059275)
+
+  [ Andrea Azzarone ]
+  * Share lockscreen password entry between screens. (LP: #1308540)
+
+  [ Marco Trevisan (Treviño) ]
+  * IconRenderer: draw count texture at proper scaling, built by
+    LauncherIcon (LP: #1353070)
+  * LauncherIcon: make the Icon count width depending on the text value
+    width (LP: #796527)
+  * Lockscreen: scale the UI elements based on current monitor scaling
+    (LP: #1292218)
+  * SwitcherView: set progress on icon render args (LP: #1361679)
+  * SearchBar, ActionButtons, IconRenderer: include the font scaling
+    when scaling textual items
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 04 Sep 2014 22:12:54 +0000
+
 unity (7.3.1+14.10.20140811-0ubuntu1) utopic; urgency=medium
 
   [ Michal Hruby ]
