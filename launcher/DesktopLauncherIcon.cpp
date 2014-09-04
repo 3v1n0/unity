@@ -33,7 +33,9 @@ DesktopLauncherIcon::DesktopLauncherIcon()
   : SimpleLauncherIcon(IconType::DESKTOP)
   , show_in_switcher_(true)
 {
-  tooltip_text = _("Show Desktop");
+  WindowManager::Default().show_desktop_changed.connect(sigc::mem_fun(this, &DesktopLauncherIcon::UpdateTooltipText));
+
+  UpdateTooltipText();
   icon_name = "desktop";
   SetQuirk(Quirk::VISIBLE, true);
   SetShortcut('d');
@@ -43,6 +45,16 @@ void DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager::Default().ShowDesktop();
+  UpdateTooltipText();
+}
+
+void DesktopLauncherIcon::UpdateTooltipText()
+{
+  auto const& wm = WindowManager::Default();
+  if (wm.InShowDesktop())
+    tooltip_text = _("Restore Windows");
+  else
+    tooltip_text = _("Show Desktop");
 }
 
 std::string DesktopLauncherIcon::GetName() const

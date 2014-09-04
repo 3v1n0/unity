@@ -189,6 +189,8 @@ public:
   sigc::signal<void, Window> window_moved;
   sigc::signal<void, Window> window_focus_changed;
 
+  sigc::signal<void> show_desktop_changed;
+
   sigc::signal<void> initiate_spread;
   sigc::signal<void> terminate_spread;
 
