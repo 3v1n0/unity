@@ -144,11 +144,12 @@ void Tooltip::PreLayoutManagement()
   _tooltip_text->SetMinimumWidth(text_min_width);
   _tooltip_text->SetMinimumHeight(text_height);
 
+  int space_height = _padding.CP(cv_) + CORNER_RADIUS.CP(cv_);
   if (text_height < ANCHOR_HEIGHT.CP(cv_))
-  {
-    _top_space->SetMinMaxSize(1, (ANCHOR_HEIGHT.CP(cv_) - text_height) / 2 + _padding.CP(cv_) + CORNER_RADIUS.CP(cv_));
-    _bottom_space->SetMinMaxSize(1, (ANCHOR_HEIGHT.CP(cv_) - text_height) / 2 + 1 + _padding.CP(cv_) + CORNER_RADIUS.CP(cv_));
-  }
+    space_height += (ANCHOR_HEIGHT.CP(cv_) - text_height) / 2;
+
+  _top_space->SetMinMaxSize(1, space_height);
+  _bottom_space->SetMinMaxSize(1, space_height + 1);
 
   CairoBaseWindow::PreLayoutManagement();
 }

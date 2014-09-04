@@ -20,6 +20,7 @@
 
 #include <glib.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibSource.h>
 #include <UnityCore/Variant.h>
 
 #include "DecorationStyle.h"
@@ -60,6 +61,7 @@ const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
 const int DEFAULT_LAUNCHER_WIDTH = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
+const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
 const double DEFAULT_DPI = 96.0f;
 }
 
@@ -302,6 +304,7 @@ public:
   void UpdateAppsScaling(double scale)
   {
     changing_gnome_settings_ = true;
+    changing_gnome_settings_timeout_.reset();
     unsigned integer_scaling = std::max<unsigned>(1, scale);
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
@@ -310,7 +313,11 @@ public:
     g_settings_set_int(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str(), cursor_size);
     g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
     g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
-    changing_gnome_settings_ = false;
+
+    changing_gnome_settings_timeout_.reset(new glib::TimeoutSeconds(GNOME_SETTINGS_CHANGED_WAIT_SECONDS, [this] {
+      changing_gnome_settings_ = false;
+      return false;
+    }, glib::Source::Priority::LOW));
   }
 
   Settings* parent_;
@@ -319,6 +326,7 @@ public:
   glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> ubuntu_ui_settings_;
   glib::Object<GSettings> gnome_ui_settings_;
+  glib::Source::UniquePtr changing_gnome_settings_timeout_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
   std::vector<int> launcher_widths_;

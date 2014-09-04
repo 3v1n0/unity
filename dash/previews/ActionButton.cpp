@@ -24,6 +24,7 @@
 #include <Nux/HLayout.h>
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -49,6 +50,7 @@ ActionButton::ActionButton(std::string const& action_hint, std::string const& la
   Init();
   BuildLayout(label, icon_hint, "");
   scale.changed.connect(sigc::mem_fun(this, &ActionButton::UpdateScale));
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &ActionButton::InitTheme)));
 }
 
 ActionButton::~ActionButton()
@@ -91,8 +93,9 @@ void ActionButton::InitTheme()
   cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
   cr_focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
 
-  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(scale));
-  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(scale));
+  double font_scaling = Settings::Instance().font_scaling() * scale;
+  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(font_scaling));
+  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(font_scaling));
 }
 
 void ActionButton::SetExtraHint(std::string const& extra_hint, std::string const& font_hint)
