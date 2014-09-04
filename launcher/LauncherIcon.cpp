@@ -60,10 +60,8 @@ const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
 const std::string PRESENT_TIMEOUT = "present-timeout";
 const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
 
-const int COUNT_WIDTH = 32;
-const int COUNT_HEIGHT = 16;
-const int COUNT_FONT_WIDTH = COUNT_WIDTH - 4;
-const int COUNT_FONT_HEIGHT = COUNT_HEIGHT - 5;
+const int COUNT_FONT_SIZE = 11;
+const int COUNT_PADDING = 2;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -103,8 +101,11 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
-  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &LauncherIcon::CleanCountTextures));
-  icon_size.changed.connect(sigc::hide(sigc::mem_fun(this, &LauncherIcon::CleanCountTextures)));
+
+  auto const& count_rebuild_cb = sigc::mem_fun(this, &LauncherIcon::CleanCountTextures);
+  Settings::Instance().dpi_changed.connect(count_rebuild_cb);
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(count_rebuild_cb));
+  icon_size.changed.connect(sigc::hide(count_rebuild_cb));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -1031,41 +1032,44 @@ LauncherIcon::SetEmblemIconName(std::string const& name)
 void LauncherIcon::CleanCountTextures()
 {
   _counts.clear();
+  EmitNeedsRedraw();
 }
 
 BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
 {
-  auto const& count_text = (count / 10000 != 0) ? "****" : std::to_string(count);
-
   glib::Object<PangoContext> pango_ctx(gdk_pango_context_get());
   glib::Object<PangoLayout> layout(pango_layout_new(pango_ctx));
 
   glib::String font_name;
   g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, nullptr);
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
-  pango_font_description_set_absolute_size(desc.get(), pango_units_from_double(COUNT_FONT_HEIGHT));
+  int font_size = pango_units_from_double(Settings::Instance().font_scaling() * COUNT_FONT_SIZE);
+  pango_font_description_set_absolute_size(desc.get(), font_size);
   pango_layout_set_font_description(layout, desc.get());
 
-  pango_layout_set_width(layout, pango_units_from_double(COUNT_FONT_WIDTH));
-  pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
-  pango_layout_set_markup_with_accel(layout, count_text.c_str(), -1, '_', nullptr);
+  pango_layout_set_width(layout, pango_units_from_double(icon_size() * 0.75));
+  pango_layout_set_height(layout, -1);
+  pango_layout_set_wrap(layout, PANGO_WRAP_CHAR);
+  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
+  pango_layout_set_text(layout, std::to_string(count).c_str(), -1);
 
   PangoRectangle ink_rect;
   pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
 
   /* DRAW OUTLINE */
-  float radius = COUNT_HEIGHT / 2.0f - 1.0f;
-  float inset = radius + 1.0f;
+  const float height = ink_rect.height + COUNT_PADDING * 4;
+  const float inset = height / 2.0;
+  const float radius = inset - 1.0f;
+  const float width = ink_rect.width + inset + COUNT_PADDING * 2;
 
-  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(COUNT_WIDTH * scale), std::round(COUNT_HEIGHT * scale));
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(width * scale), std::round(height * scale));
   cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
   cairo_t* cr = cg.GetInternalContext();
 
-  cairo_move_to(cr, inset, COUNT_HEIGHT - 1.0f);
+  cairo_move_to(cr, inset, height - 1.0f);
   cairo_arc(cr, inset, inset, radius, 0.5 * M_PI, 1.5 * M_PI);
-  cairo_arc(cr, COUNT_WIDTH - inset, inset, radius, 1.5 * M_PI, 0.5 * M_PI);
-  cairo_line_to(cr, inset, COUNT_HEIGHT - 1.0f);
+  cairo_arc(cr, width - inset, inset, radius, 1.5 * M_PI, 0.5 * M_PI);
+  cairo_line_to(cr, inset, height - 1.0f);
 
   cairo_set_source_rgba(cr, 0.35f, 0.35f, 0.35f, 1.0f);
   cairo_fill_preserve(cr);
@@ -1077,8 +1081,8 @@ BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
   cairo_set_line_width(cr, 1.0f);
 
   /* DRAW TEXT */
-  cairo_move_to(cr, (COUNT_WIDTH - ink_rect.width) / 2.0 - ink_rect.x,
-                    (COUNT_HEIGHT - ink_rect.height) / 2.0 - ink_rect.y);
+  cairo_move_to(cr, (width - ink_rect.width) / 2.0 - ink_rect.x,
+                    (height - ink_rect.height) / 2.0 - ink_rect.y);
   pango_cairo_show_layout(cr, layout);
 
   return texture_ptr_from_cairo_graphics(cg);
@@ -1177,7 +1181,6 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
     return;
 
   CleanCountTextures();
-  EmitNeedsRedraw();
 }
 
 void
@@ -1208,7 +1211,6 @@ void
 LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   CleanCountTextures();
-  EmitNeedsRedraw();
 }
 
 void

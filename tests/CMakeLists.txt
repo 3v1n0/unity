@@ -131,7 +131,6 @@ if (GMOCK_LIB AND
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
        test_launcher_entry_remote.cpp
-       test_launcher_model.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
        test_model_iterator.cpp
@@ -242,6 +241,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
+                 test_launcher_model.cpp
                  test_launcher_tooltip.cpp
                  test_lockscreen_controller.cpp
                  test_panel_controller.cpp
