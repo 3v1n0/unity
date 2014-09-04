@@ -4041,8 +4041,8 @@ CompAction::Vector& UnityScreen::getActions()
 void UnityScreen::ShowFirstRunHints()
 {
   sources_.AddTimeoutSeconds(1, [this] {
-    auto const& cache_dir = DesktopUtilities::GetUserCacheDirectory();
-    if (!cache_dir.empty() && !g_file_test((cache_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
+    auto const& config_dir = DesktopUtilities::GetUserConfigDirectory();
+    if (!config_dir.empty() && !g_file_test((config_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
     {
       // We focus the panel, so the shortcut hint will be hidden at first user input
       auto const& panels = panel_controller_->panels();
@@ -4055,7 +4055,7 @@ void UnityScreen::ShowFirstRunHints()
       shortcut_controller_->Show();
 
       glib::Error error;
-      g_file_set_contents((cache_dir+local::FIRST_RUN_STAMP).c_str(), "", 0, &error);
+      g_file_set_contents((config_dir+local::FIRST_RUN_STAMP).c_str(), "", 0, &error);
 
       if (error)
       {

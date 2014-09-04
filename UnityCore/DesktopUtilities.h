@@ -32,6 +32,7 @@ public:
   static std::string GetUserDataDirectory();
   static std::string GetUserCacheDirectory();
   static std::string GetUserRuntimeDirectory();
+  static std::string GetUserConfigDirectory();
   static std::vector<std::string> GetSystemDataDirectories();
   static std::vector<std::string> GetDataDirectories();
 
