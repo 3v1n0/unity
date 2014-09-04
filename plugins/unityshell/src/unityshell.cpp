@@ -4002,7 +4002,7 @@ launcher::Controller::Ptr UnityScreen::launcher_controller()
   return launcher_controller_;
 }
 
-std::shared_ptr<lockscreen::Controller> UnityScreen::lockscreen_controller()
+lockscreen::Controller::Ptr UnityScreen::lockscreen_controller()
 {
   return lockscreen_controller_;
 }

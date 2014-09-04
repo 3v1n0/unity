@@ -142,7 +142,7 @@ void IconTexture::LoadIcon()
                                                            -1, _size,
                                                            sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
-  else if (_icon_name.find("http://") == 0)
+  else if (_icon_name.find("://") != std::string::npos)
   {
     _handle = IconLoader::GetDefault().LoadFromURI(_icon_name,
                                                    -1, _size, sigc::mem_fun(this, &IconTexture::IconLoaded));

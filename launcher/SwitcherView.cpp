@@ -79,7 +79,7 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   icon_renderer_->scale = scale();
 
   text_view_->SetMaximumWidth(tile_size * TEXT_TILE_MULTIPLIER);
-  text_view_->SetLines(1);
+  text_view_->SetLines(-1);
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
   text_view_->SetScale(scale);

@@ -20,28 +20,28 @@
 #ifndef SEARCH_BAR_H
 #define SEARCH_BAR_H
 
-#include <gtk/gtk.h>
-#include <NuxCore/Property.h>
-#include <Nux/LayeredLayout.h>
-#include <Nux/VLayout.h>
 #include <Nux/TextEntry.h>
+#include <NuxCore/Property.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
 
-#include "SearchBarSpinner.h"
-#include "unity-shared/IconTexture.h"
-#include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
-#include "unity-shared/StaticCairoText.h"
 
 namespace nux
 {
 class AbstractPaintLayer;
+class LayeredLayout;
 class LinearLayout;
+class SpaceLayout;
+class VLayout;
 }
 
 namespace unity
 {
+class IconTexture;
+class IMTextEntry;
+class SearchBarSpinner;
+class StaticCairoText;
 
 class SearchBar : public unity::debug::Introspectable, public nux::View
 {
@@ -71,7 +71,7 @@ public:
   sigc::signal<void, std::string const&> live_search_reached;
 
 private:
-  void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+  void OnFontChanged();
   void OnSearchHintChanged();
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

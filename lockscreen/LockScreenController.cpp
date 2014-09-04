@@ -24,7 +24,6 @@
 
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
-#include "UserPromptView.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
@@ -155,20 +154,6 @@ void Controller::ActivatePanel()
     primary_shield_->ActivatePanel();
 }
 
-UserPromptView* Controller::CreatePromptView()
-{
-  auto* prompt_view = new UserPromptView(session_manager_);
-
-  auto width = 8 * Settings::GRID_SIZE;
-  auto height = 3 * Settings::GRID_SIZE;
-
-  prompt_view->SetMinimumWidth(width);
-  prompt_view->SetMaximumWidth(width);
-  prompt_view->SetMinimumHeight(height);
-
-  return prompt_view;
-}
-
 void Controller::ResetPostLockScreenSaver()
 {
   screensaver_post_lock_timeout_.reset();
@@ -205,9 +190,16 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   int shields_size = shields_.size();
   int primary = UScreen::GetDefault()->GetMonitorWithMouse();
 
+  // Keep a reference of the old prompt_view
+  nux::ObjectPtr<UserPromptView> prompt_view(prompt_view_.GetPointer());
+
   shields_.resize(num_monitors);
 
-  prompt_view_ = test_mode_ ? nullptr : CreatePromptView();
+  if (!prompt_view)
+  {
+    prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
+    prompt_view_ = prompt_view.GetPointer();
+  }
 
   for (int i = 0; i < num_monitors; ++i)
   {
@@ -216,7 +208,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     if (i >= shields_size)
     {
-      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), prompt_view_, i, i == primary);
+      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), prompt_view, i, i == primary);
       is_new = true;
     }
 
@@ -225,7 +217,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     shield->SetGeometry(new_geo);
     shield->SetMinMaxSize(new_geo.width, new_geo.height);
-    shield->primary = (i == primary);
+    shield->primary = false;
     shield->monitor = i;
 
     // XXX: manually emit nux::Area::geometry_changed beucase nux can fail to emit it.

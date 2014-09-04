@@ -33,6 +33,7 @@ class BackgroundSettings;
 class UserAuthenticator;
 class UserPromptView;
 class Panel;
+class CofView;
 
 class Shield : public AbstractShield
 {
@@ -56,6 +57,7 @@ private:
   void GrabScreen(bool cancel_on_failure);
   void ShowPrimaryView();
   void ShowSecondaryView();
+  void UpdateScale();
   Panel* CreatePanel();
 
   std::shared_ptr<BackgroundSettings> bg_settings_;
@@ -67,6 +69,7 @@ private:
   connection::Wrapper regrab_conn_;
   glib::Source::UniquePtr regrab_timeout_;
   Panel* panel_view_;
+  CofView* cof_view_;
 };
 
 }
