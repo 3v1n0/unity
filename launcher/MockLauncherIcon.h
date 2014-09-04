@@ -329,11 +329,6 @@ public:
     return icon_;
   }
 
-  nux::BaseTexture* Emblem()
-  {
-    return 0;
-  }
-
   MenuItemsVector Menus()
   {
     return MenuItemsVector ();

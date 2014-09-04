@@ -34,6 +34,7 @@ namespace
 IconTextureSource::IconTextureSource()
   : skip_(RENDERERS_SIZE, false)
   , had_emblem_(RENDERERS_SIZE, false)
+  , had_count_(RENDERERS_SIZE, false)
   , last_render_center_(RENDERERS_SIZE)
   , last_logical_center_(RENDERERS_SIZE)
   , last_rotation_(RENDERERS_SIZE)
@@ -89,6 +90,31 @@ void IconTextureSource::RememberEmblem(int monitor, bool has_emblem)
 bool IconTextureSource::HadEmblem(int monitor) const
 {
   return had_emblem_[monitor];
+}
+
+void IconTextureSource::RememberCount(int monitor, bool has_count)
+{
+  had_count_[monitor] = has_count;
+}
+
+bool IconTextureSource::HadCount(int monitor) const
+{
+  return had_count_[monitor];
+}
+
+unsigned IconTextureSource::Count() const
+{
+  return 0;
+}
+
+nux::BaseTexture* IconTextureSource::Emblem() const
+{
+  return nullptr;
+}
+
+nux::BaseTexture* IconTextureSource::CountTexture(double scale)
+{
+  return nullptr;
 }
 
 }

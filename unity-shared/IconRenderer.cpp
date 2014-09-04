@@ -199,6 +199,8 @@ enum IconSize
 const std::array<int, IconSize::SIZE> TILE_SIZES = { 54, 150 };
 const std::array<int, IconSize::SIZE> GLOW_SIZES = { 62, 200 };
 const std::array<int, IconSize::SIZE> MARKER_SIZES = { 19, 37 };
+
+constexpr double count_scaling(double icon_size, bool switcher) { return icon_size / (TILE_SIZES[local::IconSize::SMALL] * (switcher ? 2.0 : 1.0)); }
 } // anonymous namespace
 } // local namespace
 
@@ -352,6 +354,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   GetInverseScreenPerspectiveMatrix(ViewMatrix, ProjectionMatrix, geo.width, geo.height, 0.1f, 1000.0f, DEGTORAD(90));
 
   nux::Matrix4 const& PremultMatrix = ProjectionMatrix * ViewMatrix;
+  int monitor = this->monitor();
 
   std::list<RenderArg>::iterator it;
   int i;
@@ -363,6 +366,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
         it->logical_center == launcher_icon->LastLogicalCenter(monitor) &&
         it->rotation == launcher_icon->LastRotation(monitor) &&
         it->skip == launcher_icon->WasSkipping(monitor) &&
+        (launcher_icon->Count() != 0) == launcher_icon->HadCount(monitor) &&
         (launcher_icon->Emblem() != nullptr) == launcher_icon->HadEmblem(monitor))
     {
       continue;
@@ -372,6 +376,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     launcher_icon->RememberRotation(monitor, it->rotation);
     launcher_icon->RememberSkip(monitor, it->skip);
     launcher_icon->RememberEmblem(monitor, launcher_icon->Emblem() != nullptr);
+    launcher_icon->RememberCount(monitor, launcher_icon->Count() != 0);
 
     float w = icon_size;
     float h = icon_size;
@@ -423,15 +428,25 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, ui::IconTextureSource::TRANSFORM_HIT_AREA);
 
-    if (launcher_icon->Emblem())
-    {
-      nux::BaseTexture* emblem = launcher_icon->Emblem();
+    float emb_w, emb_h;
+    nux::BaseTexture* emblem = launcher_icon->Emblem();
 
+    if (nux::BaseTexture* count_texture = launcher_icon->CountTexture(local::count_scaling(icon_size, pip_style != OUTSIDE_TILE)))
+    {
+      emblem = count_texture;
+      emb_w = emblem->GetWidth();
+      emb_h = emblem->GetHeight();
+    }
+    else if (emblem)
+    {
+      emb_w = std::round(emblem->GetWidth() * scale());
+      emb_h = std::round(emblem->GetHeight() * scale());
+    }
+
+    if (emblem)
+    {
       float w = icon_size;
       float h = icon_size;
-
-      float emb_w = emblem->GetWidth();
-      float emb_h = emblem->GetHeight();
 
       x = it->render_center.x + (icon_size * 0.50f - emb_w - icon_size * 0.05f); // puts right edge of emblem just over the edge of the launcher icon
       y = it->render_center.y - icon_size * 0.50f;     // y = top left corner position of emblem
@@ -718,7 +733,18 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   tile_transform);
   }
 
-  if (arg.icon->Emblem())
+  if (nux::BaseTexture* count_texture = arg.icon->CountTexture(local::count_scaling(icon_size, pip_style != OUTSIDE_TILE)))
+  {
+    RenderElement(GfxContext,
+                  arg,
+                  count_texture->GetDeviceTexture(),
+                  nux::color::White,
+                  nux::color::White,
+                  arg.alpha,
+                  force_filter,
+                  arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_EMBLEM, monitor));
+  }
+  else if (arg.icon->Emblem())
   {
     RenderElement(GfxContext,
                   arg,
@@ -726,7 +752,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   nux::color::White,
                   nux::color::White,
                   arg.alpha,
-                  force_filter,
+                  force_filter || scale != 1.0,
                   arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_EMBLEM, monitor));
   }
 
