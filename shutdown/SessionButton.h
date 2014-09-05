@@ -26,6 +26,7 @@
 
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/RawPixel.h"
 #include "unity-shared/StaticCairoText.h"
 
 namespace unity
@@ -49,6 +50,7 @@ public:
 
   Button(Action, NUX_FILE_LINE_PROTO);
 
+  nux::Property<double> scale;
   nux::Property<bool> highlighted;
   nux::ROProperty<Action> action;
   nux::ROProperty<std::string> label;
@@ -64,6 +66,9 @@ protected:
 
 private:
   friend class TestSessionButton;
+
+  void UpdateTextures(std::string const& texture_prefix);
+  RawPixel GetDefaultMaxTextureSize(std::string const& texture_prefix) const;
 
   Action action_;
   IconTexture* image_view_;

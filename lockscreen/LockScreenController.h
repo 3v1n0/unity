@@ -27,6 +27,7 @@
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
 #include "ScreenSaverDBusManager.h"
+#include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 
@@ -35,9 +36,13 @@ namespace unity
 namespace lockscreen
 {
 
+class UserPromptView;
+
 class Controller : public sigc::trackable
 {
 public:
+  typedef std::shared_ptr<Controller> Ptr;
+
   Controller(DBusManager::Ptr const&, session::Manager::Ptr const&,
              UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
@@ -71,6 +76,7 @@ private:
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
+  nux::ObjectWeakPtr<UserPromptView> prompt_view_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
 
   DBusManager::Ptr dbus_manager_;

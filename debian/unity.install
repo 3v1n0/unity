@@ -1,3 +1,4 @@
+etc/pam.d
 usr/bin
 usr/lib/compiz
 usr/share/man/*/unity.1

@@ -24,7 +24,6 @@
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include "unity-shared/IntrospectableWrappers.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/PreviewStyle.h"
 #include <UnityCore/Track.h>
 
@@ -34,7 +33,12 @@ namespace dash
 {
 namespace previews
 {
+
+namespace
+{
 DECLARE_LOGGER(logger, "unity.dash.preview.music.tracks");
+const RawPixel CHILDREN_SPACE = 1_em;
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tracks);
 
@@ -54,6 +58,9 @@ Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
     for (std::size_t i = 0; i < tracks_->count.Get(); ++i)
       OnTrackAdded(tracks_->RowAtIndex(i));
   }
+
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &Tracks::UpdateScale));
 }
 
 std::string Tracks::GetName() const
@@ -69,11 +76,10 @@ void Tracks::AddProperties(debug::IntrospectionData& introspection)
 
 void Tracks::SetupViews()
 {
-  SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
   EnableHorizontalScrollBar(false);
   layout_ = new nux::VLayout();
-  layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin(), 0, 0);
-  layout_->SetSpaceBetweenChildren(1);
+  layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin().CP(scale), 0, 0);
+  layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
   SetLayout(layout_);
 }
 
@@ -84,6 +90,7 @@ void Tracks::OnTrackUpdated(dash::Track const& track_row)
     return;
 
   pos->second->Update(track_row);
+  pos->second->scale = scale();
 }
 
 void Tracks::OnTrackAdded(dash::Track const& track_row)
@@ -100,8 +107,9 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
   AddChild(track_view.GetPointer());
 
   track_view->Update(track_row);
-  track_view->SetMinimumHeight(style.GetTrackHeight());
-  track_view->SetMaximumHeight(style.GetTrackHeight());
+  track_view->SetMinimumHeight(style.GetTrackHeight().CP(scale));
+  track_view->SetMaximumHeight(style.GetTrackHeight().CP(scale));
+  track_view->scale = scale();
   layout_->AddView(track_view.GetPointer(), 0);
 
   m_tracks[track_uri] = track_view;
@@ -111,7 +119,7 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
 void Tracks::OnTrackRemoved(dash::Track const& track_row)
 {
   LOG_TRACE(logger) << "OnTrackRemoved for " << track_row.title.Get();
-  
+
   auto pos = m_tracks.find(track_row.uri.Get());
   if (pos == m_tracks.end())
     return;
@@ -119,6 +127,27 @@ void Tracks::OnTrackRemoved(dash::Track const& track_row)
   RemoveChild(pos->second.GetPointer());
   layout_->RemoveChildObject(pos->second.GetPointer());
   ComputeContentSize();
+}
+
+void Tracks::UpdateScale(double scale)
+{
+  int track_height = Style::Instance().GetTrackHeight().CP(scale);
+
+  for (auto const& track : m_tracks)
+  {
+    track.second->SetMinimumHeight(track_height);
+    track.second->SetMaximumHeight(track_height);
+    track.second->scale = scale;
+  }
+
+  if (layout_)
+  {
+    layout_->SetPadding(0, Style::Instance().GetDetailsRightMargin().CP(scale), 0, 0);
+    layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+  }
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews

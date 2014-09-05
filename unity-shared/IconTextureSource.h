@@ -46,7 +46,7 @@ public:
   };
 
   IconTextureSource();
-  virtual ~IconTextureSource() {}
+  virtual ~IconTextureSource() = default;
 
   std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
 
@@ -62,17 +62,23 @@ public:
   void RememberEmblem(int monitor, bool has_emblem);
   bool HadEmblem(int monitor) const;
 
+  void RememberCount(int monitor, unsigned count);
+  unsigned LastCount(int monitor) const;
+
   virtual nux::Color BackgroundColor() const = 0;
-
   virtual nux::Color GlowColor() = 0;
-
   virtual nux::BaseTexture* TextureForSize(int size) = 0;
 
-  virtual nux::BaseTexture* Emblem() = 0;
+  virtual unsigned Count() const;
+  virtual nux::BaseTexture* CountTexture(double scale);
+  virtual nux::BaseTexture* Emblem() const;
 
 private:
+  void ResetLastCount();
+
   std::vector<bool> skip_;
   std::vector<bool> had_emblem_;
+  std::vector<unsigned> last_count_;
   std::vector<nux::Point3> last_render_center_;
   std::vector<nux::Point3> last_logical_center_;
   std::vector<nux::Vector3> last_rotation_;

@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/TextInput.h"
 #include "test_utils.h"
 

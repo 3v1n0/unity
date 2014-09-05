@@ -239,7 +239,7 @@ public:
 
   switcher::Controller::Ptr switcher_controller();
   launcher::Controller::Ptr launcher_controller();
-  std::shared_ptr<lockscreen::Controller> lockscreen_controller();
+  lockscreen::Controller::Ptr lockscreen_controller();
 
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
 
@@ -348,7 +348,7 @@ private:
   session::DBusManager::Ptr session_dbus_manager_;
   session::Controller::Ptr  session_controller_;
   lockscreen::DBusManager::Ptr screensaver_dbus_manager_;
-  std::shared_ptr<lockscreen::Controller> lockscreen_controller_;
+  lockscreen::Controller::Ptr lockscreen_controller_;
   debug::DebugDBusInterface debugger_;
   std::unique_ptr<BGHash>   bghash_;
   spread::Filter::Ptr       spread_filter_;
@@ -423,6 +423,7 @@ private:
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
   connection::Wrapper hud_ungrab_slot_;
+  connection::Manager launcher_size_connections_;
 
   CompRegion buffered_compiz_damage_this_frame_;
   CompRegion buffered_compiz_damage_last_frame_;

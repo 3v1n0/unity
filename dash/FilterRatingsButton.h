@@ -25,46 +25,33 @@
 #include <memory>
 
 #include <Nux/Nux.h>
-#include <Nux/ToggleButton.h>
-#include <Nux/CairoWrapper.h>
 #include <UnityCore/RatingsFilter.h>
+#include "unity-shared/RatingsButton.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class FilterRatingsButton : public nux::ToggleButton
+class FilterRatingsButton : public RatingsButton
 {
-  NUX_DECLARE_OBJECT_TYPE(FilterRatingsButton, nux::ToggleButton);
+  NUX_DECLARE_OBJECT_TYPE(FilterRatingsButton, RatingsButton);
 public:
   FilterRatingsButton(NUX_FILE_LINE_PROTO);
-  virtual ~FilterRatingsButton();
 
   void SetFilter(Filter::Ptr const& filter);
-  RatingsFilter::Ptr GetFilter();
+  RatingsFilter::Ptr GetFilter() const;
   std::string GetFilterType();
 
 protected:
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  // Introspectable methods
+  std::string GetName() const;
 
-  // Key-nav
-  virtual bool AcceptKeyNavFocus();
-  virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+  void SetRating(float rating) override;
+  float GetRating() const override;
 
 private:
-  void OnKeyDown(unsigned long event_type, unsigned long event_keysym,
-                 unsigned long event_state, const TCHAR* character,
-                 unsigned short key_repeat_count);
-
-  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  void OnRatingsChanged(int rating);
-
   dash::RatingsFilter::Ptr filter_;
-  int focused_star_;
-
 };
 
 } // namespace dash

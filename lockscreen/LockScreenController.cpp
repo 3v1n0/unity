@@ -45,9 +45,9 @@ public:
   bool AcceptKeyNavFocus() override { return true; }
   bool InspectKeyEvent(unsigned int, unsigned int, const char*) override { return true; };
 };
-}
 
 DECLARE_LOGGER(logger, "unity.lockscreen");
+}
 
 Controller::Controller(DBusManager::Ptr const& dbus_manager,
                        session::Manager::Ptr const& session_manager,
@@ -104,7 +104,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       key_connection_->disconnect();
       uscreen_connection_->block();
       hidden_window_connection_->block();
-      session_manager_->unlocked.emit();
+      session_manager_->is_locked = false;
 
       std::for_each(shields_.begin(), shields_.end(), [](nux::ObjectPtr<Shield> const& shield) {
         shield->RemoveLayout();
@@ -171,7 +171,6 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
 
       primary_shield_->primary = false;
       primary_shield_ = shield;
-      primary_shield_->CheckCapsLockPrompt();
       shield->primary = true;
       nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
       auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
@@ -191,7 +190,16 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   int shields_size = shields_.size();
   int primary = UScreen::GetDefault()->GetMonitorWithMouse();
 
+  // Keep a reference of the old prompt_view
+  nux::ObjectPtr<UserPromptView> prompt_view(prompt_view_.GetPointer());
+
   shields_.resize(num_monitors);
+
+  if (!prompt_view)
+  {
+    prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
+    prompt_view_ = prompt_view.GetPointer();
+  }
 
   for (int i = 0; i < num_monitors; ++i)
   {
@@ -200,14 +208,21 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     if (i >= shields_size)
     {
-      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), i, i == primary);
+      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), prompt_view, i, i == primary);
       is_new = true;
     }
 
-    shield->SetGeometry(monitors[i]);
-    shield->SetMinMaxSize(monitors[i].width, monitors[i].height);
-    shield->primary = (i == primary);
+    auto old_geo = shield->GetGeometry();
+    auto new_geo = monitors[i];
+
+    shield->SetGeometry(new_geo);
+    shield->SetMinMaxSize(new_geo.width, new_geo.height);
+    shield->primary = false;
     shield->monitor = i;
+
+    // XXX: manually emit nux::Area::geometry_changed beucase nux can fail to emit it.
+    if (old_geo != new_geo)
+      shield->geometry_changed.emit(shield.GetPointer(), new_geo);
 
     if (is_new && fade_animator_.GetCurrentValue() > 0)
     {
@@ -330,9 +345,9 @@ void Controller::OnLockRequested(bool prompt)
   prompt_activation_ = prompt;
 
   lockscreen_timeout_.reset(new glib::Timeout(30, [this] {
-    bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsPointerGrab());
+    bool grabbed_by_blank = (blank_window_ && blank_window_->OwnsKeyboardGrab());
 
-    if (WindowManager::Default().IsScreenGrabbed() && !grabbed_by_blank)
+    if (!grabbed_by_blank && WindowManager::Default().IsScreenGrabbed())
     {
       HideBlankWindow();
       LOG_DEBUG(logger) << "Failed to lock the screen: the screen is already grabbed.";
@@ -343,7 +358,7 @@ void Controller::OnLockRequested(bool prompt)
       HideBlankWindow();
 
     LockScreen();
-    session_manager_->locked.emit();
+    session_manager_->is_locked = true;
 
     if (prompt_activation_)
     {
@@ -404,7 +419,7 @@ void Controller::LockScreen()
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
 
-  accelerator_controller_ = std::make_shared<AcceleratorController>();
+  accelerator_controller_ = std::make_shared<AcceleratorController>(session_manager_);
   auto activate_key = WindowManager::Default().activate_indicators_key();
   auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
   accelerator->activated.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));

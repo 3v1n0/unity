@@ -213,7 +213,8 @@ namespace local
     {
       if (const char* err = dlerror())
       {
-        LOG_ERROR(logger) << "Unable to load entry point in libxpathselect: " << err;
+        LOG_WARNING(logger) << "Unable to load entry point in libxpathselect: " << err
+                            << " -- full D-Bus introspection will not be available";
         Close();
       }
     }

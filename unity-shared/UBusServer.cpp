@@ -16,13 +16,12 @@
  * Authored by: Michal Hruby <michal.hruby@canonical.com>
  */
 
-#include <NuxCore/Logger.h>
+#include <algorithm>
 
 #include "UBusServer.h"
 
 namespace unity
 {
-DECLARE_LOGGER(logger, "unity.ubus");
 
 UBusServer::UBusServer()
   : last_id_(0)

@@ -24,6 +24,7 @@
 #define APPLICATIONPREVIEW_H
 
 #include "Preview.h"
+#include "unity-shared/OverlayScrollView.h"
 
 namespace unity
 {
@@ -54,9 +55,18 @@ protected:
   virtual void PreLayoutManagement();
 
   virtual void SetupViews();
+  void UpdateScale(double scale) override;
 
 protected:
   nux::VLayout* title_subtitle_layout_;
+  nux::HLayout* image_data_layout_;
+  nux::HLayout* main_app_info_;
+  nux::VLayout* icon_layout_;
+  nux::VLayout* app_data_layout_;
+  nux::VLayout* app_updated_copywrite_layout_;
+  nux::VLayout* app_info_layout_;
+  ScrollView* app_info_scroll_;
+  nux::Layout* actions_layout_;
 
   nux::ObjectPtr<IconTexture> app_icon_;
   nux::ObjectPtr<PreviewRatingsWidget> app_rating_;

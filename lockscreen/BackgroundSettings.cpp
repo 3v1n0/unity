@@ -25,6 +25,7 @@
 #include "LockScreenSettings.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 
 namespace unity
@@ -35,7 +36,7 @@ namespace
 {
 const std::string SETTINGS_NAME = "org.gnome.desktop.background";
 
-constexpr int GetGridOffset(int size) { return (size % Settings::GRID_SIZE) / 2; }
+inline int GetGridOffset(int size) { return (size % Settings::GRID_SIZE) / 2; }
 }
 
 BackgroundSettings::BackgroundSettings()
@@ -45,26 +46,27 @@ BackgroundSettings::BackgroundSettings()
   gnome_bg_load_from_preferences(gnome_bg_, settings);
 }
 
-BackgroundSettings::~BackgroundSettings()
-{}
-
 BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
 {
   nux::Geometry const& geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+  double scale = unity::Settings::Instance().em(monitor)->DPIScale();
   auto& settings = Settings::Instance();
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
   cairo_t* c = cairo_graphics.GetInternalContext();
 
+  double s_width = geo.width / scale;
+  double s_height = geo.height / scale;
   cairo_surface_t* bg_surface = nullptr;
 
   if (settings.use_user_background())
   {
-    bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), geo.width, geo.height, FALSE);
+    bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), s_width, s_height, FALSE);
   }
   else if (!settings.background().empty())
   {
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_scale(settings.background().c_str(), geo.width, geo.height, FALSE, NULL));
+    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_scale(settings.background().c_str(), s_width, s_height, FALSE, NULL));
 
     if (pixbuf)
       bg_surface = gdk_cairo_surface_create_from_pixbuf(pixbuf, 0, NULL);
@@ -85,15 +87,15 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
 
   if (!settings.logo().empty())
   {
-    int grid_x_offset = GetGridOffset(geo.width);
-    int grid_y_offset = GetGridOffset(geo.height);
+    int grid_x_offset = GetGridOffset(s_width);
+    int grid_y_offset = GetGridOffset(s_height);
     cairo_surface_t* logo_surface = cairo_image_surface_create_from_png(settings.logo().c_str());
 
     if (logo_surface)
     {
       int height = cairo_image_surface_get_height(logo_surface);
       int x = grid_x_offset;
-      int y = grid_y_offset + Settings::GRID_SIZE * (geo.height / Settings::GRID_SIZE - 1) - height;
+      int y = grid_y_offset + Settings::GRID_SIZE * (s_height / Settings::GRID_SIZE - 1) - height;
 
       cairo_save(c);
       cairo_translate(c, x, y);
@@ -107,8 +109,8 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
 
   if (settings.draw_grid())
   {
-    int width = geo.width;
-    int height = geo.height;
+    double width = s_width;
+    double height = s_height;
     int grid_x_offset = GetGridOffset(width);
     int grid_y_offset = GetGridOffset(height) + panel::Style::Instance().PanelHeight(monitor);
 

@@ -22,6 +22,7 @@
 #include <Nux/VLayout.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -29,24 +30,33 @@ namespace unity
 NUX_IMPLEMENT_OBJECT_TYPE(SearchBarSpinner);
 
 SearchBarSpinner::SearchBarSpinner()
-  : nux::View(NUX_TRACKER_LOCATION),
-    state_(STATE_READY),
-    search_timeout_(-1),
-    rotation_(0.0f)
+  : nux::View(NUX_TRACKER_LOCATION)
+  , scale(1.0)
+  , state_(STATE_READY)
+  , search_timeout_(-1)
+  , rotation_(0.0f)
 {
-  dash::Style& style = dash::Style::Instance();
-
-  magnify_ = style.GetSearchMagnifyIcon();
-  circle_ = style.GetSearchCircleIcon();
-  close_ = style.GetSearchCloseIcon();
-  spin_ = style.GetSearchSpinIcon();
-
   rotate_.Identity();
   rotate_.Rotate_z(0.0);
+  UpdateScale(scale);
+
+  scale.changed.connect(sigc::mem_fun(this, &SearchBarSpinner::UpdateScale));
 }
 
-void
-SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void SearchBarSpinner::UpdateScale(double scale)
+{
+  auto& style = dash::Style::Instance();
+
+  magnify_ = style.GetSearchMagnifyIcon(scale);
+  circle_ = style.GetSearchCircleIcon(scale);
+  close_ = style.GetSearchCloseIcon(scale);
+  spin_ = style.GetSearchSpinIcon(scale);
+
+  SetMinMaxSize(magnify_->GetWidth(), magnify_->GetHeight());
+  QueueDraw();
+}
+
+void SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
   nux::TexCoordXForm texxform;
@@ -56,9 +66,8 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::GetPainter().PaintBackground(GfxContext, geo);
 
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  texxform.min_filter = nux::TEXFILTER_LINEAR;
-  texxform.mag_filter = nux::TEXFILTER_LINEAR;
+  texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+  texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
   unsigned int current_alpha_blend;
   unsigned int current_src_blend_factor;
@@ -68,20 +77,23 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (state_ == STATE_READY)
   {
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - magnify_->GetWidth()) / 2),
-                        geo.y + ((geo.height - magnify_->GetHeight()) / 2),
-                        magnify_->GetWidth(),
-                        magnify_->GetHeight(),
+    nux::Size magnifier_size(magnify_->GetWidth(), magnify_->GetHeight());
+
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - magnifier_size.width) / 2),
+                        geo.y + ((geo.height - magnifier_size.height) / 2),
+                        magnifier_size.width,
+                        magnifier_size.height,
                         magnify_->GetDeviceTexture(),
                         texxform,
                         nux::color::White);
   }
   else if (state_ == STATE_SEARCHING)
   {
-    nux::Geometry spin_geo(geo.x + ((geo.width - spin_->GetWidth()) / 2),
-                           geo.y + ((geo.height - spin_->GetHeight()) / 2),
-                           spin_->GetWidth(),
-                           spin_->GetHeight());
+    nux::Size spin_size(spin_->GetWidth(), spin_->GetHeight());
+    nux::Geometry spin_geo(geo.x + ((geo.width - spin_size.width) / 2),
+                           geo.y + ((geo.height - spin_size.height) / 2),
+                           spin_size.width,
+                           spin_size.height);
     // Geometry (== Rect) uses integers which were rounded above,
     // hence an extra 0.5 offset for odd sizes is needed
     // because pure floating point is not being used.
@@ -110,18 +122,20 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - circle_->GetWidth()) / 2),
-                        geo.y + ((geo.height - circle_->GetHeight()) / 2),
-                        circle_->GetWidth(),
-                        circle_->GetHeight(),
+    nux::Size circle_size(circle_->GetWidth(), circle_->GetHeight());
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - circle_size.width) / 2),
+                        geo.y + ((geo.height - circle_size.height) / 2),
+                        circle_size.width,
+                        circle_size.height,
                         circle_->GetDeviceTexture(),
                         texxform,
                         nux::color::White);
 
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - close_->GetWidth()) / 2),
-                        geo.y + ((geo.height - close_->GetHeight()) / 2),
-                        close_->GetWidth(),
-                        close_->GetHeight(),
+    nux::Size close_size(close_->GetWidth(), close_->GetHeight());
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - close_size.width) / 2),
+                        geo.y + ((geo.height - close_size.height) / 2),
+                        close_size.width,
+                        close_size.height,
                         close_->GetDeviceTexture(),
                         texxform,
                         nux::color::White);

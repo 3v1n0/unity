@@ -91,6 +91,11 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
+  manager_->is_locked = false;
+  manager_->is_locked.changed.connect([this] (bool locked) {
+    locked ? manager_->locked.emit() : manager_->unlocked.emit();
+  });
+
   {
     const char* session_id = test_mode_ ? "id0" : g_getenv("XDG_SESSION_ID");
 
@@ -421,21 +426,13 @@ void GnomeManager::Impl::LockScreen(bool prompt)
 {
   EnsureCancelPendingAction();
 
+  if (!manager_->CanLock())
+  {
+    manager_->ScreenSaverActivate();
+    return;
+  }
+
   // FIXME (andy) we should ask gnome-session to emit the logind signal
-  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
-
-  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
-  {
-    manager_->ScreenSaverActivate();
-    return;
-  }
-  else if (manager_->UserName().find("guest-") == 0)
-  {
-    LOG_INFO(logger) << "Impossible to lock a guest session";
-    manager_->ScreenSaverActivate();
-    return;
-  }
-
   prompt ? manager_->prompt_lock_requested.emit() : manager_->lock_requested.emit();
 }
 
@@ -452,6 +449,39 @@ void GnomeManager::Impl::UpdateHaveOtherOpenSessions()
         manager_->have_other_open_sessions.changed.emit(open_sessions_);
       }
   });
+}
+
+bool GnomeManager::Impl::HasInhibitors()
+{
+  glib::Error error;
+  glib::Object<GDBusConnection> bus(g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the session bus, to fetch the inhibitors: " << error;
+    return false;
+  }
+
+  enum class Inhibited : unsigned
+  {
+    LOGOUT = 1,
+    USER_SWITCH = 2,
+    SUSPEND = 4,
+    IDLE_SET = 8
+  };
+
+  glib::Variant inhibitors(g_dbus_connection_call_sync(bus, test_mode_ ? testing::DBUS_NAME.c_str() : "org.gnome.SessionManager",
+                                                       "/org/gnome/SessionManager", "org.gnome.SessionManager",
+                                                       "IsInhibited", g_variant_new("(u)", Inhibited::LOGOUT), nullptr,
+                                                       G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the inhibitors: " << error;
+    return false;
+  }
+
+  return inhibitors.GetBool();
 }
 
 // Public implementation
@@ -617,6 +647,19 @@ void GnomeManager::Hibernate()
   });
 }
 
+bool GnomeManager::CanLock() const
+{
+  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
+
+  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()) ||
+      UserName().find("guest-") == 0 || is_locked())
+  {
+    return false;
+  }
+
+  return true;
+}
+
 bool GnomeManager::CanShutdown() const
 {
   return impl_->can_shutdown_;
@@ -630,6 +673,11 @@ bool GnomeManager::CanSuspend() const
 bool GnomeManager::CanHibernate() const
 {
   return impl_->can_hibernate_;
+}
+
+bool GnomeManager::HasInhibitors() const
+{
+  return impl_->HasInhibitors();
 }
 
 void GnomeManager::CancelAction()

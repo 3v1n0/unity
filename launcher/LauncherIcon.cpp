@@ -59,6 +59,9 @@ const std::string UNITY_THEME_NAME = "unity-icon-theme";
 const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
 const std::string PRESENT_TIMEOUT = "present-timeout";
 const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
+
+const int COUNT_FONT_SIZE = 11;
+const int COUNT_PADDING = 2;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -69,7 +72,6 @@ glib::Object<GtkIconTheme> LauncherIcon::_unity_theme;
 LauncherIcon::LauncherIcon(IconType type)
   : _icon_type(type)
   , _sticky(false)
-  , _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0.0f)
   , _sort_priority(DefaultPriority(type))
@@ -80,6 +82,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _shortcut(0)
   , _allow_quicklist_to_show(true)
   , _center(monitors::MAX)
+  , _number_of_visible_windows(monitors::MAX)
   , _quirks(monitors::MAX)
   , _quirk_animations(monitors::MAX, decltype(_quirk_animations)::value_type(unsigned(Quirk::LAST)))
   , _last_stable(monitors::MAX)
@@ -98,6 +101,11 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
+
+  auto const& count_rebuild_cb = sigc::mem_fun(this, &LauncherIcon::CleanCountTextures);
+  Settings::Instance().dpi_changed.connect(count_rebuild_cb);
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(count_rebuild_cb));
+  icon_size.changed.connect(sigc::hide(count_rebuild_cb));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -732,12 +740,15 @@ std::pair<int, nux::Point3> LauncherIcon::GetCenterForMonitor(int monitor) const
   return {-1, nux::Point3()};
 }
 
-void LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
+void LauncherIcon::SetNumberOfWindowsVisibleOnMonitor(int number_of_windows, int monitor)
 {
-  if (_has_visible_window[monitor] == val)
+  if (_number_of_visible_windows[monitor] == number_of_windows)
     return;
 
-  _has_visible_window[monitor] = val;
+  _has_visible_window[monitor] = (number_of_windows > 0);
+
+  _number_of_visible_windows[monitor] = number_of_windows;
+
   EmitNeedsRedraw(monitor);
 }
 
@@ -962,14 +973,42 @@ AbstractLauncherIcon::MenuItemsVector LauncherIcon::GetMenus()
   return result;
 }
 
-nux::BaseTexture*
-LauncherIcon::Emblem()
+nux::BaseTexture* LauncherIcon::Emblem() const
 {
   return _emblem.GetPointer();
 }
 
-void
-LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
+nux::BaseTexture* LauncherIcon::CountTexture(double scale)
+{
+  int count = Count();
+
+  if (!count)
+    return nullptr;
+
+  auto it = _counts.find(scale);
+
+  if (it != _counts.end())
+    return it->second.GetPointer();
+
+  auto const& texture = DrawCountTexture(count, scale);
+  _counts[scale] = texture;
+  return texture.GetPointer();
+}
+
+unsigned LauncherIcon::Count() const
+{
+  if (!_remote_entries.empty())
+  {
+    auto const& remote = _remote_entries.front();
+
+    if (remote->CountVisible())
+      return remote->Count();
+  }
+
+  return 0;
+}
+
+void LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
 {
   _emblem = emblem;
   EmitNeedsRedraw();
@@ -990,55 +1029,42 @@ LauncherIcon::SetEmblemIconName(std::string const& name)
   emblem->UnReference();
 }
 
-void
-LauncherIcon::SetEmblemText(std::string const& text)
+void LauncherIcon::CleanCountTextures()
 {
-  PangoLayout*          layout     = NULL;
+  _counts.clear();
+  EmitNeedsRedraw();
+}
 
-  PangoContext*         pangoCtx   = NULL;
-  PangoFontDescription* desc       = NULL;
-  GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-  GtkSettings*          settings   = gtk_settings_get_default();  // not ref'ed
-  gchar*                fontName   = NULL;
+BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
+{
+  glib::Object<PangoContext> pango_ctx(gdk_pango_context_get());
+  glib::Object<PangoLayout> layout(pango_layout_new(pango_ctx));
 
-  int width = 32;
-  int height = 8 * 2;
-  int font_height = height - 5;
+  glib::String font_name;
+  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, nullptr);
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
+  int font_size = pango_units_from_double(Settings::Instance().font_scaling() * COUNT_FONT_SIZE);
+  pango_font_description_set_absolute_size(desc.get(), font_size);
+  pango_layout_set_font_description(layout, desc.get());
 
+  pango_layout_set_width(layout, pango_units_from_double(icon_size() * 0.75));
+  pango_layout_set_height(layout, -1);
+  pango_layout_set_wrap(layout, PANGO_WRAP_CHAR);
+  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
+  pango_layout_set_text(layout, std::to_string(count).c_str(), -1);
 
-  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
-  cairo_t* cr = cg.GetInternalContext();
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cr);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-
-  layout = pango_cairo_create_layout(cr);
-
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  desc = pango_font_description_from_string(fontName);
-  pango_font_description_set_absolute_size(desc, pango_units_from_double(font_height));
-
-  pango_layout_set_font_description(layout, desc);
-  pango_font_description_free(desc);
-
-  pango_layout_set_width(layout, pango_units_from_double(width - 4.0f));
-  pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
-  pango_layout_set_markup_with_accel(layout, text.c_str(), -1, '_', NULL);
-
-  pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
-  pango_cairo_context_set_font_options(pangoCtx,
-                                       gdk_screen_get_font_options(screen));
-
-  PangoRectangle logical_rect, ink_rect;
-  pango_layout_get_extents(layout, &logical_rect, &ink_rect);
+  PangoRectangle ink_rect;
+  pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
 
   /* DRAW OUTLINE */
-  float radius = height / 2.0f - 1.0f;
-  float inset = radius + 1.0f;
+  const float height = ink_rect.height + COUNT_PADDING * 4;
+  const float inset = height / 2.0;
+  const float radius = inset - 1.0f;
+  const float width = ink_rect.width + inset + COUNT_PADDING * 2;
+
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(width * scale), std::round(height * scale));
+  cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
+  cairo_t* cr = cg.GetInternalContext();
 
   cairo_move_to(cr, inset, height - 1.0f);
   cairo_arc(cr, inset, inset, radius, 0.5 * M_PI, 1.5 * M_PI);
@@ -1055,16 +1081,11 @@ LauncherIcon::SetEmblemText(std::string const& text)
   cairo_set_line_width(cr, 1.0f);
 
   /* DRAW TEXT */
-  cairo_move_to(cr,
-                (int)((width - pango_units_to_double(logical_rect.width)) / 2.0f),
-                (int)((height - pango_units_to_double(logical_rect.height)) / 2.0f - pango_units_to_double(logical_rect.y)));
+  cairo_move_to(cr, (width - ink_rect.width) / 2.0 - ink_rect.x,
+                    (height - ink_rect.height) / 2.0 - ink_rect.y);
   pango_cairo_show_layout(cr, layout);
 
-  SetEmblem(texture_ptr_from_cairo_graphics(cg));
-
-  // clean up
-  g_object_unref(layout);
-  g_free(fontName);
+  return texture_ptr_from_cairo_graphics(cg);
 }
 
 void
@@ -1073,26 +1094,34 @@ LauncherIcon::DeleteEmblem()
   SetEmblem(BaseTexturePtr());
 }
 
-void
-LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
+void LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
-  if (std::find(_entry_list.begin(), _entry_list.end(), remote) != _entry_list.end())
+  if (!remote || std::find(_remote_entries.begin(), _remote_entries.end(), remote) != _remote_entries.end())
     return;
 
-  _entry_list.push_front(remote);
+  _remote_entries.push_back(remote);
   AddChild(remote.get());
+  SelectEntryRemote(remote);
+}
 
-  remote->emblem_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
-  remote->count_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged));
-  remote->progress_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressChanged));
-  remote->quicklist_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteQuicklistChanged));
+void LauncherIcon::SelectEntryRemote(LauncherEntryRemote::Ptr const& remote)
+{
+  if (!remote)
+    return;
 
-  remote->emblem_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged));
-  remote->count_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
-  remote->progress_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
+  auto& cm = _remote_connections;
+  cm.Clear();
 
-  remote->urgent_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteUrgentChanged));
+  cm.Add(remote->emblem_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged)));
+  cm.Add(remote->count_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged)));
+  cm.Add(remote->progress_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressChanged)));
+  cm.Add(remote->quicklist_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteQuicklistChanged)));
 
+  cm.Add(remote->emblem_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged)));
+  cm.Add(remote->count_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged)));
+  cm.Add(remote->progress_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged)));
+
+  cm.Add(remote->urgent_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteUrgentChanged)));
 
   if (remote->EmblemVisible())
     OnRemoteEmblemVisibleChanged(remote.get());
@@ -1109,28 +1138,30 @@ LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
   OnRemoteQuicklistChanged(remote.get());
 }
 
-void
-LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
+void LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
-  if (std::find(_entry_list.begin(), _entry_list.end(), remote) == _entry_list.end())
+  auto remote_it = std::find(_remote_entries.begin(), _remote_entries.end(), remote);
+
+  if (remote_it == _remote_entries.end())
     return;
 
-  _entry_list.remove(remote);
-  RemoveChild(remote.get());
-
-  DeleteEmblem();
   SetQuirk(Quirk::PROGRESS, false);
 
-  if (_remote_urgent)
+  if (remote->Urgent())
     SetQuirk(Quirk::URGENT, false);
 
+  _remote_entries.erase(remote_it);
+  RemoveChild(remote.get());
+  DeleteEmblem();
   _remote_menus = nullptr;
+
+  if (!_remote_entries.empty())
+    SelectEntryRemote(_remote_entries.back());
 }
 
 void
 LauncherIcon::OnRemoteUrgentChanged(LauncherEntryRemote* remote)
 {
-  _remote_urgent = remote->Urgent();
   SetQuirk(Quirk::URGENT, remote->Urgent());
 }
 
@@ -1149,14 +1180,7 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (!remote->CountVisible())
     return;
 
-  if (remote->Count() / 10000 != 0)
-  {
-    SetEmblemText("****");
-  }
-  else
-  {
-    SetEmblemText(std::to_string(remote->Count()));
-  }
+  CleanCountTextures();
 }
 
 void
@@ -1186,14 +1210,7 @@ LauncherIcon::OnRemoteEmblemVisibleChanged(LauncherEntryRemote* remote)
 void
 LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
-  if (remote->CountVisible())
-  {
-    SetEmblemText(std::to_string(remote->Count()));
-  }
-  else
-  {
-    DeleteEmblem();
-  }
+  CleanCountTextures();
 }
 
 void

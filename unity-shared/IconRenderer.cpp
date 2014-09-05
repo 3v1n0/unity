@@ -31,6 +31,8 @@
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DecorationStyle.h"
 #include "unity-shared/TextureCache.h"
+#include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
 #include "GraphicsUtils.h"
 
 #include <gtk/gtk.h>
@@ -199,6 +201,8 @@ enum IconSize
 const std::array<int, IconSize::SIZE> TILE_SIZES = { 54, 150 };
 const std::array<int, IconSize::SIZE> GLOW_SIZES = { 62, 200 };
 const std::array<int, IconSize::SIZE> MARKER_SIZES = { 19, 37 };
+
+constexpr double count_scaling(double icon_size, bool switcher) { return icon_size / (TILE_SIZES[local::IconSize::SMALL] * (switcher ? 2.0 : 1.0)); }
 } // anonymous namespace
 } // local namespace
 
@@ -210,7 +214,6 @@ struct IconRenderer::TexturesPool
     return instance;
   }
 
-  nux::ObjectPtr<nux::BaseTexture> RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color);
   nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
   nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
 #ifndef USE_GLES
@@ -223,8 +226,6 @@ struct IconRenderer::TexturesPool
   int FragmentColor;
   int ColorifyColor;
   int DesatFactor;
-
-  std::map<char, BaseTexturePtr> labels;
 
 private:
   TexturesPool();
@@ -249,14 +250,18 @@ struct IconRenderer::LocalTextures
   LocalTextures(IconRenderer* parent)
     : parent_(parent)
   {
-    theme_conn_ = decoration::Style::Get()->theme.changed.connect([this] (std::string const&) {
+    connections_.Add(decoration::Style::Get()->theme.changed.connect([this] (std::string const&) {
       auto& cache = TextureCache::GetDefault();
 
       for (auto const& tex_data : texture_files_)
         cache.Invalidate(tex_data.name, tex_data.size, tex_data.size);
 
       ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
-    });
+    }));
+
+    auto clear_labels = sigc::hide(sigc::mem_fun(this, &LocalTextures::ClearLabels));
+    connections_.Add(Settings::Instance().font_scaling.changed.connect(clear_labels));
+    connections_.Add(WindowManager::Default().average_color.changed.connect(clear_labels));
   }
 
   void ReloadIconSizedTextures(int icon_size, int image_size)
@@ -298,6 +303,22 @@ struct IconRenderer::LocalTextures
       *tex_data.tex_ptr = cache.FindTexture(tex_data.name, tex_data.size, tex_data.size, texture_loader);
   }
 
+  nux::BaseTexture* RenderLabelTexture(char label, int icon_size, nux::Color const&);
+
+  BaseTexturePtr const& GetLabelTexture(char label, int icon_size, nux::Color const& color)
+  {
+    labels_.push_back(TextureCache::GetDefault().FindTexture(std::string(1, label), icon_size, icon_size, [this, &color] (std::string const& label, int size, int) {
+      return RenderLabelTexture(label[0], size, color);
+    }));
+
+    return labels_.back();
+  }
+
+  void ClearLabels()
+  {
+    labels_.clear();
+  }
+
   BaseTexturePtr icon_background;
   BaseTexturePtr icon_selected_background;
   BaseTexturePtr icon_edge;
@@ -315,7 +336,8 @@ private:
   IconRenderer* parent_;
   struct TextureData { BaseTexturePtr* tex_ptr; std::string name; int size; };
   std::vector<TextureData> texture_files_;
-  connection::Wrapper theme_conn_;
+  std::vector<BaseTexturePtr> labels_;
+  connection::Manager connections_;
 };
 
 IconRenderer::IconRenderer()
@@ -335,6 +357,7 @@ void IconRenderer::SetTargetSize(int tile_size, int image_size_, int spacing_)
     icon_size = tile_size;
     image_size = image_size_;
     local_textures_->ReloadIconSizedTextures(icon_size, image_size);
+    local_textures_->ClearLabels();
   }
 
   spacing = spacing_;
@@ -352,6 +375,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   GetInverseScreenPerspectiveMatrix(ViewMatrix, ProjectionMatrix, geo.width, geo.height, 0.1f, 1000.0f, DEGTORAD(90));
 
   nux::Matrix4 const& PremultMatrix = ProjectionMatrix * ViewMatrix;
+  int monitor = this->monitor();
 
   std::list<RenderArg>::iterator it;
   int i;
@@ -363,6 +387,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
         it->logical_center == launcher_icon->LastLogicalCenter(monitor) &&
         it->rotation == launcher_icon->LastRotation(monitor) &&
         it->skip == launcher_icon->WasSkipping(monitor) &&
+        launcher_icon->Count() == launcher_icon->LastCount(monitor) &&
         (launcher_icon->Emblem() != nullptr) == launcher_icon->HadEmblem(monitor))
     {
       continue;
@@ -372,6 +397,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     launcher_icon->RememberRotation(monitor, it->rotation);
     launcher_icon->RememberSkip(monitor, it->skip);
     launcher_icon->RememberEmblem(monitor, launcher_icon->Emblem() != nullptr);
+    launcher_icon->RememberCount(monitor, launcher_icon->Count());
 
     float w = icon_size;
     float h = icon_size;
@@ -423,15 +449,25 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, ui::IconTextureSource::TRANSFORM_HIT_AREA);
 
-    if (launcher_icon->Emblem())
-    {
-      nux::BaseTexture* emblem = launcher_icon->Emblem();
+    float emb_w, emb_h;
+    nux::BaseTexture* emblem = launcher_icon->Emblem();
 
+    if (nux::BaseTexture* count_texture = launcher_icon->CountTexture(local::count_scaling(icon_size, pip_style != OUTSIDE_TILE)))
+    {
+      emblem = count_texture;
+      emb_w = emblem->GetWidth();
+      emb_h = emblem->GetHeight();
+    }
+    else if (emblem)
+    {
+      emb_w = std::round(emblem->GetWidth() * scale());
+      emb_h = std::round(emblem->GetHeight() * scale());
+    }
+
+    if (emblem)
+    {
       float w = icon_size;
       float h = icon_size;
-
-      float emb_w = emblem->GetWidth();
-      float emb_h = emblem->GetHeight();
 
       x = it->render_center.x + (icon_size * 0.50f - emb_w - icon_size * 0.05f); // puts right edge of emblem just over the edge of the launcher icon
       y = it->render_center.y - icon_size * 0.50f;     // y = top left corner position of emblem
@@ -718,7 +754,18 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   tile_transform);
   }
 
-  if (arg.icon->Emblem())
+  if (nux::BaseTexture* count_texture = arg.icon->CountTexture(local::count_scaling(icon_size, pip_style != OUTSIDE_TILE)))
+  {
+    RenderElement(GfxContext,
+                  arg,
+                  count_texture->GetDeviceTexture(),
+                  nux::color::White,
+                  nux::color::White,
+                  arg.alpha,
+                  force_filter,
+                  arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_EMBLEM, monitor));
+  }
+  else if (arg.icon->Emblem())
   {
     RenderElement(GfxContext,
                   arg,
@@ -726,7 +773,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   nux::color::White,
                   nux::color::White,
                   arg.alpha,
-                  force_filter,
+                  force_filter || scale != 1.0,
                   arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_EMBLEM, monitor));
   }
 
@@ -741,20 +788,8 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   // draw superkey-shortcut label
   if (arg.draw_shortcut && arg.shortcut_label)
   {
-    char shortcut = (char) arg.shortcut_label;
-
-    BaseTexturePtr label;
-    auto label_it = textures_->labels.find(shortcut);
-
-    if (label_it != textures_->labels.end())
-    {
-      label = label_it->second;
-    }
-    else
-    {
-      label = textures_->RenderLabelTexture(shortcut, icon_size, shortcut_color);
-      textures_->labels[shortcut] = label;
-    }
+    char shortcut = static_cast<char>(arg.shortcut_label);
+    auto const& label = local_textures_->GetLabelTexture(shortcut, icon_size, shortcut_color);
 
     RenderElement(GfxContext,
                   arg,
@@ -767,7 +802,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   }
 }
 
-nux::ObjectPtr<nux::BaseTexture> IconRenderer::TexturesPool::RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color)
+nux::BaseTexture* IconRenderer::LocalTextures::RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color)
 {
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, icon_size, icon_size);
   cairo_t* cr = cg.GetInternalContext();
@@ -791,27 +826,27 @@ nux::ObjectPtr<nux::BaseTexture> IconRenderer::TexturesPool::RenderLabelTexture(
   cairo_set_source_rgba(cr, bg_color.red, bg_color.green, bg_color.blue, 0.20f);
   cairo_fill(cr);
 
-  const double text_ratio = 0.75;
-  double text_size = label_size * text_ratio;
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
   g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name),
                                              pango_font_description_free);
-  pango_font_description_set_absolute_size(desc.get(), text_size * PANGO_SCALE);
+  const double text_ratio = 0.75;
+  int text_size = pango_units_from_double(label_size * text_ratio * Settings::Instance().font_scaling());
+  pango_font_description_set_absolute_size(desc.get(), text_size);
   pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_text(layout, &label, 1);
 
-  nux::Size extents;
-  pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
+  PangoRectangle ink_rect;
+  pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
 
   // position and paint text
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  double x = label_x - std::round((extents.width - label_w) / 2.0f);
-  double y = label_y - std::round((extents.height - label_h) / 2.0f);
+  double x = label_x - std::round((ink_rect.width - label_w) / 2.0f) - ink_rect.x;
+  double y = label_y - std::round((ink_rect.height - label_h) / 2.0f) - ink_rect.y;
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
-  return texture_ptr_from_cairo_graphics(cg);
+  return texture_from_cairo_graphics(cg);
 }
 
 void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
@@ -1151,11 +1186,6 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   GfxContext.PopClippingRectangle();
 
   unity::graphics::PopOffscreenRenderTarget();
-}
-
-void IconRenderer::DestroyShortcutTextures()
-{
-  TexturesPool::Get()->labels.clear();
 }
 
 void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,

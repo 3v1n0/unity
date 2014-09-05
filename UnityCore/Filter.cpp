@@ -20,8 +20,6 @@
 #include "Filter.h"
 #include "Filters.h"
 
-#include <NuxCore/Logger.h>
-
 #include "CheckOptionFilter.h"
 #include "MultiRangeFilter.h"
 #include "RadioOptionFilter.h"
@@ -32,7 +30,6 @@ namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.filter");
 
 using unity::glib::Signal;
 

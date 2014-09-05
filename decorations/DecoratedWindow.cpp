@@ -17,7 +17,6 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <NuxCore/Logger.h>
 #include "DecorationsPriv.h"
 #include "DecorationsForceQuitDialog.h"
 #include "DecorationsEdgeBorders.h"
@@ -35,7 +34,6 @@ namespace decoration
 {
 namespace
 {
-DECLARE_LOGGER(logger, "unity.decoration.window");
 const std::string MENUS_PANEL_NAME = "WindowLIM";
 }
 

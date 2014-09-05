@@ -51,6 +51,7 @@ struct GnomeManager::Impl
   void ConfirmShutdown();
   void CancelAction();
   void ClosedDialog();
+  bool HasInhibitors();
   void EnsureCancelPendingAction();
   void LockScreen(bool prompt);
 

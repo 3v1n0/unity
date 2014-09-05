@@ -20,6 +20,7 @@
 
 #include <glib.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibSource.h>
 #include <UnityCore/Variant.h>
 
 #include "DecorationStyle.h"
@@ -59,6 +60,8 @@ const std::string GNOME_SCALE_FACTOR = "scaling-factor";
 const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
 const int DEFAULT_LAUNCHER_WIDTH = 64;
+const int MINIMUM_DESKTOP_HEIGHT = 800;
+const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
 const double DEFAULT_DPI = 96.0f;
 }
 
@@ -89,15 +92,15 @@ public:
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
-    CacheFormFactor();
-    CacheDoubleClickActivate();
-
     // The order is important here, DPI is the last thing to be updated
     UpdateLimSetting();
     UpdateTextScaleFactor();
     UpdateCursorScaleFactor();
     UpdateFontSize();
     UpdateDPI();
+
+    CacheFormFactor();
+    CacheDoubleClickActivate();
 
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
@@ -162,10 +165,11 @@ public:
     if (raw_from_factor == 0) //Automatic
     {
       auto uscreen = UScreen::GetDefault();
-      int primary_monitor = uscreen->GetMonitorWithMouse();
+      int primary_monitor = uscreen->GetPrimaryMonitor();
       auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
+      double monitor_scaling = em(primary_monitor)->DPIScale();
 
-      new_form_factor = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
+      new_form_factor = (geo.height * monitor_scaling) >= MINIMUM_DESKTOP_HEIGHT ? FormFactor::DESKTOP : FormFactor::NETBOOK;
     }
     else
     {
@@ -239,6 +243,17 @@ public:
     cursor_scale_ = g_settings_get_double(ui_settings_, CURSOR_SCALE_FACTOR.c_str());
   }
 
+  EMConverter::Ptr const& em(int monitor) const
+  {
+    if (monitor < 0 || monitor >= (int)monitors::MAX)
+    {
+      LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning index 0 monitor instead.";
+      return em_converters_[0];
+    }
+
+    return em_converters_[monitor];
+  }
+
   void UpdateDPI()
   {
     auto* uscreen = UScreen::GetDefault();
@@ -289,6 +304,7 @@ public:
   void UpdateAppsScaling(double scale)
   {
     changing_gnome_settings_ = true;
+    changing_gnome_settings_timeout_.reset();
     unsigned integer_scaling = std::max<unsigned>(1, scale);
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
@@ -297,7 +313,11 @@ public:
     g_settings_set_int(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str(), cursor_size);
     g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
     g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
-    changing_gnome_settings_ = false;
+
+    changing_gnome_settings_timeout_.reset(new glib::TimeoutSeconds(GNOME_SETTINGS_CHANGED_WAIT_SECONDS, [this] {
+      changing_gnome_settings_ = false;
+      return false;
+    }, glib::Source::Priority::LOW));
   }
 
   Settings* parent_;
@@ -306,6 +326,7 @@ public:
   glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> ubuntu_ui_settings_;
   glib::Object<GSettings> gnome_ui_settings_;
+  glib::Source::UniquePtr changing_gnome_settings_timeout_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
   std::vector<int> launcher_widths_;
@@ -361,13 +382,7 @@ void Settings::SetLowGfxMode(const bool low_gfx)
 
 EMConverter::Ptr const& Settings::em(int monitor) const
 {
-  if (monitor < 0 || monitor >= (int)monitors::MAX)
-  {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning index 0 monitor instead.";
-    return pimpl->em_converters_[0];
-  }
-
-  return pimpl->em_converters_[monitor];
+  return pimpl->em(monitor);
 }
 
 void Settings::SetLauncherWidth(int launcher_width, int monitor)

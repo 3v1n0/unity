@@ -229,6 +229,13 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
       {
         glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
         info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
+
+        if (!info)
+        {
+          // Maybe the icon was just added to the theme, see if a rescan helps.
+          gtk_icon_theme_rescan_if_needed(theme);
+          info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
+        }
       }
       else
       {
@@ -419,7 +426,7 @@ void PanelIndicatorEntryView::Refresh()
       }
     }
 
-    glib::Object<PangoContext> context(gdk_pango_context_get_for_screen(gdk_screen_get_default()));
+    glib::Object<PangoContext> context(gdk_pango_context_get());
     std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
     pango_context_set_font_description(context, desc.get());
     pango_context_set_language(context, gtk_get_default_language());

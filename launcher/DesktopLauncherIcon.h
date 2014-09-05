@@ -41,6 +41,8 @@ protected:
   std::string GetRemoteUri() const;
 
 private:
+  void UpdateTooltipText();
+
   bool show_in_switcher_;
 };
 

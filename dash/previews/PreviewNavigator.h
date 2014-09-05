@@ -43,7 +43,7 @@ class PreviewNavigator :  public debug::Introspectable,
 {
   NUX_DECLARE_OBJECT_TYPE(PreviewNavigator, nux::View);
 public:
-  typedef nux::ObjectPtr<PreviewNavigator> Ptr;  
+  typedef nux::ObjectPtr<PreviewNavigator> Ptr;
   PreviewNavigator(Orientation direction, NUX_FILE_LINE_PROTO);
 
   void SetEnabled(bool enabled);
@@ -53,8 +53,10 @@ public:
   void AddProperties(debug::IntrospectionData&);
 
   sigc::signal<void> activated;
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
+
+  nux::Property<double> scale;
 
 private:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -66,6 +68,7 @@ private:
   void UpdateTexture();
 
   void SetupViews();
+  void UpdateScale(double scale);
 
 private:
   const Orientation direction_;
@@ -77,7 +80,8 @@ private:
     NORMAL,
     ACTIVE
   };
-  VisualState visual_state_; 
+  VisualState visual_state_;
+
 };
 
 } // namespace previews

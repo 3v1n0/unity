@@ -65,8 +65,6 @@ public:
   nux::Property<int> vertical_size;
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
-  nux::Property<int> monitor;
-  nux::Property<double> spread_size;
 
   void SkipAnimation();
 
@@ -135,8 +133,9 @@ private:
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);
 
-  void OnIconSizeChanged (int size);
-  void OnTileSizeChanged (int size);
+  void OnIconSizeChanged(int size);
+  void OnTileSizeChanged(int size);
+  void OnScaleChanged(double scale);
 
   nux::Geometry UpdateRenderTargets(float progress);
   void ResizeRenderTargets(nux::Geometry const& layout_geo, float progress);
@@ -158,6 +157,7 @@ private:
 
   int last_icon_selected_;
   int last_detail_icon_selected_;
+  uint64_t last_mouse_scroll_time_;
   bool check_mouse_first_time_;
 
   DeltaTracker delta_tracker_;

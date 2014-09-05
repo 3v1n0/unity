@@ -29,18 +29,19 @@
 
 namespace
 {
-const int num_stars = 5;
+const int NUM_STARS = 5;
 }
 
 namespace unity
 {
 RatingsButton::RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
+  , star_size_(star_size)
+  , star_gap_(star_gap)
   , editable_(true)
   , rating_(0.0)
   , focused_star_(-1)
-  , star_size_(star_size)
-  , star_gap_(star_gap)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
@@ -58,12 +59,11 @@ RatingsButton::RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_DECL)
 
     QueueDraw();
   });
-  key_nav_focus_activate.connect([this](nux::Area*) { SetRating(static_cast<float>(focused_star_+1)/num_stars); });
-  key_down.connect(sigc::mem_fun(this, &RatingsButton::OnKeyDown));
-}
 
-RatingsButton::~RatingsButton()
-{
+  key_nav_focus_activate.connect([this](nux::Area*) { SetRating(static_cast<float>(focused_star_+1)/NUM_STARS); });
+  key_down.connect(sigc::mem_fun(this, &RatingsButton::OnKeyDown));
+
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &RatingsButton::QueueDraw)));
 }
 
 void RatingsButton::SetEditable(bool editable)
@@ -76,7 +76,7 @@ void RatingsButton::SetEditable(bool editable)
 
 void RatingsButton::SetRating(float rating)
 {
-  rating_  = rating;
+  rating_ = rating;
   QueueDraw();
 }
 
@@ -87,7 +87,7 @@ float RatingsButton::GetRating() const
 
 void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  int rating =  static_cast<int>(rating_ * num_stars);
+  int rating =  static_cast<int>(GetRating() * NUM_STARS);
   // FIXME: 9/26/2011
   // We should probably support an API for saying whether the ratings
   // should or shouldn't support half stars...but our only consumer at
@@ -99,8 +99,8 @@ void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   nux::Geometry const& geo = GetGeometry();
   nux::Geometry geo_star(geo);
-  geo_star.width = star_size_;
-  geo_star.height = star_size_;
+  geo_star.width = star_size_.CP(scale);
+  geo_star.height = star_size_.CP(scale);
 
   gPainter.PaintBackground(GfxContext, geo);
   // set up our texture mode
@@ -123,10 +123,10 @@ void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                        geo.height,
                        col);
 
-  for (int index = 0; index < num_stars; ++index)
+  for (int index = 0; index < NUM_STARS; ++index)
   {
     dash::Style& style = dash::Style::Instance();
-    nux::BaseTexture* texture = style.GetStarSelectedIcon();
+    auto texture = style.GetStarSelectedIcon();
     if (index < total_full_stars)
     {
       if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_NORMAL)
@@ -165,7 +165,7 @@ void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                           nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
     }
 
-    geo_star.x += geo_star.width + star_gap_;
+    geo_star.x += geo_star.width + star_gap_.CP(scale);
 
   }
 
@@ -175,11 +175,11 @@ void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void RatingsButton::UpdateRatingToMouse(int x)
 {
-  int width = num_stars*star_size_ + (num_stars-1)*star_gap_;
+  int width = NUM_STARS*star_size_.CP(scale) + (NUM_STARS-1)*star_gap_.CP(scale);
   float new_rating = (static_cast<float>(x) / width);
 
   // FIXME: change to * 2 once we decide to support also half-stars
-  new_rating = ceil((num_stars * 1) * new_rating) / (num_stars * 1);
+  new_rating = ceil((NUM_STARS * 1) * new_rating) / (NUM_STARS * 1);
   new_rating = (new_rating > 1) ? 1 : ((new_rating < 0) ? 0 : new_rating);
 
   SetRating(new_rating);
@@ -210,8 +210,8 @@ void RatingsButton::RecvMouseMove(int x, int y, int dx, int dy,
   if (!editable_)
     return;
 
-  int width = num_stars*star_size_+ (num_stars-1)*star_gap_;
-  focused_star_ = std::max(0, std::min(static_cast<int>(ceil((static_cast<float>(x) / width) * num_stars) - 1), num_stars - 1));
+  int width = NUM_STARS*star_size_.CP(scale)+ (NUM_STARS-1)*star_gap_.CP(scale);
+  focused_star_ = std::max(0, std::min(static_cast<int>(ceil((static_cast<float>(x) / width) * NUM_STARS) - 1), NUM_STARS - 1));
 
   if (!HasKeyFocus())
     nux::GetWindowCompositor().SetKeyFocusArea(this);
@@ -240,7 +240,7 @@ bool RatingsButton::InspectKeyEvent(unsigned int eventType, unsigned int keysym,
     return false;
   else if (direction == nux::KEY_NAV_LEFT && (focused_star_ <= 0))
     return false;
-  else if (direction == nux::KEY_NAV_RIGHT && (focused_star_ >= num_stars - 1))
+  else if (direction == nux::KEY_NAV_RIGHT && (focused_star_ >= NUM_STARS - 1))
     return false;
   else
    return true;
@@ -283,7 +283,7 @@ void RatingsButton::AddProperties(debug::IntrospectionData& introspection)
 {
   introspection
     .add(GetAbsoluteGeometry())
-    .add("rating", rating_)
+    .add("rating", GetRating())
     .add("focused-star", focused_star_)
     .add("editable", editable_);
 }

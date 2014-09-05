@@ -21,6 +21,7 @@
 #define UNITY_LOCKSCREEN_SHIELD_H
 
 #include <UnityCore/ConnectionManager.h>
+#include <UnityCore/GLibSource.h>
 #include "LockScreenAbstractShield.h"
 
 namespace unity
@@ -32,14 +33,18 @@ class BackgroundSettings;
 class UserAuthenticator;
 class UserPromptView;
 class Panel;
+class CofView;
 
 class Shield : public AbstractShield
 {
 public:
-  Shield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, Accelerators::Ptr const&, int monitor, bool is_primary);
+  Shield(session::Manager::Ptr const&,
+         indicator::Indicators::Ptr const&,
+         Accelerators::Ptr const&,
+         nux::ObjectPtr<UserPromptView> const&,
+         int monitor, bool is_primary);
 
   bool IsIndicatorOpen() const override;
-  void CheckCapsLockPrompt() override;
   void ActivatePanel() override;
 
 protected:
@@ -49,19 +54,22 @@ protected:
 
 private:
   void UpdateBackgroundTexture();
+  void GrabScreen(bool cancel_on_failure);
   void ShowPrimaryView();
   void ShowSecondaryView();
+  void UpdateScale();
   Panel* CreatePanel();
-  UserPromptView* CreatePromptView();
 
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
   nux::ObjectPtr<nux::Layout> primary_layout_;
+  nux::ObjectPtr<nux::Layout> prompt_layout_;
   nux::ObjectPtr<nux::Layout> cof_layout_;
   connection::Wrapper panel_active_conn_;
   connection::Wrapper regrab_conn_;
-  UserPromptView* prompt_view_;
+  glib::Source::UniquePtr regrab_timeout_;
   Panel* panel_view_;
+  CofView* cof_view_;
 };
 
 }

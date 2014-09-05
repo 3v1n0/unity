@@ -27,6 +27,7 @@
 #include <Nux/ScrollView.h>
 #include <UnityCore/Tracks.h>
 #include <UnityCore/ConnectionManager.h>
+#include "unity-shared/OverlayScrollView.h"
 #include "unity-shared/Introspectable.h"
 #include "Track.h"
 
@@ -44,7 +45,7 @@ class Track;
 namespace previews
 {
 
-class Tracks : public debug::Introspectable, public nux::ScrollView
+class Tracks : public debug::Introspectable, public dash::ScrollView
 {
 public:
   typedef nux::ObjectPtr<Tracks> Ptr;
@@ -71,6 +72,9 @@ protected:
   nux::VLayout* layout_;
   std::map<std::string, previews::Track::Ptr> m_tracks;
   connection::Manager sig_conn_;
+
+private:
+  void UpdateScale(double scale);
 };
 
 }

@@ -55,6 +55,8 @@ const std::string USE_SCREEN_READER = "screen-reader-enabled";
 const std::string USE_OSK = "screen-keyboard-enabled";
 }
 
+const RawPixel Settings::GRID_SIZE = 40_em;
+
 struct Settings::Impl
 {
   Impl()

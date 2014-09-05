@@ -45,7 +45,6 @@ class FilterRatingsWidget : public FilterExpanderLabel
   NUX_DECLARE_OBJECT_TYPE(FilterRatingsWidget, FilterExpanderLabel);
 public:
   FilterRatingsWidget(NUX_FILE_LINE_PROTO);
-  virtual ~FilterRatingsWidget();
 
   void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
@@ -54,6 +53,8 @@ protected:
   void ClearRedirectedRenderChildArea();
 
 private:
+  void UpdateSize();
+
   FilterAllButton* all_button_;
   FilterRatingsButton* ratings_;
   RatingsFilter::Ptr filter_;

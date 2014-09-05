@@ -46,6 +46,9 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define N_TIMEOUT_SLOTS 50
 #define MAX_INDICATOR_ENTRIES 100
 
+#define NUX_VERTICAL_SCROLL_DELTA 120
+#define NUX_HORIZONTAL_SCROLL_DELTA (NUX_VERTICAL_SCROLL_DELTA ^ 2)
+
 #define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
 #define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
 #define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
@@ -276,6 +279,15 @@ panel_service_class_init (PanelServiceClass *klass)
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
 
+static gboolean
+is_point_in_rect (gint x, gint y, GdkRectangle* rect)
+{
+  g_return_val_if_fail (rect, FALSE);
+
+  return (x >= rect->x && x <= (rect->x + rect->width) &&
+          y >= rect->y && y <= (rect->y + rect->height));
+}
+
 IndicatorObjectEntry *
 get_entry_at (PanelService *self, gint x, gint y)
 {
@@ -293,8 +305,7 @@ get_entry_at (PanelService *self, gint x, gint y)
           IndicatorObjectEntry *entry = k;
           GdkRectangle *geo = v;
 
-          if (x >= geo->x && x <= (geo->x + geo->width) &&
-              y >= geo->y && y <= (geo->y + geo->height))
+          if (is_point_in_rect (x, y, geo))
             {
               return entry;
             }
@@ -1624,11 +1635,41 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
 }
 
 static int
+get_monitor_at (gint x, gint y)
+{
+  gint i;
+  gdouble scale;
+  GdkScreen *screen = gdk_screen_get_default ();
+  gint monitors = gdk_screen_get_n_monitors (screen);
+
+  for (i = 0; i < monitors; ++i)
+    {
+      GdkRectangle rect = { 0 };
+      gdk_screen_get_monitor_geometry (screen, i, &rect);
+      scale = gdk_screen_get_monitor_scale_factor (screen, i);
+
+      if (scale != 1.0)
+        {
+          rect.x *= scale;
+          rect.y *= scale;
+          rect.width *= scale;
+          rect.height *= scale;
+        }
+
+      if (is_point_in_rect (x, y, &rect))
+        {
+          return i;
+        }
+    }
+
+  return gdk_screen_get_monitor_at_point (screen, x, y);
+}
+
+static int
 get_monitor_scale_at (gint x, gint y)
 {
-  GdkScreen *screen = gdk_screen_get_default ();
-  int monitor = gdk_screen_get_monitor_at_point (screen, x, y);
-  return gdk_screen_get_monitor_scale_factor (screen, monitor);
+  gint monitor = get_monitor_at (x, y);
+  return gdk_screen_get_monitor_scale_factor (gdk_screen_get_default (), monitor);
 }
 
 static void
@@ -1642,7 +1683,7 @@ positon_menu (GtkMenu  *menu,
   PanelServicePrivate *priv = self->priv;
 
   GdkScreen *screen = gdk_screen_get_default ();
-  gint monitor = gdk_screen_get_monitor_at_point (screen, priv->last_x, priv->last_y);
+  gint monitor = get_monitor_at (priv->last_x, priv->last_y);
   gtk_menu_set_monitor (menu, monitor);
 
   gint scale = gdk_screen_get_monitor_scale_factor (screen, monitor);
@@ -2399,9 +2440,28 @@ panel_service_scroll_entry (PanelService   *self,
   entry = get_indicator_entry_by_id (self, entry_id);
   g_return_if_fail (entry);
 
-  GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
+  GdkScrollDirection direction = G_MAXINT;
 
-  object = get_entry_parent_indicator (entry);
-  g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
-                        abs(delta/120), direction);
+  switch (delta)
+    {
+      case NUX_VERTICAL_SCROLL_DELTA:
+        direction = INDICATOR_OBJECT_SCROLL_UP;
+        break;
+      case -NUX_VERTICAL_SCROLL_DELTA:
+        direction = INDICATOR_OBJECT_SCROLL_DOWN;
+        break;
+      case NUX_HORIZONTAL_SCROLL_DELTA:
+        direction = INDICATOR_OBJECT_SCROLL_LEFT;
+        break;
+      case -NUX_HORIZONTAL_SCROLL_DELTA:
+        direction = INDICATOR_OBJECT_SCROLL_RIGHT;
+        break;
+      }
+
+  if (direction != G_MAXINT)
+    {
+      object = get_entry_parent_indicator (entry);
+      g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED,
+                            entry, 1, direction);
+    }
 }

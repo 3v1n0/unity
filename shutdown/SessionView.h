@@ -22,11 +22,13 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 
-#include "UnityCore/SessionManager.h"
+#include <UnityCore/GLibSource.h>
+#include <UnityCore/SessionManager.h>
+#include "unity-shared/EMConverter.h"
 #include "unity-shared/UnityWindowView.h"
-#include "UnityCore/SessionManager.h"
 
 namespace unity
 {
@@ -71,15 +73,19 @@ protected:
 private:
   friend class TestSessionView;
 
+  void PopulateButtons();
   void UpdateText();
-  void Populate();
+  void UpdateContents();
+  void UpdateViewSize();
   void AddButton(Button*);
 
   Manager::Ptr manager_;
   StaticCairoText* title_;
   StaticCairoText* subtitle_;
+  nux::VLayout* main_layout_;
   nux::HLayout* buttons_layout_;
   nux::InputArea* key_focus_area_;
+  glib::Source::UniquePtr cancel_idle_;
 };
 
 } // namespace session

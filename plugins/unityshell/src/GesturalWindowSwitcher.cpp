@@ -115,6 +115,9 @@ GesturalWindowSwitcherPrivate::GesturalWindowSwitcherPrivate()
 
 GestureDeliveryRequest GesturalWindowSwitcherPrivate::GestureEvent(nux::GestureEvent const& event)
 {
+  if (unity_screen->lockscreen_controller()->IsLocked())
+    return GestureDeliveryRequest::NONE;
+
   switch (state)
   {
     case State::WaitingCompoundGesture:

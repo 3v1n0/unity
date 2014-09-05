@@ -47,9 +47,11 @@ public:
   void Suspend();
   void Hibernate();
 
+  bool CanLock() const;
   bool CanShutdown() const;
   bool CanSuspend() const;
   bool CanHibernate() const;
+  bool HasInhibitors() const;
 
   void CancelAction();
 

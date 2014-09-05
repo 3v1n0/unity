@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/ApplicationPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -46,23 +45,31 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.application");
 
-class DetailsScrollView : public nux::ScrollView
+namespace
 {
-public:
-  DetailsScrollView(NUX_FILE_LINE_PROTO)
-  : ScrollView(NUX_FILE_LINE_PARAM)
-  {
-    SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
-  }
+  const RawPixel ICON_SPACE_CHILDREN = 3_em;
+  const RawPixel DATA_SPACE_CHILDREN = 16_em;
+  const RawPixel INFO_SPACE_CHILDREN = 12_em;
+  const RawPixel COPYRIGHT_SPACE_CHILDREN = 8_em;
+  const RawPixel ICON_SIZE = 72_em;
+}
 
-};
+DECLARE_LOGGER(logger, "unity.dash.preview.application");
 
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationPreview);
 
 ApplicationPreview::ApplicationPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, title_subtitle_layout_(nullptr)
+, image_data_layout_(nullptr)
+, main_app_info_(nullptr)
+, icon_layout_(nullptr)
+, app_data_layout_(nullptr)
+, app_updated_copywrite_layout_(nullptr)
+, app_info_layout_(nullptr)
+, app_info_scroll_(nullptr)
+, actions_layout_(nullptr)
 {
   SetupViews();
 }
@@ -121,12 +128,13 @@ void ApplicationPreview::SetupViews()
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
 
-  nux::HLayout* image_data_layout = new nux::HLayout();
-  image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
+  image_data_layout_ = new nux::HLayout();
+  image_data_layout_->SetSpaceBetweenChildren(style.GetPanelSplitWidth().CP(scale));
 
   /////////////////////
   // Image
   image_ = new CoverArt();
+  image_->scale = scale();
   AddChild(image_.GetPointer());
   UpdateCoverArtImage(image_.GetPointer());
   /////////////////////
@@ -134,34 +142,36 @@ void ApplicationPreview::SetupViews()
     /////////////////////
     // App Data Panel
     full_data_layout_ = new nux::VLayout();
-    full_data_layout_->SetPadding(style.GetDetailsTopMargin(), 0, style.GetDetailsBottomMargin(), style.GetDetailsLeftMargin());
-    full_data_layout_->SetSpaceBetweenChildren(16);
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
+    full_data_layout_->SetSpaceBetweenChildren(DATA_SPACE_CHILDREN.CP(scale));
 
       /////////////////////
       // Main App Info
-      nux::HLayout* main_app_info = new nux::HLayout();
-      main_app_info->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails());
+      main_app_info_ = new nux::HLayout();
+      main_app_info_->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails().CP(scale));
 
         /////////////////////
         // Icon Layout
-        nux::VLayout* icon_layout = new nux::VLayout();
-        icon_layout->SetSpaceBetweenChildren(3);
-        app_icon_ = new IconTexture(app_preview_model->app_icon.Get().RawPtr() ? g_icon_to_string(app_preview_model->app_icon.Get().RawPtr()) : "", 72);
+        icon_layout_ = new nux::VLayout();
+        icon_layout_->SetSpaceBetweenChildren(ICON_SPACE_CHILDREN.CP(scale));
+        app_icon_ = new IconTexture(app_preview_model->app_icon.Get().RawPtr() ? g_icon_to_string(app_preview_model->app_icon.Get().RawPtr()) : "", ICON_SIZE.CP(scale));
         AddChild(app_icon_.GetPointer());
-        app_icon_->SetMinimumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
-        app_icon_->SetMaximumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
+        app_icon_->SetMinimumSize(style.GetAppIconAreaWidth().CP(scale), style.GetAppIconAreaWidth().CP(scale));
+        app_icon_->SetMaximumSize(style.GetAppIconAreaWidth().CP(scale), style.GetAppIconAreaWidth().CP(scale));
         app_icon_->mouse_click.connect(on_mouse_down);
-        icon_layout->AddView(app_icon_.GetPointer(), 0);
+        icon_layout_->AddView(app_icon_.GetPointer(), 0);
 
-        if (app_preview_model->rating >= 0) {
+        if (app_preview_model->rating >= 0)
+        {
           app_rating_ = new PreviewRatingsWidget();
           AddChild(app_rating_.GetPointer());
-          app_rating_->SetMaximumHeight(style.GetRatingWidgetHeight());
-          app_rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
+          app_rating_->scale = scale();
+          app_rating_->SetMaximumHeight(style.GetRatingWidgetHeight().CP(scale));
+          app_rating_->SetMinimumHeight(style.GetRatingWidgetHeight().CP(scale));
           app_rating_->SetRating(app_preview_model->rating);
           app_rating_->SetReviews(app_preview_model->num_ratings);
           app_rating_->request_close().connect([this]() { preview_container_->request_close.emit(); });
-          icon_layout->AddView(app_rating_.GetPointer(), 0);
+          icon_layout_->AddView(app_rating_.GetPointer(), 0);
         }
 
         /////////////////////
@@ -169,15 +179,16 @@ void ApplicationPreview::SetupViews()
         /////////////////////
         // Data
 
-        nux::VLayout* app_data_layout = new nux::VLayout();
-        app_data_layout->SetSpaceBetweenChildren(16);
+        app_data_layout_ = new nux::VLayout();
+        app_data_layout_->SetSpaceBetweenChildren(DATA_SPACE_CHILDREN.CP(scale));
 
         title_subtitle_layout_ = new nux::VLayout();
-        title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
+        title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
 
         title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         AddChild(title_.GetPointer());
         title_->SetLines(-1);
+        title_->SetScale(scale);
         title_->SetFont(style.title_font().c_str());
         title_->mouse_click.connect(on_mouse_down);
         title_subtitle_layout_->AddView(title_.GetPointer(), 1);
@@ -188,12 +199,13 @@ void ApplicationPreview::SetupViews()
           AddChild(subtitle_.GetPointer());
           subtitle_->SetFont(style.subtitle_size_font().c_str());
           subtitle_->SetLines(-1);
+          subtitle_->SetScale(scale);
           subtitle_->mouse_click.connect(on_mouse_down);
           title_subtitle_layout_->AddView(subtitle_.GetPointer(), 1);
         }
 
-        nux::VLayout* app_updated_copywrite_layout = new nux::VLayout();
-        app_updated_copywrite_layout->SetSpaceBetweenChildren(8);
+        app_updated_copywrite_layout_ = new nux::VLayout();
+        app_updated_copywrite_layout_->SetSpaceBetweenChildren(COPYRIGHT_SPACE_CHILDREN.CP(scale));
 
         if (!app_preview_model->license.Get().empty())
         {
@@ -201,8 +213,9 @@ void ApplicationPreview::SetupViews()
           AddChild(license_.GetPointer());
           license_->SetFont(style.app_license_font().c_str());
           license_->SetLines(-1);
+          license_->SetScale(scale);
           license_->mouse_click.connect(on_mouse_down);
-          app_updated_copywrite_layout->AddView(license_.GetPointer(), 1);
+          app_updated_copywrite_layout_->AddView(license_.GetPointer(), 1);
         }
 
         if (!app_preview_model->last_update.Get().empty())
@@ -213,8 +226,9 @@ void ApplicationPreview::SetupViews()
           last_update_ = new StaticCairoText(last_update.str(), true, NUX_TRACKER_LOCATION);
           AddChild(last_update_.GetPointer());
           last_update_->SetFont(style.app_last_update_font().c_str());
+          last_update_->SetScale(scale);
           last_update_->mouse_click.connect(on_mouse_down);
-          app_updated_copywrite_layout->AddView(last_update_.GetPointer(), 1);
+          app_updated_copywrite_layout_->AddView(last_update_.GetPointer(), 1);
         }
 
         if (!app_preview_model->copyright.Get().empty())
@@ -223,29 +237,32 @@ void ApplicationPreview::SetupViews()
           AddChild(copywrite_.GetPointer());
           copywrite_->SetFont(style.app_copywrite_font().c_str());
           copywrite_->SetLines(-1);
+          copywrite_->SetScale(scale);
           copywrite_->mouse_click.connect(on_mouse_down);
-          app_updated_copywrite_layout->AddView(copywrite_.GetPointer(), 1);
+          app_updated_copywrite_layout_->AddView(copywrite_.GetPointer(), 1);
         }
 
-        app_data_layout->AddLayout(title_subtitle_layout_);
-        app_data_layout->AddLayout(app_updated_copywrite_layout);
+        app_data_layout_->AddLayout(title_subtitle_layout_);
+        app_data_layout_->AddLayout(app_updated_copywrite_layout_);
 
         // buffer space
         /////////////////////
 
-      main_app_info->AddLayout(icon_layout, 0);
-      main_app_info->AddLayout(app_data_layout, 1);
+      main_app_info_->AddLayout(icon_layout_, 0);
+      main_app_info_->AddLayout(app_data_layout_, 1);
       /////////////////////
 
       /////////////////////
       // Description
-      nux::ScrollView* app_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
+      auto* app_info = new ScrollView(NUX_TRACKER_LOCATION);
+      app_info_scroll_ = app_info; 
+      app_info->scale = scale();
       app_info->EnableHorizontalScrollBar(false);
       app_info->mouse_click.connect(on_mouse_down);
 
-      nux::VLayout* app_info_layout = new nux::VLayout();
-      app_info_layout->SetSpaceBetweenChildren(12);
-      app_info->SetLayout(app_info_layout);
+      app_info_layout_ = new nux::VLayout();
+      app_info_layout_->SetSpaceBetweenChildren(INFO_SPACE_CHILDREN.CP(scale));
+      app_info->SetLayout(app_info_layout_);
 
       if (!preview_model_->description.Get().empty())
       {
@@ -256,36 +273,36 @@ void ApplicationPreview::SetupViews()
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
         description_->mouse_click.connect(on_mouse_down);
-        app_info_layout->AddView(description_.GetPointer());
+        app_info_layout_->AddView(description_.GetPointer());
       }
 
       if (!preview_model_->GetInfoHints().empty())
       {
-        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth().CP(scale));
         AddChild(preview_info_hints_.GetPointer());
         preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
-        app_info_layout->AddView(preview_info_hints_.GetPointer());
+        app_info_layout_->AddView(preview_info_hints_.GetPointer());
       }
       /////////////////////
 
       /////////////////////
       // Actions
       action_buttons_.clear();
-      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
-      actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+      actions_layout_ = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
+      actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
       ///////////////////
 
-    full_data_layout_->AddLayout(main_app_info, 0);
+    full_data_layout_->AddLayout(main_app_info_, 0);
     full_data_layout_->AddView(app_info, 1);
-    full_data_layout_->AddLayout(actions_layout, 0);
+    full_data_layout_->AddLayout(actions_layout_, 0);
     /////////////////////
-  
-  image_data_layout->AddView(image_.GetPointer(), 0);
-  image_data_layout->AddLayout(full_data_layout_, 1);
+
+  image_data_layout_->AddView(image_.GetPointer(), 0);
+  image_data_layout_->AddLayout(full_data_layout_, 1);
 
   mouse_click.connect(on_mouse_down);
 
-  SetLayout(image_data_layout);
+  SetLayout(image_data_layout_);
 }
 
 void ApplicationPreview::PreLayoutManagement()
@@ -296,12 +313,16 @@ void ApplicationPreview::PreLayoutManagement()
 
   nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
-  if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
-    geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+  int content_width = geo.width - style.GetPanelSplitWidth().CP(scale)
+                                - style.GetDetailsLeftMargin().CP(scale)
+                                - style.GetDetailsRightMargin().CP(scale);
+  if (content_width - geo_art.width < style.GetDetailsPanelMinimumWidth().CP(scale))
+    geo_art.width = std::max(0, content_width - style.GetDetailsPanelMinimumWidth().CP(scale));
+
   image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
-  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
-  int top_app_info_max_width = MAX(0, details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails());
+  int details_width = std::max(0, content_width - geo_art.width);
+  int top_app_info_max_width = std::max(0, details_width - style.GetAppIconAreaWidth().CP(scale) - style.GetSpaceBetweenIconAndDetails().CP(scale));
 
   if (title_) { title_->SetMaximumWidth(top_app_info_max_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(top_app_info_max_width); }
@@ -310,12 +331,77 @@ void ApplicationPreview::PreLayoutManagement()
   if (copywrite_) { copywrite_->SetMaximumWidth(top_app_info_max_width); }
   if (description_) { description_->SetMaximumWidth(details_width); }
 
+  int button_w = CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale));
+  int button_h = style.GetActionButtonHeight().CP(scale);
+
   for (nux::AbstractButton* button : action_buttons_)
-  {
-    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
-  }
+    button->SetMinMaxSize(button_w, button_h);
 
   Preview::PreLayoutManagement();
+}
+
+void ApplicationPreview::UpdateScale(double scale)
+{
+  Preview::UpdateScale(scale);
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  if (app_icon_)
+  {
+    app_icon_->SetSize(ICON_SIZE.CP(scale));
+    app_icon_->SetMinimumSize(style.GetAppIconAreaWidth().CP(scale), style.GetAppIconAreaWidth().CP(scale));
+    app_icon_->SetMaximumSize(style.GetAppIconAreaWidth().CP(scale), style.GetAppIconAreaWidth().CP(scale));
+    app_icon_->ReLoadIcon();
+  }
+
+  if (app_info_scroll_)
+    app_info_scroll_->scale = scale;
+
+  if (license_)
+    license_->SetScale(scale);
+
+  if (last_update_)
+    last_update_->SetScale(scale);
+
+  if (copywrite_)
+    copywrite_->SetScale(scale);
+
+  if (app_rating_)
+  {
+    app_rating_->SetMaximumHeight(style.GetRatingWidgetHeight().CP(scale));
+    app_rating_->SetMinimumHeight(style.GetRatingWidgetHeight().CP(scale));
+    app_rating_->scale = scale;
+  }
+
+  if (image_data_layout_)
+    image_data_layout_->SetSpaceBetweenChildren(style.GetPanelSplitWidth().CP(scale));
+
+  if (full_data_layout_)
+  {
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
+    full_data_layout_->SetSpaceBetweenChildren(DATA_SPACE_CHILDREN.CP(scale));
+  }
+
+  if (main_app_info_)
+    main_app_info_->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails().CP(scale));
+
+  if (icon_layout_)
+    icon_layout_->SetSpaceBetweenChildren(ICON_SPACE_CHILDREN.CP(scale));
+
+  if (app_data_layout_)
+    app_data_layout_->SetSpaceBetweenChildren(DATA_SPACE_CHILDREN.CP(scale));
+
+  if (title_subtitle_layout_)
+    title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
+
+  if (app_info_layout_)
+    app_info_layout_->SetSpaceBetweenChildren(INFO_SPACE_CHILDREN.CP(scale));
+
+  if (actions_layout_)
+    actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
+
+  if (app_updated_copywrite_layout_)
+    app_updated_copywrite_layout_->SetSpaceBetweenChildren(COPYRIGHT_SPACE_CHILDREN.CP(scale));
 }
 
 } // namespace previews

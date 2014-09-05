@@ -21,6 +21,7 @@
 #include <gmock/gmock.h>
 
 #include <Nux/Nux.h>
+#include <Nux/VLayout.h>
 #include <Nux/BaseWindow.h>
 #include <unity-shared/StaticCairoText.h>
 #include <unity-shared/CoverArt.h>

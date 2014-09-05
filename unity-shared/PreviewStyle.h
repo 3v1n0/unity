@@ -29,6 +29,8 @@
 #include <string>
 #include <memory>
 
+#include "unity-shared/RawPixel.h"
+
 namespace nux
 {
   class BaseTexture;
@@ -57,38 +59,38 @@ public:
 
   static Style& Instance();
 
-  int GetNavigatorWidth() const;
-  int GetNavigatorIconSize() const;
+  RawPixel GetNavigatorWidth() const;
+  RawPixel GetNavigatorIconSize() const;
 
-  int GetPreviewWidth() const;
-  int GetPreviewHeight() const;
-  int GetPreviewTopPadding() const;
+  RawPixel GetPreviewWidth() const;
+  RawPixel GetPreviewHeight() const;
+  RawPixel GetPreviewTopPadding() const;
 
-  int GetDetailsTopMargin() const;
-  int GetDetailsBottomMargin() const;
-  int GetDetailsRightMargin() const;
-  int GetDetailsLeftMargin() const;
-  int GetPanelSplitWidth() const;
+  RawPixel GetDetailsTopMargin() const;
+  RawPixel GetDetailsBottomMargin() const;
+  RawPixel GetDetailsRightMargin() const;
+  RawPixel GetDetailsLeftMargin() const;
+  RawPixel GetPanelSplitWidth() const;
 
-  int GetSpaceBetweenTitleAndSubtitle() const;
+  RawPixel GetSpaceBetweenTitleAndSubtitle() const;
 
-  int GetActionButtonHeight() const;
-  int GetSpaceBetweenActions() const;
-  int GetActionButtonMaximumWidth() const;
+  RawPixel GetActionButtonHeight() const;
+  RawPixel GetSpaceBetweenActions() const;
+  RawPixel GetActionButtonMaximumWidth() const;
 
-  int GetDetailsPanelMinimumWidth() const;
+  RawPixel GetDetailsPanelMinimumWidth() const;
 
-  int GetInfoHintIconSizeWidth() const;
-  int GetInfoHintNameMinimumWidth() const;
-  int GetInfoHintNameMaximumWidth() const;
+  RawPixel GetInfoHintIconSizeWidth() const;
+  RawPixel GetInfoHintNameMinimumWidth() const;
+  RawPixel GetInfoHintNameMaximumWidth() const;
 
-  int GetCommentNameMinimumWidth() const;
-  int GetCommentNameMaximumWidth() const;
+  RawPixel GetCommentNameMinimumWidth() const;
+  RawPixel GetCommentNameMaximumWidth() const;
 
   float GetDescriptionLineSpacing() const;
-  int GetDescriptionLineCount() const;
+  RawPixel GetDescriptionLineCount() const;
 
-  int GetRatingWidgetHeight() const;
+  RawPixel GetRatingWidgetHeight() const;
 
   bool GetShadowBackgroundEnabled() const;
 
@@ -113,8 +115,8 @@ public:
 
   float GetAppImageAspectRatio() const;
 
-  int GetAppIconAreaWidth() const;
-  int GetSpaceBetweenIconAndDetails() const;
+  RawPixel GetAppIconAreaWidth() const;
+  RawPixel GetSpaceBetweenIconAndDetails() const;
    ////////////////////////////////
 
   ////////////////////////////////
@@ -123,22 +125,22 @@ public:
   std::string u1_warning_font() const;
   nux::BaseTexture* GetWarningIcon();
 
-  int GetTrackHeight() const;
+  RawPixel GetTrackHeight() const;
   ////////////////////////////////
 
   ////////////////////////////////
   // Movie Preview
   float GetVideoImageAspectRatio() const;
 
-  int GetTrackBarHeight() const;
-  int GetMusicDurationWidth() const;
-  int GetStatusIconSize() const;
+  RawPixel GetTrackBarHeight() const;
+  RawPixel GetMusicDurationWidth() const;
+  RawPixel GetStatusIconSize() const;
   ////////////////////////////////
 
   ////////////////////////////////
   // Social Preview
-  int GetAvatarAreaWidth() const;
-  int GetAvatarAreaHeight() const;
+  RawPixel GetAvatarAreaWidth() const;
+  RawPixel GetAvatarAreaHeight() const;
 
   std::string content_font() const;
 
@@ -149,7 +151,6 @@ public:
   nux::BaseTexture* GetPlayIcon();
   nux::BaseTexture* GetPauseIcon();
   nux::BaseTexture* GetLockIcon();
-  nux::BaseTexture* GetSearchSpinIcon(int size = -1);
 
   ////////////////////////////////
   // Payment Preview
@@ -165,13 +166,13 @@ public:
   nux::Color payment_error_color() const;
 
 
-  int GetPaymentIconAreaWidth() const;
-  int GetPaymentTextInputHeight() const;
-  int GetPaymentLockWidth() const;
-  int GetPaymentLockHeight() const;
-  int GetPaymentHeaderWidth() const;
-  int GetPaymentHeaderSpace() const;
-  int GetPaymentFormSpace() const;
+  RawPixel GetPaymentIconAreaWidth() const;
+  RawPixel GetPaymentTextInputHeight() const;
+  RawPixel GetPaymentLockWidth() const;
+  RawPixel GetPaymentLockHeight() const;
+  RawPixel GetPaymentHeaderWidth() const;
+  RawPixel GetPaymentHeaderSpace() const;
+  RawPixel GetPaymentFormSpace() const;
 
   /////////////////////////////////
 

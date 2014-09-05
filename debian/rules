@@ -23,7 +23,7 @@ LIBUNITY_PRIVATE := $(shell pkg-config --libs-only-L unity-protocol-private | se
 
 SCOPES_RECOMMENDS := $(shell perl debian/scopes-recommends-generator /usr/share/unity/client-scopes.json)
 
-cmake_base_options := -DUSE_GSETTINGS=TRUE -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package
+cmake_base_options := -DUSE_GSETTINGS=TRUE -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCMAKE_SYSCONFDIR=/etc -DCOMPIZ_PLUGIN_INSTALL_TYPE=package 
 ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), $(gles2_architectures)))
   cmake_gl_options := -DBUILD_GLES=TRUE -DDISABLE_MAINTAINER_CFLAGS=ON
 endif

@@ -39,6 +39,7 @@ public:
 
   nux::Property<int> x_offset;
   nux::Property<int> y_offset;
+  nux::Property<double> scale;
   
   OverlayRenderer();
   ~OverlayRenderer();

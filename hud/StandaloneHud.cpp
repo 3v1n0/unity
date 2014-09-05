@@ -30,9 +30,14 @@
 #include "HudView.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/PanelStyle.h"
 #include <NuxCore/Logger.h>
 
 DECLARE_LOGGER(logger, "unity.tests.hud");
+
+using namespace unity;
+
+static double scale = 1.0;
 
 class TestRunner
 {
@@ -44,7 +49,6 @@ public:
   void Init ();
   nux::Layout *layout;
   unity::hud::View* hud_view_;
-  unity::Settings dash_settings_;
 
 private:
   unity::hud::Hud hud_service_;
@@ -64,7 +68,8 @@ void TestRunner::Init ()
   LOG_WARNING(logger) << "test init";
   layout = new nux::VLayout();
 
-  hud_view_ = new unity::hud::View();
+  hud_view_ = new hud::View();
+  hud_view_->scale = scale;
 
   layout->AddView (hud_view_, 1, nux::MINOR_POSITION_START);
   nux::GetWindowCompositor().SetKeyFocusArea(hud_view_->default_focus());
@@ -84,15 +89,15 @@ void TestRunner::Init ()
         break;
       }
     }
- 
+
    hud_view_->SetIcon(icon_name, 42, 52, 0);
 
   });
 
   hud_view_->query_activated.connect([this] (unity::hud::Query::Ptr query) {
     hud_service_.ExecuteQuery(query, 0);
-  });  
-  
+  });
+
   hud_view_->query_selected.connect([this] (unity::hud::Query::Ptr query) {
     hud_view_->SetIcon(query->icon_name, 42, 52, 0);
   });
@@ -135,22 +140,33 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
-  
+
   // Slightly higher as we're more likely to test things we know will fail
   nux::logging::configure_logging("unity.hud=debug");
-  
+
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   LOG_DEBUG(logger) << "starting the standalone hud";
   // The instances for the pseudo-singletons.
   unity::Settings settings;
-  unity::dash::Style dash_style;
+  panel::Style panel_style;
+  dash::Style dash_style;
+  unity::glib::Error err;
+
+  GOptionEntry args_parsed[] =
+  {
+    { "scaling-factor", 'f', 0, G_OPTION_ARG_DOUBLE, &scale, "The dash scaling factor", "F" },
+    { NULL }
+  };
+
+  std::shared_ptr<GOptionContext> ctx(g_option_context_new("Standalone Hud"), g_option_context_free);
+  g_option_context_add_main_entries(ctx.get(), args_parsed, NULL);
+  if (!g_option_context_parse(ctx.get(), &argc, &argv, &err))
+    std::cerr << "Got error when parsing arguments: " << err << std::endl;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Hud Prototype Test"),
-                            1200, 768,
-                            0,
-                            &TestRunner::InitWindowThread,
-                            test_runner);
+                            (1200_em).CP(scale), (768_em).CP(scale), 0,
+                            &TestRunner::InitWindowThread, test_runner);
 
   st = nux::CreateSystemThread (NULL, ControlThread, wt);
 

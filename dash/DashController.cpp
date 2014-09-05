@@ -104,7 +104,9 @@ Controller::Controller(Controller::WindowCreator const& create_window)
     }
   });
 
-  WindowManager::Default().initiate_spread.connect(sigc::mem_fun(this, &Controller::HideDash));
+  auto& wm = WindowManager::Default();
+  wm.initiate_spread.connect(sigc::mem_fun(this, &Controller::HideDash));
+  wm.screen_viewport_switch_started.connect(sigc::mem_fun(this, &Controller::HideDash));
 
   dbus_server_.AddObjects(dbus::INTROSPECTION, dbus::PATH);
   dbus_server_.GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) {
@@ -466,8 +468,8 @@ nux::Geometry Controller::GetInputWindowGeometry()
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
 
   nux::Geometry geo(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
-  geo.width += style.GetDashRightTileWidth();
-  geo.height += style.GetDashBottomTileHeight();
+  geo.width += style.GetDashRightTileWidth().CP(view_->scale());
+  geo.height += style.GetDashBottomTileHeight().CP(view_->scale());
   return geo;
 }
 

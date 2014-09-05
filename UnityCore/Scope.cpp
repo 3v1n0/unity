@@ -32,6 +32,12 @@ namespace dash
 {
 DECLARE_LOGGER(logger, "unity.dash.scope");
 
+GQuark
+g_scope_error_quark (void)
+{
+  return g_quark_from_static_string ("g-scope-error-quark");
+}
+
 class Scope::Impl
 {
 public:

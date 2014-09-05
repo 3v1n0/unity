@@ -21,12 +21,19 @@
 #include "TextureCache.h"
 
 #include <sstream>
-#include <NuxCore/Logger.h>
 #include "config.h"
 
 namespace unity
 {
-DECLARE_LOGGER(logger, "unity.internal.texturecache");
+namespace
+{
+// Stolen from boost
+template <class T>
+inline std::size_t hash_combine(std::size_t seed, T const& v)
+{
+  return seed ^ (std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+}
+}
 
 TextureCache& TextureCache::GetDefault()
 {
@@ -42,9 +49,7 @@ nux::BaseTexture* TextureCache::DefaultTexturesLoader(std::string const& name, i
 
 std::size_t TextureCache::Hash(std::string const& id, int width, int height)
 {
-  return ((std::hash<std::string>()(id)
-          ^ (std::hash<int>()(width) << 1)) >> 1)
-          ^ (std::hash<int>()(height) << 1);
+  return hash_combine(hash_combine(std::hash<std::string>()(id), width), height);
 }
 
 TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,

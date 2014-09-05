@@ -1,3 +1,250 @@
+unity (7.3.1+14.10.20140904-0ubuntu1) utopic; urgency=low
+
+  [ Martin Pitt ]
+  * Adjust upstart dependency to upstart-bin. (LP: #1351306)
+
+  [ Brandon Schaefer ]
+  * When Show Desktop is active, it will set the tooltip icon as
+    "Restore Windows". This is per workspace. So each time show_destop
+    bool is updated in PluginAdapter, the Show Desktop icon will update
+    its tooltip if needed. (LP: #1237132)
+  * Use CONFIG instead of CACHE to store the first_run.stamp
+
+  [ Stephen M. Webb ]
+  * update the unity manpage (LP: #1059275)
+
+  [ Andrea Azzarone ]
+  * Share lockscreen password entry between screens. (LP: #1308540)
+
+  [ Marco Trevisan (Treviño) ]
+  * IconRenderer: draw count texture at proper scaling, built by
+    LauncherIcon (LP: #1353070)
+  * LauncherIcon: make the Icon count width depending on the text value
+    width (LP: #796527)
+  * Lockscreen: scale the UI elements based on current monitor scaling
+    (LP: #1292218)
+  * SwitcherView: set progress on icon render args (LP: #1361679)
+  * SearchBar, ActionButtons, IconRenderer: include the font scaling
+    when scaling textual items
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 04 Sep 2014 22:12:54 +0000
+
+unity (7.3.1+14.10.20140811-0ubuntu1) utopic; urgency=medium
+
+  [ Michal Hruby ]
+  * Split out dconf schemas into separate package
+
+  [ Brandon Schaefer ]
+  * Make sure we check if the Quicklist or Alt+F1 key nav is open (so we
+    can close them) Bore checking if something as a WM grab. As we cant
+    open the hud is in Quicklist or KeyNav anymore. (LP: #1353167)
+
+  [ Stephen M. Webb ]
+  * Changed log message on failure to open xpathselect library from an
+    error to a warning. The xpathselect library is used for
+    introspection during automated test runs. It is not an error for
+    this library to be unavailable in normal successful operating
+    conditions. (LP: #1345296)
+
+  [ Andrea Azzarone ]
+  * Add an arrow activator in the lockscreen. (LP: #1332509)
+  * Allow a distinct pam config file for greeter and for lock-screen.
+    (LP: #1305440)
+
+  [ Marco Trevisan (Treviño) ]
+  * Autopilot, Switcher: use correct right/left scroll buttons for
+    next/prev mouse selection (LP: #1353383)
+  * UScreen, PanelService: get monitor at position, ignoring pre-
+    multipled Gdk scale factor Get monitor position based on absolute
+    coordinates, ignoring the pre-multipled scaling factor that Gdk
+    applies to all the monitor sizes. In this way we get the proper
+    monitor index for absolute coordinates, independently from the
+    scaling factor. (LP: #1351591)
+  * ApplicationLauncherIcon: make sure we close the dash if DnD is
+    accepted And we're about to focus the application window(s) (LP:
+    #1350331)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 11 Aug 2014 12:31:11 +0000
+
+unity (7.3.0+14.10.20140731.1-0ubuntu1) utopic; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Brandon Schaefer ]
+  * Fixes FTBFS caused by gcc 4.9. Mostly unused functions. (LP:
+    #1350052)
+
+  [ Andrea Azzarone ]
+  * == Problem == Lockscreen capslock detection doesn't work well with
+    remapped capslocks == Fix == Use gdk keymap to get the state of the
+    caps lock. (LP: #1347735)
+
+  [ Marco Trevisan (Treviño) ]
+  * PlacesOverlayVScrollBar and VScrollBarOverlayWindow: add support for
+    scaling Add a new ScrollView class to create ScrollViews with an
+    OverlayScrollbar and with scaling support. Using them in dash Scopes
+    and Previews. (LP: #1340996)
+  * LockScreenShield: Add GrabScreen function and retry to make sure we
+    really get grab It might happen that the grab is not possible
+    because the PluginAdapter::IsScreenGrabbed request has still not
+    being fully processed, and thus nux is not able to grab the
+    pointer/keyboard. By doing this we instead try to grab the screen,
+    and if this is not happening, we wait a little until we don't get
+    the ungrab event. In this way, if we eventually get the grab, all
+    will work as expected. Otherwise, we cancel the lock request (very
+    unlikely to happen). (LP: #1349128)
+  * PlacesOverlayVScrollBar: redirect the mouse wheel scroll events
+    coming from the thumb to the scrollview This will make the
+    scrollview to handle then and perform the same scrolling action it
+    would do otherwise. (LP: #1340992)
+  * This has a "soft" dependency on lp:~3v1n0/nux/horizontal-scroll-
+    delta/+merge/227070, this means that this code would just work as it
+    used to do (except for the SwitcerView fix) if that nux branch is
+    not used, while it will support correctly horizontal scroll events
+    when both the branches are used. (LP: #1342208)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 31 Jul 2014 18:40:00 +0000
+
+unity (7.3.0+14.10.20140711-0ubuntu1) utopic; urgency=low
+
+  [ Eleni Maria Stea ]
+  * Previews: scale the dash preview contents to match current monitor
+    scaling Improved also the scaling of search-bar, spinner, categories
+    and many other components. (LP: #1339629)
+
+  [ Marco Trevisan (Treviño) ]
+  * Previews: scale the dash preview contents to match current monitor
+    scaling Improved also the scaling of search-bar, spinner, categories
+    and many other components. (LP: #1339629)
+  * DashStyle: return RawPixel's instead of integers for sizes, and
+    avoid duplication in code
+  * FilterWidgets: add support for scaling (LP: #1340171)
+  * OverlayRendering: correctly scale the overlays borders and edges to
+    match settings DashStyle has been modified to return smart pointers
+    of textures that are loaded depending on the scale level. The cache
+    will make sure that we don't duplicate the textures and that they
+    get removed when not needed anymore. Also thanks to this the
+    SearchBarSpinner textures (and the other spinners as well) uses the
+    SVGs scaled at the proper size (I desgined a new SVG for the
+    magnifier, as we only had a PNG). (LP: #1283415)
+  * Hud: scale to match current DPI settings for monitor (LP: #1340477)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Jul 2014 19:59:35 +0000
+
+unity (7.3.0+14.10.20140708-0ubuntu1) utopic; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Stephen M. Webb ]
+  * reduce the scope of the kill command when restarting compiz (LP:
+    #1324114)
+
+  [ Eleni Maria Stea ]
+  * Changed the PreviewStyle.h/cpp to use em sizes (RawPixel).
+  * Added scale factor to Preview (base class), preview container and to
+    the components they contain.
+  * Scaled the ApplicationPreview and the containing widgets and
+    components.
+  * Scaled GenericPreview and its widgets.
+  * scaled ErrorPreview
+  * Scaled MoviePreview and widgets
+
+  [ Pawel Szubert ]
+  * reduce the scope of the kill command when restarting compiz (LP:
+    #1324114)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 08 Jul 2014 14:35:37 +0000
+
+unity (7.3.0+14.10.20140619-0ubuntu1) utopic; urgency=low
+
+  [ Stephen M. Webb ]
+  * bump upstream to 7.3.0
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Andrea Azzarone ]
+  * Remove cross fade effect during lock/unlocking. A simple fading
+    works just fine. (LP: #1312107)
+  * Manually emit nux::Area::geometry_changed beucase nux can fail to
+    emit it. (LP: #1292391)
+
+  [ Marco Trevisan (Treviño) ]
+  * {Panel,Decoration}Style: don't call deprecated
+    gtk_style_context_invalidate function in gtk >= 3.11
+  * PluginAdapter: pass the state to compiz plugins activations Fixes
+    Scale triggering on DnD (LP: #1328615)
+  * LockScreenAcceleratorController: do ther configured action on power
+    special keys press We finally can suspend, shutdown, hibernate or
+    start the screensaver when the screen is locked, using the Suspend,
+    Sleep, Hibernate and PowerOff hardware keys. Also the Shutdown
+    dialog doesn't allow now to lock the session if it is not allowed by
+    settings. (LP: #1306211)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 19 Jun 2014 18:41:55 +0000
+
+unity (7.2.0+14.10.20140607-0ubuntu1) utopic; urgency=low
+
+  [ Chris Townsend ]
+  * Fix issue where the number of Launcher icon pips are not always
+    properly updated when a new window of an already running application
+    is opened. (LP: #1283775)
+  * Fix issue where the Panel shadow would get drawn over drop down
+    windows in full screen windows. (LP: #1316005)
+
+  [ Andrea Azzarone ]
+  * Clear the clipboard when locking the screen. (LP: #1308911)
+  * Disable switcher gestures if screen is locked. Fixed a regression.
+    (LP: #1321043)
+  * Pass the correct options to showLauncherKeyTerminate in
+    UnityScreen::OnLockScreen (LP: #1320438)
+  * Fix skype indicator blinking. (LP: #1310200)
+
+  [ Marco Trevisan (Treviño) ]
+  * PluginAdapter: try to grab the screen to make sure that the screen
+    is not grabbed FocusIn event with NotifyGrab mode is not always
+    triggered by X when a window takes the grab, then we need to ensure
+    that there's no grab by trying to get one. We only care about
+    keyboard here, since pointer grabs don't affect us in general. (LP:
+    #741869)
+  * ShortcutView: use RawPixel's for the size values and convert them to
+    match current scaling Plus dinamically allocate horizontal space,
+    not to cut the text. (LP: #924840)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 07 Jun 2014 16:27:46 +0000
+
+unity (7.2.0+14.10.20140606.1-0ubuntu1) utopic; urgency=low
+
+  [ Alfred Neumayer ]
+  * Restore the launcher position by reversing the animation and
+    unsetting the DND_PUSHED_OFF quirk. (LP: #1304882)
+
+  [ Brandon Schaefer ]
+  * TextInput: move the warning icon inside the input field, render it
+    white (LP: #1307738)
+  * ShutdownView: Scale up the Buttons and Text plus Borders of the
+    UnityWindowView. (LP: #1308323)
+  * Lockscreen warning icon needs a tooltip to say what the warning is
+    about! (LP: #1308288)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: Focus and, in case, Spread the windows on
+    DnD After 1 second that an user is over an icon, that icon should
+    focus the relative application and Spread its windows if it has more
+    than one opened. Correctly handle the DnD scale in launcher, and
+    apply glow to the icon under pointer. (LP: #607796)
+  * SwitcherView: use RawPixel's for the size values and convert them to
+    match current scaling (LP: #1317348)
+
+  [ Chris Townsend ]
+  * Fix issue where scaling the edge illumination up and down with the
+    size of the Launcher icons would cause the illumination border to be
+    offset and smaller than the icon. (LP: #1309739)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 06 Jun 2014 13:55:32 +0000
+
 unity (7.2.0+14.10.20140512.4-0ubuntu1) utopic; urgency=low
 
   [ Stephen M. Webb ]
@@ -2025,7 +2272,6 @@ unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 3317 (ubuntu-unity/next)
-
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   [ Sebastien Bacher ]

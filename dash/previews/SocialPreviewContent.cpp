@@ -23,7 +23,6 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PreviewStyle.h"
-#include <NuxCore/Logger.h>
 #include <Nux/Layout.h>
 
 #include "SocialPreviewContent.h"
@@ -34,20 +33,20 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.previews.social.content");
 
 namespace
 {
-const int BUBBLE_WIDTH = 300;
-const int BUBBLE_HEIGHT = 250;
-const int TAIL_HEIGHT = 50;
+const RawPixel BUBBLE_WIDTH = 300_em;
+const RawPixel BUBBLE_HEIGHT = 250_em;
+const RawPixel TAIL_HEIGHT = 50_em;
 const int TAIL_POS_FROM_RIGHT = 60;
+const RawPixel TEXT_LINE_SPACING = 5_em;
 }
 
-inline nux::Geometry GetBubbleGeometry(nux::Geometry const& geo)
+inline nux::Geometry GetBubbleGeometry(nux::Geometry const& geo, double scale)
 {
-  int width = MIN(BUBBLE_WIDTH, geo.width);
-  int height = MIN(BUBBLE_HEIGHT + TAIL_HEIGHT, geo.height);
+  int width = std::min(BUBBLE_WIDTH.CP(scale), geo.width);
+  int height = std::min(BUBBLE_HEIGHT.CP(scale) + TAIL_HEIGHT.CP(scale), geo.height);
 
   return nux::Geometry(geo.x + (geo.width - width)/2, geo.y + (geo.height - height)/2, width, height);
 }
@@ -56,14 +55,13 @@ NUX_IMPLEMENT_OBJECT_TYPE(SocialPreviewContent);
 
 SocialPreviewContent::SocialPreviewContent(std::string const& text, NUX_FILE_LINE_DECL)
 : View(NUX_FILE_LINE_PARAM)
+, scale(1.0)
 {
   SetupViews();
   if (text.length() > 0)
     SetText(text);
-}
-
-SocialPreviewContent::~SocialPreviewContent()
-{
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &SocialPreviewContent::UpdateScale));
 }
 
 void SocialPreviewContent::SetText(std::string const& text)
@@ -94,7 +92,7 @@ void SocialPreviewContent::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> tex = cr_bubble_->GetTexture()->GetDeviceTexture();
 
-  nux::Geometry geo_bubble(GetBubbleGeometry(geo));
+  nux::Geometry geo_bubble(GetBubbleGeometry(geo, scale));
 
   gfx_engine.QRP_1Tex(geo_bubble.x,
                       geo_bubble.y,
@@ -134,8 +132,9 @@ void SocialPreviewContent::SetupViews()
 
   text_ = new StaticCairoText("", false, NUX_TRACKER_LOCATION);
   text_->SetLines(-8);
+  text_->SetScale(scale);
   text_->SetFont(style.content_font());
-  text_->SetLineSpacing(5);
+  text_->SetLineSpacing(TEXT_LINE_SPACING.CP(scale));
   text_->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_MIDDLE);
   text_->mouse_click.connect(on_mouse_down);
 
@@ -146,17 +145,18 @@ void SocialPreviewContent::SetupViews()
 
   SetLayout(layout);
 
-  cr_bubble_.reset(new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &SocialPreviewContent::RedrawBubble), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+  nux::Geometry bubble_geo = GetGeometry();
+  cr_bubble_.reset(new nux::CairoWrapper(bubble_geo, sigc::bind(sigc::mem_fun(this, &SocialPreviewContent::RedrawBubble), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
 }
 
 void SocialPreviewContent::UpdateBaloonTexture()
 {
   nux::Geometry const& geo = GetGeometry();
 
-  nux::Geometry geo_cr(GetBubbleGeometry(geo));
+  nux::Geometry geo_cr(GetBubbleGeometry(geo, scale));
 
   int max_width = std::max(0, (int)(geo_cr.width - 2*(geo_cr.width*0.1)));
-  int max_height = std::max(0, (int)((geo_cr.height - TAIL_HEIGHT) - 2*((geo_cr.height - TAIL_HEIGHT)*0.1)));
+  int max_height = std::max(0, (int)((geo_cr.height - TAIL_HEIGHT.CP(scale)) - 2*((geo_cr.height - TAIL_HEIGHT.CP(scale))*0.1)));
 
   // this will update the texture with the actual size of the text.
   text_->SetMaximumHeight(max_height);
@@ -165,7 +165,7 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
   // center text
   text_->SetBaseX(geo_cr.x + geo_cr.width/2 - geo_text.width/2);
-  text_->SetBaseY(geo_cr.y + geo_cr.height/2 - geo_text.height/2 - TAIL_HEIGHT/2);
+  text_->SetBaseY(geo_cr.y + geo_cr.height/2 - geo_text.height/2 - TAIL_HEIGHT.CP(scale)/2);
 
   if (geo_cr.width > 0 && geo_cr.height > 0)
   {
@@ -175,8 +175,9 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
 void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  double width = std::max(0, cairo_image_surface_get_width(cairo_get_target(cr)));
-  double height = std::max(0, cairo_image_surface_get_height(cairo_get_target(cr)) - TAIL_HEIGHT);
+  auto* surface = cairo_get_target(cr);
+  double width = std::max(0.0, cairo_image_surface_get_width(surface) / scale());
+  double height = std::max(0.0, cairo_image_surface_get_height(surface) / scale() - TAIL_HEIGHT);
 
   double tailPosition = width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
   if (width > 0 && height > 0)
@@ -222,11 +223,14 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
                    double   tailPosition,
                    double   tailWidth)
 {
+  auto* surface = cairo_get_target(cr);
+
   // sanity check
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS &&
-      cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_IMAGE)
     return;
 
+  cairo_surface_set_device_scale(surface, scale(), scale());
   cairo_set_line_width(cr, line_width);
 
   bool odd = line_width != double((int)line_width);
@@ -312,6 +316,14 @@ std::string SocialPreviewContent::GetName() const
 void SocialPreviewContent::AddProperties(debug::IntrospectionData& introspection)
 {
   introspection.add(GetAbsoluteGeometry());
+}
+
+void SocialPreviewContent::UpdateScale(double scale)
+{
+  if (text_)
+    text_->SetScale(scale);
+
+  UpdateBaloonTexture();
 }
 
 }

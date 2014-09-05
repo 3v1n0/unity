@@ -32,24 +32,32 @@ namespace unity
 namespace lockscreen
 {
 
+class UserPromptView;
+
 class AbstractShield : public MockableBaseWindow
 {
 public:
-  AbstractShield(session::Manager::Ptr const& session, indicator::Indicators::Ptr const& indicators, Accelerators::Ptr const& accelerators, int monitor_num, bool is_primary)
+  AbstractShield(session::Manager::Ptr const& session,
+                 indicator::Indicators::Ptr const& indicators,
+                 Accelerators::Ptr const& accelerators,
+                 nux::ObjectPtr<UserPromptView> const& prompt_view,
+                 int monitor_num, bool is_primary)
     : MockableBaseWindow("Unity Lockscreen")
     , primary(is_primary)
     , monitor(monitor_num)
+    , scale(1.0)
     , session_manager_(session)
     , indicators_(indicators)
     , accelerators_(accelerators)
+    , prompt_view_(prompt_view)
   {}
 
   nux::Property<bool> primary;
   nux::Property<int> monitor;
+  nux::Property<double> scale;
 
   using MockableBaseWindow::RemoveLayout;
   virtual bool IsIndicatorOpen() const = 0;
-  virtual void CheckCapsLockPrompt() = 0;
   virtual void ActivatePanel() = 0;
 
   sigc::signal<void, int, int> grab_motion;
@@ -59,6 +67,7 @@ protected:
   session::Manager::Ptr session_manager_;
   indicator::Indicators::Ptr indicators_;
   Accelerators::Ptr accelerators_;
+  nux::ObjectPtr<UserPromptView> prompt_view_;
 };
 
 } // lockscreen

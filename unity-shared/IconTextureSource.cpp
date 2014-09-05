@@ -19,6 +19,7 @@
 
 #include "IconTextureSource.h"
 #include "MultiMonitor.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -34,11 +35,16 @@ namespace
 IconTextureSource::IconTextureSource()
   : skip_(RENDERERS_SIZE, false)
   , had_emblem_(RENDERERS_SIZE, false)
+  , last_count_(RENDERERS_SIZE, 0)
   , last_render_center_(RENDERERS_SIZE)
   , last_logical_center_(RENDERERS_SIZE)
   , last_rotation_(RENDERERS_SIZE)
   , transformations_(RENDERERS_SIZE, decltype(transformations_)::value_type(TRANSFORM_SIZE, std::vector<nux::Vector4>(4)))
-{}
+{
+  auto reset_count_cb = sigc::mem_fun(this, &IconTextureSource::ResetLastCount);
+  Settings::Instance().dpi_changed.connect(reset_count_cb);
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(reset_count_cb));
+}
 
 std::vector<nux::Vector4> & IconTextureSource::GetTransform(TransformIndex index, int monitor)
 {
@@ -89,6 +95,36 @@ void IconTextureSource::RememberEmblem(int monitor, bool has_emblem)
 bool IconTextureSource::HadEmblem(int monitor) const
 {
   return had_emblem_[monitor];
+}
+
+void IconTextureSource::RememberCount(int monitor, unsigned count)
+{
+  last_count_[monitor] = count;
+}
+
+unsigned IconTextureSource::LastCount(int monitor) const
+{
+  return last_count_[monitor];
+}
+
+unsigned IconTextureSource::Count() const
+{
+  return 0;
+}
+
+void IconTextureSource::ResetLastCount()
+{
+  std::fill(last_count_.begin(), last_count_.end(), 0);
+}
+
+nux::BaseTexture* IconTextureSource::Emblem() const
+{
+  return nullptr;
+}
+
+nux::BaseTexture* IconTextureSource::CountTexture(double scale)
+{
+  return nullptr;
 }
 
 }

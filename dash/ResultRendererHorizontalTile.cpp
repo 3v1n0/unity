@@ -247,8 +247,8 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
                                       0.0f,
                                       0.0f,
                                       CARD_VIEW_HIGHLIGHT_CORNER_RADIUS,
-                                      width,
-                                      height,
+                                      width/scale(),
+                                      height/scale(),
                                       false);
   cairo_fill(cr);
 

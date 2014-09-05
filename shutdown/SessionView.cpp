@@ -20,9 +20,10 @@
 #include "SessionView.h"
 #include "SessionButton.h"
 
-#include <Nux/VLayout.h>
 #include <UnityCore/GLibWrapper.h>
 #include <glib/gi18n-lib.h>
+
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -31,15 +32,15 @@ namespace session
 
 namespace style
 {
-  const std::string FONT = "Ubuntu Light";
-  const std::string TITLE_FONT = FONT+" 15";
-  const std::string SUBTITLE_FONT = FONT+" 12";
+  std::string const FONT = "Ubuntu Light";
+  std::string const TITLE_FONT = FONT+" 15";
+  std::string const SUBTITLE_FONT = FONT+" 12";
 
-  const unsigned LEFT_RIGHT_PADDING = 30;
-  const unsigned TOP_PADDING = 19;
-  const unsigned BOTTOM_PADDING = 12;
-  const unsigned MAIN_SPACE = 10;
-  const unsigned BUTTONS_SPACE = 20;
+  RawPixel const LEFT_RIGHT_PADDING = 30_em;
+  RawPixel const TOP_PADDING        = 19_em;
+  RawPixel const BOTTOM_PADDING     = 12_em;
+  RawPixel const MAIN_SPACE         = 10_em;
+  RawPixel const BUTTONS_SPACE      = 20_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
@@ -51,18 +52,15 @@ View::View(Manager::Ptr const& manager)
   , key_focus_area_(this)
 {
   closable = true;
-  auto main_layout = new nux::VLayout();
-  main_layout->SetTopAndBottomPadding(style::TOP_PADDING, style::BOTTOM_PADDING);
-  main_layout->SetLeftAndRightPadding(style::LEFT_RIGHT_PADDING);
-  main_layout->SetSpaceBetweenChildren(style::MAIN_SPACE);
-  SetLayout(main_layout);
+  main_layout_ = new nux::VLayout();
+  SetLayout(main_layout_);
 
   title_ = new StaticCairoText("");
   title_->SetFont(style::TITLE_FONT);
   title_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
   title_->SetInputEventSensitivity(false);
   title_->SetVisible(false);
-  main_layout->AddView(title_);
+  main_layout_->AddView(title_);
 
   subtitle_ = new StaticCairoText("");
   subtitle_->SetFont(style::SUBTITLE_FONT);
@@ -70,11 +68,10 @@ View::View(Manager::Ptr const& manager)
   subtitle_->SetInputEventSensitivity(false);
   subtitle_->SetLines(std::numeric_limits<int>::min());
   subtitle_->SetLineSpacing(2);
-  main_layout->AddView(subtitle_);
+  main_layout_->AddView(subtitle_);
 
   buttons_layout_ = new nux::HLayout();
-  buttons_layout_->SetSpaceBetweenChildren(style::BUTTONS_SPACE);
-  main_layout->AddLayout(buttons_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_PERCENTAGE, 0.0f);
+  main_layout_->AddLayout(buttons_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_PERCENTAGE, 0.0f);
 
   GetBoundingArea()->mouse_click.connect([this] (int, int, unsigned long, unsigned long) { request_close.emit(); });
 
@@ -94,13 +91,43 @@ View::View(Manager::Ptr const& manager)
     return false;
   });
 
-  mode.changed.connect([this] (Mode m) {
-    UpdateText();
-    Populate();
-  });
+  mode.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateContents)));
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateViewSize)));
+  UpdateContents();
+}
 
+void View::UpdateContents()
+{
+  SetVisible(true);
+  PopulateButtons();
   UpdateText();
-  Populate();
+  UpdateViewSize();
+}
+
+void View::UpdateViewSize()
+{
+  main_layout_->SetTopAndBottomPadding(style::TOP_PADDING.CP(scale()), style::BOTTOM_PADDING.CP(scale()));
+  main_layout_->SetLeftAndRightPadding(style::LEFT_RIGHT_PADDING.CP(scale()));
+  main_layout_->SetSpaceBetweenChildren(style::MAIN_SPACE.CP(scale()));
+
+  title_->SetScale(scale());
+  subtitle_->SetScale(scale());
+
+  ReloadCloseButtonTexture();
+
+  buttons_layout_->SetSpaceBetweenChildren(style::BUTTONS_SPACE.CP(scale()));
+  auto const& buttons = buttons_layout_->GetChildren();
+
+  for (auto* area : buttons)
+    static_cast<Button*>(area)->scale = scale();
+
+  if (buttons.size() == 1)
+  {
+    auto* button = buttons.front();
+    button->ComputeContentSize();
+    int padding = button->GetWidth()/2 + style::MAIN_SPACE.CP(scale())/2;
+    buttons_layout_->SetLeftAndRightPadding(padding, padding);
+  }
 }
 
 void View::UpdateText()
@@ -181,19 +208,26 @@ void View::UpdateText()
   subtitle_->SetText(glib::String(g_strdup_printf(message.c_str(), name.c_str())).Str());
 }
 
-void View::Populate()
+void View::PopulateButtons()
 {
   debug::Introspectable::RemoveAllChildren();
   buttons_layout_->Clear();
+  buttons_layout_->SetLeftAndRightPadding(0, 0);
   key_focus_area_ = this;
 
   if (mode() == Mode::LOGOUT)
   {
-    auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
-    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
-    AddButton(button);
+    if (manager_->is_locked())
+      return;
 
-    button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
+    if (manager_->CanLock())
+    {
+      auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
+      AddButton(button);
+    }
+
+    auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
     key_focus_area_ = button;
     AddButton(button);
@@ -202,20 +236,23 @@ void View::Populate()
   {
     if (mode() == Mode::FULL)
     {
-      auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
-      AddButton(button);
+      if (manager_->CanLock())
+      {
+        auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
+        button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
+        AddButton(button);
+      }
 
       if (manager_->CanSuspend())
       {
-        button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
+        auto* button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
         AddButton(button);
       }
 
       if (manager_->CanHibernate())
       {
-        button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
+        auto* button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
         AddButton(button);
       }
@@ -232,17 +269,26 @@ void View::Populate()
       key_focus_area_ = (mode() == Mode::SHUTDOWN) ? button : key_focus_area_;
       AddButton(button);
     }
-    else if (mode() == Mode::FULL)
+    else if (mode() == Mode::FULL && !manager_->is_locked())
     {
       auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
       AddButton(button);
     }
   }
+
+  cancel_idle_.reset();
+  if (buttons_layout_->GetChildren().empty())
+  {
+    // There's nothing to show here, let's cancel the action and hide
+    SetVisible(false);
+    cancel_idle_.reset(new glib::Idle([this] { request_close.emit(); return false; }));
+  }
 }
 
 void View::AddButton(Button* button)
 {
+  button->scale = scale();
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
   debug::Introspectable::AddChild(button);

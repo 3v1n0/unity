@@ -90,6 +90,7 @@ protected:
   void OnActionLinkActivated(ActionLink* link, std::string const& id);
 
   virtual void SetupViews();
+  virtual void UpdateScale(double scale) override;
 
   void PreLayoutManagement();
 

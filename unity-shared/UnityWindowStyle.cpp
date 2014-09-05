@@ -16,19 +16,114 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  *              Marco Trevisan <marco.trevisan@canonical.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
+#include <NuxCore/Logger.h>
+
+#include "UnitySettings.h"
 #include "UnityWindowStyle.h"
+#include "UScreen.h"
 #include "config.h"
 
-namespace unity {
-namespace ui {
+#include <unordered_set>
+
+namespace unity
+{
+namespace ui
+{
+namespace
+{
+  const char* const SWITCHER_TOP    = PKGDATADIR"/switcher_top.png";
+  const char* const SWITCHER_LEFT   = PKGDATADIR"/switcher_left.png";
+  const char* const SWITCHER_CORNER = PKGDATADIR"/switcher_corner.png";
+
+  const char* const DIALOG_CLOSE     = PKGDATADIR"/dialog_close.png";
+  const char* const DIALOG_HIGHLIGHT = PKGDATADIR"/dialog_close_highlight.png";
+  const char* const DIALOG_PRESS     = PKGDATADIR"/dialog_close_press.png";
+
+
+  RawPixel const INTERNAL_OFFSET = 20_em;
+  RawPixel const BORDER_SIZE     = 30_em;
+  RawPixel const CLOSE_PADDING   =  3_em;
+}
+
+DECLARE_LOGGER(logger, "unity.ui.unity.window.style");
+
 
 UnityWindowStyle::UnityWindowStyle()
 {
-  background_top_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true));
-  background_left_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true));
-  background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
+  unsigned monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+  auto& settings = Settings::Instance();
+
+  // Pre-load scale values per monitor
+  for (unsigned i = 0; i < monitors; ++i)
+  {
+    double scale = settings.Instance().em(i)->DPIScale();
+
+    if (unity_window_textures_.find(scale) == unity_window_textures_.end())
+      LoadAllTextureInScale(scale);
+  }
+
+  settings.Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowStyle::CleanUpUnusedTextures));
+  UScreen::GetDefault()->changed.connect(sigc::mem_fun(this, &UnityWindowStyle::OnMonitorChanged));
+}
+
+void UnityWindowStyle::LoadAllTextureInScale(double scale)
+{
+  auto& window_textures = unity_window_textures_[scale];
+
+  window_textures[unsigned(WindowTextureType::BACKGROUND_TOP)]    = LoadTexture(scale, SWITCHER_TOP);
+  window_textures[unsigned(WindowTextureType::BACKGROUND_LEFT)]   = LoadTexture(scale, SWITCHER_LEFT);
+  window_textures[unsigned(WindowTextureType::BACKGROUND_CORNER)] = LoadTexture(scale, SWITCHER_CORNER);
+
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON)]             = LoadTexture(scale, DIALOG_CLOSE);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON_HIGHLIGHTED)] = LoadTexture(scale, DIALOG_HIGHLIGHT);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON_PRESSED)]     = LoadTexture(scale, DIALOG_PRESS);
+}
+
+nux::BaseTexture* UnityWindowStyle::LoadTexture(double scale, const char* const texture_name) const
+{
+  RawPixel max_size = GetDefaultMaxTextureSize(texture_name);
+  return nux::CreateTexture2DFromFile(texture_name, max_size.CP(scale), true);
+}
+
+RawPixel UnityWindowStyle::GetDefaultMaxTextureSize(const char* const texture_name) const
+{
+  nux::Size size;
+  gdk_pixbuf_get_file_info(texture_name, &size.width, &size.height);
+  RawPixel max_size = std::max(std::round(size.width), std::round(size.height));
+
+  return max_size;
+}
+
+void UnityWindowStyle::OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors)
+{
+  CleanUpUnusedTextures();
+}
+
+// Get current in use scale values, if a scaled value is allocated, but
+// not in use clean up the scaled textures in unity_window_textures
+void UnityWindowStyle::CleanUpUnusedTextures()
+{
+  unsigned monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+  auto& settings = Settings::Instance();
+  std::unordered_set<double> used_scales;
+
+  for (unsigned i = 0; i < monitors; ++i)
+    used_scales.insert(settings.em(i)->DPIScale());
+
+  for (auto it = unity_window_textures_.begin(); it != unity_window_textures_.end();)
+  {
+    if (used_scales.find(it->first) == used_scales.end())
+    {
+      it = unity_window_textures_.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
 }
 
 UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
@@ -38,60 +133,38 @@ UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
   return instance;
 }
 
-int UnityWindowStyle::GetBorderSize() const
+int UnityWindowStyle::GetBorderSize(double scale) const
 {
-  return 30; // as measured from textures
+  return BORDER_SIZE.CP(scale); // as measured from textures
 }
 
-int UnityWindowStyle::GetInternalOffset() const
+int UnityWindowStyle::GetInternalOffset(double scale) const
 {
-  return 20;
+  return INTERNAL_OFFSET.CP(scale);
 }
 
-int UnityWindowStyle::GetCloseButtonPadding() const
+int UnityWindowStyle::GetCloseButtonPadding(double scale) const
 {
-  return 3;
+  return CLOSE_PADDING.CP(scale);
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon()
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetTexture(double scale, WindowTextureType const& type)
 {
-  if (!close_icon_)
-    close_icon_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close.png", -1, true));
+  auto it = unity_window_textures_.find(scale);
+  if (it == unity_window_textures_.end())
+  {
+    LoadAllTextureInScale(scale);
 
-  return close_icon_;
+    it = unity_window_textures_.find(scale);
+    if (it == unity_window_textures_.end())
+    {
+      LOG_ERROR(logger) << "Failed to create unity window style textures, for scale size: " << scale;
+      return BaseTexturePtr(nullptr);
+    }
+  }
+
+  return it->second[unsigned(type)];
 }
 
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconHighligted()
-{
-  if (!close_icon_highlighted_)
-    close_icon_highlighted_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_highlight.png", -1, true));
-
-  return close_icon_highlighted_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconPressed()
-{
-  if (!close_icon_pressed_)
-    close_icon_pressed_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_press.png", -1, true));
-
-  return close_icon_pressed_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundTop() const
-{
-  return background_top_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundLeft() const
-{
-  return background_left_;
-}
-
-UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundCorner() const
-{
-  return background_corner_;
-}
-
-
-}
-}
+} // namespace ui
+} // namespace unity

@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
+#include "lockscreen/UserPromptView.h"
 #include "lockscreen/LockScreenController.h"
 
 #include <Nux/NuxTimerTickSource.h>
@@ -29,6 +30,7 @@ using namespace testing;
 
 #include "lockscreen/LockScreenSettings.h"
 #include "lockscreen/ScreenSaverDBusManager.h"
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
 #include "test_mock_session_manager.h"
@@ -52,17 +54,20 @@ const unsigned TICK_DURATION =  10 * 1000;
 struct MockShield : AbstractShield
 {
   MockShield()
-    : AbstractShield(nullptr, nullptr, nullptr, 0, false)
+    : AbstractShield(nullptr, nullptr, nullptr, nux::ObjectPtr<UserPromptView>(), 0, false)
   {}
 
   MOCK_CONST_METHOD0(IsIndicatorOpen, bool());
-  MOCK_METHOD0(CheckCapsLockPrompt, void());
   MOCK_METHOD0(ActivatePanel, void());
 };
 
 struct ShieldFactoryMock : ShieldFactoryInterface
 {
-  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, Accelerators::Ptr const&, int, bool) override
+  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
+                                              indicator::Indicators::Ptr const&,
+                                              Accelerators::Ptr const&,
+                                              nux::ObjectPtr<UserPromptView> const&,
+                                              int, bool) override
   {
     return nux::ObjectPtr<AbstractShield>(new MockShield());
   }
@@ -96,6 +101,7 @@ struct TestLockScreenController : Test
   nux::animation::AnimationController animation_controller;
 
   MockUScreen uscreen;
+  unity::dash::Style dash_style;
   unity::panel::Style panel_style;
   unity::lockscreen::Settings lockscreen_settings;
   session::MockManager::Ptr session_manager;

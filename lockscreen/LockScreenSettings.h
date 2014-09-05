@@ -21,6 +21,7 @@
 #define UNITY_LOCKSCREEN_SETTINGS_H
 
 #include <NuxCore/Property.h>
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -48,7 +49,7 @@ public:
   nux::Property<bool> lock_on_suspend;
   nux::Property<bool> use_legacy;
 
-  static const int GRID_SIZE = 40;
+  static const RawPixel GRID_SIZE;
 
 private:
   struct Impl;
