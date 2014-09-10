@@ -109,8 +109,8 @@
         'application:///messaging-app.desktop',
         'application:///address-book-app.desktop',
         'application:///ubuntu-system-settings.desktop', 
-        'application:///camera-app.desktop',
-        'application:///gallery-app.desktop',
+        'appid://com.ubuntu.camera/camera/current-user-version',
+        'appid://com.ubuntu.gallery/gallery/current-user-version',
         'application:///webbrowser-app.desktop'
       ]</default>
       <summary>List of items that should be shown by default in the launcher</summary>
