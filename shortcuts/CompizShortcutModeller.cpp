@@ -283,13 +283,13 @@ void CompizModeller::AddWorkspaceHints(std::list<shortcut::AbstractHint::Ptr> &h
 
   hints.push_back(std::make_shared<shortcut::Hint>(workspaces, "", _(" + Arrow Keys"),
                                                    _("Switches workspaces."),
-                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   shortcut::OptionType::COMPIZ_METAKEY,
                                                    WALL_PLUGIN_NAME,
                                                    WALL_OPTION_LEFT_KEY));
 
   hints.push_back(std::make_shared<shortcut::Hint>(workspaces, "", _(" + Arrow Keys"),
                                                    _("Moves focused window to another workspace."),
-                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   shortcut::OptionType::COMPIZ_METAKEY,
                                                    WALL_PLUGIN_NAME,
                                                    WALL_OPTION_LEFT_WINDOW_KEY));
 }
