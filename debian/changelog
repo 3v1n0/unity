@@ -1,3 +1,14 @@
+unity (7.3.1+14.10.20140915-0ubuntu1) utopic; urgency=low
+
+  [ Michael Zanetti ]
+  * add "items" key to Launcher schema to be used by unity8 (LP:
+    #1300650)
+
+  [ Andrea Azzarone ]
+  * Use COMPIZ_METAKEY where needed. (LP: #1363534)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 15 Sep 2014 12:35:45 +0000
+
 unity (7.3.1+14.10.20140904-0ubuntu1) utopic; urgency=low
 
   [ Martin Pitt ]
