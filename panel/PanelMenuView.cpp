@@ -73,8 +73,24 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , ignore_menu_visibility_(false)
   , integrated_menus_(decoration::Style::Get()->integrated_menus())
   , active_xid_(0)
-  , desktop_name_(_("Ubuntu Desktop"))
 {
+  std::ifstream fin("/etc/os-release");
+  std::string temp,os_release_name = _("Ubuntu");
+  if (fin.is_open())
+  {
+    while( getline(fin,temp) )
+    {    
+	    if (temp.substr(0,4) == "NAME")
+      {
+		    size_t i = temp.find_first_of("\"");
+		    size_t j = temp.find_last_of("\"");
+		    os_release_name = temp.substr(i+1, j-i-1);
+		    break;
+	    }
+    }
+    fin.close();
+  }
+  desktop_name_ = g_strdup_printf(_("%s Desktop"), os_release_name.c_str());
 
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
   if (BAMF_IS_WINDOW(active_win))
