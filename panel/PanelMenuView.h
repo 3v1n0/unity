@@ -188,7 +188,7 @@ private:
 
   Window active_xid_;
   nux::Geometry monitor_geo_;
-  std::string desktop_name_;
+  const std::string desktop_name_;
 
   glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::Signal<void, BamfMatcher*, BamfView*> view_closed_signal_;
