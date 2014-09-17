@@ -60,7 +60,6 @@ std::string get_current_desktop()
   std::ifstream fin("/etc/os-release");
   std::string temp;
   std::string os_release_name("Ubuntu");
-  std::string desktop_name;
 
   if (fin.is_open())
   {
@@ -75,12 +74,11 @@ std::string get_current_desktop()
     fin.close();
   }
 
-  if (os_release_name == "Ubuntu")
-    desktop_name = _("Ubuntu Desktop");
+  //this is done to avoid breaking translation before 14.10.
+  if (os_release_name.empty() || os_release_name == "Ubuntu")
+    return _("Ubuntu Desktop");
   else
-    desktop_name = g_strdup_printf(_("%s Desktop"), os_release_name.c_str());
-
-  return desktop_name;
+    return glib::String(g_strdup_printf(_("%s Desktop"), os_release_name.c_str())).Str();
 }
 }
 
