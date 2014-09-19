@@ -110,12 +110,37 @@ void Panel::AddIndicator(Indicator::Ptr const& indicator)
     return;
 
   indicators_view_->AddIndicator(indicator);
+
+  if (!active)
+  {
+    for (auto const& entry : indicator->GetEntries())
+    {
+      if (entry->active())
+      {
+        active = true;
+        break;
+      }
+    }
+  }
+
   QueueRelayout();
   QueueDraw();
 }
 
 void Panel::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
 {
+  if (active)
+  {
+    for (auto const& entry : indicator->GetEntries())
+    {
+      if (entry->active())
+      {
+        active = false;
+        break;
+      }
+    }
+  }
+
   indicators_view_->RemoveIndicator(indicator);
   QueueRelayout();
   QueueDraw();
