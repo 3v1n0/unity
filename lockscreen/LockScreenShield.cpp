@@ -19,7 +19,6 @@
 
 #include "LockScreenShield.h"
 
-#include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/PaintLayer.h>
@@ -39,7 +38,6 @@ namespace lockscreen
 {
 namespace
 {
-DECLARE_LOGGER(logger, "unity.lockscreen.shield");
 const unsigned MAX_GRAB_WAIT = 100;
 }
 
