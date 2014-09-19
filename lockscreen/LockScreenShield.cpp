@@ -40,7 +40,7 @@ namespace lockscreen
 namespace
 {
 DECLARE_LOGGER(logger, "unity.lockscreen.shield");
-const unsigned MAX_GRAB_WAIT = 50;
+const unsigned MAX_GRAB_WAIT = 100;
 }
 
 Shield::Shield(session::Manager::Ptr const& session_manager,
@@ -123,6 +123,7 @@ void Shield::GrabScreen(bool cancel_on_failure)
   {
     regrab_conn_->disconnect();
     regrab_timeout_.reset();
+    grabbed.emit();
   }
   else
   {
@@ -132,12 +133,17 @@ void Shield::GrabScreen(bool cancel_on_failure)
     if (cancel_on_failure)
     {
       regrab_timeout_.reset(new glib::Timeout(MAX_GRAB_WAIT, [this] {
-        LOG_ERROR(logger) << "Impossible to get the grab to lock the screen";
-        session_manager_->unlock_requested.emit();
+        grab_failed.emit();
         return false;
       }));
     }
   }
+}
+
+bool Shield::HasGrab() const
+{
+  auto& wc = nux::GetWindowCompositor();
+  return (wc.GetPointerGrabArea() == this && wc.GetKeyboardGrabArea() == this);
 }
 
 void Shield::ShowPrimaryView()

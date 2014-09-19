@@ -44,6 +44,7 @@ public:
          nux::ObjectPtr<UserPromptView> const&,
          int monitor, bool is_primary);
 
+  bool HasGrab() const override;
   bool IsIndicatorOpen() const override;
   void ActivatePanel() override;
 
