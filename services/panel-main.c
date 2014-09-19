@@ -82,6 +82,9 @@ static const gchar introspection_xml[] =
   "      <arg type='i' name='delta' direction='in'/>"
   "    </method>"
   ""
+  ""
+  "    <method name='CloseActiveEntry' />"
+  ""
   "    <signal name='EntryActivated'>"
   "     <arg type='s' name='panel_id' />"
   "     <arg type='s' name='entry_id' />"
@@ -253,6 +256,11 @@ handle_method_call (GDBusConnection       *connection,
       panel_service_scroll_entry (service, entry_id, delta);
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free(entry_id);
+    }
+  else if (g_strcmp0 (method_name, "CloseActiveEntry") == 0)
+    {
+      panel_service_close_active_entry (service);
+      g_dbus_method_invocation_return_value (invocation, NULL);
     }
 }
 

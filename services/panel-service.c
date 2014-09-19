@@ -2421,6 +2421,8 @@ panel_service_secondary_activate_entry (PanelService *self, const gchar *entry_i
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
 
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
   entry = get_indicator_entry_by_id (self, entry_id);
   g_return_if_fail (entry);
 
@@ -2436,6 +2438,8 @@ panel_service_scroll_entry (PanelService   *self,
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
 
   entry = get_indicator_entry_by_id (self, entry_id);
   g_return_if_fail (entry);
@@ -2463,5 +2467,16 @@ panel_service_scroll_entry (PanelService   *self,
       object = get_entry_parent_indicator (entry);
       g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED,
                             entry, 1, direction);
+    }
+}
+
+void
+panel_service_close_active_entry (PanelService *self)
+{
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  if (GTK_IS_MENU (self->priv->last_menu))
+    {
+      gtk_menu_popdown (GTK_MENU (self->priv->last_menu));
     }
 }
