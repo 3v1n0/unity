@@ -55,6 +55,7 @@ struct DBusIndicators::Impl
   void Sync(GVariant* args, glib::Error const&);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
   void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
+  void CloseActiveEntry();
 
   void OnConnected();
   void OnDisconnected();
@@ -313,6 +314,11 @@ void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
   gproxy_.Call("ScrollEntry", g_variant_new("(si)", entry_id.c_str(), delta));
 }
 
+void DBusIndicators::Impl::CloseActiveEntry()
+{
+  gproxy_.Call("CloseActiveEntry");
+}
+
 void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
 {
   if (!args || error)
@@ -487,6 +493,11 @@ void DBusIndicators::ShowEntriesDropdown(Indicator::Entries const& entries,
                                          unsigned xid, int x, int y)
 {
   pimpl->ShowEntriesDropdown(entries, selected, xid, x, y);
+}
+
+void DBusIndicators::CloseActiveEntry()
+{
+  pimpl->CloseActiveEntry();
 }
 
 void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)
