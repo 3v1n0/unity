@@ -177,6 +177,9 @@ bool IsWindowShadowDecorable(CompWindow* win)
   if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
     return false;
 
+  if (win->inShowDesktopMode())
+    return false;
+
   if (win->region().numRects() != 1) // Non rectangular windows
     return false;
   else if (win->region().boundingRect() != win->geometry())
