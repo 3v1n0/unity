@@ -478,8 +478,16 @@ void Window::Impl::UpdateDecorationTextures()
 
 void Window::Impl::ComputeShadowQuads()
 {
-  if (last_shadow_rect_.isEmpty() && !ShadowDecorated())
+  if (last_shadow_rect_.isEmpty())
+  {
+    if (!ShadowDecorated())
+      return;
+  }
+  else if (!ShadowDecorated())
+  {
+    last_shadow_rect_ = CompRect();
     return;
+  }
 
   const auto* texture = ShadowTexture();
 
