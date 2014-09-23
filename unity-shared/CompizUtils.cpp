@@ -179,6 +179,8 @@ bool IsWindowShadowDecorable(CompWindow* win)
 
   if (win->region().numRects() != 1) // Non rectangular windows
     return false;
+  else if (win->region().boundingRect() != win->geometry())
+    return false;
 
   if (win->alpha())
     return WindowHasMotifDecorations(win);
