@@ -281,6 +281,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompositeScreenInterface::setHandler(cScreen);
      GLScreenInterface::setHandler(gScreen);
      ScaleScreenInterface::setHandler(sScreen);
+     screen->updateSupportedWmHints();
 
      PluginAdapter::Initialize(screen);
      AddChild(&WindowManager::Default());
