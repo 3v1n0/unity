@@ -46,8 +46,9 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , frame_(0)
   , monitor_(0)
   , dirty_geo_(true)
-  , last_mwm_decor_(0)
-  , last_actions_(0)
+  , dirty_frame_(false)
+  , last_mwm_decor_(win_->mwmDecor())
+  , last_actions_(win_->actions())
   , cv_(Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
@@ -189,10 +190,10 @@ void Window::Impl::UpdateFrame()
 
 void Window::Impl::UpdateFrameActions()
 {
-  if (win_->mwmDecor() != last_mwm_decor_ || win_->actions() != last_actions_)
+  if (!dirty_frame_ && (win_->mwmDecor() != last_mwm_decor_ || win_->actions() != last_actions_))
   {
-    CleanupWindowControls();
-    Update();
+    dirty_frame_ = true;
+    Damage();
   }
 }
 
@@ -358,6 +359,7 @@ void Window::Impl::SetupWindowControls()
   top_layout_->Append(title_layout);
 
   input_mixer_->PushToFront(top_layout_);
+  dirty_frame_ = false;
 
   SetupAppMenu();
   RedrawDecorations();
@@ -576,6 +578,13 @@ void Window::Impl::Paint(GLMatrix const& transformation,
 {
   if (dirty_geo_)
     parent_->UpdateDecorationPosition();
+
+  if (dirty_frame_)
+  {
+    dirty_frame_ = false;
+    CleanupWindowControls();
+    Update();
+  }
 }
 
 void Window::Impl::Draw(GLMatrix const& transformation,

@@ -125,6 +125,7 @@ private:
   ::Window frame_;
   int monitor_;
   bool dirty_geo_;
+  bool dirty_frame_;
   unsigned last_mwm_decor_;
   unsigned last_actions_;
 
