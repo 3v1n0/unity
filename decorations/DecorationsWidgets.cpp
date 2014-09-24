@@ -255,7 +255,7 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
     return;
 
   ctx->vertexBuffer()->begin();
-  ctx->glAddGeometry({texture_.quad.matrix}, texture_.quad.box, clip);
+  ctx->glAddGeometry(texture_.quad.matrices, texture_.quad.box, clip);
 
   if (ctx->vertexBuffer()->end())
     ctx->glDrawTexture(texture_, transformation, attrib, mask);

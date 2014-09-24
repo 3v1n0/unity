@@ -31,8 +31,14 @@ namespace compiz_utils
 
 struct TextureQuad
 {
+  TextureQuad()
+  : matrices(1)
+  , matrix(matrices[0])
+  {}
+
   CompRect box;
-  GLTexture::Matrix matrix;
+  GLTexture::MatrixList matrices;
+  GLTexture::Matrix& matrix;
 };
 
 struct SimpleTexture

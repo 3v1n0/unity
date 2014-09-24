@@ -613,7 +613,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   for (unsigned i = 0; i < shadow_quads_.size(); ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
-    glwin_->glAddGeometry({quad.matrix}, CompRegion(quad.box) - win_->region(), clip_region);
+    glwin_->glAddGeometry(quad.matrices, CompRegion(quad.box) - win_->region(), clip_region);
   }
 
   if (glwin_->vertexBuffer()->end())
@@ -625,7 +625,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
       continue;
 
     glwin_->vertexBuffer()->begin();
-    glwin_->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
+    glwin_->glAddGeometry(dtex.quad.matrices, dtex.quad.box, clip_region);
 
     if (glwin_->vertexBuffer()->end())
       glwin_->glDrawTexture(dtex, transformation, attrib, mask);
