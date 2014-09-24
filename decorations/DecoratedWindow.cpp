@@ -444,6 +444,7 @@ void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
   }
 
   deco_tex.SetCoords(geo.x, geo.y);
+  deco_tex.quad.region = deco_tex.quad.box;
 }
 
 void Window::Impl::UpdateDecorationTextures()
@@ -575,6 +576,12 @@ void Window::Impl::ComputeShadowQuads()
 
   if (shadows_rect != last_shadow_rect_)
   {
+    auto const& win_region = win_->region();
+    quads[Quads::Pos::TOP_LEFT].region = CompRegion(quads[Quads::Pos::TOP_LEFT].box) - win_region;
+    quads[Quads::Pos::TOP_RIGHT].region = CompRegion(quads[Quads::Pos::TOP_RIGHT].box) - win_region;
+    quads[Quads::Pos::BOTTOM_LEFT].region = CompRegion(quads[Quads::Pos::BOTTOM_LEFT].box) - win_region;
+    quads[Quads::Pos::BOTTOM_RIGHT].region = CompRegion(quads[Quads::Pos::BOTTOM_RIGHT].box) - win_region;
+
     last_shadow_rect_ = shadows_rect;
     win_->updateWindowOutputExtents();
   }
@@ -613,7 +620,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   for (unsigned i = 0; i < shadow_quads_.size(); ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
-    glwin_->glAddGeometry(quad.matrices, CompRegion(quad.box) - win_->region(), clip_region);
+    glwin_->glAddGeometry(quad.matrices, quad.region, clip_region);
   }
 
   if (glwin_->vertexBuffer()->end())
@@ -625,7 +632,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
       continue;
 
     glwin_->vertexBuffer()->begin();
-    glwin_->glAddGeometry(dtex.quad.matrices, dtex.quad.box, clip_region);
+    glwin_->glAddGeometry(dtex.quad.matrices, dtex.quad.region, clip_region);
 
     if (glwin_->vertexBuffer()->end())
       glwin_->glDrawTexture(dtex, transformation, attrib, mask);
