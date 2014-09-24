@@ -37,6 +37,7 @@ struct TextureQuad
   {}
 
   CompRect box;
+  CompRegion region;
   GLTexture::MatrixList matrices;
   GLTexture::Matrix& matrix;
 };
