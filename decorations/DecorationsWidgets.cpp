@@ -226,6 +226,12 @@ void Item::AddProperties(debug::IntrospectionData& data)
 
 //
 
+TexturedItem::TexturedItem()
+  : dirty_region_(false)
+{
+  geo_parameters_changed.connect([this] { dirty_region_ = true; });
+}
+
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 {
   auto prev_geo = Geometry();
@@ -254,8 +260,14 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
   if (!visible || Geometry().isEmpty() || !texture_)
     return;
 
+  if (dirty_region_)
+  {
+    texture_.quad.region = texture_.quad.box;
+    dirty_region_ = false;
+  }
+
   ctx->vertexBuffer()->begin();
-  ctx->glAddGeometry(texture_.quad.matrices, texture_.quad.box, clip);
+  ctx->glAddGeometry(texture_.quad.matrices, texture_.quad.region, clip);
 
   if (ctx->vertexBuffer()->end())
     ctx->glDrawTexture(texture_, transformation, attrib, mask);
