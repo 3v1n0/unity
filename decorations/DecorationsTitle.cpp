@@ -80,6 +80,7 @@ void Title::RenderTexture()
 
   Style::Get()->DrawTitle(text(), state, text_ctx, texture_size_.width / scale(), texture_size_.height / scale(), bg_geo * (1.0/scale));
   SetTexture(text_ctx);
+  texture_.UpdateMatrix();
 }
 
 void Title::SetX(int x)
