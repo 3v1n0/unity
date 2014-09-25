@@ -169,6 +169,8 @@ int CairoContext::height() const
   return cairo_xlib_surface_get_height(surface_);
 }
 
+//
+
 bool IsWindowShadowDecorable(CompWindow* win)
 {
   if (!win)
@@ -185,7 +187,7 @@ bool IsWindowShadowDecorable(CompWindow* win)
 
   if (win->region().numRects() != 1) // Non rectangular windows
     return false;
-  else if (win->region().boundingRect() != win->geometry())
+  else if (win->region().boundingRect() != win->geometry()) // Shaped windows
     return false;
 
   if (win->alpha())
