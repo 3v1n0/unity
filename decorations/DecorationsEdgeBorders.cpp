@@ -33,14 +33,21 @@ EdgeBorders::EdgeBorders(CompWindow* win)
 {
   items_.resize(size_t(Edge::Type::Size));
 
-  for (unsigned i = 0; i < unsigned(Edge::Type::Size); ++i)
+  if (win->actions() & CompWindowActionResizeMask)
   {
-    auto type = Edge::Type(i);
+    for (unsigned i = 0; i < unsigned(Edge::Type::Size); ++i)
+    {
+      auto type = Edge::Type(i);
 
-    if (type == Edge::Type::GRAB)
-      items_[i] = std::make_shared<GrabEdge>(win);
-    else
-      items_[i] = std::make_shared<Edge>(win, type);
+      if (type == Edge::Type::GRAB)
+        items_[i] = std::make_shared<GrabEdge>(win);
+      else
+        items_[i] = std::make_shared<Edge>(win, type);
+    }
+  }
+  else /*if (win->actions() & CompWindowActionMoveMask)*/
+  {
+    items_[unsigned(Edge::Type::GRAB)] = std::make_shared<GrabEdge>(win);
   }
 
   Relayout();
@@ -58,6 +65,12 @@ void EdgeBorders::DoRelayout()
                 std::max(ib.right, MIN_CORNER_EDGE),
                 std::max(ib.top, MIN_CORNER_EDGE),
                 std::max(ib.bottom, MIN_CORNER_EDGE));
+
+  grab_edge->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top - b.top);
+  grab_edge->SetSize(rect_.width() - ib.left - ib.right, b.top);
+
+  if (!(win->actions() & CompWindowActionResizeMask))
+    return;
 
   auto item = items_[unsigned(Edge::Type::TOP)];
   item->SetCoords(rect_.x() + edges.left, rect_.y());
@@ -90,10 +103,6 @@ void EdgeBorders::DoRelayout()
   item = items_[unsigned(Edge::Type::BOTTOM_RIGHT)];
   item->SetCoords(rect_.x2() - edges.right, rect_.y2() - edges.bottom);
   item->SetSize(edges.right, edges.bottom);
-
-  item = items_[unsigned(Edge::Type::GRAB)];
-  item->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top - b.top);
-  item->SetSize(rect_.width() - ib.left - ib.right, b.top);
 }
 
 Item::Ptr const& EdgeBorders::GetEdge(Edge::Type type) const
