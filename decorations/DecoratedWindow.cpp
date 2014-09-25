@@ -150,11 +150,16 @@ void Window::Impl::SetupExtents()
                            cv_->CP(sb.top),
                            cv_->CP(sb.bottom));
 
-  auto const& ib = Style::Get()->InputBorder();
-  CompWindowExtents input(cv_->CP(sb.left + ib.left),
-                          cv_->CP(sb.right + ib.right),
-                          cv_->CP(sb.top + ib.top),
-                          cv_->CP(sb.bottom + ib.bottom));
+  CompWindowExtents input(border);
+
+  if (win_->actions() & CompWindowActionResizeMask)
+  {
+    auto const& ib = Style::Get()->InputBorder();
+    input.left += cv_->CP(ib.left);
+    input.right += cv_->CP(ib.right);
+    input.top += cv_->CP(ib.top);
+    input.bottom += cv_->CP(ib.bottom);
+  }
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
