@@ -313,12 +313,14 @@ void Window::Impl::SetupWindowControls()
   dpi_changed_ = Settings::Instance().dpi_changed.connect([this] {
     Update();
     top_layout_->scale = cv_->DPIScale();
+    edge_borders_->scale = cv_->DPIScale();
   });
 
   input_mixer_ = std::make_shared<InputMixer>();
   auto edges = std::make_shared<EdgeBorders>(win_);
   grab_edge_ = edges->GetEdge(Edge::Type::GRAB);
   edge_borders_ = edges;
+  edge_borders_->scale = cv_->DPIScale();
 
   input_mixer_->PushToFront(edge_borders_);
 
@@ -741,6 +743,9 @@ void Window::Impl::UpdateMonitor()
 
     if (top_layout_)
       top_layout_->scale = cv_->DPIScale();
+
+    if (edge_borders_)
+      edge_borders_->scale = cv_->DPIScale();
   }
 }
 

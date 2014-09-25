@@ -26,11 +26,13 @@ namespace decoration
 {
 namespace
 {
-const int MIN_CORNER_EDGE = 10;
+const RawPixel MIN_CORNER_EDGE = 10_em;
 }
 
 EdgeBorders::EdgeBorders(CompWindow* win)
 {
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &EdgeBorders::Relayout)));
+
   if (win->actions() & CompWindowActionResizeMask)
   {
     items_.resize(size_t(Edge::Type::Size));
@@ -62,10 +64,11 @@ void EdgeBorders::DoRelayout()
   auto const& ib = win->input();
 
   using namespace compiz::window::extents;
-  Extents edges(std::max(ib.left, MIN_CORNER_EDGE),
-                std::max(ib.right, MIN_CORNER_EDGE),
-                std::max(ib.top, MIN_CORNER_EDGE),
-                std::max(ib.bottom, MIN_CORNER_EDGE));
+  int min_corner_edge = MIN_CORNER_EDGE.CP(scale);
+  Extents edges(std::max(ib.left, min_corner_edge),
+                std::max(ib.right, min_corner_edge),
+                std::max(ib.top, min_corner_edge),
+                std::max(ib.bottom, min_corner_edge));
 
   grab_edge->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top - b.top);
   grab_edge->SetSize(rect_.width() - ib.left - ib.right, b.top);
