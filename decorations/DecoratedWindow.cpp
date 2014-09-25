@@ -311,18 +311,9 @@ void Window::Impl::SetupWindowControls()
   });
 
   input_mixer_ = std::make_shared<InputMixer>();
-
-  if (win_->actions() & CompWindowActionResizeMask)
-  {
-    auto edges = std::make_shared<EdgeBorders>(win_);
-    grab_edge_ = edges->GetEdge(Edge::Type::GRAB);
-    edge_borders_ = edges;
-  }
-  else /*if (win_->actions() & CompWindowActionMoveMask)*/
-  {
-    edge_borders_ = std::make_shared<GrabEdge>(win_);
-    grab_edge_ = edge_borders_;
-  }
+  auto edges = std::make_shared<EdgeBorders>(win_);
+  grab_edge_ = edges->GetEdge(Edge::Type::GRAB);
+  edge_borders_ = edges;
 
   input_mixer_->PushToFront(edge_borders_);
 
@@ -846,7 +837,8 @@ void Window::AddProperties(debug::IntrospectionData& data)
 {
   data.add(impl_->win_->borderRect())
   .add("input_geo", impl_->win_->inputRect())
-  .add("content_geo", impl_->win_->region().boundingRect())
+  .add("content_geo", impl_->win_->geometry())
+  .add("region", impl_->win_->region().boundingRect())
   .add("title", title())
   .add("active", impl_->active())
   .add("scaled", scaled())
