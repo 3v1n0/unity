@@ -31,10 +31,10 @@ const int MIN_CORNER_EDGE = 10;
 
 EdgeBorders::EdgeBorders(CompWindow* win)
 {
-  items_.resize(size_t(Edge::Type::Size));
-
   if (win->actions() & CompWindowActionResizeMask)
   {
+    items_.resize(size_t(Edge::Type::Size));
+
     for (unsigned i = 0; i < unsigned(Edge::Type::Size); ++i)
     {
       auto type = Edge::Type(i);
@@ -47,6 +47,7 @@ EdgeBorders::EdgeBorders(CompWindow* win)
   }
   else /*if (win->actions() & CompWindowActionMoveMask)*/
   {
+    items_.resize(size_t(Edge::Type::GRAB) + 1);
     items_[unsigned(Edge::Type::GRAB)] = std::make_shared<GrabEdge>(win);
   }
 
@@ -69,7 +70,7 @@ void EdgeBorders::DoRelayout()
   grab_edge->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top - b.top);
   grab_edge->SetSize(rect_.width() - ib.left - ib.right, b.top);
 
-  if (!(win->actions() & CompWindowActionResizeMask))
+  if (items_.size() != size_t(Edge::Type::Size))
     return;
 
   auto item = items_[unsigned(Edge::Type::TOP)];
