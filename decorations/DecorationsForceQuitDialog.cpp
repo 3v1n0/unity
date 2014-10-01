@@ -141,7 +141,7 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
 
   auto const& deco_style = decoration::Style::Get();
   auto const& offset = deco_style->ShadowOffset();
-  int max_offset = std::max(std::abs(offset.x), std::abs(offset.y));
+  int max_offset = std::max(std::abs(offset.x * 4), std::abs(offset.y * 4));
   gtk_container_set_border_width(GTK_CONTAINER(self), deco_style->ActiveShadowRadius()+max_offset);
 
   auto* screen = gtk_window_get_screen(self);
@@ -265,7 +265,7 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
     background-color: #f7f6f5;
     color: #4a4a4a;
     border-radius: )"+std::to_string(decoration_radius)+R"(px;
-    box-shadow: )"+std::to_string(offset.x)+"px "+std::to_string(offset.y)+"px "+
+    box-shadow: )"+std::to_string(2 * offset.x)+"px "+std::to_string(2 * offset.y)+"px "+
                    std::to_string(deco_style->ActiveShadowRadius())+"px "+
                    "rgba("+std::to_string(int(color.red * 255.0))+", "+
                            std::to_string(int(color.green * 255.0))+", "+
