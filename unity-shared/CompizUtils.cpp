@@ -217,7 +217,7 @@ unsigned WindowDecorationElements(CompWindow* win)
       elements |= DecorationElement::BORDER;
   }
 
-  if (alpha && !(elements & DecorationElement::BORDER))
+  if (alpha && !(elements & DecorationElement::BORDER) && !(win->mwmDecor() & MwmDecorBorder))
     elements &= ~DecorationElement::SHADOW;
 
   return elements;
