@@ -173,7 +173,8 @@ int CairoContext::height() const
 {
   return cairo_xlib_surface_get_height(surface_);
 }
-// 
+
+//
 //
 
 unsigned WindowDecorationElements(CompWindow* win)
@@ -192,13 +193,18 @@ unsigned WindowDecorationElements(CompWindow* win)
   if (win->inShowDesktopMode())
     return elements;
 
-  if (win->region().numRects() != 1) // Non rectangular windows
+  auto const& region = win->region();
+  bool rectangular = (region.numRects() == 1);
+  bool alpha = win->alpha();
+
+  if (!rectangular && alpha) // Non-rectangular windows with alpha channel
     return elements;
 
-  if (win->region().boundingRect() != win->geometry()) // Shaped windows
+  if (region.boundingRect() != win->geometry()) // Shaped windows
     return elements;
 
-  elements |= DecorationElement::SHADOW;
+  if (rectangular)
+    elements |= DecorationElement::SHADOW;
 
   if (!win->overrideRedirect() &&
       (win->type() & DECORABLE_WINDOW_TYPES) &&
@@ -207,11 +213,11 @@ unsigned WindowDecorationElements(CompWindow* win)
     if (win->actions() & CompWindowActionResizeMask)
       elements |= DecorationElement::EDGE;
 
-    if (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
+    if (rectangular && (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle)))
       elements |= DecorationElement::BORDER;
   }
 
-  if (!(elements & DecorationElement::BORDER) && win->alpha())
+  if (alpha && !(elements & DecorationElement::BORDER))
     elements &= ~DecorationElement::SHADOW;
 
   return elements;
