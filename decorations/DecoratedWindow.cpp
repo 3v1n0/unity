@@ -171,10 +171,10 @@ void Window::Impl::SetupExtents()
   if (deco_elements_ & cu::DecorationElement::BORDER)
   {
     auto const& sb = Style::Get()->Border();
-    border.left = sb.left;
-    border.right = sb.right;
-    border.top = sb.top;
-    border.bottom = sb.bottom;
+    border.left = cv_->CP(sb.left);
+    border.right = cv_->CP(sb.right);
+    border.top = cv_->CP(sb.top);
+    border.bottom = cv_->CP(sb.bottom);
   }
 
   CompWindowExtents input(border);
@@ -523,7 +523,7 @@ void Window::Impl::ComputeShadowQuads()
   if (!(deco_elements_ & cu::DecorationElement::SHADOW))
   {
     if (!last_shadow_rect_.isEmpty())
-      last_shadow_rect_ = CompRect();
+      last_shadow_rect_.setGeometry(0, 0, 0, 0);
 
     return;
   }
