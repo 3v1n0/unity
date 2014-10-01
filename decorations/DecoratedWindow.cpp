@@ -110,25 +110,7 @@ Window::Impl::~Impl()
 void Window::Impl::Update()
 {
   UpdateElements();
-
-  if (deco_elements_ & cu::DecorationElement::BORDER)
-  {
-    Decorate();
-  }
-  else if (deco_elements_ & cu::DecorationElement::EDGE)
-  {
-    CleanupWindowControls();
-    bg_textures_.clear();
-
-    SetupExtents();
-    UpdateFrame();
-    SetupWindowEdges();
-  }
-  else
-  {
-    Undecorate();
-  }
-
+  (deco_elements_ & (cu::DecorationElement::EDGE | cu::DecorationElement::BORDER)) ? Decorate() : Undecorate();
   last_mwm_decor_ = win_->mwmDecor();
   last_actions_ = win_->actions();
 }
@@ -138,7 +120,16 @@ void Window::Impl::Decorate()
   SetupExtents();
   UpdateFrame();
   SetupWindowEdges();
-  SetupWindowControls();
+
+  if (deco_elements_ & cu::DecorationElement::BORDER)
+  {
+    SetupWindowControls();
+  }
+  else
+  {
+    CleanupWindowControls();
+    bg_textures_.clear();
+  }
 }
 
 void Window::Impl::Undecorate()
