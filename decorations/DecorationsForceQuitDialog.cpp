@@ -259,9 +259,11 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
   auto const& radius = deco_style->CornerRadius();
   auto const& offset = deco_style->ShadowOffset();
   auto const& color = deco_style->ActiveShadowColor();
+  auto const& backcolor = deco_style->InactiveShadowColor();
   int decoration_radius = std::max({radius.top, radius.left, radius.right, radius.bottom});
 
-  gtk_css_provider_load_from_data(style, (R"(SheetStyleDialog {
+  gtk_css_provider_load_from_data(style, (R"(
+  SheetStyleDialog {
     background-color: #f7f6f5;
     color: #4a4a4a;
     border-radius: )"+std::to_string(decoration_radius)+R"(px;
@@ -271,6 +273,18 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
                            std::to_string(int(color.green * 255.0))+", "+
                            std::to_string(int(color.blue * 255.0))+", "+
                            std::to_string(int(color.alpha))+'.'+std::to_string(int(color.alpha*10000.0))+')'+R"(;
+  }
+
+  SheetStyleDialog:backdrop {
+    background-color: shade(#f7f6f5, 1.2);
+    color: shade(#4a4a4a, 1.5);
+    border-radius: )"+std::to_string(decoration_radius)+R"(px;
+    box-shadow: )"+std::to_string(2 * offset.x)+"px "+std::to_string(2 * offset.y)+"px "+
+                   std::to_string(deco_style->InactiveShadowRadius())+"px "+
+                   "rgba("+std::to_string(int(backcolor.red * 255.0))+", "+
+                           std::to_string(int(backcolor.green * 255.0))+", "+
+                           std::to_string(int(backcolor.blue * 255.0))+", "+
+                           std::to_string(int(backcolor.alpha))+'.'+std::to_string(int(backcolor.alpha*10000.0))+')'+R"(;
   })").c_str(), -1, nullptr);
 
   auto* style_ctx = gtk_widget_get_style_context(self);
