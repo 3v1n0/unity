@@ -119,9 +119,20 @@ private:
   cairo_t *cr_;
 };
 
+enum DecorationElement
+{
+  NONE = 0,
+  EDGE = (1 << 0),
+  SHADOW = (1 << 1),
+  BORDER = (1 << 2),
+  FULL = EDGE|SHADOW|BORDER
+};
+
+unsigned WindowDecorationElements(CompWindow*);
+
+bool IsWindowEdgeDecorable(CompWindow*);
 bool IsWindowShadowDecorable(CompWindow*);
 bool IsWindowFullyDecorable(CompWindow*);
-bool WindowHasMotifDecorations(CompWindow*);
 
 } // compiz_utils namespace
 } // unity namespace

@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2013 Canonical Ltd
+* Copyright (C) 2013-2014 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -30,6 +30,11 @@ namespace
 {
   const unsigned PIXMAP_DEPTH  = 32;
   const float    DEFAULT_SCALE = 1.0f;
+  const unsigned DECORABLE_WINDOW_TYPES = CompWindowTypeDialogMask |
+                                          CompWindowTypeModalDialogMask |
+                                          CompWindowTypeUtilMask |
+                                          CompWindowTypeMenuMask |
+                                          CompWindowTypeNormalMask;
 }
 
 SimpleTexture::SimpleTexture(GLTexture::List const& tex)
@@ -168,65 +173,63 @@ int CairoContext::height() const
 {
   return cairo_xlib_surface_get_height(surface_);
 }
-
+// 
 //
+
+unsigned WindowDecorationElements(CompWindow* win)
+{
+  unsigned elements = DecorationElement::NONE;
+
+  if (!win)
+    return elements;
+
+  if (!win->isViewable())
+    return elements;
+
+  if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
+    return elements;
+
+  if (win->inShowDesktopMode())
+    return elements;
+
+  if (win->region().numRects() != 1) // Non rectangular windows
+    return elements;
+
+  if (win->region().boundingRect() != win->geometry()) // Shaped windows
+    return elements;
+
+  elements |= DecorationElement::SHADOW;
+
+  if (!win->overrideRedirect() &&
+      (win->type() & DECORABLE_WINDOW_TYPES) &&
+      (win->frame() || win->hasUnmapReference()))
+  {
+    if (win->actions() & CompWindowActionResizeMask)
+      elements |= DecorationElement::EDGE;
+
+    if (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
+      elements |= DecorationElement::BORDER;
+  }
+
+  if (!(elements & DecorationElement::BORDER) && win->alpha())
+    elements &= ~DecorationElement::SHADOW;
+
+  return elements;
+}
+
+bool IsWindowEdgeDecorable(CompWindow* win)
+{
+  return WindowDecorationElements(win) & DecorationElement::EDGE;
+}
 
 bool IsWindowShadowDecorable(CompWindow* win)
 {
-  if (!win)
-    return false;
-
-  if (!win->isViewable())
-    return false;
-
-  if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
-    return false;
-
-  if (win->inShowDesktopMode())
-    return false;
-
-  if (win->region().numRects() != 1) // Non rectangular windows
-    return false;
-  else if (win->region().boundingRect() != win->geometry()) // Shaped windows
-    return false;
-
-  if (win->alpha())
-    return WindowHasMotifDecorations(win);
-
-  return true;
+  return WindowDecorationElements(win) & DecorationElement::SHADOW;
 }
 
 bool IsWindowFullyDecorable(CompWindow* win)
 {
-  if (!win)
-    return false;
-
-  if (!IsWindowShadowDecorable(win))
-    return false;
-
-  return WindowHasMotifDecorations(win);
-}
-
-bool WindowHasMotifDecorations(CompWindow* win)
-{
-  if (!win)
-    return false;
-
-  if (win->overrideRedirect())
-    return false;
-
-  switch (win->type())
-  {
-    case CompWindowTypeDialogMask:
-    case CompWindowTypeModalDialogMask:
-    case CompWindowTypeUtilMask:
-    case CompWindowTypeMenuMask:
-    case CompWindowTypeNormalMask:
-      if (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
-        return true;
-  }
-
-  return false;
+  return WindowDecorationElements(win) & DecorationElement::BORDER;
 }
 
 } // compiz_utils namespace
