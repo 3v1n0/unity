@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2013-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -92,12 +92,15 @@ struct Window::Impl
 private:
   void UnsetExtents();
   void SetupExtents();
+  void UpdateElements();
   void UpdateMonitor();
   void UpdateFrame();
   void CreateFrame(nux::Geometry const&);
   void UpdateFrameGeo(nux::Geometry const&);
   void UpdateFrameActions();
   void UnsetFrame();
+  void SetupWindowEdges();
+  void CleanupWindowEdges();
   void SetupWindowControls();
   void CleanupWindowControls();
   void UnsetAppMenu();
@@ -110,6 +113,7 @@ private:
 
   void ComputeShadowQuads();
   void UpdateDecorationTextures();
+  void UpdateWindowEdgesGeo();
   void UpdateForceQuitDialogPosition();
   void RenderDecorationTexture(Side, nux::Geometry const&);
   void Paint(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
@@ -126,6 +130,7 @@ private:
   int monitor_;
   bool dirty_geo_;
   bool dirty_frame_;
+  unsigned deco_elements_;
   unsigned last_mwm_decor_;
   unsigned last_actions_;
 

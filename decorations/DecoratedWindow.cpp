@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2013-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -47,6 +47,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , monitor_(0)
   , dirty_geo_(true)
   , dirty_frame_(false)
+  , deco_elements_(cu::DecorationElement::NONE)
   , last_mwm_decor_(win_->mwmDecor())
   , last_actions_(win_->actions())
   , cv_(Settings::Instance().em())
@@ -108,7 +109,26 @@ Window::Impl::~Impl()
 
 void Window::Impl::Update()
 {
-  ShouldBeDecorated() ? Decorate() : Undecorate();
+  UpdateElements();
+
+  if (deco_elements_ & cu::DecorationElement::BORDER)
+  {
+    Decorate();
+  }
+  else if (deco_elements_ & cu::DecorationElement::EDGE)
+  {
+    CleanupWindowControls();
+    bg_textures_.clear();
+
+    SetupExtents();
+    UpdateFrame();
+    SetupWindowEdges();
+  }
+  else
+  {
+    Undecorate();
+  }
+
   last_mwm_decor_ = win_->mwmDecor();
   last_actions_ = win_->actions();
 }
@@ -117,6 +137,7 @@ void Window::Impl::Decorate()
 {
   SetupExtents();
   UpdateFrame();
+  SetupWindowEdges();
   SetupWindowControls();
 }
 
@@ -125,6 +146,7 @@ void Window::Impl::Undecorate()
   UnsetExtents();
   UnsetFrame();
   CleanupWindowControls();
+  CleanupWindowEdges();
   bg_textures_.clear();
 }
 
@@ -144,15 +166,20 @@ void Window::Impl::SetupExtents()
   if (win_->hasUnmapReference())
     return;
 
-  auto const& sb = Style::Get()->Border();
-  CompWindowExtents border(cv_->CP(sb.left),
-                           cv_->CP(sb.right),
-                           cv_->CP(sb.top),
-                           cv_->CP(sb.bottom));
+  CompWindowExtents border;
+
+  if (deco_elements_ & cu::DecorationElement::BORDER)
+  {
+    auto const& sb = Style::Get()->Border();
+    border.left = sb.left;
+    border.right = sb.right;
+    border.top = sb.top;
+    border.bottom = sb.bottom;
+  }
 
   CompWindowExtents input(border);
 
-  if (win_->actions() & CompWindowActionResizeMask)
+  if (deco_elements_ & cu::DecorationElement::EDGE)
   {
     auto const& ib = Style::Get()->InputBorder();
     input.left += cv_->CP(ib.left);
@@ -299,6 +326,42 @@ void Window::Impl::SyncXShapeWithFrameRegion()
   win_->updateFrameRegion();
 }
 
+void Window::Impl::SetupWindowEdges()
+{
+  if (input_mixer_)
+    return;
+
+  dpi_changed_ = Settings::Instance().dpi_changed.connect([this] {
+    Update();
+    edge_borders_->scale = cv_->DPIScale();
+    if (top_layout_) top_layout_->scale = cv_->DPIScale();
+  });
+
+  input_mixer_ = std::make_shared<InputMixer>();
+  edge_borders_ = std::make_shared<EdgeBorders>(win_);
+  edge_borders_->scale = cv_->DPIScale();
+  input_mixer_->PushToFront(edge_borders_);
+
+  UpdateWindowEdgesGeo();
+}
+
+void Window::Impl::UpdateWindowEdgesGeo()
+{
+  if (!edge_borders_)
+    return;
+
+  auto const& input = win_->inputRect();
+  edge_borders_->SetCoords(input.x(), input.y());
+  edge_borders_->SetSize(input.width(), input.height());
+}
+
+void Window::Impl::CleanupWindowEdges()
+{
+  input_mixer_.reset();
+  edge_borders_.reset();
+  dpi_changed_->disconnect();
+}
+
 void Window::Impl::SetupWindowControls()
 {
   if (top_layout_)
@@ -310,19 +373,7 @@ void Window::Impl::SetupWindowControls()
     Decorate();
   });
 
-  dpi_changed_ = Settings::Instance().dpi_changed.connect([this] {
-    Update();
-    top_layout_->scale = cv_->DPIScale();
-    edge_borders_->scale = cv_->DPIScale();
-  });
-
-  input_mixer_ = std::make_shared<InputMixer>();
-  auto edges = std::make_shared<EdgeBorders>(win_);
-  grab_edge_ = edges->GetEdge(Edge::Type::GRAB);
-  edge_borders_ = edges;
-  edge_borders_->scale = cv_->DPIScale();
-
-  input_mixer_->PushToFront(edge_borders_);
+  grab_edge_ = std::static_pointer_cast<EdgeBorders>(edge_borders_)->GetEdge(Edge::Type::GRAB);
 
   auto padding = style->Padding(Side::TOP);
   top_layout_ = std::make_shared<Layout>();
@@ -368,12 +419,12 @@ void Window::Impl::CleanupWindowControls()
   if (title_)
     last_title_ = title_->text();
 
+  if (input_mixer_)
+    input_mixer_->Remove(top_layout_);
+
   UnsetAppMenu();
   theme_changed_->disconnect();
-  dpi_changed_->disconnect();
   top_layout_.reset();
-  input_mixer_.reset();
-  edge_borders_.reset();
 }
 
 bool Window::Impl::IsMaximized() const
@@ -381,26 +432,25 @@ bool Window::Impl::IsMaximized() const
   return (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE;
 }
 
-bool Window::Impl::ShadowDecorated() const
+void Window::Impl::UpdateElements()
 {
   if (!parent_->scaled() && IsMaximized())
-    return false;
+  {
+    deco_elements_ = cu::DecorationElement::NONE;
+    return;
+  }
 
-  if (!cu::IsWindowShadowDecorable(win_))
-    return false;
+  deco_elements_ = cu::WindowDecorationElements(win_);
+}
 
-  return true;
+bool Window::Impl::ShadowDecorated() const
+{
+  return deco_elements_ & cu::DecorationElement::SHADOW;
 }
 
 bool Window::Impl::FullyDecorated() const
 {
-  if (!parent_->scaled() && IsMaximized())
-    return false;
-
-  if (!cu::IsWindowFullyDecorable(win_))
-    return false;
-
-  return true;
+  return deco_elements_ & cu::DecorationElement::BORDER;
 }
 
 bool Window::Impl::ShouldBeDecorated() const
@@ -454,7 +504,6 @@ void Window::Impl::UpdateDecorationTextures()
   }
 
   auto const& geo = win_->borderRect();
-  auto const& input = win_->inputRect();
   auto const& border = win_->border();
 
   bg_textures_.resize(4);
@@ -466,25 +515,16 @@ void Window::Impl::UpdateDecorationTextures()
   top_layout_->SetCoords(geo.x(), geo.y());
   top_layout_->SetSize(geo.width(), border.top);
 
-  if (edge_borders_)
-  {
-    edge_borders_->SetCoords(input.x(), input.y());
-    edge_borders_->SetSize(input.width(), input.height());
-  }
-
   SyncMenusGeometries();
 }
 
 void Window::Impl::ComputeShadowQuads()
 {
-  if (last_shadow_rect_.isEmpty())
+  if (!(deco_elements_ & cu::DecorationElement::SHADOW))
   {
-    if (!ShadowDecorated())
-      return;
-  }
-  else if (!ShadowDecorated())
-  {
-    last_shadow_rect_ = CompRect();
+    if (!last_shadow_rect_.isEmpty())
+      last_shadow_rect_ = CompRect();
+
     return;
   }
 
@@ -599,6 +639,7 @@ void Window::Impl::Paint(GLMatrix const& transformation,
   {
     dirty_frame_ = false;
     CleanupWindowControls();
+    CleanupWindowEdges();
     Update();
   }
 }
@@ -828,6 +869,7 @@ void Window::UpdateDecorationPosition()
 {
   impl_->UpdateMonitor();
   impl_->ComputeShadowQuads();
+  impl_->UpdateWindowEdgesGeo();
   impl_->UpdateDecorationTextures();
   impl_->UpdateForceQuitDialogPosition();
   impl_->dirty_geo_ = false;
