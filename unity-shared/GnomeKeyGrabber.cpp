@@ -200,7 +200,7 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
   CompAction action;
   action.keyFromString(accelerator);
 
-  if (action.keyToString() == "Disabled")
+  if (action.key().toString().empty())
   {
       CompString prefixed = "XF86" + CompString(accelerator);
       LOG_DEBUG(logger) << "Can't grab \"" << accelerator << "\", trying \"" << prefixed << "\"";
