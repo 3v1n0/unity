@@ -64,6 +64,7 @@ public:
   LayoutSystem();
 
   void LayoutWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutWindowsNearest(LayoutWindow::Vector& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
   std::vector<int> GetRowSizes(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const;
 
 protected:

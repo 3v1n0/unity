@@ -3768,6 +3768,86 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
   return true;
 }
 
+bool UnityScreen::layoutSlotsAndAssignWindowsNearest()
+{
+  std::list<ScaleWindow *> scaled_windows = sScreen->getWindows();
+  for (auto const& output : screen->outputDevs())
+  {
+    ui::LayoutWindow::Vector layout_windows;
+    int monitor = UScreen::GetDefault()->GetMonitorAtPosition(output.centerX(), output.centerY());
+    double monitor_scale = unity_settings_.em(monitor)->DPIScale();
+
+    for (ScaleWindow *sw : scaled_windows)
+    {
+      if (sw->window->outputDevice() == static_cast<int>(output.id()))
+      {
+        UnityWindow::get(sw->window)->deco_win_->scaled = true;
+        layout_windows.emplace_back(std::make_shared<LayoutWindow>(sw->window->id()));
+      }
+    }
+
+    auto max_bounds = NuxGeometryFromCompRect(output.workArea());
+    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
+    {
+      int monitor_width = unity_settings_.LauncherWidth(monitor);
+      max_bounds.x += monitor_width;
+      max_bounds.width -= monitor_width;
+    }
+
+    nux::Geometry final_bounds;
+    ui::LayoutSystem layout;
+    layout.max_row_height = max_bounds.height;
+    layout.spacing = local::SCALE_SPACING.CP(monitor_scale);
+    int padding = local::SCALE_PADDING.CP(monitor_scale);
+    max_bounds.Expand(-padding, -padding);
+    layout.LayoutWindowsNearest(layout_windows, max_bounds, final_bounds);
+
+    std::list<ScaleWindow *> windows;
+    for (auto lw : layout_windows)
+    {
+        for (auto &sw : scaled_windows)
+        {
+            if (sw->window->id() == lw->xid)
+                windows.push_back(sw);
+        }
+    }
+
+    scaled_windows = windows;
+
+    auto lw_it = layout_windows.begin();
+    for (auto const& sw : scaled_windows)
+    {
+      if (lw_it == layout_windows.end())
+        break;
+
+      LayoutWindow::Ptr const& lw = *lw_it;
+
+      if (sw->window->id() != lw->xid)
+        continue;
+
+      ScaleSlot slot(CompRectFromNuxGeo(lw->result));
+      slot.scale = lw->scale;
+
+      float sx = lw->geo.width * slot.scale;
+      float sy = lw->geo.height * slot.scale;
+      float cx = (slot.x1() + slot.x2()) / 2;
+      float cy = (slot.y1() + slot.y2()) / 2;
+
+      CompWindow *w = sw->window;
+      cx += w->input().left * slot.scale;
+      cy += w->input().top * slot.scale;
+
+      slot.setGeometry(cx - sx / 2, cy - sy / 2, sx, sy);
+      slot.filled = true;
+
+      sw->setSlot(slot);
+      ++lw_it;
+    }
+  }
+
+  return true;
+}
+
 void UnityScreen::OnDashRealized()
 {
   RaiseOSK();
