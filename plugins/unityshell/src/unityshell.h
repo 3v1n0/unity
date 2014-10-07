@@ -176,7 +176,6 @@ public:
 
    /* window scaling */
   bool layoutSlotsAndAssignWindows();
-  bool layoutSlotsAndAssignWindowsNearest();
 
   bool showMenuBarInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showMenuBarTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
