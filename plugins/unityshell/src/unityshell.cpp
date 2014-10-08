@@ -3700,7 +3700,7 @@ void UnityScreen::outputChangeNotify()
 
 bool UnityScreen::layoutSlotsAndAssignWindows()
 {
-  std::list<ScaleWindow *> scaled_windows = sScreen->getWindows();
+  std::list<ScaleWindow*> scaled_windows = sScreen->getWindows();
   for (auto const& output : screen->outputDevs())
   {
     ui::LayoutWindow::Vector layout_windows;
@@ -3732,8 +3732,8 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
     max_bounds.Expand(-padding, -padding);
     layout.LayoutWindowsNearest(layout_windows, max_bounds, final_bounds);
 
-    std::list<ScaleWindow *> windows;
-    for (auto lw : layout_windows)
+    std::list<ScaleWindow*> windows;
+    for (auto const& lw : layout_windows)
     {
         for (auto &sw : scaled_windows)
         {

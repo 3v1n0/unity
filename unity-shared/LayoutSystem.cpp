@@ -40,33 +40,27 @@ void LayoutSystem::LayoutWindowsNearest(LayoutWindow::Vector& windows, nux::Geom
   if (windows.empty())
     return;
 
-  std::stable_sort(windows.begin(), windows.end(),
-      [](const LayoutWindow::Ptr& a, const LayoutWindow::Ptr& b)
-      {
-        int acentery = a->geo.y + a->geo.height / 2;
-        int bcentery = b->geo.y + b->geo.height / 2;
-        return acentery < bcentery;
-      });
+  std::stable_sort(windows.begin(), windows.end(), [](LayoutWindow::Ptr const& a, LayoutWindow::Ptr const& b) {
+    int acentery = a->geo.y + a->geo.height / 2;
+    int bcentery = b->geo.y + b->geo.height / 2;
+    return acentery < bcentery;
+  });
 
   LayoutGridWindows(windows, max_bounds, final_bounds);
 
-  std::vector<LayoutWindow::Vector> rows = GetRows(windows, max_bounds);
+  std::vector<LayoutWindow::Vector> const& rows = GetRows(windows, max_bounds);
   LayoutWindow::Vector ordered_windows;
 
   for (auto row : rows)
   {
-    std::stable_sort(row.begin(), row.end(),
-        [](const LayoutWindow::Ptr& a, const LayoutWindow::Ptr& b)
-        {
-          int acenterx = a->geo.x + a->geo.width / 2;
-          int bcenterx = b->geo.x + b->geo.width / 2;
-          return acenterx < bcenterx;
-        });
+    std::stable_sort(row.begin(), row.end(), [](LayoutWindow::Ptr const& a, LayoutWindow::Ptr const& b) {
+      int acenterx = a->geo.x + a->geo.width / 2;
+      int bcenterx = b->geo.x + b->geo.width / 2;
+      return acenterx < bcenterx;
+    });
 
-    for (auto win : row)
-    {
+    for (auto const& win : row)
       ordered_windows.push_back(win);
-    }
   }
 
   LayoutGridWindows(ordered_windows, max_bounds, final_bounds);
