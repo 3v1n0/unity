@@ -46,8 +46,6 @@ void LayoutSystem::LayoutWindowsNearest(LayoutWindow::Vector& windows, nux::Geom
     return acentery < bcentery;
   });
 
-  LayoutGridWindows(windows, max_bounds, final_bounds);
-
   std::vector<LayoutWindow::Vector> const& rows = GetRows(windows, max_bounds);
   LayoutWindow::Vector ordered_windows;
 
