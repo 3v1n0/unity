@@ -32,7 +32,7 @@ void LayoutSystem::LayoutWindows(LayoutWindow::Vector const& windows, nux::Geome
   if (windows.empty())
     return;
 
-  LayoutGridWindows(windows, max_bounds, final_bounds);
+  LayoutGridWindows(windows, GetRows(windows, max_bounds), max_bounds, final_bounds);
 }
 
 void LayoutSystem::LayoutWindowsNearest(LayoutWindow::Vector& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
@@ -41,27 +41,23 @@ void LayoutSystem::LayoutWindowsNearest(LayoutWindow::Vector& windows, nux::Geom
     return;
 
   std::stable_sort(windows.begin(), windows.end(), [](LayoutWindow::Ptr const& a, LayoutWindow::Ptr const& b) {
-    int acentery = a->geo.y + a->geo.height / 2;
-    int bcentery = b->geo.y + b->geo.height / 2;
-    return acentery < bcentery;
+    return a->geo.y < b->geo.y;
   });
 
-  std::vector<LayoutWindow::Vector> const& rows = GetRows(windows, max_bounds);
+  std::vector<LayoutWindow::Vector> rows = GetRows(windows, max_bounds);
   LayoutWindow::Vector ordered_windows;
 
-  for (auto row : rows)
+  for (auto& row : rows)
   {
     std::stable_sort(row.begin(), row.end(), [](LayoutWindow::Ptr const& a, LayoutWindow::Ptr const& b) {
-      int acenterx = a->geo.x + a->geo.width / 2;
-      int bcenterx = b->geo.x + b->geo.width / 2;
-      return acenterx < bcenterx;
+      return (a->geo.x + a->geo.width / 2) < (b->geo.x + b->geo.width / 2);
     });
 
     for (auto const& win : row)
       ordered_windows.push_back(win);
   }
 
-  LayoutGridWindows(ordered_windows, max_bounds, final_bounds);
+  LayoutGridWindows(ordered_windows, rows, max_bounds, final_bounds);
   windows = ordered_windows;
 }
 
@@ -259,10 +255,8 @@ std::vector<LayoutWindow::Vector> LayoutSystem::GetRows(LayoutWindow::Vector con
   return rows;
 }
 
-void LayoutSystem::LayoutGridWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+void LayoutSystem::LayoutGridWindows(LayoutWindow::Vector const& windows, std::vector<LayoutWindow::Vector> const& rows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
-  std::vector<LayoutWindow::Vector> const& rows = GetRows(windows, max_bounds);
-
   int height = rows.size();
   int non_spacing_height = max_bounds.height - ((height - 1) * spacing);
   int row_height = std::min (max_row_height(), non_spacing_height / height);

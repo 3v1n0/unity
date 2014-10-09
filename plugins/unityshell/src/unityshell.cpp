@@ -3700,7 +3700,8 @@ void UnityScreen::outputChangeNotify()
 
 bool UnityScreen::layoutSlotsAndAssignWindows()
 {
-  std::list<ScaleWindow*> scaled_windows = sScreen->getWindows();
+  auto const& scaled_windows = sScreen->getWindows();
+
   for (auto const& output : screen->outputDevs())
   {
     ui::LayoutWindow::Vector layout_windows;
@@ -3732,29 +3733,16 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
     max_bounds.Expand(-padding, -padding);
     layout.LayoutWindowsNearest(layout_windows, max_bounds, final_bounds);
 
-    std::list<ScaleWindow*> windows;
     for (auto const& lw : layout_windows)
     {
-        for (auto &sw : scaled_windows)
-        {
-            if (sw->window->id() == lw->xid)
-                windows.push_back(sw);
-        }
-    }
+      auto sw_it = std::find_if(scaled_windows.begin(), scaled_windows.end(), [&lw] (ScaleWindow* sw) {
+        return sw->window->id() == lw->xid;
+      });
 
-    scaled_windows = windows;
-
-    auto lw_it = layout_windows.begin();
-    for (auto const& sw : scaled_windows)
-    {
-      if (lw_it == layout_windows.end())
-        break;
-
-      LayoutWindow::Ptr const& lw = *lw_it;
-
-      if (sw->window->id() != lw->xid)
+      if (sw_it == scaled_windows.end())
         continue;
 
+      ScaleWindow* sw = *sw_it;
       ScaleSlot slot(CompRectFromNuxGeo(lw->result));
       slot.scale = lw->scale;
 
@@ -3771,7 +3759,6 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
       slot.filled = true;
 
       sw->setSlot(slot);
-      ++lw_it;
     }
   }
 
