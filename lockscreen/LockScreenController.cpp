@@ -59,6 +59,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , session_manager_(session_manager)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
+  , shutdown_notifier_(std::make_shared<ShutdownNotifier>())
   , fade_animator_(LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
@@ -419,6 +420,10 @@ void Controller::LockScreen()
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
 
+  shutdown_notifier_->RegisterInterest([](){
+    std::cout << "Shutdown!" << std::endl;
+  });
+
   accelerator_controller_ = std::make_shared<AcceleratorController>(session_manager_);
   auto activate_key = WindowManager::Default().activate_indicators_key();
   auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
@@ -456,6 +461,8 @@ void Controller::SimulateActivity()
 
 void Controller::OnUnlockRequested()
 {
+  shutdown_notifier_->UnregisterInterest();
+
   lockscreen_timeout_.reset();
   screensaver_post_lock_timeout_.reset();
 

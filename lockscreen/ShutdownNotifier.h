@@ -32,6 +32,8 @@ typedef std::function<void()> ShutdownCallback;
 class ShutdownNotifier
 {
 public:
+  typedef std::shared_ptr<ShutdownNotifier> Ptr;
+
   ShutdownNotifier();
   ~ShutdownNotifier();
 

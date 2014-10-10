@@ -64,17 +64,11 @@ bool ShutdownNotifier::Impl::RegisterInterest(ShutdownCallback const& cb)
 
   cb_ = cb;
 
-  std::vector<std::string> parameters;
-  parameters.push_back("shutdown"); // what
-  parameters.push_back("Unity Lockscreen"); // who
-  parameters.push_back("Screen Locked"); // why
-  parameters.push_back("delay"); // mode
-
   logind_proxy_->CallWithUnixFdList("Inhibit",
-                                    glib::Variant::FromVector(parameters),
+                                    g_variant_new("(ssss)", "shutdown", "Unity Lockscreen", "Screen is locked", "delay"),
                                     [this](GVariant* variant, glib::Error const& e){
                                       // FIXME: we should handle the error.
-                                      delay_inhibit_fd_ = glib::Variant(variant).GetUInt32();
+                                      delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
                                     });
 
   logind_proxy_->Connect("PrepareForShutdown", [this](GVariant* variant) {
