@@ -421,7 +421,7 @@ void Controller::LockScreen()
   upstart_wrapper_->Emit("desktop-lock");
 
   shutdown_notifier_->RegisterInterest([](){
-    std::cout << "Shutdown!" << std::endl;
+    WindowManager::Default().UnmapAllNoNuxWindowsSync();
   });
 
   accelerator_controller_ = std::make_shared<AcceleratorController>(session_manager_);

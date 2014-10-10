@@ -75,9 +75,10 @@ bool ShutdownNotifier::Impl::RegisterInterest(ShutdownCallback const& cb)
     bool active = glib::Variant(variant).GetBool();
 
     if (active)
+    {
       cb_();
-
-    UnregisterInterest();
+      UnregisterInterest();
+    }
   });
 
   return true;

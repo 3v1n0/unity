@@ -1454,6 +1454,46 @@ void PluginAdapter::OnWindowClosed(CompWindow *w)
     _last_focused_window = NULL;
 }
 
+void PluginAdapter::UnmapAllNoNuxWindowsSync()
+{
+  bool one_window_is_mapped = false;
+  for (auto const& window : m_Screen->windows())
+  {
+    if (!IsNuxWindow(window) && window->isMapped())
+    {
+      window->unmap();
+      one_window_is_mapped = true;
+    }
+  }
+
+  // Wait!
+  while(one_window_is_mapped)
+  {
+    one_window_is_mapped = false;
+    for (auto const& window : m_Screen->windows())
+    {
+      if (!IsNuxWindow(window) && window->isMapped())
+      {
+        one_window_is_mapped = true;
+      }
+    }
+  }
+}
+
+bool PluginAdapter::IsNuxWindow(CompWindow* value)
+{
+  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+  auto id = value->id();
+
+  unsigned int size = xwns.size();
+  for (unsigned int i = 0; i < size; ++i)
+  {
+    if (xwns[i] == id)
+      return true;
+  }
+  return false;
+}
+
 void PluginAdapter::AddProperties(debug::IntrospectionData& wrapper)
 {
   wrapper.add(GetScreenGeometry())
