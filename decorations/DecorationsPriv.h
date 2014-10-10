@@ -185,7 +185,6 @@ private:
   friend class Manager;
   friend struct Window::Impl;
 
-  ::Window active_window_;
   bool enable_add_supported_atoms_;
 
   DataPool::Ptr data_pool_;

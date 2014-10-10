@@ -41,8 +41,7 @@ Atom _NET_WM_VISIBLE_NAME = 0;
 }
 
 Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
-  : active_window_(0)
-  , enable_add_supported_atoms_(true)
+  : enable_add_supported_atoms_(true)
   , data_pool_(DataPool::Get())
   , menu_manager_(menu)
 {
@@ -204,8 +203,6 @@ Window::Ptr Manager::Impl::GetWindowByFrame(::Window xid) const
 
 bool Manager::Impl::HandleEventBefore(XEvent* event)
 {
-  active_window_ = screen->activeWindow();
-
   switch (event->type)
   {
     case ClientMessage:
@@ -250,26 +247,23 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
 
 bool Manager::Impl::HandleEventAfter(XEvent* event)
 {
-  if (screen->activeWindow() != active_window_)
-  {
-    // Do this when _NET_ACTIVE_WINDOW changes on root!
-    if (active_deco_win_)
-      active_deco_win_->impl_->active = false;
-
-    active_window_ = screen->activeWindow();
-    auto const& new_active = GetWindowByXid(active_window_);
-    active_deco_win_ = new_active;
-
-    if (new_active)
-      new_active->impl_->active = true;
-  }
-
   switch (event->type)
   {
     case PropertyNotify:
     {
-      if (event->xproperty.atom == Atoms::mwmHints ||
-          event->xproperty.atom == Atoms::wmAllowedActions)
+      if (event->xproperty.atom == Atoms::winActive)
+      {
+        if (active_deco_win_)
+          active_deco_win_->impl_->active = false;
+
+        auto const& new_active = GetWindowByXid(screen->activeWindow());
+        active_deco_win_ = new_active;
+
+        if (new_active)
+          new_active->impl_->active = true;
+      }
+      else if (event->xproperty.atom == Atoms::mwmHints ||
+               event->xproperty.atom == Atoms::wmAllowedActions)
       {
         if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
           win->impl_->UpdateFrameActions();
@@ -439,7 +433,7 @@ void Manager::AddProperties(debug::IntrospectionData& data)
   .add("active_shadow_radius", active_shadow_radius())
   .add("inactive_shadow_color", inactive_shadow_color())
   .add("inactive_shadow_radius", inactive_shadow_radius())
-  .add("active_window", impl_->active_window_);
+  .add("active_window", screen->activeWindow());
 }
 
 debug::Introspectable::IntrospectableList Manager::GetIntrospectableChildren()
