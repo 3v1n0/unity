@@ -52,7 +52,11 @@ void Signal<R, G, Ts...>::Connect(G object, std::string const& signal_name,
 template <typename R, typename G, typename... Ts>
 R Signal<R, G, Ts...>::Callback(G object, Ts... vs, Signal* self)
 {
-  return self->callback_(object, vs...);
+  /* For some weird reasons, this might not be always true (see bug #1366351) */
+  if (reinterpret_cast<GObject*>(object) == self->object_)
+    return self->callback_(object, vs...);
+
+  return R();
 }
 
 }
