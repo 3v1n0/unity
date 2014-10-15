@@ -3784,6 +3784,7 @@ void UnityScreen::OnLockScreenRequested()
   if (hud_controller_->IsVisible())
     hud_controller_->HideHud();
 
+  menus_->Indicators()->CloseActiveEntry();
   launcher_controller_->ClearTooltips();
 
   if (launcher_controller_->KeyNavIsActive())

@@ -110,12 +110,39 @@ void Panel::AddIndicator(Indicator::Ptr const& indicator)
     return;
 
   indicators_view_->AddIndicator(indicator);
+
+  if (!active)
+  {
+    for (auto const& entry : indicator->GetEntries())
+    {
+      if (entry->active())
+      {
+        active = true;
+        indicators_view_->ActivateEntry(entry->id());
+        OnEntryActivated(GetPanelName(), entry->id(), entry->geometry());
+        break;
+      }
+    }
+  }
+
   QueueRelayout();
   QueueDraw();
 }
 
 void Panel::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
 {
+  if (active)
+  {
+    for (auto const& entry : indicator->GetEntries())
+    {
+      if (entry->active())
+      {
+        active = false;
+        break;
+      }
+    }
+  }
+
   indicators_view_->RemoveIndicator(indicator);
   QueueRelayout();
   QueueDraw();
@@ -123,7 +150,7 @@ void Panel::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
 
 std::string Panel::GetPanelName() const
 {
-  return "LockScreenPanel" + std::to_string(monitor);
+  return "LockScreenPanel";
 }
 
 void Panel::OnIndicatorViewUpdated()
