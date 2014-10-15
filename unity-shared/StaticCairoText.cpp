@@ -34,6 +34,7 @@
 #include <pango/pangocairo.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "CairoTexture.h"
 #include "UnitySettings.h"
@@ -45,7 +46,6 @@ namespace unity
 struct StaticCairoText::Impl : sigc::trackable
 {
   Impl(StaticCairoText* parent, std::string const& text);
-  ~Impl();
 
   PangoEllipsizeMode GetPangoEllipsizeMode() const;
   PangoAlignment GetPangoAlignment() const;
@@ -77,8 +77,6 @@ struct StaticCairoText::Impl : sigc::trackable
   void UpdateTexture();
   void OnFontChanged();
 
-  static void FontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
-
   StaticCairoText* parent_;
   bool accept_key_nav_focus_;
   mutable bool need_new_extent_cache_;
@@ -106,6 +104,8 @@ struct StaticCairoText::Impl : sigc::trackable
   int actual_lines_;
   float line_spacing_;
   double scale_;
+
+  glib::Signal<void, GtkSettings*, GParamSpec*> font_changed_;
 };
 
 StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
@@ -126,19 +126,8 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
   , line_spacing_(0.5)
   , scale_(1.0f)
 {
-  GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
-  g_signal_connect(settings, "notify::gtk-font-name",
-                   (GCallback)FontChanged, this);
-
+  font_changed_.Connect(gtk_settings_get_default(), "notify::gtk-font-name", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::OnFontChanged))));
   Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::OnFontChanged)));
-}
-
-StaticCairoText::Impl::~Impl()
-{
-  GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
-  g_signal_handlers_disconnect_by_func(settings,
-                                       (void*)FontChanged,
-                                       this);
 }
 
 PangoEllipsizeMode StaticCairoText::Impl::GetPangoEllipsizeMode() const
@@ -778,14 +767,6 @@ void StaticCairoText::Impl::UpdateTexture()
 
     textures2D_.push_back(texture_ptr_from_cairo_graphics(*texture->cr));
   }
-}
-
-void StaticCairoText::Impl::FontChanged(GObject* gobject,
-                                        GParamSpec* pspec,
-                                        gpointer data)
-{
-  StaticCairoText::Impl* self = static_cast<StaticCairoText::Impl*>(data);
-  self->OnFontChanged();
 }
 
 void StaticCairoText::Impl::OnFontChanged()
