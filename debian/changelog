@@ -1,3 +1,15 @@
+unity (7.3.1+14.10.20141016-0ubuntu1) utopic; urgency=low
+
+  [ Eleni Maria Stea ]
+  * LayoutSystem: make sure the exposed open windows are displayed in
+    the "correct" order
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: make edges independent from borders and properly
+    update them on actions changed
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 16 Oct 2014 15:10:30 +0000
+
 unity (7.3.1+14.10.20141015-0ubuntu1) utopic; urgency=low
 
   [ Iain Lane ]
