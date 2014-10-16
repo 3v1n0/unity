@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2013-2014 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -44,8 +44,12 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , cwin_(CompositeWindow::get(win_))
   , glwin_(GLWindow::get(win_))
   , frame_(0)
-  , dirty_geo_(true)
   , monitor_(0)
+  , dirty_geo_(true)
+  , dirty_frame_(false)
+  , deco_elements_(cu::DecorationElement::NONE)
+  , last_mwm_decor_(win_->mwmDecor())
+  , last_actions_(win_->actions())
   , cv_(Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
@@ -105,14 +109,27 @@ Window::Impl::~Impl()
 
 void Window::Impl::Update()
 {
-  ShouldBeDecorated() ? Decorate() : Undecorate();
+  UpdateElements();
+  (deco_elements_ & (cu::DecorationElement::EDGE | cu::DecorationElement::BORDER)) ? Decorate() : Undecorate();
+  last_mwm_decor_ = win_->mwmDecor();
+  last_actions_ = win_->actions();
 }
 
 void Window::Impl::Decorate()
 {
   SetupExtents();
   UpdateFrame();
-  SetupWindowControls();
+  SetupWindowEdges();
+
+  if (deco_elements_ & cu::DecorationElement::BORDER)
+  {
+    SetupWindowControls();
+  }
+  else
+  {
+    CleanupWindowControls();
+    bg_textures_.clear();
+  }
 }
 
 void Window::Impl::Undecorate()
@@ -120,6 +137,7 @@ void Window::Impl::Undecorate()
   UnsetExtents();
   UnsetFrame();
   CleanupWindowControls();
+  CleanupWindowEdges();
   bg_textures_.clear();
 }
 
@@ -139,17 +157,27 @@ void Window::Impl::SetupExtents()
   if (win_->hasUnmapReference())
     return;
 
-  auto const& sb = Style::Get()->Border();
-  CompWindowExtents border(cv_->CP(sb.left),
-                           cv_->CP(sb.right),
-                           cv_->CP(sb.top),
-                           cv_->CP(sb.bottom));
+  CompWindowExtents border;
 
-  auto const& ib = Style::Get()->InputBorder();
-  CompWindowExtents input(cv_->CP(sb.left + ib.left),
-                          cv_->CP(sb.right + ib.right),
-                          cv_->CP(sb.top + ib.top),
-                          cv_->CP(sb.bottom + ib.bottom));
+  if (deco_elements_ & cu::DecorationElement::BORDER)
+  {
+    auto const& sb = Style::Get()->Border();
+    border.left = cv_->CP(sb.left);
+    border.right = cv_->CP(sb.right);
+    border.top = cv_->CP(sb.top);
+    border.bottom = cv_->CP(sb.bottom);
+  }
+
+  CompWindowExtents input(border);
+
+  if (deco_elements_ & cu::DecorationElement::EDGE)
+  {
+    auto const& ib = Style::Get()->InputBorder();
+    input.left += cv_->CP(ib.left);
+    input.right += cv_->CP(ib.right);
+    input.top += cv_->CP(ib.top);
+    input.bottom += cv_->CP(ib.bottom);
+  }
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
@@ -181,6 +209,15 @@ void Window::Impl::UpdateFrame()
 
   if (frame_geo_ != frame_geo)
     UpdateFrameGeo(frame_geo);
+}
+
+void Window::Impl::UpdateFrameActions()
+{
+  if (!dirty_frame_ && (win_->mwmDecor() != last_mwm_decor_ || win_->actions() != last_actions_))
+  {
+    dirty_frame_ = true;
+    Damage();
+  }
 }
 
 void Window::Impl::CreateFrame(nux::Geometry const& frame_geo)
@@ -280,6 +317,42 @@ void Window::Impl::SyncXShapeWithFrameRegion()
   win_->updateFrameRegion();
 }
 
+void Window::Impl::SetupWindowEdges()
+{
+  if (input_mixer_)
+    return;
+
+  dpi_changed_ = Settings::Instance().dpi_changed.connect([this] {
+    Update();
+    edge_borders_->scale = cv_->DPIScale();
+    if (top_layout_) top_layout_->scale = cv_->DPIScale();
+  });
+
+  input_mixer_ = std::make_shared<InputMixer>();
+  edge_borders_ = std::make_shared<EdgeBorders>(win_);
+  edge_borders_->scale = cv_->DPIScale();
+  input_mixer_->PushToFront(edge_borders_);
+
+  UpdateWindowEdgesGeo();
+}
+
+void Window::Impl::UpdateWindowEdgesGeo()
+{
+  if (!edge_borders_)
+    return;
+
+  auto const& input = win_->inputRect();
+  edge_borders_->SetCoords(input.x(), input.y());
+  edge_borders_->SetSize(input.width(), input.height());
+}
+
+void Window::Impl::CleanupWindowEdges()
+{
+  input_mixer_.reset();
+  edge_borders_.reset();
+  dpi_changed_->disconnect();
+}
+
 void Window::Impl::SetupWindowControls()
 {
   if (top_layout_)
@@ -291,26 +364,7 @@ void Window::Impl::SetupWindowControls()
     Decorate();
   });
 
-  dpi_changed_ = Settings::Instance().dpi_changed.connect([this] {
-    Update();
-    top_layout_->scale = cv_->DPIScale();
-  });
-
-  input_mixer_ = std::make_shared<InputMixer>();
-
-  if (win_->actions() & CompWindowActionResizeMask)
-  {
-    auto edges = std::make_shared<EdgeBorders>(win_);
-    grab_edge_ = edges->GetEdge(Edge::Type::GRAB);
-    edge_borders_ = edges;
-  }
-  else /*if (win_->actions() & CompWindowActionMoveMask)*/
-  {
-    edge_borders_ = std::make_shared<GrabEdge>(win_);
-    grab_edge_ = edge_borders_;
-  }
-
-  input_mixer_->PushToFront(edge_borders_);
+  grab_edge_ = std::static_pointer_cast<EdgeBorders>(edge_borders_)->GetEdge(Edge::Type::GRAB);
 
   auto padding = style->Padding(Side::TOP);
   top_layout_ = std::make_shared<Layout>();
@@ -345,6 +399,7 @@ void Window::Impl::SetupWindowControls()
   top_layout_->Append(title_layout);
 
   input_mixer_->PushToFront(top_layout_);
+  dirty_frame_ = false;
 
   SetupAppMenu();
   RedrawDecorations();
@@ -355,12 +410,12 @@ void Window::Impl::CleanupWindowControls()
   if (title_)
     last_title_ = title_->text();
 
+  if (input_mixer_)
+    input_mixer_->Remove(top_layout_);
+
   UnsetAppMenu();
   theme_changed_->disconnect();
-  dpi_changed_->disconnect();
   top_layout_.reset();
-  input_mixer_.reset();
-  edge_borders_.reset();
 }
 
 bool Window::Impl::IsMaximized() const
@@ -368,26 +423,25 @@ bool Window::Impl::IsMaximized() const
   return (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE;
 }
 
-bool Window::Impl::ShadowDecorated() const
+void Window::Impl::UpdateElements()
 {
   if (!parent_->scaled() && IsMaximized())
-    return false;
+  {
+    deco_elements_ = cu::DecorationElement::NONE;
+    return;
+  }
 
-  if (!cu::IsWindowShadowDecorable(win_))
-    return false;
+  deco_elements_ = cu::WindowDecorationElements(win_);
+}
 
-  return true;
+bool Window::Impl::ShadowDecorated() const
+{
+  return deco_elements_ & cu::DecorationElement::SHADOW;
 }
 
 bool Window::Impl::FullyDecorated() const
 {
-  if (!parent_->scaled() && IsMaximized())
-    return false;
-
-  if (!cu::IsWindowFullyDecorable(win_))
-    return false;
-
-  return true;
+  return deco_elements_ & cu::DecorationElement::BORDER;
 }
 
 bool Window::Impl::ShouldBeDecorated() const
@@ -429,6 +483,7 @@ void Window::Impl::RenderDecorationTexture(Side s, nux::Geometry const& geo)
   }
 
   deco_tex.SetCoords(geo.x, geo.y);
+  deco_tex.quad.region = deco_tex.quad.box;
 }
 
 void Window::Impl::UpdateDecorationTextures()
@@ -440,7 +495,6 @@ void Window::Impl::UpdateDecorationTextures()
   }
 
   auto const& geo = win_->borderRect();
-  auto const& input = win_->inputRect();
   auto const& border = win_->border();
 
   bg_textures_.resize(4);
@@ -452,19 +506,18 @@ void Window::Impl::UpdateDecorationTextures()
   top_layout_->SetCoords(geo.x(), geo.y());
   top_layout_->SetSize(geo.width(), border.top);
 
-  if (edge_borders_)
-  {
-    edge_borders_->SetCoords(input.x(), input.y());
-    edge_borders_->SetSize(input.width(), input.height());
-  }
-
   SyncMenusGeometries();
 }
 
 void Window::Impl::ComputeShadowQuads()
 {
-  if (last_shadow_rect_.isEmpty() && !ShadowDecorated())
+  if (!(deco_elements_ & cu::DecorationElement::SHADOW))
+  {
+    if (!last_shadow_rect_.isEmpty())
+      last_shadow_rect_.setGeometry(0, 0, 0, 0);
+
     return;
+  }
 
   const auto* texture = ShadowTexture();
 
@@ -552,6 +605,12 @@ void Window::Impl::ComputeShadowQuads()
 
   if (shadows_rect != last_shadow_rect_)
   {
+    auto const& win_region = win_->region();
+    quads[Quads::Pos::TOP_LEFT].region = CompRegion(quads[Quads::Pos::TOP_LEFT].box) - win_region;
+    quads[Quads::Pos::TOP_RIGHT].region = CompRegion(quads[Quads::Pos::TOP_RIGHT].box) - win_region;
+    quads[Quads::Pos::BOTTOM_LEFT].region = CompRegion(quads[Quads::Pos::BOTTOM_LEFT].box) - win_region;
+    quads[Quads::Pos::BOTTOM_RIGHT].region = CompRegion(quads[Quads::Pos::BOTTOM_RIGHT].box) - win_region;
+
     last_shadow_rect_ = shadows_rect;
     win_->updateWindowOutputExtents();
   }
@@ -561,15 +620,26 @@ void Window::Impl::Paint(GLMatrix const& transformation,
                          GLWindowPaintAttrib const& attrib,
                          CompRegion const& region, unsigned mask)
 {
+  if (win_->defaultViewport() != screen->vp())
+    return;
+
   if (dirty_geo_)
     parent_->UpdateDecorationPosition();
+
+  if (dirty_frame_)
+  {
+    dirty_frame_ = false;
+    CleanupWindowControls();
+    CleanupWindowEdges();
+    Update();
+  }
 }
 
 void Window::Impl::Draw(GLMatrix const& transformation,
                         GLWindowPaintAttrib const& attrib,
                         CompRegion const& region, unsigned mask)
 {
-  if (last_shadow_rect_.isEmpty())
+  if (last_shadow_rect_.isEmpty() || win_->defaultViewport() != screen->vp())
     return;
 
   auto const& clip_region = (mask & PAINT_WINDOW_TRANSFORMED_MASK) ? infiniteRegion : region;
@@ -580,7 +650,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   for (unsigned i = 0; i < shadow_quads_.size(); ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
-    glwin_->glAddGeometry({quad.matrix}, CompRegion(quad.box) - win_->region(), clip_region);
+    glwin_->glAddGeometry(quad.matrices, quad.region, clip_region);
   }
 
   if (glwin_->vertexBuffer()->end())
@@ -592,7 +662,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
       continue;
 
     glwin_->vertexBuffer()->begin();
-    glwin_->glAddGeometry({dtex.quad.matrix}, dtex.quad.box, clip_region);
+    glwin_->glAddGeometry(dtex.quad.matrices, dtex.quad.region, clip_region);
 
     if (glwin_->vertexBuffer()->end())
       glwin_->glDrawTexture(dtex, transformation, attrib, mask);
@@ -705,6 +775,9 @@ void Window::Impl::UpdateMonitor()
 
     if (top_layout_)
       top_layout_->scale = cv_->DPIScale();
+
+    if (edge_borders_)
+      edge_borders_->scale = cv_->DPIScale();
   }
 }
 
@@ -787,6 +860,7 @@ void Window::UpdateDecorationPosition()
 {
   impl_->UpdateMonitor();
   impl_->ComputeShadowQuads();
+  impl_->UpdateWindowEdgesGeo();
   impl_->UpdateDecorationTextures();
   impl_->UpdateForceQuitDialogPosition();
   impl_->dirty_geo_ = false;
@@ -806,7 +880,8 @@ void Window::AddProperties(debug::IntrospectionData& data)
 {
   data.add(impl_->win_->borderRect())
   .add("input_geo", impl_->win_->inputRect())
-  .add("content_geo", impl_->win_->region().boundingRect())
+  .add("content_geo", impl_->win_->geometry())
+  .add("region", impl_->win_->region().boundingRect())
   .add("title", title())
   .add("active", impl_->active())
   .add("scaled", scaled())
