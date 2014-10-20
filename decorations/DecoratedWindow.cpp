@@ -620,8 +620,10 @@ void Window::Impl::Paint(GLMatrix const& transformation,
                          GLWindowPaintAttrib const& attrib,
                          CompRegion const& region, unsigned mask)
 {
-  if (win_->defaultViewport() != screen->vp())
+  if (!(mask & PAINT_SCREEN_TRANSFORMED_MASK) && win_->defaultViewport() != screen->vp())
+  {
     return;
+  }
 
   if (dirty_geo_)
     parent_->UpdateDecorationPosition();
@@ -639,8 +641,10 @@ void Window::Impl::Draw(GLMatrix const& transformation,
                         GLWindowPaintAttrib const& attrib,
                         CompRegion const& region, unsigned mask)
 {
-  if (last_shadow_rect_.isEmpty() || win_->defaultViewport() != screen->vp())
+  if (last_shadow_rect_.isEmpty() || (!(mask & PAINT_SCREEN_TRANSFORMED_MASK) && win_->defaultViewport() != screen->vp()))
+  {
     return;
+  }
 
   auto const& clip_region = (mask & PAINT_WINDOW_TRANSFORMED_MASK) ? infiniteRegion : region;
   mask |= PAINT_WINDOW_BLEND_MASK;
