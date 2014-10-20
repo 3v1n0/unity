@@ -94,6 +94,18 @@ T* Object<T>::operator->() const
 }
 
 template <typename T>
+T** Object<T>::operator&()
+{
+  if (object_)
+  {
+    g_object_unref(object_);
+    object_ = nullptr;
+  }
+
+  return &object_;
+}
+
+template <typename T>
 Object<T>::operator bool() const
 {
   return bool(object_);

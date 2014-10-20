@@ -420,7 +420,7 @@ void DBusProxy::Impl::CallWithUnixFdList(string const& method_name,
   if (!proxy_)
   {
     glib::Variant sinked_parameters(parameters);
-    glib::Object<GCancellable>canc(target_canc, glib::AddRef());
+    glib::Object<GCancellable> canc(target_canc, glib::AddRef());
     WaitForProxy(canc, timeout_msec, [this, method_name, sinked_parameters, callback, canc, flags, timeout_msec] (glib::Error const& err)
     {
       if (err)
@@ -480,7 +480,7 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
 
 void DBusProxy::Impl::OnCallWithUnixFdListCallback(GObject* source, GAsyncResult* res, gpointer call_data)
 {
-  GUnixFDList* fd_list;
+  glib::Object<GUnixFDList> fd_list;
 
   glib::Error error;
   std::unique_ptr<CallData> data(static_cast<CallData*>(call_data));
@@ -505,11 +505,9 @@ void DBusProxy::Impl::OnCallWithUnixFdListCallback(GObject* source, GAsyncResult
   if (data->callback)
   {
     gint idx = result.GetInt32();
-    gint fd = g_unix_fd_list_get (fd_list, idx, nullptr);
+    gint fd = g_unix_fd_list_get(fd_list, idx, nullptr);
     data->callback(glib::Variant(fd), error);
   }
-
-  g_object_unref(fd_list);
 }
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback const& callback)
