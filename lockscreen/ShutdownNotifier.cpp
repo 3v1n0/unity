@@ -18,12 +18,15 @@
 
 #include "ShutdownNotifier.h"
 
+#include <NuxCore/Logger.h>
 #include "UnityCore/GLibDBusProxy.h"
 
 namespace unity
 {
 namespace lockscreen
 {
+
+DECLARE_LOGGER(logger, "unity.lockscreen.shutdownnotifier");
 
 //
 // Private Implementation
@@ -67,7 +70,7 @@ bool ShutdownNotifier::Impl::RegisterInterest(ShutdownCallback const& cb)
   logind_proxy_->CallWithUnixFdList("Inhibit",
                                     g_variant_new("(ssss)", "shutdown", "Unity Lockscreen", "Screen is locked", "delay"),
                                     [this](GVariant* variant, glib::Error const& e){
-                                      // FIXME: we should handle the error.
+                                      LOG_ERROR(logger) << "Failed to inhbit shutdow";
                                       delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
                                     });
 
