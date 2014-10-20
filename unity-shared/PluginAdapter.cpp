@@ -1454,6 +1454,7 @@ void PluginAdapter::OnWindowClosed(CompWindow *w)
     _last_focused_window = NULL;
 }
 
+// XXX Don't use that outside lockscreen controller!
 void PluginAdapter::UnmapAllNoNuxWindowsSync()
 {
   bool one_window_is_mapped = false;
@@ -1461,7 +1462,7 @@ void PluginAdapter::UnmapAllNoNuxWindowsSync()
   {
     if (!IsNuxWindow(window) && window->isMapped())
     {
-      window->unmap();
+      XUnmapWindow(m_Screen->dpy(), window->id());
       one_window_is_mapped = true;
     }
   }

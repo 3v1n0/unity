@@ -194,6 +194,7 @@ public:
   Window GetTopWindowAbove(Window xid) const;
 
   void UnmapAllNoNuxWindowsSync();
+  static bool IsNuxWindow(CompWindow* value);
 
 protected:
   PluginAdapter(CompScreen* screen);
@@ -208,8 +209,6 @@ private:
   Window GetTopMostWindowInMonitor(int monitor) const;
   Window GetTopMostValidWindowInViewport() const;
   bool IsCurrentViewportEmpty() const;
-
-  bool IsNuxWindow(CompWindow* value);
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;
