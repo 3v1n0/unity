@@ -122,6 +122,8 @@ void              panel_service_scroll_entry   (PanelService *self,
                                                 const gchar  *entry_id,
                                                 gint32       delta);
 
+void              panel_service_close_active_entry (PanelService *self);
+
 G_END_DECLS
 
 #endif /* _PANEL_SERVICE_H_ */

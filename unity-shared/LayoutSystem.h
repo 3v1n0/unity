@@ -64,10 +64,11 @@ public:
   LayoutSystem();
 
   void LayoutWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutWindowsNearest(LayoutWindow::Vector& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
   std::vector<int> GetRowSizes(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const;
 
 protected:
-  void LayoutGridWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutGridWindows(LayoutWindow::Vector const& windows, std::vector<LayoutWindow::Vector> const& rows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
 
   nux::Geometry LayoutRow(LayoutWindow::Vector const& row, nux::Geometry const& row_bounds);
   nux::Geometry CompressAndPadRow(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);

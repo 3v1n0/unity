@@ -40,6 +40,7 @@ public:
   std::vector<std::string> const& IconPaths() const;
   void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
+  void CloseActiveEntry();
 
 protected:
   virtual void OnEntryScroll(std::string const& entry_id, int delta);

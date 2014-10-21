@@ -1,3 +1,36 @@
+unity (7.3.1+14.10.20141016-0ubuntu1) utopic; urgency=low
+
+  [ Eleni Maria Stea ]
+  * LayoutSystem: make sure the exposed open windows are displayed in
+    the "correct" order
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: make edges independent from borders and properly
+    update them on actions changed
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 16 Oct 2014 15:10:30 +0000
+
+unity (7.3.1+14.10.20141015-0ubuntu1) utopic; urgency=low
+
+  [ Iain Lane ]
+  * When grabbing keys, try prefixing "XF86" if the key isn't found.
+    GNOME gives us unprefixed keys sometimes. (LP: #1302885)
+
+  [ Brandon Schaefer ]
+  * Remove bad tests that randomly fail
+
+  [ handsome_feng<445865575@qq.com> ]
+  * added support for getting the distro name from /etc/os-release (LP:
+    #1329584)
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenController: wait the primary shield to get the grab before
+    setting the session locked
+  * GLibSignal: don't call callback function if the object_ value is not
+    matching the CB (LP: #1366351)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 15 Oct 2014 12:56:50 +0000
+
 unity (7.3.1+14.10.20140915-0ubuntu2~suspend1) utopic; urgency=medium
 
   * Test suspend 2. 

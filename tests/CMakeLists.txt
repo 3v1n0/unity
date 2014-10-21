@@ -195,7 +195,7 @@ if (GMOCK_LIB AND
                  test_results.cpp
                  test_scope.cpp
                  test_scope_filter.cpp
-                 test_scope_proxy.cpp
+                 #test_scope_proxy.cpp
                  test_tracks.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})

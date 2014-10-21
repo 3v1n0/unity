@@ -68,6 +68,7 @@ private:
   void BlankWindowGrabEnable(bool grab);
   void SimulateActivity();
   void ResetPostLockScreenSaver();
+  void SetupPrimaryShieldConnections();
   void ActivatePanel();
 
   void OnLockRequested(bool prompt);
@@ -100,8 +101,7 @@ private:
   connection::Wrapper uscreen_connection_;
   connection::Wrapper suspend_connection_;
   connection::Wrapper hidden_window_connection_;
-  connection::Wrapper motion_connection_;
-  connection::Wrapper key_connection_;
+  connection::Manager primary_shield_connections_;
 
   glib::Source::UniquePtr lockscreen_timeout_;
   glib::Source::UniquePtr lockscreen_delay_timeout_;

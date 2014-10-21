@@ -26,21 +26,31 @@ namespace decoration
 {
 namespace
 {
-const int MIN_CORNER_EDGE = 10;
+const RawPixel MIN_CORNER_EDGE = 10_em;
 }
 
 EdgeBorders::EdgeBorders(CompWindow* win)
 {
-  items_.resize(size_t(Edge::Type::Size));
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &EdgeBorders::Relayout)));
 
-  for (unsigned i = 0; i < unsigned(Edge::Type::Size); ++i)
+  if (win->actions() & CompWindowActionResizeMask)
   {
-    auto type = Edge::Type(i);
+    items_.resize(size_t(Edge::Type::Size));
 
-    if (type == Edge::Type::GRAB)
-      items_[i] = std::make_shared<GrabEdge>(win);
-    else
-      items_[i] = std::make_shared<Edge>(win, type);
+    for (unsigned i = 0; i < unsigned(Edge::Type::Size); ++i)
+    {
+      auto type = Edge::Type(i);
+
+      if (type == Edge::Type::GRAB)
+        items_[i] = std::make_shared<GrabEdge>(win);
+      else
+        items_[i] = std::make_shared<Edge>(win, type);
+    }
+  }
+  else /*if (win->actions() & CompWindowActionMoveMask)*/
+  {
+    items_.resize(size_t(Edge::Type::GRAB) + 1);
+    items_[unsigned(Edge::Type::GRAB)] = std::make_shared<GrabEdge>(win);
   }
 
   Relayout();
@@ -54,10 +64,17 @@ void EdgeBorders::DoRelayout()
   auto const& ib = win->input();
 
   using namespace compiz::window::extents;
-  Extents edges(std::max(ib.left, MIN_CORNER_EDGE),
-                std::max(ib.right, MIN_CORNER_EDGE),
-                std::max(ib.top, MIN_CORNER_EDGE),
-                std::max(ib.bottom, MIN_CORNER_EDGE));
+  int min_corner_edge = MIN_CORNER_EDGE.CP(scale);
+  Extents edges(std::max(ib.left, min_corner_edge),
+                std::max(ib.right, min_corner_edge),
+                std::max(ib.top, min_corner_edge),
+                std::max(ib.bottom, min_corner_edge));
+
+  grab_edge->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top - b.top);
+  grab_edge->SetSize(rect_.width() - ib.left - ib.right, b.top);
+
+  if (items_.size() != size_t(Edge::Type::Size))
+    return;
 
   auto item = items_[unsigned(Edge::Type::TOP)];
   item->SetCoords(rect_.x() + edges.left, rect_.y());
@@ -90,10 +107,6 @@ void EdgeBorders::DoRelayout()
   item = items_[unsigned(Edge::Type::BOTTOM_RIGHT)];
   item->SetCoords(rect_.x2() - edges.right, rect_.y2() - edges.bottom);
   item->SetSize(edges.right, edges.bottom);
-
-  item = items_[unsigned(Edge::Type::GRAB)];
-  item->SetCoords(rect_.x() + ib.left, rect_.y() + ib.top - b.top);
-  item->SetSize(rect_.width() - ib.left - ib.right, b.top);
 }
 
 Item::Ptr const& EdgeBorders::GetEdge(Edge::Type type) const

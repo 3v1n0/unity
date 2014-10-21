@@ -281,6 +281,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompositeScreenInterface::setHandler(cScreen);
      GLScreenInterface::setHandler(gScreen);
      ScaleScreenInterface::setHandler(sScreen);
+     screen->updateSupportedWmHints();
 
      PluginAdapter::Initialize(screen);
      AddChild(&WindowManager::Default());
@@ -3701,7 +3702,6 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
     }
 
     auto max_bounds = NuxGeometryFromCompRect(output.workArea());
-
     if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
     {
       int monitor_width = unity_settings_.LauncherWidth(monitor);
@@ -3715,19 +3715,18 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
     layout.spacing = local::SCALE_SPACING.CP(monitor_scale);
     int padding = local::SCALE_PADDING.CP(monitor_scale);
     max_bounds.Expand(-padding, -padding);
-    layout.LayoutWindows(layout_windows, max_bounds, final_bounds);
+    layout.LayoutWindowsNearest(layout_windows, max_bounds, final_bounds);
 
-    auto lw_it = layout_windows.begin();
-    for (auto const& sw : scaled_windows)
+    for (auto const& lw : layout_windows)
     {
-      if (lw_it == layout_windows.end())
-        break;
+      auto sw_it = std::find_if(scaled_windows.begin(), scaled_windows.end(), [&lw] (ScaleWindow* sw) {
+        return sw->window->id() == lw->xid;
+      });
 
-      LayoutWindow::Ptr const& lw = *lw_it;
-
-      if (sw->window->id() != lw->xid)
+      if (sw_it == scaled_windows.end())
         continue;
 
+      ScaleWindow* sw = *sw_it;
       ScaleSlot slot(CompRectFromNuxGeo(lw->result));
       slot.scale = lw->scale;
 
@@ -3744,7 +3743,6 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
       slot.filled = true;
 
       sw->setSlot(slot);
-      ++lw_it;
     }
   }
 
@@ -3767,6 +3765,7 @@ void UnityScreen::OnLockScreenRequested()
   if (hud_controller_->IsVisible())
     hud_controller_->HideHud();
 
+  menus_->Indicators()->CloseActiveEntry();
   launcher_controller_->ClearTooltips();
 
   if (launcher_controller_->KeyNavIsActive())

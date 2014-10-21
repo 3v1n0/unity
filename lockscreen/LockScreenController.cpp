@@ -107,8 +107,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   fade_animator_.finished.connect([this] {
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
     {
-      motion_connection_->disconnect();
-      key_connection_->disconnect();
+      primary_shield_connections_.Clear();
       uscreen_connection_->block();
       hidden_window_connection_->block();
       session_manager_->is_locked = false;
@@ -180,15 +179,41 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
       primary_shield_ = shield;
       shield->primary = true;
       nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
-      auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
-      motion_connection_ = shield->grab_motion.connect(move_cb);
-      auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
-      key_connection_ = shield->grab_key.connect(key_cb);
+      SetupPrimaryShieldConnections();
       break;
     }
   }
 
   ResetPostLockScreenSaver();
+}
+
+void Controller::SetupPrimaryShieldConnections()
+{
+  if (!primary_shield_.IsValid())
+    return;
+
+  primary_shield_connections_.Clear();
+
+  auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
+  primary_shield_connections_.Add(primary_shield_->grab_motion.connect(move_cb));
+
+  auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
+  primary_shield_connections_.Add(primary_shield_->grab_key.connect(key_cb));
+
+  if (!session_manager_->is_locked())
+  {
+    primary_shield_connections_.Add(primary_shield_->grabbed.connect([this] {
+      session_manager_->is_locked = true;
+    }));
+
+    primary_shield_connections_.Add(primary_shield_->grab_failed.connect([this] {
+      if (!session_manager_->is_locked())
+      {
+        LOG_ERROR(logger) << "Impossible to get the grab to lock the screen";
+        session_manager_->unlock_requested.emit();
+      }
+    }));
+  }
 }
 
 void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
@@ -240,10 +265,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
   primary_shield_ = shields_[primary];
   primary_shield_->primary = true;
-  auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
-  motion_connection_ = primary_shield_->grab_motion.connect(move_cb);
-  auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
-  key_connection_ = primary_shield_->grab_key.connect(key_cb);
+  SetupPrimaryShieldConnections();
 }
 
 void Controller::EnsureBlankWindow()
@@ -365,7 +387,6 @@ void Controller::OnLockRequested(bool prompt)
       HideBlankWindow();
 
     LockScreen();
-    session_manager_->is_locked = true;
 
     if (prompt_activation_)
     {
@@ -455,6 +476,7 @@ void Controller::ShowShields()
     shield->PushToFront();
   });
 
+  session_manager_->is_locked = primary_shield_->HasGrab();
   nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
   animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }

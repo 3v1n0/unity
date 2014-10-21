@@ -41,8 +41,7 @@ Atom _NET_WM_VISIBLE_NAME = 0;
 }
 
 Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
-  : active_window_(0)
-  , enable_add_supported_atoms_(true)
+  : enable_add_supported_atoms_(true)
   , data_pool_(DataPool::Get())
   , menu_manager_(menu)
 {
@@ -52,7 +51,6 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   Display* dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
-  screen->updateSupportedWmHints();
 
   auto rebuild_cb = sigc::mem_fun(this, &Impl::OnShadowOptionsChanged);
   manager_->active_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, true)));
@@ -205,8 +203,6 @@ Window::Ptr Manager::Impl::GetWindowByFrame(::Window xid) const
 
 bool Manager::Impl::HandleEventBefore(XEvent* event)
 {
-  active_window_ = screen->activeWindow();
-
   switch (event->type)
   {
     case ClientMessage:
@@ -251,31 +247,26 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
 
 bool Manager::Impl::HandleEventAfter(XEvent* event)
 {
-  if (screen->activeWindow() != active_window_)
-  {
-    // Do this when _NET_ACTIVE_WINDOW changes on root!
-    if (active_deco_win_)
-      active_deco_win_->impl_->active = false;
-
-    active_window_ = screen->activeWindow();
-    auto const& new_active = GetWindowByXid(active_window_);
-    active_deco_win_ = new_active;
-
-    if (new_active)
-      new_active->impl_->active = true;
-  }
-
   switch (event->type)
   {
     case PropertyNotify:
     {
-      if (event->xproperty.atom == Atoms::mwmHints)
+      if (event->xproperty.atom == Atoms::winActive)
+      {
+        if (active_deco_win_)
+          active_deco_win_->impl_->active = false;
+
+        auto const& new_active = GetWindowByXid(screen->activeWindow());
+        active_deco_win_ = new_active;
+
+        if (new_active)
+          new_active->impl_->active = true;
+      }
+      else if (event->xproperty.atom == Atoms::mwmHints ||
+               event->xproperty.atom == Atoms::wmAllowedActions)
       {
         if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
-        {
-          win->impl_->CleanupWindowControls();
-          win->Update();
-        }
+          win->impl_->UpdateFrameActions();
       }
       else if (event->xproperty.atom == XA_WM_NAME ||
                event->xproperty.atom == Atoms::wmName ||
@@ -442,7 +433,7 @@ void Manager::AddProperties(debug::IntrospectionData& data)
   .add("active_shadow_radius", active_shadow_radius())
   .add("inactive_shadow_color", inactive_shadow_color())
   .add("inactive_shadow_radius", inactive_shadow_radius())
-  .add("active_window", impl_->active_window_);
+  .add("active_window", screen->activeWindow());
 }
 
 debug::Introspectable::IntrospectableList Manager::GetIntrospectableChildren()

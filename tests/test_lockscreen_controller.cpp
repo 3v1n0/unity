@@ -59,6 +59,7 @@ struct MockShield : AbstractShield
 
   MOCK_CONST_METHOD0(IsIndicatorOpen, bool());
   MOCK_METHOD0(ActivatePanel, void());
+  MOCK_CONST_METHOD0(HasGrab, bool());
 };
 
 struct ShieldFactoryMock : ShieldFactoryInterface

@@ -83,7 +83,7 @@ std::string XWindowManager::GetStringProperty(Window window_id, Atom atom) const
   {
     LOG_ERROR(logger) << "Impossible to get the property " << gdk_x11_get_xatom_name(atom)
                       << " for window " << window_id << ": invalid string type: "
-                      << gdk_x11_get_xatom_name(Atoms::utf8String);
+                      << gdk_x11_get_xatom_name(type);
     return std::string();
   }
 
