@@ -76,7 +76,6 @@ bool SuspendNotifier::Impl::RegisterInterest(SuspendCallback const& cb)
                                         LOG_ERROR(logger) << "Failed to inhbit suspend";
                                       }
                                       delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
-                                      std::cout << "#################" << delay_inhibit_fd_ << std::endl;
                                     });
 
   logind_proxy_->Connect("PrepareForSleep", [this](GVariant* variant) {
@@ -84,17 +83,13 @@ bool SuspendNotifier::Impl::RegisterInterest(SuspendCallback const& cb)
 
     if (active)
     {
-      //g_timeout_add(0, [] (gpointer user_data) {
-        //Impl* self = static_cast<Impl*>(user_data);
-        /*self->*/cb_();
-        /*self->*/UnregisterInterest(); // Actually it's just unlock the inhbit
-        //return FALSE;
-     // }, this);
+      cb_();
+      UnregisterInterest(); // Actually it's just unlock the inhbit
     }
-    /*else
+    else
     {
       RegisterInterest(cb_);
-    }*/
+    }
   });
 
   return true;
