@@ -1,3 +1,9 @@
+unity (7.3.1+14.10.20141016-0ubuntu2~suspend0) utopic; urgency=medium
+
+  * Test suspend changes. 
+
+ -- Andrea Azzarone <andrea@andy-XPS-L421X>  Tue, 21 Oct 2014 15:57:10 +0200
+
 unity (7.3.1+14.10.20141016-0ubuntu1) utopic; urgency=low
 
   [ Eleni Maria Stea ]
