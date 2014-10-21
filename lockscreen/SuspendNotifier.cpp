@@ -39,7 +39,10 @@ public:
   ~Impl();
 
   bool RegisterInterest(SuspendCallback const& cb);
-  void UnregisterInterest();
+  //void UnregisterInterest();
+
+  void Inhibit();
+  void Uninhibit();
 
 private:
   std::shared_ptr<glib::DBusProxy> logind_proxy_;
@@ -57,16 +60,40 @@ SuspendNotifier::Impl::Impl()
 
 SuspendNotifier::Impl::~Impl()
 {
-  UnregisterInterest();
-  logind_proxy_->DisconnectSignal("PrepareForSleep");
+  //UnregisterInterest();
+  //logind_proxy_->DisconnectSignal("PrepareForSleep");
 }
 
 bool SuspendNotifier::Impl::RegisterInterest(SuspendCallback const& cb)
 {
-  /*if (!cb or cb_)
-    return false;*/
+  if (!cb or cb_)
+    return false;
 
   cb_ = cb;
+
+  Inhibit();
+
+  logind_proxy_->Connect("PrepareForSleep", [this](GVariant* variant) {
+    bool active = glib::Variant(variant).GetBool();
+
+    if (active)
+    {
+      cb_();
+      Uninhibit();
+    }
+    else
+    {
+      Inhibit();
+    }
+  });
+
+  return true;
+}
+
+void SuspendNotifier::Impl::Inhibit()
+{
+  if (delay_inhibit_fd_ != -1)
+    return;
 
   logind_proxy_->CallWithUnixFdList("Inhibit",
                                     g_variant_new("(ssss)", "sleep", "Unity Lockscreen", "Screen is locked", "delay"),
@@ -77,33 +104,14 @@ bool SuspendNotifier::Impl::RegisterInterest(SuspendCallback const& cb)
                                       }
                                       delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
                                     });
-
-  logind_proxy_->Connect("PrepareForSleep", [this](GVariant* variant) {
-    bool active = glib::Variant(variant).GetBool();
-
-    if (active)
-    {
-      cb_();
-      UnregisterInterest(); // Actually it's just unlock the inhbit
-    }
-    else
-    {
-      RegisterInterest(cb_);
-    }
-  });
-
-  return true;
 }
 
-void SuspendNotifier::Impl::UnregisterInterest()
+void SuspendNotifier::Impl::Uninhibit()
 {
-  /*if (!cb_)
-    return;*/
+  if (delay_inhibit_fd_ == -1)
+    return;
 
-  if (delay_inhibit_fd_ != -1)
-    close(delay_inhibit_fd_);
-
-  //cb_ = 0;
+  close(delay_inhibit_fd_);
   delay_inhibit_fd_ = -1;
 }
 
@@ -125,7 +133,7 @@ bool SuspendNotifier::RegisterInterest(SuspendCallback const& cb)
 
 void SuspendNotifier::UnregisterInterest()
 {
-  pimpl_->UnregisterInterest();
+  //pimpl_->UnregisterInterest();
 }
 
 }
