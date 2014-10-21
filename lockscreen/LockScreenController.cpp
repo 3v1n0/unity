@@ -60,6 +60,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , shutdown_notifier_(std::make_shared<ShutdownNotifier>())
+  , suspend_notifier_(std::make_shared<SuspendNotifier>())
   , fade_animator_(LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
@@ -78,7 +79,12 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
   hidden_window_connection_->block();
 
-  suspend_connection_ = uscreen->suspending.connect([this] {
+  /*suspend_connection_ = uscreen->suspending.connect([this] {
+    if (Settings::Instance().lock_on_suspend())
+      session_manager_->PromptLockScreen();
+  });*/
+
+  suspend_notifier_->RegisterInterest([this](){
     if (Settings::Instance().lock_on_suspend())
       session_manager_->PromptLockScreen();
   });

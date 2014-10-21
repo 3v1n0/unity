@@ -504,7 +504,8 @@ void DBusProxy::Impl::OnCallWithUnixFdListCallback(GObject* source, GAsyncResult
 
   if (data->callback)
   {
-    gint idx = result.GetInt32();
+    gint idx;
+    g_variant_get(result, "(h)", &idx);
     gint fd = g_unix_fd_list_get(fd_list, idx, nullptr);
     data->callback(glib::Variant(fd), error);
   }

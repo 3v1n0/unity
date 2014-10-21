@@ -70,7 +70,10 @@ bool ShutdownNotifier::Impl::RegisterInterest(ShutdownCallback const& cb)
   logind_proxy_->CallWithUnixFdList("Inhibit",
                                     g_variant_new("(ssss)", "shutdown", "Unity Lockscreen", "Screen is locked", "delay"),
                                     [this](GVariant* variant, glib::Error const& e){
-                                      LOG_ERROR(logger) << "Failed to inhbit shutdow";
+                                      if (e)
+                                      {
+                                        LOG_ERROR(logger) << "Failed to inhbit shutdow";
+                                      }
                                       delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
                                     });
 

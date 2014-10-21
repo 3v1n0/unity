@@ -28,6 +28,7 @@
 #include "LockScreenAcceleratorController.h"
 #include "ScreenSaverDBusManager.h"
 #include "ShutdownNotifier.h"
+#include "SuspendNotifier.h"
 #include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
@@ -87,6 +88,7 @@ private:
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
   ShutdownNotifier::Ptr shutdown_notifier_;
+  SuspendNotifier::Ptr suspend_notifier_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
