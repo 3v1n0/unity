@@ -28,7 +28,6 @@
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibDBusProxy.h>
 
 namespace unity
 {
@@ -51,8 +50,6 @@ public:
 
   // <void, primary_monitor, monitors>
   sigc::signal<void, int, std::vector<nux::Geometry> const&> changed;
-  sigc::signal<void> suspending;
-  sigc::signal<void> resuming;
 
   const std::string GetMonitorName(int output_number) const;
   int GetPluggedMonitorsNumber() const;
@@ -68,7 +65,6 @@ protected:
 
 private:
   glib::Object<GdkScreen> screen_;
-  glib::DBusProxy proxy_;
   glib::Signal<void, GdkScreen*> size_changed_signal_;
   glib::Signal<void, GdkScreen*> monitors_changed_signal_;
   glib::Source::UniquePtr refresh_idle_;

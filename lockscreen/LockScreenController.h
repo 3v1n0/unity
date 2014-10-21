@@ -99,7 +99,6 @@ private:
   BlurType old_blur_type_;
 
   connection::Wrapper uscreen_connection_;
-  connection::Wrapper suspend_connection_;
   connection::Wrapper hidden_window_connection_;
   connection::Manager primary_shield_connections_;
 

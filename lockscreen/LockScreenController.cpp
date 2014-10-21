@@ -20,6 +20,7 @@
 #include "LockScreenController.h"
 
 #include <UnityCore/DBusIndicators.h>
+#include <UnityCore/GLibDBusProxy.h>
 #include <NuxCore/Logger.h>
 
 #include "LockScreenShield.h"
@@ -78,11 +79,6 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     nux::GetWindowCompositor().SetAlwaysOnFrontWindow(primary_shield_.GetPointer());
   });
   hidden_window_connection_->block();
-
-  /*suspend_connection_ = uscreen->suspending.connect([this] {
-    if (Settings::Instance().lock_on_suspend())
-      session_manager_->PromptLockScreen();
-  });*/
 
   suspend_notifier_->RegisterInterest([this](){
     if (Settings::Instance().lock_on_suspend())
