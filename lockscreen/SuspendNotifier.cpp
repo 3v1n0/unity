@@ -26,7 +26,7 @@ namespace unity
 namespace lockscreen
 {
 
-DECLARE_LOGGER(logger, "unity.lockscreen.Suspendnotifier");
+DECLARE_LOGGER(logger, "unity.lockscreen.suspendnotifier");
 
 //
 // Private Implementation
@@ -39,10 +39,11 @@ public:
   ~Impl();
 
   bool RegisterInterest(SuspendCallback const& cb);
-  //void UnregisterInterest();
+  void UnregisterInterest();
 
   void Inhibit();
   void Uninhibit();
+  bool IsInhibited() const;
 
 private:
   std::shared_ptr<glib::DBusProxy> logind_proxy_;
@@ -60,8 +61,7 @@ SuspendNotifier::Impl::Impl()
 
 SuspendNotifier::Impl::~Impl()
 {
-  //UnregisterInterest();
-  //logind_proxy_->DisconnectSignal("PrepareForSleep");
+  UnregisterInterest();
 }
 
 bool SuspendNotifier::Impl::RegisterInterest(SuspendCallback const& cb)
@@ -76,12 +76,12 @@ bool SuspendNotifier::Impl::RegisterInterest(SuspendCallback const& cb)
   logind_proxy_->Connect("PrepareForSleep", [this](GVariant* variant) {
     bool active = glib::Variant(variant).GetBool();
 
-    if (active)
+    if (active) // suspending
     {
       cb_();
       Uninhibit();
     }
-    else
+    else // resuming
     {
       Inhibit();
     }
@@ -90,13 +90,21 @@ bool SuspendNotifier::Impl::RegisterInterest(SuspendCallback const& cb)
   return true;
 }
 
+void SuspendNotifier::Impl::UnregisterInterest()
+{
+  Uninhibit();
+
+  logind_proxy_->DisconnectSignal("PrepareForSleep");
+  cb_ = nullptr;
+}
+
 void SuspendNotifier::Impl::Inhibit()
 {
-  if (delay_inhibit_fd_ != -1)
+  if (IsInhibited())
     return;
 
   logind_proxy_->CallWithUnixFdList("Inhibit",
-                                    g_variant_new("(ssss)", "sleep", "Unity Lockscreen", "Screen is locked", "delay"),
+                                    g_variant_new("(ssss)", "sleep", "Unity Lockscreen", "Unity wants to lock screen before suspending.", "delay"),
                                     [this](GVariant* variant, glib::Error const& e){
                                       if (e)
                                       {
@@ -108,11 +116,16 @@ void SuspendNotifier::Impl::Inhibit()
 
 void SuspendNotifier::Impl::Uninhibit()
 {
-  if (delay_inhibit_fd_ == -1)
+  if (!IsInhibited())
     return;
 
   close(delay_inhibit_fd_);
   delay_inhibit_fd_ = -1;
+}
+
+bool SuspendNotifier::Impl::IsInhibited() const
+{
+  return delay_inhibit_fd_ != -1;
 }
 
 //
@@ -133,7 +146,7 @@ bool SuspendNotifier::RegisterInterest(SuspendCallback const& cb)
 
 void SuspendNotifier::UnregisterInterest()
 {
-  //pimpl_->UnregisterInterest();
+  pimpl_->UnregisterInterest();
 }
 
 }

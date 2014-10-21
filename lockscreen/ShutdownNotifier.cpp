@@ -41,6 +41,10 @@ public:
   bool RegisterInterest(ShutdownCallback const& cb);
   void UnregisterInterest();
 
+  void Inhibit();
+  void Uninhibit();
+  bool IsInhibited() const;
+
 private:
   std::shared_ptr<glib::DBusProxy> logind_proxy_;
   ShutdownCallback cb_;
@@ -67,15 +71,7 @@ bool ShutdownNotifier::Impl::RegisterInterest(ShutdownCallback const& cb)
 
   cb_ = cb;
 
-  logind_proxy_->CallWithUnixFdList("Inhibit",
-                                    g_variant_new("(ssss)", "shutdown", "Unity Lockscreen", "Screen is locked", "delay"),
-                                    [this](GVariant* variant, glib::Error const& e){
-                                      if (e)
-                                      {
-                                        LOG_ERROR(logger) << "Failed to inhbit shutdow";
-                                      }
-                                      delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
-                                    });
+  Inhibit();
 
   logind_proxy_->Connect("PrepareForShutdown", [this](GVariant* variant) {
     bool active = glib::Variant(variant).GetBool();
@@ -95,13 +91,40 @@ void ShutdownNotifier::Impl::UnregisterInterest()
   if (!cb_)
     return;
 
+  Uninhibit();
+
   logind_proxy_->DisconnectSignal("PrepareForShutdown");
-
-  if (delay_inhibit_fd_ != -1)
-    close(delay_inhibit_fd_);
-
   cb_ = 0;
+}
+
+void ShutdownNotifier::Impl::Inhibit()
+{
+  if (IsInhibited())
+    return;
+
+  logind_proxy_->CallWithUnixFdList("Inhibit",
+                                    g_variant_new("(ssss)", "shutdown", "Unity Lockscreen", "Screen is locked", "delay"),
+                                    [this](GVariant* variant, glib::Error const& e){
+                                      if (e)
+                                      {
+                                        LOG_ERROR(logger) << "Failed to inhbit suspend";
+                                      }
+                                      delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
+                                    });
+}
+
+void ShutdownNotifier::Impl::Uninhibit()
+{
+  if (!IsInhibited())
+    return;
+
+  close(delay_inhibit_fd_);
   delay_inhibit_fd_ = -1;
+}
+
+bool ShutdownNotifier::Impl::IsInhibited() const
+{
+  return delay_inhibit_fd_ != -1;
 }
 
 //
