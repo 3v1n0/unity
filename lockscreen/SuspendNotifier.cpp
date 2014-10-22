@@ -103,15 +103,15 @@ void SuspendNotifier::Impl::Inhibit()
   if (IsInhibited())
     return;
 
-  logind_proxy_->CallWithUnixFdList("Inhibit",
-                                    g_variant_new("(ssss)", "sleep", "Unity Lockscreen", "Unity wants to lock screen before suspending.", "delay"),
-                                    [this](GVariant* variant, glib::Error const& e){
-                                      if (e)
-                                      {
-                                        LOG_ERROR(logger) << "Failed to inhbit suspend";
-                                      }
-                                      delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
-                                    });
+  GVariant* args = g_variant_new("(ssss)", "sleep", "Unity Lockscreen", "Unity wants to lock screen before suspending.", "delay");
+
+  logind_proxy_->CallWithUnixFdList("Inhibit", args, [this] (GVariant* variant, glib::Error const& e) {
+    if (e)
+    {
+      LOG_ERROR(logger) << "Failed to inhbit suspend";
+    }
+    delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
+  });
 }
 
 void SuspendNotifier::Impl::Uninhibit()

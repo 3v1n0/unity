@@ -21,7 +21,7 @@
 
 #include "GLibDBusProxy.h"
 
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <NuxCore/Logger.h>
 #include <vector>
@@ -49,7 +49,7 @@ class DBusProxy::Impl
 {
 public:
   typedef std::vector<ReplyCallback> Callbacks;
-  typedef std::map<string, Callbacks> SignalHandlers;
+  typedef std::unordered_map<string, Callbacks> SignalHandlers;
 
   Impl(DBusProxy* owner,
        string const& name,
@@ -460,7 +460,7 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
 
   if (error)
   {
-    if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
     {
       // silently ignore, don't even invoke callback, FIXME: really?
       return;
@@ -488,7 +488,7 @@ void DBusProxy::Impl::OnCallWithUnixFdListCallback(GObject* source, GAsyncResult
 
   if (error)
   {
-    if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
     {
       // silently ignore, don't even invoke callback, FIXME: really?
       return;

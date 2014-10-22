@@ -37,7 +37,7 @@ public:
   SuspendNotifier();
   ~SuspendNotifier();
 
-  bool RegisterInterest(SuspendCallback const& cb);
+  bool RegisterInterest(SuspendCallback const&);
   void UnregisterInterest();
 
 private:

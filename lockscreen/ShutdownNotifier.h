@@ -37,7 +37,7 @@ public:
   ShutdownNotifier();
   ~ShutdownNotifier();
 
-  bool RegisterInterest(ShutdownCallback const& cb);
+  bool RegisterInterest(ShutdownCallback const&);
   void UnregisterInterest();
 
 private:

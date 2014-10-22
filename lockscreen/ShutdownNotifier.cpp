@@ -94,7 +94,7 @@ void ShutdownNotifier::Impl::UnregisterInterest()
   Uninhibit();
 
   logind_proxy_->DisconnectSignal("PrepareForShutdown");
-  cb_ = 0;
+  cb_ = nullptr;
 }
 
 void ShutdownNotifier::Impl::Inhibit()
@@ -102,15 +102,15 @@ void ShutdownNotifier::Impl::Inhibit()
   if (IsInhibited())
     return;
 
-  logind_proxy_->CallWithUnixFdList("Inhibit",
-                                    g_variant_new("(ssss)", "shutdown", "Unity Lockscreen", "Screen is locked", "delay"),
-                                    [this](GVariant* variant, glib::Error const& e){
-                                      if (e)
-                                      {
-                                        LOG_ERROR(logger) << "Failed to inhbit suspend";
-                                      }
-                                      delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
-                                    });
+  GVariant* args = g_variant_new("(ssss)", "shutdown", "Unity Lockscreen", "Screen is locked", "delay");
+
+  logind_proxy_->CallWithUnixFdList("Inhibit", args, [this] (GVariant* variant, glib::Error const& e) {
+    if (e)
+    {
+      LOG_ERROR(logger) << "Failed to inhbit suspend";
+    }
+    delay_inhibit_fd_ = glib::Variant(variant).GetInt32();
+  });
 }
 
 void ShutdownNotifier::Impl::Uninhibit()
