@@ -1454,7 +1454,6 @@ void PluginAdapter::OnWindowClosed(CompWindow *w)
     _last_focused_window = NULL;
 }
 
-// XXX Don't use that outside lockscreen controller!
 void PluginAdapter::UnmapAllNoNuxWindowsSync()
 {
   for (auto const& window : m_Screen->windows())
