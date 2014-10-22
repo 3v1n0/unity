@@ -538,7 +538,19 @@ void UnityScreen::OnInitiateSpread()
     else
     {
       CompMatch windows_match;
-      for (auto xid : spread_filter_->FilteredWindows())
+      auto const& filtered_windows = spread_filter_->FilteredWindows();
+
+      for (auto const& swin : sScreen->getWindows())
+      {
+        if (std::find(filtered_windows.begin(), filtered_windows.end(), swin->window->id()) != filtered_windows.end())
+          continue;
+
+        auto* uwin = UnityWindow::get(swin->window);
+        uwin->OnTerminateSpread();
+        fake_decorated_windows_.erase(uwin);
+      }
+
+      for (auto xid : filtered_windows)
         windows_match |= "xid="+std::to_string(xid);
 
       auto match = sScreen->getCustomMatch();
@@ -4430,7 +4442,7 @@ void UnityWindow::OnTerminateSpread()
     }
     else
     {
-      window->setShowDesktopMode (false);
+      window->setShowDesktopMode(false);
     }
   }
 }
