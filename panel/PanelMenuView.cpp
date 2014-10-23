@@ -814,7 +814,7 @@ void PanelMenuView::UpdateTitleTexture(nux::Geometry const& geo, std::string con
   auto state = WidgetState::NORMAL;
   float dpi_scale = Settings::Instance().em(monitor_)->DPIScale();
 
-  if (integrated_menus_ && !is_desktop_focused_ && !WindowManager::Default().IsScaleActive())
+  if (integrated_menus_ && !is_desktop_focused_ && !WindowManager::Default().IsExpoActive())
   {
     title_geo_.x = geo.x + window_buttons_->GetBaseWidth() + (style->TitleIndent() * dpi_scale);
 
