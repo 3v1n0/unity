@@ -386,14 +386,12 @@ bool PanelMenuView::ShouldDrawMenus() const
 
 bool PanelMenuView::ShouldDrawButtons() const
 {
+  if (spread_showing_)
+    return true;
+
   if (integrated_menus_)
   {
-    if (spread_showing_)
-      return true;
-
-    WindowManager& wm = WindowManager::Default();
-
-    if (!wm.IsExpoActive() && !wm.IsScaleActive())
+    if (!WindowManager::Default().IsExpoActive())
       return (GetMaximizedWindow() != 0);
 
     return false;
@@ -401,9 +399,7 @@ bool PanelMenuView::ShouldDrawButtons() const
 
   if (we_control_active_ && is_maximized_ && !launcher_keynav_ && !switcher_showing_)
   {
-    WindowManager& wm = WindowManager::Default();
-
-    if (!wm.IsExpoActive())
+    if (!WindowManager::Default().IsExpoActive())
     {
       if (is_inside_ || show_now_activated_ || new_application_)
         return true;
@@ -412,9 +408,6 @@ bool PanelMenuView::ShouldDrawButtons() const
         return true;
     }
   }
-
-  if (spread_showing_)
-    return true;
 
   return false;
 }
@@ -854,10 +847,9 @@ std::string PanelMenuView::GetCurrentTitle() const
 {
   if (integrated_menus_ || (!switcher_showing_ && !launcher_keynav_))
   {
-    WindowManager& wm = WindowManager::Default();
     std::string new_title;
 
-    if (wm.IsExpoActive())
+    if (WindowManager::Default().IsExpoActive())
     {
       new_title = desktop_name_;
     }
@@ -1129,7 +1121,10 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher, BamfView* old_vi
     }
 
     if (is_maximized_)
-      maximized_set_.insert(active_xid_);
+    {
+      maximized_wins_.erase(std::remove(maximized_wins_.begin(), maximized_wins_.end(), active_xid_), maximized_wins_.end());
+      maximized_wins_.push_front(active_xid_);
+    }
 
     // register callback for new view
     view_name_changed_signal_.Connect(new_view, "name-changed",
@@ -1185,7 +1180,7 @@ void PanelMenuView::OnExpoTerminate()
 
 void PanelMenuView::OnWindowMinimized(Window xid)
 {
-  maximized_set_.erase(xid);
+  maximized_wins_.erase(std::remove(maximized_wins_.begin(), maximized_wins_.end(), xid), maximized_wins_.end());
 
   if (xid == active_xid_)
   {
@@ -1201,18 +1196,24 @@ void PanelMenuView::OnWindowMinimized(Window xid)
 
 void PanelMenuView::OnWindowUnminimized(Window xid)
 {
-  if (WindowManager::Default().IsWindowMaximized(xid))
-    maximized_set_.insert(xid);
-
   if (xid == active_xid_)
   {
+    if (WindowManager::Default().IsWindowMaximized(xid))
+      maximized_wins_.push_front(xid);
+
     if (Refresh())
       QueueDraw();
   }
-  else if (integrated_menus_ && IsWindowUnderOurControl(xid))
+  else
   {
-    if (Refresh())
-      QueueDraw();
+    if (WindowManager::Default().IsWindowMaximized(xid))
+      maximized_wins_.push_back(xid);
+
+    if (integrated_menus_ && IsWindowUnderOurControl(xid))
+    {
+      if (Refresh())
+        QueueDraw();
+    }
   }
 }
 
@@ -1220,7 +1221,7 @@ void PanelMenuView::OnWindowUnmapped(Window xid)
 {
   // FIXME: compiz doesn't give us a valid xid (is always 0 on unmap)
   // we need to do this again on BamfView closed signal.
-  maximized_set_.erase(xid);
+  maximized_wins_.erase(std::remove(maximized_wins_.begin(), maximized_wins_.end(), xid), maximized_wins_.end());
 
   if (xid == active_xid_)
   {
@@ -1238,22 +1239,26 @@ void PanelMenuView::OnWindowMapped(Window xid)
 {
   if (WindowManager::Default().IsWindowMaximized(xid))
   {
-    maximized_set_.insert(xid);
-
     if (xid == active_xid_)
     {
+      maximized_wins_.push_front(xid);
+
       if (Refresh())
         QueueDraw();
+    }
+    else
+    {
+      maximized_wins_.push_back(xid);
     }
   }
 }
 
 void PanelMenuView::OnWindowMaximized(Window xid)
 {
-  maximized_set_.insert(xid);
-
   if (xid == active_xid_)
   {
+    maximized_wins_.push_front(xid);
+
     // We need to update the is_inside_ state in the case of maximization by grab
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
@@ -1262,16 +1267,21 @@ void PanelMenuView::OnWindowMaximized(Window xid)
     if (Refresh())
       FullRedraw();
   }
-  else if (integrated_menus_ && IsWindowUnderOurControl(xid))
+  else
   {
-    if (Refresh())
-      QueueDraw();
+    maximized_wins_.push_back(xid);
+
+    if (integrated_menus_ && IsWindowUnderOurControl(xid))
+    {
+      if (Refresh())
+        QueueDraw();
+    }
   }
 }
 
 void PanelMenuView::OnWindowRestored(Window xid)
 {
-  maximized_set_.erase(xid);
+  maximized_wins_.erase(std::remove(maximized_wins_.begin(), maximized_wins_.end(), xid), maximized_wins_.end());
 
   if (active_xid_ == xid)
   {
@@ -1370,7 +1380,7 @@ Window PanelMenuView::GetMaximizedWindow() const
   Window window_xid = 0;
 
   // Find the front-most of the maximized windows we are controlling
-  for (auto xid : maximized_set_)
+  for (auto xid : maximized_wins_)
   {
     // We can safely assume only the front-most is visible
     if (IsValidWindow(xid))
@@ -1795,8 +1805,8 @@ void PanelMenuView::SetMonitor(int monitor)
 {
   PanelIndicatorsView::SetMonitor(monitor);
 
+  maximized_wins_.clear();
   monitor_geo_ = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
-  maximized_set_.clear();
   GList* windows = bamf_matcher_get_window_stack_for_monitor(matcher_, monitor_);
 
   for (GList* l = windows; l; l = l->next)
@@ -1806,12 +1816,18 @@ void PanelMenuView::SetMonitor(int monitor)
 
     auto window = static_cast<BamfWindow*>(l->data);
     auto view = static_cast<BamfView*>(l->data);
+    auto xid = bamf_window_get_xid(window);
 
     if (bamf_view_is_active(view))
-      active_xid_ = bamf_window_get_xid(window);
+      active_xid_ = xid;
 
     if (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED)
-      maximized_set_.insert(bamf_window_get_xid(window));
+    {
+      if (xid == active_xid_)
+        maximized_wins_.push_front(xid);
+      else
+        maximized_wins_.push_back(xid);
+    }
   }
 
   Window maximized = GetMaximizedWindow();
