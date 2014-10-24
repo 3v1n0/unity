@@ -275,6 +275,9 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   if (!mouse_inside)
     return nullptr;
 
+  if (WindowManager::Default().IsExpoActive())
+    return nullptr;
+
   Area* found_area = nullptr;
 
   if (!integrated_menus_ && !we_control_active_ && !spread_showing_)
