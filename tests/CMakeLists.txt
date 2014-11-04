@@ -8,7 +8,7 @@ file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_BINARY_DIR}/test
 #
 # Unit tests
 #
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;libupstart;libnih;libnih-dbus;dbus-1")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;libupstart;")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 string (REPLACE ";" " " TEST_UNIT_DEPS_CFLAGS_OTHER "${TEST_UNIT_CFLAGS_OTHER}")
