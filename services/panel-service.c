@@ -593,19 +593,20 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                     }
                 }
             }
-          else if (entry && (event->detail == 2 || event->detail == 4 || event->detail == 5))
+          else if (entry && (event->detail == 2 || event->detail >= 4 || event->detail <= 7))
             {
               /* If we're scrolling or middle-clicking over an indicator
                * (which is not an appmenu entry) then we need to send the
                * event to the indicator itself, and avoid it to close */
               gchar *entry_id = get_indicator_entry_id_by_entry (entry);
 
-              if (event->detail == 4 || event->detail == 5)
+              if (event->detail >= 4 || event->detail <= 7)
                 {
-                  gint32 delta = (event->detail == 4) ? 120 : -120;
+                  gint32 delta = (event->detail >= 6) ? NUX_HORIZONTAL_SCROLL_DELTA : NUX_VERTICAL_SCROLL_DELTA;
+                  delta = (event->detail % 2 == 0) ? delta : delta * -1;
                   panel_service_scroll_entry (self, entry_id, delta);
                 }
-              else if (entry == priv->pressed_entry)
+              else if (event->detail == 2 && entry == priv->pressed_entry)
                 {
                   panel_service_secondary_activate_entry (self, entry_id);
                 }
