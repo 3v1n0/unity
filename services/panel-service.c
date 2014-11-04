@@ -31,6 +31,7 @@
 #include <libindicator/indicator-ng.h>
 
 #include <X11/XKBlib.h>
+#include <X11/XF86keysym.h>
 #include <X11/extensions/XInput2.h>
 
 #include <upstart.h>
@@ -474,6 +475,58 @@ event_matches_keybinding (guint32 modifiers, KeySym key, KeyBinding *kb)
   return FALSE;
 }
 
+static gboolean
+is_special_keysym (KeySym keysym)
+{
+  /* Multimedia keys, see X11/XF86keysym.h */
+  if (keysym >= 0x1008FF00 && keysym <= 0x1008FFFF)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+is_control_keysym (KeySym keysym)
+{
+  if (!is_special_keysym (keysym))
+    return FALSE;
+
+  /* Display backlight controls */
+  if (keysym >= 0x1008FF01 && keysym <= 0x1008FF0F)
+    return TRUE;
+
+  switch (keysym)
+    {
+      case XF86XK_Battery:
+      case XF86XK_Bluetooth:
+      case XF86XK_WLAN:
+      case XF86XK_UWB:
+        return TRUE;
+    }
+
+  const gchar *keystr = XKeysymToString (keysym);
+
+  if (g_str_has_prefix (keystr, "XF86Audio") ||
+      g_str_has_prefix (keystr, "XF86Touchpad"))
+    {
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+static gboolean
+is_allowed_keysym (KeySym keysym)
+{
+  if (keysym == XK_Print)
+    return TRUE;
+
+  if (is_special_keysym (keysym))
+    return TRUE;
+
+  return FALSE;
+}
+
 static GdkFilterReturn
 event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 {
@@ -519,9 +572,9 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
             }
           else if (event->mods.base != GDK_CONTROL_MASK)
             {
-              if (!IsModifierKey (keysym) && (event->mods.base != 0 || keysym == XK_Print))
+              if (!IsModifierKey (keysym) && (event->mods.base != 0 || is_allowed_keysym (keysym)))
                 {
-                  if (GTK_IS_MENU (priv->last_menu))
+                  if (GTK_IS_MENU (priv->last_menu) && !is_control_keysym (keysym))
                     gtk_menu_popdown (GTK_MENU (priv->last_menu));
 
                   reinject_key_event_to_root_window (event);
