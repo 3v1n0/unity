@@ -501,7 +501,13 @@ is_control_keysym (KeySym keysym)
       case XF86XK_Bluetooth:
       case XF86XK_WLAN:
       case XF86XK_UWB:
-        return TRUE;
+        return !lockscreen_mode;
+      case XF86XK_Suspend:
+      case XF86XK_Hibernate:
+      case XF86XK_Sleep:
+      case XF86XK_PowerOff:
+      case XF86XK_ScreenSaver:
+        return lockscreen_mode;
     }
 
   const gchar *keystr = XKeysymToString (keysym);
@@ -556,10 +562,18 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     {
       case XI_KeyPress:
         {
-          if (lockscreen_mode)
-            break;
-
           KeySym keysym = XkbKeycodeToKeysym (event->display, event->detail, 0, 0);
+
+          if (lockscreen_mode)
+            {
+              if (is_control_keysym (keysym))
+                {
+                  reinject_key_event_to_root_window (event);
+                  ret = GDK_FILTER_REMOVE;
+                }
+
+              break;
+            }
 
           if (event_matches_keybinding (event->mods.base, keysym, &priv->menu_toggle) ||
               event_matches_keybinding (event->mods.base, keysym, &priv->show_dash) ||
