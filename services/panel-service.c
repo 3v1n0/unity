@@ -34,7 +34,7 @@
 #include <X11/XF86keysym.h>
 #include <X11/extensions/XInput2.h>
 
-#include <upstart.h>
+#include <upstart/upstart-dbus.h>
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
