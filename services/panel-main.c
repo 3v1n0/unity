@@ -19,6 +19,7 @@
  */
 
 #include <glib.h>
+#include <glib-unix.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 #include <libido/libido.h>
@@ -422,19 +423,14 @@ on_name_lost (GDBusConnection *connection,
   gtk_main_quit ();
 }
 
-static void
-on_indicators_cleared (PanelService *service)
+static gboolean
+on_unix_signal (gpointer data)
 {
-  gtk_main_quit ();
-}
-
-static void
-on_signal (int sig)
-{
-  PanelService *service = panel_service_get_default ();
-  panel_service_clear_indicators (service);
+  PanelService *service = PANEL_SERVICE (data);
   g_signal_connect (service, "indicators-cleared",
-                    G_CALLBACK (on_indicators_cleared), NULL);
+                    G_CALLBACK (gtk_main_quit), NULL);
+  panel_service_clear_indicators (service);
+  return FALSE;
 }
 
 static void
@@ -497,8 +493,8 @@ main (gint argc, gchar **argv)
                              service,
                              NULL);
 
-  signal (SIGINT, on_signal);
-  signal (SIGTERM, on_signal);
+  g_unix_signal_add (SIGINT, on_unix_signal, service);
+  g_unix_signal_add (SIGTERM, on_unix_signal, service);
 
   gtk_main ();
 
