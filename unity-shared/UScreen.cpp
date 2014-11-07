@@ -98,7 +98,7 @@ std::vector<nux::Geometry> const& UScreen::GetMonitors() const
 nux::Geometry UScreen::GetScreenGeometry() const
 {
   if (monitors_.empty())
-    return nux::Geometry();
+    return {};
 
   auto rightmost_geo = max_element(monitors_.begin(), monitors_.end(), [](nux::Geometry const& a, nux::Geometry const& b) {
     return a.x + a.width < b.x + b.width;
@@ -111,7 +111,7 @@ nux::Geometry UScreen::GetScreenGeometry() const
   auto width = rightmost_geo->x + rightmost_geo->width;
   auto height = lower_geo->y + lower_geo->height;
 
-  return nux::Geometry(0, 0, width, height);
+  return {0, 0, width, height};
 }
 
 const std::string UScreen::GetMonitorName(int output_number = 0) const
