@@ -73,21 +73,13 @@ int UScreen::GetPrimaryMonitor() const
 
 int UScreen::GetMonitorAtPosition(int x, int y) const
 {
-  int monitors = gdk_screen_get_n_monitors(screen_);
+  int idx = 0;
 
-  for (int i = 0; i < monitors; ++i)
+  for (auto const& monitor : monitors_)
   {
-    GdkRectangle rect = { 0 };
-    gdk_screen_get_monitor_geometry(screen_, i, &rect);
-
-    float scale = gdk_screen_get_monitor_scale_factor(screen_, i);
-    nux::Geometry geo(rect.x, rect.y, rect.width, rect.height);
-
-    if (scale != 1.0)
-      geo = geo * scale;
-
-    if (geo.IsPointInside(x, y))
-      return i;
+    if (monitor.IsPointInside(x, y))
+      return idx;
+    ++idx;
   }
 
   return gdk_screen_get_monitor_at_point(screen_, x, y);
@@ -105,8 +97,20 @@ std::vector<nux::Geometry> const& UScreen::GetMonitors() const
 
 nux::Geometry UScreen::GetScreenGeometry() const
 {
-  int width = gdk_screen_get_width(screen_);
-  int height = gdk_screen_get_height(screen_);
+  if (monitors_.empty())
+    return nux::Geometry();
+
+  auto rightmost_geo = max_element(monitors_.begin(), monitors_.end(), [](nux::Geometry const& a, nux::Geometry const& b) {
+    return a.x + a.width < b.x + b.width;
+  });
+
+  auto lower_geo = max_element(monitors_.begin(), monitors_.end(), [](nux::Geometry const& a, nux::Geometry const& b) {
+    return a.y + a.height < b.y + b.height;
+  });
+
+  auto width = rightmost_geo->x + rightmost_geo->width;
+  auto height = lower_geo->y + lower_geo->height;
+
   return nux::Geometry(0, 0, width, height);
 }
 
