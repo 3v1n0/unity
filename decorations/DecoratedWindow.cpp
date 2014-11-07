@@ -713,7 +713,7 @@ void Window::Impl::SetupAppMenu()
     sliding_layout->mouse_owner = true;
 
   grab_mouse_changed_ = grab_edge->mouse_owner.changed.connect([this] (bool owner) {
-    sliding_layout_->mouse_owner = owner;
+    sliding_layout_->mouse_owner = owner || menus_->show_now();
   });
 
   if (sliding_layout->mouse_owner())
