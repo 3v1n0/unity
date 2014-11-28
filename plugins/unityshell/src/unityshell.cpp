@@ -542,7 +542,7 @@ void UnityScreen::OnInitiateSpread()
 
       for (auto const& swin : sScreen->getWindows())
       {
-        if (std::find(filtered_windows.begin(), filtered_windows.end(), swin->window->id()) != filtered_windows.end())
+        if (filtered_windows.find(swin->window->id()) != filtered_windows.end())
           continue;
 
         auto* uwin = UnityWindow::get(swin->window);

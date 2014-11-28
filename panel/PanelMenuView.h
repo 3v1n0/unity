@@ -170,7 +170,7 @@ private:
   bool is_desktop_focused_;
 
   PanelIndicatorEntryView* last_active_view_;
-  std::set<Window> maximized_set_;
+  std::deque<Window> maximized_wins_;
   glib::Object<BamfApplication> new_application_;
   std::list<glib::Object<BamfApplication>> new_apps_;
   std::string panel_title_;

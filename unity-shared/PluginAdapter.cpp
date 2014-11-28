@@ -554,9 +554,10 @@ bool PluginAdapter::IsWindowOnCurrentDesktop(Window window_id) const
 
 bool PluginAdapter::IsWindowObscured(Window window_id) const
 {
-  CompWindow* window = m_Screen->findWindow(window_id);
+  if (_spread_state)
+    return false;
 
-  if (window)
+  if (CompWindow* window = m_Screen->findWindow(window_id))
   {
     if (window->inShowDesktopMode())
       return true;
