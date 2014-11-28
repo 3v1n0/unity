@@ -40,7 +40,8 @@ UScreen::UScreen()
   proxy_.Connect("PrepareForSleep", [this] (GVariant* data) {
     gboolean val;
     g_variant_get(data, "(b)", &val);
-    val ? suspending.emit() : resuming.emit();
+    if (!val)
+      resuming.emit();
   });
 
   Refresh();

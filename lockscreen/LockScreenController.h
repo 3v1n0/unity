@@ -27,6 +27,8 @@
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
 #include "ScreenSaverDBusManager.h"
+#include "ShutdownNotifier.h"
+#include "SuspendNotifier.h"
 #include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
@@ -86,6 +88,8 @@ private:
   AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
+  ShutdownNotifier::Ptr shutdown_notifier_;
+  SuspendNotifier::Ptr suspend_notifier_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
@@ -95,7 +99,6 @@ private:
   BlurType old_blur_type_;
 
   connection::Wrapper uscreen_connection_;
-  connection::Wrapper suspend_connection_;
   connection::Wrapper hidden_window_connection_;
   connection::Manager primary_shield_connections_;
 

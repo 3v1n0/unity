@@ -432,7 +432,6 @@ void GnomeManager::Impl::LockScreen(bool prompt)
     return;
   }
 
-  // FIXME (andy) we should ask gnome-session to emit the logind signal
   prompt ? manager_->prompt_lock_requested.emit() : manager_->lock_requested.emit();
 }
 

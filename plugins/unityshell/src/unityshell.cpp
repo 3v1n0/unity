@@ -2795,23 +2795,6 @@ std::string UnityScreen::GetName() const
   return "Unity";
 }
 
-bool isNuxWindow(CompWindow* value)
-{
-  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-  auto id = value->id();
-
-  // iterate loop by hand rather than use std::find as this is considerably faster
-  // we care about performance here because of the high frequency in which this function is
-  // called (nearly every frame)
-  unsigned int size = xwns.size();
-  for (unsigned int i = 0; i < size; ++i)
-  {
-    if (xwns[i] == id)
-      return true;
-  }
-  return false;
-}
-
 void UnityScreen::RaiseInputWindows()
 {
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
@@ -4094,7 +4077,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , close_icon_state_(decoration::WidgetState::NORMAL)
   , deco_win_(uScreen->deco_manager_->HandleWindow(window))
   , need_fake_deco_redraw_(false)
-  , is_nux_window_(isNuxWindow(window))
+  , is_nux_window_(PluginAdapter::IsNuxWindow(window))
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);

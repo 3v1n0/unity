@@ -64,6 +64,12 @@ public:
                  GCancellable *cancellable = nullptr,
                  GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
                  int timeout_msec = -1);
+  void CallWithUnixFdList(std::string const& method_name,
+                          GVariant* parameters = nullptr,
+                          CallFinishedCallback const& callback = nullptr,
+                          GCancellable *cancellable = nullptr,
+                          GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
+                          int timeout_msec = -1);
 
   bool IsConnected() const;
 
