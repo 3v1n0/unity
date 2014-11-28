@@ -34,9 +34,7 @@
 #include <X11/XF86keysym.h>
 #include <X11/extensions/XInput2.h>
 
-#include <upstart.h>
-#include <nih/alloc.h>
-#include <nih/error.h>
+#include <upstart/upstart-dbus.h>
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
@@ -87,8 +85,6 @@ struct _PanelServicePrivate
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
-
-  NihDBusProxy * upstart;
 };
 
 /* Globals */
@@ -139,6 +135,7 @@ static void load_indicators_from_indicator_files (PanelService *);
 static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
 static void update_keybinding (GSettings *, const gchar *, gpointer);
+static void emit_upstart_event (const gchar *);
 static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
 
 /*
@@ -154,21 +151,8 @@ panel_service_class_dispose (GObject *self)
   g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
-  if (priv->upstart != NULL && !lockscreen_mode)
-    {
-      int event_sent = 0;
-      event_sent = upstart_emit_event_sync (NULL, priv->upstart,
-                                            "indicator-services-end", NULL, 0);
-      if (event_sent != 0)
-        {
-          NihError * err = nih_error_get();
-          g_warning("Unable to signal for indicator services to stop: %s", err->message);
-          nih_free(err);
-        }
-
-      nih_unref (priv->upstart, NULL);
-      priv->upstart = NULL;
-    }
+  if (!lockscreen_mode)
+    emit_upstart_event ("indicator-services-end");
 
   if (GTK_IS_WIDGET (priv->last_menu) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->last_menu)))
@@ -699,17 +683,8 @@ initial_resync (PanelService *self)
 static gboolean
 ready_signal (PanelService *self)
 {
-  if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL && !lockscreen_mode)
-    {
-      int event_sent = 0;
-      event_sent = upstart_emit_event_sync (NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
-      if (event_sent != 0)
-        {
-          NihError * err = nih_error_get();
-          g_warning("Unable to signal for indicator services to start: %s", err->message);
-          nih_free(err);
-        }
-    }
+  if (!lockscreen_mode)
+    emit_upstart_event ("indicator-services-start");
 
   return FALSE;
 }
@@ -802,6 +777,48 @@ parse_string_keybinding (const char *str, KeyBinding *kb)
 }
 
 static void
+emit_upstart_event (const gchar *event)
+{
+  const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
+
+  if (!upstartsession)
+    return;
+
+  GError *error = NULL;
+  GDBusConnection* conn = g_dbus_connection_new_for_address_sync (upstartsession,
+                                                                  G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT,
+                                                                  NULL, NULL, &error);
+
+  if (error)
+    {
+      g_warning ("Unable to connect to Upstart session: %s", error->message);
+      g_error_free (error);
+      return;
+    }
+
+  GVariant *result = g_dbus_connection_call_sync (conn, DBUS_SERVICE_UPSTART,
+                                                  DBUS_PATH_UPSTART,
+                                                  DBUS_INTERFACE_UPSTART,
+                                                  "EmitEvent",
+                                                  g_variant_new ("(sasb)", event, NULL, 0),
+                                                  NULL, G_DBUS_CALL_FLAGS_NO_AUTO_START, -1,
+                                                  NULL, &error);
+
+  if (error)
+    {
+      g_warning ("Unable to emit Upstart event: %s", error->message);
+      g_error_free (error);
+    }
+  else
+    {
+      g_variant_unref (result);
+    }
+
+  g_object_unref (conn);
+}
+
+
+static void
 panel_service_init (PanelService *self)
 {
   PanelServicePrivate *priv;
@@ -825,29 +842,6 @@ panel_service_init (PanelService *self)
   update_keybinding (priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY, &priv->menu_toggle);
   update_keybinding (priv->gsettings, SHOW_DASH_KEY, &priv->show_dash);
   update_keybinding (priv->gsettings, SHOW_HUD_KEY, &priv->show_hud);
-
-  const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
-  if (upstartsession != NULL && !lockscreen_mode)
-    {
-      DBusConnection *conn = dbus_connection_open (upstartsession, NULL);
-      if (conn != NULL)
-        {
-          priv->upstart = nih_dbus_proxy_new (NULL, conn,
-                                              NULL,
-                                              DBUS_PATH_UPSTART,
-                                              NULL, NULL);
-          if (priv->upstart == NULL)
-            {
-              NihError * err = nih_error_get();
-              g_warning("Unable to get Upstart proxy: %s", err->message);
-              nih_free(err);
-            }
-          dbus_connection_unref (conn);
-        }
-    }
-
-  if (priv->upstart != NULL)
-    priv->upstart->auto_start = FALSE;
 }
 
 static gboolean

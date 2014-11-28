@@ -31,8 +31,6 @@ Build-Depends: cmake,
                libindicator3-dev (>= 0.12.2),
                libjson-glib-dev,
                libjson-perl,
-               libnih-dbus-dev,
-               libnih-dev,
                libnotify-dev,
                libnux-4.0-dev (>= 4.0.6),
                libpam0g-dev,
@@ -110,7 +108,6 @@ Package: unity-services
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         upstart-bin,
 Description: Services for the Unity interface
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
