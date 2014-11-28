@@ -110,7 +110,12 @@ Window::Impl::~Impl()
 void Window::Impl::Update()
 {
   UpdateElements();
-  (deco_elements_ & (cu::DecorationElement::EDGE | cu::DecorationElement::BORDER)) ? Decorate() : Undecorate();
+
+  if (deco_elements_ & (cu::DecorationElement::EDGE | cu::DecorationElement::BORDER))
+    Decorate();
+  else
+    Undecorate();
+
   last_mwm_decor_ = win_->mwmDecor();
   last_actions_ = win_->actions();
 }
@@ -181,6 +186,13 @@ void Window::Impl::SetupExtents()
 
   if (win_->border() != border || win_->input() != input)
     win_->setWindowFrameExtents(&border, &input);
+}
+
+void Window::Impl::SendFrameExtents()
+{
+  UpdateElements(cu::WindowFilter::UNMAPPED);
+  SetupExtents();
+  win_->setWindowFrameExtents(&win_->border(), &win_->input());
 }
 
 void Window::Impl::UnsetFrame()
@@ -423,7 +435,7 @@ bool Window::Impl::IsMaximized() const
   return (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE;
 }
 
-void Window::Impl::UpdateElements()
+void Window::Impl::UpdateElements(cu::WindowFilter::Value wf)
 {
   if (!parent_->scaled() && IsMaximized())
   {
@@ -431,7 +443,7 @@ void Window::Impl::UpdateElements()
     return;
   }
 
-  deco_elements_ = cu::WindowDecorationElements(win_);
+  deco_elements_ = cu::WindowDecorationElements(win_, wf);
 }
 
 bool Window::Impl::ShadowDecorated() const

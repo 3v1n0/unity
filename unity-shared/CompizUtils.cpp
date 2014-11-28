@@ -177,14 +177,14 @@ int CairoContext::height() const
 //
 //
 
-unsigned WindowDecorationElements(CompWindow* win)
+unsigned WindowDecorationElements(CompWindow* win, WindowFilter::Value wf)
 {
   unsigned elements = DecorationElement::NONE;
 
   if (!win)
     return elements;
 
-  if (!win->isViewable())
+  if (!win->isViewable() && wf == WindowFilter::NONE)
     return elements;
 
   if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
@@ -208,7 +208,7 @@ unsigned WindowDecorationElements(CompWindow* win)
 
   if (!win->overrideRedirect() &&
       (win->type() & DECORABLE_WINDOW_TYPES) &&
-      (win->frame() || win->hasUnmapReference()))
+      (win->frame() || win->hasUnmapReference() || wf == WindowFilter::UNMAPPED))
   {
     if (win->actions() & CompWindowActionResizeMask)
       elements |= DecorationElement::EDGE;
