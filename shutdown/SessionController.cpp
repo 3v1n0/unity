@@ -178,13 +178,16 @@ void Controller::CancelAndHide()
 void Controller::Hide()
 {
   if (view_window_)
+  {
+    view_window_->UnGrabPointer();
+    view_window_->UnGrabKeyboard();
+
     animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
+  }
 }
 
 void Controller::CloseWindow()
 {
-  view_window_->UnGrabPointer();
-  view_window_->UnGrabKeyboard();
   view_window_->ShowWindow(false);
   view_window_->EnableInputWindow(false);
 
