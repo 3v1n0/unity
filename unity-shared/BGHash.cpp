@@ -44,7 +44,7 @@ BGHash::BGHash()
   COLORS_ATOM = gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
   transition_animator_.updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
   WindowManager::Default().average_color = unity::colors::Aubergine;
-  RefreshColor();
+  RefreshColor(/* skip_animation */ true);
 }
 
 uint64_t BGHash::ColorAtomId() const
@@ -58,11 +58,11 @@ void BGHash::OverrideColor(nux::Color const& color)
   RefreshColor();
 }
 
-void BGHash::RefreshColor()
+void BGHash::RefreshColor(bool skip_animation)
 {
   if (override_color_.alpha > 0.0f)
   {
-    TransitionToNewColor(override_color_);
+    TransitionToNewColor(override_color_, skip_animation);
     return;
   }
 
@@ -99,19 +99,25 @@ void BGHash::RefreshColor()
   {
     gdk_rgba_parse(&color_gdk, colors);
     nux::Color new_color(color_gdk.red, color_gdk.green, color_gdk.blue, 1.0f);
-    TransitionToNewColor(MatchColor(new_color));
+    TransitionToNewColor(MatchColor(new_color), skip_animation);
   }
 
   XFree(colors);
 }
 
-void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
+void BGHash::TransitionToNewColor(nux::color::Color const& new_color, bool skip_animation)
 {
   auto const& current_color = WindowManager::Default().average_color();
   LOG_DEBUG(logger) << "transitioning from: " << current_color.red << " to " << new_color.red;
 
   transition_animator_.Stop();
-  transition_animator_.SetStartValue(current_color).SetFinishValue(new_color).Start();
+  transition_animator_.SetStartValue(current_color)
+                      .SetFinishValue(new_color)
+                      .SetDuration(skip_animation ? 0 : TRANSITION_DURATION)
+                      .Start();
+
+  // This will make sure that the animation starts even if the screen is idle.
+  nux::GetWindowThread()->RequestRedraw();
 }
 
 void BGHash::OnTransitionUpdated(nux::Color const& new_color)
