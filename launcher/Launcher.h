@@ -200,7 +200,7 @@ private:
 #endif
 
 #ifdef USE_X11
-  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper::Ptr const& owner, ui::BarrierEvent::Ptr event);
 #endif
 
   void OnExpoChanged();

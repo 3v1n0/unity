@@ -73,7 +73,7 @@ public:
 
   bool IsMouseInsideIndicator(nux::Point const& mouse_position) const;
 
-  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event) override;
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper::Ptr const& owner, ui::BarrierEvent::Ptr event) override;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
