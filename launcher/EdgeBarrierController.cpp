@@ -91,7 +91,14 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     ResizeBarrierList(layout);
     SetupBarriers(layout);
   }));*/
+
   uscreen->changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnUScreenChanged));
+
+  parent_->force_disable.changed.connect([this] (bool) {
+    auto monitors = UScreen::GetDefault()->GetMonitors();
+    ResizeBarrierList(monitors);
+    SetupBarriers(monitors);
+  });
 
   parent_->sticky_edges.SetGetterFunction([this] {
     return parent_->options() ? parent_->options()->edge_resist() : false;
@@ -158,6 +165,13 @@ void EdgeBarrierController::Impl::RemoveSubscriber(EdgeBarrierSubscriber* subscr
 
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
 {
+  if (parent_->force_disable)
+  {
+    vertical_barriers_.clear();
+    horizontal_barriers_.clear();
+    return;
+  }
+
   auto num_monitors = layout.size();
 
   if (vertical_barriers_.size() > num_monitors)
@@ -197,6 +211,9 @@ void SetupXI2Events()
 
 void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const& layout)
 {
+  if (parent_->force_disable())
+    return;
+
   bool edge_resist = parent_->sticky_edges();
 
   for (unsigned i = 0; i < layout.size(); i++)
@@ -437,7 +454,8 @@ void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, i
 }
 
 EdgeBarrierController::EdgeBarrierController()
-  : pimpl(new Impl(this))
+  : force_disable(false)
+  , pimpl(new Impl(this))
 {}
 
 EdgeBarrierController::~EdgeBarrierController()

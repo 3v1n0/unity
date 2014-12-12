@@ -653,4 +653,19 @@ TEST_F(TestEdgeBarrierController, HorizontalBarrierReleaseIfNoSubscriberForMonit
   ProcessBarrierEvent(&owner, firstEvent);
 }
 
+TEST_F(TestEdgeBarrierController, ForceDisable)
+{
+  ASSERT_FALSE(bc.force_disable);
+
+  bc.force_disable = true;
+
+  ASSERT_TRUE(GetPrivateImpl()->vertical_barriers_.empty());
+  ASSERT_TRUE(GetPrivateImpl()->horizontal_barriers_.empty());
+
+  bc.force_disable = false;
+
+  ASSERT_FALSE(GetPrivateImpl()->vertical_barriers_.empty());
+  ASSERT_FALSE(GetPrivateImpl()->horizontal_barriers_.empty());
+}
+
 }
