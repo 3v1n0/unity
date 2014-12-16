@@ -1,3 +1,19 @@
+unity (7.3.1+15.04.20141216-0ubuntu1) vivid; urgency=low
+
+  [ Stephen M. Webb ]
+  * replace the use of static glib with gi glib in AP test cases (LP:
+    #1397006)
+  * fix AP test failures due to upstream FileRoller .desktop file rename
+    (LP: #1402707)
+
+  [ Andrea Azzarone ]
+  * Set the correct size for the lockscreen message. (LP: #1384242)
+  * Ungrab the shoutdown dialog as soon as possible. (LP: #1398287)
+  * skipped the animation of BGHash on startup to prevent unwanted fade-
+    in (LP: #1241757)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 16 Dec 2014 13:25:57 +0000
+
 unity (7.3.1+15.04.20141128-0ubuntu1) vivid; urgency=low
 
   [ Andrea Azzarone ]
