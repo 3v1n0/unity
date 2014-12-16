@@ -370,8 +370,7 @@ void UserPromptView::AddMessage(std::string const& message, nux::Color const& co
   view->SetFont(Settings::Instance().font_name());
   view->SetTextColor(color);
   view->SetText(message);
-  view->SetMaximumWidth(geo.width);
-
+  view->SetMaximumWidth(geo.width - PADDING.CP(scale)*2);
   msg_layout_->AddView(view);
 
   GetLayout()->ComputeContentPosition(0, 0);
