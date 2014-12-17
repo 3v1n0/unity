@@ -20,6 +20,7 @@
 #include "UpstartWrapper.h"
 
 #include <UnityCore/GLibDBusProxy.h>
+#include <upstart/upstart-dbus.h>
 
 namespace unity
 {
@@ -41,9 +42,8 @@ private:
 
 UpstartWrapper::Impl::Impl(bool test_mode)
 {
-  upstart_proxy_ = std::make_shared<unity::glib::DBusProxy>(test_mode ?  "com.canonical.Unity.Test.Upstart" : "com.ubuntu.Upstart",
-                                                            "/com/ubuntu/Upstart", 
-                                                            "com.ubuntu.Upstart0_6");
+  upstart_proxy_ = std::make_shared<unity::glib::DBusProxy>(test_mode ?  "com.canonical.Unity.Test.Upstart" : DBUS_SERVICE_UPSTART,
+                                                            DBUS_PATH_UPSTART, DBUS_INTERFACE_UPSTART);
 }
 
 void UpstartWrapper::Impl::Emit(std::string const& name)

@@ -7,11 +7,11 @@
 # by the Free Software Foundation.
 
 import dbus
-import glib
 import unity
 import logging
 
 from autopilot.matchers import *
+from gi.repository import GLib
 from testtools.matchers import *
 
 log = logging.getLogger(__name__)
@@ -64,13 +64,13 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         log.info("pressing '%s'" % accelerator.shortcut)
         self.keyboard.press_and_release(accelerator.shortcut)
 
-        loop = glib.MainLoop()
+        loop = GLib.MainLoop()
 
         def wait():
             loop.quit()
             return False
 
-        glib.timeout_add_seconds(1, wait)
+        GLib.timeout_add_seconds(1, wait)
         loop.run()
 
         return self.activated[0]

@@ -56,6 +56,7 @@ public:
   operator T* () const;
   operator bool() const;
   T* operator->() const;
+  T** operator&();
   T* RawPtr() const;
   // Release ownership of the object. No unref will occur.
   T* Release();

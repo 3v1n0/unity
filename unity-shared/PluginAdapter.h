@@ -193,6 +193,9 @@ public:
 
   Window GetTopWindowAbove(Window xid) const;
 
+  void UnmapAllNoNuxWindowsSync();
+  static bool IsNuxWindow(CompWindow* value);
+
 protected:
   PluginAdapter(CompScreen* screen);
   void AddProperties(debug::IntrospectionData&);

@@ -1,3 +1,41 @@
+unity (7.3.1+15.04.20141216-0ubuntu1) vivid; urgency=low
+
+  [ Stephen M. Webb ]
+  * replace the use of static glib with gi glib in AP test cases (LP:
+    #1397006)
+  * fix AP test failures due to upstream FileRoller .desktop file rename
+    (LP: #1402707)
+
+  [ Andrea Azzarone ]
+  * Set the correct size for the lockscreen message. (LP: #1384242)
+  * Ungrab the shoutdown dialog as soon as possible. (LP: #1398287)
+  * skipped the animation of BGHash on startup to prevent unwanted fade-
+    in (LP: #1241757)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 16 Dec 2014 13:25:57 +0000
+
+unity (7.3.1+15.04.20141128-0ubuntu1) vivid; urgency=low
+
+  [ Andrea Azzarone ]
+  * Unmap all windows during shutdown. (LP: #1370017, #1375271)
+  * Make sure GetScreenGeometry returns the correct value. (LP:
+    #1374785)
+
+  [ Marco Trevisan (Treviño) ]
+  * Decorated Window: still paint decorations if on transformated
+    windows in different workspaces (LP: #1383468)
+  * DecoratedWindow: make sure we always set a _NET_FRAME_EXTENTS for
+    windows that requested it
+  * UnityScreen: when filtering out windows in spread, make sure we
+    unscale them (LP: #1316265)
+  * PanelMenuView: ensure that proper window tiles and buttons are shown
+    at the right place (LP: #1384958, #1384910, #1385285)
+  * PanelService: inject special key events back to the root window when
+    a menu is opened
+  * PanelService: use gdbus to notfy upstart of service start/stop
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 28 Nov 2014 12:56:28 +0000
+
 unity (7.3.1+14.10.20141016-0ubuntu1) utopic; urgency=low
 
   [ Eleni Maria Stea ]

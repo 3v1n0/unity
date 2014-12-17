@@ -538,7 +538,19 @@ void UnityScreen::OnInitiateSpread()
     else
     {
       CompMatch windows_match;
-      for (auto xid : spread_filter_->FilteredWindows())
+      auto const& filtered_windows = spread_filter_->FilteredWindows();
+
+      for (auto const& swin : sScreen->getWindows())
+      {
+        if (filtered_windows.find(swin->window->id()) != filtered_windows.end())
+          continue;
+
+        auto* uwin = UnityWindow::get(swin->window);
+        uwin->OnTerminateSpread();
+        fake_decorated_windows_.erase(uwin);
+      }
+
+      for (auto xid : filtered_windows)
         windows_match |= "xid="+std::to_string(xid);
 
       auto match = sScreen->getCustomMatch();
@@ -2795,23 +2807,6 @@ std::string UnityScreen::GetName() const
   return "Unity";
 }
 
-bool isNuxWindow(CompWindow* value)
-{
-  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-  auto id = value->id();
-
-  // iterate loop by hand rather than use std::find as this is considerably faster
-  // we care about performance here because of the high frequency in which this function is
-  // called (nearly every frame)
-  unsigned int size = xwns.size();
-  for (unsigned int i = 0; i < size; ++i)
-  {
-    if (xwns[i] == id)
-      return true;
-  }
-  return false;
-}
-
 void UnityScreen::RaiseInputWindows()
 {
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
@@ -4094,7 +4089,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , close_icon_state_(decoration::WidgetState::NORMAL)
   , deco_win_(uScreen->deco_manager_->HandleWindow(window))
   , need_fake_deco_redraw_(false)
-  , is_nux_window_(isNuxWindow(window))
+  , is_nux_window_(PluginAdapter::IsNuxWindow(window))
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
@@ -4430,7 +4425,7 @@ void UnityWindow::OnTerminateSpread()
     }
     else
     {
-      window->setShowDesktopMode (false);
+      window->setShowDesktopMode(false);
     }
   }
 }

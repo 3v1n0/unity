@@ -88,11 +88,12 @@ struct Window::Impl
   void SetupAppMenu();
   bool ActivateMenu(std::string const&);
   void ShowForceQuitDialog(bool, Time);
+  void SendFrameExtents();
 
 private:
   void UnsetExtents();
   void SetupExtents();
-  void UpdateElements();
+  void UpdateElements(cu::WindowFilter::Value wf = cu::WindowFilter::NONE);
   void UpdateMonitor();
   void UpdateFrame();
   void CreateFrame(nux::Geometry const&);

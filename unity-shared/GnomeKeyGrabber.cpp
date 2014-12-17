@@ -202,12 +202,14 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
 
   if (action.key().toString().empty())
   {
-      CompString prefixed = "XF86" + CompString(accelerator);
-      LOG_DEBUG(logger) << "Can't grab \"" << accelerator << "\", trying \"" << prefixed << "\"";
-      action.keyFromString(prefixed);
+    CompString prefixed = "XF86" + CompString(accelerator);
+    LOG_DEBUG(logger) << "Can't grab \"" << accelerator << "\", trying \"" << prefixed << "\"";
+    action.keyFromString(prefixed);
   }
   else
-      LOG_DEBUG(logger) << "grabAccelerator \"" << accelerator << "\"";
+  {
+    LOG_DEBUG(logger) << "grabAccelerator \"" << accelerator << "\"";
+  }
 
   if (!isActionPostponed(action))
   {
