@@ -97,6 +97,20 @@ GtkWidget* close_button_new();
 static void close_button_init(CloseButton*);
 static void close_button_class_init(CloseButtonClass*);
 
+bool gdk_error_trap_pop_with_output(std::string const& prefix)
+{
+  if (int error_code = gdk_error_trap_pop())
+  {
+    gchar tmp[1024];
+    XGetErrorText(gdk_x11_get_default_xdisplay(), error_code, tmp, sizeof(tmp) - 1);
+    tmp[sizeof(tmp) - 1] = '\0';
+    LOG_ERROR(logger) << (prefix.empty() ? "X error: " : prefix+": ") << tmp;
+    return true;
+  }
+
+  return false;
+}
+
 // Window implementation
 GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xid)
 {
@@ -112,15 +126,20 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
   gtk_window_set_deletable(self, FALSE);
   gtk_window_set_title(self, "Force Quit Dialog");
 
+  gdk_error_trap_push();
   XClassHint parent_class = {nullptr, nullptr};
   XGetClassHint(dpy, parent_xid, &parent_class);
-  gtk_window_set_wmclass(self, parent_class.res_name, parent_class.res_class);
+
+  if (!gdk_error_trap_pop_with_output("Impossible to get window class"))
+    gtk_window_set_wmclass(self, parent_class.res_name, parent_class.res_class);
+
   XFree(parent_class.res_class);
   XFree(parent_class.res_name);
 
   Atom WM_PID = gdk_x11_get_xatom_by_name("_NET_WM_PID");
   Atom WM_CLIENT_MACHINE = gdk_x11_get_xatom_by_name("WM_CLIENT_MACHINE");
 
+  gdk_error_trap_push();
   auto& wm = WindowManager::Default();
   auto parent_hostname = wm.GetStringProperty(parent_xid, WM_CLIENT_MACHINE);
   long parent_pid = 0;
@@ -138,6 +157,8 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
         parent_pid = pid_list.front();
     }
   }
+
+  gdk_error_trap_pop_with_output("Impossible to get window client machine and PID");
 
   auto const& deco_style = decoration::Style::Get();
   auto const& offset = deco_style->ShadowOffset();
@@ -162,14 +183,7 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
   auto xid = gdk_x11_window_get_xid(gwindow);
   XSetTransientForHint(dpy, xid, parent_xid);
   XSync(dpy, False);
-
-  if (int error_code = gdk_error_trap_pop())
-  {
-    gchar tmp[1024];
-    XGetErrorText(dpy, error_code, tmp, sizeof(tmp) - 1);
-    tmp[sizeof(tmp) - 1] = '\0';
-    LOG_ERROR(logger) << "Impossible to reparent dialog: " << tmp;
-  }
+  gdk_error_trap_pop_with_output("Impossible to reparent dialog");
 
   XChangeProperty(dpy, xid, WM_CLIENT_MACHINE, XA_STRING, 8, PropModeReplace,
                   (unsigned char *) parent_hostname.c_str(), parent_hostname.size());
@@ -227,17 +241,9 @@ void on_force_quit_clicked(GtkButton *button, gint64* kill_data)
 
   gdk_error_trap_push();
   XSync(dpy, False);
-
-  if (int error_code = gdk_error_trap_pop())
-  {
-    gchar tmp[1024];
-    XGetErrorText(dpy, error_code, tmp, sizeof(tmp) - 1);
-    tmp[sizeof(tmp) - 1] = '\0';
-    LOG_ERROR(logger) << "Impossible to kill window " << parent_xid << ": " << tmp;
-  }
-
   XKillClient(dpy, parent_xid);
   XSync(dpy, False);
+  gdk_error_trap_pop_with_output("Impossible to kill window "+parent_xid);
 
   if (parent_pid > 0)
     kill(parent_pid, 9);
