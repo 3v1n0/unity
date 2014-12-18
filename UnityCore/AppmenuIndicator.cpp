@@ -31,7 +31,7 @@ struct AppmenuIndicator::Impl
   {
     // When the active window has changed we might need to emit an updated signal
     parent->active_window.changed.connect([this, parent] (unsigned long) {
-      update_wait_.reset(new glib::Timeout(100, [parent] {
+      update_wait_.reset(new glib::Timeout(250, [parent] {
         parent->updated.emit();
         return false;
       }));
