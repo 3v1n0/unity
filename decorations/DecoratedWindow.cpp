@@ -708,6 +708,7 @@ void Window::Impl::SetupAppMenu()
   auto const& sliding_layout = sliding_layout_.lock();
   sliding_layout->SetInputItem(nullptr);
   sliding_layout->mouse_owner = false;
+  grab_mouse_changed_->disconnect();
 
   if (!menu_manager->HasAppMenu() || !Style::Get()->integrated_menus())
     return;
