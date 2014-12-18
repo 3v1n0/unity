@@ -22,6 +22,7 @@
 
 #include <NuxCore/Property.h>
 #include <UnityCore/Indicators.h>
+#include <UnityCore/AppmenuIndicator.h>
 #include "KeyGrabber.h"
 
 namespace unity
@@ -58,7 +59,7 @@ public:
 
   bool HasAppMenu() const;
   indicator::Indicators::Ptr const& Indicators() const;
-  indicator::Indicator::Ptr const& AppMenu() const;
+  indicator::AppmenuIndicator::Ptr const& AppMenu() const;
 
   key::Grabber::Ptr const& KeyGrabber() const;
 

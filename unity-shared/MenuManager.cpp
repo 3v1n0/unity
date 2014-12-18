@@ -63,7 +63,7 @@ struct Manager::Impl : sigc::trackable
       return;
 
     appmenu_connections_.Clear();
-    appmenu_ = indicator;
+    appmenu_ = std::static_pointer_cast<AppmenuIndicator>(indicator);
 
     for (auto const& entry : appmenu_->GetEntries())
       GrabEntryMnemonics(entry);
@@ -149,7 +149,7 @@ struct Manager::Impl : sigc::trackable
 
   Manager* parent_;
   Indicators::Ptr indicators_;
-  Indicator::Ptr appmenu_;
+  AppmenuIndicator::Ptr appmenu_;
   key::Grabber::Ptr key_grabber_;
   connection::Manager appmenu_connections_;
   std::unordered_map<std::string, std::shared_ptr<CompAction>> entry_actions_;
@@ -178,7 +178,7 @@ Indicators::Ptr const& Manager::Indicators() const
   return impl_->indicators_;
 }
 
-Indicator::Ptr const& Manager::AppMenu() const
+AppmenuIndicator::Ptr const& Manager::AppMenu() const
 {
   return impl_->appmenu_;
 }
