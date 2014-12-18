@@ -20,6 +20,7 @@
 #ifndef UNITY_APPMENU_INDICATOR_H
 #define UNITY_APPMENU_INDICATOR_H
 
+#include <NuxCore/Property.h>
 #include "Indicator.h"
 
 namespace unity
@@ -33,12 +34,19 @@ public:
   typedef std::shared_ptr<AppmenuIndicator> Ptr;
 
   AppmenuIndicator(std::string const& name);
+  ~AppmenuIndicator();
+
+  nux::Property<unsigned> active_window;
 
   virtual bool IsAppmenu() const { return true; }
 
   void ShowAppmenu(unsigned xid, int x, int y) const;
 
   sigc::signal<void, unsigned, int, int> on_show_appmenu;
+
+private:
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }

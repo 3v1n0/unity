@@ -140,6 +140,8 @@ void Manager::Impl::SetupAppMenu()
     return;
   }
 
+  appmenu->active_window = screen->activeWindow();
+
   auto setup_active_window = [this] {
     if (Window::Ptr const& active_win = active_deco_win_.lock())
       active_win->impl_->SetupAppMenu();
@@ -256,11 +258,15 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
         if (active_deco_win_)
           active_deco_win_->impl_->active = false;
 
-        auto const& new_active = GetWindowByXid(screen->activeWindow());
+        auto active_xid = screen->activeWindow();
+        auto const& new_active = GetWindowByXid(active_xid);
         active_deco_win_ = new_active;
 
         if (new_active)
           new_active->impl_->active = true;
+
+        if (indicator::AppmenuIndicator::Ptr const& appmenu = menu_manager_->AppMenu())
+          appmenu->active_window = active_xid;
       }
       else if (event->xproperty.atom == Atoms::mwmHints ||
                event->xproperty.atom == Atoms::wmAllowedActions)
