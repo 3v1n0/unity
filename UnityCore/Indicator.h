@@ -38,7 +38,7 @@ class Indicator : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef std::shared_ptr<Indicator> Ptr;
-  typedef std::list<Entry::Ptr> Entries;
+  typedef std::vector<Entry::Ptr> Entries;
 
   Indicator(std::string const& name);
   virtual ~Indicator();
