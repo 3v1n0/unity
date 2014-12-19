@@ -33,7 +33,7 @@ static GDBusNodeInfo *introspection_data = NULL;
 
 static const gchar introspection_xml[] =
   "<node>"
-  "  <interface name='com.canonical.Unity.Panel.Service'>"
+  "  <interface name='"UPS_IFACE"'>"
   ""
   "    <method name='Sync'>"
   "      <arg type='"ENTRY_ARRAY_SIGNATURE"' name='state' direction='out'/>"
@@ -111,10 +111,6 @@ static const gchar introspection_xml[] =
   "  </interface>"
   "</node>";
 
-#define S_NAME_DESKTOP "com.canonical.Unity.Panel.Service.Desktop"
-#define S_NAME_LOCKSCREEN "com.canonical.Unity.Panel.Service.LockScreen"
-#define S_PATH  "/com/canonical/Unity/Panel/Service"
-#define S_IFACE "com.canonical.Unity.Panel.Service"
 
 /* Forwards */
 static void
@@ -272,8 +268,8 @@ on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnec
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "ReSync",
                                  g_variant_new ("(s)", indicator_id),
                                  &error);
@@ -294,8 +290,8 @@ on_service_entry_activated (PanelService    *service,
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "EntryActivated",
                                  g_variant_new ("(ss(iiuu))", panel_id, entry_id, x, y, w, h),
                                  &error);
@@ -317,8 +313,8 @@ on_service_entry_activate_request (PanelService    *service,
 
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "EntryActivateRequest",
                                  g_variant_new ("(s)", entry_id),
                                  &error);
@@ -339,8 +335,8 @@ on_service_entry_show_now_changed (PanelService    *service,
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "EntryShowNowChanged",
                                  g_variant_new ("(sb)", entry_id, show_now_state),
                                  &error);
@@ -358,8 +354,8 @@ on_icon_theme_changed (GtkIconTheme* theme, GDBusConnection *connection)
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "IconPathsChanged",
                                  NULL,
                                  &error);
@@ -380,7 +376,7 @@ on_bus_acquired (GDBusConnection *connection,
   guint         reg_id;
 
   reg_id = g_dbus_connection_register_object (connection,
-                                              S_PATH,
+                                              UPS_PATH,
                                               introspection_data->interfaces[0],
                                               &interface_vtable,
                                               service,
@@ -486,7 +482,7 @@ main (gint argc, gchar **argv)
   service = panel_service_get_default ();
 
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
-                             !lockscreen_mode ? S_NAME_DESKTOP : S_NAME_LOCKSCREEN,
+                             !lockscreen_mode ? UPS_NAME_DESKTOP : UPS_NAME_LOCKSCREEN,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
                              on_bus_acquired,
                              on_name_acquired,

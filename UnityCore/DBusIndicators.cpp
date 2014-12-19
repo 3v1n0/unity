@@ -33,14 +33,10 @@ namespace unity
 {
 namespace indicator
 {
-DECLARE_LOGGER(logger, "unity.indicator.dbus");
 
 namespace
 {
-const std::string SERVICE_NAME_DESKTOP("com.canonical.Unity.Panel.Service.Desktop");
-const std::string SERVICE_NAME_LOCKSCREEN("com.canonical.Unity.Panel.Service.LockScreen");
-const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
-const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
+DECLARE_LOGGER(logger, "unity.indicator.dbus");
 } // anonymous namespace
 
 
@@ -86,8 +82,8 @@ struct DBusIndicators::Impl
 // Public Methods
 DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
   : owner_(owner)
-  , gproxy_(dbus_name, SERVICE_PATH, SERVICE_IFACE,
-            G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
+  , gproxy_(dbus_name, UPS_PATH, UPS_IFACE, G_BUS_TYPE_SESSION,
+            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
   gproxy_.Connect("ReSync", sigc::mem_fun(this, &DBusIndicators::Impl::OnReSync));
   gproxy_.Connect("IconPathsChanged", sigc::mem_fun(this, &DBusIndicators::Impl::OnIconsPathChanged));
@@ -464,7 +460,7 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
 }
 
 DBusIndicators::DBusIndicators()
-  : pimpl(new Impl(SERVICE_NAME_DESKTOP, this))
+  : pimpl(new Impl(UPS_NAME_DESKTOP, this))
 {}
 
 DBusIndicators::DBusIndicators(std::string const& dbus_name)
@@ -472,7 +468,7 @@ DBusIndicators::DBusIndicators(std::string const& dbus_name)
 {}
 
 LockScreenDBusIndicators::LockScreenDBusIndicators()
-  : DBusIndicators(SERVICE_NAME_LOCKSCREEN)
+  : DBusIndicators(UPS_NAME_LOCKSCREEN)
 {}
 
 DBusIndicators::~DBusIndicators()

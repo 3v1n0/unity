@@ -10,7 +10,7 @@ namespace
 static const char * panel_interface =
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<node name=\"/\">\n"
-"    <interface name=\"com.canonical.Unity.Panel.Service\">\n"
+"    <interface name=\"" UPS_IFACE "\">\n"
 "\n"
 "<!-- Begin of real methods/signals -->\n"
 "    <method name='Sync'>"
@@ -74,7 +74,7 @@ Panel::Panel()
   auto object = glib::DBusObjectBuilder::GetObjectsForIntrospection(panel_interface).front();
   object->SetMethodsCallsHandler(sigc::mem_fun(this, &Panel::OnMethodCall));
 
-  server_.AddObject(object, "/com/canonical/Unity/Panel/Service");
+  server_.AddObject(object, UPS_PATH);
 }
 
 GVariant* Panel::OnMethodCall(std::string const& method, GVariant *parameters)

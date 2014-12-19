@@ -28,18 +28,23 @@ G_BEGIN_DECLS
 extern "C" {
 #endif
 
+#define UPS_NAME_DESKTOP "com.canonical.Unity.Panel.Service.Desktop"
+#define UPS_NAME_LOCKSCREEN "com.canonical.Unity.Panel.Service.LockScreen"
+#define UPS_PATH  "/com/canonical/Unity/Panel/Service"
+#define UPS_IFACE "com.canonical.Unity.Panel.Service"
+
+#define ENTRY_SIGNATURE "(ssssbbusbbi)"
+#define ENTRY_ARRAY_SIGNATURE "a" ENTRY_SIGNATURE ""
+
+#define AltMask Mod1Mask
+#define SuperMask Mod4Mask
+
 typedef struct _KeyBinding
 {
   KeySym key;
   KeySym fallback;
   guint32 modifiers;
 } KeyBinding;
-
-#define AltMask Mod1Mask
-#define SuperMask Mod4Mask
-
-#define ENTRY_SIGNATURE "(ssssbbusbbi)"
-#define ENTRY_ARRAY_SIGNATURE "a" ENTRY_SIGNATURE ""
 
 void parse_string_keybinding (const char *, KeyBinding *);
 
