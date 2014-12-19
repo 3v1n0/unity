@@ -120,6 +120,7 @@ void Manager::Impl::SetupIntegratedMenus()
   menu_connections_.Add(menu_manager_->appmenu_added.connect(sigc::mem_fun(this, &Impl::SetupAppMenu)));
   menu_connections_.Add(menu_manager_->appmenu_removed.connect(sigc::mem_fun(this, &Impl::UnsetAppMenu)));
   menu_connections_.Add(menu_manager_->key_activate_entry.connect(sigc::mem_fun(this, &Impl::OnMenuKeyActivated)));
+  menu_connections_.Add(menu_manager_->always_show_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupAppMenu))));
 
   SetupAppMenu();
 }
