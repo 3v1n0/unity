@@ -322,9 +322,10 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
     return;
 
   GVariantIter* iter            = nullptr;
-  gchar*        name_hint       = nullptr;
   gchar*        indicator_id    = nullptr;
   gchar*        entry_id        = nullptr;
+  gchar*        name_hint       = nullptr;
+  guint32       parent_window   = 0;
   gchar*        label           = nullptr;
   gboolean      label_sensitive = false;
   gboolean      label_visible   = false;
@@ -343,6 +344,7 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
                              &indicator_id,
                              &entry_id,
                              &name_hint,
+                             &parent_window,
                              &label,
                              &label_sensitive,
                              &label_visible,
@@ -384,9 +386,10 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
 
       if (!e)
       {
-        e = std::make_shared<Entry>(entry, name_hint, label, label_sensitive,
-                                    label_visible, image_type, image_data,
-                                    image_sensitive, image_visible, priority);
+        e = std::make_shared<Entry>(entry, name_hint, parent_window,
+                                    label, label_sensitive, label_visible,
+                                    image_type, image_data, image_sensitive, image_visible,
+                                    priority);
       }
       else
       {

@@ -39,6 +39,7 @@ void add_entry_id(GVariantBuilder *b)
                          "test_indicator_id",
                          "test_entry_id",
                          "test_entry_name_hint",
+                         0, /* parent window */
                          "test_entry_label",
                          TRUE, /* label sensitive */
                          TRUE, /* label visible */
@@ -55,6 +56,7 @@ void add_entry_id_2(GVariantBuilder *b)
                          "test_indicator_id",
                          "test_entry_id2",
                          "test_entry_name_hint2",
+                         12345, /* parent window */
                          "test_entry_label2",
                          TRUE, /* label sensitive */
                          TRUE, /* label visible */

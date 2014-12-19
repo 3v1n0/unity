@@ -69,17 +69,17 @@ TEST(TestIndicator, Syncing)
   Indicator indicator("indicator-test");
   SigReceiver::Nice sig_receiver(indicator);
 
-  entry = new Entry("test-entry-1", "name-hint", "label", true, true, 0, "icon",
+  entry = new Entry("test-entry-1", "name-hint", 0, "label", true, true, 0, "icon",
                     true, true, -1);
   Entry::Ptr entry1(entry);
   sync_data.push_back(entry1);
 
-  entry = new Entry("test-entry-2", "name-hint", "label", true, true, 0, "icon",
+  entry = new Entry("test-entry-2", "name-hint", 0, "label", true, true, 0, "icon",
                     true, true, -1);
   Entry::Ptr entry2(entry);
   sync_data.push_back(entry2);
 
-  entry = new Entry("test-entry-3", "name-hint", "label", true, true, 0, "icon",
+  entry = new Entry("test-entry-3", "name-hint", 0, "label", true, true, 0, "icon",
                     true, true, -1);
   Entry::Ptr entry3(entry);
   sync_data.push_back(entry3);
@@ -113,7 +113,7 @@ TEST(TestIndicator, Syncing)
   EXPECT_EQ(indicator.EntryIndex("test-entry-2"), -1);
 
   // Sync the indicator removing an entry and adding a new one
-  entry = new Entry("test-entry-4", "name-hint", "label", true, true, 0, "icon",
+  entry = new Entry("test-entry-4", "name-hint", 0, "label", true, true, 0, "icon",
                     true, true, -1);
   Entry::Ptr entry4(entry);
   sync_data.push_back(entry4);
@@ -144,13 +144,13 @@ TEST(TestIndicator, Updated)
   SigReceiver::Nice sig_receiver(indicator);
   Indicator::Entries sync_data;
 
-  auto entry1 = std::make_shared<Entry>("test-entry-1", "name-hint", "label", true, true, 0, "icon", true, true, -1);
+  auto entry1 = std::make_shared<Entry>("test-entry-1", "name-hint", 0, "label", true, true, 0, "icon", true, true, -1);
   sync_data.push_back(entry1);
 
-  auto entry2 = std::make_shared<Entry>("test-entry-2", "name-hint", "label", true, true, 0, "icon", true, true, -1);
+  auto entry2 = std::make_shared<Entry>("test-entry-2", "name-hint", 0, "label", true, true, 0, "icon", true, true, -1);
   sync_data.push_back(entry2);
 
-  auto entry3 = std::make_shared<Entry>("test-entry-3", "name-hint", "label", true, true, 0, "icon", true, true, -1);
+  auto entry3 = std::make_shared<Entry>("test-entry-3", "name-hint", 0, "label", true, true, 0, "icon", true, true, -1);
   sync_data.push_back(entry3);
 
   EXPECT_CALL(sig_receiver, Updated());
@@ -176,7 +176,7 @@ TEST(TestIndicator, ChildrenSignalShowMenu)
   Indicator indicator("indicator-test");
   SigReceiver::Nice sig_receiver(indicator);
 
-  auto entry = std::make_shared<Entry>("test-entry-1", "name-hint", "label", true, true, 0, "icon", true, true, -1);
+  auto entry = std::make_shared<Entry>("test-entry-1", "name-hint", 0, "label", true, true, 0, "icon", true, true, -1);
   indicator.Sync({entry});
 
   EXPECT_CALL(sig_receiver, ShowMenu(entry->id(), 123456789, 50, 100, 2));
@@ -194,7 +194,7 @@ TEST(TestIndicator, ChildrenSignalSecondaryActivate)
   Indicator indicator("indicator-test");
   SigReceiver::Nice sig_receiver(indicator);
 
-  auto entry = std::make_shared<Entry>("test-entry-2", "name-hint", "label", true, true, 0, "icon", true, true, -1);
+  auto entry = std::make_shared<Entry>("test-entry-2", "name-hint", 0, "label", true, true, 0, "icon", true, true, -1);
   indicator.Sync({entry});
 
   EXPECT_CALL(sig_receiver, SecondaryActivate(entry->id()));
@@ -206,7 +206,7 @@ TEST(TestIndicator, ChildrenSignalScroll)
   Indicator indicator("indicator-test");
   SigReceiver::Nice sig_receiver(indicator);
 
-  auto entry = std::make_shared<Entry>("test-entry-2", "name-hint", "label", true, true, 0, "icon", true, true, -1);
+  auto entry = std::make_shared<Entry>("test-entry-2", "name-hint", 0, "label", true, true, 0, "icon", true, true, -1);
   indicator.Sync({entry});
 
   EXPECT_CALL(sig_receiver, Scroll(entry->id(), -5));

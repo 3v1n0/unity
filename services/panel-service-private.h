@@ -33,7 +33,7 @@ extern "C" {
 #define UPS_PATH  "/com/canonical/Unity/Panel/Service"
 #define UPS_IFACE "com.canonical.Unity.Panel.Service"
 
-#define ENTRY_SIGNATURE "(ssssbbusbbi)"
+#define ENTRY_SIGNATURE "(sssusbbusbbi)"
 #define ENTRY_ARRAY_SIGNATURE "a" ENTRY_SIGNATURE ""
 
 #define AltMask Mod1Mask
