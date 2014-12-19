@@ -711,7 +711,7 @@ void Window::Impl::SetupAppMenu()
   sliding_layout->override_main_item = false;
   grab_mouse_changed_->disconnect();
 
-  if (!menu_manager->HasAppMenu() || !Style::Get()->integrated_menus())
+  if (!menu_manager->HasAppMenu() || !menu_manager->integrated_menus())
     return;
 
   auto menus = std::make_shared<MenuLayout>(menu_manager, win_);

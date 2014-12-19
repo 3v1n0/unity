@@ -36,6 +36,7 @@ namespace
 DECLARE_LOGGER(logger, "unity.menu.manager");
 
 const std::string SETTINGS_NAME = "com.canonical.Unity";
+const std::string LIM_KEY = "integrated-menus";
 const std::string ALWAYS_SHOW_MENUS_KEY = "always-show-menus";
 }
 
@@ -58,7 +59,12 @@ struct Manager::Impl : sigc::trackable
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
     indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
 
+    parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
     parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
+
+    signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
+      parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    });
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + ALWAYS_SHOW_MENUS_KEY, [this] (GSettings*, const gchar*) {
       parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
     });
@@ -171,7 +177,8 @@ struct Manager::Impl : sigc::trackable
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)
-  : show_menus_wait(180)
+  : integrated_menus(false)
+  , show_menus_wait(180)
   , always_show_menus(false)
   , fadein(100)
   , fadeout(120)

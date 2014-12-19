@@ -58,7 +58,7 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   manager_->inactive_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->inactive_shadow_radius.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->shadow_offset.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateWindowsExtents)));
-  Style::Get()->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIntegratedMenus)));
+  menu_manager_->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIntegratedMenus)));
 
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
@@ -110,7 +110,7 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
 
 void Manager::Impl::SetupIntegratedMenus()
 {
-  if (!Style::Get()->integrated_menus())
+  if (!menu_manager_->integrated_menus())
   {
     UnsetAppMenu();
     menu_connections_.Clear();

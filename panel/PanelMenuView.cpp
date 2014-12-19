@@ -98,7 +98,7 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , we_control_active_(false)
   , new_app_menu_shown_(false)
   , ignore_menu_visibility_(false)
-  , integrated_menus_(decoration::Style::Get()->integrated_menus())
+  , integrated_menus_(menu_manager_->integrated_menus())
   , always_show_menus_(menu_manager_->always_show_menus())
   , active_xid_(0)
   , desktop_name_(get_current_desktop())
@@ -155,7 +155,7 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryViewAdded));
   Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnStyleChanged));
 
-  decoration::Style::Get()->integrated_menus.changed.connect(sigc::mem_fun(this, &PanelMenuView::OnLIMChanged));
+  menu_manager_->integrated_menus.changed.connect(sigc::mem_fun(this, &PanelMenuView::OnLIMChanged));
   menu_manager_->always_show_menus.changed.connect(sigc::mem_fun(this, &PanelMenuView::OnAlwaysShowMenusChanged));
 }
 
