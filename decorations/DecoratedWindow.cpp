@@ -708,17 +708,14 @@ void Window::Impl::SetupAppMenu()
   auto const& sliding_layout = sliding_layout_.lock();
   sliding_layout->SetInputItem(nullptr);
   sliding_layout->mouse_owner = false;
+  sliding_layout->override_main_item = false;
   grab_mouse_changed_->disconnect();
 
   if (!menu_manager->HasAppMenu() || !Style::Get()->integrated_menus())
     return;
 
-  auto visibility_cb = sigc::hide(sigc::mem_fun(this, &Impl::UpdateAppMenuVisibility));
   auto menus = std::make_shared<MenuLayout>(menu_manager, win_);
   menus->Setup();
-  menus->active.changed.connect(visibility_cb);
-  menus->show_now.changed.connect(visibility_cb);
-  menus->mouse_owner.changed.connect(visibility_cb);
   menus_ = menus;
 
   auto const& grab_edge = grab_edge_.lock();
@@ -726,15 +723,27 @@ void Window::Impl::SetupAppMenu()
   sliding_layout->fadein = menu_manager->fadein();
   sliding_layout->fadeout = menu_manager->fadeout();
 
-  if (grab_edge->mouse_owner() || grab_edge->Geometry().contains(CompPoint(pointerX, pointerY)))
-    sliding_layout->mouse_owner = true;
+  if (menu_manager->always_show_menus())
+  {
+    sliding_layout->override_main_item = true;
+  }
+  else
+  {
+    auto visibility_cb = sigc::hide(sigc::mem_fun(this, &Impl::UpdateAppMenuVisibility));
+    menus->active.changed.connect(visibility_cb);
+    menus->show_now.changed.connect(visibility_cb);
+    menus->mouse_owner.changed.connect(visibility_cb);
 
-  grab_mouse_changed_ = grab_edge->mouse_owner.changed.connect([this] (bool owner) {
-    sliding_layout_->mouse_owner = owner || menus_->show_now();
-  });
+    if (grab_edge->mouse_owner() || grab_edge->Geometry().contains(CompPoint(pointerX, pointerY)))
+      sliding_layout->mouse_owner = true;
 
-  if (sliding_layout->mouse_owner())
-    input_mixer_->ForceMouseOwnerCheck();
+    grab_mouse_changed_ = grab_edge->mouse_owner.changed.connect([this] (bool owner) {
+      sliding_layout_->mouse_owner = owner || menus_->show_now();
+    });
+
+    if (sliding_layout->mouse_owner())
+      input_mixer_->ForceMouseOwnerCheck();
+  }
 
   SyncMenusGeometries();
 }
