@@ -20,6 +20,7 @@
 
 #include <gtk/gtk.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DBusIndicators.h>
 #include <unordered_map>
@@ -30,7 +31,14 @@ namespace unity
 {
 namespace menu
 {
+namespace
+{
 DECLARE_LOGGER(logger, "unity.menu.manager");
+
+const std::string SETTINGS_NAME = "com.canonical.Unity";
+const std::string LIM_KEY = "integrated-menus";
+const std::string ALWAYS_SHOW_MENUS_KEY = "always-show-menus";
+}
 
 using namespace indicator;
 
@@ -40,6 +48,7 @@ struct Manager::Impl : sigc::trackable
     : parent_(parent)
     , indicators_(indicators)
     , key_grabber_(grabber)
+    , settings_(g_settings_new(SETTINGS_NAME.c_str()))
   {
     for (auto const& indicator : indicators_->GetIndicators())
       AddIndicator(indicator);
@@ -49,6 +58,16 @@ struct Manager::Impl : sigc::trackable
     indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::RemoveIndicator));
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
     indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
+
+    parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
+
+    signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
+      parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    });
+    signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + ALWAYS_SHOW_MENUS_KEY, [this] (GSettings*, const gchar*) {
+      parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
+    });
   }
 
   ~Impl()
@@ -63,7 +82,7 @@ struct Manager::Impl : sigc::trackable
       return;
 
     appmenu_connections_.Clear();
-    appmenu_ = indicator;
+    appmenu_ = std::static_pointer_cast<AppmenuIndicator>(indicator);
 
     for (auto const& entry : appmenu_->GetEntries())
       GrabEntryMnemonics(entry);
@@ -149,14 +168,18 @@ struct Manager::Impl : sigc::trackable
 
   Manager* parent_;
   Indicators::Ptr indicators_;
-  Indicator::Ptr appmenu_;
+  AppmenuIndicator::Ptr appmenu_;
   key::Grabber::Ptr key_grabber_;
   connection::Manager appmenu_connections_;
+  glib::Object<GSettings> settings_;
+  glib::SignalManager signals_;
   std::unordered_map<std::string, std::shared_ptr<CompAction>> entry_actions_;
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)
-  : show_menus_wait(180)
+  : integrated_menus(false)
+  , show_menus_wait(180)
+  , always_show_menus(false)
   , fadein(100)
   , fadeout(120)
   , discovery(2)
@@ -178,7 +201,7 @@ Indicators::Ptr const& Manager::Indicators() const
   return impl_->indicators_;
 }
 
-Indicator::Ptr const& Manager::AppMenu() const
+AppmenuIndicator::Ptr const& Manager::AppMenu() const
 {
   return impl_->appmenu_;
 }

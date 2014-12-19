@@ -65,7 +65,7 @@ std::string get_current_desktop()
   {
     while (getline(fin, temp))
     {
-      if (temp.substr(0,4) == "NAME")
+      if (temp.substr(0, 4) == "NAME")
       {
         os_release_name = boost::erase_all_copy(temp.substr(temp.find_last_of('=')+1), "\"");
         break;
@@ -98,7 +98,8 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , we_control_active_(false)
   , new_app_menu_shown_(false)
   , ignore_menu_visibility_(false)
-  , integrated_menus_(decoration::Style::Get()->integrated_menus())
+  , integrated_menus_(menu_manager_->integrated_menus())
+  , always_show_menus_(menu_manager_->always_show_menus())
   , active_xid_(0)
   , desktop_name_(get_current_desktop())
 {
@@ -154,19 +155,8 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryViewAdded));
   Style::Instance().changed.connect(sigc::mem_fun(this, &PanelMenuView::OnStyleChanged));
 
-  auto const& deco_style = decoration::Style::Get();
-  lim_changed_connection_ = deco_style->integrated_menus.changed.connect([this] (bool lim) {
-    integrated_menus_ = lim;
-    new_application_ = nullptr;
-    if (!integrated_menus_)
-    {
-      auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-      is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
-      window_buttons_->focused = true;
-    }
-    Refresh(true);
-    FullRedraw();
-  });
+  menu_manager_->integrated_menus.changed.connect(sigc::mem_fun(this, &PanelMenuView::OnLIMChanged));
+  menu_manager_->always_show_menus.changed.connect(sigc::mem_fun(this, &PanelMenuView::OnAlwaysShowMenusChanged));
 }
 
 void PanelMenuView::SetupWindowButtons()
@@ -266,6 +256,31 @@ void PanelMenuView::FullRedraw()
 {
   QueueDraw();
   window_buttons_->QueueDraw();
+}
+
+void PanelMenuView::OnLIMChanged(bool lim)
+{
+  integrated_menus_ = lim;
+  new_application_ = nullptr;
+
+  if (!integrated_menus_)
+  {
+    CheckMouseInside();
+    window_buttons_->focused = true;
+  }
+
+  Refresh(true);
+  FullRedraw();
+}
+
+void PanelMenuView::OnAlwaysShowMenusChanged(bool always_show_menus)
+{
+  always_show_menus_ = always_show_menus;
+
+  if (!always_show_menus_)
+    CheckMouseInside();
+
+  FullRedraw();
 }
 
 nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
@@ -376,7 +391,7 @@ bool PanelMenuView::ShouldDrawMenus() const
 
     if (!wm.IsExpoActive() && !wm.IsScaleActive())
     {
-      if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_)
+      if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_ || always_show_menus_)
         return true;
 
       if (is_maximized_)
@@ -404,7 +419,7 @@ bool PanelMenuView::ShouldDrawButtons() const
   {
     if (!WindowManager::Default().IsExpoActive())
     {
-      if (is_inside_ || show_now_activated_ || new_application_)
+      if (is_inside_ || show_now_activated_ || new_application_ || always_show_menus_)
         return true;
 
       if (window_buttons_->IsMouseOwner() || titlebar_grab_area_->IsMouseOwner())
@@ -848,6 +863,9 @@ void PanelMenuView::UpdateTitleTexture(nux::Geometry const& geo, std::string con
 
 std::string PanelMenuView::GetCurrentTitle() const
 {
+  if (always_show_menus_ && is_maximized_ && we_control_active_)
+    return std::string();
+
   if (integrated_menus_ || (!switcher_showing_ && !launcher_keynav_))
   {
     std::string new_title;
@@ -958,14 +976,10 @@ void PanelMenuView::NotifyAllMenusClosed()
 
   if (!integrated_menus_ || is_maximized_)
   {
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    bool inside = GetAbsoluteGeometry().IsInside(mouse);
+    bool was_inside = is_inside_;
 
-    if (is_inside_ != inside)
-    {
-      is_inside_ = inside;
+    if (CheckMouseInside() != was_inside)
       QueueDraw();
-    }
   }
 }
 
@@ -1065,7 +1079,7 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
     app_name_changed_signal_.Connect(BAMF_VIEW(new_app), "name-changed",
                                      sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
 
-    if (integrated_menus_)
+    if (integrated_menus_ || always_show_menus_)
       return;
 
     if (std::find(new_apps_.begin(), new_apps_.end(), new_app) != new_apps_.end())
@@ -1263,8 +1277,7 @@ void PanelMenuView::OnWindowMaximized(Window xid)
     maximized_wins_.push_front(xid);
 
     // We need to update the is_inside_ state in the case of maximization by grab
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
+    CheckMouseInside();
     is_maximized_ = true;
 
     if (Refresh())
@@ -1674,6 +1687,7 @@ void PanelMenuView::AddProperties(debug::IntrospectionData& introspection)
 
   introspection
   .add("mouse_inside", is_inside_)
+  .add("always_show_menus", always_show_menus_)
   .add("grabbed", is_grabbed_)
   .add("active_win_maximized", is_maximized_)
   .add("active_win_is_desktop", is_desktop_focused_)
@@ -1695,7 +1709,7 @@ void PanelMenuView::AddProperties(debug::IntrospectionData& introspection)
 
 void PanelMenuView::OnSwitcherShown(GVariant* data)
 {
-  if (!data || integrated_menus_)
+  if (!data || integrated_menus_ || always_show_menus_)
     return;
 
   gboolean switcher_shown;
@@ -1709,8 +1723,7 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
 
   if (!switcher_showing_)
   {
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
+    CheckMouseInside();
   }
   else
   {
@@ -1738,9 +1751,7 @@ void PanelMenuView::OnLauncherKeyNavEnded(GVariant* data)
     return;
 
   launcher_keynav_ = false;
-
-  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-  is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
+  CheckMouseInside();
 
   if (Refresh())
     QueueDraw();
@@ -1866,8 +1877,22 @@ bool PanelMenuView::GetControlsActive() const
   return we_control_active_;
 }
 
+bool PanelMenuView::CheckMouseInside()
+{
+  if (always_show_menus_)
+    return is_inside_;
+
+  auto const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  is_inside_ = GetAbsoluteGeometry().IsInside(mouse);
+
+  return is_inside_;
+}
+
 void PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
+  if (always_show_menus_)
+    return;
+
   if (!is_inside_)
   {
     if (is_grabbed_)
@@ -1881,6 +1906,9 @@ void PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_butt
 
 void PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
+  if (always_show_menus_)
+    return;
+
   if (is_inside_)
   {
     is_inside_ = false;
@@ -1890,6 +1918,9 @@ void PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_butt
 
 void PanelMenuView::SetMousePosition(int x, int y)
 {
+  if (always_show_menus_)
+    return;
+
   if (last_active_view_ ||
       (x >= 0 && y >= 0 && GetAbsoluteGeometry().IsPointInside(x, y)))
   {

@@ -58,7 +58,7 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   manager_->inactive_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->inactive_shadow_radius.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->shadow_offset.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateWindowsExtents)));
-  Style::Get()->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIntegratedMenus)));
+  menu_manager_->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIntegratedMenus)));
 
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
@@ -110,7 +110,7 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
 
 void Manager::Impl::SetupIntegratedMenus()
 {
-  if (!Style::Get()->integrated_menus())
+  if (!menu_manager_->integrated_menus())
   {
     UnsetAppMenu();
     menu_connections_.Clear();
@@ -120,6 +120,7 @@ void Manager::Impl::SetupIntegratedMenus()
   menu_connections_.Add(menu_manager_->appmenu_added.connect(sigc::mem_fun(this, &Impl::SetupAppMenu)));
   menu_connections_.Add(menu_manager_->appmenu_removed.connect(sigc::mem_fun(this, &Impl::UnsetAppMenu)));
   menu_connections_.Add(menu_manager_->key_activate_entry.connect(sigc::mem_fun(this, &Impl::OnMenuKeyActivated)));
+  menu_connections_.Add(menu_manager_->always_show_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupAppMenu))));
 
   SetupAppMenu();
 }
@@ -139,6 +140,8 @@ void Manager::Impl::SetupAppMenu()
     UnsetAppMenu();
     return;
   }
+
+  appmenu->active_window = screen->activeWindow();
 
   auto setup_active_window = [this] {
     if (Window::Ptr const& active_win = active_deco_win_.lock())
@@ -256,11 +259,15 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
         if (active_deco_win_)
           active_deco_win_->impl_->active = false;
 
-        auto const& new_active = GetWindowByXid(screen->activeWindow());
+        auto active_xid = screen->activeWindow();
+        auto const& new_active = GetWindowByXid(active_xid);
         active_deco_win_ = new_active;
 
         if (new_active)
           new_active->impl_->active = true;
+
+        if (indicator::AppmenuIndicator::Ptr const& appmenu = menu_manager_->AppMenu())
+          appmenu->active_window = active_xid;
       }
       else if (event->xproperty.atom == Atoms::mwmHints ||
                event->xproperty.atom == Atoms::wmAllowedActions)

@@ -3044,7 +3044,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
           }
         }
       }
-      else if (decoration::Style::Get()->integrated_menus())
+      else if (uScreen->menus_->integrated_menus())
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
       }
