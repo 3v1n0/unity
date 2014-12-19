@@ -32,8 +32,8 @@ namespace
 {
 typedef std::tuple<glib::Object<GtkLabel>, glib::Object<GtkImage>> EntryObjects;
 
-const std::string SYNC_ENTRY_VARIANT_FORMAT = "(ssssbbusbbi)";
-const std::string SYNC_ENTRIES_VARIANT_FORMAT = "(a"+SYNC_ENTRY_VARIANT_FORMAT+")";
+const std::string SYNC_ENTRY_VARIANT_FORMAT = ENTRY_SIGNATURE;
+const std::string SYNC_ENTRIES_VARIANT_FORMAT = "(" ENTRY_ARRAY_SIGNATURE ")";
 
 struct TestPanelService : Test
 {

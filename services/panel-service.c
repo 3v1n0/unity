@@ -1607,7 +1607,7 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
   guint32 image_type = 0;
   gchar *image_data = gtk_image_to_data (entry->image, &image_type);
 
-  g_variant_builder_add (b, "(ssssbbusbbi)",
+  g_variant_builder_add (b, ENTRY_SIGNATURE,
                          indicator_id,
                          id,
                          entry->name_hint ? entry->name_hint : "",
@@ -1627,7 +1627,7 @@ static void
 indicator_entry_null_to_variant (const gchar     *indicator_id,
                                  GVariantBuilder *b)
 {
-  g_variant_builder_add (b, "(ssssbbusbbi)",
+  g_variant_builder_add (b, ENTRY_SIGNATURE,
                          indicator_id,
                          "",
                          "",
@@ -1790,8 +1790,8 @@ panel_service_sync (PanelService *self)
   GSList *i;
   gint position;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("("ENTRY_ARRAY_SIGNATURE")"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE (ENTRY_ARRAY_SIGNATURE));
 
   for (i = self->priv->indicators; i;)
     {
@@ -1817,8 +1817,8 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   GVariantBuilder b;
   GSList *i;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("("ENTRY_ARRAY_SIGNATURE")"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE (ENTRY_ARRAY_SIGNATURE));
 
   for (i = self->priv->indicators; i; i = i->next)
     {

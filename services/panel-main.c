@@ -27,6 +27,7 @@
 #include "config.h"
 #include "panel-a11y.h"
 #include "panel-service.h"
+#include "panel-service-private.h"
 
 static GDBusNodeInfo *introspection_data = NULL;
 
@@ -35,12 +36,12 @@ static const gchar introspection_xml[] =
   "  <interface name='com.canonical.Unity.Panel.Service'>"
   ""
   "    <method name='Sync'>"
-  "      <arg type='a(ssssbbusbbi)' name='state' direction='out'/>"
+  "      <arg type='"ENTRY_ARRAY_SIGNATURE"' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncOne'>"
   "      <arg type='s' name='indicator_id' direction='in'/>"
-  "      <arg type='a(ssssbbusbbi)' name='state' direction='out'/>"
+  "      <arg type='"ENTRY_ARRAY_SIGNATURE"' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncGeometries'>"

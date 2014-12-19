@@ -24,6 +24,10 @@
 
 G_BEGIN_DECLS
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 typedef struct _KeyBinding
 {
   KeySym key;
@@ -34,7 +38,14 @@ typedef struct _KeyBinding
 #define AltMask Mod1Mask
 #define SuperMask Mod4Mask
 
+#define ENTRY_SIGNATURE "(ssssbbusbbi)"
+#define ENTRY_ARRAY_SIGNATURE "a" ENTRY_SIGNATURE ""
+
 void parse_string_keybinding (const char *, KeyBinding *);
+
+#ifdef  __cplusplus
+}
+#endif
 
 G_END_DECLS
 

@@ -1,4 +1,5 @@
 #include "test_service_panel.h"
+#include "panel-service-private.h"
 
 namespace unity
 {
@@ -13,7 +14,7 @@ static const char * panel_interface =
 "\n"
 "<!-- Begin of real methods/signals -->\n"
 "    <method name='Sync'>"
-"      <arg type='a(ssssbbusbbi)' name='state' direction='out'/>"
+"      <arg type='" ENTRY_ARRAY_SIGNATURE "' name='state' direction='out'/>"
 "    </method>"
 "\n"
 "    <signal name='ReSync'>"
@@ -34,7 +35,7 @@ static const char * panel_interface =
 
 void add_entry_id(GVariantBuilder *b)
 {
-  g_variant_builder_add (b, "(ssssbbusbbi)",
+  g_variant_builder_add (b, ENTRY_SIGNATURE,
                          "test_indicator_id",
                          "test_entry_id",
                          "test_entry_name_hint",
@@ -50,7 +51,7 @@ void add_entry_id(GVariantBuilder *b)
 
 void add_entry_id_2(GVariantBuilder *b)
 {
-  g_variant_builder_add (b, "(ssssbbusbbi)",
+  g_variant_builder_add (b, ENTRY_SIGNATURE,
                          "test_indicator_id",
                          "test_entry_id2",
                          "test_entry_name_hint2",
@@ -82,8 +83,8 @@ GVariant* Panel::OnMethodCall(std::string const& method, GVariant *parameters)
   {
     GVariantBuilder b;
 
-    g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
-    g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
+    g_variant_builder_init (&b, G_VARIANT_TYPE ("(" ENTRY_ARRAY_SIGNATURE ")"));
+    g_variant_builder_open (&b, G_VARIANT_TYPE (ENTRY_ARRAY_SIGNATURE));
 
     if (sync_return_mode_ == 0)
     {

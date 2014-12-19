@@ -27,6 +27,7 @@
 #include "GLibSource.h"
 #include "Variant.h"
 #include "DBusIndicators.h"
+#include "services/panel-service-private.h"
 
 namespace unity
 {
@@ -341,8 +342,8 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
   int wanted_idx = 0;
   bool any_different_idx = false;
 
-  g_variant_get(args, "(a(ssssbbusbbi))", &iter);
-  while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
+  g_variant_get(args, "(" ENTRY_ARRAY_SIGNATURE ")", &iter);
+  while (g_variant_iter_loop(iter, ENTRY_SIGNATURE,
                              &indicator_id,
                              &entry_id,
                              &name_hint,
