@@ -91,6 +91,8 @@ private:
   void OnActiveAppChanged(BamfMatcher* matcher, BamfApplication* old_app, BamfApplication* new_app);
   void OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name);
   void OnStyleChanged();
+  void OnLIMChanged(bool);
+  void OnAlwaysShowMenusChanged(bool);
 
   void OnSpreadInitiate();
   void OnSpreadTerminate();
@@ -133,6 +135,7 @@ private:
   void OnLauncherSelectionChanged(GVariant* data);
 
   void UpdateShowNow(bool ignore);
+  bool CheckMouseInside();
 
   bool UpdateActiveWindowPosition();
   bool UpdateShowNowWithDelay();
@@ -185,6 +188,7 @@ private:
   bool new_app_menu_shown_;
   bool ignore_menu_visibility_;
   bool integrated_menus_;
+  bool always_show_menus_;
 
   Window active_xid_;
   nux::Geometry monitor_geo_;
@@ -196,7 +200,6 @@ private:
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> active_app_changed_signal_;
   glib::Signal<void, BamfView*, gchar*, gchar*> view_name_changed_signal_;
   glib::Signal<void, BamfView*, gchar*, gchar*> app_name_changed_signal_;
-  connection::Wrapper lim_changed_connection_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
