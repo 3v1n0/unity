@@ -37,6 +37,7 @@ public:
 
   nux::Property<unsigned> fadein;
   nux::Property<unsigned> fadeout;
+  nux::Property<bool> override_main_item;
 
   void SetMainItem(Item::Ptr const& main);
   void SetInputItem(Item::Ptr const& input);
@@ -47,6 +48,7 @@ protected:
 
 private:
   void DoRelayout() override;
+  void StartAnimation();
 
   nux::animation::AnimateValue<double> fade_animator_;
 };
