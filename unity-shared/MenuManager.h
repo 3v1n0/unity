@@ -47,6 +47,7 @@ public:
 
   nux::Property<bool> show_menus;
   nux::Property<unsigned> show_menus_wait;
+  nux::Property<bool> always_show_menus;
 
   nux::Property<unsigned> fadein;
   nux::Property<unsigned> fadeout;
