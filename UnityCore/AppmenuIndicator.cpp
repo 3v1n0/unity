@@ -52,6 +52,19 @@ AppmenuIndicator::AppmenuIndicator(std::string const& name)
 AppmenuIndicator::~AppmenuIndicator()
 {}
 
+Indicator::Entries AppmenuIndicator::GetEntriesForWindow(uint32_t parent_window)
+{
+  Entries entries;
+
+  for (auto const& entry : GetEntries())
+  {
+    if (entry->parent_window() == parent_window)
+      entries.push_back(entry);
+  }
+
+  return entries;
+}
+
 void AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y) const
 {
   on_show_appmenu.emit(xid, x, y);

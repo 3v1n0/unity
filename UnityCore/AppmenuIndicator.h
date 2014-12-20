@@ -39,6 +39,7 @@ public:
   nux::Property<unsigned> active_window;
 
   virtual bool IsAppmenu() const { return true; }
+  Entries GetEntriesForWindow(uint32_t parent_window);
 
   void ShowAppmenu(unsigned xid, int x, int y) const;
 
