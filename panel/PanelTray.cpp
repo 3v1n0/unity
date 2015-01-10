@@ -45,7 +45,6 @@ PanelTray::PanelTray(int monitor)
 
   auto gtkwindow = glib::object_cast<GtkWindow>(window_);
   gtk_window_set_type_hint(gtkwindow, GDK_WINDOW_TYPE_HINT_DOCK);
-  gtk_window_set_has_resize_grip(gtkwindow, FALSE);
   gtk_window_set_keep_above(gtkwindow, TRUE);
   gtk_window_set_skip_pager_hint(gtkwindow, TRUE);
   gtk_window_set_skip_taskbar_hint(gtkwindow, TRUE);
