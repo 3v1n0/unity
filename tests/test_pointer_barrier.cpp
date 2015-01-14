@@ -85,12 +85,12 @@ TEST(TestPointerBarrier, HandleHitNotifyEvents)
 
   bool got_event = false;
 
-  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+  pb.barrier_event.connect([&] (PointerBarrierWrapper::Ptr const& pbw, BarrierEvent::Ptr bev) {
     if (!pbw->IsFirstEvent())
     {
       got_event = true;
 
-      EXPECT_EQ(pbw, &pb);
+      EXPECT_EQ(pbw.get(), &pb);
       EXPECT_EQ(bev->x, ev.root_x);
       EXPECT_EQ(bev->y, ev.root_y);
       EXPECT_EQ(bev->velocity, 600 * pb.max_velocity_multiplier);
@@ -113,10 +113,10 @@ TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
   XIBarrierEvent ev = GetGenericEvent(0xabba);
   bool got_event = false;
 
-  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+  pb.barrier_event.connect([&] (PointerBarrierWrapper::Ptr const& pbw, BarrierEvent::Ptr bev) {
     got_event = true;
 
-    EXPECT_EQ(pbw, &pb);
+    EXPECT_EQ(pbw.get(), &pb);
     EXPECT_EQ(bev->x, ev.root_x);
     EXPECT_EQ(bev->y, ev.root_y);
     EXPECT_GT(bev->velocity, 0);
@@ -136,7 +136,7 @@ TEST(TestPointerBarrier, ReciveFirstEvent)
 
   bool first_is_true = false;
 
-  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+  pb.barrier_event.connect([&] (PointerBarrierWrapper::Ptr const& pbw, BarrierEvent::Ptr bev) {
     first_is_true = true;
   });
 
@@ -151,7 +151,7 @@ TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
   XIBarrierEvent ev = GetGenericEvent(0xabba);
   int events_recived = 0;
 
-  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+  pb.barrier_event.connect([&] (PointerBarrierWrapper::Ptr const& pbw, BarrierEvent::Ptr bev) {
       events_recived++;
 
       if (events_recived == 1)
