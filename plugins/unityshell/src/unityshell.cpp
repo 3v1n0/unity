@@ -41,7 +41,6 @@
 #include "PanelView.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
-#include "StartupNotifyService.h"
 #include "Timer.h"
 #include "XKeyboardUtil.h"
 #include "unityshell.h"
@@ -285,8 +284,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      PluginAdapter::Initialize(screen);
      AddChild(&WindowManager::Default());
-
-     StartupNotifyService::Default()->SetSnDisplay(screen->snDisplay(), screen->screenNum());
 
      nux::NuxInitialize(0);
 #ifndef USE_GLES
