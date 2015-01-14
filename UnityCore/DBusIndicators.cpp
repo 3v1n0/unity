@@ -336,8 +336,6 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
   gint32        priority        = -1;
 
   std::map<Indicator::Ptr, Indicator::Entries> indicators;
-  int wanted_idx = 0;
-  bool any_different_idx = false;
 
   g_variant_get(args, "(" ENTRY_ARRAY_SIGNATURE ")", &iter);
   while (g_variant_iter_loop(iter, ENTRY_SIGNATURE,
@@ -368,21 +366,13 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
     // Empty entries are empty indicators.
     if (!entry.empty())
     {
-      Entry::Ptr e;
-      if (!any_different_idx)
-      {
-        // Indicators can only add or remove entries, so if
-        // there is a index change we can't reuse the existing ones
-        // after that index
-        if (indicator->EntryIndex(entry_id) == wanted_idx)
-        {
-          e = indicator->GetEntry(entry_id);
-        }
-        else
-        {
-          any_different_idx = true;
-        }
-      }
+      Entry::Ptr e = indicator->GetEntry(entry_id);
+      int old_priority = e ? e->priority() : -1;
+
+      // Indicators can only add or remove entries, so if
+      // there is a priority change we can't reuse the existing ones
+      if (old_priority != priority)
+        e.reset();
 
       if (!e)
       {
@@ -399,7 +389,6 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
       }
 
       entries.push_back(e);
-      ++wanted_idx;
     }
   }
   g_variant_iter_free(iter);

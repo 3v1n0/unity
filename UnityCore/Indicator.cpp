@@ -109,21 +109,6 @@ Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
   return Entry::Ptr();
 }
 
-int Indicator::EntryIndex(std::string const& entry_id) const
-{
-  int i = 0;
-  for (auto const& entry : entries_)
-  {
-    if (entry->id() == entry_id)
-    {
-      return i;
-    }
-    ++i;
-  }
-
-  return -1;
-}
-
 std::ostream& operator<<(std::ostream& out, Indicator const& i)
 {
   out << "<Indicator " << i.name() << std::endl;

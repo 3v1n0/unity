@@ -57,7 +57,6 @@ TEST(TestIndicator, Construction)
   EXPECT_EQ(indicator.name(), "indicator-test");
   EXPECT_FALSE(indicator.IsAppmenu());
   EXPECT_EQ(indicator.GetEntry("test-entry"), nullptr);
-  EXPECT_EQ(indicator.EntryIndex("test-entry"), -1);
   EXPECT_TRUE(indicator.GetEntries().empty());
 }
 
@@ -110,7 +109,6 @@ TEST(TestIndicator, Syncing)
   indicator.Sync(sync_data);
   EXPECT_EQ(indicator.GetEntries().size(), 2);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), nullptr);
-  EXPECT_EQ(indicator.EntryIndex("test-entry-2"), -1);
 
   // Sync the indicator removing an entry and adding a new one
   entry = new Entry("test-entry-4", "name-hint", 0, "label", true, true, 0, "icon",

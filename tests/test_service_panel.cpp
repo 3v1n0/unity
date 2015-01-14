@@ -33,7 +33,7 @@ static const char * panel_interface =
 "</node>\n"
 ;
 
-void add_entry_id(GVariantBuilder *b)
+void add_entry_id(GVariantBuilder *b, gint priority)
 {
   g_variant_builder_add (b, ENTRY_SIGNATURE,
                          "test_indicator_id",
@@ -47,10 +47,10 @@ void add_entry_id(GVariantBuilder *b)
                          "", /* image_data */
                          TRUE, /* image sensitive */
                          TRUE, /* image visible */
-                         1 /* priority  */);
+                         priority);
 }
 
-void add_entry_id_2(GVariantBuilder *b)
+void add_entry_id_2(GVariantBuilder *b, gint priority)
 {
   g_variant_builder_add (b, ENTRY_SIGNATURE,
                          "test_indicator_id",
@@ -64,7 +64,7 @@ void add_entry_id_2(GVariantBuilder *b)
                          "", /* image_data */
                          TRUE, /* image sensitive */
                          TRUE, /* image visible */
-                         1 /* priority  */);
+                         priority);
 }
 }
 
@@ -90,13 +90,13 @@ GVariant* Panel::OnMethodCall(std::string const& method, GVariant *parameters)
 
     if (sync_return_mode_ == 0)
     {
-      add_entry_id(&b);
-      add_entry_id_2(&b);
+      add_entry_id(&b, 1);
+      add_entry_id_2(&b, 2);
     }
     else if (sync_return_mode_ == 1)
     {
-      add_entry_id_2(&b);
-      add_entry_id(&b);
+      add_entry_id_2(&b, 1);
+      add_entry_id(&b, 2);
     }
 
     if (sync_return_mode_ == 1)
