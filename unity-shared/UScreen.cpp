@@ -74,13 +74,10 @@ int UScreen::GetPrimaryMonitor() const
 
 int UScreen::GetMonitorAtPosition(int x, int y) const
 {
-  int idx = 0;
-
-  for (auto const& monitor : monitors_)
+  for (unsigned i = 0; i < monitors_.size(); ++i)
   {
-    if (monitor.IsPointInside(x, y))
-      return idx;
-    ++idx;
+    if (monitors_[i].IsPointInside(x, y))
+      return i;
   }
 
   return gdk_screen_get_monitor_at_point(screen_, x, y);
