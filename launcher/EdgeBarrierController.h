@@ -37,7 +37,7 @@ struct EdgeBarrierSubscriber
   };
 
   virtual ~EdgeBarrierSubscriber() {}
-  virtual Result HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) = 0;
+  virtual Result HandleBarrierEvent(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr event) = 0;
 };
 
 class EdgeBarrierController : public sigc::trackable

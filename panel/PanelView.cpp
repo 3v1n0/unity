@@ -811,7 +811,7 @@ int PanelView::GetStoredDashWidth() const
   return stored_dash_width_;
 }
 
-ui::EdgeBarrierSubscriber::Result PanelView::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+ui::EdgeBarrierSubscriber::Result PanelView::HandleBarrierEvent(ui::PointerBarrierWrapper::Ptr const& owner, ui::BarrierEvent::Ptr event)
 {
   if (WindowManager::Default().IsAnyWindowMoving())
     return ui::EdgeBarrierSubscriber::Result::IGNORED;

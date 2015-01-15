@@ -502,7 +502,7 @@ TEST_F(TestLauncher, EdgeReleasesDuringDnd)
 
   launcher_->DndStarted("");
 
-  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier, event),
             ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE);
 }
 
@@ -515,24 +515,24 @@ TEST_F(TestLauncher, EdgeBarriersIgnoreEvents)
 
   event->x = launcher_geo.x-1;
   event->y = launcher_geo.y;
-  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier, event),
             ui::EdgeBarrierSubscriber::Result::IGNORED);
 
   event->x = launcher_geo.x+launcher_geo.width+1;
   event->y = launcher_geo.y;
-  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier, event),
             ui::EdgeBarrierSubscriber::Result::IGNORED);
 
   options_->reveal_trigger = RevealTrigger::EDGE;
   event->x = launcher_geo.x+launcher_geo.width/2;
   event->y = launcher_geo.y - 1;
-  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier, event),
             ui::EdgeBarrierSubscriber::Result::IGNORED);
 
   options_->reveal_trigger = RevealTrigger::CORNER;
   event->x = launcher_geo.x+launcher_geo.width/2;
   event->y = launcher_geo.y;
-  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier, event),
             ui::EdgeBarrierSubscriber::Result::IGNORED);
 }
 
@@ -551,7 +551,7 @@ TEST_F(TestLauncher, EdgeBarriersHandlesEvent)
     {
       event->x = x;
       event->y = y;
-      ASSERT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+      ASSERT_EQ(launcher_->HandleBarrierEvent(barrier, event),
                 ui::EdgeBarrierSubscriber::Result::HANDLED);
     }
   }
@@ -564,7 +564,7 @@ TEST_F(TestLauncher, EdgeBarriersHandlesEvent)
     {
       event->x = x;
       event->y = y;
-      ASSERT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+      ASSERT_EQ(launcher_->HandleBarrierEvent(barrier, event),
                 ui::EdgeBarrierSubscriber::Result::HANDLED);
     }
   }

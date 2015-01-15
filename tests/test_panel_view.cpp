@@ -80,11 +80,11 @@ TEST_F(TestPanelView, HandleBarrierEvent)
   auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
 
   WM->SetIsAnyWindowMoving(false);
-  EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier.get(), event),
+  EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier, event),
             ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE);
 
   WM->SetIsAnyWindowMoving(true);
-  EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier.get(), event),
+  EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier, event),
             ui::EdgeBarrierSubscriber::Result::IGNORED);
 }
 

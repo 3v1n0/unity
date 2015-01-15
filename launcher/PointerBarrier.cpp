@@ -101,7 +101,7 @@ void PointerBarrierWrapper::SendBarrierEvent(int x, int y, int velocity, int eve
 {
   auto event = std::make_shared<BarrierEvent>(x, y, velocity, event_id);
 
-  barrier_event.emit(this, event);
+  barrier_event.emit(shared_from_this(), event);
 }
 
 bool PointerBarrierWrapper::IsFirstEvent() const
