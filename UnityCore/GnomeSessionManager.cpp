@@ -648,6 +648,9 @@ void GnomeManager::Hibernate()
 
 bool GnomeManager::CanLock() const
 {
+  if (is_locked())
+    return true;
+
   glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
 
   if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()) ||
