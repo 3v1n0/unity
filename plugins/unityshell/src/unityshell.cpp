@@ -46,7 +46,6 @@
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
-#include "launcher/EdgeBarrierController.h"
 #include "launcher/XdndCollectionWindowImp.h"
 #include "launcher/XdndManagerImp.h"
 #include "launcher/XdndStartStopNotifierImp.h"
@@ -3819,6 +3818,9 @@ void UnityScreen::OnScreenLocked()
 
   showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, options);
   showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, options);
+
+  // We disable the edge barriers, to avoid blocking the mouse pointer during lockscreen
+  edge_barriers_->force_disable = true;
 }
 
 void UnityScreen::OnScreenUnlocked()
@@ -3833,6 +3835,8 @@ void UnityScreen::OnScreenUnlocked()
 
   for (auto& action : getActions())
     screen->addAction(&action);
+
+  edge_barriers_->force_disable = false;
 }
 
 void UnityScreen::SaveLockStamp(bool save)
@@ -3885,9 +3889,9 @@ void UnityScreen::initLauncher()
   auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
   auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();
   auto xdnd_manager = std::make_shared<XdndManagerImp>(xdnd_start_stop_notifier, xdnd_collection_window);
-  auto edge_barriers = std::make_shared<ui::EdgeBarrierController>();
+  edge_barriers_ = std::make_shared<ui::EdgeBarrierController>();
 
-  launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers);
+  launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers_);
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
@@ -3898,7 +3902,7 @@ void UnityScreen::initLauncher()
 
   /* Setup panel */
   timer.Reset();
-  panel_controller_ = std::make_shared<panel::Controller>(menus_, edge_barriers);
+  panel_controller_ = std::make_shared<panel::Controller>(menus_, edge_barriers_);
   AddChild(panel_controller_.get());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 

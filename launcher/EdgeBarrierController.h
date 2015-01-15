@@ -49,6 +49,7 @@ public:
   ~EdgeBarrierController();
 
   nux::RWProperty<bool> sticky_edges;
+  nux::Property<bool> force_disable;
   nux::Property<launcher::Options::Ptr> options;
 
   void AddHorizontalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
