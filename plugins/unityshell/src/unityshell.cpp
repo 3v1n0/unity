@@ -957,6 +957,8 @@ bool UnityScreen::forcePaintOnTop()
 {
   return !allowWindowPaint ||
          lockscreen_controller_->IsLocked() ||
+         dash_controller_->IsVisible() ||
+         hud_controller_->IsVisible() ||
           ((switcher_controller_->Visible() ||
             WindowManager::Default().IsExpoActive())
            && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
@@ -2115,14 +2117,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
 
     if (!dash_controller_->IsVisible())
     {
-      if (!adapter.IsTopWindowFullscreenOnMonitorWithMouse())
+      if (dash_controller_->ShowDash())
       {
-        if (dash_controller_->ShowDash())
-        {
-          tap_handled = true;
-          ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                                    g_variant_new("(sus)", "home.scope", dash::GOTO_DASH_URI, ""));
-        }
+        tap_handled = true;
+        ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                  g_variant_new("(sus)", "home.scope", dash::GOTO_DASH_URI, ""));
       }
     }
     else
@@ -2532,9 +2531,6 @@ bool UnityScreen::ShowHud()
       QuicklistManager::Default()->Current()->Hide();
 
     auto& wm = WindowManager::Default();
-
-    if (wm.IsTopWindowFullscreenOnMonitorWithMouse())
-      return false;
 
     if (wm.IsScreenGrabbed())
     {
