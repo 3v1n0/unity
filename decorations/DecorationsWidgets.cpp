@@ -192,15 +192,10 @@ BasicContainer::Ptr Item::GetParent() const
 
 BasicContainer::Ptr Item::GetTopParent() const
 {
-  BasicContainer::Ptr parent = GetParent();
+  BasicContainer::Ptr parent = parent_;
 
-  while (parent)
-  {
-    if (!parent->parent_)
-      return parent;
-
-    parent = parent->GetParent();
-  }
+  while (parent && parent->parent_)
+    parent = parent->parent_;
 
   return parent;
 }
