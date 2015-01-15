@@ -959,6 +959,7 @@ bool UnityScreen::forcePaintOnTop()
          lockscreen_controller_->IsLocked() ||
          dash_controller_->IsVisible() ||
          hud_controller_->IsVisible() ||
+         session_controller_->Visible() ||
           ((switcher_controller_->Visible() ||
             WindowManager::Default().IsExpoActive())
            && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
