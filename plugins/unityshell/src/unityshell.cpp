@@ -3209,7 +3209,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
           }));
         }
       }
-      else if (window->type() == CompWindowTypeNormalMask && window->resName() == "onboard")
+      else if (WindowManager::Default().IsOnscreenKeyboard(window->id()))
       {
         uScreen->onboard_ = window;
         uScreen->RaiseOSK();
@@ -4133,7 +4133,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   if (window->state() & CompWindowStateFullscreenMask)
     uScreen->fullscreen_windows_.push_back(window);
 
-  if (window->type() == CompWindowTypeNormalMask && window->resName() == "onboard" && window->isViewable())
+  if (WindowManager::Default().IsOnscreenKeyboard(window->id()) && window->isViewable())
   {
     uScreen->onboard_ = window;
     uScreen->RaiseOSK();
