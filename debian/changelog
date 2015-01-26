@@ -1,3 +1,16 @@
+unity (7.3.1+15.04.20150126-0ubuntu1) vivid; urgency=low
+
+  [ Andrea Azzarone ]
+  * Force icon size (new gtk requires it). (LP: #1404730)
+  * Disable markup accel for VolumeLauncherIcon quicklist menu items.
+    (LP: #1413411)
+  * Make sure dragged icons are not rendered behind the dash. (LP:
+    #1413773)
+  * Make unity unlockable if user is in nopsswdlogin group. On super+l
+    the screensaver is activated. (LP: #1413790)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 26 Jan 2015 22:42:26 +0000
+
 unity (7.3.1+15.04.20150115-0ubuntu1) vivid; urgency=low
 
   [ Ubuntu daily release ]
