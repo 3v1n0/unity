@@ -22,6 +22,8 @@
 #include <NuxCore/Logger.h>
 #include "Variant.h"
 
+#include <grp.h>
+
 namespace unity
 {
 namespace session
@@ -483,6 +485,18 @@ bool GnomeManager::Impl::HasInhibitors()
   return inhibitors.GetBool();
 }
 
+bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string const& group_name)
+{
+  auto group = getgrnam(group_name.c_str());
+
+  if (group && group->gr_mem)
+    for (int i = 0; group->gr_mem[i]; ++i)
+      if (g_strcmp0(group->gr_mem[i], user_name.c_str()) == 0)
+        return true;
+
+  return false;
+}
+
 // Public implementation
 
 GnomeManager::GnomeManager()
@@ -654,7 +668,8 @@ bool GnomeManager::CanLock() const
   glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
 
   if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()) ||
-      UserName().find("guest-") == 0 || is_locked())
+      UserName().find("guest-") == 0 ||
+      impl_->IsUserInGroup(UserName(), "nopasswdlogin"))
   {
     return false;
   }

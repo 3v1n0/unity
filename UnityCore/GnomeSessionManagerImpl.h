@@ -64,6 +64,8 @@ struct GnomeManager::Impl
   bool InteractiveMode();
   void UpdateHaveOtherOpenSessions();
 
+  bool IsUserInGroup(std::string const& user_name, std::string const& group_name);
+
   GnomeManager* manager_;
   bool test_mode_;
   bool can_shutdown_;
