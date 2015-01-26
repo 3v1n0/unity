@@ -957,7 +957,7 @@ bool UnityScreen::forcePaintOnTop()
 {
   return !allowWindowPaint ||
          lockscreen_controller_->IsLocked() ||
-         dash_controller_->IsVisible() ||
+         (dash_controller_->IsVisible() && !nux::GetGraphicsDisplay()->PointerIsGrabbed()) ||
          hud_controller_->IsVisible() ||
          session_controller_->Visible() ||
           ((switcher_controller_->Visible() ||
