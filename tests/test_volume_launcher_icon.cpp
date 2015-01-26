@@ -311,6 +311,7 @@ TEST_F(TestVolumeLauncherIcon, TestNameMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
 
   uint64_t time = g_random_int();
   ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
