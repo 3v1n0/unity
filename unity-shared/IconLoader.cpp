@@ -234,7 +234,7 @@ private:
       else if (icon.IsType(G_TYPE_ICON))
       {
         GtkIconInfo *info = ::gtk_icon_theme_lookup_by_gicon(impl->theme_, icon, size,
-                                                             static_cast<GtkIconLookupFlags>(0));
+                                                             static_cast<GtkIconLookupFlags>(GTK_ICON_LOOKUP_FORCE_SIZE));
         if (info)
         {
           icon_info = info;
