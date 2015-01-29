@@ -136,6 +136,8 @@ static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
 static void update_keybinding (GSettings *, const gchar *, gpointer);
 static void emit_upstart_event (const gchar *);
+static gchar * get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry);
+static IndicatorObjectEntry * get_indicator_entry_by_id (PanelService *self, const gchar *entry_id);
 static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
 
 /*
@@ -331,11 +333,6 @@ get_entry_at_panel (PanelService *self, const gchar *panel, gint x, gint y)
   return NULL;
 }
 
-static gchar *
-get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry);
-static IndicatorObjectEntry *
-get_indicator_entry_by_id (PanelService *self, const gchar *entry_id);
-
 static const gchar*
 get_panel_for_parent_at (PanelService *self, guint parent, gint x, gint y)
 {
@@ -354,7 +351,8 @@ get_panel_for_parent_at (PanelService *self, guint parent, gint x, gint y)
           IndicatorObjectEntry *entry = k;
           GdkRectangle *geo = v;
 
-          // The entry might be invalid at this point (as already removed), double check
+          /* The entry might be invalid at this point (as it could have been
+           * removed, but still not synced), so it's better to double check */
           gchar *entry_id = get_indicator_entry_id_by_entry (entry);
           IndicatorObjectEntry *tmp_entry = get_indicator_entry_by_id (self, entry_id);
           g_free (entry_id);
@@ -437,6 +435,21 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
     }
 
   return entry;
+}
+
+static void
+ensure_entry_menu_is_closed (PanelService *self,
+                             const gchar *panel_id,
+                             IndicatorObjectEntry *entry)
+{
+  PanelServicePrivate  *priv = self->priv;
+
+  /* If the entry has been removed let's make sure that its menu is closed */
+  if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+    {
+      if (!priv->last_panel || !panel_id || g_strcmp0 (priv->last_panel, panel_id) == 0)
+        gtk_menu_popdown (entry->menu);
+    }
 }
 
 static void
@@ -1270,7 +1283,10 @@ on_entry_removed (IndicatorObject      *object,
   /* Don't remove here the value from panel2entries_hash, this should be
    * done during the geometries sync, to avoid false positive.
    * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
-   * when switching the focus from a window to one of its dialog children */
+   * for more entries than the ones actually removed (sometimes we quickly get
+   * added/removed signals when removing one of the last elements). */
+
+  ensure_entry_menu_is_closed (self, NULL, entry);
 
   gchar *entry_id = get_indicator_entry_id_by_entry (entry);
   g_hash_table_remove (self->priv->id2entry_hash, entry_id);
@@ -1888,6 +1904,7 @@ panel_service_sync_geometry (PanelService *self,
 {
   IndicatorObject *object;
   IndicatorObjectEntry *entry;
+  GHashTable *entry2geometry_hash;
   gboolean valid_entry = TRUE;
   PanelServicePrivate  *priv = self->priv;
 
@@ -1908,24 +1925,18 @@ panel_service_sync_geometry (PanelService *self,
 
   if (entry)
     {
-      GHashTable *entry2geometry_hash = g_hash_table_lookup (priv->panel2entries_hash, panel_id);
+      entry2geometry_hash = g_hash_table_lookup (priv->panel2entries_hash, panel_id);
 
       if (width < 0 || height < 0 || !valid_entry)
         {
-          /* If the entry has been removed let's make sure that its menu is closed */
-          if (valid_entry && GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
-            {
-              if (!priv->last_panel || g_strcmp0 (priv->last_panel, panel_id) == 0)
-                gtk_menu_popdown (entry->menu);
-            }
+          if (valid_entry)
+            ensure_entry_menu_is_closed (self, panel_id, entry);
 
           if (entry2geometry_hash)
             {
-              if (g_hash_table_size (entry2geometry_hash) > 1)
-                {
-                  g_hash_table_remove (entry2geometry_hash, entry);
-                }
-              else
+              g_hash_table_remove (entry2geometry_hash, entry);
+
+              if (g_hash_table_size (entry2geometry_hash) == 0)
                 {
                   g_hash_table_remove (priv->panel2entries_hash, panel_id);
                 }
