@@ -331,6 +331,11 @@ get_entry_at_panel (PanelService *self, const gchar *panel, gint x, gint y)
   return NULL;
 }
 
+static gchar *
+get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry);
+static IndicatorObjectEntry *
+get_indicator_entry_by_id (PanelService *self, const gchar *entry_id);
+
 static const gchar*
 get_panel_for_parent_at (PanelService *self, guint parent, gint x, gint y)
 {
@@ -348,6 +353,14 @@ get_panel_for_parent_at (PanelService *self, guint parent, gint x, gint y)
         {
           IndicatorObjectEntry *entry = k;
           GdkRectangle *geo = v;
+
+          // The entry might be invalid at this point (as already removed), double check
+          gchar *entry_id = get_indicator_entry_id_by_entry (entry);
+          IndicatorObjectEntry *tmp_entry = get_indicator_entry_by_id (self, entry_id);
+          g_free (entry_id);
+
+          if (entry != tmp_entry)
+            continue;
 
           if (!parent || entry->parent_window == parent)
             {
