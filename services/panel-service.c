@@ -265,9 +265,10 @@ panel_service_class_init (PanelServiceClass *klass)
 }
 
 static gboolean
-is_point_in_rect (gint x, gint y, GdkRectangle* rect)
+rect_contains_point (GdkRectangle* rect, gint x, gint y)
 {
-  g_return_val_if_fail (rect, FALSE);
+  if (!rect)
+    return FALSE;
 
   return (x >= rect->x && x <= (rect->x + rect->width) &&
           y >= rect->y && y <= (rect->y + rect->height));
@@ -290,7 +291,7 @@ get_entry_at (PanelService *self, gint x, gint y)
           IndicatorObjectEntry *entry = k;
           GdkRectangle *geo = v;
 
-          if (is_point_in_rect (x, y, geo))
+          if (rect_contains_point (geo, x, y))
             {
               return entry;
             }
@@ -321,8 +322,7 @@ get_entry_at_panel (PanelService *self, const gchar *panel, gint x, gint y)
       IndicatorObjectEntry *entry = key;
       GdkRectangle *geo = value;
 
-      if (x >= geo->x && x <= (geo->x + geo->width) &&
-          y >= geo->y && y <= (geo->y + geo->height))
+      if (rect_contains_point (geo, x, y))
         {
           return entry;
         }
@@ -332,7 +332,7 @@ get_entry_at_panel (PanelService *self, const gchar *panel, gint x, gint y)
 }
 
 static const gchar*
-get_panel_at (PanelService *self, gint x, gint y)
+get_panel_for_parent_at (PanelService *self, guint parent, gint x, gint y)
 {
   GHashTableIter panel_iter, entries_iter;
   gpointer key, value, k, v;
@@ -346,12 +346,15 @@ get_panel_at (PanelService *self, gint x, gint y)
 
       while (g_hash_table_iter_next (&entries_iter, &k, &v))
         {
+          IndicatorObjectEntry *entry = k;
           GdkRectangle *geo = v;
 
-          if (x >= geo->x && x <= (geo->x + geo->width) &&
-              y >= geo->y && y <= (geo->y + geo->height))
+          if (!parent || entry->parent_window == parent)
             {
-              return panel_id;
+              if (rect_contains_point (geo, x, y))
+                {
+                  return panel_id;
+                }
             }
         }
     }
@@ -1739,7 +1742,7 @@ get_monitor_at (gint x, gint y)
           rect.height *= scale;
         }
 
-      if (is_point_in_rect (x, y, &rect))
+      if (rect_contains_point (&rect, x, y))
         {
           return i;
         }
@@ -2277,7 +2280,7 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;
-      priv->last_panel = get_panel_at (self, x, y);
+      priv->last_panel = get_panel_for_parent_at (self, xid, x, y);
 
       g_signal_connect (priv->last_menu, "hide", G_CALLBACK (on_active_menu_hidden), self);
       g_signal_connect_after (priv->last_menu, "move-current",
