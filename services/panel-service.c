@@ -61,10 +61,12 @@ struct _PanelServicePrivate
 {
   GSList     *indicators;
   GSList     *dropdown_entries;
+  GSList     *removed_entries;
   GHashTable *id2entry_hash;
   GHashTable *panel2entries_hash;
 
-  gint32 timeouts[N_TIMEOUT_SLOTS];
+  guint timeouts[N_TIMEOUT_SLOTS];
+  guint remove_idle;
 
   IndicatorObjectEntry *last_entry;
   IndicatorObjectEntry *last_dropdown_entry;
@@ -353,11 +355,7 @@ get_panel_for_parent_at (PanelService *self, guint parent, gint x, gint y)
 
           /* The entry might be invalid at this point (as it could have been
            * removed, but still not synced), so it's better to double check */
-          gchar *entry_id = get_indicator_entry_id_by_entry (entry);
-          IndicatorObjectEntry *tmp_entry = get_indicator_entry_by_id (self, entry_id);
-          g_free (entry_id);
-
-          if (entry != tmp_entry)
+          if (g_slist_find (self->priv->removed_entries, entry))
             continue;
 
           if (!parent || entry->parent_window == parent)
@@ -706,7 +704,7 @@ static gboolean
 initial_resync (PanelService *self)
 {
   g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
-  return FALSE;
+  return G_SOURCE_REMOVE;
 }
 
 static gboolean
@@ -715,7 +713,7 @@ ready_signal (PanelService *self)
   if (!lockscreen_mode)
     emit_upstart_event ("indicator-services-start");
 
-  return FALSE;
+  return G_SOURCE_REMOVE;
 }
 
 static void
@@ -879,10 +877,10 @@ panel_service_check_cleared (PanelService *self)
   if (self->priv->indicators == NULL)
     {
       g_signal_emit (self, _service_signals[INDICATORS_CLEARED], 0);
-      return FALSE;
+      return G_SOURCE_REMOVE;
     }
 
-  return TRUE;
+  return G_SOURCE_CONTINUE;
 }
 
 static void
@@ -1174,7 +1172,7 @@ actually_notify_object (IndicatorObject *object)
     g_signal_emit (self, _service_signals[RE_SYNC],
                    0, g_object_get_data (G_OBJECT (object), "id"));
 
-  return FALSE;
+  return G_SOURCE_REMOVE;
 }
 
 static void
@@ -1233,6 +1231,7 @@ on_entry_added (IndicatorObject      *object,
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
 
+  self->priv->removed_entries = g_slist_remove (self->priv->removed_entries, entry);
   gchar *entry_id = get_indicator_entry_id_by_entry (entry);
   g_hash_table_insert (self->priv->id2entry_hash, entry_id, entry);
 
@@ -1272,6 +1271,42 @@ on_entry_added (IndicatorObject      *object,
   notify_object (object);
 }
 
+static gboolean
+on_removed_idle (PanelService *self)
+{
+  GHashTableIter iter;
+  GHashTable *entry2geometry_hash;
+  IndicatorObjectEntry *entry;
+  gpointer value;
+  GSList *l;
+
+  for (l = self->priv->removed_entries; l; l = l->next)
+    {
+      entry = l->data;
+      ensure_entry_menu_is_closed (self, NULL, entry);
+
+      g_hash_table_iter_init (&iter, self->priv->panel2entries_hash);
+      while (g_hash_table_iter_next (&iter, NULL, &value))
+        {
+          if ((entry2geometry_hash = value))
+            {
+              g_hash_table_remove (entry2geometry_hash, entry);
+
+              if (g_hash_table_size (entry2geometry_hash) == 0)
+                {
+                  g_hash_table_iter_remove (&iter);
+                }
+            }
+        }
+
+    }
+
+  g_slist_free (self->priv->removed_entries);
+  self->priv->removed_entries = NULL;
+
+  return G_SOURCE_REMOVE;
+}
+
 static void
 on_entry_removed (IndicatorObject      *object,
                   IndicatorObjectEntry *entry,
@@ -1279,14 +1314,6 @@ on_entry_removed (IndicatorObject      *object,
 {
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
-
-  /* Don't remove here the value from panel2entries_hash, this should be
-   * done during the geometries sync, to avoid false positive.
-   * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
-   * for more entries than the ones actually removed (sometimes we quickly get
-   * added/removed signals when removing one of the last elements). */
-
-  ensure_entry_menu_is_closed (self, NULL, entry);
 
   gchar *entry_id = get_indicator_entry_id_by_entry (entry);
   g_hash_table_remove (self->priv->id2entry_hash, entry_id);
@@ -1301,6 +1328,13 @@ on_entry_removed (IndicatorObject      *object,
     {
       g_signal_handlers_disconnect_by_data (entry->image, object);
     }
+
+  self->priv->removed_entries = g_slist_append (self->priv->removed_entries, entry);
+
+  if (self->priv->remove_idle)
+    g_source_remove (self->priv->remove_idle);
+
+  self->priv->remove_idle = g_idle_add ((GSourceFunc) on_removed_idle, self);
 
   notify_object (object);
 }
