@@ -293,7 +293,10 @@ on_service_entry_activated (PanelService    *service,
                                  UPS_PATH,
                                  UPS_IFACE,
                                  "EntryActivated",
-                                 g_variant_new ("(ss(iiuu))", panel_id, entry_id, x, y, w, h),
+                                 g_variant_new ("(ss(iiuu))",
+                                                panel_id ? panel_id : "",
+                                                entry_id ? entry_id : "",
+                                                x, y, w, h),
                                  &error);
 
   if (error)
