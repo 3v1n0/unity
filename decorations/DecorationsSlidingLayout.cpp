@@ -137,7 +137,7 @@ void SlidingLayout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindow
   auto& main_item_ = items_[ItemRole::MAIN];
   auto& input_item_ = items_[ItemRole::INPUT];
 
-  if (!input_item_)
+  if (!input_item_ || !input_item_->visible())
   {
     if (main_item_)
       main_item_->Draw(ctx, transformation, attrib, clip, mask);
