@@ -427,7 +427,7 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
       /* Unity might register some "fake" dropdown entries that it might use to
        * to present long menu bars (right now only for appmenu indicator) */
       entry = g_new0 (IndicatorObjectEntry, 1);
-      entry->parent_object = panel_service_get_indicator (self, APPMENU_INDICATOR_NAME);
+      entry->parent_object = self->priv->appmenu_indicator;
       entry->name_hint = g_strdup (entry_id);
       self->priv->dropdown_entries = g_slist_append (self->priv->dropdown_entries, entry);
       g_hash_table_insert (self->priv->id2entry_hash, (gpointer)entry->name_hint, entry);
@@ -637,9 +637,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
             {
               /* Middle clicks over an appmenu entry are considered just like
                * all other clicks */
-              IndicatorObject *obj = get_entry_parent_indicator (entry);
-
-              if (g_strcmp0 (g_object_get_data (G_OBJECT (obj), "id"), APPMENU_INDICATOR_NAME) == 0)
+              if (get_entry_parent_indicator (entry) == priv->appmenu_indicator)
                 {
                   event_is_a_click = TRUE;
                 }
@@ -958,6 +956,9 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
     {
       g_object_ref_sink (G_OBJECT (indicator));
     }
+
+  if (self->priv->appmenu_indicator == indicator)
+    self->priv->appmenu_indicator = NULL;
 
   g_object_unref (G_OBJECT (indicator));
 }
@@ -1414,6 +1415,9 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
 
   priv->indicators = g_slist_append (priv->indicators, object);
 
+  if (!priv->appmenu_indicator && g_strcmp0 (name, APPMENU_INDICATOR_NAME) == 0)
+    priv->appmenu_indicator = object;
+
   g_object_set_data_full (G_OBJECT (object), "id", g_strdup (name), g_free);
 
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_ADDED,
@@ -1712,7 +1716,8 @@ indicator_entry_null_to_variant (const gchar     *indicator_id,
 }
 
 static void
-indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+indicator_object_full_to_variant (PanelService *self, IndicatorObject *object,
+                                  const gchar *indicator_id, GVariantBuilder *b)
 {
   GList *entries, *e;
   GHashTable *index_hash = NULL;
@@ -1722,7 +1727,7 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
 
   if (entries)
     {
-      if (g_strcmp0 (indicator_id, APPMENU_INDICATOR_NAME) == 0)
+      if (object == self->priv->appmenu_indicator)
         index_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
 
       for (e = entries; e; e = e->next)
@@ -1771,15 +1776,15 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
 }
 
 static void
-indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+indicator_object_to_variant (PanelService *self, IndicatorObject *object,
+                             const gchar *indicator_id, GVariantBuilder *b)
 {
   if (!GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "remove")))
     {
-      indicator_object_full_to_variant (object, indicator_id, b);
+      indicator_object_full_to_variant (self, object, indicator_id, b);
     }
   else
     {
-      PanelService *self = panel_service_get_default ();
       indicator_entry_null_to_variant (indicator_id, b);
       panel_service_actually_remove_indicator (self, object);
     }
@@ -1890,7 +1895,7 @@ panel_service_sync (PanelService *self)
 
       const gchar *indicator_id = g_object_get_data (G_OBJECT (indicator), "id");
       position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (indicator), "position"));
-      indicator_object_to_variant (indicator, indicator_id, &b);
+      indicator_object_to_variant (self, indicator, indicator_id, &b);
 
       /* Set the sync back to neutral */
       self->priv->timeouts[position] = SYNC_NEUTRAL;
@@ -1915,7 +1920,7 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
                      g_object_get_data (G_OBJECT (i->data), "id")) == 0)
         {
           gint position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
-          indicator_object_to_variant (i->data, indicator_id, &b);
+          indicator_object_to_variant (self, i->data, indicator_id, &b);
 
           /* Set the sync back to neutral */
           self->priv->timeouts[position] = SYNC_NEUTRAL;
@@ -2546,10 +2551,9 @@ panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y
   GList                *entries;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (INDICATOR_IS_OBJECT (self->priv->appmenu_indicator));
 
-  object = panel_service_get_indicator (self, APPMENU_INDICATOR_NAME);
-  g_return_if_fail (INDICATOR_IS_OBJECT (object));
-
+  object = self->priv->appmenu_indicator;
   entries = indicator_object_get_entries (object);
 
   if (entries)
