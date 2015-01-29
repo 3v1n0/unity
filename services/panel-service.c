@@ -1647,12 +1647,16 @@ static void
 indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
 {
   GList *entries, *e;
+  GHashTable *index_hash = NULL;
   gint parent_prio = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "priority"));
   entries = indicator_object_get_entries (object);
-  gint index = 0;
+  guint index = 0;
 
   if (entries)
     {
+      if (g_strcmp0 (indicator_id, "libappmenu.so") == 0)
+        index_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
+
       for (e = entries; e; e = e->next)
         {
           gint prio = -1;
@@ -1666,13 +1670,28 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
 
           if (prio < 0)
             {
+              if (index_hash)
+                {
+                  index = GPOINTER_TO_UINT (g_hash_table_lookup (index_hash,
+                                                                 GUINT_TO_POINTER (entry->parent_window)));
+                }
+
               prio = parent_prio + index;
               index++;
+
+              if (index_hash)
+                {
+                  g_hash_table_insert (index_hash, GUINT_TO_POINTER (entry->parent_window),
+                                                   GUINT_TO_POINTER (index));
+                }
             }
 
           indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
         }
+
+      if (index_hash)
+        g_hash_table_destroy (index_hash);
 
       g_list_free (entries);
     }
