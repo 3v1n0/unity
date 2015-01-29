@@ -64,6 +64,7 @@ struct _PanelServicePrivate
   GSList     *removed_entries;
   GHashTable *id2entry_hash;
   GHashTable *panel2entries_hash;
+  IndicatorObject *appmenu_indicator;
 
   guint timeouts[N_TIMEOUT_SLOTS];
   guint remove_idle;
@@ -113,7 +114,7 @@ enum
 static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
 static const gchar * indicator_order[][2] = {
-  {"libappmenu.so", NULL},                    /* indicator-appmenu" */
+  {APPMENU_INDICATOR_NAME, NULL},             /* indicator-appmenu" */
   {"libapplication.so", NULL},                /* indicator-application" */
   {"floating-indicators", NULL},              /* position-less NG indicators */
   {"libprintersmenu.so", NULL},               /* indicator-printers */
@@ -426,7 +427,7 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
       /* Unity might register some "fake" dropdown entries that it might use to
        * to present long menu bars (right now only for appmenu indicator) */
       entry = g_new0 (IndicatorObjectEntry, 1);
-      entry->parent_object = panel_service_get_indicator (self, "libappmenu.so");
+      entry->parent_object = panel_service_get_indicator (self, APPMENU_INDICATOR_NAME);
       entry->name_hint = g_strdup (entry_id);
       self->priv->dropdown_entries = g_slist_append (self->priv->dropdown_entries, entry);
       g_hash_table_insert (self->priv->id2entry_hash, (gpointer)entry->name_hint, entry);
@@ -638,7 +639,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                * all other clicks */
               IndicatorObject *obj = get_entry_parent_indicator (entry);
 
-              if (g_strcmp0 (g_object_get_data (G_OBJECT (obj), "id"), "libappmenu.so") == 0)
+              if (g_strcmp0 (g_object_get_data (G_OBJECT (obj), "id"), APPMENU_INDICATOR_NAME) == 0)
                 {
                   event_is_a_click = TRUE;
                 }
@@ -1721,7 +1722,7 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
 
   if (entries)
     {
-      if (g_strcmp0 (indicator_id, "libappmenu.so") == 0)
+      if (g_strcmp0 (indicator_id, APPMENU_INDICATOR_NAME) == 0)
         index_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
 
       for (e = entries; e; e = e->next)
@@ -2546,7 +2547,7 @@ panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
 
-  object = panel_service_get_indicator (self, "libappmenu.so");
+  object = panel_service_get_indicator (self, APPMENU_INDICATOR_NAME);
   g_return_if_fail (INDICATOR_IS_OBJECT (object));
 
   entries = indicator_object_get_entries (object);

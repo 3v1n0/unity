@@ -21,6 +21,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 
@@ -32,6 +33,8 @@ extern "C" {
 #define UPS_NAME_LOCKSCREEN "com.canonical.Unity.Panel.Service.LockScreen"
 #define UPS_PATH  "/com/canonical/Unity/Panel/Service"
 #define UPS_IFACE "com.canonical.Unity.Panel.Service"
+
+#define APPMENU_INDICATOR_NAME "libappmenu.so"
 
 #define ENTRY_SIGNATURE "(sssusbbusbbi)"
 #define ENTRY_ARRAY_SIGNATURE "a" ENTRY_SIGNATURE ""
