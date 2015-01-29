@@ -43,7 +43,7 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define NOTIFY_TIMEOUT 80
 #define N_TIMEOUT_SLOTS 50
-#define MAX_INDICATOR_ENTRIES 100
+#define MAX_INDICATOR_ENTRIES 500
 
 #define NUX_VERTICAL_SCROLL_DELTA 120
 #define NUX_HORIZONTAL_SCROLL_DELTA (NUX_VERTICAL_SCROLL_DELTA ^ 2)
@@ -1343,6 +1343,7 @@ static const gchar * indicator_environment[] = {
   "unity",
   "unity-3d",
   "unity-panel-service",
+  "unity-all-menus",
   NULL
 };
 
