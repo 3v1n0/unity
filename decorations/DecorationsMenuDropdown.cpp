@@ -118,7 +118,8 @@ bool MenuDropdown::Empty() const
 
 void MenuDropdown::RenderTexture()
 {
-  WidgetState state = active() ? WidgetState::PRELIGHT : WidgetState::NORMAL;
+  WidgetState normal_state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
+  WidgetState state = active() ? WidgetState::PRELIGHT : normal_state;
   cu::CairoContext icon_ctx(GetNaturalWidth(), GetNaturalHeight(), scale());
 
   if (state == WidgetState::PRELIGHT)
