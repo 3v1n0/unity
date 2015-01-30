@@ -55,12 +55,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   active.changed.connect([this] (bool active) {
     bg_textures_.clear();
     if (top_layout_)
-    {
       top_layout_->focused = active;
-
-      if (!active)
-        UnsetAppMenu();
-    }
     RedrawDecorations();
   });
 
@@ -701,7 +696,7 @@ void Window::Impl::RedrawDecorations()
 
 void Window::Impl::SetupAppMenu()
 {
-  if (!active() || !top_layout_)
+  if (!top_layout_)
     return;
 
   auto const& menu_manager = manager_->impl_->menu_manager_;
