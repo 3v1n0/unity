@@ -107,7 +107,7 @@ enum
 
 enum
 {
-  SYNC_WAITING = -1,
+  SYNC_WAITING = G_MAXUINT,
   SYNC_NEUTRAL = 0,
 };
 
@@ -169,7 +169,7 @@ panel_service_class_dispose (GObject *self)
 
   for (i = 0; i < N_TIMEOUT_SLOTS; i++)
     {
-      if (priv->timeouts[i] > 0)
+      if (priv->timeouts[i] > 0 && priv->timeouts[i] != SYNC_WAITING)
         {
           g_source_remove (priv->timeouts[i]);
           priv->timeouts[i] = 0;
