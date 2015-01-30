@@ -143,25 +143,24 @@ void Manager::Impl::SetupAppMenu()
 
   appmenu->active_window = screen->activeWindow();
 
-  auto setup_active_window = [this] {
-    if (Window::Ptr const& active_win = active_deco_win_.lock())
-      active_win->impl_->SetupAppMenu();
+  auto setup_windows = [this] {
+    for (auto const& win : windows_)
+      win.second->impl_->SetupAppMenu();
   };
 
   menu_connections_.Remove(appmenu_connection_);
-  appmenu_connection_ = menu_connections_.Add(appmenu->updated.connect(setup_active_window));
-  setup_active_window();
+  appmenu_connection_ = menu_connections_.Add(appmenu->updated.connect(setup_windows));
+  setup_windows();
 }
 
 void Manager::Impl::UnsetAppMenu()
 {
   menu_connections_.Remove(appmenu_connection_);
-  auto const& active_win = active_deco_win_.lock();
 
-  if (active_win)
+  for (auto const& win : windows_)
   {
-    active_win->impl_->UnsetAppMenu();
-    active_win->impl_->Damage();
+    win.second->impl_->UnsetAppMenu();
+    win.second->impl_->Damage();
   }
 }
 
