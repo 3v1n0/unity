@@ -42,6 +42,7 @@ MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
   horizontal_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
   vertical_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
   scale.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
+  focused.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
   in_dropdown.changed.connect([this] (bool in) { visible = entry_->visible() && !in; });
   EntryUpdated();
 }
@@ -63,7 +64,7 @@ void MenuEntry::EntryUpdated()
 
 void MenuEntry::RenderTexture()
 {
-  WidgetState state = WidgetState::NORMAL;
+  WidgetState state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
 
   if (show_now())
     state = WidgetState::PRESSED;
