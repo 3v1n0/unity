@@ -754,13 +754,18 @@ void Window::Impl::UpdateAppMenuVisibility()
     sliding_layout->mouse_owner = grab_edge_->mouse_owner();
 }
 
+inline std::string Window::Impl::GetMenusPanelID() const
+{
+  return MENUS_PANEL_NAME + std::to_string(win_->id());
+}
+
 void Window::Impl::UnsetAppMenu()
 {
   if (!menus_)
     return;
 
   auto const& indicators = manager_->impl_->menu_manager_->Indicators();
-  indicators->SyncGeometries(MENUS_PANEL_NAME, indicator::EntryLocationMap());
+  indicators->SyncGeometries(GetMenusPanelID(), indicator::EntryLocationMap());
   sliding_layout_->SetInputItem(nullptr);
   grab_mouse_changed_->disconnect();
 }
@@ -773,7 +778,7 @@ void Window::Impl::SyncMenusGeometries() const
   auto const& indicators = manager_->impl_->menu_manager_->Indicators();
   indicator::EntryLocationMap map;
   menus_->ChildrenGeometries(map);
-  indicators->SyncGeometries(MENUS_PANEL_NAME, map);
+  indicators->SyncGeometries(GetMenusPanelID(), map);
 }
 
 bool Window::Impl::ActivateMenu(std::string const& entry_id)
