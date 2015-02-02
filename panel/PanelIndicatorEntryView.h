@@ -93,6 +93,7 @@ public:
 
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
+  sigc::signal<void, bool> show_now_changed;
 
 protected:
   std::string GetName() const;

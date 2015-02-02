@@ -59,6 +59,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , cv_(unity::Settings::Instance().em(monitor_))
 {
   proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
+  proxy_->show_now_changed.connect(sigc::mem_fun(&show_now_changed, &sigc::signal<void, bool>::emit));
   proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseDown));
