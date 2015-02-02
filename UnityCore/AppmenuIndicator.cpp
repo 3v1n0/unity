@@ -17,7 +17,6 @@
  * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#include "GLibSource.h"
 #include "AppmenuIndicator.h"
 
 namespace unity
@@ -28,19 +27,7 @@ namespace indicator
 struct AppmenuIndicator::Impl
 {
   Impl(AppmenuIndicator* parent)
-  {
-    // When the active window has changed we might need to emit an updated signal
-    parent->active_window.changed.connect([this, parent] (unsigned long) {
-      update_wait_.reset(new glib::Timeout(250, [parent] {
-        parent->updated.emit();
-        return false;
-      }));
-    });
-
-    parent->updated.connect([this] { update_wait_.reset(); });
-  }
-
-  glib::Source::UniquePtr update_wait_;
+  {}
 };
 
 AppmenuIndicator::AppmenuIndicator(std::string const& name)
