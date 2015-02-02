@@ -96,11 +96,10 @@ TEST(TestIndicator, Syncing)
   indicator.Sync(sync_data);
   EXPECT_EQ(indicator.GetEntries().size(), 3);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), entry2);
-  EXPECT_EQ(indicator.EntryIndex("test-entry-2"), 1);
   // Mock::VerifyAndClearExpectations(&sig_receiver);
 
   // Sync the indicator removing an entry
-  sync_data.remove(entry2);
+  sync_data.erase(std::remove(sync_data.begin(), sync_data.end(), entry2), sync_data.end()); // FIXME use erase with vector
   EXPECT_EQ(sync_data.size(), 2);
   EXPECT_CALL(sig_receiver, Updated());
   EXPECT_CALL(sig_receiver, EntryAdded(_)).Times(0);
@@ -115,7 +114,7 @@ TEST(TestIndicator, Syncing)
                     true, true, -1);
   Entry::Ptr entry4(entry);
   sync_data.push_back(entry4);
-  sync_data.remove(entry3);
+  sync_data.erase(std::remove(sync_data.begin(), sync_data.end(), entry3), sync_data.end());
   EXPECT_EQ(sync_data.size(), 2);
 
   EXPECT_CALL(sig_receiver, EntryAdded(entry4));
@@ -160,7 +159,7 @@ TEST(TestIndicator, Updated)
   EXPECT_CALL(sig_receiver, Updated()).Times(0);
   indicator.Sync(sync_data);
 
-  sync_data.remove(entry3);
+  sync_data.erase(std::remove(sync_data.begin(), sync_data.end(), entry3), sync_data.end());
   EXPECT_CALL(sig_receiver, Updated());
   indicator.Sync(sync_data);
 
