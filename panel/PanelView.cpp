@@ -516,7 +516,7 @@ PanelView::UpdateBackground()
 
     if (opacity_maximized_toggle_)
     {
-      Window maximized_win = menu_view_->GetMaximizedWindow();
+      Window maximized_win = menu_view_->maximized_window();
 
       if (wm.IsExpoActive() || (maximized_win != 0 && !wm.IsWindowObscured(maximized_win)))
         opacity = 1.0f;
@@ -673,7 +673,7 @@ bool PanelView::ActivateFirstSensitive()
   if (!IsActive())
     return false;
 
-  if ((menu_view_->HasMenus() && menu_view_->ActivateIfSensitive()) ||
+  if ((menu_view_->HasKeyActivableMenus() && menu_view_->ActivateIfSensitive()) ||
       indicators_->ActivateIfSensitive())
   {
     // Since this only happens on keyboard events, we need to prevent that the
@@ -690,7 +690,7 @@ bool PanelView::ActivateEntry(std::string const& entry_id)
   if (!IsActive())
     return false;
 
-  if ((menu_view_->HasMenus() && menu_view_->ActivateEntry(entry_id, 0)) ||
+  if ((menu_view_->HasKeyActivableMenus() && menu_view_->ActivateEntry(entry_id, 0)) ||
       indicators_->ActivateEntry(entry_id, 0))
   {
     // Since this only happens on keyboard events, we need to prevent that the
