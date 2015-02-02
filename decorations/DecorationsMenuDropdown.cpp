@@ -33,7 +33,7 @@ const unsigned ICON_SIZE = 10;
 using namespace indicator;
 
 MenuDropdown::MenuDropdown(Indicators::Ptr const& indicators, CompWindow* win)
-  : MenuEntry(std::make_shared<Entry>("LIM-dropdown"), win)
+  : MenuEntry(std::make_shared<Entry>("LIM"+std::to_string(win->id())+"-dropdown"), win)
   , indicators_(indicators)
 {
   natural_.width = ICON_SIZE;
@@ -53,7 +53,7 @@ void MenuDropdown::ShowMenu(unsigned button)
   for (auto const& child : children_)
     entries.push_back(child->GetEntry());
 
-  indicators_->ShowEntriesDropdown(entries, active_, 0, geo.x(), geo.y2());
+  indicators_->ShowEntriesDropdown(entries, active_, grab_.Window()->id(), geo.x(), geo.y2());
 }
 
 bool MenuDropdown::ActivateChild(MenuEntry::Ptr const& child)
