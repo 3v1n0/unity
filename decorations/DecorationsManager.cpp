@@ -302,6 +302,9 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 
 bool Manager::Impl::HandleFrameEvent(XEvent* event)
 {
+  if (WindowManager::Default().IsScaleActive())
+    return false;
+
   auto const& win = GetWindowByFrame(event->xany.window);
 
   // ButtonRelease events might happen also outside the frame window, in this
