@@ -44,13 +44,17 @@ public:
   PanelMenuView(menu::Manager::Ptr const&);
   ~PanelMenuView();
 
+  nux::Property<Window> active_window;
+  nux::Property<Window> maximized_window;
+  nux::Property<bool> focused;
+
   void SetMousePosition(int x, int y);
   void SetMonitor(int monitor) override;
 
   Window GetTopWindow() const;
-  Window GetMaximizedWindow() const;
   bool GetControlsActive() const;
   bool HasMenus() const;
+  bool HasKeyActivableMenus() const;
 
   void NotifyAllMenusClosed();
 
@@ -120,9 +124,9 @@ private:
   bool Refresh(bool force = false);
 
   void UpdateTitleTexture(nux::Geometry const&, std::string const& label);
-
   void UpdateLastGeometry(nux::Geometry const& geo);
   void UpdateTitleGradientTexture();
+  void UpdateMaximizedWindow();
 
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
@@ -134,6 +138,7 @@ private:
   void OnLauncherKeyNavEnded(GVariant* data);
   void OnLauncherSelectionChanged(GVariant* data);
 
+  void UpdateTargetWindowItems();
   void UpdateShowNow(bool ignore);
   bool CheckMouseInside();
 
@@ -190,7 +195,6 @@ private:
   bool integrated_menus_;
   bool always_show_menus_;
 
-  Window active_xid_;
   nux::Geometry monitor_geo_;
   const std::string desktop_name_;
 
