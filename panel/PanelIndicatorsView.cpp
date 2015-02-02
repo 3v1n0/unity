@@ -346,6 +346,23 @@ void PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
   on_indicator_updated.emit();
 }
 
+void PanelIndicatorsView::ClearEntries()
+{
+  for (auto it = entries_.begin(); it != entries_.end();)
+  {
+    auto* entry = it->second;
+    ++it;
+
+    if (entry != dropdown_.GetPointer())
+      RemoveEntryView(entry);
+  }
+
+  on_indicator_updated.emit();
+
+  QueueRelayout();
+  QueueDraw();
+}
+
 void PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
 {
   if (!view)
@@ -367,7 +384,10 @@ void PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
 
 void PanelIndicatorsView::RemoveEntry(std::string const& entry_id)
 {
-  RemoveEntryView(entries_[entry_id]);
+  auto it = entries_.find(entry_id);
+
+  if (it != entries_.end())
+    RemoveEntryView(it->second);
 }
 
 void PanelIndicatorsView::OverlayShown()

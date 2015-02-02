@@ -84,6 +84,8 @@ protected:
   typedef std::vector<indicator::Indicator::Ptr> Indicators;
   Indicators const& GetIndicators() const;
 
+  void ClearEntries();
+
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
