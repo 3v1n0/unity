@@ -50,6 +50,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , deco_elements_(cu::DecorationElement::NONE)
   , last_mwm_decor_(win_->mwmDecor())
   , last_actions_(win_->actions())
+  , panel_id_(MENUS_PANEL_NAME + std::to_string(win_->id()))
   , cv_(Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
@@ -754,9 +755,9 @@ void Window::Impl::UpdateAppMenuVisibility()
     sliding_layout->mouse_owner = grab_edge_->mouse_owner();
 }
 
-inline std::string Window::Impl::GetMenusPanelID() const
+inline std::string const& Window::Impl::GetMenusPanelID() const
 {
-  return MENUS_PANEL_NAME + std::to_string(win_->id());
+  return panel_id_;
 }
 
 void Window::Impl::UnsetAppMenu()

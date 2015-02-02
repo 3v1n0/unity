@@ -111,7 +111,7 @@ private:
   bool ShouldBeDecorated() const;
   GLTexture* ShadowTexture() const;
   unsigned ShadowRadius() const;
-  std::string GetMenusPanelID() const;
+  std::string const& GetMenusPanelID() const;
 
   void ComputeShadowQuads();
   void UpdateDecorationTextures();
@@ -144,6 +144,7 @@ private:
   connection::Wrapper dpi_changed_;
   connection::Wrapper grab_mouse_changed_;
   std::string last_title_;
+  std::string panel_id_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
   std::shared_ptr<ForceQuitDialog> force_quit_;
   InputMixer::Ptr input_mixer_;
