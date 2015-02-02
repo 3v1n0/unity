@@ -32,7 +32,6 @@ struct AppmenuIndicator::Impl
 
 AppmenuIndicator::AppmenuIndicator(std::string const& name)
   : Indicator(name)
-  , active_window(0)
   , impl_(new AppmenuIndicator::Impl(this))
 {}
 

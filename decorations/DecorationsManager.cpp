@@ -141,8 +141,6 @@ void Manager::Impl::SetupAppMenu()
     return;
   }
 
-  appmenu->active_window = screen->activeWindow();
-
   auto setup_windows = [this] {
     for (auto const& win : windows_)
       win.second->impl_->SetupAppMenu();
@@ -264,9 +262,6 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 
         if (new_active)
           new_active->impl_->active = true;
-
-        if (indicator::AppmenuIndicator::Ptr const& appmenu = menu_manager_->AppMenu())
-          appmenu->active_window = active_xid;
       }
       else if (event->xproperty.atom == Atoms::mwmHints ||
                event->xproperty.atom == Atoms::wmAllowedActions)

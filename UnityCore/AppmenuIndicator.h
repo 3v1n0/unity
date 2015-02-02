@@ -36,8 +36,6 @@ public:
   AppmenuIndicator(std::string const& name);
   ~AppmenuIndicator();
 
-  nux::Property<unsigned> active_window;
-
   virtual bool IsAppmenu() const { return true; }
   Entries GetEntriesForWindow(uint32_t parent_window);
 
