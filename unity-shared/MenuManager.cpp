@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include "MenuManager.h"
+#include "WindowManager.h"
 
 namespace unity
 {
@@ -48,6 +49,7 @@ struct Manager::Impl : sigc::trackable
     : parent_(parent)
     , indicators_(indicators)
     , key_grabber_(grabber)
+    , show_now_window_(0)
     , settings_(g_settings_new(SETTINGS_NAME.c_str()))
   {
     for (auto const& indicator : indicators_->GetIndicators())
@@ -116,7 +118,7 @@ struct Manager::Impl : sigc::trackable
       auto key = gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic));
       glib::String accelerator(gtk_accelerator_name(key, GDK_MOD1_MASK));
       auto action = std::make_shared<CompAction>();
-      auto id = entry->id();
+      auto const& id = entry->id();
 
       action->keyFromString(accelerator);
       action->setState(CompAction::StateInitKey);
@@ -146,13 +148,37 @@ struct Manager::Impl : sigc::trackable
     parent_->key_activate_entry.emit(entry_id);
   }
 
+  void SetShowNowForWindow(Window xid, bool show)
+  {
+    if (!appmenu_)
+      return;
+
+    show_now_window_ = show ? xid : 0;
+
+    for (auto const& entry : appmenu_->GetEntriesForWindow(xid))
+      entry->set_show_now(show);
+  }
+
   void ShowMenus(bool show)
   {
     if (!appmenu_)
       return;
 
-    for (auto const& entry : appmenu_->GetEntries())
-      entry->set_show_now(show);
+    auto& wm = WindowManager::Default();
+
+    if (show)
+    {
+      active_win_conn_ = wm.window_focus_changed.connect([this] (Window new_active) {
+        SetShowNowForWindow(show_now_window_, false);
+        SetShowNowForWindow(new_active, true);
+      });
+    }
+    else
+    {
+      active_win_conn_->disconnect();
+    }
+
+    SetShowNowForWindow(wm.GetActiveWindow(), show);
   }
 
   void IconPathsChanged()
@@ -170,7 +196,9 @@ struct Manager::Impl : sigc::trackable
   Indicators::Ptr indicators_;
   AppmenuIndicator::Ptr appmenu_;
   key::Grabber::Ptr key_grabber_;
+  Window show_now_window_;
   connection::Manager appmenu_connections_;
+  connection::Wrapper active_win_conn_;
   glib::Object<GSettings> settings_;
   glib::SignalManager signals_;
   std::unordered_map<std::string, std::shared_ptr<CompAction>> entry_actions_;
