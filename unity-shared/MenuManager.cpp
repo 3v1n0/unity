@@ -55,11 +55,14 @@ struct Manager::Impl : sigc::trackable
     for (auto const& indicator : indicators_->GetIndicators())
       AddIndicator(indicator);
 
+    GrabMnemonicsForActiveWindow();
+
     parent_->show_menus.changed.connect(sigc::mem_fun(this, &Impl::ShowMenus));
     indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::AddIndicator));
     indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::RemoveIndicator));
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
     indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
+    WindowManager::Default().window_focus_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::GrabMnemonicsForActiveWindow)));
 
     parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
     parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
@@ -109,8 +112,23 @@ struct Manager::Impl : sigc::trackable
     parent_->appmenu_removed();
   }
 
+  void GrabMnemonicsForActiveWindow()
+  {
+    if (!appmenu_)
+      return;
+
+    UngrabMnemonics();
+    auto active_window = WindowManager::Default().GetActiveWindow();
+
+    for (auto const& entry : appmenu_->GetEntriesForWindow(active_window))
+      GrabEntryMnemonics(entry);
+  }
+
   void GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
   {
+    if (entry->parent_window() != WindowManager::Default().GetActiveWindow())
+      return;
+
     gunichar mnemonic;
 
     if (pango_parse_markup(entry->label().c_str(), -1, '_', nullptr, nullptr, &mnemonic, nullptr) && mnemonic)
@@ -127,7 +145,7 @@ struct Manager::Impl : sigc::trackable
         return parent_->key_activate_entry.emit(id);
       });
 
-      entry_actions_[entry] = action;
+      entry_actions_.insert({entry, action});
       key_grabber_->AddAction(*action);
     }
   }
@@ -140,6 +158,17 @@ struct Manager::Impl : sigc::trackable
     {
       key_grabber_->RemoveAction(*it->second);
       entry_actions_.erase(it);
+    }
+  }
+
+  void UngrabMnemonics()
+  {
+    for (auto it = entry_actions_.begin(); it != entry_actions_.end();)
+    {
+      auto rm_it = it;
+      ++it;
+      key_grabber_->RemoveAction(*rm_it->second);
+      entry_actions_.erase(rm_it);
     }
   }
 

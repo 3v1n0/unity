@@ -47,7 +47,7 @@ public:
 
   virtual bool IsAppmenu() const { return false; }
 
-  void Sync(Entries const& new_entries);
+  void Sync(Entries const&);
   Entry::Ptr GetEntry(std::string const& entry_id) const;
   Entries const& GetEntries() const;
 
