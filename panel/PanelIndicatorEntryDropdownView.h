@@ -39,6 +39,7 @@ public:
   void Insert(PanelIndicatorEntryView::Ptr const&);
   void Remove(PanelIndicatorEntryView::Ptr const&);
   PanelIndicatorEntryView::Ptr Pop();
+  void Clear();
 
   PanelIndicatorEntryView::Ptr Top() const;
   std::deque<PanelIndicatorEntryView::Ptr> const& Children() const;
