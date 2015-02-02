@@ -158,6 +158,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
   , sScreen(ScaleScreen::get(screen))
+  , WM(PluginAdapter::Initialize(screen))
   , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
   , deco_manager_(std::make_shared<decoration::Manager>(menus_))
   , debugger_(this)
@@ -281,9 +282,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      GLScreenInterface::setHandler(gScreen);
      ScaleScreenInterface::setHandler(sScreen);
      screen->updateSupportedWmHints();
-
-     PluginAdapter::Initialize(screen);
-     AddChild(&WindowManager::Default());
 
      nux::NuxInitialize(0);
 #ifndef USE_GLES
@@ -443,13 +441,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
       sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
     );
 
-    WindowManager& wm = WindowManager::Default();
-    wm.initiate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnInitiateSpread));
-    wm.terminate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnTerminateSpread));
-    wm.initiate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
-    wm.terminate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
+    WM.initiate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnInitiateSpread));
+    WM.terminate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnTerminateSpread));
+    WM.initiate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
+    WM.terminate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
 
-    AddChild(&screen_introspection_);
+    Introspectable::AddChild(&WM);
+    Introspectable::AddChild(&screen_introspection_);
 
     /* Create blur backup texture */
     auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
@@ -688,7 +686,7 @@ void UnityScreen::paintPanelShadow(CompRegion const& clip)
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
 
-  if (WindowManager::Default().IsExpoActive())
+  if (WM.IsExpoActive())
     return;
 
   CompOutput* output = _last_output;
@@ -949,7 +947,7 @@ void UnityScreen::DrawPanelUnderDash()
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
 
-  int monitor = WindowManager::Default().MonitorGeometryIn(NuxGeometryFromCompRect(output_dev));
+  int monitor = WM.MonitorGeometryIn(NuxGeometryFromCompRect(output_dev));
   auto const& texture = panel_style_.GetBackground(monitor)->GetDeviceTexture();
   graphics_engine->QRP_GLSL_1Tex(0, 0, output_dev.width(), texture->GetHeight(), texture, texxform, nux::color::White);
 }
@@ -959,7 +957,7 @@ bool UnityScreen::forcePaintOnTop()
   return !allowWindowPaint ||
          lockscreen_controller_->IsLocked() ||
           ((switcher_controller_->Visible() ||
-            WindowManager::Default().IsExpoActive())
+            WM.IsExpoActive())
            && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
@@ -2220,7 +2218,7 @@ bool UnityScreen::showDesktopKeyInitiate(CompAction* action,
                                          CompAction::State state,
                                          CompOption::Vector& options)
 {
-  WindowManager::Default().ShowDesktop();
+  WM.ShowDesktop();
   return true;
 }
 
@@ -2324,7 +2322,7 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
                                         CompAction::State state,
                                         CompOption::Vector& options)
 {
-  if (WindowManager::Default().IsWallActive())
+  if (WM.IsWallActive())
     return false;
   else if (switcher_controller_->Visible())
     switcher_controller_->Next();
@@ -2532,14 +2530,12 @@ bool UnityScreen::ShowHud()
     if (QuicklistManager::Default()->Current())
       QuicklistManager::Default()->Current()->Hide();
 
-    auto& wm = WindowManager::Default();
-
-    if (wm.IsTopWindowFullscreenOnMonitorWithMouse())
+    if (WM.IsTopWindowFullscreenOnMonitorWithMouse())
       return false;
 
-    if (wm.IsScreenGrabbed())
+    if (WM.IsScreenGrabbed())
     {
-      hud_ungrab_slot_ = wm.screen_ungrabbed.connect([this] { ShowHud(); });
+      hud_ungrab_slot_ = WM.screen_ungrabbed.connect([this] { ShowHud(); });
 
       // Let's wait ungrab event for maximum a couple of seconds...
       sources_.AddTimeoutSeconds(2, [this] {
@@ -2668,7 +2664,7 @@ void UnityScreen::UpdateCloseWindowKey(CompAction::KeyBinding const& keybind)
   KeySym keysym = XkbKeycodeToKeysym(screen->dpy(), keybind.keycode(), 0, 0);
   unsigned modifiers = CompizModifiersToNux(keybind.modifiers());
 
-  WindowManager::Default().close_window_key = std::make_pair(modifiers, keysym);
+  WM.close_window_key = std::make_pair(modifiers, keysym);
 }
 
 void UnityScreen::UpdateActivateIndicatorsKey()
@@ -2677,7 +2673,7 @@ void UnityScreen::UpdateActivateIndicatorsKey()
   KeySym keysym = XkbKeycodeToKeysym(screen->dpy(), keybind.keycode(), 0, 0);
   unsigned modifiers = CompizModifiersToNux(keybind.modifiers());
 
-  WindowManager::Default().activate_indicators_key = std::make_pair(modifiers, keysym);
+  WM.activate_indicators_key = std::make_pair(modifiers, keysym);
 }
 
 bool UnityScreen::initPluginActions()
@@ -2930,7 +2926,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
-  if (WindowManager::Default().IsScaleActive() &&
+  if (uScreen->WM.IsScaleActive() &&
       uScreen->sScreen->getSelectedWindow() == window->id())
   {
     nux::Geometry const& scaled_geo = GetScaledGeometry();
@@ -3031,9 +3027,8 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
             !(window_state & CompWindowStateFullscreenMask) &&
             !(window_type & CompWindowTypeFullscreenMask))
         {
-          WindowManager& wm = WindowManager::Default();
           auto const& output = uScreen->screen->currentOutputDev();
-          int monitor = wm.MonitorGeometryIn(NuxGeometryFromCompRect(output));
+          int monitor = uScreen->WM.MonitorGeometryIn(NuxGeometryFromCompRect(output));
 
           if (window->y() - window->border().top < output.y() + uScreen->panel_style_.PanelHeight(monitor))
           {
@@ -3666,8 +3661,7 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
     {
       if (strcmp(name, "hsize") == 0 || strcmp(name, "vsize") == 0)
       {
-        WindowManager& wm = WindowManager::Default();
-        wm.viewport_layout_changed.emit(screen->vpSize().width(), screen->vpSize().height());
+        WM.viewport_layout_changed.emit(screen->vpSize().width(), screen->vpSize().height());
       }
       else if (strcmp(name, "close_window_key") == 0)
       {
@@ -3783,13 +3777,11 @@ void UnityScreen::OnLockScreenRequested()
   if (QuicklistManager::Default()->Current())
     QuicklistManager::Default()->Current()->Hide();
 
-  auto& wm = WindowManager::Default();
+  if (WM.IsScaleActive())
+    WM.TerminateScale();
 
-  if (wm.IsScaleActive())
-    wm.TerminateScale();
-
-  if (wm.IsExpoActive())
-    wm.TerminateExpo();
+  if (WM.IsExpoActive())
+    WM.TerminateExpo();
 
   RaiseOSK();
 }
@@ -3888,24 +3880,24 @@ void UnityScreen::initLauncher()
   auto edge_barriers = std::make_shared<ui::EdgeBarrierController>();
 
   launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers);
-  AddChild(launcher_controller_.get());
+  Introspectable::AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
   switcher_controller_->detail.changed.connect(sigc::mem_fun(this, &UnityScreen::OnSwitcherDetailChanged));
-  AddChild(switcher_controller_.get());
+  Introspectable::AddChild(switcher_controller_.get());
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
   /* Setup panel */
   timer.Reset();
   panel_controller_ = std::make_shared<panel::Controller>(menus_, edge_barriers);
-  AddChild(panel_controller_.get());
+  Introspectable::AddChild(panel_controller_.get());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
   dash_controller_ = std::make_shared<dash::Controller>();
   dash_controller_->on_realize.connect(sigc::mem_fun(this, &UnityScreen::OnDashRealized));
-  AddChild(dash_controller_.get());
+  Introspectable::AddChild(dash_controller_.get());
 
   /* Setup Hud */
   hud_controller_ = std::make_shared<hud::Controller>();
@@ -3914,14 +3906,14 @@ void UnityScreen::initLauncher()
   hud_controller_->multiple_launchers = (optionGetNumLaunchers() == 0);
   hud_controller_->icon_size = launcher_controller_->options()->icon_size();
   hud_controller_->tile_size = launcher_controller_->options()->tile_size();
-  AddChild(hud_controller_.get());
+  Introspectable::AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
 
   // Setup Shortcut Hint
   auto base_window_raiser = std::make_shared<shortcut::BaseWindowRaiserImp>();
   auto shortcuts_modeller = std::make_shared<shortcut::CompizModeller>();
   shortcut_controller_ = std::make_shared<shortcut::Controller>(base_window_raiser, shortcuts_modeller);
-  AddChild(shortcut_controller_.get());
+  Introspectable::AddChild(shortcut_controller_.get());
   ShowFirstRunHints();
 
   // Setup Session Controller
@@ -3932,7 +3924,7 @@ void UnityScreen::initLauncher()
   manager->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
-  AddChild(session_controller_.get());
+  Introspectable::AddChild(session_controller_.get());
 
   // Setup Lockscreen Controller
   screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
@@ -4118,7 +4110,7 @@ UnityWindow::UnityWindow(CompWindow* window)
     window->minimizedSetEnabled (this, false);
   }
 
-  /* Keep this after the optionGetShowMinimizedWindows branch */
+  /* Keep this after the optionGetShowMIntrospectable.hinimizedWindows branch */
 
   if (window->state() & CompWindowStateFullscreenMask)
     uScreen->fullscreen_windows_.push_back(window);
@@ -4135,8 +4127,8 @@ void UnityWindow::AddProperties(debug::IntrospectionData& introspection)
 {
   Window xid = window->id();
   auto const& swins = uScreen->sScreen->getWindows();
+  WindowManager& wm = uScreen->WM;
   bool scaled = std::find(swins.begin(), swins.end(), ScaleWindow::get(window)) != swins.end();
-  WindowManager& wm = WindowManager::Default();
 
   introspection
     .add(scaled ? GetScaledGeometry() : wm.GetWindowGeometry(xid))
@@ -4372,9 +4364,7 @@ nux::Geometry UnityWindow::GetLayoutWindowGeometry()
 
 nux::Geometry UnityWindow::GetScaledGeometry()
 {
-  WindowManager& wm = WindowManager::Default();
-
-  if (!wm.IsScaleActive())
+  if (!uScreen->WM.IsScaleActive())
     return nux::Geometry();
 
   ScaleWindow* scale_win = ScaleWindow::get(window);

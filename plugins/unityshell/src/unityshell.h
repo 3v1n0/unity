@@ -333,6 +333,7 @@ private:
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
+  WindowManager& WM;
 
   menu::Manager::Ptr menus_;
   std::shared_ptr<decoration::Manager> deco_manager_;
