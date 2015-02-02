@@ -71,7 +71,7 @@ void PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
   indicators_.push_back(indicator);
 
   for (auto const& entry : indicator->GetEntries())
-    AddEntry(entry);
+    OnEntryAdded(entry);
 
   auto& conn_manager = indicators_connections_[indicator];
   conn_manager.Add(indicator->on_entry_added.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryAdded)));
