@@ -60,7 +60,7 @@ public:
   // You shouldn't get the PluginAdapter if you really want a WindowManager.
   // The PluginAdapter::Default should really only be called from within unityshell plugin.
   static PluginAdapter& Default();
-  static void Initialize(CompScreen* screen);
+  static PluginAdapter& Initialize(CompScreen* screen);
 
   nux::Property<bool> bias_active_to_viewport;
 
