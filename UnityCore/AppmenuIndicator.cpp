@@ -17,7 +17,10 @@
  * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include <unordered_set>
+
 #include "AppmenuIndicator.h"
+#include "ConnectionManager.h"
 
 namespace unity
 {
@@ -71,6 +74,23 @@ AppmenuIndicator::AppmenuIndicator(std::string const& name)
 
 AppmenuIndicator::~AppmenuIndicator()
 {}
+
+void AppmenuIndicator::Sync(Indicator::Entries const& entries)
+{
+  std::unordered_set<uint32_t> changed_windows;
+  connection::Wrapper added_conn(on_entry_added.connect([this, &changed_windows] (Entry::Ptr const& entry) {
+    changed_windows.insert(entry->parent_window());
+  }));
+
+  connection::Wrapper rm_conn(on_entry_removed.connect([this, &changed_windows] (Entry::Ptr const& entry) {
+    changed_windows.insert(entry->parent_window());
+  }));
+
+  Indicator::Sync(entries);
+
+  for (auto win : changed_windows)
+    updated_win.emit(win);
+}
 
 Indicator::Entries const& AppmenuIndicator::GetEntriesForWindow(uint32_t parent_window) const
 {
