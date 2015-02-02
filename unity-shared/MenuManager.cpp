@@ -103,7 +103,7 @@ struct Manager::Impl : sigc::trackable
     appmenu_connections_.Clear();
 
     for (auto const& entry : appmenu_->GetEntries())
-      UngrabEntryMnemonics(entry->id());
+      UngrabEntryMnemonics(entry);
 
     appmenu_.reset();
     parent_->appmenu_removed();
@@ -127,14 +127,14 @@ struct Manager::Impl : sigc::trackable
         return parent_->key_activate_entry.emit(id);
       });
 
-      entry_actions_[id] = action;
+      entry_actions_[entry] = action;
       key_grabber_->AddAction(*action);
     }
   }
 
-  void UngrabEntryMnemonics(std::string const& entry_id)
+  void UngrabEntryMnemonics(indicator::Entry::Ptr const& entry)
   {
-    auto it = entry_actions_.find(entry_id);
+    auto it = entry_actions_.find(entry);
 
     if (it != entry_actions_.end())
     {
@@ -201,7 +201,7 @@ struct Manager::Impl : sigc::trackable
   connection::Wrapper active_win_conn_;
   glib::Object<GSettings> settings_;
   glib::SignalManager signals_;
-  std::unordered_map<std::string, std::shared_ptr<CompAction>> entry_actions_;
+  std::unordered_map<indicator::Entry::Ptr, std::shared_ptr<CompAction>> entry_actions_;
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)

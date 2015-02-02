@@ -36,7 +36,7 @@ Indicator::Indicator(std::string const& name)
 Indicator::~Indicator()
 {
   for (auto const& entry : entries_)
-    on_entry_removed.emit(entry->id());
+    on_entry_removed.emit(entry);
 }
 
 std::string const& Indicator::name() const
@@ -55,14 +55,14 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 
   for (auto it = entries_.begin(); it != entries_.end();)
   {
-    auto const& entry = *it;
+    auto entry = *it;
 
     if (std::find(new_entries.begin(), new_entries.end(), entry) == new_entries.end())
     {
       auto entry_id = entry->id();
       entries_connections_.erase(entry);
       it = entries_.erase(it);
-      on_entry_removed.emit(entry_id);
+      on_entry_removed.emit(entry);
       changed = true;
       continue;
     }

@@ -56,7 +56,7 @@ public:
   virtual ~PanelIndicatorEntryView();
 
   IndicatorEntryType GetType() const;
-  indicator::Entry::Ptr GetEntry() const { return proxy_; }
+  indicator::Entry::Ptr const& GetEntry() const { return proxy_; }
   std::string GetEntryID() const;
   int GetEntryPriority() const;
 

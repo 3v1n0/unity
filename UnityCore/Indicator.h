@@ -54,7 +54,7 @@ public:
   // Signals
   sigc::signal<void> updated;
   sigc::signal<void, Entry::Ptr const&> on_entry_added;
-  sigc::signal<void, std::string const&> on_entry_removed;
+  sigc::signal<void, Entry::Ptr const&> on_entry_removed;
   sigc::signal<void, std::string const&, unsigned, int, int, unsigned> on_show_menu;
   sigc::signal<void, std::string const&> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
