@@ -111,6 +111,7 @@ private:
   bool ShouldBeDecorated() const;
   GLTexture* ShadowTexture() const;
   unsigned ShadowRadius() const;
+  std::string GetMenusPanelID() const;
 
   void ComputeShadowQuads();
   void UpdateDecorationTextures();
