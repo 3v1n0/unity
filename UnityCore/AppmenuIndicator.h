@@ -36,8 +36,8 @@ public:
   AppmenuIndicator(std::string const& name);
   ~AppmenuIndicator();
 
-  virtual bool IsAppmenu() const { return true; }
-  Entries GetEntriesForWindow(uint32_t parent_window);
+  bool IsAppmenu() const override { return true; }
+  Entries const& GetEntriesForWindow(uint32_t parent_window) const;
 
   void ShowAppmenu(unsigned xid, int x, int y) const;
 

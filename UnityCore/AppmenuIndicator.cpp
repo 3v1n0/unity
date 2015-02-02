@@ -23,11 +23,45 @@ namespace unity
 {
 namespace indicator
 {
+namespace
+{
+const Indicator::Entries empty_entries_;
+}
 
 struct AppmenuIndicator::Impl
 {
   Impl(AppmenuIndicator* parent)
-  {}
+  {
+    parent->on_entry_added.connect([this] (Entry::Ptr const& entry) {
+      auto it = window_entries_.find(entry->parent_window());
+
+      if (it != window_entries_.end())
+      {
+        auto& entries = it->second;
+        entries.push_back(entry);
+        window_entries_.insert({entry->parent_window(), entries});
+      }
+      else
+      {
+        window_entries_.insert({entry->parent_window(), {entry}});
+      }
+    });
+
+    parent->on_entry_removed.connect([this] (Entry::Ptr const& entry) {
+      auto it = window_entries_.find(entry->parent_window());
+
+      if (it != window_entries_.end())
+      {
+        auto& entries = it->second;
+        entries.erase(std::remove(entries.begin(), entries.end(), entry), entries.end());
+
+        if (entries.empty())
+          window_entries_.erase(it);
+      }
+    });
+  }
+
+  std::unordered_map<uint32_t, Indicator::Entries> window_entries_;
 };
 
 AppmenuIndicator::AppmenuIndicator(std::string const& name)
@@ -38,17 +72,14 @@ AppmenuIndicator::AppmenuIndicator(std::string const& name)
 AppmenuIndicator::~AppmenuIndicator()
 {}
 
-Indicator::Entries AppmenuIndicator::GetEntriesForWindow(uint32_t parent_window)
+Indicator::Entries const& AppmenuIndicator::GetEntriesForWindow(uint32_t parent_window) const
 {
-  Entries entries;
+  auto it = impl_->window_entries_.find(parent_window);
 
-  for (auto const& entry : GetEntries())
-  {
-    if (entry->parent_window() == parent_window)
-      entries.push_back(entry);
-  }
+  if (it != impl_->window_entries_.end())
+    return it->second;
 
-  return entries;
+  return empty_entries_;
 }
 
 void AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y) const
