@@ -176,5 +176,11 @@
         a window by double-clicking on its menus if the second click happens before the
         specified value of ms is elapsed</description>
     </key>
+    <key type="b" name="unfocused-windows-popup">
+      <default>true</default>
+      <summary>Whether to pop-up a menu when clicking over unfocused windows entries</summary>
+      <description>By disabling this setting you can make unity to only focus a window
+        when clicking over unfocused menu entries</description>
+    </key>
   </schema>
 </schemalist>
