@@ -79,79 +79,79 @@ TEST(TestPointerBarrier, EventConstruction)
 
 TEST(TestPointerBarrier, HandleHitNotifyEvents)
 {
-  MockPointerBarrier pb;
-  pb.threshold = 1000;
+  auto pb = std::make_shared<MockPointerBarrier>();
+  pb->threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xdeadbeef);
 
   bool got_event = false;
 
-  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+  pb->barrier_event.connect([&] (PointerBarrierWrapper::Ptr const& pbw, BarrierEvent::Ptr bev) {
     if (!pbw->IsFirstEvent())
     {
       got_event = true;
 
-      EXPECT_EQ(pbw, &pb);
+      EXPECT_EQ(pbw.get(), pb.get());
       EXPECT_EQ(bev->x, ev.root_x);
       EXPECT_EQ(bev->y, ev.root_y);
-      EXPECT_EQ(bev->velocity, 600 * pb.max_velocity_multiplier);
+      EXPECT_EQ(bev->velocity, 600 * pb->max_velocity_multiplier);
       EXPECT_EQ(bev->event_id, ev.eventid);
      }
   });
 
-  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
+  EXPECT_TRUE(pb->HandleBarrierEvent(&ev));
   EXPECT_FALSE(got_event);
 
-  Utils::WaitForTimeoutMSec(pb.smoothing());
+  Utils::WaitForTimeoutMSec(pb->smoothing());
 
   EXPECT_TRUE(got_event);
 }
 
 TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
 {
-  MockPointerBarrier pb;
-  pb.threshold = 1000;
+  auto pb = std::make_shared<MockPointerBarrier>();
+  pb->threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xabba);
   bool got_event = false;
 
-  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+  pb->barrier_event.connect([&] (PointerBarrierWrapper::Ptr const& pbw, BarrierEvent::Ptr bev) {
     got_event = true;
 
-    EXPECT_EQ(pbw, &pb);
+    EXPECT_EQ(pbw.get(), pb.get());
     EXPECT_EQ(bev->x, ev.root_x);
     EXPECT_EQ(bev->y, ev.root_y);
     EXPECT_GT(bev->velocity, 0);
     EXPECT_EQ(bev->event_id, ev.eventid);
   });
 
-  pb.released = true;
-  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
+  pb->released = true;
+  EXPECT_TRUE(pb->HandleBarrierEvent(&ev));
   EXPECT_TRUE(got_event);
 }
 
 TEST(TestPointerBarrier, ReciveFirstEvent)
 {
-  MockPointerBarrier pb;
-  pb.threshold = 1000;
+  auto pb = std::make_shared<MockPointerBarrier>();
+  pb->threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xabba);
 
   bool first_is_true = false;
 
-  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+  pb->barrier_event.connect([&] (PointerBarrierWrapper::Ptr const& pbw, BarrierEvent::Ptr bev) {
     first_is_true = true;
   });
 
-  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
+  EXPECT_TRUE(pb->HandleBarrierEvent(&ev));
   EXPECT_TRUE(first_is_true);
 }
 
 TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
 {
-  MockPointerBarrier pb;
-  pb.threshold = 1000;
+  auto pb = std::make_shared<MockPointerBarrier>();
+  pb->threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xabba);
   int events_recived = 0;
 
-  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+  pb->barrier_event.connect([&] (PointerBarrierWrapper::Ptr const& pbw, BarrierEvent::Ptr bev) {
       events_recived++;
 
       if (events_recived == 1)
@@ -160,44 +160,44 @@ TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
         EXPECT_FALSE(pbw->IsFirstEvent());
   });
 
-  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
+  EXPECT_TRUE(pb->HandleBarrierEvent(&ev));
 
-  Utils::WaitForTimeoutMSec(pb.smoothing());
+  Utils::WaitForTimeoutMSec(pb->smoothing());
 
   EXPECT_EQ(events_recived, 2);
 }
 
 TEST(TestPointerBarrier, DontReleaseBarrierOnEmptyDTime)
 {
-  MockPointerBarrier pb;
-  pb.threshold = 1000;
+  auto pb = std::make_shared<MockPointerBarrier>();
+  pb->threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xabba);
   ev.dtime = 0;
 
   {
     InSequence sequence;
-    EXPECT_CALL(pb, ReleaseBarrier(0xabba)).Times(0);
+    EXPECT_CALL(*pb, ReleaseBarrier(0xabba)).Times(0);
   }
 
-  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
+  EXPECT_TRUE(pb->HandleBarrierEvent(&ev));
 
-  Utils::WaitForTimeoutMSec(pb.smoothing());
+  Utils::WaitForTimeoutMSec(pb->smoothing());
 }
 
 TEST(TestPointerBarrier, ReleaseBarrierIfOverThreshold)
 {
-  MockPointerBarrier pb;
-  pb.threshold = 500;
+  auto pb = std::make_shared<MockPointerBarrier>();
+  pb->threshold = 500;
   XIBarrierEvent ev = GetGenericEvent(0xabba);
 
   {
     InSequence sequence;
-    EXPECT_CALL(pb, ReleaseBarrier(0xabba)).Times(1);
+    EXPECT_CALL(*pb, ReleaseBarrier(0xabba)).Times(1);
   }
 
-  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
+  EXPECT_TRUE(pb->HandleBarrierEvent(&ev));
 
-  Utils::WaitForTimeoutMSec(pb.smoothing());
+  Utils::WaitForTimeoutMSec(pb->smoothing());
 }
 
 }

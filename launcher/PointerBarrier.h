@@ -62,7 +62,7 @@ enum BarrierOrientation
   HORIZONTAL
 };
 
-class PointerBarrierWrapper : public sigc::trackable
+class PointerBarrierWrapper : public sigc::trackable, public std::enable_shared_from_this<PointerBarrierWrapper>
 {
 public:
   typedef std::shared_ptr<PointerBarrierWrapper> Ptr;
@@ -94,7 +94,7 @@ public:
   virtual void DestroyBarrier();
   virtual void ReleaseBarrier(int event_id);
 
-  sigc::signal<void, PointerBarrierWrapper*, BarrierEvent::Ptr> barrier_event;
+  sigc::signal<void, PointerBarrierWrapper::Ptr const&, BarrierEvent::Ptr> barrier_event;
 
   bool IsFirstEvent() const;
 

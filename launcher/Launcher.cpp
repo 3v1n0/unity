@@ -2224,7 +2224,7 @@ void Launcher::ScrollLauncher(int wheel_delta)
 
 #ifdef USE_X11
 
-ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper::Ptr const& owner, ui::BarrierEvent::Ptr event)
 {
   if (hide_machine_.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {

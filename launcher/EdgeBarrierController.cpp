@@ -91,7 +91,14 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     ResizeBarrierList(layout);
     SetupBarriers(layout);
   }));*/
+
   uscreen->changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnUScreenChanged));
+
+  parent_->force_disable.changed.connect([this] (bool) {
+    auto monitors = UScreen::GetDefault()->GetMonitors();
+    ResizeBarrierList(monitors);
+    SetupBarriers(monitors);
+  });
 
   parent_->sticky_edges.SetGetterFunction([this] {
     return parent_->options() ? parent_->options()->edge_resist() : false;
@@ -158,6 +165,13 @@ void EdgeBarrierController::Impl::RemoveSubscriber(EdgeBarrierSubscriber* subscr
 
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
 {
+  if (parent_->force_disable)
+  {
+    vertical_barriers_.clear();
+    horizontal_barriers_.clear();
+    return;
+  }
+
   auto num_monitors = layout.size();
 
   if (vertical_barriers_.size() > num_monitors)
@@ -197,6 +211,9 @@ void SetupXI2Events()
 
 void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const& layout)
 {
+  if (parent_->force_disable())
+    return;
+
   bool edge_resist = parent_->sticky_edges();
 
   for (unsigned i = 0; i < layout.size(); i++)
@@ -318,7 +335,7 @@ void EdgeBarrierController::Impl::BarrierReset()
   decaymulator_.value = 0;
 }
 
-void EdgeBarrierController::Impl::BarrierPush(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event)
+void EdgeBarrierController::Impl::BarrierPush(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr const& event)
 {
   if ((owner->orientation == VERTICAL and EventIsInsideYBreakZone(event)) or
       (owner->orientation == HORIZONTAL and EventIsInsideXBreakZone(event)))
@@ -368,7 +385,7 @@ bool EdgeBarrierController::Impl::EventIsInsideXBreakZone(BarrierEvent::Ptr cons
   return false;
 }
 
-void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event)
+void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr const& event)
 {
   if (owner->released)
   {
@@ -418,7 +435,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
   }
 }
 
-void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, int event)
+void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper::Ptr const& owner, int event)
 {
   owner->ReleaseBarrier(event);
   owner->released = true;
@@ -428,16 +445,22 @@ void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, i
       (owner->release_once() && (!release_timeout_ || !release_timeout_->IsRunning())))
   {
     unsigned duration = parent_->options()->edge_passed_disabled_ms;
-    release_timeout_.reset(new glib::Timeout(duration, [owner] {
-      owner->released = false;
-      owner->release_once = false;
+
+    std::weak_ptr<PointerBarrierWrapper> owner_weak(owner);
+    release_timeout_.reset(new glib::Timeout(duration, [owner_weak] {
+      if (PointerBarrierWrapper::Ptr const& owner = owner_weak.lock())
+      {
+        owner->released = false;
+        owner->release_once = false;
+      }
       return false;
     }));
   }
 }
 
 EdgeBarrierController::EdgeBarrierController()
-  : pimpl(new Impl(this))
+  : force_disable(false)
+  , pimpl(new Impl(this))
 {}
 
 EdgeBarrierController::~EdgeBarrierController()

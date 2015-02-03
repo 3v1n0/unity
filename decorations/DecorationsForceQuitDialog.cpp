@@ -243,7 +243,7 @@ void on_force_quit_clicked(GtkButton *button, gint64* kill_data)
   XSync(dpy, False);
   XKillClient(dpy, parent_xid);
   XSync(dpy, False);
-  gdk_error_trap_pop_with_output("Impossible to kill window "+parent_xid);
+  gdk_error_trap_pop_with_output("Impossible to kill window "+std::to_string(parent_xid));
 
   if (parent_pid > 0)
     kill(parent_pid, 9);

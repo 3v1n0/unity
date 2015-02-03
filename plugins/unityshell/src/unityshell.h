@@ -54,8 +54,8 @@
 #include "DashController.h"
 #include "UnitySettings.h"
 #include "DashStyle.h"
+#include "EdgeBarrierController.h"
 #include "FavoriteStoreGSettings.h"
-#include "FontSettings.h"
 #include "ShortcutController.h"
 #include "LauncherController.h"
 #include "LockScreenController.h"
@@ -326,7 +326,6 @@ private:
   Settings unity_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
-  FontSettings   font_settings_;
   internal::FavoriteStoreGSettings favorite_store_;
   ThumbnailGenerator thumbnail_generator_;
   lockscreen::Settings lockscreen_settings_;
@@ -350,6 +349,7 @@ private:
   session::Controller::Ptr  session_controller_;
   lockscreen::DBusManager::Ptr screensaver_dbus_manager_;
   lockscreen::Controller::Ptr lockscreen_controller_;
+  ui::EdgeBarrierController::Ptr edge_barriers_;
   debug::DebugDBusInterface debugger_;
   std::unique_ptr<BGHash>   bghash_;
   spread::Filter::Ptr       spread_filter_;
