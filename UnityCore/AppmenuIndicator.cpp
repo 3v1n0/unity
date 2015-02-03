@@ -35,7 +35,7 @@ struct AppmenuIndicator::Impl
 {
   Impl(AppmenuIndicator* parent)
   {
-    parent->on_entry_added.connect([this] (Entry::Ptr const& entry) {
+    connections_.Add(parent->on_entry_added.connect([this] (Entry::Ptr const& entry) {
       auto it = window_entries_.find(entry->parent_window());
 
       if (it != window_entries_.end())
@@ -48,9 +48,9 @@ struct AppmenuIndicator::Impl
       {
         window_entries_.insert({entry->parent_window(), {entry}});
       }
-    });
+    }));
 
-    parent->on_entry_removed.connect([this] (Entry::Ptr const& entry) {
+    connections_.Add(parent->on_entry_removed.connect([this] (Entry::Ptr const& entry) {
       auto it = window_entries_.find(entry->parent_window());
 
       if (it != window_entries_.end())
@@ -61,9 +61,10 @@ struct AppmenuIndicator::Impl
         if (entries.empty())
           window_entries_.erase(it);
       }
-    });
+    }));
   }
 
+  connection::Manager connections_;
   std::unordered_map<uint32_t, Indicator::Entries> window_entries_;
 };
 
