@@ -1495,11 +1495,14 @@ void PanelMenuView::ActivateIntegratedMenus(nux::Point const& click)
   if (!layout_->GetAbsoluteGeometry().IsInside(click))
     return;
 
-  unsigned double_click_wait = Settings::Instance().lim_double_click_wait();
+  auto& settings = Settings::Instance();
 
-  if (double_click_wait > 0)
+  if (!focused && !settings.lim_unfocused_popup())
+    return;
+
+  if (settings.lim_double_click_wait() > 0)
   {
-    sources_.AddTimeout(double_click_wait, [this, click] {
+    sources_.AddTimeout(settings.lim_double_click_wait(), [this, click] {
       ActivateEntryAt(click.x, click.y);
       return false;
     }, INTEGRATED_MENUS_DOUBLE_CLICK_TIMEOUT);

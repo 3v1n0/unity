@@ -66,6 +66,7 @@ protected:
   GrabEdge grab_;
 
 private:
+  bool show_menu_enabled_;
   glib::Source::UniquePtr button_up_timer_;
 };
 

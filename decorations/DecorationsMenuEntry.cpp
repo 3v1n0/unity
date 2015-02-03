@@ -37,6 +37,7 @@ MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
   , in_dropdown(false)
   , entry_(entry)
   , grab_(win, true)
+  , show_menu_enabled_(true)
 {
   entry_->updated.connect(sigc::mem_fun(this, &MenuEntry::EntryUpdated));
   horizontal_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
@@ -121,10 +122,17 @@ void MenuEntry::ButtonDownEvent(CompPoint const& p, unsigned button, Time timest
 {
   button_up_timer_.reset();
   grab_.ButtonDownEvent(p, button, timestamp);
+  show_menu_enabled_ = (focused() || Settings::Instance().lim_unfocused_popup());
 }
 
 void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button, Time timestamp)
 {
+  if (!show_menu_enabled_)
+  {
+    grab_.ButtonUpEvent(p, button, timestamp);
+    return;
+  }
+
   if (button == 1 && !grab_.IsGrabbed())
   {
     unsigned double_click_wait = Settings::Instance().lim_double_click_wait();
