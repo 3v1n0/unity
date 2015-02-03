@@ -88,7 +88,7 @@ void AppmenuIndicator::Sync(Indicator::Entries const& entries)
 
   Indicator::Sync(entries);
 
-  for (auto win : changed_windows)
+  for (uint32_t win : changed_windows)
     updated_win.emit(win);
 }
 

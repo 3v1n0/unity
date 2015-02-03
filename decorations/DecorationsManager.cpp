@@ -141,14 +141,14 @@ void Manager::Impl::SetupAppMenu()
     return;
   }
 
-  auto setup_windows = [this] {
-    for (auto const& win : windows_)
-      win.second->impl_->SetupAppMenu();
-  };
+  for (auto const& win : windows_)
+    win.second->impl_->SetupAppMenu();
 
   menu_connections_.Remove(appmenu_connection_);
-  appmenu_connection_ = menu_connections_.Add(appmenu->updated.connect(setup_windows));
-  setup_windows();
+  appmenu_connection_ = menu_connections_.Add(appmenu->updated_win.connect([this] (uint32_t xid) {
+    if (Window::Ptr const& win = GetWindowByXid(xid))
+      win->impl_->SetupAppMenu();
+  }));
 }
 
 void Manager::Impl::UnsetAppMenu()
