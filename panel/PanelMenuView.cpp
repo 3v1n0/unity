@@ -27,6 +27,7 @@
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DecorationStyle.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/RawPixel.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
@@ -43,9 +44,9 @@ DECLARE_LOGGER(logger, "unity.panel.menu");
 
 namespace
 {
-  const int MAIN_LEFT_PADDING = 4;
-  const int TITLE_PADDING = 2;
-  const int MENUBAR_PADDING = 4;
+  const RawPixel MAIN_LEFT_PADDING = 4_em;
+  const RawPixel TITLE_PADDING = 2_em;
+  const RawPixel MENUBAR_PADDING = 4_em;
   const int MENU_ENTRIES_PADDING = 6;
 
   const std::string NEW_APP_HIDE_TIMEOUT = "new-app-hide-timeout";
@@ -108,9 +109,9 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   if (BAMF_IS_WINDOW(active_win))
     active_window = bamf_window_get_xid(active_win);
 
-  SetupPanelMenuViewSignals();
   SetupWindowButtons();
   SetupTitlebarGrabArea();
+  SetupPanelMenuViewSignals();
   SetupWindowManagerSignals();
   SetupUBusManagerInterests();
 
@@ -129,8 +130,10 @@ PanelMenuView::~PanelMenuView()
 void PanelMenuView::OnStyleChanged()
 {
   int height = panel::Style::Instance().PanelHeight(monitor_);
+  double scale = Settings::Instance().em(monitor_)->DPIScale();
   window_buttons_->SetMinimumHeight(height);
   window_buttons_->SetMaximumHeight(height);
+  window_buttons_->SetLeftAndRightPadding(MAIN_LEFT_PADDING.CP(scale), MENUBAR_PADDING.CP(scale));
   window_buttons_->UpdateDPIChanged();
 
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
@@ -862,7 +865,7 @@ void PanelMenuView::UpdateTitleTexture(nux::Geometry const& geo, std::string con
   auto const& style = decoration::Style::Get();
   auto text_size = style->TitleNaturalSize(label);
   auto state = WidgetState::NORMAL;
-  float dpi_scale = Settings::Instance().em(monitor_)->DPIScale();
+  double dpi_scale = Settings::Instance().em(monitor_)->DPIScale();
 
   if (integrated_menus_ && !is_desktop_focused_ && !WindowManager::Default().IsExpoActive())
   {
@@ -873,7 +876,7 @@ void PanelMenuView::UpdateTitleTexture(nux::Geometry const& geo, std::string con
   }
   else
   {
-    title_geo_.x = geo.x + (MAIN_LEFT_PADDING + TITLE_PADDING) * dpi_scale;
+    title_geo_.x = geo.x + MAIN_LEFT_PADDING.CP(dpi_scale) + TITLE_PADDING.CP(dpi_scale);
   }
 
   title_geo_.y = geo.y + (geo.height - (text_size.height * dpi_scale)) / 2;
