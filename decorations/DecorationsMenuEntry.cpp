@@ -144,7 +144,8 @@ void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button, Time timestam
 
   if (button == 2 || button == 3)
   {
-    ShowMenu(button);
+    if (Style::Get()->WindowManagerAction(WMEvent(button)) == WMAction::NONE)
+      ShowMenu(button);
   }
 
   grab_.ButtonUpEvent(p, button, timestamp);
