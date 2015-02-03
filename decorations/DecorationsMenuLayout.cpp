@@ -67,7 +67,24 @@ void MenuLayout::Setup()
     menu->focused = focused();
     menu->scale = scale();
     menu->SetParent(shared_from_this());
-    items_.push_back(menu);
+
+    if (items_.empty() || entry->priority() < 0)
+    {
+      items_.push_back(menu);
+    }
+    else
+    {
+      auto pos = items_.rbegin();
+
+      for (; pos != items_.rend(); ++pos)
+      {
+        auto menu = std::static_pointer_cast<MenuEntry>(*pos);
+        if (entry->priority() >= menu->GetEntry()->priority())
+          break;
+      }
+
+      items_.insert(pos.base(), menu);
+    }
   }
 
   if (!items_.empty())
