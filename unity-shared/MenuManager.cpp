@@ -234,7 +234,7 @@ struct Manager::Impl : sigc::trackable
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)
-  : integrated_menus(false)
+  : integrated_menus(true)
   , show_menus_wait(180)
   , always_show_menus(false)
   , fadein(100)
