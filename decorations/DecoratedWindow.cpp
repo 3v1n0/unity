@@ -712,8 +712,11 @@ void Window::Impl::SetupAppMenu()
 
   auto menus = std::make_shared<MenuLayout>(menu_manager, win_);
   menus->Setup();
-  menus_ = menus;
 
+  if (menus->Items().empty())
+    return;
+
+  menus_ = menus;
   auto const& grab_edge = grab_edge_.lock();
   sliding_layout->SetInputItem(menus);
   sliding_layout->fadein = menu_manager->fadein();
