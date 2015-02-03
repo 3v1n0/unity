@@ -21,7 +21,7 @@
 #define UNITYSHELL_SHORTCUS_MODEL_H
 
 #include <boost/noncopyable.hpp>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <list>
 #include <string>
@@ -43,7 +43,7 @@ public:
 
   nux::Property<int> categories_per_column;
   std::vector<std::string> const& categories() const { return categories_; }
-  std::map<std::string, std::list<AbstractHint::Ptr>> const& hints() const { return hints_; }
+  std::unordered_map<std::string, std::list<AbstractHint::Ptr>> const& hints() const { return hints_; }
 
   void Fill();
 
@@ -51,7 +51,7 @@ private:
   void AddHint(AbstractHint::Ptr const& hint);
 
   std::vector<std::string> categories_;
-  std::map<std::string, std::list<AbstractHint::Ptr>> hints_;
+  std::unordered_map<std::string, std::list<AbstractHint::Ptr>> hints_;
 };
 
 }

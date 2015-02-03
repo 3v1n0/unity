@@ -32,11 +32,12 @@ UBusManager::UBusManager()
 
 UBusManager::~UBusManager()
 {
-  // we don't want to modify a container while iterating it
-  std::set<unsigned> ids_copy(connection_ids_);
-  for (auto it = ids_copy.begin(); it != ids_copy.end(); ++it)
+  for (auto it = connection_ids_.begin(); it != connection_ids_.end();)
   {
-    UnregisterInterest(*it);
+    auto tmp_it = it;
+    ++it;
+    server->UnregisterInterest(*tmp_it);
+    connection_ids_.erase(tmp_it);
   }
 }
 

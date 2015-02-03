@@ -24,7 +24,7 @@
 #include <sigc++/sigc++.h>
 #include <glib.h>
 #include <memory>
-#include <map>
+#include <unordered_map>
 
 namespace unity
 {
@@ -223,7 +223,7 @@ public:
   Source::Ptr GetSource(unsigned int id) const;
 
 protected: // For testing purposes
-  typedef std::map<std::string, Source::Ptr> SourcesMap;
+  typedef std::unordered_map<std::string, Source::Ptr> SourcesMap;
   SourcesMap sources_;
 
 private:

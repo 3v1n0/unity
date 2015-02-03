@@ -196,7 +196,7 @@ private:
 
   uweak_ptr<decoration::Window> active_deco_win_;
   uweak_ptr<InputMixer> last_mouse_owner_;
-  std::map<CompWindow*, decoration::Window::Ptr> windows_;
+  std::unordered_map<CompWindow*, decoration::Window::Ptr> windows_;
   std::unordered_map<::Window, std::weak_ptr<decoration::Window>> framed_windows_;
 
   menu::Manager::Ptr menu_manager_;

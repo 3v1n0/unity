@@ -97,7 +97,7 @@ protected:
   void RemoveEntryView(PanelIndicatorEntryView* view);
 
   nux::HLayout* layout_;
-  std::map<indicator::Entry::Ptr, PanelIndicatorEntryView*> entries_;
+  std::unordered_map<indicator::Entry::Ptr, PanelIndicatorEntryView*> entries_;
 
   int monitor_;
   bool overlay_showing_;

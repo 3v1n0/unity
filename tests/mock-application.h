@@ -20,7 +20,7 @@
 #ifndef TESTS_MOCK_APPLICATION_H
 #define TESTS_MOCK_APPLICATION_H
 
-#include <map>
+#include <unordered_map>
 #include <gmock/gmock.h>
 #include <gio/gdesktopappinfo.h>
 #include <UnityCore/GLibWrapper.h>
@@ -360,7 +360,7 @@ struct MockApplicationManager : public unity::ApplicationManager
   }
 
 private:
-  typedef std::map<std::string, unity::ApplicationPtr> AppMap;
+  typedef std::unordered_map<std::string, unity::ApplicationPtr> AppMap;
   AppMap app_map_;
 };
 

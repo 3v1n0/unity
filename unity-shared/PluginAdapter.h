@@ -50,7 +50,7 @@ private:
   CompAction* GetAction(std::string const& name) const;
 
   CompAction* primary_action_;
-  std::map<std::string, CompAction*> actions_;
+  std::unordered_map<std::string, CompAction*> actions_;
 };
 
 

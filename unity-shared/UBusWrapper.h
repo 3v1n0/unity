@@ -22,7 +22,7 @@
 
 #include <memory>
 #include <string>
-#include <set>
+#include <unordered_set>
 
 #include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
@@ -47,7 +47,7 @@ public:
 
 private:
   static std::unique_ptr<UBusServer> server;
-  std::set<unsigned> connection_ids_;
+  std::unordered_set<unsigned> connection_ids_;
 };
 
 }

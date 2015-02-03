@@ -75,7 +75,7 @@ struct DBusIndicators::Impl
   glib::Source::UniquePtr show_entry_idle_;
   glib::Source::UniquePtr show_appmenu_idle_;
   std::vector<std::string> icon_paths_;
-  std::map<std::string, EntryLocationMap> cached_locations_;
+  std::unordered_map<std::string, EntryLocationMap> cached_locations_;
 };
 
 
@@ -335,7 +335,7 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
   gboolean      image_visible   = false;
   gint32        priority        = -1;
 
-  std::map<Indicator::Ptr, Indicator::Entries> indicators;
+  std::unordered_map<Indicator::Ptr, Indicator::Entries> indicators;
 
   g_variant_get(args, "(" ENTRY_ARRAY_SIGNATURE ")", &iter);
   while (g_variant_iter_loop(iter, ENTRY_SIGNATURE,
@@ -393,10 +393,8 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
   }
   g_variant_iter_free(iter);
 
-  for (auto i = indicators.begin(), end = indicators.end(); i != end; ++i)
-  {
-    i->first->Sync(indicators[i->first]);
-  }
+  for (auto const& i : indicators)
+    i.first->Sync(i.second);
 }
 
 void DBusIndicators::Impl::SyncGeometries(std::string const& name,
