@@ -1363,21 +1363,17 @@ bool PanelMenuView::UpdateActiveWindowPosition()
 
 void PanelMenuView::OnWindowMoved(Window xid)
 {
-  if (active_window() == xid)
+  if (!integrated_menus_ && active_window() == xid && UScreen::GetDefault()->GetMonitors().size() > 1)
   {
     /* When moving the active window, if the current panel is controlling
      * the active window, then we postpone the timeout function every movement
      * that we have, setting a longer timeout.
-     * Otherwise, if the moved window is not controlled by the current panel
+     * Otherwise, if the movedPanelMenuView::OnWindowMovedPanelMenuView::OnWindowMoved window is not controlled by the current panel
      * every few millisecond we check the new window position */
 
     unsigned int timeout_length = 250;
 
-    if (we_control_active_)
-    {
-      sources_.Remove(WINDOW_MOVED_TIMEOUT);
-    }
-    else
+    if (!we_control_active_)
     {
       if (sources_.GetSource(WINDOW_MOVED_TIMEOUT))
         return;
@@ -1388,6 +1384,9 @@ void PanelMenuView::OnWindowMoved(Window xid)
     auto cb_func = sigc::mem_fun(this, &PanelMenuView::UpdateActiveWindowPosition);
     sources_.AddTimeout(timeout_length, cb_func, WINDOW_MOVED_TIMEOUT);
   }
+
+  if (std::find(maximized_wins_.begin(), maximized_wins_.end(), xid) != maximized_wins_.end())
+    UpdateMaximizedWindow();
 }
 
 bool PanelMenuView::IsWindowUnderOurControl(Window xid) const

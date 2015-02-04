@@ -163,7 +163,7 @@ private:
 
   void ActivateIntegratedMenus(nux::Point const&);
 
-  menu::Manager::Ptr const& menu_manager_;
+  menu::Manager::Ptr menu_manager_;
   glib::Object<BamfMatcher> matcher_;
 
   nux::TextureLayer* title_layer_;
