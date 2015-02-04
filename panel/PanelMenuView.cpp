@@ -1525,7 +1525,11 @@ void PanelMenuView::OnMaximizedActivate(int x, int y)
   if (maximized != 0)
   {
     if (maximized != active_window())
-      WindowManager::Default().Activate(maximized);
+    {
+      auto& wm = WindowManager::Default();
+      wm.Raise(maximized);
+      wm.Activate(maximized);
+    }
 
     if (integrated_menus_)
     {
