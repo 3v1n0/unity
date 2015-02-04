@@ -59,15 +59,15 @@ struct Manager::Impl : sigc::trackable
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
     indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
 
-    parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
-    parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
-
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
       parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
     });
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + ALWAYS_SHOW_MENUS_KEY, [this] (GSettings*, const gchar*) {
       parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
     });
+
+    parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
   }
 
   ~Impl()
