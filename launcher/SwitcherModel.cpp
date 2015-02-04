@@ -34,6 +34,7 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
   : detail_selection(false)
   , detail_selection_index(0)
   , only_detail_on_viewport(false)
+  , switch_strictly_between_applications(false)
   , applications_(icons)
   , index_(0)
   , last_index_(0)
@@ -78,6 +79,7 @@ void SwitcherModel::AddProperties(debug::IntrospectionData& introspection)
   .add("detail-current-count", DetailXids().size())
   .add("detail-windows", glib::Variant::FromVector(DetailXids()))
   .add("only-detail-on-viewport", only_detail_on_viewport)
+  .add("switch_strictly_between_applications", switch_strictly_between_applications)
   .add("selection-index", SelectionIndex())
   .add("last-selection-index", LastSelectionIndex());
 }

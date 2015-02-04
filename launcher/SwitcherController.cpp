@@ -717,6 +717,12 @@ void Controller::Impl::SelectFirstItem()
     return;
   }
 
+  if (model_->switch_strictly_between_applications)
+  {
+    model_->Select(second);
+    return;
+  }
+
   uint64_t first_highest = 0;
   uint64_t first_second = 0; // first icons second highest active
   uint64_t second_first = 0; // second icons first highest active
