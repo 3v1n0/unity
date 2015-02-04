@@ -85,11 +85,6 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   Refresh();
 }
 
-PanelIndicatorEntryView::~PanelIndicatorEntryView()
-{
-  // Nothing to do...
-}
-
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 {
   active_changed.emit(this, is_active);
@@ -115,10 +110,16 @@ void PanelIndicatorEntryView::ShowMenu(int button)
     });
 
     wm.TerminateExpo();
+    return;
   }
 
   if (wm.IsScaleActive())
+  {
+    if (type_ == MENU)
+      return;
+
     wm.TerminateScale();
+  }
 
   auto const& abs_geo = GetAbsoluteGeometry();
   proxy_->ShowMenu(abs_geo.x, abs_geo.y + abs_geo.height, button);

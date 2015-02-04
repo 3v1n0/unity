@@ -53,8 +53,6 @@ public:
   PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
 
-  virtual ~PanelIndicatorEntryView();
-
   IndicatorEntryType GetType() const;
   indicator::Entry::Ptr const& GetEntry() const { return proxy_; }
   std::string GetEntryID() const;
