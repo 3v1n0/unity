@@ -32,11 +32,7 @@ if path.isfile(old_first_run_path):
     if not path.isdir(new_first_run_path):
       makedirs(new_first_run_path, 0700)
 
-    print old_first_run_path
-    print new_first_run_path
-
     new_first_run_path += "/first_run.stamp"
     rename(old_first_run_path, new_first_run_path)
   except OSError, e:
-    print e.errno
-    print e
+    pass
