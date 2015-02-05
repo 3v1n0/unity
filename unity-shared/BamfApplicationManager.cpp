@@ -541,7 +541,8 @@ Manager::Manager()
 
   signals_.Add<void, BamfMatcher*, BamfApplication*, BamfApplication*> (matcher_, "active-application-changed",
   [this](BamfMatcher*, BamfApplication* /* from */, BamfApplication* to) {
-    this->active_application_changed.emit(pool::EnsureApplication(*this, reinterpret_cast<BamfView*>(to)));
+    auto const& app = pool::EnsureApplication(*this, reinterpret_cast<BamfView*>(to));
+    this->active_application_changed.emit(app);
   });
 }
 
@@ -680,11 +681,13 @@ void Manager::OnViewOpened(BamfMatcher* matcher, BamfView* view)
   LOG_TRACE_BLOCK(logger);
   if (BAMF_IS_APPLICATION(view))
   {
-    application_started.emit(pool::EnsureApplication(*this, view));
+    if (ApplicationPtr const& app = pool::EnsureApplication(*this, view))
+      application_started.emit(app);
   }
   else if (BAMF_IS_WINDOW(view))
   {
-    window_opened.emit(pool::EnsureWindow(*this, view));
+    if (ApplicationWindowPtr const& win = pool::EnsureWindow(*this, view))
+      window_opened.emit(win);
   }
 }
 
@@ -693,13 +696,16 @@ void Manager::OnViewClosed(BamfMatcher* matcher, BamfView* view)
   LOG_TRACE_BLOCK(logger);
   if (BAMF_IS_APPLICATION(view))
   {
-    auto app = pool::EnsureApplication(*this, view);
-    application_stopped.emit(app);
+    if (ApplicationPtr const& app = pool::EnsureApplication(*this, view))
+      application_stopped.emit(app);
+
     pool::apps_.erase(view);
   }
   else if (BAMF_IS_WINDOW(view))
   {
-    window_closed.emit(pool::EnsureWindow(*this, view));
+    if (ApplicationWindowPtr const& win = pool::EnsureWindow(*this, view))
+      window_closed.emit(win);
+
     pool::wins_.erase(view);
   }
 }
