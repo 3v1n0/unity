@@ -1,3 +1,17 @@
+unity (7.3.1+15.04.20150205-0ubuntu1) vivid; urgency=medium
+
+  [ Brandon Schaefer ]
+  * Try to set the folder permission otherwise Handle permission error.
+    (LP: #1418255)
+
+  [ Andrea Azzarone ]
+  * Actually connect to changed::* signal in MenuManager.cpp. (LP:
+    #1411620)
+  * Actually connect to changed::* signal in UnitySettings.cpp. (LP:
+    #1408212)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 05 Feb 2015 17:27:47 +0000
+
 unity (7.3.1+15.04.20150126-0ubuntu1) vivid; urgency=low
 
   [ Andrea Azzarone ]
