@@ -156,13 +156,14 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
 {
   // Lambda functions should be fine here because when the application the icon
   // is only ever removed when the application is closed.
-  signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindow const&) {
+  signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindowPtr const&) {
     EnsureWindowState();
     UpdateIconGeometries(GetCenters());
   }));
 
-  signals_conn_.Add(app_->window_closed.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState)));
-  signals_conn_.Add(app_->window_moved.connect(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState))));
+  auto ensure_windows_cb = sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+  signals_conn_.Add(app_->window_closed.connect(ensure_windows_cb));
+  signals_conn_.Add(app_->window_moved.connect(ensure_windows_cb));
 
   signals_conn_.Add(app_->urgent.changed.connect([this](bool const& urgent) {
     LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
@@ -235,7 +236,7 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int mo
     if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE, monitor))
       return false;
 
-    if (app_->type() == "webapp")
+    if (app_->type() == AppType::WEBAPP)
       return true;
 
     // Sometimes BAMF is not fast enough to update the active application
@@ -702,7 +703,7 @@ void ApplicationLauncherIcon::Focus(ActionArg arg)
     if (window->Focus())
       return;
   }
-  else if (app_->type() == "webapp")
+  else if (app_->type() == AppType::WEBAPP)
   {
     // Webapps are again special.
     OpenInstanceLauncherIcon(arg.timestamp);
@@ -1113,7 +1114,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
 void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> const& centers)
 {
-  if (app_->type() == "webapp")
+  if (app_->type() == AppType::WEBAPP)
     return;
 
   nux::Geometry geo(0, 0, icon_size, icon_size);
@@ -1264,14 +1265,14 @@ bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
 
 bool ApplicationLauncherIcon::AllowDetailViewInSwitcher() const
 {
-  return app_->type() != "webapp";
+  return app_->type() != AppType::WEBAPP;
 }
 
 uint64_t ApplicationLauncherIcon::SwitcherPriority()
 {
   uint64_t result = 0;
   // Webapps always go at the back.
-  if (app_->type() == "webapp")
+  if (app_->type() == AppType::WEBAPP)
     return result;
 
   for (auto& window : app_->GetWindows())

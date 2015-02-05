@@ -41,7 +41,7 @@ FakeApplicationWindow::~FakeApplicationWindow()
   testwrapper::StandaloneWM::Get()->Close(xid_);
 }
 
-std::string FakeApplicationWindow::type() const { return "mock"; }
+WindowType FakeApplicationWindow::type() const { return WindowType::NORMAL; }
 
 Window FakeApplicationWindow::window_id() const { return xid_; }
 int FakeApplicationWindow::monitor() const { return -1; }

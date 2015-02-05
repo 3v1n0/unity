@@ -1116,10 +1116,10 @@ TEST_F(TestApplicationLauncherIcon, IsFileManager)
 
 TEST_F(TestApplicationLauncherIcon, AllowDetailViewInSwitcher)
 {
-  mock_app->type_ = "mock";
+  mock_app->type_ = AppType::NORMAL;
   EXPECT_TRUE(mock_icon->AllowDetailViewInSwitcher());
 
-  mock_app->type_ = "webapp";
+  mock_app->type_ = AppType::WEBAPP;
   EXPECT_FALSE(mock_icon->AllowDetailViewInSwitcher());
 }
 

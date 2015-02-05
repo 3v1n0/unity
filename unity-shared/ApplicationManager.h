@@ -50,13 +50,33 @@ enum class ApplicationEventType
   LEAVE
 };
 
+enum class AppType
+{
+  NORMAL,
+  WEBAPP,
+  UNKNOWN
+};
+
+enum class WindowType
+{
+  NORMAL,
+  DESKTOP,
+  DOCK,
+  DIALOG,
+  TOOLBAR,
+  MENU,
+  UTILITY,
+  SPLASHSCREEN,
+  UNKNOWN,
+  TAB
+};
+
 class ApplicationWindow
 {
 public:
   virtual ~ApplicationWindow() = default;
 
-  virtual std::string type() const = 0; // 'window' or 'tab'
-
+  virtual WindowType type() const = 0;
   virtual Window window_id() const = 0;
   virtual int monitor() const = 0;
 
@@ -69,20 +89,32 @@ public:
   // Closes the window, or the browser tab if a webapp.
   virtual void Quit() const = 0;
 
+  virtual bool operator==(ApplicationWindow const& other) const
+  {
+    return (window_id() == other.window_id());
+  }
+
+  virtual bool operator!=(ApplicationWindow const& other) const
+  {
+    return !(operator==(other));
+  }
+
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;
 
   nux::ROProperty<bool> visible;
   nux::ROProperty<bool> active;
   nux::ROProperty<bool> urgent;
+  nux::ROProperty<bool> maximized;
 };
+
 
 class Application
 {
 public:
   virtual ~Application() = default;
 
-  virtual std::string type() const = 0;
+  virtual AppType type() const = 0;
 
   // A string representation of the object.
   virtual std::string repr() const = 0;
@@ -102,6 +134,17 @@ public:
   virtual void LogEvent(ApplicationEventType, ApplicationSubjectPtr const&) const = 0;
 
   virtual std::string desktop_id() const = 0;
+
+  virtual bool operator==(Application const& other) const
+  {
+    return (!desktop_id().empty() && (desktop_id() == other.desktop_id()));
+  }
+
+  virtual bool operator!=(Application const& other) const
+  {
+    return !(operator==(other));
+  }
+
   nux::ROProperty<std::string> desktop_file;
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;
@@ -117,10 +160,11 @@ public:
 
   sigc::signal<void> closed;
 
-  sigc::signal<void, ApplicationWindow const&> window_opened;
-  sigc::signal<void, ApplicationWindow const&> window_moved;
-  sigc::signal<void> window_closed;
+  sigc::signal<void, ApplicationWindowPtr const&> window_opened;
+  sigc::signal<void, ApplicationWindowPtr const&> window_moved;
+  sigc::signal<void, ApplicationWindowPtr const&> window_closed;
 };
+
 
 class ApplicationSubject
 {
@@ -165,15 +209,27 @@ public:
   static ApplicationManager& Default();
 
   virtual ApplicationPtr GetUnityApplication() const = 0;
+  virtual ApplicationPtr GetActiveApplication() const = 0;
   virtual ApplicationWindowPtr GetActiveWindow() const = 0;
   virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const = 0;
   virtual ApplicationList GetRunningApplications() const = 0;
+  virtual WindowList GetWindowsForMonitor(int monitor = -1) const = 0;
   virtual ApplicationPtr GetApplicationForWindow(Window xid) const = 0;
+  virtual ApplicationWindowPtr GetWindowForId(Window xid) const = 0;
 
   sigc::signal<void, ApplicationPtr const&> application_started;
+  sigc::signal<void, ApplicationPtr const&> application_stopped;
   sigc::signal<void, ApplicationPtr const&> active_application_changed;
+  sigc::signal<void, ApplicationWindowPtr const&> window_opened;
+  sigc::signal<void, ApplicationWindowPtr const&> window_closed;
   sigc::signal<void, ApplicationWindowPtr const&> active_window_changed;
 };
+
+
+bool operator==(ApplicationPtr const&, ApplicationPtr const&);
+bool operator!=(ApplicationPtr const&, ApplicationPtr const&);
+bool operator==(ApplicationWindowPtr const&, ApplicationWindowPtr const&);
+bool operator!=(ApplicationWindowPtr const&, ApplicationWindowPtr const&);
 
 }
 

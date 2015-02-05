@@ -40,8 +40,8 @@ struct MockApplicationWindow : unity::ApplicationWindow
   MockApplicationWindow(Window xid)
     : xid_(xid)
     , monitor_(0)
+    , type_(unity::WindowType::NORMAL)
     , title_("MockApplicationWindow "+std::to_string(xid_))
-    , type_("window")
     , visible_(true)
     , active_(false)
     , urgent_(false)
@@ -61,15 +61,15 @@ struct MockApplicationWindow : unity::ApplicationWindow
 
   Window xid_;
   int monitor_;
+  unity::WindowType type_;
   std::string title_;
   std::string icon_;
-  std::string type_;
 
   bool visible_;
   bool active_;
   bool urgent_;
 
-  MOCK_CONST_METHOD0(type, std::string());
+  MOCK_CONST_METHOD0(type, unity::WindowType());
   MOCK_CONST_METHOD0(window_id, Window());
   MOCK_CONST_METHOD0(monitor, int());
   MOCK_CONST_METHOD0(application, unity::ApplicationPtr());
@@ -124,7 +124,7 @@ struct MockApplication : unity::Application
     , active_(false)
     , running_(false)
     , urgent_(false)
-    , type_("mock")
+    , type_(unity::AppType::UNKNOWN)
     {
       seen.SetSetterFunction(sigc::mem_fun(this, &MockApplication::SetSeen));
       sticky.SetSetterFunction(sigc::mem_fun(this, &MockApplication::SetSticky));
@@ -159,10 +159,10 @@ struct MockApplication : unity::Application
   bool running_;
   bool urgent_;
   unity::WindowList windows_;
-  std::string type_;
+  unity::AppType type_;
   std::vector<std::pair<unity::ApplicationEventType, unity::ApplicationSubjectPtr>> actions_log_;
 
-  MOCK_CONST_METHOD0(type, std::string());
+  MOCK_CONST_METHOD0(type, unity::AppType());
   MOCK_CONST_METHOD0(repr, std::string());
   MOCK_CONST_METHOD0(desktop_id, std::string());
   MOCK_CONST_METHOD0(GetWindows, unity::WindowList());
@@ -306,6 +306,9 @@ struct MockApplicationManager : public unity::ApplicationManager
     ON_CALL(*this, GetActiveWindow()).WillByDefault(Invoke([this] { return unity::ApplicationWindowPtr(); } ));
     ON_CALL(*this, GetRunningApplications()).WillByDefault(Invoke([this] { return unity::ApplicationList(); } ));
     ON_CALL(*this, GetApplicationForWindow(_)).WillByDefault(Invoke([this] (Window) { return unity::ApplicationPtr(); } ));
+    ON_CALL(*this, GetActiveApplication()).WillByDefault(Invoke([this] { return unity::ApplicationPtr(); } ));
+    ON_CALL(*this, GetWindowsForMonitor(_)).WillByDefault(Invoke([this] (Window) { return unity::WindowList(); } ));
+    ON_CALL(*this, GetWindowForId(_)).WillByDefault(Invoke([this] (int) { return unity::ApplicationWindowPtr(); } ));
   }
 
   static void StartApp(std::string const& desktop_file)
@@ -322,6 +325,9 @@ struct MockApplicationManager : public unity::ApplicationManager
   MOCK_CONST_METHOD1(GetApplicationForDesktopFile, unity::ApplicationPtr(std::string const&));
   MOCK_CONST_METHOD0(GetRunningApplications, unity::ApplicationList());
   MOCK_CONST_METHOD1(GetApplicationForWindow, unity::ApplicationPtr(Window));
+  MOCK_CONST_METHOD0(GetActiveApplication, unity::ApplicationPtr());
+  MOCK_CONST_METHOD1(GetWindowsForMonitor, unity::WindowList(int));
+  MOCK_CONST_METHOD1(GetWindowForId, unity::ApplicationWindowPtr(Window));
 
   unity::ApplicationPtr LocalGetApplicationForDesktopFile(std::string const& desktop_file)
   {

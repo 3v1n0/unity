@@ -52,7 +52,7 @@ public:
     icon.SetGetterFunction([this] { return ""; });
   }
 
-  virtual std::string type() const { return "mock"; }
+  virtual WindowType type() const { return WindowType::UNKNOWN; }
 
   virtual Window window_id() const { return xid_; }
   virtual int monitor() const { return -1; }
