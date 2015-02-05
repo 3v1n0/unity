@@ -19,7 +19,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 from gi.repository import GLib
-from os import path, rename, mkdir
+from os import path, rename, makedirs
 
 old_first_run_path = GLib.get_user_cache_dir()  + "/unity/first_run.stamp"
 new_first_run_path = GLib.get_user_config_dir() + "/unity"
@@ -27,9 +27,16 @@ new_first_run_path = GLib.get_user_config_dir() + "/unity"
 # If we have the old first_run.stamp file, we must move it to the new location
 if path.isfile(old_first_run_path):
 
-  # make sure the new dir exists before attempting to move
-  if not path.isdir(new_first_run_path):
-    mkdir(new_first_run_path)
+  try:
+    # make sure the new dir exists before attempting to move
+    if not path.isdir(new_first_run_path):
+      makedirs(new_first_run_path, 0700)
 
-  new_first_run_path += "/first_run.stamp"
-  rename(old_first_run_path, new_first_run_path)
+    print old_first_run_path
+    print new_first_run_path
+
+    new_first_run_path += "/first_run.stamp"
+    rename(old_first_run_path, new_first_run_path)
+  except OSError, e:
+    print e.errno
+    print e
