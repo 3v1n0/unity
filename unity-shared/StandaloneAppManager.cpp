@@ -41,6 +41,8 @@ std::ostream& operator<<(std::ostream &os, AppType at)
       return os << "NORMAL";
     case AppType::WEBAPP:
       return os << "WEBAPP";
+    case AppType::MOCK:
+      return os << "MOCK";
     case AppType::UNKNOWN:
       return os << "UNKNOWN";
   }
@@ -68,10 +70,12 @@ std::ostream& operator<<(std::ostream &os, WindowType wt)
       return os << "UTILITY";
     case WindowType::SPLASHSCREEN:
       return os << "SPLASHSCREEN";
-    case WindowType::UNKNOWN:
-      return os << "UNKNOWN";
     case WindowType::TAB:
       return os << "TAB";
+    case WindowType::MOCK:
+      return os << "MOCK";
+    case WindowType::UNKNOWN:
+      return os << "UNKNOWN";
   }
 
   return os;
