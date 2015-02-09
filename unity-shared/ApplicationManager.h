@@ -54,6 +54,7 @@ enum class AppType
 {
   NORMAL,
   WEBAPP,
+  MOCK,
   UNKNOWN
 };
 
@@ -67,8 +68,9 @@ enum class WindowType
   MENU,
   UTILITY,
   SPLASHSCREEN,
-  UNKNOWN,
-  TAB
+  TAB,
+  MOCK,
+  UNKNOWN
 };
 
 class ApplicationWindow

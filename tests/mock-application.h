@@ -40,7 +40,7 @@ struct MockApplicationWindow : unity::ApplicationWindow
   MockApplicationWindow(Window xid)
     : xid_(xid)
     , monitor_(0)
-    , type_(unity::WindowType::NORMAL)
+    , type_(unity::WindowType::MOCK)
     , title_("MockApplicationWindow "+std::to_string(xid_))
     , visible_(true)
     , active_(false)
@@ -124,7 +124,7 @@ struct MockApplication : unity::Application
     , active_(false)
     , running_(false)
     , urgent_(false)
-    , type_(unity::AppType::UNKNOWN)
+    , type_(unity::AppType::MOCK)
     {
       seen.SetSetterFunction(sigc::mem_fun(this, &MockApplication::SetSeen));
       sticky.SetSetterFunction(sigc::mem_fun(this, &MockApplication::SetSticky));
