@@ -36,18 +36,7 @@ struct AppmenuIndicator::Impl
   Impl(AppmenuIndicator* parent)
   {
     connections_.Add(parent->on_entry_added.connect([this] (Entry::Ptr const& entry) {
-      auto it = window_entries_.find(entry->parent_window());
-
-      if (it != window_entries_.end())
-      {
-        auto& entries = it->second;
-        entries.push_back(entry);
-        window_entries_.insert({entry->parent_window(), entries});
-      }
-      else
-      {
-        window_entries_.insert({entry->parent_window(), {entry}});
-      }
+      window_entries_[entry->parent_window()].push_back(entry);
     }));
 
     connections_.Add(parent->on_entry_removed.connect([this] (Entry::Ptr const& entry) {
