@@ -37,6 +37,19 @@ namespace indicator
 namespace
 {
 DECLARE_LOGGER(logger, "unity.indicator.dbus");
+
+inline bool verify_variant_type(GVariant* value, const gchar* type)
+{
+  if (!g_variant_is_of_type (value, G_VARIANT_TYPE(type)))
+  {
+    LOG_ERROR(logger) << "Got invalid variant type: '"
+                      << g_variant_get_type_string(value) << "' ('"
+                      << type << "' was expected)";
+    return false;
+  }
+
+  return true;
+}
 } // anonymous namespace
 
 
@@ -205,6 +218,9 @@ void DBusIndicators::Impl::OnIconsPathChanged(GVariant*)
 
 void DBusIndicators::Impl::OnEntryActivated(GVariant* parameters)
 {
+  if (!verify_variant_type(parameters, "(ss(iiuu))"))
+    return;
+
   glib::String panel;
   glib::String entry_id;
   nux::Rect geo;
@@ -216,6 +232,9 @@ void DBusIndicators::Impl::OnEntryActivated(GVariant* parameters)
 
 void DBusIndicators::Impl::OnEntryActivatedRequest(GVariant* parameters)
 {
+  if (!verify_variant_type(parameters, "(s)"))
+    return;
+
   glib::String entry_name;
   g_variant_get(parameters, "(s)", &entry_name);
 
@@ -225,6 +244,9 @@ void DBusIndicators::Impl::OnEntryActivatedRequest(GVariant* parameters)
 
 void DBusIndicators::Impl::OnEntryShowNowChanged(GVariant* parameters)
 {
+  if (!verify_variant_type(parameters, "(sb)"))
+    return;
+
   glib::String entry_name;
   gboolean show_now;
   g_variant_get(parameters, "(sb)", &entry_name, &show_now);
@@ -334,6 +356,9 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
   gboolean      image_sensitive = false;
   gboolean      image_visible   = false;
   gint32        priority        = -1;
+
+  if (!verify_variant_type(args, "(" ENTRY_ARRAY_SIGNATURE ")"))
+    return;
 
   std::unordered_map<Indicator::Ptr, Indicator::Entries> indicators;
 
