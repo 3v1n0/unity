@@ -36,4 +36,4 @@ add_pch(pch/panel_pch.hh panel-lib)
 #
 add_executable (panel StandalonePanel.cpp)
 find_library (COMPIZ_LIB compiz_core ${COMPIZ_LIBDIR})
-target_link_libraries (panel panel-lib unity-shared unity-shared-standalone ${COMPIZ_LIB})
+target_link_libraries (panel panel-lib unity-shared unity-shared-standalone unity-shared-bamf ${COMPIZ_LIB})
