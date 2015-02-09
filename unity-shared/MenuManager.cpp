@@ -165,10 +165,8 @@ struct Manager::Impl : sigc::trackable
   {
     for (auto it = entry_actions_.begin(); it != entry_actions_.end();)
     {
-      auto rm_it = it;
-      ++it;
-      key_grabber_->RemoveAction(*rm_it->second);
-      entry_actions_.erase(rm_it);
+      key_grabber_->RemoveAction(*it->second);
+      it = entry_actions_.erase(it);
     }
   }
 
