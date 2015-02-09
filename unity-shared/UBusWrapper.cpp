@@ -34,10 +34,8 @@ UBusManager::~UBusManager()
 {
   for (auto it = connection_ids_.begin(); it != connection_ids_.end();)
   {
-    auto tmp_it = it;
-    ++it;
-    server->UnregisterInterest(*tmp_it);
-    connection_ids_.erase(tmp_it);
+    server->UnregisterInterest(*it);
+    it = connection_ids_.erase(it);
   }
 }
 
