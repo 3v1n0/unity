@@ -195,7 +195,27 @@ int AppWindow::monitor() const
 
 WindowType AppWindow::type() const
 {
-  return WindowType(bamf_window_get_window_type(bamf_window_));
+  switch (bamf_window_get_window_type(bamf_window_))
+  {
+    case BAMF_WINDOW_NORMAL:
+      return WindowType::NORMAL;
+    case BAMF_WINDOW_DESKTOP:
+      return WindowType::DESKTOP;
+    case BAMF_WINDOW_DOCK:
+      return WindowType::DOCK;
+    case BAMF_WINDOW_DIALOG:
+      return WindowType::DIALOG;
+    case BAMF_WINDOW_TOOLBAR:
+      return WindowType::TOOLBAR;
+    case BAMF_WINDOW_MENU:
+      return WindowType::MENU;
+    case BAMF_WINDOW_UTILITY:
+      return WindowType::UTILITY;
+    case BAMF_WINDOW_SPLASHSCREEN:
+      return WindowType::SPLASHSCREEN;
+    default:
+      return WindowType::UNKNOWN;
+  }
 }
 
 ApplicationPtr AppWindow::application() const
