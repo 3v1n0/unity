@@ -1,6 +1,2652 @@
+2015-02-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Try to set the folder permission otherwise Handle permission error. Fixes: #1418255
+	Approved by: PS Jenkins bot, Andrea Azzarone, Marco Trevisan (Treviño)
+
+2015-02-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Remove prints
+
+2015-02-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fix migration script to force 0700 permissions on the folder
+	* If there is a permissions issue, catch it, and handle it! (ie. Dont crash!)
+
+2015-02-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Actually connect to changed::* signal in UnitySettings.cpp. Fixes: #1408212
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-02-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Actually connect to changed::* signal in UnitySettings.cpp.
+
+2015-02-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Actually connect to changed::* signal in MenuManager.cpp. Fixes: #1411620
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-02-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Actually connect to changed::* signal in MenuManager.cpp.
+
+2015-01-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make unity unlockable if user is in nopsswdlogin group. On super+l the screensaver is activated. Fixes: #1413790
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert changes to pam/unity.
+
+2015-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable lock if user is in nopasswdlogin group.
+
+2015-01-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make unity unlockable by default if user is in nopsswdlogin group.
+
+2015-01-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure dragged icons are not rendered behind the dash. Fixes: #1413773
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-01-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure dragged icons are not rendered behind the dash.
+
+2015-01-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable markup accel for VolumeLauncherIcon quicklist menu items. Fixes: #1413411
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-01-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable markup accel for VolumeLauncherIcon quicklist menu items.
+
+2015-01-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Force icon size (new gtk requires it). Fixes: #1404730
+	Approved by: Marco Trevisan (Treviño)
+
+2015-01-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Force icon size (new gtk requires it).
+
+2015-01-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid running pontentially dangerous code paths when the screen is locked. Fixes: #1410582
+	Approved by: Stephen M. Webb
+
+2015-01-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid running pontentially dangerous path when the screen is locked.
+
+2015-01-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: make sure menus are always shown when mouse is over them or when the always-show-menus option is on Fixes: #955193, #1312137, #1374942, #1390562
+	Approved by: Stephen M. Webb
+
+2015-01-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: use std::to_string to correctly stringify a number
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: move integrated_menus property here, from decoration::Style
+	
+	This is not related to decoration or stiling at all, so it's better to keep it there
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: add setting to control menu visibility and use that value
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: always show menus if the relative option in MenuManager is active_xid_
+	
+	Include some usual cleanup and ignore unneeded events and redraws in case this option is enabled.
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsManager: update the active window menus if always_show_menus changes
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: always show input item in sliding layout if always_show_menus is enabled
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsSlidingLayout: add property to always override main item (with input item)
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: add always_show_menus property
+	
+	False by default
+
+2014-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: wait a little more before sending an updated signal
+	
+	To avoid false positives
+
+2014-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: keep track of the active window, and re-send an updated signal if that changes
+	
+	And we didn't get an update yet
+
+2014-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: use the proper type to return the AppMenu indicator
+
+2014-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: cleanup code in GetMonitorAtPosition
+
+2014-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: ensure we disconnect from grab_mouse_changed_ signals
+
+2014-12-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: trap more X errors
+
+2014-12-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2014-11-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: don't hide menus when moving mouse out and ShowNow is active
+
+2015-01-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Show session dialog over fullscreen windows. Fixes: #1404486
+	Approved by: Stephen M. Webb
+
+2014-12-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Show session dialog over a full screen window.
+
+2015-01-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Enable dash and hud if there is a fullscreen window. Fixes: #860970, #1159249
+	Approved by: Marco Trevisan (Treviño)
+
+2014-12-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Enable dash and hud if there is a fullscreen window.
+
+2015-01-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use std::weak_ptr to avoid referencing an invalid barrier. Fixes: #1238063
+	Approved by: Stephen M. Webb, Marco Trevisan (Treviño)
+
+2015-01-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix tests/test_pointer_barrier.cpp
+
+2015-01-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge the branch.
+
+2014-12-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use a weak_ptr to avoid crashes.
+
+2015-01-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable Pointer Barriers during lockscreen. Fixes: #1401911
+	Approved by: Stephen M. Webb
+
+2014-12-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable Pointer Barriers during lockscreen.
+
+2015-01-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove unsed StartupNotifyService.* 
+	Approved by: Stephen M. Webb
+
+2014-12-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove unsed StartupNotifyService.*
+
+2015-01-12  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Remove deprecated code that is no longer supported:
+	https://mail.gnome.org/archives/commits-list/2014-July/msg00351.html Fixes: #1404326
+	Approved by: Stephen M. Webb, Marco Trevisan (Treviño)
+
+2015-01-12  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fix the other deprecated code
+
+2015-01-09  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Remove deprecated code that is no longer supported:
+	https://mail.gnome.org/archives/commits-list/2014-July/msg00351.html
+
+2014-12-16  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	fix AP test failures due to upstream FileRoller .desktop file rename Fixes: #1402707
+	Approved by: Christopher Townsend
+
+2014-12-15  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	fix AP test failures due to upstream FileRoller .desktop file rename
+
+2014-12-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	skipped the animation of BGHash on startup to prevent unwanted fade-in Fixes: #1241757
+	Approved by: Marco Trevisan (Treviño)
+
+2014-12-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Skip the animation of BGHash on startup.
+
+2014-12-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Ungrab the shoutdown dialog as soon as possible. Fixes: #1398287
+	Approved by: Stephen M. Webb
+
+2014-12-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Ungrab the shoutdown dialog as soon as possible.
+
+2014-12-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Set the correct size for the lockscreen message. Fixes: #1384242
+	Approved by: Brandon Schaefer, Marco Trevisan (Treviño)
+
+2014-11-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2014-10-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Set the correct size for the lockscreen message.
+
+2014-12-16  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	replace the use of static glib with gi glib in AP test cases Fixes: #1397006
+	Approved by: Christopher Townsend
+
+2014-11-27  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	Gnome keygrabber AP test: switch to GI from static glib
+
+2014-11-28  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.1+15.04.20141128-0ubuntu1
+
+2014-11-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure GetScreenGeometry returns the correct value. Fixes: #1374785
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-11-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use initializer list.
+
+2014-11-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure GetScreenGeometry returns the correct value.
+
+2014-11-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: use gdbus to notfy upstart of service start/stop
+	
+	This fixes a memory leak caused by the nih dbus proxy Fixes: #1302955
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CMakeLists.txt: remove libnih dependency
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/control: remove dependencies on libnih libraries, and upstart-bin
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UpstartWrapper: use upstart defined values for proxy name, path and interface
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: use gdbus to notfy upstart of service start/stop
+	
+	This fixes a memory leak caused by the nih dbus proxy
+
+2014-11-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: inject special key events back to the root window when a menu is opened
+	
+	This will make the multimedia keys to work also if an indicator menu is opened. Fixes: #738202, #1389247
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: fix indentation
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: reinject some keys also when in lockscreen mode
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: inject special key events back to the root window if a menu is opened
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: add support for indicatror horizontal scroll events when a menu is opened
+
+2014-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: use g_unix_signal_add to handle unix signals
+
+2014-11-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ensure that proper window tiles and buttons are shown at the right place Fixes: #1384910, #1384958, #1385285
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2014-10-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ignore mouse events when expo is active
+
+2014-10-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't move the title to the right when in expo mode
+
+2014-10-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use a deque for minimized windows, and keep them ordered correctly
+	
+	In this way we are sure that the first element of the list is always the top-maximized window
+	we have.
+
+2014-10-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: don't consider a window obscured if we're in scale mode
+	
+	To make things better we should actually check whether the window is in the list of
+	the currently scaled list.
+
+2014-10-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: use std::set:find
+
+2014-11-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: when filtering out windows in spread, make sure we unscale them Fixes: #1316265
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2014-10-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: when filtering out windows in spread, make sure we unscale them
+
+2014-11-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: make sure we always set a _NET_FRAME_EXTENTS for windows that requested it
+	
+	Correctly handle the _NET_REQUEST_FRAME_EXTENTS message, by always replying to the window
+	setting the guessed _NET_FRAME_EXTENTS property. Fixes: #1383429
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2014-10-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: make sure we always set a _NET_FRAME_EXTENTS for windows that requested it
+	
+	Correctly handle the _NET_REQUEST_FRAME_EXTENTS atom.
+
+2014-10-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: allow to filter-out unmapped windows
+
+2014-11-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Decorated Window: still paint decorations if on transformated windows in different workspaces Fixes: #1383468
+	Approved by: Eleni Maria Stea, PS Jenkins bot
+
+2014-10-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Decorated Window: still paint decorations if a window in a different workspace has transformations
+
+2014-11-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Unmap all windows during shutdown. Fixes: #1370017, #1375271
+	Approved by: Marco Trevisan (Treviño)
+
+2014-10-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove comment.
+
+2014-10-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes suggested by Marco's review.
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert changes to debian/changelog.
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Allocate/Deallocate ShutdownNotifier when needed.
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Cleanup ShutdownNotifier/SuspendNotifier.
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Improve the logic behind SuspendNotifier.
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Register for suspend after resuming.
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove suspending/resuming signals from UScreen.
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add SuspendNotifier.*
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge lp:unity.
+
+2014-10-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Test suspend changes.
+
+2014-10-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2014-10-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a log in case we cannot inhibit the shutdown.
+
+2014-10-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add operator& to glib::Object.
+
+2014-10-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Unmap the windows on shutdown.
+
+2014-10-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix shutdown notifier and use it inside lockscreen controller.
+
+2014-10-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implement a shutdown notifier.
+
+2014-10-16  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.1+14.10.20141016-0ubuntu1
+
+2014-10-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	LayoutSystem: make sure the exposed open windows are displayed in the "correct" order
+	
+	In expose mode the windows were placed in z-order starting by the top-most window that was always put in the bottom right corner. After the change the windows are placed in a similar order to their initial one.
+	
+	here's a video of the expose mode after the change: http://youtu.be/eYFTeJjaDQE Fixes: 1349281
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-10-09  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	merged scale-pos-fixes so that we use the window y to choose the row and
+	the x value of the center to order the window inside the row
+
+2014-10-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: don't duplicate loops, just iterate once in layout windows and find relative scaled window
+
+2014-10-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LayoutSystem: reduce the GetRows calls in LayoutWindowsNearest
+
+2014-10-09  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	removed double call to LayoutGridWindows, GetRows is enough
+
+2014-10-08  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixes in the coding style etc
+
+2014-10-07  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	changed unityshell plugin to use the new layouting functions
+
+2014-10-06  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	added new layout functions for the expose mode
+
+2014-10-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: make edges independent from borders and properly update them on actions changed
+	
+	Now windows can have edges (handles) also if they are not fully decorated, and
+	the other way around.
+	Improved the logic to detect which kind of decorations are supported by windows
+	(so now we add shadows to windows with borders, and we do not to shaped ones).
+	Removed a lot of duplicated matrix/region computations.
+	Properly rebuild decorations when _NET_WM_ALLOWED_ACTIONS changes
+	Fixes to the ForceQuit dialog shadows (and support for backdrop mode). Fixes: 1276177, 1299741, 1301776, 1324104, 1364225, 1373695
+	Approved by: Brandon Schaefer, PS Jenkins bot
+
+2014-10-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsManager: update the active window only on _NET_ACTIVE_WINDOW updates
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: some code cleanup
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: don't remove shadows to windows that have Motif borders set
+	
+	Such as gtk windows with HeaderBar when using Gtk <= 3.10
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: make possible for non-rectangular windows to have edges
+	
+	But only if they're resizable... Such as Chrome/Chromium when using its client
+	side decorations.
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: correctly paint the backdrop version of the dialog
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: correctly scale the style border size
+	
+	Small regression, plus some cleanups
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: use DecorationElement and make Edge present also in borderless windows
+	
+	Windows with no border decorations might still have decoration edges so that they
+	can be resized properly. This was not possible before, because we were only adding
+	them to windows with full decorations with a top layout. Now windows can also
+	have only grab handles, but no borders.
+	
+	Reduced also a lot the calls to verify what a window support, keeping track of
+	the decoration elements.
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: use proper shadow offsets
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: add WindowDecorationElements that returns a bitset describing the elements available
+	
+	This function will allow to check which decoration elements are supported by a window
+	by using just a single call, that will check which elements should be added when decorating
+	the window. By returning a single unsigned that is a bitwise composition of values, we can
+	just use a single call to verify which elements are supported.
+
+2014-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	XWindowManager: properly log error
+
+2014-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: add missing comments
+
+2014-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsEdgeBorders: add proper scaling support
+
+2014-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: don't add an external input border if the window is not resizable
+	
+	There's no need to take the input in the edges of a window if the window can't be resized
+
+2014-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: just initialize EdgeBorders, they will adapt depending on the window
+
+2014-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsEdgeBorders: reduce the items number if we have a not resizable window
+
+2014-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsEdgeBorders: only add the GrabEdge if the window is not resizable
+
+2014-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TexturedItem: update the region when the geometry has been changed
+
+2014-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: directly update and use quad.region instead of building a new one at each draw
+
+2014-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: include a CompRegion in TextureQuad, to avoid regeneration at each draw
+
+2014-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsTitle: we need to manually update the texture matrix here
+
+2014-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: avoid matrix updates when only a texture size changes
+
+2014-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: initialize a MatrixList for each TextureQuad, so we avoid to create one at each draw
+	
+	Keep a reference not to break old code
+
+2014-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopUtilities: remove debugging code
+
+2014-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: don't paint decorations for windows that are in different workspaces
+
+2014-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: undecorate windows in showDesktop mode
+
+2014-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: don't (shadow)decorate windows that have a region mismatching their geometry
+	
+	This means that windows using XShape extensions to define a region that is different to
+	the actual window geometry, should not be decorated
+
+2014-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: make sure we set/unset the shadows accordingly
+
+2014-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: call updateSupportedWmHints after setting the handlers, or it won't work
+
+2014-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: queue decorations update on action changes, rebuild them on paint
+
+2014-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2014-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: update frame also on _NET_WM_ALLOWED_ACTIONS changes, to match actual actions
+	
+	Actions might change during execution, and only listening _MOTIF_WM_HINTS is not enough
+
+2014-10-15  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.1+14.10.20141015-0ubuntu1
+
+2014-10-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: don't call callback function if the object_ value is not matching the CB Fixes: 1366351
+	Approved by: Christopher Townsend
+
+2014-10-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StaticCairoText: use glib::Signal
+
+2014-10-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: don't call callback function if the object_ value is not matching the CB
+
+2014-10-15  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Remove bad tests that randomly fail 
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2014-10-14  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* DIsable test_proxy tests
+
+2014-10-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: wait the primary shield to get the grab before setting the session locked
+	
+	If that fails (and if the grab has never been gained during this locking session),
+	it's up to the Controller to decide whether the lock request has to be ignored.
+	So, if the primary shield fails to grab, before that the screen has ever been locked,
+	then we have to give up. Otherwise if it fails (but we were already locked), it's safe
+	to assume that this failure is due to the menus that are currently controlling the grab.
+	
+	Also setup the primary shield signal connections in a shared place and use a
+	connection::Manager to keep track of them. Fixes: 1368427, 1371764
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2014-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockIndicators: add CloseActiveEntry method
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: remove useless logger definition
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: add missing new-line at the end of file
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: close the active indicator when the on lock screen request
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: add CloseActiveEntry method, that calls relative on u-p-s
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: add CloseActiveEntry method
+	
+	To force an indicator to be closed
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenPanel: Activate the active entry during panel initialization
+	
+	In this way we get the pointer motion events tracked and the
+	proper indicator visual effect.
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenPanel: don't include the monitor id on the panel name
+	
+	Even in multi-monitor, there's just only one panel in the lockscreen,
+	thus we need to sync the menu geometries for just one panel instance.
+	By doing this, if the primary shield gets moved to another monitor,
+	while a menu is open, we get the menu automagically moved to the new
+	monitor for free (as it's handled by u-p-s).
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: wait the primary shield to get the grab before setting the session locked
+	
+	If that fails (and if the grab has never been gained during this locking session),
+	it's up to the Controller to decide whether the lock request has to be ignored.
+	So, if the primary shield fails to grab, before that the screen has ever been locked,
+	then we have to give up. Otherwise if it fails (but we were already locked), it's safe
+	to assume that this failure is due to the menus that are currently controlling the grab.
+	
+	Also setup the primary shield signal connections in a shared place and use a
+	connection::Manager to keep track of them.
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: add HasGrab method and grabbed and grab_failed signals
+	
+	It's not up to the shield to eventually unlock the screen if it can't take the grab
+
+2014-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenPanel: initialize the active state, based on the indicator status
+	
+	If an indicator is already open when the panel is created, we need to mark
+	the panel as active (in order to be able to get back the grab when the menu is closed).
+
+2014-10-15  Iain Lane  <iain.lane@canonical.com>
+
+	When grabbing keys, try prefixing "XF86" if the key isn't found. GNOME gives us unprefixed keys sometimes. Fixes: 1302885
+	Approved by: Marco Trevisan (Treviño)
+
+2014-10-03  Iain Lane  <iain.lane@canonical.com>
+
+	Compare with the value of key()
+
+2014-10-03  Iain Lane  <iain@orangesquash.org.uk>
+
+	Move {} onto their own lines
+
+2014-10-02  Iain Lane  <iain@orangesquash.org.uk>
+
+	GDK (sometimes) strips the "XF86" prefix from keys
+	
+	If compiz doesn't recognise the key, try with "XF86" prefixed, to keep
+	compatible with GNOME/unity-control-center.
+	
+	See: https://git.gnome.org/browse/mutter/commit/src/core/meta-accel-parse.c?id=8d29d22e991f8816f47529e366a947b3565993e8
+
+2014-10-15  handsome_feng<445865575@qq.com>
+
+	added support for getting the distro name from /etc/os-release Fixes: 1329584
+	Approved by: Anthony Wong, Marco Trevisan (Treviño)
+
+2014-09-17  handsome_feng<445865575@qq.com>
+
+	fix a leak and add a comment
+
+2014-09-16  handsome_feng<445865575@qq.com>
+
+	move the function out from the constructor and get the string in a better way
+
+2014-09-15  handsome_feng<445865575@qq.com>
+
+	Add support for getting the distro name from /etc/os-release
+
+2014-09-29  Tim Lunn  <tim@feathertop.org>
+
+	No change rebuild for gnome-desktop 3.12
+
+2014-09-15  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.1+14.10.20140915-0ubuntu1
+
+2014-09-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use COMPIZ_METAKEY where needed. Fixes: 1363534
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2014-09-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use COMPIZ_METAKEY where needed.
+
+2014-09-15  Michael Zanetti  <michael.zanetti@canonical.com>
+
+	add "items" key to Launcher schema to be used by unity8 Fixes: 1300650
+	Approved by: Michał Sawicz, Stephen M. Webb, PS Jenkins bot, Albert Astals Cid
+
+2014-09-10  Michael Zanetti  <michael.zanetti@canonical.com>
+
+	update camera and gallery to be click apps
+
+2014-09-09  Michael Zanetti  <michael.zanetti@canonical.com>
+
+	add some defaults
+
+2014-09-09  Michael Zanetti  <michael.zanetti@canonical.com>
+
+	3 slashes
+
+2014-08-26  Michael Zanetti  <michael.zanetti@canonical.com>
+
+	add empty default
+
+2014-08-26  Michael Zanetti  <michael.zanetti@canonical.com>
+
+	added "items" key in launcher schema for unity8's launcher
+
+2014-09-04  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.1+14.10.20140904-0ubuntu1
+
+2014-09-04  Martin Pitt  <martin.pitt@ubuntu.com>
+
+	Adjust upstart dependency to upstart-bin. Fixes: 1351306
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-09-03  Martin Pitt  <martin.pitt@ubuntu.com>
+
+	Adjust upstart dependency to upstart-bin
+	
+	unity-services is only concerned about session upstart, it does not care about
+	pid 1. Adjust the dependency to upstart-bin to allow uninstalling upstart and
+	installing systemd-sysv.
+
+2014-09-04  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	update the unity manpage Fixes: 1059275
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2014-09-04  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	fixed typo
+
+2014-08-09  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	updated unity manpage
+
+2014-09-04  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Use CONFIG instead of CACHE to store the first_run.stamp
+	
+	Create a migration script to move the new stamp to the new location Fixes: 1328677
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-08-26  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Create a migration script to move the old stamp to the new location
+
+2014-08-26  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Change location first run stamp is stored
+
+2014-09-04  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	When Show Desktop is active, it will set the tooltip icon as "Restore Windows". This is per workspace. So each time show_destop bool is updated in PluginAdapter, the Show Desktop icon will update its tooltip if needed. Fixes: 1237132
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2014-08-13  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* When Show Deskop is active (ie. the next time you pess the icon), it will show the tooltis: Restore Windows.
+
+2014-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar, ActionButtons, IconRenderer: include the font scaling when scaling textual items
+	
+	User font scaling settings should be applied to all the items containing text.
+	Fixed some elements missing support. Fixes: 1332947, 1361713, 1362162, 1362346
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2014-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnitySettings: add some delay to wait gsettings changes
+	
+	Without this delay, in some cases, unity might be notified of changes that have not been really done, but
+	triggered by some internal component. This race was causing problems to the users using a floating
+	scaling setting.
+
+2014-08-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: Update size based on font scaling options
+
+2014-08-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: use point-size for hint font
+	
+	In this way it supports font scaling
+
+2014-08-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tooltip: update the top/bottom spaces also when the text is bigger than default value
+	
+	Fixes small tooltips with scaled text
+
+2014-08-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterBasicButton: resize buttons based on the text scaling, and redraw them when it changes
+
+2014-08-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ActionButton: resize buttons based on the text scaling, and redraw them when it changes
+
+2014-08-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: set text absolute size keeping in account the user font scaling
+
+2014-08-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: share the icon labels only if they've the same size in multiple instances
+	
+	Otherwise generate each one for the provided size.
+
+2014-08-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: take in account the text scaling when building the icons overlay labels
+
+2014-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: set progress on icon render args Fixes: 1361679
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2014-08-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: set progress on icon render args
+
+2014-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Lockscreen: scale the UI elements based on current monitor scaling Fixes: 1292218
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2014-08-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with parent lp:~andyrock/unity/fix-1308540 again
+
+2014-08-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: resize the input item based on text scaling as well
+
+2014-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2014-08-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2014-08-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: Use correct font scaling, based on settings to draw the lockscreen warning tooltip
+
+2014-08-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: foward declare SpaceLayout
+
+2014-08-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: fix compilation issue
+
+2014-08-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2014-07-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tests: fix compilation issues
+
+2014-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BackgroundSettings: use double value for size
+
+2014-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: update scaling if global settings change
+
+2014-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: rebuild the background if the scale changes
+
+2014-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BackgroundSettings: scale the background to match current monitor settings
+
+2014-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Lockscreen: some cleanup
+
+2014-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: set the primary shield at the end of iteration
+	
+	It's the safer way, since otherwise we might set two primary shields at the same time,
+	and this might cause unparenting the Prompt View from the wrong parent, and thus
+	to destroy it.
+
+2014-07-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: remove child prompt view when it's not primary anymore
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: fix logic in toggling the activator visibility on spinner showing
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: only show tooltip after a timeout
+	
+	The wait value is hardcoded to match the Gdk and unity tooltips value
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UserPromptView: scale the text input to match the prompt view state
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: add scaling support
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~andyrock/unity/fix-1332509
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: cleanup unneeded includes in header file
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: cleanup unneeded includes in header file
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UserPromptView: keep track of scalable elements and apply scale updates when needed
+	
+	Also, avoid to recreate the background at every redraw, just do it when size changes.
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTexture: better check for URI scheme
+
+2014-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: update scaling on prompt view only on primary shield
+	
+	Being a shared object it might cause troubles otherwise
+
+2014-07-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UserPromptView: basic scaling updating support
+	
+	Beware, when scale chages, the field seems to go away!
+
+2014-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: setup scaling based on monitor, keep track of the CofView
+
+2014-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: correctly set the number of lines we want for the icon description
+	
+	Using the pango way
+
+2014-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UserPromptView: add scale property
+
+2014-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CofView: make the icon scalable
+
+2014-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenSettings: Use RawPixel for GRID_SIZE
+
+2014-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenPanel: also adjust the layout padding based on scaling when monitor changes
+
+2014-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: don't keep a reference of the prompt view, just keep track of it
+
+2014-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UserPromptView: initialize size inside the view itself
+
+2014-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: define lockscreen::Controller::Ptr for nicer usage
+
+2014-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: fix unityshell compilation, due to missing UserPromptView definition...
+	
+	Oh nux, I hate you when you behave like that!
+
+2014-07-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~andyrock/unity/fix-1308540
+
+2014-09-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Share lockscreen password entry between screens. Fixes: 1308540
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-08-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2014-07-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge Marco's patch.
+
+2014-07-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove un-needed include.
+
+2014-07-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert po/* changes.
+
+2014-07-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge with trunk.
+
+2014-07-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Share the lockscreen password entry between screens.
+
+2014-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: make the Icon count width depending on the text value width Fixes: 796527, 1066971, 1361713
+	Approved by: Brandon Schaefer
+
+2014-08-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherModel: move to XTests
+
+2014-08-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTextureSource: reset the cached count value when scaling settings change
+	
+	In this way we make sure we properly reset the icons matrices
+
+2014-08-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: honour the text scaling when drawing the launcher icon count emblem
+	
+	And update it when it changes.
+
+2014-08-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: setting text is enough for count, no need accel
+
+2014-08-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: make count size even more dynamic, just base anything on font and icon sizes
+
+2014-08-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTextureSource: remember the count value, so that we redraw when values change
+	
+	The emblem matrix needs to be updated accordingly.
+
+2014-08-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: make the Icon count width depending on the text width
+
+2014-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2014-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: draw count texture at proper scaling, built by LauncherIcon Fixes: 1353070, 1354498
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2014-08-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: Use smaller sized emblem for Switcher icons
+
+2014-08-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: build scaled icon texture on IconRenderer request
+	
+	In this way we can scale also switcher icons with a different scale value than the one used
+	by the launcher.
+
+2014-08-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: set the scaling based on the icon size as well
+
+2014-08-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: just use pixel ink size to position the count number
+
+2014-08-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: use GdkPango utilities
+
+2014-08-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: draw count texture at proper scaling if available
+
+2014-08-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: build multiple count textures per each scaling value
+
+2014-08-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTextureSource: add Count related functions
+
+2014-08-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2014-08-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: scale the Emblem based on monitor scaling
+
+2014-08-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher, Switcher: properly update the scale value of IconRenderer
+
+2014-08-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: only care about to the last connected remote entry
+
+2014-08-11  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.1+14.10.20140811-0ubuntu1
+
+2014-08-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Allow a distinct pam config file for greeter and for lock-screen. Fixes: 1305440
+	Approved by: Stephen M. Webb, PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-07-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add -DCMAKE_SYSCONFDIR=/etc to cmake_base_options id debian/rules.
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add etc/pam.d to unity.install
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use CMAKE_SYSCONFDIR.
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add /etc/pam.d director to unity.install
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge lp:~3v1n0/unity/handle-gtk3.12-deprecations.
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add missing file.
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert unwanted change.
+
+2014-06-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid renaming.
+
+2014-05-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert unwanted revision.
+
+2014-05-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use unity config file in UserAuthenticatorPam
+
+2014-05-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Install the unity.pam file.
+
+2014-05-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add data/pam/unity pam config file for unity lockscreen.
+
+2014-08-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add an arrow activator in the lockscreen. Fixes: 1332509
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-06-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add missing media file.
+
+2014-06-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable activator by default. Fix typo.
+
+2014-06-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add an arrow activator in the lockscreen.
+
+2014-08-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Split gsettings schemas into a separate binary package. Added a key for unity8. 
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-07-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix packaging
+
+2014-07-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix description
+
+2014-07-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Use scope schema for favorite scopes
+
+2014-07-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Split schemas into a separate package
+
+2014-08-11  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	Changed log message on failure to open xpathselect library from an error to a warning.
+	
+	The xpathselect library is used for introspection during automated test runs. It is not an error for this library to be unavailable in normal successful operating conditions. Fixes: 1345296
+	Approved by: Marco Trevisan (Treviño)
+
+2014-07-21  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	Changed log message on failure to open xpathselect library from an error to a warning.
+	
+	The xpathselect library is used for introspection during automated test runs.  It is not an error for this library to be unavailable in normal successful operating conditions.
+
+2014-08-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: make sure we close the dash if DnD is accepted
+	
+	And we're about to focus the application window(s) Fixes: 1350331
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2014-07-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: make sure we close the dash if DnD is accepted
+	
+	And we're about to focus the application window(s)
+
+2014-08-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen, PanelService: get monitor at position, ignoring pre-multipled Gdk scale factor
+	
+	Get monitor position based on absolute coordinates, ignoring the pre-multipled
+	scaling factor that Gdk applies to all the monitor sizes.
+	
+	In this way we get the proper monitor index for absolute coordinates,
+	independently from the scaling factor. Fixes: 1351591
+	Approved by: Brandon Schaefer, PS Jenkins bot
+
+2014-08-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: get monitor at position, ignoring pre-multipled Gdk scale factor
+	
+	Get monitor position based on absolute coordinates, ignoring the pre-multipled
+	scaling factor that Gdk applies to all the monitor sizes.
+	
+	In this way we get the proper monitor index, independently from the scaling factor.
+
+2014-08-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: get monitor at position, ignoring pre-multipled Gdk scale factor
+	
+	Get monitor position based on absolute coordinates, ignoring the pre-multipled
+	scaling factor that Gdk applies to all the monitor sizes.
+	
+	In this way we get the proper monitor index to attach the menu
+
+2014-08-11  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Make sure we check if the Quicklist or Alt+F1 key nav is open (so we can close them)
+	
+	Bore checking if something as a WM grab. As we cant open the hud is in Quicklist or KeyNav anymore. Fixes: 1353167
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-08-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Make sure we check if the Quicklist or Alt+F1 key nav is open (so we can close them)
+	before checking if something as a WM grab. As we cant open the hud is in Quicklist or KeyNav anymore.
+
+2014-08-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, Switcher: use correct right/left scroll buttons for next/prev mouse selection Fixes: 1353383
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2014-08-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, Switcher: use correct right/left scroll buttons for next/prev mouse selection
+
+2014-07-31  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.0+14.10.20140731.1-0ubuntu1
+
+2014-07-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	This has a "soft" dependency on lp:~3v1n0/nux/horizontal-scroll-delta/+merge/227070, this means that this code would just work as it used to do (except for the SwitcerView fix) if that nux branch is not used, while it will support correctly horizontal scroll events when both the branches are used. Fixes: 1342208, 1342731
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2014-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: enable horizontal scrolling for icons
+
+2014-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: correctly handle nux horizontal scrolling
+
+2014-07-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: switch to next icon on down/right scrolls, to previous icon on up/left
+
+2014-07-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: ignore horizontal scrolling
+
+2014-07-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	== Problem ==
+	Lockscreen capslock detection doesn't work well with remapped capslocks
+	
+	== Fix ==
+	Use gdk keymap to get the state of the caps lock. Fixes: 1347735
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-07-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix spacing and cb args.
+
+2014-07-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove comments.
+
+2014-07-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge lp:~andyrock/unity/fix-lp-1347735.
+
+2014-07-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesOverlayVScrollBar: redirect the mouse wheel scroll events coming from the thumb to the scrollview
+	
+	This will make the scrollview to handle then and perform the same scrolling action it would do otherwise. Fixes: 1340992
+	Approved by: Brandon Schaefer, PS Jenkins bot
+
+2014-07-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesOverlayVScrollBar: redirect the mouse wheel scroll events coming from the thumb to the scrollview
+
+2014-07-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VScrollBarOverlayWindow: accept mouse scroll events
+
+2014-07-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: Add GrabScreen function and retry to make sure we really get grab
+	
+	It might happen that the grab is not possible because the PluginAdapter::IsScreenGrabbed
+	request has still not being fully processed, and thus nux is not able to grab the
+	pointer/keyboard. By doing this we instead try to grab the screen, and if this is
+	not happening, we wait a little until we don't get the ungrab event.
+	
+	In this way, if we eventually get the grab, all will work as expected.
+	Otherwise, we cancel the lock request (very unlikely to happen). Fixes: 1349128
+	Approved by: Brandon Schaefer
+
+2014-07-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: define max timeout to wait for grab as a const
+
+2014-07-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: make GrabScreen recursive
+	
+	In this way we call it both as callback of screen_ungrabbed signal and
+	as standalone function
+
+2014-07-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenShield: Add GrabScreen function and retry to make sure we really get grab
+	
+	It might happen that the grab is not possible because the PluginAdapter::IsScreenGrabbed
+	request has still not being fully processed, and thus nux is not able to grab the
+	pointer/keyboard. By doing this we instead try to grab the screen, and if this is
+	not happening, we wait a little until we don't get the ungrab event.
+	
+	In this way, if we eventually get the grab, all will work as expected.
+	Otherwise, we cancel the lock request (very unlikely to happen).
+
+2014-07-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: flush after ungrabbing the keyboard, or we might get into troubles
+
+2014-07-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesOverlayVScrollBar and VScrollBarOverlayWindow: add support for scaling
+	
+	Add a new ScrollView class to create ScrollViews with an OverlayScrollbar and with scaling support.
+	Using them in dash Scopes and Previews.
+	Fixes: 1340996
+	Approved by: Brandon Schaefer, PS Jenkins bot
+
+2014-07-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayScrollView: scale also the mouse-wheel scroll steps
+
+2014-07-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tracks: extend our ScrollView, removing features we already handled
+
+2014-07-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Previews: use dash::ScrollView for creating scrolled areas and set/update scaling on it
+
+2014-07-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScopeView: rebase ScopeScrollView on unity::ScrollView
+
+2014-07-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayScrollView: a simple class to create nux scroll views that use our Overlay Scrollbars
+
+2014-07-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Preview: add a protected ScrollView class that children can use to create overlay scrollbars
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScopeView: just use a ROProperty for scale in the ScopeScrollView
+	
+	It's just a proxy class, so it doesn't need to have it's own value
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScopeView: scale the scrolling views, and so the scroll bars to match the monitor scaling
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VScrollBarOverlayWindow: add support for scaling the Scrollbars thumbs
+	
+	\o/
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesOverlayVScrollBar: add support for scaling
+	
+	The nux::InputAreaProximity doesn't allow to change the proximity value, so extending it
+	(that it supports) is the best approach to update the internal values.
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesVScrollBar: add support for scaling, don't build texture at every redraw, code cleanup
+	
+	The code was very old and buggy, now it doesn't redraw the textures everytime and uses smart
+	pointers
+
+2014-07-31  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Fixes FTBFS caused by gcc 4.9. Mostly unused functions. Fixes: 1350052
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-07-31  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Hopefully fixes arm issues
+
+2014-07-29  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fixes FTBFS when moving to gcc 4.9. Mainly remove unused functions.
+
+2014-07-11  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.0+14.10.20140711-0ubuntu1
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Hud: scale to match current DPI settings for monitor Fixes: 1340477
+	Approved by: PS Jenkins bot, Eleni Maria Stea
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestPaymentPreview: make sure that the header gets deleted or we'd get a CoverArt leak
+	
+	And that will break the TextureCache tests
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudButton: change the label property as a Read-only, fix failing test
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: set HudView scale to match current scaling factor for monitor and listen changes
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneHud: add scaling factor parameter
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: add scaling support
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudIcon: makesure we set the the proper icon size, to a fixed value
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudButton: add scaling support
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRendering: correctly scale the overlays borders and edges to match settings
+	
+	DashStyle has been modified to return smart pointers of textures that are loaded
+	depending on the scale level. The cache will make sure that we don't duplicate
+	the textures and that they get removed when not needed anymore.
+	
+	Also thanks to this the SearchBarSpinner textures (and the other spinners as well)
+	uses the SVGs scaled at the proper size (I desgined a new SVG for the magnifier,
+	as we only had a PNG). Fixes: 1283415, 1340394
+	Approved by: Eleni Maria Stea, PS Jenkins bot
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CoverArt: make possible the image to be stretched again
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestPaymentPreview: make sure that the header gets deleted or we'd get a CoverArt leak
+	
+	And that will break the TextureCache tests
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextureCache: it looks like our Hash function was flawed, and in some cases gave false positive
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	RawPixel: add default parameter set to 0
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestPlacesGroup: correctly implement the mock style to match new API
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	resources: remove obsolete files
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: make sure we update the launcher size also on launchers added later
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: properly scale the launcher width to match monitor scaling
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: initialze scaling to match the default monitor settings
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: load the Spinner textures scaling the SVGs
+	
+	Added a new svg texture for the search magnifier, and load all the textures at the proper scaling level
+	to have better looking textures.
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: add support for loading scaled dash corners, and use them in OverlayRenderer
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: scale dash borders to match current scaling
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: return ObjectPtr of textures
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterWidgets: add support for scaling Fixes: 1340171
+	Approved by: PS Jenkins bot, Eleni Maria Stea
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterRatingsWidget: add support for scaling
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterMultiRangeButton: ensure that we redraw on scale changes
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterRatingsButton: simply extend RatingsButton, remove a lot of duplicated code
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	RatingsButton: make sure we always pull the virtual function to get/set ratings
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	RatingsButton: correctly scale the ratings button
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestPlacesGroup: fix RawPixel's initialization
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterMultiRangeWidget: scale buttons
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterMultiRangeButton: add scalability support
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterBasicButton: correctly scale down the button, set fixed height
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterGenreWidget: add scaling support for internal Genre butttons
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Filter{Genre,MultiRange,Ratings}Widget: Scale the "All" button
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterBasicButton: add ability to draw scaled buttons
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Mergin with lp:~3v1n0/unity/dash-style-rawpixel
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterExpanderLabel: actually scale content
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterBar: correctly scale elements
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView, HudView, SpreadFilter: adapt to the SearchBar changes
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: correctly scale the filter layout and the expander view
+	
+	Also set the search bar height by default.
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScopeBar: make sure it gets redrawn on scale changes
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: return RawPixel's instead of integers for sizes, and avoid duplication in code 
+	Approved by: PS Jenkins bot, Eleni Maria Stea
+
+2014-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestPlacesGroup: fix RawPixe's initialization
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Dash: remove duplicated RawPixel.h inclusions
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~unity-team/unity/previews-scaling-final
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Dash: avoid unneeded duplication of RawPixel's
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: use property when convenient, remove obsolete methods
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneHud: fix initialization crashes
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: add first basic scaling support
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBarSpinner: make sure we set the scaling (and min/max size) on startup
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: return RawPixel's instead of integers for sizes
+
+2014-07-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Previews: scale the dash preview contents to match current monitor scaling
+	
+	Improved also the scaling of search-bar, spinner, categories and many other components. Fixes: 1339629
+	Approved by: PS Jenkins bot, Eleni Maria Stea, Marco Trevisan (Treviño)
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneDash: fix crash on close
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CoverArt: correclty scale thumbnails and spinner
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PreviewContainer: make sure we redraw when scale has been updated
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2014-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnitySettings: make sure we don't call a not initialized pimpl value
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Previews: add support for --scaling-factor=X.Y parameter to standalone versions
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix standalone previews icon paths
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Previews: Lots of fixes to Social, Tracks and General previews and dash views
+	
+	Merging lp:~3v1n0/unity/previews-scaling-improved
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: correctly scale the cairo generated-texture
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PreviewStyle: reduce the default size for status icons
+	
+	As they were using 1px border
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTexture: remove hardcoded border
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBarSpinner: make sure we set the scaling (and min/max size) on startup
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScopeView: scale the "No results" message
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultRendererHorizontalTile: correctly scale the width/height of the selected texture
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: initialize scaling on filters
+
+2014-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Track: set min/max sizes, not only max twice
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup, SearchBar: reset min/max sizes when updating the scale
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: set the spinner scaling
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBarSpinner: draw the spinner at scaled size
+	
+	This is fine for now, but for better quality we should reload the textures at scaled size
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PreviewContainer: use layout padding instead of a space, and update it to match scaling
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Track: correctly set the maximum duration width considering the scaling
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tracks: don't limit the track width, make sure we relayout and cleanup code
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Track: correctly resize play/pause icons
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: update expand icon size when scaling
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTexture: use view geometry if drawing in STRETCH_WITH_ASPECT mode
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: make name to correctly resize down when scaling down
+	
+	Also correctly scale some missing bits
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnitySettings: consider monitor scaling when defining the form factor
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Preview: don't use first monitor scale as default, or we'll break other assumptions
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneSocialPreview: add retweet icon
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneDash: add support for parsing arguments and setting default scope
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneDash: support passing the scaling parameter
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: don't use EMConverter, just a scale property
+
+2014-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Preview: initialize scaling to default settings value
+	
+	In this way we don't have to update scaling again if things don't change later
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PreviewNavigator: make sure that we update the ImageTexture view size, not the img size
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ActionButton: re-initialize theme on scale changes
+	
+	This makes the textures to be regenerated with correct device scaling
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ActionButton: set the button device scaling, to make sure they get properly scaled
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: get the proper width value based on the surface scaling
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Dash previews: various code cleanups and improvements
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SocialPreview: fix pre-layouting to correcty resize and put items
+	
+	And avoid crashes for unset comments_layout_
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SocialPreviewComments: correctly scale all the comments (not only the last one)
+	
+	There's no need to update the scaling here, it's just better to rebuild the whole view
+	if the scale changes.
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SocialPreviewContent: use proper cairo scaling when drawing the bubble
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PaymentPreview: avoid startup crash, make sure that views are set before scaling
+
+2014-07-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~hikiko/unity/unity.scale-track
+
+2014-07-07  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	merged music preview changes
+	(removed unnecessary check in DashView)
+
+2014-07-07  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	removed unnecessary check
+
+2014-07-04  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed problems in SocialPreview
+
+2014-07-02  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed stars size
+
+2014-07-02  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	set Maximum/Minimum width in tracks.cpp just in case
+
+2014-07-02  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed track size in album in music preview
+
+2014-07-02  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixes
+
+2014-07-02  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled PreviewNavigator
+
+2014-07-02  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	more fixes in ApplicationPreview
+
+2014-07-02  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	more fixes in ApplicationPreview.cpp
+
+2014-07-01  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed application preview setup views
+
+2014-06-30  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	undo last change
+
+2014-06-30  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	more fixes
+
+2014-06-30  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	more fixes in infohint layout
+
+2014-06-30  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed space layout in Preview container
+
+2014-06-30  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scale fixes in MusicPreview and Tracks.cpp
+
+2014-06-30  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed album_data_layout in music preview
+
+2014-06-30  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	changed MusicPreview to scale tracks
+
+2014-06-30  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled tracks
+
+2014-06-22  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled track and components
+
+2014-06-21  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	text 
+
+2014-06-21  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	added signal update scale - backup
+
+2014-06-21  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge: lp:~hikiko/unity/unity.scale-social-preview
+
+2014-06-20  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled social preview content
+
+2014-06-20  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled SocialPreviewComments and components
+
+2014-06-20  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled SocialPreview and widgets except SocialComments, SocialContent
+
+2014-06-20  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge: lp:~hikiko/unity/unity.scale-payment-musicpayment
+
+2014-06-20  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scale ActionLinks in Preview base class,
+	other minor fixes
+
+2014-06-20  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed more music payment previews widgets
+
+2014-06-19  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled more components
+
+2014-06-19  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	call update scale in ctor
+
+2014-06-19  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled MusicPaymentPreview components
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled PaymentPreview
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge: lp:~hikiko/unity/unity.layouts-fix
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	initialized all layouts to avoid seg faults
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge lp:~hikiko/unity/unity.scale-music-preview
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	more fixes, fixed all segmentation faults by uninitialized values
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	more fixes
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed more segmentation faults
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed scaling issues
+
+2014-06-18  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled MusicPreview
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge: lp:~hikiko/unity/unity.scale-movie-preview 
+
+2014-07-08  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.0+14.10.20140708-0ubuntu1
+
+2014-07-08  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	Scaled MoviePreview and widgets 
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge lp:~hikiko/unity/unity.scale-error-preview
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled MoviePreview
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge lp:~hikiko/unity/unity.scale-error-preview
+
+2014-07-08  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled ErrorPreview 
+	Approved by: PS Jenkins bot, PS Jenkins bot, Marco Trevisan (Treviño), PS Jenkins bot
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge  lp:~hikiko/unity/unity.scale-generic-preview-components
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge: lp:~hikiko/unity/unity.scale-generic-preview-components
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	more fixes
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed PreLayoutManagement
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	coding style changes to match the other previews
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge: lp:~hikiko/unity/unity.scale-generic-preview-components
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed comp error
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge to:  lp:~hikiko/unity/unity.scale-generic-preview-components
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled ErrorPreview
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge: lp:~hikiko/unity/unity.scale-generic-preview-components
+
+2014-07-08  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	Scaled GenericPreview and its widgets. 
+	Approved by: PS Jenkins bot, PS Jenkins bot, PS Jenkins bot, PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge lp:~hikiko/unity/unity.scale-application-components
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed PreLayoutManagement
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge lp:~hikiko/unity/unity.scale-application-components 
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed PreLayout management to match the app-preview
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed comp error 
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge to https://code.launchpad.net/~hikiko/unity/unity.scale-application-components
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled GenericPreview and its components
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge https://code.launchpad.net/~hikiko/unity/unity.scale-application-components/+merge/223208
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	merged: https://code.launchpad.net/~hikiko/unity/unity.preview-container-components/+merge/222906
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	locally merged:      bzr branch lp:~hikiko/unity/unity.em-size-in-preview-style 
+
+2014-07-08  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	Scaled the ApplicationPreview and the containing widgets and components. 
+	Approved by: PS Jenkins bot, PS Jenkins bot, PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed PrelayoutManagement
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed PreLayoutManagement
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed PreLayoutManagement
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed bug
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge to https://code.launchpad.net/~hikiko/unity/unity.preview-container-components/+merge/222906
+	to include the code of this branch: https://code.launchpad.net/~3v1n0/unity/better-preview-info-layouting
+	and some fixes
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scale InfoHintWidget
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed coding style (replaced c-like casting with c++)
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled application preview and its components
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	locally merged lp:~hikiko/unity/unity.preview-container-components
+
+2014-07-08  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	Added scale factor to Preview (base class), preview container and to the components they contain. 
+	Approved by: PS Jenkins bot, PS Jenkins bot, PS Jenkins bot, PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	clamped value's max width to be always >=0
+
+2014-06-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge: bzr branch lp:~3v1n0/unity/better-preview-info-layouting
+	
+	
+	
+	[ Chris Townsend ]
+	* Fix issue where the number of Launcher icon pips are not always
+	properly updated when a new window of an already running application
+	is opened. (LP: #1283775)
+	* Fix issue where the Panel shadow would get drawn over drop down
+	windows in full screen windows. (LP: #1316005)
+	[ Andrea Azzarone ]
+	* Clear the clipboard when locking the screen. (LP: #1308911)
+	* Disable switcher gestures if screen is locked. Fixed a regression.
+	(LP: #1321043)
+	* Pass the correct options to showLauncherKeyTerminate in
+	UnityScreen::OnLockScreen (LP: #1320438)
+	* Fix skype indicator blinking. (LP: #1310200)
+	[ Marco Trevisan (Treviño) ]
+	* PluginAdapter: try to grab the screen to make sure that the screen
+	is not grabbed FocusIn event with NotifyGrab mode is not always
+	triggered by X when a window takes the grab, then we need to ensure
+	that there's no grab by trying to get one. We only care about
+	keyboard here, since pointer grabs don't affect us in general. (LP:
+	#741869)
+	* ShortcutView: use RawPixel's for the size values and convert them to
+	match current scaling Plus dinamically allocate horizontal space,
+	not to cut the text. (LP: #924840)
+
+2014-06-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PreviewInfoHintWidget: remove unneded dtor
+
+2014-06-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PreviewInfoHintWidget: initialize info values to scale
+
+2014-06-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~hikiko/unity/unity.preview-container-components
+
+2014-06-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PreviewInfoHintWidget: use better and cleaner strategy for relayouting the hints
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled more PreviewContainer components
+
+2014-06-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaled more PreviewContainer components
+
+2014-06-13  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	renamed variables, removed double check
+
+2014-06-13  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	local merge lp:~hikiko/unity/unity.em-size-in-preview-style/+merge/222598
+	to remove C style casting from CLAMP
+
+2014-06-13  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed UpdateScale to be private or protected
+	fixed cairo surfaces to scale according to scale factor
+	fixes in coding style etc
+
+2014-06-12  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	Preview: UpdateScale should be virtual (overriten in child-previews)
+
+2014-06-11  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	scaling PreviewContainer, Preview (base class) and their components
+
+2014-06-10  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	merged https://code.launchpad.net/~hikiko/unity/unity.em-size-in-preview-style/+merge/222598
+
+2014-07-08  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	Changed the PreviewStyle.h/cpp to use em sizes (RawPixel). 
+	Approved by: PS Jenkins bot, PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-06-13  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	replaced the C style casting
+
+2014-06-10  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	replaced clamp with CLAMP after casting everything to RawPixel,
+	removed unecessary casting
+
+2014-06-10  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	changed the PreviewStyle to use em sizes (RawPixel)
+
+2014-07-08  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	reduce the scope of the kill command when restarting compiz Fixes: 1324114
+	Approved by: PS Jenkins bot, PS Jenkins bot, Marco Trevisan (Treviño)
+
+2014-07-08  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	tools/unity.cmake: fixed syntax error
+
+2014-07-04  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	switched to matching on a regex to further reduce the search space
+
+2014-06-18  Pawel Szubert
+
+	Limit the compiz kill on restart to only those on the same $DISPLAY (lp: 1324114)
+
+2014-06-19  CI bot  <ps-jenkins@lists.canonical.com>
+
+	Releasing 7.3.0+14.10.20140619-0ubuntu1
+
+2014-06-19  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	Release Unity 7.3.0. 
+
+2014-06-18  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	updated AUTHORS and ChangeLog for 7.3.0
+
 2014-06-18  Stephen M. Webb  <stephen.webb@canonical.com>
 
 	bump upstream to 7.3.0
+
+2014-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenAcceleratorController: do ther configured action on power special keys press
+	
+	We finally can suspend, shutdown, hibernate or start the screensaver when the screen is locked, using
+	the Suspend, Sleep, Hibernate and PowerOff hardware keys.
+	
+	Also the Shutdown dialog doesn't allow now to lock the session if it is not allowed by settings. Fixes: 1306211, 1320051, 1320071
+
+2014-06-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeSessionManager: some code cleanup
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenAcceleratorController: do ther configured action on Suspend, Sleep, Hibernate and PowerOff press
+	
+	We finally can suspend, shutdown, hibernate or start the screensaver when the screen is locked, using
+	the special power keys.
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeSessionManager: don't allow to lock, if we're already locked.
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionDBusManager: set the inhibited bits based on the current system status
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionManager: add HasInhibitors method, that gets from GS if the session is inhibited
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionView: immediately cancel and hide the dialog if there's no action we can do
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionView: add some padding if we only can show one button
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionView: only show the lock options if we are allowed to lock and not currently locked
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~brandontschaefer/unity/shutdown-dialog-hi-dpi
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenController: use is_locked instead of directly emitting the locked/unlocked signals
+
+2014-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionManager: add CanLock method and is_locked property
+	
+	The property is now used also to emit the locked and unlocked signals
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Manually emit nux::Area::geometry_changed beucase nux can fail to emit it. Fixes: 1292391
+
+2014-05-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Manually emit nux::Area::geometry_changed beucase nux can fail to emit it.
+
+2014-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove cross fade effect during lock/unlocking. A simple fading works just fine. Fixes: 1312107
+
+2014-05-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove cross fade effect during lock/unlocking. A simple fading works just fine.
+
+2014-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: pass the state to compiz plugins activations
+	
+	Fixes Scale triggering on DnD Fixes: 1328615
+
+2014-06-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: pass the state to compiz plugins activations
+	
+	Fixes Scale triggering on DnD
+
+2014-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	{Panel,Decoration}Style: don't call deprecated gtk_style_context_invalidate function in gtk >= 3.11 
+
+2014-06-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: use new margin functions
+
+2014-06-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	{Panel,Decoration}Style: don't call deprecated gtk_style_context_invalidate function in gtk >= 3.11
 
 2014-06-07  CI bot  <ps-jenkins@lists.canonical.com>
 
