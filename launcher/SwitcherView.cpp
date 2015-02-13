@@ -81,7 +81,8 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   text_view_->SetMaximumWidth(tile_size * TEXT_TILE_MULTIPLIER);
   text_view_->SetLines(-1);
   text_view_->SetTextColor(nux::color::White);
-  text_view_->SetFont("Ubuntu Bold 10");
+  text_view_->SetFontSize(10);
+  text_view_->SetFontWeight(PANGO_WEIGHT_BOLD);
   text_view_->SetScale(scale);
 
   icon_size.changed.connect(sigc::mem_fun(this, &SwitcherView::OnIconSizeChanged));
