@@ -28,10 +28,11 @@ logger = logging.getLogger(__name__)
 
 def _make_scenarios():
     return multiply_scenarios(_make_monitor_scenarios(),
-                              [
-                                  ('Locally Integrated Menus', {'lim': True}),
-                                  ('Global Menus', {'lim': False}),
-                              ])
+                              _make_menu_modes_scenarios())
+
+def _make_menu_modes_scenarios():
+    return [ ('Locally Integrated Menus', {'lim': True}),
+             ('Global Menus', {'lim': False}) ]
 
 def _make_monitor_scenarios():
     num_monitors = Display.create().get_num_screens()
@@ -393,123 +394,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
             else:
                 self.assertThat(self.unity.hud.view.overlay_window_buttons_shown[monitor], Equals(False))
 
-    def test_window_buttons_update_visual_state(self):
-        """Window button must update its state in response to mouse events."""
-        self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=True)
-        self.panel.move_mouse_over_window_buttons()
-        button = self.panel.window_buttons.unmaximize
-
-        self.assertThat(self.panel.window_buttons.focused, Eventually(Equals(True)))
-        self.assertThat(button.visual_state, Eventually(Equals("normal")))
-
-        button.mouse_move_to()
-        self.assertThat(button.visual_state, Eventually(Equals("prelight")))
-
-        self.mouse.press()
-        self.addCleanup(self.mouse.release)
-        self.assertThat(button.visual_state, Eventually(Equals("pressed")))
-
-    def test_window_buttons_cancel(self):
-        """Window buttons must ignore clicks when the mouse released outside
-        their area.
-        """
-        win = self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=True)
-        self.panel.move_mouse_over_window_buttons()
-
-        button = self.panel.window_buttons.unmaximize
-        button.mouse_move_to()
-        self.mouse.press()
-        self.assertThat(button.visual_state, Eventually(Equals("pressed")))
-        self.panel.move_mouse_below_the_panel()
-        self.mouse.release()
-
-        self.assertThat(win.is_maximized, Equals(True))
-
-    def test_window_buttons_close_button_works_for_window(self):
-        """Close window button must actually closes a window."""
-        text_win = self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
-        win_xid = text_win.x_id
-
-        self.panel.window_buttons.close.mouse_click()
-        self.assertNoWindowOpenWithXid(win_xid)
-
-    def test_window_buttons_close_follows_fitts_law(self):
-        """Tests that the 'Close' button is activated when clicking at 0,0.
-
-        See bug #839690
-        """
-        text_win = self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
-        win_xid = text_win.x_id
-
-        self.panel.move_mouse_over_window_buttons()
-        screen_x, screen_y = self.display.get_screen_geometry(self.panel_monitor)[:2]
-        self.mouse.move(screen_x, screen_y)
-        self.mouse.click()
-
-        self.assertNoWindowOpenWithXid(win_xid)
-
-    def test_window_buttons_minimize_button_works_for_window(self):
-        """Tests that the window button 'Minimize' actually minimizes a window."""
-        text_win = self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
-
-        self.panel.window_buttons.minimize.mouse_click()
-
-        self.assertProperty(text_win, is_hidden=True)
-
-    def test_window_buttons_minimize_follows_fitts_law(self):
-        """Tests that the 'Minimize' button is conform to Fitts's Law.
-
-        See bug #839690
-        """
-        text_win = self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
-
-        self.panel.move_mouse_over_window_buttons()
-        button = self.panel.window_buttons.minimize
-        target_x = button.x + button.width / 2
-        target_y = self.display.get_screen_geometry(self.panel_monitor)[1]
-        self.mouse.move(target_x, target_y)
-        self.mouse.click()
-
-        self.assertProperty(text_win, is_hidden=True)
-
-    def test_window_buttons_unmaximize_button_works_for_window(self):
-        """Tests that the window button 'Unmaximize' actually unmaximizes a window."""
-        text_win = self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
-
-        self.panel.window_buttons.unmaximize.mouse_click()
-
-        self.assertProperties(text_win, is_maximized=False, is_focused=True)
-        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
-
-    def test_window_buttons_unmaximize_follows_fitts_law(self):
-        """Tests that the 'Unmaximize' button is conform to Fitts's Law.
-
-        See bug #839690
-        """
-        text_win = self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
-
-        button = self.panel.window_buttons.unmaximize
-        button.mouse_move_to()
-        target_x = button.x + button.width / 2
-        target_y = self.display.get_screen_geometry(self.panel_monitor)[1]
-        self.mouse.move(target_x, target_y)
-        sleep(1)
-        self.mouse.click()
-
-        self.assertProperty(text_win, is_maximized=False)
-
     def test_window_buttons_close_button_works_for_hud(self):
         """Tests that the window 'Close' actually closes the HUD."""
         self.unity.hud.ensure_visible()
@@ -658,9 +542,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_minimize_button_disabled_for_non_minimizable_windows(self):
         """Minimize button must be disabled for windows that don't support minimization."""
-        text_win = self.open_new_application_window("Text Editor",
-            maximized=False,
-            move_to_monitor=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         self.keyboard.press_and_release("Ctrl+S")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
@@ -680,9 +562,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Window buttons must be shown when mouse is over panel area with an
         indicator open.
         """
-        self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
+        self.open_new_application_window("Text Editor", maximized=True)
 
         indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session")
         self.mouse_open_indicator(indicator)
@@ -696,9 +576,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_show_when_holding_show_menu_key(self):
         """Window buttons must show when we press the show-menu keybinding."""
-        self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
+        self.open_new_application_window("Text Editor", maximized=True)
 
         self.sleep_menu_settle_period()
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(self.always_visible)))
@@ -728,6 +606,114 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("HelloWorld")))
 
 
+class PanelWindowButtonsActionsTests(PanelWindowButtonsTests):
+    """Test WindowButtons actions on windows, focused or not depending on LIM"""
+    restored_on_top = False
+    scenarios = multiply_scenarios(_make_monitor_scenarios(),
+                                   (_make_menu_modes_scenarios() +
+                                    [('Locally Integrated Menus with restored on Top',
+                                      {'lim': True, 'restored_on_top': True})]))
+
+    def setUp(self):
+        super(PanelWindowButtonsActionsTests, self).setUp()
+        self.text_win = self.open_new_application_window("Text Editor", maximized=True)
+
+        if self.restored_on_top:
+            self.open_new_application_window("Calculator")
+
+    def test_window_buttons_update_visual_state(self):
+        """Window button must update its state in response to mouse events."""
+        self.panel.move_mouse_over_window_buttons()
+        button = self.panel.window_buttons.unmaximize
+
+        self.assertThat(self.panel.window_buttons.focused, Eventually(Equals(not self.restored_on_top)))
+        self.assertThat(button.visual_state, Eventually(Equals("normal")))
+
+        button.mouse_move_to()
+        self.assertThat(button.visual_state, Eventually(Equals("prelight")))
+
+        self.mouse.press()
+        self.addCleanup(self.mouse.release)
+        self.assertThat(button.visual_state, Eventually(Equals("pressed")))
+
+    def test_window_buttons_cancel(self):
+        """Window buttons must ignore clicks when the mouse released outside
+        their area.
+        """
+        self.panel.move_mouse_over_window_buttons()
+
+        button = self.panel.window_buttons.unmaximize
+        button.mouse_move_to()
+        self.mouse.press()
+        self.assertThat(button.visual_state, Eventually(Equals("pressed")))
+        self.panel.move_mouse_below_the_panel()
+        self.mouse.release()
+
+        self.assertThat(self.text_win.is_maximized, Equals(True))
+
+    def test_window_buttons_close_button_works_for_window(self):
+        """Close window button must actually closes a window."""
+        win_xid = self.text_win.x_id
+
+        self.panel.window_buttons.close.mouse_click()
+        self.assertNoWindowOpenWithXid(win_xid)
+
+    def test_window_buttons_close_follows_fitts_law(self):
+        """Tests that the 'Close' button is activated when clicking at 0,0.
+
+        See bug #839690
+        """
+        win_xid = self.text_win.x_id
+
+        self.panel.move_mouse_over_window_buttons()
+        screen_x, screen_y = self.display.get_screen_geometry(self.panel_monitor)[:2]
+        self.mouse.move(screen_x, screen_y)
+        self.mouse.click()
+
+        self.assertNoWindowOpenWithXid(win_xid)
+
+    def test_window_buttons_minimize_button_works_for_window(self):
+        """Tests that the window button 'Minimize' actually minimizes a window."""
+        self.panel.window_buttons.minimize.mouse_click()
+        self.assertProperty(self.text_win, is_hidden=True)
+
+    def test_window_buttons_minimize_follows_fitts_law(self):
+        """Tests that the 'Minimize' button is conform to Fitts's Law.
+
+        See bug #839690
+        """
+        self.panel.move_mouse_over_window_buttons()
+        button = self.panel.window_buttons.minimize
+        target_x = button.x + button.width / 2
+        target_y = self.display.get_screen_geometry(self.panel_monitor)[1]
+        self.mouse.move(target_x, target_y)
+        self.mouse.click()
+
+        self.assertProperty(self.text_win, is_hidden=True)
+
+    def test_window_buttons_unmaximize_button_works_for_window(self):
+        """Tests that the window button 'Unmaximize' actually unmaximizes a window."""
+        self.panel.window_buttons.unmaximize.mouse_click()
+
+        self.assertProperties(self.text_win, is_maximized=False, is_focused=True)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
+
+    def test_window_buttons_unmaximize_follows_fitts_law(self):
+        """Tests that the 'Unmaximize' button is conform to Fitts's Law.
+
+        See bug #839690
+        """
+        button = self.panel.window_buttons.unmaximize
+        button.mouse_move_to()
+        target_x = button.x + button.width / 2
+        target_y = self.display.get_screen_geometry(self.panel_monitor)[1]
+        self.mouse.move(target_x, target_y)
+        sleep(1)
+        self.mouse.click()
+
+        self.assertProperty(self.text_win, is_maximized=False)
+
+
 class PanelHoverTests(PanelTestsBase):
     """Tests with the mouse pointer hovering the panel area."""
 
@@ -737,9 +723,7 @@ class PanelHoverTests(PanelTestsBase):
         """Restored windows should only show menus when the mouse is in the window
         button area.
         """
-        self.open_new_application_window("Calculator",
-            maximized=False,
-            move_to_monitor=True)
+        self.open_new_application_window("Calculator")
         self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_window_buttons()
@@ -751,9 +735,7 @@ class PanelHoverTests(PanelTestsBase):
         """Restored windows should only show menus when the mouse is in the window
         menu area.
         """
-        self.open_new_application_window("Calculator",
-            maximized=False,
-            move_to_monitor=True)
+        self.open_new_application_window("Calculator")
         self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_menus()
@@ -765,9 +747,7 @@ class PanelHoverTests(PanelTestsBase):
         """Restored windows should only show menus when the mouse is in the panel
         grab area.
         """
-        self.open_new_application_window("Calculator",
-            maximized=False,
-            move_to_monitor=True)
+        self.open_new_application_window("Calculator")
         self.sleep_menu_settle_period()
 
         if self.panel.grab_area.width <= 0:
@@ -780,9 +760,7 @@ class PanelHoverTests(PanelTestsBase):
 
     def test_hovering_over_indicators_does_not_show_app_menus(self):
         """Hovering the mouse over the indicators must not show app menus."""
-        self.open_new_application_window("Calculator",
-            maximized=False,
-            move_to_monitor=True)
+        self.open_new_application_window("Text Editor", maximized=True)
         self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_menus()
@@ -798,9 +776,7 @@ class PanelHoverTests(PanelTestsBase):
         """Menus and window buttons must be shown when the mouse is in the window
         button area for a maximised application.
         """
-        self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
+        self.open_new_application_window("Text Editor", maximized=True)
         self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_window_buttons()
@@ -812,9 +788,7 @@ class PanelHoverTests(PanelTestsBase):
         """Menus and window buttons must be shown when the mouse is in the menu
         area for a maximised application.
         """
-        self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
+        self.open_new_application_window("Text Editor", maximized=True)
         self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_menus()
@@ -829,9 +803,7 @@ class PanelHoverTests(PanelTestsBase):
         if self.panel.grab_area.width <= 0:
             self.skipTest("Grab area is too small to run this test!")
 
-        self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
+        self.open_new_application_window("Text Editor", maximized=True)
         self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_grab_area()
@@ -843,9 +815,7 @@ class PanelHoverTests(PanelTestsBase):
         """Hovering the mouse over the indicators must hide the menus and window
         buttons.
         """
-        self.open_new_application_window("Text Editor",
-            maximized=True,
-            move_to_monitor=True)
+        self.open_new_application_window("Text Editor", maximized=True)
         self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_menus()
