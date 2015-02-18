@@ -1720,6 +1720,8 @@ void PanelMenuView::AddProperties(debug::IntrospectionData& introspection)
   PanelIndicatorsView::AddProperties(introspection);
 
   introspection
+  .add("focused", focused())
+  .add("integrated_menus", integrated_menus_)
   .add("mouse_inside", is_inside_)
   .add("always_show_menus", always_show_menus_)
   .add("grabbed", is_grabbed_)
@@ -1729,6 +1731,7 @@ void PanelMenuView::AddProperties(debug::IntrospectionData& introspection)
   .add("desktop_active", (panel_title_ == desktop_name_))
   .add("monitor", monitor_)
   .add("active_window", active_window())
+  .add("maximized_window", maximized_window())
   .add("draw_menus", ShouldDrawMenus())
   .add("draw_window_buttons", ShouldDrawButtons())
   .add("controls_active_window", we_control_active_)
