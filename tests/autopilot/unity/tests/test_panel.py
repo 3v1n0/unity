@@ -606,7 +606,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("HelloWorld")))
 
 
-class PanelWindowButtonsActionsTests(PanelWindowButtonsTests):
+class PanelWindowButtonsActionsTests(PanelTestsBase):
     """Test WindowButtons actions on windows, focused or not depending on LIM"""
     restored_on_top = False
     scenarios = multiply_scenarios(_make_monitor_scenarios(),
