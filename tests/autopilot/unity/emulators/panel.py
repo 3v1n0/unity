@@ -159,6 +159,10 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
         return self.menus.panel_title
 
     @property
+    def focused(self):
+        return self.menus.focused
+
+    @property
     def desktop_is_active(self):
         return self.menus.desktop_active
 
