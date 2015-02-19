@@ -766,7 +766,7 @@ class PanelHoverTests(PanelTestsBase):
         self.panel.move_mouse_over_menus()
         # This assert is repeated from above, but we use it to make sure that
         # the menus are shown before we move over the indicators.
-        self.assertThat(self.panel.menus_shown, Eventually(Equals(not self.lim)))
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
 
         self.panel.move_mouse_over_indicators()
 
@@ -891,7 +891,8 @@ class PanelMenuTests(PanelTestsBase):
             "Current panel entries are: %r" % self.panel.menus.get_entries())
 
         self.panel.move_mouse_over_grab_area()
-        self.assertThat(self.panel.title, Eventually(Equals(test_win.application.name)))
+        expected = test_win.application.name if not self.lim else ""
+        self.assertThat(self.panel.title, Eventually(Equals(expected)))
 
     def test_menus_shows_when_new_application_is_opened(self):
         """When starting a new application, menus must first show, then hide."""
@@ -985,7 +986,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     def open_app_and_get_menu_entry(self):
         """Open the test app and wait for the menu entry to appear."""
-        self.open_new_application_window("Character Map" if self.lim else "Calculator",
+        self.open_new_application_window("Remmina" if self.lim else "Calculator",
                                          maximized=self.lim)
 
         refresh_fn = lambda: len(self.panel.menus.get_entries())
@@ -1074,7 +1075,7 @@ class PanelKeyNavigationTests(PanelTestsBase):
         """Pressing the open-menus keybinding must open the first indicator."""
         self.open_new_application_window("Calculator")
         refresh_fn = lambda: len(self.panel.menus.get_entries())
-        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+        self.assertThat(refresh_fn, Eventually(Equals(0) if self.lim else GreaterThan(0)))
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.keybinding("panel/open_first_menu")
 
