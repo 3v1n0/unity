@@ -420,7 +420,7 @@ void PanelMenuView::OnFadeAnimatorUpdated(double progress)
 
 bool PanelMenuView::ShouldDrawMenus() const
 {
-  if ((we_control_active_ || integrated_menus_) && !switcher_showing_ && !launcher_keynav_ && !ignore_menu_visibility_ && !entries_.empty())
+  if ((we_control_active_ || integrated_menus_) && !switcher_showing_ && !launcher_keynav_ && !ignore_menu_visibility_ && HasVisibleMenus())
   {
     WindowManager& wm = WindowManager::Default();
 
@@ -1351,7 +1351,7 @@ bool PanelMenuView::UpdateActiveWindowPosition()
   {
     we_control_active_ = we_control_window;
 
-    if (!entries_.empty())
+    if (HasVisibleMenus())
       on_indicator_updated.emit();
 
     if (Refresh())
@@ -1890,7 +1890,7 @@ void PanelMenuView::SetMonitor(int monitor)
 
 bool PanelMenuView::HasMenus() const
 {
-  if (entries_.empty())
+  if (!HasVisibleMenus())
     return false;
 
   return integrated_menus_ || we_control_active_;
@@ -1898,7 +1898,7 @@ bool PanelMenuView::HasMenus() const
 
 bool PanelMenuView::HasKeyActivableMenus() const
 {
-  if (entries_.empty())
+  if (!HasVisibleMenus())
     return false;
 
   return integrated_menus_ ? is_maximized_ : we_control_active_;
