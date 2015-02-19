@@ -1216,6 +1216,29 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("HelloWorld")))
 
 
+class PanelLimTests(PanelTestsBase):
+
+    scenarios = _make_monitor_scenarios()
+
+    def setUp(self):
+        self.lim = True
+        super(PanelLimTests, self).setUp()
+
+    def test_title_focus_on_maximized_state_changes(self):
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
+        self.assertThat(self.panel.focused, Eventually(Equals(True)))
+        self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
+
+        self.open_new_application_window("Calculator")
+        self.assertThat(self.panel.focused, Eventually(Equals(False)))
+        self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
+
+        text_win.set_focus()
+        self.assertProperty(text_win, is_focused=True)
+        self.assertThat(self.panel.focused, Eventually(Equals(True)))
+        self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
+
+
 class PanelCrossMonitorsTests(PanelTestsBase):
     """Multimonitor panel tests."""
 
