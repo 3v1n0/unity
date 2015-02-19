@@ -512,7 +512,7 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("e")
         self.assertThat(self.unity.hud.view.selected_button, Eventually(Equals(1)))
 
-    def test_hud_does_not_open_when_fullscreen_window(self):
+    def test_hud_opens_when_fullscreen_window(self):
         """ The Hud must not open if a window is fullscreen. """
         gedit = self.process_manager.start_app("Text Editor")
         self.keyboard.press_and_release('F11')
@@ -523,7 +523,7 @@ class HudBehaviorTests(HudTestsBase):
         self.keybinding("hud/reveal")
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
 
 
 class HudLauncherInteractionsTests(HudTestsBase):
