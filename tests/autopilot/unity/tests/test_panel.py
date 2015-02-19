@@ -863,7 +863,7 @@ class PanelMenuTests(PanelTestsBase):
         test_win = self.launch_test_window(window_spec)
         test_win.set_focus()
         self.move_window_to_panel_monitor(test_win)
-        self.ensure_window_state(maximized=self.lim)
+        self.ensure_window_state(test_win, maximized=self.lim)
 
         return test_win
 
