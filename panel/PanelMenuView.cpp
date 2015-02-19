@@ -167,10 +167,13 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   active_window.changed.connect(update_target_cb);
 
   focused.changed.connect([this] (bool focused) {
+    Refresh(true);
     window_buttons_->focused = focused;
 
     for (auto const& entry : entries_)
       entry.second->SetFocusedState(focused);
+
+    FullRedraw();
   });
 }
 
@@ -941,7 +944,7 @@ bool PanelMenuView::Refresh(bool force)
 
   std::string const& new_title = GetCurrentTitle();
 
-  if (new_title == panel_title_ && !force && last_geo_ == geo && title_texture_)
+  if (!force && new_title == panel_title_ && last_geo_ == geo && title_texture_)
   {
     // No need to redraw the title, let's save some CPU time!
     return false;
@@ -1143,7 +1146,6 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher, BamfView* old_vi
   is_maximized_ = false;
   is_desktop_focused_ = false;
   Window active_xid = 0;
-  bool force_refresh = false;
 
   sources_.Remove(WINDOW_MOVED_TIMEOUT);
 
@@ -1173,17 +1175,11 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher, BamfView* old_vi
     // register callback for new view
     view_name_changed_signal_.Connect(new_view, "name-changed",
                                       sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
-
-    if (integrated_menus_)
-      force_refresh = is_maximized_;
   }
-
-  if (!force_refresh && BAMF_IS_WINDOW(old_view) && integrated_menus_)
-    force_refresh = (bamf_window_maximized(reinterpret_cast<BamfWindow*>(old_view)) == BAMF_WINDOW_MAXIMIZED);
 
   active_window = active_xid;
 
-  if (Refresh(force_refresh))
+  if (Refresh())
     FullRedraw();
 }
 
