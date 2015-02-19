@@ -1,3 +1,13 @@
+unity (7.3.1+15.04.20150219.2-0ubuntu1) vivid; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Marco Trevisan (Treviño) ]
+  * Decorations, Panel: add menus for unfocused windows as well
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 19 Feb 2015 19:33:42 +0000
+
 unity (7.3.1+15.04.20150205-0ubuntu1) vivid; urgency=medium
 
   [ Brandon Schaefer ]
