@@ -117,6 +117,7 @@ set (CORE_SOURCES
 #
 include_directories(${CORE_DEPS_INCLUDE_DIRS})
 include_directories(${CMAKE_BINARY_DIR})
+include_directories(..)
 
 set (LIBS ${CORE_DEPS_LDFLAGS} ${PRIVATE_CORE_DEPS_LDFLAGS})
 

@@ -50,17 +50,13 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , deco_elements_(cu::DecorationElement::NONE)
   , last_mwm_decor_(win_->mwmDecor())
   , last_actions_(win_->actions())
+  , panel_id_(MENUS_PANEL_NAME + std::to_string(win_->id()))
   , cv_(Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
     bg_textures_.clear();
     if (top_layout_)
-    {
       top_layout_->focused = active;
-
-      if (!active)
-        UnsetAppMenu();
-    }
     RedrawDecorations();
   });
 
@@ -701,7 +697,7 @@ void Window::Impl::RedrawDecorations()
 
 void Window::Impl::SetupAppMenu()
 {
-  if (!active() || !top_layout_)
+  if (!top_layout_)
     return;
 
   auto const& menu_manager = manager_->impl_->menu_manager_;
@@ -716,8 +712,11 @@ void Window::Impl::SetupAppMenu()
 
   auto menus = std::make_shared<MenuLayout>(menu_manager, win_);
   menus->Setup();
-  menus_ = menus;
 
+  if (menus->Items().empty())
+    return;
+
+  menus_ = menus;
   auto const& grab_edge = grab_edge_.lock();
   sliding_layout->SetInputItem(menus);
   sliding_layout->fadein = menu_manager->fadein();
@@ -759,13 +758,18 @@ void Window::Impl::UpdateAppMenuVisibility()
     sliding_layout->mouse_owner = grab_edge_->mouse_owner();
 }
 
+inline std::string const& Window::Impl::GetMenusPanelID() const
+{
+  return panel_id_;
+}
+
 void Window::Impl::UnsetAppMenu()
 {
   if (!menus_)
     return;
 
   auto const& indicators = manager_->impl_->menu_manager_->Indicators();
-  indicators->SyncGeometries(MENUS_PANEL_NAME, indicator::EntryLocationMap());
+  indicators->SyncGeometries(GetMenusPanelID(), indicator::EntryLocationMap());
   sliding_layout_->SetInputItem(nullptr);
   grab_mouse_changed_->disconnect();
 }
@@ -778,7 +782,7 @@ void Window::Impl::SyncMenusGeometries() const
   auto const& indicators = manager_->impl_->menu_manager_->Indicators();
   indicator::EntryLocationMap map;
   menus_->ChildrenGeometries(map);
-  indicators->SyncGeometries(MENUS_PANEL_NAME, map);
+  indicators->SyncGeometries(GetMenusPanelID(), map);
 }
 
 bool Window::Impl::ActivateMenu(std::string const& entry_id)

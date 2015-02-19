@@ -35,7 +35,9 @@ MenuLayout::MenuLayout(menu::Manager::Ptr const& menu, CompWindow* win)
   , win_(win)
   , last_pointer_(-1, -1)
   , dropdown_(std::make_shared<MenuDropdown>(menu_manager_->Indicators(), win))
-{}
+{
+  visible = false;
+}
 
 void MenuLayout::Setup()
 {
@@ -56,7 +58,7 @@ void MenuLayout::Setup()
   dropdown_->active.changed.connect(active_cb);
   dropdown_->show_now.changed.connect(show_now_cb);
 
-  for (auto const& entry : menu_manager_->AppMenu()->GetEntries())
+  for (auto const& entry : menu_manager_->AppMenu()->GetEntriesForWindow(win_->id()))
   {
     auto menu = std::make_shared<MenuEntry>(entry, win_);
     menu->mouse_owner.changed.connect(ownership_cb);
@@ -65,7 +67,24 @@ void MenuLayout::Setup()
     menu->focused = focused();
     menu->scale = scale();
     menu->SetParent(shared_from_this());
-    items_.push_back(menu);
+
+    if (items_.empty() || entry->priority() < 0)
+    {
+      items_.push_back(menu);
+    }
+    else
+    {
+      auto pos = items_.rbegin();
+
+      for (; pos != items_.rend(); ++pos)
+      {
+        auto menu = std::static_pointer_cast<MenuEntry>(*pos);
+        if (entry->priority() >= menu->GetEntry()->priority())
+          break;
+      }
+
+      items_.insert(pos.base(), menu);
+    }
   }
 
   if (!items_.empty())
@@ -195,12 +214,14 @@ void MenuLayout::DoRelayout()
   int accumolated_width = dropdown_width + left_padding + right_padding - inner_padding;
   int max_width = max_.width;
   std::list<MenuEntry::Ptr> to_hide;
+  bool is_visible = visible();
 
   for (auto const& item : items_)
   {
     if (!item->visible() || item == dropdown_)
       continue;
 
+    is_visible = true;
     accumolated_width += item->GetNaturalWidth() + inner_padding;
 
     if (accumolated_width > max_width)
@@ -235,6 +256,7 @@ void MenuLayout::DoRelayout()
       dropdown_->Push(hidden);
   }
 
+  visible = is_visible;
   Layout::DoRelayout();
 }
 

@@ -47,7 +47,7 @@
       <description>This is used to enable/disable double-click result activation in the dash. Double-click to activate, single click preview</description>
     </key>
     <key type="b" name="integrated-menus">
-      <default>false</default>
+      <default>true</default>
       <summary>Enable/Disable the integrated menus in Unity.</summary>
       <description>When this is enabled, the application menus will be shown
         on the window decoration, otherwise they will be always shown on the
@@ -175,6 +175,12 @@
         it a click. When this value is greater than 0, then it's possible to maximize
         a window by double-clicking on its menus if the second click happens before the
         specified value of ms is elapsed</description>
+    </key>
+    <key type="b" name="unfocused-windows-popup">
+      <default>true</default>
+      <summary>Whether to pop-up a menu when clicking over unfocused windows entries</summary>
+      <description>By disabling this setting you can make unity to only focus a window
+        when clicking over unfocused menu entries</description>
     </key>
   </schema>
 </schemalist>

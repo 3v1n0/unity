@@ -30,6 +30,7 @@ namespace indicator
 
 Entry::Entry(std::string const& id,
              std::string const& name_hint,
+             uint32_t parent_window,
              std::string const& label,
              bool label_sensitive,
              bool label_visible,
@@ -40,6 +41,7 @@ Entry::Entry(std::string const& id,
              int priority)
   : id_(id)
   , name_hint_(name_hint)
+  , parent_window_(parent_window)
   , label_(label)
   , label_visible_(label_visible)
   , label_sensitive_(label_sensitive)
@@ -52,9 +54,10 @@ Entry::Entry(std::string const& id,
   , active_(false)
 {}
 
-Entry::Entry(std::string const& id, std::string const& name_hint)
+Entry::Entry(std::string const& id, std::string const& name_hint, uint32_t parent_window)
   : id_(id)
   , name_hint_(name_hint)
+  , parent_window_(parent_window)
   , label_visible_(false)
   , label_sensitive_(false)
   , image_type_(0)
@@ -65,14 +68,19 @@ Entry::Entry(std::string const& id, std::string const& name_hint)
   , active_(false)
 {}
 
+std::string const& Entry::id() const
+{
+  return id_;
+}
+
 std::string const& Entry::name_hint() const
 {
   return name_hint_;
 }
 
-std::string const& Entry::id() const
+uint32_t Entry::parent_window() const
 {
-  return id_;
+  return parent_window_;
 }
 
 std::string const& Entry::label() const
@@ -199,6 +207,7 @@ Entry& Entry::operator=(Entry const& rhs)
 
   id_ = rhs.id_;
   name_hint_ = rhs.name_hint_;
+  parent_window_ = rhs.parent_window_;
   label_ = rhs.label_;
   label_sensitive_ = rhs.label_sensitive_;
   label_visible_ = rhs.label_visible_;
@@ -258,7 +267,7 @@ std::vector<Entry::Ptr> const& Entry::parents() const
 
 void Entry::ShowMenu(int x, int y, unsigned button)
 {
-  ShowMenu(0, x, y, button);
+  ShowMenu(parent_window_, x, y, button);
 }
 
 void Entry::ShowMenu(unsigned int xid, int x, int y, unsigned button)
@@ -278,7 +287,8 @@ void Entry::Scroll(int delta)
 
 std::ostream& operator<<(std::ostream& out, Entry const& e)
 {
-  out << "<indicator::Entry " << e.id() << " hint: '" << e.name_hint() << "' "
+  out << "<indicator::Entry " << e.id() << " hint: '" << e.name_hint() << "'"
+      << " parent window: " << e.parent_window()
       << std::boolalpha
       << " \"" << e.label() << "\" ("
       << e.label_sensitive() << ", " << e.label_visible() << ") image ("

@@ -98,6 +98,11 @@ PanelIndicatorEntryView::Ptr PanelIndicatorEntryDropdownView::Pop()
   return child;
 }
 
+void PanelIndicatorEntryDropdownView::Clear()
+{
+  children_.clear();
+}
+
 std::deque<PanelIndicatorEntryView::Ptr> const& PanelIndicatorEntryDropdownView::Children() const
 {
   return children_;
@@ -144,7 +149,7 @@ void PanelIndicatorEntryDropdownView::ShowMenu(int button)
     entries.push_back(entry->GetEntry());
 
   auto const& geo = GetAbsoluteGeometry();
-  indicators_->ShowEntriesDropdown(entries, active_entry_, 0, geo.x, geo.y + geo.height);
+  indicators_->ShowEntriesDropdown(entries, active_entry_, entries[0]->parent_window(), geo.x, geo.y + geo.height);
 }
 
 bool PanelIndicatorEntryDropdownView::ActivateChild(PanelIndicatorEntryView::Ptr const& child)

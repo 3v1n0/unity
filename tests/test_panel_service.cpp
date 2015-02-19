@@ -32,8 +32,8 @@ namespace
 {
 typedef std::tuple<glib::Object<GtkLabel>, glib::Object<GtkImage>> EntryObjects;
 
-const std::string SYNC_ENTRY_VARIANT_FORMAT = "(ssssbbusbbi)";
-const std::string SYNC_ENTRIES_VARIANT_FORMAT = "(a"+SYNC_ENTRY_VARIANT_FORMAT+")";
+const std::string SYNC_ENTRY_VARIANT_FORMAT = ENTRY_SIGNATURE;
+const std::string SYNC_ENTRIES_VARIANT_FORMAT = "(" ENTRY_ARRAY_SIGNATURE ")";
 
 struct TestPanelService : Test
 {
@@ -46,6 +46,7 @@ struct TestPanelService : Test
     std::string indicator_id;
     std::string entry_id;
     std::string entry_name_hint;
+    uint32_t parent_window;
     std::string label;
     bool label_sensitive;
     bool label_visible;
@@ -63,6 +64,7 @@ struct TestPanelService : Test
     gchar* indicator_id;
     gchar* entry_id;
     gchar* entry_name_hint;
+    guint32 parent_window;
     gchar* label;
     gboolean label_sensitive;
     gboolean label_visible;
@@ -77,6 +79,7 @@ struct TestPanelService : Test
                                &indicator_id,
                                &entry_id,
                                &entry_name_hint,
+                               &parent_window,
                                &label,
                                &label_sensitive,
                                &label_visible,
@@ -89,6 +92,7 @@ struct TestPanelService : Test
       results.push_back({ glib::gchar_to_string(indicator_id),
                           glib::gchar_to_string(entry_id),
                           glib::gchar_to_string(entry_name_hint),
+                          parent_window,
                           glib::gchar_to_string(label),
                           label_sensitive != FALSE,
                           label_visible != FALSE,

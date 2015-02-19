@@ -83,7 +83,7 @@ private:
   }
 private:
   std::string filename_;
-  std::map<int, BaseTexturePtr> textures_;
+  std::unordered_map<int, BaseTexturePtr> textures_;
 };
 
 } // namespace

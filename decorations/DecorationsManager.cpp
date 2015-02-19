@@ -141,27 +141,24 @@ void Manager::Impl::SetupAppMenu()
     return;
   }
 
-  appmenu->active_window = screen->activeWindow();
-
-  auto setup_active_window = [this] {
-    if (Window::Ptr const& active_win = active_deco_win_.lock())
-      active_win->impl_->SetupAppMenu();
-  };
+  for (auto const& win : windows_)
+    win.second->impl_->SetupAppMenu();
 
   menu_connections_.Remove(appmenu_connection_);
-  appmenu_connection_ = menu_connections_.Add(appmenu->updated.connect(setup_active_window));
-  setup_active_window();
+  appmenu_connection_ = menu_connections_.Add(appmenu->updated_win.connect([this] (uint32_t xid) {
+    if (Window::Ptr const& win = GetWindowByXid(xid))
+      win->impl_->SetupAppMenu();
+  }));
 }
 
 void Manager::Impl::UnsetAppMenu()
 {
   menu_connections_.Remove(appmenu_connection_);
-  auto const& active_win = active_deco_win_.lock();
 
-  if (active_win)
+  for (auto const& win : windows_)
   {
-    active_win->impl_->UnsetAppMenu();
-    active_win->impl_->Damage();
+    win.second->impl_->UnsetAppMenu();
+    win.second->impl_->Damage();
   }
 }
 
@@ -265,9 +262,6 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 
         if (new_active)
           new_active->impl_->active = true;
-
-        if (indicator::AppmenuIndicator::Ptr const& appmenu = menu_manager_->AppMenu())
-          appmenu->active_window = active_xid;
       }
       else if (event->xproperty.atom == Atoms::mwmHints ||
                event->xproperty.atom == Atoms::wmAllowedActions)
@@ -308,6 +302,9 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 
 bool Manager::Impl::HandleFrameEvent(XEvent* event)
 {
+  if (WindowManager::Default().IsScaleActive())
+    return false;
+
   auto const& win = GetWindowByFrame(event->xany.window);
 
   // ButtonRelease events might happen also outside the frame window, in this

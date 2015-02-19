@@ -36,7 +36,7 @@ Indicator::Indicator(std::string const& name)
 Indicator::~Indicator()
 {
   for (auto const& entry : entries_)
-    on_entry_removed.emit(entry->id());
+    on_entry_removed.emit(entry);
 }
 
 std::string const& Indicator::name() const
@@ -51,23 +51,23 @@ Indicator::Entries const& Indicator::GetEntries() const
 
 void Indicator::Sync(Indicator::Entries const& new_entries)
 {
-  bool added = false;
-  Entries to_rm;
+  bool changed = false;
 
-  if (!entries_.empty())
+  for (auto it = entries_.begin(); it != entries_.end();)
   {
-    for (auto const& entry : entries_)
+    auto entry = *it;
+
+    if (std::find(new_entries.begin(), new_entries.end(), entry) == new_entries.end())
     {
-      if (std::find(new_entries.begin(), new_entries.end(), entry) == new_entries.end())
-        to_rm.push_back(entry);
+      auto entry_id = entry->id();
+      entries_connections_.erase(entry);
+      it = entries_.erase(it);
+      on_entry_removed.emit(entry);
+      changed = true;
+      continue;
     }
-  }
 
-  for (auto const& entry : to_rm)
-  {
-    entries_connections_.erase(entry);
-    on_entry_removed.emit(entry->id());
-    entries_.remove(entry);
+    ++it;
   }
 
   for (auto const& new_entry : new_entries)
@@ -93,10 +93,10 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
     entries_.push_back(new_entry);
     on_entry_added.emit(new_entry);
 
-    added = true;
+    changed = true;
   }
 
-  if (!to_rm.empty() || added)
+  if (changed)
     updated.emit();
 }
 
@@ -107,21 +107,6 @@ Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
       return entry;
 
   return Entry::Ptr();
-}
-
-int Indicator::EntryIndex(std::string const& entry_id) const
-{
-  int i = 0;
-  for (auto const& entry : entries_)
-  {
-    if (entry->id() == entry_id)
-    {
-      return i;
-    }
-    ++i;
-  }
-
-  return -1;
 }
 
 std::ostream& operator<<(std::ostream& out, Indicator const& i)

@@ -17,6 +17,7 @@
 * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
 */
 
+#include <unordered_map>
 #include <NuxCore/Logger.h>
 
 #include "GLibDBusServer.h"
@@ -406,8 +407,8 @@ struct DBusObject::Impl
 
   GDBusInterfaceVTable interface_vtable_;
   std::shared_ptr<GDBusInterfaceInfo> interface_info_;
-  std::map<guint, std::string> registrations_;
-  std::map<std::string, glib::Object<GDBusConnection>> connection_by_path_;
+  std::unordered_map<guint, std::string> registrations_;
+  std::unordered_map<std::string, glib::Object<GDBusConnection>> connection_by_path_;
 };
 
 DBusObject::DBusObject(std::string const& introspection_xml, std::string const& interface_name)

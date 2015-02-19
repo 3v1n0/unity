@@ -55,9 +55,18 @@ PluginAdapter& PluginAdapter::Default()
 }
 
 /* static */
-void PluginAdapter::Initialize(CompScreen* screen)
+PluginAdapter& PluginAdapter::Initialize(CompScreen* screen)
 {
-  global_instance.reset(new PluginAdapter(screen));
+  if (!global_instance)
+  {
+    global_instance.reset(new PluginAdapter(screen));
+  }
+  else
+  {
+    LOG_ERROR(logger) << "Already Initialized!";
+  }
+
+  return *global_instance;
 }
 
 PluginAdapter::PluginAdapter(CompScreen* screen)

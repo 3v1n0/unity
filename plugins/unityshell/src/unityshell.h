@@ -332,6 +332,7 @@ private:
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
+  WindowManager& WM;
 
   menu::Manager::Ptr menus_;
   std::shared_ptr<decoration::Manager> deco_manager_;
@@ -368,7 +369,7 @@ private:
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   std::map<CancelActionTarget, CompActionPtr> _escape_actions;
-  std::map<int, unsigned int> windows_for_monitor_;
+  std::unordered_map<int, unsigned int> windows_for_monitor_;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

@@ -799,7 +799,7 @@ private:
   bool CoalesceTasksCb();
 
 private:
-  std::map<std::string, glib::Object<GdkPixbuf>> cache_;
+  std::unordered_map<std::string, glib::Object<GdkPixbuf>> cache_;
   /* FIXME: the reference counting of IconLoaderTasks with shared pointers
    * is currently somewhat broken, and the queued_tasks_ member is what keeps
    * it from crashing randomly.
@@ -807,7 +807,7 @@ private:
    * tasks, but when they are being completed in a worker thread, the thread
    * should own them as well (yet it doesn't), this could cause trouble
    * in the future... You've been warned! */
-  std::map<std::string, IconLoaderTask::Ptr> queued_tasks_;
+  std::unordered_map<std::string, IconLoaderTask::Ptr> queued_tasks_;
   std::queue<IconLoaderTask::Ptr> tasks_;
   std::unordered_map<Handle, IconLoaderTask::Ptr> task_map_;
   std::vector<IconLoaderTask*> finished_tasks_;

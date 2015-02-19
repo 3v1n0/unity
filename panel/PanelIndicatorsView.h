@@ -55,9 +55,10 @@ public:
                                     int padding = 5,
                                     IndicatorEntryPosition pos = AUTO,
                                     IndicatorEntryType type = IndicatorEntryType::INDICATOR);
-  void RemoveEntry(std::string const& entry_id);
+  void RemoveEntry(indicator::Entry::Ptr const&);
 
   PanelIndicatorEntryView* ActivateEntryAt(int x, int y, int button = 1);
+  PanelIndicatorEntryView* ActivateEntry(indicator::Entry::Ptr const&, int button = 1);
   PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id, int button = 1);
   bool ActivateIfSensitive();
 
@@ -84,18 +85,19 @@ protected:
   typedef std::vector<indicator::Indicator::Ptr> Indicators;
   Indicators const& GetIndicators() const;
 
+  void ClearEntries();
+
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
+  virtual void OnEntryAdded(indicator::Entry::Ptr const&);
   virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
 
   void AddEntryView(PanelIndicatorEntryView* view, IndicatorEntryPosition pos = AUTO);
   void RemoveEntryView(PanelIndicatorEntryView* view);
 
   nux::HLayout* layout_;
-  typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
-  Entries entries_;
+  std::unordered_map<indicator::Entry::Ptr, PanelIndicatorEntryView*> entries_;
 
   int monitor_;
   bool overlay_showing_;

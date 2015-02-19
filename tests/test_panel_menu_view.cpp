@@ -36,11 +36,22 @@ namespace panel
 
 struct TestPanelMenuView : public testing::Test
 {
+  TestPanelMenuView()
+    : menu_manager(std::make_shared<menu::MockManager>())
+    , menu_view(menu_manager)
+  {}
+
   struct MockPanelMenuView : public PanelMenuView
   {
-    MockPanelMenuView()
-      : PanelMenuView(std::make_shared<menu::MockManager>())
-    {}
+    MockPanelMenuView(menu::Manager::Ptr const& menu_manager)
+      : PanelMenuView(menu_manager)
+    {
+      view_opened_signal_.Disconnect();
+      active_win_changed_signal_.Disconnect();
+      active_app_changed_signal_.Disconnect();
+      view_closed_signal_.Disconnect();
+      maximized_wins_.clear();
+    }
 
     MOCK_METHOD0(QueueDraw, void());
     MOCK_CONST_METHOD1(GetActiveViewName, std::string(bool));
@@ -53,6 +64,7 @@ struct TestPanelMenuView : public testing::Test
     using PanelMenuView::titlebar_grab_area_;
     using PanelMenuView::we_control_active_;
     using PanelMenuView::spread_showing_;
+    using PanelMenuView::maximized_wins_;
   };
 
   nux::ObjectPtr<nux::BaseWindow> AddPanelToWindow(int monitor)
@@ -69,6 +81,7 @@ struct TestPanelMenuView : public testing::Test
     panel_win->ComputeContentSize();
 
     menu_view.SetMonitor(monitor);
+    menu_view.maximized_wins_.clear();
 
     return panel_win;
   }
@@ -79,6 +92,7 @@ protected:
   MockUScreen uscreen;
   panel::Style panelStyle;
   testwrapper::StandaloneWM WM;
+  menu::MockManager::Ptr menu_manager;
   testing::NiceMock<MockPanelMenuView> menu_view;
 };
 
@@ -91,6 +105,7 @@ TEST_F(TestPanelMenuView, Construction)
 
 TEST_F(TestPanelMenuView, Escaping)
 {
+  menu_manager->integrated_menus = false;
   ON_CALL(menu_view, GetActiveViewName(testing::_)).WillByDefault(Return("<>'"));
   auto escapedText = "Panel d'Inici";
   ASSERT_TRUE(menu_view.GetCurrentTitle().empty());
@@ -136,6 +151,7 @@ INSTANTIATE_TEST_CASE_P(TestPanelMenuView, ProgressTester, Range(0.0, 1.0, 0.1))
 TEST_P(ProgressTester, RestoreOnGrabInBiggerWorkArea)
 {
   uscreen.SetupFakeMultiMonitor();
+  connection::Manager conn;
   unsigned monitor = uscreen.GetMonitors().size() - 1;
   auto const& monitor_geo = uscreen.GetMonitorGeometry(monitor);
   WM->SetWorkareaGeometry(monitor_geo);

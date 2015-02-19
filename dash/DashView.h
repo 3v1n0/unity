@@ -56,7 +56,7 @@ class DashLayout;
 class DashView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
-  typedef std::map<std::string, nux::ObjectPtr<ScopeView>> ScopeViews;
+  typedef std::unordered_map<std::string, nux::ObjectPtr<ScopeView>> ScopeViews;
 
 public:
   DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& application_starter);

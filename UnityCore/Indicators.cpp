@@ -20,6 +20,7 @@
 
 #include "Indicators.h"
 #include "AppmenuIndicator.h"
+#include "services/panel-service-private.h"
 
 namespace unity
 {
@@ -143,7 +144,7 @@ Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
   if (indicator)
     return indicator;
 
-  if (name == "libappmenu.so")
+  if (name == APPMENU_INDICATOR_NAME)
   {
     auto appmenu = std::make_shared<AppmenuIndicator>(name);
     appmenu->on_show_appmenu.connect(sigc::mem_fun(owner_, &Indicators::OnShowAppMenu));
