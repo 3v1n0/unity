@@ -447,3 +447,47 @@ unity_util_accessible_set_window_thread(nux::WindowThread* wt)
 {
   unity_window_thread = wt;
 }
+
+/*
+ * FIXME: temporal solution
+ *
+ * Normally not all the accessible objects on the hierarchy are
+ * available from the beginning, and they are being created by demand
+ * due the request on the AT (ie: orca) side
+ *
+ * It usually follows a top-down approach. Top objects emits a signal
+ * of interest, so AT apps get interest on it, and request their
+ * children. One example is the signal "window::activate". AT receives
+ * a signal meaning that a top level object is activated, so request
+ * their children (and gran-children).
+ *
+ * Due technical reasons, right now it is hard to find a suitable way
+ * to emit the signal "activate" on the BaseWindow. That means that
+ * objects on the bottom of the hierarchy are not created, so Orca
+ * doesn't react to changes on sections like the Launcher.
+ *
+ * So in order to prevent that, we make a manual exploration of the
+ * hierarchy in order to ensure that those objects are there.
+ *
+ * NOTE: this manual exploration is not required with at-spi2, just
+ * with at-spi.
+ *
+ */
+void
+explore_children(AtkObject* obj)
+{
+  gint num = 0;
+  gint i = 0;
+  AtkObject* atk_child = NULL;
+
+  g_return_if_fail(ATK_IS_OBJECT(obj));
+
+  num = atk_object_get_n_accessible_children(obj);
+
+  for (i = 0; i < num; i++)
+  {
+    atk_child = atk_object_ref_accessible_child(obj, i);
+    explore_children(atk_child);
+    g_object_unref(atk_child);
+  }
+}
