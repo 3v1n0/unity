@@ -271,8 +271,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   {
      notify_init("unityshell");
 
-     unity_a11y_preset_environment();
-
      XSetErrorHandler(old_handler);
 
      /* Wrap compiz interfaces */
@@ -4515,6 +4513,8 @@ bool UnityPluginVTable::init()
     return false;
   if (!CompPlugin::checkPluginABI("opengl", COMPIZ_OPENGL_ABI))
     return false;
+
+  unity_a11y_preset_environment();
 
   /*
    * GTK needs to be initialized or else unity's gdk/gtk calls will crash.
