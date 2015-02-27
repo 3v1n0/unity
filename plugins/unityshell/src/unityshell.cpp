@@ -2972,10 +2972,14 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  if (uScreen->doShellRepaint &&
-      window == uScreen->firstWindowAboveShell &&
-      !uScreen->forcePaintOnTop() &&
-      !uScreen->fullscreenRegion.contains(window->geometry()))
+  if (uScreen->doShellRepaint && window == uScreen->onboard_)
+  {
+    uScreen->paintDisplay();
+  }
+  else if (uScreen->doShellRepaint &&
+           window == uScreen->firstWindowAboveShell &&
+           !uScreen->forcePaintOnTop() &&
+           !uScreen->fullscreenRegion.contains(window->geometry()))
   {
     uScreen->paintDisplay();
   }
@@ -3197,6 +3201,11 @@ void UnityWindow::windowNotify(CompWindowNotify n)
             return false;
           }));
         }
+      }
+      else if (WindowManager::Default().IsOnscreenKeyboard(window->id()))
+      {
+        uScreen->onboard_ = window;
+        uScreen->RaiseOSK();
       }
     /* Fall through an re-evaluate wraps on map and unmap too */
     case CompWindowNotifyUnmap:
@@ -4114,7 +4123,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   if (window->state() & CompWindowStateFullscreenMask)
     uScreen->fullscreen_windows_.push_back(window);
 
-  if (window->type() == CompWindowTypeUtilMask && window->resName() == "onboard")
+  if (WindowManager::Default().IsOnscreenKeyboard(window->id()) && window->isViewable())
   {
     uScreen->onboard_ = window;
     uScreen->RaiseOSK();

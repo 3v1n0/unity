@@ -100,6 +100,7 @@ class MockWindowManager : public WindowManager
     MOCK_METHOD0(RestoreInputFocus, bool());
 
     MOCK_CONST_METHOD1(GetWindowName, std::string(Window));
+    MOCK_CONST_METHOD1(IsOnscreenKeyboard, bool(Window));
 
     MOCK_METHOD1(AddProperties, void(GVariantBuilder*));
 };

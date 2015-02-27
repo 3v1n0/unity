@@ -600,6 +600,11 @@ std::string StandaloneWindowManager::GetWindowName(Window window_id) const
   return "";
 }
 
+bool StandaloneWindowManager::IsOnscreenKeyboard(Window window_id) const
+{
+  return false;
+}
+
 std::string StandaloneWindowManager::GetStringProperty(Window, Atom) const
 {
   return std::string();
