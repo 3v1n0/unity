@@ -88,6 +88,8 @@ static void          on_focus_changed_cb(nux::Area* area,
                                          AtkObject* accessible);
 static void          on_parent_window_activate_cb(AtkObject* parent_window,
                                                   NuxAreaAccessible* self);
+static void          on_parent_window_deactivate_cb(AtkObject* parent_window,
+                                                    NuxAreaAccessible* self);
 static AtkObject*    search_for_parent_window(AtkObject* object);
 static gboolean      nux_area_accessible_real_check_pending_notification(NuxAreaAccessible* self);
 static void          check_parent_window_connected(NuxAreaAccessible* self);
@@ -427,6 +429,10 @@ check_parent_window_connected(NuxAreaAccessible* self)
                      "activate",
                      G_CALLBACK(on_parent_window_activate_cb),
                      self);
+    g_signal_connect(self->priv->parent_window,
+                     "deactivate",
+                     G_CALLBACK(on_parent_window_deactivate_cb),
+                     self);
   }
 }
 
@@ -483,6 +489,15 @@ on_parent_window_activate_cb(AtkObject* parent_window,
                              NuxAreaAccessible* self)
 {
   nux_area_accessible_check_pending_notification(self);
+}
+
+static void
+on_parent_window_deactivate_cb(AtkObject* parent_window,
+                               NuxAreaAccessible* self)
+{
+  g_return_if_fail(NUX_IS_AREA_ACCESSIBLE(self));
+
+  self->priv->focused = FALSE;
 }
 
 
