@@ -29,6 +29,7 @@
  */
 
 #include "nux-layout-accessible.h"
+#include "unity-util-accessible.h"
 
 #include "unitya11y.h"
 
@@ -185,6 +186,7 @@ on_view_changed_cb(nux::Layout* layout,
   {
     signal_name = "children-changed::add";
     index = nux_layout_accessible_get_n_children(accessible) - 1;
+    explore_children(accessible);
   }
   else
   {

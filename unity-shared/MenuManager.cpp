@@ -64,15 +64,15 @@ struct Manager::Impl : sigc::trackable
     indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
     WindowManager::Default().window_focus_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::GrabMnemonicsForActiveWindow)));
 
-    parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
-    parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
-
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
       parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
     });
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + ALWAYS_SHOW_MENUS_KEY, [this] (GSettings*, const gchar*) {
       parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
     });
+
+    parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
   }
 
   ~Impl()

@@ -162,10 +162,13 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   active_window.changed.connect(update_target_cb);
 
   focused.changed.connect([this] (bool focused) {
+    Refresh(true);
     window_buttons_->focused = focused;
 
     for (auto const& entry : entries_)
       entry.second->SetFocusedState(focused);
+
+    FullRedraw();
   });
 }
 
@@ -415,7 +418,7 @@ void PanelMenuView::OnFadeAnimatorUpdated(double progress)
 
 bool PanelMenuView::ShouldDrawMenus() const
 {
-  if ((we_control_active_ || integrated_menus_) && !switcher_showing_ && !launcher_keynav_ && !ignore_menu_visibility_ && !entries_.empty())
+  if ((we_control_active_ || integrated_menus_) && !switcher_showing_ && !launcher_keynav_ && !ignore_menu_visibility_ && HasVisibleMenus())
   {
     WindowManager& wm = WindowManager::Default();
 
@@ -889,7 +892,7 @@ bool PanelMenuView::Refresh(bool force)
 
   std::string const& new_title = GetCurrentTitle();
 
-  if (new_title == panel_title_ && !force && last_geo_ == geo && title_texture_)
+  if (!force && new_title == panel_title_ && last_geo_ == geo && title_texture_)
   {
     // No need to redraw the title, let's save some CPU time!
     return false;
@@ -1065,7 +1068,6 @@ void PanelMenuView::OnActiveWindowChanged(ApplicationWindowPtr const& new_win)
   is_maximized_ = false;
   is_desktop_focused_ = false;
   Window active_xid = 0;
-  bool force_refresh = false;
 
   sources_.Remove(WINDOW_MOVED_TIMEOUT);
 
@@ -1096,14 +1098,11 @@ void PanelMenuView::OnActiveWindowChanged(ApplicationWindowPtr const& new_win)
       if (Refresh())
         FullRedraw();
     });
-
-    if (integrated_menus_)
-      force_refresh = is_maximized_;
   }
 
   active_window = active_xid;
 
-  if (Refresh(force_refresh))
+  if (Refresh())
     FullRedraw();
 }
 
@@ -1271,7 +1270,7 @@ bool PanelMenuView::UpdateActiveWindowPosition()
   {
     we_control_active_ = we_control_window;
 
-    if (!entries_.empty())
+    if (HasVisibleMenus())
       on_indicator_updated.emit();
 
     if (Refresh())
@@ -1605,6 +1604,8 @@ void PanelMenuView::AddProperties(debug::IntrospectionData& introspection)
   PanelIndicatorsView::AddProperties(introspection);
 
   introspection
+  .add("focused", focused())
+  .add("integrated_menus", integrated_menus_)
   .add("mouse_inside", is_inside_)
   .add("always_show_menus", always_show_menus_)
   .add("grabbed", is_grabbed_)
@@ -1614,6 +1615,7 @@ void PanelMenuView::AddProperties(debug::IntrospectionData& introspection)
   .add("desktop_active", (panel_title_ == desktop_name_))
   .add("monitor", monitor_)
   .add("active_window", active_window())
+  .add("maximized_window", maximized_window())
   .add("draw_menus", ShouldDrawMenus())
   .add("draw_window_buttons", ShouldDrawButtons())
   .add("controls_active_window", we_control_active_)
@@ -1765,7 +1767,7 @@ void PanelMenuView::SetMonitor(int monitor)
 
 bool PanelMenuView::HasMenus() const
 {
-  if (entries_.empty())
+  if (!HasVisibleMenus())
     return false;
 
   return integrated_menus_ || we_control_active_;
@@ -1773,7 +1775,7 @@ bool PanelMenuView::HasMenus() const
 
 bool PanelMenuView::HasKeyActivableMenus() const
 {
-  if (entries_.empty())
+  if (!HasVisibleMenus())
     return false;
 
   return integrated_menus_ ? is_maximized_ : we_control_active_;

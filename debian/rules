@@ -45,8 +45,6 @@ override_dh_install:
 	find debian/tmp/usr/lib -name \*.*a -exec rm {} \;
 	rm -f debian/tmp/usr/share/compiz/networkarearegion.xml
 	rm -f debian/tmp//usr/lib/compiz/libnetworkarearegion.so
-	rm -f debian/tmp/usr/share/compiz/unitydialog.xml
-	rm -f debian/tmp/usr/lib/compiz/libunitydialog.so
 	rm -rf debian/tmp/usr/share/gconf/schemas/ 
 	dh_install --fail-missing
 

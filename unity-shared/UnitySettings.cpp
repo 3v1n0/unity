@@ -92,18 +92,6 @@ public:
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
-    // The order is important here, DPI is the last thing to be updated
-    UpdateLimSetting();
-    UpdateTextScaleFactor();
-    UpdateCursorScaleFactor();
-    UpdateFontSize();
-    UpdateDPI();
-
-    CacheFormFactor();
-    CacheDoubleClickActivate();
-
-    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
-
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
     });
@@ -151,6 +139,18 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
     });
+
+    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
+
+    // The order is important here, DPI is the last thing to be updated
+    UpdateLimSetting();
+    UpdateTextScaleFactor();
+    UpdateCursorScaleFactor();
+    UpdateFontSize();
+    UpdateDPI();
+
+    CacheFormFactor();
+    CacheDoubleClickActivate();
   }
 
   void CacheFormFactor()

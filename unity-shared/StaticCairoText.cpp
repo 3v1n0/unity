@@ -30,7 +30,6 @@
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/CairoGraphics.h>
 
-#include <pango/pango.h>
 #include <pango/pangocairo.h>
 
 #include <UnityCore/GLibWrapper.h>
@@ -95,6 +94,8 @@ struct StaticCairoText::Impl : sigc::trackable
   UnderlineState underline_;
 
   std::string font_;
+  int font_size_ = -1;
+  PangoWeight font_weight_ = (PangoWeight) -1;
 
   std::list<BaseTexturePtr> textures2D_;
 
@@ -418,6 +419,32 @@ void StaticCairoText::SetFont(std::string const& font)
   }
 }
 
+void StaticCairoText::SetFontSize(int font_size)
+{
+  if (pimpl->font_size_ != font_size)
+  {
+    pimpl->font_size_ = font_size;
+    pimpl->need_new_extent_cache_ = true;
+    Size s = GetTextExtents();
+    SetMinimumHeight(s.height);
+    NeedRedraw();
+    sigFontChanged.emit(this);
+  }
+}
+
+void StaticCairoText::SetFontWeight(PangoWeight font_weight)
+{
+  if (pimpl->font_weight_ != font_weight)
+  {
+    pimpl->font_weight_ = font_weight;
+    pimpl->need_new_extent_cache_ = true;
+    Size s = GetTextExtents();
+    SetMinimumHeight(s.height);
+    NeedRedraw();
+    sigFontChanged.emit(this);
+  }
+}
+
 std::string StaticCairoText::GetFont()
 {
   return pimpl->font_;
@@ -559,6 +586,13 @@ Size StaticCairoText::Impl::GetTextExtents() const
 
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font.c_str());
+
+  if (font_size_ > 0)
+    pango_font_description_set_size(desc, font_size_ * PANGO_SCALE);
+
+  if (font_weight_ > 0)
+    pango_font_description_set_weight(desc, font_weight_);
+
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, GetPangoEllipsizeMode());
@@ -709,6 +743,13 @@ void StaticCairoText::Impl::DrawText(CacheTexture::Ptr const& texture)
 
 
   desc = pango_font_description_from_string(font.c_str());
+
+  if (font_size_ > 0)
+    pango_font_description_set_size(desc, font_size_ * PANGO_SCALE);
+
+  if (font_weight_ > 0)
+    pango_font_description_set_weight(desc, font_weight_);
+
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, GetPangoEllipsizeMode());
