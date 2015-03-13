@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2013,2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -151,6 +151,9 @@ struct ActionButton : public testing::TestWithParam<Button::Action> {
   Button button;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 INSTANTIATE_TEST_CASE_P(TestSessionButtonTypes, ActionButton,
   testing::Values(Button::Action::LOCK, Button::Action::LOGOUT, Button::Action::SUSPEND,
                   Button::Action::HIBERNATE, Button::Action::SHUTDOWN, Button::Action::REBOOT));
@@ -164,6 +167,8 @@ TEST_P(/*TestSessionButtonTypes*/ActionButton, Action)
 {
   EXPECT_EQ(button.action(), GetParam());
 }
+
+#pragma GCC diagnostic pop
 
 } // session
 } // unity

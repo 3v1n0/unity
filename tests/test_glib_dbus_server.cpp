@@ -433,6 +433,9 @@ TEST_F(TestGLibDBusServerInteractions, SignalWithParameterEmission)
   EXPECT_TRUE(signal_got);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 struct ReadableProperties : TestGLibDBusServerInteractions, testing::WithParamInterface<std::string> {};
 INSTANTIATE_TEST_CASE_P(TestGLibDBusServerInteractions, ReadableProperties, testing::Values("ReadOnlyProperty", "ReadWriteProperty"));
 
@@ -509,5 +512,7 @@ TEST_P(/*TestGLibDBusServerInteractions*/WritableProperties, PropertySetter)
   ASSERT_TRUE(called);
   EXPECT_EQ(value, new_value);
 }
+
+#pragma GCC diagnostic pop
 
 } // Namespace
