@@ -2308,13 +2308,17 @@ void Launcher::RecvQuicklistOpened(nux::ObjectPtr<QuicklistView> const& quicklis
 
 void Launcher::RecvQuicklistClosed(nux::ObjectPtr<QuicklistView> const& quicklist)
 {
-  nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
-  if (!GetAbsoluteGeometry().IsInside(pt))
+  if (!IsInKeyNavMode())
   {
-    // The Quicklist just closed and the mouse is outside the launcher.
-    SetHover(false);
-    SetStateMouseOverLauncher(false);
+    nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
+    if (!GetAbsoluteGeometry().IsInside(pt))
+    {
+      // The Quicklist just closed and the mouse is outside the launcher.
+      SetHover(false);
+      SetStateMouseOverLauncher(false);
+    }
   }
+
   // Cancel any prior state that was set before the Quicklist appeared.
   SetActionState(ACTION_NONE);
 
