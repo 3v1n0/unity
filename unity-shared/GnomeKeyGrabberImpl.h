@@ -53,7 +53,7 @@ struct GnomeGrabber::Impl
 
   GVariant* onShellMethodCall(std::string const& method, GVariant* parameters);
   unsigned int grabAccelerator(char const* accelerator, unsigned int flags);
-  void activateAction(CompAction const* action, unsigned int device) const;
+  void activateAction(CompAction const* action, unsigned device, unsigned timestamp) const;
 
   bool isActionPostponed(CompAction const& action) const;
 };
