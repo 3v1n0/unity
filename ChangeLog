@@ -1,3 +1,490 @@
+2015-02-27  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.1+15.04.20150227-0ubuntu1
+
+2015-02-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Draw osk above unity shell. Fixes: #1413165
+	Approved by: Marco Trevisan (Treviño)
+
+2015-01-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use an atom to check if a window is an osk.
+
+2015-01-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Draw osk above unity shell
+
+2015-02-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove FontSettings.*.
+	Add the possibility to specify the font size and the font weight without chaning the default font name.
+	Fix lp 886478. Fixes: #886478
+	Approved by: Brandon Schaefer, Marco Trevisan (Treviño)
+
+2015-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add the possibility to specify the font size and the font weight without chaning the default font name.
+	Fix lp 886478.
+
+2015-02-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove unitydialog plugin.
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-02-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove unitydialog plugin.
+
+2015-02-27  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Explore children when a view or layout is added
+	
+	The dash results view grid objects are not being created when the dash is opened. Force an exploration of the children of a view or layout to make sure any dynamically added/removed objects in the dash can be found. Fixes: #1066157
+	Approved by: Stephen M. Webb
+
+2015-02-20  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Explore children when a view or layout is added
+	
+	The dash results view grid objects are not being created when the
+	dash is opened. Force an exploration of the children of a view or layout to
+	make sure any dynamically added/removed objects in the dash can be found.
+
+2015-02-27  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Set focus to FALSE on window deactivation
+	
+	This ensures that dash results can be reviewed with orca and other assistive apps when the dash is opened more than once in a session. Fixes: #1066157
+	Approved by: PS Jenkins bot
+
+2015-02-20  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Set focus to FALSE on window deactivation
+	
+	This ensures that dash results can be reviewed with orca and other assistive
+	apps when the dash is opened more than once in a session.
+
+2015-02-27  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Move the unity a11y present environment call
+	
+	With this change, one can now use accerciser to explore Unity's accessibility object hierarchy again.
+	Approved by: PS Jenkins bot
+
+2015-02-20  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Move the unity a11y present environment call
+	
+	With this change, one can now use accerciser to explore Unity's accessibility
+	object hierarchy again.
+
+2015-02-19  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.1+15.04.20150219.2-0ubuntu1
+
+2015-02-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Decorations, Panel: add menus for unfocused windows as well
+	
+	Now the indicator-appmenu exports the menus for all the windows,
+	then it's up to us to filter them based on their parent window and
+	show on relevant place.
+	Also, set LIM as default now. Fixes: #1309778
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2015-02-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, test{dash,hud}: fix tests to adapt to new HUD/Dash behaviors with fullscreen windows
+
+2015-02-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, test_wm_keybindings: fix tests to make them not dependent on apps
+	
+	They just work with indicators anyway
+
+2015-02-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, test_panel: add specific LIM tests on PanelLimTests
+
+2015-02-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, test_panel: fix some unstable tests on LIMs
+
+2015-02-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: force redraw title in case we changed the focused state
+	
+	This is way better than we used to do...
+
+2015-02-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use HasVisibleMenus() instead of !entries_.empty() as there always will be a drop-down entry
+
+2015-02-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, test_panel: pass window to ensure_window_state
+
+2015-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelWindowButtonsActionsTests: just inherit from PanelTestsBase
+	
+	Otherwise tests will repeat
+
+2015-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, tests: use Gio.Settings and Variant to set gsettings values
+
+2015-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, test_panel: repeat window buttons actions when panel is unfocused
+
+2015-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, test_panel: add "Global Menus" and "Integrated Menus" scenarios and fix tests on LIM
+	
+	Repeat all the tests in both the Global and Integrated menu modes, checking different behaviors.
+
+2015-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, panel: add focused property
+	
+	It actually reflects the menu view area
+
+2015-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: add "focused", "maximized_window" and "integrated_menus" to introspection
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: don't crash on mismatching variant signature, log errors
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestAppmenuIndicator: add syncronization tests
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: just use operator[] to access to window entries vector
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UBusWrapper: use next iterator provided by erase instead of manual handling
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: use next iterator provided by erase instead of manual handling
+
+2015-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: also raise windows on panel activation
+
+2015-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneWindowManager: emit resized/moved on geo changes
+
+2015-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestPanelMenuView: don't make BAMF interact with us
+	
+	And fix non-LIM issues
+
+2015-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: verify that whether a maximized window is valid for us when moved/resized
+
+2015-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: don't terminate scale if in menu-mode
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesVScrollBar: use internal cairo context or we'll have a leak
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: protect from crashes when parent indicator is destructed
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuEntry, PanelMenuView: don't open menus on unfocused windows if not enabled
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnitySettings: add lim_unfocused_popup option
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuEntry: don't try to open a menu on right/middle clicks if a WM action is set
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager (and gschema): set LIM as default
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/control: suggest proper version of indicator-appmenu
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: don't build menus if the window has not
+	
+	Once they're added, we'll rebuild this anyway (but we'll be protected by invisible menus)...
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: fix scalability of window buttons padding
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuLayout: insert items ordered by menu priorities
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: Use unordered_map whenever possible
+	
+	As iterating over it seems just fast as in the ordered version, we just speedup lookups and insertions.
+
+2015-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsManager: only update the window menus where they have changed
+	
+	Now we only rebuild the menubar of windows that got a changed signal,
+	instead of rebuilding appmenu for everything.
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: override Sync method and emit updated_win whe one changes
+	
+	This will allow us to reduce the operations for all the windows
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsManager: don't pass events to InputMixer when in scale
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: only grabs the keys for the active window
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: keep a reference on WindowManager, and initialize ASAP
+	
+	In this way WindowsManager::Default() will be always available by our clients.
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: return self on initialization
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: keep the entries in a map, per each window so we can get them quickly
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: keep the window panel ID around, as the win->id() might be 0 on destruction
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestIndicator: update for new APIs
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicator: use indicator::Entry to emit that an element has been removed
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: remove the ugly active_window property
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: update ShowNow property on entries based on the current active window
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: use HasKeyActivableMenus to verify whether opening an entry on key activation
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: only add menu entries with the parent that matches the current window in control
+	
+	Also move some variables to properties to be notified automagically on changes
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: add show_now_changed signal
+	
+	In this way we can disconnect from it automatically when the view entry gets deleted
+	but the entry is still alive (multi-monitor case)
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestIndicator: adapt to new API
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryDropdownView: add clear method and pass the window xid to ups
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuDropdown: set the window id as entry id
+	
+	And pass the window xid to the panel service
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsPriv: add missing definition for GetMenusPanelID
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: make a view activable by position even if not focused
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: add ClearEntries method and only remove an item if it's a known id
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: call overridable function when adding the indicator entries
+
+2015-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: it's not needed anymore to notify when app focus changes
+
+2015-01-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Decorations: Include the window xid on the panel name when syncing with ups
+	
+	In this way every window is a single panel, and thus ups will handle input
+	events correctly.
+
+2015-01-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsManager: setup app menus on all windows, not only on active one
+	
+	We should optimize code in order not to update every window on every menu change.
+
+2015-01-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: build menus for all the windows, not only for the decorated one
+
+2015-01-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuDropdown: paint using backdrop state if not focused
+
+2015-01-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuEntry: expose GrabEdge to extenders
+
+2015-01-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuEntry: paint using the correct state when not focused
+
+2015-01-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuLayout: only add menus for the related window
+
+2015-01-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: fix SYNC_WAITING to be really an uint
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: Since we're using a lot the appmenu indicator, let's keep a reference of it
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: export the AppMenu library name in private header
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: Ignore quick entries removal/additions
+	
+	This allows to remove elements from geometry hash-table when needed,
+	being safer when looking for their geometries on panel clicks
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: ensure menus are closed also on entry removal
+	
+	Plus, fix an issue we had when trying to remove the last entry of a panel geo
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: enable "unity-all-menus" environment variable
+	
+	This will make IndicatorAppmenu to spam us with all the menus it knows :)
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: when looking for a panel, verify the entry is still valid before deferencing it
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: compute entry panel based also on the parent window
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: don't emit invalid panel/entry values
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: define periority per parent window
+
+2015-01-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsSlidingLayout: don't try to draw the input item if it's not visible
+
+2015-01-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsWidgets: simplify GetTopParent
+
+2015-01-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: rebuild entry only if priority has changed (don't keep track of index at this level)
+
+2015-01-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2014-12-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: get entries by for parent window
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicator: erase entries in one pass and use a vector instead than a list
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService, DBusIndicators, IndicatorEntry: add a parent_window parameter to Entry
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: share service names, path, and iface using the private header
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: add entry signature definitions in private header and use them everywhere
+	
+	So we don't have to rewrite the same unreadable string of types everywhere.
+
+2014-12-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lim-visibility-fixes branch
+
+2015-02-11  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	Release 7.3.1
+
+2015-02-05  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.1+15.04.20150205-0ubuntu1
+
 2015-02-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
 
 	Try to set the folder permission otherwise Handle permission error. Fixes: #1418255
@@ -29,6 +516,10 @@
 2015-02-04  Andrea Azzarone  <azzaronea@gmail.com>
 
 	Actually connect to changed::* signal in MenuManager.cpp.
+
+2015-01-26  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.1+15.04.20150126-0ubuntu1
 
 2015-01-26  Andrea Azzarone  <azzaronea@gmail.com>
 
@@ -73,6 +564,10 @@
 2015-01-15  Andrea Azzarone  <azzaronea@gmail.com>
 
 	Force icon size (new gtk requires it).
+
+2015-01-15  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.1+15.04.20150115-0ubuntu1
 
 2015-01-15  Andrea Azzarone  <azzaronea@gmail.com>
 
@@ -206,6 +701,10 @@
 
 	Disable Pointer Barriers during lockscreen.
 
+2015-01-12  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.1+15.04.20150112-0ubuntu1
+
 2015-01-12  Andrea Azzarone  <azzaronea@gmail.com>
 
 	Remove unsed StartupNotifyService.* 
@@ -229,6 +728,10 @@
 
 	* Remove deprecated code that is no longer supported:
 	https://mail.gnome.org/archives/commits-list/2014-July/msg00351.html
+
+2014-12-16  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.1+15.04.20141216-0ubuntu1
 
 2014-12-16  Stephen M. Webb  <stephen.webb@canonical.com>
 
