@@ -148,7 +148,7 @@ public:
 
   void SetOrder(int order) { order_ = order; }
 
-  bool OpenQuicklist(bool select_first_item = false, int monitor = -1)
+  bool OpenQuicklist(bool select_first_item = false, int monitor = -1, bool restore_input_focus = false)
   {
     return false;
   }

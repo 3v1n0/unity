@@ -56,9 +56,9 @@ public:
   void RenderQuicklistView();
 
   void SetQuicklistPosition(int x, int y);
-  void ShowQuicklistWithTipAt(int x, int y);
+  void ShowQuicklistWithTipAt(int x, int y, bool restore_input_focus = false);
 
-  void Show();
+  void Show(bool restore_input_focus = false);
   void Hide();
   void HideAndEndQuicklistNav();
 
@@ -152,6 +152,7 @@ private:
   //iIf true, suppress the Quicklist behaviour that is expected in Unity.
   // Keep the Quicklist on screen for testing and automation.
   bool _enable_quicklist_for_testing;
+  bool _restore_input_focus;
 
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
