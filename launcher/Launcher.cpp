@@ -1687,7 +1687,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER &&
       bkg_box.x + bkg_box.width <= 0 &&
       hide_machine_.reveal_progress <= 0)
+  {
     parent_->ShowWindow(false);
+  }
 
   nux::Color clear_colour = nux::Color(0x00000000);
 
