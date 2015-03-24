@@ -249,7 +249,7 @@ class UnityTestCase(AutopilotTestCase):
 
     def register_nautilus(self):
         self.addCleanup(self.process_manager.unregister_known_application, "Nautilus")
-        self.process_manager.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.process_manager.register_known_application("Nautilus", "org.gnome.Nautilus.desktop", "nautilus")
 
     def get_startup_notification_timestamp(self, bamf_window):
         atom = display.Display().intern_atom('_NET_WM_USER_TIME')
