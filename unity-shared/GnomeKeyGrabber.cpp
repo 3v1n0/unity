@@ -52,6 +52,7 @@ R"(<node>
     <signal name='AcceleratorActivated'>
       <arg type='u' name='action'/>
       <arg type='u' name='device'/>
+      <arg type='u' name='timestamp'/>
     </signal>
   </interface>
 </node>)";
@@ -216,7 +217,7 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
     action.setState(CompAction::StateInitKey);
     action.setInitiate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
-      activateAction(action, 0);
+      activateAction(action, 0, options[7].value().i());
       return true;
     });
   }
@@ -231,7 +232,7 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
       if (state & CompAction::StateTermTapped)
       {
         LOG_DEBUG(logger) << "tapped \"" << key << "\"";
-        activateAction(action, 0);
+        activateAction(action, 0, options[7].value().i());
         return true;
       }
 
@@ -242,16 +243,15 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
   return addAction(action, false);
 }
 
-void GnomeGrabber::Impl::activateAction(CompAction const* action, unsigned int device) const
+void GnomeGrabber::Impl::activateAction(CompAction const* action, unsigned device, unsigned timestamp) const
 {
   ptrdiff_t i = action - &actions_.front();
 
   if (0 <= i && i < static_cast<ptrdiff_t>(action_ids_.size()))
   {
     auto action_id = action_ids_[i];
-
     LOG_DEBUG(logger) << "activateAction (" << action_id << " \"" << action->keyToString() << "\")";
-    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uu)", action_id, device));
+    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uuu)", action_id, device, timestamp));
   }
 }
 
