@@ -1,8 +1,31 @@
-unity (7.3.2-0ubuntu1) UNRELEASED; urgency=medium
+unity (7.3.2+15.04.20150324.1-0ubuntu1) vivid; urgency=medium
 
+  [ Stephen M. Webb ]
   * Upstream release 7.3.2.
+  * fix AP test failure due to new parameter added to key grabbing (LP:
+    #1433648)
+  * silenced GCC 5 warnings (LP: #1430784)
+  * uses the new upstream .desktop file for D-Bus activated Nautilus
+    instances (LP: #1428837)
 
- -- Stephen M. Webb <stephen.webb@canonical.com>  Thu, 19 Mar 2015 11:03:12 -0400
+  [ Brandon Schaefer ]
+  * When we quit the quicklist it would check if the mouse was over the
+    launcher, if it wasn't it would fold the launcher. We don't need to
+    check this if we are in keynav as we want all the icons to be
+    unfolded. (LP: #1246891)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Chris Townsend ]
+  * Use a 2 second delay before showing the first run shortcut hints to
+    workaround a race condition on input handling. (LP: #1313597)
+
+  [ Marco Trevisan (Treviño) ]
+  * GnomeKeyGrabber: add timestamp support to accelerators (LP:
+    #1433648)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 24 Mar 2015 16:09:14 +0000
 
 unity (7.3.1+15.04.20150227-0ubuntu1) vivid; urgency=medium
 
