@@ -244,4 +244,4 @@ class LauncherKeyNavTests(LauncherTestCase):
       """The panel title must change when in key nav mode."""
 
       self.start_keynav_with_cleanup_cancel()
-      self.assertThat(self.unity.panels.get_active_panel().title, Eventually(Equals("Search your computer and online sources")))
+      self.assertThat(self.unity.panels.get_active_panel().title, Eventually(Equals("")))
