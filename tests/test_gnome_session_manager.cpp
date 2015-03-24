@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2013,2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -709,6 +709,9 @@ TEST_F(TestGnomeSessionManager, LogoutRequested)
   EXPECT_TRUE(cancelled);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 struct InteractiveMode : TestGnomeSessionManager, testing::WithParamInterface<bool> {};
 INSTANTIATE_TEST_CASE_P(TestGnomeSessionManager, InteractiveMode, testing::Bool());
 
@@ -920,6 +923,8 @@ TEST_P(/*TestGnomeSessionManager*/InteractiveMode, RebootRequestedInhibitors)
   Utils::WaitForTimeoutMSec(10);
   EXPECT_FALSE(cancelled);
 }
+
+#pragma GCC diagnostic pop
 
 TEST_F(TestGnomeSessionManager, ImmediateReboot)
 {

@@ -157,7 +157,7 @@ void Controller::SetupHudView()
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
   view_->query_activated.connect(sigc::mem_fun(this, &Controller::OnQueryActivated));
   view_->query_selected.connect(sigc::mem_fun(this, &Controller::OnQuerySelected));
-  view_->layout_changed.connect(sigc::bind(sigc::mem_fun(this, &Controller::Relayout), nullptr));
+  view_->layout_changed.connect(sigc::bind(sigc::mem_fun(this, &Controller::Relayout), false));
   // Add to the debug introspection.
   AddChild(view_);
 }

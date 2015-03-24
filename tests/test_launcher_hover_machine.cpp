@@ -32,6 +32,9 @@ unity::LauncherHoverMachine::HoverQuirk QUIRKS [] {
   unity::LauncherHoverMachine::KEY_NAV_ACTIVE,
   unity::LauncherHoverMachine::LAUNCHER_IN_ACTION };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 struct SingleQuirk : public TestWithParam<std::tuple<unity::LauncherHoverMachine::HoverQuirk, bool, bool>> {
   unity::LauncherHoverMachine machine;
 };
@@ -113,3 +116,5 @@ INSTANTIATE_TEST_CASE_P(TestLauncherHoverMachine, MultipleQuirks,
     Combine(ValuesIn(QUIRKS), Bool(), Bool(), ValuesIn(QUIRKS), Bool(), Bool()));
 
 }
+
+#pragma GCC diagnostic pop

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -145,6 +145,9 @@ TEST_F(TestPanelMenuView, ShouldDrawMenusOnSpread)
   EXPECT_FALSE(menu_view.ShouldDrawMenus());
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 struct ProgressTester : TestPanelMenuView, WithParamInterface<double> {};
 INSTANTIATE_TEST_CASE_P(TestPanelMenuView, ProgressTester, Range(0.0, 1.0, 0.1));
 
@@ -184,6 +187,8 @@ TEST_P(ProgressTester, RestoreOnGrabInBiggerWorkArea)
   EXPECT_FALSE(max_window->maximized());
   EXPECT_EQ(max_window->geo(), expected_geo);
 }
+
+#pragma GCC diagnostic pop
 
 } // panel namespace
 } // unity namespace

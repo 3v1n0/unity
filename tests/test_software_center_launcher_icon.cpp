@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -243,6 +243,9 @@ TEST_F(TestSoftwareCenterLauncherIcon, AnimateFromInvalidPosition)
   EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 struct MultiMonitor : TestSoftwareCenterLauncherIcon, WithParamInterface<unsigned> {};
 INSTANTIATE_TEST_CASE_P(TestSoftwareCenterLauncherIcon, MultiMonitor, Range<unsigned>(0, monitors::MAX, 1));
 
@@ -291,6 +294,8 @@ TEST_P(/*TestSoftwareCenterLauncherIcon*/InstallProgress, InstallEmblems)
 
   g_variant_unref(params);
 }
+
+#pragma GCC diagnostic pop
 
 }
 
