@@ -1101,7 +1101,7 @@ TEST_F(TestApplicationLauncherIcon, IsFileManager)
   EXPECT_FALSE(empty_icon->IsFileManager());
   EXPECT_FALSE(mock_icon->IsFileManager());
 
-  auto app = std::make_shared<MockApplication::Nice>("/any/path/nautilus.desktop", "Nautilus");
+  auto app = std::make_shared<MockApplication::Nice>("/any/path/org.gnome.Nautilus.desktop", "Nautilus");
   MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
   EXPECT_TRUE(icon->IsFileManager());
 
