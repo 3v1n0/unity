@@ -27,7 +27,7 @@
 
 namespace unity {
 
-class XdndStartStopNotifierImp : public XdndStartStopNotifier {
+class XdndStartStopNotifierImp : public XdndStartStopNotifier, public sigc::trackable {
 public:
   XdndStartStopNotifierImp();
 
