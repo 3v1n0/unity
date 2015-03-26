@@ -241,7 +241,12 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_changes_panel(self):
-      """The panel title must change when in key nav mode."""
+        """The panel title must change when in key nav mode
+           and LIM is not enabled.
+        """
 
-      self.start_keynav_with_cleanup_cancel()
-      self.assertThat(self.unity.panels.get_active_panel().title, Eventually(Equals("")))
+        self.start_keynav_with_cleanup_cancel()
+        panel = self.unity.panels.get_active_panel()
+        expected_panel_title = ("" if panel.menus.integrated_menus
+                                else "Search your computer and online sources")
+        self.assertThat(panel.title, Eventually(Equals(expected_panel_title)))
