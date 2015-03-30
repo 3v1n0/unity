@@ -96,7 +96,7 @@
     <key type="as" name="favorites">
       <default>[
         'application://ubiquity.desktop',
-        'application://nautilus.desktop',
+        'application://org.gnome.Nautilus.desktop',
         'application://firefox.desktop',
         'application://libreoffice-writer.desktop',
         'application://libreoffice-calc.desktop',
