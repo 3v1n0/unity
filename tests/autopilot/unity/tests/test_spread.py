@@ -59,13 +59,22 @@ class SpreadTests(UnityTestCase):
         self.assertThat(lambda: self.unity.screen.spread_filter, Eventually(NotEquals(None)))
         return self.unity.screen.spread_filter
 
-    def assertWindowIsScaledEquals(self, xid, scaled):
+    def assertWindowIsScaledEquals(self, xid, is_scaled):
         """Assert weather a window is scaled"""
-        # Add a short delay to ensure the Spread has finished.
-        sleep(0.5)
-
-        refresh_fn = lambda: xid in [w.xid for w in self.unity.screen.scaled_windows]
-        self.assertThat(refresh_fn, Eventually(Equals(scaled)))
+        def scaled_windows_for_screen_contains_xid():
+            """Predicates the window is in the list of scaled windows for the screen.
+               The DBus introspection object actually raises an exception if you try to look
+               at a window in the scaled_windows list and it's not a scaled window.  Buggzorz.
+            """
+            scaled_windows = self.unity.screen.scaled_windows
+            for w in scaled_windows:
+                try:
+                    if xid == w.xid:
+                        return True
+                except:
+                    pass
+            return False
+        self.assertThat(scaled_windows_for_screen_contains_xid, Eventually(Equals(is_scaled)))
 
     def assertWindowIsClosed(self, xid):
         """Assert that a window is not in the list of the open windows"""
