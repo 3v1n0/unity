@@ -322,7 +322,9 @@ void Controller::BlankWindowGrabEnable(bool grab)
     blank_window_->mouse_move.connect([this](int, int, int dx, int dy, unsigned long, unsigned long) {
       if ((dx || dy) && !lockscreen_timeout_) HideBlankWindow();
     });
-    blank_window_->key_down.connect([this] (unsigned long, unsigned long e, unsigned long, const char*, unsigned short) {
+    blank_window_->key_down.connect([this] (unsigned long et, unsigned long k, unsigned long s, const char* c, unsigned short kc) {
+      if (prompt_view_.GetPointer() && prompt_view_->focus_view())
+        prompt_view_->focus_view()->key_down.emit(et, k, s, c, kc);
       if (!lockscreen_timeout_) HideBlankWindow();
     });
     blank_window_->mouse_down.connect([this] (int, int, unsigned long, unsigned long) {
