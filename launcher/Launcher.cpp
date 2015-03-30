@@ -2236,7 +2236,8 @@ void Launcher::ScrollLauncher(int wheel_delta)
 
 ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper::Ptr const& owner, ui::BarrierEvent::Ptr event)
 {
-  if (hide_machine_.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
+  if (hide_machine_.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE) ||
+      hide_machine_.GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
     return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
   }
