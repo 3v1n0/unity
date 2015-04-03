@@ -74,14 +74,14 @@ Controller::Controller(WindowCreator const& create_window)
            [this] (bool d) { if (impl_->model_) { impl_->model_->detail_selection = d; } return false; })
   , detail_mode([this] { return detail_mode_; })
   , first_selection_mode(FirstSelectionMode::LAST_ACTIVE_APP)
+  , show_desktop_disabled(false)
+  , mouse_disabled(false)
   , timeout_length(0)
   , detail_on_timeout(true)
   , detail_timeout_length(500)
   , initial_detail_timeout_length(1500)
   , visible_(false)
   , monitor_(0)
-  , show_desktop_disabled_(false)
-  , mouse_disabled_(false)
   , detail_mode_(DetailMode::TAB_NEXT_WINDOW)
   , impl_(new Controller::Impl(this, 20, create_window))
 {}
@@ -92,7 +92,7 @@ Controller::~Controller()
 
 bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
 {
-  bool empty = (IsShowDesktopDisabled() ? results.empty() : results.size() == 1);
+  bool empty = (show_desktop_disabled() ? results.empty() : results.size() == 1);
   return (!empty && !WindowManager::Default().IsWallActive());
 }
 
@@ -203,29 +203,9 @@ LayoutWindow::Vector const& Controller::ExternalRenderTargets() const
   return impl_->ExternalRenderTargets();
 }
 
-bool Controller::IsShowDesktopDisabled() const
-{
-  return show_desktop_disabled_;
-}
-
-void Controller::SetShowDesktopDisabled(bool disabled)
-{
-  show_desktop_disabled_ = disabled;
-}
-
-bool Controller::IsMouseDisabled() const
-{
-  return mouse_disabled_;
-}
-
-void Controller::SetMouseDisabled(bool disabled)
-{
-  mouse_disabled_ = disabled;
-}
-
 int Controller::StartIndex() const
 {
-  return (IsShowDesktopDisabled() ? 0 : 1);
+  return (show_desktop_disabled() ? 0 : 1);
 }
 
 Selection Controller::GetCurrentSelection() const
@@ -266,7 +246,8 @@ Controller::AddProperties(debug::IntrospectionData& introspection)
   .add("detail_timeout_length", detail_timeout_length())
   .add("visible", visible_)
   .add("monitor", monitor_)
-  .add("show_desktop_disabled", show_desktop_disabled_)
+  .add("show_desktop_disabled", show_desktop_disabled())
+  .add("mouse_disabled", mouse_disabled())
   .add("detail_mode", static_cast<unsigned>(detail_mode_))
   .add("first_selection_mode", static_cast<unsigned>(first_selection_mode()));
 }
