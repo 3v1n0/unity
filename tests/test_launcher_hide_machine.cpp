@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2012,2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -48,6 +48,9 @@ struct HideModeNever : public TestWithParam<std::tuple<ul::LauncherHideMachine::
   ul::LauncherHideMachine machine;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 TEST_P(HideModeNever, Bool2Bool) {
   auto quirk = std::tr1::get<0>(GetParam());
   bool initial_value = std::tr1::get<1>(GetParam());
@@ -69,6 +72,8 @@ TEST_P(HideModeNever, Bool2Bool) {
 
 INSTANTIATE_TEST_CASE_P(TestLauncherHideMachine, HideModeNever,
     Combine(ValuesIn(QUIRKS), Bool(), Bool()));
+
+#pragma GCC diagnostic pop
 
 // TODO: write tests for HideModeAutohide.
 

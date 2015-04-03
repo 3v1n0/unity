@@ -43,7 +43,7 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define NOTIFY_TIMEOUT 80
 #define N_TIMEOUT_SLOTS 50
-#define MAX_INDICATOR_ENTRIES 100
+#define MAX_INDICATOR_ENTRIES 500
 
 #define NUX_VERTICAL_SCROLL_DELTA 120
 #define NUX_HORIZONTAL_SCROLL_DELTA (NUX_VERTICAL_SCROLL_DELTA ^ 2)
@@ -61,10 +61,13 @@ struct _PanelServicePrivate
 {
   GSList     *indicators;
   GSList     *dropdown_entries;
+  GSList     *removed_entries;
   GHashTable *id2entry_hash;
   GHashTable *panel2entries_hash;
+  IndicatorObject *appmenu_indicator;
 
-  gint32 timeouts[N_TIMEOUT_SLOTS];
+  guint timeouts[N_TIMEOUT_SLOTS];
+  guint remove_idle;
 
   IndicatorObjectEntry *last_entry;
   IndicatorObjectEntry *last_dropdown_entry;
@@ -104,14 +107,14 @@ enum
 
 enum
 {
-  SYNC_WAITING = -1,
+  SYNC_WAITING = G_MAXUINT,
   SYNC_NEUTRAL = 0,
 };
 
 static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
 static const gchar * indicator_order[][2] = {
-  {"libappmenu.so", NULL},                    /* indicator-appmenu" */
+  {APPMENU_INDICATOR_NAME, NULL},             /* indicator-appmenu" */
   {"libapplication.so", NULL},                /* indicator-application" */
   {"floating-indicators", NULL},              /* position-less NG indicators */
   {"libprintersmenu.so", NULL},               /* indicator-printers */
@@ -136,6 +139,8 @@ static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
 static void update_keybinding (GSettings *, const gchar *, gpointer);
 static void emit_upstart_event (const gchar *);
+static gchar * get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry);
+static IndicatorObjectEntry * get_indicator_entry_by_id (PanelService *self, const gchar *entry_id);
 static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
 
 /*
@@ -164,7 +169,7 @@ panel_service_class_dispose (GObject *self)
 
   for (i = 0; i < N_TIMEOUT_SLOTS; i++)
     {
-      if (priv->timeouts[i] > 0)
+      if (priv->timeouts[i] > 0 && priv->timeouts[i] != SYNC_WAITING)
         {
           g_source_remove (priv->timeouts[i]);
           priv->timeouts[i] = 0;
@@ -265,9 +270,10 @@ panel_service_class_init (PanelServiceClass *klass)
 }
 
 static gboolean
-is_point_in_rect (gint x, gint y, GdkRectangle* rect)
+rect_contains_point (GdkRectangle* rect, gint x, gint y)
 {
-  g_return_val_if_fail (rect, FALSE);
+  if (!rect)
+    return FALSE;
 
   return (x >= rect->x && x <= (rect->x + rect->width) &&
           y >= rect->y && y <= (rect->y + rect->height));
@@ -290,7 +296,7 @@ get_entry_at (PanelService *self, gint x, gint y)
           IndicatorObjectEntry *entry = k;
           GdkRectangle *geo = v;
 
-          if (is_point_in_rect (x, y, geo))
+          if (rect_contains_point (geo, x, y))
             {
               return entry;
             }
@@ -321,8 +327,7 @@ get_entry_at_panel (PanelService *self, const gchar *panel, gint x, gint y)
       IndicatorObjectEntry *entry = key;
       GdkRectangle *geo = value;
 
-      if (x >= geo->x && x <= (geo->x + geo->width) &&
-          y >= geo->y && y <= (geo->y + geo->height))
+      if (rect_contains_point (geo, x, y))
         {
           return entry;
         }
@@ -332,7 +337,7 @@ get_entry_at_panel (PanelService *self, const gchar *panel, gint x, gint y)
 }
 
 static const gchar*
-get_panel_at (PanelService *self, gint x, gint y)
+get_panel_for_parent_at (PanelService *self, guint parent, gint x, gint y)
 {
   GHashTableIter panel_iter, entries_iter;
   gpointer key, value, k, v;
@@ -346,12 +351,20 @@ get_panel_at (PanelService *self, gint x, gint y)
 
       while (g_hash_table_iter_next (&entries_iter, &k, &v))
         {
+          IndicatorObjectEntry *entry = k;
           GdkRectangle *geo = v;
 
-          if (x >= geo->x && x <= (geo->x + geo->width) &&
-              y >= geo->y && y <= (geo->y + geo->height))
+          /* The entry might be invalid at this point (as it could have been
+           * removed, but still not synced), so it's better to double check */
+          if (g_slist_find (self->priv->removed_entries, entry))
+            continue;
+
+          if (!parent || entry->parent_window == parent)
             {
-              return panel_id;
+              if (rect_contains_point (geo, x, y))
+                {
+                  return panel_id;
+                }
             }
         }
     }
@@ -414,13 +427,28 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
       /* Unity might register some "fake" dropdown entries that it might use to
        * to present long menu bars (right now only for appmenu indicator) */
       entry = g_new0 (IndicatorObjectEntry, 1);
-      entry->parent_object = panel_service_get_indicator (self, "libappmenu.so");
+      entry->parent_object = self->priv->appmenu_indicator;
       entry->name_hint = g_strdup (entry_id);
       self->priv->dropdown_entries = g_slist_append (self->priv->dropdown_entries, entry);
       g_hash_table_insert (self->priv->id2entry_hash, (gpointer)entry->name_hint, entry);
     }
 
   return entry;
+}
+
+static void
+ensure_entry_menu_is_closed (PanelService *self,
+                             const gchar *panel_id,
+                             IndicatorObjectEntry *entry)
+{
+  PanelServicePrivate  *priv = self->priv;
+
+  /* If the entry has been removed let's make sure that its menu is closed */
+  if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+    {
+      if (!priv->last_panel || !panel_id || g_strcmp0 (priv->last_panel, panel_id) == 0)
+        gtk_menu_popdown (entry->menu);
+    }
 }
 
 static void
@@ -609,9 +637,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
             {
               /* Middle clicks over an appmenu entry are considered just like
                * all other clicks */
-              IndicatorObject *obj = get_entry_parent_indicator (entry);
-
-              if (g_strcmp0 (g_object_get_data (G_OBJECT (obj), "id"), "libappmenu.so") == 0)
+              if (get_entry_parent_indicator (entry) == priv->appmenu_indicator)
                 {
                   event_is_a_click = TRUE;
                 }
@@ -677,7 +703,7 @@ static gboolean
 initial_resync (PanelService *self)
 {
   g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
-  return FALSE;
+  return G_SOURCE_REMOVE;
 }
 
 static gboolean
@@ -686,7 +712,7 @@ ready_signal (PanelService *self)
   if (!lockscreen_mode)
     emit_upstart_event ("indicator-services-start");
 
-  return FALSE;
+  return G_SOURCE_REMOVE;
 }
 
 static void
@@ -850,10 +876,10 @@ panel_service_check_cleared (PanelService *self)
   if (self->priv->indicators == NULL)
     {
       g_signal_emit (self, _service_signals[INDICATORS_CLEARED], 0);
-      return FALSE;
+      return G_SOURCE_REMOVE;
     }
 
-  return TRUE;
+  return G_SOURCE_CONTINUE;
 }
 
 static void
@@ -930,6 +956,9 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
     {
       g_object_ref_sink (G_OBJECT (indicator));
     }
+
+  if (self->priv->appmenu_indicator == indicator)
+    self->priv->appmenu_indicator = NULL;
 
   g_object_unref (G_OBJECT (indicator));
 }
@@ -1145,7 +1174,7 @@ actually_notify_object (IndicatorObject *object)
     g_signal_emit (self, _service_signals[RE_SYNC],
                    0, g_object_get_data (G_OBJECT (object), "id"));
 
-  return FALSE;
+  return G_SOURCE_REMOVE;
 }
 
 static void
@@ -1204,6 +1233,7 @@ on_entry_added (IndicatorObject      *object,
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
 
+  self->priv->removed_entries = g_slist_remove (self->priv->removed_entries, entry);
   gchar *entry_id = get_indicator_entry_id_by_entry (entry);
   g_hash_table_insert (self->priv->id2entry_hash, entry_id, entry);
 
@@ -1243,6 +1273,42 @@ on_entry_added (IndicatorObject      *object,
   notify_object (object);
 }
 
+static gboolean
+on_removed_idle (PanelService *self)
+{
+  GHashTableIter iter;
+  GHashTable *entry2geometry_hash;
+  IndicatorObjectEntry *entry;
+  gpointer value;
+  GSList *l;
+
+  for (l = self->priv->removed_entries; l; l = l->next)
+    {
+      entry = l->data;
+      ensure_entry_menu_is_closed (self, NULL, entry);
+
+      g_hash_table_iter_init (&iter, self->priv->panel2entries_hash);
+      while (g_hash_table_iter_next (&iter, NULL, &value))
+        {
+          if ((entry2geometry_hash = value))
+            {
+              g_hash_table_remove (entry2geometry_hash, entry);
+
+              if (g_hash_table_size (entry2geometry_hash) == 0)
+                {
+                  g_hash_table_iter_remove (&iter);
+                }
+            }
+        }
+
+    }
+
+  g_slist_free (self->priv->removed_entries);
+  self->priv->removed_entries = NULL;
+
+  return G_SOURCE_REMOVE;
+}
+
 static void
 on_entry_removed (IndicatorObject      *object,
                   IndicatorObjectEntry *entry,
@@ -1250,11 +1316,6 @@ on_entry_removed (IndicatorObject      *object,
 {
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (entry != NULL);
-
-  /* Don't remove here the value from panel2entries_hash, this should be
-   * done during the geometries sync, to avoid false positive.
-   * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
-   * when switching the focus from a window to one of its dialog children */
 
   gchar *entry_id = get_indicator_entry_id_by_entry (entry);
   g_hash_table_remove (self->priv->id2entry_hash, entry_id);
@@ -1269,6 +1330,13 @@ on_entry_removed (IndicatorObject      *object,
     {
       g_signal_handlers_disconnect_by_data (entry->image, object);
     }
+
+  self->priv->removed_entries = g_slist_append (self->priv->removed_entries, entry);
+
+  if (self->priv->remove_idle)
+    g_source_remove (self->priv->remove_idle);
+
+  self->priv->remove_idle = g_idle_add ((GSourceFunc) on_removed_idle, self);
 
   notify_object (object);
 }
@@ -1327,6 +1395,7 @@ static const gchar * indicator_environment[] = {
   "unity",
   "unity-3d",
   "unity-panel-service",
+  "unity-all-menus",
   NULL
 };
 
@@ -1345,6 +1414,9 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
     name = g_strdup_printf ("%p", object);
 
   priv->indicators = g_slist_append (priv->indicators, object);
+
+  if (!priv->appmenu_indicator && g_strcmp0 (name, APPMENU_INDICATOR_NAME) == 0)
+    priv->appmenu_indicator = object;
 
   g_object_set_data_full (G_OBJECT (object), "id", g_strdup (name), g_free);
 
@@ -1607,10 +1679,11 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
   guint32 image_type = 0;
   gchar *image_data = gtk_image_to_data (entry->image, &image_type);
 
-  g_variant_builder_add (b, "(ssssbbusbbi)",
+  g_variant_builder_add (b, ENTRY_SIGNATURE,
                          indicator_id,
                          id,
                          entry->name_hint ? entry->name_hint : "",
+                         entry->parent_window,
                          is_label ? gtk_label_get_label (entry->label) : "",
                          is_label ? gtk_widget_get_sensitive (GTK_WIDGET (entry->label)) : FALSE,
                          is_label ? gtk_widget_get_visible (GTK_WIDGET (entry->label)) : FALSE,
@@ -1627,14 +1700,15 @@ static void
 indicator_entry_null_to_variant (const gchar     *indicator_id,
                                  GVariantBuilder *b)
 {
-  g_variant_builder_add (b, "(ssssbbusbbi)",
+  g_variant_builder_add (b, ENTRY_SIGNATURE,
                          indicator_id,
                          "",
                          "",
+                         0,
                          "",
                          FALSE,
                          FALSE,
-                         (guint32) 0,
+                         0,
                          "",
                          FALSE,
                          FALSE,
@@ -1642,15 +1716,20 @@ indicator_entry_null_to_variant (const gchar     *indicator_id,
 }
 
 static void
-indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+indicator_object_full_to_variant (PanelService *self, IndicatorObject *object,
+                                  const gchar *indicator_id, GVariantBuilder *b)
 {
   GList *entries, *e;
+  GHashTable *index_hash = NULL;
   gint parent_prio = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "priority"));
   entries = indicator_object_get_entries (object);
-  gint index = 0;
+  guint index = 0;
 
   if (entries)
     {
+      if (object == self->priv->appmenu_indicator)
+        index_hash = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
+
       for (e = entries; e; e = e->next)
         {
           gint prio = -1;
@@ -1664,13 +1743,28 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
 
           if (prio < 0)
             {
+              if (index_hash)
+                {
+                  index = GPOINTER_TO_UINT (g_hash_table_lookup (index_hash,
+                                                                 GUINT_TO_POINTER (entry->parent_window)));
+                }
+
               prio = parent_prio + index;
               index++;
+
+              if (index_hash)
+                {
+                  g_hash_table_insert (index_hash, GUINT_TO_POINTER (entry->parent_window),
+                                                   GUINT_TO_POINTER (index));
+                }
             }
 
           indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
         }
+
+      if (index_hash)
+        g_hash_table_destroy (index_hash);
 
       g_list_free (entries);
     }
@@ -1682,15 +1776,15 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
 }
 
 static void
-indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+indicator_object_to_variant (PanelService *self, IndicatorObject *object,
+                             const gchar *indicator_id, GVariantBuilder *b)
 {
   if (!GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "remove")))
     {
-      indicator_object_full_to_variant (object, indicator_id, b);
+      indicator_object_full_to_variant (self, object, indicator_id, b);
     }
   else
     {
-      PanelService *self = panel_service_get_default ();
       indicator_entry_null_to_variant (indicator_id, b);
       panel_service_actually_remove_indicator (self, object);
     }
@@ -1718,7 +1812,7 @@ get_monitor_at (gint x, gint y)
           rect.height *= scale;
         }
 
-      if (is_point_in_rect (x, y, &rect))
+      if (rect_contains_point (&rect, x, y))
         {
           return i;
         }
@@ -1790,8 +1884,8 @@ panel_service_sync (PanelService *self)
   GSList *i;
   gint position;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("("ENTRY_ARRAY_SIGNATURE")"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE (ENTRY_ARRAY_SIGNATURE));
 
   for (i = self->priv->indicators; i;)
     {
@@ -1801,7 +1895,7 @@ panel_service_sync (PanelService *self)
 
       const gchar *indicator_id = g_object_get_data (G_OBJECT (indicator), "id");
       position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (indicator), "position"));
-      indicator_object_to_variant (indicator, indicator_id, &b);
+      indicator_object_to_variant (self, indicator, indicator_id, &b);
 
       /* Set the sync back to neutral */
       self->priv->timeouts[position] = SYNC_NEUTRAL;
@@ -1817,8 +1911,8 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   GVariantBuilder b;
   GSList *i;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("("ENTRY_ARRAY_SIGNATURE")"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE (ENTRY_ARRAY_SIGNATURE));
 
   for (i = self->priv->indicators; i; i = i->next)
     {
@@ -1826,7 +1920,7 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
                      g_object_get_data (G_OBJECT (i->data), "id")) == 0)
         {
           gint position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
-          indicator_object_to_variant (i->data, indicator_id, &b);
+          indicator_object_to_variant (self, i->data, indicator_id, &b);
 
           /* Set the sync back to neutral */
           self->priv->timeouts[position] = SYNC_NEUTRAL;
@@ -1850,6 +1944,7 @@ panel_service_sync_geometry (PanelService *self,
 {
   IndicatorObject *object;
   IndicatorObjectEntry *entry;
+  GHashTable *entry2geometry_hash;
   gboolean valid_entry = TRUE;
   PanelServicePrivate  *priv = self->priv;
 
@@ -1870,24 +1965,18 @@ panel_service_sync_geometry (PanelService *self,
 
   if (entry)
     {
-      GHashTable *entry2geometry_hash = g_hash_table_lookup (priv->panel2entries_hash, panel_id);
+      entry2geometry_hash = g_hash_table_lookup (priv->panel2entries_hash, panel_id);
 
       if (width < 0 || height < 0 || !valid_entry)
         {
-          /* If the entry has been removed let's make sure that its menu is closed */
-          if (valid_entry && GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
-            {
-              if (!priv->last_panel || g_strcmp0 (priv->last_panel, panel_id) == 0)
-                gtk_menu_popdown (entry->menu);
-            }
+          if (valid_entry)
+            ensure_entry_menu_is_closed (self, panel_id, entry);
 
           if (entry2geometry_hash)
             {
-              if (g_hash_table_size (entry2geometry_hash) > 1)
-                {
-                  g_hash_table_remove (entry2geometry_hash, entry);
-                }
-              else
+              g_hash_table_remove (entry2geometry_hash, entry);
+
+              if (g_hash_table_size (entry2geometry_hash) == 0)
                 {
                   g_hash_table_remove (priv->panel2entries_hash, panel_id);
                 }
@@ -2256,7 +2345,7 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;
-      priv->last_panel = get_panel_at (self, x, y);
+      priv->last_panel = get_panel_for_parent_at (self, xid, x, y);
 
       g_signal_connect (priv->last_menu, "hide", G_CALLBACK (on_active_menu_hidden), self);
       g_signal_connect_after (priv->last_menu, "move-current",
@@ -2462,10 +2551,9 @@ panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y
   GList                *entries;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (INDICATOR_IS_OBJECT (self->priv->appmenu_indicator));
 
-  object = panel_service_get_indicator (self, "libappmenu.so");
-  g_return_if_fail (INDICATOR_IS_OBJECT (object));
-
+  object = self->priv->appmenu_indicator;
   entries = indicator_object_get_entries (object);
 
   if (entries)

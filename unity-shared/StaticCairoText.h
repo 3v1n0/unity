@@ -21,6 +21,7 @@
 #ifndef UNITYSHARED_STATICCAIROTEXT_H
 #define UNITYSHARED_STATICCAIROTEXT_H
 
+#include <pango/pango.h>
 #include <string>
 
 #include <Nux/Nux.h>
@@ -82,8 +83,12 @@ public:
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
+
   void SetFont(std::string const& font);
+  void SetFontSize(int);
+  void SetFontWeight(PangoWeight);
   std::string GetFont();
+
   void SetUnderline(UnderlineState underline);
   void SetLines(int maximum_lines);
   void SetLineSpacing(float line_spacing);

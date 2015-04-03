@@ -42,6 +42,7 @@ const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
+const std::string UNFOCUSED_MENU_POPUP = "unfocused-windows-popup";
 
 const std::string UI_SETTINGS = "com.canonical.Unity.Interface";
 const std::string TEXT_SCALE_FACTOR = "text-scale-factor";
@@ -91,18 +92,6 @@ public:
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
-    // The order is important here, DPI is the last thing to be updated
-    UpdateLimSetting();
-    UpdateTextScaleFactor();
-    UpdateCursorScaleFactor();
-    UpdateFontSize();
-    UpdateDPI();
-
-    CacheFormFactor();
-    CacheDoubleClickActivate();
-
-    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
-
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
     });
@@ -150,6 +139,18 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
     });
+
+    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
+
+    // The order is important here, DPI is the last thing to be updated
+    UpdateLimSetting();
+    UpdateTextScaleFactor();
+    UpdateCursorScaleFactor();
+    UpdateFontSize();
+    UpdateDPI();
+
+    CacheFormFactor();
+    CacheDoubleClickActivate();
   }
 
   void CacheFormFactor()
@@ -187,6 +188,7 @@ public:
   {
     parent_->lim_movement_thresold = g_settings_get_uint(lim_settings_, CLICK_MOVEMENT_THRESHOLD.c_str());
     parent_->lim_double_click_wait = g_settings_get_uint(lim_settings_, DOUBLE_CLICK_WAIT.c_str());
+    parent_->lim_unfocused_popup = g_settings_get_boolean(lim_settings_, UNFOCUSED_MENU_POPUP.c_str());
   }
 
   FormFactor GetFormFactor() const

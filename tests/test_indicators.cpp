@@ -62,15 +62,15 @@ struct TestIndicators : Test
 
     Indicator::Ptr test_indicator_1 = indicators.AddIndicator("indicator-test-1");
 
-    entry = new Entry("indicator-test-1|entry-1", "name-hint-1", "label", true, true,
+    entry = new Entry("indicator-test-1|entry-1", "name-hint-1", 0, "label", true, true,
                       0, "icon", true, true, -1);
     sync_data.push_back(Entry::Ptr(entry));
 
-    entry = new Entry("indicator-test-1|entry-2", "name-hint-2", "label", true, true,
+    entry = new Entry("indicator-test-1|entry-2", "name-hint-2", 0, "label", true, true,
                       0, "icon", true, true, -1);
     sync_data.push_back(Entry::Ptr(entry));
 
-    entry = new Entry("indicator-test-1|entry-3", "name-hint-3", "label", true, true,
+    entry = new Entry("indicator-test-1|entry-3", "name-hint-3", 0, "label", true, true,
                       0, "icon", true, true, -1);
     sync_data.push_back(Entry::Ptr(entry));
 
@@ -83,11 +83,11 @@ struct TestIndicators : Test
     Indicator::Ptr test_indicator_2 = indicators.AddIndicator("indicator-test-2");
     sync_data.clear();
 
-    entry = new Entry("indicator-test-2|entry-1", "name-hint-1", "label", true, true,
+    entry = new Entry("indicator-test-2|entry-1", "name-hint-1", 0, "label", true, true,
                       0, "icon", true, true, -1);
     sync_data.push_back(Entry::Ptr(entry));
 
-    entry = new Entry("indicator-test-2|entry-2", "name-hint-2", "label", true, true,
+    entry = new Entry("indicator-test-2|entry-2", "name-hint-2", 0, "label", true, true,
                       0, "icon", true, true, -1);
     sync_data.push_back(Entry::Ptr(entry));
 

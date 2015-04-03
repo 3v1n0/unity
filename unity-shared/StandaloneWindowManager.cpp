@@ -600,6 +600,11 @@ std::string StandaloneWindowManager::GetWindowName(Window window_id) const
   return "";
 }
 
+bool StandaloneWindowManager::IsOnscreenKeyboard(Window window_id) const
+{
+  return false;
+}
+
 std::string StandaloneWindowManager::GetStringProperty(Window, Atom) const
 {
   return std::string();
@@ -703,6 +708,7 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
   window->visible.changed.connect([this, xid] (bool v) {v ? window_shown(xid) : window_hidden(xid);});
   window->maximized.changed.connect([this, xid] (bool v) {v ? window_maximized(xid) : window_restored(xid);});
   window->minimized.changed.connect([this, xid] (bool v) {v ? window_minimized(xid) : window_unminimized(xid);});
+  window->geo.changed.connect([this, xid] (nux::Geometry const&) { window_resized(xid); window_moved(xid); });
   window->resized.connect([this, xid] { window_resized(xid); });
   window->moved.connect([this, xid] { window_moved(xid); });
 

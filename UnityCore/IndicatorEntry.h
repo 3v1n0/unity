@@ -44,9 +44,10 @@ class Entry
 public:
   typedef std::shared_ptr<Entry> Ptr;
 
-  Entry(std::string const& id, std::string const& name_hint = "");
+  Entry(std::string const& id, std::string const& name_hint = "", uint32_t parent_window = 0);
   Entry(std::string const& id,
         std::string const& name_hint,
+        uint32_t parent_window,
         std::string const& label,
         bool label_sensitive,
         bool label_visible,
@@ -61,6 +62,7 @@ public:
 
   std::string const& id() const;
   std::string const& name_hint() const;
+  uint32_t parent_window() const;
 
   void set_image(int type, std::string const& data, bool sensitive, bool visible);
   bool image_visible() const;
@@ -114,6 +116,7 @@ public:
 private:
   std::string id_;
   std::string name_hint_;
+  uint32_t parent_window_;
 
   std::string label_;
   bool label_visible_;

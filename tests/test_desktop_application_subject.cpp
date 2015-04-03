@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Canonical Ltd.
+ * Copyright 2013,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -31,6 +31,9 @@ struct TestDestkopApplicationSubject : testing::Test
 {
   ApplicationSubject subject;
 };
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 struct Property : TestDestkopApplicationSubject, testing::WithParamInterface<std::string> {};
 INSTANTIATE_TEST_CASE_P(TestDestkopApplicationSubject, Property, testing::Values("Fooo", "Bar", "Unity"));
@@ -274,5 +277,7 @@ TEST_P(/*TestDesktopApplicationSubject*/Property, CopyBaseTypeConstructor)
   ApplicationSubject copy_subject(mock_subject);
   EXPECT_EQ(mock_subject, copy_subject);
 }
+
+#pragma GCC diagnostic pop
 
 } // anonymous namespace

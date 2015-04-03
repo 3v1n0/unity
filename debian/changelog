@@ -1,3 +1,98 @@
+unity (7.3.2+15.04.20150330-0ubuntu1) vivid; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Do not restore focus if a quicklist is opened during launcher key
+    navigation. (LP: #932486)
+  * Forward first key event that happens on top of the blank window to
+    the lockscreen. (LP: #1308265)
+  * Hide launcher to avoid damaging window when not needed. Also make
+    sure that pressure effect works fine (previous fix has been reverted
+    because of this!). (LP: #1301394)
+  * Make sure scope_views_[filter.id] exists before using operator[] on
+    it. (LP: #926979)
+  * Make sure that signals are auto-desconnected when
+    XdndStartStopNotifierImp is destroyed. (LP: #1432231)
+  * Release pointer barrier if launcher is in lock_hide state. (LP:
+    #1029114)
+
+  [ Sebastien Bacher ]
+  * use the new nautilus .desktop name (LP: #1436297)
+
+  [ Stephen M. Webb ]
+  * AP tests: accounted for arbitrarily-raised exceptions in checking
+    scaled windows (LP: #1436095)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 30 Mar 2015 15:48:47 +0000
+
+unity (7.3.2+15.04.20150324.1-0ubuntu1) vivid; urgency=medium
+
+  [ Stephen M. Webb ]
+  * Upstream release 7.3.2.
+  * fix AP test failure due to new parameter added to key grabbing (LP:
+    #1433648)
+  * silenced GCC 5 warnings (LP: #1430784)
+  * uses the new upstream .desktop file for D-Bus activated Nautilus
+    instances (LP: #1428837)
+
+  [ Brandon Schaefer ]
+  * When we quit the quicklist it would check if the mouse was over the
+    launcher, if it wasn't it would fold the launcher. We don't need to
+    check this if we are in keynav as we want all the icons to be
+    unfolded. (LP: #1246891)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Chris Townsend ]
+  * Use a 2 second delay before showing the first run shortcut hints to
+    workaround a race condition on input handling. (LP: #1313597)
+
+  [ Marco Trevisan (Treviño) ]
+  * GnomeKeyGrabber: add timestamp support to accelerators (LP:
+    #1433648)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 24 Mar 2015 16:09:14 +0000
+
+unity (7.3.1+15.04.20150227-0ubuntu1) vivid; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Draw osk above unity shell. (LP: #1413165)
+  * Remove FontSettings.*. Add the possibility to specify the font size
+    and the font weight without chaning the default font name. Fix lp
+    886478. (LP: #886478)
+  * Remove unitydialog plugin.
+
+  [ Luke Yelavich ]
+  * Explore children when a view or layout is added (LP: #1066157)
+  * Move the unity a11y present environment call
+  * Set focus to FALSE on window deactivation (LP: #1066157)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 27 Feb 2015 15:38:19 +0000
+
+unity (7.3.1+15.04.20150219.2-0ubuntu1) vivid; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Marco Trevisan (Treviño) ]
+  * Decorations, Panel: add menus for unfocused windows as well
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 19 Feb 2015 19:33:42 +0000
+
+unity (7.3.1+15.04.20150205-0ubuntu1) vivid; urgency=medium
+
+  [ Brandon Schaefer ]
+  * Try to set the folder permission otherwise Handle permission error.
+    (LP: #1418255)
+
+  [ Andrea Azzarone ]
+  * Actually connect to changed::* signal in MenuManager.cpp. (LP:
+    #1411620)
+  * Actually connect to changed::* signal in UnitySettings.cpp. (LP:
+    #1408212)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 05 Feb 2015 17:27:47 +0000
+
 unity (7.3.1+15.04.20150126-0ubuntu1) vivid; urgency=low
 
   [ Andrea Azzarone ]

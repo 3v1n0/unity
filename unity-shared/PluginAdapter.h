@@ -50,7 +50,7 @@ private:
   CompAction* GetAction(std::string const& name) const;
 
   CompAction* primary_action_;
-  std::map<std::string, CompAction*> actions_;
+  std::unordered_map<std::string, CompAction*> actions_;
 };
 
 
@@ -60,7 +60,7 @@ public:
   // You shouldn't get the PluginAdapter if you really want a WindowManager.
   // The PluginAdapter::Default should really only be called from within unityshell plugin.
   static PluginAdapter& Default();
-  static void Initialize(CompScreen* screen);
+  static PluginAdapter& Initialize(CompScreen* screen);
 
   nux::Property<bool> bias_active_to_viewport;
 

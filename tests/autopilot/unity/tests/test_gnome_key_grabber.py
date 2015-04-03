@@ -45,7 +45,7 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         self.activated = [False]
         self.active = True
 
-        def accelerator_activated(action, device):
+        def accelerator_activated(action, device, timestamp):
             if self.active and action in self.activatable:
                 log.info('%d activated' % action)
                 self.activated[0] = True

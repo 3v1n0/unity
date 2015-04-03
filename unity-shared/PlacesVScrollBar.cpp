@@ -141,7 +141,7 @@ void PlacesVScrollBar::UpdateTexture()
     return;
 
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
-  auto* cr = cg.GetContext();
+  auto* cr = cg.GetInternalContext();
   cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);

@@ -29,7 +29,6 @@ lockscreen/UserPromptView.cpp
 panel/PanelMenuView.cpp
 plugins/networkarearegion/networkarearegion.xml.in
 plugins/unity-mt-grab-handles/unitymtgrabhandles.xml.in
-plugins/unitydialog/unitydialog.xml.in
 plugins/unityshell/src/unity-dash-view-accessible.cpp
 plugins/unityshell/src/unity-launcher-accessible.cpp
 plugins/unityshell/src/unity-launcher-icon-accessible.cpp

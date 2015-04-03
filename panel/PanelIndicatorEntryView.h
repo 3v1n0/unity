@@ -53,10 +53,8 @@ public:
   PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
 
-  virtual ~PanelIndicatorEntryView();
-
   IndicatorEntryType GetType() const;
-  indicator::Entry::Ptr GetEntry() const { return proxy_; }
+  indicator::Entry::Ptr const& GetEntry() const { return proxy_; }
   std::string GetEntryID() const;
   int GetEntryPriority() const;
 
@@ -93,6 +91,7 @@ public:
 
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
+  sigc::signal<void, bool> show_now_changed;
 
 protected:
   std::string GetName() const;

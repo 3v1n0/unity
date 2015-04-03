@@ -28,6 +28,7 @@
  */
 
 #include "nux-view-accessible.h"
+#include "unity-util-accessible.h"
 #include "unitya11y.h"
 #include "nux-base-window-accessible.h"
 
@@ -241,9 +242,14 @@ on_layout_changed_cb(nux::View* view,
   atk_child = unity_a11y_get_accessible(layout);
 
   if (is_add)
+  {
     signal_name = "children-changed::add";
+    explore_children(accessible);
+  }
   else
+  {
     signal_name = "children-changed::remove";
+  }
 
   /* index is always 0 as there is always just one layout */
   g_signal_emit_by_name(accessible, signal_name, 0, atk_child, NULL);

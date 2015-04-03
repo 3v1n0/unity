@@ -118,7 +118,7 @@ void Panel::AddIndicator(Indicator::Ptr const& indicator)
       if (entry->active())
       {
         active = true;
-        indicators_view_->ActivateEntry(entry->id());
+        indicators_view_->ActivateEntry(entry);
         OnEntryActivated(GetPanelName(), entry->id(), entry->geometry());
         break;
       }

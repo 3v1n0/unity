@@ -74,8 +74,9 @@ bool QuicklistManager::RegisterQuicklist(nux::ObjectPtr<QuicklistView> const& qu
   return true;
 }
 
-void QuicklistManager::ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist, int tip_x,
-                                     int tip_y, bool hide_existing_if_open)
+void QuicklistManager::ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist,
+                                     int tip_x, int tip_y, 
+                                     bool restore_input_focus, bool hide_existing_if_open)
 {
   if (_current_quicklist == quicklist)
     return;
@@ -85,7 +86,7 @@ void QuicklistManager::ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quickl
     HideQuicklist(_current_quicklist);
   }
 
-  quicklist->ShowQuicklistWithTipAt(tip_x, tip_y);
+  quicklist->ShowQuicklistWithTipAt(tip_x, tip_y, restore_input_focus);
   nux::GetWindowCompositor().SetKeyFocusArea(quicklist.GetPointer());
 }
 

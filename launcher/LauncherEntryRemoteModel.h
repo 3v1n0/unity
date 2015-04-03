@@ -22,7 +22,7 @@
 
 #include <gio/gio.h>
 #include <sigc++/sigc++.h>
-#include <map>
+#include <unordered_map>
 
 #include "LauncherEntryRemote.h"
 
@@ -68,7 +68,7 @@ private:
   glib::Object<GDBusConnection> _conn;
   unsigned int _launcher_entry_dbus_signal_id;
   unsigned int _dbus_name_owner_changed_signal_id;
-  std::map<std::string, LauncherEntryRemote::Ptr> _entries_by_uri;
+  std::unordered_map<std::string, LauncherEntryRemote::Ptr> _entries_by_uri;
 };
 
 } // namespace

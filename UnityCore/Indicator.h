@@ -38,7 +38,7 @@ class Indicator : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef std::shared_ptr<Indicator> Ptr;
-  typedef std::list<Entry::Ptr> Entries;
+  typedef std::vector<Entry::Ptr> Entries;
 
   Indicator(std::string const& name);
   virtual ~Indicator();
@@ -47,15 +47,14 @@ public:
 
   virtual bool IsAppmenu() const { return false; }
 
-  void Sync(Entries const& new_entries);
+  virtual void Sync(Entries const&);
   Entry::Ptr GetEntry(std::string const& entry_id) const;
-  int EntryIndex(std::string const& entry_id) const;
   Entries const& GetEntries() const;
 
   // Signals
   sigc::signal<void> updated;
   sigc::signal<void, Entry::Ptr const&> on_entry_added;
-  sigc::signal<void, std::string const&> on_entry_removed;
+  sigc::signal<void, Entry::Ptr const&> on_entry_removed;
   sigc::signal<void, std::string const&, unsigned, int, int, unsigned> on_show_menu;
   sigc::signal<void, std::string const&> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;

@@ -48,7 +48,7 @@ from unity.emulators.X11 import reset_display
 from Xlib import display
 from Xlib import Xutil
 
-from gi.repository import Gio
+from gi.repository import GLib, Gio
 
 log = getLogger(__name__)
 
@@ -249,27 +249,26 @@ class UnityTestCase(AutopilotTestCase):
 
     def register_nautilus(self):
         self.addCleanup(self.process_manager.unregister_known_application, "Nautilus")
-        self.process_manager.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.process_manager.register_known_application("Nautilus", "org.gnome.Nautilus.desktop", "nautilus")
 
     def get_startup_notification_timestamp(self, bamf_window):
         atom = display.Display().intern_atom('_NET_WM_USER_TIME')
         atom_type = display.Display().intern_atom('CARDINAL')
         return bamf_window.x_win.get_property(atom, atom_type, 0, 1024).value[0]
 
-    def call_gsettings_cmd(self, command, schema, *args):
+    def call_gsettings_cmd(self, command, schema, key, value=None):
         """Set a desktop wide gsettings option
-
-        Using the gsettings command because there is a bug with importing
-        from gobject introspection and pygtk2 simultaneously, and the Xlib
-        keyboard layout bits are very unwieldy. This seems like the best
-        solution, even a little bit brutish.
         """
-        cmd = ['gsettings', command, schema] + list(args)
-        # strip to remove the trailing \n.
-        ret = check_output(cmd).strip()
-        time.sleep(5)
-        reset_display()
-        return ret
+        settings = Gio.Settings.new(schema)
+
+        if command == "get":
+            return settings.get_value(key).print_(type_annotate=False)
+        elif command == "set":
+            settings.set_value(key, GLib.Variant.parse(type=None, text=value))
+            settings.apply()
+            reset_display()
+        elif command == "reset":
+            settings.reset(key)
 
     def set_unity_option(self, option_name, option_value):
         """Set an option in the unity compiz plugin options.

@@ -75,7 +75,7 @@ class QuicklistActionTests(UnityTestCase):
         self.process_manager.start_app_window("Calculator")
         self.process_manager.start_app(self.app_name)
 
-        nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="nautilus.desktop")
+        nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="org.gnome.Nautilus.desktop")
         ql = self.open_quicklist_for_icon(nautilus_icon)
         de = self.get_desktop_entry("Nautilus")
 

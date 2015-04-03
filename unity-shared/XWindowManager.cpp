@@ -36,6 +36,7 @@ namespace atom
 {
 Atom _NET_WM_VISIBLE_NAME = 0;
 Atom XA_COMPOUND_TEXT = 0;
+Atom ONSCREEN_KEYBOARD = 0;
 }
 }
 
@@ -43,6 +44,7 @@ XWindowManager::XWindowManager()
 {
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(screen->dpy(), "_NET_WM_VISIBLE_NAME", False);
   atom::XA_COMPOUND_TEXT = XInternAtom(screen->dpy(), "COMPOUND_TEXT", False);
+  atom::ONSCREEN_KEYBOARD = XInternAtom(screen->dpy(), "ONSCREEN_KEYBOARD", False);
 }
 
 std::string XWindowManager::GetStringProperty(Window window_id, Atom atom) const
@@ -160,6 +162,16 @@ std::string XWindowManager::GetWindowName(Window window_id) const
     return name;
 
   return GetStringProperty(window_id, XA_WM_NAME);
+}
+
+bool XWindowManager::IsOnscreenKeyboard(Window window_id) const
+{
+  std::vector<long> values = GetCardinalProperty(window_id, atom::ONSCREEN_KEYBOARD);
+
+  if (values.empty())
+    return false;
+
+  return values[0] != 0;
 }
 
 void XWindowManager::UnGrabMousePointer(Time timestamp, int button, int x, int y)

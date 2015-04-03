@@ -36,12 +36,13 @@ public:
   AppmenuIndicator(std::string const& name);
   ~AppmenuIndicator();
 
-  nux::Property<unsigned> active_window;
-
-  virtual bool IsAppmenu() const { return true; }
+  bool IsAppmenu() const override { return true; }
+  void Sync(Entries const&) override;
+  Entries const& GetEntriesForWindow(uint32_t parent_window) const;
 
   void ShowAppmenu(unsigned xid, int x, int y) const;
 
+  sigc::signal<void, uint32_t> updated_win;
   sigc::signal<void, unsigned, int, int> on_show_appmenu;
 
 private:

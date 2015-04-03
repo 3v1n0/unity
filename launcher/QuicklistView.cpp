@@ -75,6 +75,7 @@ QuicklistView::QuicklistView(int monitor)
   , _padding(decoration::Style::Get()->ActiveShadowRadius())
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
+  , _restore_input_focus(false)
   , _cairo_text_has_changed(true)
   , _current_item_index(-1)
 {
@@ -300,7 +301,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
     case NUX_VK_ESCAPE:
       Hide();
       // inform UnityScreen we leave key-nav completely
-      UBusManager::SendMessage(UBUS_LAUNCHER_END_KEY_NAV);
+      UBusManager::SendMessage(UBUS_LAUNCHER_END_KEY_NAV, glib::Variant(_restore_input_focus));
       break;
 
       // <SPACE>, <RETURN> (activate selected menu-item)
@@ -354,16 +355,17 @@ void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
   }
 }
 
-void QuicklistView::ShowQuicklistWithTipAt(int x, int y)
+void QuicklistView::ShowQuicklistWithTipAt(int x, int y, bool restore_input_focus)
 {
   SetQuicklistPosition(x, y);
-  Show();
+  Show(restore_input_focus);
 }
 
-void QuicklistView::Show()
+void QuicklistView::Show(bool restore_input_focus)
 {
   if (!IsVisible())
   {
+    _restore_input_focus = restore_input_focus;
     CairoBaseWindow::Show();
     GrabPointer();
     GrabKeyboard();

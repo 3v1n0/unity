@@ -5,6 +5,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DBusIndicators.h>
 
+#include "panel-service-private.h"
 #include "test_utils.h"
 
 using namespace unity;
@@ -50,10 +51,8 @@ public:
 
   GVariant* CallPanelMethod(std::string const& name) const
   {
-    return g_dbus_connection_call_sync(session,
-                                       "com.canonical.Unity.Test",
-                                       "/com/canonical/Unity/Panel/Service",
-                                       "com.canonical.Unity.Panel.Service",
+    return g_dbus_connection_call_sync(session, "com.canonical.Unity.Test",
+                                       UPS_PATH, UPS_IFACE,
                                        name.c_str(),
                                        NULL,
                                        NULL,

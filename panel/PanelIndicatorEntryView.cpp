@@ -59,6 +59,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , cv_(unity::Settings::Instance().em(monitor_))
 {
   proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
+  proxy_->show_now_changed.connect(sigc::mem_fun(&show_now_changed, &sigc::signal<void, bool>::emit));
   proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseDown));
@@ -82,11 +83,6 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   Refresh();
-}
-
-PanelIndicatorEntryView::~PanelIndicatorEntryView()
-{
-  // Nothing to do...
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -114,10 +110,16 @@ void PanelIndicatorEntryView::ShowMenu(int button)
     });
 
     wm.TerminateExpo();
+    return;
   }
 
   if (wm.IsScaleActive())
+  {
+    if (type_ == MENU)
+      return;
+
     wm.TerminateScale();
+  }
 
   auto const& abs_geo = GetAbsoluteGeometry();
   proxy_->ShowMenu(abs_geo.x, abs_geo.y + abs_geo.height, button);

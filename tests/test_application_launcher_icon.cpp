@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -1012,6 +1012,9 @@ struct QuitLabel : TestApplicationLauncherIcon, testing::WithParamInterface<std:
   virtual ~QuitLabel() {}
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 INSTANTIATE_TEST_CASE_P(TestApplicationLauncherIcon, QuitLabel, testing::Values("Quit", "Exit", "Close"));
 
 TEST_P(/*TestApplicationLauncherIcon*/QuitLabel, QuicklistMenuItemRemoteOverridesQuitByLabelNotRunning)
@@ -1059,6 +1062,8 @@ TEST_P(/*TestApplicationLauncherIcon*/QuitLabel, QuicklistMenuItemRemoteOverride
   EXPECT_TRUE(cb_called);
 }
 
+#pragma GCC diagnostic pop
+
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByPropertyNotRunning)
 {
   mock_app->SetRunState(false);
@@ -1101,7 +1106,7 @@ TEST_F(TestApplicationLauncherIcon, IsFileManager)
   EXPECT_FALSE(empty_icon->IsFileManager());
   EXPECT_FALSE(mock_icon->IsFileManager());
 
-  auto app = std::make_shared<MockApplication::Nice>("/any/path/nautilus.desktop", "Nautilus");
+  auto app = std::make_shared<MockApplication::Nice>("/any/path/org.gnome.Nautilus.desktop", "Nautilus");
   MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
   EXPECT_TRUE(icon->IsFileManager());
 

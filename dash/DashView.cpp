@@ -1174,7 +1174,9 @@ std::string DashView::AnalyseScopeURI(std::string const& uri)
 
   if (!filter.filters.empty())
   {
-    scope_views_[filter.id]->filters_expanded = true;
+    if (scope_views_.find(filter.id) != std::end(scope_views_))
+      scope_views_[filter.id]->filters_expanded = true;
+
     // update the scope for each filter
     for (auto p : filter.filters) {
       UpdateScopeFilter(filter.id, p.first, p.second);

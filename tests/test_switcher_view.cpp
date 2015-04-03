@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Canonical Ltd.
+ * Copyright 2013,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -150,6 +150,8 @@ TEST_F(TestSwitcherView, SkipAnimation)
   EXPECT_DOUBLE_EQ(switcher.GetCurrentProgress(), 1.0f);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 struct AnimationProgress : TestSwitcherView, testing::WithParamInterface<float> {};
 INSTANTIATE_TEST_CASE_P(TestSwitcherView, AnimationProgress, testing::Range<float>(0.0, 1.0, 0.1));
@@ -215,6 +217,8 @@ TEST_P(AnimationProgress, ResizeRenderTargets)
     ASSERT_EQ(thumb_geo, expected_geo);
   }
 }
+
+#pragma GCC diagnostic pop
 
 }
 }
