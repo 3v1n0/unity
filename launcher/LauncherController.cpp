@@ -158,7 +158,10 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [this](GVariant * args) {
     if (reactivate_keynav)
+    {
       parent_->KeyNavGrab();
+      keynav_restore_window_ = true;
+    }
 
     model_->SetSelection(reactivate_index);
     AbstractLauncherIcon::Ptr const& selected = model_->Selection();
@@ -1506,8 +1509,9 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
 
 void Controller::Impl::OpenQuicklist()
 {
-  if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor()))
+  if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor(), keynav_restore_window_))
   {
+    keynav_restore_window_ = false;
     reactivate_keynav = true;
     reactivate_index = model_->SelectionIndex();
     parent_->KeyNavTerminate(false);

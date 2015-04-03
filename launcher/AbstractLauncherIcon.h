@@ -151,7 +151,7 @@ public:
 
   virtual void SetSortPriority(int priority) = 0;
 
-  virtual bool OpenQuicklist(bool select_first_item = false, int monitor = -1) = 0;
+  virtual bool OpenQuicklist(bool select_first_item = false, int monitor = -1, bool restore_input_focus = false) = 0;
   virtual void CloseQuicklist() = 0;
 
   virtual void SetCenter(nux::Point3 const& center, int monitor) = 0;

@@ -518,7 +518,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
   _allow_quicklist_to_show = true;
 }
 
-bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
+bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor, bool restore_input_focus)
 {
   MenuItemsVector const& menus = Menus();
 
@@ -588,14 +588,14 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   if (win_manager.IsExpoActive())
   {
     auto conn = std::make_shared<sigc::connection>();
-    *conn = win_manager.terminate_expo.connect([this, conn, pos] {
-      QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y);
+    *conn = win_manager.terminate_expo.connect([this, conn, pos, restore_input_focus] {
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y, restore_input_focus);
       conn->disconnect();
     });
   }
   else
   {
-    QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y);
+    QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y, restore_input_focus);
   }
 
   return true;

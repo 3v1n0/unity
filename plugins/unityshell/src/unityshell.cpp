@@ -4031,7 +4031,7 @@ CompAction::Vector& UnityScreen::getActions()
 
 void UnityScreen::ShowFirstRunHints()
 {
-  sources_.AddTimeoutSeconds(1, [this] {
+  sources_.AddTimeoutSeconds(2, [this] {
     auto const& config_dir = DesktopUtilities::GetUserConfigDirectory();
     if (!config_dir.empty() && !g_file_test((config_dir+local::FIRST_RUN_STAMP).c_str(), G_FILE_TEST_EXISTS))
     {

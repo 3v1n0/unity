@@ -1108,6 +1108,9 @@ void Launcher::SetHidden(bool hide_launcher)
   postreveal_mousemove_delta_x_ = 0;
   postreveal_mousemove_delta_y_ = 0;
 
+  if (!hide_launcher)
+    parent_->ShowWindow(true);
+
   if (nux::GetWindowThread()->IsEmbeddedWindow())
     parent_->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
 
@@ -1681,6 +1684,13 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute);
   bkg_box.width -= RIGHT_LINE_WIDTH.CP(cv_);
 
+  if (options()->hide_mode != LAUNCHER_HIDE_NEVER &&
+      bkg_box.x + bkg_box.width <= 0 &&
+      hide_machine_.reveal_progress <= 0)
+  {
+    parent_->ShowWindow(false);
+  }
+
   nux::Color clear_colour = nux::Color(0x00000000);
 
   // clear region
@@ -2226,7 +2236,8 @@ void Launcher::ScrollLauncher(int wheel_delta)
 
 ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper::Ptr const& owner, ui::BarrierEvent::Ptr event)
 {
-  if (hide_machine_.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
+  if (hide_machine_.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE) ||
+      hide_machine_.GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
     return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
   }
@@ -2270,7 +2281,10 @@ ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrie
     return ui::EdgeBarrierSubscriber::Result::IGNORED;
 
   if (!owner->IsFirstEvent())
+  {
+    parent_->ShowWindow(true);
     hide_machine_.AddRevealPressure(event->velocity);
+  }
 
   return ui::EdgeBarrierSubscriber::Result::HANDLED;
 }
@@ -2308,13 +2322,17 @@ void Launcher::RecvQuicklistOpened(nux::ObjectPtr<QuicklistView> const& quicklis
 
 void Launcher::RecvQuicklistClosed(nux::ObjectPtr<QuicklistView> const& quicklist)
 {
-  nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
-  if (!GetAbsoluteGeometry().IsInside(pt))
+  if (!IsInKeyNavMode())
   {
-    // The Quicklist just closed and the mouse is outside the launcher.
-    SetHover(false);
-    SetStateMouseOverLauncher(false);
+    nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
+    if (!GetAbsoluteGeometry().IsInside(pt))
+    {
+      // The Quicklist just closed and the mouse is outside the launcher.
+      SetHover(false);
+      SetStateMouseOverLauncher(false);
+    }
   }
+
   // Cancel any prior state that was set before the Quicklist appeared.
   SetActionState(ACTION_NONE);
 
