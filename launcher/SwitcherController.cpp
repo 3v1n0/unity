@@ -73,7 +73,7 @@ Controller::Controller(WindowCreator const& create_window)
   : detail([this] { return impl_->model_ && impl_->model_->detail_selection(); },
            [this] (bool d) { if (impl_->model_) { impl_->model_->detail_selection = d; } return false; })
   , detail_mode([this] { return detail_mode_; })
-  , first_selection_mode(FirstSelectionMode::LAST_ACTIVE_APP)
+  , first_selection_mode(FirstSelectionMode::LAST_ACTIVE_VIEW)
   , show_desktop_disabled(false)
   , mouse_disabled(false)
   , timeout_length(0)
