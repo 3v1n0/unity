@@ -60,7 +60,6 @@ public:
   nux::Property<bool>         detail_selection;
   nux::Property<unsigned int> detail_selection_index;
   nux::Property<bool>         only_detail_on_viewport;
-  nux::Property<bool>         switch_strictly_between_applications;
 
   SwitcherModel(std::vector<launcher::AbstractLauncherIcon::Ptr> const& icons);
   virtual ~SwitcherModel();

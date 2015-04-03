@@ -56,6 +56,11 @@ enum class DetailMode
   TAB_NEXT_TILE,
 };
 
+enum class FirstSelectionMode
+{
+  LAST_ACTIVE_VIEW,
+  LAST_ACTIVE_APP
+};
 
 /**
  * Represents a selected application+window to be switched to.
@@ -128,6 +133,7 @@ public:
 
   nux::RWProperty<bool> detail;
   nux::ROProperty<DetailMode> detail_mode;
+  nux::Property<FirstSelectionMode> first_selection_mode;
   nux::Property<int>  timeout_length;
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;

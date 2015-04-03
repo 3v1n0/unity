@@ -73,6 +73,7 @@ Controller::Controller(WindowCreator const& create_window)
   : detail([this] { return impl_->model_ && impl_->model_->detail_selection(); },
            [this] (bool d) { if (impl_->model_) { impl_->model_->detail_selection = d; } return false; })
   , detail_mode([this] { return detail_mode_; })
+  , first_selection_mode(FirstSelectionMode::LAST_ACTIVE_APP)
   , timeout_length(0)
   , detail_on_timeout(true)
   , detail_timeout_length(500)
@@ -266,7 +267,8 @@ Controller::AddProperties(debug::IntrospectionData& introspection)
   .add("visible", visible_)
   .add("monitor", monitor_)
   .add("show_desktop_disabled", show_desktop_disabled_)
-  .add("detail_mode", static_cast<int>(detail_mode_));
+  .add("detail_mode", static_cast<unsigned>(detail_mode_))
+  .add("first_selection_mode", static_cast<unsigned>(first_selection_mode()));
 }
 
 
@@ -717,7 +719,7 @@ void Controller::Impl::SelectFirstItem()
     return;
   }
 
-  if (model_->switch_strictly_between_applications)
+  if (obj_->first_selection_mode == FirstSelectionMode::LAST_ACTIVE_APP)
   {
     model_->Select(second);
     return;

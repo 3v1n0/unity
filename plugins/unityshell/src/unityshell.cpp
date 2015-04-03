@@ -354,6 +354,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetDashTapDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetSwitchStrictlyBetweenApplicationsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
@@ -363,10 +364,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabForwardAllTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
      optionSetAltTabPrevAllInitiate(boost::bind(&UnityScreen::altTabPrevAllInitiate, this, _1, _2, _3));
      optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-
      optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
      optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
-
      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
 
      optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
@@ -3572,6 +3571,11 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
     case UnityshellOptions::AltTabBiasViewport:
       PluginAdapter::Default().bias_active_to_viewport = optionGetAltTabBiasViewport();
+      break;
+    case UnityshellOptions::SwitchStrictlyBetweenApplications:
+      switcher_controller_->first_selection_mode = optionGetSwitchStrictlyBetweenApplications() ?
+                                                   switcher::FirstSelectionMode::LAST_ACTIVE_APP :
+                                                   switcher::FirstSelectionMode::LAST_ACTIVE_VIEW;
       break;
     case UnityshellOptions::DisableShowDesktop:
       switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
