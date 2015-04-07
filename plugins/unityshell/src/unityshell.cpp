@@ -2234,6 +2234,9 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
     grab_index_ = screen->pushGrab(cursor, "unity-switcher");
   }
 
+  if (WM.IsScaleActive())
+    WM.TerminateScale();
+
   launcher_controller_->ClearTooltips();
 
   /* Create a new keybinding for scroll buttons and current modifiers */
