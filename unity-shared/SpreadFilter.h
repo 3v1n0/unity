@@ -40,7 +40,6 @@ public:
   typedef std::shared_ptr<Filter> Ptr;
 
   Filter();
-  virtual ~Filter();
 
   nux::RWProperty<std::string> text;
 

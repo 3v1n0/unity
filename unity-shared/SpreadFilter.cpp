@@ -108,12 +108,6 @@ Filter::Filter()
   });
 }
 
-Filter::~Filter()
-{
-  nux::GetWindowCompositor().SetKeyFocusArea(nullptr);
-  nux::GetWindowThread()->RemoveObjectFromLayoutQueue(view_window_.GetPointer());
-}
-
 bool Filter::Visible() const
 {
   return (view_window_->GetOpacity() != 0.0f);
