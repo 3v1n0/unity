@@ -636,7 +636,7 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
     if (window->defaultViewport() == screen_vp &&
         window->isViewable() && window->isMapped() &&
         !window->minimized() && !window->inShowDesktopMode() &&
-        !(window->state() & CompWindowStateAboveMask) &&
+        !((window->state() & CompWindowStateAboveMask) && !window->focused()) &&
         !(window->type() & CompWindowTypeSplashMask) &&
         !(window->type() & CompWindowTypeDockMask) &&
         !window->overrideRedirect() &&
