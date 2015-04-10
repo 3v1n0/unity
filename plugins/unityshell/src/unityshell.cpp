@@ -2121,6 +2121,12 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                   g_variant_new("(sus)", "home.scope", dash::GOTO_DASH_URI, ""));
       }
     }
+    else if (dash_controller_->IsCommandLensOpen())
+    {
+      tap_handled = true;
+      ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                g_variant_new("(sus)", "home.scope", dash::GOTO_DASH_URI, ""));
+    }
     else
     {
       dash_controller_->HideDash();

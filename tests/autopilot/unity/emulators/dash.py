@@ -70,7 +70,7 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
         Ensures the dash is hidden.
         """
         if self.visible:
-            self.toggle_reveal()
+            self.hide_dash_via_dbus()
             self.visible.wait_for(False)
 
     @property
