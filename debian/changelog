@@ -1,3 +1,33 @@
+unity (7.3.2+15.04.20150410.1-0ubuntu1) vivid; urgency=medium
+
+  [ Brandon Schaefer ]
+  * When we get a launcher key press (ie. super key). We check if the
+    command lens is open. If it is then just switch the lens to the home
+    lens. This way we dont close the dash. (LP: #1108956)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Gerry Boland ]
+  * SwitcherController: add first selection mode property, to decide
+    what to select at first (LP: #998285)
+
+  [ Marco Trevisan (Treviño) ]
+  * SwitcherController: add first selection mode property, to decide
+    what to select at first (LP: #998285)
+  * UnityScreen: terminate spread if active when initiating Switcher
+    (LP: #1412001)
+
+  [ Stephen M. Webb ]
+  * (Ubuntu packaging) move the session migration scripts to Python3
+    (LP: #1440560)
+  * fixed the Panel title string expected by Launcher keynav AP tests
+    (LP: #1435830)
+  * test_wm_keybindings: fix AP failures caused by upstream Compiz
+    change (LP: #1294864)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 10 Apr 2015 21:59:12 +0000
+
 unity (7.3.2+15.04.20150330-0ubuntu1) vivid; urgency=medium
 
   [ Andrea Azzarone ]
