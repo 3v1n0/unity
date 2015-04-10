@@ -150,7 +150,7 @@ class WindowManagerKeybindingsForWindowHandling(UnityTestCase):
         workarea_geo = self.get_window_workarea()
         self.assertThat(self.screen_win.x, Eventually(Equals(workarea_geo[0])))
         self.assertThat(self.screen_win.y, Eventually(Equals(workarea_geo[1])))
-        self.assertThat(self.screen_win.width, Eventually(Equals(workarea_geo[2]/2)))
+        self.assertThat(self.screen_win.width, Eventually(Equals(int(workarea_geo[2]/2.0 + 0.5))))
         self.assertThat(self.screen_win.height, Eventually(Equals(workarea_geo[3])))
 
     def test_right_maximize(self):
@@ -162,5 +162,5 @@ class WindowManagerKeybindingsForWindowHandling(UnityTestCase):
         workarea_geo = self.get_window_workarea()
         self.assertThat(self.screen_win.x, Eventually(Equals(workarea_geo[0]+workarea_geo[2]/2)))
         self.assertThat(self.screen_win.y, Eventually(Equals(workarea_geo[1])))
-        self.assertThat(self.screen_win.width, Eventually(Equals(workarea_geo[2]/2)))
+        self.assertThat(self.screen_win.width, Eventually(Equals(int(workarea_geo[2]/2.0 + 0.5))))
         self.assertThat(self.screen_win.height, Eventually(Equals(workarea_geo[3])))
