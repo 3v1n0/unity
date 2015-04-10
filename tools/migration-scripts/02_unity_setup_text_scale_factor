@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014 Canonical
+# Copyright (C) 2014-2015 Canonical
 #
 # Authors:
 #  Marco Trevisan <marco.trevisan@canonical.com>
@@ -38,4 +38,4 @@ text_scale_factor = Gio.Settings(schema=GNOME_UI_SETTINGS).get_double(GNOME_TEXT
 # Gio.Settings(schema=UNITY_UI_SETTINGS).set_int(UNITY_TEXT_SCALE_FACTOR, text_scale_factor)
 from subprocess import Popen, PIPE, STDOUT
 p = Popen(("dconf load "+UNITY_UI_SETTINGS_PATH).split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-p.communicate(input="[/]\n"+UNITY_TEXT_SCALE_FACTOR+"={}".format(text_scale_factor).encode('utf-8'))
+p.communicate(input=bytes("[/]\n"+UNITY_TEXT_SCALE_FACTOR+"={}".format(text_scale_factor), 'utf-8'))

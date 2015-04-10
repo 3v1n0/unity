@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2014 Canonical
+# Copyright (C) 2014-2015 Canonical
 #
 # Authors:
 #  Brandon Schaefer <brandon.schaefer@canonical.com>
@@ -30,9 +30,9 @@ if path.isfile(old_first_run_path):
   try:
     # make sure the new dir exists before attempting to move
     if not path.isdir(new_first_run_path):
-      makedirs(new_first_run_path, 0700)
+      makedirs(new_first_run_path, 0o700)
 
     new_first_run_path += "/first_run.stamp"
     rename(old_first_run_path, new_first_run_path)
-  except OSError, e:
+  except OSError:
     pass

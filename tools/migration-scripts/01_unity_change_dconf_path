@@ -1,4 +1,4 @@
-set -ex
+#!/bin/sh -e
 
 dconf dump /desktop/unity/ | dconf load /com/canonical/unity/
 dconf reset -f /desktop/unity/
