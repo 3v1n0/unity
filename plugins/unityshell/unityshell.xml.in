@@ -565,6 +565,12 @@
                     <passive_grab>false</passive_grab>
                 </option>
 
+                <option name="switch_strictly_between_applications" type="bool">
+                    <_short>Switcher strictly changes between applications</_short>
+                    <_long>Disables the last focused window being the first entry in the Switcher, so Switcher strictly switches between applications</_long>
+                    <default>false</default>
+                </option>
+
                 <option name="show_minimized_windows" type="bool">
                     <_short>Show live previews of windows in the Switcher</_short>
                     <_long>Enables miniature live window previews in the Switcher.</_long>

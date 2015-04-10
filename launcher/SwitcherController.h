@@ -56,6 +56,11 @@ enum class DetailMode
   TAB_NEXT_TILE,
 };
 
+enum class FirstSelectionMode
+{
+  LAST_ACTIVE_VIEW,
+  LAST_ACTIVE_APP
+};
 
 /**
  * Represents a selected application+window to be switched to.
@@ -109,12 +114,6 @@ public:
 
   ui::LayoutWindow::Vector const& ExternalRenderTargets() const;
 
-  bool IsShowDesktopDisabled() const;
-  void SetShowDesktopDisabled(bool disabled);
-
-  bool IsMouseDisabled() const;
-  void SetMouseDisabled(bool disabled);
-
   int StartIndex() const;
   double Opacity() const;
 
@@ -128,6 +127,9 @@ public:
 
   nux::RWProperty<bool> detail;
   nux::ROProperty<DetailMode> detail_mode;
+  nux::Property<FirstSelectionMode> first_selection_mode;
+  nux::Property<bool> show_desktop_disabled;
+  nux::Property<bool> mouse_disabled;
   nux::Property<int>  timeout_length;
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
@@ -136,8 +138,6 @@ public:
 private:
   bool       visible_;
   int        monitor_;
-  bool       show_desktop_disabled_;
-  bool       mouse_disabled_;
   DetailMode detail_mode_;
 
   ImplPtr    impl_;

@@ -350,6 +350,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetDashTapDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetSwitchStrictlyBetweenApplicationsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
@@ -359,10 +360,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabForwardAllTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
      optionSetAltTabPrevAllInitiate(boost::bind(&UnityScreen::altTabPrevAllInitiate, this, _1, _2, _3));
      optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-
      optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
      optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
-
      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
 
      optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
@@ -1985,7 +1984,7 @@ void UnityScreen::handleEvent(XEvent* event)
   if (event->type == MapRequest)
     ShowdesktopHandler::AllowLeaveShowdesktopMode(event->xmaprequest.window);
 
-  if (switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible() &&
+  if (switcher_controller_->Visible() && switcher_controller_->mouse_disabled() &&
       (event->type == MotionNotify || event->type == ButtonPress || event->type == ButtonRelease))
   {
     skip_other_plugins = true;
@@ -2237,14 +2236,8 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 {
   if (!grab_index_)
   {
-    if (switcher_controller_->IsMouseDisabled())
-    {
-      grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
-    }
-    else
-    {
-      grab_index_ = screen->pushGrab (screen->normalCursor(), "unity-switcher");
-    }
+    auto cursor = switcher_controller_->mouse_disabled() ? screen->invisibleCursor() : screen->normalCursor();
+    grab_index_ = screen->pushGrab(cursor, "unity-switcher");
   }
 
   launcher_controller_->ClearTooltips();
@@ -2276,7 +2269,7 @@ void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
   }
 
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
-                                                      switcher_controller_->IsShowDesktopDisabled());
+                                                      switcher_controller_->show_desktop_disabled());
 
   if (switcher_controller_->CanShowSwitcher(results))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, results);
@@ -3581,11 +3574,16 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::AltTabBiasViewport:
       PluginAdapter::Default().bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;
+    case UnityshellOptions::SwitchStrictlyBetweenApplications:
+      switcher_controller_->first_selection_mode = optionGetSwitchStrictlyBetweenApplications() ?
+                                                   switcher::FirstSelectionMode::LAST_ACTIVE_APP :
+                                                   switcher::FirstSelectionMode::LAST_ACTIVE_VIEW;
+      break;
     case UnityshellOptions::DisableShowDesktop:
-      switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
+      switcher_controller_->show_desktop_disabled = optionGetDisableShowDesktop();
       break;
     case UnityshellOptions::DisableMouse:
-      switcher_controller_->SetMouseDisabled(optionGetDisableMouse());
+      switcher_controller_->mouse_disabled = optionGetDisableMouse();
       break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
