@@ -23,6 +23,7 @@
 #include <NuxCore/AnimationController.h>
 
 #include "SpreadFilter.h"
+#include "SearchBar.h"
 #include "DashStyle.h"
 #include "test_utils.h"
 
