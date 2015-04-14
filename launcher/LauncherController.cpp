@@ -1304,6 +1304,8 @@ void Controller::KeyNavActivate()
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
 
+  pimpl->ubus.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL);
+
   if (pimpl->launcher_grabbed)
   {
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV,
