@@ -1071,6 +1071,8 @@ Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierCont
     options()->show_for_all = !value;
     pimpl->hud_icon_->SetSingleLauncher(!value, primary);
   });
+
+  pimpl->ubus.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV_REQUEST, sigc::mem_fun(this, &Controller::KeyNavTerminate));
 }
 
 Controller::~Controller()
