@@ -99,7 +99,6 @@ void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item, int time, std:
   if (scope_id.empty())
     return;
 
-  ubus_manager_.SendMessage(UBUS_LAUNCHER_END_KEY_NAV_REQUEST, NULL);
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", scope_id.c_str(), dash::GOTO_DASH_URI, ""));
 }
 

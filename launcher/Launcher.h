@@ -144,6 +144,7 @@ public:
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
   sigc::signal<void> sc_launcher_icon_animation;
+  sigc::signal<void> key_nav_terminate_request;
 
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
