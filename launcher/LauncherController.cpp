@@ -1304,8 +1304,6 @@ void Controller::KeyNavActivate()
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
 
-  pimpl->ubus.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL);
-
   if (pimpl->launcher_grabbed)
   {
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV,
@@ -1321,6 +1319,11 @@ void Controller::KeyNavActivate()
 
   if (selected)
   {
+    if (selected->GetIconType() == AbstractLauncherIcon::IconType::HOME)
+    {
+      pimpl->ubus.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL);
+    }
+
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
                             glib::Variant(selected->tooltip_text()));
   }
@@ -1334,6 +1337,11 @@ void Controller::KeyNavNext()
 
   if (selected)
   {
+    if (selected->GetIconType() == AbstractLauncherIcon::IconType::HOME)
+    {
+      pimpl->ubus.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL);
+    }
+
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
                             glib::Variant(selected->tooltip_text()));
   }
@@ -1347,6 +1355,11 @@ void Controller::KeyNavPrevious()
 
   if (selected)
   {
+    if (selected->GetIconType() == AbstractLauncherIcon::IconType::HOME)
+    {
+      pimpl->ubus.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL);
+    }
+
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
                             glib::Variant(selected->tooltip_text()));
   }
