@@ -2369,6 +2369,8 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
       key_nav_terminate_request.emit();
     }
 
+    model_->SetSelection(model_->IconIndex(launcher_icon));
+
     icon_mouse_down_ = launcher_icon;
     // if MouseUp after the time ended -> it's an icon drag, otherwise, it's starting an app
     auto cb_func = sigc::bind(sigc::mem_fun(this, &Launcher::StartIconDragTimeout), x, y);

@@ -116,7 +116,6 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   , launcher_open(false)
   , launcher_keynav(false)
   , launcher_grabbed(false)
-  , reactivate_keynav(false)
   , keynav_restore_window_(true)
   , launcher_key_press_time_(0)
   , dbus_server_(DBUS_NAME)
@@ -157,11 +156,10 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   });
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [this](GVariant * args) {
-    if (reactivate_keynav)
-    {
-      parent_->KeyNavGrab();
-      keynav_restore_window_ = true;
-    }
+    reactivate_index = model_->SelectionIndex();
+
+    parent_->KeyNavGrab();
+    keynav_restore_window_ = true;
 
     model_->SetSelection(reactivate_index);
     AbstractLauncherIcon::Ptr const& selected = model_->Selection();
@@ -1300,7 +1298,6 @@ void Controller::KeyNavActivate()
   if (pimpl->launcher_keynav)
     return;
 
-  pimpl->reactivate_keynav = false;
   pimpl->launcher_keynav = true;
   pimpl->keynav_restore_window_ = true;
   pimpl->keyboard_launcher_ = pimpl->CurrentLauncher();
@@ -1517,8 +1514,6 @@ void Controller::Impl::OpenQuicklist()
   if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor(), keynav_restore_window_))
   {
     keynav_restore_window_ = false;
-    reactivate_keynav = true;
-    reactivate_index = model_->SelectionIndex();
     parent_->KeyNavTerminate(false);
   }
 }
