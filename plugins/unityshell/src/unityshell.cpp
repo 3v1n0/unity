@@ -87,7 +87,8 @@
 
 #define SAVE_PROGRAM \
 	int cur_prog; \
-	glGetIntegerv(GL_CURRENT_PROGRAM, &cur_prog)
+	glGetIntegerv(GL_CURRENT_PROGRAM, &cur_prog); \
+	glUseProgram(0)
 
 #define RESTORE_PROGRAM \
 	glUseProgram(cur_prog)
@@ -302,7 +303,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   if (!failed)
   {
 	 push_all();
-	 SAVE_PROGRAM;
 
      notify_init("unityshell");
 
@@ -501,7 +501,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
     /* Track whole damage on the very first frame */
     cScreen->damageScreen();
 
-	RESTORE_PROGRAM;
 	pop_all();
   }
 }
