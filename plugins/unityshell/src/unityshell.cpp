@@ -86,12 +86,21 @@
 #include "unity-util-accessible.h"
 
 #define SAVE_PROGRAM \
-	int cur_prog; \
-	glGetIntegerv(GL_CURRENT_PROGRAM, &cur_prog); \
-	glUseProgram(0)
+    int cur_prog; \
+    glGetIntegerv(GL_CURRENT_PROGRAM, &cur_prog); \
+    glUseProgram(0)
 
 #define RESTORE_PROGRAM \
-	glUseProgram(cur_prog)
+    glUseProgram(cur_prog)
+
+#define SAVE_FB \
+    int cur_fb; \
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &cur_fb); \
+    glBindFramebuffer(GL_COLOR_ATTACHMENT0_EXT, 0)
+
+#define RESTORE_FB \
+    glBindFramebuffer(GL_COLOR_ATTACHMENT0_EXT, cur_fb);
+
 
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
@@ -302,7 +311,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   if (!failed)
   {
-	 push_all();
+     push_all();
 
      notify_init("unityshell");
 
@@ -501,7 +510,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
     /* Track whole damage on the very first frame */
     cScreen->damageScreen();
 
-	pop_all();
+    pop_all();
   }
 }
 
@@ -756,6 +765,7 @@ void UnityScreen::paintPanelShadow(CompRegion const& clip)
 
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   for (auto const& r : redraw.rects())
   {
@@ -820,6 +830,7 @@ void UnityScreen::paintPanelShadow(CompRegion const& clip)
     }
   }
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -853,6 +864,7 @@ void UnityScreen::paintDisplay()
 {
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   CompOutput *output = _last_output;
 
@@ -973,6 +985,7 @@ void UnityScreen::paintDisplay()
   doShellRepaint = false;
   didShellRepaint = true;
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -994,6 +1007,7 @@ void UnityScreen::DrawPanelUnderDash()
 
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   graphics_engine->ResetModelViewMatrixStack();
   graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
@@ -1007,6 +1021,7 @@ void UnityScreen::DrawPanelUnderDash()
   auto const& texture = panel_style_.GetBackground(monitor)->GetDeviceTexture();
   graphics_engine->QRP_GLSL_1Tex(0, 0, output_dev.width(), texture->GetHeight(), texture, texxform, nux::color::White);
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -2887,6 +2902,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 {
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
   /*
    * The occlusion pass tests windows from TOP to BOTTOM. That's opposite to
    * the actual painting loop.
@@ -2912,8 +2928,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       uScreen->paintPanelShadow(region);
     }
 
-	RESTORE_PROGRAM;
-	pop_all();
+    RESTORE_FB;
+    RESTORE_PROGRAM;
+    pop_all();
 
     return false;  // Ensure nux windows are never painted by compiz
   }
@@ -2968,8 +2985,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       gWindow->glPaintSetCurrentIndex(old_index);
       deco_win_->Paint(matrix, wAttrib, region, mask);
 
-	  RESTORE_PROGRAM;
-	  pop_all();
+      RESTORE_FB;
+      RESTORE_PROGRAM;
+      pop_all();
 
       return ret;
     }
@@ -3013,7 +3031,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   deco_win_->Paint(matrix, wAttrib, region, mask);
 
   pop_all();
+  RESTORE_FB;
   RESTORE_PROGRAM;
+
   return ret;
 }
 
@@ -3035,6 +3055,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 {
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   auto window_state = window->state();
   auto window_type = window->type();
@@ -3143,8 +3164,10 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (draw_panel_shadow == DrawPanelShadow::OVER_WINDOW)
     uScreen->paintPanelShadow(region);
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
+
   return ret;
 }
 
@@ -4244,6 +4267,7 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures,
 {
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   for (auto const& texture : textures)
   {
@@ -4269,6 +4293,7 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures,
     }
   }
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -4277,6 +4302,7 @@ void UnityWindow::RenderDecoration(compiz_utils::CairoContext const& ctx, double
 {
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   if (aspect <= 0)
     return;
@@ -4288,6 +4314,7 @@ void UnityWindow::RenderDecoration(compiz_utils::CairoContext const& ctx, double
   double h = ctx.height() / aspect;
   Style::Get()->DrawSide(Side::TOP, WidgetState::NORMAL, ctx, w, h);
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -4296,6 +4323,7 @@ void UnityWindow::RenderTitle(compiz_utils::CairoContext const& ctx, int x, int 
 {
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   using namespace decoration;
   auto const& style = Style::Get();
@@ -4310,6 +4338,7 @@ void UnityWindow::RenderTitle(compiz_utils::CairoContext const& ctx, int x, int 
   style->DrawTitle(title, WidgetState::NORMAL, ctx, width - x, height);
   cairo_restore(ctx);
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -4338,6 +4367,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 {
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   mask |= PAINT_WINDOW_BLEND_MASK;
 
@@ -4395,8 +4425,10 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         if (decoration_tex_)
           DrawTexture(*decoration_tex_, attrib, transform, mask, geo.x, geo.y, scale);
 
-		RESTORE_PROGRAM;
-		pop_all();
+        RESTORE_FB;
+        RESTORE_PROGRAM;
+        pop_all();
+
         return; // Let's draw this at next repaint cycle
       }
       else
@@ -4431,6 +4463,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 
   uScreen->fake_decorated_windows_.insert(this);
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -4443,12 +4476,16 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   ScaleWindow* scale_win = ScaleWindow::get(window);
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
+
   scale_win->scalePaintDecoration(attrib, transform, region, mask);
 
   if (!scale_win->hasSlot()) // animation not finished
   {
-	RESTORE_PROGRAM;
-	pop_all();
+    RESTORE_FB;
+    RESTORE_PROGRAM;
+    pop_all();
+
     return;
   }
 
@@ -4456,8 +4493,10 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
   if (state != ScaleScreen::Wait && state != ScaleScreen::Out && !need_fake_deco_redraw_)
   {
-	RESTORE_PROGRAM;
-	pop_all();
+    RESTORE_FB;
+    RESTORE_PROGRAM;
+    pop_all();
+
     return;
   }
 
@@ -4469,6 +4508,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   bool highlighted = (uScreen->sScreen->getSelectedWindow() == window->id());
   paintFakeDecoration(scale_geo, deco_attrib, transform, mask, highlighted, pos.scale);
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -4553,6 +4593,7 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
 
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   auto const& radius = style->CornerRadius();
   int decoration_radius = std::max({radius.top, radius.left, radius.right, radius.bottom});
@@ -4569,6 +4610,7 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
   glow::Quads const& quads = computeGlowQuads(glow_geo, *glow_texture, glow_size);
   paintGlow(matrix, attrib, quads, *glow_texture, style->GlowColor(), mask);
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
@@ -4577,6 +4619,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
 {
   push_all();
   SAVE_PROGRAM;
+  SAVE_FB;
 
   GLMatrix matrix;
   matrix.toScreenSpace(uScreen->_last_output, -DEFAULT_Z_CAMERA);
@@ -4604,6 +4647,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
 
   paintFakeDecoration(geo, attrib, matrix, mask, selected, scale_ratio);
 
+  RESTORE_FB;
   RESTORE_PROGRAM;
   pop_all();
 }
