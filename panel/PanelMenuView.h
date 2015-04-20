@@ -98,8 +98,6 @@ private:
 
   void OnSpreadInitiate();
   void OnSpreadTerminate();
-  void OnExpoInitiate();
-  void OnExpoTerminate();
   void OnWindowMinimized(Window xid);
   void OnWindowUnminimized(Window xid);
   void OnWindowUnmapped(Window xid);
@@ -120,6 +118,7 @@ private:
   void FullRedraw();
   std::string GetCurrentTitle() const;
   bool Refresh(bool force = false);
+  void RefreshAndRedraw();
 
   void UpdateTitleTexture(nux::Geometry const&, std::string const& label);
   void UpdateLastGeometry(nux::Geometry const& geo);

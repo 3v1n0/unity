@@ -115,8 +115,7 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
 
   opacity = 0.0f;
 
-  if (Refresh())
-    FullRedraw();
+  RefreshAndRedraw();
 }
 
 PanelMenuView::~PanelMenuView()
@@ -227,9 +226,9 @@ void PanelMenuView::SetupWindowManagerSignals()
   wm.window_resized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
   wm.initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
   wm.terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
-  wm.initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoInitiate));
-  wm.terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
-  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
+  wm.initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
+  wm.terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
+  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
 }
 
 void PanelMenuView::SetupUBusManagerInterests()
@@ -316,7 +315,7 @@ void PanelMenuView::OnAlwaysShowMenusChanged(bool always_show_menus)
   if (!always_show_menus_)
     CheckMouseInside();
 
-  FullRedraw();
+  QueueDraw();
 }
 
 nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
@@ -911,6 +910,12 @@ bool PanelMenuView::Refresh(bool force)
   return true;
 }
 
+void PanelMenuView::RefreshAndRedraw()
+{
+  if (Refresh())
+    QueueDraw();
+}
+
 void PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view, bool is_active)
 {
   if (is_active)
@@ -925,8 +930,7 @@ void PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view, bool is_activ
     }
   }
 
-  if (Refresh())
-    FullRedraw();
+  RefreshAndRedraw();
 }
 
 void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
@@ -1026,8 +1030,7 @@ void PanelMenuView::OnActiveAppChanged(ApplicationPtr const& new_app)
   if (new_app)
   {
     app_name_changed_conn_ = new_app->title.changed.connect([this] (std::string const&t) {
-      if (Refresh())
-        FullRedraw();
+      RefreshAndRedraw();
     });
 
     if (integrated_menus_ || always_show_menus_)
@@ -1095,15 +1098,12 @@ void PanelMenuView::OnActiveWindowChanged(ApplicationWindowPtr const& new_win)
 
     // register callback for new view
     win_name_changed_conn_ = new_win->title.changed.connect([this] (std::string const& t) {
-      if (Refresh())
-        FullRedraw();
+      RefreshAndRedraw();
     });
   }
 
   active_window = active_xid;
-
-  if (Refresh())
-    FullRedraw();
+  RefreshAndRedraw();
 }
 
 void PanelMenuView::OnSpreadInitiate()
@@ -1118,18 +1118,6 @@ void PanelMenuView::OnSpreadTerminate()
   QueueDraw();
 }
 
-void PanelMenuView::OnExpoInitiate()
-{
-  if (Refresh())
-    QueueDraw();
-}
-
-void PanelMenuView::OnExpoTerminate()
-{
-  if (Refresh())
-    QueueDraw();
-}
-
 void PanelMenuView::OnWindowMinimized(Window xid)
 {
   maximized_wins_.erase(std::remove(maximized_wins_.begin(), maximized_wins_.end(), xid), maximized_wins_.end());
@@ -1137,13 +1125,11 @@ void PanelMenuView::OnWindowMinimized(Window xid)
 
   if (xid == active_window())
   {
-    if (Refresh())
-      QueueDraw();
+    RefreshAndRedraw();
   }
   else if (integrated_menus_ && window_buttons_->controlled_window == xid)
   {
-    if (Refresh())
-      QueueDraw();
+    RefreshAndRedraw();
   }
 }
 
@@ -1157,8 +1143,7 @@ void PanelMenuView::OnWindowUnminimized(Window xid)
       UpdateMaximizedWindow();
     }
 
-    if (Refresh())
-      QueueDraw();
+    RefreshAndRedraw();
   }
   else
   {
@@ -1170,8 +1155,7 @@ void PanelMenuView::OnWindowUnminimized(Window xid)
 
     if (integrated_menus_ && IsWindowUnderOurControl(xid))
     {
-      if (Refresh())
-        QueueDraw();
+      RefreshAndRedraw();
     }
   }
 }
@@ -1185,13 +1169,11 @@ void PanelMenuView::OnWindowUnmapped(Window xid)
 
   if (xid == active_window())
   {
-    if (Refresh())
-      QueueDraw();
+    RefreshAndRedraw();
   }
   else if (integrated_menus_ && window_buttons_->controlled_window == xid)
   {
-    if (Refresh())
-      QueueDraw();
+    RefreshAndRedraw();
   }
 }
 
@@ -1204,8 +1186,7 @@ void PanelMenuView::OnWindowMapped(Window xid)
       maximized_wins_.push_front(xid);
       UpdateMaximizedWindow();
 
-      if (Refresh())
-        QueueDraw();
+      RefreshAndRedraw();
     }
     else
     {
@@ -1226,8 +1207,7 @@ void PanelMenuView::OnWindowMaximized(Window xid)
     CheckMouseInside();
     is_maximized_ = true;
 
-    if (Refresh())
-      FullRedraw();
+    RefreshAndRedraw();
   }
   else
   {
@@ -1236,8 +1216,7 @@ void PanelMenuView::OnWindowMaximized(Window xid)
 
     if (integrated_menus_ && IsWindowUnderOurControl(xid))
     {
-      if (Refresh())
-        QueueDraw();
+      RefreshAndRedraw();
     }
   }
 }
@@ -1251,14 +1230,11 @@ void PanelMenuView::OnWindowRestored(Window xid)
   {
     is_maximized_ = false;
     is_grabbed_ = false;
-
-    if (Refresh())
-      FullRedraw();
+    RefreshAndRedraw();
   }
   else if (integrated_menus_ && window_buttons_->controlled_window == xid)
   {
-    if (Refresh())
-      QueueDraw();
+    RefreshAndRedraw();
   }
 }
 
@@ -1273,8 +1249,7 @@ bool PanelMenuView::UpdateActiveWindowPosition()
     if (HasVisibleMenus())
       on_indicator_updated.emit();
 
-    if (Refresh())
-      QueueDraw();
+    RefreshAndRedraw();
   }
 
   return false;
@@ -1567,8 +1542,7 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
 
       is_inside_ = true;
       is_grabbed_ = true;
-      if (Refresh())
-        FullRedraw();
+      RefreshAndRedraw();
 
       /* Ungrab the pointer and start the X move, to make the decorator handle it */
       titlebar_grab_area_->SetGrabbed(false);
@@ -1588,8 +1562,7 @@ void PanelMenuView::OnMaximizedGrabEnd(int x, int y)
   if (!is_inside_)
     is_grabbed_ = false;
 
-  if (Refresh())
-    FullRedraw();
+  RefreshAndRedraw();
 }
 
 // Introspectable
@@ -1651,8 +1624,7 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
     show_now_activated_ = false;
   }
 
-  if (Refresh())
-    QueueDraw();
+  RefreshAndRedraw();
 }
 
 void PanelMenuView::OnLauncherKeyNavStarted(GVariant* data)
@@ -1673,9 +1645,7 @@ void PanelMenuView::OnLauncherKeyNavEnded(GVariant* data)
 
   launcher_keynav_ = false;
   CheckMouseInside();
-
-  if (Refresh())
-    QueueDraw();
+  RefreshAndRedraw();
 }
 
 void PanelMenuView::OnLauncherSelectionChanged(GVariant* data)
