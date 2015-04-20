@@ -1,3 +1,11 @@
+unity (7.3.2+15.04.20150420-0ubuntu1) vivid; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * MenuManager, settings: go back to Global Menus as default (LP:
+    #1446256)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 20 Apr 2015 17:02:13 +0000
+
 unity (7.3.2+15.04.20150410.1-0ubuntu1) vivid; urgency=medium
 
   [ Brandon Schaefer ]
