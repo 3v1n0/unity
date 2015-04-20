@@ -98,6 +98,7 @@ COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 
 static void push_all()
 {
+#ifndef USE_GLES
   glPushAttrib(GL_ALL_ATTRIB_BITS);
 
   glMatrixMode(GL_MODELVIEW);
@@ -106,10 +107,12 @@ static void push_all()
   glPushMatrix();
   glMatrixMode(GL_TEXTURE);
   glPushMatrix();
+#endif
 }
 
 static void pop_all()
 {
+#ifndef USE_GLES
   glMatrixMode(GL_TEXTURE);
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
@@ -118,6 +121,7 @@ static void pop_all()
   glPopMatrix();
 
   glPopAttrib();
+#endif
 }
 
 namespace cgl = compiz::opengl;
