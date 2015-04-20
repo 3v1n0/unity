@@ -272,6 +272,16 @@ void PanelMenuView::UpdateTargetWindowItems()
   if (old_target != target_window)
   {
     window_buttons_->controlled_window = target_window;
+
+    if (ApplicationWindowPtr const& win = ApplicationManager::Default().GetWindowForId(target_window))
+    {
+      auto refresh_cb = sigc::hide(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
+      win_name_changed_conn_ = win->title.changed.connect(refresh_cb);
+
+      if (ApplicationPtr const& app = win->application())
+        app_name_changed_conn_ = app->title.changed.connect(refresh_cb);
+    }
+
     ClearEntries();
 
     if (indicator::AppmenuIndicator::Ptr appmenu = menu_manager_->AppMenu())
@@ -771,7 +781,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname) const
       return "";
     }
 
-    if (WindowManager::Default().IsWindowMaximized(window_xid) && !use_appname)
+    if (window_xid == maximized_window() && !use_appname)
       label = window->title();
 
     if (label.empty())
@@ -1029,10 +1039,6 @@ void PanelMenuView::OnActiveAppChanged(ApplicationPtr const& new_app)
 {
   if (new_app)
   {
-    app_name_changed_conn_ = new_app->title.changed.connect([this] (std::string const&t) {
-      RefreshAndRedraw();
-    });
-
     if (integrated_menus_ || always_show_menus_)
       return;
 
@@ -1095,11 +1101,6 @@ void PanelMenuView::OnActiveWindowChanged(ApplicationWindowPtr const& new_win)
       maximized_wins_.push_front(active_xid);
       UpdateMaximizedWindow();
     }
-
-    // register callback for new view
-    win_name_changed_conn_ = new_win->title.changed.connect([this] (std::string const& t) {
-      RefreshAndRedraw();
-    });
   }
 
   active_window = active_xid;
