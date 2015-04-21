@@ -88,8 +88,9 @@
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 
-static void push_all()
+static void saveState()
 {
+#ifndef USE_GLES
   glPushAttrib(GL_ALL_ATTRIB_BITS);
 
   glMatrixMode(GL_MODELVIEW);
@@ -98,10 +99,12 @@ static void push_all()
   glPushMatrix();
   glMatrixMode(GL_TEXTURE);
   glPushMatrix();
+#endif
 }
 
-static void pop_all()
+static void restoreState()
 {
+#ifndef USE_GLES
   glMatrixMode(GL_TEXTURE);
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
@@ -110,6 +113,7 @@ static void pop_all()
   glPopMatrix();
 
   glPopAttrib();
+#endif
 }
 
 namespace cgl = compiz::opengl;
@@ -662,9 +666,9 @@ void UnityScreen::nuxPrologue()
    * drivers (lp:703140). */
   glDisable(GL_LIGHTING);
 
-  push_all();
 #endif
 
+  saveState();
   glGetError();
 }
 
@@ -682,13 +686,13 @@ void UnityScreen::nuxEpilogue()
   glViewport(o->x(), screen->height() - o->y2(), o->width(), o->height());
 
   glDepthRange(0, 1);
-  pop_all();
 #else
   glDepthRangef(0, 1);
 #endif
 
   gScreen->resetRasterPos();
   glDisable(GL_SCISSOR_TEST);
+  restoreState();
 }
 
 void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
