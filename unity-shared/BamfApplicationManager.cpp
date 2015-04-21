@@ -640,7 +640,13 @@ ApplicationWindowPtr Manager::GetWindowForId(Window xid) const
   if (xid == 0)
     return nullptr;
 
-  std::shared_ptr<GList> windows(bamf_matcher_get_windows(matcher_), g_list_free);
+  // TODO: use bamf_matcher_get_window_for_xid
+  auto* app = bamf_matcher_get_application_for_xid(matcher_, xid);
+
+  if (!app)
+    return nullptr;
+
+  std::shared_ptr<GList> windows(bamf_view_get_children(reinterpret_cast<BamfView*>(app)), g_list_free);
 
   for (GList* l = windows.get(); l; l = l->next)
   {
