@@ -2886,6 +2886,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
       uScreen->paintPanelShadow(region);
     }
+
     return false;  // Ensure nux windows are never painted by compiz
   }
   else if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
@@ -2938,7 +2939,6 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
       gWindow->glPaintSetCurrentIndex(old_index);
       deco_win_->Paint(matrix, wAttrib, region, mask);
-
       return ret;
     }
   }
@@ -2979,7 +2979,6 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
   deco_win_->Paint(matrix, wAttrib, region, mask);
-
   return ret;
 }
 
@@ -4376,7 +4375,6 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
                                        unsigned int mask)
 {
   ScaleWindow* scale_win = ScaleWindow::get(window);
-
   scale_win->scalePaintDecoration(attrib, transform, region, mask);
 
   if (!scale_win->hasSlot()) // animation not finished
@@ -4492,7 +4490,6 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
 
 void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float parent_alpha, float scale_ratio, unsigned deco_height, bool selected)
 {
-
   GLMatrix matrix;
   matrix.toScreenSpace(uScreen->_last_output, -DEFAULT_Z_CAMERA);
   last_bound = geo;
