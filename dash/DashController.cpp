@@ -308,6 +308,8 @@ bool Controller::ShowDash()
     return false;
   }
 
+  wm.SaveInputFocus();
+
   EnsureDash();
   monitor_ = GetIdealMonitor();
   screen_ungrabbed_slot_->disconnect();
