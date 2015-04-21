@@ -116,6 +116,8 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
 {
   parent->scale = Settings::Instance().em()->DPIScale();
   parent->scale.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
+  Settings::Instance().low_gfx_changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::UpdateTextures));
+
   UpdateTextures();
   LoadScaledTextures();
 }
