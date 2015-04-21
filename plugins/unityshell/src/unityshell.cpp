@@ -665,7 +665,6 @@ void UnityScreen::nuxPrologue()
    * bit, but we do that here in order to workaround a bug (?) in the NVIDIA
    * drivers (lp:703140). */
   glDisable(GL_LIGHTING);
-
 #endif
 
   saveState();
