@@ -21,6 +21,7 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 
 #include "BFBLauncherIcon.h"
 
@@ -34,13 +35,18 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
  , reader_(dash::GSettingsScopesReader::GetDefault())
  , launcher_hide_mode_(hide_mode)
 {
-  tooltip_text = _("Search your computer and online sources");
   icon_name = PKGDATADIR"/launcher_bfb.png";
   position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, true);
   SkipQuirkAnimation(Quirk::VISIBLE);
 
   background_color_ = nux::color::White;
+
+  SetDefaultSearchText();
+
+  Settings::Instance().remote_content_changed.connect([this] {
+    SetDefaultSearchText();
+  });
 
   mouse_enter.connect([this](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), true));
@@ -126,6 +132,14 @@ AbstractLauncherIcon::MenuItemsVector BFBLauncherIcon::GetMenus()
   }
 
   return result;
+}
+
+void BFBLauncherIcon::SetDefaultSearchText()
+{
+    auto home_scope = reader_->GetScopeDataById("home.scope");
+    home_scope->search_hint = tooltip_text = ((Settings::Instance().GetRemoteContentStatus()) ?
+                                              _("Search your computer and online sources") :
+                                              _("Search your computer"));
 }
 
 std::string BFBLauncherIcon::GetName() const

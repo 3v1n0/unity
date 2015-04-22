@@ -482,6 +482,8 @@ void DashView::AboutToShow(int monitor)
 
     // this will make sure the spinner animates if the search takes a while
     search_bar_->ForceLiveSearch();
+
+    search_bar_->search_hint = active_scope_view_->scope()->search_hint;
   }
 
   // if a preview is open, close it
