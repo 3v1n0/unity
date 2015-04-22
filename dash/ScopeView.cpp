@@ -507,9 +507,6 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
     results_view->ResultActivated.connect([this, results_view] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
     {
-      if (local_result.uri.find("x-unity-no-preview") == 0)
-        type = ResultView::ActivateType::DIRECT;
-
       result_activated.emit(type, local_result, data, results_view->unique_id());
 
       switch (type)

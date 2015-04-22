@@ -24,8 +24,6 @@
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <NuxGraphics/GdkGraphics.h>
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
 #include <unity-protocol.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
@@ -206,6 +204,12 @@ void ResultViewGrid::Activate(LocalResult const& local_result, int index, Result
 
     column_x += column_index * column_width;
     row_y += row_index * row_height;
+  }
+
+  if (type == ActivateType::PREVIEW)
+  {
+    if (GetLocalResultActivateType(local_result) != type)
+      type = ActivateType::DIRECT;
   }
 
   active_index_ = index;
@@ -806,7 +810,8 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
 
     if (nux::GetEventButton(button_flags) == nux::NUX_MOUSE_BUTTON1)
     {
-      if (default_click_activation() == ActivateType::PREVIEW)
+      if (default_click_activation() == ActivateType::PREVIEW &&
+          GetLocalResultActivateType(activated_result_) == ActivateType::PREVIEW)
       {
         // delay activate for single left click. (for double click check)
         activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index] {
