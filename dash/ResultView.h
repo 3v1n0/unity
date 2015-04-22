@@ -72,8 +72,9 @@ public:
   void SetModelRenderer(ResultRenderer* renderer);
   void SetResultsModel(Results::Ptr const& results);
 
-  unsigned int GetIndexForLocalResult(LocalResult const& local_result);
+  unsigned int GetIndexForLocalResult(LocalResult const&);
   LocalResult GetLocalResultForIndex(unsigned int);
+  ActivateType GetLocalResultActivateType(LocalResult const&) const;
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;

@@ -23,6 +23,7 @@
 
 #include "ResultView.h"
 
+#include <boost/algorithm/string.hpp>
 #include <Nux/Layout.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
@@ -222,6 +223,14 @@ LocalResult ResultView::GetLocalResultForIndex(unsigned int index)
     return LocalResult();
 
   return LocalResult(*GetIteratorAtRow(index));
+}
+
+ResultView::ActivateType ResultView::GetLocalResultActivateType(LocalResult const& result) const
+{
+  if (boost::starts_with(result.uri, "x-unity-no-preview"))
+    return ActivateType::DIRECT;
+
+  return ActivateType::PREVIEW;
 }
 
 void ResultView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
