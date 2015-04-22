@@ -31,7 +31,6 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/OverlayScrollView.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/UnitySettings.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -497,23 +496,21 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
   if (scope_)
   {
-    std::string unique_id = category.name() + scope_->name();
-    results_view->unique_id = unique_id;
+    results_view->unique_id = name + scope_->name();
     results_view->expanded = false;
 
-    if (!Settings::Instance().double_click_activate() ||
-        scope_->id() == "applications.scope" ||
+    if (scope_->id() == "applications.scope" ||
         (scope_->id() == "home.scope" && category.id() == "applications.scope"))
     {
       results_view->default_click_activation = ResultView::ActivateType::DIRECT;
     }
 
-    results_view->ResultActivated.connect([this, unique_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
+    results_view->ResultActivated.connect([this, results_view] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
     {
       if (local_result.uri.find("x-unity-no-preview") == 0)
         type = ResultView::ActivateType::DIRECT;
 
-      result_activated.emit(type, local_result, data, unique_id);
+      result_activated.emit(type, local_result, data, results_view->unique_id());
 
       switch (type)
       {

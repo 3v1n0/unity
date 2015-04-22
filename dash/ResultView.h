@@ -81,7 +81,7 @@ public:
   nux::Property<float> desaturation_progress;
   nux::Property<bool> enable_texture_render;
   nux::Property<double> scale;
-  nux::Property<ActivateType> default_click_activation;
+  nux::RWProperty<ActivateType> default_click_activation;
 
   sigc::signal<void, LocalResult const&, ActivateType, GVariant*> ResultActivated;
 
@@ -130,6 +130,7 @@ private:
   void UpdateFontScale(double scale);
 
   Result cached_result_;
+  ActivateType default_click_activation_;
   connection::Manager result_connections_;
 };
 

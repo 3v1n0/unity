@@ -47,9 +47,9 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   , desaturation_progress(0.0)
   , enable_texture_render(false)
   , scale(DEFAULT_SCALE)
-  , default_click_activation(ActivateType::PREVIEW)
   , renderer_(NULL)
   , cached_result_(nullptr, nullptr, nullptr)
+  , default_click_activation_(ActivateType::PREVIEW)
 {
   expanded.changed.connect([this](bool value)
   {
@@ -60,6 +60,21 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   desaturation_progress.changed.connect([this](float value)
   {
     NeedRedraw();
+  });
+
+  default_click_activation.SetGetterFunction([this] {
+    if (Settings::Instance().double_click_activate())
+      return default_click_activation_;
+    return ActivateType::DIRECT;
+  });
+
+  default_click_activation.SetSetterFunction([this] (ActivateType at) {
+    if (default_click_activation_ != at)
+    {
+      default_click_activation_ = at;
+      return true;
+    }
+    return false;
   });
 
   Settings::Instance().font_scaling.changed.connect(sigc::mem_fun(this, &ResultView::UpdateFontScale));
