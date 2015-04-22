@@ -20,11 +20,6 @@
  */
 #include "config.h"
 
-#include <pango/pango.h>
-#include <pango/pangocairo.h>
-#include <gdk/gdk.h>
-#include <gtk/gtk.h>
-
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 #include <NuxGraphics/CairoGraphics.h>
