@@ -482,17 +482,16 @@ void ScopeView::OnCategoryAdded(Category const& category)
   /* Reset result count */
   counts_[group] = 0;
 
-  ResultView* results_view = nullptr;
+  auto* results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
+
   if (category.GetContentType() == "social" && category.renderer_name == "default")
   {
-    results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-    static_cast<ResultViewGrid*> (results_view)->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale());
-    static_cast<ResultViewGrid*> (results_view)->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale());
+    results_view->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale());
+    results_view->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale());
   }
   else
   {
-    results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   }
 
