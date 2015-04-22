@@ -1190,6 +1190,7 @@ bool ApplicationLauncherIcon::IsFileManager()
   auto const& desktop_file = DesktopFile();
 
   return boost::algorithm::ends_with(desktop_file, "org.gnome.Nautilus.desktop") ||
+         boost::algorithm::ends_with(desktop_file, "nautilus.desktop") ||
          boost::algorithm::ends_with(desktop_file, "nautilus-folder-handler.desktop") ||
          boost::algorithm::ends_with(desktop_file, "nautilus-home.desktop");
 }
