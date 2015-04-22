@@ -58,12 +58,12 @@ struct ResultViewTexture
 class ResultView : public nux::View, public debug::Introspectable
 {
 public:
-  typedef enum ActivateType_
+  enum class ActivateType
   {
     DIRECT,
     PREVIEW_LEFT_BUTTON,
     PREVIEW
-  } ActivateType;
+  };
 
   NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
 
@@ -82,6 +82,7 @@ public:
   nux::Property<float> desaturation_progress;
   nux::Property<bool> enable_texture_render;
   nux::Property<double> scale;
+  nux::Property<ActivateType> default_click_activation;
 
   sigc::signal<void, LocalResult const&, ActivateType, GVariant*> ResultActivated;
 

@@ -47,6 +47,7 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   , desaturation_progress(0.0)
   , enable_texture_render(false)
   , scale(DEFAULT_SCALE)
+  , default_click_activation(ActivateType::PREVIEW)
   , renderer_(NULL)
   , cached_result_(nullptr, nullptr, nullptr)
 {
