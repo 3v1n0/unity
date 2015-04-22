@@ -838,8 +838,6 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   if (windows.size() < 2)
     return;
 
-  Window active = WindowManager::Default().GetActiveWindow();
-
   // add menu items for all open windows
   for (auto const& w : windows)
   {
@@ -863,7 +861,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
         wm.Raise(xid);
     });
 
-    if (xid == active)
+    if (w->active())
     {
       dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
       dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
