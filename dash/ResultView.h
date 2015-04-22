@@ -61,7 +61,6 @@ public:
   enum class ActivateType
   {
     DIRECT,
-    PREVIEW_LEFT_BUTTON,
     PREVIEW
   };
 

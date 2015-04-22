@@ -34,7 +34,6 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/GraphicsUtils.h"
 #include "unity-shared/RawPixel.h"
-#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 #include "ResultViewGrid.h"
 #include "math.h"
@@ -94,8 +93,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   scale.changed.connect(sigc::mem_fun(this, &ResultViewGrid::UpdateScale));
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
-  key_nav_focus_activate.connect([this] (nux::Area *area)
-  {
+  key_nav_focus_activate.connect([this] (nux::Area *area) {
     Activate(focused_result_, selected_index_, ResultView::ActivateType::DIRECT);
   });
   key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
@@ -796,6 +794,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
   unsigned num_results = GetNumResults();
   unsigned index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
+
   if (index < num_results)
   {
     // we got a click on a button so activate it
@@ -805,32 +804,31 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     focused_result_ = result;
     activated_result_ = result;
 
-
     if (nux::GetEventButton(button_flags) == nux::NUX_MOUSE_BUTTON1)
     {
-      if (unity::Settings::Instance().double_click_activate)
+      if (default_click_activation() == ActivateType::PREVIEW)
       {
         // delay activate for single left click. (for double click check)
-        activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index]() {
-          Activate(activated_result_, index, ResultView::ActivateType::PREVIEW_LEFT_BUTTON);
+        activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index] {
+          Activate(activated_result_, index, ActivateType::PREVIEW);
           return false;
         }));
       }
       else
       {
-        Activate(activated_result_, index, ResultView::ActivateType::DIRECT);
+        Activate(activated_result_, index, ActivateType::DIRECT);
       }
     }
     else
     {
-       Activate(activated_result_, index, ResultView::ActivateType::PREVIEW);
+      Activate(activated_result_, index, ActivateType::PREVIEW);
     }
   }
 }
 
 void ResultViewGrid::MouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (unity::Settings::Instance().double_click_activate == false)
+  if (default_click_activation() == ActivateType::DIRECT)
     return;
 
   unsigned num_results = GetNumResults();
@@ -845,7 +843,7 @@ void ResultViewGrid::MouseDoubleClick(int x, int y, unsigned long button_flags, 
     focused_result_ = result;
 
     activated_result_ = result;
-    Activate(activated_result_, index, ResultView::ActivateType::DIRECT);
+    Activate(activated_result_, index, ActivateType::DIRECT);
   }
 }
 
