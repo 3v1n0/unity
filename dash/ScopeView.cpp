@@ -31,6 +31,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/OverlayScrollView.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/UnitySettings.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -497,31 +498,30 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
   if (scope_)
   {
-    const std::string category_id = category.id();
     std::string unique_id = category.name() + scope_->name();
     results_view->unique_id = unique_id;
     results_view->expanded = false;
 
-    results_view->ResultActivated.connect([this, unique_id, category_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
+    if (!Settings::Instance().double_click_activate() ||
+        scope_->id() == "applications.scope" ||
+        (scope_->id() == "home.scope" && category.id() == "applications.scope"))
     {
-      if (g_str_has_prefix(local_result.uri.c_str(), "x-unity-no-preview"))
-        type = ResultView::ActivateType::DIRECT;
+      results_view->default_click_activation = ResultView::ActivateType::DIRECT;
+    }
 
-      // Applications scope results should be activated on left-click (instead of preview). Note that app scope can still
-      // respond with preview for activation request (the case for uninstalled apps).
-      bool is_app_scope_result = (scope_->id() == "applications.scope" || (scope_->id() == "home.scope" && category_id == "applications.scope"));
-
-      if (is_app_scope_result && type == ResultView::ActivateType::PREVIEW_LEFT_BUTTON)
+    results_view->ResultActivated.connect([this, unique_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
+    {
+      if (local_result.uri.find("x-unity-no-preview") == 0)
         type = ResultView::ActivateType::DIRECT;
 
       result_activated.emit(type, local_result, data, unique_id);
+
       switch (type)
       {
         case ResultView::ActivateType::DIRECT:
         {
           scope_->Activate(local_result, nullptr, cancellable_);
         } break;
-        case ResultView::ActivateType::PREVIEW_LEFT_BUTTON:
         case ResultView::ActivateType::PREVIEW:
         {
           scope_->Preview(local_result, nullptr, cancellable_);
