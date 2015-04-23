@@ -137,8 +137,8 @@ void BFBLauncherIcon::UpdateDefaultSearchText()
     auto home_scope = reader_->GetScopeDataById("home.scope");
 
     tooltip_text = ((Settings::Instance().remote_content) ?
-                      _("Search your computer and online sources") :
-                      _("Search your computer"));
+                    _("Search your computer and online sources") :
+                    _("Search your computer"));
 
     if (home_scope)
     {
