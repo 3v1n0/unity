@@ -116,8 +116,11 @@ void BGHash::TransitionToNewColor(nux::color::Color const& new_color, bool skip_
                       .SetDuration(skip_animation ? 0 : TRANSITION_DURATION)
                       .Start();
 
-  // This will make sure that the animation starts even if the screen is idle.
-  nux::GetWindowThread()->RequestRedraw();
+  if (nux::WindowThread* wt = nux::GetWindowThread())
+  {
+    // This will make sure that the animation starts even if the screen is idle.
+    wt->RequestRedraw();
+  }
 }
 
 void BGHash::OnTransitionUpdated(nux::Color const& new_color)
