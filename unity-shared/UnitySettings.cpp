@@ -88,10 +88,12 @@ public:
     , cached_double_click_activate_(true)
     , changing_gnome_settings_(false)
     , lowGfx_(false)
+    , remote_content_enabled_(true)
   {
     parent_->form_factor.SetGetterFunction(sigc::mem_fun(this, &Impl::GetFormFactor));
     parent_->form_factor.SetSetterFunction(sigc::mem_fun(this, &Impl::SetFormFactor));
     parent_->double_click_activate.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDoubleClickActivate));
+    parent_->remote_content.SetGetterFunction(sigc::mem_fun(this, &Impl::GetRemoteContentEnabled));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
@@ -328,10 +330,18 @@ public:
   void UpdateRemoteContentSearch()
   {
     glib::String remote_content(g_settings_get_string(remote_content_settings_, REMOTE_CONTENT_KEY.c_str()));
+    bool remote_content_enabled = ((remote_content.Str() == "all") ? true : false);
 
-    remote_content_status_ = ((remote_content.Str() == "all") ? true : false);
+    if (remote_content_enabled != remote_content_enabled_)
+    {
+      remote_content_enabled_ = remote_content_enabled;
+      parent_->remote_content.changed.emit(remote_content_enabled_);
+    }
+  }
 
-    parent_->remote_content_changed.emit();
+  bool GetRemoteContentEnabled() const
+  {
+    return remote_content_enabled_;
   }
 
   Settings* parent_;
@@ -350,7 +360,7 @@ public:
   bool cached_double_click_activate_;
   bool changing_gnome_settings_;
   bool lowGfx_;
-  bool remote_content_status_;
+  bool remote_content_enabled_;
 };
 
 //
@@ -422,11 +432,6 @@ int Settings::LauncherWidth(int monitor) const
   }
 
   return pimpl->launcher_widths_[monitor];
-}
-
-bool Settings::GetRemoteContentStatus() const
-{
-  return pimpl->remote_content_status_;
 }
 
 } // namespace unity

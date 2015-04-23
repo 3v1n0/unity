@@ -48,7 +48,6 @@ public:
 
   void SetLauncherWidth(int launcher_width, int monitor);
   int LauncherWidth(int monitor) const;
-  bool GetRemoteContentStatus() const;
 
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
@@ -57,9 +56,9 @@ public:
   nux::Property<unsigned> lim_double_click_wait;
   nux::Property<bool> lim_unfocused_popup;
   nux::Property<double> font_scaling;
+  nux::ROProperty<bool> remote_content;
 
   sigc::signal<void> dpi_changed;
-  sigc::signal<void> remote_content_changed;
 
 private:
   class Impl;

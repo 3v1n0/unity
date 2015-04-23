@@ -52,7 +52,7 @@ protected:
 private:
   void OnOverlayShown(GVariant *data, bool visible);
   void OnMenuitemActivated(DbusmenuMenuitem* item, int time, std::string const& scope_id);
-  void SetDefaultSearchText();
+  void UpdateDefaultSearchText();
 
   nux::Color background_color_;
   dash::GSettingsScopesReader::Ptr reader_;
