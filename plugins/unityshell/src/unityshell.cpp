@@ -2228,6 +2228,11 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompAction::State state,
                                               CompOption::Vector& options)
 {
+  if (WM.IsScaleActive())
+    WM.TerminateScale();
+  else if (WM.IsExpoActive())
+    WM.TerminateExpo();
+
   _key_nav_mode_requested = true;
   return true;
 }
