@@ -141,6 +141,9 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , showing_filters(false)
   , can_refine_search(false)
+  , im_active([this] { return pango_entry_->im_active(); })
+  , im_preedit([this] { return pango_entry_->im_preedit(); })
+  , in_live_search([this] { return live_search_timeout_ && live_search_timeout_->IsRunning(); })
   , live_search_wait(DEFAULT_LIVE_SEARCH_TIMEOUT)
   , scale(DEFAULT_SCALE)
   , show_filter_hint_(show_filter_hint)
@@ -179,11 +182,11 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
   pango_entry_->key_up.connect([this] (unsigned int, unsigned long, unsigned long) {
-      if (get_im_preedit())
-      {
-        hint_->SetVisible(false);
-        hint_->QueueDraw();
-      }
+    if (im_preedit())
+    {
+      hint_->SetVisible(false);
+      hint_->QueueDraw();
+    }
   });
 
   layered_layout_ = new nux::LayeredLayout();
@@ -263,10 +266,8 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
   OnFontChanged();
 
   search_hint.changed.connect([this](std::string const& s) { OnSearchHintChanged(); });
-  search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
+  search_string.SetGetterFunction([this] { return pango_entry_->GetText(); });
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
-  im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
-  im_preedit.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_preedit));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
   scale.changed.connect(sigc::mem_fun(this, &SearchBar::UpdateScale));
   Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &SearchBar::UpdateSearchBarSize)));
@@ -633,11 +634,6 @@ nux::View* SearchBar::show_filters() const
   return expander_view_;
 }
 
-std::string SearchBar::get_search_string() const
-{
-  return pango_entry_->GetText();
-}
-
 bool SearchBar::set_search_string(std::string const& string)
 {
   pango_entry_->SetText(string.c_str());
@@ -647,16 +643,6 @@ bool SearchBar::set_search_string(std::string const& string)
   start_spinner_timeout_.reset();
 
   return true;
-}
-
-bool SearchBar::get_im_active() const
-{
-  return pango_entry_->im_active();
-}
-
-bool SearchBar::get_im_preedit() const
-{
-  return pango_entry_->im_preedit();
 }
 
 //

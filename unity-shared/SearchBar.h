@@ -63,6 +63,7 @@ public:
   nux::Property<bool> can_refine_search;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
+  nux::ROProperty<bool> in_live_search;
   nux::Property<unsigned> live_search_wait;
   nux::Property<double> scale;
 
@@ -88,10 +89,7 @@ private:
   bool OnLiveSearchTimeout();
   bool OnSpinnerStartCb();
 
-  std::string get_search_string() const;
   bool set_search_string(std::string const& string);
-  bool get_im_active() const;
-  bool get_im_preedit() const;
   bool show_filter_hint_;
 
   std::string GetName() const;
