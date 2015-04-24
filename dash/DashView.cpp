@@ -120,7 +120,6 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
   , last_activated_timestamp_(0)
-  , live_search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
   , opening_column_x_(-1)
@@ -1221,15 +1220,12 @@ void DashView::UpdateScopeFilterValue(Filter::Ptr filter, std::string value)
 
 void DashView::OnSearchChanged(std::string const& search_string)
 {
-  live_search_in_progress_ = true;
   activate_on_finish_ = false;
 }
 
 void DashView::OnLiveSearchReached(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
-  live_search_in_progress_ = false;
-
   if (!active_scope_view_.IsValid())
     return;
 
@@ -1421,7 +1417,7 @@ void DashView::OnEntryActivated()
 {
   if (active_scope_view_.IsValid())
   {
-    if (!activate_delay_ && !live_search_in_progress_)
+    if (!activate_delay_ && !search_bar_->in_live_search())
       active_scope_view_->ActivateFirst();
     else
       activate_on_finish_ = true;

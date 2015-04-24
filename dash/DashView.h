@@ -170,7 +170,6 @@ private:
 
   LocalResult last_activated_result_;
   guint64 last_activated_timestamp_;
-  bool live_search_in_progress_;
   bool activate_on_finish_;
   glib::Source::UniquePtr activate_delay_;
   bool visible_;
