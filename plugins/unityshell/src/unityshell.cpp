@@ -88,7 +88,7 @@
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 
-static void saveState()
+static void save_state()
 {
 #ifndef USE_GLES
   glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -102,7 +102,7 @@ static void saveState()
 #endif
 }
 
-static void restoreState()
+static void restore_state()
 {
 #ifndef USE_GLES
   glMatrixMode(GL_TEXTURE);
@@ -667,7 +667,7 @@ void UnityScreen::nuxPrologue()
   glDisable(GL_LIGHTING);
 #endif
 
-  saveState();
+  save_state();
   glGetError();
 }
 
@@ -691,7 +691,7 @@ void UnityScreen::nuxEpilogue()
 
   gScreen->resetRasterPos();
   glDisable(GL_SCISSOR_TEST);
-  restoreState();
+  restore_state();
 }
 
 void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
