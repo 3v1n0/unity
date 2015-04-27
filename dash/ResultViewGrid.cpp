@@ -36,6 +36,7 @@
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
+#include <UnityCore/DesktopUtilities.h>
 #include "ResultViewGrid.h"
 #include "math.h"
 
@@ -915,6 +916,16 @@ bool ResultViewGrid::DndSourceDragBegin()
   current_drag_result_ = *iter;
   if (current_drag_result_.empty())
     current_drag_result_.uri = current_drag_result_.uri.substr(current_drag_result_.uri.find(":") + 1);
+
+  std::string uri_prefix = "application://";
+  auto pos = current_drag_result_.uri.find(uri_prefix);
+
+  if (pos != std::string::npos)
+  {
+    auto desktop_id = current_drag_result_.uri.substr(pos + uri_prefix.size());
+    auto desktop_path = DesktopUtilities::GetDesktopPathById(desktop_id);
+    current_drag_result_.uri = "file://" + desktop_path;
+  }
 
   LOG_DEBUG (logger) << "Dnd begin at " <<
                      last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "
