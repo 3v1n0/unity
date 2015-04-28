@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <unity-protocol.h>
+#include <boost/algorithm/string.hpp>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
@@ -59,6 +60,8 @@ namespace
 
   const RawPixel WIDTH_PADDING   = 25_em;
   const RawPixel SCROLLBAR_WIDTH =  3_em;
+
+  const std::string APPLICATION_URI_PREFIX = "application://";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
@@ -917,14 +920,13 @@ bool ResultViewGrid::DndSourceDragBegin()
   if (current_drag_result_.empty())
     current_drag_result_.uri = current_drag_result_.uri.substr(current_drag_result_.uri.find(":") + 1);
 
-  std::string uri_prefix = "application://";
-  auto pos = current_drag_result_.uri.find(uri_prefix);
-
-  if (pos != std::string::npos)
+  if (boost::starts_with(current_drag_result_.uri, APPLICATION_URI_PREFIX))
   {
-    auto desktop_id = current_drag_result_.uri.substr(pos + uri_prefix.size());
+    auto desktop_id = current_drag_result_.uri.substr(APPLICATION_URI_PREFIX.size());
     auto desktop_path = DesktopUtilities::GetDesktopPathById(desktop_id);
-    current_drag_result_.uri = "file://" + desktop_path;
+
+    if (!desktop_path.empty())
+      current_drag_result_.uri = "file://" + desktop_path;
   }
 
   LOG_DEBUG (logger) << "Dnd begin at " <<
