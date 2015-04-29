@@ -62,6 +62,7 @@ public:
   int GetNumRows();
   void AboutToShow();
   void JumpToTop();
+  void PerformPageNavigation(bool page_up);
 
   virtual void ActivateFirst();
 

@@ -40,6 +40,8 @@ public:
   PlacesOverlayVScrollBar(NUX_FILE_LINE_PROTO);
   virtual ~PlacesOverlayVScrollBar() {}
 
+  void PerformPageNavigation(bool scroll_up);
+
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
 

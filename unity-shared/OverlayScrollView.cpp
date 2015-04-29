@@ -50,6 +50,10 @@ ScrollView::ScrollView(NUX_FILE_LINE_DECL)
   scale.changed.connect([this] (double scale) {
     m_MouseWheelScrollSize = MOUSE_WHEEL_SCROLL_SIZE.CP(scale);
   });
+
+  page_navigation.changed.connect([scrollbar] (bool page_up) {
+      scrollbar->PerformPageNavigation(page_up);
+  });
 }
 
 } // dash namespace

@@ -1007,6 +1007,11 @@ void ScopeView::JumpToTop()
   scroll_view_->ScrollToPosition(nux::Geometry(0, 0, 0, 0));
 }
 
+void ScopeView::PerformPageNavigation(bool page_up)
+{
+  scroll_view_->page_navigation.changed.emit(page_up);
+}
+
 void ScopeView::ActivateFirst()
 {
   if (!scope_)
