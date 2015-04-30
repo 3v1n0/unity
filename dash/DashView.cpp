@@ -1587,11 +1587,13 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     direction = KEY_NAV_ENTER;
     break;
   case NUX_VK_PAGE_UP:
-    active_scope_view_->PerformPageNavigation(true);
-    return nux::GetWindowCompositor().GetKeyFocusArea();
   case NUX_VK_PAGE_DOWN:
-    active_scope_view_->PerformPageNavigation(false);
-    return nux::GetWindowCompositor().GetKeyFocusArea();
+    if (!preview_displaying_)
+    {
+      active_scope_view_->PerformPageNavigation((x11_key_code == NUX_VK_PAGE_UP) ? true : false);
+      return nux::GetWindowCompositor().GetKeyFocusArea();
+    }
+    break;
   default:
     auto const& close_key = WindowManager::Default().close_window_key();
 
