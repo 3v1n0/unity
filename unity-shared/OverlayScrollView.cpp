@@ -51,8 +51,8 @@ ScrollView::ScrollView(NUX_FILE_LINE_DECL)
     m_MouseWheelScrollSize = MOUSE_WHEEL_SCROLL_SIZE.CP(scale);
   });
 
-  page_navigation.changed.connect([scrollbar] (bool page_up) {
-      scrollbar->PerformPageNavigation(page_up);
+  page_direction.changed.connect([scrollbar] (ScrollDir dir) {
+      scrollbar->PerformPageNavigation(dir);
   });
 }
 

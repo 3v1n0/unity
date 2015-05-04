@@ -1007,9 +1007,9 @@ void ScopeView::JumpToTop()
   scroll_view_->ScrollToPosition(nux::Geometry(0, 0, 0, 0));
 }
 
-void ScopeView::PerformPageNavigation(bool page_up)
+void ScopeView::PerformPageNavigation(ScrollDir dir)
 {
-  scroll_view_->page_navigation.changed.emit(page_up);
+  scroll_view_->page_direction.changed.emit(dir);
 }
 
 void ScopeView::ActivateFirst()

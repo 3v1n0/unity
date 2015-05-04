@@ -1590,7 +1590,7 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   case NUX_VK_PAGE_DOWN:
     if (!preview_displaying_)
     {
-      active_scope_view_->PerformPageNavigation((x11_key_code == NUX_VK_PAGE_UP) ? true : false);
+      active_scope_view_->PerformPageNavigation((x11_key_code == NUX_VK_PAGE_UP) ? ScrollDir::UP : ScrollDir::DOWN);
       return nux::GetWindowCompositor().GetKeyFocusArea();
     }
     break;

@@ -34,24 +34,24 @@ namespace unity
 namespace dash
 {
 
+enum class ScrollDir : unsigned int
+{
+  UP,
+  DOWN,
+};
+
 class PlacesOverlayVScrollBar: public PlacesVScrollBar
 {
 public:
   PlacesOverlayVScrollBar(NUX_FILE_LINE_PROTO);
   virtual ~PlacesOverlayVScrollBar() {}
 
-  void PerformPageNavigation(bool scroll_up);
+  void PerformPageNavigation(ScrollDir dir);
 
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
 
 private:
-  enum class ScrollDir : unsigned int
-  {
-    UP,
-    DOWN,
-  };
-
   void OnTrackGeometryChanged(nux::Area* area, nux::Geometry& geo);
   void OnVisibilityChanged(nux::Area* area, bool visible);
   void OnSensitivityChanged(nux::Area* area, bool sensitive);

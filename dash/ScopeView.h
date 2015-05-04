@@ -37,6 +37,7 @@
 #include "ResultViewGrid.h"
 #include "unity-shared/NuxObjectPtrHash.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/PlacesOverlayVScrollBar.h"
 
 namespace unity
 {
@@ -62,7 +63,7 @@ public:
   int GetNumRows();
   void AboutToShow();
   void JumpToTop();
-  void PerformPageNavigation(bool page_up);
+  void PerformPageNavigation(ScrollDir dir);
 
   virtual void ActivateFirst();
 
