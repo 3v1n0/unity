@@ -1546,6 +1546,39 @@ void DashView::ProcessDndEnter()
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
+nux::Area* DashView::SkipUnexpandableHeaderKeyNav()
+{
+  bool found = false;
+  PlacesGroup::Ptr prev_view;
+  auto category_views = active_scope_view_->GetOrderedCategoryViews();
+
+  for (auto category : category_views)
+  {
+    if (category->GetLayout() != nullptr)
+    {
+      auto header = category->GetHeaderFocusableView();
+      if (header && header->HasKeyFocus() && !category->IsExpandable())
+      {
+        found = true;
+        break;
+      }
+
+      if (category->IsVisible())
+        prev_view = category;
+    }
+  }
+
+  if (found)
+  {
+    if (prev_view)
+      return prev_view->GetChildView();
+    else
+      return search_bar_->text_entry();
+  }
+  else
+    return nullptr;
+}
+
 nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state)
@@ -1688,6 +1721,14 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
         for (auto tab : tabs)
           return tab;
       }
+    }
+  }
+
+  if (direction == KEY_NAV_UP)
+  {
+    if (auto skip_view = SkipUnexpandableHeaderKeyNav())
+    {
+      return skip_view;
     }
   }
 

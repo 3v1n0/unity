@@ -137,6 +137,8 @@ private:
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
+  nux::Area* SkipUnexpandableHeaderKeyNav();
+
   UBusManager ubus_manager_;
   Scopes::Ptr scopes_;
   ScopeViews scope_views_;
