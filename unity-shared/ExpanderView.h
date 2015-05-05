@@ -33,6 +33,8 @@ class ExpanderView : public nux::View
 public:
   ExpanderView(NUX_FILE_LINE_PROTO);
 
+  nux::Property<bool> expanded;
+  nux::Property<std::string> label;
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
