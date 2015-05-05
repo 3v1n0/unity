@@ -34,7 +34,7 @@ public:
   ScrollView(NUX_FILE_LINE_PROTO);
 
   nux::RWProperty<double> scale;
-  nux::Property<ScrollDir> page_direction;
+  sigc::signal<void, ScrollDir> page_direction;
 
   using nux::ScrollView::SetVScrollBar;
 };

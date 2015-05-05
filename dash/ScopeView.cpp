@@ -1009,7 +1009,7 @@ void ScopeView::JumpToTop()
 
 void ScopeView::PerformPageNavigation(ScrollDir dir)
 {
-  scroll_view_->page_direction.changed.emit(dir);
+  scroll_view_->page_direction.emit(dir);
 }
 
 void ScopeView::ActivateFirst()
