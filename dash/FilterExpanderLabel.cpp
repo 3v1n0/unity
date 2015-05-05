@@ -40,40 +40,6 @@ const RawPixel ARROW_BOTTOM_PADDING = 9_em;
 // font
 const char* const FONT_EXPANDER_LABEL = "Ubuntu 13"; // 17px = 13
 
-class ExpanderView : public nux::View
-{
-public:
-  ExpanderView(NUX_FILE_LINE_DECL)
-   : nux::View(NUX_FILE_LINE_PARAM)
-  {
-    SetAcceptKeyNavFocusOnMouseDown(false);
-    SetAcceptKeyNavFocusOnMouseEnter(true);
-  }
-
-protected:
-  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {};
-
-  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-    if (GetLayout())
-      GetLayout()->ProcessDraw(graphics_engine, force_draw);
-  }
-
-  bool AcceptKeyNavFocus()
-  {
-    return true;
-  }
-
-  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
-  {
-    if (event_type != nux::EVENT_MOUSE_WHEEL && TestMousePointerInclusion(mouse_position, event_type))
-      return this;
-    else
-      return nullptr;
-  }
-};
-
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
@@ -97,6 +63,7 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
 void FilterExpanderLabel::SetLabel(std::string const& label)
 {
   cairo_label_->SetText(label);
+  expander_view_->label = label;
 }
 
 void FilterExpanderLabel::UpdateScale(double scale)
@@ -139,6 +106,7 @@ void FilterExpanderLabel::BuildLayout()
   expander_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
+  expander_view_->expanded.Set(expanded);
   expander_view_->SetLayout(expander_layout_);
   top_bar_layout_->AddView(expander_view_, 1);
 
@@ -168,6 +136,7 @@ void FilterExpanderLabel::BuildLayout()
   auto mouse_expand = [this](int x, int y, unsigned long b, unsigned long k)
   {
     expanded = !expanded;
+    expander_view_->expanded.Set(expanded);
   };
 
   auto key_redraw = [this](nux::Area*, bool, nux::KeyNavDirection)
@@ -178,6 +147,7 @@ void FilterExpanderLabel::BuildLayout()
   auto key_expand = [this](nux::Area*)
   {
     expanded = !expanded;
+    expander_view_->expanded.Set(expanded);
   };
 
   // Signals

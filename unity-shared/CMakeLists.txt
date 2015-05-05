@@ -28,6 +28,7 @@ set (UNITY_SHARED_SOURCES
      DeltaRestrainment.cpp
      DesktopApplicationManager.cpp
      EMConverter.cpp
+     ExpanderView.cpp
      GnomeFileManager.cpp
      FontSettings.cpp
      GraphicsUtils.cpp

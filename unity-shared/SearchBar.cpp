@@ -88,45 +88,6 @@ const std::string SHOW_FILTERS_LABEL_DEFAULT_FONT = "Ubuntu " + SHOW_FILTERS_LAB
 }
 
 DECLARE_LOGGER(logger, "unity.dash.searchbar");
-namespace
-{
-class ExpanderView : public nux::View
-{
-public:
-  ExpanderView(NUX_FILE_LINE_DECL)
-   : nux::View(NUX_FILE_LINE_PARAM)
-  {
-    SetAcceptKeyNavFocusOnMouseDown(false);
-    SetAcceptKeyNavFocusOnMouseEnter(true);
-  }
-
-protected:
-  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {}
-
-  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-    if (GetLayout())
-      GetLayout()->ProcessDraw(graphics_engine, force_draw);
-  }
-
-  bool AcceptKeyNavFocus()
-  {
-    return true;
-  }
-
-  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
-  {
-    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
-
-    if (mouse_inside == false)
-      return nullptr;
-
-    return this;
-  }
-};
-
-}
 
 namespace unity
 {
@@ -231,6 +192,8 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     filter_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
 
     expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
+    expander_view_->label = filter_str;
+    expander_view_->expanded.Set(showing_filters);
     expander_view_->SetVisible(false);
     expander_view_->SetLayout(filter_layout_);
     layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
@@ -239,6 +202,7 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     auto mouse_expand = [this](int, int, unsigned long, unsigned long)
     {
       showing_filters = !showing_filters;
+      expander_view_->expanded.Set(showing_filters);
     };
 
     auto key_redraw = [this](nux::Area*, bool, nux::KeyNavDirection)
@@ -249,6 +213,7 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     auto key_expand = [this](nux::Area*)
     {
       showing_filters = !showing_filters;
+      expander_view_->expanded.Set(showing_filters);
     };
 
     // Signals
