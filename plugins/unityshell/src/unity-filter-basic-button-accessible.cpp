@@ -206,9 +206,6 @@ unity_filter_basic_button_accessible_ref_state_set(AtkObject* obj)
     atk_state_set_add_state(state_set, ATK_STATE_ACTIVE);
   }
 
-//  if (button->GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-//    atk_state_set_add_state(state_set, ATK_STATE_ARMED);
-
   if (button->Active())
     atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
 
