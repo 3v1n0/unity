@@ -106,7 +106,8 @@ void FilterExpanderLabel::BuildLayout()
   expander_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
-  expander_view_->expanded.Set(expanded);
+  expander_view_->expanded = expanded();
+  expanded.changed.connect([this] (bool expanded) { expander_view_->expanded = expanded; });
   expander_view_->SetLayout(expander_layout_);
   top_bar_layout_->AddView(expander_view_, 1);
 
@@ -136,7 +137,6 @@ void FilterExpanderLabel::BuildLayout()
   auto mouse_expand = [this](int x, int y, unsigned long b, unsigned long k)
   {
     expanded = !expanded;
-    expander_view_->expanded.Set(expanded);
   };
 
   auto key_redraw = [this](nux::Area*, bool, nux::KeyNavDirection)
@@ -147,7 +147,6 @@ void FilterExpanderLabel::BuildLayout()
   auto key_expand = [this](nux::Area*)
   {
     expanded = !expanded;
-    expander_view_->expanded.Set(expanded);
   };
 
   // Signals

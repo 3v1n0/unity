@@ -24,8 +24,6 @@
 
 namespace unity
 {
-// namespace dash
-// {
 
 class ExpanderView : public nux::View
 {
@@ -44,7 +42,6 @@ protected:
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 };
 
-// }
 }
 
 #endif

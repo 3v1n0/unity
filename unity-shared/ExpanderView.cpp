@@ -23,8 +23,6 @@
 
 namespace unity
 {
-// namespace dash
-// {
 
 NUX_IMPLEMENT_OBJECT_TYPE(ExpanderView);
 
@@ -52,13 +50,10 @@ bool ExpanderView::AcceptKeyNavFocus()
 
 nux::Area* ExpanderView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
-  bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
+  if (TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type))
+    return this;
 
-  if (mouse_inside == false)
-    return nullptr;
-
-  return this;
+  return nullptr;
 }
 
-// ] // namespace dash
 } // namespace unity

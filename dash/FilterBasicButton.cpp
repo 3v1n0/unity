@@ -188,7 +188,7 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& graphics_engine, bool force_dr
   graphics_engine.PopClippingRectangle();
 }
 
-std::string FilterBasicButton::GetLabel()
+std::string const& FilterBasicButton::GetLabel() const
 {
   return label_;
 }

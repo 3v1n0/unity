@@ -42,7 +42,7 @@ public:
 
   nux::Property<double> scale;
 
-  std::string GetLabel();
+  std::string const& GetLabel() const;
 
 protected:
   virtual long ComputeContentSize();
