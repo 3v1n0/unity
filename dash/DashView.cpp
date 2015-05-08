@@ -1548,7 +1548,6 @@ void DashView::ProcessDndEnter()
 
 nux::Area* DashView::SkipUnexpandableHeaderKeyNav()
 {
-  bool found = false;
   PlacesGroup::Ptr prev_view;
   auto category_views = active_scope_view_->GetOrderedCategoryViews();
 
@@ -1559,8 +1558,10 @@ nux::Area* DashView::SkipUnexpandableHeaderKeyNav()
       auto header = category->GetHeaderFocusableView();
       if (header && header->HasKeyFocus() && !category->IsExpandable())
       {
-        found = true;
-        break;
+        if (prev_view)
+          return prev_view->GetChildView();
+        else
+          return search_bar_->text_entry();
       }
 
       if (category->IsVisible())
@@ -1568,15 +1569,7 @@ nux::Area* DashView::SkipUnexpandableHeaderKeyNav()
     }
   }
 
-  if (found)
-  {
-    if (prev_view)
-      return prev_view->GetChildView();
-    else
-      return search_bar_->text_entry();
-  }
-  else
-    return nullptr;
+  return nullptr;
 }
 
 nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
