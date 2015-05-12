@@ -303,7 +303,6 @@ TEST_F(TestLauncherController, Construction)
   EXPECT_FALSE(lc.Impl()->launcher_open);
   EXPECT_FALSE(lc.Impl()->launcher_keynav);
   EXPECT_FALSE(lc.Impl()->launcher_grabbed);
-  EXPECT_FALSE(lc.Impl()->reactivate_keynav);
   EXPECT_TRUE(lc.Impl()->keynav_restore_window_);
   EXPECT_EQ(lc.Impl()->launcher_key_press_time_, 0);
 
