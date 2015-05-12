@@ -86,6 +86,34 @@
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 
+static void save_state()
+{
+#ifndef USE_GLES
+  glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glMatrixMode(GL_TEXTURE);
+  glPushMatrix();
+#endif
+}
+
+static void restore_state()
+{
+#ifndef USE_GLES
+  glMatrixMode(GL_TEXTURE);
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+
+  glPopAttrib();
+#endif
+}
+
 namespace cgl = compiz::opengl;
 
 namespace unity
@@ -632,12 +660,17 @@ void UnityScreen::nuxPrologue()
   glDisable(GL_LIGHTING);
 #endif
 
+  save_state();
   glGetError();
 }
 
 void UnityScreen::nuxEpilogue()
 {
 #ifndef USE_GLES
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
   /* In some unknown place inside nux drawing we change the viewport without
    * setting it back to the default one, so we need to restore it before allowing
    * compiz to take the scene */
@@ -651,6 +684,7 @@ void UnityScreen::nuxEpilogue()
 
   gScreen->resetRasterPos();
   glDisable(GL_SCISSOR_TEST);
+  restore_state();
 }
 
 void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
