@@ -1289,6 +1289,10 @@ void Controller::KeyNavGrab()
     pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl.get(), &Controller::Impl::ReceiveLauncherKeyPress));
   pimpl->launcher_event_outside_connection_ =
     pimpl->keyboard_launcher_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(pimpl.get(), &Controller::Impl::ReceiveMouseDownOutsideArea));
+  pimpl->launcher_key_nav_terminate_ =
+    pimpl->keyboard_launcher_->key_nav_terminate_request.connect([this] {
+       KeyNavTerminate(false);
+    });
 }
 
 void Controller::KeyNavActivate()
@@ -1377,6 +1381,7 @@ void Controller::KeyNavTerminate(bool activate)
     pimpl->keyboard_launcher_->UnGrabKeyboard();
     pimpl->launcher_key_press_connection_->disconnect();
     pimpl->launcher_event_outside_connection_->disconnect();
+    pimpl->launcher_key_nav_terminate_->disconnect();
     pimpl->launcher_grabbed = false;
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV,
                             glib::Variant(pimpl->keynav_restore_window_));
