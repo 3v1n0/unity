@@ -1,3 +1,39 @@
+unity (7.3.2+15.10.20150512-0ubuntu1) wily; urgency=medium
+
+  [ Chris Townsend ]
+  * Add new signal to tell the Launcher to terminate keynav mode and use
+    that signal when a BFB quicklist item is chosen. (LP: #1052024,
+    #1444643)
+  * Add option to enable and disable Unity low graphics mode on the fly
+    in ccsm or via gsettings. (LP: #1412937)
+  * Remove code that is no longer needed and broke opening application
+    spread while in Launcher keynav mode. (LP: #1445082)
+  * Save the active window when showing the Dash so the correct window
+    is focused when hiding the Dash. Fixes issue when "Always on Top"
+    windows are present. (LP: #1446634)
+  * Save the active window when showing the Hud so the correct window is
+    focused when hiding the Hud. Fixes issue when "Always on Top"
+    windows are present. (LP: #1366583)
+  * Send signal to ensure the Dash will show when entering keynav mode
+    since the first icon always highlighted is the BFB. (LP: #1444113)
+  * When looking for the top-most valid window in a VP, also check if
+    the window is focused if the window is set to Always on Top. This
+    allows Launcher icon spread to work properly when a window is
+    minimized an Always on Top exists in the group. (LP: #1131385)
+  * When using the left arrow to exit a Quicklist, Launcher keynav is
+    implied and should be active regardless of how the Quicklist was
+    opened. (LP: #1444626)
+
+  [ Eleni Maria Stea ]
+  * The skydome rendering of the cube plugin was wrong with unity
+    because transformation matrices set by the unityshell plugin were
+    left in the opengl matrix stacks affecting other compiz plugins.
+    Saving the compiz state at the beginning of the unityshell plugin
+    rendering functions and restoring it at the end of them fixes the
+    problem. (LP: #1446165)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 12 May 2015 13:10:15 +0000
+
 unity (7.3.2+15.04.20150420-0ubuntu1) vivid; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
