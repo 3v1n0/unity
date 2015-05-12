@@ -61,6 +61,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   auto& wm = WindowManager::Default();
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::Resize));
+  Settings::Instance().low_gfx_changed.connect(sigc::mem_fun(this, &PanelView::OnLowGfxChanged));
 
   wm.average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
   wm.initiate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadInitiate));
@@ -247,6 +248,22 @@ void PanelView::OnSpreadTerminate()
     return;
 
   EnableOverlayMode(false);
+}
+
+void PanelView::OnLowGfxChanged()
+{
+  if (!Settings::Instance().GetLowGfxMode())
+  {
+    nux::ROPConfig rop;
+
+    rop.Blend = true;
+    rop.SrcBlend = GL_ZERO;
+    rop.DstBlend = GL_SRC_COLOR;
+    nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
+    bg_darken_layer_.reset(new nux::ColorLayer(darken_colour, false, rop));
+  }
+
+  ForceUpdateBackground();
 }
 
 void PanelView::AddPanelView(PanelIndicatorsView* child,
@@ -537,6 +554,7 @@ void PanelView::ForceUpdateBackground()
   is_dirty_ = true;
   UpdateBackground();
 
+  QueueRelayout();
   QueueDraw();
 }
 

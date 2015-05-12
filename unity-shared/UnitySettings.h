@@ -58,6 +58,7 @@ public:
   nux::Property<double> font_scaling;
 
   sigc::signal<void> dpi_changed;
+  sigc::signal<void> low_gfx_changed;
 
 private:
   class Impl;

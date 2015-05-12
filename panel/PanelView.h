@@ -98,6 +98,7 @@ private:
   void OnOverlayHidden(GVariant *data);
   void OnSpreadInitiate();
   void OnSpreadTerminate();
+  void OnLowGfxChanged();
   void EnableOverlayMode(bool);
 
   bool ActivateFirstSensitive();

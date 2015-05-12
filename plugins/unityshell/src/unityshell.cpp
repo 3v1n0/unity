@@ -261,7 +261,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
       renderer.find("Mesa X11") != std::string::npos ||
       renderer.find("LLVM") != std::string::npos ||
       renderer.find("on softpipe") != std::string::npos ||
-      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
+      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1) ||
+      optionGetLowGraphicsMode())
     {
       unity_settings_.SetLowGfxMode(true);
     }
@@ -337,6 +338,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShortcutOverlayNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetLowGraphicsModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
      optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
@@ -3595,6 +3597,14 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShortcutOverlay:
       shortcut_controller_->SetEnabled(optionGetShortcutOverlay());
+      break;
+    case UnityshellOptions::LowGraphicsMode:
+      if (optionGetLowGraphicsMode())
+          BackgroundEffectHelper::blur_type = BLUR_NONE;
+      else
+          BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
+
+      unity::Settings::Instance().SetLowGfxMode(optionGetLowGraphicsMode());
       break;
     case UnityshellOptions::DecayRate:
       launcher_options->edge_decay_rate = optionGetDecayRate() * 100;

@@ -373,7 +373,12 @@ bool Settings::GetLowGfxMode() const
 
 void Settings::SetLowGfxMode(const bool low_gfx)
 {
-  pimpl->lowGfx_ = low_gfx;
+  if (pimpl->lowGfx_ != low_gfx)
+  {
+    pimpl->lowGfx_ = low_gfx;
+
+    low_gfx_changed.emit();
+  }
 }
 
 EMConverter::Ptr const& Settings::em(int monitor) const
