@@ -1355,13 +1355,6 @@ void Controller::KeyNavTerminate(bool activate)
   if (!pimpl->launcher_keynav)
     return;
 
-  if (activate && pimpl->keynav_restore_window_)
-  {
-    /* If the selected icon is running, we must not restore the input to the old */
-    AbstractLauncherIcon::Ptr const& icon = pimpl->model_->Selection();
-    pimpl->keynav_restore_window_ = !icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING);
-  }
-
   pimpl->keyboard_launcher_->ExitKeyNavMode();
 
   if (pimpl->launcher_grabbed)
