@@ -89,7 +89,7 @@ public:
 
   void OnProxyNameOwnerChanged(GDBusProxy*, GParamSpec*);
   void OnProxySignal(GDBusProxy* proxy, const char*, const char*, GVariant*);
-  void OnPropertyChanged(GDBusProxy*, GVariant*, GStrv*);
+  void OnPropertyChanged(GDBusProxy*, GVariant*, GStrv);
 
   static void OnProxyConnectCallback(GObject* source, GAsyncResult* res, gpointer impl);
   static void OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data);
@@ -114,7 +114,7 @@ public:
   unsigned reconnection_attempts_;
 
   glib::Signal<void, GDBusProxy*, const char*, const char*, GVariant*> g_signal_connection_;
-  glib::Signal<void, GDBusProxy*, GVariant*, GStrv*> g_property_signal_;
+  glib::Signal<void, GDBusProxy*, GVariant*, GStrv> g_property_signal_;
   glib::Signal<void, GDBusProxy*, GParamSpec*> name_owner_signal_;
   glib::Source::UniquePtr reconnect_timeout_;
   sigc::signal<void> proxy_acquired;
@@ -277,7 +277,7 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy, const char* sender_name, 
   }
 }
 
-void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_props, GStrv* invalidated)
+void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_props, GStrv invalidated)
 {
   LOG_DEBUG(logger) << "Properties changed for proxy (" << object_path_ << ")";
 
@@ -302,6 +302,19 @@ void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_pro
     }
 
     g_variant_iter_free (iter);
+  }
+
+  for (const gchar *property_name = *invalidated; property_name; property_name = *(++invalidated))
+  {
+    LOG_DEBUG(logger) << "Property: '" << property_name << "' invalidated";
+
+    auto handler_it = property_handlers_.find(property_name);
+
+    if (handler_it != property_handlers_.end())
+    {
+      for (ReplyCallback const& callback : handler_it->second)
+        callback(nullptr);
+    }
   }
 }
 
