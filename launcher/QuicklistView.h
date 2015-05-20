@@ -62,7 +62,7 @@ public:
   void Hide();
   void HideAndEndQuicklistNav();
 
-  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type) override;
 
   int GetNumItems();
   QuicklistMenuItem* GetNthItems(int index);
