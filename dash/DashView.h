@@ -170,10 +170,8 @@ private:
 
   LocalResult last_activated_result_;
   guint64 last_activated_timestamp_;
-  bool search_in_progress_;
   bool activate_on_finish_;
-  glib::Source::UniquePtr activate_timeout_;
-
+  glib::Source::UniquePtr activate_delay_;
   bool visible_;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> dash_view_copy_;

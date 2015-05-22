@@ -481,47 +481,40 @@ void ScopeView::OnCategoryAdded(Category const& category)
   /* Reset result count */
   counts_[group] = 0;
 
-  ResultView* results_view = nullptr;
+  auto* results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
+
   if (category.GetContentType() == "social" && category.renderer_name == "default")
   {
-    results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-    static_cast<ResultViewGrid*> (results_view)->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale());
-    static_cast<ResultViewGrid*> (results_view)->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale());
+    results_view->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale());
+    results_view->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale());
   }
   else
   {
-    results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   }
 
   if (scope_)
   {
-    const std::string category_id = category.id();
-    std::string unique_id = category.name() + scope_->name();
-    results_view->unique_id = unique_id;
+    results_view->unique_id = name + scope_->name();
     results_view->expanded = false;
 
-    results_view->ResultActivated.connect([this, unique_id, category_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
+    if (scope_->id() == "applications.scope" ||
+        (scope_->id() == "home.scope" && category.id() == "applications.scope"))
     {
-      if (g_str_has_prefix(local_result.uri.c_str(), "x-unity-no-preview"))
-        type = ResultView::ActivateType::DIRECT;
+      results_view->default_click_activation = ResultView::ActivateType::DIRECT;
+    }
 
-      // Applications scope results should be activated on left-click (instead of preview). Note that app scope can still
-      // respond with preview for activation request (the case for uninstalled apps).
-      bool is_app_scope_result = (scope_->id() == "applications.scope" || (scope_->id() == "home.scope" && category_id == "applications.scope"));
+    results_view->ResultActivated.connect([this, results_view] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
+    {
+      result_activated.emit(type, local_result, data, results_view->unique_id());
 
-      if (is_app_scope_result && type == ResultView::ActivateType::PREVIEW_LEFT_BUTTON)
-        type = ResultView::ActivateType::DIRECT;
-
-      result_activated.emit(type, local_result, data, unique_id);
       switch (type)
       {
         case ResultView::ActivateType::DIRECT:
         {
           scope_->Activate(local_result, nullptr, cancellable_);
         } break;
-        case ResultView::ActivateType::PREVIEW_LEFT_BUTTON:
         case ResultView::ActivateType::PREVIEW:
         {
           scope_->Preview(local_result, nullptr, cancellable_);

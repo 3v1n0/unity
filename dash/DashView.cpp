@@ -59,7 +59,7 @@ const RawPixel PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET = 10_em;
 const RawPixel PREVIEW_CONTAINER_TRIANGLE_WIDTH = 14_em;
 const RawPixel PREVIEW_CONTAINER_TRIANGLE_HEIGHT = 12_em;
 
-const int MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT = 1000;
+const int MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT = 300;
 }
 
 // This is so we can access some protected members in nux::VLayout and
@@ -120,7 +120,6 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
   , last_activated_timestamp_(0)
-  , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
   , opening_column_x_(-1)
@@ -1222,21 +1221,27 @@ void DashView::UpdateScopeFilterValue(Filter::Ptr filter, std::string value)
 
 void DashView::OnSearchChanged(std::string const& search_string)
 {
-  search_in_progress_ = true;
+  activate_on_finish_ = false;
 }
 
 void DashView::OnLiveSearchReached(std::string const& search_string)
 {
-  // reset and set it again once we're sure a search is happening
-  search_in_progress_ = false;
-
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
-  if (active_scope_view_)
+  if (!active_scope_view_.IsValid())
+    return;
+
+  if (active_scope_view_->PerformSearch(search_string, sigc::mem_fun(this, &DashView::OnScopeSearchFinished)))
   {
-    if (active_scope_view_->PerformSearch(search_string, sigc::mem_fun(this, &DashView::OnScopeSearchFinished)))
-    {
-      search_in_progress_ = true;
-    }
+    activate_delay_.reset(new glib::Timeout(MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT, [this] {
+      if (activate_on_finish_)
+      {
+        activate_on_finish_ = false;
+        active_scope_view_->ActivateFirst();
+      }
+
+      activate_delay_.reset();
+      return false;
+    }));
   }
 }
 
@@ -1255,12 +1260,15 @@ void DashView::OnScopeSearchFinished(std::string const& scope_id, std::string co
       LOG_DEBUG(logger) << "Search completed: " << search_string;
 
     search_bar_->SetSearchFinished();
-    search_in_progress_ = false;
 
-    activate_timeout_.reset();
-    if (activate_on_finish_ && !err)
-      OnEntryActivated();
-    activate_on_finish_= false;
+    if (activate_on_finish_)
+    {
+      activate_on_finish_ = false;
+      activate_delay_.reset();
+
+      if (!err)
+        active_scope_view_->ActivateFirst();
+    }
   }
 }
 
@@ -1408,20 +1416,12 @@ void DashView::DisableBlur()
 }
 void DashView::OnEntryActivated()
 {
-  if (active_scope_view_.IsValid() && !search_in_progress_)
+  if (active_scope_view_.IsValid())
   {
-    active_scope_view_->ActivateFirst();
-  }
-  // delay the activation until we get the SearchFinished signal
-  activate_on_finish_ = search_in_progress_;
-
-  if (activate_on_finish_)
-  {
-    activate_timeout_.reset(new glib::Timeout(MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT, [this] {
-      activate_on_finish_ = false;
+    if (!activate_delay_ && !search_bar_->in_live_search())
       active_scope_view_->ActivateFirst();
-      return FALSE;
-    }));
+    else
+      activate_on_finish_ = true;
   }
 }
 
