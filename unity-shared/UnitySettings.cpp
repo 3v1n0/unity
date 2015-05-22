@@ -59,6 +59,9 @@ const std::string GNOME_CURSOR_SIZE = "cursor-size";
 const std::string GNOME_SCALE_FACTOR = "scaling-factor";
 const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
+const std::string REMOTE_CONTENT_SETTINGS = "com.canonical.Unity.Lenses";
+const std::string REMOTE_CONTENT_KEY = "remote-content-search";
+
 const int DEFAULT_LAUNCHER_WIDTH = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
 const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
@@ -78,16 +81,19 @@ public:
     , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , ubuntu_ui_settings_(g_settings_new(UBUNTU_UI_SETTINGS.c_str()))
     , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
+    , remote_content_settings_(g_settings_new(REMOTE_CONTENT_SETTINGS.c_str()))
     , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
     , cached_form_factor_(FormFactor::DESKTOP)
     , cursor_scale_(1.0)
     , cached_double_click_activate_(true)
     , changing_gnome_settings_(false)
     , lowGfx_(false)
+    , remote_content_enabled_(true)
   {
     parent_->form_factor.SetGetterFunction(sigc::mem_fun(this, &Impl::GetFormFactor));
     parent_->form_factor.SetSetterFunction(sigc::mem_fun(this, &Impl::SetFormFactor));
     parent_->double_click_activate.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDoubleClickActivate));
+    parent_->remote_content.SetGetterFunction(sigc::mem_fun(this, &Impl::GetRemoteContentEnabled));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
@@ -140,6 +146,10 @@ public:
       UpdateLimSetting();
     });
 
+    signals_.Add<void, GSettings*, const gchar*>(remote_content_settings_, "changed::" + REMOTE_CONTENT_KEY, [this] (GSettings*, const gchar* t) {
+      UpdateRemoteContentSearch();
+    });
+
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
     // The order is important here, DPI is the last thing to be updated
@@ -151,6 +161,7 @@ public:
 
     CacheFormFactor();
     CacheDoubleClickActivate();
+    UpdateRemoteContentSearch();
   }
 
   void CacheFormFactor()
@@ -316,12 +327,30 @@ public:
     }, glib::Source::Priority::LOW));
   }
 
+  void UpdateRemoteContentSearch()
+  {
+    glib::String remote_content(g_settings_get_string(remote_content_settings_, REMOTE_CONTENT_KEY.c_str()));
+    bool remote_content_enabled = ((remote_content.Str() == "all") ? true : false);
+
+    if (remote_content_enabled != remote_content_enabled_)
+    {
+      remote_content_enabled_ = remote_content_enabled;
+      parent_->remote_content.changed.emit(remote_content_enabled_);
+    }
+  }
+
+  bool GetRemoteContentEnabled() const
+  {
+    return remote_content_enabled_;
+  }
+
   Settings* parent_;
   glib::Object<GSettings> usettings_;
   glib::Object<GSettings> lim_settings_;
   glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> ubuntu_ui_settings_;
   glib::Object<GSettings> gnome_ui_settings_;
+  glib::Object<GSettings> remote_content_settings_;
   glib::Source::UniquePtr changing_gnome_settings_timeout_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
@@ -331,6 +360,7 @@ public:
   bool cached_double_click_activate_;
   bool changing_gnome_settings_;
   bool lowGfx_;
+  bool remote_content_enabled_;
 };
 
 //
