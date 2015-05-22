@@ -33,6 +33,7 @@ plugins/unityshell/src/unity-dash-view-accessible.cpp
 plugins/unityshell/src/unity-launcher-accessible.cpp
 plugins/unityshell/src/unity-launcher-icon-accessible.cpp
 plugins/unityshell/src/unity-quicklist-menu-accessible.cpp
+plugins/unityshell/src/unity-scope-bar-icon-accessible.cpp
 plugins/unityshell/src/unity-search-bar-accessible.cpp
 plugins/unityshell/src/unity-switcher-accessible.cpp
 plugins/unityshell/src/unityshell.cpp

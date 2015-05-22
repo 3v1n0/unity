@@ -48,6 +48,7 @@
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
 #include "unity-dash-view-accessible.h"
+#include "unity-scope-bar-icon-accessible.h"
 #include "unity-search-bar-accessible.h"
 #include "unity-sctext-accessible.h"
 #include "unity-rvgrid-accessible.h"
@@ -170,6 +171,9 @@ unity_a11y_create_accessible(nux::Object* object)
 
   if (object->Type().IsDerivedFromType(DashView::StaticObjectType))
     return unity_dash_view_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(ScopeBarIcon::StaticObjectType))
+    return unity_scope_bar_icon_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(PlacesGroup::StaticObjectType))
     return unity_places_group_accessible_new(object);

@@ -85,7 +85,7 @@ void ScopeBar::SetupLayout()
 
 void ScopeBar::AddScope(Scope::Ptr const& scope)
 {
-  ScopeBarIcon* icon = new ScopeBarIcon(scope->id, scope->icon_hint);
+  ScopeBarIcon* icon = new ScopeBarIcon(scope->id, scope->icon_hint, scope->name);
 
   icon->SetVisible(scope->visible);
   icon->scale = scale();
