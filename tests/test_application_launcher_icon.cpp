@@ -775,7 +775,10 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
   mock_app->windows_ = { win1, win2 };
   WM->AddStandaloneWindow(wm_win1);
   WM->AddStandaloneWindow(wm_win2);
+
+  win2->Focus();
   ASSERT_TRUE(wm_win2->active());
+  ASSERT_TRUE(win2->active());
 
   auto const& menus = mock_icon->Menus();
   auto const& menu1 = GetMenuItemWithLabel(menus, win1->title());
