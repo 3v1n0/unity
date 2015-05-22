@@ -25,6 +25,7 @@
 #include <Nux/VLayout.h>
 #include <NuxGraphics/GdkGraphics.h>
 #include <unity-protocol.h>
+#include <boost/algorithm/string.hpp>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
@@ -33,6 +34,7 @@
 #include "unity-shared/GraphicsUtils.h"
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/WindowManager.h"
+#include <UnityCore/DesktopUtilities.h>
 #include "ResultViewGrid.h"
 #include "math.h"
 
@@ -55,6 +57,8 @@ namespace
 
   const RawPixel WIDTH_PADDING   = 25_em;
   const RawPixel SCROLLBAR_WIDTH =  3_em;
+
+  const std::string APPLICATION_URI_PREFIX = "application://";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
@@ -918,6 +922,15 @@ bool ResultViewGrid::DndSourceDragBegin()
   current_drag_result_ = *iter;
   if (current_drag_result_.empty())
     current_drag_result_.uri = current_drag_result_.uri.substr(current_drag_result_.uri.find(":") + 1);
+
+  if (boost::starts_with(current_drag_result_.uri, APPLICATION_URI_PREFIX))
+  {
+    auto desktop_id = current_drag_result_.uri.substr(APPLICATION_URI_PREFIX.size());
+    auto desktop_path = DesktopUtilities::GetDesktopPathById(desktop_id);
+
+    if (!desktop_path.empty())
+      current_drag_result_.uri = "file://" + desktop_path;
+  }
 
   LOG_DEBUG (logger) << "Dnd begin at " <<
                      last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "
