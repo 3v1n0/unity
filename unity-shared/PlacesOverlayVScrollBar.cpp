@@ -121,6 +121,11 @@ void PlacesOverlayVScrollBar::SetupAnimation(int start, int stop, int millisecon
   animation_.SetFinishValue(stop);
 }
 
+void PlacesOverlayVScrollBar::PerformPageNavigation(ScrollDir dir)
+{
+  StartScrollAnimation(dir, _slider->GetBaseHeight());
+}
+
 void PlacesOverlayVScrollBar::StartScrollAnimation(ScrollDir dir, int stop)
 {
   if (animation_.CurrentState() == nux::animation::Animation::State::Stopped)

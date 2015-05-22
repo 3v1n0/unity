@@ -21,6 +21,7 @@
 #define _UNITY_SCROLL_VIEW_H_
 
 #include <Nux/Nux.h>
+#include "PlacesOverlayVScrollBar.h"
 
 namespace unity
 {
@@ -33,6 +34,7 @@ public:
   ScrollView(NUX_FILE_LINE_PROTO);
 
   nux::RWProperty<double> scale;
+  sigc::signal<void, ScrollDir> page_direction;
 
   using nux::ScrollView::SetVScrollBar;
 };

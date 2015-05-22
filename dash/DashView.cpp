@@ -1577,17 +1577,23 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     direction = KEY_NAV_RIGHT;
     break;
   case NUX_VK_LEFT_TAB:
-  case NUX_VK_PAGE_UP:
     direction = KEY_NAV_TAB_PREVIOUS;
     break;
   case NUX_VK_TAB:
-  case NUX_VK_PAGE_DOWN:
     direction = KEY_NAV_TAB_NEXT;
     break;
   case NUX_VK_ENTER:
   case NUX_KP_ENTER:
     // Not sure if Enter should be a navigation key
     direction = KEY_NAV_ENTER;
+    break;
+  case NUX_VK_PAGE_UP:
+  case NUX_VK_PAGE_DOWN:
+    if (!preview_displaying_)
+    {
+      active_scope_view_->PerformPageNavigation((x11_key_code == NUX_VK_PAGE_UP) ? ScrollDir::UP : ScrollDir::DOWN);
+      return nux::GetWindowCompositor().GetKeyFocusArea();
+    }
     break;
   default:
     auto const& close_key = WindowManager::Default().close_window_key();
