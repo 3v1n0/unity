@@ -76,11 +76,13 @@ struct MockApplicationWindow : unity::ApplicationWindow
   MOCK_CONST_METHOD0(Focus, bool());
   MOCK_CONST_METHOD0(Quit, void());
 
-  virtual bool LocalFocus() const
+  bool LocalFocus()
   {
     auto& wm = unity::WindowManager::Default();
     wm.Raise(xid_);
     wm.Activate(xid_);
+    active_ = true;
+    active.changed.emit(active_);
     return true;
   }
 
