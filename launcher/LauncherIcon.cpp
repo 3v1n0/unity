@@ -577,10 +577,6 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor, bool resto
   }
 
   WindowManager& win_manager = WindowManager::Default();
-
-  if (win_manager.IsScaleActive())
-    win_manager.TerminateScale();
-
   auto const& pos = GetTipPosition(monitor);
 
   /* If the expo plugin is active, we need to wait it to be terminated, before
@@ -592,6 +588,15 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor, bool resto
       QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y, restore_input_focus);
       conn->disconnect();
     });
+  }
+  else if (win_manager.IsScaleActive())
+  {
+    auto conn = std::make_shared<sigc::connection>();
+    *conn = win_manager.terminate_spread.connect([this, conn, pos, restore_input_focus] {
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y, restore_input_focus);
+      conn->disconnect();
+    });
+    win_manager.TerminateScale();
   }
   else
   {
