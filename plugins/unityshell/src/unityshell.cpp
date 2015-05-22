@@ -1779,9 +1779,9 @@ void UnityScreen::handleEvent(XEvent* event)
           dash_controller_->HideDash();
           hud_controller_->HideHud();
         }
+        _key_nav_mode_requested = false;
         launcher_controller_->KeyNavGrab();
       }
-      _key_nav_mode_requested = false;
       break;
     case MotionNotify:
       if (wm.IsScaleActive())
@@ -2264,6 +2264,11 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompAction::State state,
                                               CompOption::Vector& options)
 {
+  if (WM.IsScaleActive())
+    WM.TerminateScale();
+  else if (WM.IsExpoActive())
+    WM.TerminateExpo();
+
   _key_nav_mode_requested = true;
   return true;
 }
