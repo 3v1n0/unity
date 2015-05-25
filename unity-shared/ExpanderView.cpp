@@ -17,9 +17,9 @@
  * Authored by: Luke Yelavich <luke.yelavich@canonical.com>
  */
 
-#include <Nux/Layout.h>
-
 #include "ExpanderView.h"
+
+#include <Nux/Layout.h>
 
 namespace unity
 {
