@@ -962,6 +962,7 @@ void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
       if (forced_unminimize)
         {
           top_window->unminimize();
+          top_window->show();
         }
 
       top_window->raise();
