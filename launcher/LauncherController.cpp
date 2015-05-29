@@ -757,13 +757,13 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int p
     *uri_ptr = new_uri;
   });
 
+  model_->AddIcon(icon);
+
   if (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
   {
     icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SortAndUpdate)));
     SortAndUpdate();
   }
-
-  model_->AddIcon(icon);
 
   std::string const& path = icon->DesktopFile();
 
