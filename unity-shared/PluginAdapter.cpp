@@ -145,6 +145,16 @@ void PluginAdapter::NotifyStateChange(CompWindow* window, unsigned int state, un
   {
     window_restored.emit(window->id());
   }
+
+  if ((state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask)
+  {
+    window_fullscreen.emit(window->id());
+  }
+  else if (((last_state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask) &&
+           !((state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask))
+  {
+    window_unfullscreen.emit(window->id());
+  }
 }
 
 void PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
@@ -526,6 +536,14 @@ bool PluginAdapter::IsWindowHorizontallyMaximized(Window window_id) const
 {
   if (CompWindow* window = m_Screen->findWindow(window_id))
     return (window->state() & CompWindowStateMaximizedHorzMask);
+
+  return false;
+}
+
+bool PluginAdapter::IsWindowFullscreen(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return ((window->state() & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask);
 
   return false;
 }
