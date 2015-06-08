@@ -226,6 +226,8 @@ void PanelMenuView::SetupWindowManagerSignals()
   wm.window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
   wm.window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
   wm.window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
+  wm.window_fullscreen.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
+  wm.window_unfullscreen.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnFullscreen));
   wm.window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
   wm.window_mapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMapped));
   wm.window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
@@ -1153,7 +1155,8 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher, BamfView* old_vi
   {
     BamfWindow* window = reinterpret_cast<BamfWindow*>(new_view);
     active_xid = bamf_window_get_xid(window);
-    is_maximized_ = (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED);
+    is_maximized_ = (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED ||
+                     WindowManager::Default().IsWindowFullscreen(active_xid));
 
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
     {
@@ -1337,6 +1340,12 @@ void PanelMenuView::OnWindowRestored(Window xid)
     if (Refresh())
       QueueDraw();
   }
+}
+
+void PanelMenuView::OnWindowUnFullscreen(Window xid)
+{
+  if (!WindowManager::Default().IsWindowMaximized(xid))
+    OnWindowRestored(xid);
 }
 
 bool PanelMenuView::UpdateActiveWindowPosition()
@@ -1868,7 +1877,8 @@ void PanelMenuView::SetMonitor(int monitor)
     if (bamf_view_is_active(view))
       active_window = xid;
 
-    if (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED)
+    if (bamf_window_maximized(window) == BAMF_WINDOW_MAXIMIZED ||
+        WindowManager::Default().IsWindowFullscreen(xid))
     {
       if (xid == active_window())
         maximized_wins_.push_front(xid);
