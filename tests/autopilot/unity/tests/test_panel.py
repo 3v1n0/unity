@@ -1035,7 +1035,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
         self.assertThat(menu_entry.menu_y, Eventually(Equals(0)))
 
     def test_menu_closes_on_new_focused_application(self):
-        """Clicking outside an open menu must close it."""
+        """When a new app is focused, open menu should be closed only when using Global Menus."""
         menu_entry = self.open_app_and_get_menu_entry()
         self.mouse_open_indicator(menu_entry)
 
@@ -1043,7 +1043,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
         self.assertThat(menu_entry.active, Eventually(Equals(True)))
 
         self.open_new_application_window("Text Editor")
-        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+        self.assertThat(self.unity.panels.get_active_indicator, Eventually(NotEquals(None) if self.lim else Equals(None)))
 
     def test_indicator_opens_when_dash_is_open(self):
         """When the dash is open and a click is on an indicator the dash
