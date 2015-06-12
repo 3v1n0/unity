@@ -330,6 +330,9 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
   gtk_box_set_spacing(GTK_BOX(buttons_box), 15);
   gtk_container_set_border_width(GTK_CONTAINER(buttons_box), 5);
   gtk_button_box_set_layout(GTK_BUTTON_BOX(buttons_box), GTK_BUTTONBOX_END);
+  gtk_widget_set_halign(GTK_WIDGET(buttons_box), GTK_ALIGN_END);
+  gtk_widget_set_valign(GTK_WIDGET(buttons_box), GTK_ALIGN_END);
+  gtk_widget_set_margin_top(GTK_WIDGET(buttons_box), 20);
 
   auto* wait_button = gtk_button_new_with_mnemonic(_("_Wait"));
   gtk_container_add(GTK_CONTAINER(buttons_box), wait_button);
@@ -344,14 +347,7 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
                         kill_data, [] (gpointer data, GClosure*) { g_free(data); },
                         static_cast<GConnectFlags>(0));
 
-  // FIXME Look at moving to non deprecated functions
-  G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-  auto* buttons_aligment = gtk_alignment_new(1, 1, 0, 0);
-  gtk_alignment_set_padding(GTK_ALIGNMENT(buttons_aligment), 20, 0, 0, 0);
-  gtk_container_add(GTK_CONTAINER(buttons_aligment), buttons_box);
-  gtk_container_add(GTK_CONTAINER(content_box), buttons_aligment);
-  G_GNUC_END_IGNORE_DEPRECATIONS
-
+  gtk_container_add(GTK_CONTAINER(content_box), buttons_box);
   gtk_container_add(GTK_CONTAINER(self), main_box);
 
   return self;
