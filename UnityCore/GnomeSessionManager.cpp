@@ -679,7 +679,7 @@ bool GnomeManager::CanLock() const
 
 bool GnomeManager::CanShutdown() const
 {
-  return impl_->can_shutdown_;
+  return !is_locked() && impl_->can_shutdown_;
 }
 
 bool GnomeManager::CanSuspend() const
