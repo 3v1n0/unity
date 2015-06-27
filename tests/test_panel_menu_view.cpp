@@ -45,13 +45,7 @@ struct TestPanelMenuView : public testing::Test
   {
     MockPanelMenuView(menu::Manager::Ptr const& menu_manager)
       : PanelMenuView(menu_manager)
-    {
-      view_opened_signal_.Disconnect();
-      active_win_changed_signal_.Disconnect();
-      active_app_changed_signal_.Disconnect();
-      view_closed_signal_.Disconnect();
-      maximized_wins_.clear();
-    }
+    {}
 
     MOCK_METHOD0(QueueDraw, void());
     MOCK_CONST_METHOD1(GetActiveViewName, std::string(bool));
@@ -81,7 +75,6 @@ struct TestPanelMenuView : public testing::Test
     panel_win->ComputeContentSize();
 
     menu_view.SetMonitor(monitor);
-    menu_view.maximized_wins_.clear();
 
     return panel_win;
   }

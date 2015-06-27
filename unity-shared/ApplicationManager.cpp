@@ -33,6 +33,25 @@ ApplicationManager& ApplicationManager::Default()
   return *instance;
 }
 
+bool operator==(ApplicationPtr const& lhs, ApplicationPtr const& rhs)
+{
+  return (lhs.get() == rhs.get() || (lhs && rhs && *lhs == *rhs));
+}
+
+bool operator!=(ApplicationPtr const& lhs, ApplicationPtr const& rhs)
+{
+  return !(lhs == rhs);
+}
+
+bool operator==(ApplicationWindowPtr const& lhs, ApplicationWindowPtr const& rhs)
+{
+  return (lhs.get() == rhs.get() || (lhs && rhs && *lhs == *rhs));
+}
+
+bool operator!=(ApplicationWindowPtr const& lhs, ApplicationWindowPtr const& rhs)
+{
+  return !(lhs == rhs);
+}
 
 // This method is needed to create an unresolved external for the
 // WindowManager::Default method.  This is because it is highly likely that

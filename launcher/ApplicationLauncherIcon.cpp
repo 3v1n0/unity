@@ -156,13 +156,14 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
 {
   // Lambda functions should be fine here because when the application the icon
   // is only ever removed when the application is closed.
-  signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindow const&) {
+  signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindowPtr const&) {
     EnsureWindowState();
     UpdateIconGeometries(GetCenters());
   }));
 
-  signals_conn_.Add(app_->window_closed.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState)));
-  signals_conn_.Add(app_->window_moved.connect(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState))));
+  auto ensure_windows_cb = sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+  signals_conn_.Add(app_->window_closed.connect(ensure_windows_cb));
+  signals_conn_.Add(app_->window_moved.connect(ensure_windows_cb));
 
   signals_conn_.Add(app_->urgent.changed.connect([this](bool const& urgent) {
     LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
@@ -235,7 +236,7 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int mo
     if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE, monitor))
       return false;
 
-    if (app_->type() == "webapp")
+    if (app_->type() == AppType::WEBAPP)
       return true;
 
     // Sometimes BAMF is not fast enough to update the active application
@@ -702,7 +703,7 @@ void ApplicationLauncherIcon::Focus(ActionArg arg)
     if (window->Focus())
       return;
   }
-  else if (app_->type() == "webapp")
+  else if (app_->type() == AppType::WEBAPP)
   {
     // Webapps are again special.
     OpenInstanceLauncherIcon(arg.timestamp);
@@ -837,8 +838,6 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   if (windows.size() < 2)
     return;
 
-  Window active = WindowManager::Default().GetActiveWindow();
-
   // add menu items for all open windows
   for (auto const& w : windows)
   {
@@ -862,7 +861,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
         wm.Raise(xid);
     });
 
-    if (xid == active)
+    if (w->active())
     {
       dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
       dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
@@ -1113,7 +1112,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
 void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> const& centers)
 {
-  if (app_->type() == "webapp")
+  if (app_->type() == AppType::WEBAPP)
     return;
 
   nux::Geometry geo(0, 0, icon_size, icon_size);
@@ -1189,6 +1188,7 @@ bool ApplicationLauncherIcon::IsFileManager()
   auto const& desktop_file = DesktopFile();
 
   return boost::algorithm::ends_with(desktop_file, "org.gnome.Nautilus.desktop") ||
+         boost::algorithm::ends_with(desktop_file, "nautilus.desktop") ||
          boost::algorithm::ends_with(desktop_file, "nautilus-folder-handler.desktop") ||
          boost::algorithm::ends_with(desktop_file, "nautilus-home.desktop");
 }
@@ -1264,14 +1264,14 @@ bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
 
 bool ApplicationLauncherIcon::AllowDetailViewInSwitcher() const
 {
-  return app_->type() != "webapp";
+  return app_->type() != AppType::WEBAPP;
 }
 
 uint64_t ApplicationLauncherIcon::SwitcherPriority()
 {
   uint64_t result = 0;
   // Webapps always go at the back.
-  if (app_->type() == "webapp")
+  if (app_->type() == AppType::WEBAPP)
     return result;
 
   for (auto& window : app_->GetWindows())

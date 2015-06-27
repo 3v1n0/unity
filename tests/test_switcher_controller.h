@@ -54,7 +54,7 @@ public:
   FakeApplicationWindow(Window xid, uint64_t active_number = 0);
   ~FakeApplicationWindow();
 
-  virtual std::string type() const;
+  virtual WindowType type() const;
 
   virtual Window window_id() const;
   virtual int monitor() const;
