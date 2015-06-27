@@ -104,7 +104,8 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     login_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
                                                      "/org/freedesktop/login1/session/" + glib::gchar_to_string(session_id),
                                                      "org.freedesktop.login1.Session",
-                                                     test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
+                                                     test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM,
+                                                     G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES);
 
     login_proxy_->Connect("Lock", [this](GVariant*){
       manager_->PromptLockScreen();
@@ -112,6 +113,10 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
 
     login_proxy_->Connect("Unlock", [this](GVariant*){
       manager_->unlock_requested.emit();
+    });
+
+    login_proxy_->ConnectProperty("Active", [this] (GVariant* active) {
+      manager_->screensaver_requested.emit(!glib::Variant(active).GetBool());
     });
   }
 
