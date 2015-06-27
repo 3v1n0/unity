@@ -686,6 +686,11 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
   float present_progress = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::PRESENTED, monitor());
   icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency());
 
+  if (present_progress > 0.0f)
+  {
+    parent_->ShowWindow(true);
+  }
+
   // icon is crossing threshold, start folding
   center.z += folded_z_distance * folding_progress;
   arg.rotation.x = animation_neg_rads * folding_progress;
@@ -738,7 +743,7 @@ nux::Color FullySaturateColor(nux::Color color)
 }
 
 void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
-                          nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo)
+                          nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo, bool& force_show_window)
 {
   nux::Geometry const& geo = GetGeometry();
   LauncherModel::iterator it;
@@ -912,6 +917,8 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   folding_threshold += shelf_delta;
   center.y += shelf_delta;
 
+  force_show_window = false;
+
   for (it = model_->shelf_begin(); it != model_->shelf_end(); ++it)
   {
     RenderArg arg;
@@ -921,6 +928,9 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
                   autohide_offset, folded_z_distance, animation_neg_rads);
     arg.colorify = colorify;
     launcher_args.push_back(arg);
+
+    if (autohide_offset != 0)
+      force_show_window = true;
   }
 }
 
@@ -1680,13 +1690,15 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   ROP.SrcBlend = GL_ONE;
   ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
+  bool force_show_window;
   nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-  RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute);
+  RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute, force_show_window);
   bkg_box.width -= RIGHT_LINE_WIDTH.CP(cv_);
 
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER &&
       bkg_box.x + bkg_box.width <= 0 &&
-      hide_machine_.reveal_progress <= 0)
+      hide_machine_.reveal_progress <= 0 &&
+      !force_show_window)
   {
     parent_->ShowWindow(false);
   }
