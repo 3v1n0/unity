@@ -26,6 +26,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/ExpanderView.h"
 
 namespace nux
 {
@@ -108,7 +109,7 @@ private:
   StaticCairoText* hint_;
   nux::LinearLayout* expander_layout_;
   IMTextEntry* pango_entry_;
-  nux::View* expander_view_;
+  ExpanderView* expander_view_;
   nux::HLayout* filter_layout_;
   StaticCairoText* show_filters_;
   nux::VLayout* arrow_layout_;

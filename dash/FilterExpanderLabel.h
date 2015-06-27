@@ -35,6 +35,7 @@
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/StaticCairoText.h"
+#include "unity-shared/ExpanderView.h"
 
 namespace nux
 {
@@ -62,7 +63,7 @@ public:
   virtual void SetFilter(Filter::Ptr const& filter) = 0;
   virtual std::string GetFilterType() = 0;
 
-  nux::View* expander_view() const { return expander_view_; }
+  ExpanderView* expander_view() const { return expander_view_; }
 
   nux::Property<double> scale;
   nux::Property<bool> expanded;
@@ -87,7 +88,7 @@ private:
 
   nux::VLayout* layout_;
   nux::LinearLayout* top_bar_layout_;
-  nux::View* expander_view_;
+  ExpanderView* expander_view_;
   nux::LinearLayout* expander_layout_;
   nux::View* right_hand_contents_;
   StaticCairoText* cairo_label_;

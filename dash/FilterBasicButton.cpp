@@ -188,5 +188,10 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& graphics_engine, bool force_dr
   graphics_engine.PopClippingRectangle();
 }
 
+std::string const& FilterBasicButton::GetLabel() const
+{
+  return label_;
+}
+
 } // namespace dash
 } // namespace unity

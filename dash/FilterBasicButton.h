@@ -42,6 +42,8 @@ public:
 
   nux::Property<double> scale;
 
+  std::string const& GetLabel() const;
+
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
