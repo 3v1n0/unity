@@ -1,3 +1,40 @@
+unity (7.3.2+15.10.20150627.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Fix a regression with urgent icons not showing up if launcher is
+    hidden. (LP: #1450991)
+  * Make sure new icons are added to the model before calling
+    SortAndUpdate. (LP: #1458950)
+  * This likely could fix
+    https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1451613. At
+    least the backtraces posted there suggest this. But I think that
+    those backtraces are just leftovers of old crashes-on-unloading.
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Chris Townsend ]
+  * Allow mouse clicks that are not in the visible area of the Quicklist
+    to pass through down to the Launcher icon. Fixes a failing AP test.
+    (LP: #1456245)
+
+  [ Luke Yelavich ]
+  * Implement filter results controls accessibility (LP: #1457071)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: add missing features, keep a copy of views
+    around
+  * DecorationsForceQuitDialog: remove deprecated override style
+    functions, use CSS
+  * GnomeSessionManager: Request ScreenSaver (de)activation on VT
+    changes (LP: #1405349)
+  * OverlayWindowButtons: trigger a queuedraw also when a child requires
+    a redraw (LP: #1461618)
+  * PanelMenuView: connect to target window / application title changes
+    (LP: #1418449)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Sat, 27 Jun 2015 04:44:56 +0000
+
 unity (7.3.2+15.10.20150522-0ubuntu1) wily; urgency=medium
 
   [ CI Train Bot ]
