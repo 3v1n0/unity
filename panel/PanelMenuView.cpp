@@ -146,6 +146,7 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   am.active_application_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
   am.application_started.connect(sigc::mem_fun(this, &PanelMenuView::OnApplicationStarted));
   am.application_stopped.connect(sigc::mem_fun(this, &PanelMenuView::OnApplicationClosed));
+  am.window_closed.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowClosed));
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
