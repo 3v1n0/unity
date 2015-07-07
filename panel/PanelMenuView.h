@@ -89,6 +89,7 @@ private:
   void OnEntryViewAdded(PanelIndicatorEntryView* view);
   void OnApplicationStarted(ApplicationPtr const&);
   void OnApplicationClosed(ApplicationPtr const&);
+  void OnWindowOpened(ApplicationWindowPtr const&);
   void OnWindowClosed(ApplicationWindowPtr const&);
   void OnActiveWindowChanged(ApplicationWindowPtr const&);
   void OnActiveAppChanged(ApplicationPtr const&);

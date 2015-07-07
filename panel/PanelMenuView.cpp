@@ -146,6 +146,7 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   am.active_application_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
   am.application_started.connect(sigc::mem_fun(this, &PanelMenuView::OnApplicationStarted));
   am.application_stopped.connect(sigc::mem_fun(this, &PanelMenuView::OnApplicationClosed));
+  am.window_opened.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowOpened));
   am.window_closed.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowClosed));
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
@@ -1026,6 +1027,19 @@ void PanelMenuView::OnApplicationClosed(ApplicationPtr const& app)
   if (app == new_application_)
   {
     new_application_.reset();
+  }
+}
+
+void PanelMenuView::OnWindowOpened(ApplicationWindowPtr const& win)
+{
+  if (win->window_id() == window_buttons_->controlled_window() &&
+      win->title.changed.empty())
+  {
+    /* This is a not so nice workaround that we need to include here, since
+     * BAMF might be late in informing us about a new window, and thus we
+     * can't connect to it's signals (as not available in the App Manager). */
+    window_buttons_->controlled_window = 0;
+    UpdateTargetWindowItems();
   }
 }
 
