@@ -143,10 +143,10 @@ private: // Property getters and setters
   std::string GetDesktopFile() const;
 
   bool GetSeen() const;
-  bool SetSeen(bool const& param);
+  bool SetSeen(bool param);
 
   bool GetSticky() const;
-  bool SetSticky(bool const& param);
+  bool SetSticky(bool param);
 
 private:
   glib::Object<::BamfApplication> bamf_app_;

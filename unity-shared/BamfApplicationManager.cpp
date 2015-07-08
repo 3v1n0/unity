@@ -145,6 +145,10 @@ WindowBase::WindowBase(ApplicationManager const& manager,
   [this] (BamfView*, gboolean urgent) {
     this->urgent.changed.emit(urgent);
   });
+  signals_.Add<void, BamfView*>(bamf_view_, "closed",
+  [this] (BamfView* view) {
+    pool::wins_.erase(view);
+  });
 }
 
 bool WindowBase::Focus() const
@@ -331,8 +335,11 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
     this->urgent.changed.emit(urgent);
   });
   signals_.Add<void, BamfView*>(bamf_view_, "closed",
-  [this] (BamfView*) {
+  [this] (BamfView* view) {
     this->closed.emit();
+
+    if (!sticky())
+      pool::apps_.erase(view);
   });
 
   signals_.Add<void, BamfView*, BamfView*>(bamf_view_, "child-added",
@@ -516,7 +523,7 @@ bool Application::GetSeen() const
                             g_quark_from_string(UNSEEN_QUARK));
 }
 
-bool Application::SetSeen(bool const& param)
+bool Application::SetSeen(bool param)
 {
   bool is_seen = GetSeen();
   if (param == is_seen)
@@ -534,11 +541,14 @@ bool Application::GetSticky() const
   return bamf_view_is_sticky(bamf_view_);
 }
 
-bool Application::SetSticky(bool const& param)
+bool Application::SetSticky(bool param)
 {
   bool is_sticky = GetSticky();
   if (param == is_sticky)
     return false; // unchanged
+
+  if (!param && bamf_view_is_closed(bamf_view_))
+    pool::apps_.erase(bamf_view_);
 
   bamf_view_set_sticky(bamf_view_, param);
   return true; // value updated
@@ -725,16 +735,14 @@ void Manager::OnViewClosed(BamfMatcher* matcher, BamfView* view)
   {
     if (ApplicationPtr const& app = pool::EnsureApplication(*this, view))
       application_stopped.emit(app);
-
-    pool::apps_.erase(view);
   }
   else if (BAMF_IS_WINDOW(view))
   {
     if (ApplicationWindowPtr const& win = pool::EnsureWindow(*this, view))
       window_closed.emit(win);
-
-    pool::wins_.erase(view);
   }
+
+  /* No removal here, it's done inside views, as 'closed' signal arrives later */
 }
 
 } // namespace bamf
