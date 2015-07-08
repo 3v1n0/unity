@@ -170,12 +170,23 @@ AppWindow::AppWindow(ApplicationManager const& manager, glib::Object<BamfView> c
   : WindowBase(manager, window)
   , bamf_window_(glib::object_cast<BamfWindow>(window))
 {
+  monitor.SetGetterFunction(std::bind(&AppWindow::GetMonitor, this));
   maximized.SetGetterFunction(std::bind(&AppWindow::GetMaximized, this));
+
+  signals_.Add<void, BamfWindow*, gint, gint>(bamf_window_, "monitor-changed",
+  [this] (BamfWindow*, gint, gint monitor) {
+    this->monitor.changed.emit(monitor);
+  });
   signals_.Add<void, BamfWindow*, gint, gint>(bamf_window_, "maximized-changed",
   [this] (BamfWindow*, gint old_state, gint state) {
     if ((old_state == BAMF_WINDOW_MAXIMIZED) != (state == BAMF_WINDOW_MAXIMIZED))
       this->maximized.changed.emit(state == BAMF_WINDOW_MAXIMIZED);
   });
+}
+
+int AppWindow::GetMonitor() const
+{
+  return bamf_window_get_monitor(bamf_window_);
 }
 
 bool AppWindow::GetMaximized() const
@@ -186,11 +197,6 @@ bool AppWindow::GetMaximized() const
 Window AppWindow::window_id() const
 {
   return bamf_window_get_xid(bamf_window_);
-}
-
-int AppWindow::monitor() const
-{
-  return bamf_window_get_monitor(bamf_window_);
 }
 
 WindowType AppWindow::type() const
@@ -231,14 +237,15 @@ void AppWindow::Quit() const
   WindowManager::Default().Close(window_id());
 }
 
-Tab::Tab(ApplicationManager const& manager, glib::Object<BamfView> const& tab)
-  : WindowBase(manager, tab)
-  , bamf_tab_(glib::object_cast<BamfTab>(tab))
-{}
-
 Tab::Tab(ApplicationManager const& manager, glib::Object<BamfTab> const& tab)
   : WindowBase(manager, glib::object_cast<BamfView>(tab))
   , bamf_tab_(tab)
+{
+  monitor.SetGetterFunction([] { return -1; });
+}
+
+Tab::Tab(ApplicationManager const& manager, glib::Object<BamfView> const& tab)
+  : Tab(manager_, glib::object_cast<BamfTab>(tab))
 {}
 
 Window Tab::window_id() const
@@ -249,12 +256,6 @@ Window Tab::window_id() const
 WindowType Tab::type() const
 {
   return WindowType::TAB;
-}
-
-int Tab::monitor() const
-{
-  // TODO, we could find the real window for the window_id, and get the monitor for that.
-  return -1;
 }
 
 ApplicationPtr Tab::application() const

@@ -49,6 +49,7 @@ public:
 protected:
   ApplicationManager const& manager_;
   glib::Object<BamfView> bamf_view_;
+  glib::SignalManager signals_;
 };
 
 
@@ -66,9 +67,6 @@ public:
     return static_cast<WindowBase const*>(this)->bamf_view_ == static_cast<WindowBase  const&>(other).bamf_view_;
   }
   bool operator!=(unity::ApplicationWindow const& other) const override { return !(operator==(other)); }
-
-protected:
-  glib::SignalManager signals_;
 };
 
 // NOTE: Can't use Window as a type as there is a #define for Window to some integer value.
@@ -82,12 +80,13 @@ public:
 
   WindowType type() const override;
   Window window_id() const override;
-  int monitor() const override;
   ApplicationPtr application() const override;
   void Quit() const override;
-  bool GetMaximized() const;
 
 private:
+  int GetMonitor() const;
+  bool GetMaximized() const;
+
   glib::Object<BamfWindow> bamf_window_;
 };
 
@@ -101,7 +100,6 @@ public:
 
   WindowType type() const override;
   Window window_id() const override;
-  int monitor() const override;
   ApplicationPtr application() const override;
   bool Focus() const override;
   void Quit() const override;
