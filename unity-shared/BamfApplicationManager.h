@@ -119,7 +119,7 @@ public:
 
   virtual AppType type() const;
 
-  virtual WindowList GetWindows() const;
+  virtual WindowList const& GetWindows() const;
   virtual bool OwnsWindow(Window window_id) const;
 
   virtual std::vector<std::string> GetSupportedMimeTypes() const;

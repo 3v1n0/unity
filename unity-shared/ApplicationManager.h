@@ -122,7 +122,7 @@ public:
   // A string representation of the object.
   virtual std::string repr() const = 0;
 
-  virtual WindowList GetWindows() const = 0;
+  virtual WindowList const& GetWindows() const = 0;
   virtual bool OwnsWindow(Window window_id) const = 0;
 
   virtual std::vector<std::string> GetSupportedMimeTypes() const = 0;

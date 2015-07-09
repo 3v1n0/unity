@@ -403,7 +403,7 @@ std::string Application::repr() const
   return sout.str();
 }
 
-WindowList Application::GetWindows() const
+WindowList const& Application::GetWindows() const
 {
   return windows_;
 }
