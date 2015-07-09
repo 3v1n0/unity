@@ -651,6 +651,12 @@ ApplicationWindowPtr Manager::GetWindowForId(Window xid) const
   if (xid == 0)
     return nullptr;
 
+  for (auto const& win_pair : pool::wins_)
+  {
+    if (win_pair.second->window_id() == xid)
+      return win_pair.second;
+  }
+
   // TODO: use bamf_matcher_get_window_for_xid
   auto* app = bamf_matcher_get_application_for_xid(matcher_, xid);
 
