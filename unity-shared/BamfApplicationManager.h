@@ -148,8 +148,11 @@ private: // Property getters and setters
   bool GetSticky() const;
   bool SetSticky(bool param);
 
+  void UpdateWindows();
+
 private:
   glib::Object<::BamfApplication> bamf_app_;
+  WindowList windows_;
   glib::SignalManager signals_;
   std::string type_;
 };
