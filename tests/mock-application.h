@@ -143,7 +143,7 @@ struct MockApplication : unity::Application
       ON_CALL(*this, type()).WillByDefault(Invoke([this] { return type_; }));
       ON_CALL(*this, desktop_id()).WillByDefault(Invoke([this] { return desktop_file_; }));
       ON_CALL(*this, repr()).WillByDefault(Return("MockApplication"));
-      ON_CALL(*this, GetWindows()).WillByDefault(Invoke([this] { return windows_; }));
+      ON_CALL(*this, GetWindows()).WillByDefault(Invoke([this] () -> unity::WindowList const& { return windows_; }));
       ON_CALL(*this, GetSupportedMimeTypes()).WillByDefault(Return(std::vector<std::string>()));
       ON_CALL(*this, GetFocusableWindow()).WillByDefault(Return(unity::ApplicationWindowPtr()));
       ON_CALL(*this, OwnsWindow(_)).WillByDefault(Invoke(this, &MockApplication::LocalOwnsWindow));
