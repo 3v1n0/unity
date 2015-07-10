@@ -372,6 +372,8 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
     if (ApplicationWindowPtr const& win = pool::EnsureWindow(manager_, child))
       this->window_moved.emit(win);
   });
+
+  UpdateWindows();
 }
 
 std::string Application::GetDesktopFile() const
