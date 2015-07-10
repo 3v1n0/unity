@@ -170,6 +170,9 @@ void connect_events(ApplicationPtr const& app)
       win->maximized.changed.connect([win] (bool m) {
         std::cout << "Window "<< win->window_id()<< " maximized changed to "<< m << endl;
       });
+      win->monitor.changed.connect([win] (int m) {
+        std::cout << "Window "<< win->window_id()<< " monitor changed to "<< m << endl;
+      });
       win->active.changed.connect([win] (bool a) {
         std::cout << "Window "<< win->window_id()<< " active changed to "<< a << endl;
       });
