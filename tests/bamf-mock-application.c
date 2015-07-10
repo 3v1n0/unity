@@ -99,10 +99,24 @@ bamf_mock_application_set_icon (BamfMockApplication * self, const gchar * icon)
 void
 bamf_mock_application_set_children (BamfMockApplication * self, GList * children)
 {
+  GList *l;
+
   g_return_if_fail (BAMF_IS_MOCK_APPLICATION (self));
 
-  g_list_free (self->priv->children);
-  self->priv->children = g_list_copy (children);
+  for (l = self->priv->children; l;)
+  {
+    GList *next = l->next;
+    BamfView *view = l->data;
+    self->priv->children = g_list_delete_link (self->priv->children, l);
+    g_signal_emit_by_name (G_OBJECT (self), "child-removed", view);
+    l = next;
+  }
+
+  for (l = g_list_last (children); l; l = l->prev)
+  {
+    self->priv->children = g_list_prepend (self->priv->children, l->data);
+    g_signal_emit_by_name (G_OBJECT (self), "child-added", l->data);
+  }
 }
 
 static void
