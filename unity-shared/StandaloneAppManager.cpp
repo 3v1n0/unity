@@ -81,6 +81,22 @@ std::ostream& operator<<(std::ostream &os, WindowType wt)
   return os;
 }
 
+void connect_window_events(ApplicationWindowPtr const& win)
+{
+  win->title.changed.connect([win] (std::string const& t) {
+    std::cout << "Window "<< win->window_id()<< " title changed to "<< t << endl;
+  });
+  win->maximized.changed.connect([win] (bool m) {
+    std::cout << "Window "<< win->window_id()<< " maximized changed to "<< m << endl;
+  });
+  win->monitor.changed.connect([win] (int m) {
+    std::cout << "Window "<< win->window_id()<< " monitor changed to "<< m << endl;
+  });
+  win->active.changed.connect([win] (bool a) {
+    std::cout << "Window "<< win->window_id()<< " active changed to "<< a << endl;
+  });
+}
+
 void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
 {
   if (app)
@@ -153,6 +169,7 @@ void connect_events(ApplicationPtr const& app)
   });
   app->window_opened.connect([idx](ApplicationWindowPtr const& window) {
     cout << "** " << names[idx] << " window opened: " << window->title() << endl;
+    connect_window_events(window);
   });
   app->window_closed.connect([idx](ApplicationWindowPtr const& window) {
     cout << "** " << names[idx] << " window closed: " << window->title() << endl;
@@ -163,22 +180,8 @@ void connect_events(ApplicationPtr const& app)
   app->seen = true;
 
   for (auto win : app->GetWindows())
-    {
-      win->title.changed.connect([win] (std::string const& t) {
-        std::cout << "Window "<< win->window_id()<< " title changed to "<< t << endl;
-      });
-      win->maximized.changed.connect([win] (bool m) {
-        std::cout << "Window "<< win->window_id()<< " maximized changed to "<< m << endl;
-      });
-      win->monitor.changed.connect([win] (int m) {
-        std::cout << "Window "<< win->window_id()<< " monitor changed to "<< m << endl;
-      });
-      win->active.changed.connect([win] (bool a) {
-        std::cout << "Window "<< win->window_id()<< " active changed to "<< a << endl;
-      });
-    }
+    connect_window_events(win);
 }
-
 
 
 nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)
