@@ -48,7 +48,6 @@ DECLARE_LOGGER(logger, "unity.launcher.icon.application");
 namespace
 {
 // We use the "bamf-" prefix since the manager is protected, to avoid name clash
-const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
 const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
 const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
 const std::string DEFAULT_ICON = "application-default-icon";
@@ -87,12 +86,11 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
 
   WindowManager& wm = WindowManager::Default();
   wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
-  wm.window_moved.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMoved));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
   wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-  UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState))));
+  UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowsLocation))));
 
-  EnsureWindowState();
+  EnsureWindowsLocation();
 }
 
 ApplicationLauncherIcon::~ApplicationLauncherIcon()
@@ -156,14 +154,16 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
 {
   // Lambda functions should be fine here because when the application the icon
   // is only ever removed when the application is closed.
-  signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindowPtr const&) {
-    EnsureWindowState();
-    UpdateIconGeometries(GetCenters());
+  signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindowPtr const& win) {
+    signals_conn_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
+    EnsureWindowsLocation();
   }));
 
-  auto ensure_windows_cb = sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-  signals_conn_.Add(app_->window_closed.connect(ensure_windows_cb));
-  signals_conn_.Add(app_->window_moved.connect(ensure_windows_cb));
+  auto ensure_win_location_cb = sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowsLocation));
+  signals_conn_.Add(app_->window_closed.connect(ensure_win_location_cb));
+
+  for (auto& win : app_->GetWindows())
+    signals_conn_.Add(win->monitor.changed.connect(ensure_win_location_cb));
 
   signals_conn_.Add(app_->urgent.changed.connect([this](bool const& urgent) {
     LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
@@ -535,19 +535,6 @@ void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
   }
 }
 
-void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
-{
-  if (!app_->OwnsWindow(moved_win))
-    return;
-
-  _source_manager.AddTimeout(250, [this] {
-    EnsureWindowState();
-    UpdateIconGeometries(GetCenters());
-
-    return false;
-  }, WINDOW_MOVE_TIMEOUT);
-}
-
 void ApplicationLauncherIcon::UpdateDesktopFile()
 {
   std::string const& filename = app_->desktop_file();
@@ -738,8 +725,8 @@ void ApplicationLauncherIcon::EnsureWindowState()
       // If monitor is -1 (or negative), show on all monitors.
       if (monitor < 0)
       {
-        for (unsigned j; j < monitors::MAX; j++)
-            ++number_of_windows_on_monitor[j];
+        for (unsigned j; j < monitors::MAX; ++j)
+          ++number_of_windows_on_monitor[j];
       }
       else
       {
@@ -748,10 +735,16 @@ void ApplicationLauncherIcon::EnsureWindowState()
     }
   }
 
-  for (unsigned i = 0; i < monitors::MAX; i++)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     SetNumberOfWindowsVisibleOnMonitor(number_of_windows_on_monitor[i], i);
 
   WindowsChanged.emit();
+}
+
+void ApplicationLauncherIcon::EnsureWindowsLocation()
+{
+  EnsureWindowState();
+  UpdateIconGeometries(GetCenters());
 }
 
 void ApplicationLauncherIcon::UpdateDesktopQuickList()
