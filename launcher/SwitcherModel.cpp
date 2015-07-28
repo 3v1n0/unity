@@ -30,7 +30,7 @@ namespace switcher
 {
 
 
-SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons)
+SwitcherModel::SwitcherModel(Applications const& icons)
   : detail_selection(false)
   , detail_selection_index(0)
   , only_detail_on_viewport(false)
@@ -54,14 +54,6 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
       last_active_application_ = application;
       found = true;
     }
-  }
-}
-
-SwitcherModel::~SwitcherModel()
-{
-  for (auto const& application : applications_)
-  {
-    RemoveChild(application.GetPointer());
   }
 }
 
