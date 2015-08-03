@@ -9,7 +9,7 @@ set (CFLAGS
 string (REPLACE ";" " " CFLAGS "${CFLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS}")
 
-set (LIBS ${CACHED_UNITY_DEPS_LDFLAGS} ${UNITY_STANDALONE_LADD})
+set (LIBS ${CACHED_UNITY_DEPS_LDFLAGS} pam)
 
 include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
@@ -34,5 +34,6 @@ set (LOCKSCREEN_SOURCES
      )
 
 add_library (lockscreen-lib STATIC ${LOCKSCREEN_SOURCES})
-add_dependencies (lockscreen-lib unity-core-${UNITY_API_VERSION} unity-shared pam)
+target_link_libraries (lockscreen-lib ${LIBS})
+add_dependencies (lockscreen-lib unity-core-${UNITY_API_VERSION} unity-shared)
 add_pch(pch/lockscreen_pch.hh lockscreen-lib)
