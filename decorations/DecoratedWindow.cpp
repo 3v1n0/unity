@@ -842,7 +842,7 @@ Window::Window(CompWindow* cwin)
   , impl_(new Impl(this, cwin))
 {}
 
-CompWindow* Window::compWindow()
+CompWindow* Window::GetCompWindow()
 {
   return impl_->win_;
 }
