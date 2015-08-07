@@ -45,6 +45,7 @@ public:
   nux::Property<bool> scaled;
   nux::ROProperty<double> dpi_scale;
 
+  CompWindow* compWindow();
   void Update();
   void Undecorate();
   void UpdateDecorationPosition();

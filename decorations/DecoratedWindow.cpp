@@ -842,6 +842,11 @@ Window::Window(CompWindow* cwin)
   , impl_(new Impl(this, cwin))
 {}
 
+CompWindow* Window::compWindow()
+{
+  return impl_->win_;
+}
+
 void Window::Update()
 {
   impl_->Update();
