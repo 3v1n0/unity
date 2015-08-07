@@ -306,7 +306,7 @@ bool Manager::Impl::HandleFrameEvent(XEvent* event)
     return false;
 
   auto const& win = GetWindowByFrame(event->xany.window);
-  CompWindow* comp_window = win ? win->compWindow() : 0;
+  CompWindow* comp_window = win ? win->compWindow() : nullptr;
 
   if (comp_window && comp_window->defaultViewport() != screen->vp())
     return false;
