@@ -1255,7 +1255,6 @@ void UnityWindow::DoOverrideFrameRegion(CompRegion &region)
 
   window->updateFrameRegionSetCurrentIndex(MAXSHORT);
   window->updateFrameRegion(region);
-  deco_win_->UpdateFrameRegion(region);
   window->updateFrameRegionSetCurrentIndex(oldUpdateFrameRegionIndex);
 }
 
