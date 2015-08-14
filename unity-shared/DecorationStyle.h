@@ -24,6 +24,8 @@
 #include <NuxCore/Rect.h>
 #include <cairo/cairo.h>
 
+#include <memory>
+
 struct _GtkStyleContext;
 
 namespace unity

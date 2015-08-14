@@ -1,3 +1,18 @@
+unity (7.3.2+15.10.20150803.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Enable building unity form source with gcc5.
+  * Fixes that enable building unity from sources with cmake3 (wily).
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Stephen M. Webb ]
+  * unity-shared/DebugDBusInterface.cpp: include <iostream> to fix a
+    FTBFS
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 03 Aug 2015 12:35:24 +0000
+
 unity (7.3.2+15.10.20150627.1-0ubuntu1) wily; urgency=medium
 
   [ Andrea Azzarone andrea.azzarone@canonical.com ]
