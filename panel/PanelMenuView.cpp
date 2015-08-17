@@ -229,6 +229,7 @@ void PanelMenuView::SetupWindowManagerSignals()
   wm.initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
   wm.terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
+  wm.show_desktop_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnShowDesktopChanged));
 }
 
 void PanelMenuView::SetupUBusManagerInterests()
@@ -1238,6 +1239,12 @@ void PanelMenuView::OnWindowRestored(Window xid)
     RefreshAndRedraw();
   }
 }
+
+void PanelMenuView::OnShowDesktopChanged()
+{
+  UpdateMaximizedWindow();
+}
+
 
 bool PanelMenuView::UpdateActiveWindowPosition()
 {

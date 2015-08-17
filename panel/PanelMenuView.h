@@ -105,6 +105,7 @@ private:
   void OnWindowMaximized(Window xid);
   void OnWindowRestored(Window xid);
   void OnWindowMoved(Window xid);
+  void OnShowDesktopChanged();
 
   void OnMaximizedActivate(int x, int y);
   void OnMaximizedDoubleClicked(int x, int y);
