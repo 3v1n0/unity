@@ -28,6 +28,16 @@ class UnityIntrospectionObject(CustomEmulatorBase):
 
     _Backend = DBusAddress.SessionBus(DBUS_SERVICE, DBUS_OBJECT)
 
+    def __repr__(self):
+        with self.no_automatic_refreshing():
+            return "<%s id=%d>" % (self.__class__.__name__, self.id)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.id == other.id
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 def ensure_unity_is_running(timeout=300):
     """Poll the unity debug interface, and return when it's ready for use.

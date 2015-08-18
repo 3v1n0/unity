@@ -404,7 +404,7 @@ class DashKeyNavTests(DashTestCase):
             self.keyboard.press_and_release('Tab')
             selected = scope.get_focused_category()
             expected = category if category.expand_label_is_visible else None
-            self.assertEqual(selected.id if selected else None, expected.id if expected else None)
+            self.assertEqual(selected, expected)
 
     def test_tab_with_filter_bar(self):
         """ This test makes sure that Tab works well with the filter bara."""
