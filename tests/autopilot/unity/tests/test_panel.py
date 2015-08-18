@@ -431,7 +431,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.addCleanup(self.unity.hud.ensure_hidden)
 
         self.panel.window_buttons.maximize.mouse_click()
-
         self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
 
     def test_hud_maximize_button_does_not_change_dash_form_factor(self):
@@ -1185,9 +1184,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.assertProperty(text_win, is_focused=False)
         self.assertProperty(calc_win, is_focused=True)
 
-        self.move_mouse_over_grab_area()
-        self.mouse.click()
-
+        self.mouse.click_object(self.grab_area, button=1)
         self.assertProperty(text_win, is_focused=True)
 
     def test_lower_the_maximized_window_works(self):
@@ -1198,8 +1195,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.assertProperty(text_win, is_focused=True)
         self.assertProperty(calc_win, is_focused=False)
 
-        self.move_mouse_over_grab_area()
-        self.mouse.click(2)
+        self.mouse.click_object(self.grab_area, button=2)
 
         self.assertProperty(calc_win, is_focused=True)
 
@@ -1209,8 +1205,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.addCleanup(self.unity.hud.ensure_hidden)
 
         self.keyboard.type("Hello")
-        self.move_mouse_over_grab_area()
-        self.mouse.click()
+        self.mouse.click_object(self.grab_area)
         self.keyboard.type("World")
 
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("HelloWorld")))

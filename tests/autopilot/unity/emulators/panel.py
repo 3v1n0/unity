@@ -107,30 +107,18 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
     def move_mouse_over_grab_area(self):
         """Move the mouse over the grab area for this panel."""
-        (x, y, w, h) = self.grab_area.geometry
-        target_x = x + w / 2
-        target_y = y + h / 2
-
         logger.debug("Moving mouse to center of grab area.")
-        self._mouse.move(target_x, target_y)
+        self._mouse.move_to_object(self.grab_area)
 
     def move_mouse_over_window_buttons(self):
         """Move the mouse over the center of the window buttons area for this panel."""
-        (x, y, w, h) = self.window_buttons.geometry
-        target_x = x + w / 2
-        target_y = y + h / 2
-
         logger.debug("Moving mouse to center of the window buttons.")
-        self._mouse.move(target_x, target_y)
+        self._mouse.move_to_object(self.window_buttons)
 
     def move_mouse_over_indicators(self):
         """Move the mouse over the center of the indicators area for this panel."""
-        (x, y, w, h) = self.indicators.geometry
-        target_x = x + w / 2
-        target_y = y + h / 2
-
         logger.debug("Moving mouse to center of the indicators area.")
-        self._mouse.move(target_x, target_y)
+        self._mouse.move_to_object(self.indicators)
 
     def get_indicator_entries(self, visible_only=True, include_hidden_menus=False):
         """Returns a list of entries for this panel including both menus and indicators"""
@@ -268,15 +256,12 @@ class WindowButton(UnityIntrospectionObject):
         self._mouse = Mouse.create()
 
     def mouse_move_to(self):
-        target_x = self.x + self.width / 2
-        target_y = self.y + self.height / 2
-        self._mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+        self._mouse.move_to_object(self)
 
     def mouse_click(self):
-        self.mouse_move_to()
-        sleep(.2)
-        self._mouse.click(press_duration=.1)
-        sleep(.01)
+        if self.sensitive:
+            self._mouse.click_object(self)
+            sleep(.01)
 
     @property
     def geometry(self):
@@ -331,15 +316,10 @@ class IndicatorEntry(UnityIntrospectionObject):
         self._mouse = Mouse.create()
 
     def mouse_move_to(self):
-        target_x = self.x + self.width / 2
-        target_y = self.y + self.height / 2
-        self._mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+        self._mouse.move_to_object(self)
 
     def mouse_click(self, button=1):
-        self.mouse_move_to()
-        sleep(.2)
-        assert(self.visible)
-        self._mouse.click(press_duration=.1)
+        self._mouse.click_object(self, button=button)
         sleep(.01)
 
     @property

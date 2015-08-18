@@ -274,26 +274,16 @@ class Result(UnityIntrospectionObject):
     """A single result in the dash."""
 
     def activate(self, double_click=True):
-        tx = self.x + (self.width / 2)
-        ty = self.y + (self.height / 2)
         m = Mouse.create()
-        m.move(tx, ty)
-        m.click(1)
+        m.click_object(self, button=1)
         if double_click:
-            m.click(1)
+            m.click_object(self, button=1)
 
     def preview(self, button=1):
-        tx = self.x + (self.width / 2)
-        ty = self.y + (self.height / 2)
-        m = Mouse.create()
-        m.move(tx, ty)
-        m.click(button)
+        Mouse.create().click_object(self, button)
 
     def preview_key(self):
-        tx = self.x + (self.width / 2)
-        ty = self.y + (self.height / 2)
-        m = Mouse.create()
-        m.move(tx, ty)
+        Mouse.create().move_to_object(self)
 
         k = Keyboard.create()
         k.press_and_release('Menu')
@@ -358,21 +348,13 @@ class FilterExpanderLabel(UnityIntrospectionObject):
     def ensure_expanded(self):
         """Expand the filter expander label, if it's not already"""
         if not self.expanded:
-            tx = self.x + self.width / 2
-            ty = self.y + self.height / 2
-            m = Mouse.create()
-            m.move(tx, ty)
-            m.click()
+            Mouse.create().click_object(self)
             self.expanded.wait_for(True)
 
     def ensure_collapsed(self):
         """Collapse the filter expander label, if it's not already"""
         if self.expanded:
-            tx = self.x + self.width / 2
-            ty = self.y + self.height / 2
-            m = Mouse.create()
-            m.move(tx, ty)
-            m.click()
+            Mouse.create().click_object(self)
             self.expanded.wait_for(False)
 
 
@@ -401,11 +383,7 @@ class Preview(UnityIntrospectionObject):
         """Executes an action given by the id."""
         action = self.get_action_by_id(action_id)
         if action:
-            tx = action.x + (action.width / 2)
-            ty = action.y + (action.height / 2)
-            m = Mouse.create()
-            m.move(tx, ty)
-            m.click()
+            Mouse.create().click_object(action)
 
     @property
     def cover_art(self):
@@ -484,12 +462,8 @@ class PreviewContainer(UnityIntrospectionObject):
 
     def navigate_left(self, count=1):
         """Navigate preview left"""
-        navigator = self.get_left_navigator()
-
-        tx = navigator.button_x + (navigator.button_width / 2)
-        ty = navigator.button_y + (navigator.button_height / 2)
         m = Mouse.create()
-        m.move(tx, ty)
+        m.move_to_object(self.get_left_navigator())
 
         old_preview_initiate_count = self.preview_initiate_count
 
@@ -501,12 +475,8 @@ class PreviewContainer(UnityIntrospectionObject):
 
     def navigate_right(self, count=1):
         """Navigate preview right"""
-        navigator = self.get_right_navigator()
-
-        tx = navigator.button_x + (navigator.button_width / 2)
-        ty = navigator.button_y + (navigator.button_height / 2)
         m = Mouse.create()
-        m.move(tx, ty)
+        m.move_to_object(self.get_right_navigator())
 
         old_preview_initiate_count = self.preview_initiate_count
 
