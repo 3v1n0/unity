@@ -400,10 +400,11 @@ class DashKeyNavTests(DashTestCase):
 
         # Test that tab cycles through the categories.
         # + 1 is the filter bar
-        for i in range(scope.get_num_visible_categories()):
+        for category in scope.get_categories(only_visible=True):
             self.keyboard.press_and_release('Tab')
-            category = scope.get_focused_category()
-            self.assertIsNot(category, None)
+            selected = scope.get_focused_category()
+            expected = category if category.expand_label_is_visible else None
+            self.assertEqual(selected.id if selected else None, expected.id if expected else None)
 
     def test_tab_with_filter_bar(self):
         """ This test makes sure that Tab works well with the filter bara."""
@@ -701,11 +702,9 @@ class DashVisualTests(DashTestCase):
         self.unity.dash.reveal_application_scope()
 
         scope = self.unity.dash.get_current_scope()
-        self.assertThat(lambda: len(scope.get_groups()), Eventually(GreaterThan(0), timeout=20))
+        self.assertThat(lambda: len(scope.get_categories()), Eventually(GreaterThan(0), timeout=20))
 
-        groups = scope.get_groups()
-
-        for group in groups:
+        for group in scope.get_categories():
             if (group.is_visible and group.expand_label_is_visible):
                 expand_label_y = group.expand_label_y + group.expand_label_baseline
                 name_label_y = group.name_label_y + group.name_label_baseline
@@ -1401,3 +1400,4 @@ class DashCrossMonitorsTests(DashTestCase):
         self.addCleanup(self.unity.dash.ensure_hidden)
 
         self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
+

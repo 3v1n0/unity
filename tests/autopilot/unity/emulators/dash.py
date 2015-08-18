@@ -225,10 +225,12 @@ class ScopeBarIcon(UnityIntrospectionObject):
 class ScopeView(UnityIntrospectionObject):
     """A Scope View."""
 
-    def get_groups(self):
+    def get_categories(self, only_visible=False):
         """Get a list of all groups within this scopeview. May return an empty list."""
-        groups = self.get_children_by_type(PlacesGroup)
-        return groups
+        if only_visible:
+            return self.get_children_by_type(PlacesGroup, is_visible=True)
+
+        return self.get_children_by_type(PlacesGroup)
 
     def get_focused_category(self):
         """Return a PlacesGroup instance for the category whose header has keyboard focus.
@@ -236,29 +238,22 @@ class ScopeView(UnityIntrospectionObject):
         Returns None if no category headers have keyboard focus.
 
         """
-        categories = self.get_children_by_type(PlacesGroup)
-        matches = [m for m in categories if m.header_has_keyfocus]
-        if matches:
-            return matches[0]
-        return None
+        matches = self.get_children_by_type(PlacesGroup, header_has_keyfocus=True)
+        return matches[0] if matches else None
 
     def get_category_by_name(self, category_name):
         """Return a PlacesGroup instance with the given name, or None."""
-        categories = self.get_children_by_type(PlacesGroup)
-        matches = [m for m in categories if m.name == category_name]
-        if matches:
-            return matches[0]
-        return None
+        matches = self.get_children_by_type(PlacesGroup, name=category_name)
+        return matches[0] if matches else None
 
     def get_num_visible_categories(self):
         """Get the number of visible categories in this scope."""
-        return len([c for c in self.get_children_by_type(PlacesGroup) if c.is_visible])
+        return len(self.get_catogories(only_visible=True))
 
     def get_filterbar(self):
         """Get the filter bar for the current scope, or None if it doesn't have one."""
         bars = self.get_children_by_type(FilterBar)
-        if bars:
-            return bars[0]
+        return bars[0] if bars else None
         return None
 
 
@@ -313,11 +308,8 @@ class FilterBar(UnityIntrospectionObject):
 
     def get_focused_filter(self):
         """Returns the id of the focused filter widget."""
-        filters = self.get_children_by_type(FilterExpanderLabel)
-        for filter_label in filters:
-            if filter_label.expander_has_focus:
-                return filter_label
-        return None
+        filters = self.get_children_by_type(FilterExpanderLabel, expander_has_focus=True)
+        return filters[0] if filters else None
 
     @property
     def expanded(self):
@@ -402,11 +394,8 @@ class Preview(UnityIntrospectionObject):
 
     def get_action_by_id(self, action_id):
         """Returns the action given it's action hint."""
-        actions = self.get_children_by_type(ActionButton)
-        for action in actions:
-            if action.action == action_id:
-                return action
-        return None
+        actions = self.get_children_by_type(ActionButton, action=action_id)
+        return actions[0] if actions else None
 
     def execute_action_by_id(self, action_id):
         """Executes an action given by the id."""
@@ -607,3 +596,4 @@ class IconTexture(UnityIntrospectionObject):
 
 class StaticCairoText(UnityIntrospectionObject):
     """Text boxes in the preview"""
+
