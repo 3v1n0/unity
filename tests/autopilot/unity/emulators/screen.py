@@ -13,6 +13,7 @@ import logging
 from unity.emulators import UnityIntrospectionObject
 from testtools.matchers import GreaterThan
 
+from autopilot.introspection.types import Rectangle
 from unity.emulators.dash import SearchBar
 
 logger = logging.getLogger(__name__)
@@ -54,15 +55,15 @@ class Window(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current window."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current window."""
+        return self.globalRect
 
     @property
     def scale_close_geometry(self):
-        """Returns a tuple of (x,y,w,h) for the scale close button."""
+        """Returns a Rectangle (x,y,w,h) for the scale close button."""
         self.scaled_close_width.wait_for(GreaterThan(0))
         self.scaled_close_height.wait_for(GreaterThan(0))
-        return (self.scaled_close_x, self.scaled_close_y, self.scaled_close_width, self.scaled_close_height)
+        return Rectangle(self.scaled_close_x, self.scaled_close_y, self.scaled_close_width, self.scaled_close_height)
 
 
 class SpreadFilter(UnityIntrospectionObject):

@@ -158,7 +158,7 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def geometry(self):
-        return (self.view.x, self.view.y, self.view.width, self.view.height)
+        return self.globalRect
 
 
 class DashView(UnityIntrospectionObject):

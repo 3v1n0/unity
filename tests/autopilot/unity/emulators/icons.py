@@ -103,7 +103,7 @@ class HudEmbeddedIcon(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        return (self.x, self.y, self.width, self.height)
+        return self.globalRect
 
 
 class LauncherEntry(UnityIntrospectionObject):

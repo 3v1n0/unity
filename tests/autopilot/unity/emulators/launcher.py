@@ -434,8 +434,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current launcher."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current launcher."""
+        return self.globalRect
 
 
 class LauncherModel(UnityIntrospectionObject):

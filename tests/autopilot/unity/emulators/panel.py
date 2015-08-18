@@ -14,6 +14,7 @@ from time import sleep
 
 from autopilot.input import Mouse
 from autopilot.keybindings import KeybindingsHelper
+from autopilot.introspection.types import Rectangle
 
 from unity.emulators import UnityIntrospectionObject
 logger = logging.getLogger(__name__)
@@ -180,8 +181,8 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current panel."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current panel."""
+        return self.globalRect
 
 
 class MenuView(UnityIntrospectionObject):
@@ -203,8 +204,8 @@ class MenuView(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current menu view."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current menu view."""
+        return self.globalRect
 
 
 class WindowButtons(UnityIntrospectionObject):
@@ -244,8 +245,8 @@ class WindowButtons(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current panel."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current panel."""
+        return self.globalRect
 
 
 class WindowButton(UnityIntrospectionObject):
@@ -265,8 +266,8 @@ class WindowButton(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the window button."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the window button."""
+        return self.globalRect
 
     def __repr__(self):
         with self.no_automatic_refreshing():
@@ -279,8 +280,8 @@ class GrabArea(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the grab area."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the grab area."""
+        return self.globalRect
 
 
 class Indicators(UnityIntrospectionObject):
@@ -304,8 +305,8 @@ class Indicators(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the indicators area."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the indicators area."""
+        return self.globalRect
 
 
 class IndicatorEntry(UnityIntrospectionObject):
@@ -324,13 +325,13 @@ class IndicatorEntry(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the indicator entry."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the indicator entry."""
+        return self.globalRect
 
     @property
     def menu_geometry(self):
-        """Returns a tuple of (x,y,w,h) for the opened menu geometry."""
-        return (self.menu_x, self.menu_y, self.menu_width, self.menu_height)
+        """Returns a Rectangle (x,y,w,h) for the opened menu geometry."""
+        return Rectangle(self.menu_x, self.menu_y, self.menu_width, self.menu_height)
 
     def __repr__(self):
         with self.no_automatic_refreshing():

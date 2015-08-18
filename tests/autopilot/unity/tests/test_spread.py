@@ -114,11 +114,7 @@ class SpreadTests(UnityTestCase):
         target_xid = not_focused.x_id
         [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
 
-        (x, y, w, h) = target_win.geometry
-        self.mouse.move(x + w / 2, y + h / 2)
-        sleep(.5)
-        self.mouse.click()
-
+        self.mouse.click_object(target_win, button=1)
         self.assertThat(lambda: not_focused.is_focused, Eventually(Equals(True)))
 
     def test_scaled_window_closes_on_middle_click(self):
@@ -129,10 +125,8 @@ class SpreadTests(UnityTestCase):
         target_xid = win.x_id
         [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
 
-        (x, y, w, h) = target_win.geometry
-        self.mouse.move(x + w / 2, y + h / 2)
-        sleep(.5)
-        self.mouse.click(button=2)
+        sleep(0.5)
+        self.mouse.click_object(target_win, button=2)
 
         self.assertWindowIsScaledEquals(target_xid, False)
         self.assertWindowIsClosed(target_xid)
@@ -146,13 +140,8 @@ class SpreadTests(UnityTestCase):
         [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
 
         # Make sure mouse is over the test window
-        (x1, y1, w1, h1) = target_win.geometry
-        self.mouse.move(x1 + w1 / 2, y1 + h1 / 2)
-
-        (x, y, w, h) = target_win.scale_close_geometry
-        self.mouse.move(x + w / 2, y + h / 2)
-        sleep(.5)
-        self.mouse.click()
+        self.mouse.move_to_object(target_win)
+        self.mouse.click_object(target_win.scale_close_geometry)
 
         self.assertWindowIsScaledEquals(target_xid, False)
         self.assertWindowIsClosed(target_xid)

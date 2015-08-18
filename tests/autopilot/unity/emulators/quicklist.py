@@ -66,8 +66,8 @@ class Quicklist(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the quicklist."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the quicklist."""
+        return self.globalRect
 
 
 class QuicklistMenuItem(UnityIntrospectionObject):
@@ -79,8 +79,8 @@ class QuicklistMenuItem(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the quicklist item."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the quicklist item."""
+        return self.globalRect
 
     def mouse_move_to(self):
         assert(self.visible)

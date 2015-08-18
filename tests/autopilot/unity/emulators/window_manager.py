@@ -10,6 +10,7 @@
 from __future__ import absolute_import
 
 import logging
+from autopilot.introspection.types import Rectangle
 from autopilot.keybindings import KeybindingsHelper
 
 from unity.emulators import UnityIntrospectionObject
@@ -22,8 +23,8 @@ class WindowManager(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def screen_geometry(self):
-        """Returns a tuple of (x,y,w,h) for the screen."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the screen."""
+        return self.globalRect
 
     def initiate_spread(self):
         self.keybinding("spread/start")
