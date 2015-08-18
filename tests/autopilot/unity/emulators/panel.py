@@ -283,6 +283,11 @@ class WindowButton(UnityIntrospectionObject):
         """Returns a tuple of (x,y,w,h) for the window button."""
         return (self.x, self.y, self.width, self.height)
 
+    def __repr__(self):
+        with self.no_automatic_refreshing():
+            details = "type={0.type} state={0.visual_state} sensitive={0.sensitive}".format(self)
+            return self._repr_string(details)
+
 
 class GrabArea(UnityIntrospectionObject):
     """The grab area class"""
@@ -349,7 +354,8 @@ class IndicatorEntry(UnityIntrospectionObject):
 
     def __repr__(self):
         with self.no_automatic_refreshing():
-            return "<IndicatorEntry 0x%x (%s)>" % (id(self), self.label)
+            details = "label={0.label}".format(self)
+            return self._repr_string(details)
 
 
 class Tray(UnityIntrospectionObject):

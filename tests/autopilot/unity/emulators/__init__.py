@@ -28,9 +28,23 @@ class UnityIntrospectionObject(CustomEmulatorBase):
 
     _Backend = DBusAddress.SessionBus(DBUS_SERVICE, DBUS_OBJECT)
 
+    def _repr_string(self, obj_details=""):
+        geostr = ""
+        if hasattr(self, 'globalRect'):
+            geostr = " geo=[{r.x}x{r.y} {r.width}x{r.height}]".format(r=self.globalRect)
+
+        obj_details.strip()
+        obj_details = " "+obj_details if len(obj_details) else obj_details
+
+        return "<{cls} {addr} id={id}{geo}{details}>".format(cls=self.__class__.__name__,
+                                                             addr=hex(id(self)),
+                                                             id=self.id,
+                                                             geo=geostr,
+                                                             details=obj_details)
+
     def __repr__(self):
         with self.no_automatic_refreshing():
-            return "<%s id=%d>" % (self.__class__.__name__, self.id)
+            return self._repr_string()
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.id == other.id

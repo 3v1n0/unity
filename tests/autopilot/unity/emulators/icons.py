@@ -76,10 +76,7 @@ class ApplicationLauncherIcon(SimpleLauncherIcon):
 
     def __repr__(self):
         with self.no_automatic_refreshing():
-            return "<%s %s id=%d>" % (
-                self.__class__.__name__,
-                self.desktop_id,
-                self.id)
+            return self._repr_string("{0.desktop_id}".format(self))
 
 class TrashLauncherIcon(SimpleLauncherIcon):
     """Represents the trash launcher icon."""
