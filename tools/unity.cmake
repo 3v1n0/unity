@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2010 Canonical
+# Copyright (C) 2010, 2015 Canonical
 #
 # Authors:
 #  Didier Roche <didrocks@ubuntu.com>
@@ -182,7 +182,7 @@ if __name__ == '__main__':
     parser.add_option("--replace", action="store_true",
                       help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
     parser.add_option("--reset", action="store_true",
-                      help="Reset is not supported anymore. Deprecated option")
+                      help="(deprecated: provided for backwards compatibility)")
     parser.add_option("--reset-icons", action="store_true",
                       help="Reset the default launcher icon.")  
     parser.add_option("-v", "--verbose", action="store_true",
@@ -195,8 +195,7 @@ if __name__ == '__main__':
 		sys.exit(reset_to_distro())
 
     if options.reset:
-        print ("ERROR: the reset option is now deprecated")
-        sys.exit(1)
+	print ("The reset option is deprecated, Run with no options instead.")
  
     if options.reset_icons:
         reset_launcher_icons ()
