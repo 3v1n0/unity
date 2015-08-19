@@ -195,7 +195,7 @@ if __name__ == '__main__':
 		sys.exit(reset_to_distro())
 
     if options.reset:
-	print ("The reset option is deprecated, Run with no options instead.")
+	print ("The --reset option is deprecated, You should run with no options instead.")
  
     if options.reset_icons:
         reset_launcher_icons ()
