@@ -1112,7 +1112,7 @@ class PreviewNavigateTests(DashTestCase):
         cover_art = self.get_current_preview().cover_art[0]
 
         # click the cover-art (this will set focus)
-        self.click_object(cover_art)
+        self.mouse.click_object(cover_art)
 
         self.keyboard.press_and_release("Escape")
 

@@ -158,7 +158,7 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def geometry(self):
-        return self.globalRect
+        return self.view.globalRect
 
 
 class DashView(UnityIntrospectionObject):
@@ -463,7 +463,7 @@ class PreviewContainer(UnityIntrospectionObject):
     def navigate_left(self, count=1):
         """Navigate preview left"""
         m = Mouse.create()
-        m.move_to_object(self.get_left_navigator())
+        m.move_to_object(self.get_left_navigator().button_geo)
 
         old_preview_initiate_count = self.preview_initiate_count
 
@@ -476,7 +476,7 @@ class PreviewContainer(UnityIntrospectionObject):
     def navigate_right(self, count=1):
         """Navigate preview right"""
         m = Mouse.create()
-        m.move_to_object(self.get_right_navigator())
+        m.move_to_object(self.get_right_navigator().button_geo)
 
         old_preview_initiate_count = self.preview_initiate_count
 
