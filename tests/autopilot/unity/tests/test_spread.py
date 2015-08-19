@@ -125,7 +125,7 @@ class SpreadTests(UnityTestCase):
         target_xid = win.x_id
         [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
 
-        sleep(0.5)
+        sleep(1)
         self.mouse.click_object(target_win, button=2)
 
         self.assertWindowIsScaledEquals(target_xid, False)
