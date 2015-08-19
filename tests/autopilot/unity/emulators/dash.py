@@ -248,7 +248,7 @@ class ScopeView(UnityIntrospectionObject):
 
     def get_num_visible_categories(self):
         """Get the number of visible categories in this scope."""
-        return len(self.get_catogories(only_visible=True))
+        return len(self.get_categories(only_visible=True))
 
     def get_filterbar(self):
         """Get the filter bar for the current scope, or None if it doesn't have one."""
