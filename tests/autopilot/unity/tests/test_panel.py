@@ -1185,7 +1185,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.assertProperty(text_win, is_focused=False)
         self.assertProperty(calc_win, is_focused=True)
 
-        self.mouse.click_object(self.grab_area, button=1)
+        self.mouse.click_object(self.panel.grab_area, button=1)
         self.assertProperty(text_win, is_focused=True)
 
     def test_lower_the_maximized_window_works(self):
@@ -1196,7 +1196,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.assertProperty(text_win, is_focused=True)
         self.assertProperty(calc_win, is_focused=False)
 
-        self.mouse.click_object(self.grab_area, button=2)
+        self.mouse.click_object(self.panel.grab_area, button=2)
 
         self.assertProperty(calc_win, is_focused=True)
 
@@ -1206,7 +1206,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.addCleanup(self.unity.hud.ensure_hidden)
 
         self.keyboard.type("Hello")
-        self.mouse.click_object(self.grab_area)
+        self.mouse.click_object(self.panel.grab_area)
         self.keyboard.type("World")
 
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("HelloWorld")))
