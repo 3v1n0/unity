@@ -689,7 +689,7 @@ class DashVisualTests(DashTestCase):
 
         self.unity.dash.ensure_visible()
 
-        self.assertThat(self.unity.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
+        self.assertThat(self.unity.dash.view.x, Eventually(Equals(launcher.geometry.x + launcher.geometry.width - 1)))
 
 
     def test_see_more_result_alignment(self):
