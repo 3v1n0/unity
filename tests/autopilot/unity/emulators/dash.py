@@ -254,7 +254,6 @@ class ScopeView(UnityIntrospectionObject):
         """Get the filter bar for the current scope, or None if it doesn't have one."""
         bars = self.get_children_by_type(FilterBar)
         return bars[0] if bars else None
-        return None
 
 
 class PlacesGroup(UnityIntrospectionObject):

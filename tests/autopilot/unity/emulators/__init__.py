@@ -34,7 +34,7 @@ class UnityIntrospectionObject(CustomEmulatorBase):
             geostr = " geo=[{r.x}x{r.y} {r.width}x{r.height}]".format(r=self.globalRect)
 
         obj_details.strip()
-        obj_details = " "+obj_details if len(obj_details) else obj_details
+        obj_details = " "+obj_details if len(obj_details) else ""
 
         return "<{cls} {addr} id={id}{geo}{details}>".format(cls=self.__class__.__name__,
                                                              addr=hex(id(self)),
