@@ -78,8 +78,7 @@ class PanelTestsBase(UnityTestCase):
             self.keybinding("window/restore")
             self.addCleanup(self.keybinding, "window/maximize")
 
-        sleep(.25)
-        self.assertProperty(win, is_maximized=maximized)
+        self.assertThat(lambda: win.is_maximized, Eventually(Equals(maximized)))
 
     def open_new_application_window(self, app_name, maximized=False, move_to_monitor=True):
         """Opens a new instance of the requested application, ensuring that only
@@ -93,8 +92,8 @@ class PanelTestsBase(UnityTestCase):
         app = app_win.application
 
         app_win.set_focus()
-        self.assertTrue(app.is_active)
-        self.assertTrue(app_win.is_focused)
+        self.assertThat(lambda: app.is_active, Eventually(Equals(True)))
+        self.assertThat(lambda: app_win.is_focused, Eventually(Equals(True)))
         self.assertThat(app.desktop_file, Equals(app_win.application.desktop_file))
 
         if move_to_monitor:
@@ -985,7 +984,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     def open_app_and_get_menu_entry(self):
         """Open the test app and wait for the menu entry to appear."""
-        self.open_new_application_window("Remmina" if self.lim else "Calculator",
+        self.open_new_application_window("Text Editor" if self.lim else "Calculator",
                                          maximized=self.lim)
 
         refresh_fn = lambda: len(self.panel.menus.get_entries())
