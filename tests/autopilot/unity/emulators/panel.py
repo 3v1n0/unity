@@ -260,9 +260,12 @@ class WindowButton(UnityIntrospectionObject):
         self._mouse.move_to_object(self)
 
     def mouse_click(self):
-        if self.sensitive:
-            self._mouse.click_object(self)
-            sleep(.01)
+        # Ignore buttons that are placed at 0x0, as they're invisible yet
+        if not self.x and not self.y and not self.visible:
+            return
+
+        self._mouse.click_object(self)
+        sleep(.01)
 
     @property
     def geometry(self):
