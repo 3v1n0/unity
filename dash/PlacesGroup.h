@@ -127,6 +127,7 @@ private:
   void UpdatePlacesGroupSize();
   void UpdateResultViewPadding();
   void UpdateScale(double scale);
+  void UpdateVisibleItems(int visible_items);
 
 private:
   std::string _category_id;
