@@ -212,7 +212,12 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     if(direction == nux::KEY_NAV_UP)
       nux::GetWindowCompositor().SetKeyFocusArea(_child_view, direction);
     else
-      nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
+    {
+      if (IsExpandable())
+        nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
+      else
+        nux::GetWindowCompositor().SetKeyFocusArea(_child_view, direction);
+    }
   });
 
   UpdatePlacesGroupSize();
@@ -570,6 +575,12 @@ PlacesGroup::SetCounts(unsigned n_total_items)
 }
 
 bool
+PlacesGroup::IsExpandable() const
+{
+  return (_n_visible_items_in_unexpand_mode < _n_total_items);
+}
+
+bool
 PlacesGroup::GetExpanded() const
 {
   return _is_expanded;
@@ -652,7 +663,7 @@ nux::View* PlacesGroup::GetHeaderFocusableView() const
 
 bool PlacesGroup::ShouldBeHighlighted() const
 {
-  return HeaderHasKeyFocus();
+  return (HeaderHasKeyFocus() && IsExpandable());
 }
 
 void PlacesGroup::SetResultsPreviewAnimationValue(float preview_animation)

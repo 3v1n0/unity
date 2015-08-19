@@ -77,6 +77,7 @@ public:
 
   void SetCounts(unsigned n_total_items);
 
+  virtual bool IsExpandable() const;
   virtual void SetExpanded(bool is_expanded);
   virtual bool GetExpanded() const;
 
