@@ -1042,7 +1042,8 @@ class PanelIndicatorEntryTests(PanelTestsBase):
         self.assertThat(menu_entry.active, Eventually(Equals(True)))
 
         self.open_new_application_window("Text Editor")
-        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+        get_active_indicator_fn = lambda: self.unity.panels.get_active_indicator()
+        self.assertThat(get_active_indicator_fn, Eventually(Equals(None)))
 
     def test_indicator_opens_when_dash_is_open(self):
         """When the dash is open and a click is on an indicator the dash
@@ -1067,8 +1068,9 @@ class PanelKeyNavigationTests(PanelTestsBase):
         This method will wait until the active indicator has been set.
 
         """
-        self.assertThat(self.panel.get_active_indicator, Eventually(NotEquals(None)))
-        return self.panel.get_active_indicator()
+        get_active_indicator_fn = lambda: self.panel.get_active_indicator()
+        self.assertThat(get_active_indicator_fn, Eventually(NotEquals(None)))
+        return get_active_indicator_fn()
 
     def test_panel_first_menu_show_works(self):
         """Pressing the open-menus keybinding must open the first indicator."""
