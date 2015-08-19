@@ -80,7 +80,6 @@ public:
 
   virtual WindowType type() const = 0;
   virtual Window window_id() const = 0;
-  virtual int monitor() const = 0;
 
   // It is possible for this to be null, especially in situations where
   // the application is starting up or shutting down.
@@ -100,6 +99,8 @@ public:
   {
     return !(operator==(other));
   }
+
+  nux::ROProperty<int> monitor;
 
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;
@@ -121,7 +122,7 @@ public:
   // A string representation of the object.
   virtual std::string repr() const = 0;
 
-  virtual WindowList GetWindows() const = 0;
+  virtual WindowList const& GetWindows() const = 0;
   virtual bool OwnsWindow(Window window_id) const = 0;
 
   virtual std::vector<std::string> GetSupportedMimeTypes() const = 0;
