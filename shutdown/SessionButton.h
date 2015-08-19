@@ -52,6 +52,7 @@ public:
 
   nux::Property<double> scale;
   nux::Property<bool> highlighted;
+  nux::Property<bool> pressed;
   nux::ROProperty<Action> action;
   nux::ROProperty<std::string> label;
 

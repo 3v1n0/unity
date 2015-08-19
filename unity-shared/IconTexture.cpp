@@ -281,8 +281,10 @@ void IconTexture::GetTextureSize(int* width, int* height)
 
 void IconTexture::SetOpacity(float opacity)
 {
-  _opacity = opacity;
+  if (_opacity == opacity)
+    return;
 
+  _opacity = opacity;
   QueueDraw();
 }
 
