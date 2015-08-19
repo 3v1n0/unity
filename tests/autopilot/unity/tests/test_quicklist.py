@@ -269,7 +269,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
     def assertCorrectItemSelected(self, item):
         """Ensure the item considers itself selected and that quicklist agrees."""
         self.assertThat(item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
+        self.assertThat(self.quicklist.selected_item, Equals(item))
 
     def test_keynav_selects_first_item_when_unselected(self):
         """Home key MUST select the first selectable item in a quicklist."""
@@ -402,11 +402,11 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         # Moving the mouse horizontally doesn't change the selection
         self.mouse.move(mouse_item.x + mouse_item.width - 10, mouse_item.y + mouse_item.height / 2)
-        self.assertThat(self.quicklist.selected_item.id, Equals(key_item.id))
+        self.assertThat(self.quicklist.selected_item, Equals(key_item))
 
         # Moving the mouse outside doesn't change the selection
         self.mouse.move(mouse_item.x + mouse_item.width + 50, mouse_item.y + mouse_item.height / 2)
-        self.assertThat(self.quicklist.selected_item.id, Equals(key_item.id))
+        self.assertThat(self.quicklist.selected_item, Equals(key_item))
 
         # Moving the mouse to another entry, changes the selection
         mouse_item = self.quicklist.selectable_items[-2]
