@@ -629,6 +629,7 @@ class SwitcherDetailsMouseTests(SwitcherTestCase):
     def setUp(self):
         super(SwitcherDetailsMouseTests, self).setUp()
         self.set_timeout_setting(False)
+        self.mouse.move(0, 0, animate=False)
 
     def test_mouse_highlights_switcher_icons(self):
         """ Tests that the mouse can hightlight all the switcher icons. """
@@ -691,7 +692,7 @@ class SwitcherDetailsMouseTests(SwitcherTestCase):
 
         mouse_index = self.unity.switcher.selection_index - 1
 
-        self.unity.switcher.view.move_over_icon(mouse_index);
+        self.unity.switcher.view.move_over_icon(mouse_index)
         # Assert we are over the icon we want to hover over.
         self.assertThat(self.unity.switcher.view.last_icon_selected, Eventually(Equals(mouse_index)))
 
