@@ -677,7 +677,9 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
   // goes for 0.0f when fully unfolded, to 1.0f folded
   float folding_progress = CLAMP((center.y + c_icon_size - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f);
   float unfold_progress = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::UNFOLDED, monitor());
+  float active_progress = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::ACTIVE, monitor());
 
+  unfold_progress = CLAMP(unfold_progress + active_progress, 0.0f, 1.0f);
   folding_progress *= 1.0f - unfold_progress;
 
   float half_size = (folded_size / 2.0f) + (c_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
@@ -779,9 +781,12 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     sum += height;
 
     // magic constant must some day be explained, for now suffice to say this constant prevents the bottom from "marching";
-    float magic_constant = 1.3f;
+    const float magic_constant = 1.3f;
 
     float unfold_progress = (*it)->GetQuirkProgress(AbstractLauncherIcon::Quirk::UNFOLDED, monitor());
+    float active_progress = (*it)->GetQuirkProgress(AbstractLauncherIcon::Quirk::ACTIVE, monitor());
+
+    unfold_progress = CLAMP(unfold_progress + active_progress, 0.0f, 1.0f);
     folding_threshold -= CLAMP(sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * unfold_progress);
   }
 
@@ -1597,6 +1602,7 @@ void Launcher::SetupIconAnimations(AbstractLauncherIcon::Ptr const& icon)
 {
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::VISIBLE, ANIM_DURATION_SHORT, monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::RUNNING, ANIM_DURATION_SHORT, monitor());
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::ACTIVE, ANIM_DURATION_SHORT, monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::STARTING, (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PULSE_ONCE, (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PRESENTED, ANIM_DURATION, monitor());
