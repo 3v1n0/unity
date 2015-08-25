@@ -85,11 +85,11 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   EnableDoubleClick(true);
   SetAcceptKeyNavFocusOnMouseDown(false);
 
-  auto needredraw_lambda = [this](int value) { NeedRedraw(); };
-  horizontal_spacing.changed.connect(needredraw_lambda);
-  vertical_spacing.changed.connect(needredraw_lambda);
-  padding.changed.connect(needredraw_lambda);
-  selected_index_.changed.connect(needredraw_lambda);
+  auto queue_draw_cb = sigc::hide(sigc::mem_fun(this, &ResultViewGrid::QueueDraw));
+  horizontal_spacing.changed.connect(queue_draw_cb);
+  vertical_spacing.changed.connect(queue_draw_cb);
+  padding.changed.connect(queue_draw_cb);
+  selected_index_.changed.connect(queue_draw_cb);
   expanded.changed.connect([this](bool value) { if (value) all_results_preloaded_ = false; });
   results_per_row.changed.connect([this](int value) { if (value > 0) all_results_preloaded_ = false; });
   scale.changed.connect(sigc::mem_fun(this, &ResultViewGrid::UpdateScale));
@@ -119,7 +119,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     NeedRedraw();
   });
 
-  WindowManager::Default().average_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
+  WindowManager::Default().average_color.changed.connect(queue_draw_cb);
 
   ubus_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [this] (GVariant* data) {
     // on dash size changed, we update our stored values, this sucks
