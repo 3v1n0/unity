@@ -384,7 +384,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
             self.drag_type)
         moved_icon = self.unity.launcher.model.\
                      get_launcher_icons_for_monitor(self.launcher_monitor)[1]
-        self.assertThat(moved_icon.id, Equals(calc_icon.id))
+        self.assertThat(moved_icon, Equals(calc_icon))
 
     def test_can_drag_icon_below_window_switcher(self):
         """Application icons must be dragable to below the workspace switcher icon."""

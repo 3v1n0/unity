@@ -58,10 +58,6 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
 
         return self.xids.contains(xid)
 
-    def __repr__(self):
-        with self.no_automatic_refreshing():
-            return "<%s id=%d>" % (self.__class__.__name__, self.id)
-
 
 class BFBLauncherIcon(SimpleLauncherIcon):
     """Represents the BFB button in the launcher."""
@@ -80,10 +76,7 @@ class ApplicationLauncherIcon(SimpleLauncherIcon):
 
     def __repr__(self):
         with self.no_automatic_refreshing():
-            return "<%s %s id=%d>" % (
-                self.__class__.__name__,
-                self.desktop_id,
-                self.id)
+            return self._repr_string("{0.desktop_id}".format(self))
 
 class TrashLauncherIcon(SimpleLauncherIcon):
     """Represents the trash launcher icon."""
@@ -110,7 +103,7 @@ class HudEmbeddedIcon(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        return (self.x, self.y, self.width, self.height)
+        return self.globalRect
 
 
 class LauncherEntry(UnityIntrospectionObject):
