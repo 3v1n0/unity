@@ -287,8 +287,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   if (renderer.find("Software Rasterizer") != std::string::npos ||
       renderer.find("Mesa X11") != std::string::npos ||
-      renderer.find("LLVM") != std::string::npos ||
-      renderer.find("on softpipe") != std::string::npos ||
+      renderer.find("llvmpipe") != std::string::npos ||
+      renderer.find("softpipe") != std::string::npos ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1) ||
       optionGetLowGraphicsMode())
     {
