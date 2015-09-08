@@ -45,8 +45,7 @@ struct TestScreenSaverDBusManager : Test
                                                  "/org/gnome/ScreenSaver",
                                                  "org.gnome.ScreenSaver");
 
-    Utils::WaitUntilMSec([this
-      ] { return gs_proxy->IsConnected(); });
+    Utils::WaitUntilMSec([this] { return gs_proxy->IsConnected(); });
   }
 
   struct WrapperDBusManager : DBusManager
@@ -141,7 +140,6 @@ TEST_F(TestScreenSaverDBusManager, GetActive)
 
   /* simulate SetActive */
   sc_dbus_manager->active = true;
-  //sc_dbus_manager->active.changed.emit(true);
 
   call_finished = false;
   gs_proxy->Call("GetActive", nullptr, get_active_cb);
