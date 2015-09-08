@@ -346,6 +346,7 @@ private:
   int launcher_drag_delta_max_;
   int launcher_drag_delta_min_;
   int enter_y_;
+  int enter_x_;
   int last_button_press_;
   int drag_icon_position_;
   int urgent_animation_period_;

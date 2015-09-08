@@ -439,10 +439,13 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, ui::IconTextureSource::TRANSFORM_GLOW);
 
-    w = geo.width + 2;
-    h = icon_size + spacing;
+//    w = geo.width + 2;
+//    h = icon_size + spacing;
+    h = geo.height + 2;
+    w = icon_size + spacing;
     if (i == (int) args.size() - 1)
-      h += 4;
+//      h += 4;
+      w += 4;
     x = it->logical_center.x - w / 2.0f;
     y = it->logical_center.y - h / 2.0f;
     z = it->logical_center.z;
@@ -1023,22 +1026,27 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
                                     float alpha,
                                     nux::Geometry const& geo)
 {
-  int markerCenter = (int) arg.render_center.y;
-  markerCenter -= (int)(arg.rotation.x / (2 * M_PI) * icon_size);
+//  int markerCenter = (int) arg.render_center.y;
+//  markerCenter -= (int)(arg.rotation.x / (2 * M_PI) * icon_size);
+
+  int markerCenter = (int) arg.render_center.x;
+
+  if (pip_style == OUTSIDE_TILE)
+    markerCenter += (int)(arg.rotation.y / (2 * M_PI) * icon_size);
 
   if (running > 0)
   {
-    int markerX;
+//    int markerX;
 
-    if (pip_style == OUTSIDE_TILE)
-    {
-      markerX = geo.x;
-    }
-    else
-    {
-      auto const& bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
-      markerX = bounds[0].x + 1;
-    }
+//    if (pip_style == OUTSIDE_TILE)
+//    {
+//      markerX = geo.x;
+//    }
+//    else
+//    {
+//      auto const& bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
+//      markerX = bounds[0].x + 1;
+//    }
 
     nux::TexCoordXForm texxform;
     nux::Color color = nux::color::LightGrey;
@@ -1086,14 +1094,31 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
       markers[2] = markerCenter + offset;
     }
 
+    int markerY;
+    if (pip_style == OUTSIDE_TILE)
+    {
+        markerY = (geo.y + geo.height) - texture->GetHeight();
+    }
+    else
+    {
+        auto const& bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
+
+        markerY = (bounds[2].y - (texture->GetHeight()*scale));
+    }
+
     for (int i = 0; i < 3; i++)
     {
       int center = markers[i];
       if (center == -100)
         break;
 
-      GfxContext.QRP_1Tex(markerX,
-                          center - std::round(texture->GetHeight() / 2.0f),
+      if (!texture)
+        continue;
+
+//      GfxContext.QRP_1Tex(markerX,
+//                          center - std::round(texture->GetHeight() / 2.0f),
+      GfxContext.QRP_1Tex(center - std::round(texture->GetWidth() / 2.0f),
+                          markerY,
                           texture->GetWidth(),
                           texture->GetHeight(),
                           texture->GetDeviceTexture(),
@@ -1108,8 +1133,10 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     auto const& arrow_rtl = local_textures_->arrow_rtl;
     nux::Color color = nux::color::LightGrey * alpha;
-    GfxContext.QRP_1Tex((geo.x + geo.width) - arrow_rtl->GetWidth(),
-                        markerCenter - std::round(arrow_rtl->GetHeight() / 2.0f),
+//    GfxContext.QRP_1Tex((geo.x + geo.width) - arrow_rtl->GetWidth(),
+//                        markerCenter - std::round(arrow_rtl->GetHeight() / 2.0f),
+    GfxContext.QRP_1Tex(markerCenter - std::round(arrow_rtl->GetWidth() / 2.0f),
+                        geo.y,
                         arrow_rtl->GetWidth(),
                         arrow_rtl->GetHeight(),
                         arrow_rtl->GetDeviceTexture(),
@@ -1268,7 +1295,8 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
   float x_cs = y_cs * AspectRatio;
 
   ViewMatrix = nux::Matrix4::TRANSLATE(-x_cs, y_cs, CameraToScreenDistance) *
-               nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * 3 * y_cs / ViewportHeight /* or -2.0f * x_cs/ViewportWidth*/);
+//               nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * 3 * y_cs / ViewportHeight /* or -2.0f * x_cs/ViewportWidth*/);
+               nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * x_cs / ViewportWidth /* or -2.0f * x_cs/ViewportWidth*/);
 
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
 }
