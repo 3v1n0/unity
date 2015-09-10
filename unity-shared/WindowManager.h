@@ -83,6 +83,7 @@ public:
   virtual bool IsWindowMaximized(Window window_id) const = 0;
   virtual bool IsWindowVerticallyMaximized(Window window_id) const = 0;
   virtual bool IsWindowHorizontallyMaximized(Window window_id) const = 0;
+  virtual bool IsWindowFullscreen(Window window_id) const = 0;
   virtual bool IsWindowDecorated(Window window_id) const = 0;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const = 0;
   virtual bool IsWindowObscured(Window window_id) const = 0;
@@ -185,6 +186,8 @@ public:
   sigc::signal<void, Window> window_restored;
   sigc::signal<void, Window> window_minimized;
   sigc::signal<void, Window> window_unminimized;
+  sigc::signal<void, Window> window_fullscreen;
+  sigc::signal<void, Window> window_unfullscreen;
   sigc::signal<void, Window> window_shaded;
   sigc::signal<void, Window> window_unshaded;
   sigc::signal<void, Window> window_shown;

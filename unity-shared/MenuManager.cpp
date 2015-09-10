@@ -61,6 +61,7 @@ struct Manager::Impl : sigc::trackable
     indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::AddIndicator));
     indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::RemoveIndicator));
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
+    indicators_->on_entry_activated.connect(sigc::mem_fun(this, &Impl::EntryActivated));
     indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
     WindowManager::Default().window_focus_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::GrabMnemonicsForActiveWindow)));
 
@@ -73,6 +74,7 @@ struct Manager::Impl : sigc::trackable
 
     parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
     parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
+    parent_->menu_open = indicators_->GetActiveEntry() != nullptr;
   }
 
   ~Impl()
@@ -173,6 +175,11 @@ struct Manager::Impl : sigc::trackable
   void ActivateRequest(std::string const& entry_id)
   {
     parent_->key_activate_entry.emit(entry_id);
+  }
+
+  void EntryActivated(std::string const&, std::string const&, nux::Rect const& geo)
+  {
+    parent_->menu_open = !geo.IsNull();
   }
 
   void SetShowNowForWindow(Window xid, bool show)

@@ -378,11 +378,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         self.move_mouse_to_icon(icon)
         self._mouse.press()
-        sleep(2)
+        sleep(1)
 
         if drag_type == IconDragType.OUTSIDE:
             shift_over = self._mouse.x + (icon_height * 2)
-            self._mouse.move(shift_over, self._mouse.y)
+            self._mouse.move(shift_over, self._mouse.y, rate=20, time_between_events=0.005)
             sleep(0.5)
 
         self.move_mouse_to_icon(target)
@@ -393,8 +393,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if pos == IconDragType.BEFORE:
             target_y -= icon_height + (icon_height / 2)
 
-        self._mouse.move(self._mouse.x, target_y)
-        sleep(0.5)
+        self._mouse.move(self._mouse.x, target_y, rate=20, time_between_events=0.005)
+        sleep(1)
         self._mouse.release()
         self.move_mouse_to_right_of_launcher()
 

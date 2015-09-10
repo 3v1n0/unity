@@ -105,6 +105,7 @@ private:
   void OnWindowMapped(Window xid);
   void OnWindowMaximized(Window xid);
   void OnWindowRestored(Window xid);
+  void OnWindowUnFullscreen(Window xid);
   void OnWindowMoved(Window xid);
   void OnShowDesktopChanged();
 
