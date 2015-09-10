@@ -1,3 +1,26 @@
+unity (7.3.2+15.10.20150910.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Add unit tests for unity::lockscreen::DBusManager.
+  * Add/Update tests for gnome session manager.
+  * Do not allow shutdown when screen is locked. (LP: #1460626)
+  * Make sure we update the maximized window when "show
+    desktop"/"restore desktop". (LP: #1485559)
+  * Merge patch from https://launchpadlibrarian.net/216192448/llvm-
+    fix.patch (LP: #1491555)
+  * Merge patch from https://launchpadlibrarian.net/216276242/low-gfx-
+    override.patch (LP: #1491913)
+
+  [ Andrea Azzarone azzaronea@gmail.com ]
+  * Properly hide decorations when on "Show Desktop" mode. (LP:
+    #1485073)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: force shell to be on top when there's a window
+    fullscreen and we've a menu open. (LP: #591189)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 10 Sep 2015 15:37:46 +0000
+
 unity (7.3.2+15.10.20150825-0ubuntu1) wily; urgency=medium
 
   [ Andrea Azzarone andrea.azzarone@canonical.com ]
