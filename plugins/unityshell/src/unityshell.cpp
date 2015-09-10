@@ -290,10 +290,15 @@ UnityScreen::UnityScreen(CompScreen* screen)
       renderer.find("LLVM") != std::string::npos ||
       renderer.find("on softpipe") != std::string::npos ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1) ||
-      optionGetLowGraphicsMode())
+       optionGetLowGraphicsMode())
     {
       unity_settings_.SetLowGfxMode(true);
     }
+
+  if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
+  {
+    unity_settings_.SetLowGfxMode(false);
+  }
 #endif
 
   if (!failed)
