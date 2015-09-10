@@ -775,7 +775,10 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
   mock_app->windows_ = { win1, win2 };
   WM->AddStandaloneWindow(wm_win1);
   WM->AddStandaloneWindow(wm_win2);
+
+  win2->Focus();
   ASSERT_TRUE(wm_win2->active());
+  ASSERT_TRUE(win2->active());
 
   auto const& menus = mock_icon->Menus();
   auto const& menu1 = GetMenuItemWithLabel(menus, win1->title());
@@ -1121,10 +1124,10 @@ TEST_F(TestApplicationLauncherIcon, IsFileManager)
 
 TEST_F(TestApplicationLauncherIcon, AllowDetailViewInSwitcher)
 {
-  mock_app->type_ = "mock";
+  mock_app->type_ = AppType::NORMAL;
   EXPECT_TRUE(mock_icon->AllowDetailViewInSwitcher());
 
-  mock_app->type_ = "webapp";
+  mock_app->type_ = AppType::WEBAPP;
   EXPECT_FALSE(mock_icon->AllowDetailViewInSwitcher());
 }
 

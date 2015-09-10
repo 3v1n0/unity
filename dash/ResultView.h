@@ -58,12 +58,11 @@ struct ResultViewTexture
 class ResultView : public nux::View, public debug::Introspectable
 {
 public:
-  typedef enum ActivateType_
+  enum class ActivateType
   {
     DIRECT,
-    PREVIEW_LEFT_BUTTON,
     PREVIEW
-  } ActivateType;
+  };
 
   NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
 
@@ -73,8 +72,9 @@ public:
   void SetModelRenderer(ResultRenderer* renderer);
   void SetResultsModel(Results::Ptr const& results);
 
-  unsigned int GetIndexForLocalResult(LocalResult const& local_result);
+  unsigned int GetIndexForLocalResult(LocalResult const&);
   LocalResult GetLocalResultForIndex(unsigned int);
+  ActivateType GetLocalResultActivateType(LocalResult const&) const;
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
@@ -82,6 +82,7 @@ public:
   nux::Property<float> desaturation_progress;
   nux::Property<bool> enable_texture_render;
   nux::Property<double> scale;
+  nux::RWProperty<ActivateType> default_click_activation;
 
   sigc::signal<void, LocalResult const&, ActivateType, GVariant*> ResultActivated;
 
@@ -130,6 +131,7 @@ private:
   void UpdateFontScale(double scale);
 
   Result cached_result_;
+  ActivateType default_click_activation_;
   connection::Manager result_connections_;
 };
 

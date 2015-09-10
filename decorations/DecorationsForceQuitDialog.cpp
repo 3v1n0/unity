@@ -168,7 +168,6 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
   auto* screen = gtk_window_get_screen(self);
   gtk_widget_set_visual(GTK_WIDGET(self), gdk_screen_get_rgba_visual(screen));
   gtk_widget_realize(GTK_WIDGET(self));
-  gtk_widget_override_background_color(GTK_WIDGET(self), GTK_STATE_FLAG_NORMAL, nullptr);
 
   gtk_container_add(GTK_CONTAINER(self), sheet_style_dialog_new(main_dialog, parent_xid, parent_pid));
 
@@ -316,9 +315,15 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
   gtk_container_add(GTK_CONTAINER(main_box), content_box);
 
   auto* title = gtk_label_new(_("This window is not responding"));
-  auto* font_desc = pango_font_description_from_string("Ubuntu 17");
-  gtk_widget_override_font(title, font_desc);
-  pango_font_description_free(font_desc);
+  glib::Object<GtkCssProvider> title_style(gtk_css_provider_new());
+  gtk_css_provider_load_from_data(title_style, (R"(
+  GtkLabel {
+    font-size: 17px;
+  })"), -1, nullptr);
+  style_ctx = gtk_widget_get_style_context(title);
+  gtk_style_context_add_provider(style_ctx, glib::object_cast<GtkStyleProvider>(title_style), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  gtk_style_context_add_class(style_ctx, "unity-force-quit");
+
   gtk_widget_set_halign(title, GTK_ALIGN_START);
   gtk_box_pack_start(GTK_BOX(content_box), title, FALSE, FALSE, 0);
 
@@ -330,6 +335,9 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
   gtk_box_set_spacing(GTK_BOX(buttons_box), 15);
   gtk_container_set_border_width(GTK_CONTAINER(buttons_box), 5);
   gtk_button_box_set_layout(GTK_BUTTON_BOX(buttons_box), GTK_BUTTONBOX_END);
+  gtk_widget_set_halign(GTK_WIDGET(buttons_box), GTK_ALIGN_END);
+  gtk_widget_set_valign(GTK_WIDGET(buttons_box), GTK_ALIGN_END);
+  gtk_widget_set_margin_top(GTK_WIDGET(buttons_box), 20);
 
   auto* wait_button = gtk_button_new_with_mnemonic(_("_Wait"));
   gtk_container_add(GTK_CONTAINER(buttons_box), wait_button);
@@ -344,14 +352,7 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
                         kill_data, [] (gpointer data, GClosure*) { g_free(data); },
                         static_cast<GConnectFlags>(0));
 
-  // FIXME Look at moving to non deprecated functions
-  G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-  auto* buttons_aligment = gtk_alignment_new(1, 1, 0, 0);
-  gtk_alignment_set_padding(GTK_ALIGNMENT(buttons_aligment), 20, 0, 0, 0);
-  gtk_container_add(GTK_CONTAINER(buttons_aligment), buttons_box);
-  gtk_container_add(GTK_CONTAINER(content_box), buttons_aligment);
-  G_GNUC_END_IGNORE_DEPRECATIONS
-
+  gtk_container_add(GTK_CONTAINER(content_box), buttons_box);
   gtk_container_add(GTK_CONTAINER(self), main_box);
 
   return self;

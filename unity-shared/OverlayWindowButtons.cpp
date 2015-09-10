@@ -36,9 +36,9 @@ OverlayWindowButtons::OverlayWindowButtons()
   : nux::BaseWindow("OverlayWindowButtons")
   , window_buttons_(new WindowButtons())
 {
-  window_buttons_->queue_draw.connect([this] (nux::Layout* /*layout*/) {
-    QueueDraw();
-  });
+  auto queue_draw = sigc::hide(sigc::mem_fun(this, &OverlayWindowButtons::QueueDraw));
+  window_buttons_->queue_draw.connect(queue_draw);
+  window_buttons_->child_queue_draw.connect(queue_draw);
 
   AddChild(window_buttons_.GetPointer());
   UpdateGeometry();

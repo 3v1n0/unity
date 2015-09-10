@@ -94,11 +94,7 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
 
   uscreen->changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnUScreenChanged));
 
-  parent_->force_disable.changed.connect([this] (bool) {
-    auto monitors = UScreen::GetDefault()->GetMonitors();
-    ResizeBarrierList(monitors);
-    SetupBarriers(monitors);
-  });
+  parent_->force_disable.changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnForceDisableChanged));
 
   parent_->sticky_edges.SetGetterFunction([this] {
     return parent_->options() ? parent_->options()->edge_resist() : false;
@@ -134,6 +130,13 @@ void EdgeBarrierController::Impl::OnUScreenChanged(int primary, std::vector<nux:
 {
   ResizeBarrierList(layout);
   SetupBarriers(layout);
+}
+
+void EdgeBarrierController::Impl::OnForceDisableChanged(bool value)
+{
+  auto monitors = UScreen::GetDefault()->GetMonitors();
+  ResizeBarrierList(monitors);
+  SetupBarriers(monitors);
 }
 
 void EdgeBarrierController::Impl::OnOptionsChanged()

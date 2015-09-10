@@ -39,24 +39,29 @@
 #include "PanelView.h"
 #include "DashView.h"
 #include "PlacesGroup.h"
+#include "ExpanderView.h"
 #include "QuicklistView.h"
 #include "QuicklistMenuItem.h"
 #include "SwitcherView.h"
 #include "TextInput.h"
 #include "SessionButton.h"
+#include "FilterBasicButton.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
 #include "unity-dash-view-accessible.h"
+#include "unity-scope-bar-icon-accessible.h"
 #include "unity-search-bar-accessible.h"
 #include "unity-sctext-accessible.h"
 #include "unity-rvgrid-accessible.h"
 #include "unity-places-group-accessible.h"
+#include "unity-expander-view-accessible.h"
 #include "unity-quicklist-accessible.h"
 #include "unity-quicklist-menu-item-accessible.h"
 #include "unity-switcher-accessible.h"
 #include "unity-text-input-accessible.h"
 #include "unity-session-button-accessible.h"
+#include "unity-filter-basic-button-accessible.h"
 
 using namespace unity;
 using namespace unity::dash;
@@ -171,8 +176,17 @@ unity_a11y_create_accessible(nux::Object* object)
   if (object->Type().IsDerivedFromType(DashView::StaticObjectType))
     return unity_dash_view_accessible_new(object);
 
+  if (object->Type().IsDerivedFromType(ScopeBarIcon::StaticObjectType))
+    return unity_scope_bar_icon_accessible_new(object);
+
   if (object->Type().IsDerivedFromType(PlacesGroup::StaticObjectType))
     return unity_places_group_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(ExpanderView::StaticObjectType))
+   return unity_expander_view_accessible_new(object);
+
+  if (object->Type().IsDerivedFromType(FilterBasicButton::StaticObjectType))
+    return unity_filter_basic_button_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(QuicklistView::StaticObjectType))
     return unity_quicklist_accessible_new(object);

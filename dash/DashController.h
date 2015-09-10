@@ -21,7 +21,6 @@
 
 #include <memory>
 
-#include <gdk/gdk.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibSignal.h>

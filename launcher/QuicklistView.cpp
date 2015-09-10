@@ -653,6 +653,16 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist(int x, int y, unsigned long 
   Hide();
 }
 
+nux::Area* QuicklistView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+  if (mouse_position.x > _anchorX)
+  {
+    return (CairoBaseWindow::FindAreaUnderMouse(mouse_position, event_type));
+  }
+
+  return nullptr;
+}
+
 void QuicklistView::RemoveAllMenuItem()
 {
   _item_layout->Clear();

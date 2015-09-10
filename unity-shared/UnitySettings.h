@@ -56,6 +56,7 @@ public:
   nux::Property<unsigned> lim_double_click_wait;
   nux::Property<bool> lim_unfocused_popup;
   nux::Property<double> font_scaling;
+  nux::ROProperty<bool> remote_content;
 
   sigc::signal<void> dpi_changed;
   sigc::signal<void> low_gfx_changed;

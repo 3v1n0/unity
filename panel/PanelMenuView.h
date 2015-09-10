@@ -22,12 +22,11 @@
 #define PANEL_MENU_VIEW_H
 
 #include <NuxCore/Animation.h>
-#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
-#include <libbamf/libbamf.h>
 
 #include "PanelIndicatorsView.h"
 #include "PanelTitlebarGrabAreaView.h"
+#include "unity-shared/ApplicationManager.h"
 #include "unity-shared/MenuManager.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/WindowButtons.h"
@@ -88,20 +87,17 @@ private:
 
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnEntryViewAdded(PanelIndicatorEntryView* view);
-  void OnViewOpened(BamfMatcher* matcher, BamfView* view);
-  void OnViewClosed(BamfMatcher* matcher, BamfView* view);
-  void OnApplicationClosed(BamfApplication* app);
-  void OnActiveWindowChanged(BamfMatcher* matcher, BamfView* old_view, BamfView* new_view);
-  void OnActiveAppChanged(BamfMatcher* matcher, BamfApplication* old_app, BamfApplication* new_app);
-  void OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name);
+  void OnApplicationStarted(ApplicationPtr const&);
+  void OnApplicationClosed(ApplicationPtr const&);
+  void OnWindowClosed(ApplicationWindowPtr const&);
+  void OnActiveWindowChanged(ApplicationWindowPtr const&);
+  void OnActiveAppChanged(ApplicationPtr const&);
   void OnStyleChanged();
   void OnLIMChanged(bool);
   void OnAlwaysShowMenusChanged(bool);
 
   void OnSpreadInitiate();
   void OnSpreadTerminate();
-  void OnExpoInitiate();
-  void OnExpoTerminate();
   void OnWindowMinimized(Window xid);
   void OnWindowUnminimized(Window xid);
   void OnWindowUnmapped(Window xid);
@@ -110,6 +106,7 @@ private:
   void OnWindowRestored(Window xid);
   void OnWindowUnFullscreen(Window xid);
   void OnWindowMoved(Window xid);
+  void OnShowDesktopChanged();
 
   void OnMaximizedActivate(int x, int y);
   void OnMaximizedDoubleClicked(int x, int y);
@@ -123,6 +120,7 @@ private:
   void FullRedraw();
   std::string GetCurrentTitle() const;
   bool Refresh(bool force = false);
+  void RefreshAndRedraw();
 
   void UpdateTitleTexture(nux::Geometry const&, std::string const& label);
   void UpdateLastGeometry(nux::Geometry const& geo);
@@ -131,8 +129,6 @@ private:
 
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
-
-  BamfWindow* GetBamfWindowForXid(Window xid) const;
 
   void OnSwitcherShown(GVariant* data);
   void OnLauncherKeyNavStarted(GVariant* data);
@@ -165,7 +161,6 @@ private:
   void ActivateIntegratedMenus(nux::Point const&);
 
   menu::Manager::Ptr menu_manager_;
-  glib::Object<BamfMatcher> matcher_;
 
   nux::TextureLayer* title_layer_;
   nux::ObjectPtr<WindowButtons> window_buttons_;
@@ -180,8 +175,8 @@ private:
 
   PanelIndicatorEntryView* last_active_view_;
   std::deque<Window> maximized_wins_;
-  glib::Object<BamfApplication> new_application_;
-  std::list<glib::Object<BamfApplication>> new_apps_;
+  ApplicationPtr new_application_;
+  std::list<ApplicationPtr> new_apps_;
   std::string panel_title_;
   nux::Geometry last_geo_;
   nux::Geometry title_geo_;
@@ -199,12 +194,8 @@ private:
   nux::Geometry monitor_geo_;
   const std::string desktop_name_;
 
-  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
-  glib::Signal<void, BamfMatcher*, BamfView*> view_closed_signal_;
-  glib::Signal<void, BamfMatcher*, BamfView*, BamfView*> active_win_changed_signal_;
-  glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> active_app_changed_signal_;
-  glib::Signal<void, BamfView*, gchar*, gchar*> view_name_changed_signal_;
-  glib::Signal<void, BamfView*, gchar*, gchar*> app_name_changed_signal_;
+  connection::Wrapper app_name_changed_conn_;
+  connection::Wrapper win_name_changed_conn_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;

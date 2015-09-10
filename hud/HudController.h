@@ -22,7 +22,6 @@
 #include <functional>
 #include <memory>
 
-#include <gdk/gdk.h>
 #include <UnityCore/Hud.h>
 #include <UnityCore/GLibSignal.h>
 

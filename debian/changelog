@@ -1,3 +1,85 @@
+unity (7.3.2+15.10.20150803.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Enable building unity form source with gcc5.
+  * Fixes that enable building unity from sources with cmake3 (wily).
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Stephen M. Webb ]
+  * unity-shared/DebugDBusInterface.cpp: include <iostream> to fix a
+    FTBFS
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 03 Aug 2015 12:35:24 +0000
+
+unity (7.3.2+15.10.20150627.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Fix a regression with urgent icons not showing up if launcher is
+    hidden. (LP: #1450991)
+  * Make sure new icons are added to the model before calling
+    SortAndUpdate. (LP: #1458950)
+  * This likely could fix
+    https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1451613. At
+    least the backtraces posted there suggest this. But I think that
+    those backtraces are just leftovers of old crashes-on-unloading.
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Chris Townsend ]
+  * Allow mouse clicks that are not in the visible area of the Quicklist
+    to pass through down to the Launcher icon. Fixes a failing AP test.
+    (LP: #1456245)
+
+  [ Luke Yelavich ]
+  * Implement filter results controls accessibility (LP: #1457071)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: add missing features, keep a copy of views
+    around
+  * DecorationsForceQuitDialog: remove deprecated override style
+    functions, use CSS
+  * GnomeSessionManager: Request ScreenSaver (de)activation on VT
+    changes (LP: #1405349)
+  * OverlayWindowButtons: trigger a queuedraw also when a child requires
+    a redraw (LP: #1461618)
+  * PanelMenuView: connect to target window / application title changes
+    (LP: #1418449)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Sat, 27 Jun 2015 04:44:56 +0000
+
+unity (7.3.2+15.10.20150522-0ubuntu1) wily; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Chris Townsend ]
+  * Add necessary signaling to set the BFB icon's tooltip and the Home
+    Scope's default search string to accurately reflect if searching
+    online is enabled or disabled in unity-system-settings. (LP:
+    #1202160, #1101662)
+  * Enable real page up/page down key navigation in the Dash. When using
+    these keys the view scrolls the length of the visible view. (LP:
+    #913612)
+  * If Spread/Expo is active, then terminate it when entering Launcher
+    keynav mode. (LP: #1447810)
+  * If dragging an application:// uri type from the Dash to the desktop,
+    change it to a file:// uri type so Nautilus can understand the type
+    a make a copy of it on the desktop. (LP: #1241972)
+  * Wait on Spread to be terminated before showing the Quicklist. (LP:
+    #1441626)
+
+  [ Luke Yelavich ]
+  * Implement scope bar icon accessibility (LP: #1457073)
+
+  [ Marco Trevisan (Treviño) ]
+  * ResultViewGrid: wait for double-click event only if the relative
+    result needs the Preview (LP: #1447372, #1291950)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 22 May 2015 13:21:14 +0000
+
 unity (7.3.2+15.10.20150512-0ubuntu1) wily; urgency=medium
 
   [ Chris Townsend ]

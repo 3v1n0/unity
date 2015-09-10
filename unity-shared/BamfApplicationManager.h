@@ -20,6 +20,7 @@
 #ifndef UNITYSHARED_BAMF_APPLICATION_MANAGER_H
 #define UNITYSHARED_BAMF_APPLICATION_MANAGER_H
 
+#include <unordered_map>
 #include <libbamf/libbamf.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
@@ -39,7 +40,6 @@ public:
 
   std::string GetTitle() const;
   std::string GetIcon() const;
-  std::string type() const;
 
   bool GetVisible() const;
   bool GetActive() const;
@@ -59,11 +59,15 @@ protected:
              glib::Object<BamfView> const& window);
 
 public:
-  virtual std::string type() const; // 'window' or 'tab'
+  bool Focus() const override;
 
-  virtual bool Focus() const;
+  bool operator==(unity::ApplicationWindow const& other) const override
+  {
+    return static_cast<WindowBase const*>(this)->bamf_view_ == static_cast<WindowBase  const&>(other).bamf_view_;
+  }
+  bool operator!=(unity::ApplicationWindow const& other) const override { return !(operator==(other)); }
 
-private:
+protected:
   glib::SignalManager signals_;
 };
 
@@ -76,10 +80,12 @@ public:
   AppWindow(ApplicationManager const& manager,
             glib::Object<BamfView> const& window);
 
-  virtual Window window_id() const;
-  virtual int monitor() const;
-  virtual ApplicationPtr application() const;
-  virtual void Quit() const;
+  WindowType type() const override;
+  Window window_id() const override;
+  int monitor() const override;
+  ApplicationPtr application() const override;
+  void Quit() const override;
+  bool GetMaximized() const;
 
 private:
   glib::Object<BamfWindow> bamf_window_;
@@ -93,11 +99,12 @@ public:
   Tab(ApplicationManager const& manager,
       glib::Object<BamfView> const& tab);
 
-  virtual Window window_id() const;
-  virtual int monitor() const;
-  virtual ApplicationPtr application() const;
-  virtual bool Focus() const;
-  virtual void Quit() const;
+  WindowType type() const override;
+  Window window_id() const override;
+  int monitor() const override;
+  ApplicationPtr application() const override;
+  bool Focus() const override;
+  void Quit() const override;
 
 private:
   glib::Object<BamfTab> bamf_tab_;
@@ -112,7 +119,7 @@ public:
   Application(ApplicationManager const& manager,
               glib::Object<BamfView> const& app);
 
-  virtual std::string type() const;
+  virtual AppType type() const;
 
   virtual WindowList GetWindows() const;
   virtual bool OwnsWindow(Window window_id) const;
@@ -128,9 +135,13 @@ public:
 
   virtual std::string repr() const;
 
-private: // Property getters and setters
-  void HookUpEvents();
+  bool operator==(unity::Application const& other) const override
+  {
+    return static_cast<Application const*>(this)->bamf_app_ == static_cast<Application const&>(other).bamf_app_;
+  }
+  bool operator!=(unity::Application const& other) const override { return !(operator==(other)); }
 
+private: // Property getters and setters
   std::string GetDesktopFile() const;
 
   bool GetSeen() const;
@@ -152,13 +163,20 @@ public:
   ~Manager();
 
   ApplicationPtr GetUnityApplication() const override;
+  ApplicationPtr GetActiveApplication() const override;
   ApplicationWindowPtr GetActiveWindow() const override;
   ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const override;
   ApplicationList GetRunningApplications() const override;
+  WindowList GetWindowsForMonitor(int monitor = -1) const override;
   ApplicationPtr GetApplicationForWindow(Window xid) const override;
+  ApplicationWindowPtr GetWindowForId(Window xid) const override;
+
+  ApplicationPtr EnsureApplication(BamfView*) const;
+  ApplicationWindowPtr EnsureWindow(BamfView*) const;
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
+  void OnViewClosed(BamfMatcher* matcher, BamfView* view);
 
 private:
   glib::Object<BamfMatcher> matcher_;

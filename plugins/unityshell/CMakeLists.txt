@@ -26,7 +26,6 @@ add_dependencies(unityshell
                  decorations-lib
                  hud-lib
                  launcher-lib
-                 pam
                  lockscreen-lib
                  panel-lib
                  shortcuts-lib

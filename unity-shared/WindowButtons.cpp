@@ -64,6 +64,7 @@ void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
   if (new_state != visual_state_)
   {
     visual_state_ = new_state;
+    visual_state_change.emit(this);
     QueueDraw();
   }
 }

@@ -24,9 +24,8 @@
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <NuxGraphics/GdkGraphics.h>
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
 #include <unity-protocol.h>
+#include <boost/algorithm/string.hpp>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
@@ -34,8 +33,8 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/GraphicsUtils.h"
 #include "unity-shared/RawPixel.h"
-#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
+#include <UnityCore/DesktopUtilities.h>
 #include "ResultViewGrid.h"
 #include "math.h"
 
@@ -58,6 +57,8 @@ namespace
 
   const RawPixel WIDTH_PADDING   = 25_em;
   const RawPixel SCROLLBAR_WIDTH =  3_em;
+
+  const std::string APPLICATION_URI_PREFIX = "application://";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
@@ -94,8 +95,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   scale.changed.connect(sigc::mem_fun(this, &ResultViewGrid::UpdateScale));
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
-  key_nav_focus_activate.connect([this] (nux::Area *area)
-  {
+  key_nav_focus_activate.connect([this] (nux::Area *area) {
     Activate(focused_result_, selected_index_, ResultView::ActivateType::DIRECT);
   });
   key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
@@ -208,6 +208,12 @@ void ResultViewGrid::Activate(LocalResult const& local_result, int index, Result
 
     column_x += column_index * column_width;
     row_y += row_index * row_height;
+  }
+
+  if (type == ActivateType::PREVIEW)
+  {
+    if (GetLocalResultActivateType(local_result) != type)
+      type = ActivateType::DIRECT;
   }
 
   active_index_ = index;
@@ -796,6 +802,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
   unsigned num_results = GetNumResults();
   unsigned index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
+
   if (index < num_results)
   {
     // we got a click on a button so activate it
@@ -805,32 +812,32 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     focused_result_ = result;
     activated_result_ = result;
 
-
     if (nux::GetEventButton(button_flags) == nux::NUX_MOUSE_BUTTON1)
     {
-      if (unity::Settings::Instance().double_click_activate)
+      if (default_click_activation() == ActivateType::PREVIEW &&
+          GetLocalResultActivateType(activated_result_) == ActivateType::PREVIEW)
       {
         // delay activate for single left click. (for double click check)
-        activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index]() {
-          Activate(activated_result_, index, ResultView::ActivateType::PREVIEW_LEFT_BUTTON);
+        activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index] {
+          Activate(activated_result_, index, ActivateType::PREVIEW);
           return false;
         }));
       }
       else
       {
-        Activate(activated_result_, index, ResultView::ActivateType::DIRECT);
+        Activate(activated_result_, index, ActivateType::DIRECT);
       }
     }
     else
     {
-       Activate(activated_result_, index, ResultView::ActivateType::PREVIEW);
+      Activate(activated_result_, index, ActivateType::PREVIEW);
     }
   }
 }
 
 void ResultViewGrid::MouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (unity::Settings::Instance().double_click_activate == false)
+  if (default_click_activation() == ActivateType::DIRECT)
     return;
 
   unsigned num_results = GetNumResults();
@@ -845,7 +852,7 @@ void ResultViewGrid::MouseDoubleClick(int x, int y, unsigned long button_flags, 
     focused_result_ = result;
 
     activated_result_ = result;
-    Activate(activated_result_, index, ResultView::ActivateType::DIRECT);
+    Activate(activated_result_, index, ActivateType::DIRECT);
   }
 }
 
@@ -915,6 +922,15 @@ bool ResultViewGrid::DndSourceDragBegin()
   current_drag_result_ = *iter;
   if (current_drag_result_.empty())
     current_drag_result_.uri = current_drag_result_.uri.substr(current_drag_result_.uri.find(":") + 1);
+
+  if (boost::starts_with(current_drag_result_.uri, APPLICATION_URI_PREFIX))
+  {
+    auto desktop_id = current_drag_result_.uri.substr(APPLICATION_URI_PREFIX.size());
+    auto desktop_path = DesktopUtilities::GetDesktopPathById(desktop_id);
+
+    if (!desktop_path.empty())
+      current_drag_result_.uri = "file://" + desktop_path;
+  }
 
   LOG_DEBUG (logger) << "Dnd begin at " <<
                      last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "

@@ -265,7 +265,7 @@ private:
                      float animation_neg_rads);
 
   void RenderArgs(std::list<ui::RenderArg> &launcher_args,
-                  nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo);
+                  nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo, bool& force_show_window);
 
   void OnIconAdded(AbstractLauncherIcon::Ptr const& icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr const& icon);
