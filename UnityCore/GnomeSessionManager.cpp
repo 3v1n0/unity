@@ -121,7 +121,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   }
 
   {
-    presence_proxy_ = std::make_shared<glib::DBusProxy>("org.gnome.SessionManager",
+    presence_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.gnome.SessionManager",
                                                         "/org/gnome/SessionManager/Presence",
                                                         "org.gnome.SessionManager.Presence");
 
@@ -547,12 +547,12 @@ void GnomeManager::ScreenSaverDeactivate()
 
 void GnomeManager::LockScreen()
 {
-  impl_->LockScreen(false);
+  impl_->LockScreen(/* prompt */ false);
 }
 
 void GnomeManager::PromptLockScreen()
 {
-  impl_->LockScreen(true);
+  impl_->LockScreen(/* prompt */ true);
 }
 
 void GnomeManager::Logout()
