@@ -77,6 +77,7 @@ public:
 
   void SetCounts(unsigned n_total_items);
 
+  virtual bool IsExpandable() const;
   virtual void SetExpanded(bool is_expanded);
   virtual bool GetExpanded() const;
 
@@ -127,6 +128,7 @@ private:
   void UpdatePlacesGroupSize();
   void UpdateResultViewPadding();
   void UpdateScale(double scale);
+  void UpdateVisibleItems(int visible_items);
 
 private:
   std::string _category_id;

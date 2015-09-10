@@ -1,3 +1,61 @@
+unity (7.3.2+15.10.20150825-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Do not handle events coming from viewports not actually containing
+    the window. (LP: #1449654)
+
+  [ Chris Townsend ]
+  * Also use the Compiz show() method when forcing an unmapped window to
+    be visible when clicking on it's active Launcher icon. (LP: #989588)
+  * When using keyboard navigation in the Dash, skip category headers
+    that are not expandable. Also, do not highlight the category header
+    when the mouse cursor is over it. (LP: #1045933)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: rely on windows monitor property changes for
+    updating Pips (LP: #1027191)
+  * Autopilot: modernize some tests, use stronger methods to ensure
+    false positive
+  * DecorationsForceQuitDialog: override the background of the window
+    with transparent color (LP: #1470292)
+  * Launcher: Always unfold an active icon (LP: #1472339)
+  * PanelMenuView: ensure that we connect to window signals as soon as
+    the AppManager knows it (LP: #1472326)
+  * PlacesGroup: connect to view changes using a function instead of a
+    lambda (LP: #1470298)
+  * SessionButton: set button opacity to 75% when pressed (LP: #1301655)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 25 Aug 2015 08:15:56 +0000
+
+unity (7.3.2+15.10.20150819-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Do not handle events coming from viewports not actually containing
+    the window. (LP: #1449654)
+
+  [ Chris Townsend ]
+  * Also use the Compiz show() method when forcing an unmapped window to
+    be visible when clicking on it's active Launcher icon. (LP: #989588)
+  * When using keyboard navigation in the Dash, skip category headers
+    that are not expandable. Also, do not highlight the category header
+    when the mouse cursor is over it. (LP: #1045933)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: rely on windows monitor property changes for
+    updating Pips (LP: #1027191)
+  * Autopilot: modernize some tests, use stronger methods to ensure
+    false positive
+  * DecorationsForceQuitDialog: override the background of the window
+    with transparent color (LP: #1470292)
+  * Launcher: Always unfold an active icon (LP: #1472339)
+  * PanelMenuView: ensure that we connect to window signals as soon as
+    the AppManager knows it (LP: #1472326)
+  * PlacesGroup: connect to view changes using a function instead of a
+    lambda (LP: #1470298)
+  * SessionButton: set button opacity to 75% when pressed (LP: #1301655)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 19 Aug 2015 14:45:18 +0000
+
 unity (7.3.2+15.10.20150803.1-0ubuntu1) wily; urgency=medium
 
   [ Andrea Azzarone andrea.azzarone@canonical.com ]

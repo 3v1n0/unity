@@ -192,7 +192,7 @@ Depends: ${misc:Depends},
          python-testtools,
          python-xdg,
          python-xlib,
-         libxpathselect1.4 (>= 1.4),
+         libxpathselect1.4v5 (>= 1.4),
          mesa-utils,
 Description: Autopiloted tests for Unity
  Unity is tested automatically through autopilot, a framework which enables

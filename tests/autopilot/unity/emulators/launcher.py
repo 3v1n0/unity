@@ -118,12 +118,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     def move_mouse_over_launcher(self):
         """Move the mouse over this launcher."""
         move_mouse_to_screen(self.monitor)
-        (x, y, w, h) = self.geometry
-        target_x = x + w / 2
-        target_y = y + h / 2
-
         logger.debug("Moving mouse to center of launcher.")
-        self._mouse.move(target_x, target_y)
+        self._mouse.move_to_object(self)
 
     def move_mouse_to_icon(self, icon, autoscroll_offset=0):
         """Move the mouse to a specific icon."""
@@ -438,8 +434,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current launcher."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current launcher."""
+        return self.globalRect
 
 
 class LauncherModel(UnityIntrospectionObject):

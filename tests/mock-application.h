@@ -46,6 +46,7 @@ struct MockApplicationWindow : unity::ApplicationWindow
     , active_(false)
     , urgent_(false)
   {
+    monitor.SetGetterFunction([this] { return monitor_; });
     visible.SetGetterFunction([this] { return visible_; });
     active.SetGetterFunction([this] { return active_; });
     urgent.SetGetterFunction([this] { return urgent_; });
@@ -54,7 +55,6 @@ struct MockApplicationWindow : unity::ApplicationWindow
 
     ON_CALL(*this, type()).WillByDefault(Invoke([this] { return type_; }));
     ON_CALL(*this, window_id()).WillByDefault(Invoke([this] { return xid_; }));
-    ON_CALL(*this, monitor()).WillByDefault(Invoke([this] { return monitor_; }));
     ON_CALL(*this, Focus()).WillByDefault(Invoke([this] { return LocalFocus(); }));
     ON_CALL(*this, application()).WillByDefault(Return(unity::ApplicationPtr()));
   }
@@ -71,7 +71,6 @@ struct MockApplicationWindow : unity::ApplicationWindow
 
   MOCK_CONST_METHOD0(type, unity::WindowType());
   MOCK_CONST_METHOD0(window_id, Window());
-  MOCK_CONST_METHOD0(monitor, int());
   MOCK_CONST_METHOD0(application, unity::ApplicationPtr());
   MOCK_CONST_METHOD0(Focus, bool());
   MOCK_CONST_METHOD0(Quit, void());
@@ -144,7 +143,7 @@ struct MockApplication : unity::Application
       ON_CALL(*this, type()).WillByDefault(Invoke([this] { return type_; }));
       ON_CALL(*this, desktop_id()).WillByDefault(Invoke([this] { return desktop_file_; }));
       ON_CALL(*this, repr()).WillByDefault(Return("MockApplication"));
-      ON_CALL(*this, GetWindows()).WillByDefault(Invoke([this] { return windows_; }));
+      ON_CALL(*this, GetWindows()).WillByDefault(Invoke([this] () -> unity::WindowList const& { return windows_; }));
       ON_CALL(*this, GetSupportedMimeTypes()).WillByDefault(Return(std::vector<std::string>()));
       ON_CALL(*this, GetFocusableWindow()).WillByDefault(Return(unity::ApplicationWindowPtr()));
       ON_CALL(*this, OwnsWindow(_)).WillByDefault(Invoke(this, &MockApplication::LocalOwnsWindow));
@@ -167,7 +166,7 @@ struct MockApplication : unity::Application
   MOCK_CONST_METHOD0(type, unity::AppType());
   MOCK_CONST_METHOD0(repr, std::string());
   MOCK_CONST_METHOD0(desktop_id, std::string());
-  MOCK_CONST_METHOD0(GetWindows, unity::WindowList());
+  MOCK_CONST_METHOD0(GetWindows, unity::WindowList const&());
   MOCK_CONST_METHOD1(OwnsWindow, bool(Window));
   MOCK_CONST_METHOD0(GetSupportedMimeTypes, std::vector<std::string>());
   MOCK_CONST_METHOD0(GetFocusableWindow, unity::ApplicationWindowPtr());

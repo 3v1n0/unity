@@ -799,7 +799,10 @@ void PluginAdapter::UnMinimize(Window window_id)
 {
   CompWindow* window = m_Screen->findWindow(window_id);
   if (window && (window->actions() & CompWindowActionMinimizeMask))
+  {
     window->unminimize();
+    window->show();
+  }
 }
 
 void PluginAdapter::Shade(Window window_id)
@@ -980,6 +983,7 @@ void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
       if (forced_unminimize)
         {
           top_window->unminimize();
+          top_window->show();
         }
 
       top_window->raise();

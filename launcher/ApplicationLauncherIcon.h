@@ -116,6 +116,7 @@ private:
   void UnsetApplication();
   void SetupApplicationSignalsConnections();
   void EnsureWindowState();
+  void EnsureWindowsLocation();
   void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsDefaultReady();
   void EnsureMenuItemsStaticQuicklist();
@@ -127,7 +128,6 @@ private:
   bool Spread(bool current_desktop, int state, bool force);
 
   void OnWindowMinimized(guint32 xid);
-  void OnWindowMoved(guint32 xid);
 
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();

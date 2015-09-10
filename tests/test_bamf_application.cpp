@@ -56,6 +56,8 @@ struct TestBamfApplication : public testing::Test
 
 TEST_F(TestBamfApplication, GetWindows)
 {
+  ASSERT_EQ(application_.GetWindows().size(), 0);
+
   GList* children = nullptr;
   for (int i = 0; i<5; ++i)
   {
@@ -71,8 +73,7 @@ TEST_F(TestBamfApplication, GetWindows)
   AddFakeWindowToWM(3, true);
   AddFakeWindowToWM(4, false);
 
-  auto windows = application_.GetWindows();
-  ASSERT_EQ(windows.size(), 5);
+  EXPECT_EQ(application_.GetWindows().size(), 5);
 
   g_list_free_full(children, g_object_unref);
 }

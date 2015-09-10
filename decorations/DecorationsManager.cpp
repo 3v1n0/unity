@@ -172,7 +172,7 @@ bool Manager::Impl::UpdateWindow(::Window xid)
 {
   auto const& win = GetWindowByXid(xid);
 
-  if (win && !win->impl_->win_->hasUnmapReference())
+  if (win && !win->GetCompWindow()->hasUnmapReference())
   {
     win->Update();
     return true;
@@ -306,6 +306,10 @@ bool Manager::Impl::HandleFrameEvent(XEvent* event)
     return false;
 
   auto const& win = GetWindowByFrame(event->xany.window);
+  CompWindow* comp_window = win ? win->GetCompWindow() : nullptr;
+
+  if (comp_window && comp_window->defaultViewport() != screen->vp())
+    return false;
 
   // ButtonRelease events might happen also outside the frame window, in this
   // case we must unset the mouse owner, wherever the event happens.
