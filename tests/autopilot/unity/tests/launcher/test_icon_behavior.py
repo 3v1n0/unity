@@ -60,6 +60,11 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertThat(lambda: self.process_manager.app_is_running("Calculator"), Eventually(Equals(False)))
         return calc_icon
 
+    def get_running_application_by_desktop_file(self, desktop_id):
+        get_app_fn = lambda: self.process_manager.get_running_applications_by_desktop_file(desktop_id)
+        self.assertThat(lambda: len(get_app_fn()), Eventually(Equals(1)))
+        return get_app_fn()[0]
+
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
         """Tests that the bfb tooltip disappear when the dash is opened."""
         bfb = self.unity.launcher.model.get_bfb_icon()
@@ -139,7 +144,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.process_manager.close_all_app, "Calculator")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
-        calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
+        calc_app = self.get_running_application_by_desktop_file(calc_icon.desktop_id)
         calc_window = calc_app.get_windows()[0]
 
         self.assertThat(lambda: self.get_startup_notification_timestamp(calc_window), Eventually(Equals(calc_icon.startup_notification_timestamp)))
@@ -197,8 +202,8 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
         self.keyboard.press_and_release("1");
 
-        calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
-        calc_window = calc_app.get_windows()[0]
+        calc_app = self.get_running_application_by_desktop_file(calc_icon.desktop_id)
+        [calc_window] = calc_app.get_windows()
 
         self.assertThat(lambda: calc_window.is_focused, Eventually(Equals(True)))
 
@@ -411,7 +416,8 @@ class LauncherDragIconsBehavior(LauncherTestCase):
             self.drag_type)
 
         # Must be the last bamf icon - not necessarily the third-from-end icon.
-        refresh_fn = lambda: self.unity.launcher.model.get_launcher_icons()[-2].id
+        expected_pos = -2 if self.workspace.num_workspaces < 2 else -1
+        refresh_fn = lambda: self.unity.launcher.model.get_launcher_icons()[expected_pos].id
         self.assertThat(refresh_fn,
             Eventually(Equals(calc_icon.id)),
             "Launcher icons are: %r" % self.unity.launcher.model.get_launcher_icons())
