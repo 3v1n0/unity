@@ -117,7 +117,9 @@ unity_quicklist_menu_item_accessible_dispose(GObject* object)
     g_signal_handler_disconnect(object, self->priv->on_parent_change_id);
 
   if (self->priv->name != NULL)
+  {
     g_free(self->priv->name);
+    self->priv->name = NULL;
 
   G_OBJECT_CLASS(unity_quicklist_menu_item_accessible_parent_class)->dispose(object);
 }
@@ -206,6 +208,12 @@ unity_quicklist_menu_item_accessible_get_name(AtkObject* obj)
 {
   g_return_val_if_fail(UNITY_IS_QUICKLIST_MENU_ITEM_ACCESSIBLE(obj), NULL);
   UnityQuicklistMenuItemAccessible *self = UNITY_QUICKLIST_MENU_ITEM_ACCESSIBLE(obj);
+
+  if (self->priv->name)
+  {
+    g_free(self->priv->name);
+    self->priv->name = NULL;
+  }
 
   self->priv->name = g_strdup(ATK_OBJECT_CLASS(unity_quicklist_menu_item_accessible_parent_class)->get_name(obj));
   if (self->priv->name == NULL)
