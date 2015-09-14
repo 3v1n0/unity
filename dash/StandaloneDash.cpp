@@ -37,7 +37,7 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/ThumbnailGenerator.h"
 #include "unity-shared/UBusMessages.h"
-#include "unity-shared/UBusServer.h"
+#include "unity-shared/UBusWrapper.h"
 #include <UnityCore/GSettingsScopes.h>
 #include <UnityCore/ScopeProxyInterface.h>
 
@@ -50,12 +50,13 @@ class TestRunner
 {
 public:
   TestRunner(std::string const& scope, double scale)
-    : scope_(scope)
+    : scope_(scope.empty() ? "home.scope" : scope)
     , scale_(scale)
   {}
 
-  static void InitWindowThread (nux::NThread* thread, void* InitData);
-  void Init ();
+  static void InitWindowThread(nux::NThread* thread, void* InitData);
+  void Init();
+
   std::string scope_;
   double scale_;
   nux::Layout *layout;
@@ -78,14 +79,14 @@ void TestRunner::Init ()
   nux::GetWindowThread()->SetLayout (layout);
   nux::GetWindowCompositor().SetKeyFocusArea(view->default_focus());
 
-  unity::UBusServer().SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+  unity::UBusManager::SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                                   g_variant_new("(sus)", scope_.c_str(), GOTO_DASH_URI, ""));
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
 {
   TestRunner *self =  (TestRunner *) InitData;
-  self->Init ();
+  self->Init();
 }
 
 int main(int argc, char **argv)
