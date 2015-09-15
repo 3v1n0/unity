@@ -97,6 +97,7 @@ static void save_state()
   glPushMatrix();
   glMatrixMode(GL_TEXTURE);
   glPushMatrix();
+  glMatrixMode(GL_MODELVIEW);
 #endif
 }
 
@@ -687,9 +688,10 @@ void UnityScreen::nuxEpilogue()
   glDepthRangef(0, 1);
 #endif
 
+  restore_state();
+
   gScreen->resetRasterPos();
   glDisable(GL_SCISSOR_TEST);
-  restore_state();
 }
 
 void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
