@@ -96,7 +96,7 @@ static void save_state()
   glMatrixMode(GL_TEXTURE);
   glPushMatrix();
   glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();;
+  glPushMatrix();
 #endif
 }
 
