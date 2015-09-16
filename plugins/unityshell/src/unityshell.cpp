@@ -91,13 +91,12 @@ static void save_state()
 #ifndef USE_GLES
   glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glMatrixMode(GL_TEXTURE);
   glPushMatrix();
   glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();;
 #endif
 }
 
