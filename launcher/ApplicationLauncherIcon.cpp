@@ -559,12 +559,12 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     g_file_monitor_set_rate_limit(_desktop_file_monitor, 2000);
 
     _gsignals.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
-      [this] (GFileMonitor*, GFile* f, GFile*, GFileMonitorEvent event_type) {
+      [this, desktop_file] (GFileMonitor*, GFile*,  GFile*, GFileMonitorEvent event_type) {
       switch (event_type)
       {
         case G_FILE_MONITOR_EVENT_DELETED:
         {
-          glib::Object<GFile> file(f, glib::AddRef());
+          glib::Object<GFile> file(desktop_file, glib::AddRef());
           _source_manager.AddTimeoutSeconds(1, [this, file] {
             if (!g_file_query_exists(file, nullptr))
             {
