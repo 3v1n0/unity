@@ -35,6 +35,7 @@
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/MenuManager.h"
 #include "unity-shared/MockableBaseWindow.h"
+#include "unity-shared/Timer.h"
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelIndicatorsView.h"
@@ -132,7 +133,8 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
 
   std::string active_overlay_;
-  nux::Point  tracked_pointer_pos_;
+  nux::Point  tracked_pointer_pos_, triangle_top_corner_;
+  util::Timer mouse_tracker_timer_;
 
   bool is_dirty_;
   bool opacity_maximized_toggle_;
@@ -141,6 +143,8 @@ private:
   float opacity_;
   int monitor_;
   int stored_dash_width_;
+
+  nux::Geometry menu_geo_;
 
   connection::Manager on_indicator_updated_connections_;
   connection::Manager maximized_opacity_toggle_connections_;
