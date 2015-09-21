@@ -144,7 +144,7 @@ private:
   int monitor_;
   int stored_dash_width_;
 
-  nux::Geometry ddm_geo_;
+  nux::Geometry menu_geo_;
 
   connection::Manager on_indicator_updated_connections_;
   connection::Manager maximized_opacity_toggle_connections_;

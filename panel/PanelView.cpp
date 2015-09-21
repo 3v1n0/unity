@@ -24,6 +24,7 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/RawPixel.h"
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
@@ -33,15 +34,16 @@
 
 #include "PanelView.h"
 
-namespace
-{
-const int refine_gradient_midpoint = 959;
-}
-
 namespace unity
 {
 namespace panel
 {
+namespace
+{
+const RawPixel TRIANGLE_THRESHOLD = 5_em;
+const int refine_gradient_midpoint = 959;
+}
+
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
@@ -635,15 +637,15 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   }
 }
 
-static bool PointInTriangle(nux::Point const& p, nux::Point const& p0, nux::Point const& p1, nux::Point const& p2)
+static bool PointInTriangle(nux::Point const& p, nux::Point const& t0, nux::Point const& t1, nux::Point const& t2)
 {
-  int s = p0.y * p2.x - p0.x * p2.y + (p2.y - p0.y) * p.x + (p0.x - p2.x) * p.y;
-  int t = p0.x * p1.y - p0.y * p1.x + (p0.y - p1.y) * p.x + (p1.x - p0.x) * p.y;
+  int s = t0.y * t2.x - t0.x * t2.y + (t2.y - t0.y) * p.x + (t0.x - t2.x) * p.y;
+  int t = t0.x * t1.y - t0.y * t1.x + (t0.y - t1.y) * p.x + (t1.x - t0.x) * p.y;
 
   if ((s < 0) != (t < 0))
     return false;
 
-  int A = -p1.y * p2.x + p0.y * (p2.x - p1.x) + p0.x * (p1.y - p2.y) + p1.x * p2.y;
+  int A = -t1.y * t2.x + t0.y * (t2.x - t1.x) + t0.x * (t1.y - t2.y) + t1.x * t2.y;
   if (A < 0)
   {
     s = -s;
@@ -679,10 +681,11 @@ bool PanelView::TrackMenuPointer()
   mouse_tracker_timer_.Reset();
   tracked_pointer_pos_ = mouse;
 
+  double scale = Settings::Instance().em(monitor_)->DPIScale();
   if (speed > 0 && PointInTriangle(mouse, 
-                                   nux::Point(triangle_top_corner_.x, std::max(triangle_top_corner_.y-5, 0)),
-                                   nux::Point(ddm_geo_.x, ddm_geo_.y),
-                                   nux::Point(ddm_geo_.x + ddm_geo_.width, ddm_geo_.y)))
+                                   nux::Point(triangle_top_corner_.x, std::max(triangle_top_corner_.y - TRIANGLE_THRESHOLD.CP(scale), 0)),
+                                   nux::Point(menu_geo_.x, menu_geo_.y),
+                                   nux::Point(menu_geo_.x + menu_geo_.width, menu_geo_.y)))
   {
     return true;
   }
@@ -696,12 +699,12 @@ bool PanelView::TrackMenuPointer()
   return true;
 }
 
-void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& ddm_geo)
+void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& menu_geo)
 {
   if (!panel.empty() && panel != GetPanelName())
     return;
 
-  ddm_geo_ = ddm_geo;
+  menu_geo_ = menu_geo;
 
   bool active = !entry_id.empty();
   if (active && !track_menu_pointer_timeout_)
