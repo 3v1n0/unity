@@ -565,7 +565,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
         case G_FILE_MONITOR_EVENT_DELETED:
         {
           _source_manager.AddTimeoutSeconds(1, [this, desktop_file] {
-            if (!g_file_query_exists(file, nullptr))
+            if (!g_file_query_exists(desktop_file, nullptr))
             {
               UnStick();
               LogUnityEvent(ApplicationEventType::DELETE);
