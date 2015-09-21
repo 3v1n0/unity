@@ -120,6 +120,7 @@ unity_quicklist_menu_item_accessible_dispose(GObject* object)
   {
     g_free(self->priv->name);
     self->priv->name = NULL;
+  }
 
   G_OBJECT_CLASS(unity_quicklist_menu_item_accessible_parent_class)->dispose(object);
 }
