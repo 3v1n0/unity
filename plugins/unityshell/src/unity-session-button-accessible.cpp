@@ -65,6 +65,15 @@ G_DEFINE_TYPE_WITH_CODE(UnitySessionButtonAccessible,
                         G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION,
                                               atk_action_interface_init))
 
+#define UNITY_SESSION_BUTTON_ACCESSIBLE_GET_PRIVATE(obj)           \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_SESSION_BUTTON_ACCESSIBLE, \
+                                UnitySessionButtonAccessiblePrivate))
+
+struct _UnitySessionButtonAccessiblePrivate
+{
+  gchar *name;
+};
+
 static void
 unity_session_button_accessible_class_init(UnitySessionButtonAccessibleClass* klass)
 {
@@ -78,16 +87,30 @@ unity_session_button_accessible_class_init(UnitySessionButtonAccessibleClass* kl
   atk_class->initialize = unity_session_button_accessible_initialize;
   atk_class->get_name = unity_session_button_accessible_get_name;
   atk_class->ref_state_set = unity_session_button_accessible_ref_state_set;
+
+  g_type_class_add_private(gobject_class, sizeof(UnitySessionButtonAccessiblePrivate));
 }
 
 static void
 unity_session_button_accessible_init(UnitySessionButtonAccessible* session_button_accessible)
 {
+  UnitySessionButtonAccessiblePrivate *priv =
+    UNITY_SESSION_BUTTON_ACCESSIBLE_GET_PRIVATE(session_button_accessible);
+
+  session_button_accessible->priv = priv;
+  session_button_accessible->priv->name = NULL;
 }
 
 static void
 unity_session_button_accessible_dispose(GObject* object)
 {
+  UnitySessionButtonAccessible *self = UNITY_SESSION_BUTTON_ACCESSIBLE(object);
+
+  if (self->priv->name != NULL) {
+    g_free(self->priv->name);
+    self->priv->name = NULL;
+  }
+
   G_OBJECT_CLASS(unity_session_button_accessible_parent_class)->dispose(object);
 }
 
@@ -139,24 +162,30 @@ unity_session_button_accessible_initialize(AtkObject* accessible,
 static const gchar*
 unity_session_button_accessible_get_name(AtkObject* obj)
 {
-  const gchar* name;
-
   g_return_val_if_fail(UNITY_IS_SESSION_BUTTON_ACCESSIBLE(obj), NULL);
 
-  name = ATK_OBJECT_CLASS(unity_session_button_accessible_parent_class)->get_name(obj);
-  if (name == NULL)
+  UnitySessionButtonAccessible *self = UNITY_SESSION_BUTTON_ACCESSIBLE(obj);
+
+  if (self->priv->name)
+  {
+    g_free(self->priv->name);
+    self->priv->name = NULL;
+  }
+
+  self->priv->name = g_strdup(ATK_OBJECT_CLASS(unity_session_button_accessible_parent_class)->get_name(obj));
+  if (self->priv->name == NULL)
   {
     Button* button = NULL;
 
     button = dynamic_cast<Button*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
 
     if (button == NULL) /* State is defunct */
-      name = NULL;
+      self->priv->name = NULL;
     else
-      name = button->label().c_str();
+      self->priv->name = g_strdup(button->label().c_str());
   }
 
-  return name;
+  return self->priv->name;
 }
 
 static AtkStateSet*
