@@ -38,6 +38,7 @@ DECLARE_LOGGER(logger, "unity.menu.manager");
 
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string LIM_KEY = "integrated-menus";
+const std::string SHOW_MENUS_NOW_DELAY = "show-menus-now-delay";
 const std::string ALWAYS_SHOW_MENUS_KEY = "always-show-menus";
 }
 
@@ -68,11 +69,15 @@ struct Manager::Impl : sigc::trackable
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
       parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
     });
+    signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + SHOW_MENUS_NOW_DELAY, [this] (GSettings*, const gchar*) {
+      parent_->show_menus_wait = g_settings_get_uint(settings_, SHOW_MENUS_NOW_DELAY.c_str());
+    });
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + ALWAYS_SHOW_MENUS_KEY, [this] (GSettings*, const gchar*) {
       parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
     });
 
     parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    parent_->show_menus_wait = g_settings_get_uint(settings_, SHOW_MENUS_NOW_DELAY.c_str());
     parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
     parent_->menu_open = indicators_->GetActiveEntry() != nullptr;
   }
