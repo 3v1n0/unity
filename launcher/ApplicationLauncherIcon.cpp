@@ -564,8 +564,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
       {
         case G_FILE_MONITOR_EVENT_DELETED:
         {
-          glib::Object<GFile> file(desktop_file, glib::AddRef());
-          _source_manager.AddTimeoutSeconds(1, [this, file] {
+          _source_manager.AddTimeoutSeconds(1, [this, desktop_file] {
             if (!g_file_query_exists(file, nullptr))
             {
               UnStick();
