@@ -87,7 +87,7 @@ struct DBusObject::Impl
 
       if (self->method_cb_)
       {
-        ret = self->method_cb_(method_name ? method_name : "", parameters);
+        ret = self->method_cb_(gchar_to_string(method_name), parameters, gchar_to_string(sender), gchar_to_string(object_path));
 
         LOG_INFO(logger_o) << "Called method: '" << method_name << " " << parameters
                            << "' on object '" << object_path << "' with interface '"
@@ -401,7 +401,7 @@ struct DBusObject::Impl
   }
 
   DBusObject* object_;
-  MethodCallback method_cb_;
+  MethodCallbackFull method_cb_;
   PropertyGetterCallback property_get_cb_;
   PropertySetterCallback property_set_cb_;
 
@@ -420,7 +420,14 @@ DBusObject::~DBusObject()
 
 void DBusObject::SetMethodsCallsHandler(MethodCallback const& func)
 {
-  impl_->method_cb_ = func;
+  impl_->method_cb_ = nullptr;
+
+  if (func)
+  {
+    impl_->method_cb_ = [func] (std::string const& method, GVariant* parameters, std::string const&, std::string const&) {
+      return func(method, parameters);
+    };
+  }
 }
 
 void DBusObject::SetPropertyGetter(PropertyGetterCallback const& func)

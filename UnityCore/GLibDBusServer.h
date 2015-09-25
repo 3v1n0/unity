@@ -40,11 +40,13 @@ public:
   DBusObject(std::string const& introspection_xml, std::string const& interface_name);
   virtual ~DBusObject();
 
-  typedef std::function<GVariant*(std::string const&, GVariant*)> MethodCallback;
-  typedef std::function<GVariant*(std::string const&)> PropertyGetterCallback;
-  typedef std::function<bool(std::string const&, GVariant*)> PropertySetterCallback;
+  typedef std::function<GVariant*(std::string const& /*method*/, GVariant* /*parameters*/)> MethodCallback;
+  typedef std::function<GVariant*(std::string const& /*method*/, GVariant* /*parameters*/, std::string const& /*sender*/, std::string const& /*object_path*/)> MethodCallbackFull;
+  typedef std::function<GVariant*(std::string const& /*name*/)> PropertyGetterCallback;
+  typedef std::function<bool(std::string const& /*name*/, GVariant* /*value*/)> PropertySetterCallback;
 
   void SetMethodsCallsHandler(MethodCallback const&);
+  void SetMethodsCallsHandlerFull(MethodCallbackFull const&);
   void SetPropertyGetter(PropertyGetterCallback const&);
   void SetPropertySetter(PropertySetterCallback const&);
 
