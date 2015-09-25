@@ -295,13 +295,14 @@ struct DBusObject::Impl
 
   void EmitGenericSignal(glib::Object<GDBusConnection> const& conn, std::string const& path,
                          std::string const& interface, std::string const& signal,
-                         GVariant* parameters = nullptr)
+                         GVariant* parameters = nullptr, std::string const& dest = "")
   {
     LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " for the interface "
                      << "'" << interface << "' on object path '" << path << "'";
 
     glib::Error error;
-    g_dbus_connection_emit_signal(conn, nullptr, path.c_str(), interface.c_str(),
+    g_dbus_connection_emit_signal(conn, dest.empty() ? nullptr : dest.c_str(),
+                                  path.c_str(), interface.c_str(),
                                   signal.c_str(), parameters, &error);
 
     if (error)
@@ -312,7 +313,7 @@ struct DBusObject::Impl
     }
   }
 
-  void EmitSignal(std::string const& signal, GVariant* parameters, std::string const& path)
+  void EmitSignal(std::string const& signal, GVariant* parameters, std::string const& dest, std::string const& path)
   {
     glib::Variant reffed_params(parameters);
 
@@ -333,7 +334,7 @@ struct DBusObject::Impl
         return;
       }
 
-      EmitGenericSignal(conn_it->second, path, InterfaceName(), signal, parameters);
+      EmitGenericSignal(conn_it->second, path, InterfaceName(), signal, parameters, dest);
     }
     else
     {
@@ -343,7 +344,7 @@ struct DBusObject::Impl
         auto const& obj_path = pair.first;
         auto const& conn = pair.second;
 
-        EmitGenericSignal(conn, obj_path, InterfaceName(), signal, params);
+        EmitGenericSignal(conn, obj_path, InterfaceName(), signal, params, dest);
       }
     }
   }
@@ -455,9 +456,9 @@ void DBusObject::UnRegister(std::string const& path)
   impl_->UnRegister(path);
 }
 
-void DBusObject::EmitSignal(std::string const& signal, GVariant* parameters, std::string const& path)
+void DBusObject::EmitSignal(std::string const& signal, GVariant* parameters, std::string const& dest, std::string const& path)
 {
-  impl_->EmitSignal(signal, parameters, path);
+  impl_->EmitSignal(signal, parameters, dest, path);
 }
 
 void DBusObject::EmitPropertyChanged(std::string const& property, std::string const& path)
@@ -655,12 +656,10 @@ struct DBusServer::Impl
     return DBusObject::Ptr();
   }
 
-  void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters)
+  void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters, std::string const& dest)
   {
-    auto const& obj = GetObject(interface);
-
-    if (obj)
-      obj->EmitSignal(signal, parameters);
+    if (DBusObject::Ptr const& obj = GetObject(interface))
+      obj->EmitSignal(signal, parameters, dest);
   }
 
   DBusServer* server_;
@@ -742,9 +741,9 @@ DBusObject::Ptr DBusServer::GetObject(std::string const& interface) const
   return impl_->GetObject(interface);
 }
 
-void DBusServer::EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters)
+void DBusServer::EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters, std::string const& dest)
 {
-  impl_->EmitSignal(interface, signal, parameters);
+  impl_->EmitSignal(interface, signal, parameters, dest);
 }
 
 } // namespace glib
