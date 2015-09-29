@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2013-2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: William Hua <william.hua@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "GnomeKeyGrabberImpl.h"
@@ -64,79 +65,91 @@ std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 }
 
 GnomeGrabber::Impl::Impl(bool test_mode)
-  : shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
-  , screen_(screen)
+  : screen_(screen)
+  , shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
   , current_action_id_(0)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
-  shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::onShellMethodCall));
+  shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 }
 
 GnomeGrabber::Impl::~Impl()
 {
-  if (screen_)
-  {
-    for (auto& action : actions_)
-      screen_->removeAction(&action);
-  }
+  for (auto& action : actions_)
+    screen_->removeAction(&action);
 }
 
-unsigned int GnomeGrabber::Impl::addAction(CompAction const& action, bool addressable)
+uint32_t GnomeGrabber::Impl::NextActionID()
 {
-  ++current_action_id_;
-  actions_.push_back(action);
-  action_ids_.push_back(current_action_id_);
-
-  if (addressable)
-  {
-    action_ids_by_action_[&action] = current_action_id_;
-    actions_by_action_id_[current_action_id_] = &action;
-  }
-
-  if (screen_)
-    screen_->addAction(&actions_.back());
-
-  LOG_DEBUG(logger) << "addAction (\"" << action.keyToString() << "\", " << addressable << ") = " << current_action_id_;
-
-  return current_action_id_;
+  return ++current_action_id_;
 }
 
-bool GnomeGrabber::Impl::removeAction(CompAction const& action)
+bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t action_id)
 {
-  auto i = action_ids_by_action_.find(&action);
-  return i != action_ids_by_action_.end() && removeAction(i->second);
-}
+  LOG_DEBUG(logger) << "AddAction (\"" << action.keyToString() << "\") = " << action_id;
 
-bool GnomeGrabber::Impl::removeAction(unsigned int action_id)
-{
-  auto i = std::find(action_ids_.begin(), action_ids_.end(), action_id);
-
-  if (i != action_ids_.end())
+  if (screen_->addAction(const_cast<CompAction*>(&action)))
   {
-    auto j = actions_.begin() + (i - action_ids_.begin());
-    auto k = actions_by_action_id_.find(action_id);
-
-    LOG_DEBUG(logger) << "removeAction (" << action_id << " \"" << j->keyToString() << "\")";
-
-    if (screen_)
-      screen_->removeAction(&(*j));
-
-    if (k != actions_by_action_id_.end())
-    {
-      action_ids_by_action_.erase(k->second);
-      actions_by_action_id_.erase(k);
-    }
-
-    action_ids_.erase(i);
-    actions_.erase(j);
+    actions_ids_.push_back(action_id);
+    actions_.push_back(action);
     return true;
+  }
+
+  LOG_ERROR(logger) << "Impossible to grab action \"" << action.keyToString() << "\"";
+  return false;
+}
+
+bool GnomeGrabber::Impl::AddAction(CompAction const& action)
+{
+  return AddAction(action, NextActionID());
+}
+
+bool GnomeGrabber::Impl::RemoveAction(CompAction const& action)
+{
+  for (size_t index = 0; index < actions_.size(); ++index)
+  {
+    if (actions_[index] == action)
+      return RemoveAction(index);
   }
 
   return false;
 }
 
-GVariant* GnomeGrabber::Impl::onShellMethodCall(std::string const& method, GVariant* parameters)
+bool GnomeGrabber::Impl::RemoveAction(uint32_t action_id)
+{
+  if (!action_id)
+    return false;
+
+  size_t index = 0;
+
+  for (auto id : actions_ids_)
+  {
+    if (id == action_id)
+      return RemoveAction(index);
+
+    ++index;
+  }
+
+  return false;
+}
+
+bool GnomeGrabber::Impl::RemoveAction(size_t index)
+{
+  if (!index || index >= actions_.size())
+    return false;
+
+  CompAction* action = &(actions_[index]);
+  LOG_DEBUG(logger) << "RemoveAction (\"" << action->keyToString() << "\")";
+
+  screen_->removeAction(action);
+  actions_.erase(actions_.begin() + index);
+  actions_ids_.erase(actions_ids_.begin() + index);
+
+  return true;
+}
+
+GVariant* GnomeGrabber::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Called method '" << method << "'";
 
@@ -154,52 +167,48 @@ GVariant* GnomeGrabber::Impl::onShellMethodCall(std::string const& method, GVari
       g_variant_get(parameters, "(a(su))", &iterator);
 
       while (g_variant_iter_next(iterator, "(&su)", &accelerator, &flags))
-        g_variant_builder_add(&builder, "u", grabAccelerator(accelerator, flags));
+        g_variant_builder_add(&builder, "u", GrabAccelerator(accelerator, flags));
 
       g_variant_iter_free(iterator);
       variant = g_variant_builder_end(&builder);
       return g_variant_new_tuple(&variant, 1);
     }
     else
+    {
       LOG_WARN(logger) << "Expected arguments of type (a(su))";
+    }
   }
   else if (method == "GrabAccelerator")
   {
     if (g_variant_is_of_type(parameters, G_VARIANT_TYPE("(su)")))
     {
-      GVariant* variant;
       gchar const* accelerator;
       guint flags;
-
       g_variant_get(parameters, "(&su)", &accelerator, &flags);
-      variant = g_variant_new_uint32(grabAccelerator(accelerator, flags));
-      return g_variant_new_tuple(&variant, 1);
+
+      if (uint32_t action_id = GrabAccelerator(accelerator, flags))
+        return g_variant_new("(u)", action_id);
     }
     else
+    {
       LOG_WARN(logger) << "Expected arguments of type (su)";
+    }
   }
   else if (method == "UngrabAccelerator")
   {
-    if (g_variant_is_of_type(parameters, G_VARIANT_TYPE("(u)")))
-    {
-      GVariant* variant;
-      guint action;
-
-      g_variant_get(parameters, "(u)", &action);
-      variant = g_variant_new_boolean(removeAction(action));
-      return g_variant_new_tuple(&variant, 1);
-    }
-    else
-      LOG_WARN(logger) << "Expected arguments of type (u)";
+    uint32_t action_id;
+    g_variant_get(parameters, "(u)", &action_id);
+    return g_variant_new("(b)", RemoveAction(action_id));
   }
 
   return nullptr;
 }
 
-unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsigned int flags)
+uint32_t GnomeGrabber::Impl::GrabAccelerator(char const* accelerator, uint32_t flags)
 {
   CompAction action;
   action.keyFromString(accelerator);
+  uint32_t action_id = NextActionID();
 
   if (action.key().toString().empty())
   {
@@ -212,19 +221,19 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
     LOG_DEBUG(logger) << "grabAccelerator \"" << accelerator << "\"";
   }
 
-  if (!isActionPostponed(action))
+  if (!IsActionPostponed(action))
   {
     action.setState(CompAction::StateInitKey);
-    action.setInitiate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setInitiate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
-      activateAction(action, 0, options[7].value().i());
+      ActivateAction(*action, action_id, 0, options[7].value().i());
       return true;
     });
   }
   else
   {
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
-    action.setTerminate([this](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setTerminate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       auto key = action->keyToString();
 
       LOG_DEBUG(logger) << "released \"" << key << "\"";
@@ -232,7 +241,7 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
       if (state & CompAction::StateTermTapped)
       {
         LOG_DEBUG(logger) << "tapped \"" << key << "\"";
-        activateAction(action, 0, options[7].value().i());
+        ActivateAction(*action, action_id, 0, options[7].value().i());
         return true;
       }
 
@@ -240,22 +249,16 @@ unsigned int GnomeGrabber::Impl::grabAccelerator(char const* accelerator, unsign
     });
   }
 
-  return addAction(action, false);
+  return AddAction(action, action_id) ? action_id : 0;
 }
 
-void GnomeGrabber::Impl::activateAction(CompAction const* action, unsigned device, unsigned timestamp) const
+void GnomeGrabber::Impl::ActivateAction(CompAction const& action, uint32_t action_id, uint32_t device, uint32_t timestamp) const
 {
-  ptrdiff_t i = action - &actions_.front();
-
-  if (0 <= i && i < static_cast<ptrdiff_t>(action_ids_.size()))
-  {
-    auto action_id = action_ids_[i];
-    LOG_DEBUG(logger) << "activateAction (" << action_id << " \"" << action->keyToString() << "\")";
-    shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uuu)", action_id, device, timestamp));
-  }
+  LOG_DEBUG(logger) << "ActivateAction (" << action_id << " \"" << action.keyToString() << "\")";
+  shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uuu)", action_id, device, timestamp));
 }
 
-bool GnomeGrabber::Impl::isActionPostponed(CompAction const& action) const
+bool GnomeGrabber::Impl::IsActionPostponed(CompAction const& action) const
 {
   int keycode = action.key().keycode();
   return keycode == 0 || modHandler->keycodeToModifiers(keycode) != 0;
@@ -281,12 +284,12 @@ CompAction::Vector& GnomeGrabber::GetActions()
 
 void GnomeGrabber::AddAction(CompAction const& action)
 {
-  impl_->addAction(action);
+  impl_->AddAction(action);
 }
 
 void GnomeGrabber::RemoveAction(CompAction const& action)
 {
-  impl_->removeAction(action);
+  impl_->RemoveAction(action);
 }
 
 } // namespace key
