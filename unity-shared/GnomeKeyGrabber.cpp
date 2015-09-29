@@ -85,7 +85,7 @@ uint32_t GnomeGrabber::Impl::NextActionID()
   return ++current_action_id_;
 }
 
-bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t action_id)
+bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t& action_id)
 {
   LOG_DEBUG(logger) << "AddAction (\"" << action.keyToString() << "\") = " << action_id;
 
@@ -95,10 +95,12 @@ bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t action_id)
     return false;
   }
 
-  if (std::find(actions_.begin(), actions_.end(), action) != actions_.end())
+  auto it = std::find(actions_.begin(), actions_.end(), action);
+  if (it != actions_.end())
   {
-    LOG_ERROR(logger) << "Key binding \"" << action.keyToString() << "\" is already grabbed";
-    return false;
+    action_id = actions_ids_[it - actions_.begin()];
+    LOG_DEBUG(logger) << "Key binding \"" << action.keyToString() << "\" is already grabbed, reusing id " << action_id;
+    return true;
   }
 
   if (screen_->addAction(const_cast<CompAction*>(&action)))
