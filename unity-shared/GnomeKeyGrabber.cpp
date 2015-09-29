@@ -89,6 +89,18 @@ bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t action_id)
 {
   LOG_DEBUG(logger) << "AddAction (\"" << action.keyToString() << "\") = " << action_id;
 
+  if (action.key().toString().empty())
+  {
+    LOG_WARN(logger) << "Trying to grab a disabled action, we skip it";
+    return false;
+  }
+
+  if (std::find(actions_.begin(), actions_.end(), action) != actions_.end())
+  {
+    LOG_ERROR(logger) << "Key binding \"" << action.keyToString() << "\" is already grabbed";
+    return false;
+  }
+
   if (screen_->addAction(const_cast<CompAction*>(&action)))
   {
     actions_ids_.push_back(action_id);
@@ -108,11 +120,10 @@ uint32_t GnomeGrabber::Impl::AddAction(CompAction const& action)
 
 bool GnomeGrabber::Impl::RemoveAction(CompAction const& action)
 {
-  for (size_t index = 0; index < actions_.size(); ++index)
-  {
-    if (actions_[index] == action)
-      return RemoveAction(index);
-  }
+  auto it = std::find(actions_.begin(), actions_.end(), action);
+
+  if (it != actions_.end())
+    return RemoveAction(static_cast<size_t>(it - actions_.begin()));
 
   return false;
 }
@@ -122,15 +133,10 @@ bool GnomeGrabber::Impl::RemoveAction(uint32_t action_id)
   if (!action_id)
     return false;
 
-  size_t index = 0;
+  auto it = std::find(actions_ids_.begin(), actions_ids_.end(), action_id);
 
-  for (auto id : actions_ids_)
-  {
-    if (id == action_id)
-      return RemoveAction(index);
-
-    ++index;
-  }
+  if (it != actions_ids_.end())
+    return RemoveAction(static_cast<size_t>(it - actions_ids_.begin()));
 
   return false;
 }
