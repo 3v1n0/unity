@@ -431,6 +431,11 @@ void DBusObject::SetMethodsCallsHandler(MethodCallback const& func)
   }
 }
 
+void DBusObject::SetMethodsCallsHandlerFull(MethodCallbackFull const& func)
+{
+  impl_->method_cb_ = func;
+}
+
 void DBusObject::SetPropertyGetter(PropertyGetterCallback const& func)
 {
   impl_->property_get_cb_ = func;
