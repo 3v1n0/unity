@@ -100,9 +100,10 @@ bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t action_id)
   return false;
 }
 
-bool GnomeGrabber::Impl::AddAction(CompAction const& action)
+uint32_t GnomeGrabber::Impl::AddAction(CompAction const& action)
 {
-  return AddAction(action, NextActionID());
+  auto action_id = NextActionID();
+  return AddAction(action, action_id) ? action_id : 0;
 }
 
 bool GnomeGrabber::Impl::RemoveAction(CompAction const& action)
@@ -282,14 +283,19 @@ CompAction::Vector& GnomeGrabber::GetActions()
   return impl_->actions_;
 }
 
-void GnomeGrabber::AddAction(CompAction const& action)
+uint32_t GnomeGrabber::AddAction(CompAction const& action)
 {
-  impl_->AddAction(action);
+  return impl_->AddAction(action);
 }
 
-void GnomeGrabber::RemoveAction(CompAction const& action)
+bool GnomeGrabber::RemoveAction(CompAction const& action)
 {
-  impl_->RemoveAction(action);
+  return impl_->RemoveAction(action);
+}
+
+bool GnomeGrabber::RemoveAction(uint32_t action_id)
+{
+  return impl_->RemoveAction(action_id);
 }
 
 } // namespace key

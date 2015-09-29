@@ -40,7 +40,7 @@ struct GnomeGrabber::Impl
   uint32_t NextActionID();
 
   bool AddAction(CompAction const& action, uint32_t action_id);
-  bool AddAction(CompAction const& action);
+  uint32_t AddAction(CompAction const& action);
 
   bool RemoveAction(CompAction const& action);
   bool RemoveAction(uint32_t action_id);
