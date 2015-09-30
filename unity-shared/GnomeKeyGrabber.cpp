@@ -296,9 +296,11 @@ bool GnomeGrabber::Impl::UnGrabDBusAccelerator(std::string const& sender, uint32
 
     if (actions.empty())
       actions_by_dest_.erase(it);
+
+    return RemoveAction(action_id);
   }
 
-  return RemoveAction(action_id);
+  return false;
 }
 
 void GnomeGrabber::Impl::ActivateAction(CompAction const& action, std::string const& dest, uint32_t action_id, uint32_t device, uint32_t timestamp) const
