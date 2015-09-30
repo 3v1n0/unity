@@ -125,12 +125,12 @@ bool GnomeGrabber::Impl::RemoveAction(CompAction const& action)
   auto it = std::find(actions_.begin(), actions_.end(), action);
 
   if (it != actions_.end())
-    return RemoveAction(static_cast<size_t>(it - actions_.begin()));
+    return RemoveActionByIndex(it - actions_.begin());
 
   return false;
 }
 
-bool GnomeGrabber::Impl::RemoveAction(uint32_t action_id)
+bool GnomeGrabber::Impl::RemoveActionByID(uint32_t action_id)
 {
   if (!action_id)
     return false;
@@ -138,12 +138,12 @@ bool GnomeGrabber::Impl::RemoveAction(uint32_t action_id)
   auto it = std::find(actions_ids_.begin(), actions_ids_.end(), action_id);
 
   if (it != actions_ids_.end())
-    return RemoveAction(static_cast<size_t>(it - actions_ids_.begin()));
+    return RemoveActionByIndex(it - actions_ids_.begin());
 
   return false;
 }
 
-bool GnomeGrabber::Impl::RemoveAction(size_t index)
+bool GnomeGrabber::Impl::RemoveActionByIndex(size_t index)
 {
   if (!index || index >= actions_.size())
     return false;
@@ -321,7 +321,7 @@ bool GnomeGrabber::Impl::RemoveActionForSender(uint32_t action_id, std::string c
     }
   }
 
-  return RemoveAction(action_id);
+  return RemoveActionByID(action_id);
 }
 
 void GnomeGrabber::Impl::ActivateAction(CompAction const& action, std::string const& dest, uint32_t action_id, uint32_t device, uint32_t timestamp) const
@@ -366,7 +366,7 @@ bool GnomeGrabber::RemoveAction(CompAction const& action)
 
 bool GnomeGrabber::RemoveAction(uint32_t action_id)
 {
-  return impl_->RemoveAction(action_id);
+  return impl_->RemoveActionByID(action_id);
 }
 
 } // namespace key

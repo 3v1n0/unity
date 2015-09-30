@@ -45,8 +45,8 @@ struct GnomeGrabber::Impl
   uint32_t AddAction(CompAction const& action);
 
   bool RemoveAction(CompAction const& action);
-  bool RemoveAction(uint32_t action_id);
-  bool RemoveAction(size_t index);
+  bool RemoveActionByID(uint32_t action_id);
+  bool RemoveActionByIndex(size_t index);
 
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters, std::string const& sender, std::string const&);
   uint32_t GrabDBusAccelerator(std::string const& sender, std::string const& accelerator, uint32_t flags);
