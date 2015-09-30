@@ -79,7 +79,7 @@ public:
   }
 
 private:
-  std::auto_ptr<dash::TextureContainer> renderer_;
+  std::unique_ptr<dash::TextureContainer> renderer_;
 };
 
 TEST_F(TestResultRenderer, TestConstruction)
