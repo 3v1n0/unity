@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibDBusServer.h>
+#include <UnityCore/GLibDBusNameWatcher.h>
 
 namespace unity
 {
@@ -46,10 +47,11 @@ struct GnomeGrabber::Impl
   bool RemoveAction(uint32_t action_id);
   bool RemoveAction(size_t index);
 
-  GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
-  uint32_t GrabAccelerator(char const* accelerator, uint32_t flags);
+  GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters, std::string const& sender, std::string const&);
+  uint32_t GrabDBusAccelerator(std::string const& sender, std::string const& accelerator, uint32_t flags);
+  bool UnGrabDBusAccelerator(std::string const& sender, uint32_t action_id);
 
-  void ActivateAction(CompAction const& action, uint32_t id, uint32_t device, uint32_t timestamp) const;
+  void ActivateAction(CompAction const& action, std::string const& dest, uint32_t id, uint32_t device, uint32_t timestamp) const;
   bool IsActionPostponed(CompAction const& action) const;
 
   CompScreen* screen_;
@@ -60,6 +62,9 @@ struct GnomeGrabber::Impl
   uint32_t current_action_id_;
   std::vector<uint32_t> actions_ids_;
   CompAction::Vector actions_;
+
+  struct OwnerActions { glib::DBusNameWatcher::Ptr watcher; std::vector<uint32_t> actions; };
+  std::unordered_map<std::string, OwnerActions> actions_by_dest_;
 };
 
 } // namespace key

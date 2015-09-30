@@ -71,7 +71,7 @@ GnomeGrabber::Impl::Impl(bool test_mode)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
-  shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
+  shell_object_->SetMethodsCallsHandlerFull(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 }
 
 GnomeGrabber::Impl::~Impl()
@@ -158,7 +158,7 @@ bool GnomeGrabber::Impl::RemoveAction(size_t index)
   return true;
 }
 
-GVariant* GnomeGrabber::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters)
+GVariant* GnomeGrabber::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters, std::string const& sender, std::string const&)
 {
   LOG_DEBUG(logger) << "Called method '" << method << "'";
 
@@ -176,7 +176,7 @@ GVariant* GnomeGrabber::Impl::OnShellMethodCall(std::string const& method, GVari
       g_variant_get(parameters, "(a(su))", &iterator);
 
       while (g_variant_iter_next(iterator, "(&su)", &accelerator, &flags))
-        g_variant_builder_add(&builder, "u", GrabAccelerator(accelerator, flags));
+        g_variant_builder_add(&builder, "u", GrabDBusAccelerator(sender, accelerator, flags));
 
       g_variant_iter_free(iterator);
       variant = g_variant_builder_end(&builder);
@@ -195,7 +195,7 @@ GVariant* GnomeGrabber::Impl::OnShellMethodCall(std::string const& method, GVari
       guint flags;
       g_variant_get(parameters, "(&su)", &accelerator, &flags);
 
-      if (uint32_t action_id = GrabAccelerator(accelerator, flags))
+      if (uint32_t action_id = GrabDBusAccelerator(sender, accelerator, flags))
         return g_variant_new("(u)", action_id);
     }
     else
@@ -207,42 +207,40 @@ GVariant* GnomeGrabber::Impl::OnShellMethodCall(std::string const& method, GVari
   {
     uint32_t action_id;
     g_variant_get(parameters, "(u)", &action_id);
-    return g_variant_new("(b)", RemoveAction(action_id));
+    return g_variant_new("(b)", UnGrabDBusAccelerator(sender, action_id));
   }
 
   return nullptr;
 }
 
-uint32_t GnomeGrabber::Impl::GrabAccelerator(char const* accelerator, uint32_t flags)
+uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& sender, std::string const& accelerator, uint32_t flags)
 {
   CompAction action;
   action.keyFromString(accelerator);
   uint32_t action_id = NextActionID();
 
+  LOG_DEBUG(logger) << "GrabDBusAccelerator \"" << accelerator << "\"";
+
   if (action.key().toString().empty())
   {
-    CompString prefixed = "XF86" + CompString(accelerator);
+    auto prefixed = "XF86" + accelerator;
     LOG_DEBUG(logger) << "Can't grab \"" << accelerator << "\", trying \"" << prefixed << "\"";
     action.keyFromString(prefixed);
-  }
-  else
-  {
-    LOG_DEBUG(logger) << "grabAccelerator \"" << accelerator << "\"";
   }
 
   if (!IsActionPostponed(action))
   {
     action.setState(CompAction::StateInitKey);
-    action.setInitiate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setInitiate([this, sender, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
-      ActivateAction(*action, action_id, 0, options[7].value().i());
+      ActivateAction(*action, sender, action_id, 0, options[7].value().i());
       return true;
     });
   }
   else
   {
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
-    action.setTerminate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setTerminate([this, sender, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       auto key = action->keyToString();
 
       LOG_DEBUG(logger) << "released \"" << key << "\"";
@@ -250,7 +248,7 @@ uint32_t GnomeGrabber::Impl::GrabAccelerator(char const* accelerator, uint32_t f
       if (state & CompAction::StateTermTapped)
       {
         LOG_DEBUG(logger) << "tapped \"" << key << "\"";
-        ActivateAction(*action, action_id, 0, options[7].value().i());
+        ActivateAction(*action, sender, action_id, 0, options[7].value().i());
         return true;
       }
 
@@ -258,13 +256,55 @@ uint32_t GnomeGrabber::Impl::GrabAccelerator(char const* accelerator, uint32_t f
     });
   }
 
-  return AddAction(action, action_id) ? action_id : 0;
+  if (AddAction(action, action_id))
+  {
+    if (action_id == current_action_id_)
+    {
+      auto& owner_actions = actions_by_dest_[sender];
+      bool empty_actions = owner_actions.actions.empty();
+      owner_actions.actions.push_back(action_id);
+
+      if (empty_actions)
+      {
+        owner_actions.watcher = std::make_shared<glib::DBusNameWatcher>(sender);
+        owner_actions.watcher->vanished.connect([this] (std::string const& name) {
+          auto it = actions_by_dest_.find(name);
+          if (it != actions_by_dest_.end())
+          {
+            for (auto action_id : it->second.actions)
+              RemoveAction(action_id);
+
+            actions_by_dest_.erase(it);
+          }
+        });
+      }
+    }
+
+    return action_id;
+  }
+
+  return 0;
 }
 
-void GnomeGrabber::Impl::ActivateAction(CompAction const& action, uint32_t action_id, uint32_t device, uint32_t timestamp) const
+bool GnomeGrabber::Impl::UnGrabDBusAccelerator(std::string const& sender, uint32_t action_id)
+{
+  auto it = actions_by_dest_.find(sender);
+  if (it != actions_by_dest_.end())
+  {
+    auto& actions = it->second.actions;
+    actions.erase(std::remove(actions.begin(), actions.end(), action_id), actions.end());
+
+    if (actions.empty())
+      actions_by_dest_.erase(it);
+  }
+
+  return RemoveAction(action_id);
+}
+
+void GnomeGrabber::Impl::ActivateAction(CompAction const& action, std::string const& dest, uint32_t action_id, uint32_t device, uint32_t timestamp) const
 {
   LOG_DEBUG(logger) << "ActivateAction (" << action_id << " \"" << action.keyToString() << "\")";
-  shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uuu)", action_id, device, timestamp));
+  shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uuu)", action_id, device, timestamp), dest);
 }
 
 bool GnomeGrabber::Impl::IsActionPostponed(CompAction const& action) const
