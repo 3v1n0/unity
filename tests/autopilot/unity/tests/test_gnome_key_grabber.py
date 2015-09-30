@@ -154,20 +154,12 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
 
         self.addCleanup(clean_up_test_grab_same_accelerator)
 
-        for accelerator in accelerators:
-            # Check that accelerator works
-            self.assertTrue(self.press_accelerator(accelerator))
+        # Check that accelerator works
+        self.assertTrue(self.press_accelerator(accelerator))
 
-            # Remove accelerator
-            log.info('ungrabbing %s' % accelerator)
-            self.assertTrue(self.interface.UngrabAccelerator(accelerator.action))
+        # Remove accelerator
+        log.info('ungrabbing %s' % accelerator)
+        self.assertTrue(self.interface.UngrabAccelerator(accelerator.action))
 
-            # This accelerator cannot activate any more
-            self.activatable.remove(accelerator.action)
-
-        # Add them all again for one final check
-        for accelerator in accelerators:
-            self.activatable.add(accelerator.action)
-
-        # Check that signal was not emitted
-        self.assertFalse(self.press_accelerator(accelerators[0]))
+        for accelerator in accelerators[1:]:
+            self.assertFalse(self.press_accelerator(accelerator))
