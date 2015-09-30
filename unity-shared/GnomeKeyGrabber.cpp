@@ -169,44 +169,30 @@ GVariant* GnomeGrabber::Impl::OnShellMethodCall(std::string const& method, GVari
 
   if (method == "GrabAccelerators")
   {
-    if (g_variant_is_of_type(parameters, G_VARIANT_TYPE("(a(su))")))
-    {
-      GVariant* variant;
-      GVariantBuilder builder;
-      GVariantIter* iterator;
-      gchar const* accelerator;
-      guint flags;
+    GVariant* variant;
+    GVariantBuilder builder;
+    GVariantIter* iterator;
+    gchar const* accelerator;
+    guint flags;
 
-      g_variant_builder_init(&builder, G_VARIANT_TYPE("au"));
-      g_variant_get(parameters, "(a(su))", &iterator);
+    g_variant_builder_init(&builder, G_VARIANT_TYPE("au"));
+    g_variant_get(parameters, "(a(su))", &iterator);
 
-      while (g_variant_iter_next(iterator, "(&su)", &accelerator, &flags))
-        g_variant_builder_add(&builder, "u", GrabDBusAccelerator(sender, accelerator, flags));
+    while (g_variant_iter_next(iterator, "(&su)", &accelerator, &flags))
+      g_variant_builder_add(&builder, "u", GrabDBusAccelerator(sender, accelerator, flags));
 
-      g_variant_iter_free(iterator);
-      variant = g_variant_builder_end(&builder);
-      return g_variant_new_tuple(&variant, 1);
-    }
-    else
-    {
-      LOG_WARN(logger) << "Expected arguments of type (a(su))";
-    }
+    g_variant_iter_free(iterator);
+    variant = g_variant_builder_end(&builder);
+    return g_variant_new_tuple(&variant, 1);
   }
   else if (method == "GrabAccelerator")
   {
-    if (g_variant_is_of_type(parameters, G_VARIANT_TYPE("(su)")))
-    {
-      gchar const* accelerator;
-      guint flags;
-      g_variant_get(parameters, "(&su)", &accelerator, &flags);
+    gchar const* accelerator;
+    guint flags;
+    g_variant_get(parameters, "(&su)", &accelerator, &flags);
 
-      if (uint32_t action_id = GrabDBusAccelerator(sender, accelerator, flags))
-        return g_variant_new("(u)", action_id);
-    }
-    else
-    {
-      LOG_WARN(logger) << "Expected arguments of type (su)";
-    }
+    if (uint32_t action_id = GrabDBusAccelerator(sender, accelerator, flags))
+      return g_variant_new("(u)", action_id);
   }
   else if (method == "UngrabAccelerator")
   {
