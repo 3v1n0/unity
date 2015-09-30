@@ -20,7 +20,8 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
-#include "lockscreen/UserPromptView.h"
+//#include "lockscreen/UserPromptView.h"
+#include "lockscreen/LockScreenAbstractPromptView.h"
 #include "lockscreen/LockScreenController.h"
 
 #include <Nux/NuxTimerTickSource.h>
@@ -54,7 +55,8 @@ const unsigned TICK_DURATION =  10 * 1000;
 struct MockShield : AbstractShield
 {
   MockShield()
-    : AbstractShield(nullptr, nullptr, nullptr, nux::ObjectPtr<UserPromptView>(), 0, false)
+//    : AbstractShield(nullptr, nullptr, nullptr, nux::ObjectPtr<UserPromptView>(), 0, false)
+    : AbstractShield(nullptr, nullptr, nullptr, nux::ObjectPtr<AbstractUserPromptView>(), 0, false)
   {}
 
   MOCK_CONST_METHOD0(IsIndicatorOpen, bool());
@@ -67,7 +69,8 @@ struct ShieldFactoryMock : ShieldFactoryInterface
   nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
                                               indicator::Indicators::Ptr const&,
                                               Accelerators::Ptr const&,
-                                              nux::ObjectPtr<UserPromptView> const&,
+//                                              nux::ObjectPtr<UserPromptView> const&,
+                                              nux::ObjectPtr<AbstractUserPromptView> const&,
                                               int, bool) override
   {
     return nux::ObjectPtr<AbstractShield>(new MockShield());

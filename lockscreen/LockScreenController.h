@@ -29,16 +29,20 @@
 #include "ScreenSaverDBusManager.h"
 #include "ShutdownNotifier.h"
 #include "SuspendNotifier.h"
-#include "UserPromptView.h"
+//#include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
+
+#include "KylinUserPromptView.h"
+#include "LockScreenAbstractPromptView.h"
 
 namespace unity
 {
 namespace lockscreen
 {
 
-class UserPromptView;
+//class UserPromptView;
+class AbstractUserPromptView;
 
 class Controller : public sigc::trackable
 {
@@ -79,7 +83,8 @@ private:
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
-  nux::ObjectWeakPtr<UserPromptView> prompt_view_;
+//  nux::ObjectWeakPtr<UserPromptView> prompt_view_;
+  nux::ObjectWeakPtr<AbstractUserPromptView> prompt_view_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
 
   DBusManager::Ptr dbus_manager_;

@@ -29,8 +29,6 @@
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
-#include "KylinUserPromptView.h"
-
 namespace unity
 {
 namespace lockscreen
@@ -220,15 +218,17 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   int primary = UScreen::GetDefault()->GetMonitorWithMouse();
 
   // Keep a reference of the old prompt_view
-  nux::ObjectPtr<UserPromptView> prompt_view(prompt_view_.GetPointer());
+//  nux::ObjectPtr<UserPromptView> prompt_view(prompt_view_.GetPointer());
+    nux::ObjectPtr<AbstractUserPromptView> prompt_view(prompt_view_.GetPointer());
 
   shields_.resize(num_monitors);
 
   if (!prompt_view)
   {
-    prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
+//    prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
+    prompt_view = test_mode_ ? nullptr : new KylinUserPromptView(session_manager_);
     prompt_view_ = prompt_view.GetPointer();
-    new KylinUserPromptView(session_manager_);
+//    new KylinUserPromptView(session_manager_);
   }
 
   for (int i = 0; i < num_monitors; ++i)
