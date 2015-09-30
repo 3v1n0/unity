@@ -72,7 +72,7 @@ struct StandaloneDndManager : XdndManager
 
 struct StandaloneKeyGrabber : key::Grabber
 {
-  CompAction::Vector& GetActions() { return noActions(); }
+  CompAction::Vector& GetActions() override { return noActions(); }
   uint32_t AddAction(CompAction const&) override { return 0; };
   bool RemoveAction(CompAction const&) override { return false; };
   bool RemoveAction(uint32_t id) override { return false; };
