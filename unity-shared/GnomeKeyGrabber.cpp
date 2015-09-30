@@ -64,6 +64,11 @@ namespace testing
 std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 }
 
+namespace
+{
+inline int compiz_event_timestamp(CompOption::Vector& options) { return options[7].value().i(); }
+}
+
 GnomeGrabber::Impl::Impl(bool test_mode)
   : screen_(screen)
   , shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
@@ -231,16 +236,16 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& sender, std:
   if (!IsActionPostponed(action))
   {
     action.setState(CompAction::StateInitKey);
-    action.setInitiate([this, sender, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setInitiate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
-      ActivateAction(*action, sender, action_id, 0, options[7].value().i());
+      ActivateDBusAction(*action, action_id, 0, compiz_event_timestamp(options));
       return true;
     });
   }
   else
   {
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
-    action.setTerminate([this, sender, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
+    action.setTerminate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       auto key = action->keyToString();
 
       LOG_DEBUG(logger) << "released \"" << key << "\"";
@@ -248,7 +253,7 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& sender, std:
       if (state & CompAction::StateTermTapped)
       {
         LOG_DEBUG(logger) << "tapped \"" << key << "\"";
-        ActivateAction(*action, sender, action_id, 0, options[7].value().i());
+        ActivateDBusAction(*action, action_id, 0, compiz_event_timestamp(options));
         return true;
       }
 
@@ -324,10 +329,15 @@ bool GnomeGrabber::Impl::RemoveActionForSender(uint32_t action_id, std::string c
   return RemoveActionByID(action_id);
 }
 
-void GnomeGrabber::Impl::ActivateAction(CompAction const& action, std::string const& dest, uint32_t action_id, uint32_t device, uint32_t timestamp) const
+void GnomeGrabber::Impl::ActivateDBusAction(CompAction const& action, uint32_t action_id, uint32_t device, uint32_t timestamp) const
 {
   LOG_DEBUG(logger) << "ActivateAction (" << action_id << " \"" << action.keyToString() << "\")";
-  shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uuu)", action_id, device, timestamp), dest);
+
+  for (auto const& pair : actions_by_dest_)
+  {
+    if (pair.second.actions.find(action_id) != pair.second.actions.end())
+      shell_object_->EmitSignal("AcceleratorActivated", g_variant_new("(uuu)", action_id, device, timestamp), pair.first);
+  }
 }
 
 bool GnomeGrabber::Impl::IsActionPostponed(CompAction const& action) const

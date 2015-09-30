@@ -51,9 +51,9 @@ struct GnomeGrabber::Impl
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters, std::string const& sender, std::string const&);
   uint32_t GrabDBusAccelerator(std::string const& sender, std::string const& accelerator, uint32_t flags);
   bool UnGrabDBusAccelerator(std::string const& sender, uint32_t action_id);
+  void ActivateDBusAction(CompAction const& action, uint32_t id, uint32_t device, uint32_t timestamp) const;
   bool RemoveActionForSender(uint32_t action_id, std::string const& sender);
 
-  void ActivateAction(CompAction const& action, std::string const& dest, uint32_t id, uint32_t device, uint32_t timestamp) const;
   bool IsActionPostponed(CompAction const& action) const;
 
   CompScreen* screen_;
