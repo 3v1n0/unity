@@ -102,7 +102,7 @@ TEST_F(TestIconLoader, TestGetDefault)
   EXPECT_EQ(&icon_loader, &IconLoader::GetDefault());
 }
 
-TEST_F(TestIconLoader, TestGetOneIcon)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetOneIcon))
 {
   LoadResult load_result;
 
@@ -111,11 +111,12 @@ TEST_F(TestIconLoader, TestGetOneIcon)
   handles_.push_back(handle);
 
   Utils::WaitPendingEvents(WAIT_TIMEOUT);
+  Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetAnnotatedIcon)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetAnnotatedIcon))
 {
   LoadResult load_result;
 
@@ -124,11 +125,12 @@ TEST_F(TestIconLoader, TestGetAnnotatedIcon)
   handles_.push_back(handle);
 
   Utils::WaitPendingEvents(WAIT_TIMEOUT);
+  Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetColorizedIcon)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetColorizedIcon))
 {
   LoadResult load_result;
 
@@ -137,6 +139,7 @@ TEST_F(TestIconLoader, TestGetColorizedIcon)
   handles_.push_back(handle);
 
   Utils::WaitPendingEvents(WAIT_TIMEOUT);
+  Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }

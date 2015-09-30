@@ -8,6 +8,16 @@
 #include "GLibWrapper.h"
 #include "config.h"
 
+#ifdef UNITY_DEBUG_BUILD
+#define UNSTABLE_PREFIX UNSTABLE
+#else
+#define UNSTABLE_PREFIX DISABLED
+#endif
+
+#define TEST_PREFIX(prefix,test) prefix ## _ ## test
+#define TEST_EVALUATOR(prefix,test) TEST_PREFIX(prefix,test)
+#define UNSTABLE_TEST(test) TEST_EVALUATOR(UNSTABLE_PREFIX, test)
+
 namespace
 {
 
