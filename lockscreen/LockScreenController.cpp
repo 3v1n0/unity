@@ -29,6 +29,8 @@
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
+#include "KylinUserPromptView.h"
+
 namespace unity
 {
 namespace lockscreen
@@ -226,6 +228,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   {
     prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
     prompt_view_ = prompt_view.GetPointer();
+    new KylinUserPromptView(session_manager_);
   }
 
   for (int i = 0; i < num_monitors; ++i)

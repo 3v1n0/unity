@@ -19,6 +19,7 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 set (LOCKSCREEN_SOURCES
      BackgroundSettings.cpp
      CofView.cpp
+     KylinUserPromptView.cpp
      LockScreenController.cpp
      LockScreenSettings.cpp
      LockScreenShield.cpp
