@@ -258,26 +258,25 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& sender, std:
 
   if (AddAction(action, action_id))
   {
-    if (action_id == current_action_id_)
+    auto& owner_actions = actions_by_dest_[sender];
+    bool first_insertion = owner_actions.actions.empty();
+    owner_actions.actions.insert(action_id);
+
+    if (first_insertion)
     {
-      auto& owner_actions = actions_by_dest_[sender];
-      bool empty_actions = owner_actions.actions.empty();
-      owner_actions.actions.push_back(action_id);
+      LOG_DEBUG(logger) << "Initialize dbus watcher for sender '" << sender << "'";
+      owner_actions.watcher = std::make_shared<glib::DBusNameWatcher>(sender);
+      owner_actions.watcher->vanished.connect([this] (std::string const& name) {
+        LOG_DEBUG(logger) << "Signal destination vanished '" << name << "', removing related actions";
+        auto it = actions_by_dest_.find(name);
+        if (it != actions_by_dest_.end())
+        {
+          for (auto action_id : it->second.actions)
+            RemoveActionForSender(action_id, name);
 
-      if (empty_actions)
-      {
-        owner_actions.watcher = std::make_shared<glib::DBusNameWatcher>(sender);
-        owner_actions.watcher->vanished.connect([this] (std::string const& name) {
-          auto it = actions_by_dest_.find(name);
-          if (it != actions_by_dest_.end())
-          {
-            for (auto action_id : it->second.actions)
-              RemoveAction(action_id);
-
-            actions_by_dest_.erase(it);
-          }
-        });
-      }
+          actions_by_dest_.erase(it);
+        }
+      });
     }
 
     return action_id;
@@ -288,19 +287,41 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& sender, std:
 
 bool GnomeGrabber::Impl::UnGrabDBusAccelerator(std::string const& sender, uint32_t action_id)
 {
+  LOG_DEBUG(logger) << "UnGrabDBusAccelerator \"" << action_id << "\"";
+
   auto it = actions_by_dest_.find(sender);
   if (it != actions_by_dest_.end())
   {
     auto& actions = it->second.actions;
-    actions.erase(std::remove(actions.begin(), actions.end(), action_id), actions.end());
+    actions.erase(action_id);
 
     if (actions.empty())
       actions_by_dest_.erase(it);
 
-    return RemoveAction(action_id);
+    return RemoveActionForSender(action_id, sender);
   }
 
+  LOG_WARN(logger) << "Action " << action_id << " was not registered by " << sender << ". "
+                   << "Unregistration denied";
   return false;
+}
+
+bool GnomeGrabber::Impl::RemoveActionForSender(uint32_t action_id, std::string const& sender)
+{
+  for (auto it = actions_by_dest_.begin(); it != actions_by_dest_.end(); ++it)
+  {
+    if (it->first == sender)
+      continue;
+
+    auto const& actions = it->second.actions;
+    if (actions.find(action_id) != actions.end())
+    {
+      LOG_DEBUG(logger) << "Action " << action_id << " registered for multiple destinations, not removed";
+      return false;
+    }
+  }
+
+  return RemoveAction(action_id);
 }
 
 void GnomeGrabber::Impl::ActivateAction(CompAction const& action, std::string const& dest, uint32_t action_id, uint32_t device, uint32_t timestamp) const

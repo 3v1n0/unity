@@ -24,6 +24,7 @@
 #include "GnomeKeyGrabber.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibDBusNameWatcher.h>
@@ -50,6 +51,7 @@ struct GnomeGrabber::Impl
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters, std::string const& sender, std::string const&);
   uint32_t GrabDBusAccelerator(std::string const& sender, std::string const& accelerator, uint32_t flags);
   bool UnGrabDBusAccelerator(std::string const& sender, uint32_t action_id);
+  bool RemoveActionForSender(uint32_t action_id, std::string const& sender);
 
   void ActivateAction(CompAction const& action, std::string const& dest, uint32_t id, uint32_t device, uint32_t timestamp) const;
   bool IsActionPostponed(CompAction const& action) const;
@@ -63,7 +65,7 @@ struct GnomeGrabber::Impl
   std::vector<uint32_t> actions_ids_;
   CompAction::Vector actions_;
 
-  struct OwnerActions { glib::DBusNameWatcher::Ptr watcher; std::vector<uint32_t> actions; };
+  struct OwnerActions { glib::DBusNameWatcher::Ptr watcher; std::unordered_set<uint32_t> actions; };
   std::unordered_map<std::string, OwnerActions> actions_by_dest_;
 };
 
