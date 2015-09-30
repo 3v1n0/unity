@@ -178,7 +178,6 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
 
 void KylinUserPromptView::ResetLayout()
 {
-  std::cout << "Kylin user prompt view !!" << std::endl;
   focus_queue_.clear();
 
   SetLayout(new nux::HLayout());

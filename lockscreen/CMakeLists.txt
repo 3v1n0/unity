@@ -20,6 +20,7 @@ set (LOCKSCREEN_SOURCES
      BackgroundSettings.cpp
      CofView.cpp
      KylinUserPromptView.cpp
+     KylinLockScreenShield.cpp
      LockScreenController.cpp
      LockScreenSettings.cpp
      LockScreenShield.cpp

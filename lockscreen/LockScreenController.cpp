@@ -225,8 +225,10 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
   if (!prompt_view)
   {
-//    prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
-    prompt_view = test_mode_ ? nullptr : new KylinUserPromptView(session_manager_);
+    if (strcmp(getenv("XDG_CURRENT_DESKTOP"), "KYLIN"))
+      prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
+    else
+      prompt_view = test_mode_ ? nullptr : new KylinUserPromptView(session_manager_);
     prompt_view_ = prompt_view.GetPointer();
 //    new KylinUserPromptView(session_manager_);
   }

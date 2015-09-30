@@ -100,7 +100,7 @@ std::string SanitizeMessage(std::string const& message)
 }
 
 UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
-  : nux::View(NUX_TRACKER_LOCATION)
+  : AbstractUserPromptView(session_manager)
   , scale(1.0)
   , session_manager_(session_manager)
   , username_(nullptr)

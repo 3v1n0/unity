@@ -29,7 +29,7 @@
 #include "ScreenSaverDBusManager.h"
 #include "ShutdownNotifier.h"
 #include "SuspendNotifier.h"
-//#include "UserPromptView.h"
+#include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 

@@ -21,6 +21,7 @@
 #include "LockScreenShield.h"
 //#include "UserPromptView.h"
 #include "LockScreenAbstractPromptView.h"
+#include "KylinLockScreenShield.h"
 
 namespace unity
 {
@@ -34,7 +35,10 @@ nux::ObjectPtr<AbstractShield> ShieldFactory::CreateShield(session::Manager::Ptr
                                                            nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                                                            int monitor, bool is_primary)
 {
-  return nux::ObjectPtr<Shield>(new Shield(session_manager, indicators, accelerators, prompt_view,  monitor, is_primary));
+  if (!strcmp(getenv("XDG_CURRENT_DESKTOP"),"KYLIN"))
+    return nux::ObjectPtr<KylinShield>(new KylinShield(session_manager, accelerators, prompt_view, monitor, is_primary));
+  else
+    return nux::ObjectPtr<Shield>(new Shield(session_manager, indicators, accelerators, prompt_view,  monitor, is_primary));
 }
 
 }
