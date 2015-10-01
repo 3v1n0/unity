@@ -98,7 +98,6 @@ enum
   ENTRY_ACTIVATED = 0,
   RE_SYNC,
   ENTRY_ACTIVATE_REQUEST,
-  ENTRY_SHOW_NOW_CHANGED,
   GEOMETRIES_CHANGED,
   INDICATORS_CLEARED,
 
@@ -249,14 +248,6 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_TYPE_NONE, 6,
                   G_TYPE_OBJECT, G_TYPE_POINTER,
                   G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
-
- _service_signals[ENTRY_SHOW_NOW_CHANGED] =
-    g_signal_new ("entry-show-now-changed",
-                  G_OBJECT_CLASS_TYPE (obj_class),
-                  G_SIGNAL_RUN_LAST,
-                  0,
-                  NULL, NULL, NULL,
-                  G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
   _service_signals[INDICATORS_CLEARED] =
     g_signal_new ("indicators-cleared",
@@ -1371,26 +1362,6 @@ on_indicator_menu_show (IndicatorObject      *object,
   g_free (entry_id);
 }
 
-static void
-on_indicator_menu_show_now_changed (IndicatorObject      *object,
-                                    IndicatorObjectEntry *entry,
-                                    gboolean              show_now_changed,
-                                    PanelService         *self)
-{
-  gchar *entry_id;
-  g_return_if_fail (PANEL_IS_SERVICE (self));
-
-  if (!entry)
-    {
-      g_warning ("%s called with a NULL entry", G_STRFUNC);
-      return;
-    }
-
-  entry_id = get_indicator_entry_id_by_entry (entry);
-  g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
-  g_free (entry_id);
-}
-
 static const gchar * indicator_environment[] = {
   "unity",
   "unity-3d",
@@ -1428,8 +1399,6 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
                     G_CALLBACK (on_entry_moved), self);
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_MENU_SHOW,
                     G_CALLBACK (on_indicator_menu_show), self);
-  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_SHOW_NOW_CHANGED,
-                    G_CALLBACK (on_indicator_menu_show_now_changed), self);
 
   entries = indicator_object_get_entries (object);
   for (entry = entries; entry != NULL; entry = entry->next)
