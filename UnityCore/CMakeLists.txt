@@ -25,6 +25,7 @@ set (CORE_HEADERS
      Filter.h
      Filters.h
      GenericPreview.h
+     GLibDBusNameWatcher.h
      GLibDBusProxy.h
      GLibDBusServer.h
      GLibSignal.h
@@ -80,6 +81,7 @@ set (CORE_SOURCES
      Filter.cpp
      Filters.cpp
      GenericPreview.cpp
+     GLibDBusNameWatcher.cpp
      GLibDBusProxy.cpp
      GLibDBusServer.cpp
      GLibSignal.cpp

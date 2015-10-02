@@ -53,6 +53,7 @@ struct LoadResult
 
 void CheckResults(std::vector<LoadResult> const& results)
 {
+  Utils::WaitPendingEvents(WAIT_TIMEOUT);
   Utils::WaitUntilMSec([&results] {
     bool got_all = true;
     for (auto const& result : results)
@@ -101,8 +102,7 @@ TEST_F(TestIconLoader, TestGetDefault)
   EXPECT_EQ(&icon_loader, &IconLoader::GetDefault());
 }
 
-// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
-TEST_F(TestIconLoader, DISABLED_TestGetOneIcon)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetOneIcon))
 {
   LoadResult load_result;
 
@@ -110,13 +110,13 @@ TEST_F(TestIconLoader, DISABLED_TestGetOneIcon)
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
+  Utils::WaitPendingEvents(WAIT_TIMEOUT);
   Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
-TEST_F(TestIconLoader, DISABLED_TestGetAnnotatedIcon)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetAnnotatedIcon))
 {
   LoadResult load_result;
 
@@ -124,13 +124,13 @@ TEST_F(TestIconLoader, DISABLED_TestGetAnnotatedIcon)
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
+  Utils::WaitPendingEvents(WAIT_TIMEOUT);
   Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
-TEST_F(TestIconLoader, DISABLED_TestGetColorizedIcon)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetColorizedIcon))
 {
   LoadResult load_result;
 
@@ -138,6 +138,7 @@ TEST_F(TestIconLoader, DISABLED_TestGetColorizedIcon)
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
+  Utils::WaitPendingEvents(WAIT_TIMEOUT);
   Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
@@ -173,8 +174,7 @@ TEST_F(TestIconLoader, TestGetOneIconManyTimes)
   CheckResults(results);
 }
 
-// Disabled until we have the new thread safe lp:fontconfig
-TEST_F(TestIconLoader, DISABLED_TestGetManyIcons)
+TEST_F(TestIconLoader, TestGetManyIcons)
 {
   std::vector<LoadResult> results;
   int i = 0;

@@ -142,18 +142,18 @@ struct Manager::Impl : sigc::trackable
     {
       auto key = gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic));
       glib::String accelerator(gtk_accelerator_name(key, GDK_MOD1_MASK));
-      auto action = std::make_shared<CompAction>();
       auto const& id = entry->id();
 
-      action->keyFromString(accelerator);
-      action->setState(CompAction::StateInitKey);
-      action->setInitiate([this, id] (CompAction* action, CompAction::State, CompOption::Vector&) {
+      CompAction action;
+      action.keyFromString(accelerator);
+      action.setState(CompAction::StateInitKey);
+      action.setInitiate([this, id] (CompAction* action, CompAction::State, CompOption::Vector&) {
         LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
         return parent_->key_activate_entry.emit(id);
       });
 
-      entry_actions_.insert({entry, action});
-      key_grabber_->AddAction(*action);
+      if (uint32_t action_id = key_grabber_->AddAction(action))
+        entry_actions_.insert({entry, action_id});
     }
   }
 
@@ -163,7 +163,7 @@ struct Manager::Impl : sigc::trackable
 
     if (it != entry_actions_.end())
     {
-      key_grabber_->RemoveAction(*it->second);
+      key_grabber_->RemoveAction(it->second);
       entry_actions_.erase(it);
     }
   }
@@ -172,7 +172,7 @@ struct Manager::Impl : sigc::trackable
   {
     for (auto it = entry_actions_.begin(); it != entry_actions_.end();)
     {
-      key_grabber_->RemoveAction(*it->second);
+      key_grabber_->RemoveAction(it->second);
       it = entry_actions_.erase(it);
     }
   }
@@ -240,7 +240,7 @@ struct Manager::Impl : sigc::trackable
   connection::Wrapper active_win_conn_;
   glib::Object<GSettings> settings_;
   glib::SignalManager signals_;
-  std::unordered_map<indicator::Entry::Ptr, std::shared_ptr<CompAction>> entry_actions_;
+  std::unordered_map<indicator::Entry::Ptr, uint32_t> entry_actions_;
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)
