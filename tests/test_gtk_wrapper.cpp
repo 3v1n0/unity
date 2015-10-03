@@ -41,7 +41,7 @@ TEST(TestGTKWrapper, ValidIconInfo)
   for (GList *l = icons; l; l = l->next)
   {
     auto icon_name = static_cast <const char*>(l->data);
-    GtkIconInfo *ginfo = gtk_icon_theme_lookup_icon(gtk_icon_theme_get_default(), icon_name, 32, (GtkIconLookupFlags) 0);
+    GtkIconInfo *ginfo = gtk_icon_theme_lookup_icon(gtk_icon_theme_get_default(), icon_name, 32, GTK_ICON_LOOKUP_FORCE_SIZE);
     gtk::IconInfo info(ginfo);
     ASSERT_THAT(info.RawPtr(), NotNull());
     ASSERT_TRUE(info);

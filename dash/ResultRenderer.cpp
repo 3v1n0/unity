@@ -21,8 +21,8 @@
  */
 
 #include "ResultRenderer.h"
+#include "unity-shared/RawPixel.h"
 
-#include <gtk/gtk.h>
 #include <unity-protocol.h>
 #include <NuxGraphics/GdkGraphics.h>
 #include <UnityCore/GTKWrapper.h>
@@ -34,7 +34,8 @@ namespace dash
 
 namespace
 {
-#define DEFAULT_GICON ". GThemedIcon text-x-preview"
+const std::string DEFAULT_GICON = ". GThemedIcon text-x-preview";
+const RawPixel DEFAULT_ICON_SIZE = 64_em;
 
 GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
 {
@@ -67,11 +68,11 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
      {
         auto anno = glib::object_cast<UnityProtocolAnnotatedIcon>(icon);
         GIcon *base_icon = unity_protocol_annotated_icon_get_icon(anno);
-        info = gtk_icon_theme_lookup_by_gicon(theme, base_icon, size, (GtkIconLookupFlags)0);
+        info = gtk_icon_theme_lookup_by_gicon(theme, base_icon, size, GTK_ICON_LOOKUP_FORCE_SIZE);
      }
      else
      {
-       info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+       info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, GTK_ICON_LOOKUP_FORCE_SIZE);
      }
   }
   else
@@ -79,7 +80,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
      info = gtk_icon_theme_lookup_icon(theme,
                                         icon_hint.c_str(),
                                         size,
-                                        (GtkIconLookupFlags) 0);
+                                        GTK_ICON_LOOKUP_FORCE_SIZE);
   }
 
   if (!info)
@@ -87,7 +88,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
       info = gtk_icon_theme_lookup_icon(theme,
                                         "application-default-icon",
                                         size,
-                                        (GtkIconLookupFlags) 0);
+                                        GTK_ICON_LOOKUP_FORCE_SIZE);
   }
 
   if (!gtk_icon_info_get_filename(info))
@@ -95,7 +96,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
       info = gtk_icon_theme_lookup_icon(theme,
                                         "application-default-icon",
                                         size,
-                                        (GtkIconLookupFlags) 0);
+                                        GTK_ICON_LOOKUP_FORCE_SIZE);
   }
 
   pbuf = gtk_icon_info_load_icon(info, &error);
@@ -143,10 +144,9 @@ void ResultRenderer::Unload(Result const& row)
 
 nux::NBitmapData* ResultRenderer::GetDndImage(Result const& row) const
 {
-  nux::GdkGraphics graphics(_icon_hint_get_drag_pixbuf(row.icon_hint, 64));
+  nux::GdkGraphics graphics(_icon_hint_get_drag_pixbuf(row.icon_hint, DEFAULT_ICON_SIZE.CP(scale)));
   return graphics.GetBitmap();
 }
 
 }
 }
-

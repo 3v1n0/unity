@@ -224,7 +224,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
     case GTK_IMAGE_GICON:
     {
       GtkIconTheme* theme = gtk_icon_theme_get_default();
-      auto flags = static_cast<GtkIconLookupFlags>(0);
+      auto flags = GTK_ICON_LOOKUP_FORCE_SIZE;
       gtk::IconInfo info;
 
       if (image_type == GTK_IMAGE_GICON)
