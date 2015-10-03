@@ -390,7 +390,7 @@ BaseTexturePtr LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 {
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), nullptr));
   gtk::IconInfo info;
-  auto flags = static_cast<GtkIconLookupFlags>(0);
+  auto flags = GTK_ICON_LOOKUP_FORCE_SIZE;
 
   if (icon.IsType(G_TYPE_ICON))
   {
