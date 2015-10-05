@@ -32,7 +32,7 @@
 #include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/GLibSource.h>
 #include <UnityCore/GLibSignal.h>
-#include <UnityCore/GTKWrapper.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/Timer.h"
 #include "unity-shared/UnitySettings.h"
@@ -84,7 +84,7 @@ private:
     IconLoaderCallback slot;
     Handle handle;
     Impl* impl;
-    gtk::IconInfo icon_info;
+    glib::Object<GtkIconInfo> icon_info;
     bool no_cache;
     Handle helper_handle;
     std::list<IconLoaderTask::Ptr> shadow_tasks;

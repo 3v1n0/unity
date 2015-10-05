@@ -21,7 +21,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/ConnectionManager.h>
-#include <UnityCore/GTKWrapper.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
@@ -225,7 +225,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
     {
       GtkIconTheme* theme = gtk_icon_theme_get_default();
       auto flags = GTK_ICON_LOOKUP_FORCE_SIZE;
-      gtk::IconInfo info;
+      glib::Object<GtkIconInfo> info;
 
       if (image_type == GTK_IMAGE_GICON)
       {

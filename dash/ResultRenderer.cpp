@@ -23,9 +23,10 @@
 #include "ResultRenderer.h"
 #include "unity-shared/RawPixel.h"
 
+#include <gtk/gtk.h>
 #include <unity-protocol.h>
 #include <NuxGraphics/GdkGraphics.h>
-#include <UnityCore/GTKWrapper.h>
+#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -41,7 +42,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
 {
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
-  gtk::IconInfo info;
+  glib::Object<GtkIconInfo> info;
   glib::Error error;
   glib::Object<GIcon> icon;
 
