@@ -139,7 +139,6 @@ static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
 static void update_keybinding (GSettings *, const gchar *, gpointer);
 static void emit_upstart_event (const gchar *);
-static void free_dropdown_entry (IndicatorObjectEntry *);
 static gchar * get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry);
 static IndicatorObjectEntry * get_indicator_entry_by_id (PanelService *self, const gchar *entry_id);
 static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
@@ -187,7 +186,7 @@ panel_service_class_dispose (GObject *self)
 
   if (priv->dropdown_entries)
     {
-      g_slist_free_full (priv->dropdown_entries, (GDestroyNotify) free_dropdown_entry);
+      g_slist_free_full (priv->dropdown_entries, g_free);
       priv->dropdown_entries = NULL;
     }
 
@@ -278,13 +277,6 @@ rect_contains_point (GdkRectangle* rect, gint x, gint y)
 
   return (x >= rect->x && x <= (rect->x + rect->width) &&
           y >= rect->y && y <= (rect->y + rect->height));
-}
-
-void
-free_dropdown_entry (IndicatorObjectEntry *entry)
-{
-  g_free ((gchar *) entry->name_hint);
-  g_free (entry);
 }
 
 gboolean
@@ -444,6 +436,8 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
       entry->parent_object = self->priv->appmenu_indicator;
       entry->name_hint = g_strdup (entry_id);
       self->priv->dropdown_entries = g_slist_append (self->priv->dropdown_entries, entry);
+
+      /* Now the Hashtable owns the name_hint, so no need to manually free it */
       g_hash_table_insert (self->priv->id2entry_hash, (gpointer)entry->name_hint, entry);
     }
 
@@ -950,7 +944,7 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
             {
               self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, l);
               g_hash_table_remove (self->priv->id2entry_hash, entry->name_hint);
-              free_dropdown_entry (entry);
+              g_free (entry);
             }
           else
             {
@@ -1994,7 +1988,18 @@ panel_service_sync_geometry (PanelService *self,
       if (width < 0 || height < 0 || !valid_entry)
         {
           if (valid_entry)
-            ensure_entry_menu_is_closed (self, panel_id, entry);
+            {
+              GSList *l;
+              ensure_entry_menu_is_closed (self, panel_id, entry);
+
+              if ((l = g_slist_find (self->priv->dropdown_entries, entry)))
+                {
+                  valid_entry = FALSE;
+                  self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, l);
+                  g_hash_table_remove (self->priv->id2entry_hash, entry->name_hint);
+                  g_free (entry);
+                }
+            }
 
           if (entry2geometry_hash)
             {
