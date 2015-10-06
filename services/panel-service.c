@@ -139,6 +139,7 @@ static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
 static void update_keybinding (GSettings *, const gchar *, gpointer);
 static void emit_upstart_event (const gchar *);
+static void free_dropdown_entry (IndicatorObjectEntry *);
 static gchar * get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry);
 static IndicatorObjectEntry * get_indicator_entry_by_id (PanelService *self, const gchar *entry_id);
 static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
@@ -186,7 +187,7 @@ panel_service_class_dispose (GObject *self)
 
   if (priv->dropdown_entries)
     {
-      g_slist_free_full (priv->dropdown_entries, g_free);
+      g_slist_free_full (priv->dropdown_entries, (GDestroyNotify) free_dropdown_entry);
       priv->dropdown_entries = NULL;
     }
 
@@ -277,6 +278,19 @@ rect_contains_point (GdkRectangle* rect, gint x, gint y)
 
   return (x >= rect->x && x <= (rect->x + rect->width) &&
           y >= rect->y && y <= (rect->y + rect->height));
+}
+
+void
+free_dropdown_entry (IndicatorObjectEntry *entry)
+{
+  g_free ((gchar *) entry->name_hint);
+  g_free (entry);
+}
+
+gboolean
+entry_has_dropdown_id (const gchar *entry_id)
+{
+  return g_str_has_suffix (entry_id, "-dropdown");
 }
 
 IndicatorObjectEntry *
@@ -422,7 +436,7 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
         }
     }
 
-  if (!entry && g_str_has_suffix (entry_id, "-dropdown"))
+  if (!entry && entry_has_dropdown_id (entry_id))
     {
       /* Unity might register some "fake" dropdown entries that it might use to
        * to present long menu bars (right now only for appmenu indicator) */
@@ -918,6 +932,7 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
           gchar *entry_id;
           GHashTableIter iter;
           gpointer key, value;
+          GSList *l;
 
           entry = l->data;
 
@@ -931,9 +946,18 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
               g_signal_handlers_disconnect_by_data (entry->image, indicator);
             }
 
-          entry_id = get_indicator_entry_id_by_entry (entry);
-          g_hash_table_remove (self->priv->id2entry_hash, entry_id);
-          g_free (entry_id);
+          if ((l = g_slist_find (self->priv->dropdown_entries, entry)))
+            {
+              self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, l);
+              g_hash_table_remove (self->priv->id2entry_hash, entry->name_hint);
+              free_dropdown_entry (entry);
+            }
+          else
+            {
+              entry_id = get_indicator_entry_id_by_entry (entry);
+              g_hash_table_remove (self->priv->id2entry_hash, entry_id);
+              g_free (entry_id);
+            }
 
           g_hash_table_iter_init (&iter, self->priv->panel2entries_hash);
           while (g_hash_table_iter_next (&iter, &key, &value))
