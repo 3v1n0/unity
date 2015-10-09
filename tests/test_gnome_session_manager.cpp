@@ -390,6 +390,16 @@ TEST_F(TestGnomeSessionManager, HostName)
   EXPECT_EQ(manager->HostName(), g_get_host_name());
 }
 
+TEST_F(TestGnomeSessionManager, UserIconFile)
+{
+//TODO
+}
+
+TEST_F(TestGnomeSessionManager, SwitchToGreeter)
+{
+//TODO
+}
+
 TEST_F(TestGnomeSessionManager, ScreenSaverActivate)
 {
   bool signal_emitted = false;

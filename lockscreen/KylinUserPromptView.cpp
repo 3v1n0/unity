@@ -14,7 +14,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
+* Authored by: handsome_feng <jianfengli@ubuntukylin.com>
 */
 
 #include "KylinUserPromptView.h"
@@ -40,7 +40,6 @@ namespace unity
 {
 namespace lockscreen
 {
-DECLARE_LOGGER(logger,"unity.lockscreen.kylinprompt");
 namespace
 {
 const RawPixel PADDING              = 10_em;
@@ -68,73 +67,6 @@ std::string SanitizeMessage(std::string const& message)
     return _("Username");
 
   return msg;
-}
-
-bool DoUserSwitch()
-{
-  glib::Error error;
-  glib::Object<GDBusConnection> bus(g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, &error));
-
-  if(error)
-  {
-    LOG_ERROR(logger)<<"Failed to get system bus: "<< error;
-    return false;
-  }
-
-  glib::Variant result(g_dbus_connection_call_sync(bus,
-                                         "org.freedesktop.DisplayManager",
-                                         g_getenv("XDG_SEAT_PATH"),
-                                         "org.freedesktop.DisplayManager.Seat",
-                                         "SwitchToGreeter",
-                                         g_variant_new("()"),
-                                         G_VARIANT_TYPE("()"),
-                                         G_DBUS_CALL_FLAGS_NONE,
-                                         -1,
-                                         nullptr,
-                                         &error));
-  if(error)
-  {
-    LOG_ERROR(logger)<<"Failed to switch to greeter: "<< error;
-    return false;
-  }
-
-  return result.GetBool();
-}
-
-std::string GetUserImage()
-{
-  glib::Error error;
-  glib::Object<GDBusConnection> system_bus(g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, &error));
-
-  if (error)
-  {
-    LOG_ERROR(logger)<<"Unable to get system bus: "<< error;
-    return "";
-  }
-
-  glib::Variant user_icon(g_dbus_connection_call_sync (system_bus,
-                                           "org.freedesktop.Accounts",
-                                           g_strdup_printf("/org/freedesktop/Accounts/User%i", getuid()),
-                                           "org.freedesktop.DBus.Properties",
-                                           "Get",
-                                           g_variant_new("(ss)",
-                                                         "org.freedesktop.Accounts.User",
-                                                         "IconFile"),
-                                           G_VARIANT_TYPE("(v)"),
-                                           G_DBUS_CALL_FLAGS_NONE,
-                                           -1,
-                                           nullptr,
-                                           &error));
-
-  if (error)
-  {
-    LOG_ERROR(logger)<<"Couldn't find user icon in accounts service: "<< error;
-    return "";
-  }
-
-  glib::Variant icon_file = user_icon.GetVariant();
-
-  return icon_file.GetString();
 }
 
 }
@@ -190,7 +122,7 @@ void KylinUserPromptView::ResetLayout()
   SwitchIcon_ = new IconTexture(cache.FindTexture("cof.png", ICON_SIZE, ICON_SIZE));
   switch_layout->AddView(SwitchIcon_);
   SwitchIcon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
-    DoUserSwitch();
+    session_manager_->SwitchToGreeter();
   });
 
   unity::StaticCairoText* switch_label = new unity::StaticCairoText(_("Switch User"));
@@ -201,7 +133,7 @@ void KylinUserPromptView::ResetLayout()
 
   GetLayout()->AddLayout(switch_layout);
 
-  Avatar_ = new IconTexture(GetUserImage(), Avatar_SIZE);
+  Avatar_ = new IconTexture(session_manager_->UserIconFile(), Avatar_SIZE);
   Avatar_->SetMinimumWidth(Avatar_SIZE);
   Avatar_->SetMaximumWidth(Avatar_SIZE);
 
@@ -410,7 +342,6 @@ void KylinUserPromptView::AddMessage(std::string const& message, nux::Color cons
   QueueRelayout();
   QueueDraw();
 }
-
 
 }
 }

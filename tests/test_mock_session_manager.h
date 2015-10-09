@@ -32,6 +32,7 @@ struct MockManager : Manager
   MOCK_CONST_METHOD0(RealName, std::string());
   MOCK_CONST_METHOD0(UserName, std::string());
   MOCK_CONST_METHOD0(HostName, std::string());
+  MOCK_CONST_METHOD0(UserIconFile, std::string());
 
   MOCK_METHOD0(ScreenSaverActivate, void());
   MOCK_METHOD0(ScreenSaverDeactivate, void());
@@ -43,6 +44,7 @@ struct MockManager : Manager
   MOCK_METHOD0(Suspend, void());
   MOCK_METHOD0(Hibernate, void());
   MOCK_METHOD0(CancelAction, void());
+  MOCK_METHOD0(SwitchToGreeter, void());
 
   MOCK_CONST_METHOD0(CanLock, bool());
   MOCK_CONST_METHOD0(CanShutdown, bool());

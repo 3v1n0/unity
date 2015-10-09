@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
+ * Authored by: handsome_feng <jianfengli@ubuntukylin.com>
  */
 
 #ifndef UNITY_LOCKSCREEN_ABSTRACT_USER_PROMPT_H
