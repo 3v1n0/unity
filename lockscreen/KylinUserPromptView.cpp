@@ -20,6 +20,7 @@
 #include "KylinUserPromptView.h"
 
 #include "config.h"
+#include <gtk/gtk.h>
 #include <glib/gi18n-lib.h>
 
 #include <boost/algorithm/string/trim.hpp>
@@ -47,7 +48,7 @@ const RawPixel LAYOUT_MARGIN        = 20_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
 const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
 const RawPixel ICON_SIZE            = 32_em;
-const RawPixel Avatar_SIZE          = 128_em;
+const RawPixel AVATAR_SIZE          = 128_em;
 const int PROMPT_FONT_SIZE = 14;
 
 std::string SanitizeMessage(std::string const& message)
@@ -133,9 +134,10 @@ void KylinUserPromptView::ResetLayout()
 
   GetLayout()->AddLayout(switch_layout);
 
-  Avatar_ = new IconTexture(session_manager_->UserIconFile(), Avatar_SIZE);
-  Avatar_->SetMinimumWidth(Avatar_SIZE);
-  Avatar_->SetMaximumWidth(Avatar_SIZE);
+//  Avatar_ = new IconTexture(session_manager_->UserIconFile(), AVATAR_SIZE);
+  Avatar_ = new IconTexture(LoadUserIcon(AVATAR_SIZE));
+  Avatar_->SetMinimumWidth(AVATAR_SIZE);
+  Avatar_->SetMaximumWidth(AVATAR_SIZE);
 
   GetLayout()->AddView(Avatar_);
 
@@ -341,6 +343,29 @@ void KylinUserPromptView::AddMessage(std::string const& message, nux::Color cons
   ComputeContentSize();
   QueueRelayout();
   QueueDraw();
+}
+
+nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(int icon_size)
+{
+  glib::Error error;
+  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(session_manager_->UserIconFile().c_str(), icon_size, icon_size, &error));
+  if (pixbuf == nullptr)
+  {
+    auto* theme = gtk_icon_theme_get_default();
+    GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
+    pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default", icon_size, flags, &error);
+  }
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
+  cairo_t* cr = cg.GetInternalContext();
+
+  gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+  cairo_paint_with_alpha(cr, 1.0);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_rectangle(cr, 0, 0, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
+  cairo_set_line_width(cr, 4);
+  cairo_stroke(cr);
+
+  return texture_ptr_from_cairo_graphics(cg);
 }
 
 }
