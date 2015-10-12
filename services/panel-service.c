@@ -926,7 +926,7 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
           gchar *entry_id;
           GHashTableIter iter;
           gpointer key, value;
-          GSList *l;
+          GSList *ll;
 
           entry = l->data;
 
@@ -940,9 +940,9 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
               g_signal_handlers_disconnect_by_data (entry->image, indicator);
             }
 
-          if ((l = g_slist_find (self->priv->dropdown_entries, entry)))
+          if ((ll = g_slist_find (self->priv->dropdown_entries, entry)))
             {
-              self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, l);
+              self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, ll);
               g_hash_table_remove (self->priv->id2entry_hash, entry->name_hint);
               g_free (entry);
             }
