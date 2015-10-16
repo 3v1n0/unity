@@ -146,7 +146,7 @@ TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetColorizedIcon))
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetOneIconManyTimes)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetOneIconManyTimes))
 {
   std::vector<LoadResult> results;
   std::vector<IconLoader::Handle> handles;
@@ -176,7 +176,7 @@ TEST_F(TestIconLoader, TestGetOneIconManyTimes)
   CheckResults(results);
 }
 
-TEST_F(TestIconLoader, TestGetManyIcons)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetManyIcons))
 {
   std::vector<LoadResult> results;
   int i = 0;
@@ -198,7 +198,7 @@ TEST_F(TestIconLoader, TestGetManyIcons)
   CheckResults(results);
 }
 
-TEST_F(TestIconLoader, TestCancelSome)
+TEST_F(TestIconLoader, UNSTABLE_TEST(TestCancelSome))
 {
   std::vector<LoadResult> results;
   std::vector<IconLoader::Handle> handles;
