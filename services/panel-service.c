@@ -270,6 +270,12 @@ rect_contains_point (GdkRectangle* rect, gint x, gint y)
           y >= rect->y && y <= (rect->y + rect->height));
 }
 
+gboolean
+entry_has_dropdown_id (const gchar *entry_id)
+{
+  return g_str_has_suffix (entry_id, "-dropdown");
+}
+
 IndicatorObjectEntry *
 get_entry_at (PanelService *self, gint x, gint y)
 {
@@ -413,7 +419,7 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
         }
     }
 
-  if (!entry && g_str_has_suffix (entry_id, "-dropdown"))
+  if (!entry && entry_has_dropdown_id (entry_id))
     {
       /* Unity might register some "fake" dropdown entries that it might use to
        * to present long menu bars (right now only for appmenu indicator) */
@@ -421,6 +427,8 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
       entry->parent_object = self->priv->appmenu_indicator;
       entry->name_hint = g_strdup (entry_id);
       self->priv->dropdown_entries = g_slist_append (self->priv->dropdown_entries, entry);
+
+      /* Now the Hashtable owns the name_hint, so no need to manually free it */
       g_hash_table_insert (self->priv->id2entry_hash, (gpointer)entry->name_hint, entry);
     }
 
@@ -909,6 +917,7 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
           gchar *entry_id;
           GHashTableIter iter;
           gpointer key, value;
+          GSList *ll;
 
           entry = l->data;
 
@@ -922,9 +931,18 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
               g_signal_handlers_disconnect_by_data (entry->image, indicator);
             }
 
-          entry_id = get_indicator_entry_id_by_entry (entry);
-          g_hash_table_remove (self->priv->id2entry_hash, entry_id);
-          g_free (entry_id);
+          if ((ll = g_slist_find (self->priv->dropdown_entries, entry)))
+            {
+              self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, ll);
+              g_hash_table_remove (self->priv->id2entry_hash, entry->name_hint);
+              g_free (entry);
+            }
+          else
+            {
+              entry_id = get_indicator_entry_id_by_entry (entry);
+              g_hash_table_remove (self->priv->id2entry_hash, entry_id);
+              g_free (entry_id);
+            }
 
           g_hash_table_iter_init (&iter, self->priv->panel2entries_hash);
           while (g_hash_table_iter_next (&iter, &key, &value))
@@ -1939,7 +1957,18 @@ panel_service_sync_geometry (PanelService *self,
       if (width < 0 || height < 0 || !valid_entry)
         {
           if (valid_entry)
-            ensure_entry_menu_is_closed (self, panel_id, entry);
+            {
+              GSList *l;
+              ensure_entry_menu_is_closed (self, panel_id, entry);
+
+              if ((l = g_slist_find (self->priv->dropdown_entries, entry)))
+                {
+                  valid_entry = FALSE;
+                  self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, l);
+                  g_hash_table_remove (self->priv->id2entry_hash, entry->name_hint);
+                  g_free (entry);
+                }
+            }
 
           if (entry2geometry_hash)
             {
