@@ -226,7 +226,7 @@ if (ENABLE_X_SUPPORT)
                  test_filter_widgets.cpp
                  test_glib_dbus_server.cpp
                  test_gnome_session_manager.cpp
-                 test_gtk_wrapper.cpp
+                 test_gtk_icon_info.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
