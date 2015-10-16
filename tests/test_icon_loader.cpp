@@ -91,6 +91,8 @@ struct TestIconLoader : testing::Test
   {
     for (auto handle : handles_)
       icon_loader.DisconnectHandle(handle);
+
+    Utils::WaitPendingEvents();
   }
 
   IconLoader& icon_loader;

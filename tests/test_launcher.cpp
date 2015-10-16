@@ -224,7 +224,6 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
       .WillRepeatedly(Return(false));
 
   launcher_->DndStarted("");
-  Utils::WaitPendingEvents();
 
   EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
   EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
