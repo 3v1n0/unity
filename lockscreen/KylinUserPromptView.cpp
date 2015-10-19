@@ -43,13 +43,15 @@ namespace lockscreen
 {
 namespace
 {
-const RawPixel PADDING              = 10_em;
-const RawPixel LAYOUT_MARGIN        = 20_em;
-const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
-const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
-const RawPixel SWITCH_ICON_SIZE            = 32_em;
-const RawPixel AVATAR_SIZE          = 128_em;
-const RawPixel TEXT_INPUT_WIDTH     = 281_em;
+const RawPixel PADDING                                = 10_em;
+const RawPixel LAYOUT_MARGIN                   = 20_em;
+const RawPixel MSG_LAYOUT_MARGIN         = 15_em;
+const RawPixel PROMPT_LAYOUT_MARGIN  =  5_em;
+const RawPixel SWITCH_ICON_HEIGHT           = 32_em;
+const RawPixel SWITCH_ICON_WIDTH           = 70_em;
+const RawPixel AVATAR_SIZE                           = 128_em;
+const RawPixel TEXT_INPUT_HEIGHT             =  36_em;
+const RawPixel TEXT_INPUT_WIDTH               = 320_em;
 const int PROMPT_FONT_SIZE = 14;
 
 std::string SanitizeMessage(std::string const& message)
@@ -121,12 +123,12 @@ void KylinUserPromptView::ResetLayout()
   nux::Layout* switch_layout = new nux::HLayout();
 
   TextureCache& cache = TextureCache::GetDefault();
-  SwitchIcon_ = new IconTexture(cache.FindTexture("cof.png", SWITCH_ICON_SIZE, SWITCH_ICON_SIZE));
+  SwitchIcon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_WIDTH, SWITCH_ICON_HEIGHT));
   switch_layout->AddView(SwitchIcon_);
   SwitchIcon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
     session_manager_->SwitchToGreeter();
   });
-  switch_layout->SetMaximumSize(SWITCH_ICON_SIZE, SWITCH_ICON_SIZE);
+  switch_layout->SetMaximumSize(SWITCH_ICON_WIDTH, SWITCH_ICON_HEIGHT);
   GetLayout()->AddLayout(switch_layout);
 
   Avatar_ = new IconTexture(LoadUserIcon(AVATAR_SIZE));
@@ -159,7 +161,7 @@ void KylinUserPromptView::ResetLayout()
 
 void KylinUserPromptView::UpdateSize()
 {
-  auto width = 12 * Settings::GRID_SIZE.CP(scale);
+  auto width = 15 * Settings::GRID_SIZE.CP(scale);
   auto height = 3 * Settings::GRID_SIZE.CP(scale);
 
   SetMinimumWidth(width);
@@ -285,8 +287,8 @@ void KylinUserPromptView::AddPrompt(std::string const& message, bool visible, Pr
   text_entry->SetToggleCursorVisibilityOnKeyFocus(true);
   text_entry->clipboard_enabled = false;
 
-  text_input->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
-  text_input->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+  text_input->SetMinimumHeight(TEXT_INPUT_HEIGHT.CP(scale));
+  text_input->SetMaximumHeight(TEXT_INPUT_HEIGHT.CP(scale));
   text_input->SetMinimumWidth(TEXT_INPUT_WIDTH.CP(scale));
   text_input->SetMaximumWidth(TEXT_INPUT_WIDTH.CP(scale));
   prompt_layout_->AddView(text_input, 1);
@@ -358,7 +360,7 @@ nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(int SWITCH_IC
   cairo_paint_with_alpha(cr, 1.0);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_rectangle(cr, 0, 0, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
-  cairo_set_line_width(cr, 4);
+  cairo_set_line_width(cr, 3);
   cairo_stroke(cr);
 
   return texture_ptr_from_cairo_graphics(cg);

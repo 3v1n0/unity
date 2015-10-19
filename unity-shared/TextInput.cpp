@@ -253,7 +253,10 @@ void TextInput::UpdateHintFont()
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(int icon_size)
 {
   TextureCache& cache = TextureCache::GetDefault();
-  return cache.FindTexture("arrow_right.png", icon_size, icon_size);
+  if (!strcmp(getenv("XDG_CURRENT_DESKTOP"), "KYLIN"))
+    return cache.FindTexture("login.png", 62, 36);
+  else
+    return cache.FindTexture("arrow_right.png", icon_size, icon_size);
 }
 
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)
@@ -440,19 +443,33 @@ void TextInput::UpdateBackground(bool force)
   cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
-  cairo_graphics.DrawRoundedRectangle(cr,
-                                      1.0f,
-                                      0.5, 0.5,
-                                      BORDER_RADIUS,
-                                      (last_width_/scale) - 1, (last_height_/scale) - 1,
-                                      false);
+  if (!strcmp(getenv("XDG_CURRENT_DESKTOP"), "KYLIN"))
+  {
+    cairo_graphics.DrawRoundedRectangle(cr,
+                                        1.0f,
+                                        0.5, 0.5,
+                                        0,
+                                        (last_width_/scale) - 1, (last_height_/scale) - 1,
+                                        false);
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
-  cairo_fill_preserve(cr);
-  cairo_set_line_width(cr, 1);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
-  cairo_stroke(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.75f);
+    cairo_fill_preserve(cr);
+  } else {
+    cairo_graphics.DrawRoundedRectangle(cr,
+                                        1.0f,
+                                        0.5, 0.5,
+                                        BORDER_RADIUS,
+                                        (last_width_/scale) - 1, (last_height_/scale) - 1,
+                                        false);
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
+    cairo_fill_preserve(cr);
+    cairo_set_line_width(cr, 1);
+    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
+    cairo_stroke(cr);
+  }
 
   auto texture2D = texture_ptr_from_cairo_graphics(cairo_graphics);
 
