@@ -27,7 +27,6 @@
 #include "CofView.h"
 #include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
-//#include "UserPromptView.h"
 #include "LockScreenAbstractPromptView.h"
 
 #include "unity-shared/UScreen.h"
@@ -46,7 +45,6 @@ const unsigned MAX_GRAB_WAIT = 100;
 Shield::Shield(session::Manager::Ptr const& session_manager,
                indicator::Indicators::Ptr const& indicators,
                Accelerators::Ptr const& accelerators,
-//               nux::ObjectPtr<UserPromptView> const& prompt_view,
                nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                int monitor_num, bool is_primary)
   : AbstractShield(session_manager, indicators, accelerators, prompt_view, monitor_num, is_primary)

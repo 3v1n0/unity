@@ -31,7 +31,6 @@ namespace lockscreen
 
 class BackgroundSettings;
 class UserAuthenticator;
-//class UserPromptView;
 class AbstractUserPromptView;
 class Panel;
 class CofView;
@@ -42,7 +41,6 @@ public:
   Shield(session::Manager::Ptr const&,
          indicator::Indicators::Ptr const&,
          Accelerators::Ptr const&,
-//         nux::ObjectPtr<UserPromptView> const&,
          nux::ObjectPtr<AbstractUserPromptView> const&,
          int monitor, bool is_primary);
 

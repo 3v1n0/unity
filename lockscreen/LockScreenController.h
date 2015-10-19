@@ -41,7 +41,6 @@ namespace unity
 namespace lockscreen
 {
 
-//class UserPromptView;
 class AbstractUserPromptView;
 
 class Controller : public sigc::trackable
@@ -83,7 +82,6 @@ private:
 
   std::vector<nux::ObjectPtr<AbstractShield>> shields_;
   nux::ObjectWeakPtr<AbstractShield> primary_shield_;
-//  nux::ObjectWeakPtr<UserPromptView> prompt_view_;
   nux::ObjectWeakPtr<AbstractUserPromptView> prompt_view_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
 

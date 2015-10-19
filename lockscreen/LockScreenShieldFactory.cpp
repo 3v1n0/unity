@@ -19,7 +19,6 @@
 
 #include "LockScreenShieldFactory.h"
 #include "LockScreenShield.h"
-//#include "UserPromptView.h"
 #include "LockScreenAbstractPromptView.h"
 #include "KylinLockScreenShield.h"
 
@@ -31,7 +30,6 @@ namespace lockscreen
 nux::ObjectPtr<AbstractShield> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager,
                                                            indicator::Indicators::Ptr const& indicators,
                                                            Accelerators::Ptr const& accelerators,
-//                                                           nux::ObjectPtr<UserPromptView> const& prompt_view,
                                                            nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                                                            int monitor, bool is_primary)
 {

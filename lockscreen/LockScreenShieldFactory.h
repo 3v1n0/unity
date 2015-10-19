@@ -31,7 +31,6 @@ class MockableBaseWindow;
 namespace lockscreen
 {
 
-//class UserPromptView;
 class AbstractUserPromptView;
 
 struct ShieldFactoryInterface
@@ -43,7 +42,6 @@ struct ShieldFactoryInterface
   virtual nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
                                                       indicator::Indicators::Ptr const&,
                                                       Accelerators::Ptr const&,
-//                                                      nux::ObjectPtr<UserPromptView> const&,
                                                       nux::ObjectPtr<AbstractUserPromptView> const&,
                                                       int monitor, bool is_primary) = 0;
 };
@@ -53,7 +51,6 @@ struct ShieldFactory : ShieldFactoryInterface
   nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
                                               indicator::Indicators::Ptr const&,
                                               Accelerators::Ptr const&,
-//                                              nux::ObjectPtr<UserPromptView> const&,
                                               nux::ObjectPtr<AbstractUserPromptView> const&,
                                               int monitor, bool is_primary) override;
 };

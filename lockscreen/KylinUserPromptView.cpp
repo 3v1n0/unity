@@ -47,8 +47,9 @@ const RawPixel PADDING              = 10_em;
 const RawPixel LAYOUT_MARGIN        = 20_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
 const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
-const RawPixel ICON_SIZE            = 32_em;
+const RawPixel SWITCH_ICON_SIZE            = 32_em;
 const RawPixel AVATAR_SIZE          = 128_em;
+const RawPixel TEXT_INPUT_WIDTH     = 281_em;
 const int PROMPT_FONT_SIZE = 14;
 
 std::string SanitizeMessage(std::string const& message)
@@ -120,25 +121,17 @@ void KylinUserPromptView::ResetLayout()
   nux::Layout* switch_layout = new nux::HLayout();
 
   TextureCache& cache = TextureCache::GetDefault();
-  SwitchIcon_ = new IconTexture(cache.FindTexture("cof.png", ICON_SIZE, ICON_SIZE));
+  SwitchIcon_ = new IconTexture(cache.FindTexture("cof.png", SWITCH_ICON_SIZE, SWITCH_ICON_SIZE));
   switch_layout->AddView(SwitchIcon_);
   SwitchIcon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
     session_manager_->SwitchToGreeter();
   });
-
-  unity::StaticCairoText* switch_label = new unity::StaticCairoText(_("Switch User"));
-  switch_label->SetScale(scale);
-  switch_layout->AddView(switch_label);
-
-  switch_layout->SetMaximumSize(128, ICON_SIZE);
-
+  switch_layout->SetMaximumSize(SWITCH_ICON_SIZE, SWITCH_ICON_SIZE);
   GetLayout()->AddLayout(switch_layout);
 
-//  Avatar_ = new IconTexture(session_manager_->UserIconFile(), AVATAR_SIZE);
   Avatar_ = new IconTexture(LoadUserIcon(AVATAR_SIZE));
   Avatar_->SetMinimumWidth(AVATAR_SIZE);
   Avatar_->SetMaximumWidth(AVATAR_SIZE);
-
   GetLayout()->AddView(Avatar_);
 
   nux::Layout* prompt_layout = new nux::VLayout();
@@ -166,7 +159,7 @@ void KylinUserPromptView::ResetLayout()
 
 void KylinUserPromptView::UpdateSize()
 {
-  auto width = 15 * Settings::GRID_SIZE.CP(scale);
+  auto width = 12 * Settings::GRID_SIZE.CP(scale);
   auto height = 3 * Settings::GRID_SIZE.CP(scale);
 
   SetMinimumWidth(width);
@@ -177,7 +170,7 @@ void KylinUserPromptView::UpdateSize()
   {
     layout->SetLeftAndRightPadding(PADDING.CP(scale));
     layout->SetTopAndBottomPadding(PADDING.CP(scale));
-    static_cast<nux::VLayout*>(layout)->SetVerticalInternalMargin(LAYOUT_MARGIN.CP(scale));
+//    static_cast<nux::HLayout*>(layout)->SetHorizontalInternalMargin(300);//LAYOUT_MARGIN.CP(scale));
   }
 
   if (username_)
@@ -189,7 +182,7 @@ void KylinUserPromptView::UpdateSize()
 
     for (auto* area : msg_layout_->GetChildren())
     {
-      area->SetMaximumWidth(width);
+      area->SetMaximumWidth(TEXT_INPUT_WIDTH);
       static_cast<StaticCairoText*>(area)->SetScale(scale);
     }
   }
@@ -203,6 +196,8 @@ void KylinUserPromptView::UpdateSize()
       auto* text_input = static_cast<TextInput*>(area);
       text_input->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
       text_input->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+      text_input->SetMinimumWidth(TEXT_INPUT_WIDTH.CP(scale));
+      text_input->SetMaximumWidth(TEXT_INPUT_WIDTH.CP(scale));
       text_input->scale = scale();
     }
   }
@@ -292,6 +287,8 @@ void KylinUserPromptView::AddPrompt(std::string const& message, bool visible, Pr
 
   text_input->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
   text_input->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+  text_input->SetMinimumWidth(TEXT_INPUT_WIDTH.CP(scale));
+  text_input->SetMaximumWidth(TEXT_INPUT_WIDTH.CP(scale));
   prompt_layout_->AddView(text_input, 1);
   focus_queue_.push_back(text_input);
 
@@ -330,13 +327,12 @@ void KylinUserPromptView::AddPrompt(std::string const& message, bool visible, Pr
 
 void KylinUserPromptView::AddMessage(std::string const& message, nux::Color const& color)
 {
-  nux::Geometry const& geo = GetGeometry();
   auto* view = new unity::StaticCairoText("");
   view->SetScale(scale);
   view->SetFont(Settings::Instance().font_name());
   view->SetTextColor(color);
   view->SetText(message);
-  view->SetMaximumWidth(geo.width - PADDING.CP(scale)*2);
+  view->SetMaximumWidth(TEXT_INPUT_WIDTH.CP(scale));
   msg_layout_->AddView(view);
 
   GetLayout()->ComputeContentPosition(0, 0);
@@ -345,15 +341,15 @@ void KylinUserPromptView::AddMessage(std::string const& message, nux::Color cons
   QueueDraw();
 }
 
-nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(int icon_size)
+nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(int SWITCH_ICON_SIZE)
 {
   glib::Error error;
-  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(session_manager_->UserIconFile().c_str(), icon_size, icon_size, &error));
+  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(session_manager_->UserIconFile().c_str(), SWITCH_ICON_SIZE, SWITCH_ICON_SIZE, &error));
   if (pixbuf == nullptr)
   {
     auto* theme = gtk_icon_theme_get_default();
     GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
-    pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default", icon_size, flags, &error);
+    pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default", SWITCH_ICON_SIZE, flags, &error);
   }
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
   cairo_t* cr = cg.GetInternalContext();

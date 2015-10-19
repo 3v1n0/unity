@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2013-04-17 16:00+0100\n"
+"POT-Creation-Date: 2015-10-15 10:03+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,6 +38,26 @@ msgstr ""
 msgid "Last Updated"
 msgstr ""
 
+#. The "%s" is used in the dash preview to display the "<hint>: <value>" infos
+#, c-format
+msgid "%s:"
+msgstr ""
+
+msgid "Comments"
+msgstr ""
+
+msgid "This window is not responding"
+msgstr ""
+
+msgid "Do you want to force the application to exit, or wait for it to respond?"
+msgstr ""
+
+msgid "_Wait"
+msgstr ""
+
+msgid "_Force Quit"
+msgstr ""
+
 msgid "Type your command"
 msgstr ""
 
@@ -50,7 +70,19 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
+msgid "Exit"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
 msgid "Search your computer and online sources"
+msgstr ""
+
+msgid "Search your computer"
+msgstr ""
+
+msgid "Restore Windows"
 msgstr ""
 
 msgid "Show Desktop"
@@ -69,13 +101,16 @@ msgstr ""
 msgid "Waiting to install"
 msgstr ""
 
+msgid "Installing…"
+msgstr ""
+
 msgid "Drop To Add Application"
 msgstr ""
 
 msgid "Trash"
 msgstr ""
 
-msgid "Empty Trash..."
+msgid "Empty Trash…"
 msgstr ""
 
 msgid "Open"
@@ -96,7 +131,20 @@ msgstr ""
 msgid "Unmount"
 msgstr ""
 
+msgid "Password"
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Invalid password, please try again"
+msgstr ""
+
 msgid "Ubuntu Desktop"
+msgstr ""
+
+#, c-format
+msgid "%s Desktop"
 msgstr ""
 
 msgid "Dash"
@@ -105,7 +153,19 @@ msgstr ""
 msgid "Launcher"
 msgstr ""
 
+#, c-format
+msgid "%s: running: %zu windows open"
+msgstr ""
+
+#, c-format
+msgid "%s: running"
+msgstr ""
+
 msgid "Quicklist"
+msgstr ""
+
+#, c-format
+msgid "%s: selected"
 msgstr ""
 
 msgid "Switcher"
@@ -165,6 +225,9 @@ msgstr ""
 msgid "Opens the Dash Music Lens."
 msgstr ""
 
+msgid "Opens the Dash Photo Lens."
+msgstr ""
+
 msgid "Opens the Dash Video Lens."
 msgstr ""
 
@@ -210,6 +273,9 @@ msgstr ""
 msgid "Switches between applications."
 msgstr ""
 
+msgid "Switches between applications from all workspaces."
+msgstr ""
+
 msgid "Switches windows of current applications."
 msgstr ""
 
@@ -232,6 +298,12 @@ msgid "Windows"
 msgstr ""
 
 msgid "Spreads all windows in the current workspace."
+msgstr ""
+
+msgid "Spreads all windows."
+msgstr ""
+
+msgid "Spreads all windows in all the workspaces."
 msgstr ""
 
 msgid "Minimises all windows."
@@ -258,7 +330,7 @@ msgstr ""
 msgid "Places the window in corresponding position."
 msgstr ""
 
-msgid "Ctrl + Alt + Num"
+msgid "Ctrl + Alt + Num (keypad)"
 msgstr ""
 
 msgid " Drag"
@@ -268,6 +340,11 @@ msgid "Moves the window."
 msgstr ""
 
 msgid "Resizes the window."
+msgstr ""
+
+msgid ""
+"Other users are logged in. Restarting or shutting down will close their open applications and may cause them to lose work.\n"
+"\n"
 msgstr ""
 
 msgid "Shut Down"
@@ -326,4 +403,8 @@ msgid "No Image Available"
 msgstr ""
 
 msgid "Filter results"
+msgstr ""
+
+#. avoid wrap lines
+msgid "Caps lock is on"
 msgstr ""
