@@ -1,3 +1,36 @@
+unity (7.3.2+15.10.20151016-0ubuntu1) wily; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Sync changelog with proposed
+
+  [ Andrea Azzarone ]
+  * Avoid test failures on jenkins.
+
+  [ CI Train Bot ]
+  * UnityScreen: close the session dialog in case it's open and we're
+    requested to lock (LP: #1505234)
+
+  [ Marco Trevisan (Treviño) ]
+  * LauncherIcon: force lookup icon by scaling it at the requested size
+    (LP: #1446081, #1501973)
+  * PanelService: ensure that we free the "fake" IndicatorEntry's we
+    create for dropdowns (LP: #1503348)
+  * ResultRendererTile: consider global scaling when scaling a not-
+    squared icon (LP: #1499286)
+  * TestDash: Use local results in PreviewNavigateTests instead of
+    online ones
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 16 Oct 2015 08:46:34 +0000
+
+unity (7.3.2+15.10.20151002.2-0ubuntu1) wily; urgency=medium
+
+  * GnomeKeyGrabber: Don't allow an action to be grabbed multiple times
+    (LP: #1459571)
+  * PanelService, DBusIndicators: drop support for EntryShowNowChanged
+    signal
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 02 Oct 2015 14:02:10 +0000
+
 unity (7.3.2+15.10.20150921-0ubuntu1) wily; urgency=medium
 
   [ Andrea Azzarone ]

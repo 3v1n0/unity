@@ -121,11 +121,8 @@ void Indicators::Impl::ActivateEntry(std::string const& panel, std::string const
 void Indicators::Impl::SetEntryShowNow(std::string const& entry_id,
                                        bool show_now)
 {
-  Entry::Ptr entry = GetEntry(entry_id);
-  if (entry)
-  {
+  if (Entry::Ptr const& entry = GetEntry(entry_id))
     entry->set_show_now(show_now);
-  }
 }
 
 Indicators::IndicatorsList Indicators::Impl::GetIndicators() const

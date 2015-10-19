@@ -1126,7 +1126,7 @@ TEST_F(TestGnomeSessionManager, LogindUnLock)
   EXPECT_TRUE(unlock_emitted);
 }
 
-TEST_F(TestGnomeSessionManager, NoLockWhenLockingDisabled)
+TEST_F(TestGnomeSessionManager, UNSTABLE_TEST(NoLockWhenLockingDisabled))
 {
   bool lock_emitted = false;
   bool screensaver_emitted = false;

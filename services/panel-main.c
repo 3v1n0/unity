@@ -101,11 +101,6 @@ static const gchar introspection_xml[] =
   "     <arg type='s' name='entry_id' />"
   "    </signal>"
   ""
-  "    <signal name='EntryShowNowChanged'>"
-  "     <arg type='s' name='entry_id' />"
-  "     <arg type='b' name='show_now_state' />"
-  "    </signal>"
-  ""
   "    <signal name='IconPathsChanged' />"
   ""
   "  </interface>"
@@ -330,28 +325,6 @@ on_service_entry_activate_request (PanelService    *service,
 }
 
 static void
-on_service_entry_show_now_changed (PanelService    *service,
-                                   const gchar     *entry_id,
-                                   gboolean         show_now_state,
-                                   GDBusConnection *connection)
-{
-  GError *error = NULL;
-  g_dbus_connection_emit_signal (connection,
-                                 NULL,
-                                 UPS_PATH,
-                                 UPS_IFACE,
-                                 "EntryShowNowChanged",
-                                 g_variant_new ("(sb)", entry_id, show_now_state),
-                                 &error);
-
-  if (error)
-    {
-      g_warning ("Unable to emit EntryShowNowChanged signal: %s", error->message);
-      g_error_free (error);
-    }
-}
-
-static void
 on_icon_theme_changed (GtkIconTheme* theme, GDBusConnection *connection)
 {
   GError *error = NULL;
@@ -391,8 +364,6 @@ on_bus_acquired (GDBusConnection *connection,
                     G_CALLBACK (on_service_entry_activated), connection);
   g_signal_connect (service, "entry-activate-request",
                     G_CALLBACK (on_service_entry_activate_request), connection);
-  g_signal_connect (service, "entry-show-now-changed",
-                    G_CALLBACK (on_service_entry_show_now_changed), connection);
 
   g_signal_connect (gtk_icon_theme_get_default(), "changed",
                     G_CALLBACK (on_icon_theme_changed), connection);

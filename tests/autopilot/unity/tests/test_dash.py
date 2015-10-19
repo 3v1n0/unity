@@ -983,8 +983,8 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        # wait for "More suggestions" category
-        category = self.wait_for_category(scope, _("More suggestions"))
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
 
         # wait for results
         self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
@@ -1006,15 +1006,15 @@ class PreviewNavigateTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        # wait for "More suggestions" category
-        category = self.wait_for_category(scope, _("More suggestions"))
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
 
         # wait for results (we need 4 results to perorm the multi-navigation tests)
         self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(4), timeout=20))
 
         results = category.get_results()
-        result = results[2] # 2 so we can navigate left
-        result.preview()
+        result = results[3] # 3 so we can navigate left multiple times
+        result.preview(button=3)
         self.assertThat(self.unity.dash.view.preview_displaying, Eventually(Equals(True)))
         self.assertThat(self.unity.dash.view.get_preview_container, Eventually(NotEquals(None)))
 
