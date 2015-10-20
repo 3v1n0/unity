@@ -48,7 +48,7 @@ const RawPixel LAYOUT_MARGIN                   = 20_em;
 const RawPixel MSG_LAYOUT_MARGIN         = 15_em;
 const RawPixel PROMPT_LAYOUT_MARGIN  =  5_em;
 const RawPixel SWITCH_ICON_HEIGHT           = 32_em;
-const RawPixel SWITCH_ICON_WIDTH           = 70_em;
+const RawPixel SWITCH_ICON_WIDTH           = 100_em;
 const RawPixel AVATAR_SIZE                           = 128_em;
 const RawPixel TEXT_INPUT_HEIGHT             =  36_em;
 const RawPixel TEXT_INPUT_WIDTH               = 320_em;
@@ -172,7 +172,6 @@ void KylinUserPromptView::UpdateSize()
   {
     layout->SetLeftAndRightPadding(PADDING.CP(scale));
     layout->SetTopAndBottomPadding(PADDING.CP(scale));
-//    static_cast<nux::HLayout*>(layout)->SetHorizontalInternalMargin(300);//LAYOUT_MARGIN.CP(scale));
   }
 
   if (username_)
@@ -196,8 +195,8 @@ void KylinUserPromptView::UpdateSize()
     for (auto* area : prompt_layout_->GetChildren())
     {
       auto* text_input = static_cast<TextInput*>(area);
-      text_input->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
-      text_input->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+      text_input->SetMinimumHeight(TEXT_INPUT_HEIGHT.CP(scale));
+      text_input->SetMaximumHeight(TEXT_INPUT_HEIGHT.CP(scale));
       text_input->SetMinimumWidth(TEXT_INPUT_WIDTH.CP(scale));
       text_input->SetMaximumWidth(TEXT_INPUT_WIDTH.CP(scale));
       text_input->scale = scale();
@@ -286,6 +285,7 @@ void KylinUserPromptView::AddPrompt(std::string const& message, bool visible, Pr
   text_entry->SetPasswordChar("•");
   text_entry->SetToggleCursorVisibilityOnKeyFocus(true);
   text_entry->clipboard_enabled = false;
+  text_entry->SetTextColor(nux::color::Black);
 
   text_input->SetMinimumHeight(TEXT_INPUT_HEIGHT.CP(scale));
   text_input->SetMaximumHeight(TEXT_INPUT_HEIGHT.CP(scale));

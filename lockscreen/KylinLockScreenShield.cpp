@@ -152,6 +152,7 @@ void KylinShield::ShowPrimaryView()
     {
       prompt_view_->scale = scale();
       prompt_layout_->AddView(prompt_view_.GetPointer());
+      prompt_layout_->AddSpace(0, 10);
     }
 
     GrabScreen(false);
@@ -165,11 +166,11 @@ void KylinShield::ShowPrimaryView()
   SetLayout(primary_layout_.GetPointer());
 
   prompt_layout_ = new nux::HLayout();
-  prompt_layout_->SetLeftAndRightPadding(11 * Settings::GRID_SIZE.CP(scale));
 
   if (prompt_view_)
   {
     prompt_view_->scale = scale();
+    prompt_layout_->AddSpace(0, 10);
     prompt_layout_->AddView(prompt_view_.GetPointer());
   }
 

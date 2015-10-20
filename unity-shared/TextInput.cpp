@@ -100,7 +100,10 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , last_height_(-1)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), TEXT_INPUT_RIGHT_BORDER.CP(scale));
+  if (!strcmp(getenv("XDG_CURRENT_DESKTOP"), "KYLIN"))
+    layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), 0);
+  else
+    layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), TEXT_INPUT_RIGHT_BORDER.CP(scale));
   layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT.CP(scale));
   SetLayout(layout_);
 
@@ -108,7 +111,11 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   hint_layout_->SetLeftAndRightPadding(HINT_PADDING.CP(scale), HINT_PADDING.CP(scale));
 
   hint_ = new StaticCairoText("");
-  hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+  if (!strcmp(getenv("XDG_CURRENT_DESKTOP"), "KYLIN"))
+    hint_->SetTextColor(nux::Color(0.0f, 0.0f, 0.0f, 0.5f));
+  else
+    hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+
   hint_->SetScale(scale);
   hint_layout_->AddView(hint_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   hint_font_name.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateHintFont)));
