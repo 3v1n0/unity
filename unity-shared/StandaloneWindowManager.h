@@ -181,6 +181,8 @@ public:
   void SetCurrentViewport(nux::Point const& vp);
   void SetWorkareaGeometry(nux::Geometry const& geo);
 
+  Cursor GetCachedCursor(unsigned int cursor_name) const;
+
   void ResetStatus();
 
 protected:

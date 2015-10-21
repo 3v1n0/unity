@@ -742,6 +742,11 @@ std::list<StandaloneWindow::Ptr> StandaloneWindowManager::GetStandaloneWindows()
   return standalone_windows_;
 }
 
+Cursor StandaloneWindowManager::GetCachedCursor(unsigned int cursor_name) const
+{
+  return 0;
+}
+
 void StandaloneWindowManager::SetCurrentViewport(nux::Point const& vp)
 {
   current_vp_ = vp;
