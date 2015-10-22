@@ -148,6 +148,7 @@ void KylinUserPromptView::ResetLayout()
 
   msg_layout_ = new nux::VLayout();
   msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN.CP(scale));
+  msg_layout_->SetTopAndBottomPadding(33, 0);
   prompt_layout->AddLayout(msg_layout_);
 
   prompt_layout_ = new nux::VLayout();
