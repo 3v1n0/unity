@@ -344,15 +344,17 @@ void KylinUserPromptView::AddMessage(std::string const& message, nux::Color cons
   QueueDraw();
 }
 
-nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(int SWITCH_ICON_SIZE)
+nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(const RawPixel user_icon_size)
 {
   glib::Error error;
-  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(session_manager_->UserIconFile().c_str(), SWITCH_ICON_SIZE, SWITCH_ICON_SIZE, &error));
+  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(session_manager_->UserIconFile().c_str(), user_icon_size, user_icon_size, &error));
   if (pixbuf == nullptr)
   {
     auto* theme = gtk_icon_theme_get_default();
     GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
-    pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default", SWITCH_ICON_SIZE, flags, &error);
+    pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default-kylin", user_icon_size, flags, &error);
+    if ( pixbuf == nullptr)
+      pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default", user_icon_size, flags, &error);
   }
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
   cairo_t* cr = cg.GetInternalContext();

@@ -34,6 +34,7 @@ namespace unity
 class StaticCairoText;
 class TextInput;
 class IconTexture;
+class RawPixel;
 
 namespace lockscreen
 {
@@ -57,7 +58,7 @@ protected:
   void ResetLayout();
   void UpdateSize();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
-  nux::ObjectPtr<nux::BaseTexture> LoadUserIcon(int icon_size);
+  nux::ObjectPtr<nux::BaseTexture> LoadUserIcon(const RawPixel icon_size);
 
 private:
   session::Manager::Ptr session_manager_;
