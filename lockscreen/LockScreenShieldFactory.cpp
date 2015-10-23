@@ -33,7 +33,7 @@ nux::ObjectPtr<AbstractShield> ShieldFactory::CreateShield(session::Manager::Ptr
                                                            nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                                                            int monitor, bool is_primary)
 {
-  if (!strcmp(getenv("KYLIN_CURRENT_DESKTOP"),"Kylin"))
+  if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"),"Kylin") == 0)
     return nux::ObjectPtr<KylinShield>(new KylinShield(session_manager, accelerators, prompt_view, monitor, is_primary));
   else
     return nux::ObjectPtr<Shield>(new Shield(session_manager, indicators, accelerators, prompt_view,  monitor, is_primary));

@@ -100,7 +100,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , last_height_(-1)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  if (!strcmp(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin"))
+  if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
     layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), 0);
   else
     layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), TEXT_INPUT_RIGHT_BORDER.CP(scale));
@@ -111,7 +111,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   hint_layout_->SetLeftAndRightPadding(HINT_PADDING.CP(scale), HINT_PADDING.CP(scale));
 
   hint_ = new StaticCairoText("");
-  if (!strcmp(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin"))
+  if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
     hint_->SetTextColor(nux::Color(0.0f, 0.0f, 0.0f, 0.5f));
   else
     hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
@@ -260,7 +260,7 @@ void TextInput::UpdateHintFont()
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(int icon_size)
 {
   TextureCache& cache = TextureCache::GetDefault();
-  if (!strcmp(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin"))
+  if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
     return cache.FindTexture("login.png", 62, 36);
   else
     return cache.FindTexture("arrow_right.png", icon_size, icon_size);
@@ -450,7 +450,7 @@ void TextInput::UpdateBackground(bool force)
   cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
   cairo_t* cr = cairo_graphics.GetInternalContext();
 
-  if (!strcmp(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin"))
+  if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
   {
     cairo_graphics.DrawRoundedRectangle(cr,
                                         1.0f,
@@ -460,7 +460,7 @@ void TextInput::UpdateBackground(bool force)
                                         false);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.75f);
+    cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
     cairo_fill_preserve(cr);
   } else {
     cairo_graphics.DrawRoundedRectangle(cr,

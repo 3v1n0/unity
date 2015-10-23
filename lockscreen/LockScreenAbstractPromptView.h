@@ -54,16 +54,13 @@ public:
 
   nux::Property<double> scale;
 
-  virtual nux::View* focus_view() { return this; }
+  virtual nux::View* focus_view() = 0;
 
-//  virtual void AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const& promise) = 0;
-//  virtual void AddMessage(std::string const& message, nux::Color const& color) = 0;
   virtual void AuthenticationCb(bool authenticated) = 0;
   virtual void Draw(nux::GraphicsEngine& graphics_engine, bool /* force_draw */) = 0;
   virtual void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) {}
   virtual void ResetLayout() = 0;
   virtual void UpdateSize() = 0;
-//  virtual void EnsureBGLayer() = 0;
 
   virtual bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character) = 0;
 

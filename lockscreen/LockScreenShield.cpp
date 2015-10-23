@@ -28,7 +28,6 @@
 #include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
 #include "LockScreenAbstractPromptView.h"
-
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"

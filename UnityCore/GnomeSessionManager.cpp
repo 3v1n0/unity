@@ -536,7 +536,7 @@ std::string GnomeManager::Impl::UserIconFile()
     return "";
   }
 
-  return IconFile.GetString();
+  return test_mode_?std::string("/usr/share/pixmaps/faces/fish.jpg") : IconFile.GetString();
 }
 
 bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string const& group_name)

@@ -218,16 +218,16 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   int primary = UScreen::GetDefault()->GetMonitorWithMouse();
 
   // Keep a reference of the old prompt_view
-    nux::ObjectPtr<AbstractUserPromptView> prompt_view(prompt_view_.GetPointer());
+  nux::ObjectPtr<AbstractUserPromptView> prompt_view(prompt_view_.GetPointer());
 
   shields_.resize(num_monitors);
 
   if (!prompt_view)
   {
-    if (strcmp(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin"))
-      prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
-    else
+    if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
       prompt_view = test_mode_ ? nullptr : new KylinUserPromptView(session_manager_);
+    else
+      prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
     prompt_view_ = prompt_view.GetPointer();
   }
 
