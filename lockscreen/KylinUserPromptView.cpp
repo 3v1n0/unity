@@ -120,16 +120,19 @@ void KylinUserPromptView::ResetLayout()
 
   static_cast<nux::HLayout*>(GetLayout())->SetHorizontalInternalMargin(LAYOUT_MARGIN.CP(scale));
 
-  nux::Layout* switch_layout = new nux::HLayout();
+  if (g_getenv("XDG_SEAT_PATH"))
+  {
+    nux::Layout* switch_layout = new nux::HLayout();
 
-  TextureCache& cache = TextureCache::GetDefault();
-  SwitchIcon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_WIDTH, SWITCH_ICON_HEIGHT));
-  switch_layout->AddView(SwitchIcon_);
-  SwitchIcon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
-    session_manager_->SwitchToGreeter();
-  });
-  switch_layout->SetMaximumSize(SWITCH_ICON_WIDTH, SWITCH_ICON_HEIGHT);
-  GetLayout()->AddLayout(switch_layout);
+    TextureCache& cache = TextureCache::GetDefault();
+    SwitchIcon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_WIDTH, SWITCH_ICON_HEIGHT));
+    switch_layout->AddView(SwitchIcon_);
+    SwitchIcon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
+      session_manager_->SwitchToGreeter();
+    });
+    switch_layout->SetMaximumSize(SWITCH_ICON_WIDTH, SWITCH_ICON_HEIGHT);
+    GetLayout()->AddLayout(switch_layout);
+  }
 
   Avatar_ = new IconTexture(LoadUserIcon(AVATAR_SIZE));
   Avatar_->SetMinimumWidth(AVATAR_SIZE);

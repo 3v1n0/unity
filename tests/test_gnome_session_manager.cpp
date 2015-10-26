@@ -215,8 +215,11 @@ struct TestGnomeSessionManager : testing::Test
       return nullptr;
     });
 
-    display_manager_seat_ = std::make_shared<DBusServer>();
-    display_manager_seat_->AddObjects(introspection::DISPLAY_MANAGER_SEAT, g_getenv("XDG_SEAT_PATH"));
+    if (g_getenv("XDG_SEAT_PATH "))
+    {
+      display_manager_seat_ = std::make_shared<DBusServer>();
+      display_manager_seat_->AddObjects(introspection::DISPLAY_MANAGER_SEAT, g_getenv("XDG_SEAT_PATH"));
+    }
 
     manager = std::make_shared<MockGnomeSessionManager>();
     shell_proxy_ = std::make_shared<DBusProxy>(TEST_SERVER_NAME, SHELL_OBJECT_PATH, SHELL_INTERFACE);
@@ -238,7 +241,8 @@ struct TestGnomeSessionManager : testing::Test
     Utils::WaitUntilMSec([] { return logind_->IsConnected(); });
     Utils::WaitUntilMSec([] { return console_kit_->IsConnected(); });
     Utils::WaitUntilMSec([] { return session_manager_->IsConnected(); });
-    Utils::WaitUntilMSec([] { return display_manager_seat_->IsConnected(); });
+    if (g_getenv("XDG_SEAT_PATH"))
+      Utils::WaitUntilMSec([] { return display_manager_seat_->IsConnected(); });
     Utils::WaitUntilMSec([] { return shell_proxy_->IsConnected();});
     ASSERT_TRUE(shell_proxy_->IsConnected());
     EnableInteractiveShutdown(true);
@@ -288,7 +292,8 @@ struct TestGnomeSessionManager : testing::Test
     logind_.reset();
     console_kit_.reset();
     session_manager_.reset();
-    display_manager_seat_.reset();
+    if (g_getenv("XDG_SEAT_PATH"))
+      display_manager_seat_.reset();
   }
 
   bool SettingsAvailable()
@@ -411,6 +416,8 @@ TEST_F(TestGnomeSessionManager, UserIconFile)
 
 TEST_F(TestGnomeSessionManager, SwitchToGreeter)
 {
+  if (!g_getenv("XDG_SEAT_PATH"))
+    return;
   bool switch_called = false;
 
   display_manager_seat_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {

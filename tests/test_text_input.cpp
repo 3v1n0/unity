@@ -64,11 +64,18 @@ class TestTextInput : public ::testing::Test
 TEST_F(TestTextInput, HintCorrectInit)
 {
   nux::Color color = hint->GetTextColor();
-
-  EXPECT_EQ(color.red, 1.0f);
-  EXPECT_EQ(color.green, 1.0f);
-  EXPECT_EQ(color.blue, 1.0f);
-  EXPECT_EQ(color.alpha, 0.5f);
+  if (g_strcmp0(g_getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
+  {
+    EXPECT_EQ(color.red, 0.0f);
+    EXPECT_EQ(color.green, 0.0f);
+    EXPECT_EQ(color.blue, 0.0f);
+    EXPECT_EQ(color.alpha, 0.5f);
+  } else {
+    EXPECT_EQ(color.red, 1.0f);
+    EXPECT_EQ(color.green, 1.0f);
+    EXPECT_EQ(color.blue, 1.0f);
+    EXPECT_EQ(color.alpha, 0.5f);
+  }
 }
 
 TEST_F(TestTextInput, InputStringCorrectSetter)
