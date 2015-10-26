@@ -1,3 +1,1724 @@
+2015-10-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Upstream release 7.3.3
+
+2015-10-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid test failures on jenkins.
+	Approved by: Marco Trevisan (Treviño)
+
+2015-10-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid test failures on jenkins.
+
+2015-10-16  CI Train Bot  <ci-train-bot@canonical.com>
+
+	UnityScreen: close the session dialog in case it's open and we're requested to lock
+	
+	Otherwise a grab conflict will will cause the lockscreen not to show up. Fixes: #1505234
+	Approved by: Andrea Azzarone
+
+2015-10-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: ensure that we free the "fake" IndicatorEntry's we create for dropdowns Fixes: #1503348
+	Approved by: Andrea Azzarone
+
+2015-10-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: don't hide 'l' list parameter with another one
+
+2015-10-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: remove a dropdown IndicatorEntry if not shown anymore
+	
+	When its geometry is not valid anymore we can assume it's not needed.
+
+2015-10-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: ensure that we free the "fake" IndicatorEntry's we create for dropdowns
+
+2015-10-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: force lookup icon by scaling it at the requested size
+	
+	As bonus, remove unused GtkWrapper class Fixes: #1446081, #1501973
+	Approved by: Andrea Azzarone
+
+2015-10-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GtkWrapper: remove it as it's not needed anymore
+
+2015-10-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use GTK_ICON_LOOKUP_FORCE_SIZE when loading icons everywhere
+
+2015-10-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: force lookup icon by scaling it at the requested size
+
+2015-10-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultRendererTile: consider global scaling when scaling a not-squared icon Fixes: #1499286
+	Approved by: Andrea Azzarone
+
+2015-10-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultRendererTile: consider global scaling when scaling a not-squared icon
+
+2015-10-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestDash: Use local results in PreviewNavigateTests instead of online ones
+	
+	They're just more reliable
+	Approved by: Andrea Azzarone
+
+2015-10-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestMain: unset UPSTART_SESSION not to mess with real system
+
+2015-10-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncher: no need to wait pending events here, there's no async call involved
+
+2015-10-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestIconLoader: wait pending events before on TearDown
+
+2015-10-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UpstartWrapper: start in test-mode if UPSTART_SESSION is not defined
+
+2015-10-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestDash: Use local results in PreviewNavigateTests instead of online ones
+	
+	They're just more reliable
+
+2015-10-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: close the session dialog in case it's open and we're requested to lock
+	
+	Otherwise a grab conflict will will cause the lockscreen not to show up. Fixes: #1505234
+	Approved by: Andrea Azzarone
+
+2015-10-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/changelog: sync with proposed
+
+2015-10-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: close the session dialog in case it's open and we're requested to lock
+	
+	Otherwise a grab conflict will will cause the lockscreen not to show up.
+
+2015-10-02  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20151002.2-0ubuntu1
+
+2015-10-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: Don't allow an action to be grabbed multiple times
+	
+	And always return the same action id for a specific key binding. Fixes: #1459571
+	Approved by: Andrea Azzarone
+
+2015-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: use some better naming for variables and methods
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestGnomeSessionManager: mark NoLockWhenLockingDisabled as unstable
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestUtils: define UNSTABLE_TEST macro, and disable unstable tests on release
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CMakeLists.txt: define UNITY_DEBUG_BUILD when building with debug flag
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: don't re-check for method parameters type
+	
+	That's already checked at lower level
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestIconLoader: enable some disabled tests
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestGDBusProxy: make tests more robusts when using a cancellable
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: emit the AcceleratorActivated to all the subscribers for that action
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: don't use overloaded functions, just use different names
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabberTests: fix tests to match current behavior
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: don't remove an action if shared by multiple senders
+	
+	If an action is used by multiple applications, we don't remove it until we don't
+	have customers for that.
+	Added some more debug logging.
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: don't allow any client to Ungrab an accelerator requested from different sender
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandalonePanel: fix KeyGrabber definition
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestMainDBus: use glib::DBusNameWatcher
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: only emit AcceleratorActivated signal to the requestor.
+	
+	Also, delete actions when the name-owner vanished.
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusNameWatcher: new wrapper class for monitoring DBus names
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyGrabber: update implementations with new interface
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusServer: implement SetMethodsCallsHandlerFull
+
+2015-09-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: return always the same action ID for a keybinding
+
+2015-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: Don't allow an action to be grabbed multiple times
+
+2015-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: use action IDs instead of storing actions
+
+2015-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyGrabber: return action IDs and add ability to remove an action by ID
+
+2015-09-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: simpify code, just use two vector for keeping track of actions
+	
+	Unfortunately we can't use pointers here as CompAction's are statically allocated
+
+2015-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusServer: allow to emit a signal to a single listener
+
+2015-09-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	glib::Object: add SetMethodsCallsHandlerFull to get all call parameters
+
+2015-10-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService, DBusIndicators: drop support for EntryShowNowChanged signal
+	
+	We do handle this internally inside unity since long time now, so there's no need
+	bother the bus for such thing.
+	Approved by: Andrea Azzarone
+
+2015-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService, DBusIndicators: drop support for EntryShowNowChanged signal
+	
+	We do handle this internally inside unity since long time now, so there's no need
+	bother the bus for such thing.
+
+2015-09-21  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20150921-0ubuntu1
+
+2015-09-21  Iain Lane  <iain@orangesquash.org.uk>
+
+	launcher: Always make sure we check the right file when seeing if .desktop files have been deleted. Fixes disappearing launcher icons when applications are upgraded when we are using glib > 2.44. Fixes: #1498106
+	Approved by: Marco Trevisan (Treviño)
+
+2015-09-21  Iain Lane  <iain@orangesquash.org.uk>
+
+	one more place
+
+2015-09-21  Iain Lane  <iain@orangesquash.org.uk>
+
+	No need to ref it explicitly, this is done for us
+
+2015-09-18  Iain Lane  <iain@orangesquash.org.uk>
+
+	launcher: Always make sure we check the right file when seeing if .desktop files have been deleted.
+	
+	We were checking the GFile which came in via the changed signal, but sometimes
+	(e.g. for paired delete/create events caused by moves), this can be a file that
+	is being moved onto our target.
+	
+	Always check the target file that we wateched initially.
+	
+	This fixes disappearing launcher icons when applications are updated with glib
+	> 2.44.
+
+2015-09-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid to open adjacent menu when moving from an indicator icon to its dropdown menu. Fixes: #552920
+	Approved by: Marco Trevisan (Treviño)
+
+2015-09-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2015-09-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merging with trunk.
+
+2015-08-11  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Avoid to open adjacent menu when moving from an indicator icon to its dropdown menu.
+
+2015-09-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: add a new setting to control the show-now delay Fixes: #1497915
+	Approved by: Andrea Azzarone
+
+2015-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: add a new setting to control the show-now delay
+
+2015-09-21  Lars Uebernickel  <lars@uebernic.de>
+
+	DevicesSettingsImp: dont't feed garbage to gsettings
+	
+	Use a const reference for the iteration variable in the loop over _blacklist so that the pointers returned from c_str() are still valid when feeding them to g_settings_set_strv().
+	
+	In the best case, this only wrote garbage to the "blacklist" key (making that setting useless). In the worst case, it led to a crash because the garbage was invalid utf8, which gsettings refuses to accept.
+	
+	Fixes LP: #1495173 Fixes: #1495173
+	Approved by: Andrea Azzarone
+
+2015-09-17  Lars Uebernickel  <lars@uebernic.de>
+
+	DevicesSettingsImp: dont't feed garbage to gsettings
+	
+	Use a const reference for the iteration variable in the loop over
+	_blacklist so that the pointers returned from c_str() are still valid
+	when feeding them to g_settings_set_strv().
+	
+	In the best case, this only wrote garbage to the "blacklist" key (making
+	that setting useless). In the worst case, it led to a crash because the
+	garbage was invalid utf8, which gsettings refuses to accept.
+	
+	Fixes LP: #1495173
+
+2015-09-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure to restore the state before the call to glDisable(GL_SCISSOR_TEST). Fixes: #1485727
+	Approved by: Marco Trevisan (Treviño), Eleni Maria Stea
+
+2015-09-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove double ;
+
+2015-09-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor change.
+
+2015-09-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure to restore the state before calling glDisable(GL_SCISSOR_TEST)
+
+2015-09-21  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Make a copy of a quicklist menu item plain text label
+	
+	Likely due to changes in the gcc transition, Orca stopped speaking quicklist menu items. It seems that keeping a separate copy of the label string for a11y use allows quicklist menu items to be spoken again.
+	Approved by: Marco Trevisan (Treviño)
+
+2015-09-21  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Whoops, add missing brace
+
+2015-09-11  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Make sure we free used memory before we get a new label string.
+
+2015-09-11  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Make a copy of a quicklist menu item plain text label
+	
+	Likely due to changes in the gcc transition, Orca stopped speaking quicklist
+	menu items. It seems that keeping a separate copy of the label string for a11y
+	use allows quicklist menu items to be spoken again.
+
+2015-09-21  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Make a copy of a quicklist menu item plain text label
+	
+	Similar to the fix for quicklist menu items, keep a copy of the session
+	button label for a11y use to allow for the buttons in the session dialog
+	to be spoken by Orca.
+	Approved by: Marco Trevisan (Treviño)
+
+2015-09-14  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Make a copy of a quicklist menu item plain text label
+	
+	Similar to the fix for quicklist menu items, keep a copy of the session button
+	label for a11y use to allow for the buttons in the session dialog to be spoken
+	by Orca.
+
+2015-09-10  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20150910.1-0ubuntu1
+
+2015-09-10  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Merge patch from https://launchpadlibrarian.net/216192448/llvm-fix.patch Fixes: #1491555
+	Approved by: Marco Trevisan (Treviño)
+
+2015-09-08  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Merge patch from https://launchpadlibrarian.net/216192448/llvm-fix.patch
+
+2015-09-10  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Merge patch from https://launchpadlibrarian.net/216276242/low-gfx-override.patch Fixes: #1491913
+	Approved by: Marco Trevisan (Treviño)
+
+2015-09-08  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Merge the patch from https://launchpadlibrarian.net/216276242/low-gfx-override.patch
+
+2015-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: force shell to be on top when there's a window fullscreen and we've a menu open.
+	
+	This allows to see the panel and control menus properly. Added support for fullscreen
+	windows to WindowsManager, in order to handle properly the LIM mode. Fixes: #591189
+
+2015-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: consider fullscreen windows as maximized, in any case.
+	
+	In this way in LIM-mode, we've menus available for them, and eventually
+	panel shows proper title (when unfocused).
+	
+	RESUBMITTED r3969, to hopefully fix criss-cross
+
+2015-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~azzar1/unity/lp-1485559
+
+2015-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autpilot, launcher: make dragging tests more reliable
+
+2015-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, TestIconBehavior: add utility function to get a running application
+	
+	This waits, if needed
+
+2015-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, TestPanel: fix open menu on new focused window in LIM mode
+	
+	Since LIM works for unfocused windows as well, no menu should be closed by
+	an app being mapped.
+
+2015-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: consider fullscreen windows as maximized, in any case.
+	
+	In this way in LIM-mode, we've menus available for them, and eventually
+	panel shows proper title (when unfocused).
+
+2015-06-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add IsWindowFullscreen and related signals when fullscreen is toggled
+
+2015-06-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: force shell to be on top when there's a window fullscreen and we've a menu open.
+
+2015-06-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager: add a menu_open property that is true when a menu is opened
+
+2015-06-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: add a method to get the active entry
+
+2015-09-10  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Make sure we update the maximized window when "show desktop"/"restore desktop". Fixes: #1485559
+	Approved by: Marco Trevisan (Treviño)
+
+2015-08-17  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Make sure we update the maximized window when "show desktop"/"restore desktop".
+
+2015-08-14  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Merge with trunk.
+
+2015-09-10  Andrea Azzarone azzaronea@gmail.com
+
+	Properly hide decorations when on "Show Desktop" mode. Fixes: #1485073
+	Approved by: Marco Trevisan (Treviño)
+
+2015-08-14  Andrea Azzarone azzaronea@gmail.com
+
+	Properly hide decorations when on "Show Desktop" mode.
+
+2015-09-10  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Do not allow shutdown when screen is locked. Fixes: #1460626
+	Approved by: Marco Trevisan (Treviño)
+
+2015-06-19  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Do not allow shutdown when screen is locked.
+
+2015-09-10  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Add/Update tests for gnome session manager.
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-09-08  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Resolve conflicts.
+
+2014-04-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add/Updates tests for gnome session manager.
+
+2015-09-10  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Add unit tests for unity::lockscreen::DBusManager.
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-09-08  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Some minor change.
+
+2015-09-08  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Merge with trunk.
+
+2014-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	No need for DBusManager to be trackable. The impl class will do all the job.
+
+2014-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add tests for unity::lockscreen::DBusManager
+
+2015-08-25  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20150825-0ubuntu1
+
+2015-08-25  Iain Lane  <iain@orangesquash.org.uk>
+
+	Depend on v5-renamed xpathselect package
+	Approved by: Marco Trevisan (Treviño)
+
+2015-08-24  Iain Lane  <iain@orangesquash.org.uk>
+
+	Merge archive upload
+
+2015-08-19  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20150819-0ubuntu1
+
+2015-08-19  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Do not handle events coming from viewports not actually containing the window. Fixes: #1449654
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-08-19  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When using keyboard navigation in the Dash, skip category headers that are not expandable. Also, do not highlight the category header when the mouse cursor is over it. Fixes: #1045933
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-08-19  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Also use the Compiz show() method when forcing an unmapped window to be visible when clicking on it's active Launcher icon. Fixes: #989588
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot: modernize some tests, use stronger methods to ensure false positive
+	Approved by: Andrea Azzarone
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: override the background of the window with transparent color Fixes: #1470292
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionButton: set button opacity to 75% when pressed Fixes: #1301655
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: connect to view changes using a function instead of a lambda
+	
+	This prevents crashes as there's automatic disconnection. Fixes: #1470298
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ensure that we connect to window signals as soon as the AppManager knows it Fixes: #1472326
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: Always unfold an active icon Fixes: #1472339
+	Approved by: Andrea Azzarone, PS Jenkins bot, Stephen M. Webb
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: rely on windows monitor property changes for updating Pips
+	
+	Removing the expensive calls that rely on Compiz window moved events which
+	are fired for every window, also if outside the scope of an Icon, so we don't
+	have to filter these signals out, but we can just get the monitor.changed signal
+	and depend on that.
+	This fixes the launcher pips not to be properly initialized in multi-monitor environments. Fixes: #1027191
+	Approved by: PS Jenkins bot
+
+2015-08-24  Iain Lane  <iain@orangesquash.org.uk>
+
+	Update hardcoded libxpathselect1.4 dep (dlopened) to the new v5 name
+
+2015-08-25  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Do not handle events coming from viewports not actually containing the window. Fixes: #1449654
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-08-07  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Minor change.
+
+2015-08-07  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Use nullptr.
+
+2015-08-07  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Do not handle events coming from viewports not actually containing the window.
+
+2015-08-25  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When using keyboard navigation in the Dash, skip category headers that are not expandable. Also, do not highlight the category header when the mouse cursor is over it. Fixes: #1045933
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-05-08  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Make returning from SkipUnexpandableHeaderKeyNav() a bit more efficient.
+
+2015-05-05  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When using keyboard navigation in the Dash, skip category headers that are not expandable.  Also, do not highlight the category header when the mosue cursor is over it.
+
+2015-08-25  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Also use the Compiz show() method when forcing an unmapped window to be visible when clicking on it's active Launcher icon. Fixes: #989588
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-05-29  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Also add the show() method in PluginAdapter::UnMinimize().
+
+2015-05-27  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Also use the Compiz show() method when forcing an unmapped window to be visible when clicking on it's active Launcher icon.
+
+2015-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot: modernize some tests, use stronger methods to ensure false positive
+	Approved by: Andrea Azzarone
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, TestSwitcher: use eventually in mouse selection tests
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, TestPanel: use proper grab_area path
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP: dash, fix typo
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, TestDash: use valid property for eventual check
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, TestPanel: add a lambda to verify app/win status
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, test dash: fix issues on refactoring
+	
+	Properly click object and return geometry of the view (controller has no geo)
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, TestSwitcherMouseInteraction: move mouse at origin before testing
+	
+	Otherwise our technology to prevent small mouse movements might
+	ignore the events and make the test fail.
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, TestSpread: increase the wait time before moving to a window
+	
+	Unfortunately this seems to be needed to get input in some machines
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, TestPanel: get active indicator using a lambda
+	
+	In this way we ensure that it gets called repeatdly until there's a result
+
+2015-08-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel: ignore WindowButtons that have not been placed yet, as they're not visible
+
+2015-08-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot: use new globalRect property as alias for geometry
+
+2015-08-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot: use some new facilities to move and click over items
+
+2015-08-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityIntrospectionObject: make customization of repr easier
+
+2015-08-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityIntrospectionObject: implement proper __eq__, __ne__ and __repr__ methods
+
+2015-08-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AP, TestDash: fix tab category key nav test to match recent changes
+	
+	AS per a rencent fix, the first element is selected if the category is not exapandible
+
+2015-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: override the background of the window with transparent color Fixes: #1470292
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-07-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: override the background of the window with transparent color
+
+2015-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionButton: set button opacity to 75% when pressed Fixes: #1301655
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-07-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionButton: set button opacity to 75% when pressed
+
+2015-07-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTexture: only redraw if opacity actually changed
+
+2015-07-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionView: don't show Lock button if session is currently locked
+	
+	Yay, double-lock! :)
+
+2015-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: connect to view changes using a function instead of a lambda
+	
+	This prevents crashes as there's automatic disconnection. Fixes: #1470298
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-07-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: connect to view changes using a function instead of a lambda
+	
+	This prevents crashes as there's automatic disconnection.
+
+2015-07-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultViewGrid: use sigc::mem_fun to connect to QueueDraw
+
+2015-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ensure that we connect to window signals as soon as the AppManager knows it Fixes: #1472326
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ensure that we connect to window signals as soon as the AppManager knows it
+
+2015-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: add back connection to window_closed signal
+	
+	This was a leftover of the previous refactor.
+
+2015-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: Always unfold an active icon Fixes: #1472339
+	Approved by: PS Jenkins bot, Andrea Azzarone, Stephen M. Webb
+
+2015-07-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: Always unfold an active icon
+
+2015-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: rely on windows monitor property changes for updating Pips
+	
+	Removing the expensive calls that rely on Compiz window moved events which
+	are fired for every window, also if outside the scope of an Icon, so we don't
+	have to filter these signals out, but we can just get the monitor.changed signal
+	and depend on that.
+	This fixes the launcher pips not to be properly initialized in multi-monitor environments. Fixes: #1027191
+	Approved by: PS Jenkins bot
+
+2015-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestBamfApplication: veridy children addition properly
+
+2015-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfMockApplication: emit child-{added,removed} signals when setting children
+
+2015-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: rely on windows monitor property changes for updating Pips
+	
+	Removing the expensive calls that rely on Compiz window moved events which
+	are fired for every window, also if outside the scope of an Icon, so we don't
+	have to filter these signals out, but we can just get the monitor.changed signal
+	and depend on that.
+	This fixes the launcher pips not to be properly initialized in multi-monitor environments.
+
+2015-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneAppManager: connect to window events also for newly opend windows
+
+2015-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneAppManager: list monitor changes as well
+
+2015-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfApplicationManager: UpdateWindows on App creation as it might be already running
+
+2015-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockApplication: use explicit return type with const& or Lambda will fail
+
+2015-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: return a const& WindowList in GetWindows
+	
+	Since we don't have to fetch anything, we can just avoid copies here.
+
+2015-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfApplicationManager: save windows for each app emitting window_{opened,closed} signal
+	
+	Reduce the creation of windows, emit opened or closed signals properly when windows
+	are added or removed, this fixes the problem of  not getting these signals with sticky apps
+
+2015-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfApplicationManager: try to use cached windows in GetWindowForId at first try
+
+2015-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfApplicationManager: remove cached Apps/Windows on 'closed' signal
+	
+	This happens as the last thing, then we can be sure that that app or window
+	won't be re-created for further signals (as it happened before).
+	
+	Also don't remove sticky apps, until they are unsticked (and closed).
+
+2015-07-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: use monitor as property and emit changes
+
+2015-08-03  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20150803.1-0ubuntu1
+
+2015-08-03  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	unity-shared/DebugDBusInterface.cpp: include <iostream> to fix a FTBFS
+	Approved by: Eleni Maria Stea
+
+2015-08-03  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	fix a FTBFS with GCC-5 on arm64 due to missing required standard header
+
+2015-08-03  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Enable building unity form source with gcc5.
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-07-31  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Fix for gcc5.
+
+2015-08-03  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Fixes that enable building unity from sources with cmake3 (wily).
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-07-31  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Fix for cmake 3.0
+
+2015-06-27  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20150627.1-0ubuntu1
+
+2015-06-27  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Implement filter results controls accessibility Fixes: #1457071
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-05-25  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Switch header include order, hoefully fixes Rm64 FTBFs.
+
+2015-05-08  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Some code cleanup and improvement, thanks to Marco Trevisan (Treviño)" for the pointers.
+
+2015-05-06  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Remove some commented out code that is not needed
+
+2015-05-05  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Whoops, accidently dropped some member variables when moving code around for testing
+
+2015-05-05  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Implement filter results controls accessibility
+
+2015-06-27  Andrea Azzarone andrea.azzarone@canonical.com
+
+	This likely could fix https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1451613. At least the backtraces posted there suggest this. But I think that those backtraces are just leftovers of old crashes-on-unloading.
+	Approved by: Marco Trevisan (Treviño)
+
+2015-05-28  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Avoid using lambda in EdgeBarrierController.
+
+2015-06-27  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Make sure new icons are added to the model before calling SortAndUpdate. Fixes: #1458950
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-05-29  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Make sure new icons are added to the model before calling SortAndUpdate.
+
+2015-06-27  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Fix a regression with urgent icons not showing up if launcher is hidden. Fixes: #1450991
+	Approved by: PS Jenkins bot, Stephen M. Webb
+
+2015-05-21  Andrea Azzarone andrea.azzarone@canonical.com
+
+	Properly render urgent icons.
+
+2015-06-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: remove deprecated override style functions, use CSS
+	Approved by: PS Jenkins bot, Christopher Townsend
+
+2015-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: remove deprecated override style functions, use CSS
+
+2015-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsForceQuitDialog: remove alignment deprecated functions
+	
+	Replace them with gtkwidget parameters
+
+2015-06-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayWindowButtons: trigger a queuedraw also when a child requires a redraw Fixes: #1461618
+	Approved by: PS Jenkins bot, Christopher Townsend
+
+2015-06-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayWindowButtons: trigger a queuedraw also when a child requires a redraw
+
+2015-06-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButton: emit visual_state_change signal when we change the state
+
+2015-06-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: connect to target window / application title changes
+	
+	This will be smart enough to work with LIM and global menus Fixes: #1418449
+	Approved by: PS Jenkins bot, Christopher Townsend
+
+2015-04-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with  lp:~3v1n0/unity/application-manager-new
+
+2015-04-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfApplicationManager: use bamf_matcher_get_application_for_xid to get windows for id
+	
+	This reduces the DBus traffic
+
+2015-04-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: connect to target window / application title changes
+	
+	This will be smart enough to work with LIM and global menus
+
+2015-06-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: add missing features, keep a copy of views around
+	
+	Use this in PanelMenuView, getting rid of the BAMF internal at this level.
+	Approved by: PS Jenkins bot, Christopher Townsend
+
+2015-05-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestAppliactionLauncherIcon: ensure window is activ
+
+2015-05-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockApplicationWindow: make LocalFocus to activate the window as well
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: use window active state for generating quicklist
+
+2015-04-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: add "natuilus.desktop" back to the fliemanager list
+
+2015-04-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: add RefreshAndRedraw utility function
+	
+	Instead of duplicating the same code everywhere
+
+2015-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneAppManager: add missing mock type in switch
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lim-everywhere again
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/lim-everywhere
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: add MOCK {App,Window}Type
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel: link standalone version with unity-shared-bamf
+
+2015-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfApplicationManager: do safer convertion from bamf window type to unity::WindowType
+
+2015-02-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use ApplicationManager to handle windows
+	
+	Remove the usage of BAMF internals, this allows better testability
+	and less resources usage.
+
+2015-02-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfApplicationManager: make sure we don't emit signals with null apps
+
+2015-02-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: add missing features, keep a copy of views around
+	
+	This might be still improved when BAMF crashes/reloads, so that we can rebuild the table
+
+2015-06-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeSessionManager: Request ScreenSaver (de)activation on VT changes
+	
+	Connect to login1 session active property, and monitor its state.
+	When the session is active we can safely request the screensaver to stop. Fixes: #1405349
+	Approved by: PS Jenkins bot, Christopher Townsend
+
+2015-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeSessionManager: Request ScreenSaver (de)activation on VT changes
+	
+	Connect to login1 session active property, and monitor its state.
+	When the session is active we can safely request the screensaver to stop.
+
+2015-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: Notify invalidated properties as well, by emitting a null value for them
+	
+	It's then up to the client to get the value.
+	And plus fix the signature of the OnPropertyChanged callback.
+
+2015-06-27  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Allow mouse clicks that are not in the visible area of the Quicklist to pass through down to the Launcher icon. Fixes a failing AP test. Fixes: #1456245
+	Approved by: Marco Trevisan (Treviño)
+
+2015-05-20  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Use CairoBaseWindow::FindAreaUnderMouse.
+	Use _anchorX instead of _padding.
+
+2015-05-20  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Add override to the new method.
+
+2015-05-20  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Allow mouse clicks that are not in the visible area of the Quicklist to pass through down to the Launcher icon.  Fixes a failing AP test.
+
+2015-05-22  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20150522-0ubuntu1
+
+2015-05-22  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Implement scope bar icon accessibility Fixes: #1457073
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-03-25  Luke Yelavich  <luke.yelavich@canonical.com>
+
+	Implement scope bar icon accessibility
+
+2015-05-22  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Enable real page up/page down key navigation in the Dash. When using these keys the view scrolls the length of the visible view. Fixes: #913612
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-05-05  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Use a signal instead of a nux::Property since we are not storing any value.
+
+2015-05-04  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Move the ScrollDir enum class to the anonymous namespace and use ScrollDir instead of a bool when signalling which direction to page.
+
+2015-04-30  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Clean up the case handling of the page up and page down keys and also only do these when a preview is not showing.
+
+2015-04-29  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Enable real page up/page down key navigation in the Dash.  When using these keys the view scrolls the length of the visible view.
+
+2015-05-22  Chris Townsend  <christopher.townsend@canonical.com>
+
+	If dragging an application:// uri type from the Dash to the desktop, change it to a file:// uri type so Nautilus can understand the type a make a copy of it on the desktop. Fixes: #1241972
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-04-28  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Make changes as suggested by Marco's review.
+
+2015-04-27  Chris Townsend  <christopher.townsend@canonical.com>
+
+	If dragging an application:// uri type from the Dash to the desktop, change it to a file:// uri type so Nautilus can understand the type a make a copy of it on the desktop.
+
+2015-05-22  Chris Townsend  <christopher.townsend@canonical.com>
+
+	If Spread/Expo is active, then terminate it when entering Launcher keynav mode. Fixes: #1447810
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-05-08  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Move the 'key_nav_mode_requested=false' inside the test so we don't always set that even if it's not needed.
+
+2015-04-24  Chris Townsend  <christopher.townsend@canonical.com>
+
+	If Spread/Expo is active, then terminate it when entering Launcher keynav mode.
+
+2015-05-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	
+	
+	ResultViewGrid: wait for double-click event only if the relative result needs the Preview
+	
+	This was causing a 500ms delay between the user click and some results (apps) activation.
+	Also, at this point, we can get rid of PREVIEW_LEFT_BUTTON activation type. Fixes: #1291950, #1447372
+	Approved by: Christopher Townsend, Brandon Schaefer, PS Jenkins bot
+
+2015-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: use new SearchBar in_live_search property
+
+2015-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: add in_live_search ROProperty, add more lambdas
+
+2015-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: reduce delay on key-activation of first result
+	
+	If user hits enter, then the first result has to be activated quickly.
+	So, we now wait 300ms since the live search has ended (this doesn't mean
+	we already have all the results, but we might have some of them) and
+	at this point if the user has already hit Enter key we activate the first result.
+	In case the user hits Enter after 300ms that the live search has ended,
+	we simply and promptly activate the first result.
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BGHash: request redraw only if WindowThread is initialized
+	
+	This was causing a crash in standalone dash
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: remove various unneeded g{d,t}k inclusions...
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultViewGrid: don't wait double-click if a local result doesn't support preview
+	
+	This fixes slow click events on Alt+F2 scope
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultView: add GetLocalResultActivateType that returns how a result should be activated
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultView: define default_click_activation getter to make it depends on Settings
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScopeView: initialize results_view in any case.
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultViewGrid: wait for double-click event only if the default_click_activation is PREVIEW
+	
+	This was causing a 500ms delay between the user click and some results (apps) activation.
+	Also, at this point, we can get rid of PREVIEW_LEFT_BUTTON activation type.
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScopeView: set default_click_activation on ResultViewGrid to DIRECT on apps
+	
+	This property has to be DIRECT when we handle apps or when the user has
+	requested this behavior using settings.
+
+2015-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultView: add default_click_activation property
+	
+	This is set to DIRECT by default, also move to enum class
+
+2015-05-22  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Wait on Spread to be terminated before showing the Quicklist. Fixes: #1441626
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-04-23  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Wait on Spread to be terminated before showing the Quicklist.
+
+2015-05-22  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Add necessary signaling to set the BFB icon's tooltip and the Home Scope's default search string to accurately reflect if searching online is enabled or disabled in unity-system-settings. Fixes: #1101662, #1202160
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-04-23  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Fixed formatting in last commit.
+
+2015-04-23  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Make sure the Home Scope is valid before setting it's search hint.  Fixes seg faults in the unit tests.
+
+2015-04-23  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Rename some functions to be more descriptive.
+	Use a property instead of a signal.
+
+2015-04-22  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Add necessary signaling to set the BFB icon's tooltip and the Home Scope's default search string to accurately reflect if searching online is enabled or disabled in unity-system-settings.
+
+2015-05-12  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20150512-0ubuntu1
+
+2015-05-12  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	The skydome rendering of the cube plugin was wrong with unity because transformation matrices set by the unityshell plugin were left in the opengl matrix stacks affecting other compiz plugins. Saving the compiz state at the beginning of the unityshell plugin rendering functions and restoring it at the end of them fixes the problem. Fixes: #1446165
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-04-27  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	renamed static functions
+
+2015-04-21  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	cleanup diff (removed empty line)
+
+2015-04-21  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	renamed push_all/pop_all to something more relevant
+
+2015-04-21  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	cleanup diff (newlines/spaces)
+
+2015-04-21  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	use the minimum push and pop possible to not see errors in compiz
+
+2015-04-20  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	added #ifndef USE_GLES 
+
+2015-04-20  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	removed save/restore framebuffer (it's not necessary)
+
+2015-04-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	removed unused function
+
+2015-04-17  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	save and restore fbo
+
+2015-04-16  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	restore shader as well
+
+2015-04-15  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	preserving the compiz state before applying the unity transformations
+	(fixes the compiz skydome and other issues)
+
+2015-05-12  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Add option to enable and disable Unity low graphics mode on the fly in ccsm or via gsettings. Fixes: #1412937
+	Approved by: Marco Trevisan (Treviño)
+
+2015-04-21  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Add check to whether the low graphics mode has really changed before emitting the signal.
+
+2015-04-21  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Add option to enable and disable Unity low graphics mode on the fly in ccsm or via gsettings.
+
+2015-05-12  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Save the active window when showing the Dash so the correct window is focused when hiding the Dash. Fixes issue when "Always on Top" windows are present. Fixes: #1446634
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-04-21  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Save the active window when showing the Dash so the correct window is focused when hiding the Dash.  Fixes issue when "Always on Top" windows are present.
+
+2015-05-12  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Save the active window when showing the Hud so the correct window is focused when hiding the Hud. Fixes issue when "Always on Top" windows are present. Fixes: #1366583
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-04-17  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Save the active window when showing the Hud so the correct window is focused when hiding the Hud.  Fixes issue when "Always on Top" windows are present.
+
+2015-05-12  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When using the left arrow to exit a Quicklist, Launcher keynav is implied and should be active regardless of how the Quicklist was opened. Fixes: #1444626
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-04-16  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When using the left arrow to exit a Quicklist, Launcher keynav is implied and should be active regardless of how the Quicklist was opened.
+
+2015-04-16  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Merge lp:~townsend/unity/fix-keynav-bfb-quicklist since it's a prerequisite.
+
+2015-05-12  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Add new signal to tell the Launcher to terminate keynav mode and use that signal when a BFB quicklist item is chosen. Fixes: #1052024, #1444643
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-04-16  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Move the logic to terminate Launcher keynav inside the code that has already determined a Launcher icon was clicked.
+
+2015-04-15  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Revert the previous fix of using a UBus message.  Instead, use a signal in which the Launcher will signal the LauncherController to disable KeyNav if the Launcher is clicked with a mouse.
+
+2015-04-14  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Add new signal to tell the Launcher to terminate keynav mode and use that signal when a BFB quicklist item is chosen.
+
+2015-05-12  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Send signal to ensure the Dash will show when entering keynav mode since the first icon always highlighted is the BFB. Fixes: #1444113
+	Approved by: Marco Trevisan (Treviño)
+
+2015-04-16  Chris Townsend  <christopher.townsend@canonical.com>
+
+	In the KeyNav movement functions, add a check to see if the icon is the BFB and if so, send message to ensure the Dash will show.
+
+2015-04-14  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Send signal to ensure the Dash will show when entering keynav mode since the first icon always highlighted is the BFB.
+
+2015-05-12  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Remove code that is no longer needed and broke opening application spread while in Launcher keynav mode. Fixes: #1445082
+	Approved by: Marco Trevisan (Treviño)
+
+2015-04-17  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Remove code that is no longer needed and broke opening application spread while in Launcher keynav mode.
+
+2015-05-12  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When looking for the top-most valid window in a VP, also check if the window is focused if the window is set to Always on Top. This allows Launcher icon spread to work properly when a window is minimized an Always on Top exists in the group.
+	Fixes: #1131385
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2015-04-09  Chris Townsend  <christopher.townsend@canonical.com>
+
+	When looking for the top-most valid window in a VP, also check if the window is focused if the window is set to Always on Top.  This allows Launcher icon spread to work properly when a window is minimized an Always on Top exists in the group.
+
+2015-04-20  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.04.20150420-0ubuntu1
+
+2015-04-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager, settings: go back to Global Menus as default
+	
+	As per design decision. Fixes: #1446256
+	Approved by: Stephen M. Webb
+
+2015-04-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MenuManager, settings: go back to Global Menus as default
+	
+	As per design decision.
+
+2015-04-10  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.04.20150410.1-0ubuntu1
+
+2015-04-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: terminate spread if active when initiating Switcher
+	
+	Also avodon't make the SpreadFilter to unset the nux key-focus area on destruction. Fixes: #1412001
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2015-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSpreadFilter: include SearchBar
+
+2015-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadFilter: no need to manually unset the key-focus area or remove from layout queue
+	
+	This is now done inside nux::Area::~Area, and leaves the focus to the upcoming views
+	(such as the switcher view).
+
+2015-04-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: terminate spread if active when initiating Switcher
+
+2015-04-10  Gerry Boland  <gerry.boland@canonical.com>
+
+	SwitcherController: add first selection mode property, to decide what to select at first
+	
+	Add option to have Switcher strictly between applications, and not select the previously focused window as first selection (even if that window part of the same application) Fixes: #998285
+	Approved by: Gerry Boland, Christopher Townsend, PS Jenkins bot
+
+2015-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: set FirstSelectionMode::LAST_ACTIVE_VIEW as default
+
+2015-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: use properties better
+
+2015-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: save settings in controller, and update them from compiz
+
+2015-02-04  Gerry Boland  <gerry.boland@canonical.com>
+
+	Add option to have Switcher strictly between applications, and not select the previously focused window as first selection (even if that window part of the same application)
+
+2015-04-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	When we get a launcher key press (ie. super key). We check if the command lens is open. If it is then just switch the lens to the home lens. This way we dont close the dash. Fixes: #1108956
+	Approved by: Stephen M. Webb, Christopher Townsend, PS Jenkins bot
+
+2015-04-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fix AP tests
+
+2015-03-31  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Finally fixes the issue where you cant go from the command lens to the home dash
+
+2015-04-10  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	test_wm_keybindings: fix AP failures caused by upstream Compiz change Fixes: #1294864
+	Approved by: Christopher Townsend
+
+2015-04-10  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	adjust previous fix to use floating-point division
+
+2015-04-10  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	test_wm_keybindings: fix AP failures caused by upstream Compiz change
+
+2015-04-10  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	(Ubuntu packaging) move the session migration scripts to Python3 Fixes: #1440560
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2015-04-06  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	migration scripts: used /usr/bin/python3 shebang instead of Python-recommended /usr/bin/env
+
+2015-04-05  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	move migration scripts to python3
+
+2015-04-10  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	fixed the Panel title string expected by Launcher keynav AP tests Fixes: #1435830
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2015-03-26  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	made the test_launcher_keynav_changes_panel test conform to design requirements
+
+2015-03-24  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	AP tests: updated panel title expectd during keynav tests
+
+2015-03-30  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.04.20150330-0ubuntu1
+
+2015-03-30  Sebastien Bacher  <seb128@ubuntu.com>
+
+	use the new nautilus .desktop name Fixes: #1436297
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-03-25  Sebastien Bacher  <seb128@ubuntu.com>
+
+	use the new nautilus .desktop name
+
+2015-03-30  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	AP tests: accounted for arbitrarily-raised exceptions in checking scaled windows Fixes: #1436095
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2015-03-24  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	AP tests: accounted for arbitrarily-raised exceptions in checking scaled windows
+
+2015-03-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure that signals are auto-desconnected when XdndStartStopNotifierImp is destroyed.
+	Fixes: #1432231
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-03-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure that signal are auto-desconnected when XdndStartStopNotifierImp is destroyed.
+
+2015-03-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Forward first key event that happens on top of the blank window to the lockscreen. Fixes: #1308265
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2015-03-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Forward first key event that happens on top of the blank window to the lockscreen.
+
+2015-03-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Release pointer barrier if launcher is in lock_hide state.
+	Fixes: #1029114
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2015-03-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Release pointer barrier if launcher is in lock_hide state.
+
+2015-03-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Hide launcher to avoid damaging window when not needed. Also make sure that pressure effect works fine (previous fix has been reverted because of this!). Fixes: #1301394
+	Approved by: Marco Trevisan (Treviño)
+
+2015-03-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Impre readability.
+
+2015-03-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Hide launcher to avoid damaging window when not needed. Also make sure that pressure effect works fine.
+
+2015-03-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure scope_views_[filter.id] exists before using operator[] on it. Fixes: #926979
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-03-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Check the use of std::*map::operator[].
+
+2015-03-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Do not restore focus if a quicklist is opened during launcher key navigation. Fixes: #932486
+	Approved by: Stephen M. Webb, PS Jenkins bot
+
+2015-03-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Do not refocus window when opening a quicklist during launcher key navigation.
+
+2015-03-24  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.04.20150324.1-0ubuntu1
+
+2015-03-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	When we quit the quicklist it would check if the mouse was over the launcher, if it wasn't it would fold the launcher. We don't need to check this if we are in keynav as we want all the icons to be unfolded. Fixes: #1246891
+	Approved by: Christopher Townsend
+
+2015-03-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* If we are in KeyNav mode do not check if we should set hover or not.
+
+2015-03-24  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	silenced GCC 5 warnings Fixes: #1430784
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2015-03-13  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	work around new GCC 5 warnings in GTest code
+
+2015-03-12  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	HudController.cpp: bind value of correct type to signal
+
+2015-03-24  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	uses the new upstream .desktop file for D-Bus activated Nautilus instances Fixes: #1428837
+	Approved by: Christopher Townsend, PS Jenkins bot
+
+2015-03-05  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	used D-bus activation .desktop file for Nautilus in AP tests
+
+2015-03-24  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Use a 2 second delay before showing the first run shortcut hints to workaround a race condition on input handling. Fixes: #1313597
+	Approved by: Stephen M. Webb
+
+2015-03-05  Chris Townsend  <christopher.townsend@canonical.com>
+
+	Use a 2 second delay before showing the first run shortcut hints to workaround a race condition on input handling.
+
+2015-03-24  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	fix AP test failure due to new parameter added to key grabbing Fixes: #1433648
+	Approved by: Christopher Townsend, Marco Trevisan (Treviño)
+
+2015-03-24  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	fixed AP tests to match code changes
+
+2015-03-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: add timestamp support to accelerators Fixes: #1433648
+	Approved by: Sebastien Bacher, Christopher Townsend, PS Jenkins bot
+
+2015-03-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: add timestamp support to accelerators
+
+2015-03-19  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	Upstream release 7.3.2.
+
 2015-02-27  CI Train Bot  <ci-train-bot@canonical.com>
 
 	Releasing 7.3.1+15.04.20150227-0ubuntu1
