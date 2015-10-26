@@ -215,7 +215,7 @@ struct TestGnomeSessionManager : testing::Test
       return nullptr;
     });
 
-    if (g_getenv("XDG_SEAT_PATH "))
+    if (g_getenv("XDG_SEAT_PATH"))
     {
       display_manager_seat_ = std::make_shared<DBusServer>();
       display_manager_seat_->AddObjects(introspection::DISPLAY_MANAGER_SEAT, g_getenv("XDG_SEAT_PATH"));
