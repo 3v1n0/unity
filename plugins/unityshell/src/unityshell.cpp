@@ -381,6 +381,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
      optionSetPanelFirstMenuNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetSpreadAppWindowsInitiate(boost::bind(&UnityScreen::spreadAppWindowsInitiate, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashTapDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2276,6 +2277,23 @@ bool UnityScreen::showDesktopKeyInitiate(CompAction* action,
                                          CompOption::Vector& options)
 {
   WM.ShowDesktop();
+  return true;
+}
+
+bool UnityScreen::spreadAppWindowsInitiate(CompAction* action,
+                                           CompAction::State state,
+                                           CompOption::Vector& options)
+{
+  if (ApplicationPtr const& active_app = ApplicationManager::Default().GetActiveApplication())
+  {
+    std::vector<Window> windows;
+
+    for (auto& window : active_app->GetWindows())
+      windows.push_back(window->window_id());
+
+    WM.ScaleWindowGroup(windows, 0, true);
+  }
+
   return true;
 }
 

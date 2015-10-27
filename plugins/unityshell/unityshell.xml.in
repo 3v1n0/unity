@@ -87,6 +87,12 @@
                     <default>&lt;Alt&gt;F10</default>
                 </option>
 
+                <option name="spread_app_windows" type="key">
+                    <_short>Key to spread the current application windows</_short>
+                    <_long>Initiate the window Spread for the current application windows.</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;w</default>
+                </option>
+
                 <option name="panel_opacity" type="float">
                     <_short>Panel Opacity</_short>
                     <_long>The opacity of the Panel background.</_long>
