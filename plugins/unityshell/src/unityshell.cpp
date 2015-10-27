@@ -382,6 +382,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
      optionSetPanelFirstMenuNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetSpreadAppWindowsInitiate(boost::bind(&UnityScreen::spreadAppWindowsInitiate, this, _1, _2, _3));
+     optionSetSpreadAppWindowsAnywhereInitiate(boost::bind(&UnityScreen::spreadAppWindowsAnywhereInitiate, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashTapDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2280,9 +2281,7 @@ bool UnityScreen::showDesktopKeyInitiate(CompAction* action,
   return true;
 }
 
-bool UnityScreen::spreadAppWindowsInitiate(CompAction* action,
-                                           CompAction::State state,
-                                           CompOption::Vector& options)
+void UnityScreen::SpreadAppWindows(bool anywhere)
 {
   if (ApplicationPtr const& active_app = ApplicationManager::Default().GetActiveApplication())
   {
@@ -2290,13 +2289,27 @@ bool UnityScreen::spreadAppWindowsInitiate(CompAction* action,
 
     for (auto& window : active_app->GetWindows())
     {
-      if (WM.IsWindowOnCurrentDesktop(window->window_id()))
+      if (anywhere || WM.IsWindowOnCurrentDesktop(window->window_id()))
         windows.push_back(window->window_id());
     }
 
     WM.ScaleWindowGroup(windows, 0, true);
   }
+}
 
+bool UnityScreen::spreadAppWindowsInitiate(CompAction* action,
+                                           CompAction::State state,
+                                           CompOption::Vector& options)
+{
+  SpreadAppWindows(false);
+  return true;
+}
+
+bool UnityScreen::spreadAppWindowsAnywhereInitiate(CompAction* action,
+                                                   CompAction::State state,
+                                                   CompOption::Vector& options)
+{
+  SpreadAppWindows(true);
   return true;
 }
 
