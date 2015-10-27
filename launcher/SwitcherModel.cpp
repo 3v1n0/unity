@@ -41,27 +41,15 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
 {
   // When using Webapps, there are more than one active icon, so let's just pick
   // up the first one found which is the web browser.
-  bool found = false;
-  int order = 0;
+  bool found_active = false;
 
   for (auto const& application : applications_)
   {
-    application->SetOrder(++order);
-
-    AddChild(application.GetPointer());
-    if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) && !found)
+    if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) && !found_active)
     {
       last_active_application_ = application;
-      found = true;
+      found_active = true;
     }
-  }
-}
-
-SwitcherModel::~SwitcherModel()
-{
-  for (auto const& application : applications_)
-  {
-    RemoveChild(application.GetPointer());
   }
 }
 
@@ -80,6 +68,23 @@ void SwitcherModel::AddProperties(debug::IntrospectionData& introspection)
   .add("only-detail-on-viewport", only_detail_on_viewport)
   .add("selection-index", SelectionIndex())
   .add("last-selection-index", LastSelectionIndex());
+}
+
+debug::Introspectable::IntrospectableList SwitcherModel::GetIntrospectableChildren()
+{
+  int order = 0;
+  std::list<unity::debug::Introspectable*> children;
+
+  for (auto const& icon : applications_)
+  {
+    if (!icon->removed)
+    {
+      icon->SetOrder(++order);
+      children.push_back(icon.GetPointer());
+    }
+  }
+
+  return children;
 }
 
 SwitcherModel::iterator SwitcherModel::begin()

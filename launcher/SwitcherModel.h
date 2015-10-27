@@ -62,7 +62,7 @@ public:
   nux::Property<bool>         only_detail_on_viewport;
 
   SwitcherModel(std::vector<launcher::AbstractLauncherIcon::Ptr> const& icons);
-  virtual ~SwitcherModel();
+  virtual ~SwitcherModel() = default;
 
   iterator begin();
   iterator end();
@@ -105,8 +105,9 @@ public:
 
 protected:
   // Introspectable methods
-  std::string GetName() const;
-  void AddProperties(debug::IntrospectionData&);
+  std::string GetName() const override;
+  void AddProperties(debug::IntrospectionData&) override;
+  debug::Introspectable::IntrospectableList GetIntrospectableChildren() override;
 
 private:
   void UpdateRowIndex();
