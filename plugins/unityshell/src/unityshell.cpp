@@ -2289,7 +2289,10 @@ bool UnityScreen::spreadAppWindowsInitiate(CompAction* action,
     std::vector<Window> windows;
 
     for (auto& window : active_app->GetWindows())
-      windows.push_back(window->window_id());
+    {
+      if (WM.IsWindowOnCurrentDesktop(window->window_id()))
+        windows.push_back(window->window_id());
+    }
 
     WM.ScaleWindowGroup(windows, 0, true);
   }
