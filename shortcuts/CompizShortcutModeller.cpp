@@ -68,6 +68,7 @@ namespace
   const std::string UNITYSHELL_OPTION_LAUNCHER_SWITCHER_FORWARD = "launcher_switcher_forward";
   const std::string UNITYSHELL_OPTION_SHOW_HUD = "show_hud";
   const std::string UNITYSHELL_OPTION_PANEL_FIRST_MENU = "panel_first_menu";
+  const std::string UNITYSHELL_OPTION_SPREAD_APP_WINDOWS = "spread_app_windows";
   const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD = "alt_tab_forward";
   const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD_ALL = "alt_tab_forward_all";
   const std::string UNITYSHELL_OPTION_ALT_TAB_NEXT_WINDOW = "alt_tab_next_window";
@@ -314,6 +315,14 @@ void CompizModeller::AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hin
                                                      SCALE_PLUGIN_NAME,
                                                      SCALE_OPTION_INITIATE_ALL_KEY));
   }
+
+  hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
+                                                   (ws_enabled ?
+                                                    _("Spreads all windows of the focused application in the current workspace.") :
+                                                    _("Spreads all windows of the focused application.")),
+                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   UNITYSHELL_PLUGIN_NAME,
+                                                   UNITYSHELL_OPTION_SPREAD_APP_WINDOWS));
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                    _("Minimises all windows."),
