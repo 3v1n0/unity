@@ -431,8 +431,10 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
 
 void GnomeManager::Impl::CallDisplayManagerSeatMethod(std::string const& method, GVariant* parameters)
 {
+  const char* xdg_seat_path = test_mode_ ? "/org/freedesktop/DisplayManager/Seat0" : g_getenv("XDG_SEAT_PATH");
+
   auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
-                                                 g_getenv("XDG_SEAT_PATH"),
+                                                 glib::gchar_to_string(xdg_seat_path),
                                                  "org.freedesktop.DisplayManager.Seat",
                                                  test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
   proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
@@ -507,6 +509,8 @@ bool GnomeManager::Impl::HasInhibitors()
 
 std::string GnomeManager::Impl::UserIconFile()
 {
+  if (test_mode_)
+      return std::string("/usr/share/pixmaps/faces/fish.jpg") :
   glib::Error error;
   glib::Object<GDBusConnection> system_bus(g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, &error));
 
@@ -536,7 +540,7 @@ std::string GnomeManager::Impl::UserIconFile()
     return "";
   }
 
-  return test_mode_?std::string("/usr/share/pixmaps/faces/fish.jpg") : IconFile.GetString();
+  return IconFile.GetString();
 }
 
 bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string const& group_name)

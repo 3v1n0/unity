@@ -42,6 +42,7 @@ const std::string LOGIND_SESSION_PATH = "/org/freedesktop/login1/session/id0";
 const std::string CONSOLE_KIT_PATH = "/org/freedesktop/ConsoleKit/Manager";
 const std::string SESSION_MANAGER_PATH = "/org/gnome/SessionManager";
 const std::string SESSION_MANAGER_PRESENCE_PATH = "/org/gnome/SessionManager/Presence";
+const std::string DISPLAY_MANAGER_SEAT_PATH = "/org/freedesktop/DisplayManager/Seat0";
 
 const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
 const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
@@ -215,11 +216,8 @@ struct TestGnomeSessionManager : testing::Test
       return nullptr;
     });
 
-    if (g_getenv("XDG_SEAT_PATH"))
-    {
-      display_manager_seat_ = std::make_shared<DBusServer>();
-      display_manager_seat_->AddObjects(introspection::DISPLAY_MANAGER_SEAT, g_getenv("XDG_SEAT_PATH"));
-    }
+    display_manager_seat_ = std::make_shared<DBusServer>();
+    display_manager_seat_->AddObjects(introspection::DISPLAY_MANAGER_SEAT, DISPLAY_MANAGER_SEAT_PATH);
 
     manager = std::make_shared<MockGnomeSessionManager>();
     shell_proxy_ = std::make_shared<DBusProxy>(TEST_SERVER_NAME, SHELL_OBJECT_PATH, SHELL_INTERFACE);
@@ -241,8 +239,7 @@ struct TestGnomeSessionManager : testing::Test
     Utils::WaitUntilMSec([] { return logind_->IsConnected(); });
     Utils::WaitUntilMSec([] { return console_kit_->IsConnected(); });
     Utils::WaitUntilMSec([] { return session_manager_->IsConnected(); });
-    if (g_getenv("XDG_SEAT_PATH"))
-      Utils::WaitUntilMSec([] { return display_manager_seat_->IsConnected(); });
+    Utils::WaitUntilMSec([] { return display_manager_seat_->IsConnected(); });
     Utils::WaitUntilMSec([] { return shell_proxy_->IsConnected();});
     ASSERT_TRUE(shell_proxy_->IsConnected());
     EnableInteractiveShutdown(true);
@@ -292,8 +289,7 @@ struct TestGnomeSessionManager : testing::Test
     logind_.reset();
     console_kit_.reset();
     session_manager_.reset();
-    if (g_getenv("XDG_SEAT_PATH"))
-      display_manager_seat_.reset();
+    display_manager_seat_.reset();
   }
 
   bool SettingsAvailable()
@@ -416,8 +412,6 @@ TEST_F(TestGnomeSessionManager, UserIconFile)
 
 TEST_F(TestGnomeSessionManager, SwitchToGreeter)
 {
-  if (!g_getenv("XDG_SEAT_PATH"))
-    return;
   bool switch_called = false;
 
   display_manager_seat_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
