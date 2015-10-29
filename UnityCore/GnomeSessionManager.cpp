@@ -510,7 +510,7 @@ bool GnomeManager::Impl::HasInhibitors()
 std::string GnomeManager::Impl::UserIconFile()
 {
   if (test_mode_)
-      return std::string("/usr/share/pixmaps/faces/fish.jpg") :
+      return std::string("/usr/share/pixmaps/faces/fish.jpg") ;
   glib::Error error;
   glib::Object<GDBusConnection> system_bus(g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, &error));
 
