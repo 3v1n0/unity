@@ -25,6 +25,12 @@ option(
   ON
 )
 
+option(
+  ENABLE_UNIT_TESTS
+  "Enable Unity Unit Tests"
+  ON
+)
+
 # This is due to bug lp:668799 - qemu-arm segfaults executing msgmerge
 option(
   I18N_SUPPORT
@@ -260,6 +266,7 @@ add_subdirectory(unity-shared)
 add_subdirectory(dash)
 add_subdirectory(launcher)
 add_subdirectory(data)
+
 if (ENABLE_X_SUPPORT)
   add_subdirectory(hud)
   add_subdirectory(lockscreen)
@@ -273,64 +280,70 @@ if (ENABLE_X_SUPPORT)
   add_subdirectory(unity-standalone)
 endif ()
 
-# subdirs
 add_subdirectory(doc)
-
-# Check for google test and build it locally
-set (
-  GMOCK_ROOT_DIR
-  "/usr/src/gmock"
-  CACHE
-  PATH
-  "Path to Google mock srcs"
-)
-
-set (
-  GMOCK_INCLUDE_DIR
-  "/usr/include/gmock/include"
-  CACHE
-  PATH
-  "Path to Google mock include"
-)
-
-set(
-  GTEST_ROOT_DIR
-  "${GMOCK_ROOT_DIR}/gtest" # Default value, adjustable by user with e.g., ccmake
-  CACHE
-  PATH
-  "Path to Google test srcs"
-)
-
-set(
-  GTEST_INCLUDE_DIR
-  "${GMOCK_ROOT_DIR}/gtest/include"
-  CACHE
-  PATH
-  "Path to Google tests include"
-)
-
-if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
-  include_directories (
-    ${GMOCK_INCLUDE_DIR}
-    ${GTEST_INCLUDE_DIR}
-  )
-  add_subdirectory(
-    ${GMOCK_ROOT_DIR}
-    "${CMAKE_CURRENT_BINARY_DIR}/gmock"
-  )
-elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
-  include_directories (
-    ${GTEST_INCLUDE_DIR}
-  )
-endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
-
 add_subdirectory(services)
-add_subdirectory(tests)
 add_subdirectory(tools)
 add_subdirectory(UnityCore)
 add_subdirectory(guides)
-
 add_subdirectory(gnome)
+
+if (ENABLE_UNIT_TESTS)
+  # Check for google test and build it locally
+  set (
+    GMOCK_ROOT_DIR
+    "/usr/src/gmock"
+    CACHE
+    PATH
+    "Path to Google mock srcs"
+  )
+
+  set (
+    GMOCK_INCLUDE_DIR
+    "/usr/include/gmock/include"
+    CACHE
+    PATH
+    "Path to Google mock include"
+  )
+
+  set(
+    GTEST_ROOT_DIR
+    "${GMOCK_ROOT_DIR}/gtest" # Default value, adjustable by user with e.g., ccmake
+    CACHE
+    PATH
+    "Path to Google test srcs"
+  )
+
+  set(
+    GTEST_INCLUDE_DIR
+    "${GMOCK_ROOT_DIR}/gtest/include"
+    CACHE
+    PATH
+    "Path to Google tests include"
+  )
+
+  if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
+    include_directories (
+      ${GMOCK_INCLUDE_DIR}
+      ${GTEST_INCLUDE_DIR}
+    )
+    add_subdirectory(
+      ${GMOCK_ROOT_DIR}
+      "${CMAKE_CURRENT_BINARY_DIR}/gmock"
+    )
+  elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
+    include_directories (
+      ${GTEST_INCLUDE_DIR}
+    )
+  endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
+
+  add_subdirectory(tests)
+
+else (ENABLE_UNIT_TESTS)
+  set (MISSING_TESTS_MSG "-- Tests disabled, compile with -DENABLE_UNIT_TESTS=ON")
+  add_custom_target (check COMMAND echo ${MISSING_TESTS_MSG})
+  add_custom_target (check-headless COMMAND echo ${MISSING_TESTS_MSG})
+  add_custom_target (gcheck COMMAND echo ${MISSING_TESTS_MSG})
+endif (ENABLE_UNIT_TESTS)
 
 #
 # GSettings Schema
