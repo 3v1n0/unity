@@ -3971,6 +3971,8 @@ void UnityScreen::InitUnityComponents()
   switcher_controller_ = std::make_shared<switcher::Controller>();
   switcher_controller_->detail.changed.connect(sigc::mem_fun(this, &UnityScreen::OnSwitcherDetailChanged));
   Introspectable::AddChild(switcher_controller_.get());
+  launcher_controller_->icon_added.connect(sigc::mem_fun(switcher_controller_.get(), &switcher::Controller::AddIcon));
+  launcher_controller_->icon_removed.connect(sigc::mem_fun(switcher_controller_.get(), &switcher::Controller::RemoveIcon));
   LOG_INFO(logger) << "InitUnityComponents-Switcher " << timer.ElapsedSeconds() << "s";
 
   /* Setup panel */
