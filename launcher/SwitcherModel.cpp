@@ -83,7 +83,7 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
 
 void SwitcherModel::AddIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
 {
-  if (!icon)
+  if (!icon || !icon->ShowInSwitcher(only_apps_on_viewport))
     return;
 
   if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
