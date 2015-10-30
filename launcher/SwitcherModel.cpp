@@ -28,13 +28,34 @@ using launcher::AbstractLauncherIcon;
 
 namespace switcher
 {
+namespace
+{
+/**
+ * Helper comparison functor for sorting application icons.
+ */
+bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
+                                  AbstractLauncherIcon::Ptr const& second)
+{
+  if (first->GetIconType() == second->GetIconType())
+    return first->SwitcherPriority() > second->SwitcherPriority();
+
+  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
+    return true;
+
+  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
+    return false;
+
+  return first->GetIconType() < second->GetIconType();
+}
+}
 
 
-SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons)
+SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons, bool sort_by_priority)
   : detail_selection(false)
   , detail_selection_index(0)
-  , only_detail_on_viewport(false)
+  , only_apps_on_viewport(false)
   , applications_(icons)
+  , sort_by_priority_(sort_by_priority)
   , index_(0)
   , last_index_(0)
   , row_index_(0)
@@ -42,15 +63,99 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
   // When using Webapps, there are more than one active icon, so let's just pick
   // up the first one found which is the web browser.
   bool found_active = false;
+  only_apps_on_viewport.changed.connect(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit)));
+  auto visibility_changed_cb = sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged));
+
+  if (sort_by_priority_)
+    std::sort(std::begin(applications_), std::end(applications_), CompareSwitcherItemsPriority);
 
   for (auto const& application : applications_)
   {
-    if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) && !found_active)
+    if (!found_active && application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
     {
       last_active_application_ = application;
       found_active = true;
     }
+
+    application->visibility_changed.connect(visibility_changed_cb);
   }
+}
+
+void SwitcherModel::AddIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
+{
+  if (!icon)
+    return;
+
+  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+    last_active_application_ = icon;
+
+  if (std::find(applications_.begin(), applications_.end(), icon) == applications_.end())
+  {
+    if (sort_by_priority_)
+    {
+      auto pos = std::upper_bound(applications_.begin(), applications_.end(), icon, CompareSwitcherItemsPriority);
+      auto icon_index = pos - applications_.begin();
+
+      if (icon_index <= index_)
+        Next();
+
+      applications_.insert(pos, icon);
+    }
+    else
+    {
+      applications_.push_back(icon);
+    }
+
+    icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged)));
+    updated.emit();
+  }
+}
+
+void SwitcherModel::RemoveIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
+{
+  auto icon_it = std::find(applications_.begin(), applications_.end(), icon);
+  if (icon_it != applications_.end())
+  {
+    applications_.erase(icon_it);
+
+    if (last_active_application_ == icon)
+    {
+      for (auto const& application : applications_)
+      {
+        if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+        {
+          last_active_application_ = application;
+          break;
+        }
+      }
+    }
+
+    if (icon->ShowInSwitcher(only_apps_on_viewport))
+    {
+      Next();
+      updated.emit();
+    }
+  }
+}
+
+void SwitcherModel::OnIconVisibilityChanged()
+{
+  if (Selection() == last_active_application_)
+  {
+    for (auto const& application : applications_)
+    {
+      if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      {
+        last_active_application_ = application;
+        break;
+      }
+    }
+  }
+
+  if (!Selection()->ShowInSwitcher(only_apps_on_viewport))
+    Next();
+
+  updated.emit();
 }
 
 std::string SwitcherModel::GetName() const
@@ -62,10 +167,10 @@ void SwitcherModel::AddProperties(debug::IntrospectionData& introspection)
 {
   introspection
   .add("detail-selection", detail_selection)
-  .add("detail-selection-index", (int)detail_selection_index)
+  .add("detail-selection-index", detail_selection_index())
   .add("detail-current-count", DetailXids().size())
   .add("detail-windows", glib::Variant::FromVector(DetailXids()))
-  .add("only-detail-on-viewport", only_detail_on_viewport)
+  .add("only-apps-on-viewport", only_apps_on_viewport())
   .add("selection-index", SelectionIndex())
   .add("last-selection-index", LastSelectionIndex());
 }
@@ -109,14 +214,22 @@ SwitcherModel::reverse_iterator SwitcherModel::rend()
 
 AbstractLauncherIcon::Ptr SwitcherModel::at(unsigned int index) const
 {
-  if ((int) index >= Size ())
+  if (index >= applications_.size())
     return AbstractLauncherIcon::Ptr();
+
   return applications_[index];
 }
 
-int SwitcherModel::Size() const
+size_t SwitcherModel::Size() const
 {
-  return applications_.size();
+  size_t size = 0;
+  for (auto const& icon : applications_)
+  {
+    if (icon->ShowInSwitcher(only_apps_on_viewport))
+      ++size;
+  }
+
+  return size;
 }
 
 AbstractLauncherIcon::Ptr SwitcherModel::Selection() const
@@ -153,7 +266,7 @@ std::vector<Window> SwitcherModel::DetailXids() const
   {
     Window xid = window->window_id();
 
-    if (!only_detail_on_viewport || wm.IsWindowOnCurrentDesktop(xid))
+    if (!only_apps_on_viewport || wm.IsWindowOnCurrentDesktop(xid))
       results.push_back(xid);
   }
 
@@ -190,11 +303,11 @@ Window SwitcherModel::DetailSelectionWindow() const
 
 void SwitcherModel::Next()
 {
-  last_index_ = index_;
-
-  index_++;
-  if (index_ >= applications_.size())
-    index_ = 0;
+  do
+  {
+    last_index_ = index_;
+    ++index_ %= applications_.size();
+  } while (!Selection()->ShowInSwitcher(only_apps_on_viewport));
 
   detail_selection = false;
   detail_selection_index = 0;
@@ -204,12 +317,11 @@ void SwitcherModel::Next()
 
 void SwitcherModel::Prev()
 {
-  last_index_ = index_;
-
-  if (index_ > 0)
-    index_--;
-  else
-    index_ = applications_.size() - 1;
+  do
+  {
+    last_index_ = index_;
+    index_ = (index_ > 0) ? index_ - 1 : applications_.size() - 1;
+  } while (!Selection()->ShowInSwitcher(only_apps_on_viewport));
 
   detail_selection = false;
   detail_selection_index = 0;
@@ -339,12 +451,12 @@ void SwitcherModel::SetRowSizes(std::vector<int> const& row_sizes)
 
 void SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
 {
-  int i = 0;
+  unsigned i = 0;
   for (iterator it = begin(), e = end(); it != e; ++it)
   {
     if (*it == selection)
     {
-      if ((int) index_ != i)
+      if (index_ != i)
       {
         last_index_ = index_;
         index_ = i;
