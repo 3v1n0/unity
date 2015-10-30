@@ -36,7 +36,7 @@ namespace dash
 typedef enum
 {
   G_SCOPE_ERROR_NO_ACTIVATION_HANDLER  = (1 << 0),
-  G_SCOPE_ERROR_INVALID_PREVIEW        = (2 << 0)
+  G_SCOPE_ERROR_INVALID_PREVIEW        = (1 << 1)
 } GScopeError;
 
 GQuark
