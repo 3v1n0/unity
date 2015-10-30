@@ -1,6 +1,7 @@
 unity (7.4.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * Bumping version to 7.4.0
+  * Fix building in xenial
 
  -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Mon, 26 Oct 2015 15:37:22 +0100
 
