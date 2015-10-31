@@ -117,9 +117,16 @@ private:
   void UpdateRowIndex();
   unsigned int SumNRows(unsigned int n) const;
   bool DetailIndexInLeftHalfOfRow() const;
+  void InsertIcon(launcher::AbstractLauncherIcon::Ptr const&);
+  void VerifyApplications();
+  void UpdateLastActiveApplication();
   void OnIconVisibilityChanged();
 
+  void NextIndex();
+  void PrevIndex();
+
   Applications                        applications_;
+  Applications                        hidden_applications_;
   bool                                sort_by_priority_;
   unsigned int                        index_;
   unsigned int                        last_index_;

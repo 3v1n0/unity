@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2012 Canonical Ltd
+ * Copyright (C) 2011-2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include <math.h>
@@ -53,61 +54,133 @@ bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
 SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons, bool sort_by_priority)
   : detail_selection(false)
   , detail_selection_index(0)
-  , only_apps_on_viewport(false)
+  , only_apps_on_viewport(true)
   , applications_(icons)
   , sort_by_priority_(sort_by_priority)
   , index_(0)
   , last_index_(0)
   , row_index_(0)
 {
-  // When using Webapps, there are more than one active icon, so let's just pick
-  // up the first one found which is the web browser.
-  bool found_active = false;
-  only_apps_on_viewport.changed.connect(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit)));
   auto visibility_changed_cb = sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged));
+
+  for (auto it = applications_.begin(); it != applications_.end();)
+  {
+    (*it)->visibility_changed.connect(visibility_changed_cb);
+
+    if (!(*it)->ShowInSwitcher(only_apps_on_viewport))
+    {
+      hidden_applications_.push_back(*it);
+      it = applications_.erase(it);
+      continue;
+    }
+
+    ++it;
+  }
 
   if (sort_by_priority_)
     std::sort(std::begin(applications_), std::end(applications_), CompareSwitcherItemsPriority);
 
+  UpdateLastActiveApplication();
+
+  only_apps_on_viewport.changed.connect([this] (bool) {
+    VerifyApplications();
+  });
+}
+
+void SwitcherModel::UpdateLastActiveApplication()
+{
   for (auto const& application : applications_)
   {
-    if (!found_active && application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+    if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
     {
       last_active_application_ = application;
-      found_active = true;
+      break;
     }
-
-    application->visibility_changed.connect(visibility_changed_cb);
   }
 }
 
-void SwitcherModel::AddIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
+void SwitcherModel::VerifyApplications()
 {
-  if (!icon || !icon->ShowInSwitcher(only_apps_on_viewport))
+  bool anything_changed = false;
+
+  for (auto it = applications_.begin(); it != applications_.end();)
+  {
+    if (!(*it)->ShowInSwitcher(only_apps_on_viewport))
+    {
+      auto icon_index = it - applications_.begin();
+      hidden_applications_.push_back(*it);
+      it = applications_.erase(it);
+      anything_changed = true;
+
+      if (icon_index < index_)
+        PrevIndex();
+
+      continue;
+    }
+
+    ++it;
+  }
+
+  for (auto it = hidden_applications_.begin(); it != hidden_applications_.end();)
+  {
+    if ((*it)->ShowInSwitcher(only_apps_on_viewport))
+    {
+      InsertIcon(*it);
+      it = hidden_applications_.erase(it);
+      anything_changed = true;
+      continue;
+    }
+
+    ++it;
+  }
+
+  if (anything_changed)
+  {
+    if (!last_active_application_ || !last_active_application_->ShowInSwitcher(only_apps_on_viewport))
+      UpdateLastActiveApplication();
+
+    updated.emit();
+  }
+}
+
+void SwitcherModel::InsertIcon(AbstractLauncherIcon::Ptr const& application)
+{
+  if (sort_by_priority_)
+  {
+    auto pos = std::upper_bound(applications_.begin(), applications_.end(), application, CompareSwitcherItemsPriority);
+    auto icon_index = pos - applications_.begin();
+    applications_.insert(pos, application);
+
+    if (icon_index <= index_)
+      NextIndex();
+  }
+  else
+  {
+    applications_.push_back(application);
+  }
+}
+
+void SwitcherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
+{
+  if (!icon || icon->GetIconType() != AbstractLauncherIcon::IconType::APPLICATION)
     return;
 
-  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
-    last_active_application_ = icon;
-
-  if (std::find(applications_.begin(), applications_.end(), icon) == applications_.end())
+  if (icon->ShowInSwitcher(only_apps_on_viewport))
   {
-    if (sort_by_priority_)
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      last_active_application_ = icon;
+
+    if (std::find(applications_.begin(), applications_.end(), icon) == applications_.end())
     {
-      auto pos = std::upper_bound(applications_.begin(), applications_.end(), icon, CompareSwitcherItemsPriority);
-      auto icon_index = pos - applications_.begin();
-
-      if (icon_index <= index_)
-        Next();
-
-      applications_.insert(pos, icon);
+      InsertIcon(icon);
+      icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged)));
+      updated.emit();
     }
-    else
-    {
-      applications_.push_back(icon);
-    }
-
+  }
+  else if (std::find(hidden_applications_.begin(), hidden_applications_.end(), icon) == hidden_applications_.end())
+  {
+    hidden_applications_.push_back(icon);
     icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged)));
-    updated.emit();
   }
 }
 
@@ -119,43 +192,29 @@ void SwitcherModel::RemoveIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
     applications_.erase(icon_it);
 
     if (last_active_application_ == icon)
-    {
-      for (auto const& application : applications_)
-      {
-        if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
-        {
-          last_active_application_ = application;
-          break;
-        }
-      }
-    }
+      UpdateLastActiveApplication();
 
-    if (icon->ShowInSwitcher(only_apps_on_viewport))
-    {
-      Next();
-      updated.emit();
-    }
+    NextIndex();
+    updated.emit();
+  }
+  else
+  {
+    hidden_applications_.erase(std::remove(hidden_applications_.begin(), hidden_applications_.end(), icon), hidden_applications_.end());
   }
 }
 
 void SwitcherModel::OnIconVisibilityChanged()
 {
-  if (Selection() == last_active_application_)
-  {
-    for (auto const& application : applications_)
-    {
-      if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
-      {
-        last_active_application_ = application;
-        break;
-      }
-    }
-  }
+  auto old_selection = Selection();
+  VerifyApplications();
 
-  if (!Selection()->ShowInSwitcher(only_apps_on_viewport))
-    Next();
+  if (old_selection == last_active_application_)
+    UpdateLastActiveApplication();
 
-  updated.emit();
+  auto const& new_selection = Selection();
+
+  if (old_selection != new_selection)
+    selection_changed.emit(new_selection);
 }
 
 std::string SwitcherModel::GetName() const
@@ -177,12 +236,12 @@ void SwitcherModel::AddProperties(debug::IntrospectionData& introspection)
 
 debug::Introspectable::IntrospectableList SwitcherModel::GetIntrospectableChildren()
 {
-  int order = 0;
-  std::list<unity::debug::Introspectable*> children;
+  debug::Introspectable::IntrospectableList children;
+  unsigned order = 0;
 
   for (auto const& icon : applications_)
   {
-    if (!icon->removed)
+    if (!icon->ShowInSwitcher(only_apps_on_viewport))
     {
       icon->SetOrder(++order);
       children.push_back(icon.GetPointer());
@@ -222,14 +281,7 @@ AbstractLauncherIcon::Ptr SwitcherModel::at(unsigned int index) const
 
 size_t SwitcherModel::Size() const
 {
-  size_t size = 0;
-  for (auto const& icon : applications_)
-  {
-    if (icon->ShowInSwitcher(only_apps_on_viewport))
-      ++size;
-  }
-
-  return size;
+  return applications_.size();
 }
 
 AbstractLauncherIcon::Ptr SwitcherModel::Selection() const
@@ -301,28 +353,30 @@ Window SwitcherModel::DetailSelectionWindow() const
   return windows[detail_selection_index];
 }
 
+void SwitcherModel::NextIndex()
+{
+  last_index_ = index_;
+  ++index_ %= applications_.size();
+}
+
 void SwitcherModel::Next()
 {
-  do
-  {
-    last_index_ = index_;
-    ++index_ %= applications_.size();
-  } while (!Selection()->ShowInSwitcher(only_apps_on_viewport));
-
+  NextIndex();
   detail_selection = false;
   detail_selection_index = 0;
   row_index_ = 0;
   selection_changed.emit(Selection());
 }
 
+void SwitcherModel::PrevIndex()
+{
+  last_index_ = index_;
+  index_ = (index_ > 0) ? index_ - 1 : applications_.size() - 1;
+}
+
 void SwitcherModel::Prev()
 {
-  do
-  {
-    last_index_ = index_;
-    index_ = (index_ > 0) ? index_ - 1 : applications_.size() - 1;
-  } while (!Selection()->ShowInSwitcher(only_apps_on_viewport));
-
+  PrevIndex();
   detail_selection = false;
   detail_selection_index = 0;
   row_index_ = 0;

@@ -802,9 +802,6 @@ bool SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, 
 
     for (auto const& icon : *model_)
     {
-      if (!icon->ShowInSwitcher(model_->only_apps_on_viewport()))
-        continue;
-
       RenderArg arg = CreateBaseArgForIcon(icon);
 
       float scalar = partial_overflow_scalar;
