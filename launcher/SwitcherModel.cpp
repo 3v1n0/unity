@@ -62,10 +62,12 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
   , row_index_(0)
 {
   auto visibility_changed_cb = sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged));
+  auto redraw_cb = sigc::hide(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit)));
 
   for (auto it = applications_.begin(); it != applications_.end();)
   {
     (*it)->visibility_changed.connect(visibility_changed_cb);
+    (*it)->needs_redraw.connect(redraw_cb);
 
     if (!(*it)->ShowInSwitcher(only_apps_on_viewport))
     {
@@ -174,6 +176,7 @@ void SwitcherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
     {
       InsertIcon(icon);
       icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged)));
+      icon->needs_redraw.connect(sigc::hide(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit))));
       updated.emit();
     }
   }
@@ -181,6 +184,7 @@ void SwitcherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
   {
     hidden_applications_.push_back(icon);
     icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged)));
+    icon->needs_redraw.connect(sigc::hide(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit))));
   }
 }
 
