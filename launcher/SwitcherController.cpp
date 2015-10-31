@@ -306,7 +306,6 @@ void Controller::Impl::Show(ShowMode show_mode, SortMode sort_mode, std::vector<
   model_->only_apps_on_viewport = (show_mode == ShowMode::CURRENT_VIEWPORT);
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
-  model_->request_detail_hide.connect(sigc::mem_fun(this, &Controller::Impl::DetailHide));
   obj_->AddChild(model_.get());
 
   SelectFirstItem();
@@ -428,9 +427,7 @@ void Controller::Impl::ConstructView()
   view_->SetModel(model_);
   view_->background_color = WindowManager::Default().average_color();
   view_->monitor = obj_->monitor_;
-
   view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
-
   view_->switcher_mouse_up.connect([this] (int icon_index, int button) {
     if (button == 3)
       InitiateDetail(true);
@@ -477,15 +474,6 @@ void Controller::Impl::Hide(bool accept_state)
   obj_->visible_ = false;
 
   animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
-}
-
-void Controller::Impl::DetailHide()
-{
-  // FIXME We need to refactor SwitcherModel so we can add/remove icons without causing
-  // a crash. If you remove the last application in the list it crashes.
-  obj_->detail.changed.emit(false);
-  model_->detail_selection = false;
-  Hide(false);
 }
 
 void Controller::Impl::HideWindow()

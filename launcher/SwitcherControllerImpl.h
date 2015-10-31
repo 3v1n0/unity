@@ -48,7 +48,6 @@ struct Controller::Impl : public sigc::trackable
 
   void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> const& results);
   void Hide(bool accept_state);
-  void DetailHide();
 
   void AddIcon(launcher::AbstractLauncherIcon::Ptr const&);
   void RemoveIcon(launcher::AbstractLauncherIcon::Ptr const&);

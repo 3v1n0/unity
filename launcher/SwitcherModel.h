@@ -104,7 +104,6 @@ public:
   void Select(unsigned int index);
 
   sigc::signal<void, launcher::AbstractLauncherIcon::Ptr const&> selection_changed;
-  sigc::signal<void> request_detail_hide;
   sigc::signal<void> updated;
 
 protected:
@@ -121,6 +120,7 @@ private:
   void VerifyApplications();
   void UpdateLastActiveApplication();
   void OnIconVisibilityChanged();
+  void UnsetDetailSelection();
 
   void NextIndex();
   void PrevIndex();

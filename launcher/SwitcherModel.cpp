@@ -114,7 +114,10 @@ void SwitcherModel::VerifyApplications()
       it = applications_.erase(it);
       anything_changed = true;
 
-      if (icon_index < index_)
+      if (detail_selection && icon_index == index_)
+        UnsetDetailSelection();
+
+      if (icon_index < index_ || index_ == applications_.size())
         PrevIndex();
 
       continue;
@@ -193,12 +196,18 @@ void SwitcherModel::RemoveIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
   auto icon_it = std::find(applications_.begin(), applications_.end(), icon);
   if (icon_it != applications_.end())
   {
+    auto icon_index = icon_it - applications_.begin();
     applications_.erase(icon_it);
 
     if (last_active_application_ == icon)
       UpdateLastActiveApplication();
 
-    NextIndex();
+    if (detail_selection && icon_index == index_)
+      UnsetDetailSelection();
+
+    if (icon_index < index_ || index_ == applications_.size())
+      PrevIndex();
+
     updated.emit();
   }
   else
@@ -326,17 +335,14 @@ std::vector<Window> SwitcherModel::DetailXids() const
       results.push_back(xid);
   }
 
-  if (results.empty() && detail_selection)
-  {
-    request_detail_hide.emit();
+  if (results.empty())
     return results;
-  }
 
   std::sort(results.begin(), results.end(), [&wm](Window first, Window second) {
-      return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
+    return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
   });
 
-  if (Selection() == last_active_application_ && results.size() > 1)
+  if (Selection() == last_active_application_)
   {
     results.push_back(results.front());
     results.erase(results.begin());
@@ -357,6 +363,13 @@ Window SwitcherModel::DetailSelectionWindow() const
   return windows[detail_selection_index];
 }
 
+void SwitcherModel::UnsetDetailSelection()
+{
+  detail_selection = false;
+  detail_selection_index = 0;
+  row_index_ = 0;
+}
+
 void SwitcherModel::NextIndex()
 {
   last_index_ = index_;
@@ -366,9 +379,7 @@ void SwitcherModel::NextIndex()
 void SwitcherModel::Next()
 {
   NextIndex();
-  detail_selection = false;
-  detail_selection_index = 0;
-  row_index_ = 0;
+  UnsetDetailSelection();
   selection_changed.emit(Selection());
 }
 
@@ -381,9 +392,7 @@ void SwitcherModel::PrevIndex()
 void SwitcherModel::Prev()
 {
   PrevIndex();
-  detail_selection = false;
-  detail_selection_index = 0;
-  row_index_ = 0;
+  UnsetDetailSelection();
   selection_changed.emit(Selection());
 }
 
