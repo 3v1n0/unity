@@ -93,7 +93,8 @@ struct Window::Impl
 private:
   void UnsetExtents();
   void SetupExtents();
-  void UpdateElements(cu::WindowFilter::Value wf = cu::WindowFilter::NONE);
+  void UpdateElements(cu::WindowFilter wf = cu::WindowFilter::NONE);
+  void UpdateClientDecorationsState(bool maybe_available = true);
   void UpdateMonitor();
   void UpdateFrame();
   void CreateFrame(nux::Geometry const&);
@@ -132,6 +133,7 @@ private:
   int monitor_;
   bool dirty_geo_;
   bool dirty_frame_;
+  bool client_decorated_;
   unsigned deco_elements_;
   unsigned last_mwm_decor_;
   unsigned last_actions_;
@@ -140,6 +142,7 @@ private:
   Quads shadow_quads_;
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
+  CompWindowExtents client_borders_;
   connection::Wrapper theme_changed_;
   connection::Wrapper dpi_changed_;
   connection::Wrapper grab_mouse_changed_;
@@ -189,6 +192,7 @@ private:
   friend struct Window::Impl;
 
   bool enable_add_supported_atoms_;
+  Atom gtk_border_radius_atom_;
 
   DataPool::Ptr data_pool_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;

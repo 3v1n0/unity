@@ -51,6 +51,7 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   Display* dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
+  gtk_border_radius_atom_ = XInternAtom(dpy, "_UNITY_GTK_BORDER_RADIUS", False);
 
   auto rebuild_cb = sigc::mem_fun(this, &Impl::OnShadowOptionsChanged);
   manager_->active_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, true)));
@@ -279,6 +280,11 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
           win->title = wm.GetStringProperty(event->xproperty.window, event->xproperty.atom);
         }
       }
+      else if (event->xproperty.atom == gtk_border_radius_atom_)
+      {
+        if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
+          win->impl_->UpdateClientDecorationsState(event->xproperty.state != PropertyDelete);
+      }
       break;
     }
     case ConfigureNotify:
@@ -401,7 +407,10 @@ Manager::~Manager()
 void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
 {
   if (impl_->enable_add_supported_atoms_)
+  {
     atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
+    atoms.push_back(impl_->gtk_border_radius_atom_);
+  }
 }
 
 bool Manager::HandleEventBefore(XEvent* xevent)
