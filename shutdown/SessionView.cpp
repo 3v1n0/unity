@@ -236,7 +236,7 @@ void View::PopulateButtons()
   {
     if (mode() == Mode::FULL)
     {
-      if (manager_->CanLock())
+      if (manager_->CanLock() && !manager_->is_locked())
       {
         auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));

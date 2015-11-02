@@ -122,6 +122,7 @@ public:
   bool IsWindowMaximized(Window window_id) const;
   bool IsWindowVerticallyMaximized(Window window_id) const;
   bool IsWindowHorizontallyMaximized(Window window_id) const;
+  bool IsWindowFullscreen(Window window_id) const;
   bool IsWindowDecorated(Window window_id) const;
   bool IsWindowOnCurrentDesktop(Window window_id) const;
   bool IsWindowObscured(Window window_id) const;

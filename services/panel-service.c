@@ -98,7 +98,6 @@ enum
   ENTRY_ACTIVATED = 0,
   RE_SYNC,
   ENTRY_ACTIVATE_REQUEST,
-  ENTRY_SHOW_NOW_CHANGED,
   GEOMETRIES_CHANGED,
   INDICATORS_CLEARED,
 
@@ -250,14 +249,6 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_TYPE_OBJECT, G_TYPE_POINTER,
                   G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
- _service_signals[ENTRY_SHOW_NOW_CHANGED] =
-    g_signal_new ("entry-show-now-changed",
-                  G_OBJECT_CLASS_TYPE (obj_class),
-                  G_SIGNAL_RUN_LAST,
-                  0,
-                  NULL, NULL, NULL,
-                  G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
-
   _service_signals[INDICATORS_CLEARED] =
     g_signal_new ("indicators-cleared",
                   G_OBJECT_CLASS_TYPE (obj_class),
@@ -277,6 +268,12 @@ rect_contains_point (GdkRectangle* rect, gint x, gint y)
 
   return (x >= rect->x && x <= (rect->x + rect->width) &&
           y >= rect->y && y <= (rect->y + rect->height));
+}
+
+gboolean
+entry_has_dropdown_id (const gchar *entry_id)
+{
+  return g_str_has_suffix (entry_id, "-dropdown");
 }
 
 IndicatorObjectEntry *
@@ -422,7 +419,7 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
         }
     }
 
-  if (!entry && g_str_has_suffix (entry_id, "-dropdown"))
+  if (!entry && entry_has_dropdown_id (entry_id))
     {
       /* Unity might register some "fake" dropdown entries that it might use to
        * to present long menu bars (right now only for appmenu indicator) */
@@ -430,6 +427,8 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
       entry->parent_object = self->priv->appmenu_indicator;
       entry->name_hint = g_strdup (entry_id);
       self->priv->dropdown_entries = g_slist_append (self->priv->dropdown_entries, entry);
+
+      /* Now the Hashtable owns the name_hint, so no need to manually free it */
       g_hash_table_insert (self->priv->id2entry_hash, (gpointer)entry->name_hint, entry);
     }
 
@@ -918,6 +917,7 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
           gchar *entry_id;
           GHashTableIter iter;
           gpointer key, value;
+          GSList *ll;
 
           entry = l->data;
 
@@ -931,9 +931,18 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
               g_signal_handlers_disconnect_by_data (entry->image, indicator);
             }
 
-          entry_id = get_indicator_entry_id_by_entry (entry);
-          g_hash_table_remove (self->priv->id2entry_hash, entry_id);
-          g_free (entry_id);
+          if ((ll = g_slist_find (self->priv->dropdown_entries, entry)))
+            {
+              self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, ll);
+              g_hash_table_remove (self->priv->id2entry_hash, entry->name_hint);
+              g_free (entry);
+            }
+          else
+            {
+              entry_id = get_indicator_entry_id_by_entry (entry);
+              g_hash_table_remove (self->priv->id2entry_hash, entry_id);
+              g_free (entry_id);
+            }
 
           g_hash_table_iter_init (&iter, self->priv->panel2entries_hash);
           while (g_hash_table_iter_next (&iter, &key, &value))
@@ -1371,26 +1380,6 @@ on_indicator_menu_show (IndicatorObject      *object,
   g_free (entry_id);
 }
 
-static void
-on_indicator_menu_show_now_changed (IndicatorObject      *object,
-                                    IndicatorObjectEntry *entry,
-                                    gboolean              show_now_changed,
-                                    PanelService         *self)
-{
-  gchar *entry_id;
-  g_return_if_fail (PANEL_IS_SERVICE (self));
-
-  if (!entry)
-    {
-      g_warning ("%s called with a NULL entry", G_STRFUNC);
-      return;
-    }
-
-  entry_id = get_indicator_entry_id_by_entry (entry);
-  g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
-  g_free (entry_id);
-}
-
 static const gchar * indicator_environment[] = {
   "unity",
   "unity-3d",
@@ -1428,8 +1417,6 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
                     G_CALLBACK (on_entry_moved), self);
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_MENU_SHOW,
                     G_CALLBACK (on_indicator_menu_show), self);
-  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_SHOW_NOW_CHANGED,
-                    G_CALLBACK (on_indicator_menu_show_now_changed), self);
 
   entries = indicator_object_get_entries (object);
   for (entry = entries; entry != NULL; entry = entry->next)
@@ -1970,7 +1957,18 @@ panel_service_sync_geometry (PanelService *self,
       if (width < 0 || height < 0 || !valid_entry)
         {
           if (valid_entry)
-            ensure_entry_menu_is_closed (self, panel_id, entry);
+            {
+              GSList *l;
+              ensure_entry_menu_is_closed (self, panel_id, entry);
+
+              if ((l = g_slist_find (self->priv->dropdown_entries, entry)))
+                {
+                  valid_entry = FALSE;
+                  self->priv->dropdown_entries = g_slist_delete_link (self->priv->dropdown_entries, l);
+                  g_hash_table_remove (self->priv->id2entry_hash, entry->name_hint);
+                  g_free (entry);
+                }
+            }
 
           if (entry2geometry_hash)
             {

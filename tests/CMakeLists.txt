@@ -226,7 +226,7 @@ if (ENABLE_X_SUPPORT)
                  test_filter_widgets.cpp
                  test_glib_dbus_server.cpp
                  test_gnome_session_manager.cpp
-                 test_gtk_wrapper.cpp
+                 test_gtk_icon_info.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
@@ -269,6 +269,7 @@ if (ENABLE_X_SUPPORT)
                  test_resultviewgrid.cpp
                  test_scope_bar.cpp
                  test_scope_view.cpp
+                 test_screensaver_dbus_manager.cpp
                  test_searchbar.cpp
                  test_session_button.cpp
                  test_session_controller.cpp
@@ -354,7 +355,7 @@ if (ENABLE_X_SUPPORT)
 endif (ENABLE_X_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest-xless.xml)
 set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
-set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --max-wait=300 --task ./test-gtest-service --task-name test-service --task=./test-gtest-dbus --task-name=test-dbus --wait-for=com.canonical.Unity.Test.Scope --parameter=--gtest_output=xml:./test-gtest-dbus.xml --parameter=--gtest_filter=-TestCategoriesChanging*)
+set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --max-wait=300 --task ./test-gtest-service --task-name test-service --task=./test-gtest-dbus --task-name=test-gtest-dbus --wait-for=com.canonical.Unity.Test --parameter=--gtest_output=xml:./test-gtest-dbus.xml --parameter=--gtest_filter=-TestCategoriesChanging*)
 
 set (TEST_COMMAND_XLESS
      ${GTEST_TEST_COMMAND_XLESS}

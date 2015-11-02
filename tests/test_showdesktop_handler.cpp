@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <UnityShowdesktopHandler.h>
+#include "test_utils.h"
 
 using namespace unity;
 using ::testing::_;
@@ -404,7 +405,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationPostPaintActions)
   EXPECT_EQ (ShowdesktopHandler::animating_windows.size (), 1);
 }
 
-TEST_F(UnityShowdesktopHandlerTest, DISABLED_TestAnimationOpacity)
+TEST_F(UnityShowdesktopHandlerTest, UNSTABLE_TEST(TestAnimationOpacity))
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 

@@ -118,12 +118,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     def move_mouse_over_launcher(self):
         """Move the mouse over this launcher."""
         move_mouse_to_screen(self.monitor)
-        (x, y, w, h) = self.geometry
-        target_x = x + w / 2
-        target_y = y + h / 2
-
         logger.debug("Moving mouse to center of launcher.")
-        self._mouse.move(target_x, target_y)
+        self._mouse.move_to_object(self)
 
     def move_mouse_to_icon(self, icon, autoscroll_offset=0):
         """Move the mouse to a specific icon."""
@@ -382,11 +378,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         self.move_mouse_to_icon(icon)
         self._mouse.press()
-        sleep(2)
+        sleep(1)
 
         if drag_type == IconDragType.OUTSIDE:
             shift_over = self._mouse.x + (icon_height * 2)
-            self._mouse.move(shift_over, self._mouse.y)
+            self._mouse.move(shift_over, self._mouse.y, rate=20, time_between_events=0.005)
             sleep(0.5)
 
         self.move_mouse_to_icon(target)
@@ -397,8 +393,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if pos == IconDragType.BEFORE:
             target_y -= icon_height + (icon_height / 2)
 
-        self._mouse.move(self._mouse.x, target_y)
-        sleep(0.5)
+        self._mouse.move(self._mouse.x, target_y, rate=20, time_between_events=0.005)
+        sleep(1)
         self._mouse.release()
         self.move_mouse_to_right_of_launcher()
 
@@ -438,8 +434,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current launcher."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current launcher."""
+        return self.globalRect
 
 
 class LauncherModel(UnityIntrospectionObject):

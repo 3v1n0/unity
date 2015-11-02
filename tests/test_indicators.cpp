@@ -216,6 +216,7 @@ TEST_F(TestIndicators, ActivateEntry)
 
   // Activating Entries from the Indicators class to see if they get updated
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
+  ASSERT_THAT(indicators.GetActiveEntry(), IsNull());
 
   Entry::Ptr entry12(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-2"));
   ASSERT_THAT(entry12, NotNull());
@@ -227,6 +228,7 @@ TEST_F(TestIndicators, ActivateEntry)
 
   EXPECT_EQ(entry12->active(), true);
   EXPECT_EQ(entry12->geometry(), nux::Rect(1, 2, 3, 4));
+  EXPECT_EQ(indicators.GetActiveEntry(), entry12);
 }
 
 TEST_F(TestIndicators, ActivateEntryShouldDisactivatePrevious)

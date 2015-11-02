@@ -128,7 +128,7 @@ std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
 
   return ret;
 }
-  
+
 int StandaloneWindowManager::MonitorGeometryIn(nux::Geometry const& geo) const
 {
   // TODO
@@ -164,6 +164,15 @@ bool StandaloneWindowManager::IsWindowHorizontallyMaximized(Window window_id) co
   auto window = GetWindowByXid(window_id);
   if (window)
     return window->h_maximized;
+
+  return false;
+}
+
+bool StandaloneWindowManager::IsWindowFullscreen(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->fullscreen;
 
   return false;
 }
@@ -708,6 +717,7 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
   window->visible.changed.connect([this, xid] (bool v) {v ? window_shown(xid) : window_hidden(xid);});
   window->maximized.changed.connect([this, xid] (bool v) {v ? window_maximized(xid) : window_restored(xid);});
   window->minimized.changed.connect([this, xid] (bool v) {v ? window_minimized(xid) : window_unminimized(xid);});
+  window->fullscreen.changed.connect([this, xid] (bool v) {v ? window_fullscreen(xid) : window_unfullscreen(xid);});
   window->geo.changed.connect([this, xid] (nux::Geometry const&) { window_resized(xid); window_moved(xid); });
   window->resized.connect([this, xid] { window_resized(xid); });
   window->moved.connect([this, xid] { window_moved(xid); });

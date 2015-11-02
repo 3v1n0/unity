@@ -34,10 +34,13 @@ G_BEGIN_DECLS
 
 typedef struct _UnitySessionButtonAccessible        UnitySessionButtonAccessible;
 typedef struct _UnitySessionButtonAccessibleClass   UnitySessionButtonAccessibleClass;
+typedef struct _UnitySessionButtonAccessiblePrivate UnitySessionButtonAccessiblePrivate;
 
 struct _UnitySessionButtonAccessible
 {
   NuxObjectAccessible parent;
+
+  UnitySessionButtonAccessiblePrivate *priv;
 };
 
 struct _UnitySessionButtonAccessibleClass

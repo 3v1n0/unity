@@ -145,6 +145,10 @@ WindowBase::WindowBase(ApplicationManager const& manager,
   [this] (BamfView*, gboolean urgent) {
     this->urgent.changed.emit(urgent);
   });
+  signals_.Add<void, BamfView*>(bamf_view_, "closed",
+  [this] (BamfView* view) {
+    pool::wins_.erase(view);
+  });
 }
 
 bool WindowBase::Focus() const
@@ -170,12 +174,23 @@ AppWindow::AppWindow(ApplicationManager const& manager, glib::Object<BamfView> c
   : WindowBase(manager, window)
   , bamf_window_(glib::object_cast<BamfWindow>(window))
 {
+  monitor.SetGetterFunction(std::bind(&AppWindow::GetMonitor, this));
   maximized.SetGetterFunction(std::bind(&AppWindow::GetMaximized, this));
+
+  signals_.Add<void, BamfWindow*, gint, gint>(bamf_window_, "monitor-changed",
+  [this] (BamfWindow*, gint, gint monitor) {
+    this->monitor.changed.emit(monitor);
+  });
   signals_.Add<void, BamfWindow*, gint, gint>(bamf_window_, "maximized-changed",
   [this] (BamfWindow*, gint old_state, gint state) {
     if ((old_state == BAMF_WINDOW_MAXIMIZED) != (state == BAMF_WINDOW_MAXIMIZED))
       this->maximized.changed.emit(state == BAMF_WINDOW_MAXIMIZED);
   });
+}
+
+int AppWindow::GetMonitor() const
+{
+  return bamf_window_get_monitor(bamf_window_);
 }
 
 bool AppWindow::GetMaximized() const
@@ -186,11 +201,6 @@ bool AppWindow::GetMaximized() const
 Window AppWindow::window_id() const
 {
   return bamf_window_get_xid(bamf_window_);
-}
-
-int AppWindow::monitor() const
-{
-  return bamf_window_get_monitor(bamf_window_);
 }
 
 WindowType AppWindow::type() const
@@ -231,14 +241,15 @@ void AppWindow::Quit() const
   WindowManager::Default().Close(window_id());
 }
 
-Tab::Tab(ApplicationManager const& manager, glib::Object<BamfView> const& tab)
-  : WindowBase(manager, tab)
-  , bamf_tab_(glib::object_cast<BamfTab>(tab))
-{}
-
 Tab::Tab(ApplicationManager const& manager, glib::Object<BamfTab> const& tab)
   : WindowBase(manager, glib::object_cast<BamfView>(tab))
   , bamf_tab_(tab)
+{
+  monitor.SetGetterFunction([] { return -1; });
+}
+
+Tab::Tab(ApplicationManager const& manager, glib::Object<BamfView> const& tab)
+  : Tab(manager_, glib::object_cast<BamfTab>(tab))
 {}
 
 Window Tab::window_id() const
@@ -249,12 +260,6 @@ Window Tab::window_id() const
 WindowType Tab::type() const
 {
   return WindowType::TAB;
-}
-
-int Tab::monitor() const
-{
-  // TODO, we could find the real window for the window_id, and get the monitor for that.
-  return -1;
 }
 
 ApplicationPtr Tab::application() const
@@ -323,6 +328,7 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
   signals_.Add<void, BamfView*, gboolean>(bamf_view_, "running-changed",
   [this] (BamfView*, gboolean running) {
     LOG_TRACE(logger) << "running " << visible;
+    UpdateWindows();
     this->running.changed.emit(running);
   });
   signals_.Add<void, BamfView*, gboolean>(bamf_view_, "urgent-changed",
@@ -330,21 +336,34 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
     this->urgent.changed.emit(urgent);
   });
   signals_.Add<void, BamfView*>(bamf_view_, "closed",
-  [this] (BamfView*) {
+  [this] (BamfView* view) {
+    UpdateWindows();
     this->closed.emit();
+
+    if (!sticky())
+      pool::apps_.erase(view);
   });
 
   signals_.Add<void, BamfView*, BamfView*>(bamf_view_, "child-added",
   [this] (BamfView*, BamfView* child) {
     // Ownership is not passed on signals
     if (ApplicationWindowPtr const& win = pool::EnsureWindow(manager_, child))
-      this->window_opened.emit(win);
+    {
+      if (std::find(windows_.begin(), windows_.end(), win) == windows_.end())
+      {
+        windows_.push_back(win);
+        this->window_opened.emit(win);
+      }
+    }
   });
 
   signals_.Add<void, BamfView*, BamfView*>(bamf_view_, "child-removed",
   [this] (BamfView*, BamfView* child) {
     if (ApplicationWindowPtr const& win = pool::EnsureWindow(manager_, child))
+    {
+      windows_.erase(std::remove(windows_.begin(), windows_.end(), win), windows_.end());
       this->window_closed.emit(win);
+    }
   });
 
   signals_.Add<void, BamfView*, BamfView*>(bamf_view_, "child-moved",
@@ -353,6 +372,8 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
     if (ApplicationWindowPtr const& win = pool::EnsureWindow(manager_, child))
       this->window_moved.emit(win);
   });
+
+  UpdateWindows();
 }
 
 std::string Application::GetDesktopFile() const
@@ -384,20 +405,38 @@ std::string Application::repr() const
   return sout.str();
 }
 
-WindowList Application::GetWindows() const
+WindowList const& Application::GetWindows() const
 {
-  WindowList result;
+  return windows_;
+}
 
-  if (!bamf_app_)
-    return result;
+void Application::UpdateWindows()
+{
+  if (!bamf_app_ || !running() || bamf_view_is_closed(bamf_view_))
+  {
+    for (auto it = windows_.begin(); it != windows_.end();)
+    {
+      window_closed.emit(*it);
+      it = windows_.erase(it);
+    }
+
+    return;
+  }
+
+  bool was_empty = windows_.empty();
 
   std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
   for (GList* l = children.get(); l; l = l->next)
   {
     if (ApplicationWindowPtr const& window = pool::EnsureWindow(manager_, static_cast<BamfView*>(l->data)))
-      result.push_back(window);
+    {
+      if (was_empty || std::find(windows_.begin(), windows_.end(), window) == windows_.end())
+      {
+        windows_.push_back(window);
+        window_opened.emit(window);
+      }
+    }
   }
-  return result;
 }
 
 bool Application::OwnsWindow(Window window_id) const
@@ -405,15 +444,13 @@ bool Application::OwnsWindow(Window window_id) const
   if (!window_id)
     return false;
 
-  bool owns = false;
-  std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
-  for (GList* l = children.get(); l && !owns; l = l->next)
+  for (auto const& win : windows_)
   {
-    owns = BAMF_IS_WINDOW(l->data) &&
-           bamf_window_get_xid(static_cast<BamfWindow*>(l->data)) == window_id;
+    if (win->window_id() == window_id)
+      return true;
   }
 
-  return owns;
+  return false;
 }
 
 std::vector<std::string> Application::GetSupportedMimeTypes() const
@@ -515,7 +552,7 @@ bool Application::GetSeen() const
                             g_quark_from_string(UNSEEN_QUARK));
 }
 
-bool Application::SetSeen(bool const& param)
+bool Application::SetSeen(bool param)
 {
   bool is_seen = GetSeen();
   if (param == is_seen)
@@ -533,11 +570,14 @@ bool Application::GetSticky() const
   return bamf_view_is_sticky(bamf_view_);
 }
 
-bool Application::SetSticky(bool const& param)
+bool Application::SetSticky(bool param)
 {
   bool is_sticky = GetSticky();
   if (param == is_sticky)
     return false; // unchanged
+
+  if (!param && bamf_view_is_closed(bamf_view_))
+    pool::apps_.erase(bamf_view_);
 
   bamf_view_set_sticky(bamf_view_, param);
   return true; // value updated
@@ -640,6 +680,12 @@ ApplicationWindowPtr Manager::GetWindowForId(Window xid) const
   if (xid == 0)
     return nullptr;
 
+  for (auto const& win_pair : pool::wins_)
+  {
+    if (win_pair.second->window_id() == xid)
+      return win_pair.second;
+  }
+
   // TODO: use bamf_matcher_get_window_for_xid
   auto* app = bamf_matcher_get_application_for_xid(matcher_, xid);
 
@@ -724,16 +770,14 @@ void Manager::OnViewClosed(BamfMatcher* matcher, BamfView* view)
   {
     if (ApplicationPtr const& app = pool::EnsureApplication(*this, view))
       application_stopped.emit(app);
-
-    pool::apps_.erase(view);
   }
   else if (BAMF_IS_WINDOW(view))
   {
     if (ApplicationWindowPtr const& win = pool::EnsureWindow(*this, view))
       window_closed.emit(win);
-
-    pool::wins_.erase(view);
   }
+
+  /* No removal here, it's done inside views, as 'closed' signal arrives later */
 }
 
 } // namespace bamf

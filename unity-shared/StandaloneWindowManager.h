@@ -51,6 +51,7 @@ public:
   nux::RWProperty<bool> maximized;
   nux::Property<bool> v_maximized;
   nux::Property<bool> h_maximized;
+  nux::Property<bool> fullscreen;
   nux::Property<bool> minimized;
   nux::Property<bool> shaded;
   nux::Property<bool> decorated;
@@ -78,6 +79,7 @@ public:
   virtual bool IsWindowMaximized(Window window_id) const;
   virtual bool IsWindowVerticallyMaximized(Window window_id) const;
   virtual bool IsWindowHorizontallyMaximized(Window window_id) const;
+  virtual bool IsWindowFullscreen(Window window_id) const;
   virtual bool IsWindowDecorated(Window window_id) const;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const;
   virtual bool IsWindowObscured(Window window_id) const;
