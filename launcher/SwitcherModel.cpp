@@ -113,12 +113,13 @@ void SwitcherModel::VerifyApplications()
       hidden_applications_.push_back(*it);
       it = applications_.erase(it);
       anything_changed = true;
-
-      if (detail_selection && icon_index == index_)
-        UnsetDetailSelection();
+      bool was_in_detail = (detail_selection && icon_index == index_);
 
       if (icon_index < index_ || index_ == applications_.size())
         PrevIndex();
+
+      if (was_in_detail)
+        UnsetDetailSelection();
 
       continue;
     }
@@ -197,16 +198,17 @@ void SwitcherModel::RemoveIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
   if (icon_it != applications_.end())
   {
     auto icon_index = icon_it - applications_.begin();
+    bool was_in_detail = (detail_selection && icon_index == index_);
     applications_.erase(icon_it);
 
     if (last_active_application_ == icon)
       UpdateLastActiveApplication();
 
-    if (detail_selection && icon_index == index_)
-      UnsetDetailSelection();
-
     if (icon_index < index_ || index_ == applications_.size())
       PrevIndex();
+
+    if (was_in_detail)
+      UnsetDetailSelection();
 
     updated.emit();
   }
@@ -386,7 +388,7 @@ void SwitcherModel::Next()
 void SwitcherModel::PrevIndex()
 {
   last_index_ = index_;
-  index_ = ((index_ > 0) ? index_  : applications_.size()) - 1;
+  index_ = ((index_ > 0 && index_ < applications_.size()) ? index_ : applications_.size()) - 1;
 }
 
 void SwitcherModel::Prev()
@@ -464,12 +466,12 @@ void SwitcherModel::NextDetailRow()
     if (!DetailIndexInLeftHalfOfRow())
       increment = next_row;
 
-    detail_selection_index = detail_selection_index + increment;
+    detail_selection_index = (detail_selection_index + increment) % DetailXids().size();
     ++row_index_;
   }
   else
   {
-    detail_selection_index = detail_selection_index + 1;
+    detail_selection_index = (detail_selection_index + 1) % DetailXids().size();
   }
 }
 
@@ -484,12 +486,13 @@ void SwitcherModel::PrevDetailRow()
     if (DetailIndexInLeftHalfOfRow())
       decrement = prev_row;
 
-    detail_selection_index = detail_selection_index - decrement;
+    int selection_index = detail_selection_index - decrement;
+    detail_selection_index = (selection_index > 0) ? selection_index : selection_index + DetailXids().size();
     row_index_--;
   }
   else
   {
-    detail_selection_index = detail_selection_index - 1;
+    detail_selection_index = ((detail_selection_index > 0) ? detail_selection_index : DetailXids().size()) - 1;
   }
 }
 
@@ -500,7 +503,7 @@ bool SwitcherModel::HasNextDetailRow() const
 
 bool SwitcherModel::HasPrevDetailRow() const
 {
-  return (detail_selection_index > (unsigned int) 0);
+  return (detail_selection_index > 0);
 }
 
 void SwitcherModel::SetRowSizes(std::vector<int> const& row_sizes)
