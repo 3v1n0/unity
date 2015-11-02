@@ -1092,6 +1092,22 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
   if (IsRunning())
   {
+    if (DesktopFile().empty() && !IsSticky())
+    {
+      /* Add to Dash */
+      glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Add to Dash"));
+      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+      _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+        [this] (DbusmenuMenuitem*, unsigned) {
+          app_->CreateLocalDesktopFile();
+      });
+
+      result.push_back(menu_item);
+    }
+
     if (!quit_item)
       quit_item = _menu_items[MenuItemType::QUIT];
 
