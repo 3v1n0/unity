@@ -64,11 +64,6 @@ namespace testing
 std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 }
 
-namespace
-{
-inline int compiz_event_timestamp(CompOption::Vector& options) { return options[7].value().i(); }
-}
-
 GnomeGrabber::Impl::Impl(bool test_mode)
   : screen_(screen)
   , shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
@@ -224,7 +219,7 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& owner, std::
     action.setState(CompAction::StateInitKey);
     action.setInitiate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
-      ActivateDBusAction(*action, action_id, 0, compiz_event_timestamp(options));
+      ActivateDBusAction(*action, action_id, 0, CompOption::getIntOptionNamed(options, "time"));
       return true;
     });
   }
@@ -239,7 +234,7 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& owner, std::
       if (state & CompAction::StateTermTapped)
       {
         LOG_DEBUG(logger) << "tapped \"" << key << "\"";
-        ActivateDBusAction(*action, action_id, 0, compiz_event_timestamp(options));
+        ActivateDBusAction(*action, action_id, 0, CompOption::getIntOptionNamed(options, "time"));
         return true;
       }
 
