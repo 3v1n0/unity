@@ -750,9 +750,9 @@ void LauncherIcon::SetNumberOfWindowsVisibleOnMonitor(int number_of_windows, int
     return;
 
   _has_visible_window[monitor] = (number_of_windows > 0);
-
   _number_of_visible_windows[monitor] = number_of_windows;
 
+  windows_changed.emit(monitor);
   EmitNeedsRedraw(monitor);
 }
 
@@ -895,7 +895,7 @@ void LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value, int monitor)
   if (quirk == Quirk::VISIBLE)
     visibility_changed.emit(monitor);
 
-  QuirksChanged.emit();
+  quirks_changed.emit(quirk, monitor);
 }
 
 void LauncherIcon::FullyAnimateQuirkDelayed(guint ms, LauncherIcon::Quirk quirk, int monitor)

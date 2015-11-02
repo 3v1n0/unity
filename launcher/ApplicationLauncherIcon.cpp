@@ -736,8 +736,6 @@ void ApplicationLauncherIcon::EnsureWindowState()
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
     SetNumberOfWindowsVisibleOnMonitor(number_of_windows_on_monitor[i], i);
-
-  WindowsChanged.emit();
 }
 
 void ApplicationLauncherIcon::EnsureWindowsLocation()
