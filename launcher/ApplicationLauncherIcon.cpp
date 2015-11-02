@@ -1229,29 +1229,24 @@ void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 
 bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
 {
-  bool result = false;
-
-  if (IsRunning() && IsVisible())
+  if (!removed() && IsRunning() && IsVisible())
   {
     // If current is true, we only want to show the current workspace.
     if (!current)
     {
-      result = true;
+      return true;
     }
     else
     {
       for (unsigned i = 0; i < monitors::MAX; ++i)
       {
         if (WindowVisibleOnMonitor(i))
-        {
-          result = true;
-          break;
-        }
+          return true;
       }
     }
   }
 
-  return result;
+  return false;
 }
 
 bool ApplicationLauncherIcon::AllowDetailViewInSwitcher() const
