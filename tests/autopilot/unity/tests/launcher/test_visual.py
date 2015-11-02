@@ -71,14 +71,12 @@ class LauncherVisualTests(LauncherTestCase):
 
     def test_mouse_over_with_dash_open_desaturates_icons(self):
         """Moving mouse over launcher with dash open must saturate icons."""
-        launcher_instance = self.get_launcher()
         self.unity.dash.ensure_visible()
         current_monitor = self.unity.dash.monitor
 
         self.addCleanup(self.unity.dash.ensure_hidden)
         sleep(.5)
-        x,y,w,h = launcher_instance.geometry
-        self.mouse.move(x + w/2, y + h/2)
+        self.mouse.move_to_object(self.get_launcher())
         sleep(.5)
         for icon in self.unity.launcher.model.get_launcher_icons():
             self.assertFalse(icon.monitors_desaturated[current_monitor])

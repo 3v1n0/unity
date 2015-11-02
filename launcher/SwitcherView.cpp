@@ -165,6 +165,7 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model->selection_changed.connect(sigc::mem_fun(this, &SwitcherView::OnSelectionChanged));
   model->detail_selection.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionChanged));
   model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
+  model->updated.connect(sigc::mem_fun(this, &SwitcherView::QueueRelayout));
 
   last_icon_selected_ = -1;
 
@@ -648,7 +649,7 @@ nux::Size SwitcherView::SpreadSize()
   nux::Geometry const& base = GetGeometry();
   nux::Size result(base.width - border_size * 2, base.height - border_size * 2);
 
-  int width_padding = std::max(model_->Size() - 1, 0) * minimum_spacing + tile_size;
+  int width_padding = std::max<int>(model_->Size() - 1, 0) * minimum_spacing + tile_size;
   result.width -= width_padding;
 
   return result;

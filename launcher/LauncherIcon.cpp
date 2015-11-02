@@ -39,7 +39,6 @@
 #include "MultiMonitor.h"
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GTKWrapper.h>
 #include <UnityCore/Variant.h>
 
 namespace unity
@@ -328,11 +327,11 @@ bool LauncherIcon::IsMonoDefaultTheme()
     return (bool)_current_theme_is_mono;
 
   GtkIconTheme* default_theme;
-  gtk::IconInfo info;
+  glib::Object<GtkIconInfo> info;
   default_theme = gtk_icon_theme_get_default();
 
   _current_theme_is_mono = (int)false;
-  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), icon_size(), (GtkIconLookupFlags)0);
+  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), icon_size(), GTK_ICON_LOOKUP_FORCE_SIZE);
 
   if (!info)
     return (bool)_current_theme_is_mono;
@@ -389,8 +388,8 @@ BaseTexturePtr LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
                                                          bool is_default_theme)
 {
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), nullptr));
-  gtk::IconInfo info;
-  auto flags = static_cast<GtkIconLookupFlags>(0);
+  glib::Object<GtkIconInfo> info;
+  auto flags = GTK_ICON_LOOKUP_FORCE_SIZE;
 
   if (icon.IsType(G_TYPE_ICON))
   {

@@ -190,9 +190,6 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter::Value wf)
   if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
     return elements;
 
-  if (win->inShowDesktopMode())
-    return elements;
-
   auto const& region = win->region();
   bool rectangular = (region.numRects() == 1);
   bool alpha = win->alpha();

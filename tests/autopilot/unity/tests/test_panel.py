@@ -78,8 +78,7 @@ class PanelTestsBase(UnityTestCase):
             self.keybinding("window/restore")
             self.addCleanup(self.keybinding, "window/maximize")
 
-        sleep(.25)
-        self.assertProperty(win, is_maximized=maximized)
+        self.assertThat(lambda: win.is_maximized, Eventually(Equals(maximized)))
 
     def open_new_application_window(self, app_name, maximized=False, move_to_monitor=True):
         """Opens a new instance of the requested application, ensuring that only
@@ -93,8 +92,8 @@ class PanelTestsBase(UnityTestCase):
         app = app_win.application
 
         app_win.set_focus()
-        self.assertTrue(app.is_active)
-        self.assertTrue(app_win.is_focused)
+        self.assertThat(lambda: app.is_active, Eventually(Equals(True)))
+        self.assertThat(lambda: app_win.is_focused, Eventually(Equals(True)))
         self.assertThat(app.desktop_file, Equals(app_win.application.desktop_file))
 
         if move_to_monitor:
@@ -431,7 +430,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.addCleanup(self.unity.hud.ensure_hidden)
 
         self.panel.window_buttons.maximize.mouse_click()
-
         self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
 
     def test_hud_maximize_button_does_not_change_dash_form_factor(self):
@@ -986,7 +984,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     def open_app_and_get_menu_entry(self):
         """Open the test app and wait for the menu entry to appear."""
-        self.open_new_application_window("Remmina" if self.lim else "Calculator",
+        self.open_new_application_window("Text Editor" if self.lim else "Calculator",
                                          maximized=self.lim)
 
         refresh_fn = lambda: len(self.panel.menus.get_entries())
@@ -1035,7 +1033,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
         self.assertThat(menu_entry.menu_y, Eventually(Equals(0)))
 
     def test_menu_closes_on_new_focused_application(self):
-        """Clicking outside an open menu must close it."""
+        """When a new app is focused, open menu should be closed only when using Global Menus."""
         menu_entry = self.open_app_and_get_menu_entry()
         self.mouse_open_indicator(menu_entry)
 
@@ -1043,7 +1041,8 @@ class PanelIndicatorEntryTests(PanelTestsBase):
         self.assertThat(menu_entry.active, Eventually(Equals(True)))
 
         self.open_new_application_window("Text Editor")
-        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+        get_active_indicator_fn = lambda: self.unity.panels.get_active_indicator()
+        self.assertThat(get_active_indicator_fn, Eventually(NotEquals(None) if self.lim else Equals(None)))
 
     def test_indicator_opens_when_dash_is_open(self):
         """When the dash is open and a click is on an indicator the dash
@@ -1068,8 +1067,9 @@ class PanelKeyNavigationTests(PanelTestsBase):
         This method will wait until the active indicator has been set.
 
         """
-        self.assertThat(self.panel.get_active_indicator, Eventually(NotEquals(None)))
-        return self.panel.get_active_indicator()
+        get_active_indicator_fn = lambda: self.panel.get_active_indicator()
+        self.assertThat(get_active_indicator_fn, Eventually(NotEquals(None)))
+        return get_active_indicator_fn()
 
     def test_panel_first_menu_show_works(self):
         """Pressing the open-menus keybinding must open the first indicator."""
@@ -1185,9 +1185,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.assertProperty(text_win, is_focused=False)
         self.assertProperty(calc_win, is_focused=True)
 
-        self.move_mouse_over_grab_area()
-        self.mouse.click()
-
+        self.mouse.click_object(self.panel.grab_area, button=1)
         self.assertProperty(text_win, is_focused=True)
 
     def test_lower_the_maximized_window_works(self):
@@ -1198,8 +1196,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.assertProperty(text_win, is_focused=True)
         self.assertProperty(calc_win, is_focused=False)
 
-        self.move_mouse_over_grab_area()
-        self.mouse.click(2)
+        self.mouse.click_object(self.panel.grab_area, button=2)
 
         self.assertProperty(calc_win, is_focused=True)
 
@@ -1209,8 +1206,7 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.addCleanup(self.unity.hud.ensure_hidden)
 
         self.keyboard.type("Hello")
-        self.move_mouse_over_grab_area()
-        self.mouse.click()
+        self.mouse.click_object(self.panel.grab_area)
         self.keyboard.type("World")
 
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("HelloWorld")))

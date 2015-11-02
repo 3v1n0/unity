@@ -344,7 +344,8 @@ void DBusProxy::Impl::WaitForProxy(GCancellable* cancellable,
     // wait for the signal
     *con = proxy_acquired.connect([con, canc, timeout, callback] ()
     {
-      if (!g_cancellable_is_cancelled(canc)) callback(glib::Error());
+      if (!g_cancellable_is_cancelled(canc))
+        callback(glib::Error());
 
       timeout->Remove();
       con->disconnect();
@@ -390,12 +391,15 @@ void DBusProxy::Impl::Call(string const& method_name,
   if (!proxy_)
   {
     glib::Variant sinked_parameters(parameters);
-    glib::Object<GCancellable>canc(target_canc, glib::AddRef());
+    glib::Object<GCancellable> canc(target_canc, glib::AddRef());
+
     WaitForProxy(canc, timeout_msec, [this, method_name, sinked_parameters, callback, canc, flags, timeout_msec] (glib::Error const& err)
     {
       if (err)
       {
-        callback(glib::Variant(), err);
+        if (callback)
+          callback(glib::Variant(), err);
+
         LOG_WARNING(logger) << "Cannot call method " << method_name
                             << ": " << err;
       }

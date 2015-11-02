@@ -45,25 +45,6 @@ const std::string DETAIL_TIMEOUT = "detail-timeout";
 const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
 const unsigned FADE_DURATION = 80;
 const int XY_OFFSET = 100;
-
-/**
- * Helper comparison functor for sorting application icons.
- */
-bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
-                                  AbstractLauncherIcon::Ptr const& second)
-{
-  if (first->GetIconType() == second->GetIconType())
-    return first->SwitcherPriority() > second->SwitcherPriority();
-
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return true;
-
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return false;
-
-  return first->GetIconType() < second->GetIconType();
-}
-
 }
 
 namespace switcher
@@ -98,12 +79,22 @@ bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& r
 
 void Controller::Show(ShowMode show,
                       SortMode sort,
-                      std::vector<AbstractLauncherIcon::Ptr> results)
+                      std::vector<AbstractLauncherIcon::Ptr> const& results)
 {
   auto uscreen = UScreen::GetDefault();
   monitor_     = uscreen->GetMonitorWithMouse();
 
   impl_->Show(show, sort, results);
+}
+
+void Controller::AddIcon(AbstractLauncherIcon::Ptr const& icon)
+{
+  impl_->AddIcon(icon);
+}
+
+void Controller::RemoveIcon(AbstractLauncherIcon::Ptr const& icon)
+{
+  impl_->RemoveIcon(icon);
 }
 
 void Controller::Select(int index)
@@ -308,23 +299,33 @@ void Controller::Impl::OnBackgroundUpdate(nux::Color const& new_color)
     view_->background_color = new_color;
 }
 
+void Controller::Impl::AddIcon(AbstractLauncherIcon::Ptr const& icon)
+{
+  if (!obj_->visible_ || !model_)
+    return;
 
-void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncherIcon::Ptr> results)
+  model_->AddIcon(icon);
+}
+
+void Controller::Impl::RemoveIcon(AbstractLauncherIcon::Ptr const& icon)
+{
+  if (!obj_->visible_ || !model_)
+    return;
+
+  model_->RemoveIcon(icon);
+}
+
+void Controller::Impl::Show(ShowMode show_mode, SortMode sort_mode, std::vector<AbstractLauncherIcon::Ptr> const& results)
 {
   if (results.empty() || obj_->visible_)
     return;
 
-  if (sort == SortMode::FOCUS_ORDER)
-  {
-    std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
-  }
-
-  model_ = std::make_shared<SwitcherModel>(results);
-  obj_->AddChild(model_.get());
+  model_ = std::make_shared<SwitcherModel>(results, (sort_mode == SortMode::FOCUS_ORDER));
+  model_->only_apps_on_viewport = (show_mode == ShowMode::CURRENT_VIEWPORT);
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
-  model_->request_detail_hide.connect(sigc::mem_fun(this, &Controller::Impl::DetailHide));
-  model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
+  model_->updated.connect([this] { if (!model_->Size()) Hide(false); });
+  obj_->AddChild(model_.get());
 
   SelectFirstItem();
 
@@ -445,9 +446,7 @@ void Controller::Impl::ConstructView()
   view_->SetModel(model_);
   view_->background_color = WindowManager::Default().average_color();
   view_->monitor = obj_->monitor_;
-
   view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
-
   view_->switcher_mouse_up.connect([this] (int icon_index, int button) {
     if (button == 3)
       InitiateDetail(true);
@@ -495,15 +494,6 @@ void Controller::Impl::Hide(bool accept_state)
   obj_->visible_ = false;
 
   animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
-}
-
-void Controller::Impl::DetailHide()
-{
-  // FIXME We need to refactor SwitcherModel so we can add/remove icons without causing
-  // a crash. If you remove the last application in the list it crashes.
-  obj_->detail.changed.emit(false);
-  model_->detail_selection = false;
-  Hide(false);
 }
 
 void Controller::Impl::HideWindow()
@@ -734,7 +724,7 @@ void Controller::Impl::SelectFirstItem()
   {
     Window xid = window->window_id();
 
-    if (model_->only_detail_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
+    if (model_->only_apps_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
       continue;
 
     uint64_t num = wm.GetWindowActiveNumber(xid);

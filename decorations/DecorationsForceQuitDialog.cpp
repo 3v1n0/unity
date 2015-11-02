@@ -169,6 +169,14 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
   gtk_widget_set_visual(GTK_WIDGET(self), gdk_screen_get_rgba_visual(screen));
   gtk_widget_realize(GTK_WIDGET(self));
 
+  glib::Object<GtkCssProvider> style(gtk_css_provider_new());
+  gtk_css_provider_load_from_data(style, R"(
+    * { background-color: transparent; }
+  )", -1, nullptr);
+
+  auto* style_ctx = gtk_widget_get_style_context(GTK_WIDGET(self));
+  gtk_style_context_add_provider(style_ctx, glib::object_cast<GtkStyleProvider>(style), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
   gtk_container_add(GTK_CONTAINER(self), sheet_style_dialog_new(main_dialog, parent_xid, parent_pid));
 
   gtk_window_set_modal(self, TRUE);

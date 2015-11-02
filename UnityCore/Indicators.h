@@ -40,6 +40,7 @@ public:
   virtual ~Indicators();
 
   IndicatorsList GetIndicators() const;
+  Entry::Ptr const& GetActiveEntry() const;
   virtual std::vector<std::string> const& IconPaths() const = 0;
 
   virtual void SyncGeometries(std::string const& panel, EntryLocationMap const&) = 0;

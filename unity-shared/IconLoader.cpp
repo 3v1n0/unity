@@ -32,7 +32,7 @@
 #include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/GLibSource.h>
 #include <UnityCore/GLibSignal.h>
-#include <UnityCore/GTKWrapper.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/Timer.h"
 #include "unity-shared/UnitySettings.h"
@@ -84,7 +84,7 @@ private:
     IconLoaderCallback slot;
     Handle handle;
     Impl* impl;
-    gtk::IconInfo icon_info;
+    glib::Object<GtkIconInfo> icon_info;
     bool no_cache;
     Handle helper_handle;
     std::list<IconLoaderTask::Ptr> shadow_tasks;
@@ -164,7 +164,7 @@ private:
     {
       int size = max_height < 0 ? max_width : (max_width < 0 ? max_height : MIN(max_height, max_width));
       GtkIconInfo *info = ::gtk_icon_theme_lookup_icon(impl->theme_, data.c_str(),
-                                                       size, static_cast<GtkIconLookupFlags>(0));
+                                                       size, GTK_ICON_LOOKUP_FORCE_SIZE);
       if (info)
       {
         icon_info = info;
@@ -234,7 +234,7 @@ private:
       else if (icon.IsType(G_TYPE_ICON))
       {
         GtkIconInfo *info = ::gtk_icon_theme_lookup_by_gicon(impl->theme_, icon, size,
-                                                             static_cast<GtkIconLookupFlags>(GTK_ICON_LOOKUP_FORCE_SIZE));
+                                                             GTK_ICON_LOOKUP_FORCE_SIZE);
         if (info)
         {
           icon_info = info;

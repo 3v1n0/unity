@@ -234,14 +234,14 @@ void WindowButton::AddProperties(debug::IntrospectionData& introspection)
   }
 
   introspection.add(GetAbsoluteGeometry())
-                                  .add("type", type_name)
-                                  .add("visible", IsVisible() && Parent()->opacity() != 0.0f)
-                                  .add("sensitive", Parent()->GetInputEventSensitivity())
-                                  .add("enabled", enabled())
-                                  .add("visual_state", state_name)
-                                  .add("opacity", Parent()->opacity())
-                                  .add("focused", Parent()->focused())
-                                  .add("overlay_mode", overlay_mode());
+               .add("type", type_name)
+               .add("visible", IsVisible() && Parent()->opacity() != 0.0f)
+               .add("sensitive", Parent()->GetInputEventSensitivity())
+               .add("enabled", enabled())
+               .add("visual_state", state_name)
+               .add("opacity", Parent()->opacity())
+               .add("focused", Parent()->focused())
+               .add("overlay_mode", overlay_mode());
 }
 } // Internal Namespace
 

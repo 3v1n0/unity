@@ -39,8 +39,9 @@ struct MockGrabber : Grabber
   }
 
   MOCK_METHOD0(GetActions, CompAction::Vector&());
-  MOCK_METHOD1(AddAction, void(CompAction const&));
-  MOCK_METHOD1(RemoveAction, void(CompAction const&));
+  MOCK_METHOD1(AddAction, uint32_t(CompAction const&));
+  MOCK_METHOD1(RemoveAction, bool(CompAction const&));
+  MOCK_METHOD1(RemoveAction, bool(uint32_t));
 
   CompAction::Vector actions_;
 };

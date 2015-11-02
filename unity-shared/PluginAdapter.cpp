@@ -145,6 +145,16 @@ void PluginAdapter::NotifyStateChange(CompWindow* window, unsigned int state, un
   {
     window_restored.emit(window->id());
   }
+
+  if ((state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask)
+  {
+    window_fullscreen.emit(window->id());
+  }
+  else if (((last_state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask) &&
+           !((state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask))
+  {
+    window_unfullscreen.emit(window->id());
+  }
 }
 
 void PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
@@ -530,6 +540,14 @@ bool PluginAdapter::IsWindowHorizontallyMaximized(Window window_id) const
   return false;
 }
 
+bool PluginAdapter::IsWindowFullscreen(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return ((window->state() & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask);
+
+  return false;
+}
+
 bool PluginAdapter::HasWindowDecorations(Window window_id) const
 {
   return compiz_utils::IsWindowFullyDecorable(m_Screen->findWindow(window_id));
@@ -781,7 +799,10 @@ void PluginAdapter::UnMinimize(Window window_id)
 {
   CompWindow* window = m_Screen->findWindow(window_id);
   if (window && (window->actions() & CompWindowActionMinimizeMask))
+  {
     window->unminimize();
+    window->show();
+  }
 }
 
 void PluginAdapter::Shade(Window window_id)
@@ -962,6 +983,7 @@ void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
       if (forced_unminimize)
         {
           top_window->unminimize();
+          top_window->show();
         }
 
       top_window->raise();

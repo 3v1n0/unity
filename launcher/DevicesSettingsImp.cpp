@@ -77,7 +77,7 @@ public:
     const char* blacklist_to_be_uploaded[size+1];
 
     int index = 0;
-    for (auto item : blacklist_)
+    for (auto const &item : blacklist_)
       blacklist_to_be_uploaded[index++] = item.c_str();
     blacklist_to_be_uploaded[index] = nullptr;
 
