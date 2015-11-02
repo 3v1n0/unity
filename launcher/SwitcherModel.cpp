@@ -412,7 +412,7 @@ void SwitcherModel::PrevDetail()
   if (!detail_selection())
     return;
 
-  detail_selection_index = ((detail_selection_index > 0) ? detail_selection_index : DetailXids().size()) - 1;
+  detail_selection_index = ((detail_selection_index() > 0) ? detail_selection_index : DetailXids().size()) - 1;
   UpdateRowIndex();
 }
 
@@ -492,18 +492,18 @@ void SwitcherModel::PrevDetailRow()
   }
   else
   {
-    detail_selection_index = ((detail_selection_index > 0) ? detail_selection_index : DetailXids().size()) - 1;
+    detail_selection_index = ((detail_selection_index() > 0) ? detail_selection_index : DetailXids().size()) - 1;
   }
 }
 
 bool SwitcherModel::HasNextDetailRow() const
 {
-  return (detail_selection_index < DetailXids().size() - 1);
+  return (detail_selection_index() < DetailXids().size() - 1);
 }
 
 bool SwitcherModel::HasPrevDetailRow() const
 {
-  return (detail_selection_index > 0);
+  return (detail_selection_index() > 0);
 }
 
 void SwitcherModel::SetRowSizes(std::vector<int> const& row_sizes)
