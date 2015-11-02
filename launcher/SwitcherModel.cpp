@@ -61,13 +61,9 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
   , last_index_(0)
   , row_index_(0)
 {
-  auto visibility_changed_cb = sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged));
-  auto redraw_cb = sigc::hide(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit)));
-
   for (auto it = applications_.begin(); it != applications_.end();)
   {
-    (*it)->visibility_changed.connect(visibility_changed_cb);
-    (*it)->needs_redraw.connect(redraw_cb);
+    ConnectToIconSignals(*it);
 
     if (!(*it)->ShowInSwitcher(only_apps_on_viewport))
     {
@@ -166,6 +162,12 @@ void SwitcherModel::InsertIcon(AbstractLauncherIcon::Ptr const& application)
   }
 }
 
+void SwitcherModel::ConnectToIconSignals(launcher::AbstractLauncherIcon::Ptr const& icon)
+{
+  icon->quirks_changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconQuirksChanged))));
+  icon->windows_changed.connect(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit)));
+}
+
 void SwitcherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
 {
   if (!icon || icon->GetIconType() != AbstractLauncherIcon::IconType::APPLICATION)
@@ -179,16 +181,14 @@ void SwitcherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
     if (std::find(applications_.begin(), applications_.end(), icon) == applications_.end())
     {
       InsertIcon(icon);
-      icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged)));
-      icon->needs_redraw.connect(sigc::hide(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit))));
+      ConnectToIconSignals(icon);
       updated.emit();
     }
   }
   else if (std::find(hidden_applications_.begin(), hidden_applications_.end(), icon) == hidden_applications_.end())
   {
     hidden_applications_.push_back(icon);
-    icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconVisibilityChanged)));
-    icon->needs_redraw.connect(sigc::hide(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit))));
+    ConnectToIconSignals(icon);
   }
 }
 
@@ -218,7 +218,7 @@ void SwitcherModel::RemoveIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
   }
 }
 
-void SwitcherModel::OnIconVisibilityChanged()
+void SwitcherModel::OnIconQuirksChanged()
 {
   auto old_selection = Selection();
   VerifyApplications();

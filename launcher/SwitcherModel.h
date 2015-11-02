@@ -117,9 +117,10 @@ private:
   unsigned int SumNRows(unsigned int n) const;
   bool DetailIndexInLeftHalfOfRow() const;
   void InsertIcon(launcher::AbstractLauncherIcon::Ptr const&);
+  void ConnectToIconSignals(launcher::AbstractLauncherIcon::Ptr const&);
   void VerifyApplications();
   void UpdateLastActiveApplication();
-  void OnIconVisibilityChanged();
+  void OnIconQuirksChanged();
   void UnsetDetailSelection();
 
   void NextIndex();
