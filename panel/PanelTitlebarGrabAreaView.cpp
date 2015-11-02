@@ -24,6 +24,7 @@
 #include <X11/cursorfont.h>
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/DecorationStyle.h"
+#include "unity-shared/WindowManager.h"
 #include "PanelTitlebarGrabAreaView.h"
 
 
@@ -48,12 +49,6 @@ PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   });
 }
 
-PanelTitlebarGrabArea::~PanelTitlebarGrabArea()
-{
-  if (grab_cursor_)
-    XFreeCursor(nux::GetGraphicsDisplay()->GetX11Display(), grab_cursor_);
-}
-
 void PanelTitlebarGrabArea::SetGrabbed(bool enabled)
 {
   auto display = nux::GetGraphicsDisplay()->GetX11Display();
@@ -64,13 +59,12 @@ void PanelTitlebarGrabArea::SetGrabbed(bool enabled)
 
   if (enabled && !grab_cursor_)
   {
-    grab_cursor_ = XCreateFontCursor(display, XC_fleur);
+    grab_cursor_ = WindowManager::Default().GetCachedCursor(XC_fleur);
     XDefineCursor(display, panel_window->GetInputWindowId(), grab_cursor_);
   }
   else if (!enabled && grab_cursor_)
   {
     XUndefineCursor(display, panel_window->GetInputWindowId());
-    XFreeCursor(display, grab_cursor_);
     grab_cursor_ = None;
   }
 }

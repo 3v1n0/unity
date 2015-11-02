@@ -36,7 +36,7 @@ public:
 
   static DataPool::Ptr const& Get();
   static void Reset();
-  virtual ~DataPool();
+  virtual ~DataPool() = default;
 
   Cursor EdgeCursor(Edge::Type) const;
   cu::SimpleTexture::Ptr const& GlowTexture() const;
@@ -48,10 +48,8 @@ private:
   DataPool(DataPool const&) = delete;
   DataPool& operator=(DataPool const&) = delete;
 
-  void SetupCursors();
   void SetupTextures();
 
-  std::array<Cursor, size_t(Edge::Type::Size)> edge_cursors_;
   cu::SimpleTexture::Ptr glow_texture_;
 
   typedef std::array<std::array<cu::SimpleTexture::Ptr, size_t(WidgetState::Size)>, size_t(WindowButtonType::Size)> WindowButtonsArray;

@@ -23,14 +23,13 @@
 #include "WindowGestureTarget.h"
 
 #include <Nux/Nux.h> // otherwise unityshell.h inclusion will cause failures
+#include <X11/cursorfont.h>
 #include "unityshell.h"
 
 // To make the gesture tests pass, this has to be a local include.
 #include "PluginAdapter.h"
 
 using namespace nux;
-
-Cursor WindowGestureTarget::fleur_cursor = 0;
 
 WindowGestureTarget::WindowGestureTarget(CompWindow *window)
   : window_(window), drag_grab_(0), started_window_move_(false),
@@ -138,7 +137,7 @@ void WindowGestureTarget::StartWindowMove(const nux::GestureEvent &event)
 {
   if (!event.IsDirectTouch())
   {
-    drag_grab_ = screen->pushGrab(fleur_cursor, "unity");
+    drag_grab_ = screen->pushGrab(screen->cursorCache(XC_fleur), "unity");
     window_->grabNotify(window_->serverGeometry().x(),
                         window_->serverGeometry().y(),
                         0,
