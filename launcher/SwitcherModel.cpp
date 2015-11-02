@@ -386,7 +386,7 @@ void SwitcherModel::Next()
 void SwitcherModel::PrevIndex()
 {
   last_index_ = index_;
-  index_ = (index_ > 0) ? index_ - 1 : applications_.size() - 1;
+  index_ = ((index_ > 0) ? index_  : applications_.size()) - 1;
 }
 
 void SwitcherModel::Prev()
@@ -401,11 +401,7 @@ void SwitcherModel::NextDetail()
   if (!detail_selection())
     return;
 
-  if (detail_selection_index < DetailXids().size() - 1)
-    detail_selection_index = detail_selection_index + 1;
-  else
-    detail_selection_index = 0;
-
+  detail_selection_index = (detail_selection_index + 1) % DetailXids().size();
   UpdateRowIndex();
 }
 
@@ -414,11 +410,7 @@ void SwitcherModel::PrevDetail()
   if (!detail_selection())
     return;
 
-  if (detail_selection_index >= (unsigned int) 1)
-    detail_selection_index = detail_selection_index - 1;
-  else
-    detail_selection_index = DetailXids().size() - 1;
-
+  detail_selection_index = ((detail_selection_index > 0) ? detail_selection_index : DetailXids().size()) - 1;
   UpdateRowIndex();
 }
 
@@ -437,7 +429,7 @@ void SwitcherModel::UpdateRowIndex()
       return;
     }
 
-    current_row++;
+    ++current_row;
   }
 }
 
@@ -473,7 +465,7 @@ void SwitcherModel::NextDetailRow()
       increment = next_row;
 
     detail_selection_index = detail_selection_index + increment;
-    row_index_++;
+    ++row_index_;
   }
   else
   {
