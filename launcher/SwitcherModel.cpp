@@ -523,8 +523,7 @@ void SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
         last_index_ = index_;
         index_ = i;
 
-        detail_selection = false;
-        detail_selection_index = 0;
+        UnsetDetailSelection();
         selection_changed.emit(Selection());
       }
       break;
@@ -542,8 +541,7 @@ void SwitcherModel::Select(unsigned int index)
     last_index_ = index_;
     index_ = target;
 
-    detail_selection = false;
-    detail_selection_index = 0;
+    UnsetDetailSelection();
     selection_changed.emit(Selection());
   }
 }
