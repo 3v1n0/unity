@@ -10,7 +10,7 @@ include (cmake/pch.cmake)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
 set (UNITY_MINOR 3)
-set (UNITY_MICRO 2)
+set (UNITY_MICRO 3)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 set (UNITY_COMPONENTS_VERSION "6")
@@ -101,7 +101,7 @@ add_custom_target (pre-distcheck
        && echo "• Generating ChangeLog"
        && bzr log --gnu-changelog > ChangeLog
        && echo "• Generating AUTHORS"
-       && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
+       && bzr log --long --levels=0 | grep -e "^\\s*author:" | cut -d ":" -f 2 | sed "s/,/\n/g" | sed -r -f AUTHOR-glue | sort -u | uniq -i > AUTHORS
        && echo "• Running Distcheck"
   )
 
