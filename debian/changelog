@@ -1,9 +1,28 @@
-unity (7.4.0-0ubuntu1) UNRELEASED; urgency=medium
+unity (7.4.0+16.04.20151102-0ubuntu1) xenial; urgency=medium
 
+  [ Marco Trevisan (Treviño) ]
   * Bumping version to 7.4.0
   * Fix building in xenial
 
- -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Mon, 26 Oct 2015 15:37:22 +0100
+  [ Didier Roche ]
+  * Remove unity2d transitional packages. We are post trusty LTS, they
+    are not needed anymore
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: if an app is not running and has no desktop
+    file, add QL item to add to dash
+  * PanelService: unset the idle ID before removal on callback (LP:
+    #1501289)
+  * Unity: use compiz cursorCache to get properly updated cursors (LP:
+    #1359211)
+  * UnityScreen: add SpreadAppWindows option and trigger it on
+    Super+Ctrl+[Shift]+W
+
+  [ Stephen M. Webb ]
+  * changed the wording of the help message and warning message for the
+    --reset option (LP: #1486498)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 02 Nov 2015 13:29:58 +0000
 
 unity (7.3.3-0ubuntu1) UNRELEASED; urgency=medium
 
