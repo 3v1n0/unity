@@ -306,6 +306,7 @@ void Controller::Impl::Show(ShowMode show_mode, SortMode sort_mode, std::vector<
   model_->only_apps_on_viewport = (show_mode == ShowMode::CURRENT_VIEWPORT);
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
+  model_->updated.connect([this] { if (!model_->Size()) Hide(false); });
   obj_->AddChild(model_.get());
 
   SelectFirstItem();
