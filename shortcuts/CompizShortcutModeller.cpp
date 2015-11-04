@@ -19,7 +19,6 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
-#include <core/core.h>
 #include "CompizShortcutModeller.h"
 #include "ShortcutHint.h"
 #include "ShortcutHintPrivate.h"
@@ -279,20 +278,23 @@ void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hi
                                                    shortcut::OptionType::HARDCODED,
                                                    _("Cursor Up or Down")));
 
-  if (const char* key = XKeysymToString(keyboard::get_key_right_to_key_symbol(screen->dpy(), XStringToKeysym("Tab"))))
+  if (Display *dpy = nux::GetGraphicsDisplay()->GetX11Display())
   {
-    std::string closekey = key;
-    switcher_init->Fill();
-    auto const& switcher_init_key = switcher_init->shortkey();
-    auto meta_separator = switcher_init_key.find("+");
+    if (const char* key = XKeysymToString(keyboard::get_key_right_to_key_symbol(dpy, XStringToKeysym("Tab"))))
+    {
+      std::string closekey = key;
+      switcher_init->Fill();
+      auto const& switcher_init_key = switcher_init->shortkey();
+      auto meta_separator = switcher_init_key.find("+");
 
-    if (meta_separator != std::string::npos)
-      closekey = switcher_init_key.substr(0, meta_separator-1) + " + " + closekey;
+      if (meta_separator != std::string::npos)
+        closekey = switcher_init_key.substr(0, meta_separator-1) + " + " + closekey;
 
-    hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
-                                                     _("Closes the selected application / window."),
-                                                     shortcut::OptionType::HARDCODED,
-                                                     impl::ProperCase(closekey)));
+      hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
+                                                       _("Closes the selected application / window."),
+                                                       shortcut::OptionType::HARDCODED,
+                                                       impl::ProperCase(closekey)));
+    }
   }
 }
 
