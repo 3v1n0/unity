@@ -105,7 +105,7 @@ void SwitcherModel::VerifyApplications()
   {
     if (!(*it)->ShowInSwitcher(only_apps_on_viewport))
     {
-      auto icon_index = it - applications_.begin();
+      unsigned icon_index = it - applications_.begin();
       hidden_applications_.push_back(*it);
       it = applications_.erase(it);
       anything_changed = true;
@@ -150,7 +150,7 @@ void SwitcherModel::InsertIcon(AbstractLauncherIcon::Ptr const& application)
   if (sort_by_priority_)
   {
     auto pos = std::upper_bound(applications_.begin(), applications_.end(), application, CompareSwitcherItemsPriority);
-    auto icon_index = pos - applications_.begin();
+    unsigned icon_index = pos - applications_.begin();
     applications_.insert(pos, application);
 
     if (icon_index <= index_)
@@ -197,7 +197,7 @@ void SwitcherModel::RemoveIcon(launcher::AbstractLauncherIcon::Ptr const& icon)
   auto icon_it = std::find(applications_.begin(), applications_.end(), icon);
   if (icon_it != applications_.end())
   {
-    auto icon_index = icon_it - applications_.begin();
+    unsigned icon_index = icon_it - applications_.begin();
     bool was_in_detail = (detail_selection && icon_index == index_);
     applications_.erase(icon_it);
 
@@ -466,7 +466,7 @@ void SwitcherModel::NextDetailRow()
     if (!DetailIndexInLeftHalfOfRow())
       increment = next_row;
 
-    detail_selection_index = (detail_selection_index + increment) % DetailXids().size();
+    detail_selection_index = detail_selection_index + increment;
     ++row_index_;
   }
   else
@@ -486,8 +486,7 @@ void SwitcherModel::PrevDetailRow()
     if (DetailIndexInLeftHalfOfRow())
       decrement = prev_row;
 
-    int selection_index = detail_selection_index - decrement;
-    detail_selection_index = (selection_index > 0) ? selection_index : selection_index + DetailXids().size();
+    detail_selection_index = detail_selection_index - decrement;
     row_index_--;
   }
   else
