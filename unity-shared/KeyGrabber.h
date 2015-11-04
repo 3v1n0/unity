@@ -32,8 +32,10 @@ public:
   typedef std::shared_ptr<Grabber> Ptr;
   virtual ~Grabber() = default;
 
-  virtual void AddAction(CompAction const&) = 0;
-  virtual void RemoveAction(CompAction const&) = 0;
+  virtual uint32_t AddAction(CompAction const&) = 0;
+  virtual bool RemoveAction(CompAction const&) = 0;
+  virtual bool RemoveAction(uint32_t id) = 0;
+
   virtual CompAction::Vector& GetActions() = 0;
 };
 

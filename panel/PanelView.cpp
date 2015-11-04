@@ -24,6 +24,7 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/RawPixel.h"
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
@@ -33,15 +34,16 @@
 
 #include "PanelView.h"
 
-namespace
-{
-const int refine_gradient_midpoint = 959;
-}
-
 namespace unity
 {
 namespace panel
 {
+namespace
+{
+const RawPixel TRIANGLE_THRESHOLD = 5_em;
+const int refine_gradient_midpoint = 959;
+}
+
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
@@ -635,22 +637,74 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   }
 }
 
+static bool PointInTriangle(nux::Point const& p, nux::Point const& t0, nux::Point const& t1, nux::Point const& t2)
+{
+  int s = t0.y * t2.x - t0.x * t2.y + (t2.y - t0.y) * p.x + (t0.x - t2.x) * p.y;
+  int t = t0.x * t1.y - t0.y * t1.x + (t0.y - t1.y) * p.x + (t1.x - t0.x) * p.y;
+
+  if ((s < 0) != (t < 0))
+    return false;
+
+  int A = -t1.y * t2.x + t0.y * (t2.x - t1.x) + t0.x * (t1.y - t2.y) + t1.x * t2.y;
+  if (A < 0)
+  {
+    s = -s;
+    t = -t;
+    A = -A;
+  }
+
+  return s > 0 && t > 0 && (s + t) < A;
+}
+
+static double GetMouseVelocity(nux::Point const& p0, nux::Point const& p1, util::Timer &timer)
+{
+  int dx, dy;
+  double speed;
+  auto millis = timer.ElapsedMicroSeconds();
+
+  if (millis == 0)
+    return 1;
+
+  dx = p0.x - p1.x;
+  dy = p0.y - p1.y;
+
+  speed = sqrt(dx * dx + dy * dy) / millis * 1000;
+
+  return speed;
+}
+
 bool PanelView::TrackMenuPointer()
 {
   nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-  if (tracked_pointer_pos_ != mouse)
+  double speed = GetMouseVelocity(mouse, tracked_pointer_pos_, mouse_tracker_timer_);
+
+  mouse_tracker_timer_.Reset();
+  tracked_pointer_pos_ = mouse;
+
+  double scale = Settings::Instance().em(monitor_)->DPIScale();
+  if (speed > 0 && PointInTriangle(mouse, 
+                                   nux::Point(triangle_top_corner_.x, std::max(triangle_top_corner_.y - TRIANGLE_THRESHOLD.CP(scale), 0)),
+                                   nux::Point(menu_geo_.x, menu_geo_.y),
+                                   nux::Point(menu_geo_.x + menu_geo_.width, menu_geo_.y)))
   {
+    return true;
+  }
+
+  if (mouse != triangle_top_corner_)
+  {
+    triangle_top_corner_ = mouse;
     OnMenuPointerMoved(mouse.x, mouse.y);
-    tracked_pointer_pos_ = mouse;
   }
 
   return true;
 }
 
-void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const&)
+void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& menu_geo)
 {
   if (!panel.empty() && panel != GetPanelName())
     return;
+
+  menu_geo_ = menu_geo;
 
   bool active = !entry_id.empty();
   if (active && !track_menu_pointer_timeout_)
@@ -665,6 +719,8 @@ void PanelView::OnEntryActivated(std::string const& panel, std::string const& en
     // process. All the motion events will go to unity-panel-service while
     // scrubbing because the active panel menu has (needs) the pointer grab.
     //
+    mouse_tracker_timer_.Reset();
+    triangle_top_corner_ = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     track_menu_pointer_timeout_.reset(new glib::Timeout(16));
     track_menu_pointer_timeout_->Run(sigc::mem_fun(this, &PanelView::TrackMenuPointer));
   }

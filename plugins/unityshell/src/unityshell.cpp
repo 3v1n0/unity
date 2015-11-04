@@ -91,11 +91,11 @@ static void save_state()
 #ifndef USE_GLES
   glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glMatrixMode(GL_TEXTURE);
+  glPushMatrix();
+  glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 #endif
 }
@@ -687,9 +687,10 @@ void UnityScreen::nuxEpilogue()
   glDepthRangef(0, 1);
 #endif
 
+  restore_state();
+
   gScreen->resetRasterPos();
   glDisable(GL_SCISSOR_TEST);
-  restore_state();
 }
 
 void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
@@ -3844,6 +3845,9 @@ void UnityScreen::OnLockScreenRequested()
 
   if (hud_controller_->IsVisible())
     hud_controller_->HideHud();
+
+  if (session_controller_->Visible())
+    session_controller_->Hide();
 
   menus_->Indicators()->CloseActiveEntry();
   launcher_controller_->ClearTooltips();

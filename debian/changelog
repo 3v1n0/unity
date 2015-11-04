@@ -1,3 +1,63 @@
+unity (7.3.2+15.10.20151016-0ubuntu1) wily; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Sync changelog with proposed
+
+  [ Andrea Azzarone ]
+  * Avoid test failures on jenkins.
+
+  [ CI Train Bot ]
+  * UnityScreen: close the session dialog in case it's open and we're
+    requested to lock (LP: #1505234)
+
+  [ Marco Trevisan (Treviño) ]
+  * LauncherIcon: force lookup icon by scaling it at the requested size
+    (LP: #1446081, #1501973)
+  * PanelService: ensure that we free the "fake" IndicatorEntry's we
+    create for dropdowns (LP: #1503348)
+  * ResultRendererTile: consider global scaling when scaling a not-
+    squared icon (LP: #1499286)
+  * TestDash: Use local results in PreviewNavigateTests instead of
+    online ones
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 16 Oct 2015 08:46:34 +0000
+
+unity (7.3.2+15.10.20151002.2-0ubuntu1) wily; urgency=medium
+
+  * GnomeKeyGrabber: Don't allow an action to be grabbed multiple times
+    (LP: #1459571)
+  * PanelService, DBusIndicators: drop support for EntryShowNowChanged
+    signal
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 02 Oct 2015 14:02:10 +0000
+
+unity (7.3.2+15.10.20150921-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Avoid to open adjacent menu when moving from an indicator icon to
+    its dropdown menu. (LP: #552920)
+  * Make sure to restore the state before the call to
+    glDisable(GL_SCISSOR_TEST). (LP: #1485727)
+
+  [ Iain Lane ]
+  * launcher: Always make sure we check the right file when seeing if
+    .desktop files have been deleted. Fixes disappearing launcher icons
+    when applications are upgraded when we are using glib > 2.44. (LP:
+    #1498106)
+
+  [ Lars Uebernickel ]
+  * DevicesSettingsImp: dont't feed garbage to gsettings (LP: #1495173)
+
+  [ Luke Yelavich ]
+  * Make a copy of a quicklist menu item plain text label
+  * Make a copy of a quicklist menu item plain text label
+
+  [ Marco Trevisan (Treviño) ]
+  * MenuManager: add a new setting to control the show-now delay (LP:
+    #1497915)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 21 Sep 2015 17:44:10 +0000
+
 unity (7.3.2+15.10.20150910.1-0ubuntu1) wily; urgency=medium
 
   [ Andrea Azzarone andrea.azzarone@canonical.com ]
