@@ -146,6 +146,8 @@ void PanelMenuView::SetupPanelMenuViewSignals()
   am.active_application_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
   am.application_started.connect(sigc::mem_fun(this, &PanelMenuView::OnApplicationStarted));
   am.application_stopped.connect(sigc::mem_fun(this, &PanelMenuView::OnApplicationClosed));
+  am.window_opened.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowOpened));
+  am.window_closed.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowClosed));
 
   mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
@@ -220,6 +222,8 @@ void PanelMenuView::SetupWindowManagerSignals()
   wm.window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
   wm.window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
   wm.window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
+  wm.window_fullscreen.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
+  wm.window_unfullscreen.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnFullscreen));
   wm.window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
   wm.window_mapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMapped));
   wm.window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
@@ -229,6 +233,7 @@ void PanelMenuView::SetupWindowManagerSignals()
   wm.initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
   wm.terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::RefreshAndRedraw));
+  wm.show_desktop_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnShowDesktopChanged));
 }
 
 void PanelMenuView::SetupUBusManagerInterests()
@@ -1028,6 +1033,19 @@ void PanelMenuView::OnApplicationClosed(ApplicationPtr const& app)
   }
 }
 
+void PanelMenuView::OnWindowOpened(ApplicationWindowPtr const& win)
+{
+  if (win->window_id() == window_buttons_->controlled_window() &&
+      win->title.changed.empty())
+  {
+    /* This is a not so nice workaround that we need to include here, since
+     * BAMF might be late in informing us about a new window, and thus we
+     * can't connect to it's signals (as not available in the App Manager). */
+    window_buttons_->controlled_window = 0;
+    UpdateTargetWindowItems();
+  }
+}
+
 void PanelMenuView::OnWindowClosed(ApplicationWindowPtr const& win)
 {
   /* FIXME, this can be removed when window_unmapped WindowManager signal
@@ -1083,7 +1101,7 @@ void PanelMenuView::OnActiveWindowChanged(ApplicationWindowPtr const& new_win)
   if (new_win)
   {
     active_xid = new_win->window_id();
-    is_maximized_ = new_win->maximized();
+    is_maximized_ = new_win->maximized() || WindowManager::Default().IsWindowFullscreen(active_xid);
 
     if (new_win->type() == WindowType::DESKTOP)
     {
@@ -1222,6 +1240,12 @@ void PanelMenuView::OnWindowMaximized(Window xid)
   }
 }
 
+void PanelMenuView::OnWindowUnFullscreen(Window xid)
+{
+  if (!WindowManager::Default().IsWindowMaximized(xid))
+    OnWindowRestored(xid);
+}
+
 void PanelMenuView::OnWindowRestored(Window xid)
 {
   maximized_wins_.erase(std::remove(maximized_wins_.begin(), maximized_wins_.end(), xid), maximized_wins_.end());
@@ -1238,6 +1262,12 @@ void PanelMenuView::OnWindowRestored(Window xid)
     RefreshAndRedraw();
   }
 }
+
+void PanelMenuView::OnShowDesktopChanged()
+{
+  UpdateMaximizedWindow();
+}
+
 
 bool PanelMenuView::UpdateActiveWindowPosition()
 {
@@ -1721,7 +1751,7 @@ void PanelMenuView::SetMonitor(int monitor)
     if (win->active())
       active_window = xid;
 
-    if (win->maximized())
+    if (win->maximized() || WindowManager::Default().IsWindowFullscreen(xid))
     {
       if (win->active())
         maximized_wins_.push_front(xid);

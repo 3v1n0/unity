@@ -1045,6 +1045,8 @@ void Controller::Impl::SetupIcons()
   favorite_store.favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   favorite_store.reordered.connect(sigc::mem_fun(this, &Impl::ResetIconPriorities));
 
+  model_->icon_added.connect(sigc::mem_fun(&parent_->icon_added, &decltype(parent_->icon_added)::emit));
+  model_->icon_removed.connect(sigc::mem_fun(&parent_->icon_removed, &decltype(parent_->icon_removed)::emit));
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
   model_->icon_removed.connect(sigc::mem_fun(this, &Impl::OnIconRemoved));
   model_->saved.connect(sigc::mem_fun(this, &Impl::SaveIconsOrder));

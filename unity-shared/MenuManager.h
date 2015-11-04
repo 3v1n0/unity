@@ -46,6 +46,7 @@ public:
   typedef std::shared_ptr<Manager> Ptr;
 
   nux::Property<bool> show_menus;
+  nux::Property<bool> menu_open;
 
   nux::Property<bool> integrated_menus;
   nux::Property<unsigned> show_menus_wait;

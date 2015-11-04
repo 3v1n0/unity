@@ -253,8 +253,8 @@ unity_launcher_icon_accessible_initialize(AtkObject* accessible,
     g_signal_connect(accessible, "notify::accessible-parent",
                      G_CALLBACK(on_parent_change_cb), self);
 
-  icon->QuirksChanged.connect(sigc::bind(sigc::ptr_fun(on_quirks_change_cb), self));
-  icon->WindowsChanged.connect(sigc::bind(sigc::ptr_fun(on_quirks_change_cb), self));
+  icon->quirks_changed.connect(sigc::hide(sigc::hide(sigc::bind(sigc::ptr_fun(on_quirks_change_cb), self))));
+  icon->windows_changed.connect(sigc::hide(sigc::bind(sigc::ptr_fun(on_quirks_change_cb), self)));
 }
 
 

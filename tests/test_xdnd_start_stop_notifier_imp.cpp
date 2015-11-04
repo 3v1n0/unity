@@ -47,7 +47,7 @@ struct TestXdndStartStopNotifierImp : public Test {
   unity::XdndStartStopNotifierImp xdnd_start_stop_notifier;
 };
 
-TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalStarted)
+TEST_F(TestXdndStartStopNotifierImp, UNSTABLE_TEST(SignalStarted))
 {
   bool signal_received = false;
   xdnd_start_stop_notifier.started.connect([&](){
@@ -63,7 +63,7 @@ TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalStarted)
   //XTestFakeButtonEvent(display_, 1, False, CurrentTime);
 }
 
-TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalFinished)
+TEST_F(TestXdndStartStopNotifierImp, UNSTABLE_TEST(SignalFinished))
 {
   bool signal_received = false;
   xdnd_start_stop_notifier.finished.connect([&](){

@@ -59,9 +59,10 @@ public:
 
   nux::Property<bool>         detail_selection;
   nux::Property<unsigned int> detail_selection_index;
-  nux::Property<bool>         only_detail_on_viewport;
+  nux::Property<bool>         only_apps_on_viewport;
 
-  SwitcherModel(Applications const& icons);
+  SwitcherModel(Applications const&, bool sort_by_priority);
+  virtual ~SwitcherModel() = default;
 
   iterator begin();
   iterator end();
@@ -71,7 +72,10 @@ public:
 
   launcher::AbstractLauncherIcon::Ptr at(unsigned int index) const;
 
-  int Size() const;
+  void AddIcon(launcher::AbstractLauncherIcon::Ptr const&);
+  void RemoveIcon(launcher::AbstractLauncherIcon::Ptr const&);
+
+  size_t Size() const;
 
   launcher::AbstractLauncherIcon::Ptr Selection() const;
   int SelectionIndex() const;
@@ -100,19 +104,31 @@ public:
   void Select(unsigned int index);
 
   sigc::signal<void, launcher::AbstractLauncherIcon::Ptr const&> selection_changed;
-  sigc::signal<void> request_detail_hide;
+  sigc::signal<void> updated;
 
 protected:
   // Introspectable methods
-  std::string GetName() const;
-  void AddProperties(debug::IntrospectionData&);
+  std::string GetName() const override;
+  void AddProperties(debug::IntrospectionData&) override;
+  debug::Introspectable::IntrospectableList GetIntrospectableChildren() override;
 
 private:
   void UpdateRowIndex();
   unsigned int SumNRows(unsigned int n) const;
   bool DetailIndexInLeftHalfOfRow() const;
+  void InsertIcon(launcher::AbstractLauncherIcon::Ptr const&);
+  void ConnectToIconSignals(launcher::AbstractLauncherIcon::Ptr const&);
+  void VerifyApplications();
+  void UpdateLastActiveApplication();
+  void OnIconQuirksChanged();
+  void UnsetDetailSelection();
+
+  void NextIndex();
+  void PrevIndex();
 
   Applications                        applications_;
+  Applications                        hidden_applications_;
+  bool                                sort_by_priority_;
   unsigned int                        index_;
   unsigned int                        last_index_;
   unsigned int                        row_index_;

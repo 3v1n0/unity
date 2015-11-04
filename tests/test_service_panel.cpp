@@ -17,6 +17,10 @@ static const char * panel_interface =
 "      <arg type='" ENTRY_ARRAY_SIGNATURE "' name='state' direction='out'/>"
 "    </method>"
 "\n"
+"    <method name='GetIconPaths'>"
+"      <arg type='as' name='paths' direction='out'/>"
+"    </method>"
+"\n"
 "    <signal name='ReSync'>"
 "     <arg type='s' name='indicator_id' />"
 "    </signal>"
@@ -117,6 +121,10 @@ GVariant* Panel::OnMethodCall(std::string const& method, GVariant *parameters)
   else if (method == "TriggerResync1Sent")
   {
     return g_variant_new("(b)", trigger_resync1_sent_ ? TRUE : FALSE);
+  }
+  else if (method == "GetIconPaths")
+  {
+    return g_variant_new("(as)", nullptr);
   }
 
   return nullptr;

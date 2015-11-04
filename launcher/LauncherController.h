@@ -80,6 +80,9 @@ public:
 
   void ClearTooltips();
 
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> icon_added;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> icon_removed;
+
 protected:
   // Introspectable methods
   std::string GetName() const;

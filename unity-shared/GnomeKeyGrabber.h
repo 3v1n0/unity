@@ -32,9 +32,11 @@ public:
   GnomeGrabber();
   virtual ~GnomeGrabber();
 
-  void AddAction(CompAction const&);
-  void RemoveAction(CompAction const&);
-  CompAction::Vector& GetActions();
+  uint32_t AddAction(CompAction const&) override;
+  bool RemoveAction(CompAction const&) override;
+  bool RemoveAction(uint32_t action_id) override;
+
+  CompAction::Vector& GetActions() override;
 
 protected:
   struct TestMode {};

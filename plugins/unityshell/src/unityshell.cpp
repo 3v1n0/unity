@@ -91,11 +91,11 @@ static void save_state()
 #ifndef USE_GLES
   glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glMatrixMode(GL_TEXTURE);
+  glPushMatrix();
+  glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 #endif
 }
@@ -287,13 +287,18 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   if (renderer.find("Software Rasterizer") != std::string::npos ||
       renderer.find("Mesa X11") != std::string::npos ||
-      renderer.find("LLVM") != std::string::npos ||
-      renderer.find("on softpipe") != std::string::npos ||
+      renderer.find("llvmpipe") != std::string::npos ||
+      renderer.find("softpipe") != std::string::npos ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1) ||
-      optionGetLowGraphicsMode())
+       optionGetLowGraphicsMode())
     {
       unity_settings_.SetLowGfxMode(true);
     }
+
+  if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
+  {
+    unity_settings_.SetLowGfxMode(false);
+  }
 #endif
 
   if (!failed)
@@ -313,12 +318,12 @@ UnityScreen::UnityScreen(CompScreen* screen)
 #ifndef USE_GLES
      wt.reset(nux::CreateFromForeignWindow(cScreen->output(),
                                            glXGetCurrentContext(),
-                                           &UnityScreen::initUnity,
+                                           &UnityScreen::InitNuxThread,
                                            this));
 #else
      wt.reset(nux::CreateFromForeignWindow(cScreen->output(),
                                            eglGetCurrentContext(),
-                                           &UnityScreen::initUnity,
+                                           &UnityScreen::InitNuxThread,
                                            this));
 #endif
 
@@ -424,7 +429,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
+     auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::InitPluginActions);
      sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
      InitGesturesSupport();
@@ -502,7 +507,7 @@ UnityScreen::~UnityScreen()
   reset_glib_logging();
 }
 
-void UnityScreen::initAltTabNextWindow()
+void UnityScreen::InitAltTabNextWindow()
 {
   Display* display = screen->dpy();
   KeySym tab_keysym = XStringToKeysym("Tab");
@@ -682,9 +687,10 @@ void UnityScreen::nuxEpilogue()
   glDepthRangef(0, 1);
 #endif
 
+  restore_state();
+
   gScreen->resetRasterPos();
   glDisable(GL_SCISSOR_TEST);
-  restore_state();
 }
 
 void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
@@ -986,14 +992,28 @@ void UnityScreen::DrawPanelUnderDash()
 
 bool UnityScreen::forcePaintOnTop()
 {
-  return !allowWindowPaint ||
-         lockscreen_controller_->IsLocked() ||
-         (dash_controller_->IsVisible() && !nux::GetGraphicsDisplay()->PointerIsGrabbed()) ||
-         hud_controller_->IsVisible() ||
-         session_controller_->Visible() ||
-          ((switcher_controller_->Visible() ||
-            WM.IsExpoActive())
-           && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
+  if (!allowWindowPaint ||
+      lockscreen_controller_->IsLocked() ||
+      (dash_controller_->IsVisible() && !nux::GetGraphicsDisplay()->PointerIsGrabbed()) ||
+      hud_controller_->IsVisible() ||
+      session_controller_->Visible())
+  {
+    return true;
+  }
+
+  if (!fullscreen_windows_.empty())
+  {
+    if (menus_->menu_open())
+      return true;
+
+    if (switcher_controller_->Visible() || WM.IsExpoActive())
+    {
+      if (!screen->grabbed() || screen->otherGrabExist(nullptr))
+        return true;
+    }
+  }
+
+  return false;
 }
 
 void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers)
@@ -1255,7 +1275,6 @@ void UnityWindow::DoOverrideFrameRegion(CompRegion &region)
 
   window->updateFrameRegionSetCurrentIndex(MAXSHORT);
   window->updateFrameRegion(region);
-  deco_win_->UpdateFrameRegion(region);
   window->updateFrameRegionSetCurrentIndex(oldUpdateFrameRegionIndex);
 }
 
@@ -2713,7 +2732,7 @@ void UnityScreen::UpdateActivateIndicatorsKey()
   WM.activate_indicators_key = std::make_pair(modifiers, keysym);
 }
 
-bool UnityScreen::initPluginActions()
+bool UnityScreen::InitPluginActions()
 {
   PluginAdapter& adapter = PluginAdapter::Default();
 
@@ -2819,12 +2838,12 @@ bool UnityScreen::initPluginForScreen(CompPlugin* p)
   if (p->vTable->name() == "expo" ||
       p->vTable->name() == "scale")
   {
-    initPluginActions();
+    InitPluginActions();
   }
 
   bool result = screen->initPluginForScreen(p);
   if (p->vTable->name() == "unityshell")
-    initAltTabNextWindow();
+    InitAltTabNextWindow();
 
   return result;
 }
@@ -3459,17 +3478,14 @@ bool UnityWindow::place(CompPoint& pos)
 
 
 /* Start up nux after OpenGL is initialized */
-void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
+void UnityScreen::InitNuxThread(nux::NThread* thread, void* data)
 {
   Timer timer;
-  UnityScreen* self = reinterpret_cast<UnityScreen*>(InitData);
-  self->initLauncher();
+  static_cast<UnityScreen*>(data)->InitUnityComponents();
 
   nux::ColorLayer background(nux::color::Transparent);
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
-  LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
-
-  nux::GetWindowCompositor().sigHiddenViewWindow.connect(sigc::mem_fun(self, &UnityScreen::OnViewHidden));
+  LOG_INFO(logger) << "UnityScreen::InitNuxThread: " << timer.ElapsedSeconds() << "s";
 }
 
 void UnityScreen::onRedrawRequested()
@@ -3827,6 +3843,9 @@ void UnityScreen::OnLockScreenRequested()
   if (hud_controller_->IsVisible())
     hud_controller_->HideHud();
 
+  if (session_controller_->Visible())
+    session_controller_->Hide();
+
   menus_->Indicators()->CloseActiveEntry();
   launcher_controller_->ClearTooltips();
 
@@ -3931,12 +3950,14 @@ void UnityScreen::RaiseOSK()
   }
 }
 
-/* Start up the launcher */
-void UnityScreen::initLauncher()
+/* Start up the unity components */
+void UnityScreen::InitUnityComponents()
 {
   Timer timer;
+  nux::GetWindowCompositor().sigHiddenViewWindow.connect(sigc::mem_fun(this, &UnityScreen::OnViewHidden));
 
   bghash_.reset(new BGHash());
+  LOG_INFO(logger) << "InitUnityComponents-BGHash " << timer.ElapsedSeconds() << "s";
 
   auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
   auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();
@@ -3945,18 +3966,20 @@ void UnityScreen::initLauncher()
 
   launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers_);
   Introspectable::AddChild(launcher_controller_.get());
+  LOG_INFO(logger) << "InitUnityComponents-Launcher " << timer.ElapsedSeconds() << "s";
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
   switcher_controller_->detail.changed.connect(sigc::mem_fun(this, &UnityScreen::OnSwitcherDetailChanged));
   Introspectable::AddChild(switcher_controller_.get());
-
-  LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
+  launcher_controller_->icon_added.connect(sigc::mem_fun(switcher_controller_.get(), &switcher::Controller::AddIcon));
+  launcher_controller_->icon_removed.connect(sigc::mem_fun(switcher_controller_.get(), &switcher::Controller::RemoveIcon));
+  LOG_INFO(logger) << "InitUnityComponents-Switcher " << timer.ElapsedSeconds() << "s";
 
   /* Setup panel */
   timer.Reset();
   panel_controller_ = std::make_shared<panel::Controller>(menus_, edge_barriers_);
   Introspectable::AddChild(panel_controller_.get());
-  LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
+  LOG_INFO(logger) << "InitUnityComponents-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
   dash_controller_ = std::make_shared<dash::Controller>();
@@ -3971,13 +3994,14 @@ void UnityScreen::initLauncher()
   hud_controller_->icon_size = launcher_controller_->options()->icon_size();
   hud_controller_->tile_size = launcher_controller_->options()->tile_size();
   Introspectable::AddChild(hud_controller_.get());
-  LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
+  LOG_INFO(logger) << "InitUnityComponents-Hud " << timer.ElapsedSeconds() << "s";
 
   // Setup Shortcut Hint
   auto base_window_raiser = std::make_shared<shortcut::BaseWindowRaiserImp>();
   auto shortcuts_modeller = std::make_shared<shortcut::CompizModeller>();
   shortcut_controller_ = std::make_shared<shortcut::Controller>(base_window_raiser, shortcuts_modeller);
   Introspectable::AddChild(shortcut_controller_.get());
+  LOG_INFO(logger) << "InitUnityComponents-ShortcutHints " << timer.ElapsedSeconds() << "s";
   ShowFirstRunHints();
 
   // Setup Session Controller
@@ -3988,12 +4012,14 @@ void UnityScreen::initLauncher()
   manager->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
   session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
   session_controller_ = std::make_shared<session::Controller>(manager);
+  LOG_INFO(logger) << "InitUnityComponents-Session " << timer.ElapsedSeconds() << "s";
   Introspectable::AddChild(session_controller_.get());
 
   // Setup Lockscreen Controller
   screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
   lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, manager);
   UpdateActivateIndicatorsKey();
+  LOG_INFO(logger) << "InitUnityComponents-Lockscreen " << timer.ElapsedSeconds() << "s";
 
   if (g_file_test((DesktopUtilities::GetUserRuntimeDirectory()+local::LOCKED_STAMP).c_str(), G_FILE_TEST_EXISTS))
     manager->PromptLockScreen();

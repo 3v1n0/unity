@@ -40,6 +40,7 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , scale(1.0)
   , highlighted(false)
+  , pressed(false)
   , action([this] { return action_; })
   , label([this] { return label_view_->GetText(); })
   , action_(action)
@@ -107,6 +108,8 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   mouse_enter.connect([this] (int, int, unsigned long, unsigned long) { highlighted = true; });
   mouse_leave.connect([this] (int, int, unsigned long, unsigned long) { highlighted = false; });
   mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
+  mouse_down.connect([this] (int, int, unsigned long, unsigned long) { pressed = true; });
+  mouse_up.connect([this] (int, int, unsigned long, unsigned long) { pressed = false; });
 
   begin_key_focus.connect([this] { highlighted = true; });
   end_key_focus.connect([this] { highlighted = false; });
@@ -115,6 +118,10 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   highlighted.changed.connect([this] (bool value) {
     image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
     label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
+  });
+
+  pressed.changed.connect([this] (bool value) {
+    image_view_->SetOpacity(value ? 0.75 : 1.0);
   });
 }
 

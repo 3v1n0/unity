@@ -87,7 +87,7 @@ private:
   //icon loading callbacks
   void IconLoaded(std::string const& texid, int max_width, int max_height,
                   glib::Object<GdkPixbuf> const& pixbuf,
-                  std::string icon_name, Result const& row);
+                  std::string const& icon_name, Result const& row);
   nux::BaseTexture* CreateTextureCallback(std::string const& texid,
                                           int width, int height,
                                           glib::Object<GdkPixbuf> const& pixbuf);
