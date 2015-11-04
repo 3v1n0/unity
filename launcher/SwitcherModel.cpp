@@ -466,7 +466,7 @@ void SwitcherModel::NextDetailRow()
     if (!DetailIndexInLeftHalfOfRow())
       increment = next_row;
 
-    detail_selection_index = (detail_selection_index + increment) % DetailXids().size();
+    detail_selection_index = detail_selection_index + increment;
     ++row_index_;
   }
   else
@@ -486,8 +486,7 @@ void SwitcherModel::PrevDetailRow()
     if (DetailIndexInLeftHalfOfRow())
       decrement = prev_row;
 
-    int selection_index = detail_selection_index - decrement;
-    detail_selection_index = (selection_index > 0) ? selection_index : selection_index + DetailXids().size();
+    detail_selection_index = detail_selection_index - decrement;
     row_index_--;
   }
   else
