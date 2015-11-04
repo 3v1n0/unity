@@ -206,13 +206,19 @@ void Controller::EnsureHud()
 void Controller::SetIcon(std::string const& icon_name)
 {
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
 
+  int launcher_size;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    launcher_size = unity::Settings::Instance().LauncherWidth(monitor_index_);
+  else
+    launcher_size = unity::Settings::Instance().LauncherHeight(monitor_index_);
+
+  std::cout << "HudController(216): " << unity::Settings::Instance().LauncherWidth(monitor_index_) << ":" << unity::Settings::Instance().LauncherHeight(monitor_index_) << std::endl;
   if (view_)
   {
     double scale = view_->scale();
     int tsize = tile_size().CP(scale);
-    view_->SetIcon(icon_name, tsize, icon_size().CP(scale), launcher_width - tsize);
+    view_->SetIcon(icon_name, tsize, icon_size().CP(scale), launcher_size - tsize);
   }
 
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
@@ -253,7 +259,8 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
   if (IsLockedToLauncher(ideal_monitor))
   {
-    int launcher_width = unity::Settings::Instance().LauncherWidth(ideal_monitor);
+//    int launcher_width = unity::Settings::Instance().LauncherWidth(ideal_monitor);
+    int launcher_width = 20;
     geo.x += launcher_width;
     geo.width -= launcher_width;
   }
@@ -269,7 +276,8 @@ void Controller::Relayout(bool check_monitor)
     monitor_index_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
 
   nux::Geometry const& geo = GetIdealWindowGeometry();
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
+//  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
+  int launcher_width = 20;
 
   view_->QueueDraw();
   window_->SetGeometry(geo);

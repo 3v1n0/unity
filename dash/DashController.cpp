@@ -232,18 +232,28 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
 
-  // We want to cover as much of the screen as possible to grab any mouse events outside
-  // of our window
-//  return nux::Geometry (monitor_geo.x + launcher_width,
-//                        monitor_geo.y,
-//                        monitor_geo.width - launcher_width,
-//                        monitor_geo.height);
-  return nux::Geometry (monitor_geo.x,
-                        monitor_geo.y,
-                        monitor_geo.width,
-                        monitor_geo.height - launcher_width);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+      std::cout << "Launcher_widht: "  << std::endl;
+      int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+
+      // We want to cover as much of the screen as possible to grab any mouse events outside
+      // of our window
+      return nux::Geometry (monitor_geo.x + launcher_width,
+                            monitor_geo.y,
+                            monitor_geo.width - launcher_width,
+                            monitor_geo.height);
+  }
+  else
+  {
+    int launcher_height = unity::Settings::Instance().LauncherHeight(monitor_);
+    std::cout << "launcher_heigth: " << launcher_height << std::endl;
+    return nux::Geometry (monitor_geo.x,
+                          monitor_geo.y,
+                          monitor_geo.width,
+                          monitor_geo.height - launcher_height );
+  }
 }
 
 void Controller::Relayout(bool check_monitor)
@@ -253,12 +263,18 @@ void Controller::Relayout(bool check_monitor)
   if (check_monitor)
     monitor_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
 
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+
   nux::Geometry geo = GetIdealWindowGeometry();
 
   view_->Relayout();
   window_->SetGeometry(geo);
-  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+    view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
+  }
+  else
+    view_->SetMonitorOffset(0, panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -317,8 +333,15 @@ bool Controller::ShowDash()
   EnsureDash();
   monitor_ = GetIdealMonitor();
   screen_ungrabbed_slot_->disconnect();
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
-  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+    view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
+  }
+  else
+  {
+    view_->SetMonitorOffset(0, panel::Style::Instance().PanelHeight(monitor_));
+  }
   view_->AboutToShow(monitor_);
   FocusWindow();
 
@@ -330,6 +353,7 @@ bool Controller::ShowDash()
 
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
+
   return true;
 }
 

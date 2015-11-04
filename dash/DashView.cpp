@@ -642,10 +642,6 @@ void DashView::Relayout()
                                                 top_padding));
 
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.y + content_geo_.height);
-//  content_layout_->SetMinMaxSize(content_geo_.x + content_geo_.width, content_geo_y + content_geo_.height);
-
-//  layout_->SetVerticalExternalMargin(content_geo_.y);
-//  layout_->SetHorizonalExternalMargin(content_geo_.x);
 
   // Minus the padding that gets added to the left
   style.columns_number = floorf((content_geo_.width - (32_em).CP(scale)) / style.GetTileWidth().CP(scale));
@@ -701,7 +697,6 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
     height = std::max(0, for_geo.height - panel_height);
   }
   return nux::Geometry(0, panel_height, width, height);
-//  return nux::Geometry(0, GetBaseHeight() - height, width, height);
 }
 
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)

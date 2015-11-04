@@ -38,6 +38,7 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
+const std::string LAUNCHER_POSITION = "launcher-position";
 
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
@@ -63,6 +64,7 @@ const std::string REMOTE_CONTENT_SETTINGS = "com.canonical.Unity.Lenses";
 const std::string REMOTE_CONTENT_KEY = "remote-content-search";
 
 const int DEFAULT_LAUNCHER_WIDTH = 64;
+const int DEFAULT_LAUNCHER_HEIGHT = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
 const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
 const double DEFAULT_DPI = 96.0f;
@@ -83,6 +85,8 @@ public:
     , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
     , remote_content_settings_(g_settings_new(REMOTE_CONTENT_SETTINGS.c_str()))
     , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
+    , launcher_heights_(monitors::MAX, DEFAULT_LAUNCHER_HEIGHT)
+    , cached_launcher_position_(LauncherPosition::BOTTOM)
     , cached_form_factor_(FormFactor::DESKTOP)
     , cursor_scale_(1.0)
     , cached_double_click_activate_(true)
@@ -94,6 +98,8 @@ public:
     parent_->form_factor.SetSetterFunction(sigc::mem_fun(this, &Impl::SetFormFactor));
     parent_->double_click_activate.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDoubleClickActivate));
     parent_->remote_content.SetGetterFunction(sigc::mem_fun(this, &Impl::GetRemoteContentEnabled));
+    parent_->launcher_position.SetGetterFunction(sigc::mem_fun(this, &Impl::GetLauncherPosition));
+    parent_->launcher_position.SetSetterFunction(sigc::mem_fun(this, &Impl::SetLauncherPosition));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
@@ -105,6 +111,11 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, const gchar*) {
       CacheDoubleClickActivate();
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LAUNCHER_POSITION, [this] (GSettings*, const gchar*) {
+      CacheLauncherPosition();
+      parent_->launcher_position.changed.emit(cached_launcher_position_);
     });
 
     signals_.Add<void, GSettings*, const gchar*>(ubuntu_ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
@@ -162,6 +173,7 @@ public:
     CacheFormFactor();
     CacheDoubleClickActivate();
     UpdateRemoteContentSearch();
+    CacheLauncherPosition();
   }
 
   void CacheFormFactor()
@@ -195,6 +207,11 @@ public:
     cached_double_click_activate_ = g_settings_get_boolean(usettings_, DOUBLE_CLICK_ACTIVATE.c_str());
   }
 
+  void CacheLauncherPosition()
+  {
+      cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(usettings_, LAUNCHER_POSITION.c_str()));
+  }
+
   void UpdateLimSetting()
   {
     parent_->lim_movement_thresold = g_settings_get_uint(lim_settings_, CLICK_MOVEMENT_THRESHOLD.c_str());
@@ -216,6 +233,17 @@ public:
   bool GetDoubleClickActivate() const
   {
     return cached_double_click_activate_;
+  }
+
+  LauncherPosition GetLauncherPosition() const
+  {
+      return cached_launcher_position_;
+  }
+
+  bool SetLauncherPosition(LauncherPosition launcherPosition)
+  {
+      g_settings_set_enum(usettings_, LAUNCHER_POSITION.c_str(), static_cast<int>(launcherPosition));
+      return false;
   }
 
   int GetFontSize() const
@@ -355,6 +383,8 @@ public:
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
   std::vector<int> launcher_widths_;
+  std::vector<int> launcher_heights_;
+  LauncherPosition cached_launcher_position_;
   FormFactor cached_form_factor_;
   double cursor_scale_;
   bool cached_double_click_activate_;
@@ -437,6 +467,29 @@ int Settings::LauncherWidth(int monitor) const
   }
 
   return pimpl->launcher_widths_[monitor];
+}
+
+void Settings::SetLauncherHeight(int launcher_height, int monitor)
+{
+  if (monitor < 0 || monitor >= (int)monitors::MAX)
+  {
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating laucher width.";
+  }
+  else
+  {
+    pimpl->launcher_heights_[monitor] = launcher_height;
+  }
+}
+
+int Settings::LauncherHeight(int monitor) const
+{
+  if (monitor < 0 || monitor >= (int)monitors::MAX)
+  {
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning 0.";
+    return 0;
+  }
+
+  return pimpl->launcher_heights_[monitor];
 }
 
 } // namespace unity

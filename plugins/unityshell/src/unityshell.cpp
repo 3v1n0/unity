@@ -4004,8 +4004,10 @@ void UnityScreen::initLauncher()
 
     auto* launcher = static_cast<Launcher*>(area);
     int launcher_width = w - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
+    int launcher_height = h - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
 
     unity::Settings::Instance().SetLauncherWidth(launcher_width, launcher->monitor);
+    unity::Settings::Instance().SetLauncherHeight(launcher_height, launcher->monitor);
     shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(launcher->monitor));
 
     CompOption::Value v(launcher_width);

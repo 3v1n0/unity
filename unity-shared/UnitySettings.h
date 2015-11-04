@@ -35,6 +35,12 @@ enum class FormFactor
   TV
 };
 
+enum class LauncherPosition
+{
+    LEFT = 0,
+    BOTTOM
+};
+
 class Settings
 {
 public:
@@ -48,6 +54,8 @@ public:
 
   void SetLauncherWidth(int launcher_width, int monitor);
   int LauncherWidth(int monitor) const;
+  void SetLauncherHeight(int launcher_height, int monitor);
+  int LauncherHeight(int mointor) const;
 
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
@@ -57,9 +65,11 @@ public:
   nux::Property<bool> lim_unfocused_popup;
   nux::Property<double> font_scaling;
   nux::ROProperty<bool> remote_content;
+  nux::RWProperty<LauncherPosition> launcher_position;
 
   sigc::signal<void> dpi_changed;
   sigc::signal<void> low_gfx_changed;
+  sigc::signal<void> launcher_position_changed;
 
 private:
   class Impl;
