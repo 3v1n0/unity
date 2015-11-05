@@ -98,29 +98,6 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 
 void PanelIndicatorEntryView::ShowMenu(int button)
 {
-  WindowManager& wm = WindowManager::Default();
-
-  if (wm.IsExpoActive())
-  {
-    // Delay the activation until expo is closed
-    auto conn = std::make_shared<connection::Wrapper>();
-    *conn = wm.terminate_expo.connect([this, conn, button] {
-      ShowMenu(button);
-      (*conn)->disconnect();
-    });
-
-    wm.TerminateExpo();
-    return;
-  }
-
-  if (wm.IsScaleActive())
-  {
-    if (type_ == MENU)
-      return;
-
-    wm.TerminateScale();
-  }
-
   auto const& abs_geo = GetAbsoluteGeometry();
   proxy_->ShowMenu(abs_geo.x, abs_geo.y + abs_geo.height, button);
 }
@@ -142,8 +119,30 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
     }
     else
     {
-      ShowMenu(button);
-      Refresh();
+      WindowManager& wm = WindowManager::Default();
+
+      if (wm.IsExpoActive())
+      {
+        // Delay the activation until expo is closed
+        auto conn = std::make_shared<connection::Wrapper>();
+        *conn = wm.terminate_expo.connect([this, conn, button] {
+          Activate(button);
+          (*conn)->disconnect();
+        });
+
+        wm.TerminateExpo();
+        return;
+      }
+
+      if (wm.IsScaleActive())
+      {
+        if (type_ == MENU)
+          return;
+
+        wm.TerminateScale();
+      }
+
+      Activate(button);
     }
   }
 }
