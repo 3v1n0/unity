@@ -738,10 +738,13 @@ void PanelView::OnEntryActivated(std::string const& panel, std::string const& en
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
                                 int x, int y, unsigned button)
 {
-  // This is ugly... But Nux fault!
-  menu_view_->IgnoreLeaveEvents(true);
-  WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
-  menu_view_->IgnoreLeaveEvents(false);
+  if (!track_menu_pointer_timeout_)
+  {
+    // This is ugly... But Nux fault!
+    menu_view_->IgnoreLeaveEvents(true);
+    WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
+    menu_view_->IgnoreLeaveEvents(false);
+  }
 }
 
 bool PanelView::ActivateFirstSensitive()
