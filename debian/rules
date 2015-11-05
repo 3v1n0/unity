@@ -9,10 +9,6 @@ gles2_architectures := armel armhf
 
 DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
 
-# avoid template instance removal (lp:1286284)
-export DEB_CXXFLAGS_MAINT_STRIP=-O3
-export DEB_CXXFLAGS_MAINT_APPEND=-O2
-
 # http://ccache.samba.org/manual.html#_precompiled_headers
 CCACHE_SLOPPINESS=time_macros
 
@@ -46,7 +42,7 @@ override_dh_install:
 	find debian/tmp/usr/lib -name \*.*a -exec rm {} \;
 	rm -f debian/tmp/usr/share/compiz/networkarearegion.xml
 	rm -f debian/tmp//usr/lib/compiz/libnetworkarearegion.so
-	rm -rf debian/tmp/usr/share/gconf/schemas/ 
+	rm -rf debian/tmp/usr/share/gconf/schemas/
 	dh_install --fail-missing
 
 override_dh_gencontrol:
@@ -64,4 +60,4 @@ ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 endif
 
 %:
-	dh $@ --with translations,quilt,python2,migrations --parallel
+	dh $@ --with translations,quilt,python2,python3,migrations --parallel
