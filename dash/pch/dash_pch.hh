@@ -27,3 +27,10 @@
 #include <memory>
 
 #include <Nux/Nux.h>
+
+#include <UnityCore/ModelRowAdaptor.h>
+#include <UnityCore/Model.h>
+#include <UnityCore/Category.h>
+#include <UnityCore/Categories.h>
+#include <UnityCore/Result.h>
+#include <UnityCore/Results.h>
