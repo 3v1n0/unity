@@ -125,6 +125,12 @@ int main(int argc, char **argv)
                                         WIDTH.CP(scale), HEIGHT.CP(scale),
                                         0, &TestRunner::InitWindowThread, test_runner));
 
+  nux::ObjectPtr<nux::BaseTexture> background_tex;
+  background_tex.Adopt(nux::CreateTextureFromFile("/usr/share/backgrounds/warty-final-ubuntu.png"));
+  nux::TexCoordXForm texxform;
+  auto tex_layer = std::make_shared<nux::TextureLayer>(background_tex->GetDeviceTexture(), texxform, nux::color::White);
+  wt->SetWindowBackgroundPaintLayer(tex_layer.get());
+
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller(tick_source);
   wt->Run(nullptr);
