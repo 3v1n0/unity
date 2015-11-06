@@ -450,6 +450,7 @@ void CoverArt::SetupViews()
   overlay_text_->SetLines(-3);
   overlay_text_->SetScale(scale);
   overlay_text_->SetText(_("No Image Available"));
+  overlay_text_->SetInputEventSensitivity(false);
 
   spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
 
