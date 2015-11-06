@@ -105,22 +105,14 @@ public:
     up_area_ = area;
   }
 
-  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-    if (RedirectedAncestor())
-    {
-      if (m_horizontal_scrollbar_enable && _hscrollbar->IsRedrawNeeded())
-        graphics::ClearGeometry(_hscrollbar->GetGeometry());
-      if (m_vertical_scrollbar_enable && _vscrollbar->IsRedrawNeeded())
-        graphics::ClearGeometry(_vscrollbar->GetGeometry());
-    }
-
-    ScrollView::DrawContent(graphics_engine, force_draw);
-  }
-
   void EnableScrolling(bool enable_scrolling)
   {
     _vscrollbar->SetInputEventSensitivity(enable_scrolling);
+  }
+
+  nux::VScrollBar* GetScrollbar() const
+  {
+    return _vscrollbar;
   }
 
 protected:
@@ -161,7 +153,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 {
   SetupViews(show_filters);
 
-  search_string.SetGetterFunction(sigc::mem_fun(this, &ScopeView::get_search_string));
+  search_string.SetGetterFunction([this] { return search_string_; });
   filters_expanded.changed.connect(sigc::mem_fun(this, &ScopeView::OnScopeFilterExpanded));
   view_type.changed.connect(sigc::mem_fun(this, &ScopeView::OnViewTypeChanged));
   scale.changed.connect(sigc::mem_fun(this, &ScopeView::UpdateScale));
@@ -243,6 +235,7 @@ void ScopeView::SetupViews(nux::Area* show_filters)
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
   scroll_view_->SetRightArea(show_filters);
+  scroll_view_->GetScrollbar()->queue_draw.connect(sigc::hide(sigc::mem_fun(scroll_layout_, &nux::VLayout::QueueDraw)));
 
   no_results_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   no_results_->SetTextColor(nux::color::White);
@@ -874,11 +867,6 @@ bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback co
     return true;
   }
   return false;
-}
-
-std::string ScopeView::get_search_string() const
-{
-  return search_string_;
 }
 
 void ScopeView::OnGroupExpanded(PlacesGroup* group)
