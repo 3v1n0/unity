@@ -445,7 +445,6 @@ void GnomeManager::Impl::CallDisplayManagerSeatMethod(std::string const& method,
   });
 }
 
-
 void GnomeManager::Impl::LockScreen(bool prompt)
 {
   EnsureCancelPendingAction();
