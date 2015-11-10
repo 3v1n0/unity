@@ -43,15 +43,15 @@ namespace lockscreen
 {
 namespace
 {
-const RawPixel PADDING                                = 10_em;
-const RawPixel LAYOUT_MARGIN                   = 20_em;
-const RawPixel MSG_LAYOUT_MARGIN         = 15_em;
-const RawPixel PROMPT_LAYOUT_MARGIN  =  5_em;
-const RawPixel SWITCH_ICON_HEIGHT           = 32_em;
-const RawPixel SWITCH_ICON_WIDTH           = 100_em;
-const RawPixel AVATAR_SIZE                           = 128_em;
-const RawPixel TEXT_INPUT_HEIGHT             =  36_em;
-const RawPixel TEXT_INPUT_WIDTH               = 320_em;
+const RawPixel LAYOUT_MARGIN        = 20_em;
+const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
+const RawPixel MSG_LAYOUT_PADDING   = 33_em;
+const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
+const RawPixel SWITCH_ICON_HEIGHT   = 32_em;
+const RawPixel SWITCH_ICON_WIDTH    = 100_em;
+const RawPixel AVATAR_SIZE          = 128_em;
+const RawPixel TEXT_INPUT_HEIGHT    =  36_em;
+const RawPixel TEXT_INPUT_WIDTH     = 320_em;
 const int PROMPT_FONT_SIZE = 14;
 
 std::string SanitizeMessage(std::string const& message)
@@ -82,6 +82,8 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
   , username_(nullptr)
   , msg_layout_(nullptr)
   , prompt_layout_(nullptr)
+  , SwitchIcon_(nullptr)
+  , Avatar_(nullptr)
 {
     user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
         AddPrompt(message, true, promise);
@@ -125,18 +127,18 @@ void KylinUserPromptView::ResetLayout()
     nux::Layout* switch_layout = new nux::HLayout();
 
     TextureCache& cache = TextureCache::GetDefault();
-    SwitchIcon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_WIDTH, SWITCH_ICON_HEIGHT));
+    SwitchIcon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_WIDTH.CP(scale), SWITCH_ICON_HEIGHT.CP(scale)));
     switch_layout->AddView(SwitchIcon_);
     SwitchIcon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
       session_manager_->SwitchToGreeter();
     });
-    switch_layout->SetMaximumSize(SWITCH_ICON_WIDTH, SWITCH_ICON_HEIGHT);
+    switch_layout->SetMaximumSize(SWITCH_ICON_WIDTH.CP(scale), SWITCH_ICON_HEIGHT.CP(scale));
     GetLayout()->AddLayout(switch_layout);
   }
 
-  Avatar_ = new IconTexture(LoadUserIcon(AVATAR_SIZE));
-  Avatar_->SetMinimumWidth(AVATAR_SIZE);
-  Avatar_->SetMaximumWidth(AVATAR_SIZE);
+  Avatar_ = new IconTexture(LoadUserIcon(AVATAR_SIZE.CP(scale)));
+  Avatar_->SetMinimumWidth(AVATAR_SIZE.CP(scale));
+  Avatar_->SetMaximumWidth(AVATAR_SIZE.CP(scale));
   GetLayout()->AddView(Avatar_);
 
   nux::Layout* prompt_layout = new nux::VLayout();
@@ -151,7 +153,7 @@ void KylinUserPromptView::ResetLayout()
 
   msg_layout_ = new nux::VLayout();
   msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN.CP(scale));
-  msg_layout_->SetTopAndBottomPadding(33, 0);
+  msg_layout_->SetTopAndBottomPadding(MSG_LAYOUT_PADDING.CP(scale), 0);
   prompt_layout->AddLayout(msg_layout_);
 
   prompt_layout_ = new nux::VLayout();
@@ -171,12 +173,6 @@ void KylinUserPromptView::UpdateSize()
   SetMinimumWidth(width);
   SetMaximumWidth(width);
   SetMinimumHeight(height);
-
-  if (nux::Layout* layout = GetLayout())
-  {
-    layout->SetLeftAndRightPadding(PADDING.CP(scale));
-    layout->SetTopAndBottomPadding(PADDING.CP(scale));
-  }
 
   if (username_)
     username_->SetScale(scale);
@@ -347,7 +343,7 @@ void KylinUserPromptView::AddMessage(std::string const& message, nux::Color cons
   QueueDraw();
 }
 
-nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(const RawPixel user_icon_size)
+nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(int user_icon_size)
 {
   glib::Error error;
   glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(session_manager_->UserIconFile().c_str(), user_icon_size, user_icon_size, &error));

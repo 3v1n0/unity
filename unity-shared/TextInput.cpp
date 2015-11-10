@@ -54,8 +54,8 @@ const RawPixel TOOLTIP_Y_OFFSET  =  3_em;
 const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
 
-const RawPixel LOGIN_ICON_WIDTH  = 32_em;
-const RawPixel LOGIN_ICON_HEIGHT = 62_em;
+const RawPixel LOGIN_ICON_WIDTH  = 62_em;
+const RawPixel LOGIN_ICON_HEIGHT = 36_em;
 
 std::string WARNING_ICON    = "dialog-warning-symbolic";
 // Fonts
@@ -272,12 +272,12 @@ nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(int icon_size)
         nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
         cairo_t* cr = cg.GetInternalContext();
         cairo_text_extents_t et;
-        const std::string login = _("login");
+        const std::string login = _("Login");
         double x, y;
 
         gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
         cairo_paint(cr);
-        cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+        cairo_select_font_face(cr, "Ubuntu", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
         cairo_set_font_size(cr, 18);
         cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
 

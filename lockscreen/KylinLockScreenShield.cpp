@@ -27,7 +27,6 @@
 #include "CofView.h"
 #include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
-//#include "UserPromptView.h"
 #include "KylinUserPromptView.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UnitySettings.h"
@@ -48,7 +47,6 @@ KylinShield::KylinShield(session::Manager::Ptr const& session_manager,
                int monitor_num, bool is_primary)
   : AbstractShield(session_manager, nullptr, accelerators, prompt_view, monitor_num, is_primary)
   , bg_settings_(std::make_shared<BackgroundSettings>())
-  , panel_view_(nullptr)
   , cof_view_(nullptr)
 {
   UpdateScale();
@@ -59,19 +57,14 @@ KylinShield::KylinShield(session::Manager::Ptr const& session_manager,
   unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &KylinShield::UpdateScale));
   geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdateBackgroundTexture();});
 
-  monitor.changed.connect([this] (int monitor) {
+  monitor.changed.connect([this] (int) {
     UpdateScale();
-
-    if (panel_view_)
-      panel_view_->monitor = monitor;
-
     UpdateBackgroundTexture();
   });
 
   primary.changed.connect([this] (bool is_primary) {
     regrab_conn_->disconnect();
     is_primary ? ShowPrimaryView() : ShowSecondaryView();
-    if (panel_view_) panel_view_->SetInputEventSensitivity(is_primary);
     QueueRelayout();
     QueueDraw();
   });
@@ -152,7 +145,6 @@ void KylinShield::ShowPrimaryView()
     {
       prompt_view_->scale = scale();
       prompt_layout_->AddView(prompt_view_.GetPointer());
-      prompt_layout_->AddSpace(0, 10);
     }
 
     GrabScreen(false);
@@ -170,13 +162,12 @@ void KylinShield::ShowPrimaryView()
   if (prompt_view_)
   {
     prompt_view_->scale = scale();
-    prompt_layout_->AddSpace(0, 10);
     prompt_layout_->AddView(prompt_view_.GetPointer());
   }
 
   // 10 is just a random number to center the prompt view.
   main_layout->AddSpace(0, 10);
-  main_layout->AddLayout(prompt_layout_.GetPointer());
+  main_layout->AddLayout(prompt_layout_.GetPointer(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   main_layout->AddSpace(0, 10);
 }
 
@@ -207,20 +198,6 @@ nux::Area* KylinShield::FindKeyFocusArea(unsigned etype, unsigned long keysym, u
   {
     grab_key.emit(modifiers, keysym);
 
-    if (accelerators_)
-    {
-      if (etype == nux::EVENT_KEY_DOWN)
-      {
-        if (accelerators_->HandleKeyPress(keysym, modifiers))
-          return panel_view_;
-      }
-      else if (etype == nux::EVENT_KEY_UP)
-      {
-        if (accelerators_->HandleKeyRelease(keysym, modifiers))
-          return panel_view_;
-      }
-    }
-
     if (prompt_view_)
     {
       auto* focus_view = prompt_view_->focus_view();
@@ -246,17 +223,6 @@ nux::Area* KylinShield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEven
     return this;
 
   return area;
-}
-
-bool KylinShield::IsIndicatorOpen() const
-{
-  return panel_view_ ? panel_view_->active() : false;
-}
-
-void KylinShield::ActivatePanel()
-{
-  if (panel_view_)
-    panel_view_->ActivatePanel();
 }
 
 }

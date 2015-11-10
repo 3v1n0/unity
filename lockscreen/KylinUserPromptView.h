@@ -58,7 +58,7 @@ protected:
   void ResetLayout();
   void UpdateSize();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
-  nux::ObjectPtr<nux::BaseTexture> LoadUserIcon(const RawPixel icon_size);
+  nux::ObjectPtr<nux::BaseTexture> LoadUserIcon(int icon_size);
 
 private:
   session::Manager::Ptr session_manager_;
@@ -67,11 +67,10 @@ private:
   nux::VLayout* msg_layout_;
   nux::VLayout* prompt_layout_;
   std::deque<TextInput*> focus_queue_;
-
-  nux::Geometry cached_focused_geo_;
-
   IconTexture* SwitchIcon_;
   IconTexture* Avatar_;
+
+  nux::Geometry cached_focused_geo_;
 };
 
 }

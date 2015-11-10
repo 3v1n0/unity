@@ -32,7 +32,6 @@ namespace lockscreen
 class BackgroundSettings;
 class UserAuthenticator;
 class AbstractUserPromptView;
-class Panel;
 class CofView;
 
 class KylinShield : public AbstractShield
@@ -44,8 +43,8 @@ public:
          int monitor, bool is_primary);
 
   bool HasGrab() const override;
-  bool IsIndicatorOpen() const override;
-  void ActivatePanel() override;
+  bool IsIndicatorOpen() const override { return false;}
+  void ActivatePanel() override {}
 
 protected:
   bool AcceptKeyNavFocus() override;
@@ -67,7 +66,6 @@ private:
   connection::Wrapper panel_active_conn_;
   connection::Wrapper regrab_conn_;
   glib::Source::UniquePtr regrab_timeout_;
-  Panel* panel_view_;
   CofView* cof_view_;
 };
 
