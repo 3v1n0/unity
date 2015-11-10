@@ -194,6 +194,8 @@ public:
 
   Window GetTopWindowAbove(Window xid) const;
 
+  Cursor GetCachedCursor(unsigned int) const;
+
   void UnmapAllNoNuxWindowsSync();
   static bool IsNuxWindow(CompWindow* value);
 

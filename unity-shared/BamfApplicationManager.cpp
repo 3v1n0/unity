@@ -425,8 +425,7 @@ void Application::UpdateWindows()
 
   bool was_empty = windows_.empty();
 
-  std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
-  for (GList* l = children.get(); l; l = l->next)
+  for (GList* l = bamf_view_peek_children(bamf_view_); l; l = l->next)
   {
     if (ApplicationWindowPtr const& window = pool::EnsureWindow(manager_, static_cast<BamfView*>(l->data)))
     {
@@ -686,15 +685,15 @@ ApplicationWindowPtr Manager::GetWindowForId(Window xid) const
       return win_pair.second;
   }
 
-  // TODO: use bamf_matcher_get_window_for_xid
+  if (BamfWindow* win = bamf_matcher_get_window_for_xid(matcher_, xid))
+    return pool::EnsureWindow(*this, reinterpret_cast<BamfView*>(win));
+
   auto* app = bamf_matcher_get_application_for_xid(matcher_, xid);
 
   if (!app)
     return nullptr;
 
-  std::shared_ptr<GList> windows(bamf_view_get_children(reinterpret_cast<BamfView*>(app)), g_list_free);
-
-  for (GList* l = windows.get(); l; l = l->next)
+  for (GList* l = bamf_view_peek_children(reinterpret_cast<BamfView*>(app)); l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;

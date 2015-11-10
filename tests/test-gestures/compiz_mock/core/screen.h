@@ -58,6 +58,7 @@ public:
   }
 
   Cursor invisibleCursor() {return 1;}
+  Cursor cursorCache(unsigned int) {return 0;}
 
   int width_;
   int height_;

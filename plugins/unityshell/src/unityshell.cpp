@@ -381,6 +381,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
      optionSetPanelFirstMenuNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetSpreadAppWindowsInitiate(boost::bind(&UnityScreen::spreadAppWindowsInitiate, this, _1, _2, _3));
+     optionSetSpreadAppWindowsAnywhereInitiate(boost::bind(&UnityScreen::spreadAppWindowsAnywhereInitiate, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashTapDurationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2106,7 +2108,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
 
   super_keypressed_ = true;
-  int when = options[7].value().i();  // XEvent time in millisec
+  int when = CompOption::getIntOptionNamed(options, "time");
   launcher_controller_->HandleLauncherKeyPress(when);
   EnsureSuperKeybindings ();
 
@@ -2138,7 +2140,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   bool was_tap = state & CompAction::StateTermTapped;
   bool tap_handled = false;
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
-  int when = options[7].value().i();  // XEvent time in millisec
+  int when = CompOption::getIntOptionNamed(options, "time");
 
   // hack...if the scale just wasn't activated AND the 'when' time is within time to start the
   // dash then assume was_tap is also true, since the ScalePlugin doesn't accept that state...
@@ -2209,7 +2211,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
   /* In order to avoid too many events when keeping the keybinding pressed,
    * that would make the unity-panel-service to go crazy (see bug #948522)
    * we need to filter them, just considering an event every 750 ms */
-  int event_time = options[7].value().i();  // XEvent time in millisec
+  int event_time = CompOption::getIntOptionNamed(options, "time");
 
   if (event_time - first_menu_keypress_time_ < 750)
   {
@@ -2276,6 +2278,38 @@ bool UnityScreen::showDesktopKeyInitiate(CompAction* action,
                                          CompOption::Vector& options)
 {
   WM.ShowDesktop();
+  return true;
+}
+
+void UnityScreen::SpreadAppWindows(bool anywhere)
+{
+  if (ApplicationPtr const& active_app = ApplicationManager::Default().GetActiveApplication())
+  {
+    std::vector<Window> windows;
+
+    for (auto& window : active_app->GetWindows())
+    {
+      if (anywhere || WM.IsWindowOnCurrentDesktop(window->window_id()))
+        windows.push_back(window->window_id());
+    }
+
+    WM.ScaleWindowGroup(windows, 0, true);
+  }
+}
+
+bool UnityScreen::spreadAppWindowsInitiate(CompAction* action,
+                                           CompAction::State state,
+                                           CompOption::Vector& options)
+{
+  SpreadAppWindows(false);
+  return true;
+}
+
+bool UnityScreen::spreadAppWindowsAnywhereInitiate(CompAction* action,
+                                                   CompAction::State state,
+                                                   CompOption::Vector& options)
+{
+  SpreadAppWindows(true);
   return true;
 }
 
@@ -2632,7 +2666,7 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
-  hud_keypress_time_ = options[7].value().i();  // XEvent time in millisec
+  hud_keypress_time_ = CompOption::getIntOptionNamed(options, "time");
 
   // pass key through
   return false;
@@ -2653,7 +2687,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   if (!(state & CompAction::StateTermTapped))
     return false;
 
-  int release_time = options[7].value().i();  // XEvent time in millisec
+  int release_time = CompOption::getIntOptionNamed(options, "time");
   int tap_duration = release_time - hud_keypress_time_;
   if (tap_duration > local::ALT_TAP_DURATION)
   {
@@ -3886,9 +3920,9 @@ void UnityScreen::OnScreenLocked()
     screen->removeAction(&action);
 
   // We notify that super/alt have been released, to avoid to leave unity in inconsistent state
-  CompOption::Vector options(8);
-  options[7].setName("time", CompOption::TypeInt);
-  options[7].value().set<int>(screen->getCurrentTime());
+  CompOption::Vector options(1);
+  options.back().setName("time", CompOption::TypeInt);
+  options.back().value().set<int>(screen->getCurrentTime());
 
   showLauncherKeyTerminate(&optionGetShowLauncher(), CompAction::StateTermKey, options);
   showMenuBarTerminate(&optionGetShowMenuBar(), CompAction::StateTermKey, options);

@@ -1486,6 +1486,11 @@ void PluginAdapter::OnWindowClosed(CompWindow *w)
     _last_focused_window = NULL;
 }
 
+Cursor PluginAdapter::GetCachedCursor(unsigned int cursor_name) const
+{
+  return screen->cursorCache(cursor_name);
+}
+
 void PluginAdapter::UnmapAllNoNuxWindowsSync()
 {
   for (auto const& window : m_Screen->windows())
