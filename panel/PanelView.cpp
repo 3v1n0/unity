@@ -365,7 +365,8 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
 
-      refine_x_pos += unity::Settings::Instance().LauncherWidth(monitor_);
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        refine_x_pos += unity::Settings::Instance().LauncherSize(monitor_);
       GfxContext.QRP_1Tex(refine_x_pos, geo.y,
                           bg_refine_tex_->GetWidth(),
                           bg_refine_tex_->GetHeight(),
@@ -462,7 +463,8 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::Geometry refine_geo = geo;
 
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
-      refine_x_pos += unity::Settings::Instance().LauncherWidth(monitor_);
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        refine_x_pos += unity::Settings::Instance().LauncherSize(monitor_);
 
       refine_geo.x = refine_x_pos;
       refine_geo.width = bg_refine_tex_->GetWidth();

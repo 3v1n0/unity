@@ -52,10 +52,8 @@ public:
   void SetLowGfxMode(const bool low_gfx);
   EMConverter::Ptr const& em(int monitor = 0) const;
 
-  void SetLauncherWidth(int launcher_width, int monitor);
-  int LauncherWidth(int monitor) const;
-  void SetLauncherHeight(int launcher_height, int monitor);
-  int LauncherHeight(int mointor) const;
+  void SetLauncherSize(int launcher_size, int monitor);
+  int LauncherSize(int mointor) const;
 
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
@@ -69,7 +67,6 @@ public:
 
   sigc::signal<void> dpi_changed;
   sigc::signal<void> low_gfx_changed;
-  sigc::signal<void> launcher_position_changed;
 
 private:
   class Impl;

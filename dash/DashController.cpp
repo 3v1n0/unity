@@ -235,8 +235,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
-      std::cout << "Launcher_widht: "  << std::endl;
-      int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+      int launcher_width = unity::Settings::Instance().LauncherSize(monitor_);
 
       // We want to cover as much of the screen as possible to grab any mouse events outside
       // of our window
@@ -247,8 +246,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
   }
   else
   {
-    int launcher_height = unity::Settings::Instance().LauncherHeight(monitor_);
-    std::cout << "launcher_heigth: " << launcher_height << std::endl;
+    int launcher_height = unity::Settings::Instance().LauncherSize(monitor_);
     return nux::Geometry (monitor_geo.x,
                           monitor_geo.y,
                           monitor_geo.width,
@@ -270,7 +268,7 @@ void Controller::Relayout(bool check_monitor)
   window_->SetGeometry(geo);
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
-    int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+    int launcher_width = unity::Settings::Instance().LauncherSize(monitor_);
     view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
   }
   else
@@ -335,7 +333,7 @@ bool Controller::ShowDash()
   screen_ungrabbed_slot_->disconnect();
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
-    int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+    int launcher_width = unity::Settings::Instance().LauncherSize(monitor_);
     view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
   }
   else

@@ -63,8 +63,7 @@ const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 const std::string REMOTE_CONTENT_SETTINGS = "com.canonical.Unity.Lenses";
 const std::string REMOTE_CONTENT_KEY = "remote-content-search";
 
-const int DEFAULT_LAUNCHER_WIDTH = 64;
-const int DEFAULT_LAUNCHER_HEIGHT = 64;
+const int DEFAULT_LAUNCHER_SIZE = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
 const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
 const double DEFAULT_DPI = 96.0f;
@@ -84,8 +83,7 @@ public:
     , ubuntu_ui_settings_(g_settings_new(UBUNTU_UI_SETTINGS.c_str()))
     , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
     , remote_content_settings_(g_settings_new(REMOTE_CONTENT_SETTINGS.c_str()))
-    , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
-    , launcher_heights_(monitors::MAX, DEFAULT_LAUNCHER_HEIGHT)
+    , launcher_sizes_(monitors::MAX, DEFAULT_LAUNCHER_SIZE)
     , cached_launcher_position_(LauncherPosition::BOTTOM)
     , cached_form_factor_(FormFactor::DESKTOP)
     , cursor_scale_(1.0)
@@ -116,6 +114,7 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LAUNCHER_POSITION, [this] (GSettings*, const gchar*) {
       CacheLauncherPosition();
       parent_->launcher_position.changed.emit(cached_launcher_position_);
+      std::cout << "Unitysettings position changed: " <<  static_cast<int>(Settings::Instance().launcher_position()) << std::endl;
     });
 
     signals_.Add<void, GSettings*, const gchar*>(ubuntu_ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
@@ -382,8 +381,7 @@ public:
   glib::Source::UniquePtr changing_gnome_settings_timeout_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
-  std::vector<int> launcher_widths_;
-  std::vector<int> launcher_heights_;
+  std::vector<int> launcher_sizes_;
   LauncherPosition cached_launcher_position_;
   FormFactor cached_form_factor_;
   double cursor_scale_;
@@ -446,19 +444,19 @@ EMConverter::Ptr const& Settings::em(int monitor) const
   return pimpl->em(monitor);
 }
 
-void Settings::SetLauncherWidth(int launcher_width, int monitor)
+void Settings::SetLauncherSize(int launcher_size, int monitor)
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating laucher width.";
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating laucher size.";
   }
   else
   {
-    pimpl->launcher_widths_[monitor] = launcher_width;
+    pimpl->launcher_sizes_[monitor] = launcher_size;
   }
 }
 
-int Settings::LauncherWidth(int monitor) const
+int Settings::LauncherSize(int monitor) const
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
@@ -466,30 +464,7 @@ int Settings::LauncherWidth(int monitor) const
     return 0;
   }
 
-  return pimpl->launcher_widths_[monitor];
-}
-
-void Settings::SetLauncherHeight(int launcher_height, int monitor)
-{
-  if (monitor < 0 || monitor >= (int)monitors::MAX)
-  {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating laucher width.";
-  }
-  else
-  {
-    pimpl->launcher_heights_[monitor] = launcher_height;
-  }
-}
-
-int Settings::LauncherHeight(int monitor) const
-{
-  if (monitor < 0 || monitor >= (int)monitors::MAX)
-  {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning 0.";
-    return 0;
-  }
-
-  return pimpl->launcher_heights_[monitor];
+  return pimpl->launcher_sizes_[monitor];
 }
 
 } // namespace unity

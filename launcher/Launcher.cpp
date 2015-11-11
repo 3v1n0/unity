@@ -1343,10 +1343,9 @@ void Launcher::OnMonitorChanged(int new_monitor)
   auto monitor_geo = uscreen->GetMonitorGeometry(new_monitor);
   unity::panel::Style &panel_style = panel::Style::Instance();
   int panel_height = panel_style.PanelHeight(new_monitor);
-  int launcher_height = unity::Settings::Instance().LauncherHeight(new_monitor);
+//  int launcher_height = unity::Settings::Instance().LauncherSize(new_monitor);
+  int launcher_height = icon_size_ + ICON_PADDING * 2 + RIGHT_LINE_WIDTH - 2;
   //Todo: Get wrong height , need investigate
-  std::cout << "Launcher.cpp 1348 launcherheight: " << launcher_height << ":"<< monitor_geo.y << ":" << monitor_geo.height << std::endl;
-
 
   cv_ = unity::Settings::Instance().em(monitor);
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
@@ -1842,7 +1841,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   bool force_show_window;
   nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute, force_show_window);
-  bkg_box.width -= RIGHT_LINE_WIDTH.CP(cv_);
+  if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
+    bkg_box.width -= RIGHT_LINE_WIDTH.CP(cv_);
 
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER &&
       bkg_box.x + bkg_box.width <= 0 &&
