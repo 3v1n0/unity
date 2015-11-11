@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2015-10-15 10:03+0800\n"
+"POT-Creation-Date: 2013-04-17 16:00+0100\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Italian\n"
@@ -38,27 +38,6 @@ msgstr ""
 msgid " or Right"
 msgstr ""
 
-#, c-format
-msgid "%s Desktop"
-msgstr ""
-
-#. The "%s" is used in the dash preview to display the "<hint>: <value>" infos
-#, c-format
-msgid "%s:"
-msgstr ""
-
-#, c-format
-msgid "%s: running"
-msgstr ""
-
-#, c-format
-msgid "%s: running: %zu windows open"
-msgstr ""
-
-#, c-format
-msgid "%s: selected"
-msgstr ""
-
 msgid "Activate"
 msgstr ""
 
@@ -68,23 +47,13 @@ msgstr ""
 msgid "Arrow Keys"
 msgstr ""
 
-#. avoid wrap lines
-msgid "Caps lock is on"
-msgstr ""
-
 msgid "Categories"
-msgstr ""
-
-msgid "Close"
 msgstr ""
 
 msgid "Closes the current window."
 msgstr ""
 
-msgid "Comments"
-msgstr ""
-
-msgid "Ctrl + Alt + Num (keypad)"
+msgid "Ctrl + Alt + Num"
 msgstr ""
 
 msgid "Ctrl + Tab"
@@ -96,10 +65,6 @@ msgstr ""
 msgid "Dash"
 msgstr ""
 
-msgid ""
-"Do you want to force the application to exit, or wait for it to respond?"
-msgstr ""
-
 msgid "Drop To Add Application"
 msgstr ""
 
@@ -109,13 +74,10 @@ msgstr ""
 msgid "Eject parent drive"
 msgstr ""
 
-msgid "Empty Trash…"
+msgid "Empty Trash..."
 msgstr ""
 
 msgid "Enter"
-msgstr ""
-
-msgid "Exit"
 msgstr ""
 
 msgid "Filter results"
@@ -167,12 +129,6 @@ msgid "Hi %s, you have open files you might want to save. Would you like to…"
 msgstr ""
 
 msgid "Hibernate"
-msgstr ""
-
-msgid "Installing…"
-msgstr ""
-
-msgid "Invalid password, please try again"
 msgstr ""
 
 msgid "Keyboard Shortcuts"
@@ -245,9 +201,6 @@ msgstr ""
 msgid "Opens the Dash Music Lens."
 msgstr ""
 
-msgid "Opens the Dash Photo Lens."
-msgstr ""
-
 msgid "Opens the Dash Video Lens."
 msgstr ""
 
@@ -269,15 +222,6 @@ msgstr ""
 msgid "Opens the window accessibility menu."
 msgstr ""
 
-msgid ""
-"Other users are logged in. Restarting or shutting down will close their open "
-"applications and may cause them to lose work.\n"
-"\n"
-msgstr ""
-
-msgid "Password"
-msgstr ""
-
 msgid "Places the window in corresponding position."
 msgstr ""
 
@@ -294,9 +238,6 @@ msgid "Resizes the window."
 msgstr ""
 
 msgid "Restart"
-msgstr ""
-
-msgid "Restore Windows"
 msgstr ""
 
 msgid "Restores or minimises the current window."
@@ -317,9 +258,6 @@ msgstr ""
 msgid "Same as clicking on a Launcher icon."
 msgstr ""
 
-msgid "Search your computer"
-msgstr ""
-
 msgid "Search your computer and online sources"
 msgstr ""
 
@@ -338,13 +276,7 @@ msgstr ""
 msgid "Sorry, there is nothing that matches your search."
 msgstr ""
 
-msgid "Spreads all windows in all the workspaces."
-msgstr ""
-
 msgid "Spreads all windows in the current workspace."
-msgstr ""
-
-msgid "Spreads all windows."
 msgstr ""
 
 msgid "Suspend"
@@ -357,9 +289,6 @@ msgid "Switches applications via the Launcher."
 msgstr ""
 
 msgid "Switches between Lenses."
-msgstr ""
-
-msgid "Switches between applications from all workspaces."
 msgstr ""
 
 msgid "Switches between applications."
@@ -380,9 +309,6 @@ msgstr ""
 msgid "The drive has been successfully ejected"
 msgstr ""
 
-msgid "This window is not responding"
-msgstr ""
-
 msgid "Trash"
 msgstr ""
 
@@ -399,9 +325,6 @@ msgstr "Rimuovi da Launcher"
 msgid "Unmount"
 msgstr ""
 
-msgid "Username"
-msgstr ""
-
 #. Application is being installed, or hasn't been installed yet
 msgid "Waiting to install"
 msgstr ""
@@ -413,12 +336,6 @@ msgid "Workspace Switcher"
 msgstr ""
 
 msgid "Workspaces"
-msgstr ""
-
-msgid "_Force Quit"
-msgstr ""
-
-msgid "_Wait"
 msgstr ""
 
 #, fuzzy

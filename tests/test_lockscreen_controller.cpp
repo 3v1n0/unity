@@ -20,7 +20,6 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
-//#include "lockscreen/UserPromptView.h"
 #include "lockscreen/LockScreenAbstractPromptView.h"
 #include "lockscreen/LockScreenController.h"
 
