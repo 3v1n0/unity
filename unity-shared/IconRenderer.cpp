@@ -1109,7 +1109,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
 
     int markerY = 0;
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
     {
       if (pip_style == OUTSIDE_TILE)
       {

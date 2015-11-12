@@ -189,6 +189,10 @@ Launcher::Launcher(MockableBaseWindow* parent,
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
+  launcher_position_changed_ = unity::Settings::Instance().launcher_position.changed.connect([this] (LauncherPosition) {
+    OnMonitorChanged(monitor);
+    QueueDraw();
+  });
 
   unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Launcher::OnDPIChanged));
 
@@ -1343,9 +1347,7 @@ void Launcher::OnMonitorChanged(int new_monitor)
   auto monitor_geo = uscreen->GetMonitorGeometry(new_monitor);
   unity::panel::Style &panel_style = panel::Style::Instance();
   int panel_height = panel_style.PanelHeight(new_monitor);
-//  int launcher_height = unity::Settings::Instance().LauncherSize(new_monitor);
-  int launcher_height = icon_size_ + ICON_PADDING * 2 + RIGHT_LINE_WIDTH - 2;
-  //Todo: Get wrong height , need investigate
+  int launcher_height = unity::Settings::Instance().LauncherSize(new_monitor);
 
   cv_ = unity::Settings::Instance().em(monitor);
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
@@ -1364,6 +1366,7 @@ void Launcher::UpdateOptions(Options::Ptr options)
   SetHideMode(options->hide_mode);
   SetScrollInactiveIcons(options->scroll_inactive_icons);
   SetLauncherMinimizeWindow(options->minimize_window_on_click);
+  OnMonitorChanged(monitor);
 
   if (model_)
   {

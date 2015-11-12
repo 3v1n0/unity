@@ -368,6 +368,8 @@ private:
   BaseTexturePtr launcher_pressure_effect_;
   BackgroundEffectHelper bg_effect_helper_;
 
+  connection::Wrapper launcher_position_changed_;
+
   nux::animation::AnimateValue<float> auto_hide_animation_;
   nux::animation::AnimateValue<float> hover_animation_;
   nux::animation::AnimateValue<float> drag_over_animation_;

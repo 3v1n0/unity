@@ -114,7 +114,6 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LAUNCHER_POSITION, [this] (GSettings*, const gchar*) {
       CacheLauncherPosition();
       parent_->launcher_position.changed.emit(cached_launcher_position_);
-      std::cout << "Unitysettings position changed: " <<  static_cast<int>(Settings::Instance().launcher_position()) << std::endl;
     });
 
     signals_.Add<void, GSettings*, const gchar*>(ubuntu_ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
