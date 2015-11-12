@@ -53,9 +53,7 @@ const RawPixel HINT_PADDING = 3_em;
 const RawPixel TOOLTIP_Y_OFFSET  =  3_em;
 const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
-
-const RawPixel LOGIN_ICON_WIDTH  = 62_em;
-const RawPixel LOGIN_ICON_HEIGHT = 36_em;
+const RawPixel LOGIN_ICON_SIZE   = 34_em;
 
 std::string WARNING_ICON    = "dialog-warning-symbolic";
 // Fonts
@@ -103,10 +101,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , last_height_(-1)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
-    layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), 0);
-  else
-    layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), TEXT_INPUT_RIGHT_BORDER.CP(scale));
+  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING.CP(scale), TEXT_INPUT_RIGHT_BORDER.CP(scale));
   layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT.CP(scale));
   SetLayout(layout_);
 
@@ -262,42 +257,11 @@ void TextInput::UpdateHintFont()
 
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(int icon_size)
 {
+  TextureCache& cache = TextureCache::GetDefault();
   if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
-  {
-    glib::Error error;
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(PKGDATADIR"/login.png", LOGIN_ICON_WIDTH, LOGIN_ICON_HEIGHT, &error));
-
-    if (pixbuf != nullptr)
-    {
-        nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
-        cairo_t* cr = cg.GetInternalContext();
-        cairo_text_extents_t et;
-        const std::string login = _("Login");
-        double x, y;
-
-        gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
-        cairo_paint(cr);
-        cairo_select_font_face(cr, "Ubuntu", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-        cairo_set_font_size(cr, 18);
-        cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-
-        cairo_text_extents(cr, login.c_str(), &et);
-        x = LOGIN_ICON_WIDTH/2 - (et.width/2 + et.x_bearing);
-        y = LOGIN_ICON_HEIGHT/2 - (et.height/2 + et.y_bearing);
-        cairo_move_to(cr, x, y);
-        cairo_show_text(cr, login.c_str());
-
-        return texture_ptr_from_cairo_graphics(cg);
-    } else {
-        TextureCache& cache = TextureCache::GetDefault();
-        return cache.FindTexture("arrow_right.png", icon_size, icon_size);
-    }
-  }
+    return cache.FindTexture("login.png", LOGIN_ICON_SIZE.CP(scale), LOGIN_ICON_SIZE.CP(scale));
   else
-  {
-    TextureCache& cache = TextureCache::GetDefault();
     return cache.FindTexture("arrow_right.png", icon_size, icon_size);
-  }
 }
 
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)

@@ -47,8 +47,7 @@ const RawPixel LAYOUT_MARGIN        = 20_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
 const RawPixel MSG_LAYOUT_PADDING   = 33_em;
 const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
-const RawPixel SWITCH_ICON_HEIGHT   = 32_em;
-const RawPixel SWITCH_ICON_WIDTH    = 100_em;
+const RawPixel SWITCH_ICON_SIZE     = 32_em;
 const RawPixel AVATAR_SIZE          = 128_em;
 const RawPixel TEXT_INPUT_HEIGHT    =  36_em;
 const RawPixel TEXT_INPUT_WIDTH     = 320_em;
@@ -127,12 +126,12 @@ void KylinUserPromptView::ResetLayout()
     nux::Layout* switch_layout = new nux::HLayout();
 
     TextureCache& cache = TextureCache::GetDefault();
-    SwitchIcon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_WIDTH.CP(scale), SWITCH_ICON_HEIGHT.CP(scale)));
+    SwitchIcon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale)));
     switch_layout->AddView(SwitchIcon_);
     SwitchIcon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
       session_manager_->SwitchToGreeter();
     });
-    switch_layout->SetMaximumSize(SWITCH_ICON_WIDTH.CP(scale), SWITCH_ICON_HEIGHT.CP(scale));
+    switch_layout->SetMaximumSize(SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale));
     GetLayout()->AddLayout(switch_layout);
   }
 
@@ -167,7 +166,7 @@ void KylinUserPromptView::ResetLayout()
 
 void KylinUserPromptView::UpdateSize()
 {
-  auto width = 15 * Settings::GRID_SIZE.CP(scale);
+  auto width = 13 * Settings::GRID_SIZE.CP(scale);
   auto height = 3 * Settings::GRID_SIZE.CP(scale);
 
   SetMinimumWidth(width);
