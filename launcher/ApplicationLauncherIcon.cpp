@@ -559,14 +559,13 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     g_file_monitor_set_rate_limit(_desktop_file_monitor, 2000);
 
     _gsignals.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
-      [this] (GFileMonitor*, GFile* f, GFile*, GFileMonitorEvent event_type) {
+      [this, desktop_file] (GFileMonitor*, GFile*,  GFile*, GFileMonitorEvent event_type) {
       switch (event_type)
       {
         case G_FILE_MONITOR_EVENT_DELETED:
         {
-          glib::Object<GFile> file(f, glib::AddRef());
-          _source_manager.AddTimeoutSeconds(1, [this, file] {
-            if (!g_file_query_exists(file, nullptr))
+          _source_manager.AddTimeoutSeconds(1, [this, desktop_file] {
+            if (!g_file_query_exists(desktop_file, nullptr))
             {
               UnStick();
               LogUnityEvent(ApplicationEventType::DELETE);
@@ -1093,6 +1092,22 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
   if (IsRunning())
   {
+    if (DesktopFile().empty() && !IsSticky())
+    {
+      /* Add to Dash */
+      glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Add to Dash"));
+      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+      _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+        [this] (DbusmenuMenuitem*, unsigned) {
+          app_->CreateLocalDesktopFile();
+      });
+
+      result.push_back(menu_item);
+    }
+
     if (!quit_item)
       quit_item = _menu_items[MenuItemType::QUIT];
 

@@ -38,6 +38,7 @@ DECLARE_LOGGER(logger, "unity.menu.manager");
 
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string LIM_KEY = "integrated-menus";
+const std::string SHOW_MENUS_NOW_DELAY = "show-menus-now-delay";
 const std::string ALWAYS_SHOW_MENUS_KEY = "always-show-menus";
 }
 
@@ -61,18 +62,24 @@ struct Manager::Impl : sigc::trackable
     indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::AddIndicator));
     indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::RemoveIndicator));
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
+    indicators_->on_entry_activated.connect(sigc::mem_fun(this, &Impl::EntryActivated));
     indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
     WindowManager::Default().window_focus_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::GrabMnemonicsForActiveWindow)));
 
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
       parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
     });
+    signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + SHOW_MENUS_NOW_DELAY, [this] (GSettings*, const gchar*) {
+      parent_->show_menus_wait = g_settings_get_uint(settings_, SHOW_MENUS_NOW_DELAY.c_str());
+    });
     signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + ALWAYS_SHOW_MENUS_KEY, [this] (GSettings*, const gchar*) {
       parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
     });
 
     parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    parent_->show_menus_wait = g_settings_get_uint(settings_, SHOW_MENUS_NOW_DELAY.c_str());
     parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
+    parent_->menu_open = indicators_->GetActiveEntry() != nullptr;
   }
 
   ~Impl()
@@ -135,18 +142,18 @@ struct Manager::Impl : sigc::trackable
     {
       auto key = gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic));
       glib::String accelerator(gtk_accelerator_name(key, GDK_MOD1_MASK));
-      auto action = std::make_shared<CompAction>();
       auto const& id = entry->id();
 
-      action->keyFromString(accelerator);
-      action->setState(CompAction::StateInitKey);
-      action->setInitiate([this, id] (CompAction* action, CompAction::State, CompOption::Vector&) {
+      CompAction action;
+      action.keyFromString(accelerator);
+      action.setState(CompAction::StateInitKey);
+      action.setInitiate([this, id] (CompAction* action, CompAction::State, CompOption::Vector&) {
         LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
         return parent_->key_activate_entry.emit(id);
       });
 
-      entry_actions_.insert({entry, action});
-      key_grabber_->AddAction(*action);
+      if (uint32_t action_id = key_grabber_->AddAction(action))
+        entry_actions_.insert({entry, action_id});
     }
   }
 
@@ -156,7 +163,7 @@ struct Manager::Impl : sigc::trackable
 
     if (it != entry_actions_.end())
     {
-      key_grabber_->RemoveAction(*it->second);
+      key_grabber_->RemoveAction(it->second);
       entry_actions_.erase(it);
     }
   }
@@ -165,7 +172,7 @@ struct Manager::Impl : sigc::trackable
   {
     for (auto it = entry_actions_.begin(); it != entry_actions_.end();)
     {
-      key_grabber_->RemoveAction(*it->second);
+      key_grabber_->RemoveAction(it->second);
       it = entry_actions_.erase(it);
     }
   }
@@ -173,6 +180,11 @@ struct Manager::Impl : sigc::trackable
   void ActivateRequest(std::string const& entry_id)
   {
     parent_->key_activate_entry.emit(entry_id);
+  }
+
+  void EntryActivated(std::string const&, std::string const&, nux::Rect const& geo)
+  {
+    parent_->menu_open = !geo.IsNull();
   }
 
   void SetShowNowForWindow(Window xid, bool show)
@@ -228,7 +240,7 @@ struct Manager::Impl : sigc::trackable
   connection::Wrapper active_win_conn_;
   glib::Object<GSettings> settings_;
   glib::SignalManager signals_;
-  std::unordered_map<indicator::Entry::Ptr, std::shared_ptr<CompAction>> entry_actions_;
+  std::unordered_map<indicator::Entry::Ptr, uint32_t> entry_actions_;
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)

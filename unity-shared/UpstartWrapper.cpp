@@ -32,7 +32,7 @@ namespace unity
 class UpstartWrapper::Impl
 {
 public:
-  Impl(bool test_mode = false);
+  Impl(bool test_mode = (!g_getenv("UPSTART_SESSION")));
 
   void Emit(std::string const& name);
 

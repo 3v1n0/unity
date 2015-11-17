@@ -290,7 +290,7 @@ void ResultRendererTile::LoadIcon(Result const& row)
   if (icon.IsType(G_TYPE_ICON))
   {
     bool use_large_icon = icon.IsType(G_TYPE_FILE_ICON) || !icon.IsType(G_TYPE_THEMED_ICON);
-    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name, 
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name,
                                                                           tile_size,
                                                                           use_large_icon ?
                                                                           tile_size : tile_gsize, slot);
@@ -326,7 +326,7 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
   {
     // slow path for non square icons that must be resized to fit in the square
     // texture
-    float aspect = static_cast<float>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
+    double aspect = static_cast<double>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
     if (aspect < 1.0f)
     {
       pixbuf_width = Style::Instance().GetTileImageSize().CP(scale);
@@ -358,13 +358,8 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
-    float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
-
-    //cairo_translate(cr,
-    //                static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
-    //                static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
-
-    cairo_scale(cr, scale, scale);
+    double pixmap_scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf) / scale();
+    cairo_scale(cr, pixmap_scale, pixmap_scale);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
     gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
@@ -378,7 +373,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
                                     int max_width,
                                     int max_height,
                                     glib::Object<GdkPixbuf> const& pixbuf,
-                                    std::string icon_name,
+                                    std::string const& icon_name,
                                     Result const& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();

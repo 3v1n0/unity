@@ -38,7 +38,6 @@ class PanelTitlebarGrabArea : public nux::InputArea, public unity::debug::Intros
 
 public:
   PanelTitlebarGrabArea();
-  ~PanelTitlebarGrabArea();
 
   void SetGrabbed(bool enabled);
   bool IsGrabbed();

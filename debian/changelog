@@ -1,3 +1,118 @@
+unity (7.4.0+16.04.20151102-0ubuntu1) xenial; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Bumping version to 7.4.0
+  * Fix building in xenial
+
+  [ Didier Roche ]
+  * Remove unity2d transitional packages. We are post trusty LTS, they
+    are not needed anymore
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: if an app is not running and has no desktop
+    file, add QL item to add to dash
+  * PanelService: unset the idle ID before removal on callback (LP:
+    #1501289)
+  * Unity: use compiz cursorCache to get properly updated cursors (LP:
+    #1359211)
+  * UnityScreen: add SpreadAppWindows option and trigger it on
+    Super+Ctrl+[Shift]+W
+
+  [ Stephen M. Webb ]
+  * changed the wording of the help message and warning message for the
+    --reset option (LP: #1486498)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 02 Nov 2015 13:29:58 +0000
+
+unity (7.3.3-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Releasing Unity 7.3.3
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Mon, 26 Oct 2015 15:37:22 +0100
+
+unity (7.3.2+15.10.20151016-0ubuntu1) wily; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Sync changelog with proposed
+
+  [ Andrea Azzarone ]
+  * Avoid test failures on jenkins.
+
+  [ CI Train Bot ]
+  * UnityScreen: close the session dialog in case it's open and we're
+    requested to lock (LP: #1505234)
+
+  [ Marco Trevisan (Treviño) ]
+  * LauncherIcon: force lookup icon by scaling it at the requested size
+    (LP: #1446081, #1501973)
+  * PanelService: ensure that we free the "fake" IndicatorEntry's we
+    create for dropdowns (LP: #1503348)
+  * ResultRendererTile: consider global scaling when scaling a not-
+    squared icon (LP: #1499286)
+  * TestDash: Use local results in PreviewNavigateTests instead of
+    online ones
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 16 Oct 2015 08:46:34 +0000
+
+unity (7.3.2+15.10.20151002.2-0ubuntu1) wily; urgency=medium
+
+  * GnomeKeyGrabber: Don't allow an action to be grabbed multiple times
+    (LP: #1459571)
+  * PanelService, DBusIndicators: drop support for EntryShowNowChanged
+    signal
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 02 Oct 2015 14:02:10 +0000
+
+unity (7.3.2+15.10.20150921-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Avoid to open adjacent menu when moving from an indicator icon to
+    its dropdown menu. (LP: #552920)
+  * Make sure to restore the state before the call to
+    glDisable(GL_SCISSOR_TEST). (LP: #1485727)
+
+  [ Iain Lane ]
+  * launcher: Always make sure we check the right file when seeing if
+    .desktop files have been deleted. Fixes disappearing launcher icons
+    when applications are upgraded when we are using glib > 2.44. (LP:
+    #1498106)
+
+  [ Lars Uebernickel ]
+  * DevicesSettingsImp: dont't feed garbage to gsettings (LP: #1495173)
+
+  [ Luke Yelavich ]
+  * Make a copy of a quicklist menu item plain text label
+  * Make a copy of a quicklist menu item plain text label
+
+  [ Marco Trevisan (Treviño) ]
+  * MenuManager: add a new setting to control the show-now delay (LP:
+    #1497915)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 21 Sep 2015 17:44:10 +0000
+
+unity (7.3.2+15.10.20150910.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Add unit tests for unity::lockscreen::DBusManager.
+  * Add/Update tests for gnome session manager.
+  * Do not allow shutdown when screen is locked. (LP: #1460626)
+  * Make sure we update the maximized window when "show
+    desktop"/"restore desktop". (LP: #1485559)
+  * Merge patch from https://launchpadlibrarian.net/216192448/llvm-
+    fix.patch (LP: #1491555)
+  * Merge patch from https://launchpadlibrarian.net/216276242/low-gfx-
+    override.patch (LP: #1491913)
+
+  [ Andrea Azzarone azzaronea@gmail.com ]
+  * Properly hide decorations when on "Show Desktop" mode. (LP:
+    #1485073)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: force shell to be on top when there's a window
+    fullscreen and we've a menu open. (LP: #591189)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 10 Sep 2015 15:37:46 +0000
+
 unity (7.3.2+15.10.20150825-0ubuntu1) wily; urgency=medium
 
   [ Andrea Azzarone andrea.azzarone@canonical.com ]

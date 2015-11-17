@@ -27,10 +27,11 @@ cmake_base_options := -DUSE_GSETTINGS=TRUE -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOM
 ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), $(gles2_architectures)))
   cmake_gl_options := -DBUILD_GLES=TRUE -DDISABLE_MAINTAINER_CFLAGS=ON
 endif
-ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), arm64))
-  cmake_pch_options := -Duse_pch=OFF
-endif
 
+# Workaround for bug #1511542
+ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), arm64))
+  cmake_pch_options := -DENABLE_UNIT_TESTS=OFF
+endif
 
 override_dh_auto_configure:
 	dh_auto_configure -- $(cmake_base_options) $(cmake_gl_options) $(cmake_pch_options)

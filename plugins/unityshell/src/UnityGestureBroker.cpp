@@ -24,25 +24,11 @@
 #include "UnityGestureTarget.h"
 #include "WindowGestureTarget.h"
 
-#include <X11/cursorfont.h>
-
 UnityGestureBroker::UnityGestureBroker()
   : nux::GestureBroker()
 {
-  g_assert(WindowGestureTarget::fleur_cursor == 0);
-  WindowGestureTarget::fleur_cursor = XCreateFontCursor (screen->dpy (), XC_fleur);
-
   unity_target.reset(new UnityGestureTarget);
   gestural_window_switcher_.reset(new unity::GesturalWindowSwitcher);
-}
-
-UnityGestureBroker::~UnityGestureBroker()
-{
-  if (WindowGestureTarget::fleur_cursor)
-  {
-    XFreeCursor (screen->dpy (), WindowGestureTarget::fleur_cursor);
-    WindowGestureTarget::fleur_cursor = 0;
-  }
 }
 
 std::vector<nux::ShPtGestureTarget>

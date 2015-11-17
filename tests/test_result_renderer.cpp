@@ -23,7 +23,7 @@
 #include <glib-object.h>
 
 #include "unity-shared/DashStyle.h"
-#include "UnityCore/GTKWrapper.h"
+#include "UnityCore/GLibWrapper.h"
 #include "UnityCore/Result.h"
 #include "dash/ResultRendererTile.h"
 
@@ -79,7 +79,7 @@ public:
   }
 
 private:
-  std::auto_ptr<dash::TextureContainer> renderer_;
+  std::unique_ptr<dash::TextureContainer> renderer_;
 };
 
 TEST_F(TestResultRenderer, TestConstruction)

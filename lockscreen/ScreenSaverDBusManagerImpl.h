@@ -14,32 +14,37 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Marco Trevisan <marco.trevisan@canonical.com>
+* Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-#ifndef __UNITY_KEY_GRABBER__
-#define __UNITY_KEY_GRABBER__
+#ifndef UNITYSHELL_SCREENSAVER_DBUS_MANAGER_IMPL_H
+#define UNITYSHELL_SCREENSAVER_DBUS_MANAGER_IMPL_H
 
-#include <core/core.h>
+#include <UnityCore/GLibDBusServer.h>
+#include <UnityCore/SessionManager.h>
 
 namespace unity
 {
-namespace key
+namespace lockscreen
 {
-class Grabber
+
+struct DBusManager::Impl : sigc::trackable
 {
-public:
-  typedef std::shared_ptr<Grabber> Ptr;
-  virtual ~Grabber() = default;
+  Impl(DBusManager*, session::Manager::Ptr const& session, bool test_mode);
 
-  virtual uint32_t AddAction(CompAction const&) = 0;
-  virtual bool RemoveAction(CompAction const&) = 0;
-  virtual bool RemoveAction(uint32_t id) = 0;
+  void SetActive(bool active);
+  void EnsureService();
 
-  virtual CompAction::Vector& GetActions() = 0;
+  DBusManager* manager_;
+  session::Manager::Ptr session_;
+  bool test_mode_;
+  glib::DBusServer::Ptr server_;
+  glib::DBusObject::Ptr object_;
+
+  time_t time_;
 };
 
-} // namespace key
-} // namespace unity
+}
+}
 
-#endif // __UNITY_KEY_GRABBER__
+#endif

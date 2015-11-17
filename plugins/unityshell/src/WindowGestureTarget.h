@@ -36,8 +36,6 @@ class WindowGestureTarget : public nux::GestureTarget
 
     virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
 
-    static Cursor fleur_cursor;
-
     CompWindow *window() {return window_;}
   private:
     virtual bool Equals(const nux::GestureTarget& other) const;

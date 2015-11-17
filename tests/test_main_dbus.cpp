@@ -2,6 +2,7 @@
 #include <gio/gio.h>
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
+#include <UnityCore/GLibDBusNameWatcher.h>
 #include "test_utils.h"
 
 #include "config.h"
@@ -35,7 +36,7 @@ int main(int argc, char** argv)
     g_print ("option parsing failed: %s\n", error->message);
     return 1;
   }
-  
+
   signal(SIGINT, signal_handler);
   nux::NuxInitialize (0);
 
@@ -66,24 +67,12 @@ int main(int argc, char** argv)
 static bool wait_until_test_service_appears()
 {
   bool have_name = false;
+  unity::glib::DBusNameWatcher watcher("com.canonical.Unity.Test");
+  watcher.appeared.connect([&have_name] (std::string const&, std::string const&) {
+    have_name = true;
+  });
 
-  auto callback = [](GDBusConnection * conn,
-                     const char * name,
-                     const char * name_owner,
-                     gpointer user_data)
-  {
-    *(bool*)user_data = true;
-  };
-
-  g_bus_watch_name(G_BUS_TYPE_SESSION,
-                   "com.canonical.Unity.Test",
-                   G_BUS_NAME_WATCHER_FLAGS_NONE,
-                   callback,
-                   NULL,
-                   &have_name,
-                   NULL);
-
-  Utils::WaitUntil(have_name, 3);
+  Utils::WaitUntil(have_name, 3, "Service has not appeared");
   EXPECT_TRUE(have_name);
 
   return have_name;
@@ -92,6 +81,12 @@ static bool wait_until_test_service_appears()
 static void tell_service_to_exit()
 {
   // Ask the service to exit
+  bool lost_name = false;
+  unity::glib::DBusNameWatcher watcher("com.canonical.Unity.Test");
+  watcher.vanished.connect([&lost_name] (std::string const&) {
+    lost_name = true;
+  });
+
   GDBusConnection* connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
   g_dbus_connection_call_sync(connection,
                               "com.canonical.Unity.Test",
@@ -104,6 +99,9 @@ static void tell_service_to_exit()
                               -1,
                               NULL, NULL);
   g_object_unref(connection);
+
+  Utils::WaitUntil(lost_name, 3, "Service is not vanished");
+  EXPECT_TRUE(lost_name);
 }
 
 static void signal_handler(int sig)

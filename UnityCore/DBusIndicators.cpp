@@ -74,7 +74,6 @@ struct DBusIndicators::Impl
   void OnIconsPathChanged(GVariant* parameters);
   void OnEntryActivated(GVariant* parameters);
   void OnEntryActivatedRequest(GVariant* parameters);
-  void OnEntryShowNowChanged(GVariant* parameters);
 
   void OnEntryScroll(std::string const& entry_id, int delta);
   void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button);
@@ -102,7 +101,6 @@ DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
   gproxy_.Connect("IconPathsChanged", sigc::mem_fun(this, &DBusIndicators::Impl::OnIconsPathChanged));
   gproxy_.Connect("EntryActivated", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryActivated));
   gproxy_.Connect("EntryActivateRequest", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryActivatedRequest));
-  gproxy_.Connect("EntryShowNowChanged", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryShowNowChanged));
 
   gproxy_.connected.connect(sigc::mem_fun(this, &DBusIndicators::Impl::OnConnected));
   gproxy_.disconnected.connect(sigc::mem_fun(this, &DBusIndicators::Impl::OnDisconnected));
@@ -240,19 +238,6 @@ void DBusIndicators::Impl::OnEntryActivatedRequest(GVariant* parameters)
 
   if (entry_name)
     owner_->on_entry_activate_request.emit(entry_name);
-}
-
-void DBusIndicators::Impl::OnEntryShowNowChanged(GVariant* parameters)
-{
-  if (!verify_variant_type(parameters, "(sb)"))
-    return;
-
-  glib::String entry_name;
-  gboolean show_now;
-  g_variant_get(parameters, "(sb)", &entry_name, &show_now);
-
-  if (entry_name)
-    owner_->SetEntryShowNow(entry_name, show_now);
 }
 
 void DBusIndicators::Impl::RequestSyncAll()

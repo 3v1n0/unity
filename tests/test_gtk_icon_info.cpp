@@ -17,8 +17,9 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include <gtk/gtk.h>
 #include <gmock/gmock.h>
-#include <UnityCore/GTKWrapper.h>
+#include <UnityCore/GLibWrapper.h>
 
 using namespace unity;
 using namespace testing;
@@ -26,23 +27,23 @@ using namespace testing;
 namespace
 {
 
-TEST(TestGTKWrapper, EmptyIconInfo)
+TEST(TestGtkIconInfo, EmptyIconInfo)
 {
-  gtk::IconInfo info;
+  glib::Object<GtkIconInfo> info;
   EXPECT_THAT(info.RawPtr(), IsNull());
   EXPECT_FALSE(info);
   EXPECT_EQ(info, nullptr);
 }
 
-TEST(TestGTKWrapper, ValidIconInfo)
+TEST(TestGtkIconInfo, ValidIconInfo)
 {
   GList *icons = gtk_icon_theme_list_icons(gtk_icon_theme_get_default(), "Emblems");
 
   for (GList *l = icons; l; l = l->next)
   {
     auto icon_name = static_cast <const char*>(l->data);
-    GtkIconInfo *ginfo = gtk_icon_theme_lookup_icon(gtk_icon_theme_get_default(), icon_name, 32, (GtkIconLookupFlags) 0);
-    gtk::IconInfo info(ginfo);
+    GtkIconInfo *ginfo = gtk_icon_theme_lookup_icon(gtk_icon_theme_get_default(), icon_name, 32, GTK_ICON_LOOKUP_FORCE_SIZE);
+    glib::Object<GtkIconInfo> info(ginfo);
     ASSERT_THAT(info.RawPtr(), NotNull());
     ASSERT_TRUE(info);
     ASSERT_EQ(info, ginfo);

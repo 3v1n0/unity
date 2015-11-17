@@ -65,6 +65,8 @@ struct _UnityQuicklistMenuItemAccessiblePrivate
 
   guint on_parent_selection_change_id;
   guint on_parent_change_id;
+
+  gchar *name;
 };
 
 using unity::QuicklistMenuItem;
@@ -94,6 +96,7 @@ unity_quicklist_menu_item_accessible_init(UnityQuicklistMenuItemAccessible* self
     UNITY_QUICKLIST_MENU_ITEM_ACCESSIBLE_GET_PRIVATE(self);
 
   self->priv = priv;
+  self->priv->name = NULL;
 }
 
 static void
@@ -112,6 +115,12 @@ unity_quicklist_menu_item_accessible_dispose(GObject* object)
 
   if (self->priv->on_parent_change_id != 0)
     g_signal_handler_disconnect(object, self->priv->on_parent_change_id);
+
+  if (self->priv->name != NULL)
+  {
+    g_free(self->priv->name);
+    self->priv->name = NULL;
+  }
 
   G_OBJECT_CLASS(unity_quicklist_menu_item_accessible_parent_class)->dispose(object);
 }
@@ -198,23 +207,28 @@ unity_quicklist_menu_item_accessible_initialize(AtkObject* accessible,
 static const gchar*
 unity_quicklist_menu_item_accessible_get_name(AtkObject* obj)
 {
-  const gchar* name = NULL;
-
   g_return_val_if_fail(UNITY_IS_QUICKLIST_MENU_ITEM_ACCESSIBLE(obj), NULL);
+  UnityQuicklistMenuItemAccessible *self = UNITY_QUICKLIST_MENU_ITEM_ACCESSIBLE(obj);
 
-  name = ATK_OBJECT_CLASS(unity_quicklist_menu_item_accessible_parent_class)->get_name(obj);
-  if (name == NULL)
+  if (self->priv->name)
+  {
+    g_free(self->priv->name);
+    self->priv->name = NULL;
+  }
+
+  self->priv->name = g_strdup(ATK_OBJECT_CLASS(unity_quicklist_menu_item_accessible_parent_class)->get_name(obj));
+  if (self->priv->name == NULL)
   {
     QuicklistMenuItem* menu_item = NULL;
 
     menu_item = dynamic_cast<QuicklistMenuItem*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
     if (menu_item != NULL)
     {
-      name = menu_item->GetPlainTextLabel().c_str();
+      self->priv->name = g_strdup(menu_item->GetPlainTextLabel().c_str());
     }
   }
 
-  return name;
+  return self->priv->name;
 }
 
 static AtkStateSet*

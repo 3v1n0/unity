@@ -27,9 +27,8 @@ namespace unity
 namespace indicator
 {
 
-class Indicators::Impl
+struct Indicators::Impl
 {
-public:
   typedef std::unordered_map<std::string, Indicator::Ptr> IndicatorMap;
 
   Impl(Indicators* owner)
@@ -49,7 +48,6 @@ public:
 
   Entry::Ptr GetEntry(std::string const& entry_id);
 
-private:
   Indicators* owner_;
   IndicatorMap indicators_;
   Entry::Ptr active_entry_;
@@ -93,6 +91,11 @@ void Indicators::RemoveIndicator(std::string const& name)
   return pimpl->RemoveIndicator(name);
 }
 
+Entry::Ptr const& Indicators::GetActiveEntry() const
+{
+  return pimpl->active_entry_;
+}
+
 void Indicators::Impl::ActivateEntry(std::string const& panel, std::string const& entry_id, nux::Rect const& geometry)
 {
   if (active_entry_)
@@ -118,11 +121,8 @@ void Indicators::Impl::ActivateEntry(std::string const& panel, std::string const
 void Indicators::Impl::SetEntryShowNow(std::string const& entry_id,
                                        bool show_now)
 {
-  Entry::Ptr entry = GetEntry(entry_id);
-  if (entry)
-  {
+  if (Entry::Ptr const& entry = GetEntry(entry_id))
     entry->set_show_now(show_now);
-  }
 }
 
 Indicators::IndicatorsList Indicators::Impl::GetIndicators() const

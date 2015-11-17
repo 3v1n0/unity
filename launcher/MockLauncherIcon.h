@@ -32,9 +32,9 @@
 #include <sigc++/sigc++.h>
 
 #include <libdbusmenu-glib/menuitem.h>
+#include <UnityCore/GLibWrapper.h>
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/TimeUtil.h"
-#include <UnityCore/GTKWrapper.h>
 
 #include "AbstractLauncherIcon.h"
 #include "MultiMonitor.h"
@@ -368,7 +368,7 @@ private:
   nux::BaseTexture* TextureFromGtkTheme(const char* icon_name, int size)
   {
     GdkPixbuf* pbuf;
-    gtk::IconInfo info;
+    glib::Object<GtkIconInfo> info;
     nux::BaseTexture* result = NULL;
     GError* error = NULL;
     GIcon* icon;
@@ -379,7 +379,7 @@ private:
 
     if (G_IS_ICON(icon))
     {
-      info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+      info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, GTK_ICON_LOOKUP_FORCE_SIZE);
       g_object_unref(icon);
     }
     else
@@ -387,7 +387,7 @@ private:
       info = gtk_icon_theme_lookup_icon(theme,
                                         icon_name,
                                         size,
-                                        (GtkIconLookupFlags) 0);
+                                        GTK_ICON_LOOKUP_FORCE_SIZE);
     }
 
     if (!info)
