@@ -21,6 +21,8 @@
 #ifndef EDGE_BARRIER_CONTROLLER_IMPL_PRIVATE
 #define EDGE_BARRIER_CONTROLLER_IMPL_PRIVATE
 
+#include <UnityCore/ConnectionManager.h>
+
 #include "Decaymulator.h"
 #include "UnityCore/GLibSource.h"
 
@@ -71,6 +73,7 @@ struct EdgeBarrierController::Impl : public sigc::trackable
   int xi2_opcode_;
   float edge_overcome_pressure_;
   EdgeBarrierController* parent_;
+  connection::Wrapper launcher_position_changed_;
 };
 
 } //namespace ui

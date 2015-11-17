@@ -185,11 +185,20 @@ Launcher::Launcher(MockableBaseWindow* parent,
 
   TextureCache& cache = TextureCache::GetDefault();
   launcher_sheen_ = cache.FindTexture("dash_sheen.png");
-  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect.png");
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect.png");
+  else
+    launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect_rotated.png");
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
-  launcher_position_changed_ = unity::Settings::Instance().launcher_position.changed.connect([this] (LauncherPosition) {
+  launcher_position_changed_ = unity::Settings::Instance().launcher_position.changed.connect([this] (LauncherPosition const& position) {
+    TextureCache& cache = TextureCache::GetDefault();
+    if (position == LauncherPosition::LEFT)
+      launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect.png");
+    else
+      launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect_rotated.png");
+
     OnMonitorChanged(monitor);
     QueueDraw();
   });
@@ -876,7 +885,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
         if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
           autohide_offset -= geo.width * autohide_progress;
         else
-          autohide_offset -= geo.height * autohide_progress;
+          autohide_offset += geo.height * autohide_progress;
         if (options()->auto_hide_animation() == FADE_AND_SLIDE)
           *launcher_alpha = 1.0f - 0.5f * autohide_progress;
       }
@@ -889,7 +898,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
       autohide_offset -= geo.width * 0.25f * drag_hide_progress;
     else
-      autohide_offset -= geo.height * 0.25f * drag_hide_progress;
+      autohide_offset += geo.height * 0.25f * drag_hide_progress;
     hide_machine_.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, (drag_hide_progress >= 1.0f));
   }
 
@@ -1890,12 +1899,23 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       else
         last_reveal_progress_ += .1f;
     }
+
     nux::Color pressure_color = nux::color::White * last_reveal_progress_;
     nux::TexCoordXForm texxform_pressure;
-    GfxContext.QRP_1Tex(base.x, base.y, launcher_pressure_effect_->GetWidth(), base.height,
-                        launcher_pressure_effect_->GetDeviceTexture(),
-                        texxform_pressure,
-                        pressure_color);
+    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    {
+      GfxContext.QRP_1Tex(base.x, base.y, launcher_pressure_effect_->GetWidth(), base.height,
+                          launcher_pressure_effect_->GetDeviceTexture(),
+                          texxform_pressure,
+                          pressure_color);
+    }
+    else
+    {
+      GfxContext.QRP_1Tex(base.x, base.y + base.height - launcher_pressure_effect_->GetHeight() - 1, base.width, launcher_pressure_effect_->GetHeight(),
+                          launcher_pressure_effect_->GetDeviceTexture(),
+                          texxform_pressure,
+                          pressure_color);
+    }
   }
 
   if (!Settings::Instance().GetLowGfxMode())
@@ -2365,12 +2385,15 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   if (GetActionState() == ACTION_NONE)
   {
 #ifdef USE_X11
-    if (nux::Abs(dnd_delta_y_) >= nux::Abs(dnd_delta_x_))
+    if (nux::Abs(dnd_delta_y_) >= nux::Abs(dnd_delta_x_) && Settings::Instance().launcher_position() == LauncherPosition::LEFT)
     {
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-        launcher_drag_delta_ += dnd_delta_y_;
-      else
-        launcher_drag_delta_ += dnd_delta_x_;
+      launcher_drag_delta_ += dnd_delta_y_;
+      SetActionState(ACTION_DRAG_LAUNCHER);
+      hide_machine_.SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, true);
+    }
+    else if (nux::Abs(dnd_delta_x_) >= nux::Abs(dnd_delta_y_) && Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    {
+      launcher_drag_delta_ += dnd_delta_x_;
       SetActionState(ACTION_DRAG_LAUNCHER);
       hide_machine_.SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, true);
     }
@@ -2494,7 +2517,7 @@ ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrie
   }
   else
   {
-    if (event->y >= abs_geo.y - abs_geo.height && event->y <= abs_geo.y)
+    if (event->y >= abs_geo.y && event->y <= abs_geo.y + abs_geo.height)
     {
       if (!hidden_)
         return ui::EdgeBarrierSubscriber::Result::ALREADY_HANDLED;

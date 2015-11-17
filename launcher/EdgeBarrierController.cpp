@@ -25,6 +25,7 @@
 #include <NuxCore/Logger.h>
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -116,6 +117,10 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     });*/
     options->option_changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged));
     SetupBarriers(UScreen::GetDefault()->GetMonitors());
+  });
+
+  launcher_position_changed_ = Settings::Instance().launcher_position.changed.connect([this] (LauncherPosition) {
+     OnOptionsChanged();
   });
 
   xi2_opcode_ = GetXI2OpCode();
@@ -246,10 +251,21 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     if (!edge_resist && parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER)
       continue;
 
-    vertical_barrier->x1 = monitor.x;
-    vertical_barrier->x2 = monitor.x;
-    vertical_barrier->y1 = monitor.y;
-    vertical_barrier->y2 = monitor.y + monitor.height;
+    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    {
+      vertical_barrier->x1 = monitor.x;
+      vertical_barrier->x2 = monitor.x;
+      vertical_barrier->y1 = monitor.y;
+      vertical_barrier->y2 = monitor.y + monitor.height;
+    }
+    else
+    {
+      vertical_barrier->x1 = monitor.x;
+      vertical_barrier->x2 = monitor.x + monitor.width;
+      vertical_barrier->y1 = monitor.y + monitor.height;
+      vertical_barrier->y2 = monitor.y + monitor.height;
+    }
+
     vertical_barrier->index = i;
 
     vertical_barrier->threshold = parent_->options()->edge_stop_velocity();
