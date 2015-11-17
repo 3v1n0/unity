@@ -191,16 +191,16 @@ if __name__ == '__main__':
     set_unity_env()
 
     if options.distro:
-		sys.exit(reset_to_distro())
+        sys.exit(reset_to_distro())
 
     if options.reset:
         print ("ERROR: the reset option is now deprecated")
         sys.exit(1)
- 
+
     if options.reset_icons:
         reset_launcher_icons ()
-	
-	if options.replace:
-		print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
-			
+
+    if options.replace:
+        print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
+
     run_unity (options.verbose, options.debug, options.advanced_debug, options.compiz_path, args, options.log)
