@@ -72,8 +72,10 @@ PluginAdapter& PluginAdapter::Initialize(CompScreen* screen)
 PluginAdapter::PluginAdapter(CompScreen* screen)
   : bias_active_to_viewport(false)
   , m_Screen(screen)
+  , _scale_screen(ScaleScreen::get(screen))
   , _coverage_area_before_automaximize(0.75)
   , _spread_state(false)
+  , _spread_requested_state(false)
   , _spread_windows_state(false)
   , _expo_state(false)
   , _vp_switch_started(false)
@@ -110,6 +112,7 @@ void PluginAdapter::OnScreenUngrabbed()
   if (_spread_state && !screen->grabExist("scale"))
   {
     _spread_state = false;
+    _spread_requested_state = false;
     _spread_windows_state = false;
     terminate_spread.emit();
   }
@@ -230,10 +233,12 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
 
       bool old_windows_state = _spread_windows_state;
       _spread_state = false;
+      _spread_requested_state = false;
       _spread_windows_state = false;
       terminate_spread.emit();
 
       _spread_state = true;
+      _spread_requested_state = true;
       _spread_windows_state = old_windows_state;
       initiate_spread.emit();
     }
@@ -391,16 +396,25 @@ std::string PluginAdapter::MatchStringForXids(std::vector<Window> const& windows
 
 void PluginAdapter::InitiateScale(std::string const& match, int state)
 {
-  CompOption::Vector argument(1);
-  argument[0].setName("match", CompOption::TypeMatch);
-  argument[0].value().set(CompMatch(match));
-
-  m_ScaleActionList.InitiateAll(argument, state);
+  if (!_spread_requested_state || !_scale_screen)
+  {
+    CompOption::Vector argument(1);
+    argument[0].setName("match", CompOption::TypeMatch);
+    argument[0].value().set(CompMatch(match));
+    m_ScaleActionList.InitiateAll(argument, state);
+  }
+  else
+  {
+    terminate_spread.emit();
+    _scale_screen->relayoutSlots(CompMatch(match));
+    initiate_spread.emit();
+  }
 }
 
 void PluginAdapter::TerminateScale()
 {
   m_ScaleActionList.TerminateAll();
+  _spread_requested_state = false;
 }
 
 bool PluginAdapter::IsScaleActive() const
@@ -999,6 +1013,7 @@ bool PluginAdapter::ScaleWindowGroup(std::vector<Window> const& windows, int sta
   if (num_windows > 1 || (force && num_windows))
   {
     _spread_windows_state = true;
+    _spread_requested_state = true;
     std::string const& match = MatchStringForXids(windows);
     InitiateScale(match, state);
     return true;
