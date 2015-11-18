@@ -97,6 +97,7 @@ void PluginAdapter::OnScreenGrabbed()
   if (!_spread_state && screen->grabExist("scale"))
   {
     _spread_state = true;
+    _spread_requested_state = true;
     initiate_spread.emit();
   }
 
@@ -219,6 +220,7 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
     if (_spread_state != new_state)
     {
       _spread_state = new_state;
+      _spread_requested_state = new_state;
       _spread_state ? initiate_spread.emit() : terminate_spread.emit();
 
       if (!_spread_state)
@@ -398,6 +400,7 @@ void PluginAdapter::InitiateScale(std::string const& match, int state)
 {
   if (!_spread_requested_state || !_scale_screen)
   {
+    _spread_requested_state = true;
     CompOption::Vector argument(1);
     argument[0].setName("match", CompOption::TypeMatch);
     argument[0].value().set(CompMatch(match));
@@ -1013,7 +1016,6 @@ bool PluginAdapter::ScaleWindowGroup(std::vector<Window> const& windows, int sta
   if (num_windows > 1 || (force && num_windows))
   {
     _spread_windows_state = true;
-    _spread_requested_state = true;
     std::string const& match = MatchStringForXids(windows);
     InitiateScale(match, state);
     return true;
