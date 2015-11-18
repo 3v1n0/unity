@@ -72,7 +72,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   , _last_scroll_timestamp(0)
   , _progressive_scroll(0)
   , use_custom_bg_color_(false)
-  , in_spread_(false)
   , bg_color_(nux::color::White)
 {
   LOG_INFO(logger) << "Created ApplicationLauncherIcon: "
@@ -89,7 +88,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
   wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-  wm.terminate_spread.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnSpreadTerminated));
   UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowsLocation))));
 
   EnsureWindowsLocation();
@@ -160,7 +158,7 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
     signals_conn_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
     EnsureWindowsLocation();
 
-    if (in_spread_)
+    if (WindowManager::Default().IsScaleActiveForGroup() && IsActive())
       Spread(true, 0, false);
   }));
 
@@ -713,13 +711,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
   for (auto& window : GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0))
     windows.push_back(window->window_id());
 
-  in_spread_ = WindowManager::Default().ScaleWindowGroup(windows, state, force);
-  return in_spread_;
-}
-
-void ApplicationLauncherIcon::OnSpreadTerminated()
-{
-  in_spread_ = false;
+  return WindowManager::Default().ScaleWindowGroup(windows, state, force);
 }
 
 void ApplicationLauncherIcon::EnsureWindowState()
