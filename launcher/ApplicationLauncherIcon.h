@@ -128,6 +128,7 @@ private:
   bool Spread(bool current_desktop, int state, bool force);
 
   void OnWindowMinimized(guint32 xid);
+  void OnSpreadTerminated();
 
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
@@ -148,6 +149,7 @@ private:
   glib::SignalManager _gsignals;
 
   bool use_custom_bg_color_;
+  bool in_spread_;
   nux::Color bg_color_;
 
   connection::Manager signals_conn_;
