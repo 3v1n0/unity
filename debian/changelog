@@ -1,3 +1,9 @@
+unity (7.4.0+16.04.20151102-0ubuntu2) xenial; urgency=medium
+
+  * No-change rebuild against libglew1.13
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 11 Nov 2015 19:49:37 +0000
+
 unity (7.4.0+16.04.20151102-0ubuntu1) xenial; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
