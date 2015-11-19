@@ -9,6 +9,12 @@ gles2_architectures := armel armhf
 
 DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
 
+# avoid template instance removal (lp:1286284)
+ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), ppc64el))
+  export DEB_CXXFLAGS_MAINT_STRIP=-O3
+  export DEB_CXXFLAGS_MAINT_APPEND=-O2
+endif
+
 # http://ccache.samba.org/manual.html#_precompiled_headers
 CCACHE_SLOPPINESS=time_macros
 
