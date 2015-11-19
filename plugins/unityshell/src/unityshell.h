@@ -185,6 +185,8 @@ public:
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showDesktopKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool spreadAppWindowsInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool spreadAppWindowsAnywhereInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
@@ -318,6 +320,7 @@ private:
   void DamageBlurUpdateRegion(nux::Geometry const&);
 
   void ShowFirstRunHints();
+  void SpreadAppWindows(bool anywhere);
 
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;

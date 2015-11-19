@@ -1314,6 +1314,7 @@ on_removed_idle (PanelService *self)
 
   g_slist_free (self->priv->removed_entries);
   self->priv->removed_entries = NULL;
+  self->priv->remove_idle = 0;
 
   return G_SOURCE_REMOVE;
 }

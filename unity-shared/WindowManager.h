@@ -171,6 +171,8 @@ public:
   virtual std::string GetStringProperty(Window, Atom) const = 0;
   virtual std::vector<long> GetCardinalProperty(Window, Atom) const = 0;
 
+  virtual Cursor GetCachedCursor(unsigned int cursor_name) const = 0;
+
   virtual void UnmapAllNoNuxWindowsSync() = 0;
 
 

@@ -67,7 +67,6 @@ unsigned EdgeTypeToCursorShape(Edge::Type type)
 
 DataPool::DataPool()
 {
-  SetupCursors();
   SetupTextures();
 
   CompSize glow_size(texture::GLOW_SIZE, texture::GLOW_SIZE);
@@ -76,13 +75,6 @@ DataPool::DataPool()
   auto cb = sigc::mem_fun(this, &DataPool::SetupTextures);
   Style::Get()->theme.changed.connect(sigc::hide(cb));
   unity::Settings::Instance().dpi_changed.connect(cb);
-}
-
-DataPool::~DataPool()
-{
-  auto* dpy = screen->dpy();
-  for (auto cursor : edge_cursors_)
-    XFreeCursor(dpy, cursor);
 }
 
 DataPool::Ptr const& DataPool::Get()
@@ -99,16 +91,9 @@ void DataPool::Reset()
   instance_.reset();
 }
 
-void DataPool::SetupCursors()
-{
-  auto* dpy = screen->dpy();
-  for (unsigned c = 0; c < edge_cursors_.size(); ++c)
-    edge_cursors_[c] = XCreateFontCursor(dpy, EdgeTypeToCursorShape(Edge::Type(c)));
-}
-
 Cursor DataPool::EdgeCursor(Edge::Type type) const
 {
-  return edge_cursors_[unsigned(type)];
+  return screen->cursorCache(EdgeTypeToCursorShape(type));
 }
 
 void DataPool::SetupTextures()
