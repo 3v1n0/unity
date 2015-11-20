@@ -455,6 +455,9 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
 WindowList ApplicationLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
 {
+  if (!filter && monitor < 0)
+    return app_->GetWindows();
+
   WindowManager& wm = WindowManager::Default();
   WindowList results;
 
