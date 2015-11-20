@@ -101,7 +101,6 @@ protected:
 
   void UpdateDesktopFile();
   void UpdateRemoteUri();
-  std::string _desktop_file;
 
 private:
   typedef unsigned long int WindowFilterMask;
