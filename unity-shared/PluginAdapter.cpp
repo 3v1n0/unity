@@ -72,8 +72,10 @@ PluginAdapter& PluginAdapter::Initialize(CompScreen* screen)
 PluginAdapter::PluginAdapter(CompScreen* screen)
   : bias_active_to_viewport(false)
   , m_Screen(screen)
+  , _scale_screen(ScaleScreen::get(screen))
   , _coverage_area_before_automaximize(0.75)
   , _spread_state(false)
+  , _spread_requested_state(false)
   , _spread_windows_state(false)
   , _expo_state(false)
   , _vp_switch_started(false)
@@ -95,6 +97,7 @@ void PluginAdapter::OnScreenGrabbed()
   if (!_spread_state && screen->grabExist("scale"))
   {
     _spread_state = true;
+    _spread_requested_state = true;
     initiate_spread.emit();
   }
 
@@ -110,6 +113,7 @@ void PluginAdapter::OnScreenUngrabbed()
   if (_spread_state && !screen->grabExist("scale"))
   {
     _spread_state = false;
+    _spread_requested_state = false;
     _spread_windows_state = false;
     terminate_spread.emit();
   }
@@ -216,6 +220,7 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
     if (_spread_state != new_state)
     {
       _spread_state = new_state;
+      _spread_requested_state = new_state;
       _spread_state ? initiate_spread.emit() : terminate_spread.emit();
 
       if (!_spread_state)
@@ -230,10 +235,12 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
 
       bool old_windows_state = _spread_windows_state;
       _spread_state = false;
+      _spread_requested_state = false;
       _spread_windows_state = false;
       terminate_spread.emit();
 
       _spread_state = true;
+      _spread_requested_state = true;
       _spread_windows_state = old_windows_state;
       initiate_spread.emit();
     }
@@ -391,16 +398,26 @@ std::string PluginAdapter::MatchStringForXids(std::vector<Window> const& windows
 
 void PluginAdapter::InitiateScale(std::string const& match, int state)
 {
-  CompOption::Vector argument(1);
-  argument[0].setName("match", CompOption::TypeMatch);
-  argument[0].value().set(CompMatch(match));
-
-  m_ScaleActionList.InitiateAll(argument, state);
+  if (!_spread_requested_state || !_scale_screen)
+  {
+    _spread_requested_state = true;
+    CompOption::Vector argument(1);
+    argument[0].setName("match", CompOption::TypeMatch);
+    argument[0].value().set(CompMatch(match));
+    m_ScaleActionList.InitiateAll(argument, state);
+  }
+  else
+  {
+    terminate_spread.emit();
+    _scale_screen->relayoutSlots(CompMatch(match));
+    initiate_spread.emit();
+  }
 }
 
 void PluginAdapter::TerminateScale()
 {
   m_ScaleActionList.TerminateAll();
+  _spread_requested_state = false;
 }
 
 bool PluginAdapter::IsScaleActive() const
