@@ -38,11 +38,13 @@ protected:
   void ActivateLauncherIcon(ActionArg arg);
   std::string GetName() const;
   std::string GetRemoteUri() const;
+  MenuItemsVector GetMenus();
 
 private:
   void OnViewportLayoutChanged(int hsize, int vsize);
   void UpdateIcon();
 
+  glib::SignalManager signals_;
   connection::Manager viewport_changes_connections_;
 };
 
