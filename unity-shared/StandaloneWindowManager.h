@@ -153,6 +153,7 @@ public:
 
   virtual int WorkspaceCount() const;
 
+  void SetCurrentViewport(nux::Point const&) override;
   nux::Point GetCurrentViewport() const override;
   void SetViewportSize(int horizontal, int vertical);
   int GetViewportHSize() const override;
@@ -178,7 +179,6 @@ public:
   void SetExpoActive(bool expo_active);
   void SetCurrentDesktop(unsigned desktop_id);
 
-  void SetCurrentViewport(nux::Point const& vp);
   void SetWorkareaGeometry(nux::Geometry const& geo);
 
   Cursor GetCachedCursor(unsigned int cursor_name) const;
