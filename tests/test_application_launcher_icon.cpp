@@ -72,6 +72,10 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   using ApplicationLauncherIcon::Remove;
   using ApplicationLauncherIcon::SetApplication;
   using ApplicationLauncherIcon::GetApplication;
+  using ApplicationLauncherIcon::PerformScroll;
+  using LauncherIcon::BackgroundColor;
+  using LauncherIcon::GetRemoteUri;
+  using LauncherIcon::AllowDetailViewInSwitcher;
 };
 
 MATCHER_P(AreArgsEqual, a, "")

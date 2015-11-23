@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2012 Canonical Ltd
+ * Copyright (C) 2010-2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,7 +22,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Logger.h>
 
 #include <UnityCore/GLibWrapper.h>
@@ -30,12 +29,7 @@
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
-#include "MultiMonitor.h"
 #include "unity-shared/DesktopApplicationManager.h"
-#include "unity-shared/GnomeFileManager.h"
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UBusMessages.h"
-#include "unity-shared/UScreen.h"
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
@@ -49,10 +43,8 @@ namespace
 {
 // We use the "bamf-" prefix since the manager is protected, to avoid name clash
 const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
-const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
 const std::string DEFAULT_ICON = "application-default-icon";
 const int MAXIMUM_QUICKLIST_WIDTH = 300;
-const int COMPIZ_SCALE_DND_SPREAD = 1 << 7;
 
 enum MenuItemType
 {
@@ -67,10 +59,8 @@ enum MenuItemType
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationLauncherIcon);
 
 ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
-  : SimpleLauncherIcon(IconType::APPLICATION)
-  , _startup_notification_timestamp(0)
-  , _last_scroll_timestamp(0)
-  , _progressive_scroll(0)
+  : WindowedLauncherIcon(IconType::APPLICATION)
+  , startup_notification_timestamp_(0)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
@@ -83,13 +73,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
     << ", running: " << (app->running() ? "yes" : "no");
 
   SetApplication(app);
-
-  WindowManager& wm = WindowManager::Default();
-  wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
-  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-  wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-  UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowsLocation))));
-
   EnsureWindowsLocation();
 }
 
@@ -232,11 +215,16 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   }));
 }
 
+WindowList ApplicationLauncherIcon::GetManagedWindows() const
+{
+  return app_ ? app_->GetWindows() : WindowList();
+}
+
 bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int monitor) const
 {
   if (quirk == Quirk::ACTIVE)
   {
-    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE, monitor))
+    if (!WindowedLauncherIcon::GetQuirk(Quirk::ACTIVE, monitor))
       return false;
 
     if (app_->type() == AppType::WEBAPP)
@@ -248,299 +236,27 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int mo
     return app_->OwnsWindow(WindowManager::Default().GetActiveWindow());
   }
 
-  return SimpleLauncherIcon::GetQuirk(quirk, monitor);
+  return WindowedLauncherIcon::GetQuirk(quirk, monitor);
 }
 
 void ApplicationLauncherIcon::Remove()
 {
   LogUnityEvent(ApplicationEventType::LEAVE);
   UnsetApplication();
-  SimpleLauncherIcon::Remove();
+  WindowedLauncherIcon::Remove();
 }
 
 bool ApplicationLauncherIcon::IsSticky() const
 {
   if (app_)
-    return app_->sticky() && SimpleLauncherIcon::IsSticky();
+    return app_->sticky() && WindowedLauncherIcon::IsSticky();
 
   return false;
 }
 
-bool ApplicationLauncherIcon::IsActive() const
+bool ApplicationLauncherIcon::IsUserVisible() const
 {
-  return GetQuirk(Quirk::ACTIVE);
-}
-
-bool ApplicationLauncherIcon::IsRunning() const
-{
-  return GetQuirk(Quirk::RUNNING);
-}
-
-bool ApplicationLauncherIcon::IsUrgent() const
-{
-  return GetQuirk(Quirk::URGENT);
-}
-
-void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
-{
-  SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  WindowManager& wm = WindowManager::Default();
-
-  // This is a little awkward as the target is only set from the switcher.
-  if (arg.target)
-  {
-    // thumper: should we Raise too? should the WM raise?
-    wm.Activate(arg.target);
-    return;
-  }
-
-  bool scale_was_active = wm.IsScaleActive();
-  bool active = IsActive();
-  bool user_visible = IsRunning();
-  /* We should check each child to see if there is
-   * an unmapped (!= minimized) window around and
-   * if so force "Focus" behaviour */
-
-  if (arg.source != ActionArg::Source::SWITCHER)
-  {
-    user_visible = app_->visible();
-
-    if (active)
-    {
-      bool any_visible = false;
-      bool any_mapped = false;
-      bool any_on_top = false;
-      bool any_on_monitor = (arg.monitor < 0);
-      int active_monitor = arg.monitor;
-
-      for (auto const& window : app_->GetWindows())
-      {
-        Window xid = window->window_id();
-
-        if (!any_visible && wm.IsWindowOnCurrentDesktop(xid))
-        {
-          any_visible = true;
-        }
-
-        if (!any_mapped && wm.IsWindowMapped(xid))
-        {
-          any_mapped = true;
-        }
-
-        if (!any_on_top && wm.IsWindowOnTop(xid))
-        {
-          any_on_top = true;
-        }
-
-        if (!any_on_monitor && window->monitor() == arg.monitor &&
-            wm.IsWindowMapped(xid) && wm.IsWindowVisible(xid))
-        {
-          any_on_monitor = true;
-        }
-
-        if (window->active())
-        {
-          active_monitor = window->monitor();
-        }
-      }
-
-      if (!any_visible || !any_mapped || !any_on_top)
-        active = false;
-
-      if (any_on_monitor && arg.monitor >= 0 && active_monitor != arg.monitor)
-        active = false;
-    }
-
-    if (user_visible && IsSticky() && IsFileManager())
-    {
-      // See bug #753938
-      unsigned minimum_windows = 0;
-      auto const& file_manager = GnomeFileManager::Get();
-
-      if (file_manager->IsTrashOpened())
-        ++minimum_windows;
-
-      if (file_manager->IsDeviceOpened())
-        ++minimum_windows;
-
-      if (minimum_windows > 0)
-      {
-        if (file_manager->OpenedLocations().size() == minimum_windows &&
-            GetWindows(WindowFilter::USER_VISIBLE|WindowFilter::MAPPED).size() == minimum_windows)
-        {
-          user_visible = false;
-        }
-      }
-    }
-  }
-
-  /* Behaviour:
-   * 1) Nothing running, or nothing visible -> launch application
-   * 2) Running and active -> spread application
-   * 3) Running and not active -> focus application
-   * 4) Spread is active and different icon pressed -> change spread
-   * 5) Spread is active -> Spread de-activated, and fall through
-   */
-
-  if (!IsRunning() || (IsRunning() && !user_visible)) // #1 above
-  {
-    if (GetQuirk(Quirk::STARTING, arg.monitor))
-      return;
-
-    wm.TerminateScale();
-    SetQuirk(Quirk::STARTING, true, arg.monitor);
-    OpenInstanceLauncherIcon(arg.timestamp);
-  }
-  else // app is running
-  {
-    if (active)
-    {
-      if (scale_was_active) // #5 above
-      {
-        wm.TerminateScale();
-
-        if (minimize_window_on_click())
-        {
-          for (auto const& win : GetWindows(WindowFilter::ON_CURRENT_DESKTOP))
-            wm.Minimize(win->window_id());
-        }
-        else
-        {
-          Focus(arg);
-        }
-      }
-      else // #2 above
-      {
-        if (arg.source != ActionArg::Source::SWITCHER)
-        {
-          bool minimized = false;
-
-          if (minimize_window_on_click())
-          {
-            WindowList const& windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP);
-
-            if (windows.size() == 1)
-            {
-              wm.Minimize(windows[0]->window_id());
-              minimized = true;
-            }
-          }
-
-          if (!minimized)
-          {
-            Spread(true, 0, false);
-          }
-        }
-      }
-    }
-    else
-    {
-      if (scale_was_active) // #4 above
-      {
-        if (GetWindows(WindowFilter::ON_CURRENT_DESKTOP).size() <= 1)
-          wm.TerminateScale();
-
-        Focus(arg);
-
-        if (arg.source != ActionArg::Source::SWITCHER)
-          Spread(true, 0, false);
-      }
-      else // #3 above
-      {
-        Focus(arg);
-      }
-    }
-  }
-}
-
-WindowList ApplicationLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
-{
-  if (!filter && monitor < 0)
-    return app_->GetWindows();
-
-  WindowManager& wm = WindowManager::Default();
-  WindowList results;
-
-  monitor = (filter & WindowFilter::ON_ALL_MONITORS) ? -1 : monitor;
-  bool mapped = (filter & WindowFilter::MAPPED);
-  bool user_visible = (filter & WindowFilter::USER_VISIBLE);
-  bool current_desktop = (filter & WindowFilter::ON_CURRENT_DESKTOP);
-
-  for (auto& window : app_->GetWindows())
-  {
-    if ((monitor >= 0 && window->monitor() == monitor) || monitor < 0)
-    {
-      if ((user_visible && window->visible()) || !user_visible)
-      {
-        Window xid = window->window_id();
-
-        if ((mapped && wm.IsWindowMapped(xid)) || !mapped)
-        {
-          if ((current_desktop && wm.IsWindowOnCurrentDesktop(xid)) || !current_desktop)
-          {
-            results.push_back(window);
-          }
-        }
-      }
-    }
-  }
-
-  return results;
-}
-
-WindowList ApplicationLauncherIcon::Windows()
-{
-  return GetWindows(WindowFilter::MAPPED|WindowFilter::ON_ALL_MONITORS);
-}
-
-std::vector<Window> ApplicationLauncherIcon::WindowsOnViewport()
-{
-  WindowFilterMask filter = 0;
-  filter |= WindowFilter::MAPPED;
-  filter |= WindowFilter::USER_VISIBLE;
-  filter |= WindowFilter::ON_CURRENT_DESKTOP;
-  filter |= WindowFilter::ON_ALL_MONITORS;
-
-  std::vector<Window> windows;
-  for (auto& window : GetWindows(filter))
-  {
-    windows.push_back(window->window_id());
-  }
-  return windows;
-}
-
-std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
-{
-  WindowFilterMask filter = 0;
-  filter |= WindowFilter::MAPPED;
-  filter |= WindowFilter::USER_VISIBLE;
-  filter |= WindowFilter::ON_CURRENT_DESKTOP;
-
-  std::vector<Window> windows;
-  for (auto& window : GetWindows(filter, monitor))
-  {
-    windows.push_back(window->window_id());
-  }
-  return windows;
-}
-
-void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
-{
-  for (auto const& window: app_->GetWindows())
-  {
-    if (xid == window->window_id())
-    {
-      int monitor = GetCenterForMonitor(window->monitor()).first;
-
-      if (monitor >= 0)
-      {
-        Present(0.5f, 600, monitor);
-        FullyAnimateQuirkDelayed(300, Quirk::SHIMMER, monitor);
-      }
-
-      break;
-    }
-  }
+  return app_ ? app_->visible() : false;
 }
 
 void ApplicationLauncherIcon::UpdateDesktopFile()
@@ -603,7 +319,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     bool update_saved_uri = (!filename.empty() && app_->sticky());
 
     if (update_saved_uri)
-      SimpleLauncherIcon::UnStick();
+      WindowedLauncherIcon::UnStick();
 
     uri_changed.emit(new_uri);
 
@@ -617,22 +333,6 @@ std::string ApplicationLauncherIcon::DesktopFile() const
   return app_->desktop_file();
 }
 
-void ApplicationLauncherIcon::AddProperties(debug::IntrospectionData& introspection)
-{
-  SimpleLauncherIcon::AddProperties(introspection);
-
-  std::vector<Window> xids;
-  for (auto const& window : GetWindows())
-    xids.push_back(window->window_id());
-
-  introspection
-    .add("desktop_file", DesktopFile())
-    .add("desktop_id", app_->desktop_id())
-    .add("xids", glib::Variant::FromVector(xids))
-    .add("sticky", IsSticky())
-    .add("startup_notification_timestamp", _startup_notification_timestamp);
-}
-
 void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp)
 {
   glib::Error error;
@@ -642,9 +342,9 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   GdkDisplay* display = gdk_display_get_default();
   glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
 
-  _startup_notification_timestamp = timestamp;
-  if (_startup_notification_timestamp > 0)
-    gdk_app_launch_context_set_timestamp(app_launch_context, _startup_notification_timestamp);
+  startup_notification_timestamp_ = timestamp;
+  if (startup_notification_timestamp_ > 0)
+    gdk_app_launch_context_set_timestamp(app_launch_context, startup_notification_timestamp_);
 
   if (g_app_info_supports_uris(appInfo))
   {
@@ -706,49 +406,6 @@ void ApplicationLauncherIcon::Focus(ActionArg arg)
 
   bool show_only_visible = arg.source == ActionArg::Source::SWITCHER;
   app_->Focus(show_only_visible, arg.monitor);
-}
-
-bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force)
-{
-  std::vector<Window> windows;
-  for (auto& window : GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0))
-    windows.push_back(window->window_id());
-
-  return WindowManager::Default().ScaleWindowGroup(windows, state, force);
-}
-
-void ApplicationLauncherIcon::EnsureWindowState()
-{
-  std::vector<int> number_of_windows_on_monitor(monitors::MAX);
-
-  for (auto& window: app_->GetWindows())
-  {
-    int monitor = window->monitor();
-    Window window_id = window->window_id();
-
-    if (WindowManager::Default().IsWindowOnCurrentDesktop(window_id))
-    {
-      // If monitor is -1 (or negative), show on all monitors.
-      if (monitor < 0)
-      {
-        for (unsigned j; j < monitors::MAX; ++j)
-          ++number_of_windows_on_monitor[j];
-      }
-      else
-      {
-        ++number_of_windows_on_monitor[monitor];
-      }
-    }
-  }
-
-  for (unsigned i = 0; i < monitors::MAX; ++i)
-    SetNumberOfWindowsVisibleOnMonitor(number_of_windows_on_monitor[i], i);
-}
-
-void ApplicationLauncherIcon::EnsureWindowsLocation()
-{
-  EnsureWindowState();
-  UpdateIconGeometries(GetCenters());
 }
 
 void ApplicationLauncherIcon::UpdateDesktopQuickList()
@@ -902,7 +559,7 @@ void ApplicationLauncherIcon::Stick(bool save)
   }
   else
   {
-    SimpleLauncherIcon::Stick(save);
+    WindowedLauncherIcon::Stick(save);
 
     if (save)
       LogUnityEvent(ApplicationEventType::ACCESS);
@@ -915,7 +572,7 @@ void ApplicationLauncherIcon::UnStick()
     return;
 
   LogUnityEvent(ApplicationEventType::ACCESS);
-  SimpleLauncherIcon::UnStick();
+  WindowedLauncherIcon::UnStick();
   SetQuirk(Quirk::VISIBLE, app_->visible());
   app_->sticky = false;
 
@@ -1128,28 +785,7 @@ void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> cons
   if (app_->type() == AppType::WEBAPP)
     return;
 
-  nux::Geometry geo(0, 0, icon_size, icon_size);
-
-  for (auto& window : app_->GetWindows())
-  {
-    Window xid = window->window_id();
-    int monitor = GetCenterForMonitor(window->monitor()).first;
-
-    if (monitor < 0)
-    {
-      WindowManager::Default().SetWindowIconGeometry(xid, nux::Geometry());
-      continue;
-    }
-
-    geo.x = centers[monitor].x - icon_size / 2;
-    geo.y = centers[monitor].y - icon_size / 2;
-    WindowManager::Default().SetWindowIconGeometry(xid, geo);
-  }
-}
-
-void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> const& centers)
-{
-  UpdateIconGeometries(centers);
+  return WindowedLauncherIcon::UpdateIconGeometries(centers);
 }
 
 void ApplicationLauncherIcon::UpdateRemoteUri()
@@ -1158,45 +794,17 @@ void ApplicationLauncherIcon::UpdateRemoteUri()
 
   if (!desktop_id.empty())
   {
-    _remote_uri = FavoriteStore::URI_PREFIX_APP + desktop_id;
+    remote_uri_ = FavoriteStore::URI_PREFIX_APP + desktop_id;
   }
   else
   {
-    _remote_uri.clear();
+    remote_uri_.clear();
   }
 }
 
 std::string ApplicationLauncherIcon::GetRemoteUri() const
 {
-  return _remote_uri;
-}
-
-void ApplicationLauncherIcon::OnDndEnter()
-{
-  auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
-
-  _source_manager.AddTimeout(1000, [this, timestamp] {
-    bool to_spread = GetWindows(WindowFilter::ON_CURRENT_DESKTOP).size() > 1;
-
-    if (!to_spread)
-      WindowManager::Default().TerminateScale();
-
-    if (!IsRunning())
-      return false;
-
-    UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
-    Focus(ActionArg(ActionArg::Source::LAUNCHER, 1, timestamp));
-
-    if (to_spread)
-      Spread(true, COMPIZ_SCALE_DND_SPREAD, false);
-
-    return false;
-  }, ICON_DND_OVER_TIMEOUT);
-}
-
-void ApplicationLauncherIcon::OnDndLeave()
-{
-  _source_manager.Remove(ICON_DND_OVER_TIMEOUT);
+  return remote_uri_;
 }
 
 bool ApplicationLauncherIcon::IsFileManager()
@@ -1251,28 +859,6 @@ void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   OpenInstanceWithUris(dnd_data.Uris(), timestamp);
 }
 
-bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
-{
-  if (!removed() && IsRunning() && IsVisible())
-  {
-    // If current is true, we only want to show the current workspace.
-    if (!current)
-    {
-      return true;
-    }
-    else
-    {
-      for (unsigned i = 0; i < monitors::MAX; ++i)
-      {
-        if (WindowVisibleOnMonitor(i))
-          return true;
-      }
-    }
-  }
-
-  return false;
-}
-
 bool ApplicationLauncherIcon::AllowDetailViewInSwitcher() const
 {
   return app_->type() != AppType::WEBAPP;
@@ -1280,18 +866,11 @@ bool ApplicationLauncherIcon::AllowDetailViewInSwitcher() const
 
 uint64_t ApplicationLauncherIcon::SwitcherPriority()
 {
-  uint64_t result = 0;
   // Webapps always go at the back.
   if (app_->type() == AppType::WEBAPP)
-    return result;
+    return 0;
 
-  for (auto& window : app_->GetWindows())
-  {
-    Window xid = window->window_id();
-    result = std::max(result, WindowManager::Default().GetWindowActiveNumber(xid));
-  }
-
-  return result;
+  return WindowedLauncherIcon::SwitcherPriority();
 }
 
 nux::Color ApplicationLauncherIcon::BackgroundColor() const
@@ -1299,7 +878,7 @@ nux::Color ApplicationLauncherIcon::BackgroundColor() const
   if (use_custom_bg_color_)
     return bg_color_;
 
-  return SimpleLauncherIcon::BackgroundColor();
+  return WindowedLauncherIcon::BackgroundColor();
 }
 
 const std::set<std::string> ApplicationLauncherIcon::GetSupportedTypes()
@@ -1315,102 +894,17 @@ const std::set<std::string> ApplicationLauncherIcon::GetSupportedTypes()
   return supported_types;
 }
 
-void PerformScrollUp(WindowList const& windows, unsigned int progressive_scroll)
-{
-  if (progressive_scroll == windows.size() - 1)
-  {
-    //RestackAbove to preserve Global Stacking Order
-    WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(1)->window_id());
-    WindowManager::Default().RestackBelow(windows.at(1)->window_id(), windows.at(0)->window_id());
-    windows.back()->Focus();
-    return;
-  }
-
-  WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(progressive_scroll + 1)->window_id());
-  windows.at(progressive_scroll + 1)->Focus();
-}
-
-void PerformScrollDown(WindowList const& windows, unsigned int progressive_scroll)
-{
-  if (!progressive_scroll)
-  {
-    WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.back()->window_id());
-    windows.at(1)->Focus();
-    return;
-  }
-
-  WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(progressive_scroll)->window_id());
-  windows.at(progressive_scroll)->Focus();
-}
-
-void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time timestamp)
-{
-  if (timestamp - _last_scroll_timestamp < 150)
-    return;
-  else if (timestamp - _last_scroll_timestamp > 1500)
-    _progressive_scroll = 0;
-
-  _last_scroll_timestamp = timestamp;
-
-  auto const& windows = GetWindowsOnCurrentDesktopInStackingOrder();
-
-  if (windows.empty())
-    return;
-
-  if (scroll_inactive_icons && !IsActive())
-  {
-    windows.at(0)->Focus();
-    return;
-  }
-
-  if (!scroll_inactive_icons && !IsActive())
-    return;
-
-  if (windows.size() <= 1)
-    return;
-
-  if (direction == ScrollDirection::DOWN)
-    ++_progressive_scroll;
-  else
-    //--_progressive_scroll; but roll to the top of windows
-    _progressive_scroll += windows.size() - 1;
-  _progressive_scroll %= windows.size();
-
-  switch(direction)
-  {
-  case ScrollDirection::UP:
-    PerformScrollUp(windows, _progressive_scroll);
-    break;
-  case ScrollDirection::DOWN:
-    PerformScrollDown(windows, _progressive_scroll);
-    break;
-  }
-}
-
-WindowList ApplicationLauncherIcon::GetWindowsOnCurrentDesktopInStackingOrder()
-{
-  auto windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP | WindowFilter::ON_ALL_MONITORS);
-  auto sorted_windows = WindowManager::Default().GetWindowsInStackingOrder();
-
-  // Order the windows
-  std::sort(windows.begin(), windows.end(), [&sorted_windows] (ApplicationWindowPtr const& win1, ApplicationWindowPtr const& win2) {
-    for (auto const& window : sorted_windows)
-    {
-      if (window == win1->window_id())
-        return false;
-      else if (window == win2->window_id())
-        return true;
-    }
-
-    return true;
-  });
-
-  return windows;
-}
-
 std::string ApplicationLauncherIcon::GetName() const
 {
   return "ApplicationLauncherIcon";
+}
+
+void ApplicationLauncherIcon::AddProperties(debug::IntrospectionData& introspection)
+{
+  WindowedLauncherIcon::AddProperties(introspection);
+
+  introspection.add("desktop_file", DesktopFile())
+               .add("desktop_id", app_->desktop_id());
 }
 
 } // namespace launcher

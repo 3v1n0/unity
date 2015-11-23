@@ -61,6 +61,7 @@ set (LAUNCHER_SOURCES
      VolumeImp.cpp
      VolumeLauncherIcon.cpp
      VolumeMonitorWrapper.cpp
+     WindowedLauncherIcon.cpp
      XdndCollectionWindowImp.cpp
      XdndManagerImp.cpp
      XdndStartStopNotifier.cpp

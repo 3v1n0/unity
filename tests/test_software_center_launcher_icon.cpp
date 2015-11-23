@@ -68,10 +68,10 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
     void LauncherIconUnstick() { LauncherIcon::UnStick(); }
 
     using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
-    using SoftwareCenterLauncherIcon::GetRemoteUri;
     using SoftwareCenterLauncherIcon::OnFinished;
     using SoftwareCenterLauncherIcon::OnPropertyChanged;
     using SoftwareCenterLauncherIcon::drag_window_;
+    using LauncherIcon::GetRemoteUri;
   };
 
   nux::ObjectPtr<Launcher> CreateLauncher()
