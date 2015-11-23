@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2013 Canonical Ltd
+* Copyright (C) 2015 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -43,8 +43,6 @@ public:
          int monitor, bool is_primary);
 
   bool HasGrab() const override;
-  bool IsIndicatorOpen() const override { return false;}
-  void ActivatePanel() override {}
 
 protected:
   bool AcceptKeyNavFocus() override;
@@ -63,7 +61,6 @@ private:
   nux::ObjectPtr<nux::Layout> primary_layout_;
   nux::ObjectPtr<nux::Layout> prompt_layout_;
   nux::ObjectPtr<nux::Layout> cof_layout_;
-  connection::Wrapper panel_active_conn_;
   connection::Wrapper regrab_conn_;
   glib::Source::UniquePtr regrab_timeout_;
   CofView* cof_view_;

@@ -48,6 +48,7 @@ public:
 
   nux::View* focus_view();
 
+  void AddAvatar(std::string const& avatar_icon, int avatar_size);
   void AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const&);
   void AddMessage(std::string const& message, nux::Color const& color);
   void AuthenticationCb(bool authenticated);
@@ -58,7 +59,7 @@ protected:
   void ResetLayout();
   void UpdateSize();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
-  nux::ObjectPtr<nux::BaseTexture> LoadUserIcon(int icon_size);
+  nux::ObjectPtr<nux::BaseTexture> LoadUserIcon(std::string const& icon_file, int icon_size);
 
 private:
   session::Manager::Ptr session_manager_;
@@ -66,9 +67,10 @@ private:
   StaticCairoText* username_;
   nux::VLayout* msg_layout_;
   nux::VLayout* prompt_layout_;
+  nux::VLayout* avatar_layout_;
   std::deque<TextInput*> focus_queue_;
-  IconTexture* SwitchIcon_;
-  IconTexture* Avatar_;
+  IconTexture* switch_icon_;
+  IconTexture* avatar_;
 
   nux::Geometry cached_focused_geo_;
 };

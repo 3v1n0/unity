@@ -405,11 +405,6 @@ TEST_F(TestGnomeSessionManager, HostName)
   EXPECT_EQ(manager->HostName(), g_get_host_name());
 }
 
-TEST_F(TestGnomeSessionManager, UserIconFile)
-{
-  EXPECT_EQ(manager->UserIconFile(), "/usr/share/pixmaps/faces/fish.jpg" );
-}
-
 TEST_F(TestGnomeSessionManager, SwitchToGreeter)
 {
   bool switch_called = false;

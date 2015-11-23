@@ -39,7 +39,7 @@ public:
   std::string RealName() const { return "Marco Trevisan"; }
   std::string UserName() const { return "marco"; }
   std::string HostName() const { return "tricky"; }
-  std::string UserIconFile() const { return "/usr/share/pixmaps/faces/fish.jpg"; }
+  void UserIconFile(std::function<void(GVariant*)>) const { std::cout << "UserIconFile" << std::endl; }
 
   void ScreenSaverActivate() { std::cout << "ScreenSaverActivate" << std::endl; }
   void ScreenSaverDeactivate() { std::cout << "ScreenSaverDeactivate" << std::endl; }

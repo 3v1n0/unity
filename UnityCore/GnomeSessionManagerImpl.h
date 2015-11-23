@@ -54,7 +54,7 @@ struct GnomeManager::Impl
   bool HasInhibitors();
   void EnsureCancelPendingAction();
   void LockScreen(bool prompt);
-  std::string UserIconFile();
+  void UserIconFile(std::function<void(GVariant*)> callback);
 
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
@@ -80,6 +80,7 @@ struct GnomeManager::Impl
   glib::DBusProxy::Ptr login_proxy_;
   glib::DBusProxy::Ptr presence_proxy_;
   glib::DBusProxy::Ptr dm_proxy_;
+  glib::DBusProxy::Ptr dm_seat_proxy_;
 
   int open_sessions_;
 };

@@ -27,10 +27,9 @@
 #include <Nux/View.h>
 #include <UnityCore/SessionManager.h>
 
+#include "LockScreenAbstractPromptView.h"
 #include "UserAuthenticatorPam.h"
 #include "unity-shared/IMTextEntry.h"
-
-#include "LockScreenAbstractPromptView.h"
 
 namespace nux
 {

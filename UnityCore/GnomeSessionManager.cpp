@@ -155,6 +155,13 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     });
   }
 
+  {
+    dm_seat_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.Accounts",
+                                                       ("/org/freedesktop/Accounts/User" + std::to_string(getuid())).c_str(),
+                                                       "org.freedesktop.Accounts.User",
+                                                       G_BUS_TYPE_SYSTEM);
+  }
+
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {
     if (err)
     {
@@ -440,7 +447,7 @@ void GnomeManager::Impl::CallDisplayManagerSeatMethod(std::string const& method,
   proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
     if (e)
     {
-      LOG_ERROR(logger) << "Fallback call failed: " << e.Message();
+      LOG_ERROR(logger) << "DisplayManager Seat call failed: " << e.Message();
     }
   });
 }
@@ -506,40 +513,9 @@ bool GnomeManager::Impl::HasInhibitors()
   return inhibitors.GetBool();
 }
 
-std::string GnomeManager::Impl::UserIconFile()
+void GnomeManager::Impl::UserIconFile(std::function<void(GVariant*)> callback)
 {
-  if (test_mode_)
-      return std::string("/usr/share/pixmaps/faces/fish.jpg") ;
-  glib::Error error;
-  glib::Object<GDBusConnection> system_bus(g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, &error));
-
-  if (error)
-  {
-    LOG_ERROR(logger)<<"Unable to get system bus: "<< error;
-    return "";
-  }
-
-  glib::Variant IconFile(g_dbus_connection_call_sync (system_bus,
-                                           "org.freedesktop.Accounts",
-                                           g_strdup_printf("/org/freedesktop/Accounts/User%i", getuid()),
-                                           "org.freedesktop.DBus.Properties",
-                                           "Get",
-                                           g_variant_new("(ss)",
-                                                         "org.freedesktop.Accounts.User",
-                                                         "IconFile"),
-                                           G_VARIANT_TYPE("(v)"),
-                                           G_DBUS_CALL_FLAGS_NONE,
-                                           -1,
-                                           nullptr,
-                                           &error));
-
-  if (error)
-  {
-    LOG_ERROR(logger)<<"Couldn't find user icon in accounts service: "<< error;
-    return "";
-  }
-
-  return IconFile.GetString();
+  dm_seat_proxy_->GetProperty("IconFile", callback);
 }
 
 bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string const& group_name)
@@ -587,9 +563,9 @@ std::string GnomeManager::HostName() const
   return glib::gchar_to_string(g_get_host_name());
 }
 
-std::string GnomeManager::UserIconFile() const
+void GnomeManager::UserIconFile(std::function<void(GVariant*)> callback) const
 {
-  return impl_->UserIconFile();
+  impl_->UserIconFile(callback);
 }
 
 void GnomeManager::ScreenSaverActivate()

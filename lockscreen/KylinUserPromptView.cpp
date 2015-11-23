@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2014 Canonical Ltd
+* Copyright (C) 2015 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -43,15 +43,18 @@ namespace lockscreen
 {
 namespace
 {
+const RawPixel AVATAR_SIZE          = 128_em;
+const RawPixel ACTIVATOR_ICON_SIZE  = 34_em;
 const RawPixel LAYOUT_MARGIN        = 20_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
 const RawPixel MSG_LAYOUT_PADDING   = 33_em;
 const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
 const RawPixel SWITCH_ICON_SIZE     = 32_em;
-const RawPixel AVATAR_SIZE          = 128_em;
 const RawPixel TEXT_INPUT_HEIGHT    =  36_em;
 const RawPixel TEXT_INPUT_WIDTH     = 320_em;
 const int PROMPT_FONT_SIZE = 14;
+
+const std::string ACTIVATOR_ICON = "login.png";
 
 std::string SanitizeMessage(std::string const& message)
 {
@@ -81,8 +84,9 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
   , username_(nullptr)
   , msg_layout_(nullptr)
   , prompt_layout_(nullptr)
-  , SwitchIcon_(nullptr)
-  , Avatar_(nullptr)
+  , avatar_layout_(nullptr)
+  , switch_icon_(nullptr)
+  , avatar_(nullptr)
 {
     user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
         AddPrompt(message, true, promise);
@@ -106,6 +110,10 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
 
     scale.changed.connect(sigc::hide(sigc::mem_fun(this, &KylinUserPromptView::UpdateSize)));
 
+    session_manager_->UserIconFile([this] (GVariant* value) {
+        AddAvatar(glib::gchar_to_string(g_variant_get_string(value, NULL)), AVATAR_SIZE.CP(scale));
+    });
+
     UpdateSize();
     ResetLayout();
 
@@ -126,19 +134,17 @@ void KylinUserPromptView::ResetLayout()
     nux::Layout* switch_layout = new nux::HLayout();
 
     TextureCache& cache = TextureCache::GetDefault();
-    SwitchIcon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale)));
-    switch_layout->AddView(SwitchIcon_);
-    SwitchIcon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
+    switch_icon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale)));
+    switch_layout->AddView(switch_icon_);
+    switch_icon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
       session_manager_->SwitchToGreeter();
     });
     switch_layout->SetMaximumSize(SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale));
     GetLayout()->AddLayout(switch_layout);
   }
 
-  Avatar_ = new IconTexture(LoadUserIcon(AVATAR_SIZE.CP(scale)));
-  Avatar_->SetMinimumWidth(AVATAR_SIZE.CP(scale));
-  Avatar_->SetMaximumWidth(AVATAR_SIZE.CP(scale));
-  GetLayout()->AddView(Avatar_);
+  avatar_layout_ = new nux::VLayout();
+  GetLayout()->AddLayout(avatar_layout_);
 
   nux::Layout* prompt_layout = new nux::VLayout();
 
@@ -276,6 +282,12 @@ void KylinUserPromptView::AddPrompt(std::string const& message, bool visible, Pr
   auto* text_entry = text_input->text_entry();
 
   text_input->scale = scale();
+  text_input->activator_icon = ACTIVATOR_ICON;
+  text_input->activator_icon_size = ACTIVATOR_ICON_SIZE;
+  text_input->background_color = nux::Color(1.0f, 1.0f, 1.0f, 0.8f);
+  text_input->border_color = nux::Color(0.0f, 0.0f, 0.0f, 0.0f);
+  text_input->border_radius = 0;
+  text_input->hint_color = nux::Color(0.0f, 0.0f, 0.0f, 0.5f);
   text_input->input_hint = SanitizeMessage(message);
   text_input->hint_font_size = PROMPT_FONT_SIZE;
   text_input->show_caps_lock = true;
@@ -342,17 +354,30 @@ void KylinUserPromptView::AddMessage(std::string const& message, nux::Color cons
   QueueDraw();
 }
 
-nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(int user_icon_size)
+void KylinUserPromptView::AddAvatar(std::string const& icon_file, int icon_size)
+{
+  avatar_ = new IconTexture(LoadUserIcon(icon_file, icon_size));
+  avatar_->SetMinimumWidth(icon_size);
+  avatar_->SetMaximumWidth(icon_size);
+  avatar_layout_->AddView(avatar_);
+
+  GetLayout()->ComputeContentPosition(0, 0);
+  ComputeContentSize();
+  QueueRelayout();
+  QueueDraw();
+}
+
+nux::ObjectPtr<nux::BaseTexture> KylinUserPromptView::LoadUserIcon(std::string const& icon_file, int icon_size)
 {
   glib::Error error;
-  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(session_manager_->UserIconFile().c_str(), user_icon_size, user_icon_size, &error));
-  if (pixbuf == nullptr)
+  glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(icon_file.c_str(), icon_size, icon_size, &error));
+  if (!pixbuf)
   {
     auto* theme = gtk_icon_theme_get_default();
     GtkIconLookupFlags flags = GTK_ICON_LOOKUP_FORCE_SIZE;
-    pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default-kylin", user_icon_size, flags, &error);
-    if ( pixbuf == nullptr)
-      pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default", user_icon_size, flags, &error);
+    pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default-kylin", icon_size, flags, &error);
+    if (!pixbuf)
+      pixbuf = gtk_icon_theme_load_icon(theme, "avatar-default", icon_size, flags, &error);
   }
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf));
   cairo_t* cr = cg.GetInternalContext();

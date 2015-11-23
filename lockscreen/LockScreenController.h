@@ -33,9 +33,6 @@
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 
-#include "KylinUserPromptView.h"
-#include "LockScreenAbstractPromptView.h"
-
 namespace unity
 {
 namespace lockscreen

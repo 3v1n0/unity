@@ -23,10 +23,12 @@
 #include <UnityCore/GLibDBusProxy.h>
 #include <NuxCore/Logger.h>
 
+#include "KylinUserPromptView.h"
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity
@@ -224,7 +226,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
   if (!prompt_view)
   {
-    if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"), "Kylin") == 0)
+    if (unity::Settings::Instance().desktop_type() == DesktopType::UBUNTUKYLIN)
       prompt_view = test_mode_ ? nullptr : new KylinUserPromptView(session_manager_);
     else
       prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);

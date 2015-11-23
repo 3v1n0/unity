@@ -36,7 +36,7 @@ public:
   std::string RealName() const;
   std::string UserName() const;
   std::string HostName() const;
-  std::string UserIconFile() const;
+  void UserIconFile(std::function<void(GVariant*)>) const;
 
   void ScreenSaverActivate();
   void ScreenSaverDeactivate();

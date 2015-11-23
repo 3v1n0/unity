@@ -58,8 +58,8 @@ public:
 
   using MockableBaseWindow::RemoveLayout;
   virtual bool HasGrab() const = 0;
-  virtual bool IsIndicatorOpen() const = 0;
-  virtual void ActivatePanel() = 0;
+  virtual bool IsIndicatorOpen() const { return false; }
+  virtual void ActivatePanel() {}
 
   sigc::signal<void> grabbed;
   sigc::signal<void> grab_failed;

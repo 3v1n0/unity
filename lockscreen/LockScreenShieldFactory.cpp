@@ -21,6 +21,7 @@
 #include "LockScreenShield.h"
 #include "LockScreenAbstractPromptView.h"
 #include "KylinLockScreenShield.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -33,7 +34,7 @@ nux::ObjectPtr<AbstractShield> ShieldFactory::CreateShield(session::Manager::Ptr
                                                            nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                                                            int monitor, bool is_primary)
 {
-  if (g_strcmp0(getenv("KYLIN_CURRENT_DESKTOP"),"Kylin") == 0)
+  if (Settings::Instance().desktop_type() == DesktopType::UBUNTUKYLIN)
     return nux::ObjectPtr<KylinShield>(new KylinShield(session_manager, accelerators, prompt_view, monitor, is_primary));
   else
     return nux::ObjectPtr<Shield>(new Shield(session_manager, indicators, accelerators, prompt_view,  monitor, is_primary));

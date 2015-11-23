@@ -26,6 +26,7 @@
 
 #include "Introspectable.h"
 #include "IMTextEntry.h"
+#include "RawPixel.h"
 #include "SearchBarSpinner.h"
 
 namespace nux
@@ -57,10 +58,16 @@ public:
 
   IMTextEntry* text_entry() const;
 
+  nux::Property<std::string> activator_icon;
+  nux::Property<RawPixel> activator_icon_size;
+  nux::Property<nux::Color> background_color;
+  nux::Property<nux::Color> border_color;
+  nux::Property<int> border_radius;
   nux::RWProperty<std::string> input_string;
   nux::Property<std::string> input_hint;
   nux::Property<std::string> hint_font_name;
   nux::Property<int> hint_font_size;
+  nux::Property<nux::Color> hint_color;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
   nux::Property<bool> show_activator;
@@ -70,6 +77,7 @@ public:
 private:
   void OnFontChanged();
   void UpdateHintFont();
+  void UpdateHintColor();
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   void UpdateBackground(bool force);
@@ -86,7 +94,7 @@ private:
   nux::Geometry GetWaringIconGeometry() const;
   void CheckIfCapsLockOn();
 
-  nux::ObjectPtr<nux::BaseTexture> LoadActivatorIcon(int icon_size);
+  nux::ObjectPtr<nux::BaseTexture> LoadActivatorIcon(std::string const& icon_file, int icon_size);
   nux::ObjectPtr<nux::BaseTexture> LoadWarningIcon(int icon_size);
   void LoadWarningTooltip();
 

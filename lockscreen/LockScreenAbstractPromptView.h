@@ -62,8 +62,6 @@ public:
   virtual void ResetLayout() = 0;
   virtual void UpdateSize() = 0;
 
-  virtual bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character) = 0;
-
 protected:
   session::Manager::Ptr session_manager_;
   UserAuthenticatorPam user_authenticator_;
