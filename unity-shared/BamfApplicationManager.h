@@ -175,6 +175,8 @@ public:
   ApplicationPtr EnsureApplication(BamfView*) const;
   ApplicationWindowPtr EnsureWindow(BamfView*) const;
 
+  void FocusWindowGroup(WindowList const&, bool show_on_visible, int monitor) const;
+
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);

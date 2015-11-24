@@ -338,6 +338,7 @@ struct MockApplicationManager : public unity::ApplicationManager
   MOCK_CONST_METHOD0(GetActiveApplication, unity::ApplicationPtr());
   MOCK_CONST_METHOD1(GetWindowsForMonitor, unity::WindowList(int));
   MOCK_CONST_METHOD1(GetWindowForId, unity::ApplicationWindowPtr(Window));
+  MOCK_CONST_METHOD3(FocusWindowGroup, void(unity::WindowList const&, bool, int));
 
   unity::ApplicationPtr LocalGetApplicationForDesktopFile(std::string const& desktop_file)
   {
