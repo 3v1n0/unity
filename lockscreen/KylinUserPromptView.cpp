@@ -87,6 +87,7 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
   , avatar_layout_(nullptr)
   , switch_icon_(nullptr)
   , avatar_(nullptr)
+  , avatar_icon_file("")
 {
     user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
         AddPrompt(message, true, promise);
@@ -111,7 +112,8 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
     scale.changed.connect(sigc::hide(sigc::mem_fun(this, &KylinUserPromptView::UpdateSize)));
 
     session_manager_->UserIconFile([this] (GVariant* value) {
-        AddAvatar(glib::gchar_to_string(g_variant_get_string(value, NULL)), AVATAR_SIZE.CP(scale));
+        avatar_icon_file = glib::gchar_to_string(g_variant_get_string(value, NULL));
+        AddAvatar(avatar_icon_file(), AVATAR_SIZE.CP(scale));
     });
 
     UpdateSize();
@@ -144,6 +146,8 @@ void KylinUserPromptView::ResetLayout()
   }
 
   avatar_layout_ = new nux::VLayout();
+  if (!avatar_icon_file().empty())
+    AddAvatar(avatar_icon_file(), AVATAR_SIZE.CP(scale));
   GetLayout()->AddLayout(avatar_layout_);
 
   nux::Layout* prompt_layout = new nux::VLayout();

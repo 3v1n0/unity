@@ -71,6 +71,7 @@ private:
   std::deque<TextInput*> focus_queue_;
   IconTexture* switch_icon_;
   IconTexture* avatar_;
+  nux::Property<std::string> avatar_icon_file;
 
   nux::Geometry cached_focused_geo_;
 };

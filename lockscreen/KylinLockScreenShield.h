@@ -29,7 +29,6 @@ namespace unity
 namespace lockscreen
 {
 
-class BackgroundSettings;
 class UserAuthenticator;
 class AbstractUserPromptView;
 class CofView;
@@ -42,25 +41,16 @@ public:
          nux::ObjectPtr<AbstractUserPromptView> const&,
          int monitor, bool is_primary);
 
-  bool HasGrab() const override;
-
 protected:
   nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
-  nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
 
 private:
-  void UpdateBackgroundTexture();
-  void GrabScreen(bool cancel_on_failure);
   void ShowPrimaryView();
   void ShowSecondaryView();
 
-  std::shared_ptr<BackgroundSettings> bg_settings_;
-  std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
   nux::ObjectPtr<nux::Layout> primary_layout_;
   nux::ObjectPtr<nux::Layout> prompt_layout_;
   nux::ObjectPtr<nux::Layout> cof_layout_;
-  connection::Wrapper regrab_conn_;
-  glib::Source::UniquePtr regrab_timeout_;
   CofView* cof_view_;
 };
 

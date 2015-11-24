@@ -23,30 +23,21 @@
 #include <Nux/HLayout.h>
 #include <Nux/PaintLayer.h>
 
-#include "BackgroundSettings.h"
 #include "CofView.h"
-#include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
-#include "KylinUserPromptView.h"
-#include "unity-shared/UScreen.h"
+#include "LockScreenAbstractPromptView.h"
 #include "unity-shared/UnitySettings.h"
-#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
 namespace lockscreen
 {
-namespace
-{
-const unsigned MAX_GRAB_WAIT = 100;
-}
 
 KylinShield::KylinShield(session::Manager::Ptr const& session_manager,
                Accelerators::Ptr const& accelerators,
                nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                int monitor_num, bool is_primary)
   : AbstractShield(session_manager, nullptr, accelerators, prompt_view, monitor_num, is_primary)
-  , bg_settings_(std::make_shared<BackgroundSettings>())
   , cof_view_(nullptr)
 {
   UpdateScale();
@@ -87,49 +78,6 @@ KylinShield::KylinShield(session::Manager::Ptr const& session_manager,
     auto const& abs_geo = GetAbsoluteGeometry();
     grab_motion.emit(abs_geo.x + x, abs_geo.y + y);
   });
-}
-
-void KylinShield::UpdateBackgroundTexture()
-{
-  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
-
-  if (!background_layer_ || monitor_geo != background_layer_->GetGeometry())
-  {
-    auto background_texture = bg_settings_->GetBackgroundTexture(monitor);
-    background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
-    SetBackgroundLayer(background_layer_.get());
-  }
-}
-
-void KylinShield::GrabScreen(bool cancel_on_failure)
-{
-  auto& wc = nux::GetWindowCompositor();
-
-  if (wc.GrabPointerAdd(this) && wc.GrabKeyboardAdd(this))
-  {
-    regrab_conn_->disconnect();
-    regrab_timeout_.reset();
-    grabbed.emit();
-  }
-  else
-  {
-    auto const& retry_cb = sigc::bind(sigc::mem_fun(this, &KylinShield::GrabScreen), false);
-    regrab_conn_ = WindowManager::Default().screen_ungrabbed.connect(retry_cb);
-
-    if (cancel_on_failure)
-    {
-      regrab_timeout_.reset(new glib::Timeout(MAX_GRAB_WAIT, [this] {
-        grab_failed.emit();
-        return false;
-      }));
-    }
-  }
-}
-
-bool KylinShield::HasGrab() const
-{
-  auto& wc = nux::GetWindowCompositor();
-  return (wc.GetPointerGrabArea() == this && wc.GetKeyboardGrabArea() == this);
 }
 
 void KylinShield::ShowPrimaryView()
@@ -203,16 +151,6 @@ nux::Area* KylinShield::FindKeyFocusArea(unsigned etype, unsigned long keysym, u
   }
 
   return nullptr;
-}
-
-nux::Area* KylinShield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType event_type)
-{
-  nux::Area* area = BaseWindow::FindAreaUnderMouse(mouse, event_type);
-
-  if (!area && primary)
-    return this;
-
-  return area;
 }
 
 }
