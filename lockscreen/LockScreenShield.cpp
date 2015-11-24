@@ -96,11 +96,6 @@ Shield::Shield(session::Manager::Ptr const& session_manager,
   });
 }
 
-void Shield::UpdateScale()
-{
-  scale = unity::Settings::Instance().em(monitor)->DPIScale();
-}
-
 void Shield::UpdateBackgroundTexture()
 {
   auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
@@ -257,11 +252,6 @@ nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsign
   }
 
   return nullptr;
-}
-
-bool Shield::AcceptKeyNavFocus()
-{
-  return false;
 }
 
 nux::Area* Shield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType event_type)

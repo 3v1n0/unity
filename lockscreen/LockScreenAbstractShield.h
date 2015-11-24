@@ -25,6 +25,7 @@
 #include <UnityCore/Indicators.h>
 
 #include "unity-shared/MockableBaseWindow.h"
+#include "unity-shared/UnitySettings.h"
 #include "LockScreenAccelerators.h"
 
 namespace unity
@@ -60,6 +61,11 @@ public:
   virtual bool HasGrab() const = 0;
   virtual bool IsIndicatorOpen() const { return false; }
   virtual void ActivatePanel() {}
+  virtual bool AcceptKeyNavFocus() { return false; }
+  virtual void UpdateScale()
+  {
+    scale = Settings::Instance().em(monitor)->DPIScale();
+  }
 
   sigc::signal<void> grabbed;
   sigc::signal<void> grab_failed;

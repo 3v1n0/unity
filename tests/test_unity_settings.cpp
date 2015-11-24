@@ -53,12 +53,14 @@ struct TestUnitySettings : testing::Test
    , sig_receiver(unity_settings)
   {
     g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::DESKTOP));
+    g_settings_set_enum(gsettings, "desktop-type", static_cast<int>(unity::DesktopType::UBUNTU));
   }
 
   ~TestUnitySettings()
   {
     sig_receiver.notify_callbacks();
     g_settings_reset(gsettings, "form-factor");
+    g_settings_reset(gsettings, "desktop-type");
   }
 };
 
@@ -76,6 +78,14 @@ TEST_F(TestUnitySettings, GetFormFactor)
 
   g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::NETBOOK));
   EXPECT_EQ(unity_settings->form_factor(), unity::FormFactor::NETBOOK);
+}
+
+TEST_F(TestUnitySettings, GetDesktopType)
+{
+  ASSERT_NE(unity_settings->desktop_type(), unity::DesktopType::UBUNTUKYLIN);
+
+  g_settings_set_enum(gsettings, "desktop-type", static_cast<int>(unity::DesktopType::UBUNTUKYLIN));
+  EXPECT_EQ(unity_settings->desktop_type(), unity::DesktopType::UBUNTUKYLIN);
 }
 
 TEST_F(TestUnitySettings, FormFactorChangedSignal_Extern)

@@ -89,11 +89,6 @@ KylinShield::KylinShield(session::Manager::Ptr const& session_manager,
   });
 }
 
-void KylinShield::UpdateScale()
-{
-  scale = unity::Settings::Instance().em(monitor)->DPIScale();
-}
-
 void KylinShield::UpdateBackgroundTexture()
 {
   auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
@@ -208,11 +203,6 @@ nux::Area* KylinShield::FindKeyFocusArea(unsigned etype, unsigned long keysym, u
   }
 
   return nullptr;
-}
-
-bool KylinShield::AcceptKeyNavFocus()
-{
-  return false;
 }
 
 nux::Area* KylinShield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType event_type)

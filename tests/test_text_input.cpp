@@ -25,6 +25,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/TextInput.h"
+#include "unity-shared/UnitySettings.h"
 #include "test_utils.h"
 
 using namespace nux;
@@ -63,19 +64,12 @@ class TestTextInput : public ::testing::Test
 
 TEST_F(TestTextInput, HintCorrectInit)
 {
-//  nux::Color color = hint->GetTextColor();
-//  if (Settings::Instance().desktop_type() == DesktopType::UBUNTUKYLIN)
-//  {
-//    EXPECT_EQ(color.red, 0.0f);
-//    EXPECT_EQ(color.green, 0.0f);
-//    EXPECT_EQ(color.blue, 0.0f);
-//    EXPECT_EQ(color.alpha, 0.5f);
-//  } else {
-//    EXPECT_EQ(color.red, 1.0f);
-//    EXPECT_EQ(color.green, 1.0f);
-//    EXPECT_EQ(color.blue, 1.0f);
-//    EXPECT_EQ(color.alpha, 0.5f);
-//  }
+  nux::Color color = hint->GetTextColor();
+
+  EXPECT_EQ(color.red, 1.0f);
+  EXPECT_EQ(color.green, 1.0f);
+  EXPECT_EQ(color.blue, 1.0f);
+  EXPECT_EQ(color.alpha, 0.5f);
 }
 
 TEST_F(TestTextInput, InputStringCorrectSetter)

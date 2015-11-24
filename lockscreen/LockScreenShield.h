@@ -49,7 +49,6 @@ public:
   void ActivatePanel() override;
 
 protected:
-  bool AcceptKeyNavFocus() override;
   nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
   nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
 
@@ -58,7 +57,6 @@ private:
   void GrabScreen(bool cancel_on_failure);
   void ShowPrimaryView();
   void ShowSecondaryView();
-  void UpdateScale();
   Panel* CreatePanel();
 
   std::shared_ptr<BackgroundSettings> bg_settings_;

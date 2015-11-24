@@ -45,7 +45,6 @@ public:
   bool HasGrab() const override;
 
 protected:
-  bool AcceptKeyNavFocus() override;
   nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
   nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
 
@@ -54,7 +53,6 @@ private:
   void GrabScreen(bool cancel_on_failure);
   void ShowPrimaryView();
   void ShowSecondaryView();
-  void UpdateScale();
 
   std::shared_ptr<BackgroundSettings> bg_settings_;
   std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
