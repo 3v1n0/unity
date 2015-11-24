@@ -91,7 +91,7 @@ struct MockApplicationWindow : unity::ApplicationWindow
       return;
 
     title_ = new_title;
-    title.changed(title_);
+    title.changed.emit(title_);
   }
 
   void SetIcon(std::string const& new_icon)
@@ -100,7 +100,16 @@ struct MockApplicationWindow : unity::ApplicationWindow
       return;
 
     icon_ = new_icon;
-    icon.changed(icon_);
+    icon.changed.emit(icon_);
+  }
+
+  void SetMonitor(int new_monitor)
+  {
+    if (monitor_ == new_monitor)
+      return;
+
+    monitor_ = new_monitor;
+    monitor.changed.emit(monitor_);
   }
 };
 
