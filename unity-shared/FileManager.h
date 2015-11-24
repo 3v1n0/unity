@@ -27,6 +27,8 @@
 #include <vector>
 #include <set>
 #include <sigc++/sigc++.h>
+#include "ApplicationManager.h"
+
 
 namespace unity
 {
@@ -42,13 +44,15 @@ public:
   virtual void Open(std::string const& uri, uint64_t timestamp = 0) = 0;
   virtual void OpenActiveChild(std::string const& uri, uint64_t timestamp = 0) = 0;
   virtual void OpenTrash(uint64_t timestamp) = 0;
-  virtual std::vector<std::string> OpenedLocations() const = 0;
+  virtual std::vector<std::string> const& OpenedLocations() const = 0;
   virtual bool IsPrefixOpened(std::string const& uri) const = 0;
   virtual bool IsTrashOpened() const = 0;
   virtual bool IsDeviceOpened() const = 0;
   virtual void CopyFiles(std::set<std::string> const& uris, std::string const& dest, uint64_t timestamp = 0) = 0;
   virtual bool TrashFile(std::string const& uri) = 0;
   virtual void EmptyTrash(uint64_t timestamp = 0) = 0;
+  virtual WindowList WindowsForLocation(std::string const& location) const = 0;
+  virtual std::vector<std::string> const& LocationsForWindow(ApplicationWindowPtr const&) const = 0;
 
   sigc::signal<void> locations_changed;
 
@@ -57,6 +61,6 @@ private:
   FileManager& operator=(FileManager const&) = delete;
 };
 
-}
+} // namespace unity
 
 #endif

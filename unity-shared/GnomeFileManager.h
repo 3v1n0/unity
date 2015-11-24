@@ -40,10 +40,12 @@ public:
   bool TrashFile(std::string const& uri);
   void EmptyTrash(uint64_t timestamp);
 
-  std::vector<std::string> OpenedLocations() const;
+  std::vector<std::string> const& OpenedLocations() const;
   bool IsPrefixOpened(std::string const& uri) const;
   bool IsTrashOpened() const;
   bool IsDeviceOpened() const;
+  WindowList WindowsForLocation(std::string const& location) const;
+  std::vector<std::string> const& LocationsForWindow(ApplicationWindowPtr const&) const;
 
 private:
   GnomeFileManager();
