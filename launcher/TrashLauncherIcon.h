@@ -26,7 +26,7 @@
 #include <UnityCore/ConnectionManager.h>
 
 #include "DndData.h"
-#include "WindowedLauncherIcon.h"
+#include "StorageLauncherIcon.h"
 #include "unity-shared/FileManager.h"
 
 namespace unity
@@ -34,7 +34,7 @@ namespace unity
 namespace launcher
 {
 
-class TrashLauncherIcon : public WindowedLauncherIcon
+class TrashLauncherIcon : public StorageLauncherIcon
 {
 public:
   TrashLauncherIcon(FileManager::Ptr const& = nullptr);
@@ -51,19 +51,15 @@ protected:
 
 private:
   void OpenInstanceLauncherIcon(Time timestamp) override;
-  void OnOpenedLocationsChanged();
-  void OnActiveWindowChanged(ApplicationWindowPtr const&);
   MenuItemsVector GetMenus();
 
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
 
   bool empty_;
-  FileManager::Ptr file_manager_;
   glib::Cancellable cancellable_;
   glib::Object<GFileMonitor> trash_monitor_;
   glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent> trash_changed_signal_;
   glib::Signal<void, DbusmenuMenuitem*, unsigned> empty_activated_signal_;
-  connection::Manager windows_connections_;
 };
 
 }

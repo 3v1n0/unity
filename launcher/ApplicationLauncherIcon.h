@@ -116,7 +116,7 @@ private:
   connection::Manager signals_conn_;
 };
 
-}
-}
+} // namespace launcher
+} // namespace unity
 
 #endif // APPLICATION_LAUNCHER_ICON_H

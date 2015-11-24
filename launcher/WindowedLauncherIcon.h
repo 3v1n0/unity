@@ -84,7 +84,7 @@ private:
   unsigned int progressive_scroll_;
 };
 
-}
-}
+} // namespace launcher
+} // namespace unity
 
 #endif // WINDOWED_LAUNCHER_ICON_H

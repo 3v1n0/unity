@@ -41,10 +41,9 @@ namespace
   const std::string TRASH_URI = "trash:";
 }
 
-TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
-  : WindowedLauncherIcon(IconType::TRASH)
+TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
+  : StorageLauncherIcon(IconType::TRASH, fm)
   , empty_(true)
-  , file_manager_(fmo ? fmo : GnomeFileManager::Get())
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
@@ -73,9 +72,6 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
     });
   }
 
-  file_manager_->locations_changed.connect(sigc::mem_fun(this, &TrashLauncherIcon::OnOpenedLocationsChanged));
-  ApplicationManager::Default().active_window_changed.connect(sigc::mem_fun(this, &TrashLauncherIcon::OnActiveWindowChanged));
-
   UpdateTrashIcon();
   EnsureWindowsLocation();
 }
@@ -83,31 +79,6 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
 WindowList TrashLauncherIcon::GetManagedWindows() const
 {
   return file_manager_->WindowsForLocation(TRASH_URI);
-}
-
-void TrashLauncherIcon::OnOpenedLocationsChanged()
-{
-  bool active = false;
-  auto const& wins = GetManagedWindows();
-  windows_connections_.Clear();
-
-  for (auto const& win : wins)
-  {
-    windows_connections_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
-
-    if (!active && win->active())
-      active = true;
-  }
-
-  SetQuirk(Quirk::RUNNING, !wins.empty());
-  SetQuirk(Quirk::ACTIVE, active);
-  EnsureWindowsLocation();
-}
-
-void TrashLauncherIcon::OnActiveWindowChanged(ApplicationWindowPtr const& win)
-{
-  auto const& wins = GetManagedWindows();
-  SetQuirk(Quirk::ACTIVE, std::find(begin(wins), end(wins), win) != end(wins));
 }
 
 void TrashLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
