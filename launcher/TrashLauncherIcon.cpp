@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2013 Canonical Ltd
+ * Copyright (C) 2010-2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -42,7 +42,7 @@ namespace
 }
 
 TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
-  : SimpleLauncherIcon(IconType::TRASH)
+  : WindowedLauncherIcon(IconType::TRASH)
   , empty_(true)
   , file_manager_(fmo ? fmo : GnomeFileManager::Get())
 {
@@ -74,13 +74,45 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   }
 
   file_manager_->locations_changed.connect(sigc::mem_fun(this, &TrashLauncherIcon::OnOpenedLocationsChanged));
+  ApplicationManager::Default().active_window_changed.connect(sigc::mem_fun(this, &TrashLauncherIcon::OnActiveWindowChanged));
 
   UpdateTrashIcon();
+  EnsureWindowsLocation();
+}
+
+WindowList TrashLauncherIcon::GetManagedWindows() const
+{
+  return file_manager_->WindowsForLocation(TRASH_URI);
 }
 
 void TrashLauncherIcon::OnOpenedLocationsChanged()
 {
-  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
+  bool active = false;
+  auto const& wins = GetManagedWindows();
+  windows_connections_.Clear();
+
+  for (auto const& win : wins)
+  {
+    windows_connections_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
+
+    if (!active && win->active())
+      active = true;
+  }
+
+  SetQuirk(Quirk::RUNNING, !wins.empty());
+  SetQuirk(Quirk::ACTIVE, active);
+  EnsureWindowsLocation();
+}
+
+void TrashLauncherIcon::OnActiveWindowChanged(ApplicationWindowPtr const& win)
+{
+  auto const& wins = GetManagedWindows();
+  SetQuirk(Quirk::ACTIVE, std::find(begin(wins), end(wins), win) != end(wins));
+}
+
+void TrashLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
+{
+  file_manager_->OpenTrash(timestamp);
 }
 
 AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
@@ -100,12 +132,6 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
   result.push_back(menu_item);
 
   return result;
-}
-
-void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
-{
-  SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  file_manager_->OpenTrash(arg.timestamp);
 }
 
 void TrashLauncherIcon::UpdateTrashIcon()

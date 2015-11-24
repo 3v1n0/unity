@@ -27,9 +27,11 @@
 using namespace unity;
 using namespace unity::launcher;
 using namespace testing;
+using namespace testmocks;
 
 namespace
 {
+const std::string TRASH_URI = "trash:";
 
 struct TestTrashLauncherIcon : testmocks::TestUnityAppBase
 {
@@ -74,11 +76,14 @@ TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
 
 TEST_F(TestTrashLauncherIcon, RunningState)
 {
-  EXPECT_CALL(*fm_, IsTrashOpened()).WillRepeatedly(Return(true));
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList({win1, win2})));
   fm_->locations_changed.emit();
   EXPECT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 
-  EXPECT_CALL(*fm_, IsTrashOpened()).WillRepeatedly(Return(false));
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList()));
   fm_->locations_changed.emit();
   EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
