@@ -87,4 +87,4 @@ private:
 }
 }
 
-#endif // BAMFLAUNCHERICON_H
+#endif // WINDOWED_LAUNCHER_ICON_H

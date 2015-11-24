@@ -159,7 +159,7 @@ void WindowedLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     SetQuirk(Quirk::STARTING, true, arg.monitor);
     OpenInstanceLauncherIcon(arg.timestamp);
   }
-  else // app is running
+  else // container is running
   {
     if (active)
     {
@@ -294,7 +294,7 @@ std::vector<Window> WindowedLauncherIcon::WindowsForMonitor(int monitor)
 
 void WindowedLauncherIcon::OnWindowMinimized(Window xid)
 {
-  for (auto const& window: GetWindows())
+  for (auto const& window : GetManagedWindows())
   {
     if (xid == window->window_id())
     {
@@ -313,22 +313,8 @@ void WindowedLauncherIcon::OnWindowMinimized(Window xid)
 
 void WindowedLauncherIcon::Focus(ActionArg arg)
 {
-  // ApplicationWindowPtr window = app_->GetFocusableWindow();
-  // if (window)
-  // {
-  //   // If we have a window, try to focus it.
-  //   if (window->Focus())
-  //     return;
-  // }
-  // else if (app_->type() == AppType::WEBAPP)
-  // {
-  //   // Webapps are again special.
-  //   OpenInstanceLauncherIcon(arg.timestamp);
-  //   return;
-  // }
-
-  // bool show_only_visible = arg.source == ActionArg::Source::SWITCHER;
-  // app_->Focus(show_only_visible, arg.monitor);
+  bool show_only_visible = (arg.source == ActionArg::Source::SWITCHER);
+  ApplicationManager::Default().FocusWindowGroup(GetManagedWindows(), show_only_visible, arg.monitor);
 }
 
 bool WindowedLauncherIcon::Spread(bool current_desktop, int state, bool force)
@@ -576,7 +562,7 @@ void WindowedLauncherIcon::AddProperties(debug::IntrospectionData& introspection
   SimpleLauncherIcon::AddProperties(introspection);
 
   std::vector<Window> xids;
-  for (auto const& window : GetWindows())
+  for (auto const& window : GetManagedWindows())
     xids.push_back(window->window_id());
 
   introspection.add("xids", glib::Variant::FromVector(xids))
