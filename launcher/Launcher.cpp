@@ -578,9 +578,9 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, RenderArg& 
   else
   {
     if (options()->show_for_all)
-      arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
+      arg.window_indicators = std::max<int>(icon->WindowsVisibleOnViewport(), 1);
     else
-      arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
+      arg.window_indicators = std::max<int>(icon->WindowsVisibleOnMonitor(monitor), 1);
   }
 
   arg.backlight_intensity = IconBackgroundIntensity(icon);
