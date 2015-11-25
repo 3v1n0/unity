@@ -82,7 +82,7 @@ public:
 
   nux::Point3 GetCenter(int monitor);
 
-  virtual void Activate(ActionArg arg);
+  void Activate(ActionArg arg);
 
   void OpenInstance(ActionArg arg);
 
@@ -94,15 +94,19 @@ public:
 
   void SetOrder(int order);
 
-  virtual WindowList Windows() { return WindowList(); }
+  WindowList Windows() { return WindowList(); }
 
-  virtual WindowList WindowsOnViewport() { return WindowList(); }
+  WindowList WindowsOnViewport() { return WindowList(); }
 
-  virtual WindowList WindowsForMonitor(int monitor) { return WindowList(); }
+  WindowList WindowsForMonitor(int monitor) { return WindowList(); }
 
-  const bool WindowVisibleOnMonitor(int monitor);
+  bool WindowVisibleOnMonitor(int monitor) const;
 
-  const bool WindowVisibleOnViewport();
+  bool WindowVisibleOnViewport() const;
+
+  size_t WindowsVisibleOnMonitor(int monitor) const;
+
+  size_t WindowsVisibleOnViewport() const;
 
   float PresentUrgency();
 

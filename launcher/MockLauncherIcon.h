@@ -194,14 +194,24 @@ public:
     return 7;
   }
 
-  const bool WindowVisibleOnViewport()
+  bool WindowVisibleOnViewport() const
   {
     return false;
   }
 
-  const bool WindowVisibleOnMonitor(int monitor)
+  bool WindowVisibleOnMonitor(int monitor) const
   {
     return false;
+  }
+
+  size_t WindowsVisibleOnMonitor(int monitor) const
+  {
+    return 0;
+  }
+
+  size_t WindowsVisibleOnViewport() const
+  {
+    return 0;
   }
 
   void SetVisibleOnMonitor(int monitor, bool visible) {}
