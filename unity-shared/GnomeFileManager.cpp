@@ -196,14 +196,7 @@ void GnomeFileManager::OpenActiveChild(std::string const& uri, uint64_t timestam
 
 void GnomeFileManager::OpenTrash(uint64_t timestamp)
 {
-  if (IsPrefixOpened(TRASH_PATH))
-  {
-    OpenActiveChild(TRASH_PATH, timestamp);
-  }
-  else
-  {
-    OpenActiveChild(TRASH_URI, timestamp);
-  }
+  Open(TRASH_URI, timestamp);
 }
 
 void GnomeFileManager::Activate(uint64_t timestamp)
