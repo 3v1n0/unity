@@ -524,15 +524,15 @@ void WindowedLauncherIcon::PerformScroll(ScrollDirection direction, Time timesta
 WindowList WindowedLauncherIcon::GetWindowsOnCurrentDesktopInStackingOrder()
 {
   auto windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP | WindowFilter::ON_ALL_MONITORS);
-  auto sorted_windows = WindowManager::Default().GetWindowsInStackingOrder();
+  auto sorted_windows = ApplicationManager::Default().GetWindowsForMonitor(-1);
 
   // Order the windows
   std::sort(windows.begin(), windows.end(), [&sorted_windows] (ApplicationWindowPtr const& win1, ApplicationWindowPtr const& win2) {
     for (auto const& window : sorted_windows)
     {
-      if (window == win1->window_id())
+      if (window == win1)
         return false;
-      else if (window == win2->window_id())
+      else if (window == win2)
         return true;
     }
 
