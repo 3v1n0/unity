@@ -320,23 +320,19 @@ void WindowedLauncherIcon::EnsureWindowState()
 {
   std::vector<int> number_of_windows_on_monitor(monitors::MAX);
 
-  for (auto& window: GetManagedWindows())
+  for (auto const& window : WindowsOnViewport())
   {
     int monitor = window->monitor();
-    Window window_id = window->window_id();
 
-    if (WindowManager::Default().IsWindowOnCurrentDesktop(window_id))
+    // If monitor is -1 (or negative), show on all monitors.
+    if (monitor < 0)
     {
-      // If monitor is -1 (or negative), show on all monitors.
-      if (monitor < 0)
-      {
-        for (unsigned j; j < monitors::MAX; ++j)
-          ++number_of_windows_on_monitor[j];
-      }
-      else
-      {
-        ++number_of_windows_on_monitor[monitor];
-      }
+      for (unsigned j; j < monitors::MAX; ++j)
+        ++number_of_windows_on_monitor[j];
+    }
+    else
+    {
+      ++number_of_windows_on_monitor[monitor];
     }
   }
 
