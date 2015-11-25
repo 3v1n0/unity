@@ -322,14 +322,18 @@ WindowList GnomeFileManager::WindowsForLocation(std::string const& location) con
 
   for (auto const& pair : impl_->opened_locations_xids_)
   {
-    auto const& win_loc = pair.second;
-
-    for (auto const& loc : win_loc)
+    for (auto const& loc : pair.second)
     {
-      glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
-      glib::String relative(g_file_get_relative_path(location_file, loc_file));
+      bool matches = (loc == location);
 
-      if (relative)
+      if (!matches)
+      {
+        glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
+        glib::String relative(g_file_get_relative_path(location_file, loc_file));
+        matches = static_cast<bool>(relative);
+      }
+
+      if (matches)
       {
         auto const& win = app_manager.GetWindowForId(pair.first);
 
