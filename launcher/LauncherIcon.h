@@ -96,9 +96,9 @@ public:
 
   virtual WindowList Windows() { return WindowList(); }
 
-  virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
+  virtual WindowList WindowsOnViewport() { return WindowList(); }
 
-  virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
+  virtual WindowList WindowsForMonitor(int monitor) { return WindowList(); }
 
   const bool WindowVisibleOnMonitor(int monitor);
 

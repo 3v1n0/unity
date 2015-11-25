@@ -34,8 +34,8 @@ public:
   WindowedLauncherIcon(AbstractLauncherIcon::IconType);
 
   WindowList Windows() override;
-  std::vector<Window> WindowsOnViewport() override;
-  std::vector<Window> WindowsForMonitor(int monitor) override;
+  WindowList WindowsOnViewport() override;
+  WindowList WindowsForMonitor(int monitor) override;
 
   virtual bool IsActive() const;
   virtual bool IsRunning() const;

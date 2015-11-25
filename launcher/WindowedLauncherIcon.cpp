@@ -223,7 +223,7 @@ void WindowedLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
 WindowList WindowedLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
 {
-  if (!filter && monitor < 0)
+  if ((!filter && monitor < 0) || (filter == WindowFilter::ON_ALL_MONITORS))
     return GetManagedWindows();
 
   WindowManager& wm = WindowManager::Default();
@@ -261,7 +261,7 @@ WindowList WindowedLauncherIcon::Windows()
   return GetWindows(WindowFilter::MAPPED|WindowFilter::ON_ALL_MONITORS);
 }
 
-std::vector<Window> WindowedLauncherIcon::WindowsOnViewport()
+WindowList WindowedLauncherIcon::WindowsOnViewport()
 {
   WindowFilterMask filter = 0;
   filter |= WindowFilter::MAPPED;
@@ -269,27 +269,17 @@ std::vector<Window> WindowedLauncherIcon::WindowsOnViewport()
   filter |= WindowFilter::ON_CURRENT_DESKTOP;
   filter |= WindowFilter::ON_ALL_MONITORS;
 
-  std::vector<Window> windows;
-  for (auto& window : GetWindows(filter))
-  {
-    windows.push_back(window->window_id());
-  }
-  return windows;
+  return GetWindows(filter);
 }
 
-std::vector<Window> WindowedLauncherIcon::WindowsForMonitor(int monitor)
+WindowList WindowedLauncherIcon::WindowsForMonitor(int monitor)
 {
   WindowFilterMask filter = 0;
   filter |= WindowFilter::MAPPED;
   filter |= WindowFilter::USER_VISIBLE;
   filter |= WindowFilter::ON_CURRENT_DESKTOP;
 
-  std::vector<Window> windows;
-  for (auto& window : GetWindows(filter, monitor))
-  {
-    windows.push_back(window->window_id());
-  }
-  return windows;
+  return GetWindows(filter, monitor);
 }
 
 void WindowedLauncherIcon::OnWindowMinimized(Window xid)

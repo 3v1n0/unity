@@ -174,9 +174,9 @@ public:
 
   virtual WindowList Windows() = 0;
 
-  virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
+  virtual WindowList WindowsForMonitor(int monitor) = 0;
 
-  virtual std::vector<Window> WindowsOnViewport() = 0;
+  virtual WindowList WindowsOnViewport() = 0;
 
   virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
 
