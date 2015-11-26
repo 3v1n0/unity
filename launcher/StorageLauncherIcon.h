@@ -39,6 +39,7 @@ private:
 
 protected:
   FileManager::Ptr file_manager_;
+  WindowList managed_windows_;
   connection::Manager windows_connections_;
 };
 

@@ -35,26 +35,26 @@ StorageLauncherIcon::StorageLauncherIcon(AbstractLauncherIcon::IconType icon_typ
 void StorageLauncherIcon::OnOpenedLocationsChanged()
 {
   bool active = false;
-  auto const& wins = GetManagedWindows();
+  managed_windows_ = GetManagedWindows();
   windows_connections_.Clear();
 
-  for (auto const& win : wins)
+  for (auto const& win : managed_windows_)
   {
     windows_connections_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
+    windows_connections_.Add(win->closed.connect([this] { OnOpenedLocationsChanged(); }));
 
     if (!active && win->active())
       active = true;
   }
 
-  SetQuirk(Quirk::RUNNING, !wins.empty());
+  SetQuirk(Quirk::RUNNING, !managed_windows_.empty());
   SetQuirk(Quirk::ACTIVE, active);
   EnsureWindowsLocation();
 }
 
 void StorageLauncherIcon::OnActiveWindowChanged(ApplicationWindowPtr const& win)
 {
-  auto const& wins = GetManagedWindows();
-  SetQuirk(Quirk::ACTIVE, std::find(begin(wins), end(wins), win) != end(wins));
+  SetQuirk(Quirk::ACTIVE, std::find(begin(managed_windows_), end(managed_windows_), win) != end(managed_windows_));
 }
 
 } // namespace launcher
