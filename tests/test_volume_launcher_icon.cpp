@@ -320,6 +320,32 @@ TEST_F(TestVolumeLauncherIconDelayedConstruction, TestVisibilityAfterUnmount_Bla
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
+TEST_F(TestVolumeLauncherIcon, TestVisibilityWithWindows)
+{
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(false));
+  settings_->changed.emit();
+  ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
+  file_manager_->locations_changed.emit();
+
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestVisibilityWithWindows_Blacklisted)
+{
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(true));
+  settings_->changed.emit();
+  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
+  file_manager_->locations_changed.emit();
+
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
 TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_VolumeWithoutIdentifier)
 {
   EXPECT_CALL(*volume_, GetIdentifier())
