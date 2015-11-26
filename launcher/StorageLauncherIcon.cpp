@@ -28,11 +28,11 @@ StorageLauncherIcon::StorageLauncherIcon(AbstractLauncherIcon::IconType icon_typ
   : WindowedLauncherIcon(icon_type)
   , file_manager_(fm)
 {
-  file_manager_->locations_changed.connect(sigc::mem_fun(this, &StorageLauncherIcon::OnOpenedLocationsChanged));
+  file_manager_->locations_changed.connect(sigc::mem_fun(this, &StorageLauncherIcon::UpdateStorageWindows));
   ApplicationManager::Default().active_window_changed.connect(sigc::mem_fun(this, &StorageLauncherIcon::OnActiveWindowChanged));
 }
 
-void StorageLauncherIcon::OnOpenedLocationsChanged()
+void StorageLauncherIcon::UpdateStorageWindows()
 {
   bool active = false;
   managed_windows_ = GetManagedWindows();
@@ -41,7 +41,7 @@ void StorageLauncherIcon::OnOpenedLocationsChanged()
   for (auto const& win : managed_windows_)
   {
     windows_connections_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
-    windows_connections_.Add(win->closed.connect([this] { OnOpenedLocationsChanged(); }));
+    windows_connections_.Add(win->closed.connect([this] { UpdateStorageWindows(); }));
 
     if (!active && win->active())
       active = true;

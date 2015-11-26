@@ -33,8 +33,10 @@ class StorageLauncherIcon : public WindowedLauncherIcon
 public:
   StorageLauncherIcon(AbstractLauncherIcon::IconType, FileManager::Ptr const&);
 
+protected:
+  void UpdateStorageWindows();
+
 private:
-  void OnOpenedLocationsChanged();
   void OnActiveWindowChanged(ApplicationWindowPtr const&);
 
 protected:
