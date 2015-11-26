@@ -147,6 +147,7 @@ WindowBase::WindowBase(ApplicationManager const& manager,
   });
   signals_.Add<void, BamfView*>(bamf_view_, "closed",
   [this] (BamfView* view) {
+    this->closed.emit();
     pool::wins_.erase(view);
   });
 }

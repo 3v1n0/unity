@@ -109,6 +109,8 @@ public:
   nux::ROProperty<bool> active;
   nux::ROProperty<bool> urgent;
   nux::ROProperty<bool> maximized;
+
+  sigc::signal<void> closed;
 };
 
 
