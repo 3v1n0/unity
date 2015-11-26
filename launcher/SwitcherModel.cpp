@@ -37,16 +37,7 @@ namespace
 bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
                                   AbstractLauncherIcon::Ptr const& second)
 {
-  if (first->GetIconType() == second->GetIconType())
-    return first->SwitcherPriority() > second->SwitcherPriority();
-
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return true;
-
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return false;
-
-  return first->GetIconType() < second->GetIconType();
+  return first->SwitcherPriority() > second->SwitcherPriority();
 }
 }
 
