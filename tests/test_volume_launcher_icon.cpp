@@ -27,8 +27,11 @@ using namespace testing;
 #include "test_utils.h"
 #include "test_mock_devices.h"
 #include "test_mock_filemanager.h"
+#include "mock-application.h"
+
 using namespace unity;
 using namespace unity::launcher;
+using namespace testmocks;
 
 namespace
 {
@@ -105,7 +108,7 @@ TEST_F(TestVolumeLauncherIcon, TestIconType)
 
 TEST_F(TestVolumeLauncherIconDelayedConstruction, TestRunningOnClosed)
 {
-  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(false));
+  ON_CALL(*file_manager_, WindowsForLocation(_)).WillByDefault(Return(WindowList()));
   CreateIcon();
 
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
@@ -113,7 +116,8 @@ TEST_F(TestVolumeLauncherIconDelayedConstruction, TestRunningOnClosed)
 
 TEST_F(TestVolumeLauncherIconDelayedConstruction, TestRunningOnOpened)
 {
-  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(true));
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
   CreateIcon();
 
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
@@ -128,14 +132,16 @@ TEST_F(TestVolumeLauncherIcon, FilemanagerSignalDisconnection)
 
 TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedClosed)
 {
-  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(false));
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList()));
   file_manager_->locations_changed.emit();
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
 
 TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedOpened)
 {
-  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(true));
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win1, win2})));
   file_manager_->locations_changed.emit();
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
@@ -298,7 +304,7 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
 
   InSequence seq;
   EXPECT_CALL(*volume_, Mount());
-  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  EXPECT_CALL(*file_manager_, Open(volume_->GetUri(), time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 }
@@ -318,7 +324,7 @@ TEST_F(TestVolumeLauncherIcon, TestNameMenuItem)
 
   InSequence seq;
   EXPECT_CALL(*volume_, Mount());
-  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  EXPECT_CALL(*file_manager_, Open(volume_->GetUri(), time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 }
@@ -516,7 +522,7 @@ TEST_F(TestVolumeLauncherIcon, ActivateMounted)
   uint64_t time = g_random_int();
   InSequence seq;
   EXPECT_CALL(*volume_, Mount()).Times(0);
-  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  EXPECT_CALL(*file_manager_, Open(volume_->GetUri(), time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 
@@ -526,7 +532,7 @@ TEST_F(TestVolumeLauncherIcon, ActivateUnmounted)
   ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
   InSequence seq;
   EXPECT_CALL(*volume_, Mount());
-  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  EXPECT_CALL(*file_manager_, Open(volume_->GetUri(), time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 

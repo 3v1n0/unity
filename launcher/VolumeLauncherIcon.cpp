@@ -49,7 +49,7 @@ public:
     , volume_(volume)
     , devices_settings_(devices_settings)
     , notification_(notification)
-    , file_manager_(fm)
+    , file_manager_(parent_->file_manager_)
   {
     UpdateIcon();
     UpdateVisibility();
@@ -60,7 +60,6 @@ public:
   {
     parent_->tooltip_text = volume_->GetName();
     parent_->icon_name = volume_->GetIconName();
-    parent_->SetQuirk(Quirk::RUNNING, file_manager_->IsPrefixOpened(volume_->GetUri()));
   }
 
   void UpdateVisibility()
@@ -80,7 +79,6 @@ public:
     connections_.Add(volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged)));
     connections_.Add(volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved)));
     connections_.Add(devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged)));
-    connections_.Add(file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::UpdateIcon)));
   }
 
   void OnVolumeChanged()
@@ -152,7 +150,7 @@ public:
   void OpenInFileManager(uint64_t timestamp)
   {
     DoActionWhenMounted([this, timestamp] {
-      file_manager_->OpenActiveChild(volume_->GetUri(), timestamp);
+      file_manager_->Open(volume_->GetUri(), timestamp);
     });
   }
 
@@ -325,9 +323,11 @@ VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
                                        DevicesSettings::Ptr const& devices_settings,
                                        DeviceNotificationDisplay::Ptr const& notification,
                                        FileManager::Ptr const& fm)
-  : SimpleLauncherIcon(IconType::DEVICE)
+  : StorageLauncherIcon(IconType::DEVICE, fm)
   , pimpl_(new Impl(volume, devices_settings, notification, fm, this))
-{}
+{
+  UpdateStorageWindows();
+}
 
 VolumeLauncherIcon::~VolumeLauncherIcon()
 {}
@@ -358,12 +358,6 @@ bool VolumeLauncherIcon::CanStop() const
 void VolumeLauncherIcon::StopDrive()
 {
   return pimpl_->StopDrive();
-}
-
-void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)
-{
-  SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  pimpl_->OpenInFileManager(arg.timestamp);
 }
 
 AbstractLauncherIcon::MenuItemsVector VolumeLauncherIcon::GetMenus()
@@ -410,6 +404,16 @@ void VolumeLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   pimpl_->CopyFilesToVolume(dnd_data.Uris(), timestamp);
   SetQuirk(Quirk::PULSE_ONCE, true);
   FullyAnimateQuirkDelayed(100, LauncherIcon::Quirk::SHIMMER);
+}
+
+WindowList VolumeLauncherIcon::GetManagedWindows() const
+{
+  return file_manager_->WindowsForLocation(pimpl_->volume_->GetUri());
+}
+
+void VolumeLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
+{
+  pimpl_->OpenInFileManager(timestamp);
 }
 
 //
