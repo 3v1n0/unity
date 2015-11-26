@@ -363,6 +363,45 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
+TEST_F(TestVolumeLauncherIcon, TestLockToLauncherMenuItem_Success)
+{
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(true));
+  settings_->changed.emit();
+  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+
+  auto menuitem = GetMenuItemAtIndex(4);
+
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Lock to Launcher");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(volume_->GetIdentifier())).Times(1);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+
+  EXPECT_CALL(*settings_, IsABlacklistedDevice(_)).WillRepeatedly(Return(false));
+  settings_->changed.emit(); // TryToBlacklist() works if DevicesSettings emits a changed signal.
+
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestLockToLauncherMenuItem_Failure)
+{
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(true));
+  settings_->changed.emit();
+  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+
+  auto menuitem = GetMenuItemAtIndex(4);
+
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Lock to Launcher");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(volume_->GetIdentifier())).Times(1);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
 TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
 {
   auto menuitem = GetMenuItemAtIndex(0);
