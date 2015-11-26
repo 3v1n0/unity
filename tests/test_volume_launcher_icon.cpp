@@ -146,6 +146,79 @@ TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedOpened)
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
 
+TEST_F(TestVolumeLauncherIcon, RunningState)
+{
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win1, win2})));
+  file_manager_->locations_changed.emit();
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList()));
+  file_manager_->locations_changed.emit();
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestVolumeLauncherIcon, ActiveState)
+{
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win1, win2})));
+  file_manager_->locations_changed.emit();
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+
+  win2->LocalFocus();
+  ApplicationManager::Default().active_window_changed.emit(win2);
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList()));
+  file_manager_->locations_changed.emit();
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+}
+
+TEST_F(TestVolumeLauncherIcon, WindowsCount)
+{
+  WindowList windows((g_random_int() % 10) + 5);
+  for (unsigned i = 0; i < windows.capacity(); ++i)
+    windows[i] = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(windows));
+  EXPECT_EQ(icon_->Windows().size(), windows.size());
+}
+
+TEST_F(TestVolumeLauncherIcon, WindowsPerMonitor)
+{
+  WindowList windows((g_random_int() % 10) + 5);
+  for (unsigned i = 0; i < windows.capacity(); ++i)
+  {
+    auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+    win->monitor_ = i % 2;
+    windows[i] = win;
+  }
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(windows));
+  file_manager_->locations_changed.emit();
+
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), (windows.size() / 2) + (windows.size() % 2));
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), windows.size() / 2);
+}
+
+TEST_F(TestVolumeLauncherIcon, WindowsOnMonitorChanges)
+{
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
+  file_manager_->locations_changed.emit();
+
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), 1);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), 0);
+
+  win->SetMonitor(1);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), 0);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), 1);
+}
+
 TEST_F(TestVolumeLauncherIcon, TestPosition)
 {
   EXPECT_EQ(icon_->position(), AbstractLauncherIcon::Position::FLOATING);
