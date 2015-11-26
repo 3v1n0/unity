@@ -24,6 +24,7 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/DesktopUtilities.h>
 #include <zeitgeist.h>
 
 #include "QuicklistMenuItemLabel.h"
@@ -39,10 +40,11 @@ namespace
   DECLARE_LOGGER(logger, "unity.launcher.icon.trash");
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
   const std::string TRASH_URI = "trash:";
+  const std::string TRASH_PATH = "file://" + DesktopUtilities::GetUserTrashDirectory();
 }
 
 TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
-  : StorageLauncherIcon(IconType::TRASH, fm)
+  : StorageLauncherIcon(IconType::TRASH, fm ? fm : GnomeFileManager::Get())
   , empty_(true)
 {
   tooltip_text = _("Trash");
@@ -78,7 +80,10 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
 
 WindowList TrashLauncherIcon::GetManagedWindows() const
 {
-  return file_manager_->WindowsForLocation(TRASH_URI);
+  auto windows = file_manager_->WindowsForLocation(TRASH_URI);
+  auto const& path_wins = file_manager_->WindowsForLocation(TRASH_PATH);
+  windows.insert(end(windows), begin(path_wins), end(path_wins));
+  return windows;
 }
 
 void TrashLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
