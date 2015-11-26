@@ -29,26 +29,33 @@ StorageLauncherIcon::StorageLauncherIcon(AbstractLauncherIcon::IconType icon_typ
   , file_manager_(fm)
 {
   file_manager_->locations_changed.connect(sigc::mem_fun(this, &StorageLauncherIcon::UpdateStorageWindows));
-  ApplicationManager::Default().active_window_changed.connect(sigc::mem_fun(this, &StorageLauncherIcon::OnActiveWindowChanged));
 }
 
 void StorageLauncherIcon::UpdateStorageWindows()
 {
   bool active = false;
+  bool urgent = false;
   managed_windows_ = GetStorageWindows();
   windows_connections_.Clear();
 
   for (auto const& win : managed_windows_)
   {
     windows_connections_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
+    windows_connections_.Add(win->urgent.changed.connect([this] (bool) { OnWindowStateChanged(); }));
+    windows_connections_.Add(win->active.changed.connect([this] (bool) { OnWindowStateChanged(); }));
     windows_connections_.Add(win->closed.connect([this] { UpdateStorageWindows(); }));
 
     if (!active && win->active())
       active = true;
+
+    if (!urgent && win->urgent())
+      urgent = true;
   }
 
   SetQuirk(Quirk::RUNNING, !managed_windows_.empty());
   SetQuirk(Quirk::ACTIVE, active);
+  SetQuirk(Quirk::URGENT, urgent);
+
   EnsureWindowsLocation();
 }
 
@@ -57,9 +64,22 @@ WindowList StorageLauncherIcon::GetManagedWindows() const
   return managed_windows_;
 }
 
-void StorageLauncherIcon::OnActiveWindowChanged(ApplicationWindowPtr const& win)
+void StorageLauncherIcon::OnWindowStateChanged()
 {
-  SetQuirk(Quirk::ACTIVE, std::find(begin(managed_windows_), end(managed_windows_), win) != end(managed_windows_));
+  bool active = false;
+  bool urgent = false;
+
+  for (auto const& win : managed_windows_)
+  {
+    if (!active && win->active())
+      active = true;
+
+    if (!urgent && win->urgent())
+      urgent = true;
+  }
+
+  SetQuirk(Quirk::ACTIVE, active);
+  SetQuirk(Quirk::URGENT, urgent);
 }
 
 } // namespace launcher

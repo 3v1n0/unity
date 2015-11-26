@@ -167,10 +167,9 @@ TEST_F(TestVolumeLauncherIcon, ActiveState)
 
   ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win1, win2})));
   file_manager_->locations_changed.emit();
-  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
 
   win2->LocalFocus();
-  ApplicationManager::Default().active_window_changed.emit(win2);
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
 
   ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList()));

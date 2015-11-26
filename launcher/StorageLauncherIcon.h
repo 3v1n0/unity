@@ -39,7 +39,7 @@ protected:
   virtual WindowList GetStorageWindows() const = 0;
 
 private:
-  void OnActiveWindowChanged(ApplicationWindowPtr const&);
+  void OnWindowStateChanged();
 
 protected:
   FileManager::Ptr file_manager_;

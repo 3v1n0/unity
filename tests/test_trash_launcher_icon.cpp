@@ -101,10 +101,9 @@ TEST_F(TestTrashLauncherIcon, ActiveState)
 
   ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList({win1, win2})));
   fm_->locations_changed.emit();
-  EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+  ASSERT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
 
   win2->LocalFocus();
-  ApplicationManager::Default().active_window_changed.emit(win2);
   EXPECT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
 
   ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList()));
