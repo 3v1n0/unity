@@ -119,6 +119,7 @@ TEST_F(TestTrashLauncherIcon, WindowsCount)
     windows[i] = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
 
   ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(windows));
+  fm_->locations_changed.emit();
   EXPECT_EQ(icon.Windows().size(), windows.size());
 }
 

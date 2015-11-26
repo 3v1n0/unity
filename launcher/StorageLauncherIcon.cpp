@@ -35,7 +35,7 @@ StorageLauncherIcon::StorageLauncherIcon(AbstractLauncherIcon::IconType icon_typ
 void StorageLauncherIcon::UpdateStorageWindows()
 {
   bool active = false;
-  managed_windows_ = GetManagedWindows();
+  managed_windows_ = GetStorageWindows();
   windows_connections_.Clear();
 
   for (auto const& win : managed_windows_)
@@ -50,6 +50,11 @@ void StorageLauncherIcon::UpdateStorageWindows()
   SetQuirk(Quirk::RUNNING, !managed_windows_.empty());
   SetQuirk(Quirk::ACTIVE, active);
   EnsureWindowsLocation();
+}
+
+WindowList StorageLauncherIcon::GetManagedWindows() const
+{
+  return managed_windows_;
 }
 
 void StorageLauncherIcon::OnActiveWindowChanged(ApplicationWindowPtr const& win)

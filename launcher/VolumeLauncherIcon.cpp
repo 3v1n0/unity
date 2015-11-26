@@ -406,7 +406,7 @@ void VolumeLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   FullyAnimateQuirkDelayed(100, LauncherIcon::Quirk::SHIMMER);
 }
 
-WindowList VolumeLauncherIcon::GetManagedWindows() const
+WindowList VolumeLauncherIcon::GetStorageWindows() const
 {
   return file_manager_->WindowsForLocation(pimpl_->volume_->GetUri());
 }

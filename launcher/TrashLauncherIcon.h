@@ -46,7 +46,7 @@ protected:
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
   void OnAcceptDrop(DndData const& dnd_data);
 
-  WindowList GetManagedWindows() const override;
+  WindowList GetStorageWindows() const override;
   std::string GetName() const;
 
 private:

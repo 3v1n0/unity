@@ -185,6 +185,7 @@ TEST_F(TestVolumeLauncherIcon, WindowsCount)
     windows[i] = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
 
   ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(windows));
+  file_manager_->locations_changed.emit();
   EXPECT_EQ(icon_->Windows().size(), windows.size());
 }
 

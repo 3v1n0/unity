@@ -78,7 +78,7 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
   UpdateStorageWindows();
 }
 
-WindowList TrashLauncherIcon::GetManagedWindows() const
+WindowList TrashLauncherIcon::GetStorageWindows() const
 {
   auto windows = file_manager_->WindowsForLocation(TRASH_URI);
   auto const& path_wins = file_manager_->WindowsForLocation(TRASH_PATH);

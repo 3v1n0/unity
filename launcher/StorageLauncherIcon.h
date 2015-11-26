@@ -35,6 +35,8 @@ public:
 
 protected:
   void UpdateStorageWindows();
+  WindowList GetManagedWindows() const override;
+  virtual WindowList GetStorageWindows() const = 0;
 
 private:
   void OnActiveWindowChanged(ApplicationWindowPtr const&);

@@ -56,7 +56,7 @@ protected:
   bool OnShouldHighlightOnDrag(DndData const&);
   void OnAcceptDrop(DndData const&);
   nux::DndAction OnQueryAcceptDrop(DndData const&);
-  WindowList GetManagedWindows() const override;
+  WindowList GetStorageWindows() const override;
   void OpenInstanceLauncherIcon(Time timestamp) override;
 
   // Introspection
