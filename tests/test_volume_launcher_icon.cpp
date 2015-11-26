@@ -331,22 +331,22 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_VolumeWithoutIdent
 
 TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Success)
 {
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(false));
+  settings_->changed.emit();
+  ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
   auto menuitem = GetMenuItemAtIndex(4);
 
   ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  EXPECT_CALL(*settings_, TryToBlacklist(_))
-    .Times(1);
-
-  EXPECT_CALL(*settings_, IsABlacklistedDevice(_))
-    .WillRepeatedly(Return(true));
-
+  EXPECT_CALL(*settings_, TryToBlacklist(volume_->GetIdentifier())).Times(1);
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+
+  EXPECT_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillRepeatedly(Return(true));
   settings_->changed.emit(); // TryToBlacklist() works if DevicesSettings emits a changed signal.
 
-  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
 TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
@@ -357,12 +357,10 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  EXPECT_CALL(*settings_, TryToBlacklist(_))
-    .Times(1);
-
+  EXPECT_CALL(*settings_, TryToBlacklist(volume_->GetIdentifier())).Times(1);
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
 
-  ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
 TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
@@ -518,7 +516,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved)
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
   EXPECT_CALL(*settings_, TryToUnblacklist(_))
-    .Times(0);
+    .Times(1);
 
   volume_->removed.emit();
 }
@@ -531,7 +529,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovabledVolume)
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
   EXPECT_CALL(*settings_, TryToUnblacklist(_))
-    .Times(0);
+    .Times(1);
 
   volume_->removed.emit();
 }

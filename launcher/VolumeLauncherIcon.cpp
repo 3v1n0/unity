@@ -64,40 +64,35 @@ public:
 
   void UpdateVisibility()
   {
-    UpdateKeepInLauncher();
-    parent_->SetQuirk(Quirk::VISIBLE, keep_in_launcher_);
+    parent_->SetQuirk(Quirk::VISIBLE, IsVisible());
   }
 
-  void UpdateKeepInLauncher()
+  bool IsBlackListed()
   {
-    auto const& identifier = volume_->GetIdentifier();
-    keep_in_launcher_ = !devices_settings_->IsABlacklistedDevice(identifier);
+    return devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier());
+  }
+
+  bool IsVisible()
+  {
+    if (IsBlackListed() && parent_->GetManagedWindows().empty())
+      return false;
+
+    return true;
   }
 
   void ConnectSignals()
   {
-    connections_.Add(volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged)));
+    connections_.Add(volume_->changed.connect([this] { UpdateIcon(); }));
     connections_.Add(volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved)));
-    connections_.Add(devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged)));
-  }
-
-  void OnVolumeChanged()
-  {
-    UpdateIcon();
+    connections_.Add(devices_settings_->changed.connect([this] { UpdateVisibility(); }));
+    connections_.Add(parent_->windows_changed.connect([this] (int) { UpdateVisibility(); }));
   }
 
   void OnVolumeRemoved()
   {
-    if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
-      devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
-
+    devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
     parent_->UnStick();
     parent_->Remove();
-  }
-
-  void OnSettingsChanged()
-  {
-    UpdateVisibility();
   }
 
   bool CanEject() const
@@ -169,7 +164,7 @@ public:
     AppendSeparatorItem(result);
     AppendNameItem(result);
     AppendSeparatorItem(result);
-    AppendUnlockFromLauncherItem(result);
+    AppendToggleLockFromLauncherItem(result);
     AppendEjectItem(result);
     AppendSafelyRemoveItem(result);
     AppendUnmountItem(result);
@@ -177,21 +172,28 @@ public:
     return result;
   }
 
-  void AppendUnlockFromLauncherItem(MenuItemsVector& menu)
+  void AppendToggleLockFromLauncherItem(MenuItemsVector& menu)
   {
     if (volume_->GetIdentifier().empty())
       return;
 
     glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unlock from Launcher"));
+    const char* label = IsBlackListed() ? _("Lock to Launcher") : _("Unlock from Launcher");
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, label);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-      auto const& identifier = volume_->GetIdentifier();
-      parent_->UnStick();
-      devices_settings_->TryToBlacklist(identifier);
+      if (!IsBlackListed())
+      {
+        parent_->UnStick();
+        devices_settings_->TryToBlacklist(volume_->GetIdentifier());
+      }
+      else
+      {
+        devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
+      }
     }));
 
     menu.push_back(menu_item);
@@ -305,7 +307,6 @@ public:
   }
 
   VolumeLauncherIcon* parent_;
-  bool keep_in_launcher_;
   Volume::Ptr volume_;
   DevicesSettings::Ptr devices_settings_;
   DeviceNotificationDisplay::Ptr notification_;
