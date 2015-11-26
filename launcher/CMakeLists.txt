@@ -55,6 +55,7 @@ set (LAUNCHER_SOURCES
      SingleMonitorLauncherIcon.cpp
      SoftwareCenterLauncherIcon.cpp
      SpacerLauncherIcon.cpp
+     StorageLauncherIcon.cpp
      Tooltip.cpp
      TooltipManager.cpp
      TrashLauncherIcon.cpp
