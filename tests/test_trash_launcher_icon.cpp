@@ -135,8 +135,8 @@ TEST_F(TestTrashLauncherIcon, WindowsPerMonitor)
   ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(windows));
   fm_->locations_changed.emit();
 
-  EXPECT_EQ(icon.WindowsForMonitor(0).size(), (windows.size() / 2) + (windows.size() % 2));
-  EXPECT_EQ(icon.WindowsForMonitor(1).size(), windows.size() / 2);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), (windows.size() / 2) + (windows.size() % 2));
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), windows.size() / 2);
 }
 
 TEST_F(TestTrashLauncherIcon, WindowsOnMonitorChanges)
@@ -145,12 +145,12 @@ TEST_F(TestTrashLauncherIcon, WindowsOnMonitorChanges)
   ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList({win})));
   fm_->locations_changed.emit();
 
-  EXPECT_EQ(icon.WindowsForMonitor(0).size(), 1);
-  EXPECT_EQ(icon.WindowsForMonitor(1).size(), 0);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), 1);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), 0);
 
   win->SetMonitor(1);
-  EXPECT_EQ(icon.WindowsForMonitor(0).size(), 0);
-  EXPECT_EQ(icon.WindowsForMonitor(1).size(), 1);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), 0);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), 1);
 }
 
 TEST_F(TestTrashLauncherIcon, FilemanagerSignalDisconnection)
