@@ -21,18 +21,13 @@ def add_info(report, ui):
                 report.add_package_info(apport.packaging.get_file_package(words))
                 return
 
-    # only reports all compiz infos if a graphical bug
-    compiz_bug = False
-    if ui and report['SourcePackage'] == "unity":
-        if ui.yesno("Thanks for reporting this bug on unity.  Is the issue you are reporting purely graphical (will report more information about your graphic configuration and will report the bug against compiz)?"):
-            compiz_bug = True
-    if compiz_bug:
-        report.add_hooks_info(ui, srcpackage='compiz')
-    else:
-        # still send some info like the plugins activated
-        # Plugins
-        report['CompizPlugins'] = command_output(['gconftool-2',
-            '--get', '/apps/compiz-1/general/screen0/options/active_plugins'])
-
-        # User configuration
-        report['GconfCompiz'] = command_output(['gconftool-2', '-R', '/apps/compiz-1'])
+    # Include the compiz details
+    report.add_hooks_info(ui, srcpackage='compiz')
+    # the upstart logs
+    attach_upstart_logs(report, 'unity-services')
+    attach_upstart_logs(report ,'libunity-core-6.0-9')
+    # some gsettings configs
+    attach_gsettings_schema(report, 'com.canonical.Unity')
+    attach_gsettings_schema(report, 'com.ubuntu.user-interface')
+    attach_gsettings_schema(report, 'org.gnome.desktop.interface')
+    attach_gsettings_schema(report, 'org.gnome.desktop.lockdown')
