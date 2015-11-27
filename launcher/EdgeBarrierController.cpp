@@ -119,9 +119,7 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     SetupBarriers(UScreen::GetDefault()->GetMonitors());
   });
 
-  launcher_position_changed_ = Settings::Instance().launcher_position.changed.connect([this] (LauncherPosition) {
-     OnOptionsChanged();
-  });
+  Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::OnOptionsChanged)));
 
   xi2_opcode_ = GetXI2OpCode();
 }

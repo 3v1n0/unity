@@ -81,8 +81,8 @@ const RawPixel SPACE_BETWEEN_ICONS     =  5_em;
 const int MOUSE_DEADZONE = 15;
 
 const float DRAG_OUT_PIXELS = 300.0f;
-const float FOLDED_Z_DISTANCE = 20.f;//(Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? 10.f: 20.f;
-const float NEG_FOLDED_ANGLE = 1.0f;//(Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? -1.0f : 1.0f;
+const float FOLDED_Z_DISTANCE = 10.f;
+const float NEG_FOLDED_ANGLE = -1.0f;
 
 const RawPixel SCROLL_AMOUNT      = 25_em;
 const RawPixel SCROLL_AREA_HEIGHT = 24_em;
@@ -1855,6 +1855,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute, force_show_window);
   if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
     bkg_box.width -= RIGHT_LINE_WIDTH.CP(cv_);
+  else
+    bkg_box.height -= RIGHT_LINE_WIDTH.CP(cv_);
 
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER &&
       bkg_box.x + bkg_box.width <= 0 &&
@@ -2056,7 +2058,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
                                             bkg_box.width,
-                                            1),
+                                            RIGHT_LINE_WIDTH.CP(cv_)),
                               nux::color::White * right_line_opacity);
   }
 
@@ -2717,6 +2719,7 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, nux::ObjectP
   arg.render_center = nux::Point3(roundf(texture->GetWidth() / 2.0f), roundf(texture->GetHeight() / 2.0f), 0.0f);
   arg.logical_center = arg.render_center;
   arg.rotation.x = 0.0f;
+  arg.rotation.y = 0.0f;
   arg.running_arrow = false;
   arg.active_arrow = false;
   arg.skip = false;

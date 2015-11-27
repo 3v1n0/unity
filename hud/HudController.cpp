@@ -206,7 +206,6 @@ void Controller::EnsureHud()
 void Controller::SetIcon(std::string const& icon_name)
 {
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
-
   int launcher_size = unity::Settings::Instance().LauncherSize(monitor_index_);
 
   if (view_)

@@ -285,8 +285,12 @@ struct IconRenderer::LocalTextures
       {&icon_shine, "launcher_icon_shine_"+tile_sufix, icon_size},
       {&arrow_ltr, "launcher_arrow_ltr_"+marker_sufix, marker_size},
       {&arrow_rtl, "launcher_arrow_rtl_"+marker_sufix, marker_size},
+      {&arrow_btt, "launcher_arrow_btt_"+marker_sufix, marker_size},
+      {&arrow_ttb, "launcher_arrow_ttb_"+marker_sufix, marker_size},
       {&arrow_empty_ltr, "launcher_arrow_outline_ltr_"+marker_sufix, marker_size},
+      {&arrow_empty_btt, "launcher_arrow_outline_btt_"+marker_sufix, marker_size},
       {&pip_ltr, "launcher_pip_ltr_"+marker_sufix, marker_size},
+      {&pip_btt, "launcher_pip_btt_"+marker_sufix, marker_size},
       {&progress_bar_trough, "progress_bar_trough", icon_size},
       {&progress_bar_fill, "progress_bar_fill", image_size - (icon_size - image_size)},
     };
@@ -327,8 +331,12 @@ struct IconRenderer::LocalTextures
   BaseTexturePtr icon_shine;
   BaseTexturePtr arrow_ltr;
   BaseTexturePtr arrow_rtl;
+  BaseTexturePtr arrow_btt;
+  BaseTexturePtr arrow_ttb;
   BaseTexturePtr arrow_empty_ltr;
+  BaseTexturePtr arrow_empty_btt;
   BaseTexturePtr pip_ltr;
+  BaseTexturePtr pip_btt;
   BaseTexturePtr progress_bar_trough;
   BaseTexturePtr progress_bar_fill;
 
@@ -1081,16 +1089,25 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     if (!arg.running_on_viewport)
     {
       markers[0] = markerCenter;
-      texture = local_textures_->arrow_empty_ltr;
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        texture = local_textures_->arrow_empty_ltr;
+      else
+        texture = local_textures_->arrow_empty_btt;
     }
     else if (running == 1)
     {
       markers[0] = markerCenter;
-      texture = local_textures_->arrow_ltr;
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        texture = local_textures_->arrow_ltr;
+      else
+        texture = local_textures_->arrow_btt;
     }
     else if (running == 2)
     {
-      texture = local_textures_->pip_ltr;
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        texture = local_textures_->pip_ltr;
+      else
+        texture = local_textures_->pip_btt;
 
       double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
       int offset = std::max(1.0, std::round(2.0 * texture->GetHeight() / default_tex_height));
@@ -1099,7 +1116,10 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
     else
     {
-      texture = local_textures_->pip_ltr;
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        texture = local_textures_->pip_ltr;
+      else
+        texture = local_textures_->pip_btt;
 
       double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
       int offset = std::max(1.0, std::round(4.0 * texture->GetHeight() / default_tex_height));
@@ -1155,9 +1175,10 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
-    auto const& arrow_rtl = local_textures_->arrow_rtl;
     nux::Color color = nux::color::LightGrey * alpha;
     if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    {
+      auto const& arrow_rtl = local_textures_->arrow_rtl;
       GfxContext.QRP_1Tex((geo.x + geo.width) - arrow_rtl->GetWidth(),
                           markerCenter - std::round(arrow_rtl->GetHeight() / 2.0f),
                           arrow_rtl->GetWidth(),
@@ -1165,14 +1186,18 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
                           arrow_rtl->GetDeviceTexture(),
                           texxform,
                           color);
+    }
     else
-      GfxContext.QRP_1Tex(markerCenter - std::round(arrow_rtl->GetWidth() / 2.0f),
+    {
+      auto const& arrow_ttb = local_textures_->arrow_ttb;
+      GfxContext.QRP_1Tex(markerCenter - std::round(arrow_ttb->GetWidth() / 2.0f),
                           geo.y,
-                          arrow_rtl->GetWidth(),
-                          arrow_rtl->GetHeight(),
-                          arrow_rtl->GetDeviceTexture(),
+                          arrow_ttb->GetWidth(),
+                          arrow_ttb->GetHeight(),
+                          arrow_ttb->GetDeviceTexture(),
                           texxform,
                           color);
+    }
   }
 }
 

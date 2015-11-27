@@ -73,7 +73,6 @@ struct EdgeBarrierController::Impl : public sigc::trackable
   int xi2_opcode_;
   float edge_overcome_pressure_;
   EdgeBarrierController* parent_;
-  connection::Wrapper launcher_position_changed_;
 };
 
 } //namespace ui

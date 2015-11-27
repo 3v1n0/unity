@@ -261,7 +261,6 @@ void Controller::Relayout(bool check_monitor)
   if (check_monitor)
     monitor_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
 
-
   nux::Geometry geo = GetIdealWindowGeometry();
 
   view_->Relayout();
@@ -351,7 +350,6 @@ bool Controller::ShowDash()
 
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
-
   return true;
 }
 
