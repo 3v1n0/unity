@@ -701,14 +701,11 @@ void Controller::Impl::SelectFirstItem()
   uint64_t second_first = 0; // second icons first highest active
 
   WindowManager& wm = WindowManager::Default();
-  for (auto& window : first->Windows())
+  auto const& windows = (model_->only_apps_on_viewport) ? first->WindowsOnViewport() : first->Windows();
+
+  for (auto& window : windows)
   {
-    Window xid = window->window_id();
-
-    if (model_->only_apps_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
-      continue;
-
-    uint64_t num = wm.GetWindowActiveNumber(xid);
+    uint64_t num = wm.GetWindowActiveNumber(window->window_id());
 
     if (num > first_highest)
     {
