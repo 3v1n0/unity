@@ -1464,35 +1464,60 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
 
   switch (keysym)
   {
-      // up (move selection up or go to global-menu if at top-most icon)
+    // up
     case NUX_VK_UP:
     case NUX_KP_UP:
-      parent_->KeyNavPrevious();
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        // move selection up or go to global-menu if at top-most icon
+        parent_->KeyNavPrevious();
+      else
+        OpenQuicklist();
       break;
 
-      // down (move selection down and unfold launcher if needed)
+    // down
     case NUX_VK_DOWN:
     case NUX_KP_DOWN:
-      parent_->KeyNavNext();
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        // move selection down and unfold launcher if needed
+        parent_->KeyNavNext();
+      else
+        // exit launcher key-focus
+        parent_->KeyNavTerminate(false);
       break;
 
-      // super/control/esc/left (close quicklist or exit laucher key-focus)
+    // left
+    case NUX_VK_LEFT:
+    case NUX_KP_LEFT:
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        parent_->KeyNavTerminate(false);
+      else
+        // move selection left or go to global-menu if at top-most icon or close quicklist
+        parent_->KeyNavPrevious();
+      break;
+
+    // right
+    case NUX_VK_RIGHT:
+    case NUX_KP_RIGHT:
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        OpenQuicklist();
+      else
+        // move selection right and unfold launcher if needed
+        parent_->KeyNavNext();
+      break;
+
+      // super/control/esc (close quicklist or exit laucher key-focus)
     case NUX_VK_LWIN:
     case NUX_VK_RWIN:
     case NUX_VK_CONTROL:
-    case NUX_VK_LEFT:
-    case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
       // hide again
       parent_->KeyNavTerminate(false);
       break;
 
-      // right/shift-f10 (open quicklist of currently selected icon)
+      // shift-f10 (open quicklist of currently selected icon)
     case XK_F10:
       if (!(state & nux::NUX_STATE_SHIFT))
         break;
-    case NUX_VK_RIGHT:
-    case NUX_KP_RIGHT:
     case XK_Menu:
       OpenQuicklist();
       break;

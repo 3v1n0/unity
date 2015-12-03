@@ -37,6 +37,10 @@ class IconDragType:
     BEFORE = 3
     AFTER = 4
 
+class LauncherPosition:
+    """Define launcher possible positions"""
+    LEFT = 0
+    BOTTOM = 1
 
 class LauncherController(UnityIntrospectionObject):
     """The LauncherController class."""
@@ -104,12 +108,16 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         """Places the mouse on the screen of this launcher."""
         move_mouse_to_screen(self.monitor)
 
-    def move_mouse_to_right_of_launcher(self):
+    def move_mouse_beside_launcher(self):
         """Places the mouse to the right of this launcher."""
         move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
-        target_x = x + w + 10
-        target_y = y + h / 2
+        if h > w:
+            target_x = x + w + 10
+            target_y = y + h / 2
+        else:
+            target_x = x + w / 2
+            target_y = y - 10
 
         logger.debug("Moving mouse away from launcher.")
         self._mouse.move(target_x, target_y, False)
@@ -153,8 +161,13 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
 
-        target_x = x - 300 # this is the pressure we need to reveal the launcher.
-        target_y = y + h / 2
+        if h > w:
+            target_x = x - 300 # this is the pressure we need to reveal the launcher.
+            target_y = y + h / 2
+        else:
+            target_x = x + w / 2
+            target_y = y + h + 300
+
         logger.debug("Revealing launcher on monitor %d with mouse.", self.monitor)
         self._mouse.move(target_x, target_y, True, 5, .002)
 
@@ -177,7 +190,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if self.hidemode == 1:
             self.is_showing.wait_for(False)
 
-    def keyboard_select_icon(self, **kwargs):
+    def keyboard_select_icon(self, launcher_position = LauncherPosition.LEFT, **kwargs):
         """Using either keynav mode or the switcher, select an icon in the launcher.
 
         The desired mode (keynav or switcher) must be started already before
@@ -218,7 +231,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             if matches:
                 return
             if self.in_keynav_mode:
-                self.key_nav_next()
+                self.key_nav_next(launcher_position)
             elif self.in_switcher_mode:
                 self.switcher_next()
         raise ValueError("No icon found that matches: %r", kwargs)
@@ -244,23 +257,33 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._perform_key_nav_exit_binding("launcher/keynav/activate")
         self._get_controller().key_nav_is_active.wait_for(False)
 
-    def key_nav_next(self):
+    def key_nav_next(self, launcher_position = LauncherPosition.LEFT):
         """Moves the launcher keynav focus to the next launcher icon"""
         logger.debug("Selecting next item in keyboard navigation mode.")
         old_selection = self._get_controller().key_nav_selection
-        self._perform_key_nav_binding("launcher/keynav/next")
+        if launcher_position == LauncherPosition.LEFT:
+            self._perform_key_nav_binding("launcher/keynav/next")
+        else:
+            #Todo: need to modify the keybindings dictionary in autopilot?
+            self._perform_key_nav_binding("launcher/keynav/open-quicklist")
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
-    def key_nav_prev(self):
+    def key_nav_prev(self, launcher_position = LauncherPosition.LEFT):
         """Moves the launcher keynav focus to the previous launcher icon"""
         logger.debug("Selecting previous item in keyboard navigation mode.")
         old_selection = self._get_controller().key_nav_selection
-        self._perform_key_nav_binding("launcher/keynav/prev")
+        if launcher_position == LauncherPosition.LEFT:
+            self._perform_key_nav_binding("launcher/keynav/prev")
+        else:
+            self._perform_key_nav_binding("launcher/keynav/close-quicklist")
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
-    def key_nav_enter_quicklist(self):
+    def key_nav_enter_quicklist(self, launcher_position = LauncherPosition.LEFT):
         logger.debug("Opening quicklist for currently selected icon.")
-        self._perform_key_nav_binding("launcher/keynav/open-quicklist")
+        if launcher_position == LauncherPosition.LEFT:
+            self._perform_key_nav_binding("launcher/keynav/open-quicklist")
+        else:
+            self._perform_key_nav_binding("launcher/keynav/prev")
         self.quicklist_open.wait_for(True)
 
     def key_nav_exit_quicklist(self):
@@ -329,7 +352,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._mouse.click(button)
 
         if (move_mouse_after):
-          self.move_mouse_to_right_of_launcher()
+          self.move_mouse_beside_launcher()
 
     def drag_icon_to_position(self, icon, pos, target, drag_type=IconDragType.INSIDE):
         """Drag a launcher icon to a new position.
@@ -396,7 +419,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._mouse.move(self._mouse.x, target_y, rate=20, time_between_events=0.005)
         sleep(1)
         self._mouse.release()
-        self.move_mouse_to_right_of_launcher()
+        self.move_mouse_beside_launcher()
 
     def lock_to_launcher(self, icon):
         """lock 'icon' to the launcher, if it's not already.

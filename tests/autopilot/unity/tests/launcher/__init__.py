@@ -13,6 +13,7 @@ from autopilot.testcase import multiply_scenarios
 
 from unity.tests import UnityTestCase
 from unity.emulators.X11 import set_primary_monitor
+from unity.emulators.launcher import LauncherPosition
 
 
 def _make_scenarios():
@@ -35,7 +36,11 @@ class LauncherTestCase(UnityTestCase):
     """A base class for all launcher tests that uses scenarios to run on
     each launcher (for multi-monitor setups).
     """
-    scenarios = _make_scenarios()
+    scenarios = multiply_scenarios(_make_scenarios(),
+                                   [
+                                       ('left', {'launcher_position': LauncherPosition.LEFT}),
+                                       ('bottom', {'launcher_position': LauncherPosition.BOTTOM}),
+                                   ])
 
     def setUp(self):
         super(LauncherTestCase, self).setUp()
@@ -44,6 +49,15 @@ class LauncherTestCase(UnityTestCase):
 
         self.set_unity_option('num_launchers', int(self.only_primary))
         self.launcher_instance = self.get_launcher()
+
+        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity', 'launcher-position')
+        if self.launcher_position == LauncherPosition.LEFT:
+            self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"Left"')
+
+        if self.launcher_position == LauncherPosition.BOTTOM:
+            self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"Bottom"')
+
+        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity', 'launcher-position', old_pos)
 
         if not self.launcher_instance:
             self.skipTest("Cannot run test with no Launcher on monitor %d." % self.launcher_monitor)

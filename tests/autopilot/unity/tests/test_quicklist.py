@@ -18,6 +18,7 @@ from time import sleep
 from xdg.DesktopEntry import DesktopEntry
 
 from unity.emulators.quicklist import QuicklistMenuItemLabel
+from unity.emulators.launcher import LauncherPosition
 from unity.tests import UnityTestCase
 
 
@@ -224,6 +225,10 @@ class QuicklistActionTests(UnityTestCase):
 
 class QuicklistKeyNavigationTests(UnityTestCase):
     """Tests for the quicklist key navigation."""
+    scenarios = [
+        ('left', {'launcher_position': LauncherPosition.LEFT}),
+        ('bottom', {'launcher_position': LauncherPosition.BOTTOM}),
+    ]
 
     def setUp(self):
         super(QuicklistKeyNavigationTests, self).setUp()
@@ -256,7 +261,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
-        self.ql_launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
+        self.ql_launcher.keyboard_select_icon(self.launcher_position, tooltip_text=self.ql_app.name)
         self.keybinding("launcher/keynav/open-quicklist")
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
 

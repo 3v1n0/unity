@@ -150,7 +150,7 @@ class SpreadTests(UnityTestCase):
         """Test that the screen spread desaturates the launcher icons"""
         self.start_test_application_windows("Calculator", 1)
         self.initiate_spread_for_screen()
-        self.launcher.move_mouse_to_right_of_launcher()
+        self.launcher.move_mouse_beside_launcher()
         self.assertLauncherIconsDesaturated()
 
     def test_spread_saturate_launcher_icons_on_mouse_over(self):
