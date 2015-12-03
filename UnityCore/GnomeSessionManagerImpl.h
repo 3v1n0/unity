@@ -54,7 +54,7 @@ struct GnomeManager::Impl
   bool HasInhibitors();
   void EnsureCancelPendingAction();
   void LockScreen(bool prompt);
-  void UserIconFile(std::function<void(GVariant*)> callback);
+  void UserIconFile(std::function<void(std::string const&)> const& callback);
 
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,

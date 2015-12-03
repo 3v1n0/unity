@@ -280,7 +280,7 @@ void TextInput::UpdateHintColor()
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(std::string const& icon_file, int icon_size)
 {
   TextureCache& cache = TextureCache::GetDefault();
-  return cache.FindTexture(icon_file.c_str(), icon_size, icon_size);
+  return cache.FindTexture(icon_file, icon_size, icon_size);
 }
 
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)

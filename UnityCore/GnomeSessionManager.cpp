@@ -513,9 +513,11 @@ bool GnomeManager::Impl::HasInhibitors()
   return inhibitors.GetBool();
 }
 
-void GnomeManager::Impl::UserIconFile(std::function<void(GVariant*)> callback)
+void GnomeManager::Impl::UserIconFile(std::function<void(std::string const&)> const& callback)
 {
-  dm_seat_proxy_->GetProperty("IconFile", callback);
+  dm_seat_proxy_->GetProperty("IconFile", [this, callback] (GVariant *value) {
+    callback(glib::Variant(value).GetString());
+  });
 }
 
 bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string const& group_name)
@@ -563,7 +565,7 @@ std::string GnomeManager::HostName() const
   return glib::gchar_to_string(g_get_host_name());
 }
 
-void GnomeManager::UserIconFile(std::function<void(GVariant*)> callback) const
+void GnomeManager::UserIconFile(std::function<void(std::string const&)> const& callback) const
 {
   impl_->UserIconFile(callback);
 }

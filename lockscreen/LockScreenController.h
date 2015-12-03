@@ -24,12 +24,12 @@
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSource.h>
 
+#include "LockScreenAbstractPromptView.h"
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
 #include "ScreenSaverDBusManager.h"
 #include "ShutdownNotifier.h"
 #include "SuspendNotifier.h"
-#include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 

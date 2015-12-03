@@ -28,12 +28,12 @@ namespace session
 struct MockManager : Manager
 {
   typedef std::shared_ptr<MockManager> Ptr;
-  typedef std::function<void(GVariant*)> ReplyCallback;
+  typedef std::function<void(std::string const&)> ReplyCallback;
 
   MOCK_CONST_METHOD0(RealName, std::string());
   MOCK_CONST_METHOD0(UserName, std::string());
   MOCK_CONST_METHOD0(HostName, std::string());
-  MOCK_CONST_METHOD1(UserIconFile, void(ReplyCallback));
+  MOCK_CONST_METHOD1(UserIconFile, void(ReplyCallback const&));
 
   MOCK_METHOD0(ScreenSaverActivate, void());
   MOCK_METHOD0(ScreenSaverDeactivate, void());

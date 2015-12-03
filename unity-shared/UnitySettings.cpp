@@ -222,7 +222,7 @@ public:
 
   DesktopType GetDesktopType() const
   {
-      return static_cast<DesktopType>(g_settings_get_enum(usettings_, DESKTOP_TYPE.c_str()));
+    return static_cast<DesktopType>(g_settings_get_enum(usettings_, DESKTOP_TYPE.c_str()));
   }
 
   int GetFontSize() const

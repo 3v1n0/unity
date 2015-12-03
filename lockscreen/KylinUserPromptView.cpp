@@ -49,12 +49,12 @@ const RawPixel LAYOUT_MARGIN        = 20_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
 const RawPixel MSG_LAYOUT_PADDING   = 33_em;
 const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
-const RawPixel SWITCH_ICON_SIZE     = 32_em;
+const RawPixel SWITCH_ICON_SIZE     = 34_em;
 const RawPixel TEXT_INPUT_HEIGHT    =  36_em;
 const RawPixel TEXT_INPUT_WIDTH     = 320_em;
 const int PROMPT_FONT_SIZE = 14;
 
-const std::string ACTIVATOR_ICON = "login.png";
+const std::string ACTIVATOR_ICON = "login.svg";
 
 std::string SanitizeMessage(std::string const& message)
 {
@@ -111,9 +111,9 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
 
     scale.changed.connect(sigc::hide(sigc::mem_fun(this, &KylinUserPromptView::UpdateSize)));
 
-    session_manager_->UserIconFile([this] (GVariant* value) {
-        avatar_icon_file = glib::gchar_to_string(g_variant_get_string(value, NULL));
-        AddAvatar(avatar_icon_file(), AVATAR_SIZE.CP(scale));
+    session_manager_->UserIconFile([this] (std::string const& value) {
+        avatar_icon_file = value;
+        AddAvatar(value, AVATAR_SIZE.CP(scale));
     });
 
     UpdateSize();
@@ -136,7 +136,7 @@ void KylinUserPromptView::ResetLayout()
     nux::Layout* switch_layout = new nux::HLayout();
 
     TextureCache& cache = TextureCache::GetDefault();
-    switch_icon_ = new IconTexture(cache.FindTexture("switch_user.png", SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale)));
+    switch_icon_ = new IconTexture(cache.FindTexture("switch_user.svg", SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale)));
     switch_layout->AddView(switch_icon_);
     switch_icon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
       session_manager_->SwitchToGreeter();

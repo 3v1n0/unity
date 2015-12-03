@@ -57,8 +57,6 @@ public:
   virtual nux::View* focus_view() = 0;
 
   virtual void AuthenticationCb(bool authenticated) = 0;
-  virtual void Draw(nux::GraphicsEngine& graphics_engine, bool /* force_draw */) = 0;
-  virtual void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) {}
   virtual void ResetLayout() = 0;
   virtual void UpdateSize() = 0;
 

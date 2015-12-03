@@ -23,7 +23,6 @@
 #include <sigc++/sigc++.h>
 #include <memory>
 
-#include <glib.h>
 #include <NuxCore/Property.h>
 
 namespace unity
@@ -45,7 +44,7 @@ public:
   virtual std::string RealName() const = 0;
   virtual std::string UserName() const = 0;
   virtual std::string HostName() const = 0;
-  virtual void UserIconFile(std::function<void(GVariant*)>) const = 0;
+  virtual void UserIconFile(std::function<void(std::string const&)> const&) const = 0;
 
   virtual void ScreenSaverActivate() = 0;
   virtual void ScreenSaverDeactivate() = 0;
