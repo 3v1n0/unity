@@ -21,7 +21,7 @@
 #define UNITY_LOCKSCREEN_SHIELD_FACTORY
 
 #include <Nux/Nux.h>
-#include "LockScreenAbstractShield.h"
+#include "LockScreenBaseShield.h"
 
 namespace unity
 {
@@ -39,23 +39,23 @@ struct ShieldFactoryInterface
 
   virtual ~ShieldFactoryInterface() = default;
 
-  virtual nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
-                                                      indicator::Indicators::Ptr const&,
-                                                      Accelerators::Ptr const&,
-                                                      nux::ObjectPtr<AbstractUserPromptView> const&,
-                                                      int monitor, bool is_primary) = 0;
+  virtual nux::ObjectPtr<BaseShield> CreateShield(session::Manager::Ptr const&,
+                                                  indicator::Indicators::Ptr const&,
+                                                  Accelerators::Ptr const&,
+                                                  nux::ObjectPtr<AbstractUserPromptView> const&,
+                                                  int monitor, bool is_primary) = 0;
 };
 
 struct ShieldFactory : ShieldFactoryInterface
 {
-  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
-                                              indicator::Indicators::Ptr const&,
-                                              Accelerators::Ptr const&,
-                                              nux::ObjectPtr<AbstractUserPromptView> const&,
-                                              int monitor, bool is_primary) override;
+  nux::ObjectPtr<BaseShield> CreateShield(session::Manager::Ptr const&,
+                                          indicator::Indicators::Ptr const&,
+                                          Accelerators::Ptr const&,
+                                          nux::ObjectPtr<AbstractUserPromptView> const&,
+                                          int monitor, bool is_primary) override;
 };
 
 }
 }
 
-#endif
+#endif // UNITY_LOCKSCREEN_SHIELD_FACTORY

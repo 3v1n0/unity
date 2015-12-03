@@ -24,7 +24,6 @@
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSource.h>
 
-#include "LockScreenAbstractPromptView.h"
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
 #include "ScreenSaverDBusManager.h"
@@ -77,8 +76,8 @@ private:
   void OnScreenSaverActivationRequest(bool activate);
   void OnPrimaryShieldMotion(int x, int y);
 
-  std::vector<nux::ObjectPtr<AbstractShield>> shields_;
-  nux::ObjectWeakPtr<AbstractShield> primary_shield_;
+  std::vector<nux::ObjectPtr<BaseShield>> shields_;
+  nux::ObjectWeakPtr<BaseShield> primary_shield_;
   nux::ObjectWeakPtr<AbstractUserPromptView> prompt_view_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
 

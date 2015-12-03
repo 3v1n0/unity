@@ -22,18 +22,16 @@
 
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSource.h>
-#include "LockScreenAbstractShield.h"
+#include "LockScreenBaseShield.h"
 
 namespace unity
 {
 namespace lockscreen
 {
 
-class UserAuthenticator;
 class AbstractUserPromptView;
-class CofView;
 
-class KylinShield : public AbstractShield
+class KylinShield : public BaseShield
 {
 public:
   KylinShield(session::Manager::Ptr const&,
@@ -45,13 +43,7 @@ protected:
   nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
 
 private:
-  void ShowPrimaryView();
-  void ShowSecondaryView();
-
-  nux::ObjectPtr<nux::Layout> primary_layout_;
-  nux::ObjectPtr<nux::Layout> prompt_layout_;
-  nux::ObjectPtr<nux::Layout> cof_layout_;
-  CofView* cof_view_;
+  void ShowPrimaryView() override;
 };
 
 }

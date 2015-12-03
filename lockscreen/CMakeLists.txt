@@ -22,6 +22,7 @@ set (LOCKSCREEN_SOURCES
      KylinUserPromptView.cpp
      KylinLockScreenShield.cpp
      LockScreenController.cpp
+     LockScreenBaseShield.cpp
      LockScreenSettings.cpp
      LockScreenShield.cpp
      LockScreenShieldFactory.cpp

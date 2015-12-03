@@ -28,16 +28,20 @@ namespace unity
 namespace lockscreen
 {
 
-nux::ObjectPtr<AbstractShield> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager,
-                                                           indicator::Indicators::Ptr const& indicators,
-                                                           Accelerators::Ptr const& accelerators,
-                                                           nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
-                                                           int monitor, bool is_primary)
+nux::ObjectPtr<BaseShield> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager,
+                                                       indicator::Indicators::Ptr const& indicators,
+                                                       Accelerators::Ptr const& accelerators,
+                                                       nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
+                                                       int monitor, bool is_primary)
 {
+  nux::ObjectPtr<BaseShield> shield;
+
   if (Settings::Instance().desktop_type() == DesktopType::UBUNTUKYLIN)
-    return nux::ObjectPtr<KylinShield>(new KylinShield(session_manager, accelerators, prompt_view, monitor, is_primary));
+    shield = new KylinShield(session_manager, accelerators, prompt_view, monitor, is_primary);
   else
-    return nux::ObjectPtr<Shield>(new Shield(session_manager, indicators, accelerators, prompt_view,  monitor, is_primary));
+    shield = new Shield(session_manager, indicators, accelerators, prompt_view,  monitor, is_primary);
+
+  return shield;
 }
 
 }

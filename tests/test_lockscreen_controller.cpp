@@ -51,10 +51,10 @@ const unsigned TICK_DURATION =  10 * 1000;
 }
 
 
-struct MockShield : AbstractShield
+struct MockShield : BaseShield
 {
   MockShield()
-    : AbstractShield(nullptr, nullptr, nullptr, nux::ObjectPtr<AbstractUserPromptView>(), 0, false)
+    : BaseShield(nullptr, nullptr, nullptr, nux::ObjectPtr<AbstractUserPromptView>(), 0, false)
   {}
 
   MOCK_CONST_METHOD0(IsIndicatorOpen, bool());
@@ -64,13 +64,13 @@ struct MockShield : AbstractShield
 
 struct ShieldFactoryMock : ShieldFactoryInterface
 {
-  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
-                                              indicator::Indicators::Ptr const&,
-                                              Accelerators::Ptr const&,
-                                              nux::ObjectPtr<AbstractUserPromptView> const&,
-                                              int, bool) override
+  nux::ObjectPtr<BaseShield> CreateShield(session::Manager::Ptr const&,
+                                          indicator::Indicators::Ptr const&,
+                                          Accelerators::Ptr const&,
+                                          nux::ObjectPtr<AbstractUserPromptView> const&,
+                                          int, bool) override
   {
-    return nux::ObjectPtr<AbstractShield>(new MockShield());
+    return nux::ObjectPtr<BaseShield>(new MockShield());
   }
 };
 
