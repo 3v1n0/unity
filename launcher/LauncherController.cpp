@@ -1117,13 +1117,10 @@ std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current, 
 
   for (auto icon : *(pimpl->model_))
   {
-    if (icon->ShowInSwitcher(current))
+    //otherwise we get two desktop icons in the switcher.
+    if (icon->GetIconType() != AbstractLauncherIcon::IconType::DESKTOP)
     {
-      //otherwise we get two desktop icons in the switcher.
-      if (icon->GetIconType() != AbstractLauncherIcon::IconType::DESKTOP)
-      {
-        results.push_back(icon);
-      }
+      results.push_back(icon);
     }
   }
   return results;
