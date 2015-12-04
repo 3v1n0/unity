@@ -19,7 +19,6 @@
 
 #include "LockScreenShieldFactory.h"
 #include "LockScreenShield.h"
-#include "LockScreenAbstractPromptView.h"
 #include "KylinLockScreenShield.h"
 #include "unity-shared/UnitySettings.h"
 

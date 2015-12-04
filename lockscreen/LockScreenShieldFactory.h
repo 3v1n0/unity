@@ -20,18 +20,19 @@
 #ifndef UNITY_LOCKSCREEN_SHIELD_FACTORY
 #define UNITY_LOCKSCREEN_SHIELD_FACTORY
 
-#include <Nux/Nux.h>
-#include "LockScreenBaseShield.h"
+#include <NuxCore/NuxCore.h>
+#include <UnityCore/SessionManager.h>
+#include <UnityCore/Indicators.h>
+#include "LockScreenAccelerators.h"
 
 namespace unity
 {
-
 class MockableBaseWindow;
 
 namespace lockscreen
 {
-
 class AbstractUserPromptView;
+class BaseShield;
 
 struct ShieldFactoryInterface
 {
