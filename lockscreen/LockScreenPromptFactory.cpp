@@ -14,39 +14,29 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: handsome_feng <jianfengli@ubuntukylin.com>
+* Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 */
 
-#ifndef UNITY_KYLIN_LOCKSCREEN_SHIELD_H
-#define UNITY_KYLIN_LOCKSCREEN_SHIELD_H
-
-#include <UnityCore/ConnectionManager.h>
-#include <UnityCore/GLibSource.h>
-#include "LockScreenBaseShield.h"
+#include "LockScreenPromptFactory.h"
+#include "KylinUserPromptView.h"
+#include "UserPromptView.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
 namespace lockscreen
 {
-
-class AbstractUserPromptView;
-
-class KylinShield : public BaseShield
+nux::ObjectPtr<AbstractUserPromptView> PromptFactory::CreatePrompt(session::Manager::Ptr const& sm)
 {
-public:
-  KylinShield(session::Manager::Ptr const&,
-         Accelerators::Ptr const&,
-         nux::ObjectPtr<AbstractUserPromptView> const&,
-         int monitor, bool is_primary);
+  nux::ObjectPtr<AbstractUserPromptView> prompt;
 
-protected:
-  nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
+  if (unity::Settings::Instance().desktop_type() == DesktopType::UBUNTUKYLIN)
+    prompt = new KylinUserPromptView(sm);
+  else
+    prompt = new UserPromptView(sm);
 
-private:
-  void ShowPrimaryView() override;
-};
+  return prompt;
+}
 
 }
 }
-
-#endif

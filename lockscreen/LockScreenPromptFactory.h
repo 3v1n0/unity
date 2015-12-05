@@ -14,39 +14,29 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: handsome_feng <jianfengli@ubuntukylin.com>
+* Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 */
 
-#ifndef UNITY_KYLIN_LOCKSCREEN_SHIELD_H
-#define UNITY_KYLIN_LOCKSCREEN_SHIELD_H
+#ifndef UNITY_LOCKSCREEN_PROMPT_FACTORY
+#define UNITY_LOCKSCREEN_PROMPT_FACTORY
 
-#include <UnityCore/ConnectionManager.h>
-#include <UnityCore/GLibSource.h>
-#include "LockScreenBaseShield.h"
+#include <NuxCore/NuxCore.h>
+#include <UnityCore/SessionManager.h>
 
 namespace unity
 {
+class MockableBaseWindow;
+
 namespace lockscreen
 {
-
 class AbstractUserPromptView;
 
-class KylinShield : public BaseShield
+struct PromptFactory
 {
-public:
-  KylinShield(session::Manager::Ptr const&,
-         Accelerators::Ptr const&,
-         nux::ObjectPtr<AbstractUserPromptView> const&,
-         int monitor, bool is_primary);
-
-protected:
-  nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
-
-private:
-  void ShowPrimaryView() override;
+  static nux::ObjectPtr<AbstractUserPromptView> CreatePrompt(session::Manager::Ptr const&);
 };
 
 }
 }
 
-#endif
+#endif // UNITY_LOCKSCREEN_PROMPT_FACTORY
