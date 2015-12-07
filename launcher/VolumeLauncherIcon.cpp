@@ -433,9 +433,14 @@ void VolumeLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   FullyAnimateQuirkDelayed(100, LauncherIcon::Quirk::SHIMMER);
 }
 
+std::string VolumeLauncherIcon::GetVolumeUri() const
+{
+  return pimpl_->volume_->GetUri();
+}
+
 WindowList VolumeLauncherIcon::GetStorageWindows() const
 {
-  return file_manager_->WindowsForLocation(pimpl_->volume_->GetUri());
+  return file_manager_->WindowsForLocation(GetVolumeUri());
 }
 
 void VolumeLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)

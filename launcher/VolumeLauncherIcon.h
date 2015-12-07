@@ -51,6 +51,7 @@ public:
   void UnStick();
   MenuItemsVector GetMenus();
   std::string GetRemoteUri() const;
+  std::string GetVolumeUri() const;
 
 protected:
   void OnAcceptDrop(DndData const&);
