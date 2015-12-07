@@ -37,7 +37,7 @@ namespace launcher
 
 class Launcher;
 
-class ApplicationLauncherIcon : public WindowedLauncherIcon
+class ApplicationLauncherIcon : public virtual WindowedLauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(ApplicationLauncherIcon, WindowedLauncherIcon);
 public:

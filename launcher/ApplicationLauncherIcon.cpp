@@ -146,18 +146,17 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
       Spread(true, 0, false);
   }));
 
-  auto ensure_win_location_cb = sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowsLocation));
-  signals_conn_.Add(app_->window_closed.connect(ensure_win_location_cb));
+  signals_conn_.Add(app_->window_closed.connect([this] (ApplicationWindowPtr const&) { EnsureWindowsLocation(); }));
 
   for (auto& win : app_->GetWindows())
-    signals_conn_.Add(win->monitor.changed.connect(ensure_win_location_cb));
+    signals_conn_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
 
-  signals_conn_.Add(app_->urgent.changed.connect([this](bool const& urgent) {
+  signals_conn_.Add(app_->urgent.changed.connect([this](bool urgent) {
     LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
     SetQuirk(Quirk::URGENT, urgent);
   }));
 
-  signals_conn_.Add(app_->active.changed.connect([this](bool const& active) {
+  signals_conn_.Add(app_->active.changed.connect([this](bool active) {
     LOG_DEBUG(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
     SetQuirk(Quirk::ACTIVE, active);
   }));
@@ -179,7 +178,7 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
     icon_name = (icon.empty() ? DEFAULT_ICON : icon);
   }));
 
-  signals_conn_.Add(app_->running.changed.connect([this](bool const& running) {
+  signals_conn_.Add(app_->running.changed.connect([this](bool running) {
     LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
     SetQuirk(Quirk::RUNNING, running);
 
@@ -192,7 +191,7 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
     }
   }));
 
-  signals_conn_.Add(app_->visible.changed.connect([this](bool const& visible) {
+  signals_conn_.Add(app_->visible.changed.connect([this](bool visible) {
     SetQuirk(Quirk::VISIBLE, IsSticky() ? true : visible);
   }));
 

@@ -324,7 +324,8 @@ VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
                                        DevicesSettings::Ptr const& devices_settings,
                                        DeviceNotificationDisplay::Ptr const& notification,
                                        FileManager::Ptr const& fm)
-  : StorageLauncherIcon(IconType::DEVICE, fm)
+  : WindowedLauncherIcon(IconType::DEVICE)
+  , StorageLauncherIcon(GetIconType(), fm)
   , pimpl_(new Impl(volume, devices_settings, notification, fm, this))
 {
   UpdateStorageWindows();

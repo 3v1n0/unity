@@ -28,7 +28,7 @@ namespace unity
 namespace launcher
 {
 
-class StorageLauncherIcon : public WindowedLauncherIcon
+class StorageLauncherIcon : public virtual WindowedLauncherIcon
 {
 public:
   StorageLauncherIcon(AbstractLauncherIcon::IconType, FileManager::Ptr const&);

@@ -34,21 +34,9 @@ public:
   FileManagerLauncherIcon(ApplicationPtr const&, FileManager::Ptr const& = nullptr);
 
 private:
-  // IconType GetIconType() const override {return ApplicationLauncherIcon::GetIconType(); }
   WindowList GetManagedWindows() const override;
   WindowList GetStorageWindows() const override;
-
-  void SetQuirk(Quirk quirk, bool value, int monitor) override { ApplicationLauncherIcon::SetQuirk(quirk, value, monitor); }
-  bool GetQuirk(Quirk quirk, int monitor) const override { return ApplicationLauncherIcon::GetQuirk(quirk, monitor); }
-
-  void Focus(ActionArg arg) override { StorageLauncherIcon::Focus(arg); }
-  WindowList Windows() override { return StorageLauncherIcon::Windows(); }
-  WindowList WindowsForMonitor(int monitor) override { return StorageLauncherIcon::WindowsForMonitor(monitor); }
-  WindowList WindowsOnViewport() override { return StorageLauncherIcon::WindowsOnViewport(); }
-  bool WindowVisibleOnMonitor(int monitor) const override { return StorageLauncherIcon::WindowVisibleOnMonitor(monitor); }
-  bool WindowVisibleOnViewport() const override { return StorageLauncherIcon::WindowVisibleOnViewport(); }
-  size_t WindowsVisibleOnMonitor(int monitor) const override { return StorageLauncherIcon::WindowsVisibleOnMonitor(monitor); }
-  size_t WindowsVisibleOnViewport() const override { return StorageLauncherIcon::WindowsVisibleOnViewport(); }
+  void Focus(ActionArg arg) override;
 
   bool IsLocationManaged(std::string const&) const;
 };

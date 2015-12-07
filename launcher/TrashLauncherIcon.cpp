@@ -44,7 +44,8 @@ namespace
 }
 
 TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
-  : StorageLauncherIcon(IconType::TRASH, fm ? fm : GnomeFileManager::Get())
+  : WindowedLauncherIcon(IconType::TRASH)
+  , StorageLauncherIcon(GetIconType(), fm ? fm : GnomeFileManager::Get())
   , empty_(true)
 {
   tooltip_text = _("Trash");

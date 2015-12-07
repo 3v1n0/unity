@@ -38,32 +38,38 @@ const std::string DEFAULT_ICON = "system-file-manager";
 }
 
 FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, FileManager::Ptr const& fm)
-  : ApplicationLauncherIcon(app)
-  , StorageLauncherIcon(IconType::APPLICATION, fm ? fm : GnomeFileManager::Get())
+  : WindowedLauncherIcon(IconType::APPLICATION)
+  , ApplicationLauncherIcon(app)
+  , StorageLauncherIcon(GetIconType(), fm ? fm : GnomeFileManager::Get())
 {
+  // We disconnect from ApplicationLauncherIcon app signals, as we manage them manually
   signals_conn_.Clear();
 
   signals_conn_.Add(app_->desktop_file.changed.connect([this](std::string const& desktop_file) {
-    LOG_DEBUG(logger) << ApplicationLauncherIcon::tooltip_text() << " desktop_file now " << desktop_file;
+    LOG_DEBUG(logger) << tooltip_text() << " desktop_file now " << desktop_file;
     UpdateDesktopFile();
   }));
 
   signals_conn_.Add(app_->closed.connect([this] {
-    LOG_DEBUG(logger) << ApplicationLauncherIcon::tooltip_text() << " closed";
+    LOG_DEBUG(logger) << tooltip_text() << " closed";
     OnApplicationClosed();
   }));
 
   signals_conn_.Add(app_->title.changed.connect([this](std::string const& name) {
-    LOG_DEBUG(logger) << ApplicationLauncherIcon::tooltip_text() << " name now " << name;
-    if (_menu_items.size() > 3)
-      _menu_items[2] = nullptr;
-    ApplicationLauncherIcon::tooltip_text = name;
+    LOG_DEBUG(logger) << tooltip_text() << " name now " << name;
+    _menu_items.clear();
+    tooltip_text = name;
   }));
 
   signals_conn_.Add(app_->icon.changed.connect([this](std::string const& icon) {
-    LOG_DEBUG(logger) << ApplicationLauncherIcon::tooltip_text() << " icon now " << icon;
-    ApplicationLauncherIcon::icon_name = (icon.empty() ? DEFAULT_ICON : icon);
+    LOG_DEBUG(logger) << tooltip_text() << " icon now " << icon;
+    icon_name = (icon.empty() ? DEFAULT_ICON : icon);
   }));
+}
+
+void FileManagerLauncherIcon::Focus(ActionArg arg)
+{
+  WindowedLauncherIcon::Focus(arg);
 }
 
 bool FileManagerLauncherIcon::IsLocationManaged(std::string const& location) const
