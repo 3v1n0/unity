@@ -49,6 +49,11 @@ WindowedLauncherIcon::WindowedLauncherIcon(AbstractLauncherIcon::IconType icon_t
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &WindowedLauncherIcon::EnsureWindowState));
   wm.terminate_expo.connect(sigc::mem_fun(this, &WindowedLauncherIcon::EnsureWindowState));
   UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &WindowedLauncherIcon::EnsureWindowsLocation))));
+
+  windows_changed.connect([this] (int) {
+    if (WindowManager::Default().IsScaleActiveForGroup() && IsActive())
+      Spread(true, 0, false);
+  });
 }
 
 bool WindowedLauncherIcon::IsActive() const

@@ -140,9 +140,6 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindowPtr const& win) {
     signals_conn_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
     EnsureWindowsLocation();
-
-    if (WindowManager::Default().IsScaleActiveForGroup() && IsActive())
-      Spread(true, 0, false);
   }));
 
   signals_conn_.Add(app_->window_closed.connect([this] (ApplicationWindowPtr const&) { EnsureWindowsLocation(); }));
