@@ -69,7 +69,7 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
   }
   else
   {
-    trash_changed_signal_.Connect(trash_monitor_, "changed",
+    glib_signals_.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(trash_monitor_, "changed",
     [this] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent) {
       UpdateTrashIcon();
     });
@@ -101,7 +101,7 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash…"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-  empty_activated_signal_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
   [this] (DbusmenuMenuitem*, unsigned timestamp) {
     file_manager_->EmptyTrash(timestamp);
   });
