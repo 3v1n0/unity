@@ -53,7 +53,6 @@ public:
   std::string GetRemoteUri() const;
 
 protected:
-  bool OnShouldHighlightOnDrag(DndData const&);
   void OnAcceptDrop(DndData const&);
   nux::DndAction OnQueryAcceptDrop(DndData const&);
   WindowList GetStorageWindows() const override;

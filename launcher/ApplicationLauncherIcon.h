@@ -62,7 +62,6 @@ protected:
   WindowList GetManagedWindows() const override;
 
   void LogUnityEvent(ApplicationEventType);
-  bool IsFileManager();
   void Remove();
 
   void AboutToRemove() override;

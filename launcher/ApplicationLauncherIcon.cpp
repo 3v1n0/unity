@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <boost/algorithm/string.hpp>
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
@@ -814,28 +813,8 @@ std::string ApplicationLauncherIcon::GetRemoteUri() const
   return remote_uri_;
 }
 
-bool ApplicationLauncherIcon::IsFileManager()
-{
-  auto const& desktop_file = DesktopFile();
-
-  return boost::algorithm::ends_with(desktop_file, "org.gnome.Nautilus.desktop") ||
-         boost::algorithm::ends_with(desktop_file, "nautilus.desktop") ||
-         boost::algorithm::ends_with(desktop_file, "nautilus-folder-handler.desktop") ||
-         boost::algorithm::ends_with(desktop_file, "nautilus-home.desktop");
-}
-
 bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
-  if (IsFileManager())
-  {
-    for (auto const& uri : dnd_data.Uris())
-    {
-      if (boost::algorithm::starts_with(uri, "file://"))
-        return true;
-    }
-    return false;
-  }
-
   for (auto type : dnd_data.Types())
   {
     for (auto supported_type : GetSupportedTypes())

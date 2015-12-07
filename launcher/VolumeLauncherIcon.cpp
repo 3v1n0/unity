@@ -384,17 +384,6 @@ void VolumeLauncherIcon::UnStick()
   SetQuirk(Quirk::VISIBLE, true);
 }
 
-bool VolumeLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
-{
-  for (auto const& uri : dnd_data.Uris())
-  {
-    if (uri.find("file://") == 0)
-      return true;
-  }
-
-  return false;
-}
-
 nux::DndAction VolumeLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
   return dnd_data.Uris().empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;

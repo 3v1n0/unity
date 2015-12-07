@@ -107,5 +107,10 @@ WindowList FileManagerLauncherIcon::GetStorageWindows() const
   return fm_windows;
 }
 
+bool FileManagerLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
+{
+  return StorageLauncherIcon::OnShouldHighlightOnDrag(dnd_data);
+}
+
 } // namespace launcher
 } // namespace unity

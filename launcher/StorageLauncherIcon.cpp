@@ -94,5 +94,16 @@ void StorageLauncherIcon::OnWindowStateChanged()
   SetQuirk(Quirk::VISIBLE, visible);
 }
 
+bool StorageLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
+{
+  for (auto const& uri : dnd_data.Uris())
+  {
+    if (uri.find("file://") == 0)
+      return true;
+  }
+
+  return false;
+}
+
 } // namespace launcher
 } // namespace unity
