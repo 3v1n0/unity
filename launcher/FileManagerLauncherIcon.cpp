@@ -37,10 +37,11 @@ const std::string TRASH_PATH = "file://" + DesktopUtilities::GetUserTrashDirecto
 const std::string DEFAULT_ICON = "system-file-manager";
 }
 
-FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, FileManager::Ptr const& fm)
+FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, DeviceLauncherSection::Ptr const& dev, FileManager::Ptr const& fm)
   : WindowedLauncherIcon(IconType::APPLICATION)
   , ApplicationLauncherIcon(app)
   , StorageLauncherIcon(GetIconType(), fm ? fm : GnomeFileManager::Get())
+  , devices_(dev)
 {
   // We disconnect from ApplicationLauncherIcon app signals, as we manage them manually
   signals_conn_.Clear();
@@ -82,9 +83,11 @@ bool FileManagerLauncherIcon::IsLocationManaged(std::string const& location) con
   if (boost::algorithm::starts_with(location, TRASH_PATH))
     return false;
 
-  // FIXME: get paths from devices manager
-  if (boost::algorithm::starts_with(location, "file:///media/"+std::string(g_get_user_name())))
-    return false;
+  for (auto const& volume_icon : devices_->GetIcons())
+  {
+    if (boost::algorithm::starts_with(location, volume_icon->GetVolumeUri()))
+      return false;
+  }
 
   return true;
 }

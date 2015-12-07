@@ -22,6 +22,7 @@
 
 #include "ApplicationLauncherIcon.h"
 #include "StorageLauncherIcon.h"
+#include "DeviceLauncherSection.h"
 
 namespace unity
 {
@@ -31,7 +32,7 @@ namespace launcher
 class FileManagerLauncherIcon : public ApplicationLauncherIcon, public StorageLauncherIcon
 {
 public:
-  FileManagerLauncherIcon(ApplicationPtr const&, FileManager::Ptr const& = nullptr);
+  FileManagerLauncherIcon(ApplicationPtr const&, DeviceLauncherSection::Ptr const&, FileManager::Ptr const& = nullptr);
 
 private:
   WindowList GetManagedWindows() const override;
@@ -40,6 +41,8 @@ private:
   bool OnShouldHighlightOnDrag(DndData const& dnd_data) override;
 
   bool IsLocationManaged(std::string const&) const;
+
+  DeviceLauncherSection::Ptr devices_;
 };
 
 } // namespace launcher
