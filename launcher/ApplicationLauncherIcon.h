@@ -21,8 +21,6 @@
 #ifndef APPLICATION_LAUNCHER_ICON_H
 #define APPLICATION_LAUNCHER_ICON_H
 
-#include <UnityCore/GLibSignal.h>
-#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/Variant.h>
 
@@ -85,7 +83,6 @@ protected:
 
   void UnsetApplication();
   void SetupApplicationSignalsConnections();
-  void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsDefaultReady();
   void EnsureMenuItemsStaticQuicklist();
   void UpdateBackgroundColor();
@@ -103,11 +100,9 @@ protected:
   Time startup_notification_timestamp_;
   std::set<std::string> _supported_types;
   std::vector<glib::Object<DbusmenuMenuitem>> _menu_items;
-  std::vector<glib::Object<DbusmenuMenuitem>> _menu_items_windows;
   glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   glib::Object<GFileMonitor> _desktop_file_monitor;
-  glib::SignalManager _gsignals;
 
   bool use_custom_bg_color_;
   nux::Color bg_color_;

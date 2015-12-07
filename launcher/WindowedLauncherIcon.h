@@ -20,6 +20,8 @@
 #ifndef WINDOWED_LAUNCHER_ICON_H
 #define WINDOWED_LAUNCHER_ICON_H
 
+#include <UnityCore/GLibSignal.h>
+
 #include "SimpleLauncherIcon.h"
 
 namespace unity
@@ -77,6 +79,8 @@ protected:
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   WindowList GetWindowsOnCurrentDesktopInStackingOrder();
 
+  std::vector<glib::Object<DbusmenuMenuitem>> GetWindowsMenuItems();
+
 private:
   void OnCenterStabilized(std::vector<nux::Point3> const& centers) override;
   void OnWindowMinimized(Window);
@@ -85,6 +89,9 @@ private:
 
   Time last_scroll_timestamp_;
   unsigned int progressive_scroll_;
+
+protected:
+  glib::SignalManager glib_signals_;
 };
 
 } // namespace launcher

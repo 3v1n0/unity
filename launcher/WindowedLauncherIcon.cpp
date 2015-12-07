@@ -35,6 +35,7 @@ namespace
 {
 const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
 const int COMPIZ_SCALE_DND_SPREAD = 1 << 7;
+const int MAXIMUM_QUICKLIST_WIDTH = 300;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(WindowedLauncherIcon);
@@ -552,6 +553,50 @@ void WindowedLauncherIcon::Quit() const
 void WindowedLauncherIcon::AboutToRemove()
 {
   Quit();
+}
+
+std::vector<glib::Object<DbusmenuMenuitem>> WindowedLauncherIcon::GetWindowsMenuItems()
+{
+  auto const& windows = Windows();
+  std::vector<glib::Object<DbusmenuMenuitem>> menu_items;
+
+  // We only add quicklist menu-items for windows if we have more than one window
+  if (windows.size() < 2)
+    return menu_items;
+
+  // add menu items for all open windows
+  for (auto const& w : windows)
+  {
+    auto const& title = w->title();
+
+    if (title.empty())
+      continue;
+
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, title.c_str());
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, true);
+    dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
+
+    Window xid = w->window_id();
+    glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [xid] (DbusmenuMenuitem*, unsigned) {
+        WindowManager& wm = WindowManager::Default();
+        wm.Activate(xid);
+        wm.Raise(xid);
+    });
+
+    if (w->active())
+    {
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
+      dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+    }
+
+    menu_items.push_back(menu_item);
+  }
+
+  return menu_items;
 }
 
 std::string WindowedLauncherIcon::GetName() const

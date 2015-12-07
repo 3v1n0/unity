@@ -44,7 +44,6 @@ DECLARE_LOGGER(logger, "unity.launcher.icon.application");
 // We use the "bamf-" prefix since the manager is protected, to avoid name clash
 const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
 const std::string DEFAULT_ICON = "application-default-icon";
-const int MAXIMUM_QUICKLIST_WIDTH = 300;
 
 enum MenuItemType
 {
@@ -267,7 +266,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
   std::string const& filename = app_->desktop_file();
 
   if (_desktop_file_monitor)
-    _gsignals.Disconnect(_desktop_file_monitor, "changed");
+    glib_signals_.Disconnect(_desktop_file_monitor, "changed");
 
   auto old_uri = RemoteUri();
   UpdateRemoteUri();
@@ -285,7 +284,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
                                                 nullptr, nullptr);
     g_file_monitor_set_rate_limit(_desktop_file_monitor, 2000);
 
-    _gsignals.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
+    glib_signals_.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
       [this, desktop_file] (GFileMonitor*, GFile*,  GFile*, GFileMonitorEvent event_type) {
       switch (event_type)
       {
@@ -419,7 +418,7 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
   {
     for (GList *l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
     {
-      _gsignals.Disconnect(l->data, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED);
+      glib_signals_.Disconnect(l->data, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED);
     }
 
     _menu_desktop_shortcuts = nullptr;
@@ -452,7 +451,7 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
     auto nick = glib::gchar_to_string(nicks[index]);
 
-    _gsignals.Add<void, DbusmenuMenuitem*, gint>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+    glib_signals_.Add<void, DbusmenuMenuitem*, gint>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
     [this, nick] (DbusmenuMenuitem* item, unsigned timestamp) {
       GdkDisplay* display = gdk_display_get_default();
       glib::Object<GdkAppLaunchContext> context(gdk_display_get_app_launch_context(display));
@@ -481,50 +480,6 @@ void ApplicationLauncherIcon::UpdateBackgroundColor()
       last_bg_color != bg_color_)
   {
     EmitNeedsRedraw();
-  }
-}
-
-void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
-{
-  // delete all menu items for windows
-  _menu_items_windows.clear();
-
-  auto const& windows = Windows();
-
-  // We only add quicklist menu-items for windows if we have more than one window
-  if (windows.size() < 2)
-    return;
-
-  // add menu items for all open windows
-  for (auto const& w : windows)
-  {
-    auto const& title = w->title();
-
-    if (title.empty())
-      continue;
-
-    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, title.c_str());
-    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, true);
-    dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
-
-    Window xid = w->window_id();
-    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [xid] (DbusmenuMenuitem*, unsigned) {
-        WindowManager& wm = WindowManager::Default();
-        wm.Activate(xid);
-        wm.Raise(xid);
-    });
-
-    if (w->active())
-    {
-      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
-      dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
-    }
-
-    _menu_items_windows.push_back(menu_item);
   }
 }
 
@@ -631,7 +586,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-  _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
     [this] (DbusmenuMenuitem*, unsigned) {
       ToggleSticky();
   });
@@ -644,7 +599,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-  _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
     [this] (DbusmenuMenuitem*, unsigned) {
       Quit();
   });
@@ -727,7 +682,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
     dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, TRUE);
 
-    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+    glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
       [this] (DbusmenuMenuitem*, unsigned timestamp) {
         _source_manager.AddIdle([this, timestamp] {
           ActivateLauncherIcon(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
@@ -741,13 +696,11 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   result.push_back(_menu_items[MenuItemType::APP_NAME]);
   result.push_back(_menu_items[MenuItemType::SEPARATOR]);
 
-  EnsureMenuItemsWindowsReady();
+  auto const& windows_menu_items = GetWindowsMenuItems();
 
-  if (!_menu_items_windows.empty())
+  if (!windows_menu_items.empty())
   {
-    for (auto const& it : _menu_items_windows)
-      result.push_back(it);
-
+    result.insert(end(result), begin(windows_menu_items), end(windows_menu_items));
     result.push_back(_menu_items[MenuItemType::SEPARATOR]);
   }
 
@@ -765,7 +718,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
       dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
       dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-      _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
         [this] (DbusmenuMenuitem*, unsigned) {
           app_->CreateLocalDesktopFile();
       });
