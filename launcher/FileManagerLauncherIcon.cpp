@@ -57,7 +57,7 @@ FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, File
 
   signals_conn_.Add(app_->title.changed.connect([this](std::string const& name) {
     LOG_DEBUG(logger) << tooltip_text() << " name now " << name;
-    _menu_items.clear();
+    menu_items_.clear();
     tooltip_text = name;
   }));
 

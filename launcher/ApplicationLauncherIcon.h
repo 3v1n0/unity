@@ -98,11 +98,11 @@ protected:
   ApplicationPtr app_;
   std::string remote_uri_;
   Time startup_notification_timestamp_;
-  std::set<std::string> _supported_types;
-  std::vector<glib::Object<DbusmenuMenuitem>> _menu_items;
-  glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
-  glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
-  glib::Object<GFileMonitor> _desktop_file_monitor;
+  std::set<std::string> supported_types_;
+  std::vector<glib::Object<DbusmenuMenuitem>> menu_items_;
+  glib::Object<IndicatorDesktopShortcuts> desktop_shortcuts_;
+  glib::Object<DbusmenuMenuitem> menu_desktop_shortcuts_;
+  glib::Object<GFileMonitor> desktop_file_monitor_;
 
   bool use_custom_bg_color_;
   nux::Color bg_color_;

@@ -163,8 +163,8 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
 
   signals_conn_.Add(app_->title.changed.connect([this](std::string const& name) {
     LOG_DEBUG(logger) << tooltip_text() << " name now " << name;
-    if (_menu_items.size() == MenuItemType::SIZE)
-      _menu_items[MenuItemType::APP_NAME] = nullptr;
+    if (menu_items_.size() == MenuItemType::SIZE)
+      menu_items_[MenuItemType::APP_NAME] = nullptr;
     tooltip_text = name;
   }));
 
@@ -265,8 +265,8 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
 {
   std::string const& filename = app_->desktop_file();
 
-  if (_desktop_file_monitor)
-    glib_signals_.Disconnect(_desktop_file_monitor, "changed");
+  if (desktop_file_monitor_)
+    glib_signals_.Disconnect(desktop_file_monitor_, "changed");
 
   auto old_uri = RemoteUri();
   UpdateRemoteUri();
@@ -280,11 +280,11 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     // we can remove ourself from the launcher and when it's changed
     // we can update the quicklist.
     glib::Object<GFile> desktop_file(g_file_new_for_path(filename.c_str()));
-    _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
+    desktop_file_monitor_ = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
                                                 nullptr, nullptr);
-    g_file_monitor_set_rate_limit(_desktop_file_monitor, 2000);
+    g_file_monitor_set_rate_limit(desktop_file_monitor_, 2000);
 
-    glib_signals_.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
+    glib_signals_.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(desktop_file_monitor_, "changed",
       [this, desktop_file] (GFileMonitor*, GFile*,  GFile*, GFileMonitorEvent event_type) {
       switch (event_type)
       {
@@ -414,36 +414,36 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
 {
   std::string const& desktop_file = DesktopFile();
 
-  if (_menu_desktop_shortcuts)
+  if (menu_desktop_shortcuts_)
   {
-    for (GList *l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
+    for (GList *l = dbusmenu_menuitem_get_children(menu_desktop_shortcuts_); l; l = l->next)
     {
       glib_signals_.Disconnect(l->data, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED);
     }
 
-    _menu_desktop_shortcuts = nullptr;
+    menu_desktop_shortcuts_ = nullptr;
   }
 
   if (desktop_file.empty())
     return;
 
-  _menu_desktop_shortcuts = dbusmenu_menuitem_new();
-  dbusmenu_menuitem_set_root(_menu_desktop_shortcuts, TRUE);
+  menu_desktop_shortcuts_ = dbusmenu_menuitem_new();
+  dbusmenu_menuitem_set_root(menu_desktop_shortcuts_, TRUE);
 
   // Build a desktop shortcuts object and tell it that our
   // environment is Unity to handle the filtering
-  _desktop_shortcuts = indicator_desktop_shortcuts_new(desktop_file.c_str(), "Unity");
+  desktop_shortcuts_ = indicator_desktop_shortcuts_new(desktop_file.c_str(), "Unity");
   // This will get us a list of the nicks available, it should
   // always be at least one entry of NULL if there either aren't
   // any or they're filtered for the environment we're in
-  const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
+  const gchar** nicks = indicator_desktop_shortcuts_get_nicks(desktop_shortcuts_);
 
   for (int index = 0; nicks[index]; ++index)
   {
     // Build a dbusmenu item for each nick that is the desktop
     // file that is built from it's name and includes a callback
     // to the desktop shortcuts object to execute the nick
-    glib::String name(indicator_desktop_shortcuts_nick_get_name(_desktop_shortcuts,
+    glib::String name(indicator_desktop_shortcuts_nick_get_name(desktop_shortcuts_,
                                                                 nicks[index]));
     glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
     dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, name);
@@ -457,10 +457,10 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
       glib::Object<GdkAppLaunchContext> context(gdk_display_get_app_launch_context(display));
       gdk_app_launch_context_set_timestamp(context, timestamp);
       auto gcontext = glib::object_cast<GAppLaunchContext>(context);
-      indicator_desktop_shortcuts_nick_exec_with_context(_desktop_shortcuts, nick.c_str(), gcontext);
+      indicator_desktop_shortcuts_nick_exec_with_context(desktop_shortcuts_, nick.c_str(), gcontext);
     });
 
-    dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
+    dbusmenu_menuitem_child_append(menu_desktop_shortcuts_, item);
   }
 }
 
@@ -486,7 +486,7 @@ void ApplicationLauncherIcon::UpdateBackgroundColor()
 void ApplicationLauncherIcon::EnsureMenuItemsStaticQuicklist()
 {
   // make a client for desktop file actions
-  if (!_menu_desktop_shortcuts.IsType(DBUSMENU_TYPE_MENUITEM))
+  if (!menu_desktop_shortcuts_.IsType(DBUSMENU_TYPE_MENUITEM))
   {
     UpdateDesktopQuickList();
   }
@@ -574,10 +574,10 @@ ApplicationSubjectPtr ApplicationLauncherIcon::GetSubject()
 
 void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
 {
-  if (_menu_items.size() == MenuItemType::SIZE)
+  if (menu_items_.size() == MenuItemType::SIZE)
     return;
 
-  _menu_items.resize(MenuItemType::SIZE);
+  menu_items_.resize(MenuItemType::SIZE);
 
   /* (Un)Stick to Launcher */
   glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
@@ -591,7 +591,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
       ToggleSticky();
   });
 
-  _menu_items[MenuItemType::STICK] = menu_item;
+  menu_items_[MenuItemType::STICK] = menu_item;
 
   /* Quit */
   menu_item = dbusmenu_menuitem_new();
@@ -604,12 +604,12 @@ void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
       Quit();
   });
 
-  _menu_items[MenuItemType::QUIT] = menu_item;
+  menu_items_[MenuItemType::QUIT] = menu_item;
 
   /* Separator */
   menu_item = dbusmenu_menuitem_new();
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
-  _menu_items[MenuItemType::SEPARATOR] = menu_item;
+  menu_items_[MenuItemType::SEPARATOR] = menu_item;
 }
 
 AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
@@ -621,7 +621,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   EnsureMenuItemsDefaultReady();
   EnsureMenuItemsStaticQuicklist();
 
-  for (auto const& menus : {GetRemoteMenus(), _menu_desktop_shortcuts})
+  for (auto const& menus : {GetRemoteMenus(), menu_desktop_shortcuts_})
   {
     if (!menus.IsType(DBUSMENU_TYPE_MENUITEM))
       continue;
@@ -667,11 +667,11 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
   if (separator_needed)
   {
-    result.push_back(_menu_items[MenuItemType::SEPARATOR]);
+    result.push_back(menu_items_[MenuItemType::SEPARATOR]);
     separator_needed = false;
   }
 
-  if (!_menu_items[MenuItemType::APP_NAME])
+  if (!menu_items_[MenuItemType::APP_NAME])
   {
     glib::String app_name(g_markup_escape_text(app_->title().c_str(), -1));
     std::string bold_app_name("<b>"+app_name.Str()+"</b>");
@@ -690,23 +690,23 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
         });
     });
 
-    _menu_items[MenuItemType::APP_NAME] = item;
+    menu_items_[MenuItemType::APP_NAME] = item;
   }
 
-  result.push_back(_menu_items[MenuItemType::APP_NAME]);
-  result.push_back(_menu_items[MenuItemType::SEPARATOR]);
+  result.push_back(menu_items_[MenuItemType::APP_NAME]);
+  result.push_back(menu_items_[MenuItemType::SEPARATOR]);
 
   auto const& windows_menu_items = GetWindowsMenuItems();
 
   if (!windows_menu_items.empty())
   {
     result.insert(end(result), begin(windows_menu_items), end(windows_menu_items));
-    result.push_back(_menu_items[MenuItemType::SEPARATOR]);
+    result.push_back(menu_items_[MenuItemType::SEPARATOR]);
   }
 
   const char* label = !IsSticky() ? _("Lock to Launcher") : _("Unlock from Launcher");
-  dbusmenu_menuitem_property_set(_menu_items[MenuItemType::STICK], DBUSMENU_MENUITEM_PROP_LABEL, label);
-  result.push_back(_menu_items[MenuItemType::STICK]);
+  dbusmenu_menuitem_property_set(menu_items_[MenuItemType::STICK], DBUSMENU_MENUITEM_PROP_LABEL, label);
+  result.push_back(menu_items_[MenuItemType::STICK]);
 
   if (IsRunning())
   {
@@ -727,7 +727,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     }
 
     if (!quit_item)
-      quit_item = _menu_items[MenuItemType::QUIT];
+      quit_item = menu_items_[MenuItemType::QUIT];
 
     dbusmenu_menuitem_property_set(quit_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
     result.push_back(quit_item);
