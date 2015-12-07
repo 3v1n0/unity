@@ -108,6 +108,33 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 
   result.push_back(menu_item);
 
+  if (IsRunning())
+  {
+    auto const& windows_items = GetWindowsMenuItems();
+    if (!windows_items.empty())
+    {
+      menu_item = dbusmenu_menuitem_new();
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+      result.push_back(menu_item);
+
+      result.insert(end(result), begin(windows_items), end(windows_items));
+    }
+
+    menu_item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+    result.push_back(menu_item);
+
+    menu_item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    result.push_back(menu_item);
+
+    glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+      Quit();
+    });
+  }
+
   return result;
 }
 
