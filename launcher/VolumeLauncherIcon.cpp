@@ -164,6 +164,7 @@ public:
     AppendSeparatorItem(result);
     AppendNameItem(result);
     AppendSeparatorItem(result);
+    AppendWindowsItems(result);
     AppendToggleLockFromLauncherItem(result);
     AppendEjectItem(result);
     AppendSafelyRemoveItem(result);
@@ -226,6 +227,19 @@ public:
     }));
 
     menu.push_back(menu_item);
+  }
+
+  void AppendWindowsItems(MenuItemsVector& menu)
+  {
+    if (!parent_->IsRunning())
+      return;
+
+    auto const& windows_items = parent_->GetWindowsMenuItems();
+    if (!windows_items.empty())
+    {
+      menu.insert(end(menu), begin(windows_items), end(windows_items));
+      AppendSeparatorItem(menu);
+    }
   }
 
   void AppendOpenItem(MenuItemsVector& menu)
