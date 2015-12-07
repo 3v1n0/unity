@@ -39,8 +39,8 @@ class IconDragType:
 
 class LauncherPosition:
     """Define launcher possible positions"""
-    LEFT = 0
-    BOTTOM = 1
+    LEFT = "Left"
+    BOTTOM = "Bottom"
 
 class LauncherController(UnityIntrospectionObject):
     """The LauncherController class."""
@@ -261,29 +261,19 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         """Moves the launcher keynav focus to the next launcher icon"""
         logger.debug("Selecting next item in keyboard navigation mode.")
         old_selection = self._get_controller().key_nav_selection
-        if launcher_position == LauncherPosition.LEFT:
-            self._perform_key_nav_binding("launcher/keynav/next")
-        else:
-            #Todo: need to modify the keybindings dictionary in autopilot?
-            self._perform_key_nav_binding("launcher/keynav/open-quicklist")
+        self._perform_key_nav_binding(self.keys[launcher_position + "/launcher/keynav/next"])
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def key_nav_prev(self, launcher_position = LauncherPosition.LEFT):
         """Moves the launcher keynav focus to the previous launcher icon"""
         logger.debug("Selecting previous item in keyboard navigation mode.")
         old_selection = self._get_controller().key_nav_selection
-        if launcher_position == LauncherPosition.LEFT:
-            self._perform_key_nav_binding("launcher/keynav/prev")
-        else:
-            self._perform_key_nav_binding("launcher/keynav/close-quicklist")
+        self._perform_key_nav_binding(self.keys[launcher_position + "/launcher/keynav/prev"])
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def key_nav_enter_quicklist(self, launcher_position = LauncherPosition.LEFT):
         logger.debug("Opening quicklist for currently selected icon.")
-        if launcher_position == LauncherPosition.LEFT:
-            self._perform_key_nav_binding("launcher/keynav/open-quicklist")
-        else:
-            self._perform_key_nav_binding("launcher/keynav/prev")
+        self._perform_key_nav_binding(self.keys[launcher_position + "/launcher/keynav/open-quicklist"])
         self.quicklist_open.wait_for(True)
 
     def key_nav_exit_quicklist(self):

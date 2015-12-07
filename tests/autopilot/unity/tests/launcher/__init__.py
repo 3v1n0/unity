@@ -51,12 +51,7 @@ class LauncherTestCase(UnityTestCase):
         self.launcher_instance = self.get_launcher()
 
         old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity', 'launcher-position')
-        if self.launcher_position == LauncherPosition.LEFT:
-            self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"Left"')
-
-        if self.launcher_position == LauncherPosition.BOTTOM:
-            self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"Bottom"')
-
+        self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"%s"' % self.launcher_position)
         self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity', 'launcher-position', old_pos)
 
         if not self.launcher_instance:
