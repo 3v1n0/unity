@@ -38,9 +38,10 @@ namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon.application");
 namespace
 {
+DECLARE_LOGGER(logger, "unity.launcher.icon.application");
+
 // We use the "bamf-" prefix since the manager is protected, to avoid name clash
 const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
 const std::string DEFAULT_ICON = "application-default-icon";
@@ -195,23 +196,9 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
     SetQuirk(Quirk::VISIBLE, IsSticky() ? true : visible);
   }));
 
-  signals_conn_.Add(app_->closed.connect([this]() {
-    if (!IsSticky())
-    {
-      SetQuirk(Quirk::VISIBLE, false);
-      HideTooltip();
-
-      /* Use a timeout to remove the icon, this avoids
-       * that we remove an application that is going
-       * to be reopened soon. So applications that
-       * have a splash screen won't be removed from
-       * the launcher while the splash is closed and
-       * a new window is opened. */
-      _source_manager.AddTimeoutSeconds(1, [this] {
-        Remove();
-        return false;
-      }, ICON_REMOVE_TIMEOUT);
-    }
+  signals_conn_.Add(app_->closed.connect([this] {
+    LOG_DEBUG(logger) << tooltip_text() << " closed";
+    OnApplicationClosed();
   }));
 }
 
@@ -220,6 +207,27 @@ WindowList ApplicationLauncherIcon::GetManagedWindows() const
   return app_ ? app_->GetWindows() : WindowList();
 }
 
+void ApplicationLauncherIcon::OnApplicationClosed()
+{
+  if (IsSticky())
+    return;
+
+  SetQuirk(Quirk::VISIBLE, false);
+  HideTooltip();
+
+  /* Use a timeout to remove the icon, this avoids
+   * that we remove an application that is going
+   * to be reopened soon. So applications that
+   * have a splash screen won't be removed from
+   * the launcher while the splash is closed and
+   * a new window is opened. */
+  _source_manager.AddTimeoutSeconds(1, [this] {
+    Remove();
+    return false;
+  }, ICON_REMOVE_TIMEOUT);
+}
+
+// Move to WindowedLauncherIcon?!
 bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int monitor) const
 {
   if (quirk == Quirk::ACTIVE)
@@ -576,7 +584,7 @@ void ApplicationLauncherIcon::UnStick()
   SetQuirk(Quirk::VISIBLE, app_->visible());
   app_->sticky = false;
 
-  if (!app_->running())
+  if (!IsRunning())
     Remove();
 }
 

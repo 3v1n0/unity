@@ -65,7 +65,6 @@ protected:
   bool IsFileManager();
   void Remove();
 
-private:
   void AboutToRemove() override;
   bool AllowDetailViewInSwitcher() const override;
   uint64_t SwitcherPriority() override;
@@ -95,6 +94,7 @@ private:
   void UpdateDesktopFile();
   void UpdateRemoteUri();
   void ToggleSticky();
+  void OnApplicationClosed();
 
   const std::set<std::string> GetSupportedTypes();
   ApplicationSubjectPtr GetSubject();
