@@ -555,10 +555,10 @@ void WindowedLauncherIcon::AboutToRemove()
   Quit();
 }
 
-std::vector<glib::Object<DbusmenuMenuitem>> WindowedLauncherIcon::GetWindowsMenuItems()
+AbstractLauncherIcon::MenuItemsVector WindowedLauncherIcon::GetWindowsMenuItems()
 {
   auto const& windows = Windows();
-  std::vector<glib::Object<DbusmenuMenuitem>> menu_items;
+  MenuItemsVector menu_items;
 
   // We only add quicklist menu-items for windows if we have more than one window
   if (windows.size() < 2)

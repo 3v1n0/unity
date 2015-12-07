@@ -99,7 +99,7 @@ protected:
   std::string remote_uri_;
   Time startup_notification_timestamp_;
   std::set<std::string> supported_types_;
-  std::vector<glib::Object<DbusmenuMenuitem>> menu_items_;
+  MenuItemsVector menu_items_;
   glib::Object<IndicatorDesktopShortcuts> desktop_shortcuts_;
   glib::Object<DbusmenuMenuitem> menu_desktop_shortcuts_;
   glib::Object<GFileMonitor> desktop_file_monitor_;

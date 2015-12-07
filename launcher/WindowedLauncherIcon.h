@@ -79,7 +79,7 @@ protected:
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   WindowList GetWindowsOnCurrentDesktopInStackingOrder();
 
-  std::vector<glib::Object<DbusmenuMenuitem>> GetWindowsMenuItems();
+  MenuItemsVector GetWindowsMenuItems();
 
 private:
   void OnCenterStabilized(std::vector<nux::Point3> const& centers) override;
