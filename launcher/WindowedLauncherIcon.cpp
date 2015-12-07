@@ -543,6 +543,17 @@ WindowList WindowedLauncherIcon::GetWindowsOnCurrentDesktopInStackingOrder()
   return windows;
 }
 
+void WindowedLauncherIcon::Quit() const
+{
+  for (auto& window : GetManagedWindows())
+    window->Quit();
+}
+
+void WindowedLauncherIcon::AboutToRemove()
+{
+  Quit();
+}
+
 std::string WindowedLauncherIcon::GetName() const
 {
   return "WindowedLauncherIcon";

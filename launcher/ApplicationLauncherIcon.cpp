@@ -537,7 +537,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsStaticQuicklist()
   }
 }
 
-void ApplicationLauncherIcon::Quit()
+void ApplicationLauncherIcon::Quit() const
 {
   app_->Quit();
 }

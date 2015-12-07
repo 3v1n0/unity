@@ -50,7 +50,7 @@ public:
   bool IsUserVisible() const override;
   bool GetQuirk(Quirk quirk, int monitor = 0) const override;
 
-  void Quit();
+  void Quit() const override;
 
   void Stick(bool save = true) override;
   void UnStick() override;

@@ -42,6 +42,8 @@ public:
   virtual bool IsUrgent() const;
   virtual bool IsUserVisible() const;
 
+  virtual void Quit() const;
+
 protected:
   virtual WindowList GetManagedWindows() const = 0;
   void EnsureWindowState();
@@ -56,6 +58,7 @@ protected:
   bool ShowInSwitcher(bool current) override;
   bool AllowDetailViewInSwitcher() const override;
   uint64_t SwitcherPriority() override;
+  void AboutToRemove() override;
 
   void ActivateLauncherIcon(ActionArg arg) override;
   void PerformScroll(ScrollDirection direction, Time timestamp) override;
