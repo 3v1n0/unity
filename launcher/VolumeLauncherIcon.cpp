@@ -336,6 +336,8 @@ VolumeLauncherIcon::~VolumeLauncherIcon()
 
 void VolumeLauncherIcon::AboutToRemove()
 {
+  StorageLauncherIcon::AboutToRemove();
+
   if (CanEject())
     EjectAndShowNotification();
   else if (CanStop())
