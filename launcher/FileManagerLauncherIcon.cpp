@@ -65,6 +65,8 @@ FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, File
     LOG_DEBUG(logger) << tooltip_text() << " icon now " << icon;
     icon_name = (icon.empty() ? DEFAULT_ICON : icon);
   }));
+
+  UpdateStorageWindows();
 }
 
 void FileManagerLauncherIcon::Focus(ActionArg arg)
