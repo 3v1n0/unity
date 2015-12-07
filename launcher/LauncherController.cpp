@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+#include <boost/algorithm/string.hpp>
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
@@ -32,6 +33,7 @@
 #include "DesktopLauncherIcon.h"
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
+#include "FileManagerLauncherIcon.h"
 #include "HudLauncherIcon.h"
 #include "LauncherController.h"
 #include "LauncherControllerPrivate.h"
@@ -101,6 +103,21 @@ std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
     return "";
 
   return FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
+}
+
+ApplicationLauncherIcon* CreateAppLauncherIcon(ApplicationPtr const& app)
+{
+  auto const& desktop_file = app->desktop_file();
+
+  if (boost::algorithm::ends_with(desktop_file, "org.gnome.Nautilus.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus-folder-handler.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus-home.desktop"))
+  {
+    return new FileManagerLauncherIcon(app);
+  }
+
+  return new ApplicationLauncherIcon(app);
 }
 
 }
@@ -838,7 +855,7 @@ void Controller::Impl::OnApplicationStarted(ApplicationPtr const& app)
   if (app->sticky() || app->seen())
     return;
 
-  AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+  AbstractLauncherIcon::Ptr icon(local::CreateAppLauncherIcon(app));
   RegisterIcon(icon, GetLastIconPriority<ApplicationLauncherIcon>(local::RUNNING_APPS_URI));
 }
 
@@ -875,7 +892,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
     if (!app || app->seen())
       return result;
 
-    result = AbstractLauncherIcon::Ptr(new ApplicationLauncherIcon(app));
+    result = AbstractLauncherIcon::Ptr(local::CreateAppLauncherIcon(app));
   }
   else if (icon_uri.find(FavoriteStore::URI_PREFIX_DEVICE) == 0)
   {
@@ -954,7 +971,7 @@ void Controller::Impl::AddRunningApps()
                      << (app->seen() ? "yes" : "no");
     if (!app->seen())
     {
-      AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+      AbstractLauncherIcon::Ptr icon(local::CreateAppLauncherIcon(app));
       icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
       RegisterIcon(icon, ++sort_priority_);
     }
