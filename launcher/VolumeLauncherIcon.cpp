@@ -168,6 +168,7 @@ public:
     AppendEjectItem(result);
     AppendSafelyRemoveItem(result);
     AppendUnmountItem(result);
+    AppendQuitItem(result);
 
     return result;
   }
@@ -290,7 +291,28 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        volume_->Unmount();
+      volume_->Unmount();
+    }));
+
+    menu.push_back(menu_item);
+  }
+
+  void AppendQuitItem(MenuItemsVector& menu)
+  {
+    if (!parent_->IsRunning())
+      return;
+
+    if (!menu.empty())
+      AppendSeparatorItem(menu);
+
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+      parent_->Quit();
     }));
 
     menu.push_back(menu_item);
