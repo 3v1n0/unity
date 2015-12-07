@@ -36,7 +36,7 @@ DECLARE_LOGGER(logger, "unity.filemanager.gnome");
 
 const std::string TRASH_URI = "trash:";
 const std::string FILE_SCHEMA = "file://";
-const std::string TRASH_PATH = FILE_SCHEMA + DesktopUtilities::GetUserDataDirectory() + "/Trash/files";
+const std::string TRASH_PATH = FILE_SCHEMA + DesktopUtilities::GetUserTrashDirectory();
 const std::string DEVICES_PREFIX = FILE_SCHEMA + "/media/" + glib::gchar_to_string(g_get_user_name());
 const std::vector<std::string> EMPTY_LOCATIONS;
 
@@ -315,8 +315,11 @@ WindowList GnomeFileManager::WindowsForLocation(std::string const& location) con
 
   for (auto const& pair : impl_->opened_locations_xids_)
   {
-    for (auto const& loc : pair.second)
+    if (!pair.second.empty())
     {
+      /* We only care about the first mentioned location as per our "standard"
+       * it's the active one */
+      auto const& loc = pair.second.front();
       bool matches = (loc == location);
 
       if (!matches)
