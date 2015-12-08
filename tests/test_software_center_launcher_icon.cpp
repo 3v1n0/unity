@@ -62,7 +62,8 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
     MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
                                    std::string const& aptdaemon_trans_id,
                                    std::string const& icon_path)
-      : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
+      : WindowedLauncherIcon(IconType::APPLICATION)
+      , SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
     {}
 
     void LauncherIconUnstick() { LauncherIcon::UnStick(); }

@@ -41,7 +41,7 @@ public:
                      DeviceNotificationDisplay::Ptr const&, FileManager::Ptr const&);
   virtual ~VolumeLauncherIcon();
 
-  virtual void AboutToRemove();
+  void AboutToRemove() override;
 
   bool CanEject() const; // TODO: rename to public virtual bool IsTrashable();
   void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();
@@ -49,6 +49,7 @@ public:
   void StopDrive();
   void Stick(bool save = true);
   void UnStick();
+
   MenuItemsVector GetMenus();
   std::string GetRemoteUri() const;
   std::string GetVolumeUri() const;

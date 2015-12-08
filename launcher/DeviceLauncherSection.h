@@ -43,6 +43,8 @@ public:
                         DevicesSettings::Ptr const& devices_settings = nullptr,
                         DeviceNotificationDisplay::Ptr const& notifications = nullptr);
 
+  virtual ~DeviceLauncherSection() = default;
+
   std::vector<VolumeLauncherIcon::Ptr> GetIcons() const;
 
   sigc::signal<void, AbstractLauncherIcon::Ptr const&> icon_added;

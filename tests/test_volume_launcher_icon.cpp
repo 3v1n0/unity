@@ -46,7 +46,7 @@ struct TestVolumeLauncherIcon : public Test
   {
     SetupVolumeDefaultBehavior();
     SetupSettingsDefaultBehavior();
-    icon_ = new NiceMock<VolumeLauncherIcon>(volume_, settings_, notifications_, file_manager_);
+    icon_ = new VolumeLauncherIcon(volume_, settings_, notifications_, file_manager_);
   }
 
   void SetupSettingsDefaultBehavior()
@@ -97,7 +97,7 @@ struct TestVolumeLauncherIconDelayedConstruction : TestVolumeLauncherIcon
 
   void CreateIcon()
   {
-    icon_ = new NiceMock<VolumeLauncherIcon>(volume_, settings_, notifications_, file_manager_);
+    icon_ = new VolumeLauncherIcon(volume_, settings_, notifications_, file_manager_);
   }
 };
 
