@@ -41,8 +41,8 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.launcher.icon.application");
 
-// We use the "bamf-" prefix since the manager is protected, to avoid name clash
-const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
+// We use the "application-" prefix since the manager is protected, to avoid name clash
+const std::string ICON_REMOVE_TIMEOUT = "application-icon-remove";
 const std::string DEFAULT_ICON = "application-default-icon";
 
 enum MenuItemType

@@ -31,7 +31,7 @@ namespace launcher
 {
 namespace
 {
-const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
+const std::string ICON_DND_OVER_TIMEOUT = "windowed-icon-dnd-over";
 const int COMPIZ_SCALE_DND_SPREAD = 1 << 7;
 const int MAXIMUM_QUICKLIST_WIDTH = 300;
 }
