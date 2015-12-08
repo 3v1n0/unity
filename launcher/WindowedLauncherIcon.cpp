@@ -18,7 +18,6 @@
  */
 
 #include <Nux/Nux.h>
-#include <NuxCore/Logger.h>
 
 #include "WindowedLauncherIcon.h"
 #include "MultiMonitor.h"
@@ -30,7 +29,6 @@ namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon.windowed");
 namespace
 {
 const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
