@@ -500,7 +500,8 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
     int bg_width = _background_layer->GetDeviceTexture()->GetWidth();
     bg_geo.x = std::max(bg_geo.width - bg_width, 0);
 
-    bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + (1_em).CP(scale()); // to render into a space left over by the scrollview
+    // to render into a space left over by the scrollview (1 has NOT to be scaled)
+    bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1;
     bg_geo.height = _background->GetHeight();
 
     _background_layer->SetGeometry(bg_geo);
