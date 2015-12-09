@@ -75,6 +75,11 @@ void FileManagerLauncherIcon::Focus(ActionArg arg)
   WindowedLauncherIcon::Focus(arg);
 }
 
+void FileManagerLauncherIcon::Quit() const
+{
+  WindowedLauncherIcon::Quit();
+}
+
 bool FileManagerLauncherIcon::IsLocationManaged(std::string const& location) const
 {
   if (boost::algorithm::starts_with(location, TRASH_URI))

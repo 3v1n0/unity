@@ -38,6 +38,7 @@ private:
   WindowList GetManagedWindows() const override;
   WindowList GetStorageWindows() const override;
   void Focus(ActionArg arg) override;
+  void Quit() const override;
   bool OnShouldHighlightOnDrag(DndData const& dnd_data) override;
 
   bool IsLocationManaged(std::string const&) const;
