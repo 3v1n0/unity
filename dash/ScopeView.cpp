@@ -253,6 +253,7 @@ void ScopeView::SetupViews(nux::Area* show_filters)
 
   fscroll_layout_ = new nux::VLayout();
   fscroll_view_->SetLayout(fscroll_layout_);
+  fscroll_view_->GetScrollbar()->queue_draw.connect(sigc::hide(sigc::mem_fun(fscroll_layout_, &nux::VLayout::QueueDraw)));
 
   filter_bar_ = new FilterBar();
 
