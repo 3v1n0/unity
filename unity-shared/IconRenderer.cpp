@@ -1104,25 +1104,39 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
     else if (running == 2)
     {
+      int texture_size = 0;
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      {
         texture = local_textures_->pip_ltr;
+        texture_size = texture->GetHeight();
+      }
       else
+      {
         texture = local_textures_->pip_btt;
+        texture_size = texture->GetWidth();
+      }
 
-      double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
-      int offset = std::max(1.0, std::round(2.0 * texture->GetHeight() / default_tex_height));
+      double default_tex_size = local::MARKER_SIZES[local::IconSize::SMALL];
+      int offset = std::max(1.0, std::round(2.0 * texture_size / default_tex_size));
       markers[0] = markerCenter - offset;
       markers[1] = markerCenter + offset;
     }
     else
     {
+      int texture_size = 0;
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      {
         texture = local_textures_->pip_ltr;
+        texture_size = texture->GetHeight();
+      }
       else
+      {
         texture = local_textures_->pip_btt;
+        texture_size = texture->GetWidth();
+      }
 
-      double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
-      int offset = std::max(1.0, std::round(4.0 * texture->GetHeight() / default_tex_height));
+      double default_tex_size = local::MARKER_SIZES[local::IconSize::SMALL];
+      int offset = std::max(1.0, std::round(4.0 * texture_size / default_tex_size));
       markers[0] = markerCenter - offset;
       markers[1] = markerCenter;
       markers[2] = markerCenter + offset;

@@ -27,8 +27,8 @@
     </key>
     <key enum="launcher-position-enum"  name="launcher-position">
       <default>"Left"</default>
-      <summary>Set the launcher position(Left/Bottom).</summary>
-      <description>Set the launcher position(Left/Bottom).</description>
+      <summary>The position of launcher.</summary>
+      <description>The position of launcher.</description>
     </key>
     <key type="i" name="minimize-count">
       <default>0</default>

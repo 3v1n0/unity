@@ -689,8 +689,10 @@ class DashVisualTests(DashTestCase):
 
         self.unity.dash.ensure_visible()
 
-        self.assertThat(self.unity.dash.view.x, Eventually(Equals(launcher.geometry.x + launcher.geometry.width - 1)))
-
+        if launcher.geometry.width < launcher.geometry.height:
+            self.assertThat(self.unity.dash.view.x, Eventually(Equals(launcher.geometry.x + launcher.geometry.width - 1)))
+        else:
+            self.assertThat(self.unity.dash.view.x, Eventually(Equals(0)))
 
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned

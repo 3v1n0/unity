@@ -344,7 +344,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if (move_mouse_after):
           self.move_mouse_beside_launcher()
 
-    def drag_icon_to_position(self, icon, pos, target, drag_type=IconDragType.INSIDE):
+    def drag_icon_to_position(self, icon, pos, target, drag_type=IconDragType.INSIDE, launcher_position=LauncherPosition.LEFT):
         """Drag a launcher icon to a new position.
 
         'icon' is the icon to move. It must be either a ApplicationLauncherIcon or an
@@ -387,26 +387,38 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if drag_type not in (IconDragType.INSIDE, IconDragType.OUTSIDE):
             raise ValueError("'drag_type' parameter must be one of IconDragType.INSIDE, IconDragType.OUTSIDE")
 
-        icon_height = get_compiz_option("unityshell", "icon_size")
+        icon_size = get_compiz_option("unityshell", "icon_size")
 
         self.move_mouse_to_icon(icon)
         self._mouse.press()
         sleep(1)
 
         if drag_type == IconDragType.OUTSIDE:
-            shift_over = self._mouse.x + (icon_height * 2)
-            self._mouse.move(shift_over, self._mouse.y, rate=20, time_between_events=0.005)
+            if launcher_position == LauncherPosition.LEFT:
+                shift_over = self._mouse.x + (icon_size * 3)
+                self._mouse.move(shift_over, self._mouse.y, rate=20, time_between_events=0.005)
+            else:
+                shift_over = self._mouse.y - (icon_size * 3)
+                self._mouse.move(self._mouse.x, shift_over, rate=20, time_between_events=0.005)
             sleep(0.5)
 
         self.move_mouse_to_icon(target)
 
-        target_y = target.center.y
-        if target_y < icon.center.y:
-            target_y += icon_height 
-        if pos == IconDragType.BEFORE:
-            target_y -= icon_height + (icon_height / 2)
+        if launcher_position == LauncherPosition.LEFT:
+            target_y = target.center.y
+            if target_y < icon.center.y:
+                target_y += icon_size
+            if pos == IconDragType.BEFORE:
+                target_y -= icon_size + (icon_size / 2)
+            self._mouse.move(self._mouse.x, target_y, rate=20, time_between_events=0.005)
+        else:
+            target_x = target.center.x
+            if target_x < icon.center.x:
+                target_x += icon_size
+            if pos == IconDragType.BEFORE:
+                target_x -= icon_size + (icon_size / 2)
+            self._mouse.move(target_x, self._mouse.y, rate=20, time_between_events=0.005)
 
-        self._mouse.move(self._mouse.x, target_y, rate=20, time_between_events=0.005)
         sleep(1)
         self._mouse.release()
         self.move_mouse_beside_launcher()

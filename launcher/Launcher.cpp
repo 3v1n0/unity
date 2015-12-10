@@ -66,7 +66,7 @@ const int PULSE_BLINK_LAMBDA = 2;
 
 const float BACKLIGHT_STRENGTH = 0.9f;
 const RawPixel ICON_PADDING     = 6_em;
-const RawPixel RIGHT_LINE_WIDTH = 1_em;
+const RawPixel SIDE_LINE_WIDTH = 1_em;
 
 const int ANIM_DURATION_SHORT = 125;
 const int ANIM_DURATION_SHORT_SHORT = 100;
@@ -702,8 +702,11 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
 
   int c_icon_size = icon_size_.CP(cv_);
   // goes for 0.0f when fully unfolded, to 1.0f folded
-  float folding_progress = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? CLAMP((center.y + c_icon_size - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f)
-                                            : CLAMP((center.x + c_icon_size - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f);
+  float folding_progress = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    folding_progress = CLAMP((center.y + c_icon_size - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f);
+  else
+    folding_progress = CLAMP((center.x + c_icon_size - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f);
   float unfold_progress = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::UNFOLDED, monitor());
   float active_progress = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::ACTIVE, monitor());
 
@@ -728,8 +731,11 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
   else
     arg.rotation.y = animation_neg_rads * folding_progress;
 
-  float spacing_overlap = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? CLAMP((float)(center.y + (2.0f * half_size * size_modifier) + (SPACE_BETWEEN_ICONS.CP(cv_) * size_modifier) - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f)
-                                        : CLAMP((float)(center.x + (2.0f * half_size * size_modifier) + (SPACE_BETWEEN_ICONS.CP(cv_) * size_modifier) - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f);
+  float spacing_overlap = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    spacing_overlap = CLAMP((float)(center.y + (2.0f * half_size * size_modifier) + (SPACE_BETWEEN_ICONS.CP(cv_) * size_modifier) - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f);
+  else
+    spacing_overlap = CLAMP((float)(center.x + (2.0f * half_size * size_modifier) + (SPACE_BETWEEN_ICONS.CP(cv_) * size_modifier) - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f);
   float spacing = (SPACE_BETWEEN_ICONS.CP(cv_) * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
 
   nux::Point3 centerOffset;
@@ -748,14 +754,17 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
     }
   }
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
     center.y += half_size * size_modifier;   // move to center
+    arg.render_center = nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y + centerOffset.y), roundf(center.z));
+    arg.logical_center = nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y), roundf(center.z));
+  }
   else
+  {
     center.x += half_size * size_modifier;
-
-  arg.render_center = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y + centerOffset.y), roundf(center.z))
-                                    : nux::Point3(roundf(center.x + centerOffset.x), roundf(center.y + icon_hide_offset), roundf(center.z));
-  arg.logical_center = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y), roundf(center.z))
-                                    : nux::Point3(roundf(center.x), roundf(center.y + icon_hide_offset), roundf(center.z));
+    arg.render_center = nux::Point3(roundf(center.x + centerOffset.x), roundf(center.y + icon_hide_offset), roundf(center.z));
+    arg.logical_center = nux::Point3(roundf(center.x), roundf(center.y + icon_hide_offset), roundf(center.z));
+  }
 
   nux::Point3 icon_center(parent_abs_geo.x + roundf(center.x), parent_abs_geo.y + roundf(center.y), roundf(center.z));
   icon->SetCenter(icon_center, monitor);
@@ -823,13 +832,12 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   }
   center.z = 0;
 
-  int launcher_height = geo.height;
-  int launcher_width = geo.width;
+  int launcher_size = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? geo.height : geo.width;
   folded_ = true;
 
-  // compute required height of launcher AND folding threshold
+  // compute required height/width of launcher AND folding threshold
   float sum = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? (0.0f + center.y) : (0.0f + center.x);
-  float folding_threshold = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? (launcher_height - c_icon_size / 2.5f) : (launcher_width - c_icon_size / 2.5f);
+  float folding_threshold = launcher_size - c_icon_size / 2.5f;
 
   for (it = model_->begin(); it != model_->end(); ++it)
   {
@@ -844,25 +852,13 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     float active_progress = (*it)->GetQuirkProgress(AbstractLauncherIcon::Quirk::ACTIVE, monitor());
 
     unfold_progress = CLAMP(unfold_progress + active_progress, 0.0f, 1.0f);
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-      folding_threshold -= CLAMP(sum - launcher_height, 0.0f, size * magic_constant) * (folding_constant + (1.0f - folding_constant) * unfold_progress);
-    else
-      folding_threshold -= CLAMP(sum - launcher_width, 0.0f, size * magic_constant) * (folding_constant + (1.0f - folding_constant) * unfold_progress);
+    folding_threshold -= CLAMP(sum - launcher_size, 0.0f, size * magic_constant) * (folding_constant + (1.0f - folding_constant) * unfold_progress);
   }
 
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (sum - SPACE_BETWEEN_ICONS.CP(cv_) <= launcher_size)
   {
-    if (sum - SPACE_BETWEEN_ICONS.CP(cv_) <= launcher_height)
-      folding_threshold = launcher_height;
-      folded_ = false;
-  }
-  else
-  {
-    if (sum - SPACE_BETWEEN_ICONS.CP(cv_) <= launcher_width)
-    {
-      folding_threshold = launcher_width;
-      folded_ = false;
-    }
+    folding_threshold = launcher_size;
+    folded_ = false;
   }
 
   float autohide_offset = 0.0f;
@@ -941,10 +937,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // logically dnd exit only restores to the clamped ranges
   // hover_progress restores to 0
   launcher_drag_delta_max_ = 0.0f;
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-    launcher_drag_delta_min_ = MIN(0.0f, launcher_height - sum);
-  else
-    launcher_drag_delta_min_ = MIN(0.0f, launcher_width - sum);
+  launcher_drag_delta_min_ = MIN(0.0f, launcher_size - sum);
 
   if (hover_progress > 0.0f && launcher_drag_delta_ != 0)
   {
@@ -1038,13 +1031,18 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   if (shelf_sum > 0.0f)
     shelf_sum += SPACE_BETWEEN_ICONS.CP(cv_);
 
-  float shelf_delta = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? MAX(((launcher_height - shelf_sum) + SPACE_BETWEEN_ICONS.CP(cv_)) - center.y, 0.0f)
-            :MAX(((launcher_width - shelf_sum) + SPACE_BETWEEN_ICONS.CP(cv_)) - center.x, 0.0f);
-  folding_threshold += shelf_delta;
+  float shelf_delta = 0;
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    shelf_delta = MAX(((launcher_size - shelf_sum) + SPACE_BETWEEN_ICONS.CP(cv_)) - center.y, 0.0f);
     center.y += shelf_delta;
+  }
   else
+  {
+    shelf_delta = MAX(((launcher_size - shelf_sum) + SPACE_BETWEEN_ICONS.CP(cv_)) - center.x, 0.0f);
     center.x += shelf_delta;
+  }
+  folding_threshold += shelf_delta;
 
   force_show_window = false;
 
@@ -1696,14 +1694,14 @@ void Launcher::Resize(nux::Point const& offset, int size)
   RawPixel width = 0, height = 0;
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
-    width = icon_size_ + ICON_PADDING * 2 + RIGHT_LINE_WIDTH - 2;
+    width = icon_size_ + ICON_PADDING * 2 + SIDE_LINE_WIDTH - 2;
     width = width.CP(cv_);
     height = size;
     SetMaximumHeight(height);
   }
   else
   {
-    height = icon_size_ + ICON_PADDING * 2 + RIGHT_LINE_WIDTH - 2;
+    height = icon_size_ + ICON_PADDING * 2 + SIDE_LINE_WIDTH - 2;
     height = height.CP(cv_);
     width = size;
     SetMaximumWidth(width);
@@ -1854,9 +1852,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute, force_show_window);
   if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
-    bkg_box.width -= RIGHT_LINE_WIDTH.CP(cv_);
+    bkg_box.width -= SIDE_LINE_WIDTH.CP(cv_);
   else
-    bkg_box.height -= RIGHT_LINE_WIDTH.CP(cv_);
+    bkg_box.height -= SIDE_LINE_WIDTH.CP(cv_);
 
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER &&
       bkg_box.x + bkg_box.width <= 0 &&
@@ -1913,7 +1911,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      GfxContext.QRP_1Tex(base.x, base.y + base.height - launcher_pressure_effect_->GetHeight() - 1, base.width, launcher_pressure_effect_->GetHeight(),
+      GfxContext.QRP_1Tex(base.x, base.y + base.height - SIDE_LINE_WIDTH.CP(cv_) - launcher_pressure_effect_->GetHeight(),
+                          base.width, launcher_pressure_effect_->GetHeight(),
                           launcher_pressure_effect_->GetDeviceTexture(),
                           texxform_pressure,
                           pressure_color);
@@ -1939,7 +1938,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
       else
       {
-        if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.y + bkg_box.height > 0))
+        if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.y < bkg_box.height))
         {
           blur_texture = bg_effect_helper_.GetBlurRegion();
         }
@@ -2042,7 +2041,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!IsOverlayOpen() && Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
   {
-    const double right_line_opacity = 0.15f * launcher_alpha;
+    const double top_line_opacity = 0.15f * launcher_alpha;
 
     gPainter.Paint2DQuadColor(GfxContext,
                               nux::Geometry(bkg_box.x,
@@ -2058,8 +2057,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
                                             bkg_box.width,
-                                            RIGHT_LINE_WIDTH.CP(cv_)),
-                              nux::color::White * right_line_opacity);
+                                            SIDE_LINE_WIDTH.CP(cv_)),
+                              nux::color::White * top_line_opacity);
   }
 
   /* draw launcher */
@@ -2073,7 +2072,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                   nux::Color(0xAAAAAAAA));
       else
         gPainter.Paint2DQuadColor(GfxContext,
-                                  nux::Geometry((*rev_it).render_center.x - 4, bkg_box.y, 2, bkg_box.height),
+                                  nux::Geometry((*rev_it).render_center.x - 3, bkg_box.y, 2, bkg_box.height),
                                   nux::Color(0xAAAAAAAA));
     }
 
@@ -2090,7 +2089,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.Paint2DQuadColor(GfxContext,
                               nux::Geometry(bkg_box.x + bkg_box.width,
                                             bkg_box.y,
-                                            RIGHT_LINE_WIDTH.CP(cv_),
+                                            SIDE_LINE_WIDTH.CP(cv_),
                                             bkg_box.height),
                               nux::color::White * right_line_opacity);
 

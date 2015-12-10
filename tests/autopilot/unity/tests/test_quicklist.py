@@ -194,12 +194,12 @@ class QuicklistActionTests(UnityTestCase):
 
         icons = self.unity.launcher.model.get_launcher_icons()
 
-        icon0_ql = self.open_quicklist_for_icon(icons[0])
-        self.assertThat(icon0_ql.active, Eventually(Equals(True)))
-
         icon1_ql = self.open_quicklist_for_icon(icons[1])
         self.assertThat(icon1_ql.active, Eventually(Equals(True)))
-        self.assertThat(icon0_ql.wait_until_destroyed, Not(Raises()))
+
+        icon0_ql = self.open_quicklist_for_icon(icons[0])
+        self.assertThat(icon0_ql.active, Eventually(Equals(True)))
+        self.assertThat(icon1_ql.wait_until_destroyed, Not(Raises()))
 
     def test_right_clicking_same_icon_doesnt_reopen_ql(self):
         """A right click to the same icon in the launcher must
@@ -244,6 +244,10 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         self.ql_launcher = self.unity.launcher.get_launcher_for_monitor(0)
 
+        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity', 'launcher-position')
+        self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"%s"' % self.launcher_position)
+        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity', 'launcher-position', old_pos)
+
     def open_quicklist_with_mouse(self):
         """Opens a quicklist with the mouse."""
         self.ql_launcher.click_launcher_icon(self.ql_launcher_icon, button=3)
@@ -262,7 +266,10 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
         self.ql_launcher.keyboard_select_icon(self.launcher_position, tooltip_text=self.ql_app.name)
-        self.keybinding("launcher/keynav/open-quicklist")
+        if self.launcher_position == LauncherPosition.LEFT:
+            self.keybinding("launcher/keynav/open-quicklist")
+        else:
+            self.keybinding("launcher/keynav/prev")
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
 
         self.assertThat(self.ql_launcher_icon.get_quicklist,

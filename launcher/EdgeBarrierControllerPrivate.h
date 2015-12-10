@@ -21,8 +21,6 @@
 #ifndef EDGE_BARRIER_CONTROLLER_IMPL_PRIVATE
 #define EDGE_BARRIER_CONTROLLER_IMPL_PRIVATE
 
-#include <UnityCore/ConnectionManager.h>
-
 #include "Decaymulator.h"
 #include "UnityCore/GLibSource.h"
 

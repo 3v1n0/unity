@@ -84,7 +84,7 @@ public:
     , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
     , remote_content_settings_(g_settings_new(REMOTE_CONTENT_SETTINGS.c_str()))
     , launcher_sizes_(monitors::MAX, DEFAULT_LAUNCHER_SIZE)
-    , cached_launcher_position_(LauncherPosition::BOTTOM)
+    , cached_launcher_position_(LauncherPosition::LEFT)
     , cached_form_factor_(FormFactor::DESKTOP)
     , cursor_scale_(1.0)
     , cached_double_click_activate_(true)

@@ -4056,7 +4056,7 @@ void UnityScreen::initLauncher()
     manager->PromptLockScreen();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
-    /* The launcher geometry includes 1px used to draw the right margin
+    /* The launcher geometry includes 1px used to draw the right/top margin
      * that must not be considered when drawing an overlay */
 
     auto* launcher = static_cast<Launcher*>(area);
