@@ -40,6 +40,7 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.panel.indicator.entry");
 const int DEFAULT_SPACING = 3;
+const std::string IMAGE_MISSING = "image-missing";
 }
 
 using namespace indicator;
@@ -251,7 +252,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
         // if that failed, whine and load fallback
         if (!pixbuf)
         {
-            LOG_WARN(logger) << "failed to load: " << filename;
+          LOG_WARN(logger) << "failed to load: " << filename;
         }
       }
       else if (image_type == GTK_IMAGE_ICON_NAME)
@@ -265,12 +266,10 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 
   // have a generic fallback pixbuf if for whatever reason icon loading
   // failed (see LP: #1525186)
-  if(!pixbuf)
+  if (!pixbuf)
   {
-      const std::string missing = "image-missing";
-      GtkIconTheme* theme = gtk_icon_theme_get_default();
-      auto flags = GTK_ICON_LOOKUP_FORCE_SIZE;
-      pixbuf = gtk_icon_theme_load_icon(theme, missing.c_str(), size, flags, nullptr);
+    GtkIconTheme* theme = gtk_icon_theme_get_default();
+    pixbuf = gtk_icon_theme_load_icon(theme, IMAGE_MISSING.c_str(), size, GTK_ICON_LOOKUP_FORCE_SIZE, nullptr);
   }
 
   return pixbuf;
