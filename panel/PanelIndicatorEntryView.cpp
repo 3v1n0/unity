@@ -248,15 +248,10 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
       {
         auto* filename = gtk_icon_info_get_filename(info);
         pixbuf = gdk_pixbuf_new_from_file_at_size(filename, -1, size, nullptr);
-        // see LP: #1525186, stuff fails to load and it would be bad to
-        // not have any fallback
+        // if that failed, whine and load fallback
         if (!pixbuf)
         {
-           // if that failed, whine and load fallback
-           LOG_WARN(logger) << "failed to load: " << filename;
-           const std::string missing = "image-missing";
-           pixbuf = gtk_icon_theme_load_icon(theme, missing.c_str(), size, flags, nullptr);
-           break;
+            LOG_WARN(logger) << "failed to load: " << filename;
         }
       }
       else if (image_type == GTK_IMAGE_ICON_NAME)
@@ -266,6 +261,16 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 
       break;
     }
+  }
+
+  // have a generic fallback pixbuf if for whatever reason icon loading
+  // failed (see LP: #1525186)
+  if(!pixbuf)
+  {
+      const std::string missing = "image-missing";
+      GtkIconTheme* theme = gtk_icon_theme_get_default();
+      auto flags = GTK_ICON_LOOKUP_FORCE_SIZE;
+      pixbuf = gtk_icon_theme_load_icon(theme, missing.c_str(), size, flags, nullptr);
   }
 
   return pixbuf;
