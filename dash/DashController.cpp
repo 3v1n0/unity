@@ -232,25 +232,23 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
+  int launcher_size = unity::Settings::Instance().LauncherSize(monitor_);
 
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
-      int launcher_width = unity::Settings::Instance().LauncherSize(monitor_);
-
-      // We want to cover as much of the screen as possible to grab any mouse events outside
-      // of our window
-      return nux::Geometry (monitor_geo.x + launcher_width,
+    // We want to cover as much of the screen as possible to grab any mouse events outside
+    // of our window
+    return nux::Geometry (monitor_geo.x + launcher_size,
                             monitor_geo.y,
-                            monitor_geo.width - launcher_width,
+                            monitor_geo.width - launcher_size,
                             monitor_geo.height);
   }
   else
   {
-    int launcher_height = unity::Settings::Instance().LauncherSize(monitor_);
     return nux::Geometry (monitor_geo.x,
                           monitor_geo.y,
                           monitor_geo.width,
-                          monitor_geo.height - launcher_height );
+                          monitor_geo.height - launcher_size );
   }
 }
 

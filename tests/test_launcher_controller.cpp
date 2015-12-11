@@ -215,13 +215,12 @@ struct TestLauncherController : testmocks::TestUnityAppBase
     , xdnd_manager_(std::make_shared<MockXdndManager::Nice>())
     , edge_barriers_(std::make_shared<ui::EdgeBarrierController>())
     , lc(xdnd_manager_, edge_barriers_)
-    , launcher_gsettings_(g_settings_new("com.canonical.Unity"))
   {}
   virtual ~TestLauncherController() {}
 
   virtual void SetUp()
   {
-    g_settings_set_enum(launcher_gsettings_, "launcher-position", static_cast<int>(LauncherPosition::LEFT));
+
     logger_output_->GetOutput(); // discard old output.
     lc.multiple_launchers = true;
   }
@@ -286,7 +285,6 @@ protected:
   MockXdndManager::Ptr xdnd_manager_;
   ui::EdgeBarrierController::Ptr edge_barriers_;
   MockLauncherController lc;
-  glib::Object<GSettings> launcher_gsettings_;
 };
 }
 
@@ -464,21 +462,9 @@ TEST_F(TestLauncherController, MultimonitorGeometries)
   {
     auto const& monitor_geo = uscreen.GetMonitorGeometry(i);
     auto const& launcher_geo = lc.launchers()[i]->GetAbsoluteGeometry();
-
     ASSERT_EQ(launcher_geo.x, monitor_geo.x);
     ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.PanelHeight(i));
     ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.PanelHeight(i));
-  }
-
-  g_settings_set_enum(launcher_gsettings_, "launcher-position", static_cast<int>(LauncherPosition::BOTTOM));
-  for (unsigned i = 0; i < monitors::MAX; ++i)
-  {
-    auto const& monitor_geo = uscreen.GetMonitorGeometry(i);
-    auto const& launcher_geo = lc.launchers()[i]->GetAbsoluteGeometry();
-
-    ASSERT_EQ(launcher_geo.x, monitor_geo.x);
-    ASSERT_EQ(launcher_geo.y, monitor_geo.y + monitor_geo.height - launcher_geo.height + 1);
-    ASSERT_EQ(launcher_geo.width, monitor_geo.width);
   }
 }
 
@@ -488,7 +474,6 @@ TEST_F(TestLauncherController, MonitorResizesLauncher)
   monitor_geo.SetSize(monitor_geo.width/2, monitor_geo.height/2);
   uscreen.SetMonitors({monitor_geo});
   nux::Geometry launcher_geo = lc.launcher().GetAbsoluteGeometry();
-
   ASSERT_EQ(launcher_geo.x, monitor_geo.x);
   ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.PanelHeight());
   ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.PanelHeight());
@@ -499,6 +484,25 @@ TEST_F(TestLauncherController, MonitorResizesLauncher)
   ASSERT_EQ(launcher_geo.x, monitor_geo.x);
   ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.PanelHeight());
   ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.PanelHeight());
+}
+
+TEST_F(TestLauncherController, LauncherPositionResetsOnGsettingsUpdated)
+{
+  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.Unity"));
+  g_settings_set_enum(gsettings, "launcher-position", static_cast<int>(LauncherPosition::LEFT));
+  nux::Geometry const& monitor_geo = uscreen.GetMonitorGeometry(0);
+  nux::Geometry launcher_geo = lc.launcher().GetAbsoluteGeometry();
+  ASSERT_EQ(launcher_geo.x, monitor_geo.x);
+  ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.PanelHeight(0));
+  ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.PanelHeight(0));
+
+  g_settings_set_enum(gsettings, "launcher-position", static_cast<int>(LauncherPosition::BOTTOM));
+  launcher_geo = lc.launcher().GetAbsoluteGeometry();
+  ASSERT_EQ(launcher_geo.x, monitor_geo.x);
+  ASSERT_EQ(launcher_geo.y, monitor_geo.y + monitor_geo.height - launcher_geo.height + 1);
+  ASSERT_EQ(launcher_geo.width, monitor_geo.width);
+
+  g_settings_reset(gsettings, "launcher_position");
 }
 
 TEST_F(TestLauncherController, IconCentersResetsOnMonitorsUpdated)

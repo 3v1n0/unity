@@ -17,6 +17,7 @@ from testtools.matchers import NotEquals
 from time import sleep
 
 from unity.emulators import UnityIntrospectionObject
+from unity.emulators import keys
 from unity.emulators.icons import (
     ApplicationLauncherIcon,
     BFBLauncherIcon,
@@ -261,19 +262,19 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         """Moves the launcher keynav focus to the next launcher icon"""
         logger.debug("Selecting next item in keyboard navigation mode.")
         old_selection = self._get_controller().key_nav_selection
-        self._perform_key_nav_binding(self.keys[launcher_position + "/launcher/keynav/next"])
+        self._perform_key_nav_binding(keys[launcher_position + "/launcher/keynav/next"])
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def key_nav_prev(self, launcher_position = LauncherPosition.LEFT):
         """Moves the launcher keynav focus to the previous launcher icon"""
         logger.debug("Selecting previous item in keyboard navigation mode.")
         old_selection = self._get_controller().key_nav_selection
-        self._perform_key_nav_binding(self.keys[launcher_position + "/launcher/keynav/prev"])
+        self._perform_key_nav_binding(keys[launcher_position + "/launcher/keynav/prev"])
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def key_nav_enter_quicklist(self, launcher_position = LauncherPosition.LEFT):
         logger.debug("Opening quicklist for currently selected icon.")
-        self._perform_key_nav_binding(self.keys[launcher_position + "/launcher/keynav/open-quicklist"])
+        self._perform_key_nav_binding(keys[launcher_position + "/launcher/keynav/open-quicklist"])
         self.quicklist_open.wait_for(True)
 
     def key_nav_exit_quicklist(self):
@@ -358,8 +359,13 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         'drag_type' must be one of IconDragType.INSIDE or IconDragType.OUTSIDE.
         This specifies whether the icon is gragged inside the launcher, or to the
-        right of it. The default is to drag inside the launcher. If it is
+        right/top of it. The default is to drag inside the launcher. If it is
         specified, and not one of the allowed values, a ValueError will be raised.
+
+        'launcher_position' must be one of LauncherPosition.LEFT or LauncherPosition.BOTTOM.
+        This specifies the launcher position when dragging the icon. The default launcher
+        position is at left. If it is specified, and not one of the allowed values, a
+        ValueError will be raised.
 
         For example:
 

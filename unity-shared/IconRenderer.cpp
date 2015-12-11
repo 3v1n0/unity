@@ -1163,9 +1163,6 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
       if (center == -100)
         break;
 
-      if (!texture)
-        continue;
-
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
         GfxContext.QRP_1Tex(markerX,
                             center - std::round(texture->GetHeight() / 2.0f),
@@ -1369,7 +1366,7 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
                  nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * 3 * y_cs / ViewportHeight /* or -2.0f * x_cs/ViewportWidth*/);
   else
     ViewMatrix = nux::Matrix4::TRANSLATE(-x_cs, y_cs, CameraToScreenDistance) *
-               nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * x_cs / ViewportWidth /* or -2.0f * x_cs/ViewportWidth*/);
+                 nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * x_cs / ViewportWidth);
 
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
 }

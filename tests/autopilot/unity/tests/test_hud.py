@@ -27,7 +27,6 @@ from testtools.matchers import MismatchError
 from time import sleep
 
 from unity.emulators.icons import HudLauncherIcon
-from unity.emulators.launcher import LauncherPosition
 from unity.tests import UnityTestCase
 
 
@@ -646,10 +645,7 @@ class HudVisualTests(HudTestsBase):
     launcher_screen = [('Launcher on all monitors', {'launcher_primary_only': False}),
                        ('Launcher on primary monitor', {'launcher_primary_only': True})]
 
-    launcher_position = [('left', {'launcher_position': LauncherPosition.LEFT}),
-                         ('bottom', {'launcher_position': LauncherPosition.BOTTOM})]
-
-    scenarios = multiply_scenarios(_make_monitor_scenarios(), launcher_modes, launcher_screen, launcher_position)
+    scenarios = multiply_scenarios(_make_monitor_scenarios(), launcher_modes, launcher_screen)
 
     def setUp(self):
         super(HudVisualTests, self).setUp()
@@ -659,9 +655,6 @@ class HudVisualTests(HudTestsBase):
         self.hud_monitor_is_primary = (self.display.get_primary_screen() == self.hud_monitor)
         self.hud_locked = (not self.launcher_autohide and (not self.launcher_primary_only or self.hud_monitor_is_primary))
         sleep(0.5)
-        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity', 'launcher-position')
-        self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"%s"' % self.launcher_position)
-        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity', 'launcher-position', old_pos)
 
     def test_initially_hidden(self):
         self.assertFalse(self.unity.hud.visible)
@@ -678,10 +671,11 @@ class HudVisualTests(HudTestsBase):
         monitor_geo = self.display.get_screen_geometry(self.hud_monitor)
         monitor_x = monitor_geo[0]
         monitor_w = monitor_geo[2]
+        launcher = self.unity.launcher.get_launcher_for_monitor(self.hud_monitor)
         hud_x = self.unity.hud.geometry[0]
         hud_w = self.unity.hud.geometry[2]
 
-        if self.hud_locked and self.launcher_position == LauncherPosition.LEFT:
+        if self.hud_locked and launcher.geometry.w < launcher.geometry.h:
             self.assertThat(hud_x, GreaterThan(monitor_x))
             self.assertThat(hud_x, LessThan(monitor_x + monitor_w))
             self.assertThat(hud_w, Equals(monitor_x + monitor_w - hud_x))

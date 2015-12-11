@@ -17,6 +17,7 @@ from testtools.matchers import Contains, Equals, NotEquals, Not, Raises
 from time import sleep
 from xdg.DesktopEntry import DesktopEntry
 
+from unity.emulators import keys
 from unity.emulators.quicklist import QuicklistMenuItemLabel
 from unity.emulators.launcher import LauncherPosition
 from unity.tests import UnityTestCase
@@ -266,10 +267,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
         self.ql_launcher.keyboard_select_icon(self.launcher_position, tooltip_text=self.ql_app.name)
-        if self.launcher_position == LauncherPosition.LEFT:
-            self.keybinding("launcher/keynav/open-quicklist")
-        else:
-            self.keybinding("launcher/keynav/prev")
+        self.keybinding(keys[self.launcher_position + "/launcher/keynav/open-quicklist"])
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
 
         self.assertThat(self.ql_launcher_icon.get_quicklist,

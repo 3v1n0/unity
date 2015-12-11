@@ -20,17 +20,15 @@ from autopilot.introspection.backends import DBusAddress
 
 from dbus import DBusException
 
-
-class UnityIntrospectionObject(CustomEmulatorBase):
-
-    keys = {
+keys = {
         "Left/launcher/keynav/prev": "launcher/keynav/prev",
         "Left/launcher/keynav/next": "launcher/keynav/next",
         "Left/launcher/keynav/open-quicklist": "launcher/keynav/open-quicklist",
         "Bottom/launcher/keynav/prev": "launcher/keynav/close-quicklist",
         "Bottom/launcher/keynav/next": "launcher/keynav/open-quicklist",
         "Bottom/launcher/keynav/open-quicklist": "launcher/keynav/prev",
-    }
+}
+class UnityIntrospectionObject(CustomEmulatorBase):
 
     DBUS_SERVICE = "com.canonical.Unity"
     DBUS_OBJECT = "/com/canonical/Unity/Debug"

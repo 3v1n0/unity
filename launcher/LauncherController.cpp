@@ -1464,7 +1464,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
 
   switch (keysym)
   {
-    // up
+      // up
     case NUX_VK_UP:
     case NUX_KP_UP:
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
@@ -1474,7 +1474,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
         OpenQuicklist();
       break;
 
-    // down
+      // down
     case NUX_VK_DOWN:
     case NUX_KP_DOWN:
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
@@ -1485,7 +1485,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
         parent_->KeyNavTerminate(false);
       break;
 
-    // left
+      // left
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
@@ -1495,7 +1495,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
         parent_->KeyNavPrevious();
       break;
 
-    // right
+      // right
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
