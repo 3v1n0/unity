@@ -21,7 +21,9 @@
 #include <glib/gi18n-lib.h>
 #include "CompizShortcutModeller.h"
 #include "ShortcutHint.h"
+#include "ShortcutHintPrivate.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/XKeyboardUtil.h"
 
 namespace unity
 {
@@ -246,11 +248,12 @@ void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hi
 {
   static const std::string switching(_("Switching"));
 
-  hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
-                                                   _("Switches between applications."),
-                                                   shortcut::OptionType::COMPIZ_KEY,
-                                                   UNITYSHELL_PLUGIN_NAME,
-                                                   UNITYSHELL_OPTION_ALT_TAB_FORWARD));
+  auto switcher_init = std::make_shared<shortcut::Hint>(switching, "", "",
+                                                        _("Switches between applications."),
+                                                        shortcut::OptionType::COMPIZ_KEY,
+                                                        UNITYSHELL_PLUGIN_NAME,
+                                                        UNITYSHELL_OPTION_ALT_TAB_FORWARD);
+  hints.push_back(switcher_init);
 
   if (ws_enabled)
   {
@@ -271,6 +274,30 @@ void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hi
                                                    _("Moves the focus."),
                                                    shortcut::OptionType::HARDCODED,
                                                    _("Cursor Left or Right")));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
+                                                   _("Enter / Exit from spread mode or Select windows."),
+                                                   shortcut::OptionType::HARDCODED,
+                                                   _("Cursor Up or Down")));
+
+  if (Display *dpy = nux::GetGraphicsDisplay()->GetX11Display())
+  {
+    if (const char* key = XKeysymToString(keyboard::get_key_right_to_key_symbol(dpy, XStringToKeysym("Tab"))))
+    {
+      std::string closekey = key;
+      switcher_init->Fill();
+      auto const& switcher_init_key = switcher_init->shortkey();
+      auto meta_separator = switcher_init_key.find("+");
+
+      if (meta_separator != std::string::npos)
+        closekey = switcher_init_key.substr(0, meta_separator-1) + " + " + closekey;
+
+      hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
+                                                       _("Closes the selected application / window."),
+                                                       shortcut::OptionType::HARDCODED,
+                                                       impl::ProperCase(closekey)));
+    }
+  }
 }
 
 void CompizModeller::AddWorkspaceHints(std::list<shortcut::AbstractHint::Ptr> &hints)
