@@ -157,6 +157,9 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindowPtr const& win) {
     signals_conn_.Add(win->monitor.changed.connect([this] (int) { EnsureWindowsLocation(); }));
     EnsureWindowsLocation();
+
+    if (WindowManager::Default().IsScaleActiveForGroup() && IsActive())
+      Spread(true, 0, false);
   }));
 
   auto ensure_win_location_cb = sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowsLocation));
@@ -291,12 +294,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     return;
   }
 
-  bool scaleWasActive = wm.IsScaleActive();
-  if (scaleWasActive)
-  {
-    wm.TerminateScale();
-  }
-
+  bool scale_was_active = wm.IsScaleActive();
   bool active = IsActive();
   bool user_visible = IsRunning();
   /* We should check each child to see if there is
@@ -389,6 +387,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     if (GetQuirk(Quirk::STARTING, arg.monitor))
       return;
 
+    wm.TerminateScale();
     SetQuirk(Quirk::STARTING, true, arg.monitor);
     OpenInstanceLauncherIcon(arg.timestamp);
   }
@@ -396,8 +395,10 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   {
     if (active)
     {
-      if (scaleWasActive) // #5 above
+      if (scale_was_active) // #5 above
       {
+        wm.TerminateScale();
+
         if (minimize_window_on_click())
         {
           for (auto const& win : GetWindows(WindowFilter::ON_CURRENT_DESKTOP))
@@ -414,7 +415,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
         {
           bool minimized = false;
 
-          if (minimize_window_on_click)
+          if (minimize_window_on_click())
           {
             WindowList const& windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP);
 
@@ -434,9 +435,13 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     }
     else
     {
-      if (scaleWasActive) // #4 above
+      if (scale_was_active) // #4 above
       {
+        if (GetWindows(WindowFilter::ON_CURRENT_DESKTOP).size() <= 1)
+          wm.TerminateScale();
+
         Focus(arg);
+
         if (arg.source != ActionArg::Source::SWITCHER)
           Spread(true, 0, false);
       }
@@ -704,9 +709,8 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 {
   std::vector<Window> windows;
   for (auto& window : GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0))
-  {
     windows.push_back(window->window_id());
-  }
+
   return WindowManager::Default().ScaleWindowGroup(windows, state, force);
 }
 
@@ -1169,7 +1173,10 @@ void ApplicationLauncherIcon::OnDndEnter()
   auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
 
   _source_manager.AddTimeout(1000, [this, timestamp] {
-    WindowManager::Default().TerminateScale();
+    bool to_spread = GetWindows(WindowFilter::ON_CURRENT_DESKTOP).size() > 1;
+
+    if (!to_spread)
+      WindowManager::Default().TerminateScale();
 
     if (!IsRunning())
       return false;
@@ -1177,7 +1184,7 @@ void ApplicationLauncherIcon::OnDndEnter()
     UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
     Focus(ActionArg(ActionArg::Source::LAUNCHER, 1, timestamp));
 
-    if (GetWindows(WindowFilter::ON_CURRENT_DESKTOP).size() > 1)
+    if (to_spread)
       Spread(true, COMPIZ_SCALE_DND_SPREAD, false);
 
     return false;
