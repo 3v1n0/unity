@@ -335,8 +335,6 @@ WindowList GnomeFileManager::WindowsForLocation(std::string const& location) con
 
         if (win && std::find(windows.rbegin(), windows.rend(), win) == windows.rend())
           windows.push_back(win);
-
-        break;
       }
     }
   }
