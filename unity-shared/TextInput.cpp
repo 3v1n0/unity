@@ -92,10 +92,11 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , hint_font_name(HINT_LABEL_DEFAULT_FONT_NAME)
   , hint_font_size(HINT_LABEL_FONT_SIZE)
   , show_activator(false)
-  , show_caps_lock(false)
+  , show_lock_warnings(false)
   , scale(1.0)
   , bg_layer_(new nux::ColorLayer(nux::Color(0xff595853), true))
   , caps_lock_on(false)
+  , num_lock_on(false)
   , last_width_(-1)
   , last_height_(-1)
 {
@@ -135,18 +136,12 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
 
   // Caps lock warning
   warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE.CP(scale)));
-  warning_->SetVisible(caps_lock_on());
+  warning_->SetVisible(caps_lock_on() || num_lock_on());
   layout_->AddView(warning_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  caps_lock_on.changed.connect([this] (bool on) {
-    if (show_caps_lock)
-    {
-      warning_->SetVisible(on);
-      QueueRelayout();
-      QueueDraw();
-    }
-  });
+  num_lock_on.changed.connect(sigc::mem_fun(this, &TextInput::OnLockStateChanged));
+  caps_lock_on.changed.connect(sigc::mem_fun(this, &TextInput::OnLockStateChanged));
 
-  show_caps_lock.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::CheckIfCapsLockOn)));
+  show_lock_warnings.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::CheckLocks)));
   scale.changed.connect(sigc::mem_fun(this, &TextInput::UpdateScale));
   Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateSize)));
 
@@ -169,16 +164,9 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   spinner_->scale = scale();
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  sig_manager_.Add<void, GtkSettings*>(gtk_settings_get_default(), "notify::gtk-font-name", sigc::hide(sigc::mem_fun(this, &TextInput::OnFontChanged)));
   OnFontChanged();
-
-  sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) {
-    CheckIfCapsLockOn();
-  });
-
-  sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) {
-    CheckIfCapsLockOn();
-  });
+  sig_manager_.Add<void, GtkSettings*>(gtk_settings_get_default(), "notify::gtk-font-name", sigc::hide(sigc::mem_fun(this, &TextInput::OnFontChanged)));
+  sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) { CheckLocks(); });
 
   input_string.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_input_string));
   input_string.SetSetterFunction(sigc::mem_fun(this, &TextInput::set_input_string));
@@ -228,10 +216,25 @@ void TextInput::UpdateScale(double scale)
   QueueDraw();
 }
 
-void TextInput::CheckIfCapsLockOn()
+void TextInput::CheckLocks()
 {
   GdkKeymap* keymap = gdk_keymap_get_default();
-  caps_lock_on = gdk_keymap_get_caps_lock_state(keymap) == FALSE ? false : true;
+  caps_lock_on = gdk_keymap_get_caps_lock_state(keymap) ? true : false;
+  num_lock_on = gdk_keymap_get_num_lock_state(keymap) ? true : false;
+}
+
+void TextInput::OnLockStateChanged(bool)
+{
+  if (!show_lock_warnings)
+  {
+    warning_->SetVisible(false);
+    return;
+  }
+
+  warning_->SetVisible(caps_lock_on() || num_lock_on());
+  warning_tooltip_.Release();
+  QueueRelayout();
+  QueueDraw();
 }
 
 void TextInput::SetSpinnerVisible(bool visible)
@@ -308,7 +311,19 @@ void TextInput::LoadWarningTooltip()
   pango_cairo_context_set_resolution(context, 96.0 * Settings::Instance().font_scaling());
 
   pango_layout_set_height(layout, -1); //avoid wrap lines
-  pango_layout_set_text(layout, _("Caps lock is on"), -1);
+
+  if (caps_lock_on() && num_lock_on())
+  {
+    pango_layout_set_text(layout, _("Caps lock and Num lock are on"), -1);
+  }
+  else if (caps_lock_on())
+  {
+    pango_layout_set_text(layout, _("Caps lock is on"), -1);
+  }
+  else if (num_lock_on())
+  {
+    pango_layout_set_text(layout, _("Num lock is on"), -1);
+  }
 
   nux::Size extents;
   pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
@@ -395,7 +410,7 @@ void TextInput::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   layout_->ProcessDraw(GfxContext, force_draw);
 
-  if (caps_lock_on && warning_->IsMouseInside() && !tooltip_timeout_)
+  if (warning_->IsVisible() && warning_->IsMouseInside() && !tooltip_timeout_)
     PaintWarningTooltip(GfxContext);
 
   if (!IsFullRedraw())
