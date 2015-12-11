@@ -205,8 +205,12 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 {
   glib::Object<GdkPixbuf> pixbuf;
-  auto image_type = proxy_->image_type();
 
+  // see if we need to do anything
+  if (!proxy_->image_visible() || proxy_->image_data().empty())
+    return pixbuf;
+
+  auto image_type = proxy_->image_type();
   switch (image_type)
   {
     case GTK_IMAGE_PIXBUF:
