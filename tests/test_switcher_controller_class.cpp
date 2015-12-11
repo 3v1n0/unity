@@ -32,7 +32,7 @@ FakeApplicationWindow::FakeApplicationWindow(Window xid, uint64_t active_number)
   standalone_window->active_number = active_number;
   testwrapper::StandaloneWM::Get()->AddStandaloneWindow(standalone_window);
 
-  title.SetGetterFunction([this] { return "FakeApplicationWindow"; });
+  title.SetGetterFunction([this] { return "FakeApplicationWindow "+std::to_string(xid_); });
   icon.SetGetterFunction([this] { return ""; });
 }
 
@@ -60,6 +60,11 @@ FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, bool allow_detai
 }
 
 WindowList FakeLauncherIcon::Windows()
+{
+  return window_list;
+}
+
+WindowList FakeLauncherIcon::WindowsOnViewport()
 {
   return window_list;
 }
