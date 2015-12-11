@@ -47,7 +47,7 @@ public:
   virtual bool TrashFile(std::string const& uri) = 0;
   virtual void EmptyTrash(uint64_t timestamp = 0) = 0;
   virtual WindowList WindowsForLocation(std::string const& location) const = 0;
-  virtual std::vector<std::string> const& LocationsForWindow(ApplicationWindowPtr const&) const = 0;
+  virtual std::string LocationForWindow(ApplicationWindowPtr const&) const = 0;
 
   sigc::signal<void> locations_changed;
 

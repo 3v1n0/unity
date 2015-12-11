@@ -82,6 +82,9 @@ void FileManagerLauncherIcon::Quit() const
 
 bool FileManagerLauncherIcon::IsLocationManaged(std::string const& location) const
 {
+  if (location.empty())
+    return true;
+
   if (boost::algorithm::starts_with(location, TRASH_URI))
     return false;
 
@@ -108,9 +111,7 @@ WindowList FileManagerLauncherIcon::GetStorageWindows() const
 
   for (auto const& app_win : ApplicationLauncherIcon::GetManagedWindows())
   {
-    auto const& locations = file_manager_->LocationsForWindow(app_win);
-
-    if (!locations.empty() && IsLocationManaged(locations.front()))
+    if (IsLocationManaged(file_manager_->LocationForWindow(app_win)))
       fm_windows.push_back(app_win);
   }
 

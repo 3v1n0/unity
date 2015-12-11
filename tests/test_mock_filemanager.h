@@ -37,16 +37,13 @@ struct MockFileManager : FileManager
   MOCK_METHOD1(EmptyTrash, void(uint64_t time));
   MOCK_METHOD3(CopyFiles, void(std::set<std::string> const& files, std::string const& dest, uint64_t time));
   MOCK_CONST_METHOD1(WindowsForLocation, WindowList(std::string const&));
-  MOCK_CONST_METHOD1(LocationsForWindow, std::vector<std::string> const&(ApplicationWindowPtr const&));
+  MOCK_CONST_METHOD1(LocationForWindow, std::string(ApplicationWindowPtr const&));
 
   MockFileManager()
   {
     using namespace testing;
     ON_CALL(*this, WindowsForLocation(_)).WillByDefault(Return(WindowList()));
-    ON_CALL(*this, LocationsForWindow(_)).WillByDefault(Invoke([this] (ApplicationWindowPtr const&) { return EMPTY_LOCATIONS; }));
   }
-
-  const std::vector<std::string> EMPTY_LOCATIONS;
 };
 
 }

@@ -40,7 +40,7 @@ public:
   void EmptyTrash(uint64_t timestamp);
 
   WindowList WindowsForLocation(std::string const& location) const;
-  std::vector<std::string> const& LocationsForWindow(ApplicationWindowPtr const&) const;
+  std::string LocationForWindow(ApplicationWindowPtr const&) const;
 
 private:
   GnomeFileManager();
