@@ -44,7 +44,6 @@ public:
 
 private:
   GnomeFileManager();
-  void Activate(uint64_t timestamp);
 
   struct Impl;
   std::unique_ptr<Impl> impl_;
