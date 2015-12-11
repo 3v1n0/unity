@@ -1260,6 +1260,12 @@ int PluginAdapter::WorkspaceCount() const
   return m_Screen->vpSize().width() * m_Screen->vpSize().height();
 }
 
+void PluginAdapter::SetCurrentViewport(nux::Point const& vp)
+{
+  auto const& current = GetCurrentViewport();
+  m_Screen->moveViewport(current.x - vp.x, current.y - vp.y, true);
+}
+
 nux::Point PluginAdapter::GetCurrentViewport() const
 {
   CompPoint const& vp = m_Screen->vp();
