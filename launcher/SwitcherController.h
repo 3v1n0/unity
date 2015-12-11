@@ -72,7 +72,7 @@ struct Selection
 };
 
 
-class Controller : public debug::Introspectable
+class Controller : public debug::Introspectable, public sigc::trackable
 {
 public:
   class Impl;
@@ -87,10 +87,12 @@ public:
 
   void Show(ShowMode show,
             SortMode sort,
-            std::vector<launcher::AbstractLauncherIcon::Ptr> results);
+            std::vector<launcher::AbstractLauncherIcon::Ptr> const& results);
   void Hide(bool accept_state=true);
 
-  bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
+  bool CanShowSwitcher(std::vector<launcher::AbstractLauncherIcon::Ptr> const& resutls) const;
+  void AddIcon(launcher::AbstractLauncherIcon::Ptr const&);
+  void RemoveIcon(launcher::AbstractLauncherIcon::Ptr const&);
 
   bool Visible();
   nux::Geometry GetInputWindowGeometry() const;

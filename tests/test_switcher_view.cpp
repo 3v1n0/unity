@@ -96,7 +96,7 @@ struct TestSwitcherView : testing::Test
 
       SwitcherModel::Applications apps;
       apps.push_back(AbstractLauncherIcon::Ptr(app));
-      switcher.SetModel(std::make_shared<SwitcherModel>(apps));
+      switcher.SetModel(std::make_shared<SwitcherModel>(apps, true));
 
       return apps[0];
     }
@@ -130,7 +130,7 @@ TEST_F(TestSwitcherView, SetModel)
   apps.push_back(AbstractLauncherIcon::Ptr(new MockLauncherIcon()));
   apps.push_back(AbstractLauncherIcon::Ptr(new MockLauncherIcon()));
   apps.push_back(AbstractLauncherIcon::Ptr(new MockLauncherIcon()));
-  auto model = std::make_shared<SwitcherModel>(apps);
+  auto model = std::make_shared<SwitcherModel>(apps, false);
 
   switcher.SetModel(model);
   ASSERT_EQ(switcher.model_, model);
