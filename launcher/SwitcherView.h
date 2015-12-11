@@ -85,6 +85,7 @@ public:
   sigc::signal<void> switcher_prev;
   sigc::signal<void> switcher_start_detail;
   sigc::signal<void> switcher_stop_detail;
+  sigc::signal<void> switcher_close_current;
 
   /* void; bool visible */
   sigc::signal<void, bool> hide_request;

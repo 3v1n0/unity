@@ -154,6 +154,24 @@ void Controller::Impl::StopDetailMode()
   }
 }
 
+void Controller::Impl::CloseSelection()
+{
+  if (obj_->detail())
+  {
+    if (model_->detail_selection)
+    {
+      WindowManager::Default().Close(model_->DetailSelectionWindow());
+    }
+  }
+  else
+  {
+    // Using model_->Selection()->Close() would be nicer, but it wouldn't take
+    // in consideration the workspace related settings
+    for (auto window : model_->DetailXids())
+      WindowManager::Default().Close(window);
+  }
+}
+
 void Controller::Next()
 {
   impl_->Next();
@@ -443,6 +461,7 @@ void Controller::Impl::ConstructView()
   view_->switcher_prev.connect(sigc::mem_fun(this, &Impl::Prev));
   view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
   view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
+  view_->switcher_close_current.connect(sigc::mem_fun(this, &Impl::CloseSelection));
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);

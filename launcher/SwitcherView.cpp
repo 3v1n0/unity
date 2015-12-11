@@ -500,8 +500,8 @@ bool SwitcherView::InspectKeyEvent(unsigned int eventType, unsigned int keysym, 
       case NUX_VK_DOWN:
         switcher_start_detail.emit();
         break;
-      default:
-        return false;
+      case NUX_VK_q:
+        switcher_close_current.emit();
         break;
     }
   }
