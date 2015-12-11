@@ -1,3 +1,4 @@
+
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2014 Canonical Ltd
@@ -52,7 +53,7 @@ ScrollView::ScrollView(NUX_FILE_LINE_DECL)
   });
 
   page_direction.connect([scrollbar] (ScrollDir dir) {
-      scrollbar->PerformPageNavigation(dir);
+    scrollbar->PerformPageNavigation(dir);
   });
 }
 

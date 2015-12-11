@@ -33,18 +33,15 @@ public:
   PlacesVScrollBar(NUX_FILE_LINE_PROTO);
 
   nux::Property<double> scale;
+  nux::Property<bool> hovering;
 
 protected:
-  virtual void PreLayoutManagement();
-  virtual long PostLayoutManagement(long LayoutResult);
-
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
 private:
   void UpdateSize();
-  void UpdateTexture();
-  void DrawScrollbar(nux::GraphicsEngine& graphics_engine);
+  void UpdateTexture(nux::Geometry const&);
 
 private:
   nux::ObjectPtr<nux::BaseTexture> slider_texture_;
