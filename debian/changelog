@@ -1,3 +1,16 @@
+unity (7.4.0+16.04.20151102-0ubuntu3) UNRELEASED; urgency=medium
+
+  * unity: ensure we use python3 for the launch script and
+    python2.7 for autopilot (LP: #1512909)
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Fri, 11 Dec 2015 12:36:15 +0000
+
+unity (7.4.0+16.04.20151102-0ubuntu2) xenial; urgency=medium
+
+  * No-change rebuild against libglew1.13
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 11 Nov 2015 19:49:37 +0000
+
 unity (7.4.0+16.04.20151102-0ubuntu1) xenial; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
