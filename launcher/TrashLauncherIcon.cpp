@@ -53,8 +53,6 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
   position = Position::END;
   SetQuirk(Quirk::VISIBLE, true);
   SkipQuirkAnimation(Quirk::VISIBLE);
-
-  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
   SetShortcut('t');
 
   glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));

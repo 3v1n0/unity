@@ -34,10 +34,8 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.filemanager.gnome");
 
-const std::string TRASH_URI = "trash:";
+const std::string TRASH_URI = "trash:///";
 const std::string FILE_SCHEMA = "file://";
-const std::string TRASH_PATH = FILE_SCHEMA + DesktopUtilities::GetUserTrashDirectory();
-const std::string DEVICES_PREFIX = FILE_SCHEMA + "/media/" + glib::gchar_to_string(g_get_user_name());
 const std::vector<std::string> EMPTY_LOCATIONS;
 
 const std::string NAUTILUS_NAME = "org.gnome.Nautilus";
@@ -55,26 +53,6 @@ struct GnomeFileManager::Impl
     filemanager_proxy_.ConnectProperty("XUbuntuOpenLocationsXids", callback);
   }
 
-  std::string GetOpenedPrefix(std::string const& uri, bool allow_equal = true)
-  {
-    glib::Object<GFile> uri_file(g_file_new_for_uri(uri.c_str()));
-
-    for (auto const& loc : opened_locations_)
-    {
-      bool equal = false;
-
-      glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
-
-      if (allow_equal && g_file_equal(loc_file, uri_file))
-        equal = true;
-
-      if (equal || g_file_has_prefix(loc_file, uri_file))
-        return loc;
-    }
-
-    return "";
-  }
-
   glib::DBusProxy::Ptr NautilusOperationsProxy() const
   {
     return std::make_shared<glib::DBusProxy>(NAUTILUS_NAME, NAUTILUS_PATH,
@@ -83,7 +61,6 @@ struct GnomeFileManager::Impl
 
   void OnOpenLocationsXidsUpdated(GVariant* value)
   {
-    opened_locations_.clear();
     opened_locations_xids_.clear();
 
     if (!value)
@@ -113,7 +90,6 @@ struct GnomeFileManager::Impl
       {
         LOG_DEBUG(logger) << xid << ": Opened location " << str;
         opened_locations_xids_[xid].push_back(str);
-        opened_locations_.push_back(str);
       }
     }
 
@@ -145,7 +121,6 @@ struct GnomeFileManager::Impl
   GnomeFileManager* parent_;
   glib::DBusProxy filemanager_proxy_;
   glib::Source::UniquePtr idle_;
-  std::vector<std::string> opened_locations_;
   std::map<Window, std::vector<std::string>> opened_locations_xids_;
 };
 
@@ -185,13 +160,6 @@ void GnomeFileManager::Open(std::string const& uri, uint64_t timestamp)
   {
     LOG_ERROR(logger) << "Impossible to open the location: " << error.Message();
   }
-}
-
-void GnomeFileManager::OpenActiveChild(std::string const& uri, uint64_t timestamp)
-{
-  auto const& opened = impl_->GetOpenedPrefix(uri);
-
-  Open(opened.empty() ? uri : opened, timestamp);
 }
 
 void GnomeFileManager::OpenTrash(uint64_t timestamp)
@@ -284,26 +252,6 @@ void GnomeFileManager::CopyFiles(std::set<std::string> const& uris, std::string 
     proxy->CallBegin("CopyURIs", parameters, [proxy] (GVariant*, glib::Error const&) {});
     Activate(timestamp);
   }
-}
-
-std::vector<std::string> const& GnomeFileManager::OpenedLocations() const
-{
-  return impl_->opened_locations_;
-}
-
-bool GnomeFileManager::IsPrefixOpened(std::string const& uri) const
-{
-  return !impl_->GetOpenedPrefix(uri).empty();
-}
-
-bool GnomeFileManager::IsTrashOpened() const
-{
-  return (IsPrefixOpened(TRASH_URI) || IsPrefixOpened(TRASH_PATH));
-}
-
-bool GnomeFileManager::IsDeviceOpened() const
-{
-  return !impl_->GetOpenedPrefix(DEVICES_PREFIX, false).empty();
 }
 
 WindowList GnomeFileManager::WindowsForLocation(std::string const& location) const
