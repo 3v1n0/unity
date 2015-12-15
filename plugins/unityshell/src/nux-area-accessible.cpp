@@ -173,7 +173,7 @@ nux_area_accessible_initialize(AtkObject* accessible,
   accessible->role = ATK_ROLE_UNKNOWN;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
-  area = dynamic_cast<nux::Area*>(nux_object);
+  area = static_cast<nux::Area*>(nux_object);
 
   /* focus support based on Focusable, used on the Dash */
   area->key_nav_focus_change.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
@@ -249,7 +249,7 @@ nux_area_accessible_ref_state_set(AtkObject* obj)
   if (nux_object == NULL) /* defunct */
     return state_set;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
+  area = static_cast<nux::Area*>(nux_object);
 
   if (area->IsSensitive())
   {
@@ -311,8 +311,7 @@ nux_area_accessible_get_extents(AtkComponent* component,
   if (nux_object == NULL) /* defunct */
     return;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
-
+  area = static_cast<nux::Area*>(nux_object);
   geometry = area->GetGeometry();
 
   *width = geometry.GetWidth();
@@ -347,8 +346,6 @@ nux_area_accessible_grab_focus(AtkComponent* component)
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(component));
   if (nux_object == NULL) /* defunct */
     return FALSE;
-
-  //area = dynamic_cast<nux::Area*>(nux_object);
 
   /* FIXME: SetFocused doesn't return if the force was successful or
      not, we suppose that this is the case like in cally and gail */
@@ -557,7 +554,7 @@ check_focus(NuxAreaAccessible* self)
   if (nux_object == NULL) /* defunct */
     return;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
+  area = static_cast<nux::Area*>(nux_object);
 
   if (nux::GetWindowCompositor().GetKeyFocusArea() == area)
     focus_in = TRUE;

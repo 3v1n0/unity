@@ -76,7 +76,7 @@ nux_layout_accessible_new(nux::Object* object)
 {
   AtkObject* accessible = NULL;
 
-  g_return_val_if_fail(dynamic_cast<nux::Layout*>(object), NULL);
+  g_return_val_if_fail(static_cast<nux::Layout*>(object), NULL);
 
   accessible = ATK_OBJECT(g_object_new(NUX_TYPE_LAYOUT_ACCESSIBLE, NULL));
 
@@ -98,7 +98,7 @@ nux_layout_accessible_initialize(AtkObject* accessible,
   accessible->role = ATK_ROLE_PANEL;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
-  layout = dynamic_cast<nux::Layout*>(nux_object);
+  layout = static_cast<nux::Layout*>(nux_object);
 
   layout->ViewAdded.connect(sigc::bind(sigc::ptr_fun(on_view_changed_cb),
                                        accessible, TRUE));
@@ -120,7 +120,7 @@ nux_layout_accessible_get_n_children(AtkObject* obj)
   if (!nux_object) /* state is defunct */
     return 0;
 
-  layout = dynamic_cast<nux::Layout*>(nux_object);
+  layout = static_cast<nux::Layout*>(nux_object);
 
   element_list = layout->GetChildren();
 
@@ -148,14 +148,14 @@ nux_layout_accessible_ref_child(AtkObject* obj,
   if (!nux_object) /* state is defunct */
     return 0;
 
-  layout = dynamic_cast<nux::Layout*>(nux_object);
+  layout = static_cast<nux::Layout*>(nux_object);
 
   element_list = layout->GetChildren();
 
   it = element_list.begin();
   std::advance(it, i);
 
-  child = dynamic_cast<nux::Object*>(*it);
+  child = static_cast<nux::Object*>(*it);
   child_accessible = unity_a11y_get_accessible(child);
 
   parent = atk_object_get_parent(child_accessible);

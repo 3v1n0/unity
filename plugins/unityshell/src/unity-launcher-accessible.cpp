@@ -156,8 +156,7 @@ unity_launcher_accessible_initialize(AtkObject* accessible,
   self = UNITY_LAUNCHER_ACCESSIBLE(accessible);
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
 
-  launcher = dynamic_cast<Launcher*>(nux_object);
-
+  launcher = static_cast<Launcher*>(nux_object);
   model = launcher->GetModel();
 
   if (model)
@@ -189,7 +188,7 @@ unity_launcher_accessible_get_n_children(AtkObject* obj)
   if (!object) /* state is defunct */
     return 0;
 
-  launcher = dynamic_cast<Launcher*>(object);
+  launcher = static_cast<Launcher*>(object);
 
   launcher_model = launcher->GetModel();
 
@@ -220,8 +219,7 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
   if (!nux_object) /* state is defunct */
     return 0;
 
-  launcher = dynamic_cast<Launcher*>(nux_object);
-
+  launcher = static_cast<Launcher*>(nux_object);
   launcher_model = launcher->GetModel();
 
   it = launcher_model->begin();
@@ -298,7 +296,7 @@ unity_launcher_accessible_ref_selection(AtkSelection* selection,
   if (!nux_object) /* state is defunct */
     return 0;
 
-  launcher = dynamic_cast<Launcher*>(nux_object);
+  launcher = static_cast<Launcher*>(nux_object);
   AbstractLauncherIcon::Ptr const& selected_icon = launcher->GetSelectedMenuIcon();
 
   if (selected_icon)
@@ -322,7 +320,7 @@ unity_launcher_accessible_get_selection_count(AtkSelection* selection)
   if (!nux_object) /* state is defunct */
     return 0;
 
-  launcher = dynamic_cast<Launcher*>(nux_object);
+  launcher = static_cast<Launcher*>(nux_object);
 
   if (!launcher->GetSelectedMenuIcon())
     return 0;
@@ -344,7 +342,7 @@ unity_launcher_accessible_is_child_selected(AtkSelection* selection,
   if (!nux_object) /* state is defunct */
     return 0;
 
-  launcher = dynamic_cast<Launcher*>(nux_object);
+  launcher = static_cast<Launcher*>(nux_object);
   LauncherModel::Ptr const& launcher_model = launcher->GetModel();
   it = launcher_model->begin();
   std::advance(it, i);
@@ -428,7 +426,7 @@ update_children_index(UnityLauncherAccessible* self)
   if (!nux_object) /* state is defunct */
     return;
 
-  launcher = dynamic_cast<Launcher*>(nux_object);
+  launcher = static_cast<Launcher*>(nux_object);
   launcher_model = launcher->GetModel();
 
   if (launcher_model == NULL)
