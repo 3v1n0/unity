@@ -38,6 +38,8 @@ public:
 
   LayoutWindow(Window xid);
 
+  void ComputeDecorationHeight();
+
   Window xid;
 
   nux::Geometry geo;
