@@ -204,11 +204,10 @@ nux_area_accessible_get_parent(AtkObject* obj)
   if (nux_object == NULL) /* defunct */
     return NULL;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
-
+  area = static_cast<nux::Area*>(nux_object);
   parent = area->GetParentObject();
 
-  return unity_a11y_get_accessible(parent);
+  return parent ? unity_a11y_get_accessible(parent) : NULL;
 }
 
 /*
@@ -450,14 +449,16 @@ gboolean
 nux_area_accessible_parent_window_active(NuxAreaAccessible* self)
 {
   AtkStateSet* state_set = NULL;
+  gboolean active = FALSE;
 
   check_parent_window_connected(self);
 
-  state_set = atk_object_ref_state_set(ATK_OBJECT(self->priv->parent_window));
-
-  gboolean active = atk_state_set_contains_state(state_set, ATK_STATE_ACTIVE);
-
-  g_object_unref(state_set);
+  if (ATK_IS_OBJECT(self->priv->parent_window))
+  {
+    state_set = atk_object_ref_state_set(ATK_OBJECT(self->priv->parent_window));
+    active = atk_state_set_contains_state(state_set, ATK_STATE_ACTIVE);
+    g_object_unref(state_set);
+  }
 
   return active;
 }
