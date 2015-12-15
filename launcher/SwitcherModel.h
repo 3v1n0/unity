@@ -121,6 +121,7 @@ private:
   void VerifyApplications();
   void UpdateLastActiveApplication();
   void OnIconQuirksChanged();
+  void OnIconWindowsUpdated(launcher::AbstractLauncherIcon*);
   void UnsetDetailSelection();
 
   void NextIndex();

@@ -165,7 +165,7 @@ void SwitcherModel::InsertIcon(AbstractLauncherIcon::Ptr const& application)
 void SwitcherModel::ConnectToIconSignals(launcher::AbstractLauncherIcon::Ptr const& icon)
 {
   icon->quirks_changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &SwitcherModel::OnIconQuirksChanged))));
-  icon->windows_changed.connect(sigc::hide(sigc::mem_fun(&updated, &decltype(updated)::emit)));
+  icon->windows_changed.connect(sigc::hide(sigc::bind(sigc::mem_fun(this, &SwitcherModel::OnIconWindowsUpdated), icon.GetPointer())));
 }
 
 void SwitcherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
@@ -230,6 +230,19 @@ void SwitcherModel::OnIconQuirksChanged()
 
   if (old_selection != new_selection)
     selection_changed.emit(new_selection);
+}
+
+void SwitcherModel::OnIconWindowsUpdated(AbstractLauncherIcon* icon)
+{
+  if (detail_selection() && icon == Selection().GetPointer())
+  {
+    auto windows = DetailXids();
+
+    if (detail_selection_index() >= windows.size())
+      detail_selection_index = windows.empty() ? 0 : windows.size() - 1;
+  }
+
+  updated.emit();
 }
 
 std::string SwitcherModel::GetName() const
