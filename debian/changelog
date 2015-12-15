@@ -1,3 +1,10 @@
+unity (7.4.0+16.04.20151211-0ubuntu2) xenial; urgency=medium
+
+  * rebuild against latest libunity to update the list of recommends
+    (LP: #1521208)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 15 Dec 2015 09:29:52 +0100
+
 unity (7.4.0+16.04.20151211-0ubuntu1) xenial; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
