@@ -306,6 +306,12 @@ msgstr ""
 msgid "Switching"
 msgstr ""
 
+msgid "Take a screenshot of the current window."
+msgstr ""
+
+msgid "Take a screenshot."
+msgstr ""
+
 msgid "The drive has been successfully ejected"
 msgstr ""
 

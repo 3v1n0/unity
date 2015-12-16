@@ -240,6 +240,17 @@ void CompizModeller::AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints)
                                                    _("Moves focus between indicators."),
                                                    shortcut::OptionType::HARDCODED,
                                                    _("Cursor Left or Right")));
+                                                   
+  //FIXME: These should not be hardcoded. Find a way to get these from Compiz 
+  hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
+                                                   _("Take a screenshot."),
+                                                   shortcut::OptionType::HARDCODED,
+                                                   "PrntScr"));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
+                                                   _("Take a screenshot of the current window."),
+                                                   shortcut::OptionType::HARDCODED,
+                                                   "Alt + PrntScr"));
 }
 
 void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints, bool ws_enabled)
