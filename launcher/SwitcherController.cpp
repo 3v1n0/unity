@@ -167,7 +167,7 @@ void Controller::Impl::CloseSelection()
   {
     // Using model_->Selection()->Close() would be nicer, but it wouldn't take
     // in consideration the workspace related settings
-    for (auto window : model_->DetailXids())
+    for (auto window : model_->SelectionWindows())
       WindowManager::Default().Close(window);
   }
 }
@@ -576,7 +576,7 @@ SwitcherView::Ptr Controller::Impl::GetView() const
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->Selection()->AllowDetailViewInSwitcher() && model_->DetailXids().size() >= min_windows)
+  if (value && model_->Selection()->AllowDetailViewInSwitcher() && model_->SelectionWindows().size() >= min_windows)
   {
     model_->detail_selection = true;
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
@@ -680,7 +680,7 @@ Selection Controller::Impl::GetCurrentSelection() const
       }
       else if (model_->SelectionIsActive())
       {
-        window = model_->DetailXids().front();
+        window = model_->SelectionWindows().front();
       }
     }
   }

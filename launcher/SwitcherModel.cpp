@@ -83,6 +83,10 @@ SwitcherModel::SwitcherModel(Applications const& icons, bool sort_by_priority)
   only_apps_on_viewport.changed.connect([this] (bool) {
     VerifyApplications();
   });
+
+  detail_selection.changed.connect([this] (bool) {
+    UpdateDetailXids();
+  });
 }
 
 void SwitcherModel::UpdateLastActiveApplication()
@@ -236,10 +240,10 @@ void SwitcherModel::OnIconWindowsUpdated(AbstractLauncherIcon* icon)
 {
   if (detail_selection() && icon == Selection().GetPointer())
   {
-    auto windows = DetailXids();
+    UpdateDetailXids();
 
-    if (detail_selection_index() >= windows.size())
-      detail_selection_index = windows.empty() ? 0 : windows.size() - 1;
+    if (detail_selection_index() >= detail_xids_.size())
+      detail_selection_index = detail_xids_.empty() ? 0 : detail_xids_.size() - 1;
   }
 
   updated.emit();
@@ -255,8 +259,8 @@ void SwitcherModel::AddProperties(debug::IntrospectionData& introspection)
   introspection
   .add("detail-selection", detail_selection)
   .add("detail-selection-index", detail_selection_index())
-  .add("detail-current-count", DetailXids().size())
-  .add("detail-windows", glib::Variant::FromVector(DetailXids()))
+  .add("detail-current-count", SelectionWindows().size())
+  .add("detail-windows", glib::Variant::FromVector(SelectionWindows()))
   .add("only-apps-on-viewport", only_apps_on_viewport())
   .add("selection-index", SelectionIndex())
   .add("last-selection-index", LastSelectionIndex());
@@ -337,8 +341,16 @@ int SwitcherModel::LastSelectionIndex() const
   return last_index_;
 }
 
-std::vector<Window> SwitcherModel::DetailXids() const
+std::vector<Window> const& SwitcherModel::DetailXids() const
 {
+  return detail_xids_;
+}
+
+std::vector<Window> SwitcherModel::SelectionWindows() const
+{
+  if (!detail_xids_.empty())
+    return detail_xids_;
+
   WindowManager& wm = WindowManager::Default();
   std::vector<Window> results;
 
@@ -366,16 +378,23 @@ std::vector<Window> SwitcherModel::DetailXids() const
   return results;
 }
 
+void SwitcherModel::UpdateDetailXids()
+{
+  detail_xids_.clear();
+
+  if (detail_selection)
+    detail_xids_ = SelectionWindows();
+}
+
 Window SwitcherModel::DetailSelectionWindow() const
 {
-  auto windows = DetailXids();
-  if (!detail_selection || windows.empty())
+  if (!detail_selection || detail_xids_.empty())
     return 0;
 
-  if (detail_selection_index > windows.size() - 1)
+  if (detail_selection_index > detail_xids_.size() - 1)
     return 0;
 
-  return windows[detail_selection_index];
+  return detail_xids_[detail_selection_index];
 }
 
 void SwitcherModel::UnsetDetailSelection()
@@ -416,7 +435,7 @@ void SwitcherModel::NextDetail()
   if (!detail_selection())
     return;
 
-  detail_selection_index = (detail_selection_index + 1) % DetailXids().size();
+  detail_selection_index = (detail_selection_index + 1) % detail_xids_.size();
   UpdateRowIndex();
 }
 
@@ -425,7 +444,7 @@ void SwitcherModel::PrevDetail()
   if (!detail_selection())
     return;
 
-  detail_selection_index = ((detail_selection_index() > 0) ? detail_selection_index : DetailXids().size()) - 1;
+  detail_selection_index = ((detail_selection_index() > 0) ? detail_selection_index : detail_xids_.size()) - 1;
   UpdateRowIndex();
 }
 
@@ -484,7 +503,7 @@ void SwitcherModel::NextDetailRow()
   }
   else
   {
-    detail_selection_index = (detail_selection_index + 1) % DetailXids().size();
+    detail_selection_index = (detail_selection_index + 1) % detail_xids_.size();
   }
 }
 
@@ -504,13 +523,13 @@ void SwitcherModel::PrevDetailRow()
   }
   else
   {
-    detail_selection_index = ((detail_selection_index() > 0) ? detail_selection_index : DetailXids().size()) - 1;
+    detail_selection_index = ((detail_selection_index() > 0) ? detail_selection_index : detail_xids_.size()) - 1;
   }
 }
 
 bool SwitcherModel::HasNextDetailRow() const
 {
-  return (detail_selection_index() < DetailXids().size() - 1);
+  return (detail_selection_index() < detail_xids_.size() - 1);
 }
 
 bool SwitcherModel::HasPrevDetailRow() const
