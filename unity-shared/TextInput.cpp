@@ -232,6 +232,7 @@ void TextInput::OnLockStateChanged(bool)
   }
 
   warning_->SetVisible(caps_lock_on() || num_lock_on());
+  warning_->SetOpacity((num_lock_on() && !caps_lock_on()) ? 0.3 : 1.0);
   warning_tooltip_.Release();
   QueueRelayout();
   QueueDraw();
