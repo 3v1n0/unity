@@ -270,12 +270,6 @@ msgstr ""
 msgid "Resizes the window."
 msgstr ""
 
-msgid "Take a screenshot."
-msgstr ""
-
-msgid "Take a screenshot of the current window."
-msgstr ""
-
 msgid "Shut Down"
 msgstr ""
 

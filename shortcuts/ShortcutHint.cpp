@@ -31,6 +31,8 @@ namespace unity
 namespace shortcut
 {
 
+const std::string GNOME_MEDIA_SETTINGS = "org.gnome.settings-daemon.plugins.media-keys";
+
 // Ctor
 Hint::Hint(std::string const& category,
            std::string const& prefix,
@@ -152,6 +154,22 @@ bool Hint::Fill()
         shortkey = prefix() + value() + postfix();
       }
       return true;
+    case OptionType::GNOME:
+    { 
+      GSettings* settings = g_settings_new(GNOME_MEDIA_SETTINGS.c_str());
+      std::string key = g_settings_get_string(settings, arg1().c_str());
+      
+      std::string temp(impl::GetTranslatableLabel(key));
+      temp = impl::ProperCase(temp);
+      
+      if (value() != temp)
+      {
+        value = temp;
+        shortkey = value();
+      }
+      
+      return true;
+    }
 
     default:
       LOG_WARNING(logger) << "Unable to find the option type" << static_cast<unsigned>(type()); 
