@@ -109,7 +109,7 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
             cmdline = open(os.path.join(pid_path, "cmdline"), "rb").read()
             if re.match(rb"^compiz\b", cmdline):
                 compiz_env = open(os.path.join(pid_path, "environ"), "rb").read()
-                if display in compiz_env:
+                if display in compiz_env.decode(sys.getdefaultencoding()):
                     subprocess.call (["kill", "-9", pid])
         except IOError:
             continue
