@@ -81,6 +81,7 @@ Depends: ${shlibs:Depends},
 Provides: indicator-renderer
 Recommends: unity-control-center,
             ${unity-default-masterscopes}
+            nautilus,
             indicator-appmenu (>= 15.02.0),
             indicator-application,
             indicator-sound,
