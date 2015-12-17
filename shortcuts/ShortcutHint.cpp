@@ -21,18 +21,19 @@
 
 #include <core/core.h> // Compiz...
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "ShortcutHintPrivate.h"
-
-DECLARE_LOGGER(logger, "unity.shortcut");
 
 namespace unity
 {
 namespace shortcut
 {
-
-const std::string GNOME_MEDIA_SETTINGS = "org.gnome.settings-daemon.plugins.media-keys";
-
+namespace
+{
+    const std::string GNOME_MEDIA_SETTINGS = "org.gnome.settings-daemon.plugins.media-keys";
+    DECLARE_LOGGER(logger, "unity.shortcut");
+}
 // Ctor
 Hint::Hint(std::string const& category,
            std::string const& prefix,
@@ -155,11 +156,11 @@ bool Hint::Fill()
       }
       return true;
     case OptionType::GNOME:
-    { 
-      GSettings* settings = g_settings_new(GNOME_MEDIA_SETTINGS.c_str());
-      std::string key = g_settings_get_string(settings, arg1().c_str());
-      
-      std::string temp(impl::GetTranslatableLabel(key));
+    {
+      glib::Object<GSettings> key_settings(g_settings_new(GNOME_MEDIA_SETTINGS.c_str()));
+      glib::String key(g_settings_get_string(settings, arg1().c_str()));
+
+      std::string temp(impl::GetTranslatableLabel(key.Str()));
       temp = impl::ProperCase(temp);
       
       if (value() != temp)
