@@ -262,6 +262,7 @@ pkg_check_modules (CACHED_UNITY_PRIVATE_DEPS REQUIRED ${UNITY_PROTOCOL_PRIVATE_D
 find_library (UNITY_PROTOCOL_PRIVATE_LIB unity-protocol-private ${CACHED_UNITY_PRIVATE_DEPS_LIBDIR} ${CACHED_UNITY_PRIVATE_DEPS_LIBRARY_DIRS})
 set(UNITY_STANDALONE_LADD ${UNITY_STANDALONE_LADD} ${UNITY_PROTOCOL_PRIVATE_LIB})
 
+add_subdirectory(a11y)
 add_subdirectory(unity-shared)
 add_subdirectory(dash)
 add_subdirectory(launcher)

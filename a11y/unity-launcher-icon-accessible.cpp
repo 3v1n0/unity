@@ -245,8 +245,10 @@ unity_launcher_icon_accessible_initialize(AtkObject* accessible,
 
   accessible->role = ATK_ROLE_PUSH_BUTTON;
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
   atk_component_add_focus_handler(ATK_COMPONENT(accessible),
                                   unity_launcher_icon_accessible_focus_handler);
+G_GNUC_END_IGNORE_DEPRECATIONS
 
   /* we could do that by redefining ->set_parent */
   self->priv->on_parent_change_id =
@@ -384,7 +386,7 @@ check_selected(UnityLauncherIconAccessible* self)
                                    found);
 
     g_signal_emit_by_name(self, "focus-event", self->priv->selected, &return_val);
-    atk_focus_tracker_notify(ATK_OBJECT(self));
+    atk_object_notify_state_change(ATK_OBJECT(self), ATK_STATE_FOCUSED, self->priv->selected);
   }
 }
 
