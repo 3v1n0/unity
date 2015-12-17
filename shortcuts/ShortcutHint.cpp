@@ -158,7 +158,7 @@ bool Hint::Fill()
     case OptionType::GNOME:
     {
       glib::Object<GSettings> key_settings(g_settings_new(GNOME_MEDIA_SETTINGS.c_str()));
-      glib::String key(g_settings_get_string(settings, arg1().c_str()));
+      glib::String key(g_settings_get_string(key_settings, arg1().c_str()));
 
       std::string temp(impl::GetTranslatableLabel(key.Str()));
       temp = impl::ProperCase(temp);
