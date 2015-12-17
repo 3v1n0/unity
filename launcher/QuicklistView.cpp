@@ -81,8 +81,16 @@ QuicklistView::QuicklistView(int monitor)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
 
-  _left_space = new nux::SpaceLayout(RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
-                                     RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
+  int width = 0;
+  int height = 0;
+  // when launcher is at left, the anchor is on the left of the menuitem, and
+  // when launcher is at bottom, the anchor is at the bottom of the menuitem.
+  if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
+    width = ANCHOR_WIDTH;
+  else
+    height = ANCHOR_WIDTH;
+  _left_space = new nux::SpaceLayout(RawPixel(_padding + width + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
+                                     RawPixel(_padding + width + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
                                      1, MAX_HEIGHT.CP(cv_));
 
   _right_space = new nux::SpaceLayout(_padding.CP(cv_) + CORNER_RADIUS.CP(cv_),
@@ -94,8 +102,8 @@ QuicklistView::QuicklistView(int monitor)
                                     _padding.CP(cv_) + CORNER_RADIUS.CP(cv_));
 
   _bottom_space = new nux::SpaceLayout(1, MAX_WIDTH.CP(cv_),
-                                       _padding.CP(cv_) + CORNER_RADIUS.CP(cv_),
-                                       _padding.CP(cv_) + CORNER_RADIUS.CP(cv_));
+                                       _padding.CP(cv_) + height + CORNER_RADIUS.CP(cv_),
+                                       _padding.CP(cv_) + height + CORNER_RADIUS.CP(cv_));
 
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_top_space, 0);
@@ -129,12 +137,22 @@ QuicklistView::QuicklistView(int monitor)
 
 int QuicklistView::CalculateX() const
 {
-  return _anchorX - _padding.CP(cv_);
+  int x;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    x = _anchorX - _padding.CP(cv_);
+  else
+    x = _anchorX - (ANCHOR_HEIGHT.CP(cv_) / 2) - _top_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  return x;
 }
 
 int QuicklistView::CalculateY() const
 {
-  return _anchorY - (ANCHOR_HEIGHT.CP(cv_) / 2) - _top_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  int y;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    y = _anchorY - (ANCHOR_HEIGHT.CP(cv_) / 2) - _top_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  else
+    y = _anchorY - GetBaseHeight() + _padding.CP(cv_);
+  return y;
 }
 
 void
@@ -338,7 +356,11 @@ void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
       auto* us = UScreen::GetDefault();
       int ql_monitor = us->GetMonitorAtPosition(_anchorX, _anchorY);
       auto const& ql_monitor_geo = us->GetMonitorGeometry(ql_monitor);
-      int offscreen_size = GetBaseY() + GetBaseHeight() - (ql_monitor_geo.y + ql_monitor_geo.height);
+      int offscreen_size = 0;
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        offscreen_size = GetBaseY() + GetBaseHeight() - (ql_monitor_geo.y + ql_monitor_geo.height);
+      else
+        offscreen_size = GetBaseX() + GetBaseWidth() - (ql_monitor_geo.x + ql_monitor_geo.width);
 
       if (offscreen_size > 0)
         _top_size = offscreen_size + TOP_SIZE;
@@ -442,10 +464,14 @@ void QuicklistView::PreLayoutManagement()
     TotalItemHeight += text_extents.height;
   }
 
+  int rotated_anchor_height = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    rotated_anchor_height = ANCHOR_WIDTH;
+
   if (TotalItemHeight < ANCHOR_HEIGHT.CP(cv_))
   {
-    int b = (ANCHOR_HEIGHT.CP(cv_) - TotalItemHeight) / 2 + _padding.CP(cv_) + CORNER_RADIUS.CP(cv_);
-    int t = b + OFFSET_CORRECTION.CP(cv_);
+    int b = (ANCHOR_HEIGHT.CP(cv_) - TotalItemHeight) / 2 + _padding.CP(cv_) + CORNER_RADIUS.CP(cv_) + rotated_anchor_height;
+    int t = b + OFFSET_CORRECTION.CP(cv_) - rotated_anchor_height;
 
     _top_space->SetMinimumHeight(t);
     _top_space->SetMaximumHeight(t);
@@ -455,8 +481,8 @@ void QuicklistView::PreLayoutManagement()
   }
   else
   {
-    int b = _padding.CP(cv_) + CORNER_RADIUS.CP(cv_);
-    int t = b + OFFSET_CORRECTION.CP(cv_);
+    int b = _padding.CP(cv_) + CORNER_RADIUS.CP(cv_) + rotated_anchor_height;
+    int t = b + OFFSET_CORRECTION.CP(cv_) - rotated_anchor_height;
 
     _top_space->SetMinimumHeight(t);
     _top_space->SetMaximumHeight(t);
@@ -476,7 +502,10 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
 
   UpdateTexture();
 
-  int x = RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + OFFSET_CORRECTION).CP(cv_);
+  int width = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    width = ANCHOR_WIDTH;
+  int x = RawPixel(_padding + width + CORNER_RADIUS + OFFSET_CORRECTION).CP(cv_);
   int y = _top_space->GetMinimumHeight();
 
   for (auto const& item : _item_list)
@@ -864,27 +893,28 @@ void ql_compute_full_mask_path(cairo_t* cr,
                                gfloat   radius,
                                guint    pad)
 {
-  //     0  1        2  3
-  //     +--+--------+--+
-  //     |              |
-  //     + 14           + 4
-  //     |              |
-  //     |              |
-  //     |              |
-  //     + 13           |
-  //    /               |
-  //   /                |
-  //  + 12              |
-  //   \                |
-  //    \               |
-  //  11 +              |
-  //     |              |
-  //     |              |
-  //     |              |
-  //  10 +              + 5
-  //     |              |
-  //     +--+--------+--+ 6
-  //     9  8        7
+  //  launcher at left:           launcher at bottom:
+  //     0  1        2  3            0  1           2  3
+  //     +--+--------+--+            +--+-----------+--+
+  //     |              |            |                 |
+  //     + 14           + 4       14 +                 + 4
+  //     |              |            |                 |
+  //     |              |            |                 |
+  //     |              |            |                 |
+  //     + 13           |            |                 |
+  //    /               |            |                 |
+  //   /                |            |                 |
+  //  + 12              |            |                 |
+  //   \                |            |                 |
+  //    \               |            |                 |
+  //  11 +              |            |                 |
+  //     |              |         13 +                 + 5
+  //     |              |            |     10    8     |
+  //     |              |         12 +--+--+     +--+--+ 6
+  //  10 +              + 5             11  \   /   7
+  //     |              |                    \ /
+  //     +--+--------+--+ 6                   +
+  //     9  8        7                        9
 
 
   gfloat padding  = pad;
@@ -901,72 +931,121 @@ void ql_compute_full_mask_path(cairo_t* cr,
   //gint upper_dynamic_size = upper_size;
   //gint lower_dynamic_size = dynamic_size - upper_dynamic_size;
 
+  int size = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    size = height;
+  else
+    size = width;
   if (upper_size >= 0)
   {
-    if (upper_size > height - 2.0f * radius - anchor_height - 2 * padding)
+    if (upper_size > size - 2.0f * radius - anchor_height - 2 * padding)
     {
       //g_warning ("[_compute_full_mask_path] incorrect upper_size value");
       HeightToAnchor = 0;
     }
     else
     {
-      HeightToAnchor = height - 2.0f * radius - anchor_height - 2 * padding - upper_size;
+      HeightToAnchor = size - 2.0f * radius - anchor_height - 2 * padding - upper_size;
     }
   }
   else
   {
-    HeightToAnchor = (height - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
+    HeightToAnchor = (size - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
   }
 
   cairo_translate(cr, -0.5f, -0.5f);
 
   // create path
-  cairo_move_to(cr, padding + anchor_width + radius + ZEROPOINT5, padding + ZEROPOINT5);  // Point 1
-  cairo_line_to(cr, width - padding - radius, padding + ZEROPOINT5);    // Point 2
-  cairo_arc(cr,
-            width  - padding - radius + ZEROPOINT5,
-            padding + radius + ZEROPOINT5,
-            radius,
-            -90.0f * G_PI / 180.0f,
-            0.0f * G_PI / 180.0f);   // Point 4
-  cairo_line_to(cr,
-                (gdouble) width - padding + ZEROPOINT5,
-                (gdouble) height - radius - padding + ZEROPOINT5); // Point 5
-  cairo_arc(cr,
-            (gdouble) width - padding - radius + ZEROPOINT5,
-            (gdouble) height - padding - radius + ZEROPOINT5,
-            radius,
-            0.0f * G_PI / 180.0f,
-            90.0f * G_PI / 180.0f);  // Point 7
-  cairo_line_to(cr,
-                anchor_width + padding + radius + ZEROPOINT5,
-                (gdouble) height - padding + ZEROPOINT5); // Point 8
-
-  cairo_arc(cr,
-            anchor_width + padding + radius + ZEROPOINT5,
-            (gdouble) height - padding - radius,
-            radius,
-            90.0f * G_PI / 180.0f,
-            180.0f * G_PI / 180.0f); // Point 10
-
-  cairo_line_to(cr,
-                padding + anchor_width + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor + ZEROPOINT5);   // Point 11
-  cairo_line_to(cr,
-                padding + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor - anchor_height / 2.0f + ZEROPOINT5); // Point 12
-  cairo_line_to(cr,
-                padding + anchor_width + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor - anchor_height + ZEROPOINT5);  // Point 13
-
-  cairo_line_to(cr, padding + anchor_width + ZEROPOINT5, padding + radius  + ZEROPOINT5);   // Point 14
-  cairo_arc(cr,
-            padding + anchor_width + radius + ZEROPOINT5,
-            padding + radius + ZEROPOINT5,
-            radius,
-            180.0f * G_PI / 180.0f,
-            270.0f * G_PI / 180.0f);
-
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    cairo_move_to(cr, padding + anchor_width + radius + ZEROPOINT5, padding + ZEROPOINT5);  // Point 1
+    cairo_line_to(cr, width - padding - radius, padding + ZEROPOINT5);    // Point 2
+    cairo_arc(cr,
+              width  - padding - radius + ZEROPOINT5,
+              padding + radius + ZEROPOINT5,
+              radius,
+              -90.0f * G_PI / 180.0f,
+              0.0f * G_PI / 180.0f);   // Point 4
+    cairo_line_to(cr,
+                  (gdouble) width - padding + ZEROPOINT5,
+                  (gdouble) height - radius - padding + ZEROPOINT5); // Point 5
+    cairo_arc(cr,
+              (gdouble) width - padding - radius + ZEROPOINT5,
+              (gdouble) height - padding - radius + ZEROPOINT5,
+              radius,
+              0.0f * G_PI / 180.0f,
+              90.0f * G_PI / 180.0f);  // Point 7
+    cairo_line_to(cr,
+                  anchor_width + padding + radius + ZEROPOINT5,
+                  (gdouble) height - padding + ZEROPOINT5); // Point 8
+    cairo_arc(cr,
+              anchor_width + padding + radius + ZEROPOINT5,
+              (gdouble) height - padding - radius,
+              radius,
+              90.0f * G_PI / 180.0f,
+              180.0f * G_PI / 180.0f); // Point 10
+    cairo_line_to(cr,
+                  padding + anchor_width + ZEROPOINT5,
+                  (gdouble) height - padding - radius - HeightToAnchor + ZEROPOINT5);   // Point 11
+    cairo_line_to(cr,
+                  padding + ZEROPOINT5,
+                  (gdouble) height - padding - radius - HeightToAnchor - anchor_height / 2.0f + ZEROPOINT5); // Point 12
+    cairo_line_to(cr,
+                  padding + anchor_width + ZEROPOINT5,
+                  (gdouble) height - padding - radius - HeightToAnchor - anchor_height + ZEROPOINT5);  // Point 13
+    cairo_line_to(cr, padding + anchor_width + ZEROPOINT5, padding + radius  + ZEROPOINT5);   // Point 14
+    cairo_arc(cr,
+              padding + anchor_width + radius + ZEROPOINT5,
+              padding + radius + ZEROPOINT5,
+              radius,
+              180.0f * G_PI / 180.0f,
+              270.0f * G_PI / 180.0f);
+  }
+  else
+  {
+    cairo_move_to(cr, padding + radius + ZEROPOINT5, padding + ZEROPOINT5);  // Point 1
+    cairo_line_to(cr, width - padding - radius, padding + ZEROPOINT5);    // Point 2
+    cairo_arc(cr,
+              width  - padding - radius + ZEROPOINT5,
+              padding + radius + ZEROPOINT5,
+              radius,
+              -90.0f * G_PI / 180.0f,
+              0.0f * G_PI / 180.0f);   // Point 4
+    cairo_line_to(cr,
+                  (gdouble) width - padding + ZEROPOINT5,
+                  (gdouble) height - radius - anchor_width - padding + ZEROPOINT5); // Point 5
+    cairo_arc(cr,
+              (gdouble) width - padding - radius + ZEROPOINT5,
+              (gdouble) height - padding - anchor_width - radius + ZEROPOINT5,
+              radius,
+              0.0f * G_PI / 180.0f,
+              90.0f * G_PI / 180.0f);  // Point 7
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - HeightToAnchor + ZEROPOINT5,
+                  height - padding - anchor_width + ZEROPOINT5);   // Point 8
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - HeightToAnchor - anchor_height / 2.0f + ZEROPOINT5,
+                  height - padding + ZEROPOINT5); // Point 9
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - HeightToAnchor - anchor_height + ZEROPOINT5,
+                  height - padding - anchor_width + ZEROPOINT5);  // Point 10
+    cairo_arc(cr,
+              padding + radius + ZEROPOINT5,
+              (gdouble) height - padding - anchor_width - radius,
+              radius,
+              90.0f * G_PI / 180.0f,
+              180.0f * G_PI / 180.0f); // Point 11
+    cairo_line_to(cr,
+                  padding + ZEROPOINT5,
+                  (gdouble) height - padding -anchor_width - radius + ZEROPOINT5); // Point 13
+    cairo_line_to(cr, padding + ZEROPOINT5, padding + radius  + ZEROPOINT5);   // Point 14
+    cairo_arc(cr,
+              padding + radius + ZEROPOINT5,
+              padding + radius + ZEROPOINT5,
+              radius,
+              180.0f * G_PI / 180.0f,
+              270.0f * G_PI / 180.0f);
+  }
   cairo_close_path(cr);
 }
 
