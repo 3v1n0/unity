@@ -49,14 +49,13 @@ namespace dash
 {
 namespace
 {
-
-const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
-const float kExpandDefaultIconOpacity = 0.5f;
+const nux::Color EXPAND_DEFAULT_TEXT_COLOR(1.0f, 1.0f, 1.0f, 0.5f);
+const float EXPAND_DEFAULT_ICON_OPACITY = 0.5f;
 
 // Category  highlight
-const RawPixel kHighlightRightPadding =  7_em; // FIXME 10 - 3 because the scrollbar is not a real overlay scrollbar!
-const RawPixel kHighlightHeight       = 24_em;
-const RawPixel kHighlightLeftPadding  = 10_em;
+const RawPixel HIGHLIGHT_RIGHT_PADDING = 10_em;
+const RawPixel HIGHLIGHT_HEIGHT       = 24_em;
+const RawPixel HIGHLIGHT_LEFT_PADDING = 10_em;
 const RawPixel SPACE_BETWEEN_CHILDREN = 10_em;
 const RawPixel TEXT_INTERNAL_MARGIN   = 15_em;
 const RawPixel EXPAND_INTERNAL_MARGIN =  8_em;
@@ -65,7 +64,6 @@ const double DEFAULT_SCALE            = 1.0;
 // Font
 const char* const NAME_LABEL_FONT     = "Ubuntu 13"; // 17px = 13
 const char* const EXPANDER_LABEL_FONT = "Ubuntu 10"; // 13px = 10
-
 }
 
 class HeaderView : public nux::View
@@ -184,12 +182,12 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _expand_label->SetLines(-1);
   _expand_label->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
-  _expand_label->SetTextColor(kExpandDefaultTextColor);
+  _expand_label->SetTextColor(EXPAND_DEFAULT_TEXT_COLOR);
   _expand_label_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new IconTexture(_style.GetGroupExpandIcon());
   _expand_icon->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
-  _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
+  _expand_icon->SetOpacity(EXPAND_DEFAULT_ICON_OPACITY);
   _expand_icon->SetVisible(false);
   _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
@@ -466,9 +464,9 @@ long PlacesGroup::ComputeContentSize()
   if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
     _focus_layer.reset(_style.FocusOverlay(geo.width -
-                                           kHighlightLeftPadding.CP(scale()) -
-                                           kHighlightRightPadding.CP(scale()),
-                                           kHighlightHeight.CP(scale())));
+                                           HIGHLIGHT_LEFT_PADDING.CP(scale()) -
+                                           HIGHLIGHT_RIGHT_PADDING.CP(scale()),
+                                           HIGHLIGHT_HEIGHT.CP(scale())));
     _cached_geometry = geo;
   }
   return ret;
@@ -487,10 +485,10 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   {
     nux::Geometry geo(_header_layout->GetGeometry());
     geo.width = base.width -
-                kHighlightRightPadding.CP(scale()) -
-                kHighlightLeftPadding.CP(scale());
+                HIGHLIGHT_RIGHT_PADDING.CP(scale()) -
+                HIGHLIGHT_LEFT_PADDING.CP(scale());
 
-    geo.x += kHighlightLeftPadding.CP(scale());
+    geo.x += HIGHLIGHT_LEFT_PADDING.CP(scale());
 
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);
@@ -500,9 +498,10 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   {
     nux::Geometry bg_geo = base;
     int bg_width = _background_layer->GetDeviceTexture()->GetWidth();
-    bg_geo.x = std::max(bg_geo.width - bg_width,0);
-    
-    bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1; // to render into a space left over by the scrollview
+    bg_geo.x = std::max(bg_geo.width - bg_width, 0);
+
+    // to render into a space left over by the scrollview (1 has NOT to be scaled)
+    bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1;
     bg_geo.height = _background->GetHeight();
 
     _background_layer->SetGeometry(bg_geo);

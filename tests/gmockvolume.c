@@ -234,7 +234,7 @@ g_mock_volume_mount (GVolume            *volume,
   g_mock_volume_set_mount(mock_volume, G_MOUNT(g_mock_mount_new()));
 
   callback(G_OBJECT (volume),
-           G_ASYNC_RESULT (g_simple_async_result_new (G_OBJECT (volume), callback, user_data, NULL)),
+           G_TASK (g_task_new (G_OBJECT (volume), NULL, callback, user_data)),
            user_data);
 }
 
@@ -254,7 +254,7 @@ g_mock_volume_eject (GVolume             *volume,
                      gpointer             user_data)
 {
   callback(G_OBJECT (volume),
-           G_ASYNC_RESULT (g_simple_async_result_new (G_OBJECT (volume), callback, user_data, NULL)),
+           G_TASK (g_task_new (G_OBJECT (volume), NULL, callback, user_data)),
            user_data);
 }
 

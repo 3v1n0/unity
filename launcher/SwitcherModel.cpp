@@ -42,7 +42,7 @@ bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
 }
 
 
-SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons, bool sort_by_priority)
+SwitcherModel::SwitcherModel(Applications const& icons, bool sort_by_priority)
   : detail_selection(false)
   , detail_selection_index(0)
   , only_apps_on_viewport(true)

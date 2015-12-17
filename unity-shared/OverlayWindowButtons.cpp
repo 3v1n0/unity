@@ -72,6 +72,9 @@ void OverlayWindowButtons::UpdateGeometry()
 
 void OverlayWindowButtons::Show()
 {
+  if (!nux::GetWindowThread()->IsEmbeddedWindow())
+    return;
+
   UpdateGeometry();
   ShowWindow(true);
   PushToFront();
@@ -80,6 +83,9 @@ void OverlayWindowButtons::Show()
 
 void OverlayWindowButtons::Hide()
 {
+  if (!nux::GetWindowThread()->IsEmbeddedWindow())
+    return;
+
   ShowWindow(false);
   PushToBack();
   QueueDraw();

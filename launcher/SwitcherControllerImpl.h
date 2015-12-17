@@ -62,6 +62,8 @@ struct Controller::Impl : public sigc::trackable
   void NextDetail();
   void PrevDetail();
 
+  void CloseSelection();
+
   void NextDetailRow();
   void PrevDetailRow();
   bool HasNextDetailRow() const;

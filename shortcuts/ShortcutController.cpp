@@ -53,6 +53,10 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
 
   WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
   fade_animator_.updated.connect(sigc::mem_fun(this, &Controller::SetOpacity));
+  fade_animator_.finished.connect([this] {
+    if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
+      view_window_->ShowWindow(false);
+  });
   modeller_->model_changed.connect(sigc::mem_fun(this, &Controller::OnModelUpdated));
 }
 
@@ -120,6 +124,7 @@ bool Controller::OnShowTimer()
   if (visible_)
   {
     view_->live_background = true;
+    view_window_->ShowWindow(true);
     animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
   }
 
@@ -171,7 +176,7 @@ void Controller::ConstructView()
 
   main_layout_->AddView(view_.GetPointer());
 
-  view_window_->ShowWindow(true);
+  view_window_->ShowWindow(false);
   SetOpacity(0.0);
 }
 

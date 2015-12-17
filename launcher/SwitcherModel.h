@@ -61,7 +61,7 @@ public:
   nux::Property<unsigned int> detail_selection_index;
   nux::Property<bool>         only_apps_on_viewport;
 
-  SwitcherModel(std::vector<launcher::AbstractLauncherIcon::Ptr> const& icons, bool sort_by_priority);
+  SwitcherModel(Applications const&, bool sort_by_priority);
   virtual ~SwitcherModel() = default;
 
   iterator begin();
