@@ -604,8 +604,9 @@ nux::Geometry SwitcherView::UpdateRenderTargets(float progress)
 
   for (Window window : xids)
   {
-    auto layout_window = std::make_shared<LayoutWindow>(window);
     bool selected = (window == model_->DetailSelectionWindow());
+    auto layout_window = std::make_shared<LayoutWindow>(window);
+    layout_window->ComputeDecorationHeight();
     layout_window->selected = selected;
     layout_window->alpha = (selected ? 1.0f : 0.9f) * progress;
 

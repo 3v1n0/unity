@@ -81,11 +81,71 @@ TEST_F(TestLayoutWindow, InitializationMaximizedWindow)
   auto fake_window = AddFakeWindowToWM(xid);
   wm->Maximize(xid);
 
+  LayoutWindow lwin(xid);
+  EXPECT_EQ(lwin.xid, xid);
+  EXPECT_EQ(lwin.geo, fake_window->geo);
+  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.selected, false);
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
+}
+
+TEST_F(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
+{
+  const Window xid = g_random_int();
+  auto fake_window = AddFakeWindowToWM(xid);
+  wm->Maximize(xid);
+  wm->Minimize(xid);
+
+  LayoutWindow lwin(xid);
+  EXPECT_EQ(lwin.xid, xid);
+  EXPECT_EQ(lwin.geo, fake_window->geo);
+  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.selected, false);
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
+}
+
+TEST_F(TestLayoutWindow, DecorationHeightNormalWindow)
+{
+  const Window xid = g_random_int();
+  auto fake_window = AddFakeWindowToWM(xid);
+
+  LayoutWindow lwin(xid);
+  lwin.ComputeDecorationHeight();
+  EXPECT_EQ(lwin.xid, xid);
+  EXPECT_EQ(lwin.geo, fake_window->geo);
+  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.selected, false);
+  EXPECT_FLOAT_EQ(lwin.scale, 1.0f);
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
+}
+
+TEST_F(TestLayoutWindow, DecorationHeightMinimizedNormalWindow)
+{
+  const Window xid = g_random_int();
+  auto fake_window = AddFakeWindowToWM(xid);
+  wm->Minimize(xid);
+
+  LayoutWindow lwin(xid);
+  lwin.ComputeDecorationHeight();
+  EXPECT_EQ(lwin.xid, xid);
+  EXPECT_EQ(lwin.geo, fake_window->geo);
+  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.selected, false);
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
+}
+
+TEST_F(TestLayoutWindow, DecorationHeightMaximizedWindow)
+{
+  const Window xid = g_random_int();
+  auto fake_window = AddFakeWindowToWM(xid);
+  wm->Maximize(xid);
+
   nux::Geometry expected_geo(fake_window->geo);
   unsigned top_deco = wm->GetWindowDecorationSize(xid, WindowManager::Edge::TOP).height;
   expected_geo.height += top_deco;
 
   LayoutWindow lwin(xid);
+  lwin.ComputeDecorationHeight();
   EXPECT_EQ(lwin.xid, xid);
   EXPECT_EQ(lwin.geo, expected_geo);
   EXPECT_EQ(lwin.decoration_height, top_deco);
@@ -93,7 +153,7 @@ TEST_F(TestLayoutWindow, InitializationMaximizedWindow)
   EXPECT_EQ(lwin.aspect_ratio, expected_geo.width / static_cast<float>(expected_geo.height));
 }
 
-TEST_F(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
+TEST_F(TestLayoutWindow, DecorationHeightMinimizedMaximizedWindow)
 {
   const Window xid = g_random_int();
   auto fake_window = AddFakeWindowToWM(xid);
