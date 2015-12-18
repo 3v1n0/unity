@@ -36,7 +36,8 @@ enum class OptionType : unsigned
   COMPIZ_KEY = 0,
   COMPIZ_METAKEY,
   COMPIZ_MOUSE,
-  HARDCODED
+  HARDCODED,
+  GNOME
   /* GSETTINGS,
    * GCONF */
 };

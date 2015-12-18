@@ -242,6 +242,16 @@ void CompizModeller::AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints)
                                                    _("Moves focus between indicators."),
                                                    shortcut::OptionType::HARDCODED,
                                                    _("Cursor Left or Right")));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
+                                                   _("Take a screenshot."),
+                                                   shortcut::OptionType::GNOME,
+                                                   "screenshot"));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
+                                                   _("Take a screenshot of the current window."),
+                                                   shortcut::OptionType::GNOME,
+                                                   "window-screenshot"));
 }
 
 void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints, bool ws_enabled)
