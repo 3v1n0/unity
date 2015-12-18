@@ -295,7 +295,7 @@ nux_view_accessible_check_pending_notification(NuxAreaAccessible* area_accessibl
     return FALSE;
 
   g_signal_emit_by_name(self, "focus_event", self->priv->key_focused);
-  atk_focus_tracker_notify(ATK_OBJECT(self));
+  atk_object_notify_state_change(ATK_OBJECT(self), ATK_STATE_FOCUSED, self->priv->key_focused);
   self->priv->pending_notification = FALSE;
 
   return TRUE;

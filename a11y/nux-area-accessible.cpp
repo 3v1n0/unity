@@ -178,8 +178,10 @@ nux_area_accessible_initialize(AtkObject* accessible,
   /* focus support based on Focusable, used on the Dash */
   area->key_nav_focus_change.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
   atk_component_add_focus_handler(ATK_COMPONENT(accessible),
                                   nux_area_accessible_focus_handler);
+G_GNUC_END_IGNORE_DEPRECATIONS
 
   /* NOTE: we can't search for the parent window on initialization as a
      general rule, or we could enter an infinite loop. At area this
@@ -534,8 +536,8 @@ nux_area_accessible_real_check_pending_notification(NuxAreaAccessible* self)
   if (nux_object == NULL) /* defunct */
     return FALSE;
 
-  g_signal_emit_by_name(self, "focus_event", self->priv->focused);
-  atk_focus_tracker_notify(ATK_OBJECT(self));
+  g_signal_emit_by_name(self, "focus-event", self->priv->focused);
+  atk_object_notify_state_change(ATK_OBJECT(self), ATK_STATE_FOCUSED, self->priv->focused);
   self->priv->pending_notification = FALSE;
 
   return TRUE;
@@ -573,7 +575,7 @@ check_focus(NuxAreaAccessible* self)
     else
     {
       g_signal_emit_by_name(self, "focus_event", focus_in);
-      atk_focus_tracker_notify(ATK_OBJECT(self));
+      atk_object_notify_state_change(ATK_OBJECT(self), ATK_STATE_FOCUSED, focus_in);
       self->priv->pending_notification = FALSE;
     }
   }
