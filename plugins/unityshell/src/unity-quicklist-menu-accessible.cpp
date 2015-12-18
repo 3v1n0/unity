@@ -269,10 +269,14 @@ unity_quicklist_menu_accessible_ref_selection(AtkSelection* selection,
     return NULL;
 
   child = quicklist->GetSelectedMenuItem();
-  child_accessible = unity_a11y_get_accessible(child);
 
-  if (child_accessible != NULL)
-    g_object_ref(child_accessible);
+  if (child != NULL)
+  {
+    child_accessible = unity_a11y_get_accessible(child);
+
+    if (child_accessible != NULL)
+      g_object_ref(child_accessible);
+  }
 
   return child_accessible;
 }

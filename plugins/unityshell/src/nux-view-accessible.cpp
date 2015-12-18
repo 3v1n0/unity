@@ -134,7 +134,7 @@ nux_view_accessible_initialize(AtkObject* accessible,
   accessible->role = ATK_ROLE_UNKNOWN;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
-  view = dynamic_cast<nux::View*>(nux_object);
+  view = static_cast<nux::View*>(nux_object);
 
   view->LayoutAdded.connect(sigc::bind(sigc::ptr_fun(on_layout_changed_cb),
                                        accessible, TRUE));
@@ -187,8 +187,7 @@ nux_view_accessible_get_n_children(AtkObject* obj)
   if (nux_object == NULL) /* state is defunct */
     return 0;
 
-  view = dynamic_cast<nux::View*>(nux_object);
-
+  view = static_cast<nux::View*>(nux_object);
   layout = view->GetLayout();
 
   if (layout == NULL)
@@ -216,8 +215,7 @@ nux_view_accessible_ref_child(AtkObject* obj,
   if (nux_object == NULL) /* state is defunct */
     return 0;
 
-  view = dynamic_cast<nux::View*>(nux_object);
-
+  view = static_cast<nux::View*>(nux_object);
   layout = view->GetLayout();
 
   layout_accessible = unity_a11y_get_accessible(layout);

@@ -153,8 +153,7 @@ unity_session_button_accessible_initialize(AtkObject* accessible,
   if (nux_object == NULL) /* defunct */
     return;
 
-  button = dynamic_cast<Button*>(nux_object);
-
+  button = static_cast<Button*>(nux_object);
   button->highlighted.changed.connect(sigc::bind(sigc::ptr_fun(on_focus_change_cb),
                                                  UNITY_SESSION_BUTTON_ACCESSIBLE(self)));
 }
