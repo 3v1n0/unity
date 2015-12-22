@@ -1042,7 +1042,10 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
                                     nux::Geometry const& geo)
 {
   int markerCenter = 0;
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  bool switcher_mode = (pip_style != OUTSIDE_TILE);
+  bool left_markers = (switcher_mode || Settings::Instance().launcher_position() == LauncherPosition::LEFT);
+
+  if (left_markers)
   {
     markerCenter = (int) arg.render_center.y;
     markerCenter -= (int)(arg.rotation.x / (2 * M_PI) * icon_size);
@@ -1058,7 +1061,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   if (running > 0)
   {
     int markerX = 0;
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    if (left_markers)
     {
       if (pip_style == OUTSIDE_TILE)
       {
@@ -1089,7 +1092,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     if (!arg.running_on_viewport)
     {
       markers[0] = markerCenter;
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      if (left_markers)
         texture = local_textures_->arrow_empty_ltr;
       else
         texture = local_textures_->arrow_empty_btt;
@@ -1097,7 +1100,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     else if (running == 1)
     {
       markers[0] = markerCenter;
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      if (left_markers)
         texture = local_textures_->arrow_ltr;
       else
         texture = local_textures_->arrow_btt;
@@ -1105,7 +1108,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     else if (running == 2)
     {
       int texture_size = 0;
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      if (left_markers)
       {
         texture = local_textures_->pip_ltr;
         texture_size = texture->GetHeight();
@@ -1124,7 +1127,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     else
     {
       int texture_size = 0;
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      if (left_markers)
       {
         texture = local_textures_->pip_ltr;
         texture_size = texture->GetHeight();
@@ -1143,7 +1146,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     }
 
     int markerY = 0;
-    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    if (!left_markers)
     {
       if (pip_style == OUTSIDE_TILE)
       {
@@ -1163,22 +1166,18 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
       if (center == -100)
         break;
 
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-        GfxContext.QRP_1Tex(markerX,
-                            center - std::round(texture->GetHeight() / 2.0f),
-                            texture->GetWidth(),
-                            texture->GetHeight(),
-                            texture->GetDeviceTexture(),
-                            texxform,
-                            color);
+      if (left_markers)
+        markerY = center - std::round(texture->GetHeight() / 2.0f);
       else
-        GfxContext.QRP_1Tex(center - std::round(texture->GetWidth() / 2.0f),
-                            markerY,
-                            texture->GetWidth(),
-                            texture->GetHeight(),
-                            texture->GetDeviceTexture(),
-                            texxform,
-                            color);
+        markerX = center - std::round(texture->GetWidth() / 2.0f);
+
+      GfxContext.QRP_1Tex(markerX,
+                          markerY,
+                          texture->GetWidth(),
+                          texture->GetHeight(),
+                          texture->GetDeviceTexture(),
+                          texxform,
+                          color);
     }
   }
 
@@ -1187,7 +1186,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::color::LightGrey * alpha;
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    if (left_markers)
     {
       auto const& arrow_rtl = local_textures_->arrow_rtl;
       GfxContext.QRP_1Tex((geo.x + geo.width) - arrow_rtl->GetWidth(),
