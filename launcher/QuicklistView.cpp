@@ -83,8 +83,8 @@ QuicklistView::QuicklistView(int monitor)
 
   int width = 0;
   int height = 0;
-  // when launcher is at left, the anchor is on the left of the menuitem, and
-  // when launcher is at bottom, the anchor is at the bottom of the menuitem.
+  // when launcher is on the left, the anchor is on the left of the menuitem, and
+  // when launcher is on the bottom, the anchor is on the bottom of the menuitem.
   if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
     width = ANCHOR_WIDTH;
   else
@@ -893,7 +893,7 @@ void ql_compute_full_mask_path(cairo_t* cr,
                                gfloat   radius,
                                guint    pad)
 {
-  //  launcher at left:           launcher at bottom:
+  //  On the right of the icon:   On the top of the icon:
   //     0  1        2  3            0  1           2  3
   //     +--+--------+--+            +--+-----------+--+
   //     |              |            |                 |
@@ -920,13 +920,6 @@ void ql_compute_full_mask_path(cairo_t* cr,
   gfloat padding  = pad;
   int ZEROPOINT5 = 0.0f;
 
-  gfloat HeightToAnchor = ((gfloat) height - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
-  if (HeightToAnchor < 0.0f)
-  {
-    g_warning("Anchor-height and corner-radius a higher than whole texture!");
-    return;
-  }
-
   //gint dynamic_size = height - 2*radius - 2*padding - anchor_height;
   //gint upper_dynamic_size = upper_size;
   //gint lower_dynamic_size = dynamic_size - upper_dynamic_size;
@@ -936,6 +929,14 @@ void ql_compute_full_mask_path(cairo_t* cr,
     size = height;
   else
     size = width;
+
+  gfloat HeightToAnchor = ((gfloat) size - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
+  if (HeightToAnchor < 0.0f)
+  {
+    g_warning("Anchor-height and corner-radius a higher than whole texture!");
+    return;
+  }
+
   if (upper_size >= 0)
   {
     if (upper_size > size - 2.0f * radius - anchor_height - 2 * padding)

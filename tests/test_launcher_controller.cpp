@@ -220,7 +220,6 @@ struct TestLauncherController : testmocks::TestUnityAppBase
 
   virtual void SetUp()
   {
-
     logger_output_->GetOutput(); // discard old output.
     lc.multiple_launchers = true;
   }

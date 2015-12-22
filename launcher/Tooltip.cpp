@@ -56,7 +56,8 @@ Tooltip::Tooltip(int monitor) :
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  int left_space_width = 0, bottom_space_height = 0;
+  int left_space_width = 0;
+  int bottom_space_height = 0;
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
     left_space_width = _padding.CP(cv_) + ANCHOR_WIDTH.CP(cv_);
@@ -312,16 +313,17 @@ void _compute_full_mask_path(cairo_t* cr,
                              guint    pad)
 {
 
-  //  On the right of icon:
-  //     0            1 2
-  //     +------------+-+
-  //    /               + 3
-  //   /                |
-  //  + 8               |
-  //   \                |
-  //    \               + 4
-  //     +------------+-+
-  //     7            6 5
+  //  On the right of the icon:              On the top of the icon:
+  //     0                  1 2                 0 1                2 3
+  //     +------------------+-+                 +-+----------------+-+
+  //    /                     + 3            14 +                    + 4
+  //   /                      |                 |                    |
+  //  + 8                     |                 |                    |
+  //   \                      |                 |                    |
+  //    \                     + 4            13 +    10   8          + 5
+  //     +------------------+-+                 +-+---+   +--------+-+
+  //     7                  6 5                12 11   \ /         7 6
+  //                                                    + 9
 
   gfloat padding = pad;
 
@@ -364,21 +366,15 @@ void _compute_full_mask_path(cairo_t* cr,
       return;
     }
 
-    if (left_size >= 0)
+    if (left_size > width - 2.0f * radius - anchor_width - 2 * padding)
     {
-      if (left_size > width - 2.0f * radius - anchor_width - 2 * padding)
-      {
-        WidthToAnchor = 0;
-      }
-      else
-      {
-        WidthToAnchor = width - 2.0f * radius - anchor_width - 2 * padding - left_size;
-      }
+      WidthToAnchor = 0;
     }
     else
     {
-      WidthToAnchor = (width - 2.0f * radius - anchor_width - 2 * padding) / 2.0f;
+      WidthToAnchor = width - 2.0f * radius - anchor_width - 2 * padding - left_size;
     }
+
     cairo_move_to(cr, padding + radius, padding);  // Point 1
     cairo_line_to(cr, width - padding - radius, padding);    // Point 2
     cairo_arc(cr,

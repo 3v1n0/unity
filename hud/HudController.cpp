@@ -277,15 +277,19 @@ void Controller::Relayout(bool check_monitor)
     monitor_index_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
 
   nux::Geometry const& geo = GetIdealWindowGeometry();
-  int launcher_width = unity::Settings::Instance().LauncherSize(monitor_index_);
 
   view_->QueueDraw();
   window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    int launcher_width = unity::Settings::Instance().LauncherSize(monitor_index_);
     view_->SetMonitorOffset(launcher_width, panel_style.PanelHeight(monitor_index_));
+  }
   else
+  {
     view_->SetMonitorOffset(0, panel_style.PanelHeight(monitor_index_));
+  }
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
