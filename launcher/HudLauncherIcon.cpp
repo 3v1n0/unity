@@ -22,6 +22,7 @@
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -32,9 +33,9 @@ namespace launcher
 {
 DECLARE_LOGGER(logger, "unity.launcher.icon.hud");
 
-HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
+HudLauncherIcon::HudLauncherIcon()
  : SingleMonitorLauncherIcon(IconType::HUD)
- , launcher_hide_mode_(hide_mode)
+ , launcher_hide_mode_(LAUNCHER_HIDE_NEVER)
  , overlay_monitor_(0)
  , single_launcher_(false)
  , launcher_monitor_(0)
@@ -90,7 +91,7 @@ void HudLauncherIcon::SetSingleLauncher(bool single_launcher, int launcher_monit
 {
   if (single_launcher_ == single_launcher && launcher_monitor_ == launcher_monitor)
     return;
-  
+
   single_launcher_ = single_launcher;
   launcher_monitor_ = launcher_monitor;
 
@@ -112,6 +113,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   // If the hud is open, we show the HUD button if we have a locked launcher
   if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER &&
+      Settings::Instance().launcher_position() == LauncherPosition::LEFT &&
       (!single_launcher_ || (single_launcher_ && launcher_monitor_ == overlay_monitor_)))
   {
     SetMonitor(visible ? overlay_monitor_ : -1);
