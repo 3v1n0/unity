@@ -96,7 +96,6 @@ private:
   Base             _inner_shelf;
   Base             _inner_main;
   int              selection_;
-  std::list<unity::debug::Introspectable*> introspection_results_;
   glib::SourceManager timeouts_;
 
   bool Populate();

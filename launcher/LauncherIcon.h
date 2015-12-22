@@ -139,9 +139,6 @@ public:
 
   void SkipQuirkAnimation(Quirk quirk, int monitor = -1);
 
-  sigc::signal<void> QuirksChanged;
-  sigc::signal<void> WindowsChanged;
-
   IconType GetIconType() const;
 
   virtual nux::Color BackgroundColor() const;

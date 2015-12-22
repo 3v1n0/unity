@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2010, 2015 Canonical
 #
@@ -18,7 +18,6 @@
 # this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-import glib
 import glob
 from optparse import OptionParser
 import os
@@ -58,21 +57,21 @@ def set_unity_env ():
     '''set variable environnement for unity to run'''
 
     os.environ['COMPIZ_CONFIG_PROFILE'] = 'ubuntu'
-    
+
     if not 'DISPLAY' in os.environ:
         # take an optimistic chance and warn about it :)
-        print "WARNING: no DISPLAY variable set, setting it to :0"
+        print("WARNING: no DISPLAY variable set, setting it to :0")
         os.environ['DISPLAY'] = ':0'
 
 def reset_launcher_icons ():
     '''Reset the default launcher icon and restart it.'''
-    subprocess.Popen(["gsettings", "reset" ,"com.canonical.Unity.Launcher" , "favorites"]) 
+    subprocess.Popen(["gsettings", "reset" ,"com.canonical.Unity.Launcher" , "favorites"])
 
 def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_file):
     '''launch unity under compiz (replace the current shell in any case)'''
-    
+
     cli = []
-    
+
     if debug_mode > 0:
         # we can do more check later as if it's in PATH...
         if not os.path.isfile('/usr/bin/gdb'):
@@ -85,7 +84,7 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
             sys.exit(1)
         else:
             cli.extend(['gdb', '--args'])
-   
+
     if options.compiz_path:
         cli.extend([options.compiz_path, '--replace'])
     else:
@@ -95,7 +94,7 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
         cli.append("--debug")
     if args:
         cli.extend(compiz_args)
-    
+
     if log_file:
         cli.extend(['2>&1', '|', 'tee', log_file])
 
@@ -108,9 +107,9 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
         try:
             pid_path = os.path.join("/proc", pid)
             cmdline = open(os.path.join(pid_path, "cmdline"), "rb").read()
-            if re.match(r"^compiz\b", cmdline):
+            if re.match(rb"^compiz\b", cmdline):
                 compiz_env = open(os.path.join(pid_path, "environ"), "rb").read()
-                if display in compiz_env:
+                if display in compiz_env.decode(sys.getdefaultencoding()):
                     subprocess.call (["kill", "-9", pid])
         except IOError:
             continue
@@ -119,7 +118,7 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
     # In this case, we need a string and not a list
     # FIXME: still some bug with 2>&1 not showing everything before wait()
     return subprocess.Popen(" ".join(cli), env=dict(os.environ), shell=True)
-    
+
 
 def run_unity (verbose, debug, advanced_debug, compiz_path, compiz_args, log_file):
     '''run the unity shell and handle Ctrl + C'''
@@ -130,7 +129,7 @@ def run_unity (verbose, debug, advanced_debug, compiz_path, compiz_args, log_fil
         unity_instance = process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_file)
         subprocess.call(["start", "unity-panel-service"])
         unity_instance.wait()
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
         try:
             os.kill(unity_instance.pid, signal.SIGKILL)
         except:
@@ -139,31 +138,31 @@ def run_unity (verbose, debug, advanced_debug, compiz_path, compiz_args, log_fil
     sys.exit(unity_instance.returncode)
 
 def reset_to_distro():
-	''' remove all known default local installation path '''
-	
-	# check if we are root, we need to be root
-	if os.getuid() != 0:
-		print "Error: You need to be root to remove your local unity installation"
-		return 1
-	error = False
-	
-	for filedir in well_known_local_path:
-		for elem in glob.glob(filedir):
-			try:
-				shutil.rmtree(elem)
-			except OSError, e:
-				if os.path.isfile(elem) or os.path.islink(elem):
-					os.remove(elem)
-				else:
-					print "ERROR: Cannot remove %s: %s" % (elem, e)
-					error = True
-	
-	if error:
-		print "See above: some error happened and you should clean them before trying to restart unity"
-		return 1
-	else:
-		print "Unity local install cleaned, you can now restart unity"
-		return 0
+    ''' remove all known default local installation path '''
+
+    # check if we are root, we need to be root
+    if os.getuid() != 0:
+        print("Error: You need to be root to remove your local unity installation")
+        return 1
+    error = False
+
+    for filedir in well_known_local_path:
+        for elem in glob.glob(filedir):
+            try:
+                shutil.rmtree(elem)
+            except OSError as e:
+                if os.path.isfile(elem) or os.path.islink(elem):
+                    os.remove(elem)
+                else:
+                    print("ERROR: Cannot remove %s: %s" % (elem, e))
+                    error = True
+
+    if error:
+        print("See above: some error happened and you should clean them before trying to restart unity")
+        return 1
+    else:
+        print("Unity local install cleaned, you can now restart unity")
+        return 0
 
 if __name__ == '__main__':
     usage = "usage: %prog [options]"
@@ -176,7 +175,7 @@ if __name__ == '__main__':
     parser.add_option("--debug", action="store_true",
                       help="Run unity under gdb and print a backtrace on crash. /!\ Only if devs ask for it.")
     parser.add_option("--distro", action="store_true",
-                      help="Remove local build if present with default values to return to the package value (this doesn't run unity and need root access)")    
+                      help="Remove local build if present with default values to return to the package value (this doesn't run unity and need root access)")
     parser.add_option("--log", action="store",
                       help="Store log under filename.")
     parser.add_option("--replace", action="store_true",
@@ -184,7 +183,7 @@ if __name__ == '__main__':
     parser.add_option("--reset", action="store_true",
                       help="(deprecated: provided for backwards compatibility)")
     parser.add_option("--reset-icons", action="store_true",
-                      help="Reset the default launcher icon.")  
+                      help="Reset the default launcher icon.")
     parser.add_option("-v", "--verbose", action="store_true",
                       help="Get additional debug output from unity.")
     (options, args) = parser.parse_args()
@@ -192,15 +191,15 @@ if __name__ == '__main__':
     set_unity_env()
 
     if options.distro:
-		sys.exit(reset_to_distro())
+        sys.exit(reset_to_distro())
 
     if options.reset:
-	print ("The --reset option is deprecated, You should run with no options instead.")
- 
+        print ("The --reset option is deprecated, You should run with no options instead.")
+
     if options.reset_icons:
         reset_launcher_icons ()
-	
-	if options.replace:
-		print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
-			
+
+    if options.replace:
+        print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
+
     run_unity (options.verbose, options.debug, options.advanced_debug, options.compiz_path, args, options.log)

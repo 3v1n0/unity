@@ -253,6 +253,8 @@ public:
   sigc::signal<void, AbstractLauncherIcon::Ptr const&> remove;
   sigc::signal<void, nux::ObjectPtr<nux::View>> tooltip_visible;
   sigc::signal<void, int> visibility_changed;
+  sigc::signal<void, int> windows_changed;
+  sigc::signal<void, Quirk, int> quirks_changed;
   sigc::signal<void> position_saved;
   sigc::signal<void> position_forgot;
   sigc::signal<void, std::string const&> uri_changed;

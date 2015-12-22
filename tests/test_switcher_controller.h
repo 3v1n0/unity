@@ -75,6 +75,7 @@ struct FakeLauncherIcon : unity::launcher::SimpleLauncherIcon
 
   unity::WindowList Windows() override;
   bool AllowDetailViewInSwitcher() const override;
+  bool ShowInSwitcher(bool) override;
   uint64_t SwitcherPriority() override;
 
   bool allow_detail_view_;

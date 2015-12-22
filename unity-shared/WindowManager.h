@@ -153,11 +153,12 @@ public:
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
 
-  virtual void CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any) = 0;
+  virtual void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any) = 0;
 
   virtual int WorkspaceCount() const = 0;
 
   virtual nux::Point GetCurrentViewport() const = 0;
+  virtual void SetCurrentViewport(nux::Point const&) = 0;
   virtual void SetViewportSize(int horizontal, int vertical) = 0;
   virtual int GetViewportHSize() const = 0;
   virtual int GetViewportVSize() const = 0;

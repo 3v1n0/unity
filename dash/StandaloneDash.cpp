@@ -37,7 +37,7 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/ThumbnailGenerator.h"
 #include "unity-shared/UBusMessages.h"
-#include "unity-shared/UBusServer.h"
+#include "unity-shared/UBusWrapper.h"
 #include <UnityCore/GSettingsScopes.h>
 #include <UnityCore/ScopeProxyInterface.h>
 
@@ -50,12 +50,13 @@ class TestRunner
 {
 public:
   TestRunner(std::string const& scope, double scale)
-    : scope_(scope)
+    : scope_(scope.empty() ? "home.scope" : scope)
     , scale_(scale)
   {}
 
-  static void InitWindowThread (nux::NThread* thread, void* InitData);
-  void Init ();
+  static void InitWindowThread(nux::NThread* thread, void* InitData);
+  void Init();
+
   std::string scope_;
   double scale_;
   nux::Layout *layout;
@@ -78,14 +79,14 @@ void TestRunner::Init ()
   nux::GetWindowThread()->SetLayout (layout);
   nux::GetWindowCompositor().SetKeyFocusArea(view->default_focus());
 
-  unity::UBusServer().SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+  unity::UBusManager::SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                                   g_variant_new("(sus)", scope_.c_str(), GOTO_DASH_URI, ""));
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
 {
   TestRunner *self =  (TestRunner *) InitData;
-  self->Init ();
+  self->Init();
 }
 
 int main(int argc, char **argv)
@@ -123,6 +124,12 @@ int main(int argc, char **argv)
   std::unique_ptr<nux::WindowThread> wt(nux::CreateGUIThread(TEXT("Unity Dash"),
                                         WIDTH.CP(scale), HEIGHT.CP(scale),
                                         0, &TestRunner::InitWindowThread, test_runner));
+
+  nux::ObjectPtr<nux::BaseTexture> background_tex;
+  background_tex.Adopt(nux::CreateTextureFromFile("/usr/share/backgrounds/warty-final-ubuntu.png"));
+  nux::TexCoordXForm texxform;
+  auto tex_layer = std::make_shared<nux::TextureLayer>(background_tex->GetDeviceTexture(), texxform, nux::color::White);
+  wt->SetWindowBackgroundPaintLayer(tex_layer.get());
 
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller(tick_source);

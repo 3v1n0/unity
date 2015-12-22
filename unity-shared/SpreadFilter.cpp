@@ -109,6 +109,8 @@ Filter::Filter()
       search_bar_->SetSearchFinished();
     }
   });
+
+  ApplicationManager::Default().window_opened.connect(sigc::hide(sigc::mem_fun(this, &Filter::OnWindowChanged)));
 }
 
 bool Filter::Visible() const
@@ -130,26 +132,37 @@ void Filter::UpdateFilteredWindows()
 {
   auto const& lower_search = casefold_copy(text());
   filtered_windows_.clear();
+  title_connections_.Clear();
 
   if (lower_search.empty())
     return;
 
+  auto update_cb = sigc::hide(sigc::mem_fun(this, &Filter::OnWindowChanged));
+
   for (auto const& app : ApplicationManager::Default().GetRunningApplications())
   {
+    title_connections_.Add(app->title.changed.connect(update_cb));
+
     if (casefold_copy(app->title()).find(lower_search) != std::string::npos)
     {
       for (auto const& win : app->GetWindows())
         filtered_windows_.insert(win->window_id());
-
-      continue;
-    }
-
-    for (auto const& win : app->GetWindows())
-    {
-      if (casefold_copy(win->title()).find(lower_search) != std::string::npos)
-        filtered_windows_.insert(win->window_id());
     }
   }
+
+  for (auto const& win : ApplicationManager::Default().GetWindowsForMonitor(-1))
+  {
+    title_connections_.Add(win->title.changed.connect(update_cb));
+
+    if (casefold_copy(win->title()).find(lower_search) != std::string::npos)
+      filtered_windows_.insert(win->window_id());
+  }
+}
+
+void Filter::OnWindowChanged()
+{
+  UpdateFilteredWindows();
+  text.changed.emit(text);
 }
 
 //

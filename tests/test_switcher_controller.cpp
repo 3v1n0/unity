@@ -125,7 +125,7 @@ TEST_F(TestSwitcherController, StartDetailModeMovesNextRows)
   //  0, 1,
   //  2, 3
   EXPECT_TRUE(model->HasPrevDetailRow());
-  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 2);
+  EXPECT_EQ(model->detail_selection_index(), 2);
 }
 
 TEST_F(TestSwitcherController, StopDetailModeMovesPrevRows)
