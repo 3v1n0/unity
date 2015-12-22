@@ -260,13 +260,13 @@ void Controller::Relayout(bool check_monitor)
 
   view_->Relayout();
   window_->SetGeometry(geo);
+
+  int horizontal_offset = 0;
+
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-  {
-    int launcher_width = unity::Settings::Instance().LauncherSize(monitor_);
-    view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
-  }
-  else
-    view_->SetMonitorOffset(0, panel::Style::Instance().PanelHeight(monitor_));
+    horizontal_offset = unity::Settings::Instance().LauncherSize(monitor_);
+
+  view_->SetMonitorOffset(horizontal_offset, panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
