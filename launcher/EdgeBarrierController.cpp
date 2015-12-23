@@ -266,6 +266,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     }
 
     vertical_barrier->index = i;
+
     vertical_barrier->threshold = parent_->options()->edge_stop_velocity();
     vertical_barrier->max_velocity_multiplier = parent_->options()->edge_responsiveness();
 
@@ -341,10 +342,6 @@ PointerBarrierWrapper::Ptr EdgeBarrierController::Impl::FindBarrierEventOwner(XI
       return barrier;
 
   for (auto barrier : horizontal_barriers_)
-    if (barrier->OwnsBarrierEvent(barrier_event->barrier))
-      return barrier;
-
-  for (auto barrier : horizontal_bottom_barriers_)
     if (barrier->OwnsBarrierEvent(barrier_event->barrier))
       return barrier;
 

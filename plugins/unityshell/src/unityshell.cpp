@@ -4070,10 +4070,10 @@ void UnityScreen::InitUnityComponents()
       launcher_size = h - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
 
     unity::Settings::Instance().SetLauncherSize(launcher_size, launcher->monitor);
+    int adjustment_x = 0;
     if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
-      shortcut_controller_->SetAdjustment(launcher_size, panel_style_.PanelHeight(launcher->monitor));
-    else
-      shortcut_controller_->SetAdjustment(0, panel_style_.PanelHeight(launcher->monitor));
+      adjustment_x = launcher_size;
+    shortcut_controller_->SetAdjustment(adjustment_x, panel_style_.PanelHeight(launcher->monitor));
 
     CompOption::Value v(launcher_size);
     screen->setOptionForPlugin("expo", "x_offset", v);

@@ -188,7 +188,10 @@ Launcher::Launcher(MockableBaseWindow* parent,
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
+
+  launcher_position_ = unity::Settings::Instance().launcher_position();
   launcher_position_changed_ = unity::Settings::Instance().launcher_position.changed.connect([this] (LauncherPosition const& position) {
+    launcher_position_ = position;
     OnMonitorChanged(monitor);
     QueueDraw();
   });
@@ -308,7 +311,7 @@ bool Launcher::MouseBeyondDragThreshold() const
 {
   if (GetActionState() == ACTION_DRAG_ICON)
   {
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    if (launcher_position_ == LauncherPosition::LEFT)
       return mouse_position_.x > GetGeometry().width + icon_size_.CP(cv_) / 2;
     else
       return mouse_position_.y < GetGeometry().y - icon_size_.CP(cv_) / 2;
@@ -352,19 +355,19 @@ void Launcher::OnDPIChanged()
 
 void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo)
 {
-  auto const& anchor = (Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? MouseIconIntersection(x, enter_y_) : MouseIconIntersection(enter_x_, y);
+  auto const& anchor = (launcher_position_ == LauncherPosition::LEFT) ? MouseIconIntersection(x, enter_y_) : MouseIconIntersection(enter_x_, y);
   int c_icon_size = icon_size_.CP(cv_);
 
   if (anchor)
   {
-    float position =(Settings::Instance().launcher_position() == LauncherPosition::LEFT) ? y: x;
+    float position =(launcher_position_ == LauncherPosition::LEFT) ? y: x;
 
     for (AbstractLauncherIcon::Ptr const& model_icon : *model_)
     {
       if (model_icon == anchor)
       {
         position += c_icon_size / 2;
-        if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        if (launcher_position_ == LauncherPosition::LEFT)
         {
           launcher_drag_delta_ = enter_y_ - position;
           if (position + c_icon_size / 2 + launcher_drag_delta_ > geo.height)
@@ -690,9 +693,8 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
   if (size_modifier <= 0.0f)
     arg.skip = true;
 
-  auto launcher_position = Settings::Instance().launcher_position();
   int c_icon_size = icon_size_.CP(cv_);
-  auto moving_center = (launcher_position == LauncherPosition::LEFT) ? center.y : center.x;
+  auto moving_center = (launcher_position_ == LauncherPosition::LEFT) ? center.y : center.x;
   // goes for 0.0f when fully unfolded, to 1.0f folded
   float folding_progress = CLAMP((moving_center + c_icon_size - folding_threshold) / (float) c_icon_size, 0.0f, 1.0f);
   float unfold_progress = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::UNFOLDED, monitor());
@@ -714,7 +716,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
 
   // icon is crossing threshold, start folding
   center.z += folded_z_distance * folding_progress;
-  if (launcher_position == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
     arg.rotation.x = animation_neg_rads * folding_progress;
   else
     arg.rotation.y = animation_neg_rads * folding_progress;
@@ -726,7 +728,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
   float center_transit_progress = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::CENTER_SAVED, monitor());
   if (center_transit_progress <= 1.0f)
   {
-    if (launcher_position == LauncherPosition::LEFT)
+    if (launcher_position_ == LauncherPosition::LEFT)
     {
       int saved_center = icon->GetSavedCenter(monitor).y - parent_abs_geo.y;
       centerOffset.y = (saved_center - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
@@ -737,7 +739,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
       centerOffset.x = (saved_center - (center.x + (half_size * size_modifier))) * (1.0f - center_transit_progress);
     }
   }
-  if (launcher_position == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
   {
     center.y += half_size * size_modifier;   // move to center
     arg.render_center = nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y + centerOffset.y), roundf(center.z));
@@ -759,7 +761,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
     drag_window_->SetAnimationTarget(icon_center.x, icon_center.y);
   }
 
-  if (launcher_position == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
     center.y += (half_size * size_modifier) + spacing;   // move to end
   else
     center.x += (half_size * size_modifier) + spacing;
@@ -792,7 +794,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   nux::Point3 center;
 
   nux::Color const& colorify = FullySaturateColor(options()->background_color);
-  auto launcher_position = Settings::Instance().launcher_position();
 
   float hover_progress = folded_ ? hover_animation_.GetCurrentValue() : 1.0f;
   float folded_z_distance = FOLDED_Z_DISTANCE * (1.0f - hover_progress);
@@ -805,7 +806,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   float folded_size = c_icon_size * folding_not_constant;
   float folded_spacing = SPACE_BETWEEN_ICONS.CP(cv_) * folding_not_constant;
 
-  if (launcher_position == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
   {
     center.x = geo.width / 2;
     center.y = SPACE_BETWEEN_ICONS.CP(cv_);
@@ -817,11 +818,11 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   }
   center.z = 0;
 
-  int launcher_size = (launcher_position == LauncherPosition::LEFT) ? geo.height : geo.width;
+  int launcher_size = (launcher_position_ == LauncherPosition::LEFT) ? geo.height : geo.width;
   folded_ = true;
 
   // compute required height/width of launcher AND folding threshold
-  float sum = (launcher_position == LauncherPosition::LEFT) ? (0.0f + center.y) : (0.0f + center.x);
+  float sum = (launcher_position_ == LauncherPosition::LEFT) ? (0.0f + center.y) : (0.0f + center.x);
   float folding_threshold = launcher_size - c_icon_size / 2.5f;
 
   for (it = model_->begin(); it != model_->end(); ++it)
@@ -863,7 +864,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     {
       if (autohide_progress > 0.0f)
       {
-        if (launcher_position == LauncherPosition::LEFT)
+        if (launcher_position_ == LauncherPosition::LEFT)
           autohide_offset -= geo.width * autohide_progress;
         else
           autohide_offset += geo.height * autohide_progress;
@@ -876,7 +877,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
   {
     float drag_hide_progress = dnd_hide_animation_.GetCurrentValue();
-    if (launcher_position == LauncherPosition::LEFT)
+    if (launcher_position_ == LauncherPosition::LEFT)
       autohide_offset -= geo.width * 0.25f * drag_hide_progress;
     else
       autohide_offset += geo.height * 0.25f * drag_hide_progress;
@@ -888,7 +889,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER || hide_machine_.GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
-    if (launcher_position == LauncherPosition::LEFT)
+    if (launcher_position_ == LauncherPosition::LEFT)
       box_geo.x += autohide_offset;
     else
       box_geo.y += autohide_offset;
@@ -903,7 +904,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   static nux::Geometry last_geo = box_geo;
 
   // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
-  if (launcher_position == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
   {
     if (enter_y_ != 0 && enter_y_ + c_icon_size / 2 > folding_threshold)
       SetDndDelta(last_geo.x + last_geo.width / 2, center.y, geo);
@@ -950,7 +951,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     delta *= hover_progress;
     folding_threshold += delta;
 
-    if (launcher_position == LauncherPosition::LEFT)
+    if (launcher_position_ == LauncherPosition::LEFT)
       center.y += delta;
     else
       center.x += delta;
@@ -993,7 +994,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     shelf_sum += SPACE_BETWEEN_ICONS.CP(cv_);
 
   float shelf_delta = 0;
-  if (launcher_position == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
   {
     shelf_delta = MAX(((launcher_size - shelf_sum) + SPACE_BETWEEN_ICONS.CP(cv_)) - center.y, 0.0f);
     center.y += shelf_delta;
@@ -1318,7 +1319,7 @@ void Launcher::OnMonitorChanged(int new_monitor)
   int launcher_height = unity::Settings::Instance().LauncherSize(new_monitor);
 
   cv_ = unity::Settings::Instance().em(monitor);
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
     Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_height), monitor_geo.height - panel_height);
   else
     Resize(nux::Point(monitor_geo.x, monitor_geo.y + monitor_geo.height - launcher_height), monitor_geo.width);
@@ -1432,7 +1433,7 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
     return mouse_position_.y < SCROLL_AREA_HEIGHT.CP(cv_);
   else
     return mouse_position_.x < SCROLL_AREA_HEIGHT.CP(cv_);
@@ -1440,7 +1441,7 @@ bool Launcher::MouseOverTopScrollArea()
 
 bool Launcher::MouseOverBottomScrollArea()
 {
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
     return mouse_position_.y >= GetGeometry().height - SCROLL_AREA_HEIGHT.CP(cv_);
   else
     return mouse_position_.x >= GetGeometry().width - SCROLL_AREA_HEIGHT.CP(cv_);
@@ -1463,7 +1464,7 @@ bool Launcher::OnScrollTimeout()
     else
     {
       int mouse_distance = 0;
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      if (launcher_position_ == LauncherPosition::LEFT)
         mouse_distance = (SCROLL_AREA_HEIGHT.CP(cv_) - mouse_position_.y);
       else
         mouse_distance = (SCROLL_AREA_HEIGHT.CP(cv_) - mouse_position_.x);
@@ -1480,7 +1481,7 @@ bool Launcher::OnScrollTimeout()
     else
     {
       int mouse_distance = 0;
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      if (launcher_position_ == LauncherPosition::LEFT)
         mouse_distance = (mouse_position_.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT.CP(cv_));
       else
         mouse_distance = (mouse_position_.x + 1) - (GetGeometry().width - SCROLL_AREA_HEIGHT.CP(cv_));
@@ -1645,7 +1646,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   AbstractLauncherIcon::icon_size = icon_size_;
 
   nux::Geometry const& parent_geo = parent_->GetGeometry();
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
     Resize(nux::Point(parent_geo.x, parent_geo.y), parent_geo.height);
   else
     Resize(nux::Point(parent_geo.x, parent_geo.y), parent_geo.width);
@@ -1659,7 +1660,7 @@ int Launcher::GetIconSize() const
 void Launcher::Resize(nux::Point const& offset, int size)
 {
   RawPixel width = 0, height = 0;
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
   {
     width = icon_size_ + ICON_PADDING * 2 + SIDE_LINE_WIDTH - 2;
     width = width.CP(cv_);
@@ -1818,7 +1819,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   bool force_show_window;
   nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute, force_show_window);
-  if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
+
+  if (launcher_position_ == LauncherPosition::LEFT)
     bkg_box.width -= SIDE_LINE_WIDTH.CP(cv_);
   else
     bkg_box.height -= SIDE_LINE_WIDTH.CP(cv_);
@@ -1846,17 +1848,19 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   int push_count = 1;
 
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
     GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
   else
     GfxContext.PushClippingRectangle(nux::Geometry(bkg_box.x, base.y, bkg_box.width, base.height));
 
   float reveal_progress = hide_machine_.reveal_progress;
   TextureCache& cache = TextureCache::GetDefault();
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-    launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect.png");
-  else
-    launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect_rotated.png");
+
+  std::string launcher_pressure_icon = "launcher_pressure_effect.png";
+  if (launcher_position_ == LauncherPosition::BOTTOM)
+    launcher_pressure_icon = "launcher_pressure_effect_rotated.png";
+
+  launcher_pressure_effect_ = cache.FindTexture(launcher_pressure_icon);
 
   if ((reveal_progress > 0 || last_reveal_progress_ > 0) && launcher_pressure_effect_.IsValid())
   {
@@ -1873,21 +1877,25 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     nux::Color pressure_color = nux::color::White * last_reveal_progress_;
     nux::TexCoordXForm texxform_pressure;
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+
+    int pressure_y = 0, pressure_width = 0, pressure_height = 0;
+    if (launcher_position_ == LauncherPosition::LEFT)
     {
-      GfxContext.QRP_1Tex(base.x, base.y, launcher_pressure_effect_->GetWidth(), base.height,
-                          launcher_pressure_effect_->GetDeviceTexture(),
-                          texxform_pressure,
-                          pressure_color);
+      pressure_y = base.y;
+      pressure_width = launcher_pressure_effect_->GetWidth();
+      pressure_height = base.height;
     }
     else
     {
-      GfxContext.QRP_1Tex(base.x, base.y + base.height - SIDE_LINE_WIDTH.CP(cv_) - launcher_pressure_effect_->GetHeight(),
-                          base.width, launcher_pressure_effect_->GetHeight(),
-                          launcher_pressure_effect_->GetDeviceTexture(),
-                          texxform_pressure,
-                          pressure_color);
+      pressure_y = base.y + base.height - SIDE_LINE_WIDTH.CP(cv_) - launcher_pressure_effect_->GetHeight();
+      pressure_width = base.width;
+      pressure_height = launcher_pressure_effect_->GetHeight();
     }
+
+    GfxContext.QRP_1Tex(base.x, pressure_y, pressure_width, pressure_height,
+                        launcher_pressure_effect_->GetDeviceTexture(),
+                        texxform_pressure,
+                        pressure_color);
   }
 
   if (!Settings::Instance().GetLowGfxMode())
@@ -1896,27 +1904,18 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture;
 
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      bool visible = false;
+      if ((launcher_position_ == LauncherPosition::LEFT && (bkg_box.x + bkg_box.width > 0)) ||
+          (launcher_position_ == LauncherPosition::BOTTOM && (bkg_box.y < bkg_box.height)))
+        visible = true;
+
+      if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && visible)
       {
-        if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
-        {
-          blur_texture = bg_effect_helper_.GetBlurRegion();
-        }
-        else
-        {
-          blur_texture = bg_effect_helper_.GetRegion();
-        }
+        blur_texture = bg_effect_helper_.GetBlurRegion();
       }
       else
       {
-        if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.y < bkg_box.height))
-        {
-          blur_texture = bg_effect_helper_.GetBlurRegion();
-        }
-        else
-        {
-          blur_texture = bg_effect_helper_.GetRegion();
-        }
+        blur_texture = bg_effect_helper_.GetRegion();
       }
 
       if (blur_texture.IsValid())
@@ -2010,7 +2009,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   icon_renderer_->PreprocessIcons(args, base);
   EventLogic();
 
-  if (!IsOverlayOpen() && Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+  if (!IsOverlayOpen() && launcher_position_ == LauncherPosition::BOTTOM)
   {
     const double top_line_opacity = 0.15f * launcher_alpha;
 
@@ -2037,7 +2036,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     if ((*rev_it).stick_thingy)
     {
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      if (launcher_position_ == LauncherPosition::LEFT)
         gPainter.Paint2DQuadColor(GfxContext,
                                   nux::Geometry(bkg_box.x, (*rev_it).render_center.y - 3, bkg_box.width, 2),
                                   nux::Color(0xAAAAAAAA));
@@ -2053,7 +2052,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     icon_renderer_->RenderIcon(GfxContext, *rev_it, bkg_box, base);
   }
 
-  if (!IsOverlayOpen() && Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (!IsOverlayOpen() && launcher_position_ == LauncherPosition::LEFT)
   {
     const double right_line_opacity = 0.15f * launcher_alpha;
 
@@ -2119,8 +2118,18 @@ bool Launcher::StartIconDragTimeout(int x, int y)
 void Launcher::StartIconDragRequest(int x, int y)
 {
   auto const& abs_geo = GetAbsoluteGeometry();
-  auto const& drag_icon = (Settings::Instance().launcher_position == LauncherPosition::LEFT) ? MouseIconIntersection(abs_geo.width / 2.0f, y)
-                                                                                             : MouseIconIntersection(x, abs_geo.height / 2.0f);
+  int mouse_x = 0, mouse_y = 0;
+  if (launcher_position_ == LauncherPosition::LEFT)
+  {
+    mouse_x = abs_geo.width / 2.0f;
+    mouse_y = y;
+  }
+  else
+  {
+    mouse_x = x;
+    mouse_y = abs_geo.height / 2.0f;
+  }
+  auto const& drag_icon = MouseIconIntersection(mouse_x, mouse_y);
 
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
@@ -2255,9 +2264,18 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
     return;
 
   auto const& launcher_geo = GetGeometry();
-  auto const& hovered_icon = (Settings::Instance().launcher_position == LauncherPosition::LEFT) ?
-                             MouseIconIntersection((launcher_geo.x + launcher_geo.width) / 2.0, y - GetAbsoluteY()) :
-                             MouseIconIntersection(x - GetAbsoluteX(), (launcher_geo.y + launcher_geo.height) / 2.0);
+  int mouse_x = 0, mouse_y = 0;
+  if (launcher_position_ == LauncherPosition::LEFT)
+  {
+    mouse_x = (launcher_geo.x + launcher_geo.width) / 2.0;
+    mouse_y = y - GetAbsoluteY();
+  }
+  else
+  {
+    mouse_x = x - GetAbsoluteX();
+    mouse_y = (launcher_geo.y + launcher_geo.height) / 2.0;
+  }
+  auto const& hovered_icon = MouseIconIntersection(mouse_x, mouse_y);
   bool mouse_beyond_drag_threshold = MouseBeyondDragThreshold();
 
   if (hovered_icon && drag_icon_ != hovered_icon)
@@ -2281,21 +2299,11 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
       if (!icon->IsVisibleOnMonitor(monitor))
         continue;
 
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      if ((launcher_position_ == LauncherPosition::LEFT && y >= icon->GetCenter(monitor).y) ||
+          (launcher_position_ == LauncherPosition::BOTTOM && x >= icon->GetCenter(monitor).x))
       {
-        if (y >= icon->GetCenter(monitor).y)
-        {
-          model_->ReorderAfter(drag_icon_, icon);
-          break;
-        }
-      }
-      else
-      {
-        if (x >= icon->GetCenter(monitor).x)
-        {
-          model_->ReorderAfter(drag_icon_, icon);
-          break;
-        }
+        model_->ReorderAfter(drag_icon_, icon);
+        break;
       }
     }
   }
@@ -2358,13 +2366,13 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   if (GetActionState() == ACTION_NONE)
   {
 #ifdef USE_X11
-    if (nux::Abs(dnd_delta_y_) >= nux::Abs(dnd_delta_x_) && Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    if (nux::Abs(dnd_delta_y_) >= nux::Abs(dnd_delta_x_) && launcher_position_ == LauncherPosition::LEFT)
     {
       launcher_drag_delta_ += dnd_delta_y_;
       SetActionState(ACTION_DRAG_LAUNCHER);
       hide_machine_.SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, true);
     }
-    else if (nux::Abs(dnd_delta_x_) >= nux::Abs(dnd_delta_y_) && Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    else if (nux::Abs(dnd_delta_x_) >= nux::Abs(dnd_delta_y_) && launcher_position_ == LauncherPosition::BOTTOM)
     {
       launcher_drag_delta_ += dnd_delta_x_;
       SetActionState(ACTION_DRAG_LAUNCHER);
@@ -2380,7 +2388,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   }
   else if (GetActionState() == ACTION_DRAG_LAUNCHER)
   {
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    if (launcher_position_ == LauncherPosition::LEFT)
       launcher_drag_delta_ += dy;
     else
       launcher_drag_delta_ += dx;
@@ -2469,7 +2477,7 @@ ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrie
   nux::Geometry const& abs_geo = GetAbsoluteGeometry();
 
   bool apply_to_reveal = false;
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position_ == LauncherPosition::LEFT)
   {
     if (event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
     {
@@ -2497,12 +2505,12 @@ ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrie
 
       if (options()->reveal_trigger == RevealTrigger::EDGE)
       {
-        if (event->x >= abs_geo.x)
+        if (event->x >= abs_geo.x + panel::Style::Instance().PanelHeight(monitor()))
           apply_to_reveal = true;
       }
       else if (options()->reveal_trigger == RevealTrigger::CORNER)
       {
-        if (event->x < abs_geo.x)
+        if (event->x < abs_geo.x + panel::Style::Instance().PanelHeight(monitor()))
           apply_to_reveal = true;
       }
     }
@@ -2849,14 +2857,13 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
   }
 
   SetMousePosition(x - parent_->GetGeometry().x, y - parent_->GetGeometry().y);
-  auto launcher_position = Settings::Instance().launcher_position();
 
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
   {
     if ((monitor() == 0 && !IsOverlayOpen() && mouse_position_.x == 0 && !drag_edge_touching_) &&
-        ((launcher_position == LauncherPosition::LEFT &&
+        ((launcher_position_ == LauncherPosition::LEFT &&
           mouse_position_.y <= (parent_->GetGeometry().height - icon_size_.CP(cv_) - 2 * SPACE_BETWEEN_ICONS.CP(cv_))) ||
-        (launcher_position == LauncherPosition::BOTTOM &&
+        (launcher_position_ == LauncherPosition::BOTTOM &&
          mouse_position_.x <= (parent_->GetGeometry().width - icon_size_.CP(cv_) - 2 * SPACE_BETWEEN_ICONS.CP(cv_)))))
     {
       if (dnd_hovered_icon_)
@@ -2869,8 +2876,8 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       drag_edge_touching_ = true;
     }
     else if (drag_edge_touching_ &&
-             ((launcher_position == LauncherPosition::LEFT && mouse_position_.x != 0) ||
-              (launcher_position == LauncherPosition::BOTTOM && mouse_position_.y != 0)))
+             ((launcher_position_ == LauncherPosition::LEFT && mouse_position_.x != 0) ||
+              (launcher_position_ == LauncherPosition::BOTTOM && mouse_position_.y != 0)))
     {
       animation::StartOrReverse(dnd_hide_animation_, animation::Direction::BACKWARD);
       drag_edge_touching_ = false;

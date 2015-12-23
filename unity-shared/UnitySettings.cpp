@@ -38,6 +38,8 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
+
+const std::string LAUNCHER_SETTINGS = "com.canonical.Unity.Launcher";
 const std::string LAUNCHER_POSITION = "launcher-position";
 
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
@@ -78,6 +80,7 @@ public:
   Impl(Settings* owner)
     : parent_(owner)
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , launcher_settings_(g_settings_new(LAUNCHER_SETTINGS.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
     , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , ubuntu_ui_settings_(g_settings_new(UBUNTU_UI_SETTINGS.c_str()))
@@ -111,7 +114,7 @@ public:
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LAUNCHER_POSITION, [this] (GSettings*, const gchar*) {
+    signals_.Add<void, GSettings*, const gchar*>(launcher_settings_, "changed::" + LAUNCHER_POSITION, [this] (GSettings*, const gchar*) {
       CacheLauncherPosition();
       parent_->launcher_position.changed.emit(cached_launcher_position_);
     });
@@ -207,7 +210,7 @@ public:
 
   void CacheLauncherPosition()
   {
-    cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(usettings_, LAUNCHER_POSITION.c_str()));
+    cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(launcher_settings_, LAUNCHER_POSITION.c_str()));
   }
 
   void UpdateLimSetting()
@@ -240,7 +243,7 @@ public:
 
   bool SetLauncherPosition(LauncherPosition launcherPosition)
   {
-    g_settings_set_enum(usettings_, LAUNCHER_POSITION.c_str(), static_cast<int>(launcherPosition));
+    g_settings_set_enum(launcher_settings_, LAUNCHER_POSITION.c_str(), static_cast<int>(launcherPosition));
     return false;
   }
 
@@ -372,6 +375,7 @@ public:
 
   Settings* parent_;
   glib::Object<GSettings> usettings_;
+  glib::Object<GSettings> launcher_settings_;
   glib::Object<GSettings> lim_settings_;
   glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> ubuntu_ui_settings_;

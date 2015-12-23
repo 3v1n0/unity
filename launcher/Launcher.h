@@ -43,6 +43,7 @@
 #include "LauncherHoverMachine.h"
 #include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/UnitySettings.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "TooltipManager.h"
 
@@ -368,6 +369,7 @@ private:
   BaseTexturePtr launcher_pressure_effect_;
   BackgroundEffectHelper bg_effect_helper_;
 
+  LauncherPosition launcher_position_;
   connection::Wrapper launcher_position_changed_;
 
   nux::animation::AnimateValue<float> auto_hide_animation_;

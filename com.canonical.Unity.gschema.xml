@@ -25,11 +25,6 @@
       <summary>Whether the home screen should be expanded.</summary>
       <description>Whether the home screen should be expanded.</description>
     </key>
-    <key enum="launcher-position-enum"  name="launcher-position">
-      <default>"Left"</default>
-      <summary>The position of launcher.</summary>
-      <description>The position of launcher.</description>
-    </key>
     <key type="i" name="minimize-count">
       <default>0</default>
       <summary>Number of times a normal window has been minimized.</summary>
@@ -144,6 +139,11 @@
       <default>''</default>
       <summary>Version of last migration done</summary>
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
+    </key>
+    <key enum="launcher-position-enum"  name="launcher-position">
+      <default>"Left"</default>
+      <summary>The position of launcher.</summary>
+      <description>The position of launcher.</description>
     </key>
   </schema>
   <schema path="/com/canonical/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">

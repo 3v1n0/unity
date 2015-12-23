@@ -104,10 +104,18 @@ bool SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   int launcher_size = std::min(launcher->GetWidth(), launcher->GetHeight());
   drag_window_ = new LauncherDragWindow(launcher_size, rcb);
   drag_window_->SetBaseXY(start_x, start_y);
+  int target_x = 0, target_y = 0;
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-    drag_window_->SetAnimationTarget(icon_center.x, icon_center.y + (launcher->GetIconSize() / 2));
+  {
+    target_x = icon_center.x;
+    target_y = icon_center.y + (launcher->GetIconSize() / 2);
+  }
   else
-    drag_window_->SetAnimationTarget(icon_center.x + (launcher->GetIconSize() / 2), icon_center.y);
+  {
+    target_x = icon_center.x + (launcher->GetIconSize() / 2);
+    target_y = icon_center.y;
+  }
+  drag_window_->SetAnimationTarget(target_x, target_y);
 
   launcher->ForceReveal(true);
   drag_window_->ShowWindow(true);

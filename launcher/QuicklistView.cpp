@@ -137,7 +137,7 @@ QuicklistView::QuicklistView(int monitor)
 
 int QuicklistView::CalculateX() const
 {
-  int x;
+  int x = 0;
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
     x = _anchorX - _padding.CP(cv_);
   else
@@ -147,7 +147,7 @@ int QuicklistView::CalculateX() const
 
 int QuicklistView::CalculateY() const
 {
-  int y;
+  int y = 0;
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
     y = _anchorY - (ANCHOR_HEIGHT.CP(cv_) / 2) - _top_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
   else

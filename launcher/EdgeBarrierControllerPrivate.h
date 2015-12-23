@@ -62,8 +62,6 @@ struct EdgeBarrierController::Impl : public sigc::trackable
 
   std::vector<PointerBarrierWrapper::Ptr> vertical_barriers_;
   std::vector<PointerBarrierWrapper::Ptr> horizontal_barriers_;
-  //This is used when launcher on the bottom
-  std::vector<PointerBarrierWrapper::Ptr> horizontal_bottom_barriers_;
 
   std::vector<EdgeBarrierSubscriber*> vertical_subscribers_;
   std::vector<EdgeBarrierSubscriber*> horizontal_subscribers_;
