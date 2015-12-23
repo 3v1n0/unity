@@ -32,13 +32,11 @@
 #include "DesktopLauncherIcon.h"
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
-#include "HudLauncherIcon.h"
 #include "LauncherController.h"
 #include "LauncherControllerPrivate.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "ExpoLauncherIcon.h"
 #include "TrashLauncherIcon.h"
-#include "BFBLauncherIcon.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
@@ -109,6 +107,8 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   : parent_(parent)
   , model_(std::make_shared<LauncherModel>())
   , xdnd_manager_(xdnd_manager)
+  , bfb_icon_(new BFBLauncherIcon())
+  , hud_icon_(new HudLauncherIcon())
   , expo_icon_(new ExpoLauncherIcon())
   , desktop_icon_(new DesktopLauncherIcon())
   , edge_barriers_(edge_barriers)
@@ -132,20 +132,28 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  LauncherHideMode hide_mode = parent_->options()->hide_mode;
-  BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
-  RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
+  auto hide_mode = parent_->options()->hide_mode();
+  bfb_icon_->SetHideMode(hide_mode);
+  RegisterIcon(AbstractLauncherIcon::Ptr(bfb_icon_));
 
-  HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
-  RegisterIcon(AbstractLauncherIcon::Ptr(hud));
-  hud_icon_ = hud;
+  hud_icon_->SetHideMode(hide_mode);
+  RegisterIcon(AbstractLauncherIcon::Ptr(hud_icon_));
 
   TrashLauncherIcon* trash = new TrashLauncherIcon();
   RegisterIcon(AbstractLauncherIcon::Ptr(trash));
 
-  parent_->options()->hide_mode.changed.connect([bfb, hud](LauncherHideMode mode) {
-    bfb->SetHideMode(mode);
-    hud->SetHideMode(mode);
+  parent_->options()->hide_mode.changed.connect([this] (LauncherHideMode mode) {
+    bfb_icon_->SetHideMode(mode);
+    hud_icon_->SetHideMode(mode);
+  });
+
+  parent_->multiple_launchers.changed.connect([this] (bool value) {
+    UScreen* uscreen = UScreen::GetDefault();
+    auto monitors = uscreen->GetMonitors();
+    int primary = uscreen->GetPrimaryMonitor();
+    EnsureLaunchers(primary, monitors);
+    parent_->options()->show_for_all = !value;
+    hud_icon_->SetSingleLauncher(!value, primary);
   });
 
   WindowManager& wm = WindowManager::Default();
@@ -1066,16 +1074,7 @@ Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierCont
  : options(std::make_shared<Options>())
  , multiple_launchers(true)
  , pimpl(new Impl(this, xdnd_manager, edge_barriers))
-{
-  multiple_launchers.changed.connect([this] (bool value) {
-    UScreen* uscreen = UScreen::GetDefault();
-    auto monitors = uscreen->GetMonitors();
-    int primary = uscreen->GetPrimaryMonitor();
-    pimpl->EnsureLaunchers(primary, monitors);
-    options()->show_for_all = !value;
-    pimpl->hud_icon_->SetSingleLauncher(!value, primary);
-  });
-}
+{}
 
 Controller::~Controller()
 {}

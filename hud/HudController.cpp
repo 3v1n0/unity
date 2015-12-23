@@ -174,7 +174,7 @@ int Controller::GetIdealMonitor()
 
 bool Controller::IsLockedToLauncher(int monitor)
 {
-  if (launcher_locked_out)
+  if (launcher_locked_out && Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
     int primary_monitor = UScreen::GetDefault()->GetPrimaryMonitor();
 
@@ -253,17 +253,9 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
   if (IsLockedToLauncher(ideal_monitor))
   {
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-    {
-      int launcher_width = unity::Settings::Instance().LauncherSize(ideal_monitor);
-      geo.x += launcher_width;
-      geo.width -= launcher_width;
-    }
-    else
-    {
-      int launcher_height = unity::Settings::Instance().LauncherSize(ideal_monitor);
-      geo.height -= launcher_height;
-    }
+    int launcher_width = unity::Settings::Instance().LauncherSize(ideal_monitor);
+    geo.x += launcher_width;
+    geo.width -= launcher_width;
   }
 
   return geo;

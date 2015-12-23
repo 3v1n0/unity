@@ -23,6 +23,7 @@
 #include "EdgeBarrierControllerPrivate.h"
 #include "Decaymulator.h"
 #include <NuxCore/Logger.h>
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
 
@@ -93,6 +94,7 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   }));*/
 
   uscreen->changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnUScreenChanged));
+  Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged)));
 
   parent_->force_disable.changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnForceDisableChanged));
 
@@ -172,7 +174,6 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
   {
     vertical_barriers_.clear();
     horizontal_barriers_.clear();
-    horizontal_bottom_barriers_.clear();
     return;
   }
 
@@ -183,9 +184,6 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
 
   if (horizontal_barriers_.size() > num_monitors)
     horizontal_barriers_.resize(num_monitors);
-
-  if (horizontal_bottom_barriers_.size() > num_monitors)
-    horizontal_bottom_barriers_.resize(num_monitors);
 
   while (vertical_barriers_.size() < num_monitors)
   {
@@ -201,14 +199,6 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
     barrier->orientation = HORIZONTAL;
     barrier->barrier_event.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnPointerBarrierEvent));
     horizontal_barriers_.push_back(barrier);
-  }
-
-  while (horizontal_bottom_barriers_.size() < num_monitors)
-  {
-    auto barrier = std::make_shared<PointerBarrierWrapper>();
-    barrier->orientation = VERTICAL;
-    barrier->barrier_event.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnPointerBarrierEvent));
-    horizontal_bottom_barriers_.push_back(barrier);
   }
 }
 
@@ -230,17 +220,16 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     return;
 
   bool edge_resist = parent_->sticky_edges();
+  auto launcher_position = Settings::Instance().launcher_position();
 
   for (unsigned i = 0; i < layout.size(); i++)
   {
     auto vertical_barrier = vertical_barriers_[i];
     auto horizontal_barrier = horizontal_barriers_[i];
-    auto horizontal_bottom_barrier = horizontal_bottom_barriers_[i];
     auto monitor = layout[i];
 
     vertical_barrier->DestroyBarrier();
     horizontal_barrier->DestroyBarrier();
-    horizontal_bottom_barrier->DestroyBarrier();
 
     if (edge_resist)
     {
@@ -260,28 +249,27 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     if (!edge_resist && parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER)
       continue;
 
-    vertical_barrier->x1 = monitor.x;
-    vertical_barrier->x2 = monitor.x;
-    vertical_barrier->y1 = monitor.y;
-    vertical_barrier->y2 = monitor.y + monitor.height;
-    vertical_barrier->index = i;
+    if (launcher_position == LauncherPosition::LEFT)
+    {
+      vertical_barrier->x1 = monitor.x;
+      vertical_barrier->x2 = monitor.x;
+      vertical_barrier->y1 = monitor.y;
+      vertical_barrier->y2 = monitor.y + monitor.height;
+    }
+    else
+    {
+      vertical_barrier->x1 = monitor.x;
+      vertical_barrier->x2 = monitor.x + monitor.width;
+      vertical_barrier->y1 = monitor.y + monitor.height;
+      vertical_barrier->y2 = monitor.y + monitor.height;
+      vertical_barrier->direction = DOWN;
+    }
 
+    vertical_barrier->index = i;
     vertical_barrier->threshold = parent_->options()->edge_stop_velocity();
     vertical_barrier->max_velocity_multiplier = parent_->options()->edge_responsiveness();
 
     vertical_barrier->ConstructBarrier();
-
-    horizontal_bottom_barrier->x1 = monitor.x;
-    horizontal_bottom_barrier->x2 = monitor.x + monitor.width;
-    horizontal_bottom_barrier->y1 = monitor.y + monitor.height;
-    horizontal_bottom_barrier->y2 = monitor.y + monitor.height;
-    horizontal_bottom_barrier->index = i;
-    horizontal_bottom_barrier->direction = DOWN;
-
-    horizontal_bottom_barrier->threshold = parent_->options()->edge_stop_velocity();
-    horizontal_bottom_barrier->max_velocity_multiplier = parent_->options()->edge_responsiveness();
-
-    horizontal_bottom_barrier->ConstructBarrier();
   }
 
   SetupXI2Events();

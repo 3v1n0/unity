@@ -207,7 +207,7 @@ public:
 
   void CacheLauncherPosition()
   {
-      cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(usettings_, LAUNCHER_POSITION.c_str()));
+    cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(usettings_, LAUNCHER_POSITION.c_str()));
   }
 
   void UpdateLimSetting()
@@ -235,13 +235,13 @@ public:
 
   LauncherPosition GetLauncherPosition() const
   {
-      return cached_launcher_position_;
+    return cached_launcher_position_;
   }
 
   bool SetLauncherPosition(LauncherPosition launcherPosition)
   {
-      g_settings_set_enum(usettings_, LAUNCHER_POSITION.c_str(), static_cast<int>(launcherPosition));
-      return false;
+    g_settings_set_enum(usettings_, LAUNCHER_POSITION.c_str(), static_cast<int>(launcherPosition));
+    return false;
   }
 
   int GetFontSize() const
@@ -447,7 +447,7 @@ void Settings::SetLauncherSize(int launcher_size, int monitor)
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating laucher size.";
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating launcher size.";
   }
   else
   {

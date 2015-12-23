@@ -37,8 +37,8 @@ enum class FormFactor
 
 enum class LauncherPosition
 {
-    LEFT = 0,
-    BOTTOM
+  LEFT = 0,
+  BOTTOM
 };
 
 class Settings
