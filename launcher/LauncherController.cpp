@@ -1049,6 +1049,8 @@ void Controller::Impl::SetupIcons()
   favorite_store.favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   favorite_store.reordered.connect(sigc::mem_fun(this, &Impl::ResetIconPriorities));
 
+  model_->icon_added.connect(sigc::mem_fun(&parent_->icon_added, &decltype(parent_->icon_added)::emit));
+  model_->icon_removed.connect(sigc::mem_fun(&parent_->icon_removed, &decltype(parent_->icon_removed)::emit));
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
   model_->icon_removed.connect(sigc::mem_fun(this, &Impl::OnIconRemoved));
   model_->saved.connect(sigc::mem_fun(this, &Impl::SaveIconsOrder));
@@ -1115,13 +1117,10 @@ std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current, 
 
   for (auto icon : *(pimpl->model_))
   {
-    if (icon->ShowInSwitcher(current))
+    //otherwise we get two desktop icons in the switcher.
+    if (icon->GetIconType() != AbstractLauncherIcon::IconType::DESKTOP)
     {
-      //otherwise we get two desktop icons in the switcher.
-      if (icon->GetIconType() != AbstractLauncherIcon::IconType::DESKTOP)
-      {
-        results.push_back(icon);
-      }
+      results.push_back(icon);
     }
   }
   return results;

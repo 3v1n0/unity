@@ -40,6 +40,7 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.panel.indicator.entry");
 const int DEFAULT_SPACING = 3;
+const std::string IMAGE_MISSING = "image-missing";
 }
 
 using namespace indicator;
@@ -98,29 +99,6 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 
 void PanelIndicatorEntryView::ShowMenu(int button)
 {
-  WindowManager& wm = WindowManager::Default();
-
-  if (wm.IsExpoActive())
-  {
-    // Delay the activation until expo is closed
-    auto conn = std::make_shared<connection::Wrapper>();
-    *conn = wm.terminate_expo.connect([this, conn, button] {
-      ShowMenu(button);
-      (*conn)->disconnect();
-    });
-
-    wm.TerminateExpo();
-    return;
-  }
-
-  if (wm.IsScaleActive())
-  {
-    if (type_ == MENU)
-      return;
-
-    wm.TerminateScale();
-  }
-
   auto const& abs_geo = GetAbsoluteGeometry();
   proxy_->ShowMenu(abs_geo.x, abs_geo.y + abs_geo.height, button);
 }
@@ -142,8 +120,30 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
     }
     else
     {
-      ShowMenu(button);
-      Refresh();
+      WindowManager& wm = WindowManager::Default();
+
+      if (wm.IsExpoActive())
+      {
+        // Delay the activation until expo is closed
+        auto conn = std::make_shared<connection::Wrapper>();
+        *conn = wm.terminate_expo.connect([this, conn, button] {
+          Activate(button);
+          (*conn)->disconnect();
+        });
+
+        wm.TerminateExpo();
+        return;
+      }
+
+      if (wm.IsScaleActive())
+      {
+        if (type_ == MENU)
+          return;
+
+        wm.TerminateScale();
+      }
+
+      Activate(button);
     }
   }
 }
@@ -204,8 +204,12 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 {
   glib::Object<GdkPixbuf> pixbuf;
-  auto image_type = proxy_->image_type();
 
+  // see if we need to do anything
+  if (!proxy_->image_visible() || proxy_->image_data().empty())
+    return pixbuf;
+
+  auto image_type = proxy_->image_type();
   switch (image_type)
   {
     case GTK_IMAGE_PIXBUF:
@@ -248,6 +252,11 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
       {
         auto* filename = gtk_icon_info_get_filename(info);
         pixbuf = gdk_pixbuf_new_from_file_at_size(filename, -1, size, nullptr);
+        // if that failed, whine and load fallback
+        if (!pixbuf)
+        {
+          LOG_WARN(logger) << "failed to load: " << filename;
+        }
       }
       else if (image_type == GTK_IMAGE_ICON_NAME)
       {
@@ -256,6 +265,14 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 
       break;
     }
+  }
+
+  // have a generic fallback pixbuf if for whatever reason icon loading
+  // failed (see LP: #1525186)
+  if (!pixbuf)
+  {
+    GtkIconTheme* theme = gtk_icon_theme_get_default();
+    pixbuf = gtk_icon_theme_load_icon(theme, IMAGE_MISSING.c_str(), size, GTK_ICON_LOOKUP_FORCE_SIZE, nullptr);
   }
 
   return pixbuf;

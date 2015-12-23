@@ -46,9 +46,11 @@ struct Controller::Impl : public sigc::trackable
        Controller::WindowCreator const& create_window);
   virtual ~Impl() {}
 
-  void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
+  void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> const& results);
   void Hide(bool accept_state);
-  void DetailHide();
+
+  void AddIcon(launcher::AbstractLauncherIcon::Ptr const&);
+  void RemoveIcon(launcher::AbstractLauncherIcon::Ptr const&);
 
   void StartDetailMode();
   void StopDetailMode();
@@ -59,6 +61,8 @@ struct Controller::Impl : public sigc::trackable
   void InitiateDetail(bool animate=false);
   void NextDetail();
   void PrevDetail();
+
+  void CloseSelection();
 
   void NextDetailRow();
   void PrevDetailRow();

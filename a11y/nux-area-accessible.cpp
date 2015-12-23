@@ -173,13 +173,15 @@ nux_area_accessible_initialize(AtkObject* accessible,
   accessible->role = ATK_ROLE_UNKNOWN;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
-  area = dynamic_cast<nux::Area*>(nux_object);
+  area = static_cast<nux::Area*>(nux_object);
 
   /* focus support based on Focusable, used on the Dash */
   area->key_nav_focus_change.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
   atk_component_add_focus_handler(ATK_COMPONENT(accessible),
                                   nux_area_accessible_focus_handler);
+G_GNUC_END_IGNORE_DEPRECATIONS
 
   /* NOTE: we can't search for the parent window on initialization as a
      general rule, or we could enter an infinite loop. At area this
@@ -204,11 +206,10 @@ nux_area_accessible_get_parent(AtkObject* obj)
   if (nux_object == NULL) /* defunct */
     return NULL;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
-
+  area = static_cast<nux::Area*>(nux_object);
   parent = area->GetParentObject();
 
-  return unity_a11y_get_accessible(parent);
+  return parent ? unity_a11y_get_accessible(parent) : NULL;
 }
 
 /*
@@ -250,7 +251,7 @@ nux_area_accessible_ref_state_set(AtkObject* obj)
   if (nux_object == NULL) /* defunct */
     return state_set;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
+  area = static_cast<nux::Area*>(nux_object);
 
   if (area->IsSensitive())
   {
@@ -312,8 +313,7 @@ nux_area_accessible_get_extents(AtkComponent* component,
   if (nux_object == NULL) /* defunct */
     return;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
-
+  area = static_cast<nux::Area*>(nux_object);
   geometry = area->GetGeometry();
 
   *width = geometry.GetWidth();
@@ -348,8 +348,6 @@ nux_area_accessible_grab_focus(AtkComponent* component)
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(component));
   if (nux_object == NULL) /* defunct */
     return FALSE;
-
-  //area = dynamic_cast<nux::Area*>(nux_object);
 
   /* FIXME: SetFocused doesn't return if the force was successful or
      not, we suppose that this is the case like in cally and gail */
@@ -450,14 +448,16 @@ gboolean
 nux_area_accessible_parent_window_active(NuxAreaAccessible* self)
 {
   AtkStateSet* state_set = NULL;
+  gboolean active = FALSE;
 
   check_parent_window_connected(self);
 
-  state_set = atk_object_ref_state_set(ATK_OBJECT(self->priv->parent_window));
-
-  gboolean active = atk_state_set_contains_state(state_set, ATK_STATE_ACTIVE);
-
-  g_object_unref(state_set);
+  if (ATK_IS_OBJECT(self->priv->parent_window))
+  {
+    state_set = atk_object_ref_state_set(ATK_OBJECT(self->priv->parent_window));
+    active = atk_state_set_contains_state(state_set, ATK_STATE_ACTIVE);
+    g_object_unref(state_set);
+  }
 
   return active;
 }
@@ -536,8 +536,8 @@ nux_area_accessible_real_check_pending_notification(NuxAreaAccessible* self)
   if (nux_object == NULL) /* defunct */
     return FALSE;
 
-  g_signal_emit_by_name(self, "focus_event", self->priv->focused);
-  atk_focus_tracker_notify(ATK_OBJECT(self));
+  g_signal_emit_by_name(self, "focus-event", self->priv->focused);
+  atk_object_notify_state_change(ATK_OBJECT(self), ATK_STATE_FOCUSED, self->priv->focused);
   self->priv->pending_notification = FALSE;
 
   return TRUE;
@@ -556,7 +556,7 @@ check_focus(NuxAreaAccessible* self)
   if (nux_object == NULL) /* defunct */
     return;
 
-  area = dynamic_cast<nux::Area*>(nux_object);
+  area = static_cast<nux::Area*>(nux_object);
 
   if (nux::GetWindowCompositor().GetKeyFocusArea() == area)
     focus_in = TRUE;
@@ -575,7 +575,7 @@ check_focus(NuxAreaAccessible* self)
     else
     {
       g_signal_emit_by_name(self, "focus_event", focus_in);
-      atk_focus_tracker_notify(ATK_OBJECT(self));
+      atk_object_notify_state_change(ATK_OBJECT(self), ATK_STATE_FOCUSED, focus_in);
       self->priv->pending_notification = FALSE;
     }
   }

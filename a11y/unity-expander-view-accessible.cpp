@@ -135,10 +135,8 @@ unity_expander_view_accessible_initialize(AtkObject* accessible,
   ATK_OBJECT_CLASS(unity_expander_view_accessible_parent_class)->initialize(accessible, data);
 
   object = (nux::Object*)data;
-  view = dynamic_cast<ExpanderView*>(object);
-
+  view = static_cast<ExpanderView*>(object);
   view->key_nav_focus_change.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
-
   view->expanded.changed.connect(sigc::bind(sigc::ptr_fun(on_expanded_changed_cb), accessible));
   view->label.changed.connect(sigc::bind(sigc::ptr_fun(on_name_changed_cb), accessible));
 

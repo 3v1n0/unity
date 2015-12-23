@@ -1,3 +1,96 @@
+unity (7.4.0+16.04.20151218-0ubuntu1) xenial; urgency=medium
+
+  [ Aneesh Madhavan ]
+  * resources: optimize png images (LP: #1023745)
+
+  [ Evan McIntire ]
+  * ShortcutHint: Add key shortcut hints for Screenshot and Window
+    Screenshot (LP: #1050195)
+
+  [ Marco Trevisan (Treviño) ]
+  * CompizShortcutModeller: show menus keybinding can be read from
+    settings
+  * GnomeKeyGrabber: refcount the actions and remove them only when
+    nobody needs (LP: #1525308)
+  * LayoutSystem: add ComputeDecorationHeight method to LayoutWindow
+    (LP: #1526386)
+  * PanelMenuView: ensure that the maximized window is computed when
+    setting the monitor (LP: #1526835)
+  * SwitcherModel: don't reiterate over windows all the time, keep a
+    list and update it (LP: #1526434)
+  * TextInput: reduce opacity to warning if only num_lock is enabled
+  * Unity: compile a byte regex in order to get proper matching with
+    byte cmdline (LP: #1526455)
+  * a11y: don't spam the log with warnings when a quicklist is opened
+  * a11y: move accessibility stuff to its own directory, adding a
+    private lib for building
+
+  [ Michael Vogt ]
+  * Display "image-missing" icon in the panel if for some reason a icon
+    can not be loaded. (LP: #1525186)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 18 Dec 2015 00:01:39 +0000
+
+unity (7.4.0+16.04.20151211-0ubuntu2) xenial; urgency=medium
+
+  * rebuild against latest libunity to update the list of recommends
+    (LP: #1521208)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 15 Dec 2015 09:29:52 +0100
+
+unity (7.4.0+16.04.20151211-0ubuntu1) xenial; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * unity: ensure we use python3 for the launch script and
+    python2.7 for autopilot (LP: #1512909)
+
+  [ Andrea Azzarone ]
+  * Places(Overlay)VScrollBar: impelement gtk-like overlay scrollbars
+    (LP: #1481706)
+  * Properly hide shortcut overlay window to avoid unnecessary redraws.
+
+  [ Bryan Quigley ]
+  * debian/control: Remove telepathy from recommends
+
+  [ Eleni Maria Stea ]
+  * Replaced deprecated calls in tests to get rid of compiler warnings
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: if a new window opens while spreading,
+    spread again with proper match (LP: #1517455)
+  * ExpoLauncherIcon: add Quicklist to switch workspace and see the
+    selected one (LP: #750497)
+  * PanelIndicatorEntryView: Activate menus on click, by drawing them as
+    active (LP: #1513523)
+  * PanelMenuView: ignore leave events when triggered by feeding nux
+    manually (LP: #1513496)
+  * Places(Overlay)VScrollBar: impelement gtk-like overlay scrollbars
+    (LP: #1481706)
+  * SwitcherModel: allow to add/remove icons dynamically and update them
+    when they require it (LP: #1512349)
+  * SwitcherView: Add support to Alt+Key-right-to-tab to close the
+    selected app/window
+  * Switcher{View,Controller}: close active selection on Alt+q (LP:
+    #1468820)
+  * TextInput: show warning also when num lock is enabled
+  * XKeyboardUtil: add ability to get keycodes from any relative
+    position
+  * debian/rules: enable unit tests on arm64 again (LP: #1514538)
+
+  [ Sebastien Bacher ]
+  * Updated apport hook to include: the compiz and xorg details, not
+    only after asking users if the issue is a graphical one (which is
+    weird question) the upstart logs for unity/ups/lockscreen some
+    gsettings configurations (LP: #1508974)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 11 Dec 2015 12:46:16 +0000
+
+unity (7.4.0+16.04.20151102-0ubuntu2) xenial; urgency=medium
+
+  * No-change rebuild against libglew1.13
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 11 Nov 2015 19:49:37 +0000
+
 unity (7.4.0+16.04.20151102-0ubuntu1) xenial; urgency=medium
 
   [ Marco Trevisan (Treviño) ]

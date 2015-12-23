@@ -165,10 +165,12 @@ void Panel::OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, in
   if (!GetInputEventSensitivity())
     return;
 
-  // This is ugly... But Nux fault!
-  WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
-
-  active = true;
+  if (!active)
+  {
+    // This is ugly... But Nux fault!
+    WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
+    active = true;
+  }
 }
 
 void Panel::OnEntryActivateRequest(std::string const& entry_id)

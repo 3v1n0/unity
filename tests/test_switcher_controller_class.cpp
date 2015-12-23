@@ -64,6 +64,11 @@ WindowList FakeLauncherIcon::Windows()
   return window_list;
 }
 
+bool FakeLauncherIcon::ShowInSwitcher(bool)
+{
+  return true;
+}
+
 bool FakeLauncherIcon::AllowDetailViewInSwitcher() const
 {
   return allow_detail_view_;
