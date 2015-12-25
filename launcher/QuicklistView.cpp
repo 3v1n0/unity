@@ -684,7 +684,9 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist(int x, int y, unsigned long 
 
 nux::Area* QuicklistView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
-  if (mouse_position.x > _anchorX)
+  auto launcher_position = Settings::Instance().launcher_position();
+  if ((launcher_position == LauncherPosition::LEFT && (mouse_position.x > _anchorX)) ||
+      (launcher_position == LauncherPosition::BOTTOM && (mouse_position.y < _anchorY)))
   {
     return (CairoBaseWindow::FindAreaUnderMouse(mouse_position, event_type));
   }
