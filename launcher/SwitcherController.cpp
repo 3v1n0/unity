@@ -154,24 +154,6 @@ void Controller::Impl::StopDetailMode()
   }
 }
 
-void Controller::Impl::CloseSelection()
-{
-  if (obj_->detail())
-  {
-    if (model_->detail_selection)
-    {
-      WindowManager::Default().Close(model_->DetailSelectionWindow());
-    }
-  }
-  else
-  {
-    // Using model_->Selection()->Close() would be nicer, but it wouldn't take
-    // in consideration the workspace related settings
-    for (auto window : model_->SelectionWindows())
-      WindowManager::Default().Close(window);
-  }
-}
-
 void Controller::Next()
 {
   impl_->Next();
@@ -461,7 +443,6 @@ void Controller::Impl::ConstructView()
   view_->switcher_prev.connect(sigc::mem_fun(this, &Impl::Prev));
   view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
   view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
-  view_->switcher_close_current.connect(sigc::mem_fun(this, &Impl::CloseSelection));
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
@@ -720,14 +701,11 @@ void Controller::Impl::SelectFirstItem()
   uint64_t second_first = 0; // second icons first highest active
 
   WindowManager& wm = WindowManager::Default();
-  for (auto& window : first->Windows())
+  auto const& windows = (model_->only_apps_on_viewport) ? first->WindowsOnViewport() : first->Windows();
+
+  for (auto& window : windows)
   {
-    Window xid = window->window_id();
-
-    if (model_->only_apps_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
-      continue;
-
-    uint64_t num = wm.GetWindowActiveNumber(xid);
+    uint64_t num = wm.GetWindowActiveNumber(window->window_id());
 
     if (num > first_highest)
     {
