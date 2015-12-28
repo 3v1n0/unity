@@ -538,7 +538,7 @@ TEST_F(TestLauncher, EdgeBarriersIgnoreEvents)
 
 TEST_F(TestLauncher, EdgeBarriersHandlesEvent)
 {
-  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.Unity"));
+  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.Unity.Launcher"));
   auto launcher_geo = launcher_->GetAbsoluteGeometry();
   auto barrier = std::make_shared<ui::PointerBarrierWrapper>();
   auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);

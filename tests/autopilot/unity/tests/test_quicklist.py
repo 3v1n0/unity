@@ -245,9 +245,9 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         self.ql_launcher = self.unity.launcher.get_launcher_for_monitor(0)
 
-        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity', 'launcher-position')
-        self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"%s"' % self.launcher_position)
-        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity', 'launcher-position', old_pos)
+        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity.Launcher', 'launcher-position')
+        self.call_gsettings_cmd('set', 'com.canonical.Unity.Launcher', 'launcher-position', '"%s"' % self.launcher_position)
+        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity.Launcher', 'launcher-position', old_pos)
 
     def open_quicklist_with_mouse(self):
         """Opens a quicklist with the mouse."""

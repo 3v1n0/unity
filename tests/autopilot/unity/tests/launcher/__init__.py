@@ -50,9 +50,9 @@ class LauncherTestCase(UnityTestCase):
         self.set_unity_option('num_launchers', int(self.only_primary))
         self.launcher_instance = self.get_launcher()
 
-        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity', 'launcher-position')
-        self.call_gsettings_cmd('set', 'com.canonical.Unity', 'launcher-position', '"%s"' % self.launcher_position)
-        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity', 'launcher-position', old_pos)
+        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity.Launcher', 'launcher-position')
+        self.call_gsettings_cmd('set', 'com.canonical.Unity.Launcher', 'launcher-position', '"%s"' % self.launcher_position)
+        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity.Launcher', 'launcher-position', old_pos)
 
         if not self.launcher_instance:
             self.skipTest("Cannot run test with no Launcher on monitor %d." % self.launcher_monitor)

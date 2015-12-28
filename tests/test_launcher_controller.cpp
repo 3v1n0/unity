@@ -487,7 +487,7 @@ TEST_F(TestLauncherController, MonitorResizesLauncher)
 
 TEST_F(TestLauncherController, LauncherPositionResetsOnGsettingsUpdated)
 {
-  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.Unity"));
+  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.Unity.Launcher"));
   g_settings_set_enum(gsettings, "launcher-position", static_cast<int>(LauncherPosition::LEFT));
   nux::Geometry const& monitor_geo = uscreen.GetMonitorGeometry(0);
   nux::Geometry launcher_geo = lc.launcher().GetAbsoluteGeometry();
@@ -501,7 +501,7 @@ TEST_F(TestLauncherController, LauncherPositionResetsOnGsettingsUpdated)
   ASSERT_EQ(launcher_geo.y, monitor_geo.y + monitor_geo.height - launcher_geo.height + 1);
   ASSERT_EQ(launcher_geo.width, monitor_geo.width);
 
-  g_settings_reset(gsettings, "launcher_position");
+  g_settings_reset(gsettings, "launcher-position");
 }
 
 TEST_F(TestLauncherController, IconCentersResetsOnMonitorsUpdated)
