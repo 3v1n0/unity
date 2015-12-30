@@ -574,10 +574,11 @@ TEST_F(TestLauncher, EdgeBarriersHandlesEvent)
   g_settings_set_enum(gsettings, "launcher-position", static_cast<int>(LauncherPosition::BOTTOM));
   launcher_geo = launcher_->GetAbsoluteGeometry();
   options_->reveal_trigger = RevealTrigger::EDGE;
+  int panel_height = panel::Style::Instance().PanelHeight(launcher_->monitor());
 
   for (int y = launcher_geo.y; y < launcher_geo.y+launcher_geo.height; ++y)
   {
-    for (int x = launcher_geo.x; x < launcher_geo.x+launcher_geo.width; ++x)
+    for (int x = launcher_geo.x + panel_height; x < launcher_geo.x+launcher_geo.width; ++x)
     {
       event->x = x;
       event->y = y;
@@ -590,7 +591,7 @@ TEST_F(TestLauncher, EdgeBarriersHandlesEvent)
 
   for (int y = launcher_geo.y; y < launcher_geo.y+launcher_geo.height; ++y)
   {
-    for (int x = launcher_geo.x-10; x < launcher_geo.x; ++x)
+    for (int x = launcher_geo.x; x < launcher_geo.x + panel_height; ++x)
     {
       event->x = x;
       event->y = y;
