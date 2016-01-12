@@ -4063,25 +4063,31 @@ void UnityScreen::InitUnityComponents()
      * that must not be considered when drawing an overlay */
 
     auto* launcher = static_cast<Launcher*>(area);
-    int launcher_size = 0;
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-      launcher_size = w - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
+    auto launcher_position = Settings::Instance().launcher_position();
+
+    int size = 0;
+    if (launcher_position == LauncherPosition::LEFT)
+      size = w;
     else
-      launcher_size = h - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
+      size = h;
+    int launcher_size = size - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
 
     unity::Settings::Instance().SetLauncherSize(launcher_size, launcher->monitor);
     int adjustment_x = 0;
-    if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
+    if (launcher_position == LauncherPosition::LEFT)
       adjustment_x = launcher_size;
     shortcut_controller_->SetAdjustment(adjustment_x, panel_style_.PanelHeight(launcher->monitor));
 
-    CompOption::Value v(launcher_size);
-    screen->setOptionForPlugin("expo", "x_offset", v);
+    if (launcher_position == LauncherPosition::LEFT)
+    {
+      CompOption::Value v(launcher_size);
+      screen->setOptionForPlugin("expo", "x_offset", v);
 
-    if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
-      v.set(0);
+      if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
+        v.set(0);
 
-    screen->setOptionForPlugin("scale", "x_offset", v);
+      screen->setOptionForPlugin("scale", "x_offset", v);
+    }
   };
 
   auto check_launchers_size = [this, on_launcher_size_changed] {
