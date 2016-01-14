@@ -70,6 +70,7 @@ namespace
   const std::string UNITYSHELL_OPTION_LAUNCHER_SWITCHER_FORWARD = "launcher_switcher_forward";
   const std::string UNITYSHELL_OPTION_SHOW_HUD = "show_hud";
   const std::string UNITYSHELL_OPTION_PANEL_FIRST_MENU = "panel_first_menu";
+  const std::string UNITYSHELL_OPTION_SHOW_MENUS = "show_menu_bar";
   const std::string UNITYSHELL_OPTION_SPREAD_APP_WINDOWS = "spread_app_windows";
   const std::string UNITYSHELL_OPTION_SPREAD_APP_WINDOWS_ANYWHERE = "spread_app_windows_anywhere";
   const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD = "alt_tab_forward";
@@ -229,8 +230,9 @@ void CompizModeller::AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints)
 
   hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Hold)"),
                                                    _("Reveals the application menu."),
-                                                   shortcut::OptionType::HARDCODED,
-                                                   "Alt"));
+                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   UNITYSHELL_PLUGIN_NAME,
+                                                   UNITYSHELL_OPTION_SHOW_MENUS));
 
   hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
                                                    _("Opens the indicator menu."),
@@ -242,6 +244,16 @@ void CompizModeller::AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints)
                                                    _("Moves focus between indicators."),
                                                    shortcut::OptionType::HARDCODED,
                                                    _("Cursor Left or Right")));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
+                                                   _("Take a screenshot."),
+                                                   shortcut::OptionType::GNOME,
+                                                   "screenshot"));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
+                                                   _("Take a screenshot of the current window."),
+                                                   shortcut::OptionType::GNOME,
+                                                   "window-screenshot"));
 }
 
 void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints, bool ws_enabled)

@@ -292,8 +292,7 @@ unity_switcher_accessible_ref_selection(AtkSelection* selection,
   if (!nux_object) /* state is defunct */
     return 0;
 
-  switcher = dynamic_cast<SwitcherView*>(nux_object);
-
+  switcher = static_cast<SwitcherView*>(nux_object);
   switcher_model = switcher->GetModel();
   selected_index = switcher_model->SelectionIndex();
 
@@ -319,7 +318,7 @@ unity_switcher_accessible_get_selection_count(AtkSelection* selection)
   if (!nux_object) /* state is defunct */
     return 0;
 
-  switcher = dynamic_cast<SwitcherView*>(nux_object);
+  switcher = static_cast<SwitcherView*>(nux_object);
   switcher_model = switcher->GetModel();
 
   if (!switcher_model->Selection())
@@ -344,7 +343,7 @@ unity_switcher_accessible_is_child_selected(AtkSelection* selection,
   if (!nux_object) /* state is defunct */
     return 0;
 
-  switcher = dynamic_cast<SwitcherView*>(nux_object);
+  switcher = static_cast<SwitcherView*>(nux_object);
   switcher_model = switcher->GetModel();
   selected_index = switcher_model->SelectionIndex();
 
@@ -393,7 +392,7 @@ create_children(UnitySwitcherAccessible* self)
   if (!nux_object) /* state is defunct */
     return;
 
-  switcher = dynamic_cast<SwitcherView*>(nux_object);
+  switcher = static_cast<SwitcherView*>(nux_object);
   SwitcherModel::Ptr const& switcher_model = switcher->GetModel();
 
   if (!switcher_model)

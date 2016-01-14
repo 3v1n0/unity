@@ -84,7 +84,8 @@ public:
   launcher::AbstractLauncherIcon::Ptr LastSelection() const;
   int LastSelectionIndex() const;
 
-  std::vector<Window> DetailXids() const;
+  std::vector<Window> SelectionWindows() const;
+  std::vector<Window> const& DetailXids() const;
   Window DetailSelectionWindow() const;
 
   void Next();
@@ -120,7 +121,9 @@ private:
   void ConnectToIconSignals(launcher::AbstractLauncherIcon::Ptr const&);
   void VerifyApplications();
   void UpdateLastActiveApplication();
+  void UpdateDetailXids();
   void OnIconQuirksChanged();
+  void OnIconWindowsUpdated(launcher::AbstractLauncherIcon*);
   void UnsetDetailSelection();
 
   void NextIndex();
@@ -134,6 +137,7 @@ private:
   unsigned int                        row_index_;
   launcher::AbstractLauncherIcon::Ptr last_active_application_;
   std::vector<int>                    row_sizes_;
+  std::vector<Window>                 detail_xids_;
 };
 
 }

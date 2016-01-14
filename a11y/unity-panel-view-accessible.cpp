@@ -28,12 +28,13 @@
  *
  */
 
+#include "config.h"
+#include "unitya11y.h"
+
 #include <glib/gi18n-lib.h>
 #include <Nux/Nux.h>
 #include "PanelView.h"
 #include "unity-panel-view-accessible.h"
-
-#include "unitya11y.h"
 
 using namespace unity::panel;
 

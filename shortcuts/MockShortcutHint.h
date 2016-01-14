@@ -59,6 +59,9 @@ public:
         value = arg1();
         shortkey = prefix() + value() + postfix();
         return true;
+      case OptionType::GNOME:
+        value = arg1();
+        return true;
     }
 
     return false;

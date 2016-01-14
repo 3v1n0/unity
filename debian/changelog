@@ -1,3 +1,36 @@
+unity (7.4.0+16.04.20151218-0ubuntu1) xenial; urgency=medium
+
+  [ Aneesh Madhavan ]
+  * resources: optimize png images (LP: #1023745)
+
+  [ Evan McIntire ]
+  * ShortcutHint: Add key shortcut hints for Screenshot and Window
+    Screenshot (LP: #1050195)
+
+  [ Marco Trevisan (Treviño) ]
+  * CompizShortcutModeller: show menus keybinding can be read from
+    settings
+  * GnomeKeyGrabber: refcount the actions and remove them only when
+    nobody needs (LP: #1525308)
+  * LayoutSystem: add ComputeDecorationHeight method to LayoutWindow
+    (LP: #1526386)
+  * PanelMenuView: ensure that the maximized window is computed when
+    setting the monitor (LP: #1526835)
+  * SwitcherModel: don't reiterate over windows all the time, keep a
+    list and update it (LP: #1526434)
+  * TextInput: reduce opacity to warning if only num_lock is enabled
+  * Unity: compile a byte regex in order to get proper matching with
+    byte cmdline (LP: #1526455)
+  * a11y: don't spam the log with warnings when a quicklist is opened
+  * a11y: move accessibility stuff to its own directory, adding a
+    private lib for building
+
+  [ Michael Vogt ]
+  * Display "image-missing" icon in the panel if for some reason a icon
+    can not be loaded. (LP: #1525186)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 18 Dec 2015 00:01:39 +0000
+
 unity (7.4.0+16.04.20151211-0ubuntu2) xenial; urgency=medium
 
   * rebuild against latest libunity to update the list of recommends

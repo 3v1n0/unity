@@ -52,7 +52,6 @@ struct GnomeGrabber::Impl
   uint32_t GrabDBusAccelerator(std::string const& owner, std::string const& accelerator, uint32_t flags);
   bool UnGrabDBusAccelerator(std::string const& sender, uint32_t action_id);
   void ActivateDBusAction(CompAction const& action, uint32_t id, uint32_t device, uint32_t timestamp) const;
-  bool RemoveActionForOwner(uint32_t action_id, std::string const& owner);
 
   bool IsActionPostponed(CompAction const& action) const;
 
@@ -63,6 +62,7 @@ struct GnomeGrabber::Impl
 
   uint32_t current_action_id_;
   std::vector<uint32_t> actions_ids_;
+  std::vector<uint32_t> actions_customers_;
   CompAction::Vector actions_;
 
   struct OwnerActions { glib::DBusNameWatcher::Ptr watcher; std::unordered_set<uint32_t> actions; };

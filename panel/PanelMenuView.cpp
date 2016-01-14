@@ -179,7 +179,6 @@ void PanelMenuView::SetupWindowButtons()
   window_buttons_ = new WindowButtons();
   window_buttons_->SetParentObject(this);
   window_buttons_->monitor = monitor_;
-  window_buttons_->controlled_window = active_window();
   window_buttons_->opacity = 0.0f;
   window_buttons_->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
   window_buttons_->SetMaximumHeight(panel::Style::Instance().PanelHeight(monitor_));

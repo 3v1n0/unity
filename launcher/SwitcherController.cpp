@@ -154,6 +154,24 @@ void Controller::Impl::StopDetailMode()
   }
 }
 
+void Controller::Impl::CloseSelection()
+{
+  if (obj_->detail())
+  {
+    if (model_->detail_selection)
+    {
+      WindowManager::Default().Close(model_->DetailSelectionWindow());
+    }
+  }
+  else
+  {
+    // Using model_->Selection()->Close() would be nicer, but it wouldn't take
+    // in consideration the workspace related settings
+    for (auto window : model_->SelectionWindows())
+      WindowManager::Default().Close(window);
+  }
+}
+
 void Controller::Next()
 {
   impl_->Next();
@@ -443,6 +461,7 @@ void Controller::Impl::ConstructView()
   view_->switcher_prev.connect(sigc::mem_fun(this, &Impl::Prev));
   view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
   view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
+  view_->switcher_close_current.connect(sigc::mem_fun(this, &Impl::CloseSelection));
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
@@ -557,7 +576,7 @@ SwitcherView::Ptr Controller::Impl::GetView() const
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->Selection()->AllowDetailViewInSwitcher() && model_->DetailXids().size() >= min_windows)
+  if (value && model_->Selection()->AllowDetailViewInSwitcher() && model_->SelectionWindows().size() >= min_windows)
   {
     model_->detail_selection = true;
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
@@ -661,7 +680,7 @@ Selection Controller::Impl::GetCurrentSelection() const
       }
       else if (model_->SelectionIsActive())
       {
-        window = model_->DetailXids().front();
+        window = model_->SelectionWindows().front();
       }
     }
   }
