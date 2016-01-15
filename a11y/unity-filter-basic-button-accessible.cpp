@@ -191,7 +191,7 @@ unity_filter_basic_button_accessible_ref_state_set(AtkObject* obj)
   if (nux_object == NULL) /* defunct */
     return state_set;
 
-  button = dynamic_cast<FilterBasicButton*>(nux_object);
+  button = static_cast<FilterBasicButton*>(nux_object);
 
   atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
   atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
@@ -234,8 +234,7 @@ unity_filter_basic_button_accessible_do_action(AtkAction *action,
   if (nux_object == NULL)
     return FALSE;
 
-  button = dynamic_cast<FilterBasicButton*>(nux_object);
-
+  button = static_cast<FilterBasicButton*>(nux_object);
   button->Activate();
 
   return TRUE;

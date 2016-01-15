@@ -158,8 +158,7 @@ check_selection(UnityRvgridAccessible* self)
   if (!object) /* state is defunct */
     return;
 
-  rvgrid = dynamic_cast<ResultViewGrid*>(object);
-
+  rvgrid = static_cast<ResultViewGrid*>(object);
   index = rvgrid->GetSelectedIndex();
 
   if (index >= 0)

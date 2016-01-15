@@ -143,8 +143,6 @@ private:
 
   void OnCompositorKeyNavFocusChanged(nux::Area*, bool, nux::KeyNavDirection);
 
-  std::string get_search_string() const;
-
   CategoryGroups category_views_;
 
   Scope::Ptr scope_;

@@ -24,6 +24,7 @@
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/XKeyboardUtil.h"
 
 #include <Nux/Nux.h>
 
@@ -72,6 +73,7 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   , last_detail_icon_selected_(-1)
   , last_mouse_scroll_time_(0)
   , check_mouse_first_time_(true)
+  , key_right_to_tab_(NUX_VK_q)
 {
   icon_renderer_->pip_style = OVER_TILE;
   icon_renderer_->monitor = monitors::MAX;
@@ -104,6 +106,14 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
     geo.SetSize(blur_geometry_.width, blur_geometry_.height);
     return geo;
   });
+
+  if (Display* dpy = nux::GetGraphicsDisplay()->GetX11Display())
+  {
+    KeySym sym = keyboard::get_key_right_to_key_symbol(dpy, XStringToKeysym("Tab"));
+
+    if (sym != NoSymbol)
+      key_right_to_tab_ = sym;
+  }
 
   animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &SwitcherView::PreLayoutManagement)));
 }
@@ -165,6 +175,7 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model->selection_changed.connect(sigc::mem_fun(this, &SwitcherView::OnSelectionChanged));
   model->detail_selection.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionChanged));
   model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
+  model->updated.connect(sigc::mem_fun(this, &SwitcherView::QueueRelayout));
 
   last_icon_selected_ = -1;
 
@@ -500,8 +511,8 @@ bool SwitcherView::InspectKeyEvent(unsigned int eventType, unsigned int keysym, 
         switcher_start_detail.emit();
         break;
       default:
-        return false;
-        break;
+        if (keysym == key_right_to_tab_)
+          switcher_close_current.emit();
     }
   }
 
@@ -593,8 +604,9 @@ nux::Geometry SwitcherView::UpdateRenderTargets(float progress)
 
   for (Window window : xids)
   {
-    auto layout_window = std::make_shared<LayoutWindow>(window);
     bool selected = (window == model_->DetailSelectionWindow());
+    auto layout_window = std::make_shared<LayoutWindow>(window);
+    layout_window->ComputeDecorationHeight();
     layout_window->selected = selected;
     layout_window->alpha = (selected ? 1.0f : 0.9f) * progress;
 
@@ -648,7 +660,7 @@ nux::Size SwitcherView::SpreadSize()
   nux::Geometry const& base = GetGeometry();
   nux::Size result(base.width - border_size * 2, base.height - border_size * 2);
 
-  int width_padding = std::max(model_->Size() - 1, 0) * minimum_spacing + tile_size;
+  int width_padding = std::max<int>(model_->Size() - 1, 0) * minimum_spacing + tile_size;
   result.width -= width_padding;
 
   return result;

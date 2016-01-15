@@ -71,7 +71,7 @@ public:
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
   nux::Property<bool> show_activator;
-  nux::Property<bool> show_caps_lock;
+  nux::Property<bool> show_lock_warnings;
   nux::Property<double> scale;
 
 private:
@@ -85,14 +85,12 @@ private:
   void UpdateSize();
 
   std::string GetName() const;
-
   void AddProperties(debug::IntrospectionData&);
+
   bool AcceptKeyNavFocus();
-
   bool ShouldBeHighlighted();
-
-  nux::Geometry GetWaringIconGeometry() const;
-  void CheckIfCapsLockOn();
+  void CheckLocks();
+  void OnLockStateChanged(bool);
 
   nux::ObjectPtr<nux::BaseTexture> LoadActivatorIcon(std::string const& icon_file, int icon_size);
   nux::ObjectPtr<nux::BaseTexture> LoadWarningIcon(int icon_size);
@@ -125,6 +123,7 @@ private:
   SearchBarSpinner* spinner_;
 
   nux::Property<bool> caps_lock_on;
+  nux::Property<bool> num_lock_on;
   int last_width_;
   int last_height_;
 

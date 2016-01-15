@@ -98,7 +98,9 @@ bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t& action_id
   auto it = std::find(actions_.begin(), actions_.end(), action);
   if (it != actions_.end())
   {
-    action_id = actions_ids_[it - actions_.begin()];
+    auto action_index = it - actions_.begin();
+    action_id = actions_ids_[action_index];
+    ++actions_customers_[action_index];
     LOG_DEBUG(logger) << "Key binding \"" << action.keyToString() << "\" is already grabbed, reusing id " << action_id;
     return true;
   }
@@ -107,6 +109,7 @@ bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t& action_id
   {
     actions_ids_.push_back(action_id);
     actions_.push_back(action);
+    actions_customers_.push_back(1);
     return true;
   }
 
@@ -148,12 +151,23 @@ bool GnomeGrabber::Impl::RemoveActionByIndex(size_t index)
   if (!index || index >= actions_.size())
     return false;
 
+  if (actions_customers_[index] > 1)
+  {
+    LOG_DEBUG(logger) << "Not removing action " << actions_[index].keyToString()
+                      << " as it is used by multiple customers ("
+                      << actions_customers_[index] << ")";
+
+    --actions_customers_[index];
+    return false;
+  }
+
   CompAction* action = &(actions_[index]);
   LOG_DEBUG(logger) << "RemoveAction (\"" << action->keyToString() << "\")";
 
   screen_->removeAction(action);
   actions_.erase(actions_.begin() + index);
   actions_ids_.erase(actions_ids_.begin() + index);
+  actions_customers_.erase(actions_customers_.begin() + index);
 
   return true;
 }
@@ -258,7 +272,7 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& owner, std::
         if (it != actions_by_owner_.end())
         {
           for (auto action_id : it->second.actions)
-            RemoveActionForOwner(action_id, name);
+            RemoveActionByID(action_id);
 
           actions_by_owner_.erase(it);
         }
@@ -284,30 +298,12 @@ bool GnomeGrabber::Impl::UnGrabDBusAccelerator(std::string const& owner, uint32_
     if (actions.empty())
       actions_by_owner_.erase(it);
 
-    return RemoveActionForOwner(action_id, owner);
+    return RemoveActionByID(action_id);
   }
 
   LOG_WARN(logger) << "Action " << action_id << " was not registered by " << owner << ". "
                    << "Unregistration denied";
   return false;
-}
-
-bool GnomeGrabber::Impl::RemoveActionForOwner(uint32_t action_id, std::string const& owner)
-{
-  for (auto it = actions_by_owner_.begin(); it != actions_by_owner_.end(); ++it)
-  {
-    if (it->first == owner)
-      continue;
-
-    auto const& actions = it->second.actions;
-    if (actions.find(action_id) != actions.end())
-    {
-      LOG_DEBUG(logger) << "Action " << action_id << " registered for multiple destinations, not removed";
-      return false;
-    }
-  }
-
-  return RemoveActionByID(action_id);
 }
 
 void GnomeGrabber::Impl::ActivateDBusAction(CompAction const& action, uint32_t action_id, uint32_t device, uint32_t timestamp) const

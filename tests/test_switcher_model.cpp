@@ -43,7 +43,7 @@ class MockLauncherIcon2 : public unity::launcher::MockLauncherIcon
 public:
   MockLauncherIcon2(int id)
   : id_(id)
-  { }
+  {}
 
   int id_;
 };
@@ -61,33 +61,33 @@ public:
   TestSwitcherModel()
   {
     for (int i = 0; i < 4; ++i)
-    {
       icons_.push_back(AbstractLauncherIcon::Ptr(new MockLauncherIcon2(i)));
-    }
+
+    model = std::make_shared<SwitcherModel>(icons_, false);
   }
 
 protected:
   std::vector<AbstractLauncherIcon::Ptr> icons_;
+  SwitcherModel::Ptr model;
 };
 
 
 TEST_F(TestSwitcherModel, TestConstructor)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
-
   EXPECT_EQ(model->Size(), icons_.size());
   EXPECT_EQ(model->Selection(), icons_.front());
   EXPECT_EQ(model->LastSelection(), icons_.front());
   EXPECT_EQ(model->SelectionIndex(), 0);
   EXPECT_EQ(model->LastSelectionIndex(), 0);
-  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
+  EXPECT_FALSE(model->SelectionWindows().empty());
+  EXPECT_TRUE(model->DetailXids().empty());
+  EXPECT_FALSE(model->detail_selection);
+  EXPECT_EQ(model->detail_selection_index, 0u);
 }
 
 
 TEST_F(TestSwitcherModel, TestSelection)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
-
   EXPECT_EQ(IdentityOf(model->Selection()), 0);
 
   model->Next();
@@ -126,12 +126,12 @@ TEST_F(TestSwitcherModel, TestSelection)
 TEST_F(TestSwitcherModel, TestActiveDetailWindowSort)
 {
   // Create a base case for the null hypothesis.
-  SwitcherModel::Ptr model_detail(new SwitcherModel(icons_));
+  auto model_detail = std::make_shared<SwitcherModel>(icons_, false);
   model_detail->detail_selection = true;
 
   // Create a test case with an active detail window.
   icons_.front()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
-  SwitcherModel::Ptr model_detail_active(new SwitcherModel(icons_));
+  auto model_detail_active = std::make_shared<SwitcherModel>(icons_, false);
   model_detail_active->detail_selection = true;
 
   EXPECT_TRUE(model_detail_active->DetailXids().size() > 2);
@@ -150,19 +150,29 @@ TEST_F(TestSwitcherModel, TestActiveDetailWindowSort)
 
 TEST_F(TestSwitcherModel, SelectionIsActive)
 {
-  SwitcherModel model(icons_);
+  model->Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
+  EXPECT_FALSE(model->SelectionIsActive());
 
-  model.Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
-  EXPECT_FALSE(model.SelectionIsActive());
+  model->Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+  EXPECT_TRUE(model->SelectionIsActive());
+}
 
-  model.Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
-  EXPECT_TRUE(model.SelectionIsActive());
+TEST_F(TestSwitcherModel, DetailXidsIsValidOnSelectionOnly)
+{
+  model->detail_selection = true;
+  EXPECT_FALSE(model->DetailXids().empty());
+  EXPECT_EQ(model->DetailXids(), model->SelectionWindows());
+
+  model->detail_selection = false;
+  EXPECT_TRUE(model->DetailXids().empty());
+  EXPECT_FALSE(model->SelectionWindows().empty());
 }
 
 TEST_F(TestSwitcherModel, TestWebAppActive)
 {
   // Create a base case
-  SwitcherModel::Ptr base_model(new SwitcherModel(icons_));
+  auto base_model = std::make_shared<SwitcherModel>(icons_, false);
+  base_model->detail_selection = true;
 
   // Set the first icon as Active to simulate Firefox being active
   icons_.front()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
@@ -170,18 +180,16 @@ TEST_F(TestSwitcherModel, TestWebAppActive)
   // Set the last icon as Active to simulate that it is a WebApp
   icons_.back()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
 
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
-
-  model->DetailXids();
+  auto new_model = std::make_shared<SwitcherModel>(icons_, false);
+  new_model->detail_selection = true;
 
   // model's front Window should be different than the base case due to the
   // re-sorting in DetailXids().
-  EXPECT_NE(model->DetailXids().front(), base_model->DetailXids().front());
+  EXPECT_NE(new_model->DetailXids().front(), base_model->DetailXids().front());
 }
 
 TEST_F(TestSwitcherModel, TestHasNextDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({2,2});
 
@@ -190,7 +198,6 @@ TEST_F(TestSwitcherModel, TestHasNextDetailRow)
 
 TEST_F(TestSwitcherModel, TestHasNextDetailRowStopsAtTheEnd)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   for (unsigned int i = 0; i < model->DetailXids().size() - 1 &&
        model->HasNextDetailRow(); i++)
@@ -203,7 +210,6 @@ TEST_F(TestSwitcherModel, TestHasNextDetailRowStopsAtTheEnd)
 
 TEST_F(TestSwitcherModel, TestHasPrevDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({2,2});
 
@@ -216,7 +222,6 @@ TEST_F(TestSwitcherModel, TestHasPrevDetailRow)
 
 TEST_F(TestSwitcherModel, TestHasNextThenPrevDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({2,2});
 
@@ -231,7 +236,6 @@ TEST_F(TestSwitcherModel, TestHasNextThenPrevDetailRow)
 
 TEST_F(TestSwitcherModel, TestNextDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({2,2});
 
@@ -245,7 +249,6 @@ TEST_F(TestSwitcherModel, TestNextDetailRow)
 
 TEST_F(TestSwitcherModel, TestNextDetailThenNextDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({2,2});
 
@@ -260,7 +263,6 @@ TEST_F(TestSwitcherModel, TestNextDetailThenNextDetailRow)
 
 TEST_F(TestSwitcherModel, TestPrevDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({2,2});
 
@@ -275,7 +277,6 @@ TEST_F(TestSwitcherModel, TestPrevDetailRow)
 
 TEST_F(TestSwitcherModel, TestNextDetailThenPrevDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({2,2});
 
@@ -292,7 +293,6 @@ TEST_F(TestSwitcherModel, TestNextDetailThenPrevDetailRow)
 
 TEST_F(TestSwitcherModel, TestUnEvenNextDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({3,2});
 
@@ -306,7 +306,6 @@ TEST_F(TestSwitcherModel, TestUnEvenNextDetailRow)
 
 TEST_F(TestSwitcherModel, TestUnEvenPrevDetailRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({3,2});
 
@@ -321,7 +320,6 @@ TEST_F(TestSwitcherModel, TestUnEvenPrevDetailRow)
 
 TEST_F(TestSwitcherModel, TestNextPrevDetailRowMovesLeftInTopRow)
 {
-  SwitcherModel::Ptr model(new SwitcherModel(icons_));
   model->detail_selection = true;
   model->SetRowSizes({3,2});
 

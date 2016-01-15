@@ -30,48 +30,148 @@ using namespace unity;
 namespace
 {
 
-void test_key(Display* x_display, const char* key)
-{
-  KeySym keysym = XStringToKeysym(key);
-  KeySym above_keysym = keyboard::get_key_above_key_symbol(x_display, keysym);
-  EXPECT_NE(above_keysym, NoSymbol);
-}
-
 TEST(TestKeyboardUtil, AboveKeySymbol)
 {
   Display* x_display = XOpenDisplay(NULL);
 
-  test_key(x_display, "Tab");
-  test_key(x_display, "Shift_R");
-  test_key(x_display, "Control_L");
-  test_key(x_display, "space");
-  test_key(x_display, "comma");
-  test_key(x_display, "a");
-  test_key(x_display, "b");
-  test_key(x_display, "c");
-  test_key(x_display, "d");
-  test_key(x_display, "e");
-  test_key(x_display, "f");
-  test_key(x_display, "g");
-  test_key(x_display, "h");
-  test_key(x_display, "i");
-  test_key(x_display, "j");
-  test_key(x_display, "k");
-  test_key(x_display, "l");
-  test_key(x_display, "m");
-  test_key(x_display, "n");
-  test_key(x_display, "o");
-  test_key(x_display, "p");
-  test_key(x_display, "k");
-  test_key(x_display, "r");
-  test_key(x_display, "s");
-  test_key(x_display, "t");
-  test_key(x_display, "u");
-  test_key(x_display, "v");
-  test_key(x_display, "w");
-  test_key(x_display, "x");
-  test_key(x_display, "y");
-  test_key(x_display, "z");
+  ASSERT_EQ(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("escape")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("Tab")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("Shift_R")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("Control_L")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("space")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("comma")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("a")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("b")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("c")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("d")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("e")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("f")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("g")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("h")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("i")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("j")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("k")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("l")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("m")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("n")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("o")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("p")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("k")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("r")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("s")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("t")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("u")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("v")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("w")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("x")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("y")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("z")), NoSymbol);
+}
+
+TEST(TestKeyboardUtil, BelowKeySymbol)
+{
+  Display* x_display = XOpenDisplay(NULL);
+
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("Tab")), NoSymbol);
+  ASSERT_EQ(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("Control_L")), NoSymbol);
+  ASSERT_EQ(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("space")), NoSymbol);
+  ASSERT_EQ(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("comma")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("a")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("b")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("d")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("e")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("f")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("g")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("h")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("i")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("j")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("k")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("l")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("o")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("p")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("k")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("r")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("s")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("t")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("u")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("w")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("x")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("y")), NoSymbol);
+}
+
+TEST(TestKeyboardUtil, RightToKeySymbol)
+{
+  Display* x_display = XOpenDisplay(NULL);
+
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("Tab")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("Shift_R")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("Control_L")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("space")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("comma")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("a")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("b")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("c")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("d")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("e")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("f")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("g")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("h")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("i")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("j")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("k")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("l")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("m")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("n")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("o")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("p")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("k")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("r")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("s")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("t")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("u")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("v")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("w")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("x")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("y")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("z")), NoSymbol);
+}
+
+TEST(TestKeyboardUtil, LeftToKeySymbol)
+{
+  Display* x_display = XOpenDisplay(NULL);
+
+  ASSERT_EQ(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("Tab")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("Shift_R")), NoSymbol);
+  ASSERT_EQ(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("Control_L")), NoSymbol);
+  ASSERT_EQ(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("escape")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("space")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("comma")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("a")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("b")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("c")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("d")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("e")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("f")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("g")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("h")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("i")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("j")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("k")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("l")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("m")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("n")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("o")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("p")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("k")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("r")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("s")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("t")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("u")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("v")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("w")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("x")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("y")), NoSymbol);
+  ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("z")), NoSymbol);
 }
 
 TEST(TestKeyboardUtil, PrintableKeySymbols)

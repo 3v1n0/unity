@@ -21,35 +21,27 @@ if(revert_compiz)
   set (CMAKE_BUILD_TYPE "" CACHE STRING "Build type (Debug/Release/RelWithDebInfo/MinSizeRe)" FORCE)
 endif()
 
-add_dependencies(unityshell
-                 dash-lib
-                 decorations-lib
-                 hud-lib
-                 launcher-lib
-                 lockscreen-lib
-                 panel-lib
-                 shortcuts-lib
-                 shutdown-lib
-                 switcher-lib
-                 unity-core-${UNITY_API_VERSION}
-                 unity-shared
-                 unity-shared-compiz)
+set(UNITY_PRIVATE_LIBS
+    a11y-lib
+    dash-lib
+    decorations-lib
+    hud-lib
+    launcher-lib
+    lockscreen-lib
+    panel-lib
+    shortcuts-lib
+    shutdown-lib
+    switcher-lib
+    unity-core-${UNITY_API_VERSION}
+    unity-shared
+    unity-shared-bamf
+    unity-shared-compiz)
+
+add_dependencies(unityshell ${UNITY_PRIVATE_LIBS})
 
 target_link_libraries(unityshell
-                      dash-lib
-                      decorations-lib
-                      hud-lib
-                      launcher-lib
-                      pam
-                      lockscreen-lib
-                      panel-lib
-                      shortcuts-lib
-                      shutdown-lib
-                      switcher-lib
-                      unity-core-${UNITY_API_VERSION}
-                      unity-shared
-                      unity-shared-bamf
-                      unity-shared-compiz)
+                      ${UNITY_PRIVATE_LIBS}
+                      pam)
 
 set_target_properties(unityshell
                       PROPERTIES INSTALL_RPATH "${CACHED_UNITY_PRIVATE_DEPS_LIBRARY_DIRS}"

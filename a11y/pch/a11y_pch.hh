@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,23 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Jussi Pakkanen <jussi.pakkanen@canonical.com>
+ * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 /*
- * These are the precompiled header includes for Dash.
+ * These are the precompiled header includes for this module.
  * Only system header files can be listed here.
  */
 
-#include <vector>
-#include <string>
-#include <memory>
-
+#include <atk/atk.h>
+#include <glib.h>
+#include <gio/gio.h>
+#include <gmodule.h>
+#include <stdio.h>
+#include <atk-bridge.h>
 #include <Nux/Nux.h>
-
-#include <UnityCore/ModelRowAdaptor.h>
-#include <UnityCore/Model.h>
-#include <UnityCore/Category.h>
-#include <UnityCore/Categories.h>
-#include <UnityCore/Result.h>
-#include <UnityCore/Results.h>
+#include <Nux/WindowThread.h>
+#include <NuxCore/Object.h>

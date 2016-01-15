@@ -259,7 +259,10 @@ private:
     SHORTCUT_HINT
   };
 
-  void initAltTabNextWindow ();
+  static void InitNuxThread(nux::NThread* thread, void* data);
+  void InitUnityComponents();
+  bool InitPluginActions();
+  void InitAltTabNextWindow();
 
   void SendExecuteCommand();
 
@@ -267,16 +270,12 @@ private:
   void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
   void EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers = 0);
 
-  bool initPluginActions();
-  void initLauncher();
-
   void compizDamageNux(CompRegion const& region);
   void determineNuxDamage(CompRegion &nux_damage);
 
   void onRedrawRequested();
   void Relayout();
 
-  static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
 
