@@ -154,6 +154,24 @@ void Controller::Impl::StopDetailMode()
   }
 }
 
+void Controller::Impl::CloseSelection()
+{
+  if (obj_->detail())
+  {
+    if (model_->detail_selection)
+    {
+      WindowManager::Default().Close(model_->DetailSelectionWindow());
+    }
+  }
+  else
+  {
+    // Using model_->Selection()->Close() would be nicer, but it wouldn't take
+    // in consideration the workspace related settings
+    for (auto window : model_->SelectionWindows())
+      WindowManager::Default().Close(window);
+  }
+}
+
 void Controller::Next()
 {
   impl_->Next();
