@@ -114,6 +114,9 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   // Make sure we set the LauncherIcon stick bit too...
   if (app_->sticky() || was_sticky)
     Stick(false); // don't emit the signal
+
+  if (app_->starting())
+    SetQuirk(Quirk::STARTING, true);
 }
 
 void ApplicationLauncherIcon::UnsetApplication()
@@ -149,6 +152,11 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   signals_conn_.Add(app_->urgent.changed.connect([this](bool urgent) {
     LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
     SetQuirk(Quirk::URGENT, urgent);
+  }));
+
+  signals_conn_.Add(app_->starting.changed.connect([this](bool starting) {
+    LOG_DEBUG(logger) << tooltip_text() << " starting now " << (starting ? "true" : "false");
+    SetQuirk(Quirk::STARTING, starting);
   }));
 
   signals_conn_.Add(app_->active.changed.connect([this](bool active) {

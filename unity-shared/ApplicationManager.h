@@ -162,6 +162,7 @@ public:
   nux::ROProperty<bool> active;
   nux::ROProperty<bool> running;
   nux::ROProperty<bool> urgent;
+  nux::ROProperty<bool> starting;
 
   sigc::signal<void> closed;
 

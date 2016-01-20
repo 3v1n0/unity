@@ -45,6 +45,7 @@ public:
   bool GetActive() const;
   bool GetRunning() const;
   bool GetUrgent() const;
+  bool GetStarting() const;
 
 protected:
   ApplicationManager const& manager_;
