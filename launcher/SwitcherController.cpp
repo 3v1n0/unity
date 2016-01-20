@@ -461,6 +461,7 @@ void Controller::Impl::ConstructView()
   view_->switcher_prev.connect(sigc::mem_fun(this, &Impl::Prev));
   view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
   view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
+  view_->switcher_close_current.connect(sigc::mem_fun(this, &Impl::CloseSelection));
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
