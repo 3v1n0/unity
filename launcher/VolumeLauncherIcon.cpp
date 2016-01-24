@@ -161,6 +161,7 @@ public:
     MenuItemsVector result;
 
     AppendOpenItem(result);
+    AppendFormatItem(result);
     AppendSeparatorItem(result);
     AppendNameItem(result);
     AppendSeparatorItem(result);
@@ -169,7 +170,6 @@ public:
     AppendEjectItem(result);
     AppendSafelyRemoveItem(result);
     AppendUnmountItem(result);
-    AppendFormatItem(result);
     AppendQuitItem(result);
 
     return result;
