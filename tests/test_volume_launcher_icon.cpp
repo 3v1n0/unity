@@ -61,6 +61,7 @@ struct TestVolumeLauncherIcon : public Test
     ON_CALL(*volume_, GetName()).WillByDefault(Return("Test Name"));
     ON_CALL(*volume_, GetIconName()).WillByDefault(Return("Test Icon Name"));
     ON_CALL(*volume_, GetIdentifier()).WillByDefault(Return("Test Identifier"));
+    ON_CALL(*volume_, GetUnixDevicePath()).WillByDefault(Return("/dev/sda1"));
     ON_CALL(*volume_, GetUri()).WillByDefault(Return("file:///media/user/device_uri"));
     ON_CALL(*volume_, HasSiblings()).WillByDefault(Return(false));
     ON_CALL(*volume_, CanBeEjected()).WillByDefault(Return(false));

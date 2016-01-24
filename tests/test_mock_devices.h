@@ -83,6 +83,7 @@ struct MockVolume : Volume
   MOCK_CONST_METHOD0(GetName, std::string(void));
   MOCK_CONST_METHOD0(GetIconName, std::string(void));
   MOCK_CONST_METHOD0(GetIdentifier, std::string(void));
+  MOCK_CONST_METHOD0(GetUnixDevicePath, std::string(void));
   MOCK_CONST_METHOD0(GetUri, std::string(void));
   MOCK_CONST_METHOD0(HasSiblings, bool(void));
   MOCK_CONST_METHOD0(CanBeEjected, bool(void));

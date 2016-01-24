@@ -46,6 +46,7 @@ public:
   virtual std::string GetName() const;
   virtual std::string GetIconName() const;
   virtual std::string GetIdentifier() const;
+  virtual std::string GetUnixDevicePath() const;
   virtual std::string GetUri() const;
   virtual bool HasSiblings() const;
   virtual bool IsMounted() const;

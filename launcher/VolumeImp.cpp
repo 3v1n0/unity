@@ -84,6 +84,12 @@ public:
     return uuid.Str() + "-" + label.Str();
   }
 
+  std::string GetUnixDevicePath() const
+  {
+    glib::String ret(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UNIX_DEVICE));
+    return ret.Str();
+  }
+
   bool HasSiblings() const
   {
     glib::Object<GDrive> drive(g_volume_get_drive(volume_));
@@ -223,6 +229,11 @@ std::string VolumeImp::GetIconName() const
 std::string VolumeImp::GetIdentifier() const
 {
   return pimpl->GetIdentifier();
+}
+
+std::string VolumeImp::GetUnixDevicePath() const
+{
+  return pimpl->GetUnixDevicePath();
 }
 
 std::string VolumeImp::GetUri() const
