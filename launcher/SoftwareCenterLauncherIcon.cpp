@@ -46,7 +46,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app,
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
-  : ApplicationLauncherIcon(app)
+  : WindowedLauncherIcon(IconType::APPLICATION)
+  , ApplicationLauncherIcon(app)
   , aptdaemon_trans_(std::make_shared<glib::DBusProxy>("org.debian.apt",
                                                        aptdaemon_trans_id,
                                                        "org.debian.apt.transaction",

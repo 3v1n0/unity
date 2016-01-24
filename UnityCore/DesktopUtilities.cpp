@@ -90,6 +90,11 @@ std::string DesktopUtilities::GetUserRuntimeDirectory()
   return "";
 }
 
+std::string DesktopUtilities::GetUserTrashDirectory()
+{
+  return GetUserDataDirectory().append(G_DIR_SEPARATOR_S "Trash" G_DIR_SEPARATOR_S "files" G_DIR_SEPARATOR_S);
+}
+
 std::vector<std::string> DesktopUtilities::GetSystemDataDirectories()
 {
   const char* const* system_dirs = g_get_system_data_dirs();

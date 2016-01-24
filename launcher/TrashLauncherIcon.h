@@ -23,9 +23,10 @@
 #include <gio/gio.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include "DndData.h"
-#include "SimpleLauncherIcon.h"
+#include "StorageLauncherIcon.h"
 #include "unity-shared/FileManager.h"
 
 namespace unity
@@ -33,7 +34,7 @@ namespace unity
 namespace launcher
 {
 
-class TrashLauncherIcon : public SimpleLauncherIcon
+class TrashLauncherIcon : public StorageLauncherIcon
 {
 public:
   TrashLauncherIcon(FileManager::Ptr const& = nullptr);
@@ -45,21 +46,18 @@ protected:
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
   void OnAcceptDrop(DndData const& dnd_data);
 
+  WindowList GetStorageWindows() const override;
   std::string GetName() const;
 
 private:
-  void ActivateLauncherIcon(ActionArg arg);
-  void OnOpenedLocationsChanged();
+  void OpenInstanceLauncherIcon(Time timestamp) override;
   MenuItemsVector GetMenus();
 
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
 
   bool empty_;
-  FileManager::Ptr file_manager_;
   glib::Cancellable cancellable_;
   glib::Object<GFileMonitor> trash_monitor_;
-  glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent> trash_changed_signal_;
-  glib::Signal<void, DbusmenuMenuitem*, unsigned> empty_activated_signal_;
 };
 
 }
