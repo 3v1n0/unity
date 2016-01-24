@@ -298,6 +298,9 @@ public:
 
   void AppendFormatItem(MenuItemsVector& menu)
   {
+    if (!volume_->CanBeFormatted())
+      return;
+
     glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Format..."));

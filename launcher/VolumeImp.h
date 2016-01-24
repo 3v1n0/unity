@@ -41,6 +41,7 @@ public:
   virtual ~VolumeImp();
 
   virtual bool CanBeEjected() const;
+  virtual bool CanBeFormatted() const;
   virtual bool CanBeRemoved() const;
   virtual bool CanBeStopped() const;
   virtual std::string GetName() const;

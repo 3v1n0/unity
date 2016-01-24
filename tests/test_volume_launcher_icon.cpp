@@ -56,6 +56,7 @@ struct TestVolumeLauncherIcon : public Test
 
   void SetupVolumeDefaultBehavior()
   {
+    ON_CALL(*volume_, CanBeFormatted()).WillByDefault(Return(false));
     ON_CALL(*volume_, CanBeRemoved()).WillByDefault(Return(false));
     ON_CALL(*volume_, CanBeStopped()).WillByDefault(Return(false));
     ON_CALL(*volume_, GetName()).WillByDefault(Return("Test Name"));
