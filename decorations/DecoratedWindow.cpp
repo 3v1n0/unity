@@ -463,12 +463,7 @@ GLTexture* Window::Impl::ShadowTexture() const
 {
   auto const& mi = manager_->impl_;
   if (active() || parent_->scaled())
-  {
-    if (win_->region().numRects() > 1)
-      return mi->shaped_shadow_pixmap_->texture();
-    else
-      return mi->active_shadow_pixmap_->texture();
-  }
+    return win_->region().numRects() > 1 ? mi->shaped_shadow_pixmap_->texture() : mi->active_shadow_pixmap_->texture();
 
   return win_->region().numRects() > 1 ? mi->shaped_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
 }
@@ -659,9 +654,17 @@ void Window::Impl::ComputeShapedShadowQuad()
   int width = texture->width();
   int height = texture->height();
 
-  printf("\n x:%d y:%d, width:%d, height:%d\n", x, y, width, height);
+  auto* quad = &shadow_quads_[Quads::Pos(0)];
+  quad->box.setGeometry(x, y, width, height);
+  quad->matrix = texture->matrix();
+  quad->matrix.x0 = 0.0f - COMP_TEX_COORD_X(quad->matrix, quad->box.x1());
+  quad->matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad->matrix, quad->box.y1());
+
   CompRect shaped_shadow_rect(x, y, width, height);
   if (shaped_shadow_rect != last_shadow_rect_) {
+    auto const& win_region = win_->region();
+    quad->region = CompRegion(quad->box) - win_region;
+
     last_shadow_rect_ = shaped_shadow_rect;
     win_->updateWindowOutputExtents();
   }
@@ -702,10 +705,15 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   glwin_->vertexBuffer()->begin();
 
-  for (unsigned i = 0; i < shadow_quads_.size(); ++i)
-  {
-    auto& quad = shadow_quads_[Quads::Pos(i)];
-    glwin_->glAddGeometry(quad.matrices, quad.region, clip_region);
+  auto &first_quad = shadow_quads_[Quads::Pos(0)];
+  glwin_->glAddGeometry(first_quad.matrices, first_quad.region, clip_region);
+
+  if (win_->region().numRects() == 1) {
+    for (unsigned i = 1; i < shadow_quads_.size(); ++i)
+    {
+      auto& quad = shadow_quads_[Quads::Pos(i)];
+      glwin_->glAddGeometry(quad.matrices, quad.region, clip_region);
+    }
   }
 
   if (glwin_->vertexBuffer()->end())
