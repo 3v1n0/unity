@@ -194,14 +194,7 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter::Value wf)
   bool rectangular = (region.numRects() == 1);
   bool alpha = win->alpha();
 
-  if (!rectangular && alpha) // Non-rectangular windows with alpha channel
-    return elements;
-
-  if (region.boundingRect() != win->geometry()) // Shaped windows
-    return elements;
-
-  if (rectangular)
-    elements |= DecorationElement::SHADOW;
+  elements |= DecorationElement::SHADOW;
 
   if (!win->overrideRedirect() &&
       (win->type() & DECORABLE_WINDOW_TYPES) &&
