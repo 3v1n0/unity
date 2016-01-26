@@ -2987,9 +2987,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       wAttrib.opacity = 0.0;
       int old_index = gWindow->glPaintGetCurrentIndex();
       gWindow->glPaintSetCurrentIndex(MAXSHORT);
+      deco_win_->Paint(matrix, wAttrib, region, mask);
       bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
       gWindow->glPaintSetCurrentIndex(old_index);
-      deco_win_->Paint(matrix, wAttrib, region, mask);
       return ret;
     }
   }
@@ -3028,9 +3028,8 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     wAttrib.brightness *= 0.75f;
   }
 
-  bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
   deco_win_->Paint(matrix, wAttrib, region, mask);
-  return ret;
+  return gWindow->glPaint(wAttrib, matrix, region, mask);
 }
 
 /* handle window painting in an opengl context
@@ -3153,8 +3152,8 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (draw_panel_shadow == DrawPanelShadow::BELOW_WINDOW)
     uScreen->paintPanelShadow(region);
 
-  bool ret = gWindow->glDraw(matrix, attrib, region, mask);
   deco_win_->Draw(matrix, attrib, region, mask);
+  bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
   if (draw_panel_shadow == DrawPanelShadow::OVER_WINDOW)
     uScreen->paintPanelShadow(region);
