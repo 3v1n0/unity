@@ -136,6 +136,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , last_reveal_progress_(0.0f)
   , drag_action_(nux::DNDACTION_NONE)
   , bg_effect_helper_(this)
+  , launcher_position_(unity::Settings::Instance().launcher_position())
   , auto_hide_animation_(ANIM_DURATION_SHORT)
   , hover_animation_(ANIM_DURATION)
   , drag_over_animation_(ANIM_DURATION_LONG)
@@ -189,7 +190,6 @@ Launcher::Launcher(MockableBaseWindow* parent,
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
 
-  launcher_position_ = unity::Settings::Instance().launcher_position();
   launcher_position_changed_ = unity::Settings::Instance().launcher_position.changed.connect([this] (LauncherPosition const& position) {
     launcher_position_ = position;
     OnMonitorChanged(monitor);

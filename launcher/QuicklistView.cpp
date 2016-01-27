@@ -141,7 +141,20 @@ int QuicklistView::CalculateX() const
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
     x = _anchorX - _padding.CP(cv_);
   else
-    x = _anchorX - (ANCHOR_HEIGHT.CP(cv_) / 2) - _top_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  {
+    int size = 0;
+    int max = GetBaseWidth() - ANCHOR_HEIGHT.CP(cv_) - 2 * CORNER_RADIUS.CP(cv_) - 2 * _padding.CP(cv_);
+    if (_top_size.CP(cv_) > max)
+    {
+      size = max;
+    }
+    else if (_top_size.CP(cv_) > 0)
+    {
+      size = _top_size.CP(cv_);
+    }
+    x = _anchorX - (ANCHOR_HEIGHT.CP(cv_) / 2) - size - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  }
+
   return x;
 }
 
@@ -356,16 +369,29 @@ void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
       auto* us = UScreen::GetDefault();
       int ql_monitor = us->GetMonitorAtPosition(_anchorX, _anchorY);
       auto const& ql_monitor_geo = us->GetMonitorGeometry(ql_monitor);
-      int offscreen_size = 0;
-      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-        offscreen_size = GetBaseY() + GetBaseHeight() - (ql_monitor_geo.y + ql_monitor_geo.height);
-      else
-        offscreen_size = GetBaseX() + GetBaseWidth() - (ql_monitor_geo.x + ql_monitor_geo.width);
+      auto launcher_position = Settings::Instance().launcher_position();
 
-      if (offscreen_size > 0)
-        _top_size = offscreen_size + TOP_SIZE;
+      if (launcher_position == LauncherPosition::LEFT)
+      {
+        int offscreen_size = GetBaseY() + GetBaseHeight() - (ql_monitor_geo.y + ql_monitor_geo.height);
+        if (offscreen_size > 0)
+          _top_size = offscreen_size + TOP_SIZE;
+        else
+          _top_size = TOP_SIZE;
+      }
       else
-        _top_size = TOP_SIZE;
+      {
+        int offscreen_size_left = ql_monitor_geo.x - (_anchorX - GetBaseWidth() / 2);
+        int offscreen_size_right = _anchorX + GetBaseWidth()/2 - (ql_monitor_geo.x + ql_monitor_geo.width);
+        int half_size = (GetBaseWidth() / 2) - _padding.CP(cv_) - CORNER_RADIUS.CP(cv_) - (ANCHOR_HEIGHT.CP(cv_) / 2);
+
+        if (offscreen_size_left > 0)
+          _top_size = half_size - offscreen_size_left;
+        else if (offscreen_size_right > 0)
+          _top_size = half_size + offscreen_size_right;
+        else
+          _top_size = half_size;
+      }
 
       SetXY(CalculateX(), CalculateY());
     }
@@ -921,13 +947,14 @@ void ql_compute_full_mask_path(cairo_t* cr,
 
   gfloat padding  = pad;
   int ZEROPOINT5 = 0.0f;
+  auto launcher_position = Settings::Instance().launcher_position();
 
   //gint dynamic_size = height - 2*radius - 2*padding - anchor_height;
   //gint upper_dynamic_size = upper_size;
   //gint lower_dynamic_size = dynamic_size - upper_dynamic_size;
 
   int size = 0;
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position == LauncherPosition::LEFT)
     size = height;
   else
     size = width;
@@ -953,13 +980,16 @@ void ql_compute_full_mask_path(cairo_t* cr,
   }
   else
   {
-    HeightToAnchor = (size - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
+    if (launcher_position == LauncherPosition::LEFT)
+      HeightToAnchor = (size - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
+    else
+      HeightToAnchor = size - 2.0f * radius - anchor_height - 2 * padding;
   }
 
   cairo_translate(cr, -0.5f, -0.5f);
 
   // create path
-  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  if (launcher_position == LauncherPosition::LEFT)
   {
     cairo_move_to(cr, padding + anchor_width + radius + ZEROPOINT5, padding + ZEROPOINT5);  // Point 1
     cairo_line_to(cr, width - padding - radius, padding + ZEROPOINT5);    // Point 2
