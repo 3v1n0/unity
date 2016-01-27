@@ -105,12 +105,8 @@ cu::PixmapTexture::Ptr Manager::Impl::BuildShapedShadowTexture(unsigned int radi
   img.BlurSurface(radius);
 
   cu::CairoContext shadow_ctx(img_width, img_height);
-  cairo_set_source_surface(img_ctx, img.GetSurface(), 0, 0);
+  cairo_set_source_surface(shadow_ctx, img.GetSurface(), 0, 0);
   cairo_paint(shadow_ctx);
-
-  //TODO - remove this debug code
-  const char* fname = "/tmp/cairo.png";
-  cairo_surface_write_to_png(img.GetSurface(), fname);
 
   return shadow_ctx;
 }
