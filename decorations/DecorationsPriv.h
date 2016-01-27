@@ -157,6 +157,8 @@ private:
   Item::Ptr edge_borders_;
 
   EMConverter::Ptr cv_;
+
+  cu::PixmapTexture::Ptr shaped_shadow_pixmap_;
 };
 
 struct Manager::Impl : sigc::trackable
@@ -195,8 +197,6 @@ private:
   DataPool::Ptr data_pool_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;
   cu::PixmapTexture::Ptr inactive_shadow_pixmap_;
-
-  cu::PixmapTexture::Ptr shaped_shadow_pixmap_;
 
   uweak_ptr<decoration::Window> active_deco_win_;
   uweak_ptr<InputMixer> last_mouse_owner_;

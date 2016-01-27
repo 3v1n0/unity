@@ -463,9 +463,9 @@ GLTexture* Window::Impl::ShadowTexture() const
 {
   auto const& mi = manager_->impl_;
   if (active() || parent_->scaled())
-    return win_->region().numRects() > 1 ? mi->shaped_shadow_pixmap_->texture() : mi->active_shadow_pixmap_->texture();
+    return win_->region().numRects() > 1 ? shaped_shadow_pixmap_->texture() : mi->active_shadow_pixmap_->texture();
 
-  return win_->region().numRects() > 1 ? mi->shaped_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
+  return win_->region().numRects() > 1 ? shaped_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
 }
 
 unsigned Window::Impl::ShadowRadius() const
@@ -640,7 +640,7 @@ void Window::Impl::ComputeShapedShadowQuad()
   unsigned int radius = active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
   DecorationsShape shape;
   shape.initShape(win_->id());
-  manager_->impl_->shaped_shadow_pixmap_ = manager_->impl_->BuildShapedShadowTexture(radius, color, shape);
+  shaped_shadow_pixmap_ = manager_->impl_->BuildShapedShadowTexture(radius, color, shape);
 
   const auto* texture = ShadowTexture();
 
