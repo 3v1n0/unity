@@ -712,8 +712,8 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   for (unsigned int i = 0; i < num_quads; ++i)
   {
-      auto& quad = shadow_quads_[Quads::Pos(i)];
-      glwin_->glAddGeometry(quad.matrices, quad.region, clip_region);
+    auto& quad = shadow_quads_[Quads::Pos(i)];
+    glwin_->glAddGeometry(quad.matrices, quad.region, clip_region);
   }
 
   if (glwin_->vertexBuffer()->end())
