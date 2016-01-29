@@ -122,7 +122,17 @@ int Tooltip::CalculateX() const
   }
   else
   {
-    x = _anchorX - (ROTATED_ANCHOR_WIDTH.CP(cv_) / 2) - _left_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+    int size = 0;
+    int max = GetBaseWidth() - ROTATED_ANCHOR_WIDTH.CP(cv_) - 2 * CORNER_RADIUS.CP(cv_) - 2 * _padding.CP(cv_);
+    if (_left_size.CP(cv_) > max)
+    {
+      size = max;
+    }
+    else if (_left_size.CP(cv_) > 0)
+    {
+      size = _left_size.CP(cv_);
+    }
+    x = _anchorX - (ROTATED_ANCHOR_WIDTH.CP(cv_) / 2) - size - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
   }
   return x;
 }
@@ -157,12 +167,17 @@ void Tooltip::SetTooltipPosition(int tip_x, int tip_y)
     auto* us = UScreen::GetDefault();
     int monitor = us->GetMonitorAtPosition(_anchorX, _anchorY);
     auto const& monitor_geo = us->GetMonitorGeometry(monitor);
-    int offscreen_size = GetBaseX() + GetBaseWidth() - (monitor_geo.x + monitor_geo.width);
+    int offscreen_size_right = _anchorX + GetBaseWidth()/2 - (monitor_geo.x + monitor_geo.width);
+    int offscreen_size_left = monitor_geo.x - (_anchorX - GetBaseWidth()/2);
+    int half_size = (GetBaseWidth() / 2) - _padding.CP(cv_) - CORNER_RADIUS.CP(cv_) - (ROTATED_ANCHOR_WIDTH.CP(cv_) / 2);
 
-    if (offscreen_size > 0)
-      _left_size = offscreen_size + LEFT_SIZE;
+    if (offscreen_size_left > 0)
+      _left_size = half_size - offscreen_size_left;
+    else if (offscreen_size_right > 0)
+      _left_size = half_size + offscreen_size_right;
     else
-      _left_size = LEFT_SIZE;
+      _left_size = half_size;
+    _cairo_text_has_changed = true;
   }
 
   SetBaseXY(CalculateX(), CalculateY());
@@ -369,6 +384,10 @@ void _compute_full_mask_path(cairo_t* cr,
     if (left_size > width - 2.0f * radius - anchor_width - 2 * padding)
     {
       WidthToAnchor = 0;
+    }
+    else if (left_size < 0)
+    {
+      WidthToAnchor = width - 2.0f * radius - anchor_width - 2 * padding;
     }
     else
     {
