@@ -670,6 +670,7 @@ void Window::Impl::ComputeShapedShadowQuad()
     last_shadow_rect_ = shaped_shadow_rect;
     win_->updateWindowOutputExtents();
   }
+  cwin_->addDamage(true);
 }
 
 void Window::Impl::Paint(GLMatrix const& transformation,
