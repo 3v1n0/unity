@@ -39,7 +39,7 @@ class LauncherRevealTests(LauncherTestCase):
 
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""
-        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.launcher_instance.move_mouse_beside_launcher()
         self.launcher_instance.mouse_reveal_launcher()
         self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
 
@@ -58,7 +58,7 @@ class LauncherRevealTests(LauncherTestCase):
         """Tests reveal of launchers by mouse pressure to ensure it doesn't
         automatically hide again.
         """
-        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.launcher_instance.move_mouse_beside_launcher()
         self.launcher_instance.mouse_reveal_launcher()
         self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
 

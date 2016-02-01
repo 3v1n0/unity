@@ -77,6 +77,7 @@
 #include "UScreen.h"
 
 #include "config.h"
+#include "unity-shared/UnitySettings.h"
 
 /* FIXME: once we get a better method to add the toplevel windows to
    the accessible root object, this include would not be required */
@@ -3813,9 +3814,9 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
     }
 
     auto max_bounds = NuxGeometryFromCompRect(output.workArea());
-    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
+    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER && Settings::Instance().launcher_position() == LauncherPosition::LEFT)
     {
-      int monitor_width = unity_settings_.LauncherWidth(monitor);
+      int monitor_width = unity_settings_.LauncherSize(monitor);
       max_bounds.x += monitor_width;
       max_bounds.width -= monitor_width;
     }
@@ -4058,22 +4059,35 @@ void UnityScreen::InitUnityComponents()
     manager->PromptLockScreen();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
-    /* The launcher geometry includes 1px used to draw the right margin
+    /* The launcher geometry includes 1px used to draw the right/top margin
      * that must not be considered when drawing an overlay */
 
     auto* launcher = static_cast<Launcher*>(area);
-    int launcher_width = w - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
+    auto launcher_position = Settings::Instance().launcher_position();
 
-    unity::Settings::Instance().SetLauncherWidth(launcher_width, launcher->monitor);
-    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.PanelHeight(launcher->monitor));
+    int size = 0;
+    if (launcher_position == LauncherPosition::LEFT)
+      size = w;
+    else
+      size = h;
+    int launcher_size = size - (1_em).CP(unity_settings_.em(launcher->monitor)->DPIScale());
 
-    CompOption::Value v(launcher_width);
-    screen->setOptionForPlugin("expo", "x_offset", v);
+    unity::Settings::Instance().SetLauncherSize(launcher_size, launcher->monitor);
+    int adjustment_x = 0;
+    if (launcher_position == LauncherPosition::LEFT)
+      adjustment_x = launcher_size;
+    shortcut_controller_->SetAdjustment(adjustment_x, panel_style_.PanelHeight(launcher->monitor));
 
-    if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
-      v.set(0);
+    if (launcher_position == LauncherPosition::LEFT)
+    {
+      CompOption::Value v(launcher_size);
+      screen->setOptionForPlugin("expo", "x_offset", v);
 
-    screen->setOptionForPlugin("scale", "x_offset", v);
+      if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
+        v.set(0);
+
+      screen->setOptionForPlugin("scale", "x_offset", v);
+    }
   };
 
   auto check_launchers_size = [this, on_launcher_size_changed] {

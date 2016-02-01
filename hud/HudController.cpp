@@ -174,7 +174,7 @@ int Controller::GetIdealMonitor()
 
 bool Controller::IsLockedToLauncher(int monitor)
 {
-  if (launcher_locked_out)
+  if (launcher_locked_out && Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
     int primary_monitor = UScreen::GetDefault()->GetPrimaryMonitor();
 
@@ -206,13 +206,13 @@ void Controller::EnsureHud()
 void Controller::SetIcon(std::string const& icon_name)
 {
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
+  int launcher_size = unity::Settings::Instance().LauncherSize(monitor_index_);
 
   if (view_)
   {
     double scale = view_->scale();
     int tsize = tile_size().CP(scale);
-    view_->SetIcon(icon_name, tsize, icon_size().CP(scale), launcher_width - tsize);
+    view_->SetIcon(icon_name, tsize, icon_size().CP(scale), launcher_size - tsize);
   }
 
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
@@ -253,7 +253,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
   if (IsLockedToLauncher(ideal_monitor))
   {
-    int launcher_width = unity::Settings::Instance().LauncherWidth(ideal_monitor);
+    int launcher_width = unity::Settings::Instance().LauncherSize(ideal_monitor);
     geo.x += launcher_width;
     geo.width -= launcher_width;
   }
@@ -269,12 +269,17 @@ void Controller::Relayout(bool check_monitor)
     monitor_index_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
 
   nux::Geometry const& geo = GetIdealWindowGeometry();
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
 
   view_->QueueDraw();
   window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
-  view_->SetMonitorOffset(launcher_width, panel_style.PanelHeight(monitor_index_));
+
+  int horizontal_offset = 0;
+
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    horizontal_offset = unity::Settings::Instance().LauncherSize(monitor_index_);
+
+  view_->SetMonitorOffset(horizontal_offset, panel_style.PanelHeight(monitor_index_));
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,

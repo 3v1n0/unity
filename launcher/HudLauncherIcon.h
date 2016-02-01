@@ -32,9 +32,8 @@ namespace launcher
 
 class HudLauncherIcon : public SingleMonitorLauncherIcon
 {
-
 public:
-  HudLauncherIcon(LauncherHideMode hide_mode);
+  HudLauncherIcon();
 
   virtual nux::Color BackgroundColor() const;
   virtual nux::Color GlowColor();
@@ -53,7 +52,7 @@ private:
   nux::Color background_color_;
   LauncherHideMode launcher_hide_mode_;
   UBusManager ubus_manager_;
-  gint32 overlay_monitor_; 
+  gint32 overlay_monitor_;
   bool single_launcher_;
   int launcher_monitor_;
 };

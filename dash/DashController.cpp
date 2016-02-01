@@ -231,15 +231,22 @@ int Controller::GetIdealMonitor()
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
-  auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+  auto ideal_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
+  int launcher_size = unity::Settings::Instance().LauncherSize(monitor_);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
-  return nux::Geometry (monitor_geo.x + launcher_width,
-                        monitor_geo.y,
-                        monitor_geo.width - launcher_width,
-                        monitor_geo.height);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    ideal_geo.x += launcher_size;
+    ideal_geo.width -= launcher_size;
+  }
+  else
+  {
+    ideal_geo.height -= launcher_size;
+  }
+
+  return ideal_geo;
 }
 
 void Controller::Relayout(bool check_monitor)
@@ -249,12 +256,17 @@ void Controller::Relayout(bool check_monitor)
   if (check_monitor)
     monitor_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
 
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
   nux::Geometry geo = GetIdealWindowGeometry();
 
   view_->Relayout();
   window_->SetGeometry(geo);
-  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
+
+  int horizontal_offset = 0;
+
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    horizontal_offset = unity::Settings::Instance().LauncherSize(monitor_);
+
+  view_->SetMonitorOffset(horizontal_offset, panel::Style::Instance().PanelHeight(monitor_));
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -313,8 +325,13 @@ bool Controller::ShowDash()
   EnsureDash();
   monitor_ = GetIdealMonitor();
   screen_ungrabbed_slot_->disconnect();
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
-  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
+
+  int horizontal_offset = 0;
+
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    horizontal_offset = unity::Settings::Instance().LauncherSize(monitor_);
+
+  view_->SetMonitorOffset(horizontal_offset, panel::Style::Instance().PanelHeight(monitor_));
   view_->AboutToShow(monitor_);
   FocusWindow();
 

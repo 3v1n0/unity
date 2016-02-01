@@ -55,7 +55,7 @@ Filter::Filter()
   auto& settings = Settings::Instance();
   auto const& work_area = wm.GetWorkAreaGeometry(0);
   int monitor = wm.MonitorGeometryIn(work_area);
-  int launcher_width = settings.LauncherWidth(monitor);
+  int launcher_width = settings.LauncherSize(monitor);
   auto const& cv = settings.em(monitor);
 
   search_bar_ = SearchBar::Ptr(new SearchBar());
@@ -81,7 +81,10 @@ Filter::Filter()
   view_window_->SetOpacity(0.0f);
   view_window_->SetEnterFocusInputArea(search_bar_.GetPointer());
   view_window_->SetInputFocus();
-  view_window_->SetXY(OFFSET_X.CP(cv) + std::max(work_area.x, launcher_width), OFFSET_Y.CP(cv) + work_area.y);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    view_window_->SetXY(OFFSET_X.CP(cv) + std::max(work_area.x, launcher_width), OFFSET_Y.CP(cv) + work_area.y);
+  else
+    view_window_->SetXY(OFFSET_X.CP(cv) + work_area.x, OFFSET_Y.CP(cv) + work_area.y);
   fade_animator_.updated.connect([this] (double opacity) { view_window_->SetOpacity(opacity); });
 
   nux::GetWindowCompositor().SetKeyFocusArea(search_bar_->text_entry());

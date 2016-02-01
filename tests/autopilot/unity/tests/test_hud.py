@@ -471,10 +471,10 @@ class HudBehaviorTests(HudTestsBase):
 
         self.unity.hud.ensure_visible()
 
-        # Click bottom right of the screen, but take into account the non-maximized window -
+        # Click right of the screen, but take into account the non-maximized window -
         # we do not want to click on it as it focuses the wrong window
         w = self.display.get_screen_width() - 1
-        h = self.display.get_screen_height() - 1
+        h = (self.display.get_screen_height() - 1) / 2
 
         # If the mouse is over the non-maximized window, move it away from it.
         (calc_x, calc_y, calc_w, calc_h) = calc_win.get_windows()[0].geometry
@@ -671,10 +671,11 @@ class HudVisualTests(HudTestsBase):
         monitor_geo = self.display.get_screen_geometry(self.hud_monitor)
         monitor_x = monitor_geo[0]
         monitor_w = monitor_geo[2]
+        launcher = self.unity.launcher.get_launcher_for_monitor(self.hud_monitor)
         hud_x = self.unity.hud.geometry[0]
         hud_w = self.unity.hud.geometry[2]
 
-        if self.hud_locked:
+        if self.hud_locked and launcher.geometry.w < launcher.geometry.h:
             self.assertThat(hud_x, GreaterThan(monitor_x))
             self.assertThat(hud_x, LessThan(monitor_x + monitor_w))
             self.assertThat(hud_w, Equals(monitor_x + monitor_w - hud_x))

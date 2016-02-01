@@ -31,6 +31,7 @@
 #include "LauncherDragWindow.h"
 #include "LauncherModel.h"
 #include "DesktopUtilities.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -100,9 +101,21 @@ bool SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   SetQuirk(Quirk::VISIBLE, true, monitor);
 
   auto rcb = std::bind(&Launcher::RenderIconToTexture, launcher.GetPointer(), _1, _2, floating_icon_ptr);
-  drag_window_ = new LauncherDragWindow(launcher->GetWidth(), rcb);
+  int launcher_size = std::min(launcher->GetWidth(), launcher->GetHeight());
+  drag_window_ = new LauncherDragWindow(launcher_size, rcb);
   drag_window_->SetBaseXY(start_x, start_y);
-  drag_window_->SetAnimationTarget(icon_center.x, icon_center.y + (launcher->GetIconSize() / 2));
+  int target_x = 0, target_y = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    target_x = icon_center.x;
+    target_y = icon_center.y + (launcher->GetIconSize() / 2);
+  }
+  else
+  {
+    target_x = icon_center.x + (launcher->GetIconSize() / 2);
+    target_y = icon_center.y;
+  }
+  drag_window_->SetAnimationTarget(target_x, target_y);
 
   launcher->ForceReveal(true);
   drag_window_->ShowWindow(true);

@@ -23,6 +23,7 @@
 #include "EdgeBarrierControllerPrivate.h"
 #include "Decaymulator.h"
 #include <NuxCore/Logger.h>
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
 
@@ -93,6 +94,7 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   }));*/
 
   uscreen->changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnUScreenChanged));
+  Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged)));
 
   parent_->force_disable.changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnForceDisableChanged));
 
@@ -218,6 +220,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     return;
 
   bool edge_resist = parent_->sticky_edges();
+  auto launcher_position = Settings::Instance().launcher_position();
 
   for (unsigned i = 0; i < layout.size(); i++)
   {
@@ -246,10 +249,22 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     if (!edge_resist && parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER)
       continue;
 
-    vertical_barrier->x1 = monitor.x;
-    vertical_barrier->x2 = monitor.x;
-    vertical_barrier->y1 = monitor.y;
-    vertical_barrier->y2 = monitor.y + monitor.height;
+    if (launcher_position == LauncherPosition::LEFT)
+    {
+      vertical_barrier->x1 = monitor.x;
+      vertical_barrier->x2 = monitor.x;
+      vertical_barrier->y1 = monitor.y;
+      vertical_barrier->y2 = monitor.y + monitor.height;
+    }
+    else
+    {
+      vertical_barrier->x1 = monitor.x;
+      vertical_barrier->x2 = monitor.x + monitor.width;
+      vertical_barrier->y1 = monitor.y + monitor.height;
+      vertical_barrier->y2 = monitor.y + monitor.height;
+      vertical_barrier->direction = DOWN;
+    }
+
     vertical_barrier->index = i;
 
     vertical_barrier->threshold = parent_->options()->edge_stop_velocity();
