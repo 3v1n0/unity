@@ -32,15 +32,19 @@ bool DecorationsShape::initShape(XID win)
   XShapeQueryExtents(dpy, win, &buse, &bx, &by, &bw, &bh, &cuse, &cx, &cy, &cw, &ch);
 
   int kind;
-  if (cuse) {
-    width = cw;
-    height = ch;
-    kind = ShapeClip;
-  }
-  else if (buse) {
+  if (buse) {
     width = bw;
     height = bh;
+    xoffs = bx;
+    yoffs = by;
     kind = ShapeBounding;
+  }
+  else if (cuse) {
+    width = cw;
+    height = ch;
+    xoffs = cx;
+    yoffs = cy;
+    kind = ShapeClip;
   }
   else {
     fprintf(stderr, "XShapeQueryExtend returned no extends.\n");
@@ -82,6 +86,15 @@ int DecorationsShape::getHeight() const
   return height;
 }
 
+int DecorationsShape::getXoffs() const
+{
+  return xoffs;
+}
+
+int DecorationsShape::getYoffs() const
+{
+  return yoffs;
+}
 void DecorationsShape::clear()
 {
   width = height = 0;

@@ -102,7 +102,7 @@ cu::PixmapTexture::Ptr Manager::Impl::BuildShapedShadowTexture(unsigned int radi
 
   for (int i=0; i<shape.getRectangleCount(); i++) {
     XRectangle rect = shape.getRectangle(i);
-    cairo_rectangle(img_ctx, rect.x + radius * blur_margin_factor, rect.y + radius * blur_margin_factor, rect.width, rect.height);
+    cairo_rectangle(img_ctx, rect.x + radius * blur_margin_factor - shape.getXoffs(), rect.y + radius * blur_margin_factor - shape.getYoffs(), rect.width, rect.height);
     cairo_set_source_rgba(img_ctx, color.red, color.green, color.blue, color.alpha);
     cairo_fill(img_ctx);
   }

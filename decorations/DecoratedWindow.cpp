@@ -651,8 +651,8 @@ void Window::Impl::ComputeShapedShadowQuad()
   nux::Point2D<int> shadow_offset = manager_->shadow_offset();
 // ideally it would be -radius for the *2 part see comment in Manager::Impl::BuildShapedShadowTexture
 // in DecorationsManager.cpp Make sure to keep these factors in sync.
-  int x = border.x() + shadow_offset.x - radius * 2;
-  int y = border.y() + shadow_offset.y - radius * 2;
+  int x = border.x() + shadow_offset.x - radius * 2 + shape.getXoffs();
+  int y = border.y() + shadow_offset.y - radius * 2 + shape.getYoffs();
   int width = texture->width();
   int height = texture->height();
 

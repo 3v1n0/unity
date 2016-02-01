@@ -28,6 +28,7 @@ class DecorationsShape
 private:
   std::vector<XRectangle> rects;
   int width, height;
+  int xoffs, yoffs;
 
 public:
   bool initShape(XID win);
@@ -35,6 +36,8 @@ public:
   int getRectangleCount() const;
   int getWidth() const;
   int getHeight() const;
+  int getXoffs() const;
+  int getYoffs() const;
   void clear();
 };
 #endif //DECORATIONS_SHAPE_H_
