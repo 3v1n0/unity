@@ -184,8 +184,8 @@ public:
   BaseTexturePtr GetDashTopCorner(double scale) const;
   BaseTexturePtr GetDashTopCornerMask(double scale) const;
 
-  RawPixel GetDashBottomTileHeight() const;
-  RawPixel GetDashRightTileWidth() const;
+  RawPixel GetDashHorizontalBorderHeight() const;
+  RawPixel GetDashVerticalBorderWidth() const;
 
   BaseTexturePtr const& GetDashShine() const;
 
