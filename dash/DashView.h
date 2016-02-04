@@ -64,11 +64,12 @@ public:
 
   nux::Property<double> scale;
 
-  void AboutToShow(int monitor);
+  void AboutToShow();
   void AboutToHide();
   void Relayout();
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
+  void SetMonitor(int monitor);
   void SetMonitorOffset(int x, int y);
 
   bool IsCommandLensOpen() const;
@@ -108,7 +109,6 @@ private:
   void BuildPreview(Preview::Ptr model);
   void ClosePreview();
   void OnPreviewAnimationFinished();
-  void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
   void OnLiveSearchReached(std::string const& search_string);
