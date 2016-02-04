@@ -650,7 +650,20 @@ void DashView::Relayout()
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
   if (preview_displaying_)
-    preview_container_->SetGeometry(layout_->GetGeometry());
+  {
+    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    {
+      preview_container_->SetGeometry(layout_->GetGeometry());
+    }
+    else
+    {
+      auto preview_geo = content_geo_;
+      int padding = style.GetDashBottomTileHeight().CP(scale());
+      preview_geo.y += padding;
+      preview_geo.height -= padding;
+      preview_container_->SetGeometry(preview_geo);
+    }
+  }
 
   renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
 
