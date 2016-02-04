@@ -504,11 +504,11 @@ nux::Geometry Controller::GetInputWindowGeometry()
 
   if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
   {
-    geo.width += style.GetDashRightTileWidth().CP(view_->scale());
-    geo.height += style.GetDashBottomTileHeight().CP(view_->scale());
+    geo.width += style.GetDashVerticalBorderWidth().CP(view_->scale());
+    geo.height += style.GetDashHorizontalBorderHeight().CP(view_->scale());
 
     if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
-      geo.y += view_content_geo.y - style.GetDashBottomTileHeight().CP(view_->scale());
+      geo.y += view_content_geo.y - style.GetDashHorizontalBorderHeight().CP(view_->scale());
   }
 
   return geo;

@@ -2306,12 +2306,12 @@ BaseTexturePtr const& Style::GetDashShine() const
   return pimpl->dash_shine_.texture();
 }
 
-RawPixel Style::GetDashBottomTileHeight() const
+RawPixel Style::GetDashHorizontalBorderHeight() const
 {
   return 30;
 }
 
-RawPixel Style::GetDashRightTileWidth() const
+RawPixel Style::GetDashVerticalBorderWidth() const
 {
   return 30;
 }

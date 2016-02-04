@@ -651,17 +651,17 @@ void DashView::Relayout()
 
   if (preview_displaying_)
   {
-    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
-    {
-      preview_container_->SetGeometry(layout_->GetGeometry());
-    }
-    else
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
     {
       auto preview_geo = content_geo_;
-      int padding = style.GetDashBottomTileHeight().CP(scale());
+      int padding = style.GetDashHorizontalBorderHeight().CP(scale());
       preview_geo.y += padding;
       preview_geo.height -= padding;
       preview_container_->SetGeometry(preview_geo);
+    }
+    else
+    {
+      preview_container_->SetGeometry(layout_->GetGeometry());
     }
   }
 
@@ -1510,8 +1510,8 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
   introspection.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height))
                .add("num_rows", num_rows)
                .add("form_factor", form_factor)
-               .add("right-border-width", style.GetDashRightTileWidth().CP(scale))
-               .add("bottom-border-height", style.GetDashBottomTileHeight().CP(scale))
+               .add("vertical-border-width", style.GetDashVerticalBorderWidth().CP(scale))
+               .add("horizontal-border-height", style.GetDashHorizontalBorderHeight().CP(scale))
                .add("preview_displaying", preview_displaying_)
                .add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_)
                .add("dash_maximized", style.always_maximised())
