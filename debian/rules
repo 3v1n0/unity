@@ -42,6 +42,9 @@ override_dh_install:
 	rm -f debian/tmp/usr/share/compiz/networkarearegion.xml
 	rm -f debian/tmp//usr/lib/compiz/libnetworkarearegion.so
 	rm -rf debian/tmp/usr/share/gconf/schemas/
+	mkdir -p debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
+	mv debian/tmp/usr/lib/lib*so* debian/tmp/usr/lib/pkgconfig \
+		debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
 	dh_install --fail-missing
 
 override_dh_gencontrol:
