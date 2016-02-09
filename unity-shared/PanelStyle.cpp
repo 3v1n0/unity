@@ -272,7 +272,7 @@ BaseTexturePtr Style::GetDashWindowButton(WindowButtonType type, WindowState sta
   static const std::array<std::string, 4> states = { "", "_prelight", "_pressed", "_disabled" };
 
   auto base_filename = names[unsigned(type)] + states[unsigned(state)];
-  auto const& file = decoration::Style::Get()->ThemedFilePath(base_filename, {PKGDATADIR"/"});
+  auto const& file = decoration::Style::Get()->ThemedFilePath(base_filename, {PKGDATADIR});
 
   if (file.empty())
     return BaseTexturePtr();

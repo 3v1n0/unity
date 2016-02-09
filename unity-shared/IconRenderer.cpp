@@ -29,7 +29,7 @@
 #include <UnityCore/ConnectionManager.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/DecorationStyle.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
@@ -250,7 +250,7 @@ struct IconRenderer::LocalTextures
   LocalTextures(IconRenderer* parent)
     : parent_(parent)
   {
-    connections_.Add(decoration::Style::Get()->theme.changed.connect([this] (std::string const&) {
+    connections_.Add(theme::Settings::Get()->theme.changed.connect([this] (std::string const&) {
       auto& cache = TextureCache::GetDefault();
 
       for (auto const& tex_data : texture_files_)
@@ -294,7 +294,7 @@ struct IconRenderer::LocalTextures
     auto texture_loader = [] (std::string const& basename, int w, int h)
     {
       int size = std::max(w, h);
-      auto const& file = decoration::Style::Get()->ThemedFilePath(basename, {PKGDATADIR"/"});
+      auto const& file = theme::Settings::Get()->ThemedFilePath(basename, {PKGDATADIR});
       return nux::CreateTexture2DFromFile(file.c_str(), (size <= 0 ? -1 : size), true);
     };
 
