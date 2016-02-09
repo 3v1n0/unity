@@ -5,4 +5,4 @@ start on desktop-lock
 stop on desktop-unlock
 
 respawn
-exec ${CMAKE_INSTALL_PREFIX}/lib/unity/unity-panel-service --lockscreen-mode
+exec ${CMAKE_INSTALL_FULL_LIBDIR}/unity/unity-panel-service --lockscreen-mode
