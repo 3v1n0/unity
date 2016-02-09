@@ -81,7 +81,7 @@ if (CMAKE_BUILD_TYPE MATCHES coverage)
       message(FATAL_ERROR "Cannot enable coverage targets because gcovr was not found.")
   else ()
       message (STATUS "Enabling XML coverage report")
-      add_custom_target (coverage-xml 
+      add_custom_target (coverage-xml
           COMMAND  "${GCOVR_EXECUTABLE}" --exclude="tests.*" --exclude="obj-.*" -x -r "${CMAKE_SOURCE_DIR}" -o "${COVERAGE_XML_FILE}")
   endif()
 
@@ -94,7 +94,7 @@ if (CMAKE_BUILD_TYPE MATCHES coverage)
 #      message(FATAL_ERROR "Cannot enable coverage targets because genhtml was not found.")
 #  else ()
 #      message (STATUS "Enabling HTML coverage report")
-#      add_custom_target (coverage-html 
+#      add_custom_target (coverage-html
 #          COMMAND "${LCOV_EXECUTABLE}" --directory "${CMAKE_BINARY_DIR}" --capture --output-file "${COVERAGE_INFO_FILE}"
 #          COMMAND "${GENHTML_EXECUTABLE}" --output-directory "${COVERAGE_HTML_DIR}" "${COVERAGE_INFO_FILE}")
 #  endif()
@@ -158,14 +158,14 @@ add_dependencies (release distcheck)
 #
 set (VERSION "${UNITY_VERSION}")
 set (PREFIXPATH "${CMAKE_INSTALL_PREFIX}")
-set (UNITYLIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/unity")
-set (UNITYDATADIR "${CMAKE_INSTALL_FULL_DATADIR}/unity")
+set (UNITYLIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/${PROJECT_NAME}")
+set (UNITYDATADIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
 set (PKGDATADIR "${UNITYDATADIR}/icons")
 set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 set (LOCALE_DIR "${CMAKE_INSTALL_FULL_LOCALEDIR}")
-set (GETTEXT_PACKAGE "unity")
+set (GETTEXT_PACKAGE "${PROJECT_NAME}")
 
 find_package (PkgConfig)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} gtk+-3.0 --variable prefix OUTPUT_VARIABLE GTK_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -173,7 +173,7 @@ execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUT
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable indicatordir OUTPUT_VARIABLE INDICATORDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable iconsdir OUTPUT_VARIABLE INDICATORICONDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable prefix OUTPUT_VARIABLE INDICATORPREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
-set (INDICATOR_SERVICE_DIR "${INDICATORPREFIX}/share/unity/indicators")
+set (INDICATOR_SERVICE_DIR "${INDICATORPREFIX}/share/${PROJECT_NAME}/indicators")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
@@ -185,8 +185,8 @@ find_package (Gettext REQUIRED)
 
 set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
 
-add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/unity.pot
-		COMMAND xgettext -c --from-code=UTF-8 --files-from ${CMAKE_SOURCE_DIR}/po/POTFILES.in --keyword=_ -o ${CMAKE_SOURCE_DIR}/po/unity.pot --copyright-holder="Canonical Ltd" --msgid-bugs-address="ayatana-dev@lists.launchpad.net" --no-wrap --no-location
+add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/${PROJECT_NAME}.pot
+		COMMAND xgettext -c --from-code=UTF-8 --files-from ${CMAKE_SOURCE_DIR}/po/POTFILES.in --keyword=_ -o ${CMAKE_SOURCE_DIR}/po/${PROJECT_NAME}.pot --copyright-holder="Canonical Ltd" --msgid-bugs-address="ayatana-dev@lists.launchpad.net" --no-wrap --no-location
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		)
 
@@ -388,7 +388,7 @@ install (CODE "message (STATUS \"Compiling GSettings schemas\")")
 install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR})")
 
 # Resources
-install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_DATADIR}/unity/themes)
+install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/themes)
 file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
 install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
 
