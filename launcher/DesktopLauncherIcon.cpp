@@ -77,5 +77,10 @@ bool DesktopLauncherIcon::ShowInSwitcher(bool current)
   return show_in_switcher_;
 }
 
+uint64_t DesktopLauncherIcon::SwitcherPriority()
+{
+  return std::numeric_limits<uint64_t>::max();
+}
+
 } // namespace launcher
 } // namespace unity

@@ -37,16 +37,7 @@ namespace
 bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
                                   AbstractLauncherIcon::Ptr const& second)
 {
-  if (first->GetIconType() == second->GetIconType())
-    return first->SwitcherPriority() > second->SwitcherPriority();
-
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return true;
-
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return false;
-
-  return first->GetIconType() < second->GetIconType();
+  return first->SwitcherPriority() > second->SwitcherPriority();
 }
 }
 
@@ -174,7 +165,7 @@ void SwitcherModel::ConnectToIconSignals(launcher::AbstractLauncherIcon::Ptr con
 
 void SwitcherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (!icon || icon->GetIconType() != AbstractLauncherIcon::IconType::APPLICATION)
+  if (!icon)
     return;
 
   if (icon->ShowInSwitcher(only_apps_on_viewport))
