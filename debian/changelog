@@ -1,3 +1,22 @@
+unity (7.4.0+16.04.20160209.3-0ubuntu1) xenial; urgency=medium
+
+  [ Didier Roche ]
+  * debian: Recommends session-shortcuts, prodiving easy way to
+    shutdown, reboot and logout from dash
+
+  [ Marco Trevisan (Treviño) ]
+  * CMake: use GNUInstallDirs with native multi-arch support (LP:
+    #1508635, #1485668)
+  * Launcher: add FileManager, Trash and Volume icons integration (LP:
+    #1524721, #1161323, #1063838, #1063823)
+  * SwitcherModel: avoid to access to invalid selection or to divide by
+    zero (LP: #1537524)
+
+  [ handsome_feng ]
+  * Extend the lockscreen theme for kylin.
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 09 Feb 2016 12:21:15 +0000
+
 unity (7.4.0+16.04.20151218-0ubuntu2) xenial; urgency=medium
 
   * Multiarchify the library packages.
