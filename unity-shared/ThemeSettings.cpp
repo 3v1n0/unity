@@ -23,7 +23,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/DesktopUtilities.h>
 #include <UnityCore/ConnectionManager.h>
-#include "GtkUtils.h"
+#include "FontSettings.h"
 
 namespace unity
 {
@@ -100,9 +100,10 @@ struct Settings::Impl
   }
 
   Settings* parent_;
-  connection::Manager connections_;
+  FontSettings font_settings_;
   gtk::Setting<std::string> theme_setting_;
   gtk::Setting<std::string> font_setting_;
+  connection::Manager connections_;
 };
 
 Settings::Ptr const& Settings::Get()
