@@ -152,4 +152,3 @@ void PlacesOverlayVScrollBar::StartScrollAnimation(ScrollDir dir, int stop, unsi
 
 } // namespace dash
 } // namespace unity
-
