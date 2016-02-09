@@ -61,6 +61,7 @@ set (UNITY_SHARED_SOURCES
      TextureCache.cpp
      TextInput.cpp
      TextureThumbnailProvider.cpp
+     ThemeSettings.cpp
      ThumbnailGenerator.cpp
      Timer.cpp
      UBusServer.cpp
