@@ -117,8 +117,8 @@ public:
   static Style::Ptr const& Get();
   virtual ~Style();
 
-  nux::Property<std::string> theme;
-  nux::Property<std::string> font;
+  nux::ROProperty<std::string> theme;
+  nux::ROProperty<std::string> font;
   nux::Property<std::string> title_font;
   nux::Property<unsigned> grab_wait;
   nux::Property<double> font_scale;
