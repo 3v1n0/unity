@@ -30,32 +30,16 @@ namespace unity
 {
 namespace dash
 {
-namespace
-{
-const RawPixel BUTTONS_HEIGHT = 0_em;
-const RawPixel WIDTH = 3_em;
-}
 
 PlacesVScrollBar::PlacesVScrollBar(NUX_FILE_LINE_DECL)
   : nux::VScrollBar(NUX_FILE_LINE_PARAM)
   , scale(1.0)
   , hovering(false)
 {
-  UpdateSize();
   scale.changed.connect([this] (double scale) {
-    UpdateSize();
     QueueRelayout();
     QueueDraw();
   });
-}
-
-void PlacesVScrollBar::UpdateSize()
-{
-  _scroll_up_button->SetMaximumHeight(BUTTONS_HEIGHT.CP(scale));
-  _scroll_up_button->SetMinimumHeight(BUTTONS_HEIGHT.CP(scale));
-
-  _scroll_down_button->SetMaximumHeight(BUTTONS_HEIGHT.CP(scale));
-  _scroll_down_button->SetMinimumHeight(BUTTONS_HEIGHT.CP(scale));
 }
 
 void PlacesVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)

@@ -40,7 +40,6 @@ protected:
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
 private:
-  void UpdateSize();
   void UpdateTexture(nux::Geometry const&);
 
 private:
