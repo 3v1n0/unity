@@ -93,12 +93,9 @@ bool FileManagerLauncherIcon::IsLocationManaged(std::string const& location) con
 
   for (auto const& volume_icon : devices_->GetIcons())
   {
-    if (volume_icon->IsVisible())
-    {
-      auto const& volume_uri = volume_icon->GetVolumeUri();
-      if (!volume_uri.empty() && boost::algorithm::starts_with(location, volume_uri))
-        return false;
-    }
+    auto const& volume_uri = volume_icon->GetVolumeUri();
+    if (!volume_uri.empty() && boost::algorithm::starts_with(location, volume_uri))
+      return false;
   }
 
   return true;
