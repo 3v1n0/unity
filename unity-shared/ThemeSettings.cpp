@@ -46,12 +46,12 @@ struct Settings::Impl
     parent_->font = glib::String(gtk::GetSettingValue<gchar*>("gtk-font-name")).Str();
 
     GtkSettings* settings = gtk_settings_get_default();
-    signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*, GParamSpec*) {
-      parent_->theme = glib::String(gtk::GetSettingValue<gchar*>("gtk-theme-name")).Str();
+    signals_.Add<void, GtkSettings*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*) {
+      parent_->theme = glib::String(gtk::GetSettingValue<std::string>("gtk-theme-name")).Str();
       LOG_INFO(logger) << "gtk-theme-name changed to " << parent_->theme();
     });
 
-    signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-font-name", [this] (GtkSettings*, GParamSpec*) {
+    signals_.Add<void, GtkSettings*>(settings, "notify::gtk-font-name", [this] (GtkSettings*) {
       parent_->font = glib::String(gtk::GetSettingValue<gchar*>("gtk-font-name")).Str();
       LOG_INFO(logger) << "gtk-font-name changed to " << parent_->font();
     });
