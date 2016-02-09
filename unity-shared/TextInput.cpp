@@ -36,6 +36,7 @@
 #include "PreviewStyle.h"
 #include "RawPixel.h"
 #include "TextureCache.h"
+#include "ThemeSettings.h"
 #include "UnitySettings.h"
 
 namespace unity
@@ -132,7 +133,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  UpdateSize();
+  UpdateFont();
 
   // Caps lock warning
   warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE.CP(scale)));
@@ -164,8 +165,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   spinner_->scale = scale();
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  OnFontChanged();
-  sig_manager_.Add<void, GtkSettings*>(gtk_settings_get_default(), "notify::gtk-font-name", sigc::hide(sigc::mem_fun(this, &TextInput::OnFontChanged)));
+  theme::Settings::Get()->font.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateFont)));
   sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) { CheckLocks(); });
 
   input_string.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_input_string));
@@ -293,9 +293,6 @@ nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)
 
 void TextInput::LoadWarningTooltip()
 {
-  glib::String font_name;
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
-
   glib::Object<GtkStyleContext> style_context(gtk_style_context_new());
   std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
   gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_TOOLTIP);
@@ -306,7 +303,8 @@ void TextInput::LoadWarningTooltip()
   glib::Object<PangoContext> context(gdk_pango_context_get());
   glib::Object<PangoLayout> layout(pango_layout_new(context));
 
-  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
+  auto const& font = theme::Settings::Get()->font();
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
   pango_context_set_font_description(context, desc.get());
   pango_context_set_language(context, gtk_get_default_language());
   pango_cairo_context_set_resolution(context, 96.0 * Settings::Instance().font_scaling());
@@ -342,14 +340,10 @@ void TextInput::LoadWarningTooltip()
   warning_tooltip_ = texture_ptr_from_cairo_graphics(cg);
 }
 
-void TextInput::OnFontChanged()
+void TextInput::UpdateFont()
 {
-  glib::String font_name;
-  PangoFontDescription* desc;
+  auto* desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
-
-  desc = pango_font_description_from_string(font_name.Value());
   if (desc)
   {
     pango_entry_->SetFontFamily(pango_font_description_get_family(desc));

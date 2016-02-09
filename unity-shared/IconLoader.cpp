@@ -35,6 +35,7 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/Timer.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity
@@ -313,12 +314,11 @@ private:
         glib::Object<PangoLayout> layout;
         PangoContext* pango_context = NULL;
         GdkScreen* screen = gdk_screen_get_default(); // not ref'ed
-        glib::String font;
+        auto const& font = theme::Settings::Get()->font();
 
-        g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
         cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
         layout = pango_cairo_create_layout(cr);
-        std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
+        std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
         pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
         int font_size = FONT_SIZE;
         pango_font_description_set_size (desc.get(), font_size * PANGO_SCALE);
@@ -914,14 +914,12 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
 {
   // FIXME: what about CJK?
   const char* const SAMPLE_MAX_TEXT = "Chromium Web Browser";
-  GtkSettings* settings = gtk_settings_get_default();
 
   nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
   cairo_t* cr = util_cg.GetInternalContext();
 
-  glib::String font;
-  g_object_get(settings, "gtk-font-name", &font, nullptr);
-  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
+  auto const& font = theme::Settings::Get()->font();
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
   pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
   pango_font_description_set_size(desc.get(), FONT_SIZE * PANGO_SCALE);
 

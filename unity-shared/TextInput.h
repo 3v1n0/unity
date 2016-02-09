@@ -68,7 +68,7 @@ public:
   nux::Property<double> scale;
 
 private:
-  void OnFontChanged();
+  void UpdateFont();
   void UpdateHintFont();
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);

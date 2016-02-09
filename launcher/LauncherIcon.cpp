@@ -26,6 +26,7 @@
 #include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 
@@ -1044,9 +1045,8 @@ BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
   glib::Object<PangoContext> pango_ctx(gdk_pango_context_get());
   glib::Object<PangoLayout> layout(pango_layout_new(pango_ctx));
 
-  glib::String font_name;
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, nullptr);
-  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
+  auto const& font = theme::Settings::Get()->font();
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
   int font_size = pango_units_from_double(Settings::Instance().font_scaling() * COUNT_FONT_SIZE);
   pango_font_description_set_absolute_size(desc.get(), font_size);
   pango_layout_set_font_description(layout, desc.get());

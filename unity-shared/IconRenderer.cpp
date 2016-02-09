@@ -827,8 +827,8 @@ nux::BaseTexture* IconRenderer::LocalTextures::RenderLabelTexture(char label, in
   cairo_fill(cr);
 
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
-  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name),
+  auto const& font = theme::Settings::Get()->font();
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()),
                                              pango_font_description_free);
   const double text_ratio = 0.75;
   int text_size = pango_units_from_double(label_size * text_ratio * Settings::Instance().font_scaling());

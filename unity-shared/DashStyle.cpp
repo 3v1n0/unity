@@ -34,15 +34,13 @@
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/ImageSurface.h>
 #include <NuxGraphics/CairoGraphics.h>
-
 #include <Nux/PaintLayer.h>
-
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "CairoTexture.h"
 #include "JSONParser.h"
 #include "TextureCache.h"
+#include "ThemeSettings.h"
 #include "UnitySettings.h"
 #include "config.h"
 
@@ -173,7 +171,6 @@ struct Style::Impl : sigc::trackable
 
   void Refresh();
   void UpdateFormFactor(FormFactor);
-  void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
 
   BaseTexturePtr LoadScaledTexture(std::string const& name, double scale)
   {
@@ -215,8 +212,6 @@ struct Style::Impl : sigc::trackable
   int                   scrollbar_blur_size_;
   int                   scrollbar_size_;
   double                scrollbar_corner_radius_;
-
-  glib::SignalManager signal_manager_;
 
   nux::Color text_color_;
 
@@ -265,13 +260,11 @@ Style::Impl::Impl(Style* owner)
   , star_selected_texture_("/star_selected.png")
   , star_highlight_texture_("/star_highlight.png")
 {
-  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
-                      (gtk_settings_get_default(),
-                       "notify::gtk-font-name",
-                       sigc::mem_fun(this, &Impl::OnFontChanged)));
+  auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Impl::Refresh));
+  theme::Settings::Get()->font.changed.connect(refresh_cb);
 
   auto& settings = Settings::Instance();
-  settings.font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Refresh)));
+  settings.font_scaling.changed.connect(refresh_cb);
   settings.form_factor.changed.connect(sigc::mem_fun(this, &Impl::UpdateFormFactor));
 
   Refresh();
@@ -360,14 +353,12 @@ Style::Impl::~Impl()
 void Style::Impl::Refresh()
 {
   const char* const SAMPLE_MAX_TEXT = "Chromium Web Browser";
-  GtkSettings* settings = ::gtk_settings_get_default();
 
   nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
   cairo_t* cr = util_cg.GetInternalContext();
 
-  glib::String font_description;
-  ::g_object_get(settings, "gtk-font-name", &font_description, nullptr);
-  PangoFontDescription* desc = ::pango_font_description_from_string(font_description);
+  auto const& font = theme::Settings::Get()->font();
+  PangoFontDescription* desc = ::pango_font_description_from_string(font.c_str());
   ::pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
   ::pango_font_description_set_size(desc, 9 * PANGO_SCALE);
 
@@ -390,11 +381,6 @@ void Style::Impl::Refresh()
   owner_->changed.emit();
 
   pango_font_description_free(desc);
-}
-
-void Style::Impl::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
-{
-  Refresh();
 }
 
 void Style::Impl::UpdateFormFactor(FormFactor form_factor)
@@ -1356,9 +1342,7 @@ void Style::Impl::GetTextExtents(int& width,
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
   PangoRectangle        inkRect  = {0, 0, 0, 0};
-  char*                 fontName = NULL;
   GdkScreen*            screen   = gdk_screen_get_default();  // is not ref'ed
-  GtkSettings*          settings = gtk_settings_get_default();// is not ref'ed
 
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create(surface);
@@ -1366,16 +1350,9 @@ void Style::Impl::GetTextExtents(int& width,
     cairo_set_font_options(cr, default_font_options_);
   else
     cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  layout = pango_cairo_create_layout(cr);
 
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  if (!fontName)
-    desc = pango_font_description_from_string("Sans 10");
-  else
-  {
-    desc = pango_font_description_from_string(fontName);
-    g_free(fontName);
-  }
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
@@ -1423,9 +1400,7 @@ void Style::Impl::Text(cairo_t*    cr,
   PangoFontDescription* desc        = NULL;
   PangoContext*         pangoCtx    = NULL;
   GdkScreen*            screen      = gdk_screen_get_default();   // not ref'ed
-  GtkSettings*          settings    = gtk_settings_get_default(); // not ref'ed
   gchar*                fontName    = NULL;
-  //double                horizMargin = 10.0;
 
   get_actual_cairo_size(cr, &w, &h);
   w -= 2 * horizMargin;
@@ -1434,13 +1409,9 @@ void Style::Impl::Text(cairo_t*    cr,
     cairo_set_font_options(cr, default_font_options_);
   else
     cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  layout = pango_cairo_create_layout(cr);
 
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  if (!fontName)
-    desc = pango_font_description_from_string("Ubuntu 10");
-  else
-    desc = pango_font_description_from_string(fontName);
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
   if (text_size > 0)
   {
