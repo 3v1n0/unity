@@ -21,6 +21,7 @@
 #define UNITY_GTK_UTILS
 
 #include <gtk/gtk.h>
+#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -33,6 +34,12 @@ inline TYPE GetSettingValue(std::string const& name)
   TYPE value;
   g_object_get(gtk_settings_get_default(), name.c_str(), &value, nullptr);
   return value;
+}
+
+template <>
+inline std::string GetSettingValue(std::string const& name)
+{
+  return glib::String(gtk::GetSettingValue<gchar*>(name)).Str();
 }
 
 } // theme namespace
