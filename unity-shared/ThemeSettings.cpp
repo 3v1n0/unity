@@ -20,11 +20,11 @@
 #include "config.h"
 #include "ThemeSettings.h"
 
-#include <gtk/gtk.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/DesktopUtilities.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+#include "GtkUtils.h"
 
 namespace unity
 {
@@ -42,27 +42,19 @@ struct Settings::Impl
   Impl(Settings* parent)
     : parent_(parent)
   {
-    parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
-    parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+    parent_->theme = glib::String(gtk::GetSettingValue<gchar*>("gtk-theme-name")).Str();
+    parent_->font = glib::String(gtk::GetSettingValue<gchar*>("gtk-font-name")).Str();
 
     GtkSettings* settings = gtk_settings_get_default();
     signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*, GParamSpec*) {
-      parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
+      parent_->theme = glib::String(gtk::GetSettingValue<gchar*>("gtk-theme-name")).Str();
       LOG_INFO(logger) << "gtk-theme-name changed to " << parent_->theme();
     });
 
     signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-font-name", [this] (GtkSettings*, GParamSpec*) {
-      parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+      parent_->font = glib::String(gtk::GetSettingValue<gchar*>("gtk-font-name")).Str();
       LOG_INFO(logger) << "gtk-font-name changed to " << parent_->font();
     });
-  }
-
-  template <typename TYPE>
-  inline TYPE GetSettingValue(std::string const& name)
-  {
-    TYPE value;
-    g_object_get(gtk_settings_get_default(), name.c_str(), &value, nullptr);
-    return value;
   }
 
   std::string ThemedFilePath(std::string const& base_filename, std::vector<std::string> const& extra_folders = {}) const

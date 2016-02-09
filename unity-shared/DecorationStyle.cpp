@@ -19,15 +19,16 @@
 
 #include "config.h"
 #include "DecorationStyle.h"
-#include "ThemeSettings.h"
 
-#include <gtk/gtk.h>
+#include <math.h>
 #include <NuxCore/Colors.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
-#include <math.h>
+
+#include "GtkUtils.h"
+#include "ThemeSettings.h"
 
 namespace unity
 {
@@ -294,14 +295,6 @@ struct Style::Impl
     AddContextClasses(s, ws);
     gtk_style_context_get(ctx_, GtkStateFromWidgetState(ws), property.c_str(), &value, nullptr);
     gtk_style_context_restore(ctx_);
-    return value;
-  }
-
-  template <typename TYPE>
-  inline TYPE GetSettingValue(std::string const& name)
-  {
-    TYPE value;
-    g_object_get(gtk_settings_get_default(), name.c_str(), &value, nullptr);
     return value;
   }
 
@@ -789,12 +782,12 @@ WMAction Style::WindowManagerAction(WMEvent event) const
 
 int Style::DoubleClickMaxDistance() const
 {
-  return impl_->GetSettingValue<int>("gtk-double-click-distance");
+  return gtk::GetSettingValue<int>("gtk-double-click-distance");
 }
 
 int Style::DoubleClickMaxTimeDelta() const
 {
-  return impl_->GetSettingValue<int>("gtk-double-click-time");
+  return gtk::GetSettingValue<int>("gtk-double-click-time");
 }
 
 nux::Size Style::TitleNaturalSize(std::string const& text)

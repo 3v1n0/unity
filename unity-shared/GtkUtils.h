@@ -17,40 +17,25 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#ifndef UNITY_THEME_SETTINGS
-#define UNITY_THEME_SETTINGS
+#ifndef UNITY_GTK_UTILS
+#define UNITY_GTK_UTILS
 
-#include <memory>
-#include <NuxCore/Property.h>
+#include <gtk/gtk.h>
 
 namespace unity
 {
-namespace theme
+namespace gtk
 {
 
-class Settings
+template <typename TYPE>
+inline TYPE GetSettingValue(std::string const& name)
 {
-public:
-  typedef std::shared_ptr<Settings> Ptr;
-
-  static Settings::Ptr const& Get();
-  virtual ~Settings();
-
-  nux::Property<std::string> theme;
-  nux::Property<std::string> font;
-
-  std::string ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders = {}) const;
-
-private:
-  Settings();
-  Settings(Settings const&) = delete;
-  Settings& operator=(Settings const&) = delete;
-
-  struct Impl;
-  std::unique_ptr<Impl> impl_;
-};
+  TYPE value;
+  g_object_get(gtk_settings_get_default(), name.c_str(), &value, nullptr);
+  return value;
+}
 
 } // theme namespace
 } // unity namespace
 
-#endif // UNITY_THEME_SETTINGS
+#endif // UNITY_GTK_UTILS
