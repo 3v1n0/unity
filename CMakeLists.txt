@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.9)
 
 include (cmake/Documentation.cmake)
 include (cmake/pch.cmake)
+include (GNUInstallDirs)
 
 #
 # Base bits
@@ -36,6 +37,12 @@ option(
   I18N_SUPPORT
   "Enable I18N, do the .po file thing."
   ON
+)
+
+option(
+  ENABLE_NETWORKAREAREGION_PLUGIN
+  "Enable Unity Network Area region Plugin"
+  OFF
 )
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
@@ -149,15 +156,16 @@ add_dependencies (release distcheck)
 #
 # config.h
 #
-set (PREFIXDIR "${CMAKE_INSTALL_PREFIX}")
-set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
-set (PKGDATADIR "${DATADIR}/unity/icons")
-set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
-set (GETTEXT_PACKAGE "unity")
-set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
+set (PREFIXPATH "${CMAKE_INSTALL_PREFIX}")
+set (UNITYLIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/unity")
+set (UNITYDATADIR "${CMAKE_INSTALL_FULL_DATADIR}/unity")
+set (PKGDATADIR "${UNITYDATADIR}/icons")
+set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+set (LOCALE_DIR "${CMAKE_INSTALL_FULL_LOCALEDIR}")
+set (GETTEXT_PACKAGE "unity")
 
 find_package (PkgConfig)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} gtk+-3.0 --variable prefix OUTPUT_VARIABLE GTK_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -274,11 +282,15 @@ if (ENABLE_X_SUPPORT)
   add_subdirectory(panel)
   add_subdirectory(decorations)
   add_subdirectory(plugins/unityshell)
-  add_subdirectory(plugins/networkarearegion)
   add_subdirectory(plugins/unity-mt-grab-handles)
   add_subdirectory(shortcuts)
   add_subdirectory(shutdown)
   add_subdirectory(unity-standalone)
+
+  if (ENABLE_NETWORKAREAREGION_PLUGIN)
+    add_subdirectory(plugins/networkarearegion)
+  endif (ENABLE_NETWORKAREAREGION_PLUGIN)
+
 endif ()
 
 add_subdirectory(doc)
@@ -355,7 +367,7 @@ SET (UNITY_TEST_SCHEMAS "external.gschema.xml")
 # Have an option to not install the schema into where GLib is
 option (GSETTINGS_LOCALINSTALL "Install GSettings Schemas locally instead of to the GLib prefix" OFF)
 if (GSETTINGS_LOCALINSTALL)
-    SET (GSETTINGS_DIR "${CMAKE_INSTALL_PREFIX}/share/glib-2.0/schemas/")
+    SET (GSETTINGS_DIR "${CMAKE_INSTALL_DATADIR}/glib-2.0/schemas/")
 else (GSETTINGS_LOCALINSTALL)
     execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} glib-2.0 --variable prefix  OUTPUT_VARIABLE _glib_prefix OUTPUT_STRIP_TRAILING_WHITESPACE)
     SET (GSETTINGS_DIR "${_glib_prefix}/share/glib-2.0/schemas/")
@@ -376,7 +388,7 @@ install (CODE "message (STATUS \"Compiling GSettings schemas\")")
 install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR})")
 
 # Resources
-install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/themes)
+install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_DATADIR}/unity/themes)
 file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
 install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
 
