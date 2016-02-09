@@ -22,8 +22,7 @@
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/DesktopUtilities.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
+#include <UnityCore/ConnectionManager.h>
 #include "GtkUtils.h"
 
 namespace unity
@@ -41,20 +40,21 @@ struct Settings::Impl
 {
   Impl(Settings* parent)
     : parent_(parent)
+    , theme_setting_("gtk-theme-name")
+    , font_setting_("gtk-font-name")
   {
-    parent_->theme = gtk::GetSettingValue<std::string>("gtk-theme-name");
-    parent_->font = gtk::GetSettingValue<std::string>("gtk-font-name");
+    parent_->theme = theme_setting_();
+    parent_->font = font_setting_();
 
-    GtkSettings* settings = gtk_settings_get_default();
-    signals_.Add<void, GtkSettings*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*) {
-      parent_->theme = gtk::GetSettingValue<std::string>("gtk-theme-name");
+    connections_.Add(theme_setting_.changed.connect([this] (std::string const& theme) {
+      parent_->theme = theme;
       LOG_INFO(logger) << "gtk-theme-name changed to " << parent_->theme();
-    });
+    }));
 
-    signals_.Add<void, GtkSettings*>(settings, "notify::gtk-font-name", [this] (GtkSettings*) {
-      parent_->font = gtk::GetSettingValue<std::string>("gtk-font-name");
+    connections_.Add(font_setting_.changed.connect([this] (std::string const& font) {
+      parent_->font = font;
       LOG_INFO(logger) << "gtk-font-name changed to " << parent_->font();
-    });
+    }));
   }
 
   std::string ThemedFilePath(std::string const& base_filename, std::vector<std::string> const& extra_folders = {}) const
@@ -100,7 +100,9 @@ struct Settings::Impl
   }
 
   Settings* parent_;
-  glib::SignalManager signals_;
+  connection::Manager connections_;
+  gtk::Setting<std::string> theme_setting_;
+  gtk::Setting<std::string> font_setting_;
 };
 
 Settings::Ptr const& Settings::Get()
