@@ -39,7 +39,7 @@ public:
   nux::Property<std::string> theme;
   nux::Property<std::string> font;
 
-  std::string ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders = {}) const;
+  std::string ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders = {}, std::vector<std::string> const& extra_extensions = {}) const;
 
 private:
   Settings();

@@ -57,7 +57,7 @@ struct Settings::Impl
     }));
   }
 
-  std::string ThemedFilePath(std::string const& base_filename, std::vector<std::string> const& extra_folders = {}) const
+  std::string ThemedFilePath(std::string const& base_filename, std::vector<std::string> const& extra_folders, std::vector<std::string> extensions) const
   {
     auto const& theme = parent_->theme();
     auto const& home_dir = DesktopUtilities::GetUserHomeDirectory();
@@ -67,11 +67,12 @@ struct Settings::Impl
     if (!gtk_prefix || gtk_prefix[0] == '\0')
       gtk_prefix = GTK_PREFIX;
 
-    for (auto const& extension : THEMED_FILE_EXTENSIONS)
+    extensions.insert(end(extensions), begin(THEMED_FILE_EXTENSIONS), end(THEMED_FILE_EXTENSIONS));
+
+    for (auto const& extension : extensions)
     {
       auto filename = base_filename + '.' + extension;
       glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
-
       glib::String local_file(g_build_filename(data_dir.c_str(), "themes", subpath.Value(), nullptr));
 
       if (g_file_test(local_file, G_FILE_TEST_EXISTS))
@@ -119,9 +120,9 @@ Settings::Settings()
 Settings::~Settings()
 {}
 
-std::string Settings::ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders) const
+std::string Settings::ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders, std::vector<std::string> const& extra_extensions) const
 {
-  return impl_->ThemedFilePath(basename, extra_folders);
+  return impl_->ThemedFilePath(basename, extra_folders, extra_extensions);
 }
 
 } // theme namespace
