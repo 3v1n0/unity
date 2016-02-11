@@ -56,8 +56,6 @@ namespace
 Style* style_instance = nullptr;
 
 const int STATES = 5;
-const double BUTTON_CORNER_RADIUS = 7.0;
-
 
 // These cairo overrides may also be reused somewhere...
 void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
@@ -186,6 +184,7 @@ struct Style::Impl : sigc::trackable
 
   std::vector<nux::Color> button_label_border_color_;
   std::vector<double>     button_label_border_size_;
+  double                  button_label_border_radius_;
   double                  button_label_text_size_;
 
   std::vector<nux::Color> button_label_text_color_;
@@ -308,6 +307,7 @@ void Style::Impl::LoadStyleFile()
   parser.ReadColors("button-label", "border-color", "border-opacity",
                     button_label_border_color_);
   parser.ReadDoubles("button-label", "border-size", button_label_border_size_);
+  parser.ReadDouble("button-label", "border-radius", button_label_border_radius_);
   parser.ReadDouble("button-label", "text-size", button_label_text_size_);
   parser.ReadColors("button-label", "text-color", "text-opacity",
                     button_label_text_color_);
@@ -701,6 +701,7 @@ void Style::Impl::SetDefaultValues()
   //button_label_border_size_[nux::NUX_STATE_SELECTED]        = 0.5;
   //button_label_border_size_[nux::NUX_STATE_INSENSITIVE]     = 0.5;
 
+  button_label_border_radius_                               = 4.0;
   button_label_text_size_                                   = 1.0;
 
   button_label_text_color_[nux::VISUAL_STATE_NORMAL] = nux::color::White;
@@ -1624,7 +1625,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 1.0,
                 (double) (garnish) + 1.0,
                 (double) (garnish) + 1.0,
-                BUTTON_CORNER_RADIUS,
+                pimpl->button_label_border_radius_,
                 w - (double) (2 * garnish) - 2.0,
                 h - (double) (2 * garnish) - 2.0);
   else
@@ -1632,7 +1633,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 1.0,
                 (double) (garnish) + 0.5,
                 (double) (garnish) + 0.5,
-                BUTTON_CORNER_RADIUS,
+                pimpl->button_label_border_radius_,
                 w - (double) (2 * garnish) - 1.0,
                 h - (double) (2 * garnish) - 1.0);
 
@@ -1725,7 +1726,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     cairo_move_to(cr, _align(x + width, odd), y);
     if (curve_bottom)
     {
-      double radius = BUTTON_CORNER_RADIUS;
+      double radius = pimpl->button_label_border_radius_;
       LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
       // line to bottom-right corner
       cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
@@ -1830,7 +1831,7 @@ bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
               1.0,
               (double) 0.5,
               (double) 0.5,
-              BUTTON_CORNER_RADIUS,
+              pimpl->button_label_border_radius_,
               w - 1.0,
               h - 1.0);
 
@@ -1879,7 +1880,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                             1.0,
                             x,
                             y,
-                            BUTTON_CORNER_RADIUS,
+                            pimpl->button_label_border_radius_,
                             w,
                             h,
                             segment);
@@ -1902,7 +1903,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                               1.0,
                               x,
                               y + line_width/2,
-                              BUTTON_CORNER_RADIUS,
+                              pimpl->button_label_border_radius_,
                               w,
                               h - line_width,
                               segment,
