@@ -56,7 +56,6 @@ namespace
 Style* style_instance = nullptr;
 
 const int STATES = 5;
-
 const double BUTTON_CORNER_RADIUS = 7.0;
 
 
@@ -121,6 +120,7 @@ struct Style::Impl : sigc::trackable
 
   void Blur(cairo_t* cr, int size);
 
+  void LoadStyleFile();
   void SetDefaultValues();
 
   void GetTextExtents(int& width,
@@ -261,7 +261,10 @@ Style::Impl::Impl(Style* owner)
   , star_highlight_texture_("/star_highlight.png")
 {
   auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Impl::Refresh));
-  theme::Settings::Get()->font.changed.connect(refresh_cb);
+
+  auto theme_settings = theme::Settings::Get();
+  theme_settings->font.changed.connect(refresh_cb);
+  theme_settings->theme.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::LoadStyleFile)));
 
   auto& settings = Settings::Instance();
   settings.font_scaling.changed.connect(refresh_cb);
@@ -284,12 +287,22 @@ Style::Impl::Impl(Style* owner)
                                         CAIRO_HINT_METRICS_ON);
   }
 
+  LoadStyleFile();
+}
+
+void Style::Impl::LoadStyleFile()
+{
   json::Parser parser;
+
   // Since the parser skips values if they are not found, make sure everything
   // is initialised.
   SetDefaultValues();
-  if (!parser.Open(DASH_WIDGETS_FILE))
+
+  if (!parser.Open(theme::Settings::Get()->ThemedFilePath("dash-widgets", {UNITYDATADIR"/themes"}, {"json"})))
+  {
+    LOG_ERROR(logger) << "Impossible to find a dash-widgets.json in theme paths";
     return;
+  }
 
   // button-label
   parser.ReadColors("button-label", "border-color", "border-opacity",
@@ -342,6 +355,8 @@ Style::Impl::Impl(Style* owner)
   parser.ReadInt("scrollbar", "blur-size", scrollbar_blur_size_);
   parser.ReadInt("scrollbar", "size", scrollbar_size_);
   parser.ReadDouble("scrollbar", "corner-radius", scrollbar_corner_radius_);
+
+  owner_->changed.emit();
 }
 
 Style::Impl::~Impl()
