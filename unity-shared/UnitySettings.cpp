@@ -38,6 +38,7 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
+const std::string DESKTOP_TYPE = "desktop-type";
 
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
@@ -94,6 +95,7 @@ public:
     parent_->form_factor.SetSetterFunction(sigc::mem_fun(this, &Impl::SetFormFactor));
     parent_->double_click_activate.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDoubleClickActivate));
     parent_->remote_content.SetGetterFunction(sigc::mem_fun(this, &Impl::GetRemoteContentEnabled));
+    parent_->desktop_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDesktopType));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
@@ -216,6 +218,11 @@ public:
   bool GetDoubleClickActivate() const
   {
     return cached_double_click_activate_;
+  }
+
+  DesktopType GetDesktopType() const
+  {
+    return static_cast<DesktopType>(g_settings_get_enum(usettings_, DESKTOP_TYPE.c_str()));
   }
 
   int GetFontSize() const

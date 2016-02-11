@@ -35,6 +35,12 @@ enum class FormFactor
   TV
 };
 
+enum class DesktopType
+{
+    UBUNTU,
+    UBUNTUKYLIN
+};
+
 class Settings
 {
 public:
@@ -51,6 +57,7 @@ public:
 
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
+  nux::ROProperty<DesktopType> desktop_type;
   nux::ROProperty<bool> double_click_activate;
   nux::Property<unsigned> lim_movement_thresold;
   nux::Property<unsigned> lim_double_click_wait;

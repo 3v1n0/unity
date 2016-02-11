@@ -44,7 +44,7 @@
 #include "UnitySettings.h"
 #include "config.h"
 
-#define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
+#define DASH_WIDGETS_FILE UNITYDATADIR"/themes/dash-widgets.json"
 
 namespace unity
 {

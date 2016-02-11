@@ -64,7 +64,7 @@ public:
 
   bool operator==(unity::ApplicationWindow const& other) const override
   {
-    return static_cast<WindowBase const*>(this)->bamf_view_ == static_cast<WindowBase  const&>(other).bamf_view_;
+    return static_cast<WindowBase const*>(this)->bamf_view_ == static_cast<WindowBase const&>(other).bamf_view_;
   }
   bool operator!=(unity::ApplicationWindow const& other) const override { return !(operator==(other)); }
 };
@@ -174,6 +174,8 @@ public:
 
   ApplicationPtr EnsureApplication(BamfView*) const;
   ApplicationWindowPtr EnsureWindow(BamfView*) const;
+
+  void FocusWindowGroup(WindowList const&, bool show_on_visible, int monitor) const;
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);

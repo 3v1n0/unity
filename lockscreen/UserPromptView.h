@@ -27,6 +27,7 @@
 #include <Nux/View.h>
 #include <UnityCore/SessionManager.h>
 
+#include "LockScreenAbstractPromptView.h"
 #include "UserAuthenticatorPam.h"
 #include "unity-shared/IMTextEntry.h"
 
@@ -44,7 +45,7 @@ class TextInput;
 namespace lockscreen
 {
 
-class UserPromptView : public nux::View
+class UserPromptView : public AbstractUserPromptView
 {
 public:
   UserPromptView(session::Manager::Ptr const& session_manager);

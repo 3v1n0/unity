@@ -23,6 +23,8 @@
 #include <UnityCore/GLibDBusProxy.h>
 #include <NuxCore/Logger.h>
 
+#include "LockScreenAbstractPromptView.h"
+#include "LockScreenPromptFactory.h"
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
@@ -218,13 +220,13 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
   int primary = UScreen::GetDefault()->GetMonitorWithMouse();
 
   // Keep a reference of the old prompt_view
-  nux::ObjectPtr<UserPromptView> prompt_view(prompt_view_.GetPointer());
+  nux::ObjectPtr<AbstractUserPromptView> prompt_view(prompt_view_.GetPointer());
 
   shields_.resize(num_monitors);
 
   if (!prompt_view)
   {
-    prompt_view = test_mode_ ? nullptr : new UserPromptView(session_manager_);
+    prompt_view = test_mode_ ? nux::ObjectPtr<AbstractUserPromptView>() : PromptFactory::CreatePrompt(session_manager_);
     prompt_view_ = prompt_view.GetPointer();
   }
 
