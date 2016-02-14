@@ -170,19 +170,19 @@ public:
   BaseTexturePtr const& GetCategoryBackground() const;
   BaseTexturePtr const& GetCategoryBackgroundNoFilters() const;
 
-  BaseTexturePtr GetDashBottomTile(double scale) const;
-  BaseTexturePtr GetDashBottomTileMask(double scale) const;
+  BaseTexturePtr GetDashHorizontalTile(double scale, bool at_bottom) const;
+  BaseTexturePtr GetDashHorizontalTileMask(double scale, bool at_bottom) const;
   BaseTexturePtr GetDashRightTile(double scale) const;
   BaseTexturePtr GetDashRightTileMask(double scale) const;
   BaseTexturePtr GetDashLeftTile(double scale) const;
-  BaseTexturePtr GetDashTopTile(double scale) const;
+  BaseTexturePtr GetDashTopOrBottomTile(double scale, bool at_bottom) const;
 
-  BaseTexturePtr GetDashCorner(double scale) const;
-  BaseTexturePtr GetDashCornerMask(double scale) const;
-  BaseTexturePtr GetDashLeftCorner(double scale) const;
-  BaseTexturePtr GetDashLeftCornerMask(double scale) const;
-  BaseTexturePtr GetDashTopCorner(double scale) const;
-  BaseTexturePtr GetDashTopCornerMask(double scale) const;
+  BaseTexturePtr GetDashCorner(double scale, bool at_bottom) const;
+  BaseTexturePtr GetDashCornerMask(double scale, bool at_bottom) const;
+  BaseTexturePtr GetDashLeftCorner(double scale, bool at_bottom) const;
+  BaseTexturePtr GetDashLeftCornerMask(double scale, bool at_bottom) const;
+  BaseTexturePtr GetDashRightCorner(double scale, bool at_bottom) const;
+  BaseTexturePtr GetDashRightCornerMask(double scale, bool at_bottom) const;
 
   RawPixel GetDashHorizontalBorderHeight() const;
   RawPixel GetDashVerticalBorderWidth() const;
