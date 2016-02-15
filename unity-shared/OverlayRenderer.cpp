@@ -118,6 +118,7 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
 {
   parent->scale = Settings::Instance().em()->DPIScale();
   parent->scale.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
+  parent->owner.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
   Settings::Instance().low_gfx_changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::UpdateTextures));
   Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
 
@@ -129,25 +130,25 @@ void OverlayRendererImpl::LoadScaledTextures()
 {
   double scale = parent->scale;
   auto& style = dash::Style::Instance();
-  bool at_bottom;
-  if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
-    at_bottom = true;
+  bool dash_at_bottom;
+  if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM && parent->owner() == OverlayOwner::Dash)
+    dash_at_bottom = true;
   else
-    at_bottom = false;
+    dash_at_bottom = false;
 
-  horizontal_texture_ = style.GetDashHorizontalTile(scale, at_bottom);
-  horizontal_texture_mask_ = style.GetDashHorizontalTileMask(scale, at_bottom);
+  horizontal_texture_ = style.GetDashHorizontalTile(scale, dash_at_bottom);
+  horizontal_texture_mask_ = style.GetDashHorizontalTileMask(scale, dash_at_bottom);
   right_texture_ = style.GetDashRightTile(scale);
   right_texture_mask_ = style.GetDashRightTileMask(scale);
   left_texture_ = style.GetDashLeftTile(scale);
-  top_bottom_texture_ = style.GetDashTopOrBottomTile(scale, at_bottom);
+  top_bottom_texture_ = style.GetDashTopOrBottomTile(scale, dash_at_bottom);
 
-  corner_ = style.GetDashCorner(scale, at_bottom);
-  corner_mask_ = style.GetDashCornerMask(scale, at_bottom);
-  left_corner_ = style.GetDashLeftCorner(scale, at_bottom);
-  left_corner_mask_ = style.GetDashLeftCornerMask(scale, at_bottom);
-  right_corner_ = style.GetDashRightCorner(scale, at_bottom);
-  right_corner_mask_ = style.GetDashRightCornerMask(scale, at_bottom);
+  corner_ = style.GetDashCorner(scale, dash_at_bottom);
+  corner_mask_ = style.GetDashCornerMask(scale, dash_at_bottom);
+  left_corner_ = style.GetDashLeftCorner(scale, dash_at_bottom);
+  left_corner_mask_ = style.GetDashLeftCornerMask(scale, dash_at_bottom);
+  right_corner_ = style.GetDashRightCorner(scale, dash_at_bottom);
+  right_corner_mask_ = style.GetDashRightCornerMask(scale, dash_at_bottom);
 }
 
 void OverlayRendererImpl::OnBgColorChanged(nux::Color const& new_color)
@@ -609,14 +610,16 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   {
     int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
     nux::Geometry const& monitor_geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
+    int launcher_size = Settings::Instance().LauncherSize(monitor);
+    int panel_height = panel::Style::Instance().PanelHeight(monitor);
 
     bool dash_at_bottom = false;
     int border_y = content_geo.y;
     int border_height = larger_absolute_geo.height;
-    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM && !force_edges)
     {
-      border_y = panel::Style::Instance().PanelHeight(monitor);
-      border_height = monitor_geo.height - Settings::Instance().LauncherSize(monitor);
+      border_y = panel_height;
+      border_height = monitor_geo.height - launcher_size;
       dash_at_bottom = true;
     }
     nux::Geometry geo_border(content_geo.x, border_y, larger_absolute_geo.width - content_geo.x, border_height);
@@ -787,8 +790,13 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         int left_texture_y = 0;
         if (dash_at_bottom)
         {
-          left_texture_y = panel::Style::Instance().PanelHeight(monitor);
-          real_height = monitor_geo.height - Settings::Instance().LauncherSize(monitor) - content_geo.height - left_corner->GetHeight() - panel::Style::Instance().PanelHeight(monitor) + top_corner_offset;
+          left_texture_y = panel_height;
+          real_height = monitor_geo.height - launcher_size - content_geo.height - left_corner->GetHeight() - panel_height + top_corner_offset;
+        }
+        else if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+        {
+          left_texture_y = geo.y + geo.height;
+          real_height -= launcher_size;
         }
         else
         {

@@ -73,6 +73,7 @@ View::View()
   scale = Settings::Instance().em()->DPIScale();
   renderer_.scale = scale();
   renderer_.SetOwner(this);
+  renderer_.owner = OverlayOwner::Hud;
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });

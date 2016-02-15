@@ -133,6 +133,7 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   , monitor_(0)
 {
   renderer_.SetOwner(this);
+  renderer_.owner = OverlayOwner::Dash;
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
