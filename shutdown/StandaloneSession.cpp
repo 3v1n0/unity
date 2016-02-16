@@ -39,6 +39,7 @@ public:
   std::string RealName() const { return "Marco Trevisan"; }
   std::string UserName() const { return "marco"; }
   std::string HostName() const { return "tricky"; }
+  void UserIconFile(std::function<void(std::string const&)> const&) const { std::cout << "UserIconFile" << std::endl; }
 
   void ScreenSaverActivate() { std::cout << "ScreenSaverActivate" << std::endl; }
   void ScreenSaverDeactivate() { std::cout << "ScreenSaverDeactivate" << std::endl; }
@@ -49,6 +50,7 @@ public:
   void Shutdown() { std::cout << "Shutdown" << std::endl; }
   void Suspend() { std::cout << "Suspend" << std::endl; }
   void Hibernate() { std::cout << "Hibernate" << std::endl; }
+  void SwitchToGreeter() { std::cout << "SwitchToGreeter" << std::endl; }
 
   void CancelAction() { std::cout << "CancelAction" << std::endl; }
 

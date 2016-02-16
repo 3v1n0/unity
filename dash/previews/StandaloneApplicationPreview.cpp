@@ -17,7 +17,8 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
-#include <gtk/gtk.h>
+
+#include "config.h"
 
 #include "Nux/Nux.h"
 #include "Nux/VLayout.h"
@@ -165,23 +166,23 @@ void TestRunner::Init ()
     description << "Application description " << i << std::endl;
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string(PKGDATADIR"/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string(PKGDATADIR"/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
-  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string(PKGDATADIR "/launcher_bfb.png", NULL));
   unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
   unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
   unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.5);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 17);
 
-  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
+  unity_protocol_preview_set_image_source_uri(proto_obj, "file://" PKGDATADIR "/launcher_bfb.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description.str().c_str());
@@ -210,24 +211,24 @@ void TestRunner::NavRight()
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
-  glib::Object<GIcon> iconHint4(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string(PKGDATADIR"/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string(PKGDATADIR"/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint4(g_icon_new_for_string(PKGDATADIR"/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
-  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string(PKGDATADIR "/launcher_bfb.png", NULL));
   unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
   unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
   unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.25);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 5);
 
-  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
+  unity_protocol_preview_set_image_source_uri(proto_obj, "file://" PKGDATADIR "/launcher_bfb.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
@@ -262,9 +263,9 @@ void TestRunner::NavLeft()
   The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
    // creates a generic preview object
-    glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-music.svg", NULL));
-    glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-home.svg", NULL));
-    glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/icons/lens-nav-people.svg", NULL));
+    glib::Object<GIcon> iconHint1(g_icon_new_for_string(PKGDATADIR"/lens-nav-music.svg", NULL));
+    glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
+    glib::Object<GIcon> iconHint3(g_icon_new_for_string(PKGDATADIR"/lens-nav-people.svg", NULL));
 
     GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
@@ -272,14 +273,14 @@ void TestRunner::NavLeft()
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
 
-    unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
+    unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string(PKGDATADIR"/launcher_bfb.png", NULL));
     unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
     unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
     unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
     unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.8);
     unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 1223);
 
-    unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
+    unity_protocol_preview_set_image_source_uri(proto_obj, "file://" PKGDATADIR "/launcher_bfb.png");
     unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
     unity_protocol_preview_set_subtitle(proto_obj, subtitle);
     unity_protocol_preview_set_description(proto_obj, description);

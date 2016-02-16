@@ -72,7 +72,7 @@ public:
     GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
     g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
 
-    unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
+    unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string(TESTDATADIR "/bfb.png", NULL));
     unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "License & special char");
     unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Copywrite & special char");
     unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");

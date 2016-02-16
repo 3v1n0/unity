@@ -24,7 +24,7 @@
 #include "Volume.h"
 #include "DevicesSettings.h"
 #include "DeviceNotificationDisplay.h"
-#include "SimpleLauncherIcon.h"
+#include "StorageLauncherIcon.h"
 #include "unity-shared/FileManager.h"
 
 namespace unity
@@ -32,7 +32,7 @@ namespace unity
 namespace launcher
 {
 
-class VolumeLauncherIcon : public SimpleLauncherIcon
+class VolumeLauncherIcon : public StorageLauncherIcon
 {
 public:
   typedef nux::ObjectPtr<VolumeLauncherIcon> Ptr;
@@ -41,7 +41,7 @@ public:
                      DeviceNotificationDisplay::Ptr const&, FileManager::Ptr const&);
   virtual ~VolumeLauncherIcon();
 
-  virtual void AboutToRemove();
+  void AboutToRemove() override;
 
   bool CanEject() const; // TODO: rename to public virtual bool IsTrashable();
   void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();
@@ -49,14 +49,16 @@ public:
   void StopDrive();
   void Stick(bool save = true);
   void UnStick();
+
   MenuItemsVector GetMenus();
   std::string GetRemoteUri() const;
+  std::string GetVolumeUri() const;
 
 protected:
-  void ActivateLauncherIcon(ActionArg arg);
-  bool OnShouldHighlightOnDrag(DndData const&);
   void OnAcceptDrop(DndData const&);
   nux::DndAction OnQueryAcceptDrop(DndData const&);
+  WindowList GetStorageWindows() const override;
+  void OpenInstanceLauncherIcon(Time timestamp) override;
 
   // Introspection
   virtual std::string GetName() const;

@@ -150,14 +150,24 @@ void LauncherIcon::LoadQuicklist()
   QuicklistManager::Default()->RegisterQuicklist(_quicklist);
 }
 
-const bool LauncherIcon::WindowVisibleOnMonitor(int monitor)
+bool LauncherIcon::WindowVisibleOnMonitor(int monitor) const
 {
   return _has_visible_window[monitor];
 }
 
-const bool LauncherIcon::WindowVisibleOnViewport()
+bool LauncherIcon::WindowVisibleOnViewport() const
 {
   return _has_visible_window.any();
+}
+
+size_t LauncherIcon::WindowsVisibleOnMonitor(int monitor) const
+{
+  return _number_of_visible_windows[monitor];
+}
+
+size_t LauncherIcon::WindowsVisibleOnViewport() const
+{
+  return std::accumulate(begin(_number_of_visible_windows), end(_number_of_visible_windows), 0);
 }
 
 std::string

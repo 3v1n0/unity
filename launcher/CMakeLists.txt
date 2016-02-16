@@ -32,6 +32,7 @@ set (LAUNCHER_SOURCES
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp
+     FileManagerLauncherIcon.cpp
      HudLauncherIcon.cpp
      Launcher.cpp
      LauncherController.cpp
@@ -55,12 +56,14 @@ set (LAUNCHER_SOURCES
      SingleMonitorLauncherIcon.cpp
      SoftwareCenterLauncherIcon.cpp
      SpacerLauncherIcon.cpp
+     StorageLauncherIcon.cpp
      Tooltip.cpp
      TooltipManager.cpp
      TrashLauncherIcon.cpp
      VolumeImp.cpp
      VolumeLauncherIcon.cpp
      VolumeMonitorWrapper.cpp
+     WindowedLauncherIcon.cpp
      XdndCollectionWindowImp.cpp
      XdndManagerImp.cpp
      XdndStartStopNotifier.cpp

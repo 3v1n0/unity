@@ -10,6 +10,11 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
   set(revert_compiz TRUE)
 endif()
 
+set (libdir ${CMAKE_INSTALL_LIBDIR})
+set (includedir ${CMAKE_INSTALL_INCLUDEDIR})
+set (libdir ${CMAKE_INSTALL_LIBDIR})
+set (datadir ${CMAKE_INSTALL_FULL_DATADIR})
+
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl compiztoolbox scale
@@ -50,4 +55,4 @@ set_target_properties(unityshell
 #
 # Data
 #
-install (FILES plugin-unityshell.png DESTINATION ${DATADIR}/ccsm/icons/hicolor/64x64/apps)
+install (FILES plugin-unityshell.png DESTINATION ${COMPIZ_DATADIR}/ccsm/icons/hicolor/64x64/apps)

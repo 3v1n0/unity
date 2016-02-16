@@ -38,6 +38,7 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
+const std::string DESKTOP_TYPE = "desktop-type";
 
 const std::string LAUNCHER_SETTINGS = "com.canonical.Unity.Launcher";
 const std::string LAUNCHER_POSITION = "launcher-position";
@@ -101,6 +102,7 @@ public:
     parent_->remote_content.SetGetterFunction(sigc::mem_fun(this, &Impl::GetRemoteContentEnabled));
     parent_->launcher_position.SetGetterFunction(sigc::mem_fun(this, &Impl::GetLauncherPosition));
     parent_->launcher_position.SetSetterFunction(sigc::mem_fun(this, &Impl::SetLauncherPosition));
+    parent_->desktop_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDesktopType));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
@@ -245,6 +247,11 @@ public:
   {
     g_settings_set_enum(launcher_settings_, LAUNCHER_POSITION.c_str(), static_cast<int>(launcherPosition));
     return false;
+  }
+
+  DesktopType GetDesktopType() const
+  {
+    return static_cast<DesktopType>(g_settings_get_enum(usettings_, DESKTOP_TYPE.c_str()));
   }
 
   int GetFontSize() const
