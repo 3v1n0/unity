@@ -19,12 +19,12 @@
  * Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
-#include <cstdlib>
-#include <boost/scoped_array.hpp>
 #include "inputremover.h"
+#include <cstdlib>
 #include <X11/Xregion.h>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 namespace
 {
@@ -347,8 +347,7 @@ compiz::WindowInputRemover::writeProperty (XRectangle *input,
    */
   const size_t dataSize = headerSize + (nInput * 4);
 
-  boost::scoped_array<unsigned long> data(new unsigned long[dataSize]);
-
+  std::vector<unsigned long> data(dataSize);
   data[0] = propVersion;
   data[1] = nInput;
   data[2] = inputOrdering;
@@ -370,7 +369,7 @@ compiz::WindowInputRemover::writeProperty (XRectangle *input,
                   type,
                   fmt,
                   PropModeReplace,
-                  reinterpret_cast<unsigned char*>(data.get()),
+                  reinterpret_cast<unsigned char*>(data.data()),
                   dataSize);
 
   return true;

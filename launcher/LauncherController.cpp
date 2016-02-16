@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+#include <boost/algorithm/string.hpp>
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
@@ -32,6 +33,8 @@
 #include "DesktopLauncherIcon.h"
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
+#include "FileManagerLauncherIcon.h"
+#include "HudLauncherIcon.h"
 #include "LauncherController.h"
 #include "LauncherControllerPrivate.h"
 #include "SoftwareCenterLauncherIcon.h"
@@ -100,13 +103,13 @@ std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
 
   return FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
 }
-
 }
 
 Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
   : parent_(parent)
   , model_(std::make_shared<LauncherModel>())
   , xdnd_manager_(xdnd_manager)
+  , device_section_(std::make_shared<DeviceLauncherSection>())
   , bfb_icon_(new BFBLauncherIcon())
   , hud_icon_(new HudLauncherIcon())
   , expo_icon_(new ExpoLauncherIcon())
@@ -348,6 +351,21 @@ Launcher* Controller::Impl::CreateLauncher()
   parent_->AddChild(launcher);
 
   return launcher;
+}
+
+ApplicationLauncherIcon* Controller::Impl::CreateAppLauncherIcon(ApplicationPtr const& app)
+{
+  auto const& desktop_file = app->desktop_file();
+
+  if (boost::algorithm::ends_with(desktop_file, "org.gnome.Nautilus.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus-folder-handler.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus-home.desktop"))
+  {
+    return new FileManagerLauncherIcon(app, device_section_);
+  }
+
+  return new ApplicationLauncherIcon(app);
 }
 
 void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr const& icon_before)
@@ -846,7 +864,7 @@ void Controller::Impl::OnApplicationStarted(ApplicationPtr const& app)
   if (app->sticky() || app->seen())
     return;
 
-  AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+  AbstractLauncherIcon::Ptr icon(CreateAppLauncherIcon(app));
   RegisterIcon(icon, GetLastIconPriority<ApplicationLauncherIcon>(local::RUNNING_APPS_URI));
 }
 
@@ -883,11 +901,11 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
     if (!app || app->seen())
       return result;
 
-    result = AbstractLauncherIcon::Ptr(new ApplicationLauncherIcon(app));
+    result = AbstractLauncherIcon::Ptr(CreateAppLauncherIcon(app));
   }
   else if (icon_uri.find(FavoriteStore::URI_PREFIX_DEVICE) == 0)
   {
-    auto const& devices = device_section_.GetIcons();
+    auto const& devices = device_section_->GetIcons();
     auto const& icon = std::find_if(devices.begin(), devices.end(),
       [&icon_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == icon_uri); });
 
@@ -962,7 +980,7 @@ void Controller::Impl::AddRunningApps()
                      << (app->seen() ? "yes" : "no");
     if (!app->seen())
     {
-      AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+      AbstractLauncherIcon::Ptr icon(CreateAppLauncherIcon(app));
       icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
       RegisterIcon(icon, ++sort_priority_);
     }
@@ -972,7 +990,7 @@ void Controller::Impl::AddRunningApps()
 void Controller::Impl::AddDevices()
 {
   auto& fav_store = FavoriteStore::Instance();
-  for (auto const& icon : device_section_.GetIcons())
+  for (auto const& icon : device_section_->GetIcons())
   {
     if (!icon->IsSticky() && !fav_store.IsFavorite(icon->RemoteUri()))
     {
@@ -1052,7 +1070,7 @@ void Controller::Impl::SetupIcons()
   ApplicationManager::Default().application_started
     .connect(sigc::mem_fun(this, &Impl::OnApplicationStarted));
 
-  device_section_.icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));
+  device_section_->icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));
   favorite_store.favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
   favorite_store.favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   favorite_store.reordered.connect(sigc::mem_fun(this, &Impl::ResetIconPriorities));

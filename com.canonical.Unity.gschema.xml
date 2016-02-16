@@ -13,6 +13,10 @@
     <value nick="Left" value="0"/>
     <value nick="Bottom" value="1"/>
   </enum>
+  <enum id="desktop-type-enum">
+    <value nick="Ubuntu" value="0" />
+    <value nick="UbuntuKylin" value="1" />
+  </enum>
 
   <schema path="/com/canonical/unity/" id="com.canonical.Unity" gettext-domain="unity">
     <key enum="form-factor-enum" name="form-factor">
@@ -24,6 +28,11 @@
       <default>"Expanded"</default>
       <summary>Whether the home screen should be expanded.</summary>
       <description>Whether the home screen should be expanded.</description>
+    </key>
+    <key enum="desktop-type-enum" name="desktop-type">
+      <default>"Ubuntu"</default>
+      <summary>The current desktop name.</summary>
+      <description>The current desktop name.</description>
     </key>
     <key type="i" name="minimize-count">
       <default>0</default>

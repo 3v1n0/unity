@@ -301,7 +301,7 @@ void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_pro
       }
     }
 
-    g_variant_iter_free (iter);
+    g_variant_iter_free(iter);
   }
 
   for (const gchar *property_name = *invalidated; property_name; property_name = *(++invalidated))
@@ -624,7 +624,7 @@ void DBusProxy::GetProperty(std::string const& name, ReplyCallback const& callba
                            [] (GObject *source, GAsyncResult *res, gpointer user_data) {
       glib::Error err;
       std::unique_ptr<ReplyCallback> callback(static_cast<ReplyCallback*>(user_data));
-      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err));
+      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err), StealRef());
 
       if (err)
       {
@@ -660,7 +660,7 @@ void DBusProxy::SetProperty(std::string const& name, GVariant* value)
                            nullptr, G_DBUS_CALL_FLAGS_NONE, -1, pimpl->cancellable_,
                            [] (GObject *source, GAsyncResult *res, gpointer user_data) {
       glib::Error err;
-      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err));
+      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err), StealRef());
       if (err)
       {
         LOG_ERROR(logger) << "Impossible to set property: " << err;

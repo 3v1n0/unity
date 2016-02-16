@@ -27,9 +27,11 @@
 using namespace unity;
 using namespace unity::launcher;
 using namespace testing;
+using namespace testmocks;
 
 namespace
 {
+const std::string TRASH_URI = "trash:";
 
 struct TestTrashLauncherIcon : testmocks::TestUnityAppBase
 {
@@ -41,6 +43,12 @@ struct TestTrashLauncherIcon : testmocks::TestUnityAppBase
   MockFileManager::Ptr fm_;
   TrashLauncherIcon icon;
 };
+
+TEST_F(TestTrashLauncherIcon, InitState)
+{
+  EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+  EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+}
 
 TEST_F(TestTrashLauncherIcon, Position)
 {
@@ -74,13 +82,75 @@ TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
 
 TEST_F(TestTrashLauncherIcon, RunningState)
 {
-  EXPECT_CALL(*fm_, IsTrashOpened()).WillRepeatedly(Return(true));
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList({win1, win2})));
   fm_->locations_changed.emit();
   EXPECT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 
-  EXPECT_CALL(*fm_, IsTrashOpened()).WillRepeatedly(Return(false));
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList()));
   fm_->locations_changed.emit();
   EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestTrashLauncherIcon, ActiveState)
+{
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList({win1, win2})));
+  fm_->locations_changed.emit();
+  ASSERT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+
+  win2->LocalFocus();
+  EXPECT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList()));
+  fm_->locations_changed.emit();
+  EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+}
+
+TEST_F(TestTrashLauncherIcon, WindowsCount)
+{
+  WindowList windows((g_random_int() % 10) + 5);
+  for (unsigned i = 0; i < windows.capacity(); ++i)
+    windows[i] = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(windows));
+  fm_->locations_changed.emit();
+  EXPECT_EQ(icon.Windows().size(), windows.size());
+}
+
+TEST_F(TestTrashLauncherIcon, WindowsPerMonitor)
+{
+  WindowList windows((g_random_int() % 10) + 5);
+  for (unsigned i = 0; i < windows.capacity(); ++i)
+  {
+    auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+    win->monitor_ = i % 2;
+    windows[i] = win;
+  }
+
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(windows));
+  fm_->locations_changed.emit();
+
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), (windows.size() / 2) + (windows.size() % 2));
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), windows.size() / 2);
+}
+
+TEST_F(TestTrashLauncherIcon, WindowsOnMonitorChanges)
+{
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList({win})));
+  fm_->locations_changed.emit();
+
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), 1);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), 0);
+
+  win->SetMonitor(1);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), 0);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), 1);
 }
 
 TEST_F(TestTrashLauncherIcon, FilemanagerSignalDisconnection)
