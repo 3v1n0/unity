@@ -57,4 +57,3 @@ private:
 }
 
 #endif // SIMPLELAUNCHERICON_H
-
