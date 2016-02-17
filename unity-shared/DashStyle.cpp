@@ -205,12 +205,14 @@ struct Style::Impl : sigc::trackable
   BlendMode             separator_overlay_mode_;
   int                   separator_blur_size_;
 
-  nux::Color            scrollbar_color_;
-  double                scrollbar_overlay_opacity_;
-  BlendMode             scrollbar_overlay_mode_;
-  int                   scrollbar_blur_size_;
   int                   scrollbar_size_;
+  int                   scrollbar_overlay_size_;
+  int                   scrollbar_buttons_size_;
+  nux::Color            scrollbar_color_;
+  nux::Color            scrollbar_overlay_color_;
+  nux::Color            scrollbar_track_color_;
   double                scrollbar_corner_radius_;
+  double                scrollbar_overlay_corner_radius_;
 
   nux::Color text_color_;
 
@@ -348,13 +350,14 @@ void Style::Impl::LoadStyleFile()
   parser.ReadInt("separator", "blur-size", separator_blur_size_);
 
   // scrollbar
-  parser.ReadColor("scrollbar", "color", "opacity", scrollbar_color_);
-  parser.ReadDouble("scrollbar", "overlay-opacity", scrollbar_overlay_opacity_);
-  parser.ReadMappedString("scrollbar", "overlay-mode", blend_mode_map,
-                          scrollbar_overlay_mode_);
-  parser.ReadInt("scrollbar", "blur-size", scrollbar_blur_size_);
   parser.ReadInt("scrollbar", "size", scrollbar_size_);
+  parser.ReadInt("scrollbar-overlay", "size", scrollbar_overlay_size_);
+  parser.ReadInt("scrollbar", "buttons-size", scrollbar_buttons_size_);
+  parser.ReadColor("scrollbar", "color", "opacity", scrollbar_color_);
+  parser.ReadColor("scrollbar-overlay", "color", "opacity", scrollbar_overlay_color_);
+  parser.ReadColor("scrollbar-track", "color", "opacity", scrollbar_track_color_);
   parser.ReadDouble("scrollbar", "corner-radius", scrollbar_corner_radius_);
+  parser.ReadDouble("scrollbar-overlay", "corner-radius", scrollbar_overlay_corner_radius_);
 
   owner_->changed.emit();
 }
@@ -748,12 +751,14 @@ void Style::Impl::SetDefaultValues()
   separator_blur_size_       = 6;
 
   // scrollbar
-  scrollbar_color_ = nux::color::White;
-  scrollbar_overlay_opacity_ = 0.3;
-  scrollbar_overlay_mode_    = BlendMode::NORMAL;
-  scrollbar_blur_size_       = 5;
-  scrollbar_size_           = 3;
-  scrollbar_corner_radius_   = 1.5;
+  scrollbar_size_                  = 8;
+  scrollbar_overlay_size_          = 3;
+  scrollbar_buttons_size_          = 0;
+  scrollbar_color_                 = nux::color::White;
+  scrollbar_overlay_color_         = nux::color::White;
+  scrollbar_track_color_           = nux::color::White * 0.4;
+  scrollbar_corner_radius_         = 3;
+  scrollbar_overlay_corner_radius_ = 1.5;
 }
 
 void Style::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
@@ -2176,11 +2181,6 @@ RawPixel Style::GetSeparatorGarnishSize() const
   return pimpl->separator_blur_size_;
 }
 
-RawPixel Style::GetScrollbarGarnishSize() const
-{
-  return pimpl->scrollbar_blur_size_;
-}
-
 nux::Color const& Style::GetTextColor() const
 {
   return pimpl->text_color_;
@@ -2393,9 +2393,44 @@ RawPixel Style::GetFilterViewRightPadding() const
   return 10;
 }
 
-RawPixel Style::GetScrollbarWidth() const
+RawPixel Style::GetOverlayScrollbarSize() const
 {
-  return 3;
+  return pimpl->scrollbar_overlay_size_;
+}
+
+RawPixel Style::GetScrollbarSize() const
+{
+  return pimpl->scrollbar_size_;
+}
+
+RawPixel Style::GetScrollbarButtonsSize() const
+{
+  return pimpl->scrollbar_buttons_size_;
+}
+
+RawPixel Style::GetOverlayScrollbarCornerRadius() const
+{
+  return pimpl->scrollbar_overlay_corner_radius_;
+}
+
+RawPixel Style::GetScrollbarCornerRadius() const
+{
+  return pimpl->scrollbar_corner_radius_;
+}
+
+nux::Color Style::GetOverlayScrollbarColor() const
+{
+  return pimpl->scrollbar_overlay_color_;
+}
+
+nux::Color Style::GetScrollbarColor() const
+{
+  return pimpl->scrollbar_color_;
+}
+
+nux::Color Style::GetScrollbarTrackColor() const
+{
+  return pimpl->scrollbar_track_color_;
 }
 
 RawPixel Style::GetCategoryIconSize() const

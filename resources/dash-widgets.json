@@ -111,13 +111,23 @@
   },
 
   "scrollbar"        : {
-    "color"          : "#ffffff",
+    "color"          : "#fff",
     "opacity"        : 1.0,
-    "overlay-opacity": 0.30,
-    "overlay-mode"   : "normal",
-    "blur-size"      : 5,
+    "size"           : 8,
+    "buttons-size"   : 0,
+    "corner-radius"  : 3
+  },
+
+  "scrollbar-overlay": {
+    "color"          : "#fff",
+    "opacity"        : 1.0,
     "size"           : 3,
     "corner-radius"  : 1.5
+  },
+
+  "scrollbar-track": {
+    "color"          : "#fff",
+    "opacity"        : 0.4
   },
 
   "filter-pane" : {
