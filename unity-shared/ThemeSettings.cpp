@@ -34,6 +34,7 @@ namespace
 DECLARE_LOGGER(logger, "unity.theme.settings");
 
 const std::array<std::string, 2> THEMED_FILE_EXTENSIONS = { "svg", "png" };
+const std::string UNITY_THEME_NAME = "unity-icon-theme";
 }
 
 struct Settings::Impl
@@ -55,6 +56,13 @@ struct Settings::Impl
       parent_->font = font;
       LOG_INFO(logger) << "gtk-font-name changed to " << parent_->font();
     }));
+
+    unity_icon_theme_ = gtk_icon_theme_new();
+    gtk_icon_theme_set_custom_theme(unity_icon_theme_, UNITY_THEME_NAME.c_str());
+
+    icon_theme_changed_.Connect(gtk_icon_theme_get_default(), "changed", [this] (GtkIconTheme*) {
+      parent_->icons_changed.emit();
+    });
   }
 
   std::string ThemedFilePath(std::string const& base_filename, std::vector<std::string> const& extra_folders, std::vector<std::string> extensions) const
@@ -104,6 +112,8 @@ struct Settings::Impl
   FontSettings font_settings_;
   gtk::Setting<std::string> theme_setting_;
   gtk::Setting<std::string> font_setting_;
+  glib::Signal<void, GtkIconTheme*> icon_theme_changed_;
+  glib::Object<GtkIconTheme> unity_icon_theme_;
   connection::Manager connections_;
 };
 
@@ -123,6 +133,11 @@ Settings::~Settings()
 std::string Settings::ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders, std::vector<std::string> const& extra_extensions) const
 {
   return impl_->ThemedFilePath(basename, extra_folders, extra_extensions);
+}
+
+GtkIconTheme* Settings::UnityIconTheme() const
+{
+  return impl_->unity_icon_theme_;
 }
 
 } // theme namespace

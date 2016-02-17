@@ -23,6 +23,8 @@
 #include <memory>
 #include <NuxCore/Property.h>
 
+struct _GtkIconTheme;
+
 namespace unity
 {
 namespace theme
@@ -40,6 +42,9 @@ public:
   nux::Property<std::string> font;
 
   std::string ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders = {}, std::vector<std::string> const& extra_extensions = {}) const;
+  _GtkIconTheme* UnityIconTheme() const;
+
+  sigc::signal<void> icons_changed;
 
 private:
   Settings();
