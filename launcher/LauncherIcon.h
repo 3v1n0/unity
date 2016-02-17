@@ -275,10 +275,6 @@ protected:
 
   BaseTexturePtr TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
 
-  static bool        IsMonoDefaultTheme();
-
-  GtkIconTheme*      GetUnityTheme();
-
   void OnRemoteEmblemChanged(LauncherEntryRemote* remote);
 
   void OnRemoteCountChanged(LauncherEntryRemote* remote);
@@ -306,9 +302,6 @@ protected:
   {
     return *_quirk_animations[monitor][unsigned(quirk)];
   }
-
-  // This looks like a case for boost::logical::tribool
-  static int _current_theme_is_mono;
 
 private:
   IconType _icon_type;
@@ -354,8 +347,6 @@ private:
   std::vector<LauncherEntryRemote::Ptr> _remote_entries;
   connection::Manager _remote_connections;
   glib::Object<DbusmenuClient> _remote_menus;
-
-  static glib::Object<GtkIconTheme> _unity_theme;
 
 protected:
   glib::SourceManager _source_manager;

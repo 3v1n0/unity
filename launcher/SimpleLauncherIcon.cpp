@@ -22,6 +22,7 @@
 
 #include "SimpleLauncherIcon.h"
 
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -35,11 +36,7 @@ SimpleLauncherIcon::SimpleLauncherIcon(IconType type)
   : LauncherIcon(type)
   , icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
 {
-  auto* theme = gtk_icon_theme_get_default();
-  theme_changed_signal_.Connect(theme, "changed", [this] (GtkIconTheme *) {
-    _current_theme_is_mono = -1;
-    ReloadIcon();
-  });
+  theme::Settings::Get()->icons_changed.connect(sigc::mem_fun(this, &SimpleLauncherIcon::ReloadIcon));
 }
 
 void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
