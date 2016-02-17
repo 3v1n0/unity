@@ -30,8 +30,8 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/CairoGraphics.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSource.h>
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/Timer.h"
@@ -817,7 +817,7 @@ private:
   Handle handle_counter_;
   glib::Source::UniquePtr idle_;
   glib::Source::UniquePtr coalesce_timeout_;
-  glib::Signal<void, GtkIconTheme*> theme_changed_signal_;
+  connection::Wrapper theme_changed_;
 };
 
 
@@ -827,7 +827,7 @@ IconLoader::Impl::Impl()
   , theme_(::gtk_icon_theme_get_default())
   , handle_counter_(0)
 {
-  theme_changed_signal_.Connect(theme_, "changed", [this] (GtkIconTheme*) {
+  theme_changed_ = theme::Settings::Get()->icons_changed.connect([this] {
     /* Since the theme has been changed we can clear the cache, however we
      * could include two improvements here:
      *  1) clear only the themed icons in cache
