@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2016 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -61,6 +61,7 @@ struct Settings::Impl
     gtk_icon_theme_set_custom_theme(unity_icon_theme_, UNITY_THEME_NAME.c_str());
 
     icon_theme_changed_.Connect(gtk_icon_theme_get_default(), "changed", [this] (GtkIconTheme*) {
+      LOG_INFO(logger) << "gtk default icon theme changed";
       parent_->icons_changed.emit();
     });
   }
