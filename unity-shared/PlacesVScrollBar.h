@@ -41,6 +41,7 @@ protected:
 
 private:
   void UpdateTexture(nux::Geometry const&);
+  void OnStyleChanged();
 
 private:
   nux::ObjectPtr<nux::BaseTexture> slider_texture_;

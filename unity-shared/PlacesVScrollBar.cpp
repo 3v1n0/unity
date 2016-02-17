@@ -23,7 +23,7 @@
 
 #include "PlacesVScrollBar.h"
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/RawPixel.h"
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/GraphicsUtils.h"
 
 namespace unity
@@ -36,10 +36,17 @@ PlacesVScrollBar::PlacesVScrollBar(NUX_FILE_LINE_DECL)
   , scale(1.0)
   , hovering(false)
 {
+  Style::Instance().changed.connect(sigc::mem_fun(this, &PlacesVScrollBar::OnStyleChanged));
   scale.changed.connect([this] (double scale) {
     QueueRelayout();
     QueueDraw();
   });
+}
+
+void PlacesVScrollBar::OnStyleChanged()
+{
+  slider_texture_.Release();
+  QueueDraw();
 }
 
 void PlacesVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -79,7 +86,10 @@ void PlacesVScrollBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool fo
     nux::GetPainter().PushDrawLayer(graphics_engine, base, &layer);
 
     if (hovering)
-      graphics_engine.QRP_Color(base.x, base.y, base.width, base.height, nux::color::White * 0.4);
+    {
+      auto const& track_color = Style::Instance().GetScrollbarTrackColor();
+      graphics_engine.QRP_Color(base.x, base.y, base.width, base.height, track_color * track_color.alpha);
+    }
 
     UpdateTexture(slider_geo);
     graphics_engine.QRP_1Tex(base.x + base.width - slider_geo.width,
@@ -106,6 +116,7 @@ void PlacesVScrollBar::UpdateTexture(nux::Geometry const& geo)
   if (slider_texture_ && slider_texture_->GetWidth() == width && slider_texture_->GetHeight() == height)
     return;
 
+  auto& style = Style::Instance();
   double unscaled_width = static_cast<double>(width) / scale();
   double unscaled_height = static_cast<double>(height) / scale();
 
@@ -116,9 +127,12 @@ void PlacesVScrollBar::UpdateTexture(nux::Geometry const& geo)
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
+  auto const& color = hovering ? style.GetScrollbarColor() : style.GetOverlayScrollbarColor();
+  double radius = hovering ? style.GetScrollbarCornerRadius() : style.GetOverlayScrollbarCornerRadius();
+
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cg.DrawRoundedRectangle(cr, 1.0f, 0, 0, unscaled_width / 2.0, unscaled_width, unscaled_height - 2.0);
+  cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
+  cg.DrawRoundedRectangle(cr, 1.0f, 0, 0, radius, unscaled_width, unscaled_height - 2.0);
   cairo_fill(cr);
 
   slider_texture_ = texture_ptr_from_cairo_graphics(cg);
