@@ -112,34 +112,34 @@ public:
     return result;
   }
 
-  std::vector<Window> WindowsOnViewport ()
+  WindowList WindowsOnViewport()
   {
-    std::vector<Window> result;
+    WindowList result;
 
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((500 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((200 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((600 << 16) + 200);
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((500 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((200 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((600 << 16) + 200));
 
     return result;
   }
 
-  std::vector<Window> WindowsForMonitor (int monitor)
+  WindowList WindowsForMonitor(int monitor)
   {
-    std::vector<Window> result;
+    WindowList result;
 
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((500 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((200 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((600 << 16) + 200);
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((500 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((200 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((600 << 16) + 200));
 
     return result;
   }
@@ -194,14 +194,24 @@ public:
     return 7;
   }
 
-  const bool WindowVisibleOnViewport()
+  bool WindowVisibleOnViewport() const
   {
     return false;
   }
 
-  const bool WindowVisibleOnMonitor(int monitor)
+  bool WindowVisibleOnMonitor(int monitor) const
   {
     return false;
+  }
+
+  size_t WindowsVisibleOnMonitor(int monitor) const
+  {
+    return 0;
+  }
+
+  size_t WindowsVisibleOnViewport() const
+  {
+    return 0;
   }
 
   void SetVisibleOnMonitor(int monitor, bool visible) {}

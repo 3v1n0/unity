@@ -136,8 +136,10 @@ private:
 
 struct MockApplicationLauncherIcon : ApplicationLauncherIcon
 {
-  typedef NiceMock<MockApplicationLauncherIcon> Nice;
-  typedef nux::ObjectPtr<MockApplicationLauncherIcon::Nice> Ptr;
+  // NiceMock doesn't work well with Virtual Inheritance, so we need to disable it
+  //typedef NiceMock<MockApplicationLauncherIcon> Nice;
+  typedef MockApplicationLauncherIcon Nice;
+  typedef nux::ObjectPtr<MockApplicationLauncherIcon> Ptr;
   typedef bool Fake;
 
   MockApplicationLauncherIcon(Fake = true, std::string const& remote_uri = "")
@@ -154,7 +156,8 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   }
 
   explicit MockApplicationLauncherIcon(ApplicationPtr const& app)
-    : ApplicationLauncherIcon(app)
+    : WindowedLauncherIcon(IconType::APPLICATION)
+    , ApplicationLauncherIcon(app)
   {
     ON_CALL(*this, Stick(_)).WillByDefault(Invoke([this] (bool save) { ApplicationLauncherIcon::Stick(save); }));
     ON_CALL(*this, UnStick()).WillByDefault(Invoke([this] { ApplicationLauncherIcon::UnStick(); }));
@@ -170,15 +173,18 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   MOCK_CONST_METHOD0(GetRemoteUri, std::string());
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(UnStick, void());
-  MOCK_METHOD0(Quit, void());
+  MOCK_CONST_METHOD0(Quit, void());
 };
 
 struct MockVolumeLauncherIcon : public VolumeLauncherIcon
 {
   typedef nux::ObjectPtr<MockVolumeLauncherIcon> Ptr;
+  // typedef NiceMock<MockVolumeLauncherIcon> Nice;
+  typedef MockVolumeLauncherIcon Nice;
 
   MockVolumeLauncherIcon()
-    : VolumeLauncherIcon(Volume::Ptr(volume_ = new NiceMock<MockVolume>()),
+    : WindowedLauncherIcon(IconType::DEVICE)
+    , VolumeLauncherIcon(Volume::Ptr(volume_ = new NiceMock<MockVolume>()),
                          std::make_shared<MockDevicesSettings::Nice>(),
                          std::make_shared<MockDeviceNotificationDisplay::Nice>(),
                          std::make_shared<MockFileManager::Nice>())
@@ -269,7 +275,7 @@ protected:
     void DisconnectSignals()
     {
       ApplicationManager::Default().application_started.clear();
-      Impl()->device_section_.icon_added.clear();
+      Impl()->device_section_->icon_added.clear();
       Impl()->model_->icon_removed.clear();
       Impl()->model_->saved.clear();
       Impl()->model_->order_changed.clear();
@@ -640,8 +646,8 @@ TEST_F(TestLauncherController, CreateFavoriteInvalidDesktopFile)
 
 TEST_F(TestLauncherController, CreateFavoriteDevice)
 {
-  lc.Impl()->device_section_ = MockDeviceLauncherSection();
-  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>();
+  auto const& icons = lc.Impl()->device_section_->GetIcons();
   auto const& device_icon = icons.front();
 
   ASSERT_TRUE(device_icon.IsValid());
@@ -903,8 +909,8 @@ TEST_F(TestLauncherController, AddDevices)
 {
   lc.ClearModel();
   lc.DisconnectSignals();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection();
-  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>();
+  auto const& icons = lc.Impl()->device_section_->GetIcons();
   auto const& device_icon1 = icons.front();
   auto const& device_icon2 = *(std::next(icons.begin()));
 
@@ -949,7 +955,7 @@ TEST_F(TestLauncherController, MigrateFavoritesUnneeded)
 TEST_F(TestLauncherController, SetupIcons)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>();
   lc.Impl()->expo_icon_->UnStick();
   lc.Impl()->desktop_icon_->UnStick();
   auto const& model = lc.Impl()->model_;
@@ -970,7 +976,7 @@ TEST_F(TestLauncherController, SetupIcons)
   fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::SW_CENTER);
   EXPECT_EQ(model->IconIndex(fav), ++icon_index);
 
-  for (auto const& device : lc.Impl()->device_section_.GetIcons())
+  for (auto const& device : lc.Impl()->device_section_->GetIcons())
     ASSERT_EQ(model->IconIndex(device), ++icon_index);
 
   fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER);
@@ -995,7 +1001,7 @@ TEST_F(TestLauncherController, SetupIcons)
 TEST_F(TestLauncherController, ResetIconPriorities)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>();
   auto const& model = lc.Impl()->model_;
 
   favorite_store.AddFavorite(places::APPS_URI, -1);
@@ -1012,7 +1018,7 @@ TEST_F(TestLauncherController, ResetIconPriorities)
 
   int icon_index = -1;
 
-  for (auto const& device : lc.Impl()->device_section_.GetIcons())
+  for (auto const& device : lc.Impl()->device_section_->GetIcons())
     ASSERT_EQ(model->IconIndex(device), ++icon_index);
 
   auto fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::SW_CENTER);
@@ -1043,8 +1049,8 @@ TEST_F(TestLauncherController, ResetIconPriorities)
 TEST_F(TestLauncherController, GetLastIconPriorityUnSticky)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
-  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(3);
+  auto const& device_icons = lc.Impl()->device_section_->GetIcons();
   auto const& last_device = device_icons.back();
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
@@ -1060,8 +1066,8 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnSticky)
 TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithAllStickyIcons)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
-  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(3);
+  auto const& device_icons = lc.Impl()->device_section_->GetIcons();
   auto const& last_device = device_icons.back();
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
@@ -1080,8 +1086,8 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithAllStickyIcons)
 TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithSomeStickyIcons)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
-  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(3);
+  auto const& device_icons = lc.Impl()->device_section_->GetIcons();
   auto const& first_device = *(std::next(device_icons.rbegin()));
   auto const& last_device = device_icons.back();
 
@@ -1100,7 +1106,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithSomeStickyIcons)
 TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIcons)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(0);
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(0);
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
 
@@ -1111,7 +1117,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIcons)
 TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIconsAndUri)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(0);
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(0);
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
@@ -1136,11 +1142,11 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIconsAndUri)
 TEST_F(TestLauncherController, GetLastIconPrioritySticky)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(3);
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
 
-  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  auto const& device_icons = lc.Impl()->device_section_->GetIcons();
   auto const& first_device = device_icons.front();
 
   int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>("", true);
@@ -1150,8 +1156,8 @@ TEST_F(TestLauncherController, GetLastIconPrioritySticky)
 TEST_F(TestLauncherController, GetLastIconPriorityStickyWithAllStickyIcons)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
-  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(3);
+  auto const& device_icons = lc.Impl()->device_section_->GetIcons();
   auto const& last_device = device_icons.back();
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
@@ -1170,8 +1176,8 @@ TEST_F(TestLauncherController, GetLastIconPriorityStickyWithAllStickyIcons)
 TEST_F(TestLauncherController, GetLastIconPriorityStickyWithSomeStickyIcons)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
-  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(3);
+  auto const& device_icons = lc.Impl()->device_section_->GetIcons();
   auto const& first_device = *(std::next(device_icons.rbegin()));
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
@@ -1189,7 +1195,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityStickyWithSomeStickyIcons)
 TEST_F(TestLauncherController, GetLastIconPriorityStickyWithNoIcons)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection(0);
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>(0);
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
 
@@ -1240,8 +1246,8 @@ TEST_F(TestLauncherController, LauncherAddRequestApplicationStick)
 TEST_F(TestLauncherController, LauncherAddRequestDeviceAdd)
 {
   auto const& model = lc.Impl()->model_;
-  lc.Impl()->device_section_ = MockDeviceLauncherSection();
-  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>();
+  auto const& icons = lc.Impl()->device_section_->GetIcons();
   auto const& device_icon = icons.front();
   auto const& icon_uri = device_icon->RemoteUri();
 
@@ -1262,7 +1268,7 @@ TEST_F(TestLauncherController, LauncherAddRequestDeviceAdd)
 TEST_F(TestLauncherController, LauncherAddRequestDeviceStick)
 {
   auto const& model = lc.Impl()->model_;
-  MockVolumeLauncherIcon::Ptr device_icon(new NiceMock<MockVolumeLauncherIcon>());
+  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon::Nice());
   lc.Impl()->RegisterIcon(device_icon, std::numeric_limits<int>::max());
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
@@ -1287,7 +1293,7 @@ TEST_F(TestLauncherController, LauncherRemoveRequestApplicationUnStickAndQuit)
 
 TEST_F(TestLauncherController, LauncherRemoveRequestDeviceEjects)
 {
-  MockVolumeLauncherIcon::Ptr device_icon(new NiceMock<MockVolumeLauncherIcon>());
+  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon::Nice());
 
   EXPECT_CALL(*(device_icon->volume_), CanBeEjected())
       .WillRepeatedly(Return(true));
@@ -1302,7 +1308,7 @@ TEST_F(TestLauncherController, LauncherRemoveRequestDeviceEjects)
 
 TEST_F(TestLauncherController, LauncherRemoveRequestDeviceStops)
 {
-  MockVolumeLauncherIcon::Ptr device_icon(new NiceMock<MockVolumeLauncherIcon>());
+  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon::Nice());
 
   EXPECT_CALL(*(device_icon->volume_), CanBeEjected())
       .WillRepeatedly(Return(false));
@@ -1330,7 +1336,7 @@ TEST_F(TestLauncherController, SaveIconsOrder)
   invisible_app->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, false);
   lc.Impl()->RegisterIcon(invisible_app, ++priority);
 
-  MockVolumeLauncherIcon::Ptr sticky_device(new NiceMock<MockVolumeLauncherIcon>());
+  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon::Nice());
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
@@ -1361,7 +1367,7 @@ TEST_F(TestLauncherController, SaveIconsOrderWithOnlyStickyIcons)
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
-  MockVolumeLauncherIcon::Ptr sticky_device(new NiceMock<MockVolumeLauncherIcon>());
+  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon::Nice());
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
@@ -1390,7 +1396,7 @@ TEST_F(TestLauncherController, SaveIconsOrderTriesToKeepIconProvidersOrder)
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
-  MockVolumeLauncherIcon::Ptr sticky_device(new NiceMock<MockVolumeLauncherIcon>());
+  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon::Nice());
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
@@ -1415,7 +1421,7 @@ TEST_F(TestLauncherController, SaveIconsOrderTriesToKeepIconProvidersOrder2)
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
-  MockVolumeLauncherIcon::Ptr sticky_device(new NiceMock<MockVolumeLauncherIcon>());
+  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon::Nice());
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
@@ -1565,9 +1571,9 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickAfter)
 TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedDeviceSection)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>();
   auto const& model = lc.Impl()->model_;
-  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  auto const& icons = lc.Impl()->device_section_->GetIcons();
   auto const& device_icon1(icons.front());
   auto const& device_icon2(*(std::next(icons.begin())));
 
@@ -1602,10 +1608,10 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedApplication)
 TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDevice)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>();
   auto const& model = lc.Impl()->model_;
 
-  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  auto const& icons = lc.Impl()->device_section_->GetIcons();
   auto const& device_icon(icons.front());
 
   favorite_store.SetFavorites({ lc.Impl()->expo_icon_->RemoteUri(),
@@ -1628,10 +1634,10 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDevice)
 TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDeviceSection)
 {
   lc.ClearModel();
-  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  lc.Impl()->device_section_ = std::make_shared<MockDeviceLauncherSection>();
   auto const& model = lc.Impl()->model_;
 
-  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  auto const& icons = lc.Impl()->device_section_->GetIcons();
   auto const& device_icon1(icons.front());
   auto const& device_icon2(*(std::next(icons.begin())));
 
@@ -1926,10 +1932,9 @@ TEST_F(TestLauncherController, IconShowsOnQuickApplicationReopen)
   unity::glib::Object<BamfMockApplication> bamf_mock_application(bamf_mock_application_new());
   ApplicationPtr app(new unity::bamf::Application(mock_manager, unity::glib::object_cast<BamfApplication>(bamf_mock_application)));
 
-  MockApplicationLauncherIcon::Ptr our_icon;
-
+  AbstractLauncherIcon::Ptr our_icon;
   mock_manager.Default().application_started.emit(app);
-  
+
   app->title.changed.emit("Hello");
   auto app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
 
@@ -1939,7 +1944,7 @@ TEST_F(TestLauncherController, IconShowsOnQuickApplicationReopen)
     {
        our_icon = icon;
        break;
-    } 
+    }
   }
   ASSERT_TRUE(our_icon);
   EXPECT_FALSE(our_icon->removed);

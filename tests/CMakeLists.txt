@@ -80,6 +80,7 @@ if (GMOCK_LIB AND
   set (GTEST_SLOW_SOURCES
        test_main.cpp
        logger_helper.cpp
+       mock-application.cpp
        test_switcher_controller_slow.cpp
        test_switcher_controller_class.cpp
        test_tooltip_manager.cpp

@@ -45,7 +45,8 @@ const int INSTALL_TIP_DURATION = 1500;
 NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app,
                                                        std::string const& aptdaemon_trans_id)
-  : ApplicationLauncherIcon(app)
+  : WindowedLauncherIcon(IconType::APPLICATION)
+  , ApplicationLauncherIcon(app)
   , aptdaemon_trans_(std::make_shared<glib::DBusProxy>("org.debian.apt",
                                                        aptdaemon_trans_id,
                                                        "org.debian.apt.transaction",

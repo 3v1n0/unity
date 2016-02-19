@@ -37,9 +37,13 @@ namespace launcher
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
+  typedef std::shared_ptr<DeviceLauncherSection> Ptr;
+
   DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr const& volume_monitor = nullptr,
                         DevicesSettings::Ptr const& devices_settings = nullptr,
                         DeviceNotificationDisplay::Ptr const& notifications = nullptr);
+
+  virtual ~DeviceLauncherSection() = default;
 
   std::vector<VolumeLauncherIcon::Ptr> GetIcons() const;
 

@@ -147,6 +147,7 @@ WindowBase::WindowBase(ApplicationManager const& manager,
   });
   signals_.Add<void, BamfView*>(bamf_view_, "closed",
   [this] (BamfView* view) {
+    this->closed.emit();
     pool::wins_.erase(view);
   });
 }
@@ -473,7 +474,7 @@ ApplicationWindowPtr Application::GetFocusableWindow() const
   return pool::EnsureWindow(manager_, bamf_application_get_focusable_child(bamf_app_));
 }
 
-void Application::Focus(bool show_only_visible, int monitor) const
+void Manager::FocusWindowGroup(WindowList const& wins, bool show_only_visible, int monitor) const
 {
   WindowManager& wm = WindowManager::Default();
   std::vector<Window> urgent_windows;
@@ -481,7 +482,7 @@ void Application::Focus(bool show_only_visible, int monitor) const
   std::vector<Window> non_visible_windows;
   bool any_visible = false;
 
-  for (auto& window : GetWindows())
+  for (auto& window : wins)
   {
     Window window_id = window->window_id();
     if (window->urgent())
@@ -526,12 +527,15 @@ void Application::Focus(bool show_only_visible, int monitor) const
   }
 }
 
+void Application::Focus(bool show_only_visible, int monitor) const
+{
+  manager_.FocusWindowGroup(GetWindows(), show_only_visible, monitor);
+}
+
 void Application::Quit() const
 {
   for (auto& window : GetWindows())
-  {
     window->Quit();
-  }
 }
 
 bool Application::CreateLocalDesktopFile() const

@@ -61,15 +61,16 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
   {
     MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
                                    std::string const& aptdaemon_trans_id)
-      : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id)
+      : WindowedLauncherIcon(IconType::APPLICATION)
+      , SoftwareCenterLauncherIcon(app, aptdaemon_trans_id)
     {}
 
     void LauncherIconUnstick() { LauncherIcon::UnStick(); }
 
     using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
-    using SoftwareCenterLauncherIcon::GetRemoteUri;
     using SoftwareCenterLauncherIcon::OnFinished;
     using SoftwareCenterLauncherIcon::OnPropertyChanged;
+    using LauncherIcon::GetRemoteUri;
   };
 
   nux::ObjectPtr<Launcher> CreateLauncher()

@@ -86,6 +86,7 @@ public:
 
   void RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int priority = std::numeric_limits<int>::min());
 
+  ApplicationLauncherIcon* CreateAppLauncherIcon(ApplicationPtr const&);
   AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri, bool emit_signal = false);
   AbstractLauncherIcon::Ptr GetIconByUri(std::string const& icon_uri);
   SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& appstream_app_id, std::string const& aptdaemon_trans_id);
@@ -121,7 +122,7 @@ public:
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   XdndManager::Ptr xdnd_manager_;
-  DeviceLauncherSection  device_section_;
+  DeviceLauncherSection::Ptr device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;
