@@ -638,8 +638,7 @@ void Window::Impl::ComputeShapedShadowQuad()
 
   nux::Color color = active() ? manager_->active_shadow_color() : manager_->inactive_shadow_color();
   unsigned int radius = active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
-  DecorationsShape shape;
-  shape.initShape(win_->id());
+  Shape shape(win_->id());
   shaped_shadow_pixmap_ = manager_->impl_->BuildShapedShadowTexture(radius, color, shape);
 
   const auto* texture = ShadowTexture();
@@ -651,8 +650,8 @@ void Window::Impl::ComputeShapedShadowQuad()
   nux::Point2D<int> shadow_offset = manager_->shadow_offset();
 // ideally it would be -radius for the *2 part see comment in Manager::Impl::BuildShapedShadowTexture
 // in DecorationsManager.cpp Make sure to keep these factors in sync.
-  int x = border.x() + shadow_offset.x - radius * 2 + shape.getXoffs();
-  int y = border.y() + shadow_offset.y - radius * 2 + shape.getYoffs();
+  int x = border.x() + shadow_offset.x - radius * 2 + shape.XOffset();
+  int y = border.y() + shadow_offset.y - radius * 2 + shape.YOffset();
   int width = texture->width();
   int height = texture->height();
 
@@ -663,7 +662,8 @@ void Window::Impl::ComputeShapedShadowQuad()
   quad->matrix.y0 = -COMP_TEX_COORD_Y(quad->matrix, quad->box.y1());
 
   CompRect shaped_shadow_rect(x, y, width, height);
-  if (shaped_shadow_rect != last_shadow_rect_) {
+  if (shaped_shadow_rect != last_shadow_rect_)
+  {
     auto const& win_region = win_->region();
     quad->region = CompRegion(quad->box) - win_region;
 

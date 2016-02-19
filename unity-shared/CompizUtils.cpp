@@ -190,10 +190,6 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter::Value wf)
   if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
     return elements;
 
-  auto const& region = win->region();
-  bool rectangular = (region.numRects() == 1);
-  bool alpha = win->alpha();
-
   elements |= DecorationElement::SHADOW;
 
   if (!win->overrideRedirect() &&
@@ -203,11 +199,14 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter::Value wf)
     if (win->actions() & CompWindowActionResizeMask)
       elements |= DecorationElement::EDGE;
 
+    auto const& region = win->region();
+    bool rectangular = (region.numRects() == 1);
+
     if (rectangular && (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle)))
       elements |= DecorationElement::BORDER;
   }
 
-  if (alpha && !(elements & DecorationElement::BORDER) && !(win->mwmDecor() & MwmDecorBorder))
+  if (win->alpha() && !(elements & DecorationElement::BORDER) && !(win->mwmDecor() & MwmDecorBorder))
     elements &= ~DecorationElement::SHADOW;
 
   return elements;

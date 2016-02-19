@@ -147,6 +147,7 @@ private:
   std::string last_title_;
   std::string panel_id_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
+  cu::PixmapTexture::Ptr shaped_shadow_pixmap_;
   std::shared_ptr<ForceQuitDialog> force_quit_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
@@ -157,8 +158,6 @@ private:
   Item::Ptr edge_borders_;
 
   EMConverter::Ptr cv_;
-
-  cu::PixmapTexture::Ptr shaped_shadow_pixmap_;
 };
 
 struct Manager::Impl : sigc::trackable
@@ -184,7 +183,7 @@ private:
   void BuildActiveShadowTexture();
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
-  cu::PixmapTexture::Ptr BuildShapedShadowTexture(unsigned int radius, nux::Color const& color, DecorationsShape const& shape);
+  cu::PixmapTexture::Ptr BuildShapedShadowTexture(unsigned int radius, nux::Color const&, Shape const&);
   void OnShadowOptionsChanged(bool active);
   void OnWindowFrameChanged(bool, ::Window, std::weak_ptr<decoration::Window> const&);
   bool OnMenuKeyActivated(std::string const&);

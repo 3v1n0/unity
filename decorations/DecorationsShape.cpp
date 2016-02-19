@@ -17,86 +17,91 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include <string.h>
-#include <X11/extensions/shape.h>
-#include "DecoratedWindow.h"
 #include "DecorationsShape.h"
 
-bool DecorationsShape::initShape(XID win)
+#include <core/core.h>
+#include <NuxCore/Logger.h>
+#include <X11/extensions/shape.h>
+
+namespace unity
+{
+namespace decoration
+{
+namespace
+{
+DECLARE_LOGGER(logger, "unity.decoration.shape");
+}
+
+Shape::Shape(Window xid)
 {
   Bool buse, cuse;
   int bx, by, cx, cy;
   unsigned int bw, bh, cw, ch;
   Display *dpy = screen->dpy();
 
-  XShapeQueryExtents(dpy, win, &buse, &bx, &by, &bw, &bh, &cuse, &cx, &cy, &cw, &ch);
+  XShapeQueryExtents(dpy, xid, &buse, &bx, &by, &bw, &bh, &cuse, &cx, &cy, &cw, &ch);
 
   int kind;
-  if (buse) {
-    width = bw;
-    height = bh;
-    xoffs = bx;
-    yoffs = by;
+
+  if (buse)
+  {
+    width_ = bw;
+    height_ = bh;
+    xoffs_ = bx;
+    yoffs_ = by;
     kind = ShapeBounding;
   }
-  else if (cuse) {
-    width = cw;
-    height = ch;
-    xoffs = cx;
-    yoffs = cy;
+  else if (cuse)
+  {
+    width_ = cw;
+    height_ = ch;
+    xoffs_ = cx;
+    yoffs_ = cy;
     kind = ShapeClip;
   }
-  else {
-    fprintf(stderr, "XShapeQueryExtend returned no extends.\n");
-    return false;
+  else
+  {
+    LOG_ERROR(logger) << "XShapeQueryExtend returned no extents";
+    return;
   }
 
   int rect_count, rect_order;
-  XRectangle *rectangles;
-  if (!(rectangles = XShapeGetRectangles(dpy, win, kind, &rect_count, &rect_order))) {
-    fprintf(stderr, "Failed to get shape rectangles\n");
-    return false;
+  std::unique_ptr<XRectangle[], int(*)(void*)> rectangles(XShapeGetRectangles(dpy, xid, kind, &rect_count, &rect_order), XFree);
+
+  if (!rectangles)
+  {
+    LOG_ERROR(logger) << "Failed to get shape rectangles";
+    return;
   }
 
-  for (int i=0; i< rect_count; i++) {
-    rects.push_back(rectangles[i]);
-  }
-
-  XFree(rectangles);
-  return true;
+  for (int i = 0; i < rect_count; ++i)
+    rectangles_.push_back(rectangles[i]);
 }
 
-const XRectangle& DecorationsShape::getRectangle(int idx) const
+std::vector<XRectangle> const& Shape::GetRectangles() const
 {
-  return rects[idx];
+  return rectangles_;
 }
 
-int DecorationsShape::getRectangleCount() const
+int Shape::Width() const
 {
-  return (int)rects.size();
+  return width_;
 }
 
-int DecorationsShape::getWidth() const
+int Shape::Height() const
 {
-  return width;
+  return height_;
 }
 
-int DecorationsShape::getHeight() const
+int Shape::XOffset() const
 {
-  return height;
+  return xoffs_;
 }
 
-int DecorationsShape::getXoffs() const
+int Shape::YOffset() const
 {
-  return xoffs;
+  return yoffs_;
 }
 
-int DecorationsShape::getYoffs() const
-{
-  return yoffs;
-}
-void DecorationsShape::clear()
-{
-  width = height = 0;
-  rects.clear();
-}
+} // decoration namespace
+} // unity namespace
