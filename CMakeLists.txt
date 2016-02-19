@@ -220,6 +220,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.1.0)
 set(UNITY_PLUGIN_SHARED_DEPS
     ${UNITY_PROTOCOL_PRIVATE_DEPS}
+    appstream-glib
     atk
     atk-bridge-2.0
     cairo>=1.13.1

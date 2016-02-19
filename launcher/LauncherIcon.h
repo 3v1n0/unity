@@ -265,6 +265,8 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
+  BaseTexturePtr TextureFromPixbuf(GdkPixbuf *pixbuf, int size, bool update_glow_colors = true);
+
   BaseTexturePtr TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
   BaseTexturePtr TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
