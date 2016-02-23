@@ -51,11 +51,11 @@ public:
 private:
   std::string GetDesktopFile() const;
   std::string GetTitle() const;
-  glib::Object<GdkPixbuf> GetIconPixbuf() const;
+  glib::Object<_GdkPixbuf> GetIconPixbuf() const;
 
   std::string appstream_id_;
   std::string title_;
-  glib::Object<GdkPixbuf> icon_pixbuf_;
+  glib::Object<_GdkPixbuf> icon_pixbuf_;
   WindowList window_list_;
 };
 
