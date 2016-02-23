@@ -43,8 +43,7 @@ Application::Application(std::string const& appstream_id)
   AsApp *as_app = as_store_get_app_by_id(as_store, appstream_id_.c_str());
   g_return_if_fail(as_app);
 
-  const gchar* name = as_app_get_name(as_app, nullptr);
-  title_ = name ? name : "";
+  title_ = glib::gchar_to_string(as_app_get_name(as_app, nullptr));
 
   AsIcon *as_icon = as_app_get_icon_default(as_app);
   g_return_if_fail(as_icon);
