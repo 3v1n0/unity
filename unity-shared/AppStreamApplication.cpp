@@ -31,9 +31,9 @@ namespace appstream
 Application::Application(std::string const& appstream_id)
   : appstream_id_(appstream_id)
 {
-  desktop_file.SetGetterFunction(std::bind(&Application::GetDesktopFile, this));
-  title.SetGetterFunction(std::bind(&Application::GetTitle, this));
-  icon_pixbuf.SetGetterFunction(std::bind(&Application::GetIconPixbuf, this));
+  desktop_file.SetGetterFunction([this](){ return appstream_id_; });
+  title.SetGetterFunction([this](){ return title_; });
+  icon_pixbuf.SetGetterFunction([this](){ return icon_pixbuf_; });
 
   glib::Object<AsStore> as_store(as_store_new());
   g_return_if_fail(as_store);
@@ -50,21 +50,6 @@ Application::Application(std::string const& appstream_id)
 
   as_icon_load(as_icon, AS_ICON_LOAD_FLAG_SEARCH_SIZE, nullptr);
   icon_pixbuf_ = glib::Object<GdkPixbuf>(as_icon_get_pixbuf(as_icon), glib::AddRef());
-}
-
-std::string Application::GetDesktopFile() const
-{
-  return appstream_id_;
-}
-
-std::string Application::GetTitle() const
-{
-  return title_;
-}
-
-glib::Object<GdkPixbuf> Application::GetIconPixbuf() const
-{
-  return icon_pixbuf_;
 }
 
 AppType Application::type() const

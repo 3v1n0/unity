@@ -49,10 +49,6 @@ public:
   std::string desktop_id() const override;
 
 private:
-  std::string GetDesktopFile() const;
-  std::string GetTitle() const;
-  glib::Object<_GdkPixbuf> GetIconPixbuf() const;
-
   std::string appstream_id_;
   std::string title_;
   glib::Object<_GdkPixbuf> icon_pixbuf_;
