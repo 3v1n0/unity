@@ -42,28 +42,26 @@ namespace launcher
 {
 namespace
 {
-const std::string PRE_INSTALL_ICON = "software-launcher-icon";
 const std::string FINAL_ICON = "org.gnome.Software";
 const std::string APP_NAME = "Software";
 const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
 const std::string GS_DESKTOP = LOCAL_DATA_DIR+"/applications/org.gnome.Software.desktop";
-const std::string GS_APP_INSTALL_DESKTOP = "/usr/share/app-install/desktop/software-center:org.gnome.Software.desktop";
+const std::string GS_APP_INSTALL_DESKTOP = "org.gnome.Software.desktop";
 }
 
 struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
 {
   TestSoftwareCenterLauncherIcon()
      : gs(std::make_shared<MockApplication::Nice>(GS_APP_INSTALL_DESKTOP, FINAL_ICON, APP_NAME))
-     , icon(gs, "/com/canonical/unity/test/object/path", PRE_INSTALL_ICON)
+     , icon(gs, "/com/canonical/unity/test/object/path")
   {}
 
   struct MockSoftwareCenterLauncherIcon : SoftwareCenterLauncherIcon
   {
     MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
-                                   std::string const& aptdaemon_trans_id,
-                                   std::string const& icon_path)
+                                   std::string const& aptdaemon_trans_id)
       : WindowedLauncherIcon(IconType::APPLICATION)
-      , SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
+      , SoftwareCenterLauncherIcon(app, aptdaemon_trans_id)
     {}
 
     void LauncherIconUnstick() { LauncherIcon::UnStick(); }
@@ -71,7 +69,6 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
     using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
     using SoftwareCenterLauncherIcon::OnFinished;
     using SoftwareCenterLauncherIcon::OnPropertyChanged;
-    using SoftwareCenterLauncherIcon::drag_window_;
     using LauncherIcon::GetRemoteUri;
   };
 
@@ -94,9 +91,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
 {
   EXPECT_FALSE(icon.IsVisible());
   EXPECT_TRUE(icon.IsSticky());
-  EXPECT_EQ(AbstractLauncherIcon::Position::FLOATING, icon.position());
   EXPECT_EQ("Waiting to install", icon.tooltip_text());
-  EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
@@ -106,28 +101,9 @@ TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), GS_DESKTOP);
 }
 
-TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall)
-{
-  // ensure that tranformation from app-install data desktop files works
-  gs->desktop_file_ = "/usr/share/app-install/desktop/pkgname:kde4__afile.desktop";
-   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(),
-             LOCAL_DATA_DIR+"/applications/kde4/afile.desktop");
-}
-
-TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
-{
-  // now simualte data coming from the software-center-agent
-  gs->desktop_file_ = "/tmp/software-center-agent:VP2W9M:org.gnome.Software.desktop";
-  EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), GS_DESKTOP);
-}
-
-// simulate a OnFinished signal from a /usr/share/app-install location
-// and ensure that the remote uri is updated from temp location to
-// the real location
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedReplacesDesktopFile)
 {
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
-
   EXPECT_EQ(GS_DESKTOP, icon.DesktopFile());
 }
 
@@ -162,7 +138,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedRemoveInvalidNewAppIcon)
 {
   // Using an icon ptr, to get the removed signal to be properly emitted
   nux::ObjectPtr<MockSoftwareCenterLauncherIcon> icon_ptr(
-    new MockSoftwareCenterLauncherIcon(gs, "/com/canonical/unity/test/object/path", PRE_INSTALL_ICON));
+    new MockSoftwareCenterLauncherIcon(gs, "/com/canonical/unity/test/object/path"));
 
   bool removed = false;
   auto& app_manager = unity::ApplicationManager::Default();
@@ -217,65 +193,15 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesTooltip)
   EXPECT_EQ(icon.tooltip_text(), gs->title());
 }
 
-TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesIcon)
-{
-  icon.icon_name = "foo-icon";
-  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
-  EXPECT_EQ(icon.icon_name(), gs->icon());
-}
-
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedLogsEvent)
 {
   EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _));
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
 }
 
-TEST_F(TestSoftwareCenterLauncherIcon, AnimateToInvalidPosition)
-{
-  EXPECT_FALSE(icon.Animate(CreateLauncher(), 1, 2));
-  EXPECT_FALSE(icon.IsVisible());
-  EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
-}
-
-TEST_F(TestSoftwareCenterLauncherIcon, AnimateFromInvalidPosition)
-{
-  EXPECT_TRUE(icon.Animate(CreateLauncher(), 0, 0));
-  EXPECT_TRUE(icon.IsVisible());
-  EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
-}
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-struct MultiMonitor : TestSoftwareCenterLauncherIcon, WithParamInterface<unsigned> {};
-INSTANTIATE_TEST_CASE_P(TestSoftwareCenterLauncherIcon, MultiMonitor, Range<unsigned>(0, monitors::MAX, 1));
-
-TEST_P(/*TestSoftwareCenterLauncherIcon*/MultiMonitor, Animate)
-{
-  auto launcher = CreateLauncher();
-  launcher->monitor = GetParam();
-  icon.SetCenter({1, 1, 0}, launcher->monitor());
-  ASSERT_TRUE(icon.Animate(launcher, 2, 2));
-  EXPECT_FALSE(icon.IsVisible());
-  EXPECT_TRUE(icon.icon_name().empty());
-
-  for (unsigned i = 0; i < monitors::MAX; ++i)
-    ASSERT_EQ(static_cast<int>(i) == launcher->monitor(), icon.IsVisibleOnMonitor(i));
-
-  bool animated = false;
-  ASSERT_TRUE(icon.drag_window_);
-  icon.drag_window_->anim_completed.connect([&animated] { animated = true; });
-  Utils::WaitUntilMSec(animated);
-  ASSERT_TRUE(animated);
-
-  EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
-  EXPECT_FALSE(icon.drag_window_);
-
-  for (unsigned i = 0; i < monitors::MAX; ++i)
-    ASSERT_TRUE(icon.IsVisibleOnMonitor(i));
-
-  EXPECT_TRUE(icon.IsVisible());
-}
 
 struct InstallProgress : TestSoftwareCenterLauncherIcon, WithParamInterface<int> {};
 INSTANTIATE_TEST_CASE_P(TestSoftwareCenterLauncherIcon, InstallProgress, Range<int>(0, 99, 10));
