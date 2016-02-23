@@ -134,7 +134,6 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
   {
     // failure condition, remove icon again
     UnStick();
-    Remove();
   }
 
   aptdaemon_trans_.reset();
