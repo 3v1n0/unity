@@ -38,7 +38,7 @@ const gchar* SETTINGS_NAME = "com.canonical.Unity.Launcher";
 const gchar* SETTINGS_KEY = "favorites";
 
 const char* base_store_favs[] = { BUILDDIR"/tests/data/applications/ubuntuone-installer.desktop",
-                                  "file://" BUILDDIR "/tests/data/applications/ubuntu-software-center.desktop",
+                                  "file://" BUILDDIR "/tests/data/applications/org.gnome.Software.desktop",
                                   "application://" BUILDDIR "/tests/data/applications/update-manager.desktop",
                                   "unity://test-icon",
                                   "device://uuid",
