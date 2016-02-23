@@ -61,7 +61,7 @@ const std::string DEVICES_URI = "unity://devices";
 namespace app
 {
  const std::string UBUNTU_ONE = BUILDDIR "/tests/data/applications/ubuntuone-installer.desktop";
- const std::string SW_CENTER = BUILDDIR "/tests/data/applications/ubuntu-software-center.desktop";
+ const std::string SW_CENTER = BUILDDIR "/tests/data/applications/org.gnome.Software.desktop";
  const std::string UPDATE_MANAGER = BUILDDIR "/tests/data/applications/update-manager.desktop";
  const std::string BZR_HANDLE_PATCH = BUILDDIR "/tests/data/applications/bzr-handle-patch.desktop";
  const std::string NO_ICON = BUILDDIR "/tests/data/applications/no-icon.desktop";
