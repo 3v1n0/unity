@@ -316,9 +316,9 @@ public:
 
   void OpenFormatPrompt()
   {
-    std::string cmdline = std::string("gnome-disks") +
-                          std::string(" --block-device ") + volume_->GetUnixDevicePath() +
-                          std::string(" --format-device");
+    std::string cmdline = "gnome-disks --block-device" +
+                          volume_->GetUnixDevicePath() +
+                          " --format-device";
 
     glib::Object<GAppInfo> app_info(g_app_info_create_from_commandline(cmdline.c_str(), nullptr, G_APP_INFO_CREATE_NONE, nullptr));
     g_app_info_launch(app_info, nullptr, nullptr, nullptr);
