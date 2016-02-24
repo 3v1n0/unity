@@ -39,11 +39,13 @@ public:
   virtual ~Volume() = default;
 
   virtual bool CanBeEjected() const = 0;
+  virtual bool CanBeFormatted() const = 0;
   virtual bool CanBeRemoved() const = 0;
   virtual bool CanBeStopped() const = 0;
   virtual std::string GetName() const = 0;
   virtual std::string GetIconName() const = 0;
   virtual std::string GetIdentifier() const = 0;
+  virtual std::string GetUnixDevicePath() const = 0;
   virtual std::string GetUri() const = 0;
   virtual bool HasSiblings() const = 0;
   virtual bool IsMounted() const = 0;
