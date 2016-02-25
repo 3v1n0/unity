@@ -36,7 +36,7 @@ public:
   typedef std::shared_ptr<Settings> Ptr;
 
   static Settings::Ptr const& Get();
-  virtual ~Settings();
+  ~Settings();
 
   nux::Property<std::string> theme;
   nux::Property<std::string> font;
