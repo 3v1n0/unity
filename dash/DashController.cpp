@@ -496,6 +496,8 @@ bool Controller::IsCommandLensOpen() const
 nux::Geometry Controller::GetInputWindowGeometry()
 {
   EnsureDash();
+  int launcher_size = Settings::Instance().LauncherSize(monitor_);
+  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
   dash::Style& style = dash::Style::Instance();
   nux::Geometry const& window_geo(window_->GetGeometry());
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
@@ -508,7 +510,13 @@ nux::Geometry Controller::GetInputWindowGeometry()
     geo.height += style.GetDashHorizontalBorderHeight().CP(view_->scale());
 
     if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
-      geo.y += view_content_geo.y - style.GetDashHorizontalBorderHeight().CP(view_->scale());
+      geo.y = monitor_geo.height - view_content_geo.height - launcher_size - style.GetDashHorizontalBorderHeight().CP(view_->scale());
+  }
+  else if (Settings::Instance().form_factor() == FormFactor::NETBOOK)
+  {
+    geo.height = monitor_geo.height;
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      geo.height -= launcher_size;
   }
 
   return geo;
