@@ -60,6 +60,11 @@ bool WindowedLauncherIcon::IsActive() const
   return GetQuirk(Quirk::ACTIVE);
 }
 
+bool WindowedLauncherIcon::IsStarting() const
+{
+  return GetQuirk(Quirk::STARTING);
+}
+
 bool WindowedLauncherIcon::IsRunning() const
 {
   return GetQuirk(Quirk::RUNNING);
