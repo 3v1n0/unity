@@ -115,7 +115,7 @@ public:
   typedef std::shared_ptr<Style> Ptr;
 
   static Style::Ptr const& Get();
-  virtual ~Style();
+  ~Style();
 
   nux::ROProperty<std::string> theme;
   nux::ROProperty<std::string> font;
