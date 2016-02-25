@@ -68,6 +68,6 @@ private:
 };
 
 } // theme namespace
-} // unity namespace
+} // gtk namespace
 
 #endif // UNITY_GTK_UTILS
