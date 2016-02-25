@@ -336,7 +336,7 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
 
   signals_.Add<void, BamfView*, gboolean>(bamf_view_, "starting-changed",
   [this] (BamfView*, gboolean starting) {
-    LOG_TRACE(logger) << "starting " << visible;
+    LOG_TRACE(logger) << "starting " << starting;
     this->starting.changed.emit(starting);
   });
 
