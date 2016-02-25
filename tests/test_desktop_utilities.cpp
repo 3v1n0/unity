@@ -184,17 +184,17 @@ TEST(TestDesktopUtilities, TestGetDesktopPathById)
   g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR.c_str(), TRUE);
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
-  std::string const& file = DesktopUtilities::GetDesktopPathById("ubuntu-software-center.desktop");
+  std::string const& file = DesktopUtilities::GetDesktopPathById("org.gnome.Software.desktop");
 
   g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
   g_setenv("XDG_DATA_HOME", old_dirs.c_str(), TRUE);
 
-  EXPECT_EQ(file, LOCAL_DATA_DIR + "/applications/ubuntu-software-center.desktop");
+  EXPECT_EQ(file, LOCAL_DATA_DIR + "/applications/org.gnome.Software.desktop");
 }
 
 TEST(TestDesktopUtilities, TestGetBackgroundColor)
 {
-  std::string const& color = DesktopUtilities::GetBackgroundColor(LOCAL_DATA_DIR+"/applications/ubuntu-software-center.desktop");
+  std::string const& color = DesktopUtilities::GetBackgroundColor(LOCAL_DATA_DIR+"/applications/org.gnome.Software.desktop");
 
   EXPECT_EQ(color, "#aabbcc");
 }
