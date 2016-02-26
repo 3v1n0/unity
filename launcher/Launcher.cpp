@@ -351,6 +351,8 @@ float Launcher::GetAutohidePositionMax() const
 void Launcher::OnDPIChanged()
 {
   monitor.changed.emit(monitor());
+  if (launcher_position_ == LauncherPosition::BOTTOM)
+    options.changed.emit(options());
 }
 
 void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo)
