@@ -121,7 +121,7 @@
         'application://libreoffice-writer.desktop',
         'application://libreoffice-calc.desktop',
         'application://libreoffice-impress.desktop',
-        'application://ubuntu-software-center.desktop',
+        'application://org.gnome.Software.desktop',
         'application://ubuntu-amazon-default.desktop',
         'application://unity-control-center.desktop',
         'unity://running-apps',

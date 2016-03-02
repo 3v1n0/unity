@@ -169,39 +169,6 @@ void GnomeFileManager::OpenTrash(uint64_t timestamp)
   Open(TRASH_URI, timestamp);
 }
 
-void GnomeFileManager::Activate(uint64_t timestamp)
-{
-  glib::Cancellable cancellable;
-  glib::Object<GFile> file(g_file_new_for_uri(TRASH_URI.c_str()));
-  glib::Object<GAppInfo> app_info(g_file_query_default_handler(file, cancellable, nullptr));
-
-  if (app_info)
-  {
-    GdkDisplay* display = gdk_display_get_default();
-    glib::Object<GdkAppLaunchContext> context(gdk_display_get_app_launch_context(display));
-
-    if (timestamp > 0)
-      gdk_app_launch_context_set_timestamp(context, timestamp);
-
-    auto const& gcontext = glib::object_cast<GAppLaunchContext>(context);
-    auto proxy = std::make_shared<glib::DBusProxy>(NAUTILUS_NAME, NAUTILUS_PATH,
-                                                   "org.freedesktop.Application");
-
-    glib::String context_string(g_app_launch_context_get_startup_notify_id(gcontext, app_info, nullptr));
-
-    if (context_string && g_utf8_validate(context_string, -1, nullptr))
-    {
-      GVariantBuilder builder;
-      g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
-      g_variant_builder_add(&builder, "{sv}", "desktop-startup-id", g_variant_new("s", context_string.Value()));
-      GVariant *param = g_variant_new("(@a{sv})", g_variant_builder_end(&builder));
-
-      // Passing the proxy to the lambda we ensure that it will be destroyed when needed
-      proxy->CallBegin("Activate", param, [proxy] (GVariant*, glib::Error const&) {});
-    }
-  }
-}
-
 bool GnomeFileManager::TrashFile(std::string const& uri)
 {
   glib::Cancellable cancellable;
@@ -217,11 +184,10 @@ bool GnomeFileManager::TrashFile(std::string const& uri)
 
 void GnomeFileManager::EmptyTrash(uint64_t timestamp)
 {
-  Activate(timestamp);
   auto const& proxy = impl_->NautilusOperationsProxy();
 
   // Passing the proxy to the lambda we ensure that it will be destroyed when needed
-  proxy->CallBegin("EmptyTrash", nullptr, [proxy] (GVariant*, glib::Error const&) {});
+  proxy->CallBegin("EmptyTrashWithTimestamp", g_variant_new("(u)", timestamp), [proxy] (GVariant*, glib::Error const&) {});
 }
 
 void GnomeFileManager::CopyFiles(std::set<std::string> const& uris, std::string const& dest, uint64_t timestamp)
@@ -231,7 +197,7 @@ void GnomeFileManager::CopyFiles(std::set<std::string> const& uris, std::string 
 
   bool found_valid = false;
   GVariantBuilder b;
-  g_variant_builder_init(&b, G_VARIANT_TYPE("(ass)"));
+  g_variant_builder_init(&b, G_VARIANT_TYPE("(assu)"));
   g_variant_builder_open(&b, G_VARIANT_TYPE("as"));
 
   for (auto const& uri : uris)
@@ -245,14 +211,14 @@ void GnomeFileManager::CopyFiles(std::set<std::string> const& uris, std::string 
 
   g_variant_builder_close(&b);
   g_variant_builder_add(&b, "s", dest.c_str());
+  g_variant_builder_add(&b, "u", timestamp);
   glib::Variant parameters(g_variant_builder_end(&b));
 
   if (found_valid)
   {
     // Passing the proxy to the lambda we ensure that it will be destroyed when needed
     auto const& proxy = impl_->NautilusOperationsProxy();
-    proxy->CallBegin("CopyURIs", parameters, [proxy] (GVariant*, glib::Error const&) {});
-    Activate(timestamp);
+    proxy->CallBegin("CopyURIsWithTimestamp", parameters, [proxy] (GVariant*, glib::Error const&) {});
   }
 }
 

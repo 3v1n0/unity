@@ -25,8 +25,10 @@
 
 #include <sigc++/signal.h>
 #include <NuxCore/Property.h>
+#include <UnityCore/GLibWrapper.h>
 #include <unity-shared/WindowManager.h>
 
+struct _GdkPixbuf;
 
 namespace unity
 {
@@ -153,6 +155,7 @@ public:
   nux::ROProperty<std::string> desktop_file;
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;
+  nux::ROProperty<glib::Object<_GdkPixbuf>> icon_pixbuf;
 
   // Considering using a property for the "unity-seen" quark
   nux::RWProperty<bool> seen;

@@ -41,7 +41,7 @@ using namespace unity::launcher;
 namespace
 {
 const std::string DEFAULT_EMPTY_ICON = "application-default-icon";
-const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
+const std::string GS_DESKTOP = BUILDDIR"/tests/data/applications/org.gnome.Software.desktop";
 const std::string UM_DESKTOP = BUILDDIR"/tests/data/applications/update-manager.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
 
@@ -93,9 +93,9 @@ struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
 
   virtual void SetUp() override
   {
-    usc_app = std::make_shared<MockApplication::Nice>(USC_DESKTOP, "softwarecenter");
+    usc_app = std::make_shared<MockApplication::Nice>(GS_DESKTOP, "org.gnome.Software");
     usc_icon = new MockApplicationLauncherIcon(usc_app);
-    ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
+    ASSERT_EQ(usc_icon->DesktopFile(), GS_DESKTOP);
 
     empty_app = std::make_shared<MockApplication::Nice>(NO_ICON_DESKTOP);
     empty_icon = new MockApplicationLauncherIcon(empty_app);
@@ -175,7 +175,7 @@ struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
 
 TEST_F(TestApplicationLauncherIcon, ApplicationSignalDisconnection)
 {
-  std::shared_ptr<MockApplication> app = std::make_shared<MockApplication::Nice>(USC_DESKTOP);
+  std::shared_ptr<MockApplication> app = std::make_shared<MockApplication::Nice>(GS_DESKTOP);
   {
     MockApplicationLauncherIcon::Ptr icon(new MockApplicationLauncherIcon(app));
     EXPECT_FALSE(app->closed.empty());
@@ -201,7 +201,7 @@ TEST_F(TestApplicationLauncherIcon, TestCustomBackgroundColor)
 
 TEST_F(TestApplicationLauncherIcon, TestDefaultIcon)
 {
-  EXPECT_EQ(usc_icon->icon_name(), "softwarecenter");
+  EXPECT_EQ(usc_icon->icon_name(), "org.gnome.Software");
   EXPECT_EQ(empty_icon->icon_name(), DEFAULT_EMPTY_ICON);
   EXPECT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
 }
@@ -267,7 +267,7 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApp)
 
 TEST_F(TestApplicationLauncherIcon, StickStickedDesktopApp)
 {
-  auto app = std::make_shared<MockApplication::Nice>(USC_DESKTOP);
+  auto app = std::make_shared<MockApplication::Nice>(GS_DESKTOP);
   app->sticky = true;
   app->desktop_file_ = UM_DESKTOP;
   MockApplicationLauncherIcon::Ptr icon(new MockApplicationLauncherIcon(app));
@@ -542,7 +542,7 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopForgetsOldPositionUpdatesUriAnd
 
 TEST_F(TestApplicationLauncherIcon, RemoteUri)
 {
-  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + USC_DESKTOP);
+  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + GS_DESKTOP);
   EXPECT_TRUE(mock_icon->RemoteUri().empty());
 }
 

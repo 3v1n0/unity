@@ -24,7 +24,6 @@
 #include <string>
 #include <UnityCore/GLibDBusProxy.h>
 #include "ApplicationLauncherIcon.h"
-#include "LauncherDragWindow.h"
 
 namespace unity
 {
@@ -39,10 +38,7 @@ public:
   typedef nux::ObjectPtr<SoftwareCenterLauncherIcon> Ptr;
 
   SoftwareCenterLauncherIcon(ApplicationPtr const& app,
-                             std::string const& aptdaemon_trans_id,
-                             std::string const& icon_path);
-
-  bool Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y);
+                             std::string const& aptdaemon_trans_id);
 
 protected:
   std::string GetName() const;
@@ -52,10 +48,8 @@ private:
   std::string GetActualDesktopFileAfterInstall();
   void OnFinished(GVariant *params);
   void OnPropertyChanged(GVariant* params);
-  void OnDragAnimationFinished(nux::ObjectPtr<Launcher> const&, std::string const&);
 
   glib::DBusProxy::Ptr aptdaemon_trans_;
-  LauncherDragWindow::Ptr drag_window_;
   bool finished_;
   bool needs_urgent_;
   std::string aptdaemon_trans_id_;
