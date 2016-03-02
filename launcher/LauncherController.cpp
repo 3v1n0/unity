@@ -34,12 +34,12 @@
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "FileManagerLauncherIcon.h"
-#include "HudLauncherIcon.h"
 #include "LauncherController.h"
 #include "LauncherControllerPrivate.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "ExpoLauncherIcon.h"
 #include "TrashLauncherIcon.h"
+#include "unity-shared/AppStreamApplication.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
@@ -60,13 +60,8 @@ const std::string DBUS_INTROSPECTION =
   "<node>"
   "  <interface name='com.canonical.Unity.Launcher'>"
   ""
-  "    <method name='AddLauncherItemFromPosition'>"
-  "      <arg type='s' name='title' direction='in'/>"
-  "      <arg type='s' name='icon' direction='in'/>"
-  "      <arg type='i' name='icon_x' direction='in'/>"
-  "      <arg type='i' name='icon_y' direction='in'/>"
-  "      <arg type='i' name='icon_size' direction='in'/>"
-  "      <arg type='s' name='desktop_file' direction='in'/>"
+  "    <method name='AddLauncherItem'>"
+  "      <arg type='s' name='appstream_app_id' direction='in'/>"
   "      <arg type='s' name='aptdaemon_task' direction='in'/>"
   "    </method>"
   ""
@@ -515,44 +510,25 @@ Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, b
 }
 
 void
-Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
-                                              std::string const& aptdaemon_trans_id,
-                                              std::string const& icon_path,
-                                              int icon_x,
-                                              int icon_y,
-                                              int icon_size)
+Controller::Impl::OnLauncherAddRequestSpecial(std::string const& appstream_app_id,
+                                              std::string const& aptdaemon_trans_id)
 {
-  // Check if desktop file was supplied, or if it's set to SC's agent
-  // See https://bugs.launchpad.net/unity/+bug/1002440
-  if (path.empty() || path == local::SOFTWARE_CENTER_AGENT)
+  // Check if desktop file was supplied
+  if (appstream_app_id.empty())
     return;
 
   auto const& icon = std::find_if(model_->begin(), model_->end(),
-    [&path](AbstractLauncherIcon::Ptr const& i) { return (i->DesktopFile() == path); });
+    [&appstream_app_id](AbstractLauncherIcon::Ptr const& i) { return (i->DesktopFile() == appstream_app_id); });
 
   if (icon != model_->end())
     return;
 
-  auto const& result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+  auto const& result = CreateSCLauncherIcon(appstream_app_id, aptdaemon_trans_id);
 
   if (result)
   {
-    // Setting the icon position and adding it to the model, makes the launcher
-    // to compute its center
     RegisterIcon(result, GetLastIconPriority<ApplicationLauncherIcon>("", true));
-
-    if (icon_x > 0 || icon_y > 0)
-    {
-      // This will ensure that the center of the new icon is set, so that
-      // the animation could be done properly.
-      sources_.AddIdle([this, icon_x, icon_y, result] {
-        return !result->Animate(CurrentLauncher(), icon_x, icon_y);
-      });
-    }
-    else
-    {
-      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
-    }
+    result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
   }
 }
 
@@ -953,22 +929,11 @@ AbstractLauncherIcon::Ptr Controller::Impl::GetIconByUri(std::string const& icon
   return AbstractLauncherIcon::Ptr();
 }
 
-SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
-                                                                       std::string const& aptdaemon_trans_id,
-                                                                       std::string const& icon_path)
+SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::string const& appstream_app_id,
+                                                                       std::string const& aptdaemon_trans_id)
 {
-  SoftwareCenterLauncherIcon::Ptr result;
-
-  ApplicationPtr app = ApplicationManager::Default().GetApplicationForDesktopFile(file_path);
-  if (!app)
-    return result;
-
-  if (app->seen)
-    return result;
-
-  result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
-
-  return result;
+  ApplicationPtr app = std::make_shared<appstream::Application>(appstream_app_id);
+  return SoftwareCenterLauncherIcon::Ptr(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id));
 }
 
 void Controller::Impl::AddRunningApps()
@@ -1573,16 +1538,11 @@ void Controller::Impl::OpenQuicklist()
 
 GVariant* Controller::Impl::OnDBusMethodCall(std::string const& method, GVariant *parameters)
 {
-  if (method == "AddLauncherItemFromPosition")
+  if (method == "AddLauncherItem")
   {
-    glib::String icon, icon_title, desktop_file, aptdaemon_task;
-    gint icon_x, icon_y, icon_size;
-
-    g_variant_get(parameters, "(ssiiiss)", &icon_title, &icon, &icon_x, &icon_y,
-                                           &icon_size, &desktop_file, &aptdaemon_task);
-
-    OnLauncherAddRequestSpecial(desktop_file.Str(), aptdaemon_task.Str(),
-                                icon.Str(), icon_x, icon_y, icon_size);
+    glib::String appstream_app_id, aptdaemon_trans_id;
+    g_variant_get(parameters, "(ss)", &appstream_app_id, &aptdaemon_trans_id);
+    OnLauncherAddRequestSpecial(appstream_app_id.Str(), aptdaemon_trans_id.Str());
   }
   else if (method == "UpdateLauncherIconFavoriteState")
   {

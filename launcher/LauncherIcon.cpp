@@ -365,6 +365,20 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
   return _unity_theme;
 }
 
+BaseTexturePtr LauncherIcon::TextureFromPixbuf(GdkPixbuf* pixbuf, int size, bool update_glow_colors)
+{
+  g_return_val_if_fail(GDK_IS_PIXBUF(pixbuf), BaseTexturePtr());
+
+  glib::Object<GdkPixbuf> scaled_pixbuf(gdk_pixbuf_scale_simple(pixbuf, size, size,  GDK_INTERP_BILINEAR));
+
+  if (update_glow_colors)
+    ColorForIcon(scaled_pixbuf, _background_color, _glow_color);
+
+  BaseTexturePtr result;
+  result.Adopt(nux::CreateTexture2DFromPixbuf(scaled_pixbuf, true));
+  return result;
+}
+
 BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
 {
   GtkIconTheme* default_theme;
