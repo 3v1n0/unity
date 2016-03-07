@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2011 Canonical Ltd
+* Copyright (C) 2015 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -14,33 +14,29 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Alex Launi <alex.launi@canonical.com>
+* Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 */
 
-#ifndef UNITY_PERFORMANCE_MONITOR
-#define UNITY_PERFORMANCE_MONITOR
+#include "LockScreenPromptFactory.h"
+#include "KylinUserPromptView.h"
+#include "UserPromptView.h"
+#include "unity-shared/UnitySettings.h"
 
-#include <string>
-#include <glib.h>
-
-namespace unity {
-namespace performance {
-
-class Monitor
+namespace unity
 {
-public:
-  virtual ~Monitor() {}
+namespace lockscreen
+{
+nux::ObjectPtr<AbstractUserPromptView> PromptFactory::CreatePrompt(session::Manager::Ptr const& sm)
+{
+  nux::ObjectPtr<AbstractUserPromptView> prompt;
 
-	void Start();
-	GVariant* Stop();
-	virtual std::string GetName() const = 0;
+  if (unity::Settings::Instance().desktop_type() == DesktopType::UBUNTUKYLIN)
+    prompt = new KylinUserPromptView(sm);
+  else
+    prompt = new UserPromptView(sm);
 
-protected:
-	virtual void StartMonitor () = 0;
-	virtual void StopMonitor (GVariantBuilder* builder) = 0;
-};
- 
+  return prompt;
+}
+
 }
 }
-
-#endif // UNITY_PERFORMANCE_MONITOR

@@ -82,7 +82,7 @@ public:
 
   nux::Point3 GetCenter(int monitor);
 
-  virtual void Activate(ActionArg arg);
+  void Activate(ActionArg arg);
 
   void OpenInstance(ActionArg arg);
 
@@ -94,15 +94,19 @@ public:
 
   void SetOrder(int order);
 
-  virtual WindowList Windows() { return WindowList(); }
+  WindowList Windows() { return WindowList(); }
 
-  virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
+  WindowList WindowsOnViewport() { return WindowList(); }
 
-  virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
+  WindowList WindowsForMonitor(int monitor) { return WindowList(); }
 
-  const bool WindowVisibleOnMonitor(int monitor);
+  bool WindowVisibleOnMonitor(int monitor) const;
 
-  const bool WindowVisibleOnViewport();
+  bool WindowVisibleOnViewport() const;
+
+  size_t WindowsVisibleOnMonitor(int monitor) const;
+
+  size_t WindowsVisibleOnViewport() const;
 
   float PresentUrgency();
 
@@ -138,9 +142,6 @@ public:
   void SetQuirkDuration(Quirk quirk, unsigned duration, int monitor = -1);
 
   void SkipQuirkAnimation(Quirk quirk, int monitor = -1);
-
-  sigc::signal<void> QuirksChanged;
-  sigc::signal<void> WindowsChanged;
 
   IconType GetIconType() const;
 
@@ -267,6 +268,8 @@ protected:
   virtual void OpenInstanceLauncherIcon(Time timestamp) {}
 
   virtual bool HandlesSpread () { return false; }
+
+  BaseTexturePtr TextureFromPixbuf(GdkPixbuf *pixbuf, int size, bool update_glow_colors = true);
 
   BaseTexturePtr TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 

@@ -167,7 +167,7 @@ void Controller::Impl::CloseSelection()
   {
     // Using model_->Selection()->Close() would be nicer, but it wouldn't take
     // in consideration the workspace related settings
-    for (auto window : model_->DetailXids())
+    for (auto window : model_->SelectionWindows())
       WindowManager::Default().Close(window);
   }
 }
@@ -325,11 +325,18 @@ void Controller::Impl::Show(ShowMode show_mode, SortMode sort_mode, std::vector<
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
   model_->updated.connect([this] { if (!model_->Size()) Hide(false); });
-  obj_->AddChild(model_.get());
+
+  if (!model_->Size())
+  {
+    model_.reset();
+    return;
+  }
 
   SelectFirstItem();
 
+  obj_->AddChild(model_.get());
   obj_->visible_ = true;
+
   int real_wait = obj_->timeout_length() - fade_animator_.Duration();
 
   if (real_wait > 0)
@@ -442,7 +449,6 @@ void Controller::Impl::ConstructView()
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
 
   view_ = SwitcherView::Ptr(new SwitcherView(icon_renderer_));
-  obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = WindowManager::Default().average_color();
   view_->monitor = obj_->monitor_;
@@ -462,6 +468,7 @@ void Controller::Impl::ConstructView()
   view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
   view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
   view_->switcher_close_current.connect(sigc::mem_fun(this, &Impl::CloseSelection));
+  obj_->AddChild(view_.GetPointer());
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
@@ -506,6 +513,9 @@ void Controller::Impl::HideWindow()
   view_window_->SetOpacity(0.0f);
   view_window_->ShowWindow(false);
   view_window_->PushToBack();
+
+  obj_->RemoveChild(model_.get());
+  obj_->RemoveChild(view_.GetPointer());
 
   model_.reset();
   view_.Release();
@@ -576,7 +586,7 @@ SwitcherView::Ptr Controller::Impl::GetView() const
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->Selection()->AllowDetailViewInSwitcher() && model_->DetailXids().size() >= min_windows)
+  if (value && model_->Selection()->AllowDetailViewInSwitcher() && model_->SelectionWindows().size() >= min_windows)
   {
     model_->detail_selection = true;
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
@@ -680,7 +690,7 @@ Selection Controller::Impl::GetCurrentSelection() const
       }
       else if (model_->SelectionIsActive())
       {
-        window = model_->DetailXids().front();
+        window = model_->SelectionWindows().front();
       }
     }
   }
@@ -720,14 +730,11 @@ void Controller::Impl::SelectFirstItem()
   uint64_t second_first = 0; // second icons first highest active
 
   WindowManager& wm = WindowManager::Default();
-  for (auto& window : first->Windows())
+  auto const& windows = (model_->only_apps_on_viewport) ? first->WindowsOnViewport() : first->Windows();
+
+  for (auto& window : windows)
   {
-    Window xid = window->window_id();
-
-    if (model_->only_apps_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
-      continue;
-
-    uint64_t num = wm.GetWindowActiveNumber(xid);
+    uint64_t num = wm.GetWindowActiveNumber(window->window_id());
 
     if (num > first_highest)
     {

@@ -3,23 +3,24 @@ Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
-               compiz-dev (>= 1:0.9.11),
+               compiz-dev (>= 1:0.9.12.2),
                debhelper (>= 9.0.0~),
                dbus-test-runner,
                dh-migrations,
                dh-translations (>= 94),
+               dh-python,
                google-mock (>= 1.6.0+svn437),
                gsettings-desktop-schemas-dev,
                gsettings-ubuntu-schemas (>= 0.0.1+14.04.20140219),
                intltool (>= 0.35.0),
+               libappstream-glib-dev,
                libatk1.0-dev,
-               libbamf3-dev (>= 0.5.0+13.10.20130731),
+               libbamf3-dev (>= 0.5.2~bzr0),
                libboost-dev,
                libcairo2-dev,
                libdbus-1-dev,
                libdbusmenu-glib-dev (>= 0.3.91),
                libdee-dev (>= 1.2.6),
-               libgee-dev (>= 0.5.0),
                libgeis-dev (>= 2.0.10),
                libgl1-mesa-dri,
                libglib2.0-dev (>= 2.39.1),
@@ -48,6 +49,7 @@ Build-Depends: cmake,
                libzeitgeist-2.0-dev,
                pkg-config,
                python (>= 2.7),
+               python3 (>= 3.4),
                python-setuptools,
                quilt,
                xserver-xorg-video-dummy,
@@ -62,7 +64,7 @@ Package: unity
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         ${python:Depends},
+         ${python3:Depends},
          libunity-core-6.0-9 (= ${binary:Version}),
          compiz,
          compiz-core, compiz-core-abiversion-${coreabiversion},
@@ -81,6 +83,7 @@ Depends: ${shlibs:Depends},
 Provides: indicator-renderer
 Recommends: unity-control-center,
             ${unity-default-masterscopes}
+            nautilus,
             indicator-appmenu (>= 15.02.0),
             indicator-application,
             indicator-sound,
@@ -91,8 +94,8 @@ Recommends: unity-control-center,
             indicator-printers,
             indicator-power,
             indicator-session,
-            telepathy-indicator,
             hud,
+            session-shortcuts,
 Breaks: unity-lens-applications (<< 5.12.0-0ubuntu2),
         unity-lens-files (<< 5.10.0-0ubuntu2),
         unity-lens-music (<< 6.0.0),
@@ -138,6 +141,8 @@ Description: Interface designed for efficiency of space and interaction.
 Package: libunity-core-6.0-9
 Section: libs
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          unity-services (= ${binary:Version}),
@@ -158,6 +163,7 @@ Description: core library for the Unity interface
 Package: libunity-core-6.0-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends},
          libunity-core-6.0-9 (= ${binary:Version}),
          libglib2.0-dev,
@@ -200,69 +206,4 @@ Description: Autopiloted tests for Unity
  introspection.  This package contains the specific unity introspection
  bindings to be able to write tests in python as well as the full test suite
  for Unity.
-
-Package: unity-2d
-Depends: unity, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for unity-2d -> unity migration.
- It can safely be removed.
-
-Package: libunity-2d-private0
-Depends: unity, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for unity-2d -> unity migration.
- It can safely be removed.
-
-Package: libunity-2d-private-dev
-Depends: unity, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for unity-2d -> unity migration.
- It can safely be removed.
-
-Package: unity-2d-panel
-Depends: unity, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for unity-2d -> unity migration.
- It can safely be removed.
-
-Package: unity-2d-spread
-Depends: unity, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for unity-2d -> unity migration.
- It can safely be removed.
-
-Package: unity-2d-common
-Depends: unity, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for unity-2d -> unity migration.
- It can safely be removed.
-
-Package: unity-2d-shell
-Depends: unity, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for unity-2d -> unity migration.
- It can safely be removed.
-
-Package: unity-2d-dbg
-Priority: extra
-Depends: unity, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for unity-2d -> unity migration.
- It can safely be removed.
 

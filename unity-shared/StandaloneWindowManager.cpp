@@ -575,12 +575,17 @@ int StandaloneWindowManager::WorkspaceCount() const
   return viewport_size_.width * viewport_size_.height;
 }
 
+void StandaloneWindowManager::SetCurrentViewport(nux::Point const& vp)
+{
+  current_vp_ = vp;
+}
+
 nux::Point StandaloneWindowManager::GetCurrentViewport() const
 {
   return current_vp_;
 }
 
- int StandaloneWindowManager::GetViewportHSize() const
+int StandaloneWindowManager::GetViewportHSize() const
 {
   return viewport_size_.width;
 }
@@ -742,9 +747,9 @@ std::list<StandaloneWindow::Ptr> StandaloneWindowManager::GetStandaloneWindows()
   return standalone_windows_;
 }
 
-void StandaloneWindowManager::SetCurrentViewport(nux::Point const& vp)
+Cursor StandaloneWindowManager::GetCachedCursor(unsigned int cursor_name) const
 {
-  current_vp_ = vp;
+  return 0;
 }
 
 void StandaloneWindowManager::AddProperties(debug::IntrospectionData& wrapper)

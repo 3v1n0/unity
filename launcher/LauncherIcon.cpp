@@ -150,14 +150,24 @@ void LauncherIcon::LoadQuicklist()
   QuicklistManager::Default()->RegisterQuicklist(_quicklist);
 }
 
-const bool LauncherIcon::WindowVisibleOnMonitor(int monitor)
+bool LauncherIcon::WindowVisibleOnMonitor(int monitor) const
 {
   return _has_visible_window[monitor];
 }
 
-const bool LauncherIcon::WindowVisibleOnViewport()
+bool LauncherIcon::WindowVisibleOnViewport() const
 {
   return _has_visible_window.any();
+}
+
+size_t LauncherIcon::WindowsVisibleOnMonitor(int monitor) const
+{
+  return _number_of_visible_windows[monitor];
+}
+
+size_t LauncherIcon::WindowsVisibleOnViewport() const
+{
+  return std::accumulate(begin(_number_of_visible_windows), end(_number_of_visible_windows), 0);
 }
 
 std::string
@@ -353,6 +363,20 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
     gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
   }
   return _unity_theme;
+}
+
+BaseTexturePtr LauncherIcon::TextureFromPixbuf(GdkPixbuf* pixbuf, int size, bool update_glow_colors)
+{
+  g_return_val_if_fail(GDK_IS_PIXBUF(pixbuf), BaseTexturePtr());
+
+  glib::Object<GdkPixbuf> scaled_pixbuf(gdk_pixbuf_scale_simple(pixbuf, size, size,  GDK_INTERP_BILINEAR));
+
+  if (update_glow_colors)
+    ColorForIcon(scaled_pixbuf, _background_color, _glow_color);
+
+  BaseTexturePtr result;
+  result.Adopt(nux::CreateTexture2DFromPixbuf(scaled_pixbuf, true));
+  return result;
 }
 
 BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
@@ -750,9 +774,9 @@ void LauncherIcon::SetNumberOfWindowsVisibleOnMonitor(int number_of_windows, int
     return;
 
   _has_visible_window[monitor] = (number_of_windows > 0);
-
   _number_of_visible_windows[monitor] = number_of_windows;
 
+  windows_changed.emit(monitor);
   EmitNeedsRedraw(monitor);
 }
 
@@ -895,7 +919,7 @@ void LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value, int monitor)
   if (quirk == Quirk::VISIBLE)
     visibility_changed.emit(monitor);
 
-  QuirksChanged.emit();
+  quirks_changed.emit(quirk, monitor);
 }
 
 void LauncherIcon::FullyAnimateQuirkDelayed(guint ms, LauncherIcon::Quirk quirk, int monitor)

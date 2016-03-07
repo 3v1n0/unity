@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2016 Canonical
+#
+# Authors:
+#  Marco Trevisan <marco.trevisan@canonical.com>
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; version 3.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUTa
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+from gi.repository import Gio
+
+UNITY_LAUNCHER_SETTINGS = "com.canonical.Unity.Launcher";
+UNITY_LAUNCHER_SETTINGS_PATH = "/com/canonical/unity/launcher/"
+UNITY_LAUNCER_FAVORITES = "favorites";
+
+favorites = Gio.Settings(schema=UNITY_LAUNCHER_SETTINGS).get_strv(UNITY_LAUNCER_FAVORITES)
+
+for i in range(len(favorites)):
+  if 'ubuntu-software-center.desktop' in favorites[i]:
+    favorites[i] = favorites[i].replace('ubuntu-software-center', 'org.gnome.Software')
+
+# gsettings doesn't work directly, the key is somewhat reverted. Work one level under then: dconf!
+from subprocess import Popen, PIPE, STDOUT
+p = Popen(("dconf load "+UNITY_LAUNCHER_SETTINGS_PATH).split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+p.communicate(input=bytes("[/]\n"+UNITY_LAUNCER_FAVORITES+"={}".format(favorites), 'utf-8'))

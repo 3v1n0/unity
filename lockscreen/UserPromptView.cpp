@@ -100,7 +100,7 @@ std::string SanitizeMessage(std::string const& message)
 }
 
 UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
-  : nux::View(NUX_TRACKER_LOCATION)
+  : AbstractUserPromptView(session_manager)
   , scale(1.0)
   , session_manager_(session_manager)
   , username_(nullptr)
@@ -317,7 +317,7 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
   text_input->scale = scale();
   text_input->input_hint = SanitizeMessage(message);
   text_input->hint_font_size = PROMPT_FONT_SIZE;
-  text_input->show_caps_lock = true;
+  text_input->show_lock_warnings = true;
   text_input->show_activator = true;
   text_entry->SetPasswordMode(!visible);
   text_entry->SetPasswordChar("•");

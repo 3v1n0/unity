@@ -32,7 +32,7 @@ class UnityGestureBroker : public nux::GestureBroker
 {
 public:
   UnityGestureBroker();
-  virtual ~UnityGestureBroker();
+  virtual ~UnityGestureBroker() = default;
 
 private:
   std::vector<nux::ShPtGestureTarget>

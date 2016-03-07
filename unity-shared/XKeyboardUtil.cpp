@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,11 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include <gdk/gdk.h>
 #include <string.h>
 #include <cmath>
+
+#include <NuxCore/Logger.h>
 
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
@@ -34,6 +37,8 @@ namespace keyboard
 {
 namespace
 {
+DECLARE_LOGGER(logger, "unity.keyboard.xutil");
+
 const unsigned int FETCH_MASK = (XkbGBN_KeyNamesMask |
                                  XkbGBN_ClientSymbolsMask |
                                  XkbGBN_GeometryMask);
@@ -44,16 +49,26 @@ public:
   KeyboardUtil(Display* display);
   ~KeyboardUtil();
 
-  guint GetKeycodeAboveKeySymbol(KeySym key_symbol) const;
+  enum class Position
+  {
+    LEFT,
+    RIGHT,
+    ABOVE,
+    BELOW
+  };
+
+  KeyCode GetKeyCodeNearKeySymbol(KeySym key_symbol, Position) const;
+  KeySym GetNearKey(KeySym key_symbol, Position) const;
 
 private:
-  bool CompareOffsets (int current_x, int current_y, int best_x, int best_y) const;
-  guint ConvertKeyToKeycode (XkbKeyPtr key) const;
+  bool CompareOffsets(int current_x, int current_y, int best_x, int best_y) const;
+  KeyCode ConvertKeyToKeycode(XkbKeyPtr key) const;
 
-  bool FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds) const;
-  bool FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section, XkbBoundsRec const& target_bounds, guint &keycode) const;
+  bool FindKeyInGeometry(XkbGeometryPtr, char *key_name, int& res_section, XkbBoundsRec&) const;
+  bool FindKeyInVertical(Position, XkbGeometryPtr, int section, XkbBoundsRec const&, KeyCode&) const;
+  bool FindKeyOnSides(Position, XkbGeometryPtr, int section_index, XkbBoundsRec const&, KeyCode &keycode) const;
 
-  XkbBoundsRec GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, XkbSectionPtr section, XkbGeometryPtr geo) const;
+  XkbBoundsRec GetAbsoluteKeyBounds (XkbKeyPtr, XkbRowPtr, XkbSectionPtr, XkbGeometryPtr) const;
 
   Display *display_;
   XkbDescPtr keyboard_;
@@ -116,7 +131,7 @@ bool KeyboardUtil::CompareOffsets(int current_x, int current_y, int best_x, int 
   return false;
 }
 
-guint KeyboardUtil::ConvertKeyToKeycode(XkbKeyPtr key) const
+KeyCode KeyboardUtil::ConvertKeyToKeycode(XkbKeyPtr key) const
 {
   if (!keyboard_)
     return 0;
@@ -164,48 +179,54 @@ XkbBoundsRec KeyboardUtil::GetAbsoluteKeyBounds(XkbKeyPtr key, XkbRowPtr row, Xk
   return result;
 }
 
-bool KeyboardUtil::FindKeyInSectionAboveBounds(XkbGeometryPtr geo, int section_index, XkbBoundsRec const& target_bounds, guint &keycode) const
+bool KeyboardUtil::FindKeyInVertical(Position pos, XkbGeometryPtr geo, int section_index, XkbBoundsRec const& target_bounds, KeyCode &keycode) const
 {
-  XkbKeyPtr best = NULL;
+  XkbKeyPtr best = nullptr;
   int best_x_offset = G_MAXINT;
   int best_y_offset = G_MAXINT;
 
   int sections_in_geometry = geo->num_sections;
-  for (int k = 0; k < sections_in_geometry; k++)
+  for (int k = 0; k < sections_in_geometry; ++k)
   {
+    XkbSectionPtr section = &geo->sections[section_index];
 
-  XkbSectionPtr section = &geo->sections[section_index];
-  int rows_in_section = section->num_rows;
-  for (int i = 0; i < rows_in_section; i++)
-  {
-    XkbRowPtr row = &section->rows[i];
-
-    int keys_in_row = row->num_keys;
-    for (int j = 0; j < keys_in_row; j++)
+    for (int i = 0; i < section->num_rows; ++i)
     {
-      XkbKeyPtr key = &row->keys[j];
-      XkbBoundsRec bounds = GetAbsoluteKeyBounds (key, row, section, geo);
+      XkbRowPtr row = &section->rows[i];
 
-      // make sure we are actually over the target bounds
-      int center = (bounds.x1 + bounds.x2) / 2;
-      if (center < target_bounds.x1 || center > target_bounds.x2)
-        continue;
-
-      // make sure the key is actually above our target.
-      int current_y_offset = target_bounds.y1 - bounds.y2;
-      if (current_y_offset < 0)
-        continue;
-
-      int current_x_offset = std::abs(center - (target_bounds.x1 + target_bounds.x2) / 2);
-
-      if (CompareOffsets(current_x_offset, current_y_offset, best_x_offset, best_y_offset))
+      int keys_in_row = row->num_keys;
+      for (int j = 0; j < keys_in_row; ++j)
       {
-        best = key;
-        best_x_offset = current_x_offset;
-        best_y_offset = current_y_offset;
-       }
+        XkbKeyPtr key = &row->keys[j];
+        XkbBoundsRec bounds = GetAbsoluteKeyBounds(key, row, section, geo);
+
+        // make sure we are actually over the target bounds
+        int hcenter = (bounds.x1 + bounds.x2) / 2;
+        if (hcenter < target_bounds.x1 || hcenter > target_bounds.x2)
+          continue;
+
+        // make sure the key is actually above our target.
+        int current_y_offset;
+
+        if (pos == Position::ABOVE)
+          current_y_offset = target_bounds.y1 - bounds.y2;
+        else // if (pos == Position::BELOW)
+          current_y_offset = bounds.y1 - target_bounds.y2;
+
+        // make sure the key is actually above our target.
+        if (current_y_offset < 0)
+          continue;
+
+        int current_x_offset = std::abs(hcenter - (target_bounds.x1 + target_bounds.x2) / 2);
+
+        if (CompareOffsets(current_x_offset, current_y_offset, best_x_offset, best_y_offset))
+        {
+          best = key;
+          best_x_offset = current_x_offset;
+          best_y_offset = current_y_offset;
+        }
+      }
     }
-  }
   }
 
   if (best)
@@ -216,11 +237,66 @@ bool KeyboardUtil::FindKeyInSectionAboveBounds(XkbGeometryPtr geo, int section_i
   return false;
 }
 
-guint KeyboardUtil::GetKeycodeAboveKeySymbol(KeySym key_symbol) const
+bool KeyboardUtil::FindKeyOnSides(Position pos, XkbGeometryPtr geo, int section_index, XkbBoundsRec const& target_bounds, KeyCode &keycode) const
 {
-  guint result = 0;
+  XkbKeyPtr best = nullptr;
+  int best_x_offset = G_MAXINT;
+  int best_y_offset = G_MAXINT;
 
-  int code = XKeysymToKeycode(display_, key_symbol);
+  int sections_in_geometry = geo->num_sections;
+  for (int k = 0; k < sections_in_geometry; ++k)
+  {
+    XkbSectionPtr section = &geo->sections[section_index];
+    for (int i = 0; i < section->num_rows; ++i)
+    {
+      XkbRowPtr row = &section->rows[i];
+
+      int keys_in_row = row->num_keys;
+      for (int j = 0; j < keys_in_row; ++j)
+      {
+        XkbKeyPtr key = &row->keys[j];
+        XkbBoundsRec bounds = GetAbsoluteKeyBounds(key, row, section, geo);
+
+        // make sure we are actually over the target bounds
+        int vcenter = (bounds.y1 + bounds.y2) / 2;
+        if (vcenter < target_bounds.y1 || vcenter > target_bounds.y2)
+          continue;
+
+        int current_x_offset;
+
+        if (pos == Position::LEFT)
+          current_x_offset = target_bounds.x1 - bounds.x2;
+        else // if (pos == Position::RIGHT)
+          current_x_offset = target_bounds.x2 - bounds.x1;
+
+        // make sure the key is actually above our target.
+        if (current_x_offset < 0)
+          continue;
+
+        int current_y_offset = std::abs(vcenter - (target_bounds.y1 + target_bounds.y2) / 2);
+
+        if (CompareOffsets(current_x_offset, current_y_offset, best_x_offset, best_y_offset))
+        {
+          best = key;
+          best_x_offset = current_x_offset;
+          best_y_offset = current_y_offset;
+        }
+      }
+    }
+  }
+
+  if (best)
+  {
+    keycode = ConvertKeyToKeycode(best);
+    return true;
+  }
+  return false;
+}
+
+KeyCode KeyboardUtil::GetKeyCodeNearKeySymbol(KeySym key_symbol, Position pos) const
+{
+  KeyCode result = 0;
+  KeyCode code = XKeysymToKeycode(display_, key_symbol);
 
   if (!code || !keyboard_)
     return result;
@@ -230,21 +306,44 @@ guint KeyboardUtil::GetKeycodeAboveKeySymbol(KeySym key_symbol) const
 
   char* key_str = keyboard_->names->keys[code].name;
 
-
   int key_section;
   XkbBoundsRec key_bounds;
   bool found_key = FindKeyInGeometry(keyboard_->geom, key_str, key_section, key_bounds);
 
   if (found_key)
   {
-    guint maybe;
-    found_key = FindKeyInSectionAboveBounds(keyboard_->geom, key_section, key_bounds, maybe);
+    KeyCode maybe;
+
+    switch (pos)
+    {
+      case Position::LEFT:
+      case Position::RIGHT:
+        found_key = FindKeyOnSides(pos, keyboard_->geom, key_section, key_bounds, maybe);
+        break;
+      case Position::ABOVE:
+      case Position::BELOW:
+        found_key = FindKeyInVertical(pos, keyboard_->geom, key_section, key_bounds, maybe);
+        break;
+      default:
+        LOG_ERROR(logger) << "Impossible to find key near to " << XKeysymToString(key_symbol)
+                          << " at position " << static_cast<unsigned>(pos); // Get actual type name.
+        found_key = false;
+        break;
+    }
 
     if (found_key)
       result = maybe;
   }
 
   return result;
+}
+
+KeySym KeyboardUtil::GetNearKey(KeySym key_symbol, Position pos) const
+{
+  KeyCode keycode = GetKeyCodeNearKeySymbol(key_symbol, pos);
+  const unsigned int group_interest = 0;
+  const unsigned int shift_interest = 0;
+  return XkbKeycodeToKeysym(display_, keycode, group_interest, shift_interest);
 }
 
 
@@ -277,11 +376,22 @@ bool is_move_key_symbol(unsigned long key_symbol)
 
 KeySym get_key_above_key_symbol(Display* display, KeySym key_symbol)
 {
-  KeyboardUtil util(display);
-  guint above_keycode = util.GetKeycodeAboveKeySymbol(key_symbol);
-  const unsigned int group_interest = 0;
-  const unsigned int shift_interest = 0;
-  return XkbKeycodeToKeysym(display, above_keycode, group_interest, shift_interest);
+  return KeyboardUtil(display).GetNearKey(key_symbol, KeyboardUtil::Position::ABOVE);
+}
+
+KeySym get_key_below_key_symbol(Display* display, KeySym key_symbol)
+{
+  return KeyboardUtil(display).GetNearKey(key_symbol, KeyboardUtil::Position::BELOW);
+}
+
+KeySym get_key_right_to_key_symbol(Display* display, KeySym key_symbol)
+{
+  return KeyboardUtil(display).GetNearKey(key_symbol, KeyboardUtil::Position::RIGHT);
+}
+
+KeySym get_key_left_to_key_symbol(Display* display, KeySym key_symbol)
+{
+  return KeyboardUtil(display).GetNearKey(key_symbol, KeyboardUtil::Position::LEFT);
 }
 
 } // namespace keyboard

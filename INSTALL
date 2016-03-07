@@ -28,7 +28,7 @@
 
   libglib2.0-dev libgdk-pixbuf2.0-dev libcairo2-dev libpng12-dev libglew1.5-dev
   libglewmx1.5-dev libxxf86vm-dev libgl1-mesa-dev libsigc++-2.0-dev
-  libpango1.0-dev doxygen cmake pkg-config intltool libgee-dev
+  libpango1.0-dev doxygen cmake pkg-config intltool
   libbamf-dev gsettings-desktop-schemas-dev libgconf2-dev  libglib2.0-dev
   libdbusmenu-glib-dev libgtk2.0-dev libdee-dev libindicator-dev 
   libboost-dev libboost-serialization-dev libmetacity-dev python-dev cython

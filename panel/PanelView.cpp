@@ -682,7 +682,7 @@ bool PanelView::TrackMenuPointer()
   tracked_pointer_pos_ = mouse;
 
   double scale = Settings::Instance().em(monitor_)->DPIScale();
-  if (speed > 0 && PointInTriangle(mouse, 
+  if (speed > 0 && PointInTriangle(mouse,
                                    nux::Point(triangle_top_corner_.x, std::max(triangle_top_corner_.y - TRIANGLE_THRESHOLD.CP(scale), 0)),
                                    nux::Point(menu_geo_.x, menu_geo_.y),
                                    nux::Point(menu_geo_.x + menu_geo_.width, menu_geo_.y)))
@@ -738,8 +738,13 @@ void PanelView::OnEntryActivated(std::string const& panel, std::string const& en
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
                                 int x, int y, unsigned button)
 {
-  // This is ugly... But Nux fault!
-  WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
+  if (!track_menu_pointer_timeout_)
+  {
+    // This is ugly... But Nux fault!
+    menu_view_->IgnoreLeaveEvents(true);
+    WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
+    menu_view_->IgnoreLeaveEvents(false);
+  }
 }
 
 bool PanelView::ActivateFirstSensitive()

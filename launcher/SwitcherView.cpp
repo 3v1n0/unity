@@ -24,6 +24,7 @@
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/XKeyboardUtil.h"
 
 #include <Nux/Nux.h>
 
@@ -72,6 +73,7 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
   , last_detail_icon_selected_(-1)
   , last_mouse_scroll_time_(0)
   , check_mouse_first_time_(true)
+  , key_right_to_tab_(NUX_VK_q)
 {
   icon_renderer_->pip_style = OVER_TILE;
   icon_renderer_->monitor = monitors::MAX;
@@ -104,6 +106,14 @@ SwitcherView::SwitcherView(ui::AbstractIconRenderer::Ptr const& renderer)
     geo.SetSize(blur_geometry_.width, blur_geometry_.height);
     return geo;
   });
+
+  if (Display* dpy = nux::GetGraphicsDisplay()->GetX11Display())
+  {
+    KeySym sym = keyboard::get_key_right_to_key_symbol(dpy, XStringToKeysym("Tab"));
+
+    if (sym != NoSymbol)
+      key_right_to_tab_ = sym;
+  }
 
   animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &SwitcherView::PreLayoutManagement)));
 }
@@ -500,9 +510,9 @@ bool SwitcherView::InspectKeyEvent(unsigned int eventType, unsigned int keysym, 
       case NUX_VK_DOWN:
         switcher_start_detail.emit();
         break;
-      case NUX_VK_q:
-        switcher_close_current.emit();
-        break;
+      default:
+        if (keysym == key_right_to_tab_)
+          switcher_close_current.emit();
     }
   }
 
@@ -528,7 +538,7 @@ RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon::Ptr const& ic
   // tells the renderer to render arrows by number
   arg.running_on_viewport = true;
 
-  arg.window_indicators = icon->WindowsForMonitor(monitor).size();
+  arg.window_indicators = icon->WindowsVisibleOnMonitor(monitor);
   if (arg.window_indicators > 1)
     arg.running_arrow = true;
   else
@@ -594,8 +604,9 @@ nux::Geometry SwitcherView::UpdateRenderTargets(float progress)
 
   for (Window window : xids)
   {
-    auto layout_window = std::make_shared<LayoutWindow>(window);
     bool selected = (window == model_->DetailSelectionWindow());
+    auto layout_window = std::make_shared<LayoutWindow>(window);
+    layout_window->ComputeDecorationHeight();
     layout_window->selected = selected;
     layout_window->alpha = (selected ? 1.0f : 0.9f) * progress;
 

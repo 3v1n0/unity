@@ -79,7 +79,10 @@ TEST_F(TestSwitcherModel, TestConstructor)
   EXPECT_EQ(model->LastSelection(), icons_.front());
   EXPECT_EQ(model->SelectionIndex(), 0);
   EXPECT_EQ(model->LastSelectionIndex(), 0);
-  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
+  EXPECT_FALSE(model->SelectionWindows().empty());
+  EXPECT_TRUE(model->DetailXids().empty());
+  EXPECT_FALSE(model->detail_selection);
+  EXPECT_EQ(model->detail_selection_index, 0u);
 }
 
 
@@ -154,10 +157,22 @@ TEST_F(TestSwitcherModel, SelectionIsActive)
   EXPECT_TRUE(model->SelectionIsActive());
 }
 
+TEST_F(TestSwitcherModel, DetailXidsIsValidOnSelectionOnly)
+{
+  model->detail_selection = true;
+  EXPECT_FALSE(model->DetailXids().empty());
+  EXPECT_EQ(model->DetailXids(), model->SelectionWindows());
+
+  model->detail_selection = false;
+  EXPECT_TRUE(model->DetailXids().empty());
+  EXPECT_FALSE(model->SelectionWindows().empty());
+}
+
 TEST_F(TestSwitcherModel, TestWebAppActive)
 {
   // Create a base case
   auto base_model = std::make_shared<SwitcherModel>(icons_, false);
+  base_model->detail_selection = true;
 
   // Set the first icon as Active to simulate Firefox being active
   icons_.front()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
@@ -166,7 +181,7 @@ TEST_F(TestSwitcherModel, TestWebAppActive)
   icons_.back()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
 
   auto new_model = std::make_shared<SwitcherModel>(icons_, false);
-  new_model->DetailXids();
+  new_model->detail_selection = true;
 
   // model's front Window should be different than the base case due to the
   // re-sorting in DetailXids().

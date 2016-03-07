@@ -160,6 +160,7 @@ private:
   int last_detail_icon_selected_;
   uint64_t last_mouse_scroll_time_;
   bool check_mouse_first_time_;
+  KeySym key_right_to_tab_;
 
   DeltaTracker delta_tracker_;
 

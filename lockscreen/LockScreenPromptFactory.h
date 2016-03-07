@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2011 Canonical Ltd
+* Copyright (C) 2015 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -14,28 +14,29 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Alex Launi <alex.launi@canonical.com>
+* Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 */
 
-#include "Monitor.h"
+#ifndef UNITY_LOCKSCREEN_PROMPT_FACTORY
+#define UNITY_LOCKSCREEN_PROMPT_FACTORY
 
-namespace unity {
-namespace performance {
+#include <NuxCore/NuxCore.h>
+#include <UnityCore/SessionManager.h>
 
-void Monitor::Start ()
+namespace unity
 {
-  StartMonitor ();
-}
+class MockableBaseWindow;
 
-GVariant* Monitor::Stop ()
+namespace lockscreen
 {
-  GVariantBuilder builder;
+class AbstractUserPromptView;
 
-  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-  StopMonitor (&builder);
+struct PromptFactory
+{
+  static nux::ObjectPtr<AbstractUserPromptView> CreatePrompt(session::Manager::Ptr const&);
+};
 
-  return g_variant_new ("a{sv}", &builder);
+}
 }
 
-}
-}
+#endif // UNITY_LOCKSCREEN_PROMPT_FACTORY

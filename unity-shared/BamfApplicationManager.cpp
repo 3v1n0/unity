@@ -147,6 +147,7 @@ WindowBase::WindowBase(ApplicationManager const& manager,
   });
   signals_.Add<void, BamfView*>(bamf_view_, "closed",
   [this] (BamfView* view) {
+    this->closed.emit();
     pool::wins_.erase(view);
   });
 }
@@ -425,8 +426,7 @@ void Application::UpdateWindows()
 
   bool was_empty = windows_.empty();
 
-  std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
-  for (GList* l = children.get(); l; l = l->next)
+  for (GList* l = bamf_view_peek_children(bamf_view_); l; l = l->next)
   {
     if (ApplicationWindowPtr const& window = pool::EnsureWindow(manager_, static_cast<BamfView*>(l->data)))
     {
@@ -474,7 +474,7 @@ ApplicationWindowPtr Application::GetFocusableWindow() const
   return pool::EnsureWindow(manager_, bamf_application_get_focusable_child(bamf_app_));
 }
 
-void Application::Focus(bool show_only_visible, int monitor) const
+void Manager::FocusWindowGroup(WindowList const& wins, bool show_only_visible, int monitor) const
 {
   WindowManager& wm = WindowManager::Default();
   std::vector<Window> urgent_windows;
@@ -482,7 +482,7 @@ void Application::Focus(bool show_only_visible, int monitor) const
   std::vector<Window> non_visible_windows;
   bool any_visible = false;
 
-  for (auto& window : GetWindows())
+  for (auto& window : wins)
   {
     Window window_id = window->window_id();
     if (window->urgent())
@@ -527,12 +527,15 @@ void Application::Focus(bool show_only_visible, int monitor) const
   }
 }
 
+void Application::Focus(bool show_only_visible, int monitor) const
+{
+  manager_.FocusWindowGroup(GetWindows(), show_only_visible, monitor);
+}
+
 void Application::Quit() const
 {
   for (auto& window : GetWindows())
-  {
     window->Quit();
-  }
 }
 
 bool Application::CreateLocalDesktopFile() const
@@ -686,15 +689,15 @@ ApplicationWindowPtr Manager::GetWindowForId(Window xid) const
       return win_pair.second;
   }
 
-  // TODO: use bamf_matcher_get_window_for_xid
+  if (BamfWindow* win = bamf_matcher_get_window_for_xid(matcher_, xid))
+    return pool::EnsureWindow(*this, reinterpret_cast<BamfView*>(win));
+
   auto* app = bamf_matcher_get_application_for_xid(matcher_, xid);
 
   if (!app)
     return nullptr;
 
-  std::shared_ptr<GList> windows(bamf_view_get_children(reinterpret_cast<BamfView*>(app)), g_list_free);
-
-  for (GList* l = windows.get(); l; l = l->next)
+  for (GList* l = bamf_view_peek_children(reinterpret_cast<BamfView*>(app)); l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;

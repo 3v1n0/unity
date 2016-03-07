@@ -1,3 +1,4 @@
 tools/migration-scripts/01_unity_change_dconf_path
 tools/migration-scripts/02_unity_setup_text_scale_factor
 tools/migration-scripts/03_unity_first_run_stamp_move
+tools/migration-scripts/04_unity_update_software_center_desktop_file

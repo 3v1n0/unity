@@ -23,6 +23,7 @@
 /* Compiz */
 #include <core/core.h>
 #include <core/atoms.h>
+#include <scale/scale.h>
 
 #include <NuxCore/Property.h>
 
@@ -180,6 +181,7 @@ public:
 
   int WorkspaceCount() const;
 
+  void SetCurrentViewport(nux::Point const&) override;
   nux::Point GetCurrentViewport() const override;
   void SetViewportSize(int horizontal, int vertical) override;
   int GetViewportHSize() const override;
@@ -193,6 +195,8 @@ public:
   void MoveResizeWindow(Window window_id, nux::Geometry geometry);
 
   Window GetTopWindowAbove(Window xid) const;
+
+  Cursor GetCachedCursor(unsigned int) const;
 
   void UnmapAllNoNuxWindowsSync();
   static bool IsNuxWindow(CompWindow* value);
@@ -212,11 +216,13 @@ private:
   bool IsCurrentViewportEmpty() const;
 
   CompScreen* m_Screen;
+  ScaleScreen* _scale_screen;
   MultiActionList m_ExpoActionList;
   MultiActionList m_ScaleActionList;
 
   float _coverage_area_before_automaximize;
   bool _spread_state;
+  bool _spread_requested_state;
   bool _spread_windows_state;
   bool _expo_state;
   bool _vp_switch_started;

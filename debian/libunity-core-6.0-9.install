@@ -1,5 +1,5 @@
-usr/lib/libunity-core*.so.*
-usr/lib/unity/*.py
+usr/lib/*/libunity-core*.so.*
+usr/lib/*/unity/*.py
 usr/share/ccsm
 usr/share/gnome-control-center/
 usr/share/unity
