@@ -351,8 +351,6 @@ float Launcher::GetAutohidePositionMax() const
 void Launcher::OnDPIChanged()
 {
   monitor.changed.emit(monitor());
-  if (launcher_position_ == LauncherPosition::BOTTOM)
-    options.changed.emit(options());
 }
 
 void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo)
@@ -1311,9 +1309,10 @@ void Launcher::OnMonitorChanged(int new_monitor)
   auto monitor_geo = uscreen->GetMonitorGeometry(new_monitor);
   unity::panel::Style &panel_style = panel::Style::Instance();
   int panel_height = panel_style.PanelHeight(new_monitor);
-  int launcher_height = unity::Settings::Instance().LauncherSize(new_monitor);
-
+  RawPixel launcher_height = icon_size_ + ICON_PADDING * 2 + SIDE_LINE_WIDTH - 2;
   cv_ = unity::Settings::Instance().em(monitor);
+  launcher_height = launcher_height.CP(cv_) - (1_em).CP(cv_);
+
   if (launcher_position_ == LauncherPosition::LEFT)
     Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_height), monitor_geo.height - panel_height);
   else
