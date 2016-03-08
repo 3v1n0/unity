@@ -50,6 +50,11 @@ class ForceQuitDialog;
 
 namespace cu = compiz_utils;
 
+namespace atom
+{
+extern Atom _UNITY_GTK_BORDER_RADIUS;
+}
+
 struct Quads
 {
   enum class Pos
@@ -94,7 +99,7 @@ private:
   void UnsetExtents();
   void SetupExtents();
   void UpdateElements(cu::WindowFilter wf = cu::WindowFilter::NONE);
-  void UpdateClientDecorationsState(bool maybe_available = true);
+  void UpdateClientDecorationsState();
   void UpdateMonitor();
   void UpdateFrame();
   void CreateFrame(nux::Geometry const&);
@@ -192,7 +197,6 @@ private:
   friend struct Window::Impl;
 
   bool enable_add_supported_atoms_;
-  Atom gtk_border_radius_atom_;
 
   DataPool::Ptr data_pool_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;

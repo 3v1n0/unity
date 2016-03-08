@@ -31,13 +31,11 @@ namespace decoration
 {
 Manager* manager_ = nullptr;
 
-namespace
-{
 namespace atom
 {
 Atom _NET_REQUEST_FRAME_EXTENTS = 0;
 Atom _NET_WM_VISIBLE_NAME = 0;
-}
+Atom _UNITY_GTK_BORDER_RADIUS = 0;
 }
 
 Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
@@ -51,7 +49,7 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   Display* dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
-  gtk_border_radius_atom_ = XInternAtom(dpy, "_UNITY_GTK_BORDER_RADIUS", False);
+  atom::_UNITY_GTK_BORDER_RADIUS = XInternAtom(dpy, "_UNITY_GTK_BORDER_RADIUS", False);
 
   auto rebuild_cb = sigc::mem_fun(this, &Impl::OnShadowOptionsChanged);
   manager_->active_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, true)));
@@ -280,10 +278,9 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
           win->title = wm.GetStringProperty(event->xproperty.window, event->xproperty.atom);
         }
       }
-      else if (event->xproperty.atom == gtk_border_radius_atom_)
+      else if (event->xproperty.atom == atom::_UNITY_GTK_BORDER_RADIUS)
       {
-        if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
-          win->impl_->UpdateClientDecorationsState(event->xproperty.state != PropertyDelete);
+        UpdateWindow(event->xproperty.window);
       }
       break;
     }
@@ -409,7 +406,7 @@ void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
   if (impl_->enable_add_supported_atoms_)
   {
     atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
-    atoms.push_back(impl_->gtk_border_radius_atom_);
+    atoms.push_back(atom::_UNITY_GTK_BORDER_RADIUS);
   }
 }
 

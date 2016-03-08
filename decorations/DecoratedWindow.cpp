@@ -445,16 +445,19 @@ void Window::Impl::UpdateElements(cu::WindowFilter wf)
   deco_elements_ = cu::WindowDecorationElements(win_, wf);
 }
 
-void Window::Impl::UpdateClientDecorationsState(bool maybe_available)
+void Window::Impl::UpdateClientDecorationsState()
 {
-  if (maybe_available && win_->alpha())
+  if (win_->alpha())
   {
-    if (!WindowManager::Default().GetCardinalProperty(win_->id(), manager_->impl_->gtk_border_radius_atom_).empty())
+    auto const& corners = WindowManager::Default().GetCardinalProperty(win_->id(), atom::_UNITY_GTK_BORDER_RADIUS);
+
+    if (!corners.empty())
     {
-      // FIXME: add actual values
-      client_borders_.top = 6;
-      client_borders_.left = 6;
-      client_borders_.right = 6;
+      enum Corner { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT };
+      client_borders_.top = std::max(corners[TOP_LEFT], corners[TOP_RIGHT]);
+      client_borders_.left = std::max(corners[TOP_LEFT], corners[BOTTOM_LEFT]);
+      client_borders_.right = std::max(corners[TOP_RIGHT], corners[BOTTOM_RIGHT]);
+      client_borders_.bottom = std::max(corners[BOTTOM_LEFT], corners[BOTTOM_RIGHT]);
       client_decorated_ = true;
       return;
     }
@@ -639,8 +642,13 @@ void Window::Impl::ComputeShadowQuads()
   if (shadows_rect != last_shadow_rect_)
   {
     auto win_region = win_->region();
-    win_region.shrink(client_borders_.left + client_borders_.right, client_borders_.top + client_borders_.bottom);
-    win_region.translate(client_borders_.left - client_borders_.right, client_borders_.top - client_borders_.bottom);
+
+    if (client_decorated_)
+    {
+      win_region.shrink(client_borders_.left + client_borders_.right, client_borders_.top + client_borders_.bottom);
+      win_region.translate(client_borders_.left - client_borders_.right, client_borders_.top - client_borders_.bottom);
+    }
+
     quads[Quads::Pos::TOP_LEFT].region = CompRegion(quads[Quads::Pos::TOP_LEFT].box) - win_region;
     quads[Quads::Pos::TOP_RIGHT].region = CompRegion(quads[Quads::Pos::TOP_RIGHT].box) - win_region;
     quads[Quads::Pos::BOTTOM_LEFT].region = CompRegion(quads[Quads::Pos::BOTTOM_LEFT].box) - win_region;
