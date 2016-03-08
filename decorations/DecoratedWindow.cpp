@@ -157,7 +157,6 @@ void Window::Impl::UnsetExtents()
 
 void Window::Impl::SetupExtents()
 {
-  // FIXME: EDGE not being set on startup on client_decorated
   if (win_->hasUnmapReference())
     return;
 
@@ -215,10 +214,10 @@ void Window::Impl::UpdateFrame()
   if (win_->shaded())
     frame_geo.height = input.top + input.bottom;
 
-  if (!frame_)
+  if (!frame_ && win_->frame())
     CreateFrame(frame_geo);
 
-  if (frame_geo_ != frame_geo)
+  if (frame_ && frame_geo_ != frame_geo)
     UpdateFrameGeo(frame_geo);
 }
 
