@@ -178,6 +178,7 @@ const std::string LOCKED_STAMP = "locked.stamp";
 
 namespace atom
 {
+Atom _UNITY_SHELL = 0;
 Atom _UNITY_SAVED_WINDOW_SHAPE = 0;
 }
 
@@ -318,6 +319,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      GLScreenInterface::setHandler(gScreen);
      ScaleScreenInterface::setHandler(sScreen);
 
+     atom::_UNITY_SHELL = XInternAtom(screen->dpy(), "_UNITY_SHELL", False);
      atom::_UNITY_SAVED_WINDOW_SHAPE = XInternAtom(screen->dpy(), "_UNITY_SAVED_WINDOW_SHAPE", False);
      screen->updateSupportedWmHints();
 
@@ -1778,6 +1780,7 @@ void UnityScreen::determineNuxDamage(CompRegion& nux_damage)
 void UnityScreen::addSupportedAtoms(std::vector<Atom>& atoms)
 {
   screen->addSupportedAtoms(atoms);
+  atoms.push_back(atom::_UNITY_SHELL);
   atoms.push_back(atom::_UNITY_SAVED_WINDOW_SHAPE);
   deco_manager_->AddSupportedAtoms(atoms);
 }
