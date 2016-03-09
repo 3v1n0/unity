@@ -175,6 +175,12 @@ const std::string HUD_UNGRAB_WAIT = "hud-ungrab-wait";
 const std::string FIRST_RUN_STAMP = "first_run.stamp";
 const std::string LOCKED_STAMP = "locked.stamp";
 } // namespace local
+
+namespace atom
+{
+Atom _UNITY_SAVED_WINDOW_SHAPE = 0;
+}
+
 } // anon namespace
 
 UnityScreen::UnityScreen(CompScreen* screen)
@@ -311,6 +317,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompositeScreenInterface::setHandler(cScreen);
      GLScreenInterface::setHandler(gScreen);
      ScaleScreenInterface::setHandler(sScreen);
+
+     atom::_UNITY_SAVED_WINDOW_SHAPE = XInternAtom(screen->dpy(), "_UNITY_SAVED_WINDOW_SHAPE", False);
      screen->updateSupportedWmHints();
 
      nux::NuxInitialize(0);
@@ -504,8 +512,10 @@ UnityScreen::~UnityScreen()
   QuicklistManager::Destroy();
   decoration::DataPool::Reset();
   SaveLockStamp(false);
-
   reset_glib_logging();
+
+  screen->addSupportedAtomsSetEnabled(this, false);
+  screen->updateSupportedWmHints();
 }
 
 void UnityScreen::InitAltTabNextWindow()
@@ -1768,6 +1778,7 @@ void UnityScreen::determineNuxDamage(CompRegion& nux_damage)
 void UnityScreen::addSupportedAtoms(std::vector<Atom>& atoms)
 {
   screen->addSupportedAtoms(atoms);
+  atoms.push_back(atom::_UNITY_SAVED_WINDOW_SHAPE);
   deco_manager_->AddSupportedAtoms(atoms);
 }
 
@@ -4180,13 +4191,17 @@ bool WindowHasInconsistentShapeRects(Display *d, Window  w)
   int n;
   Atom *atoms = XListProperties(d, w, &n);
   bool has_inconsistent_shape = false;
-  static Atom unity_shape_rects_atom = XInternAtom(d, "_UNITY_SAVED_WINDOW_SHAPE", False);
 
   for (int i = 0; i < n; ++i)
-    if (atoms[i] == unity_shape_rects_atom)
+  {
+    if (atoms[i] == atom::_UNITY_SAVED_WINDOW_SHAPE)
+    {
       has_inconsistent_shape = true;
+      break;
+    }
+  }
 
-  XFree (atoms);
+  XFree(atoms);
   return has_inconsistent_shape;
 }
 }

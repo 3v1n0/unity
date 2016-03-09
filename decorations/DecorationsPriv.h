@@ -169,7 +169,6 @@ private:
 struct Manager::Impl : sigc::trackable
 {
   Impl(decoration::Manager*, menu::Manager::Ptr const&);
-  ~Impl();
 
   Window::Ptr HandleWindow(CompWindow* cwin);
   bool HandleEventBefore(XEvent*);
@@ -195,8 +194,6 @@ private:
 
   friend class Manager;
   friend struct Window::Impl;
-
-  bool enable_add_supported_atoms_;
 
   DataPool::Ptr data_pool_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;

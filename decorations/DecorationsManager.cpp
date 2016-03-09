@@ -39,8 +39,7 @@ Atom _UNITY_GTK_BORDER_RADIUS = 0;
 }
 
 Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
-  : enable_add_supported_atoms_(true)
-  , data_pool_(DataPool::Get())
+  : data_pool_(DataPool::Get())
   , menu_manager_(menu)
 {
   if (!manager_)
@@ -62,12 +61,6 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
   SetupIntegratedMenus();
-}
-
-Manager::Impl::~Impl()
-{
-  enable_add_supported_atoms_ = false;
-  screen->updateSupportedWmHints();
 }
 
 cu::PixmapTexture::Ptr Manager::Impl::BuildShadowTexture(unsigned radius, nux::Color const& color)
@@ -403,11 +396,8 @@ Manager::~Manager()
 
 void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
 {
-  if (impl_->enable_add_supported_atoms_)
-  {
-    atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
-    atoms.push_back(atom::_UNITY_GTK_BORDER_RADIUS);
-  }
+  atoms.push_back(atom::_UNITY_GTK_BORDER_RADIUS);
+  atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
 }
 
 bool Manager::HandleEventBefore(XEvent* xevent)
