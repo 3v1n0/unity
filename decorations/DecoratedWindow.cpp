@@ -47,6 +47,7 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , monitor_(0)
   , dirty_geo_(true)
   , dirty_frame_(false)
+  , client_decorated_(false)
   , deco_elements_(cu::DecorationElement::NONE)
   , last_mwm_decor_(win_->mwmDecor())
   , last_actions_(win_->actions())
@@ -105,7 +106,8 @@ Window::Impl::~Impl()
 
 void Window::Impl::Update()
 {
-  UpdateElements();
+  UpdateClientDecorationsState();
+  UpdateElements(client_decorated_ ? cu::WindowFilter::CLIENTSIDE_DECORATED : cu::WindowFilter::NONE);
 
   if (deco_elements_ & (cu::DecorationElement::EDGE | cu::DecorationElement::BORDER))
     Decorate();
@@ -212,10 +214,10 @@ void Window::Impl::UpdateFrame()
   if (win_->shaded())
     frame_geo.height = input.top + input.bottom;
 
-  if (!frame_)
+  if (!frame_ && win_->frame())
     CreateFrame(frame_geo);
 
-  if (frame_geo_ != frame_geo)
+  if (frame_ && frame_geo_ != frame_geo)
     UpdateFrameGeo(frame_geo);
 }
 
@@ -431,7 +433,7 @@ bool Window::Impl::IsMaximized() const
   return (win_->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE;
 }
 
-void Window::Impl::UpdateElements(cu::WindowFilter::Value wf)
+void Window::Impl::UpdateElements(cu::WindowFilter wf)
 {
   if (!parent_->scaled() && IsMaximized())
   {
@@ -440,6 +442,31 @@ void Window::Impl::UpdateElements(cu::WindowFilter::Value wf)
   }
 
   deco_elements_ = cu::WindowDecorationElements(win_, wf);
+}
+
+void Window::Impl::UpdateClientDecorationsState()
+{
+  if (win_->alpha())
+  {
+    auto const& corners = WindowManager::Default().GetCardinalProperty(win_->id(), atom::_UNITY_GTK_BORDER_RADIUS);
+
+    if (!corners.empty())
+    {
+      enum Corner { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT };
+      client_borders_.top = std::max(corners[TOP_LEFT], corners[TOP_RIGHT]);
+      client_borders_.left = std::max(corners[TOP_LEFT], corners[BOTTOM_LEFT]);
+      client_borders_.right = std::max(corners[TOP_RIGHT], corners[BOTTOM_RIGHT]);
+      client_borders_.bottom = std::max(corners[BOTTOM_LEFT], corners[BOTTOM_RIGHT]);
+      client_decorated_ = true;
+      return;
+    }
+  }
+
+  if (client_decorated_)
+  {
+    client_borders_ = CompWindowExtents();
+    client_decorated_ = false;
+  }
 }
 
 bool Window::Impl::ShadowDecorated() const
@@ -613,7 +640,14 @@ void Window::Impl::ComputeShadowQuads()
 
   if (shadows_rect != last_shadow_rect_)
   {
-    auto const& win_region = win_->region();
+    auto win_region = win_->region();
+
+    if (client_decorated_)
+    {
+      win_region.shrink(client_borders_.left + client_borders_.right, client_borders_.top + client_borders_.bottom);
+      win_region.translate(client_borders_.left - client_borders_.right, client_borders_.top - client_borders_.bottom);
+    }
+
     quads[Quads::Pos::TOP_LEFT].region = CompRegion(quads[Quads::Pos::TOP_LEFT].box) - win_region;
     quads[Quads::Pos::TOP_RIGHT].region = CompRegion(quads[Quads::Pos::TOP_RIGHT].box) - win_region;
     quads[Quads::Pos::BOTTOM_LEFT].region = CompRegion(quads[Quads::Pos::BOTTOM_LEFT].box) - win_region;
@@ -656,6 +690,9 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   auto const& clip_region = (mask & PAINT_WINDOW_TRANSFORMED_MASK) ? infiniteRegion : region;
   mask |= PAINT_WINDOW_BLEND_MASK;
+
+  if (win_->alpha() || attrib.opacity != OPAQUE)
+    mask |= PAINT_WINDOW_TRANSLUCENT_MASK;
 
   glwin_->vertexBuffer()->begin();
 

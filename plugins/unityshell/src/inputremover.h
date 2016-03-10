@@ -97,6 +97,7 @@ private:
   void clearRectangles ();
 
   Display       *mDpy;
+  Atom          mProperty;
   Window        mShapeWindow;
   Window        mPropWindow;
   unsigned long mShapeMask;
