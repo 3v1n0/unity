@@ -528,7 +528,7 @@ void Controller::Impl::SortAndUpdate()
 {
   unsigned shortcut = 1;
 
-  for (auto const& icon : model_->GetSublist<ApplicationLauncherIcon>())
+  for (auto const& icon : model_->GetSublist<WindowedLauncherIcon>())
   {
     if (shortcut <= 10 && icon->IsVisible())
     {

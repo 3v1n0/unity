@@ -1455,7 +1455,10 @@ TEST_F(TestLauncherController, SortAndUpdate)
 
   for (auto const& icon : *(lc.Impl()->model_))
   {
-    if (icon->IsVisible() && icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION && expected_shortcut <= 10)
+    if (icon->IsVisible() &&
+        (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION ||
+         icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE) &&
+        expected_shortcut <= 10)
     {
       ASSERT_EQ(icon->GetShortcut(), std::to_string(expected_shortcut % 10)[0]);
       ++expected_shortcut;
