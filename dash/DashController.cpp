@@ -89,7 +89,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   }
 
   SetupWindow();
-  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry> const&) { Relayout(true); });
+  UScreen::GetDefault()->changed.connect(sigc::mem_fun(this, &Controller::OnMonitorChanged));
 
   form_factor_changed_ = Settings::Instance().form_factor.changed.connect([this] (FormFactor)
   {
@@ -177,7 +177,6 @@ void Controller::RegisterUBusInterests()
       HideDash();
     }
   });
-
 }
 
 void Controller::EnsureDash()
@@ -242,19 +241,30 @@ nux::Geometry Controller::GetIdealWindowGeometry()
                         monitor_geo.height);
 }
 
-void Controller::Relayout(bool check_monitor)
+void Controller::OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors)
+{
+  if (!visible_ || !window_ || !view_)
+    return;
+
+  monitor_ = std::min<int>(GetIdealMonitor(), monitors.size()-1);
+  view_->SetMonitor(monitor_);
+  Relayout();
+}
+
+void Controller::Relayout()
 {
   EnsureDash();
 
-  if (check_monitor)
-    monitor_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
-
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
-  nux::Geometry geo = GetIdealWindowGeometry();
-
   view_->Relayout();
-  window_->SetGeometry(geo);
-  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
+  window_->SetGeometry(GetIdealWindowGeometry());
+  UpdateDashPosition();
+}
+
+void Controller::UpdateDashPosition()
+{
+  int top_offset = panel::Style::Instance().PanelHeight(monitor_);
+  int left_offset = unity::Settings::Instance().LauncherWidth(monitor_);
+  view_->SetMonitorOffset(left_offset, top_offset);
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -308,18 +318,17 @@ bool Controller::ShowDash()
     return false;
   }
 
+  screen_ungrabbed_slot_->disconnect();
   wm.SaveInputFocus();
 
   EnsureDash();
   monitor_ = GetIdealMonitor();
-  screen_ungrabbed_slot_->disconnect();
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
-  view_->SetMonitorOffset(launcher_width, panel::Style::Instance().PanelHeight(monitor_));
-  view_->AboutToShow(monitor_);
+  view_->SetMonitor(monitor_);
+  view_->AboutToShow();
+  UpdateDashPosition();
   FocusWindow();
 
   visible_ = true;
-
   StartShowHideTimeline();
 
   nux::Geometry const& view_content_geo = view_->GetContentGeometry();
@@ -470,8 +479,13 @@ nux::Geometry Controller::GetInputWindowGeometry()
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
 
   nux::Geometry geo(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
-  geo.width += style.GetDashRightTileWidth().CP(view_->scale());
-  geo.height += style.GetDashBottomTileHeight().CP(view_->scale());
+
+  if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
+  {
+    geo.width += style.GetDashVerticalBorderWidth().CP(view_->scale());
+    geo.height += style.GetDashHorizontalBorderHeight().CP(view_->scale());
+  }
+
   return geo;
 }
 

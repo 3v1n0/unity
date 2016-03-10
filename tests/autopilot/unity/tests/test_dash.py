@@ -740,7 +740,7 @@ class DashBorderTests(DashTestCase):
         if (self.unity.dash.view.form_factor != "desktop"):
             self.skip("Not in desktop form-factor.")
 
-        x = self.unity.dash.view.x + self.unity.dash.view.width + self.unity.dash.view.right_border_width / 2
+        x = self.unity.dash.view.x + self.unity.dash.view.width + self.unity.dash.view.vertical_border_width / 2
         y = self.unity.dash.view.y + self.unity.dash.view.height / 2
 
         self.mouse.move(x, y)
@@ -756,7 +756,7 @@ class DashBorderTests(DashTestCase):
             self.skip("Not in desktop form-factor.")
 
         x = self.unity.dash.view.x + self.unity.dash.view.width / 2
-        y = self.unity.dash.view.y + self.unity.dash.view.height + self.unity.dash.view.bottom_border_height / 2
+        y = self.unity.dash.view.y + self.unity.dash.view.height + self.unity.dash.view.horizontal_border_height / 2
 
         self.mouse.move(x, y)
         self.mouse.click()
