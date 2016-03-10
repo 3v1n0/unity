@@ -140,8 +140,6 @@ public:
 
   RawPixel GetSeparatorGarnishSize() const;
 
-  RawPixel GetScrollbarGarnishSize() const;
-
   void Blur(cairo_t* cr, int size);
 
   void RoundedRect(cairo_t* cr,
@@ -237,7 +235,16 @@ public:
   RawPixel GetSpaceBetweenScopeAndFilters() const;
 
   // Scrollbars
-  RawPixel GetScrollbarWidth() const;
+  RawPixel GetOverlayScrollbarSize() const;
+  RawPixel GetScrollbarSize() const;
+  RawPixel GetScrollbarButtonsSize() const;
+
+  RawPixel GetOverlayScrollbarCornerRadius() const;
+  RawPixel GetScrollbarCornerRadius() const;
+
+  nux::Color GetOverlayScrollbarColor() const;
+  nux::Color GetScrollbarColor() const;
+  nux::Color GetScrollbarTrackColor() const;
 
   // Places Group
   RawPixel GetCategoryIconSize() const;

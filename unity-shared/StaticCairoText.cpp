@@ -33,9 +33,10 @@
 #include <pango/pangocairo.h>
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include "CairoTexture.h"
+#include "ThemeSettings.h"
 #include "UnitySettings.h"
 
 using namespace nux;
@@ -106,7 +107,7 @@ struct StaticCairoText::Impl : sigc::trackable
   float line_spacing_;
   double scale_;
 
-  glib::Signal<void, GtkSettings*, GParamSpec*> font_changed_;
+  connection::Wrapper font_changed_conn_;
 };
 
 StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
@@ -127,8 +128,9 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
   , line_spacing_(0.5)
   , scale_(1.0f)
 {
-  font_changed_.Connect(gtk_settings_get_default(), "notify::gtk-font-name", sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::OnFontChanged))));
-  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::OnFontChanged)));
+  auto font_changed_cb = sigc::hide(sigc::mem_fun(this, &Impl::OnFontChanged));
+  font_changed_conn_ = theme::Settings::Get()->font.changed.connect(font_changed_cb);
+  Settings::Instance().font_scaling.changed.connect(font_changed_cb);
 }
 
 PangoEllipsizeMode StaticCairoText::Impl::GetPangoEllipsizeMode() const
@@ -410,6 +412,7 @@ void StaticCairoText::SetFont(std::string const& font)
 {
   if (pimpl->font_ != font)
   {
+    font.empty() ? pimpl->font_changed_conn_->unblock() : pimpl->font_changed_conn_->block();
     pimpl->font_ = font;
     pimpl->need_new_extent_cache_ = true;
     Size s = GetTextExtents();
@@ -552,12 +555,7 @@ void StaticCairoText::AddProperties(debug::IntrospectionData& introspection)
 std::string StaticCairoText::Impl::GetEffectiveFont() const
 {
   if (font_.empty())
-  {
-    GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
-    glib::String font_name;
-    g_object_get(settings, "gtk-font-name", &font_name, NULL);
-    return font_name.Str();
-  }
+    return theme::Settings::Get()->font();
 
   return font_;
 }
@@ -577,7 +575,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
   }
 
   Size result;
-  std::string font = GetEffectiveFont();
+  std::string const& font = GetEffectiveFont();
   nux::Size layout_size(-1, lines_ < 0 ? lines_ : std::numeric_limits<int>::min());
 
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);

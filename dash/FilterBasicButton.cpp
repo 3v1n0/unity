@@ -72,6 +72,7 @@ FilterBasicButton::FilterBasicButton(std::string const& label, nux::TextureArea*
 
   scale.changed.connect(sigc::mem_fun(this, &FilterBasicButton::UpdateScale));
   Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &FilterBasicButton::InitTheme)));
+  Style::Instance().changed.connect(sigc::mem_fun(this, &FilterBasicButton::InitTheme));
 }
 
 void FilterBasicButton::InitTheme()
