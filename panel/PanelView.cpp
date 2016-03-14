@@ -55,7 +55,6 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
   , overlay_is_open_(false)
-  , enable_overlay_mode_(true)
   , opacity_(1.0f)
   , monitor_(0)
   , stored_dash_width_(0)
@@ -65,22 +64,6 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::Resize));
   Settings::Instance().low_gfx_changed.connect(sigc::mem_fun(this, &PanelView::OnLowGfxChanged));
-  Settings::Instance().form_factor.changed.connect([this] (FormFactor form_factor)
-  {
-    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
-    {
-      if (form_factor == FormFactor::DESKTOP)
-      {
-        enable_overlay_mode_ = false;
-        EnableOverlayMode(false);
-      }
-      else
-      {
-        enable_overlay_mode_ = true;
-        EnableOverlayMode(true);
-      }
-    }
-  });
 
   wm.average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
   wm.initiate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadInitiate));
@@ -191,7 +174,7 @@ void PanelView::OnBackgroundUpdate(nux::Color const&)
 
 bool PanelView::InOverlayMode() const
 {
-  return (overlay_is_open_ && enable_overlay_mode_) || WindowManager::Default().IsScaleActive();
+  return overlay_is_open_ || WindowManager::Default().IsScaleActive();
 }
 
 void PanelView::EnableOverlayMode(bool overlay_mode)
@@ -244,19 +227,12 @@ void PanelView::OnOverlayShown(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
-  auto launcher_position = Settings::Instance().launcher_position();
-  if (launcher_position == LauncherPosition::BOTTOM && Settings::Instance().form_factor() == FormFactor::DESKTOP)
-    enable_overlay_mode_ = false;
-  else if (launcher_position == LauncherPosition::LEFT)
-    enable_overlay_mode_ = true;
-
   if (monitor_ == overlay_monitor)
   {
     overlay_is_open_ = true;
     active_overlay_ = overlay_identity.Str();
     stored_dash_width_ = width;
-    if (enable_overlay_mode_)
-      EnableOverlayMode(true);
+    EnableOverlayMode(true);
   }
 }
 
@@ -551,7 +527,7 @@ PanelView::UpdateBackground()
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  if ((overlay_is_open_ && enable_overlay_mode_) || wm.IsScaleActive())
+  if (overlay_is_open_ || wm.IsScaleActive())
   {
     bg_layer_.reset(new nux::ColorLayer(wm.average_color(), true, rop));
   }

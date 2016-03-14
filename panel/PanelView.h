@@ -140,7 +140,6 @@ private:
   bool opacity_maximized_toggle_;
   bool needs_geo_sync_;
   bool overlay_is_open_;
-  bool enable_overlay_mode_;
   float opacity_;
   int monitor_;
   int stored_dash_width_;

@@ -46,7 +46,7 @@ public:
   nux::Property<int> x_offset;
   nux::Property<int> y_offset;
   nux::Property<double> scale;
-  nux::Property<OverlayOwner> owner;
+  nux::Property<OverlayOwner> owner_type;
   
   OverlayRenderer();
   ~OverlayRenderer();
