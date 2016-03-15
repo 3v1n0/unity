@@ -91,7 +91,7 @@ struct MockApplicationWindow : unity::ApplicationWindow
       return;
 
     title_ = new_title;
-    title.changed(title_);
+    title.changed.emit(title_);
   }
 
   void SetIcon(std::string const& new_icon)
@@ -100,7 +100,16 @@ struct MockApplicationWindow : unity::ApplicationWindow
       return;
 
     icon_ = new_icon;
-    icon.changed(icon_);
+    icon.changed.emit(icon_);
+  }
+
+  void SetMonitor(int new_monitor)
+  {
+    if (monitor_ == new_monitor)
+      return;
+
+    monitor_ = new_monitor;
+    monitor.changed.emit(monitor_);
   }
 };
 
@@ -329,6 +338,7 @@ struct MockApplicationManager : public unity::ApplicationManager
   MOCK_CONST_METHOD0(GetActiveApplication, unity::ApplicationPtr());
   MOCK_CONST_METHOD1(GetWindowsForMonitor, unity::WindowList(int));
   MOCK_CONST_METHOD1(GetWindowForId, unity::ApplicationWindowPtr(Window));
+  MOCK_CONST_METHOD3(FocusWindowGroup, void(unity::WindowList const&, bool, int));
 
   unity::ApplicationPtr LocalGetApplicationForDesktopFile(std::string const& desktop_file)
   {

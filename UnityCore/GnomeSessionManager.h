@@ -36,6 +36,7 @@ public:
   std::string RealName() const;
   std::string UserName() const;
   std::string HostName() const;
+  void UserIconFile(std::function<void(std::string const&)> const&) const;
 
   void ScreenSaverActivate();
   void ScreenSaverDeactivate();
@@ -46,6 +47,7 @@ public:
   void Shutdown();
   void Suspend();
   void Hibernate();
+  void SwitchToGreeter();
 
   bool CanLock() const;
   bool CanShutdown() const;

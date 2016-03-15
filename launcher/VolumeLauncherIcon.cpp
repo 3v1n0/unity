@@ -20,6 +20,7 @@
 
 
 #include "config.h"
+#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSignal.h>
@@ -49,7 +50,7 @@ public:
     , volume_(volume)
     , devices_settings_(devices_settings)
     , notification_(notification)
-    , file_manager_(fm)
+    , file_manager_(parent_->file_manager_)
   {
     UpdateIcon();
     UpdateVisibility();
@@ -60,46 +61,39 @@ public:
   {
     parent_->tooltip_text = volume_->GetName();
     parent_->icon_name = volume_->GetIconName();
-    parent_->SetQuirk(Quirk::RUNNING, file_manager_->IsPrefixOpened(volume_->GetUri()));
   }
 
   void UpdateVisibility()
   {
-    UpdateKeepInLauncher();
-    parent_->SetQuirk(Quirk::VISIBLE, keep_in_launcher_);
+    parent_->SetQuirk(Quirk::VISIBLE, IsVisible());
   }
 
-  void UpdateKeepInLauncher()
+  bool IsBlackListed()
   {
-    auto const& identifier = volume_->GetIdentifier();
-    keep_in_launcher_ = !devices_settings_->IsABlacklistedDevice(identifier);
+    return devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier());
+  }
+
+  bool IsVisible()
+  {
+    if (IsBlackListed() && parent_->GetManagedWindows().empty())
+      return false;
+
+    return true;
   }
 
   void ConnectSignals()
   {
-    connections_.Add(volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged)));
+    connections_.Add(volume_->changed.connect([this] { UpdateIcon(); }));
     connections_.Add(volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved)));
-    connections_.Add(devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged)));
-    connections_.Add(file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::UpdateIcon)));
-  }
-
-  void OnVolumeChanged()
-  {
-    UpdateIcon();
+    connections_.Add(devices_settings_->changed.connect([this] { UpdateVisibility(); }));
+    connections_.Add(parent_->windows_changed.connect([this] (int) { UpdateVisibility(); }));
   }
 
   void OnVolumeRemoved()
   {
-    if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
-      devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
-
+    devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
     parent_->UnStick();
     parent_->Remove();
-  }
-
-  void OnSettingsChanged()
-  {
-    UpdateVisibility();
   }
 
   bool CanEject() const
@@ -152,7 +146,7 @@ public:
   void OpenInFileManager(uint64_t timestamp)
   {
     DoActionWhenMounted([this, timestamp] {
-      file_manager_->OpenActiveChild(volume_->GetUri(), timestamp);
+      file_manager_->Open(volume_->GetUri(), timestamp);
     });
   }
 
@@ -168,32 +162,42 @@ public:
     MenuItemsVector result;
 
     AppendOpenItem(result);
+    AppendFormatItem(result);
     AppendSeparatorItem(result);
     AppendNameItem(result);
     AppendSeparatorItem(result);
-    AppendUnlockFromLauncherItem(result);
+    AppendWindowsItems(result);
+    AppendToggleLockFromLauncherItem(result);
     AppendEjectItem(result);
     AppendSafelyRemoveItem(result);
     AppendUnmountItem(result);
+    AppendQuitItem(result);
 
     return result;
   }
 
-  void AppendUnlockFromLauncherItem(MenuItemsVector& menu)
+  void AppendToggleLockFromLauncherItem(MenuItemsVector& menu)
   {
     if (volume_->GetIdentifier().empty())
       return;
 
     glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unlock from Launcher"));
+    const char* label = IsBlackListed() ? _("Lock to Launcher") : _("Unlock from Launcher");
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, label);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-      auto const& identifier = volume_->GetIdentifier();
-      parent_->UnStick();
-      devices_settings_->TryToBlacklist(identifier);
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+      if (!IsBlackListed())
+      {
+        parent_->UnStick();
+        devices_settings_->TryToBlacklist(volume_->GetIdentifier());
+      }
+      else
+      {
+        devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
+      }
     }));
 
     menu.push_back(menu_item);
@@ -220,11 +224,24 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, true);
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
       OpenInFileManager(timestamp);
     }));
 
     menu.push_back(menu_item);
+  }
+
+  void AppendWindowsItems(MenuItemsVector& menu)
+  {
+    if (!parent_->IsRunning())
+      return;
+
+    auto const& windows_items = parent_->GetWindowsMenuItems();
+    if (!windows_items.empty())
+    {
+      menu.insert(end(menu), begin(windows_items), end(windows_items));
+      AppendSeparatorItem(menu);
+    }
   }
 
   void AppendOpenItem(MenuItemsVector& menu)
@@ -235,7 +252,7 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
       OpenInFileManager(timestamp);
     }));
 
@@ -253,7 +270,8 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+      parent_->Quit();
       EjectAndShowNotification();
     }));
 
@@ -271,11 +289,57 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        volume_->StopDrive();
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+      parent_->Quit();
+      volume_->StopDrive();
     }));
 
     menu.push_back(menu_item);
+  }
+
+  void AppendFormatItem(MenuItemsVector& menu)
+  {
+    glib::Object<GDesktopAppInfo> gd(g_desktop_app_info_new("gnome-disks.desktop"));
+
+    if (!volume_->CanBeFormatted() || !gd)
+      return;
+
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Format…"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
+      OpenFormatPrompt(timestamp);
+    }));
+
+    menu.push_back(menu_item);
+  }
+
+  void OpenFormatPrompt(Time timestamp)
+  {
+    glib::Object<GDesktopAppInfo> gd_desktop_app_info(g_desktop_app_info_new("gnome-disks.desktop"));
+
+    if (!gd_desktop_app_info)
+      return;
+
+    auto gd_app_info = glib::object_cast<GAppInfo>(gd_desktop_app_info);
+
+    std::string command_line = glib::gchar_to_string(g_app_info_get_executable(gd_app_info)) +
+                               " --block-device " +
+                               volume_->GetUnixDevicePath() + 
+                               " --format-device";
+
+    GdkDisplay* display = gdk_display_get_default();
+    glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
+    gdk_app_launch_context_set_timestamp(app_launch_context, timestamp);
+
+    glib::Object<GAppInfo> app_info(g_app_info_create_from_commandline(command_line.c_str(),
+                                                                       nullptr,
+                                                                       G_APP_INFO_CREATE_SUPPORTS_STARTUP_NOTIFICATION,
+                                                                       nullptr));
+    g_app_info_launch_uris(app_info, nullptr, glib::object_cast<GAppLaunchContext>(app_launch_context), nullptr);
   }
 
   void AppendUnmountItem(MenuItemsVector& menu)
@@ -289,8 +353,29 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        volume_->Unmount();
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+      volume_->Unmount();
+    }));
+
+    menu.push_back(menu_item);
+  }
+
+  void AppendQuitItem(MenuItemsVector& menu)
+  {
+    if (!parent_->IsRunning())
+      return;
+
+    if (!menu.empty())
+      AppendSeparatorItem(menu);
+
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+      parent_->Quit();
     }));
 
     menu.push_back(menu_item);
@@ -307,13 +392,10 @@ public:
   }
 
   VolumeLauncherIcon* parent_;
-  bool keep_in_launcher_;
   Volume::Ptr volume_;
   DevicesSettings::Ptr devices_settings_;
   DeviceNotificationDisplay::Ptr notification_;
   FileManager::Ptr file_manager_;
-
-  glib::SignalManager gsignals_;
   connection::Manager connections_;
 };
 
@@ -325,15 +407,20 @@ VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
                                        DevicesSettings::Ptr const& devices_settings,
                                        DeviceNotificationDisplay::Ptr const& notification,
                                        FileManager::Ptr const& fm)
-  : SimpleLauncherIcon(IconType::DEVICE)
+  : WindowedLauncherIcon(IconType::DEVICE)
+  , StorageLauncherIcon(GetIconType(), fm)
   , pimpl_(new Impl(volume, devices_settings, notification, fm, this))
-{}
+{
+  UpdateStorageWindows();
+}
 
 VolumeLauncherIcon::~VolumeLauncherIcon()
 {}
 
 void VolumeLauncherIcon::AboutToRemove()
 {
+  StorageLauncherIcon::AboutToRemove();
+
   if (CanEject())
     EjectAndShowNotification();
   else if (CanStop())
@@ -360,12 +447,6 @@ void VolumeLauncherIcon::StopDrive()
   return pimpl_->StopDrive();
 }
 
-void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)
-{
-  SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  pimpl_->OpenInFileManager(arg.timestamp);
-}
-
 AbstractLauncherIcon::MenuItemsVector VolumeLauncherIcon::GetMenus()
 {
   return pimpl_->GetMenus();
@@ -388,17 +469,6 @@ void VolumeLauncherIcon::UnStick()
   SetQuirk(Quirk::VISIBLE, true);
 }
 
-bool VolumeLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
-{
-  for (auto const& uri : dnd_data.Uris())
-  {
-    if (uri.find("file://") == 0)
-      return true;
-  }
-
-  return false;
-}
-
 nux::DndAction VolumeLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
   return dnd_data.Uris().empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
@@ -410,6 +480,21 @@ void VolumeLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   pimpl_->CopyFilesToVolume(dnd_data.Uris(), timestamp);
   SetQuirk(Quirk::PULSE_ONCE, true);
   FullyAnimateQuirkDelayed(100, LauncherIcon::Quirk::SHIMMER);
+}
+
+std::string VolumeLauncherIcon::GetVolumeUri() const
+{
+  return pimpl_->volume_->GetUri();
+}
+
+WindowList VolumeLauncherIcon::GetStorageWindows() const
+{
+  return file_manager_->WindowsForLocation(GetVolumeUri());
+}
+
+void VolumeLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
+{
+  pimpl_->OpenInFileManager(timestamp);
 }
 
 //

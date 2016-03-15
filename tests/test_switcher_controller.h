@@ -27,10 +27,11 @@
 
 #include "test_utils.h"
 #include "DesktopLauncherIcon.h"
-#include "SimpleLauncherIcon.h"
+#include "WindowedLauncherIcon.h"
 #include "SwitcherController.h"
 #include "SwitcherView.h"
 #include "TimeUtil.h"
+#include "mock-application.h"
 #include "mock-base-window.h"
 #include "test_standalone_wm.h"
 
@@ -48,35 +49,24 @@ const unsigned TICK_DURATION = 10 * 1000;
 /**
  * A fake ApplicationWindow for verifying selection of the switcher.
  */
-class FakeApplicationWindow : public unity::ApplicationWindow
+struct FakeApplicationWindow : public ::testmocks::MockApplicationWindow::Nice
 {
-public:
+  typedef NiceMock<FakeApplicationWindow> Nice;
   FakeApplicationWindow(Window xid, uint64_t active_number = 0);
   ~FakeApplicationWindow();
-
-  virtual WindowType type() const;
-
-  virtual Window window_id() const;
-  virtual int monitor() const;
-  virtual unity::ApplicationPtr application() const;
-  virtual bool Focus() const;
-  virtual void Quit() const;
-
-private:
-  Window xid_;
 };
 
 /**
  * A fake LauncherIcon for verifying selection operations of the switcher.
  */
-struct FakeLauncherIcon : unity::launcher::SimpleLauncherIcon
+struct FakeLauncherIcon : unity::launcher::WindowedLauncherIcon
 {
   FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, uint64_t priority);
 
-  unity::WindowList Windows() override;
   bool AllowDetailViewInSwitcher() const override;
   bool ShowInSwitcher(bool) override;
   uint64_t SwitcherPriority() override;
+  WindowList GetManagedWindows() const override;
 
   bool allow_detail_view_;
   uint64_t priority_;

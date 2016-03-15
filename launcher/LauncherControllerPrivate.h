@@ -69,8 +69,7 @@ public:
   void OnDeviceIconAdded(AbstractLauncherIcon::Ptr const& icon);
 
   void OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr const& before);
-  void OnLauncherAddRequestSpecial(std::string const& path, std::string const& aptdaemon_trans_id,
-                                   std::string const& icon_path, int icon_x, int icon_y, int icon_size);
+  void OnLauncherAddRequestSpecial(std::string const& appstream_app_id, std::string const& aptdaemon_trans_id);
   void OnLauncherUpdateIconStickyState(std::string const& desktop_file, bool sticky);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr const& icon);
 
@@ -87,9 +86,10 @@ public:
 
   void RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int priority = std::numeric_limits<int>::min());
 
+  ApplicationLauncherIcon* CreateAppLauncherIcon(ApplicationPtr const&);
   AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri, bool emit_signal = false);
   AbstractLauncherIcon::Ptr GetIconByUri(std::string const& icon_uri);
-  SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& appstream_app_id, std::string const& aptdaemon_trans_id);
 
   void SetupIcons();
   void MigrateFavorites();
@@ -122,7 +122,7 @@ public:
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   XdndManager::Ptr xdnd_manager_;
-  DeviceLauncherSection  device_section_;
+  DeviceLauncherSection::Ptr device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;

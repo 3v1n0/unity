@@ -19,23 +19,23 @@
 #ifndef UNITY_FONT_SETTINGS_H_
 #define UNITY_FONT_SETTINGS_H_
 
-#include <gtk/gtk.h>
-
-#include <UnityCore/GLibSignal.h>
+#include "GtkUtils.h"
 
 namespace unity
 {
 
-class FontSettings
+class FontSettings : public sigc::trackable
 {
 public:
   FontSettings();
 
 private:
-  void Refresh(GtkSettings* unused0=nullptr, GParamSpec* unused1=nullptr);
+  void Refresh();
 
 private:
-  glib::SignalManager sig_man_;
+  gtk::Setting<std::string> hintstyle_;
+  gtk::Setting<std::string> rgba_;
+  gtk::Setting<int> antialias_;
 };
 
 }

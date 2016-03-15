@@ -1,3 +1,61 @@
+unity (7.4.0+16.04.20160310-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add a "Format..." option to volume icons. (LP: #1057008)
+
+  [ Marco Trevisan (Treviño) ]
+  * DashView: ensure that we update scaling when monitor changes (LP:
+    #1546690)
+  * DecoratedWindow: move the shadow under the window if we've a client-
+    side decorated window with corners (LP: #1516403)
+  * LauncherController: add overlay shortcut to all the
+    WindowedLauncherIcon's we have
+  * ThemeSettings: add small class for reading gtk settings for theming
+    (LP: #1543757, #1288998)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 10 Mar 2016 10:09:34 +0000
+
+unity (7.4.0+16.04.20160223.1-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone, Didier Roche ]
+  * Gnome-software launcher integration.
+
+  [ Marco Trevisan (Treviño) ]
+  * GnomeFileManager: use *WithTimestamp file operations instead of
+    using Activate workaround (LP: #1445595)
+  * unity.migrations: add 04_unity_update_software_center_desktop_file
+
+  [ Robert Ancell ]
+  * Drop unused build-dependency on libgee-dev.
+  * Switch from Ubuntu Software Center to GNOME Software. (LP: #1547129)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 23 Feb 2016 22:39:18 +0000
+
+unity (7.4.0+16.04.20160209.3-0ubuntu1) xenial; urgency=medium
+
+  [ Didier Roche ]
+  * debian: Recommends session-shortcuts, prodiving easy way to
+    shutdown, reboot and logout from dash
+
+  [ Marco Trevisan (Treviño) ]
+  * CMake: use GNUInstallDirs with native multi-arch support (LP:
+    #1508635, #1485668)
+  * Launcher: add FileManager, Trash and Volume icons integration (LP:
+    #1524721, #1161323, #1063838, #1063823)
+  * SwitcherModel: avoid to access to invalid selection or to divide by
+    zero (LP: #1537524)
+
+  [ handsome_feng ]
+  * Extend the lockscreen theme for kylin.
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 09 Feb 2016 12:21:15 +0000
+
+unity (7.4.0+16.04.20151218-0ubuntu2) xenial; urgency=medium
+
+  * Multiarchify the library packages.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 28 Jan 2016 17:38:52 +0100
+
 unity (7.4.0+16.04.20151218-0ubuntu1) xenial; urgency=medium
 
   [ Aneesh Madhavan ]

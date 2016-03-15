@@ -28,11 +28,12 @@ UNITY_UI_SETTINGS = "com.canonical.Unity.Interface";
 UNITY_UI_SETTINGS_PATH = "/com/canonical/unity/interface/"
 UNITY_TEXT_SCALE_FACTOR = "text-scale-factor";
 
-if GNOME_UI_SETTINGS not in Gio.Settings.list_schemas():
+gnome_ui_schema = Gio.SettingsSchemaSource.get_default().lookup(GNOME_UI_SETTINGS, recursive=False)
+if not gnome_ui_schema:
     print("No gnome desktop interface schemas found, no migration needed")
     sys.exit(0)
 
-text_scale_factor = Gio.Settings(schema=GNOME_UI_SETTINGS).get_double(GNOME_TEXT_SCALE_FACTOR)
+text_scale_factor = Gio.Settings(settings_schema=gnome_ui_schema).get_double(GNOME_TEXT_SCALE_FACTOR)
 
 # gsettings doesn't work directly, the key is somewhat reverted. Work one level under then: dconf!
 # Gio.Settings(schema=UNITY_UI_SETTINGS).set_int(UNITY_TEXT_SCALE_FACTOR, text_scale_factor)

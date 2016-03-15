@@ -78,11 +78,13 @@ struct MockVolume : Volume
   typedef std::shared_ptr<MockVolume> Ptr;
   typedef testing::NiceMock<MockVolume> Nice;
 
+  MOCK_CONST_METHOD0(CanBeFormatted, bool(void));
   MOCK_CONST_METHOD0(CanBeRemoved, bool(void));
   MOCK_CONST_METHOD0(CanBeStopped, bool(void));
   MOCK_CONST_METHOD0(GetName, std::string(void));
   MOCK_CONST_METHOD0(GetIconName, std::string(void));
   MOCK_CONST_METHOD0(GetIdentifier, std::string(void));
+  MOCK_CONST_METHOD0(GetUnixDevicePath, std::string(void));
   MOCK_CONST_METHOD0(GetUri, std::string(void));
   MOCK_CONST_METHOD0(HasSiblings, bool(void));
   MOCK_CONST_METHOD0(CanBeEjected, bool(void));

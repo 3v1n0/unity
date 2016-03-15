@@ -32,6 +32,7 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity
@@ -72,16 +73,12 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
     InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
   }
 
-  if (type_ != MENU)
-  {
-    icon_theme_changed_.Connect(gtk_icon_theme_get_default(), "changed", [this] (GtkIconTheme*) {
-      if (proxy_->image_type() && proxy_->image_visible())
-        Refresh();
-    });
-  }
+  auto refresh_cb = sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh);
+  panel::Style::Instance().changed.connect(refresh_cb);
+  unity::Settings::Instance().dpi_changed.connect(refresh_cb);
 
-  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
+  if (type_ != MENU)
+    theme::Settings::Get()->icons_changed.connect(refresh_cb);
 
   Refresh();
 }

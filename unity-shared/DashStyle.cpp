@@ -34,19 +34,17 @@
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/ImageSurface.h>
 #include <NuxGraphics/CairoGraphics.h>
-
 #include <Nux/PaintLayer.h>
-
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "CairoTexture.h"
 #include "JSONParser.h"
 #include "TextureCache.h"
+#include "ThemeSettings.h"
 #include "UnitySettings.h"
 #include "config.h"
 
-#define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
+#define DASH_WIDGETS_FILE UNITYDATADIR"/themes/dash-widgets.json"
 
 namespace unity
 {
@@ -58,9 +56,6 @@ namespace
 Style* style_instance = nullptr;
 
 const int STATES = 5;
-
-const double BUTTON_CORNER_RADIUS = 7.0;
-
 
 // These cairo overrides may also be reused somewhere...
 void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
@@ -123,6 +118,7 @@ struct Style::Impl : sigc::trackable
 
   void Blur(cairo_t* cr, int size);
 
+  void LoadStyleFile();
   void SetDefaultValues();
 
   void GetTextExtents(int& width,
@@ -173,7 +169,6 @@ struct Style::Impl : sigc::trackable
 
   void Refresh();
   void UpdateFormFactor(FormFactor);
-  void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
 
   BaseTexturePtr LoadScaledTexture(std::string const& name, double scale)
   {
@@ -189,6 +184,7 @@ struct Style::Impl : sigc::trackable
 
   std::vector<nux::Color> button_label_border_color_;
   std::vector<double>     button_label_border_size_;
+  double                  button_label_border_radius_;
   double                  button_label_text_size_;
 
   std::vector<nux::Color> button_label_text_color_;
@@ -209,14 +205,14 @@ struct Style::Impl : sigc::trackable
   BlendMode             separator_overlay_mode_;
   int                   separator_blur_size_;
 
-  nux::Color            scrollbar_color_;
-  double                scrollbar_overlay_opacity_;
-  BlendMode             scrollbar_overlay_mode_;
-  int                   scrollbar_blur_size_;
   int                   scrollbar_size_;
+  int                   scrollbar_overlay_size_;
+  int                   scrollbar_buttons_size_;
+  nux::Color            scrollbar_color_;
+  nux::Color            scrollbar_overlay_color_;
+  nux::Color            scrollbar_track_color_;
   double                scrollbar_corner_radius_;
-
-  glib::SignalManager signal_manager_;
+  double                scrollbar_overlay_corner_radius_;
 
   nux::Color text_color_;
 
@@ -265,13 +261,14 @@ Style::Impl::Impl(Style* owner)
   , star_selected_texture_("/star_selected.png")
   , star_highlight_texture_("/star_highlight.png")
 {
-  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
-                      (gtk_settings_get_default(),
-                       "notify::gtk-font-name",
-                       sigc::mem_fun(this, &Impl::OnFontChanged)));
+  auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Impl::Refresh));
+
+  auto theme_settings = theme::Settings::Get();
+  theme_settings->font.changed.connect(refresh_cb);
+  theme_settings->theme.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::LoadStyleFile)));
 
   auto& settings = Settings::Instance();
-  settings.font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Refresh)));
+  settings.font_scaling.changed.connect(refresh_cb);
   settings.form_factor.changed.connect(sigc::mem_fun(this, &Impl::UpdateFormFactor));
 
   Refresh();
@@ -291,17 +288,28 @@ Style::Impl::Impl(Style* owner)
                                         CAIRO_HINT_METRICS_ON);
   }
 
+  LoadStyleFile();
+}
+
+void Style::Impl::LoadStyleFile()
+{
   json::Parser parser;
+
   // Since the parser skips values if they are not found, make sure everything
   // is initialised.
   SetDefaultValues();
-  if (!parser.Open(DASH_WIDGETS_FILE))
+
+  if (!parser.Open(theme::Settings::Get()->ThemedFilePath("dash-widgets", {UNITYDATADIR"/themes"}, {"json"})))
+  {
+    LOG_ERROR(logger) << "Impossible to find a dash-widgets.json in theme paths";
     return;
+  }
 
   // button-label
   parser.ReadColors("button-label", "border-color", "border-opacity",
                     button_label_border_color_);
   parser.ReadDoubles("button-label", "border-size", button_label_border_size_);
+  parser.ReadDouble("button-label", "border-radius", button_label_border_radius_);
   parser.ReadDouble("button-label", "text-size", button_label_text_size_);
   parser.ReadColors("button-label", "text-color", "text-opacity",
                     button_label_text_color_);
@@ -342,13 +350,16 @@ Style::Impl::Impl(Style* owner)
   parser.ReadInt("separator", "blur-size", separator_blur_size_);
 
   // scrollbar
-  parser.ReadColor("scrollbar", "color", "opacity", scrollbar_color_);
-  parser.ReadDouble("scrollbar", "overlay-opacity", scrollbar_overlay_opacity_);
-  parser.ReadMappedString("scrollbar", "overlay-mode", blend_mode_map,
-                          scrollbar_overlay_mode_);
-  parser.ReadInt("scrollbar", "blur-size", scrollbar_blur_size_);
   parser.ReadInt("scrollbar", "size", scrollbar_size_);
+  parser.ReadInt("scrollbar-overlay", "size", scrollbar_overlay_size_);
+  parser.ReadInt("scrollbar", "buttons-size", scrollbar_buttons_size_);
+  parser.ReadColor("scrollbar", "color", "opacity", scrollbar_color_);
+  parser.ReadColor("scrollbar-overlay", "color", "opacity", scrollbar_overlay_color_);
+  parser.ReadColor("scrollbar-track", "color", "opacity", scrollbar_track_color_);
   parser.ReadDouble("scrollbar", "corner-radius", scrollbar_corner_radius_);
+  parser.ReadDouble("scrollbar-overlay", "corner-radius", scrollbar_overlay_corner_radius_);
+
+  owner_->changed.emit();
 }
 
 Style::Impl::~Impl()
@@ -360,14 +371,12 @@ Style::Impl::~Impl()
 void Style::Impl::Refresh()
 {
   const char* const SAMPLE_MAX_TEXT = "Chromium Web Browser";
-  GtkSettings* settings = ::gtk_settings_get_default();
 
   nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
   cairo_t* cr = util_cg.GetInternalContext();
 
-  glib::String font_description;
-  ::g_object_get(settings, "gtk-font-name", &font_description, nullptr);
-  PangoFontDescription* desc = ::pango_font_description_from_string(font_description);
+  auto const& font = theme::Settings::Get()->font();
+  PangoFontDescription* desc = ::pango_font_description_from_string(font.c_str());
   ::pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
   ::pango_font_description_set_size(desc, 9 * PANGO_SCALE);
 
@@ -390,11 +399,6 @@ void Style::Impl::Refresh()
   owner_->changed.emit();
 
   pango_font_description_free(desc);
-}
-
-void Style::Impl::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
-{
-  Refresh();
 }
 
 void Style::Impl::UpdateFormFactor(FormFactor form_factor)
@@ -700,6 +704,7 @@ void Style::Impl::SetDefaultValues()
   //button_label_border_size_[nux::NUX_STATE_SELECTED]        = 0.5;
   //button_label_border_size_[nux::NUX_STATE_INSENSITIVE]     = 0.5;
 
+  button_label_border_radius_                               = 4.0;
   button_label_text_size_                                   = 1.0;
 
   button_label_text_color_[nux::VISUAL_STATE_NORMAL] = nux::color::White;
@@ -746,12 +751,14 @@ void Style::Impl::SetDefaultValues()
   separator_blur_size_       = 6;
 
   // scrollbar
-  scrollbar_color_ = nux::color::White;
-  scrollbar_overlay_opacity_ = 0.3;
-  scrollbar_overlay_mode_    = BlendMode::NORMAL;
-  scrollbar_blur_size_       = 5;
-  scrollbar_size_           = 3;
-  scrollbar_corner_radius_   = 1.5;
+  scrollbar_size_                  = 8;
+  scrollbar_overlay_size_          = 3;
+  scrollbar_buttons_size_          = 0;
+  scrollbar_color_                 = nux::color::White;
+  scrollbar_overlay_color_         = nux::color::White;
+  scrollbar_track_color_           = nux::color::White * 0.4;
+  scrollbar_corner_radius_         = 3;
+  scrollbar_overlay_corner_radius_ = 1.5;
 }
 
 void Style::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
@@ -1356,9 +1363,7 @@ void Style::Impl::GetTextExtents(int& width,
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
   PangoRectangle        inkRect  = {0, 0, 0, 0};
-  char*                 fontName = NULL;
   GdkScreen*            screen   = gdk_screen_get_default();  // is not ref'ed
-  GtkSettings*          settings = gtk_settings_get_default();// is not ref'ed
 
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create(surface);
@@ -1366,16 +1371,9 @@ void Style::Impl::GetTextExtents(int& width,
     cairo_set_font_options(cr, default_font_options_);
   else
     cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  layout = pango_cairo_create_layout(cr);
 
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  if (!fontName)
-    desc = pango_font_description_from_string("Sans 10");
-  else
-  {
-    desc = pango_font_description_from_string(fontName);
-    g_free(fontName);
-  }
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
@@ -1423,9 +1421,7 @@ void Style::Impl::Text(cairo_t*    cr,
   PangoFontDescription* desc        = NULL;
   PangoContext*         pangoCtx    = NULL;
   GdkScreen*            screen      = gdk_screen_get_default();   // not ref'ed
-  GtkSettings*          settings    = gtk_settings_get_default(); // not ref'ed
   gchar*                fontName    = NULL;
-  //double                horizMargin = 10.0;
 
   get_actual_cairo_size(cr, &w, &h);
   w -= 2 * horizMargin;
@@ -1434,13 +1430,9 @@ void Style::Impl::Text(cairo_t*    cr,
     cairo_set_font_options(cr, default_font_options_);
   else
     cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  layout = pango_cairo_create_layout(cr);
 
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  if (!fontName)
-    desc = pango_font_description_from_string("Ubuntu 10");
-  else
-    desc = pango_font_description_from_string(fontName);
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
   if (text_size > 0)
   {
@@ -1638,7 +1630,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 1.0,
                 (double) (garnish) + 1.0,
                 (double) (garnish) + 1.0,
-                BUTTON_CORNER_RADIUS,
+                pimpl->button_label_border_radius_,
                 w - (double) (2 * garnish) - 2.0,
                 h - (double) (2 * garnish) - 2.0);
   else
@@ -1646,7 +1638,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 1.0,
                 (double) (garnish) + 0.5,
                 (double) (garnish) + 0.5,
-                BUTTON_CORNER_RADIUS,
+                pimpl->button_label_border_radius_,
                 w - (double) (2 * garnish) - 1.0,
                 h - (double) (2 * garnish) - 1.0);
 
@@ -1739,7 +1731,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     cairo_move_to(cr, _align(x + width, odd), y);
     if (curve_bottom)
     {
-      double radius = BUTTON_CORNER_RADIUS;
+      double radius = pimpl->button_label_border_radius_;
       LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
       // line to bottom-right corner
       cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
@@ -1844,7 +1836,7 @@ bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
               1.0,
               (double) 0.5,
               (double) 0.5,
-              BUTTON_CORNER_RADIUS,
+              pimpl->button_label_border_radius_,
               w - 1.0,
               h - 1.0);
 
@@ -1893,7 +1885,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                             1.0,
                             x,
                             y,
-                            BUTTON_CORNER_RADIUS,
+                            pimpl->button_label_border_radius_,
                             w,
                             h,
                             segment);
@@ -1916,7 +1908,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                               1.0,
                               x,
                               y + line_width/2,
-                              BUTTON_CORNER_RADIUS,
+                              pimpl->button_label_border_radius_,
                               w,
                               h - line_width,
                               segment,
@@ -2189,11 +2181,6 @@ RawPixel Style::GetSeparatorGarnishSize() const
   return pimpl->separator_blur_size_;
 }
 
-RawPixel Style::GetScrollbarGarnishSize() const
-{
-  return pimpl->scrollbar_blur_size_;
-}
-
 nux::Color const& Style::GetTextColor() const
 {
   return pimpl->text_color_;
@@ -2306,12 +2293,12 @@ BaseTexturePtr const& Style::GetDashShine() const
   return pimpl->dash_shine_.texture();
 }
 
-RawPixel Style::GetDashBottomTileHeight() const
+RawPixel Style::GetDashHorizontalBorderHeight() const
 {
   return 30;
 }
 
-RawPixel Style::GetDashRightTileWidth() const
+RawPixel Style::GetDashVerticalBorderWidth() const
 {
   return 30;
 }
@@ -2406,9 +2393,44 @@ RawPixel Style::GetFilterViewRightPadding() const
   return 10;
 }
 
-RawPixel Style::GetScrollbarWidth() const
+RawPixel Style::GetOverlayScrollbarSize() const
 {
-  return 3;
+  return pimpl->scrollbar_overlay_size_;
+}
+
+RawPixel Style::GetScrollbarSize() const
+{
+  return pimpl->scrollbar_size_;
+}
+
+RawPixel Style::GetScrollbarButtonsSize() const
+{
+  return pimpl->scrollbar_buttons_size_;
+}
+
+RawPixel Style::GetOverlayScrollbarCornerRadius() const
+{
+  return pimpl->scrollbar_overlay_corner_radius_;
+}
+
+RawPixel Style::GetScrollbarCornerRadius() const
+{
+  return pimpl->scrollbar_corner_radius_;
+}
+
+nux::Color Style::GetOverlayScrollbarColor() const
+{
+  return pimpl->scrollbar_overlay_color_;
+}
+
+nux::Color Style::GetScrollbarColor() const
+{
+  return pimpl->scrollbar_color_;
+}
+
+nux::Color Style::GetScrollbarTrackColor() const
+{
+  return pimpl->scrollbar_track_color_;
 }
 
 RawPixel Style::GetCategoryIconSize() const

@@ -20,7 +20,6 @@
 #ifndef UNITYSHELL_SIMPLELAUNCHERICON_H
 #define UNITYSHELL_SIMPLELAUNCHERICON_H
 
-#include <UnityCore/GLibSignal.h>
 #include "LauncherIcon.h"
 
 namespace unity
@@ -38,6 +37,7 @@ public:
 
   // Properties
   nux::Property<std::string> icon_name;
+  nux::Property<glib::Object<GdkPixbuf>> icon_pixbuf;
 
 protected:
   std::string GetName() const;
@@ -49,14 +49,13 @@ protected:
 private:
   void ReloadIcon();
   bool SetIconName(std::string& target, std::string const& value);
+  bool SetIconPixbuf(glib::Object<GdkPixbuf>& target, glib::Object<GdkPixbuf> const& value);
 
 private:
   std::unordered_map<int, BaseTexturePtr> texture_map_;
-  glib::Signal<void, GtkIconTheme*> theme_changed_signal_;
 };
 
 }
 }
 
 #endif // SIMPLELAUNCHERICON_H
-

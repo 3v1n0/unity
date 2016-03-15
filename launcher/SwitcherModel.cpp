@@ -37,16 +37,7 @@ namespace
 bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
                                   AbstractLauncherIcon::Ptr const& second)
 {
-  if (first->GetIconType() == second->GetIconType())
-    return first->SwitcherPriority() > second->SwitcherPriority();
-
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return true;
-
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return false;
-
-  return first->GetIconType() < second->GetIconType();
+  return first->SwitcherPriority() > second->SwitcherPriority();
 }
 }
 
@@ -174,7 +165,7 @@ void SwitcherModel::ConnectToIconSignals(launcher::AbstractLauncherIcon::Ptr con
 
 void SwitcherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (!icon || icon->GetIconType() != AbstractLauncherIcon::IconType::APPLICATION)
+  if (!icon)
     return;
 
   if (icon->ShowInSwitcher(only_apps_on_viewport))
@@ -318,7 +309,7 @@ size_t SwitcherModel::Size() const
 
 AbstractLauncherIcon::Ptr SwitcherModel::Selection() const
 {
-  return applications_.at(index_);
+  return index_ < applications_.size() ? applications_.at(index_) : AbstractLauncherIcon::Ptr();
 }
 
 int SwitcherModel::SelectionIndex() const
@@ -328,7 +319,8 @@ int SwitcherModel::SelectionIndex() const
 
 bool SwitcherModel::SelectionIsActive() const
 {
-  return Selection()->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE);
+  auto const& selection = Selection();
+  return selection ? selection->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) : false;
 }
 
 AbstractLauncherIcon::Ptr SwitcherModel::LastSelection() const
@@ -353,8 +345,12 @@ std::vector<Window> SwitcherModel::SelectionWindows() const
 
   WindowManager& wm = WindowManager::Default();
   std::vector<Window> results;
+  auto const& selection = Selection();
 
-  for (auto& window : Selection()->Windows())
+  if (!selection)
+    return results;
+
+  for (auto& window : selection->Windows())
   {
     Window xid = window->window_id();
 
@@ -369,7 +365,7 @@ std::vector<Window> SwitcherModel::SelectionWindows() const
     return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
   });
 
-  if (Selection() == last_active_application_)
+  if (selection == last_active_application_)
   {
     results.push_back(results.front());
     results.erase(results.begin());
@@ -406,6 +402,9 @@ void SwitcherModel::UnsetDetailSelection()
 
 void SwitcherModel::NextIndex()
 {
+  if (applications_.empty())
+    return;
+
   last_index_ = index_;
   ++index_ %= applications_.size();
 }
@@ -419,6 +418,9 @@ void SwitcherModel::Next()
 
 void SwitcherModel::PrevIndex()
 {
+  if (applications_.empty())
+    return;
+
   last_index_ = index_;
   index_ = ((index_ > 0 && index_ < applications_.size()) ? index_ : applications_.size()) - 1;
 }
@@ -432,7 +434,7 @@ void SwitcherModel::Prev()
 
 void SwitcherModel::NextDetail()
 {
-  if (!detail_selection())
+  if (!detail_selection() || detail_xids_.empty())
     return;
 
   detail_selection_index = (detail_selection_index + 1) % detail_xids_.size();
@@ -441,7 +443,7 @@ void SwitcherModel::NextDetail()
 
 void SwitcherModel::PrevDetail()
 {
-  if (!detail_selection())
+  if (!detail_selection() || detail_xids_.empty())
     return;
 
   detail_selection_index = ((detail_selection_index() > 0) ? detail_selection_index : detail_xids_.size()) - 1;
