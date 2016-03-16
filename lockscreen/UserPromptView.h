@@ -50,8 +50,6 @@ class UserPromptView : public AbstractUserPromptView
 public:
   UserPromptView(session::Manager::Ptr const& session_manager);
 
-  nux::Property<double> scale;
-
   nux::View* focus_view();
 
   void AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const&);
