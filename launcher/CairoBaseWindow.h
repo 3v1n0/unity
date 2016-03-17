@@ -35,6 +35,7 @@ public:
 
   virtual void Show();
   virtual void Hide();
+  void PromptHide();
 
   void RedrawBlur();
   bool HasBlurredBackground() const;

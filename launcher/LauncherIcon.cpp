@@ -689,6 +689,14 @@ void LauncherIcon::HideTooltip()
   tooltip_visible.emit(nux::ObjectPtr<nux::View>());
 }
 
+void LauncherIcon::PromptHideTooltip()
+{
+  if (_tooltip)
+    _tooltip->PromptHide();
+
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>());
+}
+
 void LauncherIcon::SetCenter(nux::Point3 const& new_center, int monitor)
 {
   nux::Point3& center = _center[monitor];
