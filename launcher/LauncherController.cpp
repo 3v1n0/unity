@@ -180,6 +180,18 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
     }
   });
 
+  ubus.RegisterInterest(UBUS_LAUNCHER_NEXT_KEY_NAV, [this] (GVariant*) {
+    parent_->KeyNavNext();
+  });
+
+  ubus.RegisterInterest(UBUS_LAUNCHER_PREV_KEY_NAV, [this] (GVariant*) {
+    parent_->KeyNavPrevious();
+  });
+
+  ubus.RegisterInterest(UBUS_LAUNCHER_OPEN_QUICKLIST, [this] (GVariant*) {
+    OpenQuicklist();
+  });
+
   parent_->AddChild(model_.get());
 
   xdnd_manager_->dnd_started.connect(sigc::mem_fun(this, &Impl::OnDndStarted));
