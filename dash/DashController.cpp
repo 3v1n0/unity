@@ -230,22 +230,22 @@ int Controller::GetIdealMonitor()
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
-  auto ideal_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
+  auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
   int launcher_size = unity::Settings::Instance().LauncherSize(monitor_);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
-    ideal_geo.x += launcher_size;
-    ideal_geo.width -= launcher_size;
+    monitor_geo.x += launcher_size;
+    monitor_geo.width -= launcher_size;
   }
   else
   {
-    ideal_geo.height -= launcher_size;
+    monitor_geo.height -= launcher_size;
   }
 
-  return ideal_geo;
+  return monitor_geo;
 }
 
 void Controller::OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors)
@@ -350,7 +350,6 @@ bool Controller::ShowDash()
   FocusWindow();
 
   visible_ = true;
-
   StartShowHideTimeline();
 
   nux::Geometry const& view_content_geo = view_->GetContentGeometry();

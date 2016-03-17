@@ -20,6 +20,8 @@
 #ifndef EXPO_LAUNCHER_ICON_H
 #define EXPO_LAUNCHER_ICON_H
 
+#include <UnityCore/GLibSignal.h>
+
 #include "SimpleLauncherIcon.h"
 
 namespace unity

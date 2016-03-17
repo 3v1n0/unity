@@ -177,7 +177,7 @@ int CairoContext::height() const
 //
 //
 
-unsigned WindowDecorationElements(CompWindow* win, WindowFilter::Value wf)
+unsigned WindowDecorationElements(CompWindow* win, WindowFilter wf)
 {
   unsigned elements = DecorationElement::NONE;
 
@@ -194,8 +194,22 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter::Value wf)
   bool rectangular = (region.numRects() == 1);
   bool alpha = win->alpha();
 
-  if (!rectangular && alpha) // Non-rectangular windows with alpha channel
-    return elements;
+  if (alpha)
+  {
+    if (wf == WindowFilter::CLIENTSIDE_DECORATED)
+    {
+      elements = DecorationElement::SHADOW;
+
+      if (win->actions() & CompWindowActionResizeMask)
+        elements |= DecorationElement::EDGE;
+
+      return elements;
+    }
+    else if (!rectangular) // Non-rectangular windows with alpha channel
+    {
+      return elements;
+    }
+  }
 
   if (region.boundingRect() != win->geometry()) // Shaped windows
     return elements;

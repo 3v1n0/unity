@@ -28,7 +28,6 @@
 
 #include <UnityCore/IndicatorEntry.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
 
 #include <gtk/gtk.h>
 
@@ -119,7 +118,6 @@ private:
   IndicatorEntryType type_;
   nux::ObjectPtr<nux::BaseTexture> entry_texture_;
   nux::Geometry cached_geo_;
-  glib::Signal<void, GtkIconTheme*> icon_theme_changed_;
   int monitor_;
   double opacity_;
   bool draw_active_;

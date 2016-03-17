@@ -103,7 +103,7 @@ void Parser::ReadMappedStrings(std::string const& node_name,
                                       values.size());
   for (std::size_t i = 0; i < size; ++i)
   {
-    std::string key(json_array_get_string_element(array, i));
+    auto key = glib::gchar_to_string(json_array_get_string_element(array, i));
     boost::to_lower(key);
     auto it = mapping.find(key);
     if (it != mapping.end())
@@ -121,7 +121,7 @@ void Parser::ReadMappedString(std::string const& node_name,
   if (!object)
     return;
 
-  std::string key(json_object_get_string_member(object, member_name.c_str()));
+  auto key = glib::gchar_to_string(json_object_get_string_member(object, member_name.c_str()));
   boost::to_lower(key);
   auto it = mapping.find(key);
   if (it != mapping.end())

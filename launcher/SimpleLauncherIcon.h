@@ -20,7 +20,6 @@
 #ifndef UNITYSHELL_SIMPLELAUNCHERICON_H
 #define UNITYSHELL_SIMPLELAUNCHERICON_H
 
-#include <UnityCore/GLibSignal.h>
 #include "LauncherIcon.h"
 
 namespace unity
@@ -54,11 +53,9 @@ private:
 
 private:
   std::unordered_map<int, BaseTexturePtr> texture_map_;
-  glib::Signal<void, GtkIconTheme*> theme_changed_signal_;
 };
 
 }
 }
 
 #endif // SIMPLELAUNCHERICON_H
-

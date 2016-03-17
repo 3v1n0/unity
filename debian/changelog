@@ -1,3 +1,20 @@
+unity (7.4.0+16.04.20160310-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add a "Format..." option to volume icons. (LP: #1057008)
+
+  [ Marco Trevisan (Treviño) ]
+  * DashView: ensure that we update scaling when monitor changes (LP:
+    #1546690)
+  * DecoratedWindow: move the shadow under the window if we've a client-
+    side decorated window with corners (LP: #1516403)
+  * LauncherController: add overlay shortcut to all the
+    WindowedLauncherIcon's we have
+  * ThemeSettings: add small class for reading gtk settings for theming
+    (LP: #1543757, #1288998)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 10 Mar 2016 10:09:34 +0000
+
 unity (7.4.0+16.04.20160223.1-0ubuntu1) xenial; urgency=medium
 
   [ Andrea Azzarone, Didier Roche ]
