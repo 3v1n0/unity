@@ -165,7 +165,9 @@ set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 set (LOCALE_DIR "${CMAKE_INSTALL_FULL_LOCALEDIR}")
-set (GETTEXT_PACKAGE "${PROJECT_NAME}")
+# specify the domain directly rather than refering to a variable 
+# like ${PROJECT_NAME} to no confuse dh_translations
+set (GETTEXT_PACKAGE "unity")
 
 find_package (PkgConfig)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} gtk+-3.0 --variable prefix OUTPUT_VARIABLE GTK_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
