@@ -198,7 +198,6 @@ public:
 
   Cursor GetCachedCursor(unsigned int) const;
 
-  void UnmapAllNoNuxWindowsSync();
   static bool IsNuxWindow(CompWindow* value);
 
 protected:
