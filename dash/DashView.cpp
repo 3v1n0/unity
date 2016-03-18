@@ -133,6 +133,7 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   , monitor_(0)
 {
   renderer_.SetOwner(this);
+  renderer_.owner_type = OverlayOwner::Dash;
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
@@ -650,7 +651,20 @@ void DashView::Relayout()
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
   if (preview_displaying_)
-    preview_container_->SetGeometry(layout_->GetGeometry());
+  {
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    {
+      auto preview_geo = content_geo_;
+      int padding = style.GetDashHorizontalBorderHeight().CP(scale());
+      preview_geo.y += padding;
+      preview_geo.height -= padding;
+      preview_container_->SetGeometry(preview_geo);
+    }
+    else
+    {
+      preview_container_->SetGeometry(layout_->GetGeometry());
+    }
+  }
 
   renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
 
@@ -729,6 +743,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   // See lp bug: 1125346 (The sharp white line between dash and launcher is missing)
   nux::Geometry clip_geo = geo_layout;
   clip_geo.x += 1;
+  if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    clip_geo.y += renderer_y_offset;
   graphics_engine.PushClippingRectangle(clip_geo);
 
   if (IsFullRedraw())

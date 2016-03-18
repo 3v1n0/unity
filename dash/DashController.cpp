@@ -230,22 +230,22 @@ int Controller::GetIdealMonitor()
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
-  auto ideal_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
+  auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
   int launcher_size = unity::Settings::Instance().LauncherSize(monitor_);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
-    ideal_geo.x += launcher_size;
-    ideal_geo.width -= launcher_size;
+    monitor_geo.x += launcher_size;
+    monitor_geo.width -= launcher_size;
   }
   else
   {
-    ideal_geo.height -= launcher_size;
+    monitor_geo.height -= launcher_size;
   }
 
-  return ideal_geo;
+  return monitor_geo;
 }
 
 void Controller::OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors)
@@ -277,6 +277,12 @@ void Controller::UpdateDashPosition()
   if (launcher_position == LauncherPosition::LEFT)
   {
     left_offset = launcher_size;
+  }
+  else if (launcher_position == LauncherPosition::BOTTOM &&
+           Settings::Instance().form_factor() == FormFactor::DESKTOP)
+  {
+    auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
+    top_offset = monitor_geo.height - view_->GetContentGeometry().height - launcher_size;
   }
 
   view_->SetMonitorOffset(left_offset, top_offset);
@@ -489,6 +495,8 @@ bool Controller::IsCommandLensOpen() const
 nux::Geometry Controller::GetInputWindowGeometry()
 {
   EnsureDash();
+  int launcher_size = Settings::Instance().LauncherSize(monitor_);
+  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
   dash::Style& style = dash::Style::Instance();
   nux::Geometry const& window_geo(window_->GetGeometry());
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
@@ -499,6 +507,15 @@ nux::Geometry Controller::GetInputWindowGeometry()
   {
     geo.width += style.GetDashVerticalBorderWidth().CP(view_->scale());
     geo.height += style.GetDashHorizontalBorderHeight().CP(view_->scale());
+
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      geo.y = monitor_geo.height - view_content_geo.height - launcher_size - style.GetDashHorizontalBorderHeight().CP(view_->scale());
+  }
+  else if (Settings::Instance().form_factor() == FormFactor::NETBOOK)
+  {
+    geo.height = monitor_geo.height;
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      geo.height -= launcher_size;
   }
 
   return geo;

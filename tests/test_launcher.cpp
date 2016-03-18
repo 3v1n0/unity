@@ -62,6 +62,7 @@ public:
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD2(PerformScroll, void(ScrollDirection, Time));
   MOCK_METHOD0(HideTooltip, void());
+  MOCK_METHOD0(PromptHideTooltip, void());
   MOCK_METHOD3(SetQuirk, void(ApplicationLauncherIcon::Quirk, bool, int));
   MOCK_METHOD2(SetQuirk, void(ApplicationLauncherIcon::Quirk, bool));
   MOCK_METHOD2(SkipQuirkAnimation, void(ApplicationLauncherIcon::Quirk, int));

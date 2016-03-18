@@ -73,6 +73,12 @@ void CairoBaseWindow::Hide()
   animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
 }
 
+void CairoBaseWindow::PromptHide()
+{
+  Hide();
+  fade_animator_.Stop();
+}
+
 void CairoBaseWindow::RedrawBlur()
 {
   compute_blur_bkg_ = true;

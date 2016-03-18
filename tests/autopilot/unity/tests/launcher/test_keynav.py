@@ -13,6 +13,7 @@ from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, GreaterThan
 
+from unity.emulators.launcher import LauncherPosition
 from unity.tests.launcher import LauncherTestCase
 
 logger = logging.getLogger(__name__)
@@ -114,10 +115,12 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.launcher_instance.key_nav_enter_quicklist(self.launcher_position)
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
-        self.launcher_instance.key_nav_exit_quicklist()
-        self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(False)))
-        self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(True)))
-        self.assertThat(self.unity.launcher.key_nav_is_grabbed, Eventually(Equals(True)))
+        # We can't close a quicklist from keynav mode when launcher at bottom.
+        if self.launcher_position == LauncherPosition.LEFT:
+            self.launcher_instance.key_nav_exit_quicklist()
+            self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(False)))
+            self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(True)))
+            self.assertThat(self.unity.launcher.key_nav_is_grabbed, Eventually(Equals(True)))
 
     def test_launcher_keynav_mode_toggles(self):
         """Tests that keynav mode toggles with Alt+F1."""

@@ -325,7 +325,32 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
       // left (close quicklist, go back to laucher key-nav)
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
-      HideAndEndQuicklistNav();
+
+      if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      {
+        PromptHide();
+        UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
+        UBusManager::SendMessage(UBUS_LAUNCHER_PREV_KEY_NAV);
+        UBusManager::SendMessage(UBUS_LAUNCHER_OPEN_QUICKLIST);
+      }
+      else
+      {
+        HideAndEndQuicklistNav();
+      }
+
+      break;
+
+      // right (close quicklist, go back to launcher key-nav)
+    case NUX_VK_RIGHT:
+    case NUX_KP_RIGHT:
+      if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      {
+        PromptHide();
+        UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
+        UBusManager::SendMessage(UBUS_LAUNCHER_NEXT_KEY_NAV);
+        UBusManager::SendMessage(UBUS_LAUNCHER_OPEN_QUICKLIST);
+      }
+
       break;
 
       // esc (close quicklist, exit key-nav)

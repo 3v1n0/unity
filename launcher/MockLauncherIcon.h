@@ -87,6 +87,7 @@ public:
 
   void ShowTooltip() { is_tooltip_visible_ = true; }
   void HideTooltip() { is_tooltip_visible_ = false; }
+  void PromptHideTooltip() { is_tooltip_visible_ = false; }
   bool IsTooltipVisible() { return is_tooltip_visible_; }
 
   void    SetShortcut(guint64 shortcut) {}

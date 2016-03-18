@@ -43,7 +43,6 @@
 #include "LauncherHoverMachine.h"
 #include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UnitySettings.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "TooltipManager.h"
 
@@ -54,6 +53,8 @@
 
 namespace unity
 {
+enum class LauncherPosition;
+
 namespace launcher
 {
 extern const char* window_title;
