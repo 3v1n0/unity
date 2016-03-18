@@ -31,7 +31,7 @@ class MockBFBLauncherIcon : public BFBLauncherIcon
 {
 public:
   MockBFBLauncherIcon()
-    : BFBLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
+    : BFBLauncherIcon()
   {}
 };
 

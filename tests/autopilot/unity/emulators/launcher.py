@@ -17,6 +17,7 @@ from testtools.matchers import NotEquals
 from time import sleep
 
 from unity.emulators import UnityIntrospectionObject
+from unity.emulators import keys
 from unity.emulators.icons import (
     ApplicationLauncherIcon,
     BFBLauncherIcon,
@@ -37,6 +38,10 @@ class IconDragType:
     BEFORE = 3
     AFTER = 4
 
+class LauncherPosition:
+    """Define launcher possible positions"""
+    LEFT = "Left"
+    BOTTOM = "Bottom"
 
 class LauncherController(UnityIntrospectionObject):
     """The LauncherController class."""
@@ -104,12 +109,16 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         """Places the mouse on the screen of this launcher."""
         move_mouse_to_screen(self.monitor)
 
-    def move_mouse_to_right_of_launcher(self):
+    def move_mouse_beside_launcher(self):
         """Places the mouse to the right of this launcher."""
         move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
-        target_x = x + w + 10
-        target_y = y + h / 2
+        if h > w:
+            target_x = x + w + 10
+            target_y = y + h / 2
+        else:
+            target_x = x + w / 2
+            target_y = y - 10
 
         logger.debug("Moving mouse away from launcher.")
         self._mouse.move(target_x, target_y, False)
@@ -153,8 +162,13 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
 
-        target_x = x - 300 # this is the pressure we need to reveal the launcher.
-        target_y = y + h / 2
+        if h > w:
+            target_x = x - 300 # this is the pressure we need to reveal the launcher.
+            target_y = y + h / 2
+        else:
+            target_x = x + w / 2
+            target_y = y + h + 300
+
         logger.debug("Revealing launcher on monitor %d with mouse.", self.monitor)
         self._mouse.move(target_x, target_y, True, 5, .002)
 
@@ -177,7 +191,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if self.hidemode == 1:
             self.is_showing.wait_for(False)
 
-    def keyboard_select_icon(self, **kwargs):
+    def keyboard_select_icon(self, launcher_position = LauncherPosition.LEFT, **kwargs):
         """Using either keynav mode or the switcher, select an icon in the launcher.
 
         The desired mode (keynav or switcher) must be started already before
@@ -218,7 +232,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             if matches:
                 return
             if self.in_keynav_mode:
-                self.key_nav_next()
+                self.key_nav_next(launcher_position)
             elif self.in_switcher_mode:
                 self.switcher_next()
         raise ValueError("No icon found that matches: %r", kwargs)
@@ -244,23 +258,23 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._perform_key_nav_exit_binding("launcher/keynav/activate")
         self._get_controller().key_nav_is_active.wait_for(False)
 
-    def key_nav_next(self):
+    def key_nav_next(self, launcher_position = LauncherPosition.LEFT):
         """Moves the launcher keynav focus to the next launcher icon"""
         logger.debug("Selecting next item in keyboard navigation mode.")
         old_selection = self._get_controller().key_nav_selection
-        self._perform_key_nav_binding("launcher/keynav/next")
+        self._perform_key_nav_binding(keys[launcher_position + "/launcher/keynav/next"])
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
-    def key_nav_prev(self):
+    def key_nav_prev(self, launcher_position = LauncherPosition.LEFT):
         """Moves the launcher keynav focus to the previous launcher icon"""
         logger.debug("Selecting previous item in keyboard navigation mode.")
         old_selection = self._get_controller().key_nav_selection
-        self._perform_key_nav_binding("launcher/keynav/prev")
+        self._perform_key_nav_binding(keys[launcher_position + "/launcher/keynav/prev"])
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
-    def key_nav_enter_quicklist(self):
+    def key_nav_enter_quicklist(self, launcher_position = LauncherPosition.LEFT):
         logger.debug("Opening quicklist for currently selected icon.")
-        self._perform_key_nav_binding("launcher/keynav/open-quicklist")
+        self._perform_key_nav_binding(keys[launcher_position + "/launcher/keynav/open-quicklist"])
         self.quicklist_open.wait_for(True)
 
     def key_nav_exit_quicklist(self):
@@ -329,9 +343,9 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._mouse.click(button)
 
         if (move_mouse_after):
-          self.move_mouse_to_right_of_launcher()
+          self.move_mouse_beside_launcher()
 
-    def drag_icon_to_position(self, icon, pos, target, drag_type=IconDragType.INSIDE):
+    def drag_icon_to_position(self, icon, pos, target, drag_type=IconDragType.INSIDE, launcher_position=LauncherPosition.LEFT):
         """Drag a launcher icon to a new position.
 
         'icon' is the icon to move. It must be either a ApplicationLauncherIcon or an
@@ -345,8 +359,13 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         'drag_type' must be one of IconDragType.INSIDE or IconDragType.OUTSIDE.
         This specifies whether the icon is gragged inside the launcher, or to the
-        right of it. The default is to drag inside the launcher. If it is
+        right/top of it. The default is to drag inside the launcher. If it is
         specified, and not one of the allowed values, a ValueError will be raised.
+
+        'launcher_position' must be one of LauncherPosition.LEFT or LauncherPosition.BOTTOM.
+        This specifies the launcher position when dragging the icon. The default launcher
+        position is at left. If it is specified, and not one of the allowed values, a
+        ValueError will be raised.
 
         For example:
 
@@ -374,29 +393,41 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if drag_type not in (IconDragType.INSIDE, IconDragType.OUTSIDE):
             raise ValueError("'drag_type' parameter must be one of IconDragType.INSIDE, IconDragType.OUTSIDE")
 
-        icon_height = get_compiz_option("unityshell", "icon_size")
+        icon_size = get_compiz_option("unityshell", "icon_size")
 
         self.move_mouse_to_icon(icon)
         self._mouse.press()
         sleep(1)
 
         if drag_type == IconDragType.OUTSIDE:
-            shift_over = self._mouse.x + (icon_height * 2)
-            self._mouse.move(shift_over, self._mouse.y, rate=20, time_between_events=0.005)
+            if launcher_position == LauncherPosition.LEFT:
+                shift_over = self._mouse.x + (icon_size * 3)
+                self._mouse.move(shift_over, self._mouse.y, rate=20, time_between_events=0.005)
+            else:
+                shift_over = self._mouse.y - (icon_size * 3)
+                self._mouse.move(self._mouse.x, shift_over, rate=20, time_between_events=0.005)
             sleep(0.5)
 
         self.move_mouse_to_icon(target)
 
-        target_y = target.center.y
-        if target_y < icon.center.y:
-            target_y += icon_height 
-        if pos == IconDragType.BEFORE:
-            target_y -= icon_height + (icon_height / 2)
+        if launcher_position == LauncherPosition.LEFT:
+            target_y = target.center.y
+            if target_y < icon.center.y:
+                target_y += icon_size
+            if pos == IconDragType.BEFORE:
+                target_y -= icon_size + (icon_size / 2)
+            self._mouse.move(self._mouse.x, target_y, rate=20, time_between_events=0.005)
+        else:
+            target_x = target.center.x
+            if target_x < icon.center.x:
+                target_x += icon_size
+            if pos == IconDragType.BEFORE:
+                target_x -= icon_size + (icon_size / 2)
+            self._mouse.move(target_x, self._mouse.y, rate=20, time_between_events=0.005)
 
-        self._mouse.move(self._mouse.x, target_y, rate=20, time_between_events=0.005)
         sleep(1)
         self._mouse.release()
-        self.move_mouse_to_right_of_launcher()
+        self.move_mouse_beside_launcher()
 
     def lock_to_launcher(self, icon):
         """lock 'icon' to the launcher, if it's not already.

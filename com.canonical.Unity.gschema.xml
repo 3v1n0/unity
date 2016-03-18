@@ -9,6 +9,10 @@
     <value nick="Not Expanded" value="0" />
     <value nick="Expanded" value="1" />
   </enum>
+  <enum id="launcher-position-enum">
+    <value nick="Left" value="0" />
+    <value nick="Bottom" value="1" />
+  </enum>
   <enum id="desktop-type-enum">
     <value nick="Ubuntu" value="0" />
     <value nick="UbuntuKylin" value="1" />
@@ -144,6 +148,11 @@
       <default>''</default>
       <summary>Version of last migration done</summary>
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
+    </key>
+    <key enum="launcher-position-enum"  name="launcher-position">
+      <default>"Left"</default>
+      <summary>The position of launcher.</summary>
+      <description>The position of launcher.</description>
     </key>
   </schema>
   <schema path="/com/canonical/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">

@@ -230,15 +230,22 @@ int Controller::GetIdealMonitor()
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
-  auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+  auto ideal_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
+  int launcher_size = unity::Settings::Instance().LauncherSize(monitor_);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
-  return nux::Geometry (monitor_geo.x + launcher_width,
-                        monitor_geo.y,
-                        monitor_geo.width - launcher_width,
-                        monitor_geo.height);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    ideal_geo.x += launcher_size;
+    ideal_geo.width -= launcher_size;
+  }
+  else
+  {
+    ideal_geo.height -= launcher_size;
+  }
+
+  return ideal_geo;
 }
 
 void Controller::OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors)
@@ -262,8 +269,16 @@ void Controller::Relayout()
 
 void Controller::UpdateDashPosition()
 {
+  auto launcher_position = Settings::Instance().launcher_position();
+  int left_offset = 0;
   int top_offset = panel::Style::Instance().PanelHeight(monitor_);
-  int left_offset = unity::Settings::Instance().LauncherWidth(monitor_);
+  int launcher_size = unity::Settings::Instance().LauncherSize(monitor_);
+
+  if (launcher_position == LauncherPosition::LEFT)
+  {
+    left_offset = launcher_size;
+  }
+
   view_->SetMonitorOffset(left_offset, top_offset);
 }
 

@@ -88,8 +88,9 @@ class LauncherScrollTests(LauncherTestCase):
         launcher_instance.move_mouse_to_icon(last_icon)
 
         # Make sure the first icon is off the screen or else there is no
-        # scrolling.
-        self.assertThat(first_icon.center.y, LessThan(y))
+        # scrolling when launcher at left
+        if w < h:
+            self.assertThat(first_icon.center.y, LessThan(y))
         
         # Autoscroll to the first icon
         launcher_instance.move_mouse_to_icon(first_icon, autoscroll_offset)
