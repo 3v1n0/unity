@@ -1,3 +1,22 @@
+unity (7.4.0+16.04.20160318-0ubuntu1) xenial; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * UserPromptView: don't hide local scale property (LP: #1551820)
+
+  [ Sebastien Bacher ]
+  * set the gettext domain directly in CMakeLists rather than using
+    refering to the project name, the translation template is updated
+    during the build by dh_translations which is not clever enough to
+    understand the variable (LP: #1557081)
+
+  [ handsome_feng ]
+  * Dash: move it down when the launcher is positioned at the bottom.
+    (LP: #1552630)
+  * Launcher: add Bottom mode, so that the launcher can be positioned
+    horisontally (LP: #1552630)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 18 Mar 2016 10:10:42 +0000
+
 unity (7.4.0+16.04.20160310-0ubuntu1) xenial; urgency=medium
 
   [ Andrea Azzarone ]
