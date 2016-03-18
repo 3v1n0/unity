@@ -10,8 +10,8 @@
     <value nick="Expanded" value="1" />
   </enum>
   <enum id="launcher-position-enum">
-    <value nick="Left" value="0"/>
-    <value nick="Bottom" value="1"/>
+    <value nick="Left" value="0" />
+    <value nick="Bottom" value="1" />
   </enum>
   <enum id="desktop-type-enum">
     <value nick="Ubuntu" value="0" />
