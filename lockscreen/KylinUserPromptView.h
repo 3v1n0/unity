@@ -46,8 +46,6 @@ class KylinUserPromptView : public AbstractUserPromptView
 public:
   KylinUserPromptView(session::Manager::Ptr const& session_manager);
 
-  nux::Property<double> scale;
-
   nux::View* focus_view();
 
   void AddAvatar(std::string const& avatar_icon, int avatar_size);

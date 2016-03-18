@@ -81,7 +81,6 @@ std::string SanitizeMessage(std::string const& message)
 
 KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_manager)
   : AbstractUserPromptView(session_manager)
-  , scale(1.0)
   , session_manager_(session_manager)
   , username_(nullptr)
   , msg_layout_(nullptr)
