@@ -32,6 +32,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
@@ -465,13 +466,10 @@ void ResultRendererTile::LoadText(Result const& row)
   PangoFontDescription* desc       = NULL;
   PangoContext*         pango_context   = NULL;
   GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-  glib::String          font;
-
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
 
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
-  desc = pango_font_description_from_string(font.Value());
+  desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
   pango_font_description_set_size (desc, FONT_SIZE * FONT_MULTIPLIER);
 
   pango_layout_set_font_description(layout, desc);

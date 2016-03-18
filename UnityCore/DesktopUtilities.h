@@ -29,6 +29,7 @@ namespace unity
 class DesktopUtilities
 {
 public:
+  static std::string GetUserHomeDirectory();
   static std::string GetUserDataDirectory();
   static std::string GetUserCacheDirectory();
   static std::string GetUserRuntimeDirectory();

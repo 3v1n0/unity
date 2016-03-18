@@ -73,7 +73,7 @@ public:
   sigc::signal<void, std::string const&> live_search_reached;
 
 private:
-  void OnFontChanged();
+  void UpdateFont();
   void OnSearchHintChanged();
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

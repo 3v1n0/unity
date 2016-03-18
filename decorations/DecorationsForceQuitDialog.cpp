@@ -385,7 +385,7 @@ GtkWidget* close_button_new()
   gtk_widget_set_can_focus(self, FALSE);
   gtk_widget_set_halign(self, GTK_ALIGN_START);
 
-  auto const& file = decoration::Style::Get()->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
+  auto const& file = decoration::Style::Get()->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR});
   auto* img = gtk_image_new_from_file(file.c_str());
   gtk_container_add(GTK_CONTAINER(self), img);
   CLOSE_BUTTON(self)->priv->img = GTK_IMAGE(img);
@@ -419,13 +419,13 @@ static void close_button_class_init(CloseButtonClass* klass)
 
     auto new_flags = gtk_widget_get_state_flags(self);
     auto const& deco_style = decoration::Style::Get();
-    auto file = deco_style->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
+    auto file = deco_style->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR});
 
     if (((new_flags & GTK_STATE_FLAG_PRELIGHT) && !gtk_widget_get_can_focus(self)) ||
         (new_flags & GTK_STATE_FLAG_FOCUSED))
     {
       auto const& basename = (new_flags & GTK_STATE_FLAG_ACTIVE) ? CLOSE_BUTTON_ACTIVE_FILE : CLOSE_BUTTON_FOCUSED_FILE;
-      file = deco_style->ThemedFilePath(basename, {PKGDATADIR"/"});
+      file = deco_style->ThemedFilePath(basename, {PKGDATADIR});
     }
 
     gtk_image_set_from_file(img, file.c_str());

@@ -40,11 +40,15 @@ MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
   , show_menu_enabled_(true)
 {
   entry_->updated.connect(sigc::mem_fun(this, &MenuEntry::EntryUpdated));
-  horizontal_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
-  vertical_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
-  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
-  focused.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
   in_dropdown.changed.connect([this] (bool in) { visible = entry_->visible() && !in; });
+
+  auto render_texture_cb = sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture));
+  horizontal_padding.changed.connect(render_texture_cb);
+  vertical_padding.changed.connect(render_texture_cb);
+  scale.changed.connect(render_texture_cb);
+  focused.changed.connect(render_texture_cb);
+  Style::Get()->font.changed.connect(render_texture_cb);
+
   EntryUpdated();
 }
 

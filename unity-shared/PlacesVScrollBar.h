@@ -40,8 +40,8 @@ protected:
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
 private:
-  void UpdateSize();
   void UpdateTexture(nux::Geometry const&);
+  void OnStyleChanged();
 
 private:
   nux::ObjectPtr<nux::BaseTexture> slider_texture_;

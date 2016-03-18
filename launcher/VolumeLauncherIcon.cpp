@@ -20,6 +20,7 @@
 
 
 #include "config.h"
+#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSignal.h>
@@ -161,6 +162,7 @@ public:
     MenuItemsVector result;
 
     AppendOpenItem(result);
+    AppendFormatItem(result);
     AppendSeparatorItem(result);
     AppendNameItem(result);
     AppendSeparatorItem(result);
@@ -293,6 +295,51 @@ public:
     }));
 
     menu.push_back(menu_item);
+  }
+
+  void AppendFormatItem(MenuItemsVector& menu)
+  {
+    glib::Object<GDesktopAppInfo> gd(g_desktop_app_info_new("gnome-disks.desktop"));
+
+    if (!volume_->CanBeFormatted() || !gd)
+      return;
+
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Format…"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    parent_->glib_signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
+      OpenFormatPrompt(timestamp);
+    }));
+
+    menu.push_back(menu_item);
+  }
+
+  void OpenFormatPrompt(Time timestamp)
+  {
+    glib::Object<GDesktopAppInfo> gd_desktop_app_info(g_desktop_app_info_new("gnome-disks.desktop"));
+
+    if (!gd_desktop_app_info)
+      return;
+
+    auto gd_app_info = glib::object_cast<GAppInfo>(gd_desktop_app_info);
+
+    std::string command_line = glib::gchar_to_string(g_app_info_get_executable(gd_app_info)) +
+                               " --block-device " +
+                               volume_->GetUnixDevicePath() + 
+                               " --format-device";
+
+    GdkDisplay* display = gdk_display_get_default();
+    glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
+    gdk_app_launch_context_set_timestamp(app_launch_context, timestamp);
+
+    glib::Object<GAppInfo> app_info(g_app_info_create_from_commandline(command_line.c_str(),
+                                                                       nullptr,
+                                                                       G_APP_INFO_CREATE_SUPPORTS_STARTUP_NOTIFICATION,
+                                                                       nullptr));
+    g_app_info_launch_uris(app_info, nullptr, glib::object_cast<GAppLaunchContext>(app_launch_context), nullptr);
   }
 
   void AppendUnmountItem(MenuItemsVector& menu)

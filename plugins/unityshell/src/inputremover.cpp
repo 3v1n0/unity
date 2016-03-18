@@ -88,6 +88,7 @@ compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
                                                 Window shapeWindow,
                                                 Window propWindow) :
   mDpy (dpy),
+  mProperty (XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", False)),
   mShapeWindow (shapeWindow),
   mPropWindow (propWindow),
   mShapeMask (0),
@@ -328,7 +329,6 @@ compiz::WindowInputRemover::writeProperty (XRectangle *input,
                                            int nInput,
                                            int inputOrdering)
 {
-  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
   Atom type = XA_CARDINAL;
   int  fmt  = 32;
 
@@ -365,7 +365,7 @@ compiz::WindowInputRemover::writeProperty (XRectangle *input,
   /* No need to check return code, always returns 0 */
   XChangeProperty(mDpy,
                   mPropWindow,
-                  prop,
+                  mProperty,
                   type,
                   fmt,
                   PropModeReplace,
@@ -381,7 +381,6 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
                                           int *inputOrdering)
 
 {
-  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
   Atom type = XA_CARDINAL;
   int  fmt  = 32;
 
@@ -399,7 +398,7 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
    * long the rest of the property is going to be */
   if (!XGetWindowProperty(mDpy,
                           mPropWindow,
-                          prop,
+                          mProperty,
                           0L,
                           headerLength,
                           FALSE,
@@ -438,7 +437,7 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
 
   if (!XGetWindowProperty(mDpy,
                           mPropWindow,
-                          prop,
+                          mProperty,
                           0L,
                           fullLength,
                           FALSE,
@@ -486,9 +485,7 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
 void
 compiz::WindowInputRemover::clearProperty()
 {
-  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
-
-  XDeleteProperty(mDpy, mPropWindow, prop);
+  XDeleteProperty(mDpy, mPropWindow, mProperty);
 }
 
 bool

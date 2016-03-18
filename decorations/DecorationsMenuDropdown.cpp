@@ -19,6 +19,7 @@
 
 #include "DecorationsMenuDropdown.h"
 #include "DecorationStyle.h"
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
@@ -39,6 +40,7 @@ MenuDropdown::MenuDropdown(Indicators::Ptr const& indicators, CompWindow* win)
   natural_.width = ICON_SIZE;
   natural_.height = ICON_SIZE;
   entry_->set_image(1, ICON_NAME, true, true);
+  theme::Settings::Get()->icons_changed.connect(sigc::mem_fun(this, &MenuDropdown::RenderTexture));
 }
 
 void MenuDropdown::ShowMenu(unsigned button)

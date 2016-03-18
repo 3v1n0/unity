@@ -20,6 +20,7 @@
  */
 
 #include <gtk/gtk.h>
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
@@ -291,10 +292,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, double width, double
     return;
 
   GdkScreen* screen = gdk_screen_get_default(); // not ref'ed
-  GtkSettings* settings = gtk_settings_get_default(); // not ref'ed
-
-  glib::String font_name;
-  g_object_get(settings, "gtk-font-name", &font_name, nullptr);
+  auto const& font = theme::Settings::Get()->font();
 
   cairo_t* cr = cairo.GetInternalContext();
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
@@ -302,7 +300,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, double width, double
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
 
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
-  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
   pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_height(layout, -1);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
