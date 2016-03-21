@@ -59,7 +59,7 @@ namespace
 const int URGENT_BLINKS = 3;
 const int WIGGLE_CYCLES = 6;
 
-const int MAX_STARTING_BLINKS = 5;
+const int MAX_STARTING_BLINKS = 15;
 const int STARTING_BLINK_LAMBDA = 3;
 
 const int PULSE_BLINK_LAMBDA = 2;
