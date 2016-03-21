@@ -1,3 +1,11 @@
+unity (7.4.0+16.04.20160321-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * ApplicationLauncherIcon: use the starting property to show an icon
+    when launched (LP: #676457)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 21 Mar 2016 15:38:22 +0000
+
 unity (7.4.0+16.04.20160318-0ubuntu1) xenial; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
