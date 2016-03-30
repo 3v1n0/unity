@@ -22,6 +22,7 @@
 
 #include <Nux/VLayout.h>
 #include <glib/gi18n-lib.h>
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
@@ -48,33 +49,33 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
-  std::string texture_prefix = PKGDATADIR"/";
+  std::string texture_prefix;
   std::string label;
 
   switch (action_)
   {
     case Action::LOCK:
-      texture_prefix += "lockscreen";
+      texture_prefix = "lockscreen";
       label = _("Lock");
       break;
     case Action::LOGOUT:
-      texture_prefix += "logout";
+      texture_prefix = "logout";
       label = _("Log Out");
       break;
     case Action::SUSPEND:
-      texture_prefix += "suspend";
+      texture_prefix = "suspend";
       label = _("Suspend");
       break;
     case Action::HIBERNATE:
-      texture_prefix += "hibernate";
+      texture_prefix = "hibernate";
       label = _("Hibernate");
       break;
     case Action::SHUTDOWN:
-      texture_prefix += "shutdown";
+      texture_prefix = "shutdown";
       label = _("Shut Down");
       break;
     case Action::REBOOT:
-      texture_prefix += "restart";
+      texture_prefix = "restart";
       label = _("Restart");
       break;
   }
@@ -93,6 +94,8 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
     UpdateTextures(texture_prefix);
     image_view_->SetTexture(highlighted ? highlight_tex_ : normal_tex_);
   });
+
+  theme::Settings::Get()->theme.changed.connect(sigc::hide(sigc::bind(sigc::mem_fun(this, &Button::UpdateTextures), texture_prefix)));
 
   image_view_ = new IconTexture(normal_tex_);
   image_view_->SetInputEventSensitivity(false);
@@ -127,17 +130,20 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
 
 void Button::UpdateTextures(std::string const& texture_prefix)
 {
-  RawPixel const texture_size = GetDefaultMaxTextureSize(texture_prefix);
+  auto const& theme = theme::Settings::Get();
+  auto texture_path = theme->ThemedFilePath(texture_prefix, {PKGDATADIR});
+  RawPixel const texture_size = GetDefaultMaxTextureSize(texture_path);
+  normal_tex_.Adopt(nux::CreateTexture2DFromFile(texture_path.c_str(), texture_size.CP(scale), true));
 
-  normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), texture_size.CP(scale), true));
-  highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), texture_size.CP(scale), true));
+  auto texture_highlight_path = theme->ThemedFilePath(texture_prefix + "_highlight", {PKGDATADIR});
+  RawPixel const texture_highlight_size = GetDefaultMaxTextureSize(texture_path);
+  highlight_tex_.Adopt(nux::CreateTexture2DFromFile(texture_highlight_path.c_str(), texture_highlight_size.CP(scale), true));
 }
 
-RawPixel Button::GetDefaultMaxTextureSize(std::string const& texture_prefix) const
+RawPixel Button::GetDefaultMaxTextureSize(std::string const& texture_path) const
 {
   nux::Size size;
-  auto const& texture_name = (texture_prefix + ".png");
-  gdk_pixbuf_get_file_info(texture_name.c_str(), &size.width, &size.height);
+  gdk_pixbuf_get_file_info(texture_path.c_str(), &size.width, &size.height);
   RawPixel max_size = std::max(size.width, size.height);
 
   return max_size;
