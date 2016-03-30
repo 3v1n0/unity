@@ -90,6 +90,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
 
   SetupWindow();
   UScreen::GetDefault()->changed.connect(sigc::mem_fun(this, &Controller::OnMonitorChanged));
+  Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::Relayout)));
 
   form_factor_changed_ = Settings::Instance().form_factor.changed.connect([this] (FormFactor)
   {
