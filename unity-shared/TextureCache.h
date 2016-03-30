@@ -23,7 +23,6 @@
 
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 
 #include <Nux/Nux.h>
 #include <sigc++/trackable.h>
@@ -63,7 +62,7 @@ private:
   void OnThemeChanged(std::string const&);
 
   std::unordered_map<std::size_t, nux::BaseTexture*> cache_;
-  std::unordered_set<std::size_t> themed_files_;
+  std::vector<std::size_t> themed_files_;
 };
 
 }

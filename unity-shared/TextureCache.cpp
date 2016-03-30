@@ -66,17 +66,18 @@ nux::BaseTexture* TextureCache::LocalLoader(std::string const& name, int w, int 
 nux::BaseTexture* TextureCache::ThemedLoader(std::string const& name, int w, int h)
 {
   auto& cache = GetDefault();
-  cache.themed_files_.insert(Hash(name, w, h));
+  cache.themed_files_.push_back(Hash(name, w, h));
   auto const& themed_file = theme::Settings::Get()->ThemedFilePath(name, {PKGDATADIR}, {""});
   return themed_file.empty() ? LocalLoader(name, w, h) : create_2d_texture(themed_file, w, h);
 }
 
 void TextureCache::OnThemeChanged(std::string const&)
 {
-  for (auto texture_key : themed_files_)
-    cache_.erase(texture_key);
-
-  themed_files_.clear();
+  for (auto it = begin(themed_files_); it != end(themed_files_);)
+  {
+    cache_.erase(*it);
+    it = themed_files_.erase(it);
+  }
 }
 
 TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,
