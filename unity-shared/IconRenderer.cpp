@@ -251,7 +251,8 @@ struct IconRenderer::LocalTextures
     : parent_(parent)
   {
     connections_.Add(theme::Settings::Get()->theme.changed.connect([this] (std::string const&) {
-      ReloadIconSxtures(parent_->icon_size, parent_->image_size);
+      if (!texture_files_.empty())
+        ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
     }));
 
     auto clear_labels = sigc::hide(sigc::mem_fun(this, &LocalTextures::ClearLabels));
