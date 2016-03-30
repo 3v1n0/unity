@@ -425,6 +425,7 @@ void Controller::HideHud()
   need_show_ = false;
   EnsureHud();
   view_->AboutToHide();
+  view_->ShowEmbeddedIcon(false);
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
