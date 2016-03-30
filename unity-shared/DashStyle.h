@@ -85,7 +85,7 @@ enum class Arrow {
   NONE
 };
 
-enum class DashPosition {
+enum class Position {
   LEFT,
   BOTTOM
 };
@@ -172,19 +172,19 @@ public:
   BaseTexturePtr const& GetCategoryBackground() const;
   BaseTexturePtr const& GetCategoryBackgroundNoFilters() const;
 
-  BaseTexturePtr GetDashHorizontalTile(double scale, DashPosition dash_position) const;
-  BaseTexturePtr GetDashHorizontalTileMask(double scale, DashPosition dash_position) const;
+  BaseTexturePtr GetDashHorizontalTile(double scale, Position) const;
+  BaseTexturePtr GetDashHorizontalTileMask(double scale, Position) const;
   BaseTexturePtr GetDashRightTile(double scale) const;
   BaseTexturePtr GetDashRightTileMask(double scale) const;
   BaseTexturePtr GetDashLeftTile(double scale) const;
-  BaseTexturePtr GetDashTopOrBottomTile(double scale, DashPosition dash_position) const;
+  BaseTexturePtr GetDashTopOrBottomTile(double scale, Position) const;
 
-  BaseTexturePtr GetDashCorner(double scale, DashPosition dash_position) const;
-  BaseTexturePtr GetDashCornerMask(double scale, DashPosition dash_position) const;
-  BaseTexturePtr GetDashLeftCorner(double scale, DashPosition dash_position) const;
-  BaseTexturePtr GetDashLeftCornerMask(double scale, DashPosition dash_position) const;
-  BaseTexturePtr GetDashRightCorner(double scale, DashPosition dash_position) const;
-  BaseTexturePtr GetDashRightCornerMask(double scale, DashPosition dash_position) const;
+  BaseTexturePtr GetDashCorner(double scale, Position) const;
+  BaseTexturePtr GetDashCornerMask(double scale, Position) const;
+  BaseTexturePtr GetDashLeftCorner(double scale, Position) const;
+  BaseTexturePtr GetDashLeftCornerMask(double scale, Position) const;
+  BaseTexturePtr GetDashRightCorner(double scale, Position) const;
+  BaseTexturePtr GetDashRightCornerMask(double scale, Position) const;
 
   RawPixel GetDashHorizontalBorderHeight() const;
   RawPixel GetDashVerticalBorderWidth() const;

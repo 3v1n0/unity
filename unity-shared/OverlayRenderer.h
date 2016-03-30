@@ -26,7 +26,7 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 
-namespace unity 
+namespace unity
 {
 
 enum class OverlayOwner

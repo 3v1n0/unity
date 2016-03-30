@@ -173,7 +173,8 @@ struct Style::Impl : sigc::trackable
   BaseTexturePtr LoadScaledTexture(std::string const& name, double scale)
   {
     int w, h;
-    gdk_pixbuf_get_file_info((PKGDATADIR"/" + name).c_str(), &w, &h);
+    auto const& path = theme::Settings::Get()->ThemedFilePath(name, {PKGDATADIR});
+    gdk_pixbuf_get_file_info(path.c_str(), &w, &h);
     return TextureCache::GetDefault().FindTexture(name, RawPixel(w).CP(scale), RawPixel(h).CP(scale));
   }
 
@@ -249,17 +250,17 @@ Style::Impl::Impl(Style* owner)
   , text_color_(nux::color::White)
   , text_width_(0)
   , text_height_(0)
-  , category_texture_("/category_gradient.png")
-  , category_texture_no_filters_("/category_gradient_no_refine.png")
-  , dash_shine_("/dash_sheen.png")
-  , information_texture_("/information_icon.svg")
-  , refine_gradient_corner_("/refine_gradient_corner.png")
-  , refine_gradient_dash_("/refine_gradient_dash.png")
-  , group_unexpand_texture_("/dash_group_unexpand.png")
-  , group_expand_texture_("/dash_group_expand.png")
-  , star_deselected_texture_("/star_deselected.png")
-  , star_selected_texture_("/star_selected.png")
-  , star_highlight_texture_("/star_highlight.png")
+  , category_texture_("category_gradient")
+  , category_texture_no_filters_("category_gradient_no_refine")
+  , dash_shine_("dash_sheen")
+  , information_texture_("information_icon")
+  , refine_gradient_corner_("refine_gradient_corner")
+  , refine_gradient_dash_("refine_gradient_dash")
+  , group_unexpand_texture_("dash_group_unexpand")
+  , group_expand_texture_("dash_group_expand")
+  , star_deselected_texture_("star_deselected")
+  , star_selected_texture_("star_selected")
+  , star_highlight_texture_("star_highlight")
 {
   auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Impl::Refresh));
 
@@ -2082,129 +2083,129 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
-BaseTexturePtr Style::GetDashHorizontalTile(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashHorizontalTile(double scale, Position dash_position) const
 {
   std::string horizontal_tile;
-  if (dash_position == DashPosition::BOTTOM)
-    horizontal_tile = "dash_top_border_tile.png";
+  if (dash_position == Position::BOTTOM)
+    horizontal_tile = "dash_top_border_tile";
   else
-    horizontal_tile = "dash_bottom_border_tile.png";
+    horizontal_tile = "dash_bottom_border_tile";
   return pimpl->LoadScaledTexture(horizontal_tile, scale);
 }
 
-BaseTexturePtr Style::GetDashHorizontalTileMask(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashHorizontalTileMask(double scale, Position dash_position) const
 {
   std::string horizontal_tile_mask;
-  if (dash_position == DashPosition::BOTTOM)
-    horizontal_tile_mask = "dash_top_border_tile_mask.png";
+  if (dash_position == Position::BOTTOM)
+    horizontal_tile_mask = "dash_top_border_tile_mask";
   else
-    horizontal_tile_mask = "dash_bottom_border_tile_mask.png";
+    horizontal_tile_mask = "dash_bottom_border_tile_mask";
   return pimpl->LoadScaledTexture(horizontal_tile_mask, scale);
 }
 
 BaseTexturePtr Style::GetDashRightTile(double scale) const
 {
-  return pimpl->LoadScaledTexture("dash_right_border_tile.png", scale);
+  return pimpl->LoadScaledTexture("dash_right_border_tile", scale);
 }
 
 BaseTexturePtr Style::GetDashRightTileMask(double scale) const
 {
-  return pimpl->LoadScaledTexture("dash_right_border_tile_mask.png", scale);
+  return pimpl->LoadScaledTexture("dash_right_border_tile_mask", scale);
 }
 
 BaseTexturePtr Style::GetDashLeftTile(double scale) const
 {
-  return pimpl->LoadScaledTexture("dash_left_tile.png", scale);
+  return pimpl->LoadScaledTexture("dash_left_tile", scale);
 }
 
-BaseTexturePtr Style::GetDashTopOrBottomTile(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashTopOrBottomTile(double scale, Position dash_position) const
 {
   std::string top_bottom_tile;
-  if (dash_position == DashPosition::BOTTOM)
-    top_bottom_tile = "dash_bottom_tile.png";
+  if (dash_position == Position::BOTTOM)
+    top_bottom_tile = "dash_bottom_tile";
   else
-    top_bottom_tile = "dash_top_tile.png";
+    top_bottom_tile = "dash_top_tile";
   return pimpl->LoadScaledTexture(top_bottom_tile, scale);
 }
 
-BaseTexturePtr Style::GetDashCorner(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashCorner(double scale, Position dash_position) const
 {
   std::string corner;
-  if (dash_position == DashPosition::BOTTOM)
-    corner = "dash_top_right_corner_rotated.png";
+  if (dash_position == Position::BOTTOM)
+    corner = "dash_top_right_corner_rotated";
   else
-    corner = "dash_bottom_right_corner.png";
+    corner = "dash_bottom_right_corner";
   return pimpl->LoadScaledTexture(corner, scale);
 }
 
-BaseTexturePtr Style::GetDashCornerMask(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashCornerMask(double scale, Position dash_position) const
 {
   std::string corner_mask;
-  if (dash_position == DashPosition::BOTTOM)
-    corner_mask = "dash_top_right_corner_rotated_mask.png";
+  if (dash_position == Position::BOTTOM)
+    corner_mask = "dash_top_right_corner_rotated_mask";
   else
-    corner_mask = "dash_bottom_right_corner_mask.png";
+    corner_mask = "dash_bottom_right_corner_mask";
   return pimpl->LoadScaledTexture(corner_mask, scale);
 }
 
-BaseTexturePtr Style::GetDashLeftCorner(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashLeftCorner(double scale, Position dash_position) const
 {
   std::string left_corner;
-  if (dash_position == DashPosition::BOTTOM)
-    left_corner = "dash_top_left_corner.png";
+  if (dash_position == Position::BOTTOM)
+    left_corner = "dash_top_left_corner";
   else
-    left_corner = "dash_bottom_left_corner.png";
+    left_corner = "dash_bottom_left_corner";
   return pimpl->LoadScaledTexture(left_corner, scale);
 }
 
-BaseTexturePtr Style::GetDashLeftCornerMask(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashLeftCornerMask(double scale, Position dash_position) const
 {
   std::string left_corner_mask;
-  if (dash_position == DashPosition::BOTTOM)
-    left_corner_mask = "dash_top_left_corner_mask.png";
+  if (dash_position == Position::BOTTOM)
+    left_corner_mask = "dash_top_left_corner_mask";
   else
-    left_corner_mask = "dash_bottom_left_corner_mask.png";
+    left_corner_mask = "dash_bottom_left_corner_mask";
   return pimpl->LoadScaledTexture(left_corner_mask, scale);
 }
 
-BaseTexturePtr Style::GetDashRightCorner(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashRightCorner(double scale, Position dash_position) const
 {
   std::string right_corner;
-  if (dash_position == DashPosition::BOTTOM)
-    right_corner = "dash_bottom_right_corner_rotated.png";
+  if (dash_position == Position::BOTTOM)
+    right_corner = "dash_bottom_right_corner_rotated";
   else
-    right_corner = "dash_top_right_corner.png";
+    right_corner = "dash_top_right_corner";
   return pimpl->LoadScaledTexture(right_corner, scale);
 }
 
-BaseTexturePtr Style::GetDashRightCornerMask(double scale, DashPosition dash_position) const
+BaseTexturePtr Style::GetDashRightCornerMask(double scale, Position dash_position) const
 {
   std::string right_corner_mask;
-  if (dash_position == DashPosition::BOTTOM)
-    right_corner_mask = "dash_bottom_right_corner_rotated_mask.png";
+  if (dash_position == Position::BOTTOM)
+    right_corner_mask = "dash_bottom_right_corner_rotated_mask";
   else
-    right_corner_mask = "dash_top_right_corner_mask.png";
+    right_corner_mask = "dash_top_right_corner_mask";
   return pimpl->LoadScaledTexture(right_corner_mask, scale);
 }
 
 BaseTexturePtr Style::GetSearchMagnifyIcon(double scale) const
 {
-  return pimpl->LoadScaledTexture("search_magnify.svg", scale);
+  return pimpl->LoadScaledTexture("search_magnify", scale);
 }
 
 BaseTexturePtr Style::GetSearchCircleIcon(double scale) const
 {
-  return pimpl->LoadScaledTexture("search_circle.svg", scale);
+  return pimpl->LoadScaledTexture("search_circle", scale);
 }
 
 BaseTexturePtr Style::GetSearchCloseIcon(double scale) const
 {
-  return pimpl->LoadScaledTexture("search_close.svg", scale);
+  return pimpl->LoadScaledTexture("search_close", scale);
 }
 
 BaseTexturePtr Style::GetSearchSpinIcon(double scale) const
 {
-  return pimpl->LoadScaledTexture("search_spin.svg", scale);
+  return pimpl->LoadScaledTexture("search_spin", scale);
 }
 
 
