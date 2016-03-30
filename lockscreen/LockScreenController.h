@@ -27,9 +27,8 @@
 #include "LockScreenBaseShield.h"
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
+#include "LoginManager.h"
 #include "ScreenSaverDBusManager.h"
-#include "ShutdownNotifier.h"
-#include "SuspendNotifier.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 
@@ -70,6 +69,7 @@ private:
   void ResetPostLockScreenSaver();
   void SetupPrimaryShieldConnections();
   void ActivatePanel();
+  void SyncInhibitor();
 
   void OnLockRequested(bool prompt);
   void OnUnlockRequested();
@@ -88,8 +88,7 @@ private:
   AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
-  ShutdownNotifier::Ptr shutdown_notifier_;
-  SuspendNotifier::Ptr suspend_notifier_;
+  LoginManager::Ptr login_manager_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
@@ -97,6 +96,8 @@ private:
   bool test_mode_;
   bool prompt_activation_;
   BlurType old_blur_type_;
+
+  gint inhibitor_handler_;
 
   connection::Wrapper uscreen_connection_;
   connection::Wrapper hidden_window_connection_;
