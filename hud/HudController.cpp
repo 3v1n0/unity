@@ -108,6 +108,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Controller::OnDPIChanged));
+  Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::bind(sigc::mem_fun(this, &Controller::Relayout), false)));
 
   EnsureHud();
 }
@@ -279,6 +280,7 @@ void Controller::Relayout(bool check_monitor)
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
     horizontal_offset = unity::Settings::Instance().LauncherSize(monitor_index_);
 
+  view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
   view_->SetMonitorOffset(horizontal_offset, panel_style.PanelHeight(monitor_index_));
 }
 
