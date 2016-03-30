@@ -73,11 +73,10 @@ nux::BaseTexture* TextureCache::ThemedLoader(std::string const& name, int w, int
 
 void TextureCache::OnThemeChanged(std::string const&)
 {
-  for (auto it = begin(themed_files_); it != end(themed_files_);)
-  {
-    cache_.erase(*it);
-    it = themed_files_.erase(it);
-  }
+  for (auto texture_key : themed_files_)
+    cache_.erase(texture_key);
+
+  themed_files_.clear();
 }
 
 TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,
