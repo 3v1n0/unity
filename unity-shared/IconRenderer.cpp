@@ -251,12 +251,7 @@ struct IconRenderer::LocalTextures
     : parent_(parent)
   {
     connections_.Add(theme::Settings::Get()->theme.changed.connect([this] (std::string const&) {
-      auto& cache = TextureCache::GetDefault();
-
-      for (auto const& tex_data : texture_files_)
-        cache.Invalidate(tex_data.name, tex_data.size, tex_data.size);
-
-      ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
+      ReloadIconSxtures(parent_->icon_size, parent_->image_size);
     }));
 
     auto clear_labels = sigc::hide(sigc::mem_fun(this, &LocalTextures::ClearLabels));
@@ -295,16 +290,9 @@ struct IconRenderer::LocalTextures
       {&progress_bar_fill, "progress_bar_fill", image_size - (icon_size - image_size)},
     };
 
-    auto texture_loader = [] (std::string const& basename, int w, int h)
-    {
-      int size = std::max(w, h);
-      auto const& file = theme::Settings::Get()->ThemedFilePath(basename, {PKGDATADIR});
-      return nux::CreateTexture2DFromFile(file.c_str(), (size <= 0 ? -1 : size), true);
-    };
-
     auto& cache = TextureCache::GetDefault();
     for (auto const& tex_data : texture_files_)
-      *tex_data.tex_ptr = cache.FindTexture(tex_data.name, tex_data.size, tex_data.size, texture_loader);
+      *tex_data.tex_ptr = cache.FindTexture(tex_data.name, tex_data.size, tex_data.size);
   }
 
   nux::BaseTexture* RenderLabelTexture(char label, int icon_size, nux::Color const&);

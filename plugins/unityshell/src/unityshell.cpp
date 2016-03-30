@@ -41,6 +41,7 @@
 #include "PanelView.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
+#include "TextureCache.h"
 #include "Timer.h"
 #include "XKeyboardUtil.h"
 #include "unityshell.h"
@@ -4005,6 +4006,10 @@ void UnityScreen::InitUnityComponents()
 
   bghash_.reset(new BGHash());
   LOG_INFO(logger) << "InitUnityComponents-BGHash " << timer.ElapsedSeconds() << "s";
+
+  // Ugly hack to ensure that texture cache will connect promptly to theme changed signal
+  TextureCache::GetDefault();
+  LOG_INFO(logger) << "InitUnityComponents-TextureCache " << timer.ElapsedSeconds() << "s";
 
   auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
   auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();

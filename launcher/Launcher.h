@@ -312,6 +312,7 @@ private:
   bool DndIsSpecialRequest(std::string const& uri) const;
 
   void OnDPIChanged();
+  void LoadTextures();
 
   LauncherModel::Ptr model_;
   MockableBaseWindow* parent_;

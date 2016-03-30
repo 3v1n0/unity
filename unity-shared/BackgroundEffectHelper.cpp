@@ -48,7 +48,7 @@ BackgroundEffectHelper::BackgroundEffectHelper(nux::View* view)
 {
   enabled.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   owner.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnOwnerChanged));
-  noise_texture_ = TextureCache::GetDefault().FindTexture("dash_noise.png");
+  noise_texture_ = TextureCache::GetDefault().FindTexture("dash_noise");
 
   if (Settings::Instance().GetLowGfxMode())
     blur_type = BLUR_NONE;

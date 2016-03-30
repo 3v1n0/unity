@@ -30,6 +30,7 @@
 
 #include "unity-shared/Introspectable.h"
 
+#include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/DashStyle.h"

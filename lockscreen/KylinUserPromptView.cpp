@@ -137,7 +137,7 @@ void KylinUserPromptView::ResetLayout()
     nux::Layout* switch_layout = new nux::HLayout();
 
     TextureCache& cache = TextureCache::GetDefault();
-    switch_icon_ = new IconTexture(cache.FindTexture("switch_user.svg", SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale)));
+    switch_icon_ = new IconTexture(cache.FindTexture("switch_user", SWITCH_ICON_SIZE.CP(scale), SWITCH_ICON_SIZE.CP(scale)));
     switch_layout->AddView(switch_icon_);
     switch_icon_->mouse_click.connect([this](int x, int y, unsigned long button_flags, unsigned long key_flags) {
       session_manager_->SwitchToGreeter();
