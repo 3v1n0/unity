@@ -249,9 +249,10 @@ struct IconRenderer::LocalTextures
 {
   LocalTextures(IconRenderer* parent)
     : parent_(parent)
+    , textures_loaded_(false)
   {
     connections_.Add(theme::Settings::Get()->theme.changed.connect([this] (std::string const&) {
-      if (!texture_files_.empty())
+      if (textures_loaded_)
         ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
     }));
 
@@ -272,7 +273,8 @@ struct IconRenderer::LocalTextures
     int marker_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
     auto const& marker_sufix = std::to_string(MARKER_SIZES[tex_size]);
 
-    texture_files_ = {
+    struct TextureData { BaseTexturePtr* tex_ptr; std::string name; int size; };
+    std::vector<TextureData> texture_files = {
       {&icon_background, "launcher_icon_back_"+tile_sufix, icon_size},
       {&icon_selected_background, "launcher_icon_selected_back_"+tile_sufix, icon_size},
       {&icon_edge, "launcher_icon_edge_"+tile_sufix, icon_size},
@@ -292,8 +294,10 @@ struct IconRenderer::LocalTextures
     };
 
     auto& cache = TextureCache::GetDefault();
-    for (auto const& tex_data : texture_files_)
+    for (auto const& tex_data : texture_files)
       *tex_data.tex_ptr = cache.FindTexture(tex_data.name, tex_data.size, tex_data.size);
+
+    textures_loaded_ = true;
   }
 
   nux::BaseTexture* RenderLabelTexture(char label, int icon_size, nux::Color const&);
@@ -331,8 +335,7 @@ struct IconRenderer::LocalTextures
 
 private:
   IconRenderer* parent_;
-  struct TextureData { BaseTexturePtr* tex_ptr; std::string name; int size; };
-  std::vector<TextureData> texture_files_;
+  bool textures_loaded_;
   std::vector<BaseTexturePtr> labels_;
   connection::Manager connections_;
 };
