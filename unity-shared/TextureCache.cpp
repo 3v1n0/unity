@@ -77,6 +77,7 @@ void TextureCache::OnThemeChanged(std::string const&)
     cache_.erase(texture_key);
 
   themed_files_.clear();
+  themed_invalidated.emit();
 }
 
 TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,

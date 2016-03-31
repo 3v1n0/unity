@@ -55,6 +55,8 @@ public:
   // Return the current size of the cache.
   std::size_t Size() const;
 
+  sigc::signal<void> themed_invalidated;
+
 private:
   TextureCache();
 
