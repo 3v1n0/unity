@@ -36,7 +36,6 @@ namespace ui
 {
 namespace
 {
-  // THemeable
   const std::string DIALOG_BORDER_TOP     = "dialog_border_top";
   const std::string DIALOG_BORDER_LEFT    = "dialog_border_left";
   const std::string DIALOG_BORDER_CORNER  = "dialog_border_corner";
