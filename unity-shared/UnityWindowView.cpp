@@ -50,6 +50,16 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
 
   live_background = false;
 
+  scale.changed.connect([this] (double scale) {
+    closable.changed.emit(closable());
+
+    if (internal_layout_)
+    {
+      int offset = style()->GetInternalOffset().CP(scale);
+      view_layout_->SetPadding(offset, offset);
+    }
+  });
+
   theme::Settings::Get()->theme.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnThemeChanged));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged));
   monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged)));
@@ -69,12 +79,6 @@ UnityWindowView::~UnityWindowView()
 void UnityWindowView::OnDPIChanged()
 {
   scale = Settings::Instance().em(monitor())->DPIScale();
-
-  if (internal_layout_)
-  {
-    int offset = style()->GetInternalOffset().CP(scale);
-    view_layout_->SetPadding(offset, offset);
-  }
 }
 
 void UnityWindowView::OnThemeChanged(std::string const&)
