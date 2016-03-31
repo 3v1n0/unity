@@ -78,6 +78,7 @@ private:
   void OnEnabledChanged(bool value);
   void OnOwnerChanged(nux::View*);
   void SetupOwner(nux::View*);
+  void LoadTextures();
   bool UpdateOwnerGeometry();
 
   nux::ObjectPtr<nux::BaseTexture> noise_texture_;
