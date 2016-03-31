@@ -56,7 +56,7 @@ const RawPixel TEXT_INPUT_HEIGHT    =  36_em;
 const RawPixel TEXT_INPUT_WIDTH     = 320_em;
 const int PROMPT_FONT_SIZE = 14;
 
-const std::string ACTIVATOR_ICON = "login.svg";
+const std::string ACTIVATOR_ICON = "kylin_login_activate";
 
 std::string SanitizeMessage(std::string const& message)
 {
