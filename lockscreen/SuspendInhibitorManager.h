@@ -16,8 +16,8 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITY_LOCKSCREEN_LOGIN_MANAGER
-#define UNITY_LOCKSCREEN_LOGIN_MANAGER
+#ifndef UNITY_LOCKSCREEN_SUSPEND_INHIBITOR_MANAGER
+#define UNITY_LOCKSCREEN_SUSPEND_INHIBITOR_MANAGER
 
 #include <memory>
 #include <string>
@@ -28,13 +28,13 @@ namespace unity
 namespace lockscreen
 {
 
-class LoginManager
+class SuspendInhibitorManager
 {
 public:
-  typedef std::shared_ptr<LoginManager> Ptr;
+  typedef std::shared_ptr<SuspendInhibitorManager> Ptr;
 
-  LoginManager();
-  ~LoginManager();
+  SuspendInhibitorManager();
+  ~SuspendInhibitorManager();
 
   void Inhibit(std::string const&);
   void Uninhibit();

@@ -16,7 +16,7 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#include "LoginManager.h"
+#include "SuspendInhibitorManager.h"
 
 #include <NuxCore/Logger.h>
 #include "UnityCore/GLibDBusProxy.h"
@@ -26,16 +26,16 @@ namespace unity
 namespace lockscreen
 {
 
-DECLARE_LOGGER(logger, "unity.lockscreen.loginmanager");
+DECLARE_LOGGER(logger, "unity.lockscreen.suspendinhibitormanager");
 
 //
 // Private Implementation
 //
 
-class LoginManager::Impl
+class SuspendInhibitorManager::Impl
 {
 public:
-  Impl(LoginManager *parent);
+  Impl(SuspendInhibitorManager *parent);
   ~Impl();
 
   void Inhibit(std::string const&);
@@ -43,12 +43,12 @@ public:
   bool IsInhibited();
 
 private:
-  LoginManager *parent_;
+  SuspendInhibitorManager *parent_;
   std::shared_ptr<glib::DBusProxy> lm_proxy_;
   gint inhibitor_handler_;
 };
 
-LoginManager::Impl::Impl(LoginManager *parent)
+SuspendInhibitorManager::Impl::Impl(SuspendInhibitorManager *parent)
   : parent_(parent)
   , inhibitor_handler_(-1)
 {
@@ -65,10 +65,10 @@ LoginManager::Impl::Impl(LoginManager *parent)
   lm_proxy_->connected.connect(sigc::mem_fun(&parent->connected, &decltype(parent->connected)::emit));
 }
 
-LoginManager::Impl::~Impl()
+SuspendInhibitorManager::Impl::~Impl()
 {}
 
-void LoginManager::Impl::Inhibit(std::string const& msg)
+void SuspendInhibitorManager::Impl::Inhibit(std::string const& msg)
 {
   if (IsInhibited())
     return;
@@ -86,7 +86,7 @@ void LoginManager::Impl::Inhibit(std::string const& msg)
   });
 }
 
-void LoginManager::Impl::Uninhibit()
+void SuspendInhibitorManager::Impl::Uninhibit()
 {
   if (IsInhibited())
   {
@@ -95,7 +95,7 @@ void LoginManager::Impl::Uninhibit()
   }
 }
 
-bool LoginManager::Impl::IsInhibited()
+bool SuspendInhibitorManager::Impl::IsInhibited()
 {
   return inhibitor_handler_ >= 0;
 }
@@ -104,24 +104,24 @@ bool LoginManager::Impl::IsInhibited()
 // End Private Implementation
 //
 
-LoginManager::LoginManager()
+SuspendInhibitorManager::SuspendInhibitorManager()
   : pimpl_(new Impl(this))
 {}
 
-LoginManager::~LoginManager()
+SuspendInhibitorManager::~SuspendInhibitorManager()
 {}
 
-void LoginManager::Inhibit(std::string const& msg)
+void SuspendInhibitorManager::Inhibit(std::string const& msg)
 {
   pimpl_->Inhibit(msg);
 }
 
-void LoginManager::Uninhibit()
+void SuspendInhibitorManager::Uninhibit()
 {
   pimpl_->Uninhibit();
 }
 
-bool LoginManager::IsInhibited()
+bool SuspendInhibitorManager::IsInhibited()
 {
   return pimpl_->IsInhibited();
 }

@@ -62,7 +62,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , session_manager_(session_manager)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
-  , login_manager_(std::make_shared<LoginManager>())
+  , suspend_inhibitor_manager_(std::make_shared<SuspendInhibitorManager>())
   , fade_animator_(LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
@@ -81,14 +81,14 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
   hidden_window_connection_->block();
 
-  login_manager_->about_to_suspend.connect([this] () {
+  suspend_inhibitor_manager_->about_to_suspend.connect([this] () {
     if (Settings::Instance().lock_on_suspend())
       session_manager_->PromptLockScreen();
   });
 
   Settings::Instance().lock_on_suspend.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
   Settings::Instance().use_legacy.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
-  login_manager_->connected.connect(sigc::mem_fun(this, &Controller::SyncInhibitor));
+  suspend_inhibitor_manager_->connected.connect(sigc::mem_fun(this, &Controller::SyncInhibitor));
 
   dbus_manager_->simulate_activity.connect(sigc::mem_fun(this, &Controller::SimulateActivity));
   session_manager_->screensaver_requested.connect(sigc::mem_fun(this, &Controller::OnScreenSaverActivationRequest));
@@ -535,9 +535,9 @@ void Controller::SyncInhibitor()
                  !Settings::Instance().use_legacy();
 
   if (inhibit)
-    login_manager_->Inhibit("Unity needs to lock the screen");
+    suspend_inhibitor_manager_->Inhibit("Unity needs to lock the screen");
   else
-    login_manager_->Uninhibit();
+    suspend_inhibitor_manager_->Uninhibit();
 }
 
 } // lockscreen

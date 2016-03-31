@@ -27,7 +27,7 @@
 #include "LockScreenBaseShield.h"
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
-#include "LoginManager.h"
+#include "SuspendInhibitorManager.h"
 #include "ScreenSaverDBusManager.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
@@ -88,7 +88,7 @@ private:
   AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
-  LoginManager::Ptr login_manager_;
+  SuspendInhibitorManager::Ptr suspend_inhibitor_manager_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
