@@ -102,6 +102,7 @@ public:
   BaseTexturePtr const& texture();
 private:
   void LoadTexture();
+  void UnloadTexture();
 private:
   std::string filename_;
   int size_;
@@ -271,6 +272,8 @@ Style::Impl::Impl(Style* owner)
   auto& settings = Settings::Instance();
   settings.font_scaling.changed.connect(refresh_cb);
   settings.form_factor.changed.connect(sigc::mem_fun(this, &Impl::UpdateFormFactor));
+
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(&owner_->textures_changed, &decltype(owner_->textures_changed)::emit));
 
   Refresh();
   UpdateFormFactor(settings.form_factor());
@@ -2526,6 +2529,7 @@ LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
   : filename_(filename)
   , size_(size)
 {
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &LazyLoadTexture::UnloadTexture));
 }
 
 BaseTexturePtr const& LazyLoadTexture::texture()
@@ -2539,6 +2543,11 @@ void LazyLoadTexture::LoadTexture()
 {
   TextureCache& cache = TextureCache::GetDefault();
   texture_ = cache.FindTexture(filename_, size_, size_);
+}
+
+void LazyLoadTexture::UnloadTexture()
+{
+  texture_ = nullptr;
 }
 
 } // anon namespace

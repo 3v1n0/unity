@@ -261,6 +261,7 @@ public:
   RawPixel GetCategorySeparatorRightPadding() const;
 
   sigc::signal<void> changed;
+  sigc::signal<void> textures_changed;
 
   nux::Property<int> columns_number;
   nux::Property<bool> always_maximised;
