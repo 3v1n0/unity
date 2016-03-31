@@ -20,6 +20,7 @@
 
 #include "UnityWindowView.h"
 #include <Nux/VLayout.h>
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
@@ -49,8 +50,9 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
 
   live_background = false;
 
-  monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged)));
+  theme::Settings::Get()->theme.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnThemeChanged));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged));
+  monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged)));
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
   background_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
 }
@@ -73,6 +75,12 @@ void UnityWindowView::OnDPIChanged()
     int offset = style()->GetInternalOffset().CP(scale);
     view_layout_->SetPadding(offset, offset);
   }
+}
+
+void UnityWindowView::OnThemeChanged(std::string const&)
+{
+  closable.changed.emit(closable());
+  QueueDraw();
 }
 
 void UnityWindowView::SetBackgroundHelperGeometryGetter(BackgroundEffectHelper::GeometryGetterFunc const& func)
