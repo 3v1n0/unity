@@ -20,14 +20,13 @@
  *
  */
 
+#include "config.h"
+
 #include "PreviewStyle.h"
 #include <NuxCore/Logger.h>
-
-#include <NuxGraphics/GLTextureResourceManager.h>
 #include <Nux/PaintLayer.h>
 
-#include <UnityCore/GLibWrapper.h>
-#include "config.h"
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
@@ -45,45 +44,36 @@ const RawPixel preview_height = 380_em;
 
 typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-template <int default_size = 1>
+template <int default_size = -1>
 class LazyLoadTexture
 {
 public:
-  LazyLoadTexture(std::string const& filename)
-  : filename_(filename) {}
+  LazyLoadTexture(std::string const& texture_name)
+    : texture_name_(texture_name)
+  {}
 
-  nux::BaseTexture* texture(int size = default_size)
+  nux::BaseTexture* texture()
   {
-    auto tex_iter = textures_.find(size);
-    if (tex_iter != textures_.end())
-      return tex_iter->second.GetPointer();
+    if (texture_)
+      return texture_.GetPointer();
 
-    return LoadTexture(size).GetPointer();
+    return LoadTexture().GetPointer();
   }
 
 private:
-  BaseTexturePtr LoadTexture(int size)
+  BaseTexturePtr LoadTexture()
   {
-    BaseTexturePtr texture;
-    std::string full_path = PKGDATADIR + filename_;
-    glib::Object<GdkPixbuf> pixbuf;
-    glib::Error error;
+    auto const& texture_path = theme::Settings::Get()->ThemedFilePath(texture_name_, {PKGDATADIR});
+    texture_.Release();
 
-    pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size, size, &error);
-    if (error)
-    {
-      LOG_WARN(logger) << "Unable to texture " << full_path << " at size '" << size << "' : " << error;
-    }
-    else
-    {
-      texture.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-    }
-    textures_[size] = texture;
-    return texture;
+    if (!texture_path.empty())
+      texture_.Adopt(nux::CreateTexture2DFromFile(texture_path.c_str(), default_size, true));
+
+    return texture_;
   }
-private:
-  std::string filename_;
-  std::unordered_map<int, BaseTexturePtr> textures_;
+
+  std::string texture_name_;
+  BaseTexturePtr texture_;
 };
 
 } // namespace
@@ -94,14 +84,13 @@ class Style::Impl
 public:
   Impl(Style* owner)
   : owner_(owner)
-  , preview_nav_left_texture_("/preview_previous.svg")
-  , preview_nav_right_texture_("/preview_next.svg")
-  , preview_play_texture_("/preview_play.svg")
-  , preview_pause_texture_("/preview_pause.svg")
-  , warning_icon_texture_("/warning_icon.png")
-  {
-  }
-  ~Impl() {}
+  , preview_nav_left_texture_("preview_previous")
+  , preview_nav_right_texture_("preview_next")
+  , preview_play_texture_("preview_play")
+  , preview_pause_texture_("preview_pause")
+  , warning_icon_texture_("warning_icon")
+  , lock_icon_("lock_icon")
+  {}
 
   Style* owner_;
 
@@ -110,6 +99,7 @@ public:
   LazyLoadTexture<32> preview_play_texture_;
   LazyLoadTexture<32> preview_pause_texture_;
   LazyLoadTexture<22> warning_icon_texture_;
+  LazyLoadTexture<-1> lock_icon_;
 };
 
 
@@ -398,7 +388,7 @@ RawPixel Style::GetAvatarAreaHeight() const
 
 std::string Style::content_font() const
 {
-  return "Ubuntu Light 12";  
+  return "Ubuntu Light 12";
 }
 
 std::string Style::title_font() const
@@ -422,7 +412,7 @@ std::string Style::action_font() const
 }
 std::string Style::action_extra_font() const
 {
-  return "Ubuntu Bold 11";  
+  return "Ubuntu Bold 11";
 }
 
 std::string Style::app_license_font() const
@@ -492,8 +482,7 @@ nux::BaseTexture* Style::GetPauseIcon()
 
 nux::BaseTexture* Style::GetLockIcon()
 {
-  return nux::CreateTexture2DFromFile(
-              PKGDATADIR"/lock_icon.png", -1, true);
+  return pimpl->lock_icon_.texture();
 }
 
 nux::BaseTexture* Style::GetWarningIcon()
