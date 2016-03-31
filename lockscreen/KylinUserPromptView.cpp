@@ -120,6 +120,7 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
     UpdateSize();
     ResetLayout();
 
+    TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &KylinUserPromptView::ResetLayout));
     user_authenticator_.AuthenticateStart(session_manager_->UserName(),
                                           sigc::mem_fun(this, &KylinUserPromptView::AuthenticationCb));
 }

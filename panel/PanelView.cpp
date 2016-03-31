@@ -26,7 +26,6 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/TextureCache.h"
-#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
@@ -129,7 +128,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   });
 
   LoadTextures();
-  theme::Settings::Get()->theme.changed.connect(sigc::hide(sigc::mem_fun(this, &PanelView::LoadTextures)));
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &PanelView::LoadTextures));
 }
 
 PanelView::~PanelView()

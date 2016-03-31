@@ -182,8 +182,8 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   spinner_->scale = scale();
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &TextInput::UpdateTextures));
   theme::Settings::Get()->font.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateFont)));
-  theme::Settings::Get()->theme.changed.connect(sigc::mem_fun(this, &TextInput::UpdateTheme));
   sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) { CheckLocks(); });
 
   input_string.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_input_string));
@@ -239,7 +239,7 @@ void TextInput::UpdateScale(double scale)
   QueueDraw();
 }
 
-void TextInput::UpdateTheme(std::string const&)
+void TextInput::UpdateTextures()
 {
   activator_->SetTexture(LoadActivatorIcon(activator_icon(), activator_icon_size().CP(scale)));
   QueueDraw();

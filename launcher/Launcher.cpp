@@ -35,7 +35,6 @@
 #include "unity-shared/IconLoader.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/TextureCache.h"
-#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
@@ -186,7 +185,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
 
   LoadTextures();
-  theme::Settings::Get()->theme.changed.connect(sigc::hide(sigc::mem_fun(this, &Launcher::LoadTextures)));
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &Launcher::LoadTextures));
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));

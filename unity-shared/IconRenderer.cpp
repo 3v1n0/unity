@@ -251,7 +251,7 @@ struct IconRenderer::LocalTextures
     : parent_(parent)
     , textures_loaded_(false)
   {
-    connections_.Add(theme::Settings::Get()->theme.changed.connect([this] (std::string const&) {
+    connections_.Add(TextureCache::GetDefault().themed_invalidated.connect([this] {
       if (textures_loaded_)
         ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
     }));
