@@ -121,6 +121,8 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
   parent->owner_type.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
   Settings::Instance().low_gfx_changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::UpdateTextures));
   Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
+  dash::Style::Instance().textures_changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::UpdateTextures));
+  dash::Style::Instance().textures_changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures));
 
   UpdateTextures();
   LoadScaledTextures();
