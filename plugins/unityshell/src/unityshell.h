@@ -292,6 +292,7 @@ private:
   void OnInitiateSpread();
   void OnTerminateSpread();
 
+  void LoadPanelShadowTexture();
   void DamagePanelShadow();
 
   void OnViewHidden(nux::BaseWindow *bw);
