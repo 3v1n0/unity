@@ -26,7 +26,7 @@
 #include <Nux/HLayout.h>
 
 #include <UnityCore/GLibSource.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/SessionManager.h"
 #include "unity-shared/EMConverter.h"
 #include "unity-shared/UnityWindowView.h"
 

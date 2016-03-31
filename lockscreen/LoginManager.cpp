@@ -38,76 +38,66 @@ public:
   Impl(LoginManager *parent);
   ~Impl();
 
-  void Inhibit(std::string const&, InhibitCallback const&);
-  void Uninhibit(gint);
+  void Inhibit(std::string const&);
+  void Uninhibit();
+  bool IsInhibited();
 
 private:
-  void SetupProxies();
-
   LoginManager *parent_;
   std::shared_ptr<glib::DBusProxy> lm_proxy_;
-  std::shared_ptr<glib::DBusProxy> ls_proxy_;
+  gint inhibitor_handler_;
 };
 
 LoginManager::Impl::Impl(LoginManager *parent)
   : parent_(parent)
+  , inhibitor_handler_(-1)
 {
-  SetupProxies();
-
-  parent_->session_active.SetGetterFunction([this] {
-    return ls_proxy_->GetProperty("Active").GetBool();
-  });
-
-  lm_proxy_->Connect("PrepareForSleep", [this](GVariant* variant) {
-    bool about_to_suspend = glib::Variant(variant).GetBool();
-    parent_->prepare_for_sleep.emit(about_to_suspend);
-  });
-
-  ls_proxy_->ConnectProperty("Active", [this] (GVariant *variant) {
-    parent_->session_active.changed.emit(glib::Variant(variant).GetBool());
-  });
-
-  lm_proxy_->connected.connect(sigc::mem_fun(&parent->connected, &decltype(parent->connected)::emit));
-  ls_proxy_->connected.connect(sigc::mem_fun(&parent->connected, &decltype(parent->connected)::emit));
-}
-
-LoginManager::Impl::~Impl()
-{}
-
-void LoginManager::Impl::SetupProxies()
-{
-  const char* session_id = g_getenv("XDG_SESSION_ID");
-
   lm_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.login1",
                                                 "/org/freedesktop/login1",
                                                 "org.freedesktop.login1.Manager",
                                                 G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES);
 
-  ls_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.login1",
-                                                "/org/freedesktop/login1/session/" + glib::gchar_to_string(session_id),
-                                                "org.freedesktop.login1.Session",
-                                                G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES);
+  lm_proxy_->Connect("PrepareForSleep", [this] (GVariant* variant) {
+    if (glib::Variant(variant).GetBool())
+      parent_->about_to_suspend.emit();
+  });
+
+  lm_proxy_->connected.connect(sigc::mem_fun(&parent->connected, &decltype(parent->connected)::emit));
 }
 
-void LoginManager::Impl::Inhibit(std::string const& msg, InhibitCallback const& cb)
+LoginManager::Impl::~Impl()
+{}
+
+void LoginManager::Impl::Inhibit(std::string const& msg)
 {
+  if (IsInhibited())
+    return;
+
   GVariant* args = g_variant_new("(ssss)", "sleep", "Unity", msg.c_str(), "delay");
 
-  lm_proxy_->CallWithUnixFdList("Inhibit", args, [this, cb] (GVariant* variant, glib::Error const& e) {
+  lm_proxy_->CallWithUnixFdList("Inhibit", args, [this] (GVariant* variant, glib::Error const& e) {
     if (e)
     {
       LOG_WARNING(logger) << "Failed to inhbit suspend";
       return;
     }
 
-    cb(glib::Variant(variant).GetInt32());
+    inhibitor_handler_ = glib::Variant(variant).GetInt32();
   });
 }
 
-void LoginManager::Impl::Uninhibit(gint inhbit_handler)
+void LoginManager::Impl::Uninhibit()
 {
-  if (inhbit_handler >= 0)
-    close(inhbit_handler);
+  if (IsInhibited())
+  {
+    close(inhibitor_handler_);
+    inhibitor_handler_ = -1;
+  }
+}
+
+bool LoginManager::Impl::IsInhibited()
+{
+  return inhibitor_handler_ >= 0;
 }
 
 //
@@ -121,15 +111,21 @@ LoginManager::LoginManager()
 LoginManager::~LoginManager()
 {}
 
-void LoginManager::Inhibit(std::string const& msg, InhibitCallback const& cb)
+void LoginManager::Inhibit(std::string const& msg)
 {
-  pimpl_->Inhibit(msg, cb);
+  pimpl_->Inhibit(msg);
 }
 
-void LoginManager::Uninhibit(gint inhbit_handler)
+void LoginManager::Uninhibit()
 {
-  pimpl_->Uninhibit(inhbit_handler);
+  pimpl_->Uninhibit();
 }
+
+bool LoginManager::IsInhibited()
+{
+  return pimpl_->IsInhibited();
+}
+
 
 }
 }

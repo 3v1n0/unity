@@ -27,7 +27,7 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/SessionManager.h"
 
 #include "UserAuthenticatorPam.h"
 #include "unity-shared/IMTextEntry.h"

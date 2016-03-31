@@ -20,7 +20,7 @@
 #ifndef UNITY_LOCKSCREEN_ACCELERATOR_CONTROLLER
 #define UNITY_LOCKSCREEN_ACCELERATOR_CONTROLLER
 
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/SessionManager.h"
 #include "LockScreenAccelerators.h"
 
 namespace unity

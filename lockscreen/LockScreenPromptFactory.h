@@ -21,7 +21,7 @@
 #define UNITY_LOCKSCREEN_PROMPT_FACTORY
 
 #include <NuxCore/NuxCore.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/SessionManager.h"
 
 namespace unity
 {

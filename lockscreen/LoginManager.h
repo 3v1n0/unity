@@ -20,15 +20,13 @@
 #define UNITY_LOCKSCREEN_LOGIN_MANAGER
 
 #include <memory>
-#include <functional>
+#include <string>
 #include <sigc++/signal.h>
 
 namespace unity
 {
 namespace lockscreen
 {
-
-typedef std::function<void(gint)> InhibitCallback;
 
 class LoginManager
 {
@@ -38,13 +36,12 @@ public:
   LoginManager();
   ~LoginManager();
 
-  void Inhibit(std::string const&, InhibitCallback const&);
-  void Uninhibit(gint);
-
-  nux::ROProperty<bool> session_active;
+  void Inhibit(std::string const&);
+  void Uninhibit();
+  bool IsInhibited();
 
   sigc::signal<void> connected;
-  sigc::signal<void, bool> prepare_for_sleep;
+  sigc::signal<void> about_to_suspend;
 
 private:
   class Impl;

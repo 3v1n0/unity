@@ -67,7 +67,6 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
   , prompt_activation_(false)
-  , inhibitor_handler_(-1)
 {
   auto* uscreen = UScreen::GetDefault();
   uscreen_connection_ = uscreen->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
@@ -82,15 +81,14 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
   hidden_window_connection_->block();
 
-  login_manager_->prepare_for_sleep.connect([this] (bool about_to_suspend) {
-    if (Settings::Instance().lock_on_suspend() && about_to_suspend)
+  login_manager_->about_to_suspend.connect([this] () {
+    if (Settings::Instance().lock_on_suspend())
       session_manager_->PromptLockScreen();
   });
 
   Settings::Instance().lock_on_suspend.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
   Settings::Instance().use_legacy.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
   login_manager_->connected.connect(sigc::mem_fun(this, &Controller::SyncInhibitor));
-  login_manager_->session_active.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
 
   dbus_manager_->simulate_activity.connect(sigc::mem_fun(this, &Controller::SimulateActivity));
   session_manager_->screensaver_requested.connect(sigc::mem_fun(this, &Controller::OnScreenSaverActivationRequest));
@@ -98,6 +96,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   session_manager_->prompt_lock_requested.connect(sigc::bind(sigc::mem_fun(this, &Controller::OnLockRequested), true));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
   session_manager_->presence_status_changed.connect(sigc::mem_fun(this, &Controller::OnPresenceStatusChanged));
+  session_manager_->is_session_active.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
 
   fade_animator_.updated.connect([this](double value) {
     std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
@@ -530,28 +529,15 @@ bool Controller::HasOpenMenu() const
 void Controller::SyncInhibitor()
 {
   bool locked = IsLocked() && primary_shield_.IsValid() && primary_shield_->GetOpacity() == 1.0f;
-  bool inhibit = login_manager_->session_active() &&
+  bool inhibit = session_manager_->is_session_active() &&
                  !locked &&
                  Settings::Instance().lock_on_suspend() &&
                  !Settings::Instance().use_legacy();
 
   if (inhibit)
-  {
-    if (inhibitor_handler_ >= 0)
-      return;
-
-    login_manager_->Inhibit("Unity needs to lock the screen", [this] (gint inhibitor_handler) {
-      inhibitor_handler_ = inhibitor_handler;
-    });
-  }
+    login_manager_->Inhibit("Unity needs to lock the screen");
   else
-  {
-    if (inhibitor_handler_ >= 0)
-    {
-      login_manager_->Uninhibit(inhibitor_handler_);
-      inhibitor_handler_ = -1;
-    }
-  }
+    login_manager_->Uninhibit();
 }
 
 } // lockscreen

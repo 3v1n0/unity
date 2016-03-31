@@ -25,7 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/SessionManager.h"
 
 #include "LockScreenAbstractPromptView.h"
 #include "UserAuthenticatorPam.h"
