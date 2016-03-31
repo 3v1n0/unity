@@ -26,6 +26,7 @@
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
@@ -376,7 +377,7 @@ void Controller::ShowHud()
   }
   else
   {
-    focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
+    focused_app_icon_ = theme::Settings::Get()->ThemedFilePath("launcher_bfb", {PKGDATADIR});
   }
 
   wm.SaveInputFocus();
