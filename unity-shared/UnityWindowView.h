@@ -78,6 +78,7 @@ private:
 
   void OnDPIChanged();
   void OnClosableChanged(bool closable);
+  void OnThemeChanged(std::string const&);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
   nux::Layout *internal_layout_;

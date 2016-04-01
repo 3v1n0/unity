@@ -17,10 +17,11 @@
 * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
+#include "config.h"
+
 #include "CofView.h"
 #include "unity-shared/RawPixel.h"
-
-#include "config.h"
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
@@ -28,17 +29,17 @@ namespace lockscreen
 {
 namespace
 {
-const std::string COF_FILE = "cof.png";
+const std::string COF_FILE = "lockscreen_cof";
 }
 
 CofView::CofView()
-  // FIXME (andy) if we get an svg cof we can make it fullscreen independent.
-  : IconTexture(PKGDATADIR"/"+COF_FILE, -1)
+  // FIXME (andy) if we get an svg cof we can make it resolution independent.
+  : IconTexture(theme::Settings::Get()->ThemedFilePath(COF_FILE, {PKGDATADIR}), std::numeric_limits<unsigned>::max())
   , scale(1.0)
 {
   scale.changed.connect([this] (double scale) {
     int w, h;
-    gdk_pixbuf_get_file_info((PKGDATADIR"/" + COF_FILE).c_str(), &w, &h);
+    gdk_pixbuf_get_file_info(theme::Settings::Get()->ThemedFilePath(COF_FILE, {PKGDATADIR}).c_str(), &w, &h);
     SetSize(RawPixel(std::max(w, h)).CP(scale));
     ReLoadIcon();
   });
@@ -47,7 +48,7 @@ CofView::CofView()
 nux::Area* CofView::FindAreaUnderMouse(nux::Point const& mouse_position,
                                        nux::NuxEventType event_type)
 {
-    return nullptr;
+  return nullptr;
 }
 
 }

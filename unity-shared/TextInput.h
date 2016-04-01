@@ -83,6 +83,7 @@ private:
   void UpdateBackground(bool force);
   void UpdateScale(double);
   void UpdateSize();
+  void UpdateTextures();
 
   std::string GetName() const;
   void AddProperties(debug::IntrospectionData&);

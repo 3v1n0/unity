@@ -49,6 +49,7 @@ public:
   Handle LoadFromIconName(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromGIconString(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromThemedFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromURI(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
 
   void DisconnectHandle(Handle handle);

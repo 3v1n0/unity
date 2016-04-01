@@ -85,7 +85,7 @@ TEST_F(TestUnityWindowView, Closable)
   EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(view.scale, WindowTextureType::CLOSE_ICON));
   EXPECT_EQ(view.close_button_->GetParentObject(), &view);
 
-  int padding = view.style()->GetCloseButtonPadding(view.scale);
+  int padding = view.style()->GetCloseButtonPadding().CP(view.scale);
   EXPECT_EQ(view.close_button_->GetBaseX(), padding);
   EXPECT_EQ(view.close_button_->GetBaseY(), padding);
 }
@@ -185,7 +185,7 @@ TEST_F(TestUnityWindowView, SetLayoutWrapsOriginalLayout)
   view.SetLayout(layout);
   view.ComputeContentSize();
 
-  int offset = view.style()->GetInternalOffset(view.scale);
+  int offset = view.style()->GetInternalOffset().CP(view.scale);
   EXPECT_EQ(layout->GetBaseX(), offset);
   EXPECT_EQ(layout->GetBaseY(), offset);
 }
@@ -199,7 +199,7 @@ TEST_F(TestUnityWindowView, GetLayout)
 
 TEST_F(TestUnityWindowView, GetInternalBackground)
 {
-  int offset = view.style()->GetInternalOffset(view.scale);
+  int offset = view.style()->GetInternalOffset().CP(view.scale);
   view.background_geo_.Set(g_random_int(), g_random_int(), g_random_int(), g_random_int());
   EXPECT_EQ(view.GetInternalBackground(), view.background_geo_.GetExpand(-offset, -offset));
 }

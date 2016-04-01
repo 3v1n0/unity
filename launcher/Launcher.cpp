@@ -184,14 +184,15 @@ Launcher::Launcher(MockableBaseWindow* parent,
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
 
-  TextureCache& cache = TextureCache::GetDefault();
-  launcher_sheen_ = cache.FindTexture("dash_sheen.png");
+  LoadTextures();
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &Launcher::LoadTextures));
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
 
   launcher_position_changed_ = unity::Settings::Instance().launcher_position.changed.connect([this] (LauncherPosition const& position) {
     launcher_position_ = position;
+    LoadTextures();
     OnMonitorChanged(monitor);
     QueueDraw();
   });
@@ -211,6 +212,19 @@ Launcher::Launcher(MockableBaseWindow* parent,
 std::string Launcher::GetName() const
 {
   return "Launcher";
+}
+
+void Launcher::LoadTextures()
+{
+  auto& cache = TextureCache::GetDefault();
+
+  auto launcher_pressure_icon = launcher_position_ == LauncherPosition::LEFT ?
+                                  "launcher_pressure_effect" :
+                                  "launcher_pressure_effect_rotated";
+
+  launcher_pressure_effect_ = cache.FindTexture(launcher_pressure_icon);
+  launcher_sheen_ = cache.FindTexture("dash_sheen");
+  QueueDraw();
 }
 
 #ifdef NUX_GESTURES_SUPPORT
@@ -1848,13 +1862,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     GfxContext.PushClippingRectangle(nux::Geometry(bkg_box.x, base.y, bkg_box.width, base.height));
 
   float reveal_progress = hide_machine_.reveal_progress;
-  TextureCache& cache = TextureCache::GetDefault();
-
-  std::string launcher_pressure_icon = "launcher_pressure_effect.png";
-  if (launcher_position_ == LauncherPosition::BOTTOM)
-    launcher_pressure_icon = "launcher_pressure_effect_rotated.png";
-
-  launcher_pressure_effect_ = cache.FindTexture(launcher_pressure_icon);
 
   if ((reveal_progress > 0 || last_reveal_progress_ > 0) && launcher_pressure_effect_.IsValid())
   {

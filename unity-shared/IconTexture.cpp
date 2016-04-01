@@ -45,7 +45,7 @@ using namespace unity;
 IconTexture::IconTexture(BaseTexturePtr const& texture, unsigned width, unsigned height)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
-    _size(height),
+    _size(std::max(width, height)),
     _texture_cached(texture),
     _texture_size(width, height),
     _loading(false),
@@ -133,24 +133,25 @@ void IconTexture::LoadIcon()
     return;
 
   _loading = true;
+  int size = (_size == std::numeric_limits<unsigned>::max()) ? -1 : _size;
 
   glib::Object<GIcon> icon(g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
 
   if (icon.IsType(G_TYPE_ICON))
   {
     _handle = IconLoader::GetDefault().LoadFromGIconString(_icon_name.empty() ? DEFAULT_GICON : _icon_name.c_str(),
-                                                           -1, _size,
+                                                           -1, size,
                                                            sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else if (_icon_name.find("://") != std::string::npos)
   {
     _handle = IconLoader::GetDefault().LoadFromURI(_icon_name,
-                                                   -1, _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
+                                                   -1, size, sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else
   {
     _handle = IconLoader::GetDefault().LoadFromIconName(_icon_name,
-                                                        -1, _size,
+                                                        -1, size,
                                                         sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
 }
@@ -299,7 +300,6 @@ void IconTexture::SetTexture(BaseTexturePtr const& texture)
   {
     _texture_size.width = texture->GetWidth();
     _texture_size.height = texture->GetHeight();
-    _size = _texture_size.height;
     SetMinMaxSize(_texture_size.width, _texture_size.height);
   }
 

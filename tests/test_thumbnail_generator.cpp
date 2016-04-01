@@ -121,8 +121,8 @@ TEST(TestThumbnailGenerator, TestGetManyFileThumbnail)
   ThumbnailGenerator thumbnail_generator;
 
   const char* thumbs[] = { "file://" SOURCEDATADIR "/switcher_background.png" , "file://" SOURCEDATADIR "/star_highlight.png",
-                          "file://" SOURCEDATADIR "/launcher_bfb.png", "file://" SOURCEDATADIR "/switcher_corner.png",
-                          "file://" SOURCEDATADIR "/switcher_top.png", "file://" SOURCEDATADIR "/switcher_left.png",
+                          "file://" SOURCEDATADIR "/launcher_bfb.png", "file://" SOURCEDATADIR "/dialog_border_corner.png",
+                          "file://" SOURCEDATADIR "/dialog_border_top.png", "file://" SOURCEDATADIR "/dialog_border_left.png",
                           "file://" SOURCEDATADIR "/dash_bottom_left_corner.png", "file://" SOURCEDATADIR "/dash_bottom_right_corner.png"};
 
   std::vector<LoadResult> results;

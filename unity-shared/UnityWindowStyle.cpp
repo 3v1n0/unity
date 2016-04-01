@@ -21,8 +21,10 @@
 
 #include <NuxCore/Logger.h>
 
-#include "UnitySettings.h"
 #include "UnityWindowStyle.h"
+
+#include "ThemeSettings.h"
+#include "UnitySettings.h"
 #include "UScreen.h"
 #include "config.h"
 
@@ -34,22 +36,20 @@ namespace ui
 {
 namespace
 {
-  const char* const SWITCHER_TOP    = PKGDATADIR"/switcher_top.png";
-  const char* const SWITCHER_LEFT   = PKGDATADIR"/switcher_left.png";
-  const char* const SWITCHER_CORNER = PKGDATADIR"/switcher_corner.png";
+  const std::string DIALOG_BORDER_TOP     = "dialog_border_top";
+  const std::string DIALOG_BORDER_LEFT    = "dialog_border_left";
+  const std::string DIALOG_BORDER_CORNER  = "dialog_border_corner";
 
-  const char* const DIALOG_CLOSE     = PKGDATADIR"/dialog_close.png";
-  const char* const DIALOG_HIGHLIGHT = PKGDATADIR"/dialog_close_highlight.png";
-  const char* const DIALOG_PRESS     = PKGDATADIR"/dialog_close_press.png";
+  const std::string DIALOG_CLOSE     = "dialog_close";
+  const std::string DIALOG_HIGHLIGHT = "dialog_close_highlight";
+  const std::string DIALOG_PRESS     = "dialog_close_press";
 
+  const RawPixel BORDER_SIZE     = 30_em; // as measured from textures
+  const RawPixel INTERNAL_OFFSET = 20_em;
+  const RawPixel CLOSE_PADDING   =  3_em;
 
-  RawPixel const INTERNAL_OFFSET = 20_em;
-  RawPixel const BORDER_SIZE     = 30_em;
-  RawPixel const CLOSE_PADDING   =  3_em;
+  DECLARE_LOGGER(logger, "unity.ui.window.style");
 }
-
-DECLARE_LOGGER(logger, "unity.ui.unity.window.style");
-
 
 UnityWindowStyle::UnityWindowStyle()
 {
@@ -67,31 +67,33 @@ UnityWindowStyle::UnityWindowStyle()
 
   settings.Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowStyle::CleanUpUnusedTextures));
   UScreen::GetDefault()->changed.connect(sigc::mem_fun(this, &UnityWindowStyle::OnMonitorChanged));
+  theme::Settings::Get()->font.changed.connect(sigc::mem_fun(this, &UnityWindowStyle::OnThemeChanged));
 }
 
 void UnityWindowStyle::LoadAllTextureInScale(double scale)
 {
   auto& window_textures = unity_window_textures_[scale];
 
-  window_textures[unsigned(WindowTextureType::BACKGROUND_TOP)]    = LoadTexture(scale, SWITCHER_TOP);
-  window_textures[unsigned(WindowTextureType::BACKGROUND_LEFT)]   = LoadTexture(scale, SWITCHER_LEFT);
-  window_textures[unsigned(WindowTextureType::BACKGROUND_CORNER)] = LoadTexture(scale, SWITCHER_CORNER);
+  window_textures[unsigned(WindowTextureType::BORDER_TOP)]    = LoadTexture(DIALOG_BORDER_TOP, scale);
+  window_textures[unsigned(WindowTextureType::BORDER_LEFT)]   = LoadTexture(DIALOG_BORDER_LEFT, scale);
+  window_textures[unsigned(WindowTextureType::BORDER_CORNER)] = LoadTexture(DIALOG_BORDER_CORNER, scale);
 
-  window_textures[unsigned(WindowTextureType::CLOSE_ICON)]             = LoadTexture(scale, DIALOG_CLOSE);
-  window_textures[unsigned(WindowTextureType::CLOSE_ICON_HIGHLIGHTED)] = LoadTexture(scale, DIALOG_HIGHLIGHT);
-  window_textures[unsigned(WindowTextureType::CLOSE_ICON_PRESSED)]     = LoadTexture(scale, DIALOG_PRESS);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON)]             = LoadTexture(DIALOG_CLOSE, scale);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON_HIGHLIGHTED)] = LoadTexture(DIALOG_HIGHLIGHT, scale);
+  window_textures[unsigned(WindowTextureType::CLOSE_ICON_PRESSED)]     = LoadTexture(DIALOG_PRESS, scale);
 }
 
-nux::BaseTexture* UnityWindowStyle::LoadTexture(double scale, const char* const texture_name) const
+nux::BaseTexture* UnityWindowStyle::LoadTexture(std::string const& texture_name, double scale) const
 {
-  RawPixel max_size = GetDefaultMaxTextureSize(texture_name);
-  return nux::CreateTexture2DFromFile(texture_name, max_size.CP(scale), true);
+  auto const& texture_path = theme::Settings::Get()->ThemedFilePath(texture_name, {PKGDATADIR});
+  RawPixel max_size = GetDefaultMaxTextureSize(texture_path);
+  return nux::CreateTexture2DFromFile(texture_path.c_str(), max_size.CP(scale), true);
 }
 
-RawPixel UnityWindowStyle::GetDefaultMaxTextureSize(const char* const texture_name) const
+RawPixel UnityWindowStyle::GetDefaultMaxTextureSize(std::string const& texture_path) const
 {
   nux::Size size;
-  gdk_pixbuf_get_file_info(texture_name, &size.width, &size.height);
+  gdk_pixbuf_get_file_info(texture_path.c_str(), &size.width, &size.height);
   RawPixel max_size = std::max(std::round(size.width), std::round(size.height));
 
   return max_size;
@@ -100,6 +102,11 @@ RawPixel UnityWindowStyle::GetDefaultMaxTextureSize(const char* const texture_na
 void UnityWindowStyle::OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors)
 {
   CleanUpUnusedTextures();
+}
+
+void UnityWindowStyle::OnThemeChanged(std::string const&)
+{
+  unity_window_textures_.clear();
 }
 
 // Get current in use scale values, if a scaled value is allocated, but
@@ -133,19 +140,19 @@ UnityWindowStyle::Ptr const& UnityWindowStyle::Get()
   return instance;
 }
 
-int UnityWindowStyle::GetBorderSize(double scale) const
+RawPixel UnityWindowStyle::GetBorderSize() const
 {
-  return BORDER_SIZE.CP(scale); // as measured from textures
+  return BORDER_SIZE;
 }
 
-int UnityWindowStyle::GetInternalOffset(double scale) const
+RawPixel UnityWindowStyle::GetInternalOffset() const
 {
-  return INTERNAL_OFFSET.CP(scale);
+  return INTERNAL_OFFSET;
 }
 
-int UnityWindowStyle::GetCloseButtonPadding(double scale) const
+RawPixel UnityWindowStyle::GetCloseButtonPadding() const
 {
-  return CLOSE_PADDING.CP(scale);
+  return CLOSE_PADDING;
 }
 
 UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetTexture(double scale, WindowTextureType const& type)
@@ -159,7 +166,7 @@ UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetTexture(double scale, Wind
     if (it == unity_window_textures_.end())
     {
       LOG_ERROR(logger) << "Failed to create unity window style textures, for scale size: " << scale;
-      return BaseTexturePtr(nullptr);
+      return BaseTexturePtr();
     }
   }
 

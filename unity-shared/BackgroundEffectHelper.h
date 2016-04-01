@@ -36,7 +36,7 @@ enum BlurType
   BLUR_ACTIVE
 };
 
-class BackgroundEffectHelper
+class BackgroundEffectHelper : public sigc::trackable
 {
 public:
   BackgroundEffectHelper();
@@ -75,6 +75,7 @@ private:
   static int GetBlurRadius();
   static void UpdateBlurGeometries();
 
+  void LoadTextures();
   void OnEnabledChanged(bool value);
   void OnOwnerChanged(nux::View*);
   void SetupOwner(nux::View*);

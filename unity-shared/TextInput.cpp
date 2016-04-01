@@ -55,7 +55,7 @@ const RawPixel TOOLTIP_Y_OFFSET  =  3_em;
 const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
 
-std::string ACTIVATOR_ICON  = "arrow_right.png";
+std::string ACTIVATOR_ICON  = "arrow_right";
 std::string WARNING_ICON    = "dialog-warning-symbolic";
 // Fonts
 const std::string HINT_LABEL_DEFAULT_FONT_NAME = "Ubuntu";
@@ -182,6 +182,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   spinner_->scale = scale();
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &TextInput::UpdateTextures));
   theme::Settings::Get()->font.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateFont)));
   sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) { CheckLocks(); });
 
@@ -235,6 +236,12 @@ void TextInput::UpdateScale(double scale)
   warning_tooltip_.Release();
 
   QueueRelayout();
+  QueueDraw();
+}
+
+void TextInput::UpdateTextures()
+{
+  activator_->SetTexture(LoadActivatorIcon(activator_icon(), activator_icon_size().CP(scale)));
   QueueDraw();
 }
 

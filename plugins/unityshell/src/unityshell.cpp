@@ -41,6 +41,7 @@
 #include "PanelView.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
+#include "ThemeSettings.h"
 #include "Timer.h"
 #include "XKeyboardUtil.h"
 #include "unityshell.h"
@@ -446,10 +447,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      InitGesturesSupport();
 
-     CompString name(PKGDATADIR"/panel-shadow.png");
-     CompString pname("unityshell");
-     CompSize size(1, 20);
-     _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
+     LoadPanelShadowTexture();
+     theme::Settings::Get()->theme.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityScreen::LoadPanelShadowTexture)));
 
      ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [this](GVariant * data)
      {
@@ -707,6 +706,14 @@ void UnityScreen::nuxEpilogue()
   glDisable(GL_SCISSOR_TEST);
 }
 
+void UnityScreen::LoadPanelShadowTexture()
+{
+  CompString name(theme::Settings::Get()->ThemedFilePath("panel_shadow", {PKGDATADIR}));
+  CompString pname;
+  CompSize size;
+  _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
+}
+
 void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
 {
   panel_shadow_matrix_ = matrix;
@@ -714,15 +721,15 @@ void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
 
 void UnityScreen::FillShadowRectForOutput(CompRect& shadowRect, CompOutput const& output)
 {
-  if (_shadow_texture.empty ())
+  if (_shadow_texture.empty())
     return;
 
-  int monitor = PluginAdapter::Default().MonitorGeometryIn(NuxGeometryFromCompRect(output));
-  float panel_h = static_cast<float>(panel_style_.PanelHeight(monitor));
+  int monitor = WM.MonitorGeometryIn(NuxGeometryFromCompRect(output));
+  float panel_h = panel_style_.PanelHeight(monitor);
   float shadowX = output.x();
   float shadowY = output.y() + panel_h;
   float shadowWidth = output.width();
-  float shadowHeight = _shadow_texture[0]->height();
+  float shadowHeight = _shadow_texture[0]->height() * unity_settings_.em(monitor)->DPIScale();
   shadowRect.setGeometry(shadowX, shadowY, shadowWidth, shadowHeight);
 }
 

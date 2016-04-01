@@ -21,6 +21,7 @@
 #include "UnityCore/GLibWrapper.h"
 #include <NuxCore/Logger.h>
 
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 
@@ -42,7 +43,7 @@ HudLauncherIcon::HudLauncherIcon()
 {
   tooltip_text = _("HUD");
   tooltip_enabled = false;
-  icon_name = PKGDATADIR"/launcher_bfb.png";
+  icon_name = theme::Settings::Get()->ThemedFilePath("launcher_bfb", {PKGDATADIR});
   position = Position::BEGIN;
   SetQuirk(Quirk::ACTIVE, true);
 
@@ -67,7 +68,7 @@ void HudLauncherIcon::OnHudIconChanged(GVariant *data)
   if (hud_icon_name != icon_name)
   {
     if (hud_icon_name.empty())
-      icon_name = PKGDATADIR"/launcher_bfb.png";
+      icon_name = theme::Settings::Get()->ThemedFilePath("launcher_bfb", {PKGDATADIR});
     else
       icon_name = hud_icon_name;
   }

@@ -46,23 +46,25 @@ public:
   typedef std::function<nux::BaseTexture*(std::string const&, int, int)> CreateTextureCallback;
 
   static TextureCache& GetDefault();
-  static nux::BaseTexture* DefaultTexturesLoader(std::string const&, int, int);
+  static nux::BaseTexture* LocalLoader(std::string const&, int, int);
+  static nux::BaseTexture* ThemedLoader(std::string const&, int, int);
 
-  BaseTexturePtr FindTexture(std::string const& texture_id, int width = 0, int height = 0, CreateTextureCallback callback = DefaultTexturesLoader);
+  BaseTexturePtr FindTexture(std::string const& texture_id, int width = 0, int height = 0, CreateTextureCallback callback = ThemedLoader);
   void Invalidate(std::string const& texture_id, int width = 0, int height = 0);
 
   // Return the current size of the cache.
   std::size_t Size() const;
 
-private:
-  TextureCache() = default;
+  sigc::signal<void> themed_invalidated;
 
-  std::size_t Hash(std::string const& , int width, int height);
-  // Have the key passed by value not referece, as the key will be a bound
-  // parameter in the slot passed to the texture on_destroy signal.
+private:
+  TextureCache();
+
   void OnDestroyNotify(nux::Trackable* Object, std::size_t key);
+  void OnThemeChanged(std::string const&);
 
   std::unordered_map<std::size_t, nux::BaseTexture*> cache_;
+  std::vector<std::size_t> themed_files_;
 };
 
 }

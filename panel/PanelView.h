@@ -101,6 +101,7 @@ private:
   void OnSpreadTerminate();
   void OnLowGfxChanged();
   void EnableOverlayMode(bool);
+  void LoadTextures();
 
   bool ActivateFirstSensitive();
   bool ActivateEntry(std::string const& entry_id);
