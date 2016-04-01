@@ -167,8 +167,6 @@ public:
   virtual std::string GetStringProperty(Window window_id, Atom) const;
   virtual std::vector<long> GetCardinalProperty(Window window_id, Atom) const;
 
-  virtual void UnmapAllNoNuxWindowsSync() {};
-
   // Mock functions
   StandaloneWindow::Ptr GetWindowByXid(Window window_id) const;
   void AddStandaloneWindow(StandaloneWindow::Ptr const& window);

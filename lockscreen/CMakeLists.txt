@@ -31,8 +31,7 @@ set (LOCKSCREEN_SOURCES
      LockScreenAcceleratorController.cpp
      LockScreenAccelerators.cpp
      ScreenSaverDBusManager.cpp
-     ShutdownNotifier.cpp
-     SuspendNotifier.cpp
+     SuspendInhibitorManager.cpp
      UserAuthenticatorPam.cpp
      UserPromptView.cpp
      )

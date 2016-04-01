@@ -21,8 +21,8 @@
 #define UNITY_LOCKSCREEN_SHIELD_FACTORY
 
 #include <NuxCore/NuxCore.h>
-#include <UnityCore/SessionManager.h>
-#include <UnityCore/Indicators.h>
+#include "UnityCore/SessionManager.h"
+#include "UnityCore/Indicators.h"
 #include "LockScreenAccelerators.h"
 
 namespace unity
