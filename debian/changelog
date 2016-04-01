@@ -1,3 +1,19 @@
+unity (7.4.0+16.04.20160401.1-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Improve the "lock on suspend" logic to always keep in sync the
+    inhibitor with the lockscreen.
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: Just send estimated extents on
+    _NET_REQUEST_FRAME_EXTENTS (LP: #1368118)
+  * TextureCache: add support for loading themed textures (LP: #903179,
+    #1208790)
+  * Unity: stop unity7 upstart instance if needed and restart it if not
+    clearly requested (LP: #1555633)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 01 Apr 2016 23:11:47 +0000
+
 unity (7.4.0+16.04.20160322-0ubuntu1) xenial; urgency=medium
 
   * ForceQuitDialog: set client leader
