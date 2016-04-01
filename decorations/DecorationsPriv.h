@@ -98,6 +98,7 @@ struct Window::Impl
 private:
   void UnsetExtents();
   void SetupExtents();
+  void ComputeBorderExtent(CompWindowExtents &border);
   void UpdateElements(cu::WindowFilter wf = cu::WindowFilter::NONE);
   void UpdateClientDecorationsState();
   void UpdateMonitor();
