@@ -415,13 +415,6 @@ void Controller::OnPresenceStatusChanged(bool is_idle)
 
 void Controller::OnScreenSaverActivationRequest(bool activate)
 {
-  if (Settings::Instance().use_legacy())
-  {
-    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-    proxy->CallBegin("SetActive", g_variant_new("(b)", activate != FALSE), [proxy] (GVariant*, glib::Error const&) {});
-    return;
-  }
-
   // It looks we need to do this after a small delay, not to get the screen back on
   screensaver_activation_timeout_.reset(new glib::Timeout(100, [this, activate] {
     if (dbus_manager_->active() == activate)
