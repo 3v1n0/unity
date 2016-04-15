@@ -150,8 +150,6 @@ private:
   StaticCairoText* _expand_label;
   IconTexture*     _expand_icon;
 
-  nux::BaseTexture* _background;
-  nux::BaseTexture* _background_nofilters;
   bool              _using_filters_background;
   std::unique_ptr<nux::TextureLayer> _background_layer;
 

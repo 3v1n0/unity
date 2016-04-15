@@ -130,16 +130,13 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   SetAcceptKeyNavFocusOnMouseEnter(false);
   scale.changed.connect(sigc::mem_fun(this, &PlacesGroup::UpdateScale));
 
-  _background = _style.GetCategoryBackground().GetPointer();
-  _background_nofilters = _style.GetCategoryBackgroundNoFilters().GetPointer();
-
   nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   nux::TexCoordXForm texxform;
-  _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
+  _background_layer.reset(new nux::TextureLayer(_style.GetCategoryBackgroundNoFilters()->GetDeviceTexture(),
                           texxform,
                           nux::color::White,
                           false,
@@ -502,7 +499,7 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 
     // to render into a space left over by the scrollview (1 has NOT to be scaled)
     bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1;
-    bg_geo.height = _background->GetHeight();
+    bg_geo.height = _background_layer->GetDeviceTexture()->GetHeight();
 
     _background_layer->SetGeometry(bg_geo);
     _background_layer->Renderlayer(graphics_engine);
@@ -681,7 +678,7 @@ void PlacesGroup::SetFiltersExpanded(bool filters_expanded)
   nux::TexCoordXForm texxform;
   if (filters_expanded && !_using_filters_background)
   {
-    _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(),
+    _background_layer.reset(new nux::TextureLayer(_style.GetCategoryBackground()->GetDeviceTexture(),
                             texxform, 
                             nux::color::White,
                             false,
@@ -689,7 +686,7 @@ void PlacesGroup::SetFiltersExpanded(bool filters_expanded)
   }
   else if (!filters_expanded && _using_filters_background)
   {
-    _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
+    _background_layer.reset(new nux::TextureLayer(_style.GetCategoryBackgroundNoFilters()->GetDeviceTexture(),
                             texxform,
                             nux::color::White,
                             false,
