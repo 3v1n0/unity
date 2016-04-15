@@ -95,7 +95,7 @@
 
                 <option name="spread_app_windows_anywhere" type="key">
                     <_short>Key to spread the current application windows in any workspace</_short>
-                    <_long>Initiate the window Spread for the current application windows, for the all the windows.</_long>
+                    <_long>Initiate the window Spread for the current application windows, for all the windows.</_long>
                     <default>&lt;Control&gt;&lt;Super&gt;&lt;Shift&gt;w</default>
                 </option>
 
