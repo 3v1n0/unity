@@ -96,8 +96,8 @@ def process_and_start_unity (compiz_args):
 
     if options.verbose:
         cli.append("--debug")
-    if args:
-        cli.extend(options.compiz_args)
+    if compiz_args:
+        cli.extend(compiz_args)
 
     if options.log:
         cli.extend(['2>&1', '|', 'tee', options.log])
