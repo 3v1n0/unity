@@ -1,3 +1,16 @@
+unity (7.4.0+16.04.20160415-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Do not use pointers to LazyLoadTextures. (LP: #1569100)
+  * Fix unity script crash. (LP: #1566565)
+  * LockscreenController: Don't use SetActivate(False) for gnome-
+    screensaver to prevent unlocking on tty switch. It will not only
+    deactivate the screensaver but also unlock the screen. (LP:
+    #1552537)
+  * unityshell.xml: Fix typo (LP: #1559427)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 15 Apr 2016 05:33:08 +0000
+
 unity (7.4.0+16.04.20160401.1-0ubuntu1) xenial; urgency=medium
 
   [ Andrea Azzarone ]

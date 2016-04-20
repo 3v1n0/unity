@@ -426,8 +426,12 @@ void Controller::OnScreenSaverActivationRequest(bool activate)
 {
   if (Settings::Instance().use_legacy())
   {
-    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-    proxy->CallBegin("SetActive", g_variant_new("(b)", activate != FALSE), [proxy] (GVariant*, glib::Error const&) {});
+    // SetActive(FALSE) will unlock the screen. This used to cause security issues (see lp:1552537).
+    if (activate)
+    {
+      auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+      proxy->CallBegin("SetActive", g_variant_new("(b)", TRUE), [proxy] (GVariant*, glib::Error const&) {});
+    }
     return;
   }
 
