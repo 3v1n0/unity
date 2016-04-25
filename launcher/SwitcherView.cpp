@@ -437,16 +437,20 @@ void SwitcherView::HandleMouseUp(int x, int y, int button)
 {
   int icon_index = IconIndexAt(x,y);
 
-  switcher_mouse_up.emit(icon_index, button);
-
-  if (button == 1)
+  if (button == 1 || button == 2 || button == 3)
   {
     if (icon_index >= 0 && icon_index == last_icon_selected_)
-    {
       model_->Select(icon_index);
+
+    if (button == 1)
       hide_request.emit(true);
-    }
+    else if (button == 2)
+      switcher_close_current.emit();
+    else if (button == 3)
+      switcher_start_detail.emit();
   }
+
+  switcher_mouse_up.emit(icon_index, button);
 }
 
 void SwitcherView::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
