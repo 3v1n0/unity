@@ -127,8 +127,9 @@ AbstractLauncherIcon::MenuItemsVector ExpoLauncherIcon::GetMenus()
         dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
       }
 
-      signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [h, v] (DbusmenuMenuitem*, int) {
+      signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this, h, v] (DbusmenuMenuitem*, int) {
         WindowManager::Default().SetCurrentViewport({h, v});
+        UpdateIcon();
       }));
       result.push_back(menu_item);
     }
