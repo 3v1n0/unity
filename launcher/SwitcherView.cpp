@@ -434,14 +434,16 @@ void SwitcherView::HandleMouseUp(int x, int y, int button)
   if (button == 1 || button == 2 || button == 3)
   {
     if (icon_index >= 0 && icon_index == last_icon_selected_)
+    {
       model_->Select(icon_index);
 
-    if (button == 1)
-      hide_request.emit(true);
-    else if (button == 2)
-      switcher_close_current.emit();
-    else if (button == 3)
-      switcher_start_detail.emit();
+      if (button == 1)
+        hide_request.emit(true);
+      else if (button == 2)
+        switcher_close_current.emit();
+      else if (button == 3)
+        switcher_start_detail.emit();
+    }
   }
 }
 
