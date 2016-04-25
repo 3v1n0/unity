@@ -278,7 +278,7 @@ TEST_F(TestSwitcherController, ShowHideSwitcherFading)
   Mock::VerifyAndClearExpectations(mock_window_.GetPointer());
 }
 
-TEST_F(TestSwitcherController, TestRightClickedReceived)
+TEST_F(TestSwitcherController, TestDetailActivationRequest)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
 
@@ -287,8 +287,7 @@ TEST_F(TestSwitcherController, TestRightClickedReceived)
 
   ASSERT_FALSE(model->detail_selection());
 
-  view->switcher_mouse_up.emit(-1, 3);
-  view->switcher_mouse_down.emit(-1, 3);
+  view->switcher_start_detail.emit();
 
   ASSERT_TRUE(model->detail_selection());
 }

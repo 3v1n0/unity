@@ -381,8 +381,6 @@ void SwitcherView::HandleDetailMouseDown(int x, int y, int button)
   int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
 
   last_detail_icon_selected_ = detail_icon_index;
-
-  switcher_mouse_down.emit(detail_icon_index, button);
 }
 
 void SwitcherView::HandleMouseDown(int x, int y, int button)
@@ -390,8 +388,6 @@ void SwitcherView::HandleMouseDown(int x, int y, int button)
   int icon_index = IconIndexAt(x,y);
 
   last_icon_selected_ = icon_index;
-
-  switcher_mouse_down.emit(icon_index, button);
 }
 
 void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
@@ -412,8 +408,6 @@ void SwitcherView::HandleDetailMouseUp(int x, int y, int button)
 {
   nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
   int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
-
-  switcher_mouse_up.emit(detail_icon_index, button);
 
   if (button == 1)
   {
@@ -449,8 +443,6 @@ void SwitcherView::HandleMouseUp(int x, int y, int button)
     else if (button == 3)
       switcher_start_detail.emit();
   }
-
-  switcher_mouse_up.emit(icon_index, button);
 }
 
 void SwitcherView::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
