@@ -4098,16 +4098,16 @@ void UnityScreen::InitUnityComponents()
       adjustment_x = launcher_size;
     shortcut_controller_->SetAdjustment(adjustment_x, panel_style_.PanelHeight(launcher->monitor));
 
-    if (launcher_position == LauncherPosition::LEFT)
-    {
-      CompOption::Value v(launcher_size);
-      screen->setOptionForPlugin("expo", "x_offset", v);
+    CompOption::Value v(launcher_size);
+    if (launcher_position == LauncherPosition::BOTTOM)
+      v.set(0);
 
-      if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
-        v.set(0);
+    screen->setOptionForPlugin("expo", "x_offset", v);
 
-      screen->setOptionForPlugin("scale", "x_offset", v);
-    }
+    if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
+      v.set(0);
+
+    screen->setOptionForPlugin("scale", "x_offset", v);
   };
 
   auto check_launchers_size = [this, on_launcher_size_changed] {
@@ -4121,6 +4121,10 @@ void UnityScreen::InitUnityComponents()
   };
 
   UScreen::GetDefault()->changed.connect([this, check_launchers_size] (int, std::vector<nux::Geometry> const&) {
+    check_launchers_size();
+  });
+
+  Settings::Instance().launcher_position.changed.connect([this, check_launchers_size] (LauncherPosition const&) {
     check_launchers_size();
   });
 
