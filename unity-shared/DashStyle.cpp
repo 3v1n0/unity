@@ -95,7 +95,7 @@ inline void get_actual_cairo_size(cairo_t* cr, T* width, T* height)
   *height = cairo_image_surface_get_height(surface) / h_scale;
 }
 
-class LazyLoadTexture
+class LazyLoadTexture : public sigc::trackable
 {
 public:
   LazyLoadTexture(std::string const& filename, int size = -1);
