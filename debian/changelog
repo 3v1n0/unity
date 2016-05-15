@@ -1,3 +1,9 @@
+unity (7.5.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Bumping version to 7.5.0, as per 7.4 release
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Sun, 15 May 2016 01:00:09 +0200
+
 unity (7.4.0+16.04.20160415-0ubuntu1) xenial; urgency=medium
 
   [ Andrea Azzarone ]
