@@ -1,6 +1,2421 @@
+2016-04-15  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20160415-0ubuntu1
+
+2016-04-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Do not use pointers to LazyLoadTextures. Fixes: #1569100
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2016-04-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Do not use pointers to LazyLoadTextures.
+
+2016-04-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix unity script crash. Fixes: #1566565
+	Approved by: Marco Trevisan (Treviño)
+
+2016-04-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix unity script crash.
+
+2016-04-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	unityshell.xml: Fix typo Fixes: #1559427
+	Approved by: Marco Trevisan (Treviño)
+
+2016-04-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2016-04-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	LockscreenController: Don't use SetActivate(False) for gnome-screensaver to prevent unlocking on tty switch.
+	It will not only deactivate the screensaver but also unlock the screen. Fixes: #1552537
+	Approved by: Marco Trevisan (Treviño)
+
+2016-04-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add comment.
+
+2016-04-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't call SetActive only if activate is FALSE.
+
+2016-04-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't use SetActivate from gnome-screensaver as it will not only deactivate the screensaver but also unlock the escreensaver.
+
+2016-04-01  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20160401.1-0ubuntu1
+
+2016-04-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Improve the "lock on suspend" logic to always keep in sync the inhibitor with the lockscreen.
+	Approved by: Marco Trevisan (Treviño)
+
+2016-03-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Rename LoginManager.* to SuspendInhibitorManager.*
+
+2016-03-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Refactor a bit the LoginManager login according to Marco's review.
+
+2016-03-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge with trunk.
+
+2016-03-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Improve inhibitor login for lockscreen and "lock on suspend".
+
+2016-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: Just send estimated extents on _NET_REQUEST_FRAME_EXTENTS
+	
+	As per EWMH protocol when _NET_REQUEST_FRAME_EXTENTS we just have to send the
+	client the estimation of the border. We don't have to set it on window yet.
+	Let's just implement this by avoiding setting the compiz borders, as this will prevent the window
+	to be moved to be fully visible once mapped. Fixes: #1368118
+	Approved by: Andrea Azzarone
+
+2016-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: Just send estimated extents on _NET_REQUEST_FRAME_EXTENTS
+	
+	As per EWMH protocol when _NET_REQUEST_FRAME_EXTENTS we just have to send the
+	client the estimation of the border. We don't have to set it on window yet.
+	Let's just implement this by avoiding setting the compiz borders, as this will prevent the window
+	to be moved to be fully visible once mapped.
+
+2016-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: stop unity7 upstart instance if needed and restart it if not clearly requested Fixes: #1555633
+	Approved by: Andrea Azzarone
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: stop unity7 upstart instance if needed and restart it if possible
+
+2016-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextureCache: add support for loading themed textures
+	
+	When a themed texture is requested, we add it to a list so that we can invalidate
+	it on theme changes.
+	
+	Use themed textures in any case we load local files, falling back to the default path if
+	theme doesn't provide any customized asset. Fixes: #903179, #1208790
+	Approved by: Andrea Azzarone
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindowStyle: remove temporary comment
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BackgroundEffectHelper: esure we load the textures in first place and inherit from sigc::trackable to disconnect
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher, Panel, TextInput: use cache texture_invalidated to reload textures
+	
+	So we can remove we workaround in UnitySettings as the signal is always emitted after
+	removing all the themed textures that we have.
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayRenderer: Update and reload scaled textures when style emits textures_changed signal
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BackgroundEffectHelper: reload textures on chache themed icons invalidated
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: redirect themed_invalidated signal to textures_changed, unload lazy loaded ones
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextureCache: emit a themed_invalidated signal when themed icons have been cleared
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: avoid doing unneeded computations where it could be optionally done in callbacks
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PreviewStyle: load themed textures and simplify the LazyLoader
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: add LoadFromThemedFilename and use it for emblems
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: Load the panel shadow from theme and properly scale it
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CofView: use themed texture
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTexture: load icon at its default size when passing the maximum size value
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindowView: reload close icon on scale change
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KylinUserPromptView: make activator icon themeable
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController, HudLauncherIcon: use BFB themed icon
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindowView: reload textures on theme change
+
+2016-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindowStyle: use theme settings for getting the textures and cleanup them on theme change
+	
+	Also export RawPixel's and cleanup the API a little
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SessionButton: make textures themeable
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: relayout the hud view if launcher position changed
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: only create the icon instance if needed
+	
+	This tiny icon is actually more expensive than expected, since it uses the IconRenderer
+	and thus could cause reloading some textures for no gain.
+	
+	Also this is not visible in default configuration
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: no need to keep track of textures names/sizes anymore as we don't have to invalidate them
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: don't try reload textures on theme changes if none has ever loaded
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher, Dash, Panel, Lockscreen: properly use themed TextureCache reloading textures on theme changes
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextureCache: trust C++ optimizations and just clear all themed files together
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextureCache: use just a vector for managing themed_files_
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: use new texture cache and rename DashPosition enum to dash::Position
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextureCache: add support for loading themed textures
+	
+	When a themed texture is requested, we add it to a list so that we can invalidate
+	it on theme changes.
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: add ability to load files with no extension and some better logging
+
+2016-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: relayout the view on launcher position changed
+
+2016-03-22  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20160322-0ubuntu1
+
+2016-03-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: set client leader
+
+2016-03-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ForceQuitDialog: set client leader
+
+2016-03-21  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20160321-0ubuntu1
+
+2016-03-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	ApplicationLauncherIcon: use the starting property to show an icon when launched Fixes: #676457
+
+2016-03-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Increase MAX_STARTING_BLINKS.
+
+2016-03-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Require bamf >= 0.5.3 in CmakeList.txt too.
+
+2016-02-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use bamf 5.3
+
+2016-02-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2016-02-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge with trunk.
+
+2016-01-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix unwanted change.
+
+2016-01-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Resync with p:~3v1n0/unity/launcher-filemanager-integration
+
+2016-01-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use new bamf starting property.
+
+2015-12-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge with launch lp:~3v1n0/unity/launcher-filemanager-integration/
+
+2016-03-18  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20160318-0ubuntu1
+
+2016-03-18  handsome_feng  <445865575@qq.com>
+
+	Dash: move it down when the launcher is positioned at the bottom. Fixes: #1552630
+	Approved by: Marco Trevisan (Treviño)
+
+2016-03-18  handsome_feng  <445865575@qq.com>
+
+	modified a keynav AP test
+
+2016-03-18  handsome_feng  <445865575@qq.com>
+
+	merge lp:~feng-kylin/unity/unityshell-rotatd-kylin
+
+2016-03-17  handsome_feng  <445865575@qq.com>
+
+	fix nav with quicklist
+
+2016-03-17  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2016-03-17  handsome_feng  <445865575@qq.com>
+
+	fix the problem in tooltip
+
+2016-03-14  handsome_feng  <445865575@qq.com>
+
+	Revert the changes to PanelView,small change in OverlayRenderer and DashStyle, fix black edge
+
+2016-03-11  handsome_feng  <445865575@qq.com>
+
+	Fix some fials in hud and dash autopilot tests
+
+2016-03-08  handsome_feng  <445865575@qq.com>
+
+	Don't use Settings::LauncherSize() before Resize() in onMonitorChanged(), because the method there run before Settings::SetLauncherSize in unityshell.cpp
+
+2016-03-07  handsome_feng  <445865575@qq.com>
+
+	Disable overlay mode of panel when dash at bottom and factor type is DESKTOP
+
+2016-03-02  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2016-02-26  handsome_feng  <445865575@qq.com>
+
+	fix the bug that launcher  locate in the wrong position when scale changed
+
+2016-02-25  handsome_feng  <445865575@qq.com>
+
+	fix the bug that can't click the scope bar when maximize dash
+
+2016-02-22  handsome_feng  <445865575@qq.com>
+
+	changed libgee-dev to libgee-0.8-dev
+
+2016-02-16  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2016-02-15  handsome_feng  <445865575@qq.com>
+
+	draw the border of hud
+
+2016-02-14  handsome_feng  <445865575@qq.com>
+
+	draw the border of dash when at bottom
+
+2016-02-04  handsome_feng  <445865575@qq.com>
+
+	merged lp:~3v1n0/unity/bottom-dash-move
+
+2016-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: use better names for dash border sizes
+
+2016-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: reduce the preview container area when the dash is at the bottom
+
+2016-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: set proper offsets to move dash to the bottom when launcher is there
+
+2016-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: ensure that we update scaling when monitor changes
+	
+	Also remove some dead code
+
+2016-02-02  handsome_feng  <445865575@qq.com>
+
+	added the pic of dash edge
+
+2016-02-01  handsome_feng  <445865575@qq.com>
+
+	Merge with launcher to the bottom branch
+
+2016-03-18  handsome_feng  <445865575@qq.com>
+
+	Launcher: add Bottom mode, so that the launcher can be positioned horisontally Fixes: #1552630
+	Approved by: Marco Trevisan (Treviño)
+
+2016-03-18  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2016-03-11  handsome_feng  <445865575@qq.com>
+
+	Fix some fials in hud and dash autopilot tests
+
+2016-03-08  handsome_feng  <445865575@qq.com>
+
+	Recalculate launcher height
+
+2016-03-02  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2016-03-02  handsome_feng  <445865575@qq.com>
+
+	fix the bug that launcher locate in the wrong position when scale changed
+
+2016-02-16  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2016-01-29  handsome_feng  <445865575@qq.com>
+
+	center the anchor of tooltip
+
+2016-01-27  handsome_feng  <445865575@qq.com>
+
+	center the anchor of quicklist
+
+2016-01-12  handsome_feng  <445865575@qq.com>
+
+	modified the x_offset for plugin 'expo' and 'scale'
+
+2015-12-30  handsome_feng  <445865575@qq.com>
+
+	fix the error in test_launcher.cpp
+
+2015-12-28  handsome_feng  <445865575@qq.com>
+
+	move the launcher-position from com.canonical.Unity to com.canonical.Unity.Launcher
+
+2015-12-25  handsome_feng  <445865575@qq.com>
+
+	modified something about quicklist mousearea and launcher folding icon
+
+2015-12-23  handsome_feng  <445865575@qq.com>
+
+	cleanups
+
+2015-12-23  handsome_feng  <445865575@qq.com>
+
+	merging lp:~3v1n0/unity/rotated-improvements
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: various launcher position related code cleanups
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnitySettings: fix indentation
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: update "vertical" barriers depending on launcher position
+	
+	No need to add new type of horizontal barriers
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: cleanup setting monitor offset
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	{Hud,BFB}LauncherIcon: don't change state with launcher in the bottom
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: set as not locked to launcher when launcher is on the bottom
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: cleanup ideal geometry codepath
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: only show rotated pips when drawing the launcher icons, not switcher
+
+2015-12-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-12-23  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2015-12-22  handsome_feng  <445865575@qq.com>
+
+	Added a new EdgeBarrier for launcher on the bottom
+
+2015-12-17  handsome_feng  <445865575@qq.com>
+
+	added rotated tooltip and quicklist, but did't show right on trash icon
+
+2015-12-11  handsome_feng  <445865575@qq.com>
+
+	update
+
+2015-12-10  handsome_feng  <445865575@qq.com>
+
+	fix some problem in autopilot
+
+2015-12-07  handsome_feng  <445865575@qq.com>
+
+	modified the keybindings in autopilot
+
+2015-12-03  handsome_feng  <445865575@qq.com>
+
+	modified the keybindings for keynav and some autopilot test.
+
+2015-11-27  handsome_feng  <445865575@qq.com>
+
+	modified some test, added the indicator icon, and fix some bug
+
+2015-11-17  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2015-11-17  handsome_feng  <445865575@qq.com>
+
+	fix some problems in launcher with draging icon and autohide
+
+2015-11-12  handsome_feng  <445865575@qq.com>
+
+	reset the launcher layout dynamically according to the gsettings item launcher-position
+
+2015-11-11  handsome_feng  <445865575@qq.com>
+
+	use launchersize instead of launcherWidth/launcherHeight
+
+2015-11-04  handsome_feng  <445865575@qq.com>
+
+	Added the launcher position setting in UnitySettings.
+
+2015-09-08  handsome_feng  <445865575@qq.com>
+
+	initial version of rotatory unityshell
+
+2016-03-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UserPromptView: don't hide local scale property Fixes: #1551820
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2016-03-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UserPromptView: don't hide local scale property
+
+2016-03-18  Sebastien Bacher  <seb128@ubuntu.com>
+
+	set the gettext domain directly in CMakeLists rather than using refering to
+	the project name, the translation template is updated during the build by
+	dh_translations which is not clever enough to understand the variable Fixes: #1557081
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2016-03-16  Sebastien Bacher  <seb128@ubuntu.com>
+
+	set the gettext domain directly in CMakeLists rather than using refering to
+	the project name, the translation template is updated during the build by 
+	dh_translations which is not clever enough to understand the variable
+
+2016-03-10  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20160310-0ubuntu1
+
+2016-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: move the shadow under the window if we've a client-side decorated window with corners Fixes: #1516403
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2016-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: expose _UNITY_SHELL atom on _NET_SUPPORTED
+	
+	Just a way to be sure that we're running in unity
+
+2016-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: handle adding/removing supported atoms at this level
+
+2016-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	inputremover: load atom just once
+
+2016-03-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: don't try to create a frame if the window has not a parent yet
+	
+	We can do it when we get the CompWindowNotifyReparent event
+
+2016-03-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: get client borders from window atom _UNITY_GTK_BORDER_RADIUS
+
+2016-03-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecoratedWindow: move the shadow under the window if we've a clientside decorated window with borders
+	
+	Something still to be fixed
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: draw decorations before the window itself
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizUtils: add CLIENTSIDE_DECORATED filter for WindowDecorationElements
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/switcher-dynamic-model
+
+2016-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: add overlay shortcut to all the WindowedLauncherIcon's we have
+	
+	This includes device icons now.
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2016-03-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: update to include device icons in shortcut ones
+
+2016-03-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: add overlay shortcut to all the WindowedLauncherIcon's we have
+	
+	This includes device icons now.
+
+2016-03-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: use forward declaration for FormFactor
+
+2016-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: ensure that we update scaling when monitor changes
+	
+	Plus don't increase the input area by border sizes when maximized. Fixes: #1546690
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: don't increase the input area by border sizes when maximized
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: ensure that we update scaling when monitor changes
+	
+	And also use better names for dash border sizes in DashStyle
+
+2016-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: add small class for reading gtk settings for theming
+	
+	Implemented through a new GtkUtils class which includes some functions
+	and classes to handle Gtk elements.
+	
+	The ThemeSettings utility class allows to read settings and being notified when
+	these changes. All in a single place. It also includes some methods
+	
+	As bonus, some improvements to the dash theming (dash-widgets.json is now
+	themable and supports new scrollbars as well), and BFB icon can be overridden
+	as well.
+	
+	More infos at: https://wiki.ubuntu.com/Unity/Theming Fixes: #1288998, #1543757
+	Approved by: Andrea Azzarone, PS Jenkins bot
+
+2016-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2016-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GtkUtils: fixed a copy&paste typo
+
+2016-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationStyle: no need for virtual dtor here
+
+2016-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: no need for virtual dtor here
+
+2016-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	JSONParser: sanitize string handling by using glib::gchar_to_string
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: add logging and fix copyright
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: use theme settings for icon theme changes
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilterBasicButton: regenerate texture on theme change
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuDropdown: rebuild texture on icon theme change
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: use theme settings to get icon theme changes
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: get rid of the ugly custom icon theme support
+	
+	And of the evil and useless _current_theme_is_mono "tribool"
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: add basic support for icon theme
+	
+	Emits a signal when it changes, and creates the custom unity theme
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesOverlayVScrollBar: use dash style for getting colors and sizes
+	
+	So everything is themable
+
+2016-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: add proper support for theming the scrollbars
+
+2016-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: make button corner radius themeable
+
+2016-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashStyle: load dash-widgets.json from theme and update it when needed
+
+2016-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: allow to get files for different extensions
+
+2016-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2016-02-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BFBLauncherIcon: make possible to theme the icon
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	dash-widgets.json: syntax cleanup
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesVScrollBar: code cleanup
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsMenuEntry: rebuild the texture when font changes
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: keep a reference on FontSettings as well
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FontSettings: use gtk:Setting
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: use gtk:Setting
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GtkUtils: add gtk::Setting class for monitoring and getting settings
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: use specialized version of GetSettingValue for std::string
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GtkUtils: add specialization for getting string values
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: reduce parameters on callback
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: use theme::Settings' font around
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GtkUtils: add gtk::GetSettingValue definition
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconRenderer: use ThemedFilePath
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationStyle: use ThemeSettings
+	
+	Theme and font properties can be RO now.
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ThemeSettings: add small class for reading gtk settings for theming
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopUtilities: add GetUserHomeDirectory
+
+2016-03-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a "Format..." option to volume icons. Fixes: #1057008
+	Approved by: Marco Trevisan (Treviño), PS Jenkins bot
+
+2016-02-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Properly launch gnome-disk.
+
+2016-02-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid the useless std::string.
+
+2016-02-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use proper unicode char for triple dots.
+
+2016-02-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge with trunk.
+
+2016-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Move Format... item
+
+2016-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make sure a volume can be formatted.
+
+2016-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add format option.
+
+2016-01-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge lp:~3v1n0/unity/launcher-filemanager-integration/
+
+2016-02-23  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20160223.1-0ubuntu1
+
+2016-02-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Gnome-software launcher integration.
+	Approved by: Marco Trevisan (Treviño)
+
+2016-02-23  ""Andrea Azzarone  <azzaronea@gmail.com>
+""
+
+	Merge with Robert's branch.
+
+2016-02-23  ""Andrea Azzarone  <azzaronea@gmail.com>
+""
+
+	Add libappstream-glib-dev in debian/control
+
+2016-02-23  ""Andrea Azzarone  <azzaronea@gmail.com>
+""
+
+	Remove unneeded "Remove()"
+
+2016-02-23  ""Andrea Azzarone  <azzaronea@gmail.com>
+""
+
+	Use lambda functions.
+
+2016-02-23  ""Andrea Azzarone  <azzaronea@gmail.com>
+""
+
+	Use glib::gchar_to_string.
+
+2016-02-23  ""Andrea Azzarone  <azzaronea@gmail.com>
+""
+
+	Forward declar GdkPixbuf.
+
+2016-02-19  ""Andrea Azzarone  <azzaronea@gmail.com>
+""
+
+	Merge with trunk.
+
+2016-02-19  ""Andrea Azzarone  <azzaronea@gmail.com>
+""
+
+	Integration with gnome-software.
+
+2016-01-27  Didier Roche  <didrocks@ubuntu.com>
+
+	Depends on session-shortcuts, prodiving easy way to shutdown, reboot, logout from dash
+
+2016-02-23  Robert Ancell  <robert.ancell@canonical.com>
+
+	Switch from Ubuntu Software Center to GNOME Software. Fixes: #1547129
+	Approved by: Marco Trevisan (Treviño)
+
+2016-02-19  Robert Ancell  <robert.ancell@canonical.com>
+
+	Rewrite tests to not use Ubuntu Software Center, use GNOME Software instead
+
+2016-02-19  Robert Ancell  <robert.ancell@canonical.com>
+
+	Switch from Ubuntu Software Center to GNOME Software in the default application list
+
+2016-02-23  Robert Ancell  <robert.ancell@canonical.com>
+
+	Drop unused build-dependency on libgee-dev.
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2016-02-23  Robert Ancell  <robert.ancell@canonical.com>
+
+	Drop libgee from docs
+
+2016-02-23  Robert Ancell  <robert.ancell@canonical.com>
+
+	Drop libgee dependency - it's not used anymore
+
+2016-02-19  Robert Ancell  <robert.ancell@canonical.com>
+
+	Fix dependency for libgee-0.8-dev, libgee-dev doesn't seem to exist anymore
+
+2016-02-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeFileManager: use *WithTimestamp file operations instead of using Activate workaround Fixes: #1445595
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeFileManager: use *WithTimestamp file operations instead of using Activate workaround
+
+2016-02-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unity.migrations: add 04_unity_update_software_center_desktop_file
+	
+	Update favorite to use gnome software
+	Approved by: Robert Ancell
+
+2016-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	04_unity_update_software_center_desktop_file: more lines is better :)
+
+2016-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unity.migrations: add 04_unity_update_software_center_desktop_file
+	
+	Update favorite to use gnome software
+
+2016-02-09  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20160209.3-0ubuntu1
+
+2016-02-09  handsome_feng  <445865575@qq.com>
+
+	Extend the lockscreen theme for kylin.
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2016-01-15  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2015-12-07  handsome_feng  <445865575@qq.com>
+
+	Modified some copyright notices
+
+2015-12-05  handsome_feng  <445865575@qq.com>
+
+	merge ~3v1n0/unity/kylin-lockscreen-cleanup
+
+2015-12-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenPromptFactory: add factory to create prompt views
+
+2015-12-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenBaseShield: add new base shield with common features for Ubuntu and Kylin
+
+2015-12-03  handsome_feng  <445865575@qq.com>
+
+	update
+
+2015-11-24  handsome_feng  <445865575@qq.com>
+
+	share the code in AbstractShield
+
+2015-11-24  handsome_feng  <445865575@qq.com>
+
+	modified some tests and the AbstractShield
+
+2015-11-23  handsome_feng  <445865575@qq.com>
+
+	Modified UserIconFile(), Add DesktopType to UnitySettings,Add some nux::Property in textinput
+
+2015-11-12  handsome_feng  <445865575@qq.com>
+
+	Update the icon to the final version
+
+2015-11-11  handsome_feng  <445865575@qq.com>
+
+	revert the changes applied at po files
+
+2015-11-10  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2015-11-10  handsome_feng  <445865575@qq.com>
+
+	remove some comment and the temp changelog
+
+2015-11-10  handsome_feng  <445865575@qq.com>
+
+	Adjust the prompt layout on mutil-monitor,remove the panelview in ScreenSheld
+
+2015-11-02  handsome_feng  <445865575@qq.com>
+
+	modified the login icon
+
+2015-10-29  handsome_feng  <445865575@qq.com>
+
+	Modified an error
+
+2015-10-29  handsome_feng  <445865575@qq.com>
+
+	update some tests in GnomeSessionManager
+
+2015-10-26  handsome_feng  <445865575@qq.com>
+
+	remove extra space after XDG_SEAT_PATH
+
+2015-10-26  handsome_feng  <445865575@qq.com>
+
+	comment usericonfile test
+
+2015-10-26  handsome_feng  <445865575@qq.com>
+
+	update some tests
+
+2015-10-26  handsome_feng  <445865575@qq.com>
+
+	Update
+
+2015-10-23  handsome_feng  <445865575@qq.com>
+
+	used g_strcmp0 instead of strcmp, added two gtests
+
+2015-10-22  handsome_feng  <445865575@qq.com>
+
+	changed the envionment variables name
+
+2015-10-22  handsome_feng  <445865575@qq.com>
+
+	Temporary close the tests
+
+2015-10-20  handsome_feng  <445865575@qq.com>
+
+	comment the test code because of the build failure.
+
+2015-10-20  handsome_feng  <445865575@qq.com>
+
+	Modified the textinput temporary
+
+2015-10-19  handsome_feng  <445865575@qq.com>
+
+	merge trunk
+
+2015-10-19  handsome_feng  <445865575@qq.com>
+
+	added 2 icon
+
+2015-10-19  handsome_feng  <445865575@qq.com>
+
+	update something
+
+2015-10-10  handsome_feng  <445865575@qq.com>
+
+	Added white border to the user icon
+
+2015-10-09  handsome_feng  <445865575@qq.com>
+
+	Moved the dbus call inside unity::session
+
+2015-09-30  handsome_feng  <445865575@qq.com>
+
+	Successfully make it an option
+
+2015-09-30  handsome_feng  <445865575@qq.com>
+
+	Successfully  use kylinUserPrompt witch inheirted from AbstractUserPromptView replace the UserPromptView
+
+2015-09-30  handsome_feng  <445865575@qq.com>
+
+	Add AbstractPromptView and KylinUserPromptView
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CMake: use GNUInstallDirs with native multi-arch support
+	
+	We can now use CMAKE_INSTALL_*DIR instead of defining them manually.
+	Also disable networkarea region plugin build by default. Fixes: #1485668, #1508635
+	Approved by: Andrea Azzarone
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use proper prefixes where possible
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CMakeLists: use ${PROJECT_NAME} instead of unity
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CMake: use GNUInstallDirs with native multi-arch support
+	
+	We can now use CMAKE_INSTALL_*DIR instead of defining them manually.
+	Also disable networkarea region plugin build by default.
+
+2016-02-09  Didier Roche  <didrocks@ubuntu.com>
+
+	debian: Recommends session-shortcuts, prodiving easy way to shutdown, reboot and logout from dash
+	Approved by: Marco Trevisan (Treviño)
+
+2016-02-09  Didier Roche  <didrocks@ubuntu.com>
+
+	debian/control: add session-shortcuts to Recommends
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: avoid to access to invalid selection or to divide by zero Fixes: #1537524
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2016-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryAccessible: check for entry validity
+
+2016-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	InputRemove: remove scoped array
+
+2016-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: don't show anything if the model is empty.
+	
+	Also ensure we remove the introspectable children
+
+2016-01-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: avoid to access to invalid selection or division by zero
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: add FileManager, Trash and Volume icons integration
+	
+	Now the launcher will link each nautilus window to the related volume or trash
+	icon, while the Nautilus launcher icon will only be active if the file manager is
+	browsing other locations.
+	It's now possible to manage sub-windows from the parent icon like it happens for
+	every other application (so even spreading them or select from QL)
+	
+	The windows management logic has been moved to WindowedLauncherIcon which is a
+	base class of ApplicationLauncherIcon, and StorageLauncherIcon.
+	VolumeLauncherIcon and TrashLauncherIcon are now based on StorageLauncherIcon
+	which connects to the FileManager to get the windows for a given location.
+	
+	FileManagerLauncherIcon is now special and is both an ApplicationLauncherIcon
+	and a StorageLauncherIcon, and uses the parent application only for some tasks.
+	
+	Lots of random code cleanup included too. Fixes: #1063823, #1063838, #1161323, #1524721
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManagerLauncherIcon: ignore device icon visibility status, as it won't update promptly
+	
+	There might be a race (if we don't connect to signals), thus there's no reason of doing this
+	since the volume icon already covers this case.
+
+2016-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManagerLauncherIcon: ignore invisible devices and the ones with invalid URIs
+
+2016-01-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-12-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-12-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/control: add nautilus to Recommends
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManager: remove support multiple locations for window
+	
+	Although the fielmanager might have multiple tabs opened, we don't care
+	about knowing them, since we only care of the active one.
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManager: remove the unneeded methods from FileManager
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeFileManager: don't break the loop when we've found the first window matching location
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSwitcherController: use WindowedLauncherIcon as base for FakeLauncherIcon and MockApplicationWindow's
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSwitcherController: implement WindowsOnViewport for FakeLauncherIcon
+
+2015-12-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManagerLauncherIcon: use the WindowedLauncherIcon Quit definition
+
+2015-12-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: close windows on Eject or Stop
+
+2015-12-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon, ApplicationLauncherIcon: remove bamf prefixes
+
+2015-12-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: remove unused logger
+
+2015-12-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Test*LauncherIcon: remove NiceMock for Virtually inherited classes
+	
+	It doesn't seem to work here because we need to re-call the base class on initialization.
+
+2015-12-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StorageLauncherIcon: check visibility only for applications icons
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: add any kind of icon, we'll filter them out by visibilty then
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeFileManager: only care about the first exported location for each window
+	
+	It's the active one.
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManagerLauncherIcon: add device manager and use volume URIs to filter out windows
+	
+	Do this by using pointer version of devices section in LauncherController.
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: add GetVolumeUri method
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TrashLauncherIcon: add Quit and Windows quicklists
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: add windows menu items to Quicklist
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: use MenuItemsVector definition
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: add Quit QL item if running
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: use post_fixed_ variables
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: use WindowedLauncherIcon shared glib::SignalManager
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TrashLauncherIcon: use WindowedLauncherIcon shared glib::SignalManager
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: add GetWindowsMenuItems to generate QL for windows
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManagerLauncherIcon: update the storage windows on startup
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: ensure manged windows are closed on icon trashed
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: Add Quit method to close windows and call it when icon is trashed
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: update the spreaded windows if windows changed and we're in scale
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: move FileManager specific actions to FileManagerLauncherIcon
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManagerLauncherIcon: fix diamond-problem by using virtual inheritance of WindowedLauncherIcon
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: add CreateAppLauncherIcon which might create a FileManager icon in case
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FileManagerLauncherIcon: add icon for managing FileManager
+	
+	For now this is both an ApplicationLauncherIcon and a StorageLauncherIcon, but has to be fixed.
+	The icon should skip windows that are currently handled by trash or devices
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StorageLauncherIcon: manage visibility for application icons
+
+2015-12-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: manage applicaition closed signal in a protected method
+	
+	In this way we could call it from derived classes
+
+2015-12-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/switcher-dynamic-model
+
+2015-12-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: use icon's WindowsOnViewport when needed
+
+2015-11-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	launcher: add missing StorageLauncherIcon.cpp to CMakeLists.txt
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StorageLauncherIcon: just use window's active/urgent properties changed signals for changing QUIRKs
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: just sort icons by switcher priority, since we have it...
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopLauncherIcon: force it to be the first icon in switcher
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestVolumeLauncherIcon: add tests for checking the visibilty on blacklisted devices with windows
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestVolumeLauncherIcon: add tests for "Lock to launcher" quicklist
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: add quicklist to Lock/Unlock to launcher
+	
+	The icon should stay in launcher also if there's an open window for this location.
+	Once all the windows are closed and the user has blacklisted the device, no launcher
+	icon should stay.
+	
+	Tests updated
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StorageLauncherIcon: reduce the calls to FM's WindowsForLocation caching results
+	
+	They're updated only on locations_changed or when a window closes
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestVolumeLauncherIcon: add more windows related tests
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: inherit from StorageLauncherIcon and add support to manage windows
+	
+	Now windows can be opened, spreaded and minimized from the volume icon.
+	Also pips respect the actual state.
+	
+	Tests updated
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestTrashLauncherIcon: use WindowsVisibleOnMonitor
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TrashLauncherIcon: call UpdateStorageWindows (instead of EnsureWindowState) on init
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StorageLauncherIcon: add protected UpdateStorageWindows
+	
+	This will get the windows and connect to signals, plus ensure the window state.
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StorageLauncherIcon: keep track of the managed windows
+	
+	So we don't have to fetch them at every active window change.
+	This has to be improved for other scenarios.
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationWindow: add closed signal
+	
+	And impelment it in BamfApplicationWindow
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TrashLauncherIcon: Also get windows for trash path
+	
+	Nautilus doesn't use trash:///subfolder/paths correctly
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopUtilities: add GetUserTrashDirectory
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: go back to WM's GetWindowsInStackingOrder as it's more testable
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: use WindowsVisibleOnViewport and WindowsVisibleOnMonitor
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: use WindowsVisibleOnMonitor
+
+2015-11-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: add WindowsVisibleOn{Monitor,Viewport} to return the number of available windows
+	
+	This saves us from fetching a list of windows that we already generated at every repaint
+
+2015-11-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: use WindowsOnViewport to ensure windows
+
+2015-11-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: use ApplicationManager for sorting windows by stacking order
+
+2015-11-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: always return a WindowList on windows related functions
+
+2015-11-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeFileManager: always open trash in new instance
+
+2015-11-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeFileManager: match windows also for exact locations
+	
+	Not only for relative paths
+
+2015-11-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StorageLauncherIcon: add new base-class for storage icons and use it for Trash
+
+2015-11-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestTrashLauncherIcon: add some windows related tests
+
+2015-11-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TrashLauncherIcon: extend WindowedLauncherIcon and add support to manage windows
+	
+	Now windows can be opened, spreaded and minimized from the trash.
+	Also pips respect the actual state.
+
+2015-11-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: use ApplicationManager's FocusWindowGroup for focusing windows
+
+2015-11-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationManager: add FocusWindowGroup to Manager, and use it for focusing Apps
+
+2015-11-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockApplicationWindow: add SetMonitor method
+
+2015-11-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: unref the result of Set/Get property calls
+
+2015-11-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeFileManager: add WindowsForLocation and LocationsForWindow APIs
+	
+	We use the XUbuntuOpenLocationsXids property from 
+	org.freedesktop.FileManager1 to get the list of locations that every window
+	is showing
+
+2015-11-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: don't override window_indicators for devices and trash icons
+
+2015-11-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowedLauncherIcon: add new base-class for Icons holding windows
+	
+	And using this as base-class for ApplicationLauncherIcon
+
+2015-11-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: just return the app window list if no filter is set
+
+2015-11-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: remove unused member variable
+
+2015-11-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/dynamic-app-spread
+
+2015-11-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/switcher-dynamic-model
+
+2016-02-08  Matthias Klose  <doko@ubuntu.com>
+
+	debian: Multiarchify the library packages.
+	
+	Manual sync with debian packaging
+
+2015-12-18  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20151218-0ubuntu1
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ensure that the maximized window is computed when setting the monitor Fixes: #1526835
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-12-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ensure that the maximized window is computed when setting the monitor
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizShortcutModeller: show menus keybinding can be read from settings
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-12-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizShortcutModeller: show menus keybinding can be read from settings
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: reduce opacity to warning if only num_lock is enabled
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-12-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: reduce opacity to warning if only num_lock is enabled
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: don't reiterate over windows all the time, keep a list and update it
+	
+	Windows are computed just once, unless the window count for the selected icon
+	changes. DetailXids is now returning something only if detail is enabled.
+	
+	When the active app windows changed, we can update the detail xids. Fixes: #1526434
+	Approved by: Andrea Azzarone
+
+2015-12-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSwitcherModel: add test to verify DetailXids and SelectionWindows
+	
+	Fix failing test due to DetailXids change
+
+2015-12-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: don't reiterate over windows all the time, keep a list and update it
+	
+	Windows are computed just once, unless the window count for the selected icon
+	changes. DetailXids is now returning something if detail is enabled
+
+2015-12-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: update detail_selection_index if windows changed on selected icon
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LayoutSystem: add ComputeDecorationHeight method to LayoutWindow
+	
+	Use this only for SwitcherView, while we don't need this trick when using
+	these windows for generating the spread grid. Fixes: #1526386
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-12-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLayoutWindow: fix tests to support ComputeDecorationHeight
+
+2015-12-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: compute the decoration height for layout window
+
+2015-12-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LayoutSystem: add ComputeDecorationHeight method to LayoutWindow
+	
+	So that it can be used on request.
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	a11y: move accessibility stuff to its own directory, adding a private lib for building
+	Approved by: Andrea Azzarone
+
+2015-12-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	a11y: move accessibility stuff to its own directory, adding a private lib for building
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	a11y: don't spam the log with warnings when a quicklist is opened
+	
+	React silently when trying to get accessible elements from null views.
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-12-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	a11y: remove unneeded dynamic casts
+
+2015-12-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuAccessible: try to get accessible child from valid children only
+
+2015-12-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	NuxAreaAccessible: don't try to get accessible data from null views
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: refcount the actions and remove them only when nobody needs
+	
+	There might be multiple customers for an action (i.e. a menu entry and a dbus customer)
+	so we can't remove them in this case without ref-counting. Fixes: #1525308
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-12-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: refcount the actions and remove them only when nobody needs
+	
+	There might be multiple customers for an action (i.e. a menu entry and a dbus customer)
+	so we can't remove them in this case without ref-counting.
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: compile a byte regex in order to get proper matching with byte cmdline Fixes: #1526455
+	Approved by: PS Jenkins bot, Barry Warsaw, Sebastien Bacher
+
+2015-12-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unity.cmake: correctly compare strings with strings
+
+2015-12-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: compile a byte regex in order to get proper matching with byte cmdline
+
+2015-12-18  Evan McIntire  <mcintire.evan@gmail.com>
+
+	ShortcutHint: Add key shortcut hints for Screenshot and Window Screenshot
+	
+	Key bindings are dynamically taken from gnome settings. Fixes: #1050195
+	Approved by: Marco Trevisan (Treviño)
+
+2015-12-17  Evan McIntire  <mcintire.evan@gmail.com>
+
+	ShortcutHint: Add key shortcut hints for Screenshot and Window Screenshot
+	
+	Key bindings are dynamically taken from gnome settings.
+
+2015-12-17  Evan McIntire  <mcintire.evan@gmail.com>
+
+	Various style fixes, fix leaks
+
+2015-12-16  Evan McIntire  <mcintire.evan@gmail.com>
+
+	Add key shortcut hints for Screenshot and Window Screenshot
+	
+	Revert changes to po files
+
+2015-12-16  Evan McIntire  <mcintire.evan@gmail.com>
+
+	Add harcoded shortcut hints for Screenshot and Screenshot window
+
+2015-12-18  Michael Vogt  <michael.vogt@ubuntu.com>
+
+	Display "image-missing" icon in the panel if for some reason a icon can not be loaded. Fixes: #1525186
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-12-11  Michael Vogt  <michael.vogt@ubuntu.com>
+
+	address another review comments (thanks to Trevino!)
+
+2015-12-11  Michael Vogt  <michael.vogt@ubuntu.com>
+
+	address review comments (thanks to Trevino!)
+
+2015-12-11  Michael Vogt  <michael.vogt@ubuntu.com>
+
+	Make fallback to "image-missing" more generic
+	
+	Always provide a "image-missing" fallback if icon loading of any
+	kind failed for any reason. Still log failure from 
+	gdk_pixbuf_new_from_file_at_size() failures.
+
+2015-12-11  Michael Vogt  <michael.vogt@ubuntu.com>
+
+	If a icon can not be loaded, fallback to "image-missing" and log
+	
+	When a icon can not be loaded the panel currently shows no icon
+	at all. This is undesirable for icons with no text (like the
+	sound indicator or the session indicator). Instead provide the
+	"image-missing" fallback if icon loading failed.
+
+2015-12-18  Aneesh Madhavan  <aneeshmadhavan1@gmail.com>
+
+	resources: optimize png images Fixes: #1023745
+	Approved by: Didier Roche, Marco Trevisan (Treviño)
+
+2015-12-11  Aneesh Madhavan  <aneeshmadhavan1@gmail.com>
+
+	Optimised Unity png images
+
+2015-12-15  Didier Roche  <didrocks@ubuntu.com>
+
+	releasing package unity version 7.4.0+16.04.20151211-0ubuntu2
+
+2015-12-11  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20151211-0ubuntu1
+
+2015-12-11  Sebastien Bacher  <seb128@ubuntu.com>
+
+	Updated apport hook to include:
+	- the compiz and xorg details, not only after asking users if the issue
+	is a graphical one (which is weird question)
+	- the upstart logs for unity/ups/lockscreen
+	- some gsettings configurations Fixes: #1508974
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-11-27  Sebastien Bacher  <seb128@ubuntu.com>
+
+	Updated apport hook to include:
+	- the compiz and xorg details, not only after asking users if the issue
+	is a graphical one (which is weird question)
+	- the upstart logs for unity/ups/lockscreen
+	- some gsettings configurations
+
+2015-12-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Properly hide shortcut overlay window to avoid unnecessary redraws.
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-11-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Properly hide shortcut overlay window to avoid unnecessary redraws.
+
+2015-12-11  Bryan Quigley  <bryan.quigley@canonical.com>
+
+	debian/control: Remove telepathy from recommends
+	Approved by: Marco Trevisan (Treviño)
+
+2015-11-17  Bryan Quigley  <bryan.quigley@canonical.com>
+
+	Remove telepathy from recommends
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unity: ensure we use python3 for the launch script and python2.7 for autopilot Fixes: #1512909
+	Approved by: PS Jenkins bot
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/changelog: add commit message as the train doesn't pick this automatically
+
+2015-11-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/renable-arm64-tests
+
+2015-11-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/rules: workaround bug #1286284 for ppc64el
+
+2015-11-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/changelog: sync with distro
+
+2015-11-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-11-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unity.cmake: fix syntax, removing mixed tabs and spaces
+
+2015-11-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tests: install autopilot with python2.7
+
+2015-11-05  Barry Warsaw  <barry@ubuntu.com>
+
+	unity: ensure we use python3 for the launch script
+
+2015-12-11  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	Replaced deprecated calls in tests to get rid of compiler warnings
+	Approved by: PS Jenkins bot, Marco Trevisan (Treviño)
+
+2015-11-11  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	replaced G_ASYNC_RESULT with G_TASK
+
+2015-11-11  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	fixed the order of arguments in g_task_new
+
+2015-10-27  Eleni Maria Stea  <elenimaria.stea@canonical.com>
+
+	replaced deprecated test calls to get rid of compiler warnings
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ExpoLauncherIcon: add Quicklist to switch workspace and see the selected one Fixes: #750497
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-11-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ExpoLauncherIcon: add Quicklist to switch workspace and see the selected one
+
+2015-11-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add SetCurrentViewport method
+	
+	It allows to switch to a different viewport, by using the offset from the current one
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: if a new window opens while spreading, spread again with proper match Fixes: #1517455
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-11-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadFilter: update filtered windows when a new window opens or title changes
+
+2015-11-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: use IsScaleActiveForGroup and IsActive to check if it's spreading
+	
+	It's enough since a spread app is also active.
+
+2015-11-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: correclty initialize _spread_requested_state
+
+2015-11-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: if a new window opens while spreading, spread again with proper match
+
+2015-11-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: add ScaleScreen and relayout the spread when it's currently active
+	
+	Instead of terminating the spread and re-spreading again we can simply update our match
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Places(Overlay)VScrollBar: impelement gtk-like overlay scrollbars Fixes: #1481706
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-12-09  Andrea Azzarone  <andrea.azzarone@canonical.com>
+
+	ScopeView: redraw the scroll layout if the scollbar needs redraw
+
+2015-12-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: don't scale the extra pixel, or it would cause troubles
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CoverArt: remove sensitivity to text
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayWindowButtons: don't show in standalone mode
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneDash: add default ubuntu background
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestOverlayScrollbar: remove
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OverlayScrollView: add some cleanup
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	dash_pch.hh: add more precompiled headers
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ScopeView: redraw the scroll layout together with scrollbar, don't clear scroll geometries here
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: some code cleanup
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Places(Overlay)VScrollBar: impelement gtk-like overlay scrollbars
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2015-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandaloneDash: ensure that the scope command line works
+	
+	And open the home scope by default
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: show warning also when num lock is enabled
+	Approved by: Andrea Azzarone
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UserPromptView: use show_lock_warnings
+
+2015-11-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextInput: show warning also when num lock is enabled
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: Activate menus on click, by drawing them as active Fixes: #1513523
+	Approved by: Andrea Azzarone
+
+2015-11-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: Activate menus on click, by drawing them as active
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/rules: enable unit tests on arm64 again Fixes: #1514538
+	Approved by: Andrea Azzarone
+
+2015-11-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/rules: enable unit tests on arm64 again
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: Add support to Alt+Key-right-to-tab to close the selected app/window
+	Approved by: Andrea Azzarone
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizShortcutModeller: get display from nux
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizShortcutModeller: add Alt+key_right_to_Tab and Up/Down arrows
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/near-tab-key-support
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: Add support to Alt+Key-right-to-tab to close the selected app/window
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	XKeyboardUtil: add ability to get keycodes from any relative position
+	Approved by: PS Jenkins bot, Andrea Azzarone
+
+2015-11-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/switcher-alt+q
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/switcher-dynamic-model
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/switcher-dynamic-model again
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestKeyboardUtil: add tests for near key symbols lookup
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	XKeyboardUtil: add ability to get keycodes from any relative position
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/switcher-dynamic-model
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Switcher{View,Controller}: close active selection on Alt+q
+	
+	'Q' should be instead the first key in the row, near to tab. Fixes: #1468820
+	Approved by: Andrea Azzarone
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/switcher-dynamic-model
+
+2015-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Switcher{View,Controller}: close active selection on Alt+q
+	
+	There are still some issues: 'Q' should be the first key in the row, near to tab.
+	Model and view should update dynamically to match show proper content
+
+2015-07-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: some minor cleanups
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: allow to add/remove icons dynamically and update them when they require it
+	
+	We keep hidden applications in a separated vector; when an application becomes
+	invisible in switcher we need to move it to the hidden_applications_ vector,
+	if it becomes visible again we put it back on the main model vector. Fixes: #1512349
+	Approved by: Andrea Azzarone
+
+2015-12-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: get all icons for AltTab, it's up to the Model to filter them
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSwitcherModel: use new constructor
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSwitcherController: ensure that icons are visible in switcher, or tests will fail
+
+2015-11-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: use old behavior in {Next,Pre}DetailRow
+
+2015-11-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: avoid signed/unsigned comparisons
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: only connect to quirks_changed and windows_changed signals
+	
+	They're more than enough to get proper view updates
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: move signals to base class, use proper naming
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: fix signed/unsigned comparisons
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: even more cleanup
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: ensure that we update index before emitting any signal
+	
+	Fix a crash when we had the detail mode activated on the last
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: hide the view if the model has no more icons
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: don't show a removed window in switcher
+	
+	Not that it happened, but just for being sure
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: small code optimizations
+
+2015-10-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: don't hide the switcher if there are no more detail windows open
+	
+	Also fix a crash when removing an icon and we're selecting the last element
+
+2015-10-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: emit an "updated" signal when an icon needs redraw
+	
+	This allows to get both the icon to be updated when the pip count changes
+	and when a window is added/removed in detail mode
+
+2015-10-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: keep hidden applications in a separated vector
+	
+	When an application becomes invisible in switcher we need to move it to
+	the hidden_applications_ vector, if it becomes visible again we put it back
+	on the main model vector.
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: redirect launcher controller icons signals to the switcher
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: rename the initialization functions to be more consistent
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: don't show icons if not visible in switcher, relayout the view on model update
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: add ability to add/remove icons, move more logic to the model
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: emit signals when icons are added/removed from model
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSwitcherModel: Initialize model just once, update for new API
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: make possible to add and remove icons at runtime
+	
+	Icons are kept in order at this level
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: code cleanup
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherModel: implement GetIntrospectableChildren
+
+2015-12-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ignore leave events when triggered by feeding nux manually
+	
+	WindowManager::Default().UnGrabMousePointer uses ProcessForeignEvent to send
+	a ButtonRelease event, and this breaks the panel. So we need to ignore this. Fixes: #1513496
+	Approved by: Andrea Azzarone
+
+2015-11-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LockScreenPanel: don't ungrab the pointer at each menu opened, just do it at frist time
+
+2015-11-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: don't ungrab the pointer at each menu opened, just do it at frist time.
+
+2015-11-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: ignore leave events when triggered by feeding nux manually
+	
+	WindowManager::Default().UnGrabMousePointer uses ProcessForeignEvent to send
+	a ButtonRelease event, and this breaks the panel. So we need to ignore this.
+
+2015-11-02  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.4.0+16.04.20151102-0ubuntu1
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: if an app is not running and has no desktop file, add QL item to add to dash
+	
+	This allows to generate a desktop file without sticking the icon
+	Approved by: Andrea Azzarone
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: if an app is not running and has no desktop file, add QL item to add to dash
+	
+	This allows to generate a desktop file without sticking the icon
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: add SpreadAppWindows option and trigger it on Super+Ctrl+[Shift]+W
+	Approved by: Andrea Azzarone
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GnomeKeyGrabber: get events timestamp using CompOption::getIntOptionNamed time
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: get events timestamp using CompOption::getIntOptionNamed time
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: add ability to spread app windows depending on workspace
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompizShortcutModeller: show option to spread all application windows
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: make SpreadAppWindows workspace-aware
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: add SpreadAppWindows option and trigger it on Super+Ctrl+W
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: unset the idle ID before removal on callback Fixes: #1501289
+	Approved by: Andrea Azzarone
+
+2015-10-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: unset the idle ID before removal on callback
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: use compiz cursorCache to get properly updated cursors
+	
+	We avoid duplicating instances and they're automatically recreated
+	when the system cursor setting change. Fixes: #1359211
+	Approved by: Andrea Azzarone
+
+2015-10-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CompScreenMock: define cursorCache
+
+2015-10-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IMTextEntry: use GetCachedCursor to get proper cursor
+
+2015-10-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockWindowManager: add definition for GetCachedCursor
+
+2015-10-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: get grab_cursor_ from global cursor cache
+
+2015-10-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add GetCachedCursor function
+	
+	It wraps CompScreen::cusorCache
+
+2015-10-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowGestureTarget: use compiz cursorCache
+
+2015-10-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DecorationsDataPool: use compiz cursor cache to get cursors
+	
+	We avoid duplicating instances and they're automatically recreated
+	when the system cursor setting change.
+
+2015-11-02  Didier Roche  <didrocks@ubuntu.com>
+
+	Remove unity2d transitional packages. We are post trusty LTS, they are not needed anymore
+	Approved by: Marco Trevisan (Treviño)
+
+2015-09-22  Didier Roche  <didrocks@ubuntu.com>
+
+	Remove unity2d transitional packages.
+	
+	We are post trusty LTS, they are not needed anymore
+
+2015-11-02  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	changed the wording of the help message and warning message for the --reset option Fixes: #1486498
+	Approved by: Brandon Schaefer
+
+2015-08-19  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	tools/unity.cmake: tweaked wording of warning message.
+
+2015-08-19  Stephen M. Webb  <stephen.webb@canonical.com>
+
+	tools/unity.cmake: fix message given for the --reset option
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Bump version to 7.4.0 Fixes: #1511542
+	Approved by: Andrea Azzarone
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/rules: Don't build unit tests in arm64
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	CMakeLists.txt: Add ENABLE_UNIT_TEST option to enable/disable tests
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Scope: add proper defintion using bit shifting
+
+2015-10-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/rules: enable precompiled headers in arm64
+
+2015-10-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	debian/control: depend on bamf 0.5.2~bzr0
+
+2015-10-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfApplicationManager: use new BAMF 0.5.2 API
+	
+	Bump requirements in CMakeLists.txt and debian/control.
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: properly use sigc::track_obj with object instance (not pointer)
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	StandalonePreviews: link against unity-shared-standalone
+
+2015-10-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: fix build failure with libsigc++ >= 2.5
+
+2015-10-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Bump version to Unity 7.4.0
+
+2015-11-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Upstream release 7.3.3
+	Approved by: Andrea Azzarone
+
 2015-10-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
 
 	Upstream release 7.3.3
+
+2015-10-16  CI Train Bot  <ci-train-bot@canonical.com>
+
+	Releasing 7.3.2+15.10.20151016-0ubuntu1
 
 2015-10-16  Andrea Azzarone  <azzaronea@gmail.com>
 
