@@ -25,6 +25,7 @@
 #include <cairo/cairo.h>
 
 #include <memory>
+#include <vector>
 
 struct _GtkStyleContext;
 
