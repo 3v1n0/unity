@@ -256,9 +256,19 @@ struct TestGnomeSessionManager : testing::Test
 
   void TearDown()
   {
+    manager->have_other_open_sessions.changed.clear();
+    manager->is_locked.changed.clear();
+    manager->is_session_active.changed.clear();
+    manager->lock_requested.clear();
+    manager->unlock_requested.clear();
+    manager->prompt_lock_requested.clear();
+    manager->locked.clear();
+    manager->unlocked.clear();
     manager->logout_requested.clear();
     manager->reboot_requested.clear();
     manager->shutdown_requested.clear();
+    manager->presence_status_changed.clear();
+    manager->screensaver_requested.clear();
     manager->cancel_requested.clear();
     shell_proxy_->DisconnectSignal();
 

@@ -42,6 +42,8 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
+#include <numeric>
+
 namespace unity
 {
 namespace launcher
