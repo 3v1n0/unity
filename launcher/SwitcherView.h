@@ -73,10 +73,6 @@ public:
   int IconIndexAt(int x, int y) const;
   int DetailIconIdexAt(int x, int y) const;
 
-  /* void; int icon_index, int button*/
-  sigc::signal<void, int, int> switcher_mouse_down;
-  sigc::signal<void, int, int> switcher_mouse_up;
-
   /* void; int icon_index */
   sigc::signal<void, int> switcher_mouse_move;
 

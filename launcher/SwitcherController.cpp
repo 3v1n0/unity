@@ -453,10 +453,6 @@ void Controller::Impl::ConstructView()
   view_->background_color = WindowManager::Default().average_color();
   view_->monitor = obj_->monitor_;
   view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
-  view_->switcher_mouse_up.connect([this] (int icon_index, int button) {
-    if (button == 3)
-      InitiateDetail(true);
-  });
 
   view_->switcher_mouse_move.connect([this] (int icon_index) {
     if (icon_index >= 0)
