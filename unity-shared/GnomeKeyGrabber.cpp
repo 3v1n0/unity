@@ -232,8 +232,11 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& owner, std::
   {
     action.setState(CompAction::StateInitKey);
     action.setInitiate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
-      LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
-      ActivateDBusAction(*action, action_id, 0, CompOption::getIntOptionNamed(options, "time"));
+      if (!CompOption::getBoolOptionNamed(options, "is_repeated"))
+      {
+        LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
+        ActivateDBusAction(*action, action_id, 0, CompOption::getIntOptionNamed(options, "time"));
+      }
       return true;
     });
   }
