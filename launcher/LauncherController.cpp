@@ -555,7 +555,7 @@ void Controller::Impl::SortAndUpdate()
       icon->SetShortcut(std::to_string(shortcut % 10)[0]);
       ++shortcut;
     }
-    else
+    else if (isdigit(icon->GetShortcut()))
     {
       // reset shortcut
       icon->SetShortcut(0);
