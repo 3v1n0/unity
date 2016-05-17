@@ -1,8 +1,37 @@
-unity (7.5.0-0ubuntu1) UNRELEASED; urgency=medium
+unity (7.5.0+16.10.20160517-0ubuntu1) yakkety; urgency=medium
 
+  [ Marco Trevisan (Treviño) ]
   * Bumping version to 7.5.0, as per 7.4 release
 
- -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Sun, 15 May 2016 01:00:09 +0200
+  [ Andrea Azzarone ]
+  * Do not reset the shortcut for icons that have their own shortcut.
+    (LP: #1562847)
+  * Fallback to "background" class in case no background is specified
+    for title bars and top panel. (LP: #1575527)
+  * GnomeKeyGrabber: do not activate an action if it's a repeated one.
+    (LP: #1572241)
+  * Properly calculate array indexes to avoid crashes. (LP: #1570843)
+  * Properly remove SoftwareCenterLauncherIcon in case of failure. (LP:
+    #1553165)
+  * Update ExpoLauncherIcon in case the quicklist is used to switch vp.
+    (LP: #1525685)
+
+  [ Marco Trevisan (Treviño) ]
+  * DashStyle: ensure LazyLoadTexture disconnects from signals on
+    destruction (LP: #1580212)
+  * Releasing Unity 7.4.0
+  * SwitcherController: don't try to get a window from empty selections
+    (LP: #1580211)
+  * SwitcherView: close the mouse-selected application on middle-click
+    (LP: #1574689)
+  * UnityScreen, UnityWindow: cleanup a little the code, and ensure
+    overridden CompositeWindow functions get actually called
+
+  [ handsome_feng ]
+  * Change the x_offset of expo when launcher position changed. (LP:
+    #1573897, #1562348)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 17 May 2016 02:56:22 +0000
 
 unity (7.4.0+16.04.20160415-0ubuntu1) xenial; urgency=medium
 
