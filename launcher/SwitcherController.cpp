@@ -686,7 +686,10 @@ Selection Controller::Impl::GetCurrentSelection() const
       }
       else if (model_->SelectionIsActive())
       {
-        window = model_->SelectionWindows().front();
+        auto const& selection_windows = model_->SelectionWindows();
+
+        if (!selection_windows.empty())
+          window = selection_windows.front();
       }
     }
   }
