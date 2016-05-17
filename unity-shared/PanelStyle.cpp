@@ -85,6 +85,7 @@ Style::Style()
   gtk_widget_path_iter_set_name(widget_path.get(), -1, PANEL_STYLE_CSS_NAME.c_str());
 
   gtk_style_context_set_path(style_context_, widget_path.get());
+  gtk_style_context_add_class(style_context_, "background");
   gtk_style_context_add_class(style_context_, "gnome-panel-menu-bar");
   gtk_style_context_add_class(style_context_, "unity-panel");
 

@@ -369,6 +369,7 @@ struct Style::Impl
   void AddContextClasses(Side s, WidgetState ws, GtkStyleContext* ctx = nullptr)
   {
     ctx = ctx ? ctx : ctx_;
+    gtk_style_context_add_class(ctx, "background");
     gtk_style_context_add_class(ctx, "gnome-panel-menu-bar");
     if (s == Side::TOP) { gtk_style_context_add_class(ctx, "header-bar"); }
     gtk_style_context_add_class(ctx, GetBorderClass(s).c_str());
