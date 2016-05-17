@@ -3623,7 +3623,17 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
 
       int scale_offset = (launcher_options->hide_mode == LAUNCHER_HIDE_NEVER) ? 0 : launcher_controller_->launcher().GetWidth();
       CompOption::Value v(scale_offset);
-      screen->setOptionForPlugin("scale", "x_offset", v);
+      CompOption::Value bv(0);
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      {
+        screen->setOptionForPlugin("scale", "x_offset", v);
+        screen->setOptionForPlugin("scale", "y_bottom_offset", bv);
+      }
+      else
+      {
+        screen->setOptionForPlugin("scale", "x_offset", bv);
+        screen->setOptionForPlugin("scale", "y_bottom_offset", v);
+      }
       break;
     }
     case UnityshellOptions::BacklightMode:
@@ -3834,11 +3844,19 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
     }
 
     auto max_bounds = NuxGeometryFromCompRect(output.workArea());
-    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER && Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    if (launcher_controller_->options()->hide_mode != LAUNCHER_HIDE_NEVER)
     {
-      int monitor_width = unity_settings_.LauncherSize(monitor);
-      max_bounds.x += monitor_width;
-      max_bounds.width -= monitor_width;
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      {
+        int monitor_width = unity_settings_.LauncherSize(monitor);
+        max_bounds.x += monitor_width;
+        max_bounds.width -= monitor_width;
+      }
+      else if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      {
+        int launcher_size = unity_settings_.LauncherSize(monitor);
+        max_bounds.height -= launcher_size;
+      }
     }
 
     nux::Geometry final_bounds;
@@ -4098,14 +4116,31 @@ void UnityScreen::InitUnityComponents()
       adjustment_x = launcher_size;
     shortcut_controller_->SetAdjustment(adjustment_x, panel_style_.PanelHeight(launcher->monitor));
 
+    CompOption::Value v(launcher_size);
     if (launcher_position == LauncherPosition::LEFT)
     {
-      CompOption::Value v(launcher_size);
       screen->setOptionForPlugin("expo", "x_offset", v);
 
       if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
         v.set(0);
 
+      screen->setOptionForPlugin("scale", "x_offset", v);
+
+      v.set(0);
+      screen->setOptionForPlugin("expo", "y_bottom_offset", v);
+      screen->setOptionForPlugin("scale", "y_bottom_offset", v);
+    }
+    else
+    {
+      screen->setOptionForPlugin("expo", "y_bottom_offset", v);
+
+      if (launcher_controller_->options()->hide_mode == LAUNCHER_HIDE_NEVER)
+        v.set(0);
+
+      screen->setOptionForPlugin("scale", "y_bottom_offset", v);
+
+      v.set(0);
+      screen->setOptionForPlugin("expo", "x_offset", v);
       screen->setOptionForPlugin("scale", "x_offset", v);
     }
   };
@@ -4121,6 +4156,10 @@ void UnityScreen::InitUnityComponents()
   };
 
   UScreen::GetDefault()->changed.connect([this, check_launchers_size] (int, std::vector<nux::Geometry> const&) {
+    check_launchers_size();
+  });
+
+  Settings::Instance().launcher_position.changed.connect([this, check_launchers_size] (LauncherPosition const&) {
     check_launchers_size();
   });
 
