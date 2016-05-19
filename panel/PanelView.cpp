@@ -300,10 +300,16 @@ void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
+  nux::Geometry const& mgeo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
+  nux::Geometry isect = mgeo.Intersect(geo);
+
+  if(!isect.width || !isect.height)
+      return;
+
   UpdateBackground();
 
   bool overlay_mode = InOverlayMode();
-  GfxContext.PushClippingRectangle(geo);
+  GfxContext.PushClippingRectangle(isect);
 
   if (IsTransparent())
   {
@@ -331,7 +337,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       rop.SrcBlend = GL_ONE;
       rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-      GfxContext.PushClippingRectangle(geo);
+      GfxContext.PushClippingRectangle(isect);
 
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath())
