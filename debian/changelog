@@ -1,3 +1,11 @@
+unity (7.5.0+16.10.20160525-0ubuntu1) yakkety; urgency=medium
+
+  [ Eleni Maria Stea ]
+  * PanelView: Don't draw it if the geo doesn't intersect the monitor
+    geo (as in ezoom)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 25 May 2016 14:22:42 +0000
+
 unity (7.5.0+16.10.20160517-0ubuntu1) yakkety; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
