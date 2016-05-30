@@ -13,14 +13,14 @@ Build-Depends: cmake,
                gsettings-desktop-schemas-dev,
                gsettings-ubuntu-schemas (>= 0.0.1+14.04.20140219),
                intltool (>= 0.35.0),
+               libappstream-glib-dev,
                libatk1.0-dev,
-               libbamf3-dev (>= 0.5.2~bzr0),
+               libbamf3-dev (>= 0.5.3~bzr0),
                libboost-dev,
                libcairo2-dev,
                libdbus-1-dev,
                libdbusmenu-glib-dev (>= 0.3.91),
                libdee-dev (>= 1.2.6),
-               libgee-dev (>= 0.5.0),
                libgeis-dev (>= 2.0.10),
                libgl1-mesa-dri,
                libglib2.0-dev (>= 2.39.1),
@@ -83,6 +83,8 @@ Depends: ${shlibs:Depends},
 Provides: indicator-renderer
 Recommends: unity-control-center,
             ${unity-default-masterscopes}
+            nautilus,
+            gnome-disk-utility,
             indicator-appmenu (>= 15.02.0),
             indicator-application,
             indicator-sound,
@@ -94,6 +96,7 @@ Recommends: unity-control-center,
             indicator-power,
             indicator-session,
             hud,
+            session-shortcuts,
 Breaks: unity-lens-applications (<< 5.12.0-0ubuntu2),
         unity-lens-files (<< 5.10.0-0ubuntu2),
         unity-lens-music (<< 6.0.0),
@@ -139,6 +142,8 @@ Description: Interface designed for efficiency of space and interaction.
 Package: libunity-core-6.0-9
 Section: libs
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          unity-services (= ${binary:Version}),
@@ -159,6 +164,7 @@ Description: core library for the Unity interface
 Package: libunity-core-6.0-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends},
          libunity-core-6.0-9 (= ${binary:Version}),
          libglib2.0-dev,

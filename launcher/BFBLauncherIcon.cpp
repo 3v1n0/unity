@@ -21,6 +21,7 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 
 #include "BFBLauncherIcon.h"
@@ -30,25 +31,30 @@ namespace unity
 namespace launcher
 {
 
-BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
+BFBLauncherIcon::BFBLauncherIcon()
  : SimpleLauncherIcon(IconType::HOME)
  , reader_(dash::GSettingsScopesReader::GetDefault())
- , launcher_hide_mode_(hide_mode)
+ , launcher_hide_mode_(LAUNCHER_HIDE_NEVER)
 {
-  icon_name = PKGDATADIR"/launcher_bfb.png";
   position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, true);
   SkipQuirkAnimation(Quirk::VISIBLE);
-
   background_color_ = nux::color::White;
 
+  UpdateIcon();
   UpdateDefaultSearchText();
 
+  theme::Settings::Get()->theme.changed.connect(sigc::hide(sigc::mem_fun(this, &BFBLauncherIcon::UpdateIcon)));
   Settings::Instance().remote_content.changed.connect(sigc::hide(sigc::mem_fun(this, &BFBLauncherIcon::UpdateDefaultSearchText)));
 
   mouse_enter.connect([this](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), true));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), false));
+}
+
+void BFBLauncherIcon::UpdateIcon()
+{
+  icon_name = theme::Settings::Get()->ThemedFilePath("launcher_bfb", {PKGDATADIR});
 }
 
 void BFBLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
@@ -73,7 +79,8 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   // If the hud is open, we hide the BFB if we have a locked launcher
   else if (overlay_identity.Str() == "hud")
   {
-    if (launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
+    if (launcher_hide_mode_ == LAUNCHER_HIDE_NEVER &&
+        Settings::Instance().launcher_position() == LauncherPosition::LEFT)
     {
       SetVisibleOnMonitor(overlay_monitor, !visible);
       SkipQuirkAnimation(Quirk::VISIBLE, overlay_monitor);

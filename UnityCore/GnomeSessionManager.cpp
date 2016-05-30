@@ -115,8 +115,14 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
       manager_->unlock_requested.emit();
     });
 
-    login_proxy_->ConnectProperty("Active", [this] (GVariant* active) {
-      manager_->screensaver_requested.emit(!glib::Variant(active).GetBool());
+    login_proxy_->ConnectProperty("Active", [this] (GVariant* variant) {
+      bool active = glib::Variant(variant).GetBool();
+      manager_->screensaver_requested.emit(!active);
+      manager_->is_session_active.changed.emit(active);
+    });
+
+    manager_->is_session_active.SetGetterFunction([this] {
+      return login_proxy_->GetProperty("Active").GetBool();
     });
   }
 
@@ -153,6 +159,13 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     manager_->have_other_open_sessions.SetGetterFunction([this]() {
       return open_sessions_ > 1;
     });
+  }
+
+  {
+    dm_seat_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.Accounts",
+                                                       ("/org/freedesktop/Accounts/User" + std::to_string(getuid())).c_str(),
+                                                       "org.freedesktop.Accounts.User",
+                                                       G_BUS_TYPE_SYSTEM);
   }
 
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {
@@ -429,6 +442,22 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
   });
 }
 
+void GnomeManager::Impl::CallDisplayManagerSeatMethod(std::string const& method, GVariant* parameters)
+{
+  const char* xdg_seat_path = test_mode_ ? "/org/freedesktop/DisplayManager/Seat0" : g_getenv("XDG_SEAT_PATH");
+
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
+                                                 glib::gchar_to_string(xdg_seat_path),
+                                                 "org.freedesktop.DisplayManager.Seat",
+                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
+  proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
+    if (e)
+    {
+      LOG_ERROR(logger) << "DisplayManager Seat call failed: " << e.Message();
+    }
+  });
+}
+
 void GnomeManager::Impl::LockScreen(bool prompt)
 {
   EnsureCancelPendingAction();
@@ -490,6 +519,13 @@ bool GnomeManager::Impl::HasInhibitors()
   return inhibitors.GetBool();
 }
 
+void GnomeManager::Impl::UserIconFile(std::function<void(std::string const&)> const& callback)
+{
+  dm_seat_proxy_->GetProperty("IconFile", [this, callback] (GVariant *value) {
+    callback(glib::Variant(value).GetString());
+  });
+}
+
 bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string const& group_name)
 {
   auto group = getgrnam(group_name.c_str());
@@ -533,6 +569,11 @@ std::string GnomeManager::UserName() const
 std::string GnomeManager::HostName() const
 {
   return glib::gchar_to_string(g_get_host_name());
+}
+
+void GnomeManager::UserIconFile(std::function<void(std::string const&)> const& callback) const
+{
+  impl_->UserIconFile(callback);
 }
 
 void GnomeManager::ScreenSaverActivate()
@@ -663,6 +704,11 @@ void GnomeManager::Hibernate()
     if (err)
       impl_->CallUPowerMethod("Hibernate");
   });
+}
+
+void GnomeManager::SwitchToGreeter()
+{
+  impl_->CallDisplayManagerSeatMethod("SwitchToGreeter");
 }
 
 bool GnomeManager::CanLock() const

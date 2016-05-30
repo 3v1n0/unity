@@ -9,6 +9,14 @@
     <value nick="Not Expanded" value="0" />
     <value nick="Expanded" value="1" />
   </enum>
+  <enum id="launcher-position-enum">
+    <value nick="Left" value="0" />
+    <value nick="Bottom" value="1" />
+  </enum>
+  <enum id="desktop-type-enum">
+    <value nick="Ubuntu" value="0" />
+    <value nick="UbuntuKylin" value="1" />
+  </enum>
 
   <schema path="/com/canonical/unity/" id="com.canonical.Unity" gettext-domain="unity">
     <key enum="form-factor-enum" name="form-factor">
@@ -20,6 +28,11 @@
       <default>"Expanded"</default>
       <summary>Whether the home screen should be expanded.</summary>
       <description>Whether the home screen should be expanded.</description>
+    </key>
+    <key enum="desktop-type-enum" name="desktop-type">
+      <default>"Ubuntu"</default>
+      <summary>The current desktop name.</summary>
+      <description>The current desktop name.</description>
     </key>
     <key type="i" name="minimize-count">
       <default>0</default>
@@ -108,7 +121,7 @@
         'application://libreoffice-writer.desktop',
         'application://libreoffice-calc.desktop',
         'application://libreoffice-impress.desktop',
-        'application://ubuntu-software-center.desktop',
+        'application://org.gnome.Software.desktop',
         'application://ubuntu-amazon-default.desktop',
         'application://unity-control-center.desktop',
         'unity://running-apps',
@@ -135,6 +148,11 @@
       <default>''</default>
       <summary>Version of last migration done</summary>
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
+    </key>
+    <key enum="launcher-position-enum"  name="launcher-position">
+      <default>"Left"</default>
+      <summary>The position of launcher.</summary>
+      <description>The position of launcher.</description>
     </key>
   </schema>
   <schema path="/com/canonical/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">

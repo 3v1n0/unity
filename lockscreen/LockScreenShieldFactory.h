@@ -20,18 +20,19 @@
 #ifndef UNITY_LOCKSCREEN_SHIELD_FACTORY
 #define UNITY_LOCKSCREEN_SHIELD_FACTORY
 
-#include <Nux/Nux.h>
-#include "LockScreenAbstractShield.h"
+#include <NuxCore/NuxCore.h>
+#include "UnityCore/SessionManager.h"
+#include "UnityCore/Indicators.h"
+#include "LockScreenAccelerators.h"
 
 namespace unity
 {
-
 class MockableBaseWindow;
 
 namespace lockscreen
 {
-
-class UserPromptView;
+class AbstractUserPromptView;
+class BaseShield;
 
 struct ShieldFactoryInterface
 {
@@ -39,23 +40,23 @@ struct ShieldFactoryInterface
 
   virtual ~ShieldFactoryInterface() = default;
 
-  virtual nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
-                                                      indicator::Indicators::Ptr const&,
-                                                      Accelerators::Ptr const&,
-                                                      nux::ObjectPtr<UserPromptView> const&,
-                                                      int monitor, bool is_primary) = 0;
+  virtual nux::ObjectPtr<BaseShield> CreateShield(session::Manager::Ptr const&,
+                                                  indicator::Indicators::Ptr const&,
+                                                  Accelerators::Ptr const&,
+                                                  nux::ObjectPtr<AbstractUserPromptView> const&,
+                                                  int monitor, bool is_primary) = 0;
 };
 
 struct ShieldFactory : ShieldFactoryInterface
 {
-  nux::ObjectPtr<AbstractShield> CreateShield(session::Manager::Ptr const&,
-                                              indicator::Indicators::Ptr const&,
-                                              Accelerators::Ptr const&,
-                                              nux::ObjectPtr<UserPromptView> const&,
-                                              int monitor, bool is_primary) override;
+  nux::ObjectPtr<BaseShield> CreateShield(session::Manager::Ptr const&,
+                                          indicator::Indicators::Ptr const&,
+                                          Accelerators::Ptr const&,
+                                          nux::ObjectPtr<AbstractUserPromptView> const&,
+                                          int monitor, bool is_primary) override;
 };
 
 }
 }
 
-#endif
+#endif // UNITY_LOCKSCREEN_SHIELD_FACTORY

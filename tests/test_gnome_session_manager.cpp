@@ -42,6 +42,7 @@ const std::string LOGIND_SESSION_PATH = "/org/freedesktop/login1/session/id0";
 const std::string CONSOLE_KIT_PATH = "/org/freedesktop/ConsoleKit/Manager";
 const std::string SESSION_MANAGER_PATH = "/org/gnome/SessionManager";
 const std::string SESSION_MANAGER_PRESENCE_PATH = "/org/gnome/SessionManager/Presence";
+const std::string DISPLAY_MANAGER_SEAT_PATH = "/org/freedesktop/DisplayManager/Seat0";
 
 const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
 const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
@@ -137,6 +138,13 @@ R"(<node>
 </node>
 )";
 
+const std::string DISPLAY_MANAGER_SEAT =
+R"(<node>
+  <interface name="org.freedesktop.DisplayManager.Seat">
+    <method name="SwitchToGreeter"/>
+  </interface>
+</node>
+)";
 }
 
 struct MockGnomeSessionManager : session::GnomeManager {
@@ -208,6 +216,9 @@ struct TestGnomeSessionManager : testing::Test
       return nullptr;
     });
 
+    display_manager_seat_ = std::make_shared<DBusServer>();
+    display_manager_seat_->AddObjects(introspection::DISPLAY_MANAGER_SEAT, DISPLAY_MANAGER_SEAT_PATH);
+
     manager = std::make_shared<MockGnomeSessionManager>();
     shell_proxy_ = std::make_shared<DBusProxy>(TEST_SERVER_NAME, SHELL_OBJECT_PATH, SHELL_INTERFACE);
 
@@ -228,6 +239,7 @@ struct TestGnomeSessionManager : testing::Test
     Utils::WaitUntilMSec([] { return logind_->IsConnected(); });
     Utils::WaitUntilMSec([] { return console_kit_->IsConnected(); });
     Utils::WaitUntilMSec([] { return session_manager_->IsConnected(); });
+    Utils::WaitUntilMSec([] { return display_manager_seat_->IsConnected(); });
     Utils::WaitUntilMSec([] { return shell_proxy_->IsConnected();});
     ASSERT_TRUE(shell_proxy_->IsConnected());
     EnableInteractiveShutdown(true);
@@ -244,9 +256,19 @@ struct TestGnomeSessionManager : testing::Test
 
   void TearDown()
   {
+    manager->have_other_open_sessions.changed.clear();
+    manager->is_locked.changed.clear();
+    manager->is_session_active.changed.clear();
+    manager->lock_requested.clear();
+    manager->unlock_requested.clear();
+    manager->prompt_lock_requested.clear();
+    manager->locked.clear();
+    manager->unlocked.clear();
     manager->logout_requested.clear();
     manager->reboot_requested.clear();
     manager->shutdown_requested.clear();
+    manager->presence_status_changed.clear();
+    manager->screensaver_requested.clear();
     manager->cancel_requested.clear();
     shell_proxy_->DisconnectSignal();
 
@@ -277,6 +299,7 @@ struct TestGnomeSessionManager : testing::Test
     logind_.reset();
     console_kit_.reset();
     session_manager_.reset();
+    display_manager_seat_.reset();
   }
 
   bool SettingsAvailable()
@@ -342,6 +365,7 @@ struct TestGnomeSessionManager : testing::Test
   static DBusServer::Ptr console_kit_;
   static DBusServer::Ptr logind_;
   static DBusServer::Ptr session_manager_;
+  static DBusServer::Ptr display_manager_seat_;
   static DBusProxy::Ptr shell_proxy_;
 };
 
@@ -350,6 +374,7 @@ DBusServer::Ptr TestGnomeSessionManager::upower_;
 DBusServer::Ptr TestGnomeSessionManager::console_kit_;
 DBusServer::Ptr TestGnomeSessionManager::logind_;
 DBusServer::Ptr TestGnomeSessionManager::session_manager_;
+DBusServer::Ptr TestGnomeSessionManager::display_manager_seat_;
 DBusProxy::Ptr TestGnomeSessionManager::shell_proxy_;
 bool TestGnomeSessionManager::can_shutdown_;
 bool TestGnomeSessionManager::can_suspend_;
@@ -388,6 +413,23 @@ TEST_F(TestGnomeSessionManager, UserName)
 TEST_F(TestGnomeSessionManager, HostName)
 {
   EXPECT_EQ(manager->HostName(), g_get_host_name());
+}
+
+TEST_F(TestGnomeSessionManager, SwitchToGreeter)
+{
+  bool switch_called = false;
+
+  display_manager_seat_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    if (method == "SwitchToGreeter")
+      switch_called = true;
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->SwitchToGreeter();
+
+  Utils::WaitUntilMSec(switch_called);
+  EXPECT_TRUE(switch_called);
 }
 
 TEST_F(TestGnomeSessionManager, ScreenSaverActivate)

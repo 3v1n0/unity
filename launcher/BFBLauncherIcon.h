@@ -37,7 +37,7 @@ class BFBLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  BFBLauncherIcon(LauncherHideMode hide_mode);
+  BFBLauncherIcon();
 
   virtual nux::Color BackgroundColor() const;
   virtual nux::Color GlowColor();
@@ -53,6 +53,7 @@ private:
   void OnOverlayShown(GVariant *data, bool visible);
   void OnMenuitemActivated(DbusmenuMenuitem* item, int time, std::string const& scope_id);
   void UpdateDefaultSearchText();
+  void UpdateIcon();
 
   nux::Color background_color_;
   dash::GSettingsScopesReader::Ptr reader_;

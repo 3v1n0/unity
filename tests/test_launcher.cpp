@@ -31,6 +31,7 @@ using namespace testing;
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 #include "test_standalone_wm.h"
 #include "test_utils.h"
 
@@ -61,6 +62,7 @@ public:
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD2(PerformScroll, void(ScrollDirection, Time));
   MOCK_METHOD0(HideTooltip, void());
+  MOCK_METHOD0(PromptHideTooltip, void());
   MOCK_METHOD3(SetQuirk, void(ApplicationLauncherIcon::Quirk, bool, int));
   MOCK_METHOD2(SetQuirk, void(ApplicationLauncherIcon::Quirk, bool));
   MOCK_METHOD2(SkipQuirkAnimation, void(ApplicationLauncherIcon::Quirk, int));
@@ -537,11 +539,13 @@ TEST_F(TestLauncher, EdgeBarriersIgnoreEvents)
 
 TEST_F(TestLauncher, EdgeBarriersHandlesEvent)
 {
-  auto const& launcher_geo = launcher_->GetAbsoluteGeometry();
+  glib::Object<GSettings> gsettings(g_settings_new("com.canonical.Unity.Launcher"));
+  auto launcher_geo = launcher_->GetAbsoluteGeometry();
   auto barrier = std::make_shared<ui::PointerBarrierWrapper>();
   auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
   launcher_->SetHidden(true);
 
+  g_settings_set_enum(gsettings, "launcher-position", static_cast<int>(LauncherPosition::LEFT));
   options_->reveal_trigger = RevealTrigger::EDGE;
 
   for (int x = launcher_geo.x; x < launcher_geo.x+launcher_geo.width; ++x)
@@ -567,6 +571,37 @@ TEST_F(TestLauncher, EdgeBarriersHandlesEvent)
                 ui::EdgeBarrierSubscriber::Result::HANDLED);
     }
   }
+
+  g_settings_set_enum(gsettings, "launcher-position", static_cast<int>(LauncherPosition::BOTTOM));
+  launcher_geo = launcher_->GetAbsoluteGeometry();
+  options_->reveal_trigger = RevealTrigger::EDGE;
+  int panel_height = panel::Style::Instance().PanelHeight(launcher_->monitor());
+
+  for (int y = launcher_geo.y; y < launcher_geo.y+launcher_geo.height; ++y)
+  {
+    for (int x = launcher_geo.x + panel_height; x < launcher_geo.x+launcher_geo.width; ++x)
+    {
+      event->x = x;
+      event->y = y;
+      ASSERT_EQ(launcher_->HandleBarrierEvent(barrier, event),
+                ui::EdgeBarrierSubscriber::Result::HANDLED);
+    }
+  }
+
+  options_->reveal_trigger = RevealTrigger::CORNER;
+
+  for (int y = launcher_geo.y; y < launcher_geo.y+launcher_geo.height; ++y)
+  {
+    for (int x = launcher_geo.x; x < launcher_geo.x + panel_height; ++x)
+    {
+      event->x = x;
+      event->y = y;
+      ASSERT_EQ(launcher_->HandleBarrierEvent(barrier, event),
+                ui::EdgeBarrierSubscriber::Result::HANDLED);
+    }
+  }
+
+  g_settings_reset(gsettings, "launcher-position");
 }
 
 TEST_F(TestLauncher, DndIsSpecialRequest)

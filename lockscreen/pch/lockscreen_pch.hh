@@ -28,5 +28,5 @@
 #include <security/pam_appl.h>
 
 #include <Nux/Nux.h>
-#include <UnityCore/SessionManager.h>
-#include <UnityCore/Indicators.h>
+#include "UnityCore/SessionManager.h"
+#include "UnityCore/Indicators.h"

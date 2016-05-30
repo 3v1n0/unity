@@ -38,6 +38,7 @@
 #include "RawPixel.h"
 #include "SearchBarSpinner.h"
 #include "StaticCairoText.h"
+#include "ThemeSettings.h"
 #include "UnitySettings.h"
 
 namespace unity
@@ -226,8 +227,8 @@ SearchBar::SearchBar(bool show_filter_hint, NUX_FILE_LINE_DECL)
     expand_icon_->mouse_click.connect(mouse_expand);
   }
 
-  sig_manager_.Add<void, GtkSettings*>(gtk_settings_get_default(), "notify::gtk-font-name", sigc::hide(sigc::mem_fun(this, &SearchBar::OnFontChanged)));
-  OnFontChanged();
+  UpdateFont();
+  theme::Settings::Get()->font.changed.connect(sigc::hide(sigc::mem_fun(this, &SearchBar::UpdateFont)));
 
   search_hint.changed.connect([this](std::string const& s) { OnSearchHintChanged(); });
   search_string.SetGetterFunction([this] { return pango_entry_->GetText(); });
@@ -320,30 +321,23 @@ void SearchBar::UpdateScale(double scale)
   UpdateSearchBarSize();
 }
 
-void SearchBar::OnFontChanged()
+void SearchBar::UpdateFont()
 {
-  glib::String font_name;
-  PangoFontDescription* desc;
-  std::ostringstream font_desc;
+  auto* desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
-
-  desc = pango_font_description_from_string(font_name.Value());
   if (desc)
   {
     pango_entry_->SetFontFamily(pango_font_description_get_family(desc));
     pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE.CP(scale * Settings::Instance().font_scaling()));
     pango_entry_->SetFontOptions(gdk_screen_get_font_options(gdk_screen_get_default()));
 
-    font_desc << pango_font_description_get_family(desc) << " " << HINT_LABEL_FONT_STYLE << " " << HINT_LABEL_FONT_SIZE;
-    hint_->SetFont(font_desc.str().c_str());
+    auto font_desc = glib::gchar_to_string(pango_font_description_get_family(desc)) + " " + HINT_LABEL_FONT_STYLE + " " + HINT_LABEL_FONT_SIZE;
+    hint_->SetFont(font_desc.c_str());
 
     if (show_filter_hint_)
     {
-      font_desc.str("");
-      font_desc.clear();
-      font_desc << pango_font_description_get_family(desc) << " " << SHOW_FILTERS_LABEL_FONT_STYLE << " " << SHOW_FILTERS_LABEL_FONT_SIZE;
-      show_filters_->SetFont(font_desc.str().c_str());
+      font_desc = glib::gchar_to_string(pango_font_description_get_family(desc)) + " " + SHOW_FILTERS_LABEL_FONT_STYLE + " " + SHOW_FILTERS_LABEL_FONT_SIZE;
+      show_filters_->SetFont(font_desc.c_str());
     }
 
     pango_font_description_free(desc);

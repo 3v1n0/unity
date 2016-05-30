@@ -26,6 +26,7 @@
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
@@ -108,6 +109,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Controller::OnDPIChanged));
+  Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::bind(sigc::mem_fun(this, &Controller::Relayout), false)));
 
   EnsureHud();
 }
@@ -174,7 +176,7 @@ int Controller::GetIdealMonitor()
 
 bool Controller::IsLockedToLauncher(int monitor)
 {
-  if (launcher_locked_out)
+  if (launcher_locked_out && Settings::Instance().launcher_position() == LauncherPosition::LEFT)
   {
     int primary_monitor = UScreen::GetDefault()->GetPrimaryMonitor();
 
@@ -206,13 +208,13 @@ void Controller::EnsureHud()
 void Controller::SetIcon(std::string const& icon_name)
 {
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
+  int launcher_size = unity::Settings::Instance().LauncherSize(monitor_index_);
 
   if (view_)
   {
     double scale = view_->scale();
     int tsize = tile_size().CP(scale);
-    view_->SetIcon(icon_name, tsize, icon_size().CP(scale), launcher_width - tsize);
+    view_->SetIcon(icon_name, tsize, icon_size().CP(scale), launcher_size - tsize);
   }
 
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
@@ -253,7 +255,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 
   if (IsLockedToLauncher(ideal_monitor))
   {
-    int launcher_width = unity::Settings::Instance().LauncherWidth(ideal_monitor);
+    int launcher_width = unity::Settings::Instance().LauncherSize(ideal_monitor);
     geo.x += launcher_width;
     geo.width -= launcher_width;
   }
@@ -269,12 +271,18 @@ void Controller::Relayout(bool check_monitor)
     monitor_index_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
 
   nux::Geometry const& geo = GetIdealWindowGeometry();
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_index_);
 
   view_->QueueDraw();
   window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
-  view_->SetMonitorOffset(launcher_width, panel_style.PanelHeight(monitor_index_));
+
+  int horizontal_offset = 0;
+
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    horizontal_offset = unity::Settings::Instance().LauncherSize(monitor_index_);
+
+  view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
+  view_->SetMonitorOffset(horizontal_offset, panel_style.PanelHeight(monitor_index_));
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -369,7 +377,7 @@ void Controller::ShowHud()
   }
   else
   {
-    focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
+    focused_app_icon_ = theme::Settings::Get()->ThemedFilePath("launcher_bfb", {PKGDATADIR});
   }
 
   wm.SaveInputFocus();
@@ -420,6 +428,7 @@ void Controller::HideHud()
   need_show_ = false;
   EnsureHud();
   view_->AboutToHide();
+  view_->ShowEmbeddedIcon(false);
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;

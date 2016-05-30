@@ -48,7 +48,8 @@ BackgroundEffectHelper::BackgroundEffectHelper(nux::View* view)
 {
   enabled.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   owner.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnOwnerChanged));
-  noise_texture_ = TextureCache::GetDefault().FindTexture("dash_noise.png");
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &BackgroundEffectHelper::LoadTextures));
+  LoadTextures();
 
   if (Settings::Instance().GetLowGfxMode())
     blur_type = BLUR_NONE;
@@ -61,6 +62,11 @@ BackgroundEffectHelper::BackgroundEffectHelper()
 BackgroundEffectHelper::~BackgroundEffectHelper()
 {
   Unregister(this);
+}
+
+void BackgroundEffectHelper::LoadTextures()
+{
+  noise_texture_ = TextureCache::GetDefault().FindTexture("dash_noise");
 }
 
 void BackgroundEffectHelper::OnEnabledChanged(bool enabled)

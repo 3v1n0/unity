@@ -50,6 +50,11 @@ class ForceQuitDialog;
 
 namespace cu = compiz_utils;
 
+namespace atom
+{
+extern Atom _UNITY_GTK_BORDER_RADIUS;
+}
+
 struct Quads
 {
   enum class Pos
@@ -93,7 +98,9 @@ struct Window::Impl
 private:
   void UnsetExtents();
   void SetupExtents();
-  void UpdateElements(cu::WindowFilter::Value wf = cu::WindowFilter::NONE);
+  void ComputeBorderExtent(CompWindowExtents &border);
+  void UpdateElements(cu::WindowFilter wf = cu::WindowFilter::NONE);
+  void UpdateClientDecorationsState();
   void UpdateMonitor();
   void UpdateFrame();
   void CreateFrame(nux::Geometry const&);
@@ -133,6 +140,7 @@ private:
   int monitor_;
   bool dirty_geo_;
   bool dirty_frame_;
+  bool client_decorated_;
   unsigned deco_elements_;
   unsigned last_mwm_decor_;
   unsigned last_actions_;
@@ -141,6 +149,7 @@ private:
   Quads shadow_quads_;
   nux::Geometry frame_geo_;
   CompRegion frame_region_;
+  CompWindowExtents client_borders_;
   connection::Wrapper theme_changed_;
   connection::Wrapper dpi_changed_;
   connection::Wrapper grab_mouse_changed_;
@@ -164,7 +173,6 @@ private:
 struct Manager::Impl : sigc::trackable
 {
   Impl(decoration::Manager*, menu::Manager::Ptr const&);
-  ~Impl();
 
   Window::Ptr HandleWindow(CompWindow* cwin);
   bool HandleEventBefore(XEvent*);
@@ -191,8 +199,6 @@ private:
 
   friend class Manager;
   friend struct Window::Impl;
-
-  bool enable_add_supported_atoms_;
 
   DataPool::Ptr data_pool_;
   cu::PixmapTexture::Ptr active_shadow_pixmap_;

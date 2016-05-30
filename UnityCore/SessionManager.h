@@ -40,10 +40,12 @@ public:
 
   nux::ROProperty<bool> have_other_open_sessions;
   nux::Property<bool> is_locked;
+  nux::ROProperty<bool> is_session_active;
 
   virtual std::string RealName() const = 0;
   virtual std::string UserName() const = 0;
   virtual std::string HostName() const = 0;
+  virtual void UserIconFile(std::function<void(std::string const&)> const&) const = 0;
 
   virtual void ScreenSaverActivate() = 0;
   virtual void ScreenSaverDeactivate() = 0;
@@ -54,6 +56,7 @@ public:
   virtual void Shutdown() = 0;
   virtual void Suspend() = 0;
   virtual void Hibernate() = 0;
+  virtual void SwitchToGreeter() = 0;
 
   virtual bool CanLock() const = 0;
   virtual bool CanShutdown() const = 0;

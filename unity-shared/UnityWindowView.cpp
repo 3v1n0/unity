@@ -20,6 +20,7 @@
 
 #include "UnityWindowView.h"
 #include <Nux/VLayout.h>
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
@@ -49,8 +50,19 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
 
   live_background = false;
 
-  monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged)));
+  scale.changed.connect([this] (double scale) {
+    closable.changed.emit(closable());
+
+    if (internal_layout_)
+    {
+      int offset = style()->GetInternalOffset().CP(scale);
+      view_layout_->SetPadding(offset, offset);
+    }
+  });
+
+  theme::Settings::Get()->theme.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnThemeChanged));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged));
+  monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged)));
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
   background_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
 }
@@ -67,12 +79,12 @@ UnityWindowView::~UnityWindowView()
 void UnityWindowView::OnDPIChanged()
 {
   scale = Settings::Instance().em(monitor())->DPIScale();
+}
 
-  if (internal_layout_)
-  {
-    int offset = style()->GetInternalOffset(scale);
-    view_layout_->SetPadding(offset, offset);
-  }
+void UnityWindowView::OnThemeChanged(std::string const&)
+{
+  closable.changed.emit(closable());
+  QueueDraw();
 }
 
 void UnityWindowView::SetBackgroundHelperGeometryGetter(BackgroundEffectHelper::GeometryGetterFunc const& func)
@@ -138,7 +150,7 @@ void UnityWindowView::OnClosableChanged(bool closable)
   }
 
   auto const& texture = style()->GetTexture(scale, WindowTextureType::CLOSE_ICON);
-  int padding = style()->GetCloseButtonPadding(scale);
+  int padding = style()->GetCloseButtonPadding().CP(scale);
 
   close_button_ = new IconTexture(texture);
   close_button_->SetBaseXY(padding, padding);
@@ -179,7 +191,7 @@ bool UnityWindowView::SetLayout(nux::Layout* layout)
 {
   if (layout && layout->IsLayout())
   {
-    int offset = style()->GetInternalOffset(scale);
+    int offset = style()->GetInternalOffset().CP(scale);
 
     // We wrap the internal layout adding some padding, so that inherited classes
     // can ignore the offsets we define here.
@@ -204,7 +216,7 @@ nux::Layout* UnityWindowView::GetLayout()
 
 nux::Geometry UnityWindowView::GetInternalBackground()
 {
-  int offset = style()->GetInternalOffset(scale);
+  int offset = style()->GetInternalOffset().CP(scale);
 
   return GetBackgroundGeometry().GetExpand(-offset, -offset);
 }
@@ -355,9 +367,8 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
 {
-  int border = style()->GetBorderSize(scale);
-
-  auto background_corner_textrue = style()->GetTexture(scale, WindowTextureType::BACKGROUND_CORNER)->GetDeviceTexture();
+  int border = style()->GetBorderSize().CP(scale);
+  auto background_corner_textrue = style()->GetTexture(scale, WindowTextureType::BORDER_CORNER)->GetDeviceTexture();
 
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -403,7 +414,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + geo.height - border,
                        border, border, background_corner_textrue, texxform, nux::color::White);
 
-  auto background_top = style()->GetTexture(scale, WindowTextureType::BACKGROUND_TOP);
+  auto background_top = style()->GetTexture(scale, WindowTextureType::BORDER_TOP);
   int top_width  = background_top->GetWidth();
   int top_height = background_top->GetHeight();
 
@@ -425,7 +436,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_v_coord = true;
   GfxContext.QRP_1Tex (geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, background_top->GetDeviceTexture(), texxform, nux::color::White);
 
-  auto background_left = style()->GetTexture(scale, WindowTextureType::BACKGROUND_LEFT);
+  auto background_left = style()->GetTexture(scale, WindowTextureType::BORDER_LEFT);
   int left_width  = background_left->GetWidth();
   int left_height = background_left->GetHeight();
 

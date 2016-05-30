@@ -1,8 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#cmakedefine PREFIXDIR "@PREFIXDIR@"
-#cmakedefine DATADIR "@DATADIR@"
+#cmakedefine PREFIXPATH "@PREFIXPATH@"
+#cmakedefine UNITYDATADIR "@UNITYDATADIR@"
+#cmakedefine UNITYLIBDIR "@UNITYLIBDIR@"
 #cmakedefine PKGDATADIR "@PKGDATADIR@"
 #cmakedefine LOCALE_DIR "@LOCALE_DIR@"
 #cmakedefine VERSION "@VERSION@"

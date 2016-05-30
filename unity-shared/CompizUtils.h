@@ -119,14 +119,12 @@ private:
   cairo_t *cr_;
 };
 
-namespace WindowFilter
-{
-enum Value
+enum class WindowFilter
 {
   NONE,
-  UNMAPPED
+  UNMAPPED,
+  CLIENTSIDE_DECORATED
 };
-}
 
 namespace DecorationElement
 {
@@ -140,7 +138,7 @@ enum
 };
 }
 
-unsigned WindowDecorationElements(CompWindow*, WindowFilter::Value wf = WindowFilter::NONE);
+unsigned WindowDecorationElements(CompWindow*, WindowFilter wf = WindowFilter::NONE);
 
 bool IsWindowEdgeDecorable(CompWindow*);
 bool IsWindowShadowDecorable(CompWindow*);

@@ -133,16 +133,15 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   , monitor_(0)
 {
   renderer_.SetOwner(this);
+  renderer_.owner_type = OverlayOwner::Dash;
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
 
   SetupViews();
   SetupUBusConnections();
-
   AddChild(overlay_window_buttons_.GetPointer());
 
-  mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
 
   if (scopes_)
@@ -167,6 +166,15 @@ DashView::~DashView()
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the scope models
   RemoveLayout();
+}
+
+void DashView::SetMonitor(int monitor)
+{
+  if (monitor_== monitor)
+    return;
+
+  monitor_ = monitor;
+  scale = Settings::Instance().em(monitor_)->DPIScale();
 }
 
 void DashView::SetMonitorOffset(int x, int y)
@@ -460,16 +468,10 @@ void DashView::OnPreviewAnimationFinished()
   content_view_->SetPresentRedirectedView(true);
 }
 
-void DashView::AboutToShow(int monitor)
+void DashView::AboutToShow()
 {
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
-
-  if (monitor_ != monitor)
-  {
-    monitor_ = monitor;
-    scale = Settings::Instance().em(monitor_)->DPIScale();
-  }
 
   /* Give the scopes a chance to prep data before we map them  */
   if (active_scope_view_)
@@ -614,7 +616,7 @@ void DashView::SetupUBusConnections()
       sigc::mem_fun(this, &DashView::OnActivateRequest));
 }
 
-long DashView::PostLayoutManagement (long LayoutResult)
+long DashView::PostLayoutManagement(long LayoutResult)
 {
   Relayout();
   return LayoutResult;
@@ -649,7 +651,20 @@ void DashView::Relayout()
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
   if (preview_displaying_)
-    preview_container_->SetGeometry(layout_->GetGeometry());
+  {
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    {
+      auto preview_geo = content_geo_;
+      int padding = style.GetDashHorizontalBorderHeight().CP(scale());
+      preview_geo.y += padding;
+      preview_geo.height -= padding;
+      preview_container_->SetGeometry(preview_geo);
+    }
+    else
+    {
+      preview_container_->SetGeometry(layout_->GetGeometry());
+    }
+  }
 
   renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
 
@@ -662,7 +677,12 @@ void DashView::Relayout()
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
   dash::Style& style = dash::Style::Instance();
-  int panel_height = renderer_.y_offset;
+  int vertical_offset = renderer_.y_offset;
+
+  if (style.always_maximised)
+  {
+    return nux::Geometry(0, vertical_offset, for_geo.width, for_geo.height - vertical_offset);
+  }
 
   int width = 0, height = 0;
   int tile_width = style.GetTileWidth().CP(scale);
@@ -689,14 +709,9 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   // width/height shouldn't be bigger than the geo available.
   width = std::min(width, for_geo.width); // launcher width is taken into account in for_geo.
-  height = std::min(height, for_geo.height - panel_height); // panel height is not taken into account in for_geo.
+  height = std::min(height, for_geo.height - vertical_offset); // panel height is not taken into account in for_geo.
 
-  if (style.always_maximised)
-  {
-    width = std::max(0, for_geo.width);
-    height = std::max(0, for_geo.height - panel_height);
-  }
-  return nux::Geometry(0, panel_height, width, height);
+  return nux::Geometry(0, vertical_offset, width, height);
 }
 
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -728,6 +743,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   // See lp bug: 1125346 (The sharp white line between dash and launcher is missing)
   nux::Geometry clip_geo = geo_layout;
   clip_geo.x += 1;
+  if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    clip_geo.y += renderer_y_offset;
   graphics_engine.PushClippingRectangle(clip_geo);
 
   if (IsFullRedraw())
@@ -1119,18 +1136,6 @@ void DashView::DrawPreview(nux::GraphicsEngine& graphics_engine, bool force_draw
   }
 }
 
-void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
-{
-  nux::Geometry geo(content_geo_);
-
-  if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
-  {
-    dash::Style& style = dash::Style::Instance();
-    geo.width  += style.GetDashRightTileWidth().CP(scale);
-    geo.height += style.GetDashBottomTileHeight().CP(scale);
-  }
-}
-
 void DashView::OnActivateRequest(GVariant* args)
 {
   glib::String uri;
@@ -1508,8 +1513,8 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
   introspection.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height))
                .add("num_rows", num_rows)
                .add("form_factor", form_factor)
-               .add("right-border-width", style.GetDashRightTileWidth().CP(scale))
-               .add("bottom-border-height", style.GetDashBottomTileHeight().CP(scale))
+               .add("vertical-border-width", style.GetDashVerticalBorderWidth().CP(scale))
+               .add("horizontal-border-height", style.GetDashHorizontalBorderHeight().CP(scale))
                .add("preview_displaying", preview_displaying_)
                .add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_)
                .add("dash_maximized", style.always_maximised())

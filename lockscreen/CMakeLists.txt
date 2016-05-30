@@ -19,16 +19,19 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 set (LOCKSCREEN_SOURCES
      BackgroundSettings.cpp
      CofView.cpp
+     KylinUserPromptView.cpp
+     KylinLockScreenShield.cpp
      LockScreenController.cpp
+     LockScreenBaseShield.cpp
      LockScreenSettings.cpp
      LockScreenShield.cpp
      LockScreenShieldFactory.cpp
      LockScreenPanel.cpp
+     LockScreenPromptFactory.cpp
      LockScreenAcceleratorController.cpp
      LockScreenAccelerators.cpp
      ScreenSaverDBusManager.cpp
-     ShutdownNotifier.cpp
-     SuspendNotifier.cpp
+     SuspendInhibitorManager.cpp
      UserAuthenticatorPam.cpp
      UserPromptView.cpp
      )

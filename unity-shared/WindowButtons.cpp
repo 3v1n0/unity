@@ -27,6 +27,7 @@
 #include "WindowButtonPriv.h"
 
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity

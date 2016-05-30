@@ -144,6 +144,7 @@ public:
 
   virtual void ShowTooltip() = 0;
   virtual void HideTooltip() = 0;
+  virtual void PromptHideTooltip() = 0;
 
   virtual void    SetShortcut(guint64 shortcut) = 0;
 
@@ -174,13 +175,17 @@ public:
 
   virtual WindowList Windows() = 0;
 
-  virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
+  virtual WindowList WindowsForMonitor(int monitor) = 0;
 
-  virtual std::vector<Window> WindowsOnViewport() = 0;
+  virtual WindowList WindowsOnViewport() = 0;
 
-  virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
+  virtual bool WindowVisibleOnMonitor(int monitor) const = 0;
 
-  virtual const bool WindowVisibleOnViewport() = 0;
+  virtual bool WindowVisibleOnViewport() const = 0;
+
+  virtual size_t WindowsVisibleOnMonitor(int monitor) const = 0;
+
+  virtual size_t WindowsVisibleOnViewport() const = 0;
 
   virtual float PresentUrgency() = 0;
 

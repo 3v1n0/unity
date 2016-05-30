@@ -24,12 +24,11 @@
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSource.h>
 
+#include "LockScreenBaseShield.h"
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
+#include "SuspendInhibitorManager.h"
 #include "ScreenSaverDBusManager.h"
-#include "ShutdownNotifier.h"
-#include "SuspendNotifier.h"
-#include "UserPromptView.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UpstartWrapper.h"
 
@@ -38,7 +37,7 @@ namespace unity
 namespace lockscreen
 {
 
-class UserPromptView;
+class AbstractUserPromptView;
 
 class Controller : public sigc::trackable
 {
@@ -70,6 +69,7 @@ private:
   void ResetPostLockScreenSaver();
   void SetupPrimaryShieldConnections();
   void ActivatePanel();
+  void SyncInhibitor();
 
   void OnLockRequested(bool prompt);
   void OnUnlockRequested();
@@ -77,9 +77,9 @@ private:
   void OnScreenSaverActivationRequest(bool activate);
   void OnPrimaryShieldMotion(int x, int y);
 
-  std::vector<nux::ObjectPtr<AbstractShield>> shields_;
-  nux::ObjectWeakPtr<AbstractShield> primary_shield_;
-  nux::ObjectWeakPtr<UserPromptView> prompt_view_;
+  std::vector<nux::ObjectPtr<BaseShield>> shields_;
+  nux::ObjectWeakPtr<BaseShield> primary_shield_;
+  nux::ObjectWeakPtr<AbstractUserPromptView> prompt_view_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
 
   DBusManager::Ptr dbus_manager_;
@@ -88,8 +88,7 @@ private:
   AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
-  ShutdownNotifier::Ptr shutdown_notifier_;
-  SuspendNotifier::Ptr suspend_notifier_;
+  SuspendInhibitorManager::Ptr suspend_inhibitor_manager_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;

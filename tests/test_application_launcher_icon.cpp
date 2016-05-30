@@ -41,7 +41,7 @@ using namespace unity::launcher;
 namespace
 {
 const std::string DEFAULT_EMPTY_ICON = "application-default-icon";
-const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
+const std::string GS_DESKTOP = BUILDDIR"/tests/data/applications/org.gnome.Software.desktop";
 const std::string UM_DESKTOP = BUILDDIR"/tests/data/applications/update-manager.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
 
@@ -50,7 +50,8 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   typedef nux::ObjectPtr<MockApplicationLauncherIcon> Ptr;
 
   MockApplicationLauncherIcon(ApplicationPtr const& app)
-    : ApplicationLauncherIcon(app)
+    : WindowedLauncherIcon(IconType::APPLICATION)
+    , ApplicationLauncherIcon(app)
   {
     ON_CALL(*this, Stick(_)).WillByDefault(Invoke([this] (bool save) { ApplicationLauncherIcon::Stick(save); }));
     ON_CALL(*this, Stick()).WillByDefault(Invoke([this] { ApplicationLauncherIcon::Stick(); }));
@@ -67,11 +68,14 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   bool LauncherIconIsSticky() const { return LauncherIcon::IsSticky(); }
   void LocalActivate(ActionArg a) { ApplicationLauncherIcon::ActivateLauncherIcon(a); }
 
-  using ApplicationLauncherIcon::IsFileManager;
   using ApplicationLauncherIcon::LogUnityEvent;
   using ApplicationLauncherIcon::Remove;
   using ApplicationLauncherIcon::SetApplication;
   using ApplicationLauncherIcon::GetApplication;
+  using ApplicationLauncherIcon::PerformScroll;
+  using LauncherIcon::BackgroundColor;
+  using LauncherIcon::GetRemoteUri;
+  using LauncherIcon::AllowDetailViewInSwitcher;
 };
 
 MATCHER_P(AreArgsEqual, a, "")
@@ -89,16 +93,16 @@ struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
 
   virtual void SetUp() override
   {
-    usc_app = std::make_shared<MockApplication::Nice>(USC_DESKTOP, "softwarecenter");
-    usc_icon = new NiceMock<MockApplicationLauncherIcon>(usc_app);
-    ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
+    usc_app = std::make_shared<MockApplication::Nice>(GS_DESKTOP, "org.gnome.Software");
+    usc_icon = new MockApplicationLauncherIcon(usc_app);
+    ASSERT_EQ(usc_icon->DesktopFile(), GS_DESKTOP);
 
     empty_app = std::make_shared<MockApplication::Nice>(NO_ICON_DESKTOP);
-    empty_icon = new NiceMock<MockApplicationLauncherIcon>(empty_app);
+    empty_icon = new MockApplicationLauncherIcon(empty_app);
     ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
     mock_app = std::make_shared<MockApplication::Nice>();
-    mock_icon = new NiceMock<MockApplicationLauncherIcon>(mock_app);
+    mock_icon = new MockApplicationLauncherIcon(mock_app);
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
 
@@ -171,9 +175,9 @@ struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
 
 TEST_F(TestApplicationLauncherIcon, ApplicationSignalDisconnection)
 {
-  std::shared_ptr<MockApplication> app = std::make_shared<MockApplication::Nice>(USC_DESKTOP);
+  std::shared_ptr<MockApplication> app = std::make_shared<MockApplication::Nice>(GS_DESKTOP);
   {
-    MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+    MockApplicationLauncherIcon::Ptr icon(new MockApplicationLauncherIcon(app));
     EXPECT_FALSE(app->closed.empty());
   }
 
@@ -197,7 +201,7 @@ TEST_F(TestApplicationLauncherIcon, TestCustomBackgroundColor)
 
 TEST_F(TestApplicationLauncherIcon, TestDefaultIcon)
 {
-  EXPECT_EQ(usc_icon->icon_name(), "softwarecenter");
+  EXPECT_EQ(usc_icon->icon_name(), "org.gnome.Software");
   EXPECT_EQ(empty_icon->icon_name(), DEFAULT_EMPTY_ICON);
   EXPECT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
 }
@@ -263,10 +267,10 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApp)
 
 TEST_F(TestApplicationLauncherIcon, StickStickedDesktopApp)
 {
-  auto app = std::make_shared<MockApplication::Nice>(USC_DESKTOP);
+  auto app = std::make_shared<MockApplication::Nice>(GS_DESKTOP);
   app->sticky = true;
   app->desktop_file_ = UM_DESKTOP;
-  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  MockApplicationLauncherIcon::Ptr icon(new MockApplicationLauncherIcon(app));
   ASSERT_TRUE(icon->IsSticky());
   EXPECT_TRUE(icon->LauncherIconIsSticky());
 }
@@ -275,7 +279,7 @@ TEST_F(TestApplicationLauncherIcon, StickStickedDesktopLessApp)
 {
   auto app = std::make_shared<MockApplication::Nice>();
   app->sticky = true;
-  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  MockApplicationLauncherIcon::Ptr icon(new MockApplicationLauncherIcon(app));
   ASSERT_FALSE(icon->IsSticky());
   EXPECT_FALSE(icon->LauncherIconIsSticky());
 }
@@ -291,7 +295,7 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopAppDontCreateNewDesktop)
 TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessAppCreatesNewDesktop)
 {
   auto app = std::make_shared<MockApplication::Nice>();
-  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  MockApplicationLauncherIcon::Ptr icon(new MockApplicationLauncherIcon(app));
 
   EXPECT_CALL(*app, CreateLocalDesktopFile());
   icon->Stick(true);
@@ -354,7 +358,7 @@ TEST_F(TestApplicationLauncherIcon, UnstickDesktopAppLogEvents)
 TEST_F(TestApplicationLauncherIcon, UnstickDesktopLessAppLogEvent)
 {
   auto app = std::make_shared<MockApplication::Nice>();
-  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  MockApplicationLauncherIcon::Ptr icon(new MockApplicationLauncherIcon(app));
 
   EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _)).Times(0);
   icon->UnStick();
@@ -538,7 +542,7 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopForgetsOldPositionUpdatesUriAnd
 
 TEST_F(TestApplicationLauncherIcon, RemoteUri)
 {
-  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + USC_DESKTOP);
+  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + GS_DESKTOP);
   EXPECT_TRUE(mock_icon->RemoteUri().empty());
 }
 
@@ -1103,25 +1107,6 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByProper
   dbusmenu_menuitem_handle_event(item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
 }
 
-TEST_F(TestApplicationLauncherIcon, IsFileManager)
-{
-  EXPECT_FALSE(usc_icon->IsFileManager());
-  EXPECT_FALSE(empty_icon->IsFileManager());
-  EXPECT_FALSE(mock_icon->IsFileManager());
-
-  auto app = std::make_shared<MockApplication::Nice>("/any/path/org.gnome.Nautilus.desktop", "Nautilus");
-  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
-  EXPECT_TRUE(icon->IsFileManager());
-
-  app = std::make_shared<MockApplication::Nice>("/any/path/nautilus-folder-handler.desktop", "Nautilus");
-  icon = new NiceMock<MockApplicationLauncherIcon>(app);
-  EXPECT_TRUE(icon->IsFileManager());
-
-  app = std::make_shared<MockApplication::Nice>("/any/path/nautilus-home.desktop", "Nautilus");
-  icon = new NiceMock<MockApplicationLauncherIcon>(app);
-  EXPECT_TRUE(icon->IsFileManager());
-}
-
 TEST_F(TestApplicationLauncherIcon, AllowDetailViewInSwitcher)
 {
   mock_app->type_ = AppType::NORMAL;
@@ -1232,7 +1217,7 @@ TEST_F(TestApplicationLauncherIcon, DestructionDontUnsetsAppSeenIfReplaced)
   mock_icon->Remove();
   ASSERT_FALSE(mock_app->seen);
 
-  MockApplicationLauncherIcon::Ptr new_icon(new NiceMock<MockApplicationLauncherIcon>(mock_app));
+  MockApplicationLauncherIcon::Ptr new_icon(new MockApplicationLauncherIcon(mock_app));
   mock_icon = nullptr;
 
   EXPECT_TRUE(mock_app->seen);

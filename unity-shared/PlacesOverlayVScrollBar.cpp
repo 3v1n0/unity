@@ -21,8 +21,8 @@
 #include <Nux/Nux.h>
 
 #include "AnimationUtils.h"
+#include "DashStyle.h"
 #include "PlacesOverlayVScrollBar.h"
-#include "RawPixel.h"
 
 namespace unity
 {
@@ -33,10 +33,6 @@ namespace
 const RawPixel PROXIMITY = 7_em;
 const int PAGE_SCROLL_ANIMATION = 200;
 const int CLICK_SCROLL_ANIMATION = 80;
-
-const RawPixel BUTTONS_HEIGHT = 0_em;
-const RawPixel DEFAULT_WIDTH = 3_em;
-const RawPixel ACTIVE_WIDTH = 8_em;
 }
 
 struct PlacesOverlayVScrollBar::ProximityArea : public nux::InputAreaProximity, public sigc::trackable
@@ -62,6 +58,7 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   });
 
   auto update_sb_cb = sigc::mem_fun(this, &PlacesOverlayVScrollBar::UpdateScrollbarSize);
+  Style::Instance().changed.connect(update_sb_cb);
 
   auto update_sb_proximity_cb = sigc::hide(update_sb_cb);
   area_prox_->mouse_near.connect(update_sb_proximity_cb);
@@ -94,22 +91,26 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
 void PlacesOverlayVScrollBar::UpdateScrollbarSize()
 {
   bool is_hovering = false;
-  SetMinimumWidth(ACTIVE_WIDTH.CP(scale));
-  SetMaximumWidth(ACTIVE_WIDTH.CP(scale));
+  auto& style = Style::Instance();
 
-  _scroll_up_button->SetMaximumHeight(BUTTONS_HEIGHT.CP(scale));
-  _scroll_up_button->SetMinimumHeight(BUTTONS_HEIGHT.CP(scale));
-  _scroll_down_button->SetMaximumHeight(BUTTONS_HEIGHT.CP(scale));
-  _scroll_down_button->SetMinimumHeight(BUTTONS_HEIGHT.CP(scale));
+  int active_width = style.GetScrollbarSize().CP(scale);
+  SetMinimumWidth(active_width);
+  SetMaximumWidth(active_width);
 
-  int slider_width = DEFAULT_WIDTH.CP(scale);
+  int buttons_height = style.GetScrollbarButtonsSize().CP(scale);
+  _scroll_up_button->SetMaximumHeight(buttons_height);
+  _scroll_up_button->SetMinimumHeight(buttons_height);
+  _scroll_down_button->SetMaximumHeight(buttons_height);
+  _scroll_down_button->SetMinimumHeight(buttons_height);
+
+  int slider_width = style.GetOverlayScrollbarSize().CP(scale);
 
   if (_track->IsMouseInside() || _track->IsMouseOwner() ||
       _slider->IsMouseInside() || _slider->IsMouseOwner() ||
        area_prox_->IsMouseNear())
   {
     is_hovering = true;
-    slider_width = ACTIVE_WIDTH.CP(scale);
+    slider_width = active_width;
   }
 
   hovering = is_hovering;
@@ -152,4 +153,3 @@ void PlacesOverlayVScrollBar::StartScrollAnimation(ScrollDir dir, int stop, unsi
 
 } // namespace dash
 } // namespace unity
-

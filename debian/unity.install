@@ -1,6 +1,6 @@
 etc/pam.d
 usr/bin
-usr/lib/compiz
+usr/lib/*/compiz/libunity*.so
 usr/share/man/*/unity.1
 usr/share/compiz
 usr/share/locale

@@ -25,8 +25,10 @@
 
 #include <sigc++/signal.h>
 #include <NuxCore/Property.h>
+#include <UnityCore/GLibWrapper.h>
 #include <unity-shared/WindowManager.h>
 
+struct _GdkPixbuf;
 
 namespace unity
 {
@@ -109,6 +111,8 @@ public:
   nux::ROProperty<bool> active;
   nux::ROProperty<bool> urgent;
   nux::ROProperty<bool> maximized;
+
+  sigc::signal<void> closed;
 };
 
 
@@ -151,6 +155,7 @@ public:
   nux::ROProperty<std::string> desktop_file;
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;
+  nux::ROProperty<glib::Object<_GdkPixbuf>> icon_pixbuf;
 
   // Considering using a property for the "unity-seen" quark
   nux::RWProperty<bool> seen;
@@ -160,6 +165,7 @@ public:
   nux::ROProperty<bool> active;
   nux::ROProperty<bool> running;
   nux::ROProperty<bool> urgent;
+  nux::ROProperty<bool> starting;
 
   sigc::signal<void> closed;
 
@@ -219,6 +225,7 @@ public:
   virtual WindowList GetWindowsForMonitor(int monitor = -1) const = 0;
   virtual ApplicationPtr GetApplicationForWindow(Window xid) const = 0;
   virtual ApplicationWindowPtr GetWindowForId(Window xid) const = 0;
+  virtual void FocusWindowGroup(WindowList const&, bool show_on_visible, int monitor) const = 0;
 
   sigc::signal<void, ApplicationPtr const&> application_started;
   sigc::signal<void, ApplicationPtr const&> application_stopped;

@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+#include <boost/algorithm/string.hpp>
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
@@ -32,13 +33,13 @@
 #include "DesktopLauncherIcon.h"
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
-#include "HudLauncherIcon.h"
+#include "FileManagerLauncherIcon.h"
 #include "LauncherController.h"
 #include "LauncherControllerPrivate.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "ExpoLauncherIcon.h"
 #include "TrashLauncherIcon.h"
-#include "BFBLauncherIcon.h"
+#include "unity-shared/AppStreamApplication.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
@@ -59,13 +60,8 @@ const std::string DBUS_INTROSPECTION =
   "<node>"
   "  <interface name='com.canonical.Unity.Launcher'>"
   ""
-  "    <method name='AddLauncherItemFromPosition'>"
-  "      <arg type='s' name='title' direction='in'/>"
-  "      <arg type='s' name='icon' direction='in'/>"
-  "      <arg type='i' name='icon_x' direction='in'/>"
-  "      <arg type='i' name='icon_y' direction='in'/>"
-  "      <arg type='i' name='icon_size' direction='in'/>"
-  "      <arg type='s' name='desktop_file' direction='in'/>"
+  "    <method name='AddLauncherItem'>"
+  "      <arg type='s' name='appstream_app_id' direction='in'/>"
   "      <arg type='s' name='aptdaemon_task' direction='in'/>"
   "    </method>"
   ""
@@ -102,13 +98,15 @@ std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
 
   return FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
 }
-
 }
 
 Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
   : parent_(parent)
   , model_(std::make_shared<LauncherModel>())
   , xdnd_manager_(xdnd_manager)
+  , device_section_(std::make_shared<DeviceLauncherSection>())
+  , bfb_icon_(new BFBLauncherIcon())
+  , hud_icon_(new HudLauncherIcon())
   , expo_icon_(new ExpoLauncherIcon())
   , desktop_icon_(new DesktopLauncherIcon())
   , edge_barriers_(edge_barriers)
@@ -132,20 +130,28 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  LauncherHideMode hide_mode = parent_->options()->hide_mode;
-  BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
-  RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
+  auto hide_mode = parent_->options()->hide_mode();
+  bfb_icon_->SetHideMode(hide_mode);
+  RegisterIcon(AbstractLauncherIcon::Ptr(bfb_icon_));
 
-  HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
-  RegisterIcon(AbstractLauncherIcon::Ptr(hud));
-  hud_icon_ = hud;
+  hud_icon_->SetHideMode(hide_mode);
+  RegisterIcon(AbstractLauncherIcon::Ptr(hud_icon_));
 
   TrashLauncherIcon* trash = new TrashLauncherIcon();
   RegisterIcon(AbstractLauncherIcon::Ptr(trash));
 
-  parent_->options()->hide_mode.changed.connect([bfb, hud](LauncherHideMode mode) {
-    bfb->SetHideMode(mode);
-    hud->SetHideMode(mode);
+  parent_->options()->hide_mode.changed.connect([this] (LauncherHideMode mode) {
+    bfb_icon_->SetHideMode(mode);
+    hud_icon_->SetHideMode(mode);
+  });
+
+  parent_->multiple_launchers.changed.connect([this] (bool value) {
+    UScreen* uscreen = UScreen::GetDefault();
+    auto monitors = uscreen->GetMonitors();
+    int primary = uscreen->GetPrimaryMonitor();
+    EnsureLaunchers(primary, monitors);
+    parent_->options()->show_for_all = !value;
+    hud_icon_->SetSingleLauncher(!value, primary);
   });
 
   WindowManager& wm = WindowManager::Default();
@@ -172,6 +178,18 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
     {
       ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED, glib::Variant(selected->tooltip_text()));
     }
+  });
+
+  ubus.RegisterInterest(UBUS_LAUNCHER_NEXT_KEY_NAV, [this] (GVariant*) {
+    parent_->KeyNavNext();
+  });
+
+  ubus.RegisterInterest(UBUS_LAUNCHER_PREV_KEY_NAV, [this] (GVariant*) {
+    parent_->KeyNavPrevious();
+  });
+
+  ubus.RegisterInterest(UBUS_LAUNCHER_OPEN_QUICKLIST, [this] (GVariant*) {
+    OpenQuicklist();
   });
 
   parent_->AddChild(model_.get());
@@ -342,6 +360,21 @@ Launcher* Controller::Impl::CreateLauncher()
   return launcher;
 }
 
+ApplicationLauncherIcon* Controller::Impl::CreateAppLauncherIcon(ApplicationPtr const& app)
+{
+  auto const& desktop_file = app->desktop_file();
+
+  if (boost::algorithm::ends_with(desktop_file, "org.gnome.Nautilus.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus-folder-handler.desktop") ||
+      boost::algorithm::ends_with(desktop_file, "nautilus-home.desktop"))
+  {
+    return new FileManagerLauncherIcon(app, device_section_);
+  }
+
+  return new ApplicationLauncherIcon(app);
+}
+
 void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr const& icon_before)
 {
   std::string app_uri;
@@ -489,44 +522,25 @@ Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, b
 }
 
 void
-Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
-                                              std::string const& aptdaemon_trans_id,
-                                              std::string const& icon_path,
-                                              int icon_x,
-                                              int icon_y,
-                                              int icon_size)
+Controller::Impl::OnLauncherAddRequestSpecial(std::string const& appstream_app_id,
+                                              std::string const& aptdaemon_trans_id)
 {
-  // Check if desktop file was supplied, or if it's set to SC's agent
-  // See https://bugs.launchpad.net/unity/+bug/1002440
-  if (path.empty() || path == local::SOFTWARE_CENTER_AGENT)
+  // Check if desktop file was supplied
+  if (appstream_app_id.empty())
     return;
 
   auto const& icon = std::find_if(model_->begin(), model_->end(),
-    [&path](AbstractLauncherIcon::Ptr const& i) { return (i->DesktopFile() == path); });
+    [&appstream_app_id](AbstractLauncherIcon::Ptr const& i) { return (i->DesktopFile() == appstream_app_id); });
 
   if (icon != model_->end())
     return;
 
-  auto const& result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+  auto const& result = CreateSCLauncherIcon(appstream_app_id, aptdaemon_trans_id);
 
   if (result)
   {
-    // Setting the icon position and adding it to the model, makes the launcher
-    // to compute its center
     RegisterIcon(result, GetLastIconPriority<ApplicationLauncherIcon>("", true));
-
-    if (icon_x > 0 || icon_y > 0)
-    {
-      // This will ensure that the center of the new icon is set, so that
-      // the animation could be done properly.
-      sources_.AddIdle([this, icon_x, icon_y, result] {
-        return !result->Animate(CurrentLauncher(), icon_x, icon_y);
-      });
-    }
-    else
-    {
-      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
-    }
+    result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
   }
 }
 
@@ -534,14 +548,14 @@ void Controller::Impl::SortAndUpdate()
 {
   unsigned shortcut = 1;
 
-  for (auto const& icon : model_->GetSublist<ApplicationLauncherIcon>())
+  for (auto const& icon : model_->GetSublist<WindowedLauncherIcon>())
   {
     if (shortcut <= 10 && icon->IsVisible())
     {
       icon->SetShortcut(std::to_string(shortcut % 10)[0]);
       ++shortcut;
     }
-    else
+    else if (isdigit(icon->GetShortcut()))
     {
       // reset shortcut
       icon->SetShortcut(0);
@@ -838,7 +852,7 @@ void Controller::Impl::OnApplicationStarted(ApplicationPtr const& app)
   if (app->sticky() || app->seen())
     return;
 
-  AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+  AbstractLauncherIcon::Ptr icon(CreateAppLauncherIcon(app));
   RegisterIcon(icon, GetLastIconPriority<ApplicationLauncherIcon>(local::RUNNING_APPS_URI));
 }
 
@@ -875,11 +889,11 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
     if (!app || app->seen())
       return result;
 
-    result = AbstractLauncherIcon::Ptr(new ApplicationLauncherIcon(app));
+    result = AbstractLauncherIcon::Ptr(CreateAppLauncherIcon(app));
   }
   else if (icon_uri.find(FavoriteStore::URI_PREFIX_DEVICE) == 0)
   {
-    auto const& devices = device_section_.GetIcons();
+    auto const& devices = device_section_->GetIcons();
     auto const& icon = std::find_if(devices.begin(), devices.end(),
       [&icon_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == icon_uri); });
 
@@ -927,22 +941,11 @@ AbstractLauncherIcon::Ptr Controller::Impl::GetIconByUri(std::string const& icon
   return AbstractLauncherIcon::Ptr();
 }
 
-SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
-                                                                       std::string const& aptdaemon_trans_id,
-                                                                       std::string const& icon_path)
+SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::string const& appstream_app_id,
+                                                                       std::string const& aptdaemon_trans_id)
 {
-  SoftwareCenterLauncherIcon::Ptr result;
-
-  ApplicationPtr app = ApplicationManager::Default().GetApplicationForDesktopFile(file_path);
-  if (!app)
-    return result;
-
-  if (app->seen)
-    return result;
-
-  result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
-
-  return result;
+  ApplicationPtr app = std::make_shared<appstream::Application>(appstream_app_id);
+  return SoftwareCenterLauncherIcon::Ptr(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id));
 }
 
 void Controller::Impl::AddRunningApps()
@@ -954,7 +957,7 @@ void Controller::Impl::AddRunningApps()
                      << (app->seen() ? "yes" : "no");
     if (!app->seen())
     {
-      AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+      AbstractLauncherIcon::Ptr icon(CreateAppLauncherIcon(app));
       icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
       RegisterIcon(icon, ++sort_priority_);
     }
@@ -964,7 +967,7 @@ void Controller::Impl::AddRunningApps()
 void Controller::Impl::AddDevices()
 {
   auto& fav_store = FavoriteStore::Instance();
-  for (auto const& icon : device_section_.GetIcons())
+  for (auto const& icon : device_section_->GetIcons())
   {
     if (!icon->IsSticky() && !fav_store.IsFavorite(icon->RemoteUri()))
     {
@@ -1044,7 +1047,7 @@ void Controller::Impl::SetupIcons()
   ApplicationManager::Default().application_started
     .connect(sigc::mem_fun(this, &Impl::OnApplicationStarted));
 
-  device_section_.icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));
+  device_section_->icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));
   favorite_store.favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
   favorite_store.favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   favorite_store.reordered.connect(sigc::mem_fun(this, &Impl::ResetIconPriorities));
@@ -1066,16 +1069,7 @@ Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierCont
  : options(std::make_shared<Options>())
  , multiple_launchers(true)
  , pimpl(new Impl(this, xdnd_manager, edge_barriers))
-{
-  multiple_launchers.changed.connect([this] (bool value) {
-    UScreen* uscreen = UScreen::GetDefault();
-    auto monitors = uscreen->GetMonitors();
-    int primary = uscreen->GetPrimaryMonitor();
-    pimpl->EnsureLaunchers(primary, monitors);
-    options()->show_for_all = !value;
-    pimpl->hud_icon_->SetSingleLauncher(!value, primary);
-  });
-}
+{}
 
 Controller::~Controller()
 {}
@@ -1463,35 +1457,60 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
 
   switch (keysym)
   {
-      // up (move selection up or go to global-menu if at top-most icon)
+      // up
     case NUX_VK_UP:
     case NUX_KP_UP:
-      parent_->KeyNavPrevious();
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        // move selection up or go to global-menu if at top-most icon
+        parent_->KeyNavPrevious();
+      else
+        OpenQuicklist();
       break;
 
-      // down (move selection down and unfold launcher if needed)
+      // down
     case NUX_VK_DOWN:
     case NUX_KP_DOWN:
-      parent_->KeyNavNext();
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        // move selection down and unfold launcher if needed
+        parent_->KeyNavNext();
+      else
+        // exit launcher key-focus
+        parent_->KeyNavTerminate(false);
       break;
 
-      // super/control/esc/left (close quicklist or exit laucher key-focus)
+      // left
+    case NUX_VK_LEFT:
+    case NUX_KP_LEFT:
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        parent_->KeyNavTerminate(false);
+      else
+        // move selection left or go to global-menu if at top-most icon or close quicklist
+        parent_->KeyNavPrevious();
+      break;
+
+      // right
+    case NUX_VK_RIGHT:
+    case NUX_KP_RIGHT:
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        OpenQuicklist();
+      else
+        // move selection right and unfold launcher if needed
+        parent_->KeyNavNext();
+      break;
+
+      // super/control/esc (close quicklist or exit laucher key-focus)
     case NUX_VK_LWIN:
     case NUX_VK_RWIN:
     case NUX_VK_CONTROL:
-    case NUX_VK_LEFT:
-    case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
       // hide again
       parent_->KeyNavTerminate(false);
       break;
 
-      // right/shift-f10 (open quicklist of currently selected icon)
+      // shift-f10 (open quicklist of currently selected icon)
     case XK_F10:
       if (!(state & nux::NUX_STATE_SHIFT))
         break;
-    case NUX_VK_RIGHT:
-    case NUX_KP_RIGHT:
     case XK_Menu:
       OpenQuicklist();
       break;
@@ -1531,16 +1550,11 @@ void Controller::Impl::OpenQuicklist()
 
 GVariant* Controller::Impl::OnDBusMethodCall(std::string const& method, GVariant *parameters)
 {
-  if (method == "AddLauncherItemFromPosition")
+  if (method == "AddLauncherItem")
   {
-    glib::String icon, icon_title, desktop_file, aptdaemon_task;
-    gint icon_x, icon_y, icon_size;
-
-    g_variant_get(parameters, "(ssiiiss)", &icon_title, &icon, &icon_x, &icon_y,
-                                           &icon_size, &desktop_file, &aptdaemon_task);
-
-    OnLauncherAddRequestSpecial(desktop_file.Str(), aptdaemon_task.Str(),
-                                icon.Str(), icon_x, icon_y, icon_size);
+    glib::String appstream_app_id, aptdaemon_trans_id;
+    g_variant_get(parameters, "(ss)", &appstream_app_id, &aptdaemon_trans_id);
+    OnLauncherAddRequestSpecial(appstream_app_id.Str(), aptdaemon_trans_id.Str());
   }
   else if (method == "UpdateLauncherIconFavoriteState")
   {

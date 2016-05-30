@@ -19,12 +19,16 @@
 
 #include "config.h"
 #include "DecorationStyle.h"
-#include <gtk/gtk.h>
+
+#include <math.h>
 #include <NuxCore/Colors.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
-#include <math.h>
+
+#include "GtkUtils.h"
+#include "ThemeSettings.h"
 
 namespace unity
 {
@@ -53,7 +57,6 @@ const int DEFAULT_TITLE_FADING_PIXELS = 35;
 const int DEFAULT_GLOW_SIZE = 10;
 const nux::Color DEFAULT_GLOW_COLOR(221, 72, 20);
 
-const std::array<std::string, 2> THEMED_FILE_EXTENSIONS = { "svg", "png" };
 const std::array<std::string, size_t(WindowButtonType::Size)> WBUTTON_NAMES = { "close", "minimize", "unmaximize", "maximize" };
 const std::array<std::string, size_t(WidgetState::Size)> WBUTTON_STATES = {"", "_focused_prelight", "_focused_pressed", "_unfocused",
                                                                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed" };
@@ -157,8 +160,9 @@ struct Style::Impl
     gtk_widget_path_append_type(widget_path.get(), unity_decoration_get_type());
     gtk_style_context_set_path(ctx_, widget_path.get());
 
-    parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
-    parent_->font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+    auto theme_settings = theme::Settings::Get();
+    parent_->theme.SetGetterFunction([theme_settings] { return theme_settings->theme(); });
+    parent_->font.SetGetterFunction([theme_settings] { return theme_settings->font(); });
     parent_->font_scale = 1.0;
     SetTitleFont();
 
@@ -166,29 +170,26 @@ struct Style::Impl
     UpdateMenuItemPangoContext(parent_->font);
     UpdateThemedValues();
 
-    GtkSettings* settings = gtk_settings_get_default();
-    signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-theme-name", [this] (GtkSettings*, GParamSpec*) {
+    connections_.Add(theme_settings->theme.changed.connect([this] (std::string const& theme) {
 #if !GTK_CHECK_VERSION(3, 11, 0)
       gtk_style_context_invalidate(ctx_);
 #endif
       UpdateThemedValues();
-      parent_->theme = glib::String(GetSettingValue<gchar*>("gtk-theme-name")).Str();
-      LOG_INFO(logger) << "gtk-theme-name changed to " << parent_->theme();
-    });
+      parent_->theme.EmitChanged(theme);
+      LOG_INFO(logger) << "unity theme changed to " << parent_->theme();
+    }));
 
-    signals_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-font-name", [this] (GtkSettings*, GParamSpec*) {
-      auto const& font = glib::String(GetSettingValue<gchar*>("gtk-font-name")).Str();
+    connections_.Add(theme_settings->font.changed.connect([this] (std::string const& font) {
       UpdateMenuItemPangoContext(font);
-      parent_->font = font;
+      parent_->font.EmitChanged(font);
 
       if (g_settings_get_boolean(settings_, USE_SYSTEM_FONT_KEY.c_str()))
       {
         UpdateTitlePangoContext(parent_->font());
         parent_->title_font = parent_->font();
       }
-
-      LOG_INFO(logger) << "gtk-font-name changed to " << parent_->font();
-    });
+      LOG_INFO(logger) << "unity font changed to " << parent_->font();
+    }));
 
     parent_->font_scale.changed.connect([this] (bool scale) {
       UpdateTitlePangoContext(parent_->title_font);
@@ -297,14 +298,6 @@ struct Style::Impl
     return value;
   }
 
-  template <typename TYPE>
-  inline TYPE GetSettingValue(std::string const& name)
-  {
-    TYPE value;
-    g_object_get(gtk_settings_get_default(), name.c_str(), &value, nullptr);
-    return value;
-  }
-
   WMAction WMActionFromString(std::string const& action) const
   {
     if (action == "toggle-shade")
@@ -376,6 +369,7 @@ struct Style::Impl
   void AddContextClasses(Side s, WidgetState ws, GtkStyleContext* ctx = nullptr)
   {
     ctx = ctx ? ctx : ctx_;
+    gtk_style_context_add_class(ctx, "background");
     gtk_style_context_add_class(ctx, "gnome-panel-menu-bar");
     if (s == Side::TOP) { gtk_style_context_add_class(ctx, "header-bar"); }
     gtk_style_context_add_class(ctx, GetBorderClass(s).c_str());
@@ -391,54 +385,10 @@ struct Style::Impl
     gtk_style_context_restore(ctx_);
   }
 
-  std::string ThemedFilePath(std::string const& base_filename, std::vector<std::string> const& extra_folders = {}) const
-  {
-    auto const& theme = parent_->theme();
-    const char* home_dir = g_get_home_dir();
-    const char* gtk_prefix = g_getenv("GTK_DATA_PREFIX");
-    if (!gtk_prefix)
-      gtk_prefix = GTK_PREFIX;
-
-    for (auto const& extension : THEMED_FILE_EXTENSIONS)
-    {
-      auto filename = base_filename + '.' + extension;
-      glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
-
-      // Look in home directory
-      if (home_dir)
-      {
-        glib::String local_file(g_build_filename(home_dir, ".local", "share", "themes", subpath.Value(), nullptr));
-
-        if (g_file_test(local_file, G_FILE_TEST_EXISTS))
-          return local_file.Str();
-
-        glib::String home_file(g_build_filename(home_dir, ".themes", subpath.Value(), nullptr));
-
-        if (g_file_test(home_file, G_FILE_TEST_EXISTS))
-          return home_file.Str();
-      }
-
-      glib::String path(g_build_filename(gtk_prefix, "share", "themes", subpath.Value(), nullptr));
-
-      if (g_file_test(path, G_FILE_TEST_EXISTS))
-        return path.Str();
-
-      for (auto const& folder : extra_folders)
-      {
-        glib::String path(g_build_filename(folder.c_str(), filename.c_str(), nullptr));
-
-        if (g_file_test(path, G_FILE_TEST_EXISTS))
-          return path.Str();
-      }
-    }
-
-    return std::string();
-  }
-
   std::string WindowButtonFile(WindowButtonType type, WidgetState state) const
   {
     auto base_filename = WBUTTON_NAMES[unsigned(type)] + WBUTTON_STATES[unsigned(state)];
-    auto const& file_path = ThemedFilePath(base_filename);
+    auto const& file_path = parent_->ThemedFilePath(base_filename);
 
     if (!file_path.empty())
       return file_path;
@@ -677,6 +627,7 @@ struct Style::Impl
   glib::Object<GSettings> usettings_;
   glib::Object<PangoContext> title_pango_ctx_;
   glib::Object<PangoContext> menu_item_pango_ctx_;
+  connection::Manager connections_;
   decoration::Border border_;
   decoration::Border input_edges_;
   decoration::Border radius_;
@@ -751,7 +702,7 @@ void Style::DrawMenuItemIcon(std::string const& i, WidgetState ws, cairo_t* cr, 
 
 std::string Style::ThemedFilePath(std::string const& basename, std::vector<std::string> const& extra_folders) const
 {
-  return impl_->ThemedFilePath(basename, extra_folders);
+  return theme::Settings::Get()->ThemedFilePath(basename, extra_folders);
 }
 
 std::string Style::WindowButtonFile(WindowButtonType type, WidgetState state) const
@@ -832,12 +783,12 @@ WMAction Style::WindowManagerAction(WMEvent event) const
 
 int Style::DoubleClickMaxDistance() const
 {
-  return impl_->GetSettingValue<int>("gtk-double-click-distance");
+  return gtk::GetSettingValue<int>("gtk-double-click-distance");
 }
 
 int Style::DoubleClickMaxTimeDelta() const
 {
-  return impl_->GetSettingValue<int>("gtk-double-click-time");
+  return gtk::GetSettingValue<int>("gtk-double-click-time");
 }
 
 nux::Size Style::TitleNaturalSize(std::string const& text)

@@ -114,6 +114,11 @@ bool View::GetUrgent() const
   return bamf_view_is_urgent(bamf_view_);
 }
 
+bool View::GetStarting() const
+{
+  return bamf_view_is_starting(bamf_view_);
+}
+
 
 WindowBase::WindowBase(ApplicationManager const& manager,
                        glib::Object<BamfView> const& window)
@@ -147,6 +152,7 @@ WindowBase::WindowBase(ApplicationManager const& manager,
   });
   signals_.Add<void, BamfView*>(bamf_view_, "closed",
   [this] (BamfView* view) {
+    this->closed.emit();
     pool::wins_.erase(view);
   });
 }
@@ -302,6 +308,8 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
   active.SetGetterFunction(std::bind(&View::GetActive, this));
   running.SetGetterFunction(std::bind(&View::GetRunning, this));
   urgent.SetGetterFunction(std::bind(&View::GetUrgent, this));
+  starting.SetGetterFunction(std::bind(&View::GetStarting, this));
+
 
   signals_.Add<void, BamfApplication*, const char*>(bamf_app_, "desktop-file-updated",
   [this] (BamfApplication*, const char* new_desktop_file) {
@@ -325,6 +333,13 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
     LOG_TRACE(logger) << "active-changed " << visible;
     this->active.changed.emit(active);
   });
+
+  signals_.Add<void, BamfView*, gboolean>(bamf_view_, "starting-changed",
+  [this] (BamfView*, gboolean starting) {
+    LOG_TRACE(logger) << "starting " << starting;
+    this->starting.changed.emit(starting);
+  });
+
   signals_.Add<void, BamfView*, gboolean>(bamf_view_, "running-changed",
   [this] (BamfView*, gboolean running) {
     LOG_TRACE(logger) << "running " << visible;
@@ -473,7 +488,7 @@ ApplicationWindowPtr Application::GetFocusableWindow() const
   return pool::EnsureWindow(manager_, bamf_application_get_focusable_child(bamf_app_));
 }
 
-void Application::Focus(bool show_only_visible, int monitor) const
+void Manager::FocusWindowGroup(WindowList const& wins, bool show_only_visible, int monitor) const
 {
   WindowManager& wm = WindowManager::Default();
   std::vector<Window> urgent_windows;
@@ -481,7 +496,7 @@ void Application::Focus(bool show_only_visible, int monitor) const
   std::vector<Window> non_visible_windows;
   bool any_visible = false;
 
-  for (auto& window : GetWindows())
+  for (auto& window : wins)
   {
     Window window_id = window->window_id();
     if (window->urgent())
@@ -526,12 +541,15 @@ void Application::Focus(bool show_only_visible, int monitor) const
   }
 }
 
+void Application::Focus(bool show_only_visible, int monitor) const
+{
+  manager_.FocusWindowGroup(GetWindows(), show_only_visible, monitor);
+}
+
 void Application::Quit() const
 {
   for (auto& window : GetWindows())
-  {
     window->Quit();
-  }
 }
 
 bool Application::CreateLocalDesktopFile() const

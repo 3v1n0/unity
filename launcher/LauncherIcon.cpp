@@ -26,6 +26,7 @@
 #include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 
@@ -41,6 +42,8 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
+#include <numeric>
+
 namespace unity
 {
 namespace launcher
@@ -52,8 +55,6 @@ namespace
 const int IGNORE_REPEAT_SHORTCUT_DURATION = 250;
 
 const std::string DEFAULT_ICON = "application-default-icon";
-const std::string MONO_TEST_ICON = "gnome-home";
-const std::string UNITY_THEME_NAME = "unity-icon-theme";
 
 const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
 const std::string PRESENT_TIMEOUT = "present-timeout";
@@ -64,9 +65,6 @@ const int COUNT_PADDING = 2;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
-
-int LauncherIcon::_current_theme_is_mono = -1;
-glib::Object<GtkIconTheme> LauncherIcon::_unity_theme;
 
 LauncherIcon::LauncherIcon(IconType type)
   : _icon_type(type)
@@ -150,14 +148,24 @@ void LauncherIcon::LoadQuicklist()
   QuicklistManager::Default()->RegisterQuicklist(_quicklist);
 }
 
-const bool LauncherIcon::WindowVisibleOnMonitor(int monitor)
+bool LauncherIcon::WindowVisibleOnMonitor(int monitor) const
 {
   return _has_visible_window[monitor];
 }
 
-const bool LauncherIcon::WindowVisibleOnViewport()
+bool LauncherIcon::WindowVisibleOnViewport() const
 {
   return _has_visible_window.any();
+}
+
+size_t LauncherIcon::WindowsVisibleOnMonitor(int monitor) const
+{
+  return _number_of_visible_windows[monitor];
+}
+
+size_t LauncherIcon::WindowsVisibleOnViewport() const
+{
+  return std::accumulate(begin(_number_of_visible_windows), end(_number_of_visible_windows), 0);
 }
 
 std::string
@@ -315,44 +323,18 @@ void LauncherIcon::ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::
   glow = nux::Color(nux::color::RedGreenBlue(hsv));
 }
 
-/*
- * FIXME, all this code (and below), should be put in a facility for IconLoader
- * to share between launcher and places the same Icon loading logic and not look
- * having etoomanyimplementationofsamethings.
- */
-/* static */
-bool LauncherIcon::IsMonoDefaultTheme()
+BaseTexturePtr LauncherIcon::TextureFromPixbuf(GdkPixbuf* pixbuf, int size, bool update_glow_colors)
 {
-  if (_current_theme_is_mono != -1)
-    return (bool)_current_theme_is_mono;
+  g_return_val_if_fail(GDK_IS_PIXBUF(pixbuf), BaseTexturePtr());
 
-  GtkIconTheme* default_theme;
-  glib::Object<GtkIconInfo> info;
-  default_theme = gtk_icon_theme_get_default();
+  glib::Object<GdkPixbuf> scaled_pixbuf(gdk_pixbuf_scale_simple(pixbuf, size, size,  GDK_INTERP_BILINEAR));
 
-  _current_theme_is_mono = (int)false;
-  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), icon_size(), GTK_ICON_LOOKUP_FORCE_SIZE);
+  if (update_glow_colors)
+    ColorForIcon(scaled_pixbuf, _background_color, _glow_color);
 
-  if (!info)
-    return (bool)_current_theme_is_mono;
-
-  // yeah, it's evil, but it's blessed upstream
-  if (g_strrstr(gtk_icon_info_get_filename(info), "ubuntu-mono") != NULL)
-    _current_theme_is_mono = (int)true;
-
-  return (bool)_current_theme_is_mono;
-}
-
-GtkIconTheme* LauncherIcon::GetUnityTheme()
-{
-  // The theme object is invalid as soon as you add a new icon to change the theme.
-  // invalidate the cache then and rebuild the theme the first time after a icon theme update.
-  if (!_unity_theme.IsType(GTK_TYPE_ICON_THEME))
-  {
-    _unity_theme = gtk_icon_theme_new();
-    gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
-  }
-  return _unity_theme;
+  BaseTexturePtr result;
+  result.Adopt(nux::CreateTexture2DFromPixbuf(scaled_pixbuf, true));
+  return result;
 }
 
 BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
@@ -367,7 +349,7 @@ BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size
   result = TextureFromSpecificGtkTheme(default_theme, icon_name, size, update_glow_colors);
 
   if (!result)
-    result = TextureFromSpecificGtkTheme(GetUnityTheme(), icon_name, size, update_glow_colors);
+    result = TextureFromSpecificGtkTheme(theme::Settings::Get()->UnityIconTheme(), icon_name, size, update_glow_colors);
 
   if (!result)
     result = TextureFromSpecificGtkTheme(default_theme, icon_name, size, update_glow_colors, true);
@@ -485,7 +467,14 @@ guint64 LauncherIcon::GetShortcut()
 nux::Point LauncherIcon::GetTipPosition(int monitor) const
 {
   auto const& converter = Settings::Instance().em(monitor);
-  return nux::Point(_center[monitor].x + converter->CP(icon_size()) / 2 + 1, _center[monitor].y);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    return nux::Point(_center[monitor].x + converter->CP(icon_size()) / 2 + 1, _center[monitor].y);
+  }
+  else
+  {
+    return nux::Point(_center[monitor].x, _center[monitor].y - converter->CP(icon_size()) / 2 - 1);
+  }
 }
 
 void LauncherIcon::ShowTooltip()
@@ -654,6 +643,14 @@ void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
     _tooltip->Hide();
+
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>());
+}
+
+void LauncherIcon::PromptHideTooltip()
+{
+  if (_tooltip)
+    _tooltip->PromptHide();
 
   tooltip_visible.emit(nux::ObjectPtr<nux::View>());
 }
@@ -1044,9 +1041,8 @@ BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
   glib::Object<PangoContext> pango_ctx(gdk_pango_context_get());
   glib::Object<PangoLayout> layout(pango_layout_new(pango_ctx));
 
-  glib::String font_name;
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, nullptr);
-  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
+  auto const& font = theme::Settings::Get()->font();
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
   int font_size = pango_units_from_double(Settings::Instance().font_scaling() * COUNT_FONT_SIZE);
   pango_font_description_set_absolute_size(desc.get(), font_size);
   pango_layout_set_font_description(layout, desc.get());

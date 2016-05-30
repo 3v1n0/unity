@@ -36,6 +36,7 @@
 #include "PreviewStyle.h"
 #include "RawPixel.h"
 #include "TextureCache.h"
+#include "ThemeSettings.h"
 #include "UnitySettings.h"
 
 namespace unity
@@ -54,6 +55,7 @@ const RawPixel TOOLTIP_Y_OFFSET  =  3_em;
 const RawPixel TOOLTIP_OFFSET    = 10_em;
 const RawPixel DEFAULT_ICON_SIZE = 22_em;
 
+std::string ACTIVATOR_ICON  = "arrow_right";
 std::string WARNING_ICON    = "dialog-warning-symbolic";
 // Fonts
 const std::string HINT_LABEL_DEFAULT_FONT_NAME = "Ubuntu";
@@ -88,9 +90,15 @@ NUX_IMPLEMENT_OBJECT_TYPE(TextInput);
 
 TextInput::TextInput(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , activator_icon(ACTIVATOR_ICON)
+  , activator_icon_size(DEFAULT_ICON_SIZE)
+  , background_color(nux::Color(0.0f, 0.0f, 0.0f, 0.35f))
+  , border_color(nux::Color(1.0f, 1.0f, 1.0f, 0.7f))
+  , border_radius(BORDER_RADIUS)
   , input_hint("")
   , hint_font_name(HINT_LABEL_DEFAULT_FONT_NAME)
   , hint_font_size(HINT_LABEL_FONT_SIZE)
+  , hint_color(nux::Color(1.0f, 1.0f, 1.0f, 0.5f))
   , show_activator(false)
   , show_lock_warnings(false)
   , scale(1.0)
@@ -109,7 +117,9 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   hint_layout_->SetLeftAndRightPadding(HINT_PADDING.CP(scale), HINT_PADDING.CP(scale));
 
   hint_ = new StaticCairoText("");
-  hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+  hint_->SetTextColor(hint_color);
+  hint_color.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateHintColor)));
+
   hint_->SetScale(scale);
   hint_layout_->AddView(hint_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   hint_font_name.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateHintFont)));
@@ -132,7 +142,7 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   layered_layout_->SetActiveLayerN(1);
   layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  UpdateSize();
+  UpdateFont();
 
   // Caps lock warning
   warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE.CP(scale)));
@@ -146,9 +156,17 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateSize)));
 
   // Activator
-  activator_ = new IconTexture(LoadActivatorIcon(DEFAULT_ICON_SIZE.CP(scale)));
+  activator_ = new IconTexture(LoadActivatorIcon(activator_icon(), activator_icon_size().CP(scale)));
   activator_->SetVisible(show_activator());
   layout_->AddView(activator_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
+  activator_icon.changed.connect([this] (std::string icon) {
+    activator_->SetTexture(LoadActivatorIcon(icon, activator_icon_size().CP(scale)));
+  });
+
+  activator_icon_size.changed.connect([this] (RawPixel icon_size) {
+    activator_->SetTexture(LoadActivatorIcon(activator_icon(), icon_size.CP(scale)));
+  });
 
   show_activator.changed.connect([this] (bool value) {
     activator_->SetVisible(value);
@@ -164,8 +182,8 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   spinner_->scale = scale();
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  OnFontChanged();
-  sig_manager_.Add<void, GtkSettings*>(gtk_settings_get_default(), "notify::gtk-font-name", sigc::hide(sigc::mem_fun(this, &TextInput::OnFontChanged)));
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &TextInput::UpdateTextures));
+  theme::Settings::Get()->font.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::UpdateFont)));
   sig_manager_.Add<void, GdkKeymap*>(gdk_keymap_get_default(), "state-changed", [this](GdkKeymap*) { CheckLocks(); });
 
   input_string.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_input_string));
@@ -185,6 +203,11 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   warning_->mouse_leave.connect([this] (int x, int y, int button, int key_flags) {
     tooltip_timeout_ ? tooltip_timeout_.reset() : QueueDraw();
   });
+
+  //background
+  background_color.changed.connect([this] (nux::Color color) { UpdateBackground(true); });
+  border_color.changed.connect([this] (nux::Color color) { UpdateBackground(true); });
+  border_radius.changed.connect([this] (int radius) { UpdateBackground(true); });
 }
 
 void TextInput::UpdateSize()
@@ -208,11 +231,17 @@ void TextInput::UpdateScale(double scale)
   hint_->SetMaximumHeight(pango_entry_->GetMinimumHeight());
 
   spinner_->scale = scale;
-  activator_->SetTexture(LoadActivatorIcon(DEFAULT_ICON_SIZE.CP(scale)));
+  activator_->SetTexture(LoadActivatorIcon(activator_icon(), activator_icon_size().CP(scale)));
   warning_->SetTexture(LoadWarningIcon(DEFAULT_ICON_SIZE.CP(scale)));
   warning_tooltip_.Release();
 
   QueueRelayout();
+  QueueDraw();
+}
+
+void TextInput::UpdateTextures()
+{
+  activator_->SetTexture(LoadActivatorIcon(activator_icon(), activator_icon_size().CP(scale)));
   QueueDraw();
 }
 
@@ -254,10 +283,15 @@ void TextInput::UpdateHintFont()
   hint_->SetFont((hint_font_name() + " " + std::to_string(hint_font_size())).c_str());
 }
 
-nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(int icon_size)
+void TextInput::UpdateHintColor()
+{
+  hint_->SetTextColor(hint_color);
+}
+
+nux::ObjectPtr<nux::BaseTexture> TextInput::LoadActivatorIcon(std::string const& icon_file, int icon_size)
 {
   TextureCache& cache = TextureCache::GetDefault();
-  return cache.FindTexture("arrow_right.png", icon_size, icon_size);
+  return cache.FindTexture(icon_file, icon_size, icon_size);
 }
 
 nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)
@@ -293,9 +327,6 @@ nux::ObjectPtr<nux::BaseTexture> TextInput::LoadWarningIcon(int icon_size)
 
 void TextInput::LoadWarningTooltip()
 {
-  glib::String font_name;
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
-
   glib::Object<GtkStyleContext> style_context(gtk_style_context_new());
   std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
   gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_TOOLTIP);
@@ -306,7 +337,8 @@ void TextInput::LoadWarningTooltip()
   glib::Object<PangoContext> context(gdk_pango_context_get());
   glib::Object<PangoLayout> layout(pango_layout_new(context));
 
-  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
+  auto const& font = theme::Settings::Get()->font();
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
   pango_context_set_font_description(context, desc.get());
   pango_context_set_language(context, gtk_get_default_language());
   pango_cairo_context_set_resolution(context, 96.0 * Settings::Instance().font_scaling());
@@ -342,14 +374,10 @@ void TextInput::LoadWarningTooltip()
   warning_tooltip_ = texture_ptr_from_cairo_graphics(cg);
 }
 
-void TextInput::OnFontChanged()
+void TextInput::UpdateFont()
 {
-  glib::String font_name;
-  PangoFontDescription* desc;
+  auto* desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
-
-  desc = pango_font_description_from_string(font_name.Value());
   if (desc)
   {
     pango_entry_->SetFontFamily(pango_font_description_get_family(desc));
@@ -459,15 +487,15 @@ void TextInput::UpdateBackground(bool force)
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
                                       0.5, 0.5,
-                                      BORDER_RADIUS,
+                                      border_radius(),
                                       (last_width_/scale) - 1, (last_height_/scale) - 1,
                                       false);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
+  cairo_set_source_rgba(cr, background_color().red, background_color().green, background_color().blue, background_color().alpha);
   cairo_fill_preserve(cr);
   cairo_set_line_width(cr, 1);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
+  cairo_set_source_rgba(cr, border_color().red, border_color().green, border_color().blue, border_color().alpha);
   cairo_stroke(cr);
 
   auto texture2D = texture_ptr_from_cairo_graphics(cairo_graphics);

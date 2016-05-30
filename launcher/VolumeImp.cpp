@@ -53,6 +53,11 @@ public:
     return g_volume_can_eject(volume_) != FALSE;
   }
 
+  bool CanBeFormatted() const
+  {
+    return !GetUnixDevicePath().empty();
+  }
+
   bool CanBeRemoved() const
   {
     glib::Object<GDrive> drive(g_volume_get_drive(volume_));
@@ -82,6 +87,12 @@ public:
     glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
 
     return uuid.Str() + "-" + label.Str();
+  }
+
+  std::string GetUnixDevicePath() const
+  {
+    glib::String ret(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UNIX_DEVICE));
+    return ret.Str();
   }
 
   bool HasSiblings() const
@@ -200,6 +211,11 @@ bool VolumeImp::CanBeEjected() const
   return pimpl->CanBeEjected();
 }
 
+bool VolumeImp::CanBeFormatted() const
+{
+  return pimpl->CanBeFormatted();
+}
+
 bool VolumeImp::CanBeRemoved() const
 {
   return pimpl->CanBeRemoved();
@@ -223,6 +239,11 @@ std::string VolumeImp::GetIconName() const
 std::string VolumeImp::GetIdentifier() const
 {
   return pimpl->GetIdentifier();
+}
+
+std::string VolumeImp::GetUnixDevicePath() const
+{
+  return pimpl->GetUnixDevicePath();
 }
 
 std::string VolumeImp::GetUri() const

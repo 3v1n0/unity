@@ -35,6 +35,18 @@ enum class FormFactor
   TV
 };
 
+enum class LauncherPosition
+{
+  LEFT = 0,
+  BOTTOM
+};
+
+enum class DesktopType
+{
+  UBUNTU,
+  UBUNTUKYLIN
+};
+
 class Settings
 {
 public:
@@ -46,17 +58,19 @@ public:
   void SetLowGfxMode(const bool low_gfx);
   EMConverter::Ptr const& em(int monitor = 0) const;
 
-  void SetLauncherWidth(int launcher_width, int monitor);
-  int LauncherWidth(int monitor) const;
+  void SetLauncherSize(int launcher_size, int monitor);
+  int LauncherSize(int mointor) const;
 
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
+  nux::ROProperty<DesktopType> desktop_type;
   nux::ROProperty<bool> double_click_activate;
   nux::Property<unsigned> lim_movement_thresold;
   nux::Property<unsigned> lim_double_click_wait;
   nux::Property<bool> lim_unfocused_popup;
   nux::Property<double> font_scaling;
   nux::ROProperty<bool> remote_content;
+  nux::RWProperty<LauncherPosition> launcher_position;
 
   sigc::signal<void> dpi_changed;
   sigc::signal<void> low_gfx_changed;

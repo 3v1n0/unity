@@ -28,6 +28,7 @@ import subprocess
 import sys
 import time
 
+DEFAULT_COMMAND = "compiz --replace"
 home_dir = os.path.expanduser("~%s" % os.getenv("SUDO_USER"))
 supported_prefix = "/usr/local"
 
@@ -67,17 +68,20 @@ def reset_launcher_icons ():
     '''Reset the default launcher icon and restart it.'''
     subprocess.Popen(["gsettings", "reset" ,"com.canonical.Unity.Launcher" , "favorites"])
 
-def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_file):
+def is_upstart_session():
+  return 'UPSTART_SESSION' in os.environ.keys() and len(os.environ['UPSTART_SESSION'])
+
+def process_and_start_unity (compiz_args):
     '''launch unity under compiz (replace the current shell in any case)'''
 
     cli = []
 
-    if debug_mode > 0:
+    if options.debug_mode > 0:
         # we can do more check later as if it's in PATH...
         if not os.path.isfile('/usr/bin/gdb'):
             print("ERROR: you don't have gdb in your system. Please install it to run in advanced debug mode.")
             sys.exit(1)
-        elif debug_mode == 1:
+        elif options.debug_mode == 1:
             cli.extend(['gdb', '-ex', 'run', '-ex', '"bt full"', '--batch', '--args'])
         elif 'DESKTOP_SESSION' in os.environ:
             print("ERROR: it seems you are under a graphical environment. That's incompatible with executing advanced-debug option. You should be in a tty.")
@@ -88,15 +92,19 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
     if options.compiz_path:
         cli.extend([options.compiz_path, '--replace'])
     else:
-        cli.extend(['compiz', '--replace'])
+        cli.extend(DEFAULT_COMMAND.split())
 
     if options.verbose:
         cli.append("--debug")
-    if args:
+    if compiz_args:
         cli.extend(compiz_args)
 
-    if log_file:
-        cli.extend(['2>&1', '|', 'tee', log_file])
+    if options.log:
+        cli.extend(['2>&1', '|', 'tee', options.log])
+
+    if is_upstart_session():
+      if b'start/running' in subprocess.check_output("status unity7".split()):
+        subprocess.call("stop unity7".split())
 
     # kill a previous compiz if was there (this is a hack as compiz can
     # sometimes get stuck and not exit on --replace)
@@ -110,24 +118,29 @@ def process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_
             if re.match(rb"^compiz\b", cmdline):
                 compiz_env = open(os.path.join(pid_path, "environ"), "rb").read()
                 if display in compiz_env.decode(sys.getdefaultencoding()):
-                    subprocess.call (["kill", "-9", pid])
+                    subprocess.call(["kill", "-9", pid])
         except IOError:
             continue
 
-    # shell = True as it's the simpest way to | tee.
-    # In this case, we need a string and not a list
-    # FIXME: still some bug with 2>&1 not showing everything before wait()
-    return subprocess.Popen(" ".join(cli), env=dict(os.environ), shell=True)
+    run_command = " ".join(cli)
+
+    if is_upstart_session() and run_command == DEFAULT_COMMAND and not options.ignore_upstart:
+      return subprocess.Popen("start unity7".split())
+    else:
+      # shell = True as it's the simpest way to | tee.
+      # In this case, we need a string and not a list
+      # FIXME: still some bug with 2>&1 not showing everything before wait()
+      return subprocess.Popen(" ".join(cli), env=dict(os.environ), shell=True)
 
 
-def run_unity (verbose, debug, advanced_debug, compiz_path, compiz_args, log_file):
+def run_unity (compiz_args):
     '''run the unity shell and handle Ctrl + C'''
 
     try:
-        debug_mode = 2 if advanced_debug else 1 if debug else 0
-        subprocess.call(["stop", "unity-panel-service"])
-        unity_instance = process_and_start_unity (verbose, debug_mode, compiz_path, compiz_args, log_file)
-        subprocess.call(["start", "unity-panel-service"])
+        options.debug_mode = 2 if options.advanced_debug else 1 if options.debug else 0
+        if is_upstart_session(): subprocess.call(["stop", "unity-panel-service"])
+        unity_instance = process_and_start_unity (compiz_args)
+        if is_upstart_session(): subprocess.call(["start", "unity-panel-service"])
         unity_instance.wait()
     except KeyboardInterrupt as e:
         try:
@@ -180,6 +193,8 @@ if __name__ == '__main__':
                       help="Store log under filename.")
     parser.add_option("--replace", action="store_true",
                       help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
+    parser.add_option("--ignore-upstart", action="store_true",
+                      help="Run unity without upstart support")
     parser.add_option("--reset", action="store_true",
                       help="(deprecated: provided for backwards compatibility)")
     parser.add_option("--reset-icons", action="store_true",
@@ -202,4 +217,4 @@ if __name__ == '__main__':
     if options.replace:
         print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
 
-    run_unity (options.verbose, options.debug, options.advanced_debug, options.compiz_path, args, options.log)
+    run_unity(args)

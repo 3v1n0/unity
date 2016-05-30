@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical Ltd
+ * Copyright (C) 2016 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,29 +16,32 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITY_LOCKSCREEN_SHUTDOWN_NOTIFIER
-#define UNITY_LOCKSCREEN_SHUTDOWN_NOTIFIER
+#ifndef UNITY_LOCKSCREEN_SUSPEND_INHIBITOR_MANAGER
+#define UNITY_LOCKSCREEN_SUSPEND_INHIBITOR_MANAGER
 
 #include <memory>
-#include <functional>
+#include <string>
+#include <sigc++/signal.h>
 
 namespace unity
 {
 namespace lockscreen
 {
 
-typedef std::function<void()> ShutdownCallback;
-
-class ShutdownNotifier
+class SuspendInhibitorManager
 {
 public:
-  typedef std::shared_ptr<ShutdownNotifier> Ptr;
+  typedef std::shared_ptr<SuspendInhibitorManager> Ptr;
 
-  ShutdownNotifier();
-  ~ShutdownNotifier();
+  SuspendInhibitorManager();
+  ~SuspendInhibitorManager();
 
-  bool RegisterInterest(ShutdownCallback const&);
-  void UnregisterInterest();
+  void Inhibit(std::string const&);
+  void Uninhibit();
+  bool IsInhibited();
+
+  sigc::signal<void> connected;
+  sigc::signal<void> about_to_suspend;
 
 private:
   class Impl;

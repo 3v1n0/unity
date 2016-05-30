@@ -35,6 +35,11 @@ namespace
 DECLARE_LOGGER(logger, "unity.desktop.utilities");
 }
 
+std::string DesktopUtilities::GetUserHomeDirectory()
+{
+  return glib::gchar_to_string(g_get_home_dir());
+}
+
 std::string DesktopUtilities::GetUserDataDirectory()
 {
   const char* user_dir = g_get_user_data_dir();
@@ -43,12 +48,12 @@ std::string DesktopUtilities::GetUserDataDirectory()
     return user_dir;
 
   // This shouldn't ever happen, but let's manually fallback to the default
-  const char* home = g_get_home_dir();
+  auto home = GetUserHomeDirectory();
 
-  if (home)
+  if (!home.empty())
   {
     const char* subdir = G_DIR_SEPARATOR_S ".local" G_DIR_SEPARATOR_S "share";
-    return std::string(home).append(subdir);
+    return home.append(subdir);
   }
 
   return "";
@@ -88,6 +93,11 @@ std::string DesktopUtilities::GetUserRuntimeDirectory()
 
   LOG_ERROR(logger) << "Impossible to create unity runtime folder '"<< unity_runtime <<"' !";
   return "";
+}
+
+std::string DesktopUtilities::GetUserTrashDirectory()
+{
+  return GetUserDataDirectory().append(G_DIR_SEPARATOR_S "Trash" G_DIR_SEPARATOR_S "files" G_DIR_SEPARATOR_S);
 }
 
 std::vector<std::string> DesktopUtilities::GetSystemDataDirectories()

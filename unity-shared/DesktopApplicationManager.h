@@ -24,7 +24,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
-#include "unity-shared/ApplicationManager.h"
+#include "ApplicationManager.h"
 
 namespace unity
 {

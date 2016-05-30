@@ -53,6 +53,8 @@
 
 namespace unity
 {
+enum class LauncherPosition;
+
 namespace launcher
 {
 extern const char* window_title;
@@ -310,6 +312,7 @@ private:
   bool DndIsSpecialRequest(std::string const& uri) const;
 
   void OnDPIChanged();
+  void LoadTextures();
 
   LauncherModel::Ptr model_;
   MockableBaseWindow* parent_;
@@ -345,6 +348,7 @@ private:
   int launcher_drag_delta_;
   int launcher_drag_delta_max_;
   int launcher_drag_delta_min_;
+  int enter_x_;
   int enter_y_;
   int last_button_press_;
   int drag_icon_position_;
@@ -366,6 +370,9 @@ private:
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
   BackgroundEffectHelper bg_effect_helper_;
+
+  LauncherPosition launcher_position_;
+  connection::Wrapper launcher_position_changed_;
 
   nux::animation::AnimateValue<float> auto_hide_animation_;
   nux::animation::AnimateValue<float> hover_animation_;

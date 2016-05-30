@@ -70,6 +70,7 @@ public:
   void RecvMouseClick(int button, int monitor, unsigned long key_flags = 0);
 
   void HideTooltip();
+  void PromptHideTooltip();
 
   void ShowTooltip();
 
@@ -82,7 +83,7 @@ public:
 
   nux::Point3 GetCenter(int monitor);
 
-  virtual void Activate(ActionArg arg);
+  void Activate(ActionArg arg);
 
   void OpenInstance(ActionArg arg);
 
@@ -94,15 +95,19 @@ public:
 
   void SetOrder(int order);
 
-  virtual WindowList Windows() { return WindowList(); }
+  WindowList Windows() { return WindowList(); }
 
-  virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
+  WindowList WindowsOnViewport() { return WindowList(); }
 
-  virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
+  WindowList WindowsForMonitor(int monitor) { return WindowList(); }
 
-  const bool WindowVisibleOnMonitor(int monitor);
+  bool WindowVisibleOnMonitor(int monitor) const;
 
-  const bool WindowVisibleOnViewport();
+  bool WindowVisibleOnViewport() const;
+
+  size_t WindowsVisibleOnMonitor(int monitor) const;
+
+  size_t WindowsVisibleOnViewport() const;
 
   float PresentUrgency();
 
@@ -265,15 +270,13 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
+  BaseTexturePtr TextureFromPixbuf(GdkPixbuf *pixbuf, int size, bool update_glow_colors = true);
+
   BaseTexturePtr TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
   BaseTexturePtr TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
 
   BaseTexturePtr TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
-
-  static bool        IsMonoDefaultTheme();
-
-  GtkIconTheme*      GetUnityTheme();
 
   void OnRemoteEmblemChanged(LauncherEntryRemote* remote);
 
@@ -302,9 +305,6 @@ protected:
   {
     return *_quirk_animations[monitor][unsigned(quirk)];
   }
-
-  // This looks like a case for boost::logical::tribool
-  static int _current_theme_is_mono;
 
 private:
   IconType _icon_type;
@@ -350,8 +350,6 @@ private:
   std::vector<LauncherEntryRemote::Ptr> _remote_entries;
   connection::Manager _remote_connections;
   glib::Object<DbusmenuClient> _remote_menus;
-
-  static glib::Object<GtkIconTheme> _unity_theme;
 
 protected:
   glib::SourceManager _source_manager;

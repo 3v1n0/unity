@@ -17,7 +17,9 @@ from testtools.matchers import Contains, Equals, NotEquals, Not, Raises
 from time import sleep
 from xdg.DesktopEntry import DesktopEntry
 
+from unity.emulators import keys
 from unity.emulators.quicklist import QuicklistMenuItemLabel
+from unity.emulators.launcher import LauncherPosition
 from unity.tests import UnityTestCase
 
 
@@ -193,12 +195,12 @@ class QuicklistActionTests(UnityTestCase):
 
         icons = self.unity.launcher.model.get_launcher_icons()
 
-        icon0_ql = self.open_quicklist_for_icon(icons[0])
-        self.assertThat(icon0_ql.active, Eventually(Equals(True)))
-
         icon1_ql = self.open_quicklist_for_icon(icons[1])
         self.assertThat(icon1_ql.active, Eventually(Equals(True)))
-        self.assertThat(icon0_ql.wait_until_destroyed, Not(Raises()))
+
+        icon0_ql = self.open_quicklist_for_icon(icons[0])
+        self.assertThat(icon0_ql.active, Eventually(Equals(True)))
+        self.assertThat(icon1_ql.wait_until_destroyed, Not(Raises()))
 
     def test_right_clicking_same_icon_doesnt_reopen_ql(self):
         """A right click to the same icon in the launcher must
@@ -224,6 +226,10 @@ class QuicklistActionTests(UnityTestCase):
 
 class QuicklistKeyNavigationTests(UnityTestCase):
     """Tests for the quicklist key navigation."""
+    scenarios = [
+        ('left', {'launcher_position': LauncherPosition.LEFT}),
+        ('bottom', {'launcher_position': LauncherPosition.BOTTOM}),
+    ]
 
     def setUp(self):
         super(QuicklistKeyNavigationTests, self).setUp()
@@ -238,6 +244,10 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher_icon = icon_refresh_fn()
 
         self.ql_launcher = self.unity.launcher.get_launcher_for_monitor(0)
+
+        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity.Launcher', 'launcher-position')
+        self.call_gsettings_cmd('set', 'com.canonical.Unity.Launcher', 'launcher-position', '"%s"' % self.launcher_position)
+        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity.Launcher', 'launcher-position', old_pos)
 
     def open_quicklist_with_mouse(self):
         """Opens a quicklist with the mouse."""
@@ -256,8 +266,8 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
-        self.ql_launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
-        self.keybinding("launcher/keynav/open-quicklist")
+        self.ql_launcher.keyboard_select_icon(self.launcher_position, tooltip_text=self.ql_app.name)
+        self.keybinding(keys[self.launcher_position + "/launcher/keynav/open-quicklist"])
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
 
         self.assertThat(self.ql_launcher_icon.get_quicklist,

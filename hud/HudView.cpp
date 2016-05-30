@@ -30,6 +30,7 @@
 
 #include "unity-shared/Introspectable.h"
 
+#include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/DashStyle.h"
@@ -66,13 +67,13 @@ View::View()
   , last_known_height_(0)
   , current_height_(0)
   , selected_button_(0)
-  , show_embedded_icon_(true)
   , keyboard_stole_focus_(false)
   , overlay_window_buttons_(new OverlayWindowButtons())
 {
   scale = Settings::Instance().em()->DPIScale();
   renderer_.scale = scale();
   renderer_.SetOwner(this);
+  renderer_.owner_type = OverlayOwner::Hud;
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
@@ -301,21 +302,24 @@ void View::SetIcon(std::string const& icon_name, unsigned int tile_size, unsigne
 void View::ShowEmbeddedIcon(bool show)
 {
   LOG_DEBUG(logger) << "Hide icon called";
-  if (show == show_embedded_icon_)
+  if (show == icon_.IsValid())
     return;
 
-  show_embedded_icon_ = show;
-
-  if (show_embedded_icon_)
+  if (show)
   {
-    layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_START,
-                     nux::MINOR_SIZE_FULL, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
-    AddChild(icon_.GetPointer());
+    if (!icon_)
+    {
+      icon_ = new Icon();
+      layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_START,
+                      nux::MINOR_SIZE_FULL, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+      AddChild(icon_.GetPointer());
+    }
   }
-  else
+  else if (icon_)
   {
     layout_->RemoveChildObject(icon_.GetPointer());
     RemoveChild(icon_.GetPointer());
+    icon_ = nullptr;
   }
 
   UpdateLayoutGeometry();
@@ -330,7 +334,7 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
   int width = DEFAULT_WIDTH.CP(scale);
   int height = DEFAULT_HEIGHT.CP(scale);
 
-  if (show_embedded_icon_)
+  if (icon_)
     width += icon_->GetGeometry().width;
 
   LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;
@@ -368,13 +372,6 @@ void View::SetupViews()
   nux::VLayout* super_layout = new nux::VLayout();
   layout_ = new nux::HLayout();
   {
-    // fill layout with icon
-    icon_ = new Icon();
-    {
-      AddChild(icon_.GetPointer());
-      layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
-    }
-
     // fill the content layout
     content_layout_ = new nux::VLayout();
     {

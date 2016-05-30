@@ -17,6 +17,7 @@ from time import sleep
 
 from unity.emulators.icons import ApplicationLauncherIcon, ExpoLauncherIcon
 from unity.emulators.launcher import IconDragType
+from unity.emulators.launcher import LauncherPosition
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
 from Xlib import Xutil
@@ -196,7 +197,8 @@ class LauncherIconsTests(LauncherTestCase):
         self.launcher_instance.drag_icon_to_position(
             calc_icon,
             IconDragType.AFTER,
-            bfb_icon)
+            bfb_icon,
+            launcher_position = self.launcher_position)
 
         self.launcher_instance.keyboard_reveal_launcher()
         self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
@@ -354,6 +356,10 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                    [
                                        ('inside', {'drag_type': IconDragType.INSIDE}),
                                        ('outside', {'drag_type': IconDragType.OUTSIDE}),
+                                   ],
+                                   [
+                                       ('left', {'launcher_position': LauncherPosition.LEFT}),
+                                       ('bottom', {'launcher_position': LauncherPosition.BOTTOM}),
                                    ])
 
     def setUp(self):
@@ -386,7 +392,8 @@ class LauncherDragIconsBehavior(LauncherTestCase):
             calc_icon,
             IconDragType.AFTER,
             bfb_icon,
-            self.drag_type)
+            self.drag_type,
+            self.launcher_position)
         moved_icon = self.unity.launcher.model.\
                      get_launcher_icons_for_monitor(self.launcher_monitor)[1]
         self.assertThat(moved_icon, Equals(calc_icon))
@@ -406,14 +413,16 @@ class LauncherDragIconsBehavior(LauncherTestCase):
             calc_icon,
             IconDragType.AFTER,
             bfb_icon,
-            self.drag_type)
+            self.drag_type,
+            self.launcher_position)
 
         sleep(1)
         self.launcher_instance.drag_icon_to_position(
             calc_icon,
             IconDragType.BEFORE,
             trash_icon,
-            self.drag_type)
+            self.drag_type,
+            self.launcher_position)
 
         # Must be the last bamf icon - not necessarily the third-from-end icon.
         expected_pos = -2 if self.workspace.num_workspaces < 2 else -1

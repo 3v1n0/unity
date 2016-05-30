@@ -85,6 +85,10 @@ enum class Arrow {
   NONE
 };
 
+enum class Position {
+  LEFT,
+  BOTTOM
+};
 
 class Style : public StyleInterface
 {
@@ -140,8 +144,6 @@ public:
 
   RawPixel GetSeparatorGarnishSize() const;
 
-  RawPixel GetScrollbarGarnishSize() const;
-
   void Blur(cairo_t* cr, int size);
 
   void RoundedRect(cairo_t* cr,
@@ -170,22 +172,22 @@ public:
   BaseTexturePtr const& GetCategoryBackground() const;
   BaseTexturePtr const& GetCategoryBackgroundNoFilters() const;
 
-  BaseTexturePtr GetDashBottomTile(double scale) const;
-  BaseTexturePtr GetDashBottomTileMask(double scale) const;
+  BaseTexturePtr GetDashHorizontalTile(double scale, Position) const;
+  BaseTexturePtr GetDashHorizontalTileMask(double scale, Position) const;
   BaseTexturePtr GetDashRightTile(double scale) const;
   BaseTexturePtr GetDashRightTileMask(double scale) const;
   BaseTexturePtr GetDashLeftTile(double scale) const;
-  BaseTexturePtr GetDashTopTile(double scale) const;
+  BaseTexturePtr GetDashTopOrBottomTile(double scale, Position) const;
 
-  BaseTexturePtr GetDashCorner(double scale) const;
-  BaseTexturePtr GetDashCornerMask(double scale) const;
-  BaseTexturePtr GetDashLeftCorner(double scale) const;
-  BaseTexturePtr GetDashLeftCornerMask(double scale) const;
-  BaseTexturePtr GetDashTopCorner(double scale) const;
-  BaseTexturePtr GetDashTopCornerMask(double scale) const;
+  BaseTexturePtr GetDashCorner(double scale, Position) const;
+  BaseTexturePtr GetDashCornerMask(double scale, Position) const;
+  BaseTexturePtr GetDashLeftCorner(double scale, Position) const;
+  BaseTexturePtr GetDashLeftCornerMask(double scale, Position) const;
+  BaseTexturePtr GetDashRightCorner(double scale, Position) const;
+  BaseTexturePtr GetDashRightCornerMask(double scale, Position) const;
 
-  RawPixel GetDashBottomTileHeight() const;
-  RawPixel GetDashRightTileWidth() const;
+  RawPixel GetDashHorizontalBorderHeight() const;
+  RawPixel GetDashVerticalBorderWidth() const;
 
   BaseTexturePtr const& GetDashShine() const;
 
@@ -237,7 +239,16 @@ public:
   RawPixel GetSpaceBetweenScopeAndFilters() const;
 
   // Scrollbars
-  RawPixel GetScrollbarWidth() const;
+  RawPixel GetOverlayScrollbarSize() const;
+  RawPixel GetScrollbarSize() const;
+  RawPixel GetScrollbarButtonsSize() const;
+
+  RawPixel GetOverlayScrollbarCornerRadius() const;
+  RawPixel GetScrollbarCornerRadius() const;
+
+  nux::Color GetOverlayScrollbarColor() const;
+  nux::Color GetScrollbarColor() const;
+  nux::Color GetScrollbarTrackColor() const;
 
   // Places Group
   RawPixel GetCategoryIconSize() const;
@@ -250,6 +261,7 @@ public:
   RawPixel GetCategorySeparatorRightPadding() const;
 
   sigc::signal<void> changed;
+  sigc::signal<void> textures_changed;
 
   nux::Property<int> columns_number;
   nux::Property<bool> always_maximised;

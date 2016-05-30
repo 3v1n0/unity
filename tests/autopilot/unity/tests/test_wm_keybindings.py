@@ -99,10 +99,16 @@ class WindowManagerKeybindingsForWindowHandling(UnityTestCase):
         monitor = self.bamf_win.monitor
         monitor_geo = self.display.get_screen_geometry(monitor)
         launcher = self.unity.launcher.get_launcher_for_monitor(monitor)
-        launcher_w = 0 if launcher.hidemode else launcher.geometry[2]
+        # When launcher at left, do not use launcher_h, otherwise, do not use launcher_w
+        if launcher.geometry[2] < launcher.geometry[3]:
+            launcher_h = 0
+            launcher_w = 0 if launcher.hidemode else launcher.geometry[2]
+        else:
+            launcher_h = 0 if launcher.hidemode else launcher.geometry[3]
+            launcher_w = 0
         panel_h = self.unity.panels.get_panel_for_monitor(monitor).geometry[3]
         return (monitor_geo[0] + launcher_w, monitor_geo[1] + panel_h,
-                monitor_geo[2] - launcher_w, monitor_geo[3] - panel_h)
+                monitor_geo[2] - launcher_w, monitor_geo[3] - panel_h - launcher_h)
 
     def test_maximize_window(self):
         if self.start_restored:

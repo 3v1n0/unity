@@ -33,18 +33,15 @@ namespace decoration
 {
 Manager* manager_ = nullptr;
 
-namespace
-{
 namespace atom
 {
 Atom _NET_REQUEST_FRAME_EXTENTS = 0;
 Atom _NET_WM_VISIBLE_NAME = 0;
-}
+Atom _UNITY_GTK_BORDER_RADIUS = 0;
 }
 
 Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
-  : enable_add_supported_atoms_(true)
-  , data_pool_(DataPool::Get())
+  : data_pool_(DataPool::Get())
   , menu_manager_(menu)
 {
   if (!manager_)
@@ -53,6 +50,7 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   Display* dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
+  atom::_UNITY_GTK_BORDER_RADIUS = XInternAtom(dpy, "_UNITY_GTK_BORDER_RADIUS", False);
 
   auto rebuild_cb = sigc::mem_fun(this, &Impl::OnShadowOptionsChanged);
   manager_->active_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, true)));
@@ -65,12 +63,6 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
   SetupIntegratedMenus();
-}
-
-Manager::Impl::~Impl()
-{
-  enable_add_supported_atoms_ = false;
-  screen->updateSupportedWmHints();
 }
 
 cu::PixmapTexture::Ptr Manager::Impl::BuildShadowTexture(unsigned radius, nux::Color const& color)
@@ -306,6 +298,10 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
           win->title = wm.GetStringProperty(event->xproperty.window, event->xproperty.atom);
         }
       }
+      else if (event->xproperty.atom == atom::_UNITY_GTK_BORDER_RADIUS)
+      {
+        UpdateWindow(event->xproperty.window);
+      }
       break;
     }
     case ConfigureNotify:
@@ -427,8 +423,8 @@ Manager::~Manager()
 
 void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
 {
-  if (impl_->enable_add_supported_atoms_)
-    atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
+  atoms.push_back(atom::_UNITY_GTK_BORDER_RADIUS);
+  atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
 }
 
 bool Manager::HandleEventBefore(XEvent* xevent)

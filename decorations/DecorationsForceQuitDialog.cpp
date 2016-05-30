@@ -138,6 +138,7 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
 
   Atom WM_PID = gdk_x11_get_xatom_by_name("_NET_WM_PID");
   Atom WM_CLIENT_MACHINE = gdk_x11_get_xatom_by_name("WM_CLIENT_MACHINE");
+  Atom WM_CLIENT_LEADER = gdk_x11_get_xatom_by_name("WM_CLIENT_LEADER");
 
   gdk_error_trap_push();
   auto& wm = WindowManager::Default();
@@ -196,6 +197,8 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
                   (unsigned char *) parent_hostname.c_str(), parent_hostname.size());
   XChangeProperty(dpy, xid, WM_PID, XA_CARDINAL, 32, PropModeReplace,
                   (unsigned char *) &parent_pid, 1);
+  XChangeProperty(dpy, xid, WM_CLIENT_LEADER, XA_WINDOW, 32, PropModeReplace,
+                  (unsigned char *) &parent_xid, 1);
   XSync(dpy, False);
 
   return GTK_WIDGET(self);
@@ -385,7 +388,7 @@ GtkWidget* close_button_new()
   gtk_widget_set_can_focus(self, FALSE);
   gtk_widget_set_halign(self, GTK_ALIGN_START);
 
-  auto const& file = decoration::Style::Get()->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
+  auto const& file = decoration::Style::Get()->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR});
   auto* img = gtk_image_new_from_file(file.c_str());
   gtk_container_add(GTK_CONTAINER(self), img);
   CLOSE_BUTTON(self)->priv->img = GTK_IMAGE(img);
@@ -419,13 +422,13 @@ static void close_button_class_init(CloseButtonClass* klass)
 
     auto new_flags = gtk_widget_get_state_flags(self);
     auto const& deco_style = decoration::Style::Get();
-    auto file = deco_style->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
+    auto file = deco_style->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR});
 
     if (((new_flags & GTK_STATE_FLAG_PRELIGHT) && !gtk_widget_get_can_focus(self)) ||
         (new_flags & GTK_STATE_FLAG_FOCUSED))
     {
       auto const& basename = (new_flags & GTK_STATE_FLAG_ACTIVE) ? CLOSE_BUTTON_ACTIVE_FILE : CLOSE_BUTTON_FOCUSED_FILE;
-      file = deco_style->ThemedFilePath(basename, {PKGDATADIR"/"});
+      file = deco_style->ThemedFilePath(basename, {PKGDATADIR});
     }
 
     gtk_image_set_from_file(img, file.c_str());
@@ -459,8 +462,18 @@ struct ForceQuitDialog::Impl : sigc::trackable
 
   void UpdateWindowTime(Time time)
   {
-    gdk_x11_window_set_user_time(gtk_widget_get_window(dialog_), time);
+    auto gwindow = gtk_widget_get_window(dialog_);
+    gdk_x11_window_set_user_time(gwindow, time);
     gtk_widget_show_all(dialog_);
+
+    auto* dpy = gdk_x11_get_default_xdisplay();
+    auto xid = gdk_x11_window_get_xid(gwindow);
+    if (XWMHints *wmhints = XGetWMHints(dpy, xid))
+    {
+      wmhints->window_group = win_->id();
+      XSetWMHints(dpy, xid, wmhints);
+      XFree(wmhints);
+    }
   }
 
   void UpdateDialogPosition()

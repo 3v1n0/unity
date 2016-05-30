@@ -30,11 +30,12 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/CairoGraphics.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSource.h>
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/Timer.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity
@@ -57,6 +58,7 @@ public:
   Handle LoadFromIconName(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromGIconString(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromThemedFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromURI(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
 
   void DisconnectHandle(Handle);
@@ -313,12 +315,11 @@ private:
         glib::Object<PangoLayout> layout;
         PangoContext* pango_context = NULL;
         GdkScreen* screen = gdk_screen_get_default(); // not ref'ed
-        glib::String font;
+        auto const& font = theme::Settings::Get()->font();
 
-        g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
         cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
         layout = pango_cairo_create_layout(cr);
-        std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
+        std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
         pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
         int font_size = FONT_SIZE;
         pango_font_description_set_size (desc.get(), font_size * PANGO_SCALE);
@@ -627,24 +628,24 @@ private:
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_APPLICATION:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_apps.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_apps", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_books.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_books", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_MUSIC:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_music.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_music", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_MOVIE:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_video.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_video", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_CLOTHES:
           case UNITY_PROTOCOL_CATEGORY_TYPE_SHOES:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_clothes.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_clothes", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_GAMES:
           case UNITY_PROTOCOL_CATEGORY_TYPE_ELECTRONICS:
@@ -667,7 +668,7 @@ private:
           case UNITY_PROTOCOL_CATEGORY_TYPE_CAR:
           default:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_others.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_others", -1, cat_size, helper_slot);
             break;
         }
       }
@@ -817,7 +818,7 @@ private:
   Handle handle_counter_;
   glib::Source::UniquePtr idle_;
   glib::Source::UniquePtr coalesce_timeout_;
-  glib::Signal<void, GtkIconTheme*> theme_changed_signal_;
+  connection::Wrapper theme_changed_;
 };
 
 
@@ -827,7 +828,7 @@ IconLoader::Impl::Impl()
   , theme_(::gtk_icon_theme_get_default())
   , handle_counter_(0)
 {
-  theme_changed_signal_.Connect(theme_, "changed", [this] (GtkIconTheme*) {
+  theme_changed_ = theme::Settings::Get()->icons_changed.connect([this] {
     /* Since the theme has been changed we can clear the cache, however we
      * could include two improvements here:
      *  1) clear only the themed icons in cache
@@ -889,6 +890,11 @@ IconLoader::Handle IconLoader::Impl::LoadFromFilename(std::string const& filenam
   return LoadFromURI(uri.Str(), max_width, max_height, slot);
 }
 
+IconLoader::Handle IconLoader::Impl::LoadFromThemedFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
+{
+  return LoadFromFilename(theme::Settings::Get()->ThemedFilePath(filename, {PKGDATADIR}), max_width, max_height, slot);
+}
+
 IconLoader::Handle IconLoader::Impl::LoadFromURI(std::string const& uri, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || uri.empty() || !slot ||
@@ -914,14 +920,12 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
 {
   // FIXME: what about CJK?
   const char* const SAMPLE_MAX_TEXT = "Chromium Web Browser";
-  GtkSettings* settings = gtk_settings_get_default();
 
   nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
   cairo_t* cr = util_cg.GetInternalContext();
 
-  glib::String font;
-  g_object_get(settings, "gtk-font-name", &font, nullptr);
-  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
+  auto const& font = theme::Settings::Get()->font();
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
   pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
   pango_font_description_set_size(desc.get(), FONT_SIZE * PANGO_SCALE);
 
@@ -1105,6 +1109,11 @@ IconLoader::Handle IconLoader::LoadFromGIconString(std::string const& gicon_stri
 IconLoader::Handle IconLoader::LoadFromFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromFilename(filename, max_width, max_height, slot);
+}
+
+IconLoader::Handle IconLoader::LoadFromThemedFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
+{
+  return pimpl->LoadFromThemedFilename(filename, max_width, max_height, slot);
 }
 
 IconLoader::Handle IconLoader::LoadFromURI(std::string const& uri, int max_width, int max_height, IconLoaderCallback const& slot)

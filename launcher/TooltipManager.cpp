@@ -19,6 +19,7 @@
  */
 
 #include "TooltipManager.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -40,7 +41,12 @@ void TooltipManager::MouseMoved(AbstractLauncherIcon::Ptr const& icon_under_mous
 
   StopTimer();
   if (icon_)
-    icon_->HideTooltip();
+  {
+    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+      icon_->HideTooltip();
+    else
+      icon_->PromptHideTooltip();
+  }
 
   icon_ = icon_under_mouse;
 

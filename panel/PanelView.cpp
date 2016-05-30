@@ -28,6 +28,7 @@
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 
 #include "PanelIndicatorsView.h"
@@ -126,12 +127,25 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
     QueueDraw();
   });
 
+  LoadTextures();
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &PanelView::LoadTextures));
+}
+
+PanelView::~PanelView()
+{
+  indicator::EntryLocationMap locations;
+  remote_->SyncGeometries(GetName() + std::to_string(monitor_), locations);
+}
+
+void PanelView::LoadTextures()
+{
   //FIXME (gord)- replace with async loading
   TextureCache& cache = TextureCache::GetDefault();
-  panel_sheen_ = cache.FindTexture("dash_sheen.png");
-  bg_refine_tex_ = cache.FindTexture("refine_gradient_panel.png");
-  bg_refine_single_column_tex_ = cache.FindTexture("refine_gradient_panel_single_column.png");
+  panel_sheen_ = cache.FindTexture("dash_sheen");
+  bg_refine_tex_ = cache.FindTexture("refine_gradient_panel");
+  bg_refine_single_column_tex_ = cache.FindTexture("refine_gradient_panel_single_column");
 
+  nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
@@ -139,18 +153,8 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   bg_refine_layer_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(),
                          nux::TexCoordXForm(), nux::color::White, false, rop));
 
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
   bg_refine_single_column_layer_.reset(new nux::TextureLayer(bg_refine_single_column_tex_->GetDeviceTexture(),
                                        nux::TexCoordXForm(), nux::color::White, false, rop));
-}
-
-PanelView::~PanelView()
-{
-  indicator::EntryLocationMap locations;
-  remote_->SyncGeometries(GetName() + std::to_string(monitor_), locations);
 }
 
 Window PanelView::GetTrayXid() const
@@ -296,10 +300,16 @@ void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
+  nux::Geometry const& mgeo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
+  nux::Geometry isect = mgeo.Intersect(geo);
+
+  if(!isect.width || !isect.height)
+      return;
+
   UpdateBackground();
 
   bool overlay_mode = InOverlayMode();
-  GfxContext.PushClippingRectangle(geo);
+  GfxContext.PushClippingRectangle(isect);
 
   if (IsTransparent())
   {
@@ -327,7 +337,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       rop.SrcBlend = GL_ONE;
       rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-      GfxContext.PushClippingRectangle(geo);
+      GfxContext.PushClippingRectangle(isect);
 
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath())
@@ -367,7 +377,8 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
 
-      refine_x_pos += unity::Settings::Instance().LauncherWidth(monitor_);
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        refine_x_pos += unity::Settings::Instance().LauncherSize(monitor_);
       GfxContext.QRP_1Tex(refine_x_pos, geo.y,
                           bg_refine_tex_->GetWidth(),
                           bg_refine_tex_->GetHeight(),
@@ -464,7 +475,8 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::Geometry refine_geo = geo;
 
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
-      refine_x_pos += unity::Settings::Instance().LauncherWidth(monitor_);
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        refine_x_pos += unity::Settings::Instance().LauncherSize(monitor_);
 
       refine_geo.x = refine_x_pos;
       refine_geo.width = bg_refine_tex_->GetWidth();

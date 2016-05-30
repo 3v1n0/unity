@@ -1,3 +1,166 @@
+unity (7.5.0+16.10.20160525-0ubuntu1) yakkety; urgency=medium
+
+  [ Eleni Maria Stea ]
+  * PanelView: Don't draw it if the geo doesn't intersect the monitor
+    geo (as in ezoom)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 25 May 2016 14:22:42 +0000
+
+unity (7.5.0+16.10.20160517-0ubuntu1) yakkety; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Bumping version to 7.5.0, as per 7.4 release
+
+  [ Andrea Azzarone ]
+  * Do not reset the shortcut for icons that have their own shortcut.
+    (LP: #1562847)
+  * Fallback to "background" class in case no background is specified
+    for title bars and top panel. (LP: #1575527)
+  * GnomeKeyGrabber: do not activate an action if it's a repeated one.
+    (LP: #1572241)
+  * Properly calculate array indexes to avoid crashes. (LP: #1570843)
+  * Properly remove SoftwareCenterLauncherIcon in case of failure. (LP:
+    #1553165)
+  * Update ExpoLauncherIcon in case the quicklist is used to switch vp.
+    (LP: #1525685)
+
+  [ Marco Trevisan (Treviño) ]
+  * DashStyle: ensure LazyLoadTexture disconnects from signals on
+    destruction (LP: #1580212)
+  * Releasing Unity 7.4.0
+  * SwitcherController: don't try to get a window from empty selections
+    (LP: #1580211)
+  * SwitcherView: close the mouse-selected application on middle-click
+    (LP: #1574689)
+  * UnityScreen, UnityWindow: cleanup a little the code, and ensure
+    overridden CompositeWindow functions get actually called
+
+  [ handsome_feng ]
+  * Change the x_offset of expo when launcher position changed. (LP:
+    #1573897, #1562348)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 17 May 2016 02:56:22 +0000
+
+unity (7.4.0+16.04.20160415-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Do not use pointers to LazyLoadTextures. (LP: #1569100)
+  * Fix unity script crash. (LP: #1566565)
+  * LockscreenController: Don't use SetActivate(False) for gnome-
+    screensaver to prevent unlocking on tty switch. It will not only
+    deactivate the screensaver but also unlock the screen. (LP:
+    #1552537)
+  * unityshell.xml: Fix typo (LP: #1559427)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 15 Apr 2016 05:33:08 +0000
+
+unity (7.4.0+16.04.20160401.1-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Improve the "lock on suspend" logic to always keep in sync the
+    inhibitor with the lockscreen.
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: Just send estimated extents on
+    _NET_REQUEST_FRAME_EXTENTS (LP: #1368118)
+  * TextureCache: add support for loading themed textures (LP: #903179,
+    #1208790)
+  * Unity: stop unity7 upstart instance if needed and restart it if not
+    clearly requested (LP: #1555633)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 01 Apr 2016 23:11:47 +0000
+
+unity (7.4.0+16.04.20160322-0ubuntu1) xenial; urgency=medium
+
+  * ForceQuitDialog: set client leader
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 22 Mar 2016 15:36:52 +0000
+
+unity (7.4.0+16.04.20160321-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * ApplicationLauncherIcon: use the starting property to show an icon
+    when launched (LP: #676457)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 21 Mar 2016 15:38:22 +0000
+
+unity (7.4.0+16.04.20160318-0ubuntu1) xenial; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * UserPromptView: don't hide local scale property (LP: #1551820)
+
+  [ Sebastien Bacher ]
+  * set the gettext domain directly in CMakeLists rather than using
+    refering to the project name, the translation template is updated
+    during the build by dh_translations which is not clever enough to
+    understand the variable (LP: #1557081)
+
+  [ handsome_feng ]
+  * Dash: move it down when the launcher is positioned at the bottom.
+    (LP: #1552630)
+  * Launcher: add Bottom mode, so that the launcher can be positioned
+    horisontally (LP: #1552630)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 18 Mar 2016 10:10:42 +0000
+
+unity (7.4.0+16.04.20160310-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add a "Format..." option to volume icons. (LP: #1057008)
+
+  [ Marco Trevisan (Treviño) ]
+  * DashView: ensure that we update scaling when monitor changes (LP:
+    #1546690)
+  * DecoratedWindow: move the shadow under the window if we've a client-
+    side decorated window with corners (LP: #1516403)
+  * LauncherController: add overlay shortcut to all the
+    WindowedLauncherIcon's we have
+  * ThemeSettings: add small class for reading gtk settings for theming
+    (LP: #1543757, #1288998)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 10 Mar 2016 10:09:34 +0000
+
+unity (7.4.0+16.04.20160223.1-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone, Didier Roche ]
+  * Gnome-software launcher integration.
+
+  [ Marco Trevisan (Treviño) ]
+  * GnomeFileManager: use *WithTimestamp file operations instead of
+    using Activate workaround (LP: #1445595)
+  * unity.migrations: add 04_unity_update_software_center_desktop_file
+
+  [ Robert Ancell ]
+  * Drop unused build-dependency on libgee-dev.
+  * Switch from Ubuntu Software Center to GNOME Software. (LP: #1547129)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 23 Feb 2016 22:39:18 +0000
+
+unity (7.4.0+16.04.20160209.3-0ubuntu1) xenial; urgency=medium
+
+  [ Didier Roche ]
+  * debian: Recommends session-shortcuts, prodiving easy way to
+    shutdown, reboot and logout from dash
+
+  [ Marco Trevisan (Treviño) ]
+  * CMake: use GNUInstallDirs with native multi-arch support (LP:
+    #1508635, #1485668)
+  * Launcher: add FileManager, Trash and Volume icons integration (LP:
+    #1524721, #1161323, #1063838, #1063823)
+  * SwitcherModel: avoid to access to invalid selection or to divide by
+    zero (LP: #1537524)
+
+  [ handsome_feng ]
+  * Extend the lockscreen theme for kylin.
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 09 Feb 2016 12:21:15 +0000
+
+unity (7.4.0+16.04.20151218-0ubuntu2) xenial; urgency=medium
+
+  * Multiarchify the library packages.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 28 Jan 2016 17:38:52 +0100
+
 unity (7.4.0+16.04.20151218-0ubuntu1) xenial; urgency=medium
 
   [ Aneesh Madhavan ]
