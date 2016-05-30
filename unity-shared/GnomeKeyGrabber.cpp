@@ -81,7 +81,7 @@ GnomeGrabber::Impl::Impl(bool test_mode)
   shell_object_->SetMethodsCallsHandlerFull(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
   whitelist_changed_signal_.Connect(settings_, "changed::" + WHITELIST_KEY, [this] (GSettings*, gchar*) {
-      UpdateWhitelist();
+    UpdateWhitelist();
   });
 
   UpdateWhitelist();
