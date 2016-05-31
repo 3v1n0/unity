@@ -2010,27 +2010,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   icon_renderer_->PreprocessIcons(args, base);
   EventLogic();
 
-  if (!IsOverlayOpen() && launcher_position_ == LauncherPosition::BOTTOM)
-  {
-    const double top_line_opacity = 0.15f * launcher_alpha;
-
-    gPainter.Paint2DQuadColor(GfxContext,
-                              nux::Geometry(bkg_box.x,
-                                            bkg_box.y,
-                                            bkg_box.width,
-                                            SIDE_LINE_WIDTH.CP(cv_)),
-                              nux::color::White * top_line_opacity);
-
-    gPainter.Paint2DQuadColor(GfxContext,
-                              nux::Geometry(bkg_box.x,
-                                            bkg_box.y,
-                                            bkg_box.width,
-                                            8),
-                              nux::Color(0x70000000),
-                              nux::Color(0x00000000),
-                              nux::Color(0x00000000),
-                              nux::Color(0x70000000));
-  }
 
   /* draw launcher */
   for (rev_it = args.rbegin(); rev_it != args.rend(); ++rev_it)
@@ -2063,6 +2042,28 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                             SIDE_LINE_WIDTH.CP(cv_),
                                             bkg_box.height),
                               nux::color::White * right_line_opacity);
+
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x,
+                                            bkg_box.y,
+                                            bkg_box.width,
+                                            8),
+                              nux::Color(0x70000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x70000000));
+  }
+
+  if (!IsOverlayOpen() && launcher_position_ == LauncherPosition::BOTTOM)
+  {
+    const double top_line_opacity = 0.15f * launcher_alpha;
+
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x,
+                                            bkg_box.y,
+                                            bkg_box.width,
+                                            SIDE_LINE_WIDTH.CP(cv_)),
+                              nux::color::White * top_line_opacity);
 
     gPainter.Paint2DQuadColor(GfxContext,
                               nux::Geometry(bkg_box.x,
