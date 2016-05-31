@@ -298,8 +298,8 @@ private:
   void SpreadAppWindows(bool anywhere);
   bool queryForShader();
 
-  Window getNextActiveWindow() const;
-  void setNextActiveWindow(Window next_active_window);
+  Window GetNextActiveWindow() const;
+  void SetNextActiveWindow(Window next_active_window);
 
   /* We store these  to avoid unecessary calls to ::get */
   CompScreen* screen;
