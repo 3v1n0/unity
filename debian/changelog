@@ -1,3 +1,15 @@
+unity (7.5.0+16.10.20160602-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add whitelist for auto-repated keys. (LP: #1586491)
+  * Fix scale window activation if in show desktop mode. (LP: #1582056)
+  * Order matters in the rendering. Draw launcher shadow after the
+    background in all cases. (LP: #1586374)
+  * Fallback to volume name if no other identifier is available. (LP:
+    #1103593)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 02 Jun 2016 01:02:19 +0000
+
 unity (7.5.0+16.10.20160525-0ubuntu1) yakkety; urgency=medium
 
   [ Eleni Maria Stea ]
