@@ -221,6 +221,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , key_nav_mode_requested_(false)
   , big_tick_(0)
   , back_buffer_age_(0)
+  , next_active_window_(0)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -1214,6 +1215,8 @@ void UnityWindow::leaveShowDesktop ()
 
 void UnityWindow::activate ()
 {
+  uScreen->SetNextActiveWindow(window->id());
+
   ShowdesktopHandler::InhibitLeaveShowdesktopMode (window->id ());
   window->activate ();
   ShowdesktopHandler::AllowLeaveShowdesktopMode (window->id ());
@@ -4245,6 +4248,16 @@ void UnityScreen::ShowFirstRunHints()
   });
 }
 
+Window UnityScreen::GetNextActiveWindow() const
+{
+  return next_active_window_;
+}
+
+void UnityScreen::SetNextActiveWindow(Window next_active_window)
+{
+  next_active_window_ = next_active_window;
+}
+
 /* Window init */
 
 namespace
@@ -4604,7 +4617,7 @@ void UnityWindow::OnTerminateSpread()
 
   if (IsInShowdesktopMode())
   {
-    if (!(screen->activeWindow() == window->id()))
+    if (uScreen->GetNextActiveWindow() != window->id())
     {
       if (!mShowdesktopHandler)
         mShowdesktopHandler.reset(new ShowdesktopHandler(static_cast <ShowdesktopHandlerWindowInterface *>(this),

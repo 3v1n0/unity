@@ -298,6 +298,9 @@ private:
   void SpreadAppWindows(bool anywhere);
   bool queryForShader();
 
+  Window GetNextActiveWindow() const;
+  void SetNextActiveWindow(Window next_active_window);
+
   /* We store these  to avoid unecessary calls to ::get */
   CompScreen* screen;
   CompositeScreen* cScreen;
@@ -412,6 +415,8 @@ private:
   bool key_nav_mode_requested_;
   uint64_t big_tick_;
   unsigned int back_buffer_age_;
+
+  Window next_active_window_;
 
   friend class UnityWindow;
   friend class debug::ScreenIntrospection;
