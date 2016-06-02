@@ -86,7 +86,10 @@ public:
     glib::String label(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_LABEL));
     glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
 
-    return uuid.Str() + "-" + label.Str();
+    if (!label && !uuid)
+      return GetName();
+    else
+      return uuid.Str() + "-" + label.Str();
   }
 
   std::string GetUnixDevicePath() const
