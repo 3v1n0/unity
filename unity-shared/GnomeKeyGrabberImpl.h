@@ -28,6 +28,7 @@
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibDBusNameWatcher.h>
+#include <UnityCore/GLibSignal.h>
 
 namespace unity
 {
@@ -55,10 +56,16 @@ struct GnomeGrabber::Impl
 
   bool IsActionPostponed(CompAction const& action) const;
 
+  void UpdateWhitelist();
+
   CompScreen* screen_;
 
   glib::DBusServer shell_server_;
   glib::DBusObject::Ptr shell_object_;
+
+  glib::Object<GSettings> settings_;
+  glib::Signal<void, GSettings*, gchar*> whitelist_changed_signal_;
+  std::list<std::string> whitelist_;
 
   uint32_t current_action_id_;
   std::vector<uint32_t> actions_ids_;

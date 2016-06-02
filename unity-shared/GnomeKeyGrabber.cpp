@@ -59,6 +59,12 @@ R"(<node>
 </node>)";
 }
 
+namespace
+{
+const std::string SETTINGS_NAME = "com.canonical.Unity";
+const std::string WHITELIST_KEY = "whitelist-repeated-keys";
+}
+
 namespace testing
 {
 std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
@@ -67,11 +73,18 @@ std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 GnomeGrabber::Impl::Impl(bool test_mode)
   : screen_(screen)
   , shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
+  , settings_(g_settings_new(SETTINGS_NAME.c_str()))
   , current_action_id_(0)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandlerFull(sigc::mem_fun(this, &Impl::OnShellMethodCall));
+
+  whitelist_changed_signal_.Connect(settings_, "changed::" + WHITELIST_KEY, [this] (GSettings*, gchar*) {
+    UpdateWhitelist();
+  });
+
+  UpdateWhitelist();
 }
 
 GnomeGrabber::Impl::~Impl()
@@ -232,7 +245,8 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& owner, std::
   {
     action.setState(CompAction::StateInitKey);
     action.setInitiate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
-      if (!CompOption::getBoolOptionNamed(options, "is_repeated"))
+      bool is_whitelisted = std::find(whitelist_.begin(), whitelist_.end(), action->keyToString()) != whitelist_.end();
+      if (is_whitelisted || !CompOption::getBoolOptionNamed(options, "is_repeated"))
       {
         LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
         ActivateDBusAction(*action, action_id, 0, CompOption::getIntOptionNamed(options, "time"));
@@ -324,6 +338,16 @@ bool GnomeGrabber::Impl::IsActionPostponed(CompAction const& action) const
 {
   int keycode = action.key().keycode();
   return keycode == 0 || modHandler->keycodeToModifiers(keycode) != 0;
+}
+
+void GnomeGrabber::Impl::UpdateWhitelist()
+{
+  std::shared_ptr<gchar*> whitelist(g_settings_get_strv(settings_, WHITELIST_KEY.c_str()), g_strfreev);
+  auto whitelist_raw = whitelist.get();
+
+  whitelist_.clear();
+  for (int i = 0; whitelist_raw[i]; ++i)
+    whitelist_.push_back(whitelist_raw[i]);
 }
 
 // Public implementation

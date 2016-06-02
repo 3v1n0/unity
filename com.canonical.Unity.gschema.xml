@@ -81,6 +81,18 @@
         integrated menus are enabled), otherwise they will be shown only when
         the mouse cursor is over the relative mouse area.</description>
     </key>
+    <key type="as" name="whitelist-repeated-keys">
+      <default>[
+        'XF86KbdBrightnessUp',
+        'XF86KbdBrightnessDown',
+        'XF86MonBrightnessUp',
+        'XF86MonBrightnessDown',
+        'XF86AudioRaiseVolume',
+        'XF86AudioLowerVolume'
+        ]</default>
+      <summary>List of keycodes that should be processed even if auto-repated.</summary>
+      <description>These keycodes are processed even if they are auto-repeated.</description>
+    </key>
   </schema>
   <schema path="/com/canonical/unity/interface/" id="com.canonical.Unity.Interface" gettext-domain="unity">
     <key type="d" name="text-scale-factor">
