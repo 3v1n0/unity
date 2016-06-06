@@ -4205,13 +4205,11 @@ void UnityScreen::InitGesturesSupport()
   gestures_sub_launcher_->SetGestureClasses(nux::DRAG_GESTURE);
   gestures_sub_launcher_->SetNumTouches(4);
   gestures_sub_launcher_->SetWindowId(GDK_ROOT_WINDOW());
-  gestures_sub_launcher_->Activate();
 
   gestures_sub_dash_.reset(new nux::GesturesSubscription);
   gestures_sub_dash_->SetGestureClasses(nux::TAP_GESTURE);
   gestures_sub_dash_->SetNumTouches(4);
   gestures_sub_dash_->SetWindowId(GDK_ROOT_WINDOW());
-  gestures_sub_dash_->Activate();
 
   gestures_sub_windows_.reset(new nux::GesturesSubscription);
   gestures_sub_windows_->SetGestureClasses(nux::TOUCH_GESTURE
@@ -4219,7 +4217,7 @@ void UnityScreen::InitGesturesSupport()
                                          | nux::PINCH_GESTURE);
   gestures_sub_windows_->SetNumTouches(3);
   gestures_sub_windows_->SetWindowId(GDK_ROOT_WINDOW());
-  gestures_sub_windows_->Activate();
+
   // Apply the user's settings
   UpdateGesturesSupport();
 }
