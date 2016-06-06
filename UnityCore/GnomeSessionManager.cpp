@@ -117,8 +117,9 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
 
     login_proxy_->ConnectProperty("Active", [this] (GVariant* variant) {
       bool active = glib::Variant(variant).GetBool();
-      manager_->screensaver_requested.emit(!active);
       manager_->is_session_active.changed.emit(active);
+      if (active)
+        manager_->screensaver_requested.emit(false);
     });
 
     manager_->is_session_active.SetGetterFunction([this] {
