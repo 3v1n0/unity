@@ -446,6 +446,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::InitPluginActions);
      sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
+     Settings::Instance().gestures_changed.connect(sigc::mem_fun(this, &UnityScreen::UpdateGesturesSupport));
      InitGesturesSupport();
 
      LoadPanelShadowTexture();
@@ -4189,11 +4190,17 @@ lockscreen::Controller::Ptr UnityScreen::lockscreen_controller()
   return lockscreen_controller_;
 }
 
+void UnityScreen::UpdateGesturesSupport()
+{
+  Settings::Instance().gestures_launcher_drag() ? gestures_sub_launcher_->Activate() : gestures_sub_launcher_->Deactivate();
+  Settings::Instance().gestures_dash_tap() ? gestures_sub_dash_->Activate() : gestures_sub_dash_->Deactivate();
+  Settings::Instance().gestures_windows_drag_pinch() ? gestures_sub_windows_->Activate() : gestures_sub_windows_->Deactivate();
+}
+
 void UnityScreen::InitGesturesSupport()
 {
   std::unique_ptr<nux::GestureBroker> gesture_broker(new UnityGestureBroker);
   wt->GetWindowCompositor().SetGestureBroker(std::move(gesture_broker));
-
   gestures_sub_launcher_.reset(new nux::GesturesSubscription);
   gestures_sub_launcher_->SetGestureClasses(nux::DRAG_GESTURE);
   gestures_sub_launcher_->SetNumTouches(4);
@@ -4213,6 +4220,8 @@ void UnityScreen::InitGesturesSupport()
   gestures_sub_windows_->SetNumTouches(3);
   gestures_sub_windows_->SetWindowId(GDK_ROOT_WINDOW());
   gestures_sub_windows_->Activate();
+  // Apply the user's settings
+  UpdateGesturesSupport();
 }
 
 CompAction::Vector& UnityScreen::getActions()

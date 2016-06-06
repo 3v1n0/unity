@@ -282,6 +282,7 @@ private:
   void OnDecorationStyleChanged();
 
   void InitGesturesSupport();
+  void UpdateGesturesSupport();
 
   void DrawPanelUnderDash();
 
