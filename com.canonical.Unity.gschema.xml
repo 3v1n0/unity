@@ -220,4 +220,23 @@
         when clicking over unfocused menu entries</description>
     </key>
   </schema>
+  <schema path="/com/canonical/unity/gestures/" id="com.canonical.Unity.Gestures" gettext-domain="unity">
+    <key type="b" name="launcher-drag">
+      <default>true</default>
+      <summary>Multi-touch gesture to reveal the launcher.</summary>
+      <description>When this is enabled, a 4 finger swipe from left to right will reveal launcher,
+        provided that the launcher is set to auto-hide.</description>
+    </key>
+    <key type="b" name="dash-tap">
+      <default>true</default>
+      <summary>Multi-touch gesture to open the dash.</summary>
+      <description>When this is enabled, a 4 finger tap will open the dash.</description>
+    </key>
+    <key type="b" name="windows-drag-pinch">
+      <default>true</default>
+      <summary>Multi-touch gestures to manage the windows.</summary>
+      <description>When this is enabled, 3 finger gestures such as drag, and pinch, will
+        help manage the windows.</description>
+    </key>
+  </schema>
 </schemalist>
