@@ -2486,7 +2486,7 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   }
   else
   {
-    switcher_controller_->detail = true;
+    switcher_controller_->SetDetail(true);
   }
 
   action->setState(action->state() | CompAction::StateTermKey);
