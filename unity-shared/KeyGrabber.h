@@ -21,6 +21,7 @@
 #define __UNITY_KEY_GRABBER__
 
 #include <core/core.h>
+#include <sigc++/signal.h>
 
 namespace unity
 {
@@ -35,6 +36,9 @@ public:
   virtual uint32_t AddAction(CompAction const&) = 0;
   virtual bool RemoveAction(CompAction const&) = 0;
   virtual bool RemoveAction(uint32_t id) = 0;
+
+  sigc::signal<void, CompAction const&> action_added;
+  sigc::signal<void, CompAction const&> action_removed;
 
   virtual CompAction::Vector& GetActions() = 0;
 };
