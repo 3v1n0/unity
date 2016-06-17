@@ -42,6 +42,11 @@ const char* const POWER_KEY_SUSPEND                = "XF86Suspend";
 const char* const POWER_KEY_SLEEP                  = "XF86Sleep";
 const char* const POWER_KEY_HIBERNATE              = "XF86Hibernate";
 const char* const POWER_KEY_POWEROFF               = "XF86PowerOff";
+const char* const POWER_KEY_MON_BRIGHTNESS_UP      = "XF86MonBrightnessUp";
+const char* const POWER_KEY_MON_BRIGHTNESS_DOWN    = "XF86MonBrightnessDown";
+const char* const POWER_KEY_KBD_BRIGHTNESS_UP      = "XF86KbdBrightnessUp";
+const char* const POWER_KEY_KBD_BRIGHTNESS_DOWN    = "XF86KbdBrightnessDown";
+const char* const POWER_KEY_KBD_BRIGHTNESS_TOGGLE  = "XF86KbdLightOnOff";
 
 const char* const INPUT_SWITCH_SCHEMA              = "org.gnome.desktop.wm.keybindings";
 const char* const INPUT_SWITCH_KEY_PREVIOUS_SOURCE = "switch-input-source-backward";
@@ -56,6 +61,14 @@ const char* const INDICATOR_SOUND_ACTION_SCROLL    = "scroll";
 const char* const INDICATOR_KEYBOARD_BUS_NAME      = "com.canonical.indicator.keyboard";
 const char* const INDICATOR_KEYBOARD_OBJECT_PATH   = "/com/canonical/indicator/keyboard";
 const char* const INDICATOR_KEYBOARD_ACTION_SCROLL = "locked_scroll";
+
+const std::string USD_POWER_MANAGER_NAME           = "org.gnome.SettingsDaemon.Power";
+const std::string USD_POWER_MANAGER_PATH           = "/org/gnome/SettingsDaemon/Power";
+const std::string USD_DEVICE_MONITOR               = "Screen";
+const std::string USD_DEVICE_KEYBOARD              = "Keyboard";
+const std::string USD_ACTION_STEP_UP               = "StepUp";
+const std::string USD_ACTION_STEP_DOWN             = "StepDown";
+const std::string USD_ACTION_TOGGLE                = "Toggle";
 
 void ActivateIndicator(std::string const& bus_name,
                        std::string const& object_path,
@@ -117,6 +130,13 @@ void PowerAction(session::Manager::Ptr const& session, const char *action_key)
   else if (action == "blank")
     session->ScreenSaverActivate();
 }
+
+void BrightnessAction(std::string const& device, std::string const& action)
+{
+  auto proxy = std::make_shared<glib::DBusProxy>(USD_POWER_MANAGER_NAME, USD_POWER_MANAGER_PATH, USD_POWER_MANAGER_NAME+"."+device);
+  proxy->CallBegin(action, nullptr, [proxy] (GVariant*, glib::Error const&) {});
+}
+
 } // namespace
 
 AcceleratorController::AcceleratorController(session::Manager::Ptr const& session)
@@ -150,6 +170,26 @@ AcceleratorController::AcceleratorController(session::Manager::Ptr const& sessio
 
   accelerator = std::make_shared<Accelerator>(POWER_KEY_POWEROFF);
   accelerator->activated.connect(std::bind(PowerAction, session, POWER_BUTTON_ACTION_KEY));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_MON_BRIGHTNESS_UP);
+  accelerator->activated.connect(std::bind(BrightnessAction, USD_DEVICE_MONITOR, USD_ACTION_STEP_UP));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_MON_BRIGHTNESS_DOWN);
+  accelerator->activated.connect(std::bind(BrightnessAction, USD_DEVICE_MONITOR, USD_ACTION_STEP_DOWN));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_KBD_BRIGHTNESS_UP);
+  accelerator->activated.connect(std::bind(BrightnessAction, USD_DEVICE_KEYBOARD, USD_ACTION_STEP_UP));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_KBD_BRIGHTNESS_DOWN);
+  accelerator->activated.connect(std::bind(BrightnessAction, USD_DEVICE_KEYBOARD, USD_ACTION_STEP_DOWN));
+  accelerators_->Add(accelerator);
+
+  accelerator = std::make_shared<Accelerator>(POWER_KEY_KBD_BRIGHTNESS_TOGGLE);
+  accelerator->activated.connect(std::bind(BrightnessAction, USD_DEVICE_KEYBOARD, USD_ACTION_TOGGLE));
   accelerators_->Add(accelerator);
 
   settings = glib::Object<GSettings>(g_settings_new(INPUT_SWITCH_SCHEMA));
