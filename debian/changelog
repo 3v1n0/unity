@@ -1,3 +1,36 @@
+unity (7.5.0+16.10.20160606.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Alberto Milone ]
+  * UnitySettings: Add dconf keys for disabling multitouch gestures (LP:
+    #1589520)
+
+  [ Andrea Azzarone ]
+  * Do not trigger screensaver on session inactive. (LP: #1587507)
+  * Use SwitcherController::SetDetail instead of detail=... (LP:
+    #1587618)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 06 Jun 2016 14:29:04 +0000
+
+unity (7.5.0+16.10.20160602-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add whitelist for auto-repated keys. (LP: #1586491)
+  * Fix scale window activation if in show desktop mode. (LP: #1582056)
+  * Order matters in the rendering. Draw launcher shadow after the
+    background in all cases. (LP: #1586374)
+  * Fallback to volume name if no other identifier is available. (LP:
+    #1103593)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 02 Jun 2016 01:02:19 +0000
+
+unity (7.5.0+16.10.20160525-0ubuntu1) yakkety; urgency=medium
+
+  [ Eleni Maria Stea ]
+  * PanelView: Don't draw it if the geo doesn't intersect the monitor
+    geo (as in ezoom)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 25 May 2016 14:22:42 +0000
+
 unity (7.5.0+16.10.20160517-0ubuntu1) yakkety; urgency=medium
 
   [ Marco Trevisan (Treviño) ]

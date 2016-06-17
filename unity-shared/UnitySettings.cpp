@@ -66,6 +66,11 @@ const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 const std::string REMOTE_CONTENT_SETTINGS = "com.canonical.Unity.Lenses";
 const std::string REMOTE_CONTENT_KEY = "remote-content-search";
 
+const std::string GESTURES_SETTINGS = "com.canonical.Unity.Gestures";
+const std::string LAUNCHER_DRAG = "launcher-drag";
+const std::string DASH_TAP = "dash-tap";
+const std::string WINDOWS_DRAG_PINCH = "windows-drag-pinch";
+
 const int DEFAULT_LAUNCHER_SIZE = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
 const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
@@ -83,6 +88,7 @@ public:
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , launcher_settings_(g_settings_new(LAUNCHER_SETTINGS.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
+    , gestures_settings_(g_settings_new(GESTURES_SETTINGS.c_str()))
     , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , ubuntu_ui_settings_(g_settings_new(UBUNTU_UI_SETTINGS.c_str()))
     , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
@@ -160,6 +166,10 @@ public:
       UpdateLimSetting();
     });
 
+    signals_.Add<void, GSettings*, const gchar*>(gestures_settings_, "changed", [this] (GSettings*, const gchar*) {
+      UpdateGesturesSetting();
+    });
+
     signals_.Add<void, GSettings*, const gchar*>(remote_content_settings_, "changed::" + REMOTE_CONTENT_KEY, [this] (GSettings*, const gchar* t) {
       UpdateRemoteContentSearch();
     });
@@ -168,6 +178,7 @@ public:
 
     // The order is important here, DPI is the last thing to be updated
     UpdateLimSetting();
+    UpdateGesturesSetting();
     UpdateTextScaleFactor();
     UpdateCursorScaleFactor();
     UpdateFontSize();
@@ -220,6 +231,14 @@ public:
     parent_->lim_movement_thresold = g_settings_get_uint(lim_settings_, CLICK_MOVEMENT_THRESHOLD.c_str());
     parent_->lim_double_click_wait = g_settings_get_uint(lim_settings_, DOUBLE_CLICK_WAIT.c_str());
     parent_->lim_unfocused_popup = g_settings_get_boolean(lim_settings_, UNFOCUSED_MENU_POPUP.c_str());
+  }
+
+  void UpdateGesturesSetting()
+  {
+    parent_->gestures_launcher_drag = g_settings_get_boolean(gestures_settings_, LAUNCHER_DRAG.c_str());
+    parent_->gestures_dash_tap = g_settings_get_boolean(gestures_settings_, DASH_TAP.c_str());
+    parent_->gestures_windows_drag_pinch = g_settings_get_boolean(gestures_settings_, WINDOWS_DRAG_PINCH.c_str());
+    parent_->gestures_changed.emit();
   }
 
   FormFactor GetFormFactor() const
@@ -384,6 +403,7 @@ public:
   glib::Object<GSettings> usettings_;
   glib::Object<GSettings> launcher_settings_;
   glib::Object<GSettings> lim_settings_;
+  glib::Object<GSettings> gestures_settings_;
   glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> ubuntu_ui_settings_;
   glib::Object<GSettings> gnome_ui_settings_;

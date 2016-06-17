@@ -71,9 +71,13 @@ public:
   nux::Property<double> font_scaling;
   nux::ROProperty<bool> remote_content;
   nux::RWProperty<LauncherPosition> launcher_position;
+  nux::Property<bool> gestures_launcher_drag;
+  nux::Property<bool> gestures_dash_tap;
+  nux::Property<bool> gestures_windows_drag_pinch;
 
   sigc::signal<void> dpi_changed;
   sigc::signal<void> low_gfx_changed;
+  sigc::signal<void> gestures_changed;
 
 private:
   class Impl;
