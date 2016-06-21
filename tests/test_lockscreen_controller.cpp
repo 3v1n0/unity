@@ -33,6 +33,7 @@ using namespace testing;
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
+#include "mock_key_grabber.h"
 #include "test_mock_session_manager.h"
 #include "test_uscreen_mock.h"
 #include "test_utils.h"
@@ -80,19 +81,21 @@ struct TestLockScreenController : Test
   TestLockScreenController()
     : animation_controller(tick_source)
     , session_manager(std::make_shared<NiceMock<session::MockManager>>())
+    , key_grabber(std::make_shared<key::MockGrabber::Nice>())
     , dbus_manager(std::make_shared<DBusManager>(session_manager))
     , upstart_wrapper(std::make_shared<UpstartWrapper>())
     , shield_factory(std::make_shared<ShieldFactoryMock>())
-    , controller(dbus_manager, session_manager, upstart_wrapper, shield_factory)
+    , controller(dbus_manager, session_manager, key_grabber, upstart_wrapper, shield_factory)
   {}
 
   struct ControllerWrap : Controller
   {
     ControllerWrap(DBusManager::Ptr const& dbus_manager,
                    session::Manager::Ptr const& session_manager,
+                   key::Grabber::Ptr const& key_grabber,
                    UpstartWrapper::Ptr const& upstart_wrapper,
                    ShieldFactoryInterface::Ptr const& shield_factory)
-      : Controller(dbus_manager, session_manager, upstart_wrapper, shield_factory, /* test_mode */ true)
+      : Controller(dbus_manager, session_manager, key_grabber, upstart_wrapper, shield_factory, /* test_mode */ true)
     {}
 
     using Controller::shields_;
@@ -107,6 +110,7 @@ struct TestLockScreenController : Test
   unity::panel::Style panel_style;
   unity::lockscreen::Settings lockscreen_settings;
   session::MockManager::Ptr session_manager;
+  key::MockGrabber::Ptr key_grabber;
   DBusManager::Ptr dbus_manager;
   unity::UpstartWrapper::Ptr upstart_wrapper;
 
@@ -123,7 +127,7 @@ TEST_F(TestLockScreenController, DisconnectUScreenSignalsOnDestruction)
 {
   size_t before = uscreen.changed.size();
   {
-    Controller dummy(dbus_manager, session_manager);
+    Controller dummy(dbus_manager, session_manager, key_grabber);
   }
   ASSERT_EQ(before, uscreen.changed.size());
 
@@ -135,7 +139,7 @@ TEST_F(TestLockScreenController, DisconnectSessionManagerSignalsOnDestruction)
 {
   size_t before = session_manager->unlock_requested.size();
   {
-    Controller dummy(dbus_manager, session_manager);
+    Controller dummy(dbus_manager, session_manager, key_grabber);
   }
   ASSERT_EQ(before, session_manager->unlock_requested.size());
 

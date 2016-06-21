@@ -37,7 +37,7 @@ namespace key
 
 struct GnomeGrabber::Impl
 {
-  Impl(bool test_mode = false);
+  Impl(Grabber*, bool test_mode = false);
   ~Impl();
 
   uint32_t NextActionID();
@@ -55,9 +55,9 @@ struct GnomeGrabber::Impl
   void ActivateDBusAction(CompAction const& action, uint32_t id, uint32_t device, uint32_t timestamp) const;
 
   bool IsActionPostponed(CompAction const& action) const;
-
   void UpdateWhitelist();
 
+  Grabber* parent_;
   CompScreen* screen_;
 
   glib::DBusServer shell_server_;

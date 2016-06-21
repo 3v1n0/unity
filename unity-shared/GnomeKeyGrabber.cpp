@@ -70,8 +70,9 @@ namespace testing
 std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 }
 
-GnomeGrabber::Impl::Impl(bool test_mode)
-  : screen_(screen)
+GnomeGrabber::Impl::Impl(Grabber* parent, bool test_mode)
+  : parent_(parent)
+  , screen_(screen)
   , shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
   , settings_(g_settings_new(SETTINGS_NAME.c_str()))
   , current_action_id_(0)
@@ -123,6 +124,7 @@ bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t& action_id
     actions_ids_.push_back(action_id);
     actions_.push_back(action);
     actions_customers_.push_back(1);
+    parent_->action_added.emit(action);
     return true;
   }
 
@@ -178,6 +180,7 @@ bool GnomeGrabber::Impl::RemoveActionByIndex(size_t index)
   LOG_DEBUG(logger) << "RemoveAction (\"" << action->keyToString() << "\")";
 
   screen_->removeAction(action);
+  parent_->action_removed.emit(*action);
   actions_.erase(actions_.begin() + index);
   actions_ids_.erase(actions_ids_.begin() + index);
   actions_customers_.erase(actions_customers_.begin() + index);
@@ -259,7 +262,6 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& owner, std::
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
     action.setTerminate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       auto key = action->keyToString();
-
       LOG_DEBUG(logger) << "released \"" << key << "\"";
 
       if (state & CompAction::StateTermTapped)
@@ -353,11 +355,11 @@ void GnomeGrabber::Impl::UpdateWhitelist()
 // Public implementation
 
 GnomeGrabber::GnomeGrabber()
-  : impl_(new Impl())
+  : impl_(new Impl(this))
 {}
 
 GnomeGrabber::GnomeGrabber(TestMode const& dummy)
-  : impl_(new Impl(true))
+  : impl_(new Impl(this, true))
 {}
 
 GnomeGrabber::~GnomeGrabber()

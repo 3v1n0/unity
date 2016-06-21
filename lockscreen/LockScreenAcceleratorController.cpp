@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2014 Canonical Ltd
+ * Copyright (C) 2014-2016 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,10 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: William Hua <william.hua@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "LockScreenAcceleratorController.h"
 
+#include <NuxCore/Logger.h>
 #include <UnityCore/GLibDBusProxy.h>
 
 namespace unity
@@ -28,157 +30,150 @@ namespace lockscreen
 
 namespace
 {
-const char* const MEDIA_KEYS_SCHEMA                = "org.gnome.settings-daemon.plugins.media-keys";
-const char* const MEDIA_KEYS_KEY_VOLUME_MUTE       = "volume-mute";
-const char* const MEDIA_KEYS_KEY_VOLUME_DOWN       = "volume-down";
-const char* const MEDIA_KEYS_KEY_VOLUME_UP         = "volume-up";
+DECLARE_LOGGER(logger, "unity.lockscreen.accelerator.controller");
 
-const char* const POWER_SCHEMA                     = "org.gnome.settings-daemon.plugins.power";
-const char* const SUSPEND_BUTTON_ACTION_KEY        = "button-suspend";
-const char* const SLEEP_BUTTON_ACTION_KEY          = "button-sleep";
-const char* const HIBERNATE_BUTTON_ACTION_KEY      = "button-hibernate";
-const char* const POWER_BUTTON_ACTION_KEY          = "button-power";
-const char* const POWER_KEY_SUSPEND                = "XF86Suspend";
-const char* const POWER_KEY_SLEEP                  = "XF86Sleep";
-const char* const POWER_KEY_HIBERNATE              = "XF86Hibernate";
-const char* const POWER_KEY_POWEROFF               = "XF86PowerOff";
+const std::string MEDIA_KEYS_SCHEMA = "org.gnome.settings-daemon.plugins.media-keys";
+const std::vector<std::string> ALLOWED_MEDIA_KEYS = {
+  "logout",
+  "magnifier",
+  "on-screen-keyboard",
+  "magnifier-zoom-in",
+  "screenreader",
+  "pause",
+  "stop",
+  "toggle-contrast",
+  "video-out",
+  "volume-down",
+  "volume-mute",
+  "volume-up",
+};
 
-const char* const INPUT_SWITCH_SCHEMA              = "org.gnome.desktop.wm.keybindings";
-const char* const INPUT_SWITCH_KEY_PREVIOUS_SOURCE = "switch-input-source-backward";
-const char* const INPUT_SWITCH_KEY_NEXT_SOURCE     = "switch-input-source";
+const std::string WM_KEYS_SCHEMA = "org.gnome.desktop.wm.keybindings";
+const std::vector<std::string> ALLOWED_WM_KEYS = {
+  "switch-input-source",
+  "switch-input-source-backward",
+};
 
-const char* const INDICATOR_INTERFACE_ACTIONS      = "org.gtk.Actions";
-const char* const INDICATOR_METHOD_ACTIVATE        = "Activate";
-const char* const INDICATOR_SOUND_BUS_NAME         = "com.canonical.indicator.sound";
-const char* const INDICATOR_SOUND_OBJECT_PATH      = "/com/canonical/indicator/sound";
-const char* const INDICATOR_SOUND_ACTION_MUTE      = "mute";
-const char* const INDICATOR_SOUND_ACTION_SCROLL    = "scroll";
-const char* const INDICATOR_KEYBOARD_BUS_NAME      = "com.canonical.indicator.keyboard";
-const char* const INDICATOR_KEYBOARD_OBJECT_PATH   = "/com/canonical/indicator/keyboard";
-const char* const INDICATOR_KEYBOARD_ACTION_SCROLL = "locked_scroll";
+const std::vector<std::string> ALLOWED_XF86_KEYS = {
+  "XF86ScreenSaver",
+  "XF86Sleep",
+  "XF86Standby",
+  "XF86Suspend",
+  "XF86Hibernate",
+  "XF86PowerOff",
+  "XF86MonBrightnessUp",
+  "XF86MonBrightnessDown",
+  "XF86KbdBrightnessUp",
+  "XF86KbdBrightnessDown",
+  "XF86KbdLightOnOff",
+  "XF86AudioMicMute",
+  "XF86Touchpad",
+};
 
-void ActivateIndicator(std::string const& bus_name,
-                       std::string const& object_path,
-                       std::string const& action_name,
-                       glib::Variant const& parameters = glib::Variant())
+bool IsKeyBindingAllowed(std::string const& key)
 {
-  GVariantBuilder builder;
+  if (std::find(begin(ALLOWED_XF86_KEYS), end(ALLOWED_XF86_KEYS), key) != end(ALLOWED_XF86_KEYS))
+    return true;
 
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("(sava{sv})"));
-  g_variant_builder_add(&builder, "s", action_name.c_str());
+  glib::Object<GSettings> media_settings(g_settings_new(MEDIA_KEYS_SCHEMA.c_str()));
+  Accelerator key_accelerator(key);
 
-  if (parameters)
-    g_variant_builder_add_parsed(&builder, "[%v]", static_cast<GVariant*>(parameters));
-  else
-    g_variant_builder_add_parsed(&builder, "@av []");
+  for (auto const& setting : ALLOWED_MEDIA_KEYS)
+  {
+    Accelerator media_key(glib::String(g_settings_get_string(media_settings, setting.c_str())).Str());
+    if (media_key == key_accelerator)
+      return true;
+  }
 
-  g_variant_builder_add_parsed(&builder, "@a{sv} []");
+  glib::Object<GSettings> wm_settings(g_settings_new(WM_KEYS_SCHEMA.c_str()));
 
-  auto proxy = std::make_shared<glib::DBusProxy>(bus_name, object_path, INDICATOR_INTERFACE_ACTIONS);
-  proxy->CallBegin(INDICATOR_METHOD_ACTIVATE, g_variant_builder_end(&builder), [proxy] (GVariant*, glib::Error const&) {});
+  for (auto const& setting : ALLOWED_WM_KEYS)
+  {
+    glib::Variant accels(g_settings_get_value(wm_settings, setting.c_str()), glib::StealRef());
+    auto children = g_variant_n_children(accels);
+
+    if (children > 0)
+    {
+      glib::String value;
+
+      for (auto i = 0u; i < children; ++i)
+      {
+        g_variant_get_child(accels, 0, "s", &value);
+
+        if (Accelerator(value.Str()) == key_accelerator)
+          return true;
+      }
+    }
+  }
+
+  return false;
 }
 
-void MuteIndicatorSound()
-{
-  ActivateIndicator(INDICATOR_SOUND_BUS_NAME,
-                    INDICATOR_SOUND_OBJECT_PATH,
-                    INDICATOR_SOUND_ACTION_MUTE);
-}
-
-void ScrollIndicatorSound(int offset)
-{
-  ActivateIndicator(INDICATOR_SOUND_BUS_NAME,
-                    INDICATOR_SOUND_OBJECT_PATH,
-                    INDICATOR_SOUND_ACTION_SCROLL,
-                    g_variant_new_int32(offset));
-}
-
-void ScrollIndicatorKeyboard(int offset)
-{
-  ActivateIndicator(INDICATOR_KEYBOARD_BUS_NAME,
-                    INDICATOR_KEYBOARD_OBJECT_PATH,
-                    INDICATOR_KEYBOARD_ACTION_SCROLL,
-                    g_variant_new_int32(-offset));
-}
-
-void PowerAction(session::Manager::Ptr const& session, const char *action_key)
-{
-  glib::Object<GSettings> settings(g_settings_new(POWER_SCHEMA));
-  auto const& action = glib::String(g_settings_get_string(settings, action_key)).Str();
-
-  if (action == "interactive")
-    session->shutdown_requested.emit(session->HasInhibitors());
-  else if (action == "shutdown")
-    session->reboot_requested.emit(session->HasInhibitors());
-  else if (action == "suspend")
-    session->Suspend();
-  else if (action == "hibernate")
-    session->Hibernate();
-  else if (action == "blank")
-    session->ScreenSaverActivate();
-}
 } // namespace
 
-AcceleratorController::AcceleratorController(session::Manager::Ptr const& session)
+AcceleratorController::AcceleratorController(key::Grabber::Ptr const& key_grabber)
   : accelerators_(new Accelerators)
 {
-  auto settings = glib::Object<GSettings>(g_settings_new(MEDIA_KEYS_SCHEMA));
+  for (auto const& action : key_grabber->GetActions())
+    AddAction(action);
 
-  auto accelerator = std::make_shared<Accelerator>(glib::String(g_settings_get_string(settings, MEDIA_KEYS_KEY_VOLUME_MUTE)));
-  accelerator->activated.connect(std::function<void()>(MuteIndicatorSound));
-  accelerators_->Add(accelerator);
+  key_grabber->action_added.connect(sigc::mem_fun(this, &AcceleratorController::AddAction));
+  key_grabber->action_removed.connect(sigc::mem_fun(this, &AcceleratorController::RemoveAction));
+}
 
-  accelerator = std::make_shared<Accelerator>(glib::String(g_settings_get_string(settings, MEDIA_KEYS_KEY_VOLUME_DOWN)));
-  accelerator->activated.connect(std::bind(ScrollIndicatorSound, -1));
-  accelerators_->Add(accelerator);
+void AcceleratorController::AddAction(CompAction const& action)
+{
+  if (action.type() != CompAction::BindingTypeKey)
+    return;
 
-  accelerator = std::make_shared<Accelerator>(glib::String(g_settings_get_string(settings, MEDIA_KEYS_KEY_VOLUME_UP)));
-  accelerator->activated.connect(std::bind(ScrollIndicatorSound, +1));
-  accelerators_->Add(accelerator);
+  auto const& key = action.keyToString();
 
-  accelerator = std::make_shared<Accelerator>(POWER_KEY_SUSPEND);
-  accelerator->activated.connect(std::bind(PowerAction, session, SUSPEND_BUTTON_ACTION_KEY));
-  accelerators_->Add(accelerator);
-
-  accelerator = std::make_shared<Accelerator>(POWER_KEY_SLEEP);
-  accelerator->activated.connect(std::bind(PowerAction, session, SLEEP_BUTTON_ACTION_KEY));
-  accelerators_->Add(accelerator);
-
-  accelerator = std::make_shared<Accelerator>(POWER_KEY_HIBERNATE);
-  accelerator->activated.connect(std::bind(PowerAction, session, HIBERNATE_BUTTON_ACTION_KEY));
-  accelerators_->Add(accelerator);
-
-  accelerator = std::make_shared<Accelerator>(POWER_KEY_POWEROFF);
-  accelerator->activated.connect(std::bind(PowerAction, session, POWER_BUTTON_ACTION_KEY));
-  accelerators_->Add(accelerator);
-
-  settings = glib::Object<GSettings>(g_settings_new(INPUT_SWITCH_SCHEMA));
-
-  auto variant = glib::Variant(g_settings_get_value(settings, INPUT_SWITCH_KEY_PREVIOUS_SOURCE), glib::StealRef());
-
-  if (g_variant_n_children(variant) > 0)
+  if (!IsKeyBindingAllowed(key))
   {
-    const gchar* string;
-
-    g_variant_get_child(variant, 0, "&s", &string);
-
-    accelerator = std::make_shared<Accelerator>(string);
-    accelerator->activated.connect(std::bind(ScrollIndicatorKeyboard, -1));
-    accelerators_->Add(accelerator);
+    LOG_DEBUG(logger) << "Action not allowed " << key;
+    return;
   }
 
-  variant = glib::Variant(g_settings_get_value(settings, INPUT_SWITCH_KEY_NEXT_SOURCE), glib::StealRef());
+  auto accelerator = std::make_shared<Accelerator>(key);
+  accelerator->activated.connect(sigc::bind(sigc::mem_fun(this, &AcceleratorController::OnActionActivated), action));
+  accelerators_->Add(accelerator);
+  actions_accelerators_.push_back({action, accelerator});
 
-  if (g_variant_n_children(variant) > 0)
+  LOG_DEBUG(logger) << "Action added " << key;
+}
+
+void AcceleratorController::RemoveAction(CompAction const& action)
+{
+  if (action.type() != CompAction::BindingTypeKey)
+    return;
+
+  LOG_DEBUG(logger) << "Removing action " << action.keyToString();
+
+  for (auto it = begin(actions_accelerators_); it != end(actions_accelerators_);)
   {
-    const gchar* string;
-
-    g_variant_get_child(variant, 0, "&s", &string);
-
-    accelerator = std::make_shared<Accelerator>(string);
-    accelerator->activated.connect(std::bind(ScrollIndicatorKeyboard, +1));
-    accelerators_->Add(accelerator);
+    if (it->first == action)
+    {
+      accelerators_->Remove(it->second);
+      it = actions_accelerators_.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
   }
+}
+
+void AcceleratorController::OnActionActivated(CompAction& action)
+{
+  LOG_DEBUG(logger) << "Activating action " << action.keyToString();
+
+  CompOption::Vector options;
+
+  if (action.state() & CompAction::StateInitKey)
+    action.initiate()(&action, 0, options);
+
+  if (action.state() & CompAction::StateTermKey)
+    action.terminate()(&action, CompAction::StateTermTapped, options);
 }
 
 Accelerators::Ptr const& AcceleratorController::GetAccelerators() const

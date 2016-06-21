@@ -69,9 +69,11 @@ class Accelerators
 {
 public:
   typedef std::shared_ptr<Accelerators> Ptr;
+  typedef std::vector<Accelerator::Ptr> Vector;
 
   Accelerators();
 
+  Accelerators::Vector GetAccelerators() const;
   void Clear();
 
   void Add(Accelerator::Ptr const& accelerator);
@@ -83,7 +85,7 @@ public:
                         unsigned int modifiers);
 
 private:
-  std::vector<Accelerator::Ptr> accelerators_;
+  Accelerators::Vector accelerators_;
 
   PressedState pressed_state_;
 };

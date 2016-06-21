@@ -54,12 +54,14 @@ DECLARE_LOGGER(logger, "unity.lockscreen");
 
 Controller::Controller(DBusManager::Ptr const& dbus_manager,
                        session::Manager::Ptr const& session_manager,
+                       key::Grabber::Ptr const& key_grabber,
                        UpstartWrapper::Ptr const& upstart_wrapper,
                        ShieldFactoryInterface::Ptr const& shield_factory,
                        bool test_mode)
   : opacity([this] { return fade_animator_.GetCurrentValue(); })
   , dbus_manager_(dbus_manager)
   , session_manager_(session_manager)
+  , key_grabber_(key_grabber)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , suspend_inhibitor_manager_(std::make_shared<SuspendInhibitorManager>())
@@ -459,7 +461,7 @@ void Controller::LockScreen()
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
 
-  accelerator_controller_ = std::make_shared<AcceleratorController>(session_manager_);
+  accelerator_controller_ = std::make_shared<AcceleratorController>(key_grabber_);
   auto activate_key = WindowManager::Default().activate_indicators_key();
   auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
   accelerator->activated.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));
