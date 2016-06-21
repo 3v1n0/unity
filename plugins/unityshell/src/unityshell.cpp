@@ -4081,24 +4081,24 @@ void UnityScreen::InitUnityComponents()
   ShowFirstRunHints();
 
   // Setup Session Controller
-  auto manager = std::make_shared<session::GnomeManager>();
-  manager->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  manager->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  manager->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
-  manager->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
-  session_dbus_manager_ = std::make_shared<session::DBusManager>(manager);
-  session_controller_ = std::make_shared<session::Controller>(manager);
+  auto session = std::make_shared<session::GnomeManager>();
+  session->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  session->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  session->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
+  session->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
+  session_dbus_manager_ = std::make_shared<session::DBusManager>(session);
+  session_controller_ = std::make_shared<session::Controller>(session);
   LOG_INFO(logger) << "InitUnityComponents-Session " << timer.ElapsedSeconds() << "s";
   Introspectable::AddChild(session_controller_.get());
 
   // Setup Lockscreen Controller
-  screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(manager);
-  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, manager);
+  screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(session);
+  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, session, menus_->KeyGrabber());
   UpdateActivateIndicatorsKey();
   LOG_INFO(logger) << "InitUnityComponents-Lockscreen " << timer.ElapsedSeconds() << "s";
 
   if (g_file_test((DesktopUtilities::GetUserRuntimeDirectory()+local::LOCKED_STAMP).c_str(), G_FILE_TEST_EXISTS))
-    manager->PromptLockScreen();
+    session->PromptLockScreen();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right/top margin

@@ -30,6 +30,7 @@
 #include "SuspendInhibitorManager.h"
 #include "ScreenSaverDBusManager.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/KeyGrabber.h"
 #include "unity-shared/UpstartWrapper.h"
 
 namespace unity
@@ -44,7 +45,7 @@ class Controller : public sigc::trackable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller(DBusManager::Ptr const&, session::Manager::Ptr const&,
+  Controller(DBusManager::Ptr const&, session::Manager::Ptr const&, key::Grabber::Ptr const&,
              UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
@@ -84,6 +85,7 @@ private:
 
   DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
+  key::Grabber::Ptr key_grabber_;
   indicator::Indicators::Ptr indicators_;
   AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;

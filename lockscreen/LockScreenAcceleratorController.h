@@ -20,7 +20,7 @@
 #ifndef UNITY_LOCKSCREEN_ACCELERATOR_CONTROLLER
 #define UNITY_LOCKSCREEN_ACCELERATOR_CONTROLLER
 
-#include "UnityCore/SessionManager.h"
+#include "unity-shared/KeyGrabber.h"
 #include "LockScreenAccelerators.h"
 
 namespace unity
@@ -28,16 +28,21 @@ namespace unity
 namespace lockscreen
 {
 
-class AcceleratorController
+class AcceleratorController : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<AcceleratorController> Ptr;
 
-  AcceleratorController(session::Manager::Ptr const&);
+  AcceleratorController(key::Grabber::Ptr const&);
 
   Accelerators::Ptr const& GetAccelerators() const;
 
 private:
+  void AddAction(CompAction const&);
+  void RemoveAction(CompAction const&);
+  void OnActionActivated(CompAction&);
+
+  std::vector<std::pair<CompAction, Accelerator::Ptr>> actions_accelerators_;
   Accelerators::Ptr accelerators_;
 };
 
