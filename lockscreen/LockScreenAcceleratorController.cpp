@@ -76,10 +76,12 @@ bool IsKeyBindingAllowed(std::string const& key)
     return true;
 
   glib::Object<GSettings> media_settings(g_settings_new(MEDIA_KEYS_SCHEMA.c_str()));
+  Accelerator key_accelerator(key);
 
   for (auto const& setting : ALLOWED_MEDIA_KEYS)
   {
-    if (glib::String(g_settings_get_string(media_settings, setting.c_str())).Str() == key)
+    Accelerator media_key(glib::String(g_settings_get_string(media_settings, setting.c_str())).Str());
+    if (media_key == key_accelerator)
       return true;
   }
 
@@ -98,7 +100,7 @@ bool IsKeyBindingAllowed(std::string const& key)
       {
         g_variant_get_child(accels, 0, "s", &value);
 
-        if (value.Str() == key)
+        if (Accelerator(value.Str()) == key_accelerator)
           return true;
       }
     }
@@ -128,7 +130,7 @@ void AcceleratorController::AddAction(CompAction const& action)
 
   if (!IsKeyBindingAllowed(key))
   {
-    LOG_DEBUG(logger) << "Action not allowed " << action.keyToString();
+    LOG_DEBUG(logger) << "Action not allowed " << key;
     return;
   }
 
@@ -137,7 +139,7 @@ void AcceleratorController::AddAction(CompAction const& action)
   accelerators_->Add(accelerator);
   actions_accelerators_.push_back({action, accelerator});
 
-  LOG_DEBUG(logger) << "Action added " << action.keyToString();
+  LOG_DEBUG(logger) << "Action added " << key;
 }
 
 void AcceleratorController::RemoveAction(CompAction const& action)
