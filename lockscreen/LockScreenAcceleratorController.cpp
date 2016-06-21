@@ -66,8 +66,8 @@ const std::vector<std::string> ALLOWED_XF86_KEYS = {
   "XF86KbdBrightnessUp",
   "XF86KbdBrightnessDown",
   "XF86KbdLightOnOff",
-  //"XF86AudioMicMute",
-  //"XF86Touchpad",
+  "XF86AudioMicMute",
+  "XF86Touchpad",
 };
 
 bool IsKeyBindingAllowed(std::string const& key)
