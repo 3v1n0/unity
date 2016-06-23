@@ -98,6 +98,9 @@ public:
 
   static Style& Instance();
 
+  virtual bool LockScreenButton(cairo_t* cr, std::string const& label,
+                                int font_px_size);
+
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
                       std::string const& label, int font_px_size=-1,
                       Alignment alignment = Alignment::CENTER,
@@ -195,6 +198,8 @@ public:
   BaseTexturePtr GetSearchCircleIcon(double scale) const;
   BaseTexturePtr GetSearchCloseIcon(double scale) const;
   BaseTexturePtr GetSearchSpinIcon(double scale) const;
+
+  BaseTexturePtr GetLockScreenActivator(double scale) const;
 
   BaseTexturePtr const& GetGroupUnexpandIcon() const;
   BaseTexturePtr const& GetGroupExpandIcon() const;
