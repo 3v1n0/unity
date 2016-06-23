@@ -142,8 +142,7 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   UpdateSize();
   ResetLayout();
 
-  user_authenticator_.AuthenticateStart(session_manager_->UserName(),
-                                        sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+  StartAuthentication();
 }
 
 void UserPromptView::UpdateSize()
@@ -277,37 +276,20 @@ void UserPromptView::AuthenticationCb(bool is_authenticated)
   if (is_authenticated)
   {
     if (prompted_ && !unacknowledged_messages_)
-    {
-      session_manager_->unlock_requested.emit();
-    }
+      DoUnlock();
     else
-    {
-      prompted_ = true;
-
-      unacknowledged_messages_ = false;
       ShowAuthenticated(true);
-    }
   }
   else
   {
     if (prompted_)
     {
       AddMessage(_("Invalid password, please try again"), nux::color::Red);
-
-      prompted_ = false;
-      unacknowledged_messages_ = false;
-
-      user_authenticator_.AuthenticateStart(session_manager_->UserName(),
-                                            sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+      StartAuthentication();
     }
     else
     {
-      if (!unacknowledged_messages_)
-        AddMessage(_("Failed to authenticate"), nux::color::Red);
-
-      prompted_ = true;
-      unacknowledged_messages_ = false;
-
+      AddMessage(_("Failed to authenticate"), nux::color::Red);
       ShowAuthenticated(false);
     }
   }
@@ -471,20 +453,29 @@ void UserPromptView::AddButton(std::string const& text, std::function<void()> co
 
 void UserPromptView::ShowAuthenticated(bool successful)
 {
-  if (successful)
-    AddButton(_("Unlock"), [this]() {
-      session_manager_->unlock_requested.emit();
-    });
-  else
-    AddButton(_("Retry"),  [this]() {
-      prompted_ = false;
-      unacknowledged_messages_ = false;
+  prompted_ = true;
+  unacknowledged_messages_ = false;
 
-      user_authenticator_.AuthenticateStart(session_manager_->UserName(),
-                                            sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
-    });
+  if (successful)
+    AddButton(_("Unlock"), sigc::mem_fun(this, &UserPromptView::DoUnlock));
+  else
+    AddButton(_("Retry"), sigc::mem_fun(this, &UserPromptView::StartAuthentication));
 
   GetLayout()->AddLayout(button_layout_);
+}
+
+void UserPromptView::StartAuthentication()
+{
+  prompted_ = false;
+  unacknowledged_messages_ = false;
+
+  user_authenticator_.AuthenticateStart(session_manager_->UserName(),
+                                        sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+}
+
+void UserPromptView::DoUnlock()
+{
+  session_manager_->unlock_requested.emit();
 }
 
 }

@@ -60,6 +60,7 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
+  bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character) override;
 
 private:
   void ResetLayout();
@@ -67,8 +68,8 @@ private:
   void EnsureBGLayer();
 
   void ShowAuthenticated(bool successful);
-
-  bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
+  void StartAuthentication();
+  void DoUnlock();
 
   session::Manager::Ptr session_manager_;
   UserAuthenticatorPam user_authenticator_;
