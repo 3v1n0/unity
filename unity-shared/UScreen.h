@@ -45,6 +45,7 @@ public:
   int GetMonitorWithMouse() const;
   int GetMonitorAtPosition(int x, int y) const;
   nux::Geometry const& GetMonitorGeometry(int monitor) const;
+  nux::Size const& GetMonitorPhysicalSize(int monitor) const;
 
   std::vector<nux::Geometry> const& GetMonitors() const;
   nux::Geometry GetScreenGeometry() const;
@@ -63,6 +64,7 @@ private:
 protected:
   static UScreen* default_screen_;
   std::vector<nux::Geometry> monitors_;
+  std::vector<nux::Size> physical_monitors_;
   int primary_;
 
 private:
