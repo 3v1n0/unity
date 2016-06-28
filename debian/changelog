@@ -1,3 +1,13 @@
+unity (7.5.0+16.10.20160628.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * UnitySettings: Add an option to enable/disable pam account checking.
+    (LP: #1460649)
+  * Lockscreen: Make sure warning and errors are properly shown to the
+    user (LP: #1593696)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 28 Jun 2016 16:23:47 +0000
+
 unity (7.5.0+16.10.20160621.1-0ubuntu1) yakkety; urgency=medium
 
   * LockScreenAcceleratorController: use key::Grabber to handle allowed
