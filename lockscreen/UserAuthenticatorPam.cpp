@@ -22,6 +22,7 @@
 // let's just fallcback to lightdm.
 
 #include "UserAuthenticatorPam.h"
+#include "unity-shared/UnitySettings.h"
 
 #include <cstring>
 #include <security/pam_appl.h>
@@ -52,13 +53,21 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
 
   g_task_run_in_thread(task, [] (GTask* task, gpointer, gpointer data, GCancellable*) {
     auto self = static_cast<UserAuthenticatorPam*>(data);
+
     self->status_ = pam_authenticate(self->pam_handle_, 0);
+
     if (self->status_ == PAM_SUCCESS)
-      self->status_ = pam_acct_mgmt(self->pam_handle_, 0);
-    if (self->status_ == PAM_NEW_AUTHTOK_REQD)
-      self->status_ = pam_chauthtok(self->pam_handle_, PAM_CHANGE_EXPIRED_AUTHTOK);
-    if (self->status_ == PAM_SUCCESS)
+    {
+      int status2 = pam_acct_mgmt(self->pam_handle_, 0);
+
+      if (status2 == PAM_NEW_AUTHTOK_REQD)
+        status2 = pam_chauthtok(self->pam_handle_, PAM_CHANGE_EXPIRED_AUTHTOK);
+
+      if (unity::Settings::Instance().pam_check_account_type())
+        self->status_ = status2;
+
       pam_setcred (self->pam_handle_, PAM_REINITIALIZE_CRED);
+    }
   });
 
   return true;

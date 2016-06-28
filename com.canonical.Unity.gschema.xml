@@ -93,6 +93,13 @@
       <summary>List of keycodes that should be processed even if auto-repated.</summary>
       <description>These keycodes are processed even if they are auto-repeated.</description>
     </key>
+    <key type="b" name="pam-check-account-type">
+      <default>false</default>
+      <summary>Enable/Disable PAM account checking</summary>
+      <description>Whether PAM should check the result of account modules
+        when authenticating.  Only do this if you have account
+        configured properly on your system.</description>
+    </key>
   </schema>
   <schema path="/com/canonical/unity/interface/" id="com.canonical.Unity.Interface" gettext-domain="unity">
     <key type="d" name="text-scale-factor">
