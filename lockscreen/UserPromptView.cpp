@@ -26,6 +26,7 @@
 #include <Nux/VLayout.h>
 
 #include "LockScreenSettings.h"
+#include "LockScreenButton.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/TextInput.h"
 #include "unity-shared/StaticCairoText.h"
@@ -41,6 +42,7 @@ const RawPixel PADDING              = 10_em;
 const RawPixel LAYOUT_MARGIN        = 10_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
 const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
+const RawPixel BUTTON_LAYOUT_MARGIN =  5_em;
 const int PROMPT_FONT_SIZE = 13;
 
 nux::AbstractPaintLayer* CrateBackgroundLayer(double width, double height, double scale)
@@ -105,20 +107,29 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   , username_(nullptr)
   , msg_layout_(nullptr)
   , prompt_layout_(nullptr)
+  , button_layout_(nullptr)
+  , prompted_(false)
+  , unacknowledged_messages_(false)
 {
   user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
+    prompted_ = true;
+    unacknowledged_messages_ = false;
     AddPrompt(message, /* visible */ true, promise);
   });
 
   user_authenticator_.echo_off_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
+    prompted_ = true;
+    unacknowledged_messages_ = false;
     AddPrompt(message, /* visible */ false, promise);
   });
 
   user_authenticator_.message_requested.connect([this](std::string const& message){
+    unacknowledged_messages_ = true;
     AddMessage(message, nux::color::White);
   });
 
   user_authenticator_.error_requested.connect([this](std::string const& message){
+    unacknowledged_messages_ = true;
     AddMessage(message, nux::color::Red);
   });
 
@@ -131,8 +142,7 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
   UpdateSize();
   ResetLayout();
 
-  user_authenticator_.AuthenticateStart(session_manager_->UserName(),
-                                        sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+  StartAuthentication();
 }
 
 void UserPromptView::UpdateSize()
@@ -178,6 +188,19 @@ void UserPromptView::UpdateSize()
     }
   }
 
+  if (button_layout_)
+  {
+    button_layout_->SetVerticalInternalMargin(BUTTON_LAYOUT_MARGIN.CP(scale));
+
+    for (auto* area : button_layout_->GetChildren())
+    {
+      auto* button = static_cast<LockScreenButton*>(area);
+      button->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
+      button->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+      button->scale = scale();
+    }
+  }
+
   bg_layer_.reset();
 
   ComputeContentSize();
@@ -200,7 +223,12 @@ bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sy
 
 void UserPromptView::ResetLayout()
 {
+  bool keep_msg_layout = msg_layout_ && (!prompted_ || unacknowledged_messages_);
+
   focus_queue_.clear();
+
+  if (keep_msg_layout)
+    msg_layout_->Reference();
 
   SetLayout(new nux::VLayout());
 
@@ -216,34 +244,54 @@ void UserPromptView::ResetLayout()
   username_->SetFont("Ubuntu "+std::to_string(PROMPT_FONT_SIZE));
   GetLayout()->AddView(username_);
 
-  msg_layout_ = new nux::VLayout();
-  msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN.CP(scale));
-  msg_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
+  if (!keep_msg_layout)
+  {
+    msg_layout_ = new nux::VLayout();
+    msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN.CP(scale));
+    msg_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
+  }
+
   GetLayout()->AddLayout(msg_layout_);
+
+  if (keep_msg_layout)
+    msg_layout_->UnReference();
 
   prompt_layout_ = new nux::VLayout();
   prompt_layout_->SetVerticalInternalMargin(PROMPT_LAYOUT_MARGIN.CP(scale));
   prompt_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
   GetLayout()->AddLayout(prompt_layout_);
 
+  button_layout_ = new nux::VLayout();
+  button_layout_->SetVerticalInternalMargin(BUTTON_LAYOUT_MARGIN.CP(scale));
+  button_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
+
   QueueRelayout();
   QueueDraw();
 }
 
-void UserPromptView::AuthenticationCb(bool authenticated)
+void UserPromptView::AuthenticationCb(bool is_authenticated)
 {
   ResetLayout();
 
-  if (authenticated)
+  if (is_authenticated)
   {
-    session_manager_->unlock_requested.emit();
+    if (prompted_ && !unacknowledged_messages_)
+      DoUnlock();
+    else
+      ShowAuthenticated(true);
   }
   else
   {
-    AddMessage(_("Invalid password, please try again"), nux::color::Red);
-
-    user_authenticator_.AuthenticateStart(session_manager_->UserName(),
-                                          sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+    if (prompted_)
+    {
+      AddMessage(_("Invalid password, please try again"), nux::color::Red);
+      StartAuthentication();
+    }
+    else
+    {
+      AddMessage(_("Failed to authenticate"), nux::color::Red);
+      ShowAuthenticated(false);
+    }
   }
 }
 
@@ -299,7 +347,16 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
 nux::View* UserPromptView::focus_view()
 {
   if (focus_queue_.empty())
-    return nullptr;
+  {
+    if (button_layout_ && button_layout_->GetChildren().size() > 0)
+    {
+      return static_cast<nux::View*>(button_layout_->GetChildren().front());
+    }
+    else
+    {
+      return nullptr;
+    }
+  }
 
   for (auto* view : focus_queue_)
     if (view->text_entry()->HasKeyboardFocus())
@@ -376,6 +433,49 @@ void UserPromptView::AddMessage(std::string const& message, nux::Color const& co
   ComputeContentSize();
   QueueRelayout();
   QueueDraw();
+}
+
+void UserPromptView::AddButton(std::string const& text, std::function<void()> const& cb)
+{
+  auto* button = new LockScreenButton (text, NUX_TRACKER_LOCATION);
+  button->scale = scale();
+  button_layout_->AddView(button, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
+
+  button->state_change.connect ([cb] (nux::View*) {
+    cb();
+  });
+
+  GetLayout()->ComputeContentPosition(0, 0);
+  ComputeContentSize();
+  QueueRelayout();
+  QueueDraw();
+}
+
+void UserPromptView::ShowAuthenticated(bool successful)
+{
+  prompted_ = true;
+  unacknowledged_messages_ = false;
+
+  if (successful)
+    AddButton(_("Unlock"), sigc::mem_fun(this, &UserPromptView::DoUnlock));
+  else
+    AddButton(_("Retry"), sigc::mem_fun(this, &UserPromptView::StartAuthentication));
+
+  GetLayout()->AddLayout(button_layout_);
+}
+
+void UserPromptView::StartAuthentication()
+{
+  prompted_ = false;
+  unacknowledged_messages_ = false;
+
+  user_authenticator_.AuthenticateStart(session_manager_->UserName(),
+                                        sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+}
+
+void UserPromptView::DoUnlock()
+{
+  session_manager_->unlock_requested.emit();
 }
 
 }

@@ -1672,6 +1672,41 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
   return true;
 }
 
+bool Style::LockScreenButton(cairo_t* cr, std::string const& label,
+                             int font_px_size)
+{
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+
+  cairo_set_line_width(cr, 1);
+
+  double radius = 5.0;
+  RoundedRect(cr, 1.0, 0.5, 0.5, radius, w - 1.0, h - 1.0);
+
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
+  cairo_fill_preserve(cr);
+
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
+  cairo_stroke(cr);
+
+  static double internal_padding = 10.0f;
+
+  pimpl->Text(cr,
+              nux::color::White,
+              label,
+              font_px_size,
+              internal_padding,
+              dash::Alignment::LEFT);
+
+  return true;
+}
+
 nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
 {
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
@@ -2211,6 +2246,10 @@ BaseTexturePtr Style::GetSearchSpinIcon(double scale) const
   return pimpl->LoadScaledTexture("search_spin", scale);
 }
 
+BaseTexturePtr Style::GetLockScreenActivator(double scale) const
+{
+  return pimpl->LoadScaledTexture("arrow_right", scale);
+}
 
 RawPixel Style::GetButtonGarnishSize() const
 {
