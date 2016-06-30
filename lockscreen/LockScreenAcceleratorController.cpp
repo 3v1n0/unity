@@ -20,6 +20,8 @@
 
 #include "LockScreenAcceleratorController.h"
 
+#include <sigc++/bind.h>
+
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibDBusProxy.h>
 
