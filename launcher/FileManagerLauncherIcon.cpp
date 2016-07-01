@@ -67,6 +67,14 @@ FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, Devi
     icon_name = (icon.empty() ? DEFAULT_ICON : icon);
   }));
 
+  signals_conn_.Add(app_->running.changed.connect([this](bool running) {
+    LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
+
+    if (running)
+      _source_manager.Remove(ICON_REMOVE_TIMEOUT);
+  }));
+
+
   UpdateStorageWindows();
 }
 
