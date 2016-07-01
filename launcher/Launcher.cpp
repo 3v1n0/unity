@@ -1847,7 +1847,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
   gPainter.PushDrawColorLayer(GfxContext, base, clear_colour, true, ROP);
 
-  if (Settings::Instance().GetLowGfxMode() == false)
+  if (Settings::Instance().low_gfx() == false)
   {
     GfxContext.GetRenderStates().SetBlend(true);
     GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -1899,7 +1899,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                         pressure_color);
   }
 
-  if (!Settings::Instance().GetLowGfxMode())
+  if (!Settings::Instance().low_gfx())
   {
     if (IsOverlayOpen() && bg_effect_helper_.enabled)
     {

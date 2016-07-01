@@ -54,13 +54,12 @@ public:
   ~Settings();
 
   static Settings& Instance();
-  bool GetLowGfxMode() const;
-  void SetLowGfxMode(const bool low_gfx);
   EMConverter::Ptr const& em(int monitor = 0) const;
 
   void SetLauncherSize(int launcher_size, int monitor);
   int LauncherSize(int mointor) const;
 
+  nux::Property<bool> low_gfx;
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
   nux::ROProperty<DesktopType> desktop_type;

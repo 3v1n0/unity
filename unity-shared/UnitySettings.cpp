@@ -99,7 +99,6 @@ public:
     , cursor_scale_(1.0)
     , cached_double_click_activate_(true)
     , changing_gnome_settings_(false)
-    , lowGfx_(false)
     , remote_content_enabled_(true)
   {
     parent_->form_factor.SetGetterFunction(sigc::mem_fun(this, &Impl::GetFormFactor));
@@ -417,7 +416,6 @@ public:
   double cursor_scale_;
   bool cached_double_click_activate_;
   bool changing_gnome_settings_;
-  bool lowGfx_;
   bool remote_content_enabled_;
 };
 
@@ -426,7 +424,8 @@ public:
 //
 
 Settings::Settings()
-  : is_standalone(false)
+  : low_gfx(false)
+  , is_standalone(false)
   , pimpl(new Impl(this))
 {
   if (settings_instance)
@@ -452,21 +451,6 @@ Settings& Settings::Instance()
   }
 
   return *settings_instance;
-}
-
-bool Settings::GetLowGfxMode() const
-{
-  return pimpl->lowGfx_;
-}
-
-void Settings::SetLowGfxMode(const bool low_gfx)
-{
-  if (pimpl->lowGfx_ != low_gfx)
-  {
-    pimpl->lowGfx_ = low_gfx;
-
-    low_gfx_changed.emit();
-  }
 }
 
 EMConverter::Ptr const& Settings::em(int monitor) const
