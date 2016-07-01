@@ -197,7 +197,8 @@ Launcher::Launcher(MockableBaseWindow* parent,
     QueueDraw();
   });
 
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Launcher::OnDPIChanged));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Launcher::OnDPIChanged));
+  Settings::Instance().low_gfx.changed.connect(redraw_cb);
 
   auto_hide_animation_.updated.connect(redraw_cb);
   hover_animation_.updated.connect(redraw_cb);
