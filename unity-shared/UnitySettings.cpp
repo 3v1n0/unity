@@ -75,7 +75,7 @@ const int DEFAULT_LAUNCHER_SIZE = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
 const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
 const double DEFAULT_DPI = 96.0f;
-const double HIDPI_LIMIT = DEFAULT_DPI * 2;
+const double DPI_SCALE_LIMIT = 140.0f;
 }
 
 //
@@ -317,11 +317,11 @@ public:
     return em_converters_[monitor];
   }
 
-  double FindOptimalScale(const UScreen* uscreen, const int monitor)
+  int FindOptimalScale(const UScreen* uscreen, const int monitor)
   {
     auto const& geo = uscreen->GetMonitorGeometry(monitor);
     auto const& size = uscreen->GetMonitorPhysicalSize(monitor);
-    int const scale = 8;
+    int scale = 8;
       
     if ((size.width == 160 && size.height == 90) ||
       (size.width == 160 && size.height == 100) ||
@@ -332,8 +332,11 @@ public:
     if (size.width > 0 && size.height > 0) {
       const double dpi_x = static_cast<double>(geo.width) / (size.width / 25.4);  
       const double dpi_y = static_cast<double>(geo.height) / (size.height / 25.4);
-      if (dpi_x > HIDPI_LIMIT && dpi_y > HIDPI_LIMIT)    
-        return scale * 2;
+
+      const auto dpi = std::max(dpi_x, dpi_y);
+
+      if (dpi > DPI_SCALE_LIMIT)
+        scale = static_cast<int>(std::lround(scale * dpi / DPI_SCALE_LIMIT));
     }
 
     return scale;
