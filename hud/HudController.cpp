@@ -40,8 +40,11 @@ namespace unity
 {
 namespace hud
 {
-
+namespace
+{
 DECLARE_LOGGER(logger, "unity.hud.controller");
+const unsigned FADE_DURATION = 90;
+}
 
 Controller::Controller(Controller::ViewCreator const& create_view,
                        Controller::WindowCreator const& create_window)
@@ -54,7 +57,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   , monitor_index_(0)
   , create_view_(create_view)
   , create_window_(create_window)
-  , timeline_animator_(90)
+  , timeline_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   LOG_DEBUG(logger) << "hud startup";
 

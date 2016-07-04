@@ -49,7 +49,7 @@ std::string casefold_copy(std::string const& str)
 }
 
 Filter::Filter()
-  : fade_animator_(FADE_DURATION)
+  : fade_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   auto& wm = WindowManager::Default();
   auto& settings = Settings::Instance();

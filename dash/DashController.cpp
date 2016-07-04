@@ -43,7 +43,8 @@ const char* window_title = "unity-dash";
 
 namespace
 {
-unsigned const PRELOAD_TIMEOUT_LENGTH = 40;
+const unsigned PRELOAD_TIMEOUT_LENGTH = 40;
+const unsigned FADE_DURATION = 90;
 
 namespace dbus
 {
@@ -68,7 +69,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , visible_(false)
   , dbus_server_(dbus::BUS_NAME)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
-  , timeline_animator_(90)
+  , timeline_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   RegisterUBusInterests();
 

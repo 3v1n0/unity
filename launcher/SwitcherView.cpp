@@ -23,6 +23,7 @@
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/XKeyboardUtil.h"
 
@@ -248,6 +249,7 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
     render_targets_.clear();
   }
 
+  animation_.SetDuration(Settings::Instance().low_gfx() ? 0 : animation_length);
   SaveLast();
 }
 
@@ -258,6 +260,7 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
 
   delta_tracker_.ResetState();
 
+  animation_.SetDuration(animation_length);
   SaveLast();
 }
 

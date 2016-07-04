@@ -28,6 +28,7 @@
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
@@ -65,7 +66,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , suspend_inhibitor_manager_(std::make_shared<SuspendInhibitorManager>())
-  , fade_animator_(LOCK_FADE_DURATION)
+  , fade_animator_(unity::Settings::Instance().low_gfx() ? 0 : LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
   , prompt_activation_(false)
