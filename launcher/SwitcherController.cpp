@@ -292,6 +292,10 @@ Controller::Impl::Impl(Controller* obj,
         HideWindow();
     }
   });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
 }
 
 void Controller::Impl::OnBackgroundUpdate(nux::Color const& new_color)

@@ -110,6 +110,10 @@ Filter::Filter()
     }
   });
 
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
+
   ApplicationManager::Default().window_opened.connect(sigc::hide(sigc::mem_fun(this, &Filter::OnWindowChanged)));
 }
 

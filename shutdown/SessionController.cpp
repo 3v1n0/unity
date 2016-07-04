@@ -62,6 +62,10 @@ Controller::Controller(session::Manager::Ptr const& manager)
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
       CloseWindow();
   });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
 }
 
 void Controller::OnBackgroundUpdate(nux::Color const& new_color)

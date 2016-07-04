@@ -58,6 +58,11 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
       view_window_->ShowWindow(false);
   });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
+
   modeller_->model_changed.connect(sigc::mem_fun(this, &Controller::OnModelUpdated));
 }
 

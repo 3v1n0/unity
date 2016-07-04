@@ -51,6 +51,10 @@ CairoBaseWindow::CairoBaseWindow(int monitor)
   SetWindowSizeMatchLayout(true);
   sigVisible.connect([this] (BaseWindow*) { compute_blur_bkg_ = true; });
 
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
+
   fade_animator_.updated.connect(sigc::mem_fun(this, &BaseWindow::SetOpacity));
   fade_animator_.finished.connect([this] {
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
