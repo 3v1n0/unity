@@ -576,7 +576,6 @@ double PreviewContainer::GetSwipeAnimationProgress(struct timespec const& curren
 
 void PreviewContainer::QueueAnimation(double progress)
 {
-  g_print("Queue animation %f\n",progress);
   if (preview_layout_)
     preview_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
 
