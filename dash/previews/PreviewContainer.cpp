@@ -29,6 +29,7 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/UnitySettings.h"
 #include "PreviewNavigator.h"
 #include <boost/math/constants/constants.hpp>
 #include "config.h"
@@ -409,7 +410,7 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   , scale(1.0)
   , preview_layout_(nullptr)
   , nav_disabled_(Navigation::NONE)
-  , animation_(ANIM_DURATION_LONG)
+  , animation_(Settings::Instance().low_gfx() ? 0 : ANIM_DURATION_LONG)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
@@ -420,6 +421,10 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   mouse_click.connect(sigc::mem_fun(this, &PreviewContainer::OnMouseDown));
   scale.changed.connect(sigc::mem_fun(this, &PreviewContainer::UpdateScale));
   animation_.updated.connect(sigc::mem_fun(this, &PreviewContainer::QueueAnimation));
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_LONG);
+  }, *this));
 }
 
 void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation direction)
