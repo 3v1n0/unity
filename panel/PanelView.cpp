@@ -300,8 +300,9 @@ void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
+  nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
   nux::Geometry const& mgeo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
-  nux::Geometry isect = mgeo.Intersect(geo);
+  nux::Geometry isect = mgeo.Intersect(geo_absolute);
 
   if(!isect.width || !isect.height)
       return;
@@ -313,8 +314,6 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (IsTransparent())
   {
-    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-
     if (BackgroundEffectHelper::blur_type != BLUR_NONE)
     {
       bg_blur_texture_ = bg_effect_helper_.GetBlurRegion();
