@@ -36,7 +36,7 @@ void StorageLauncherIcon::UpdateStorageWindows()
   bool active = false;
   bool urgent = false;
   bool check_visibility = (GetIconType() == IconType::APPLICATION);
-  bool visible = IsSticky();
+  bool visible = false;
 
   managed_windows_ = GetStorageWindows();
   windows_connections_.Clear();
@@ -54,12 +54,13 @@ void StorageLauncherIcon::UpdateStorageWindows()
     if (!urgent && win->urgent())
       urgent = true;
 
-    if (check_visibility)
+    if (check_visibility && !visible)
     {
-      windows_connections_.Add(win->visible.changed.connect([this] (bool) { OnWindowStateChanged(); }));
+      visible = true;
+      //windows_connections_.Add(win->visible.changed.connect([this] (bool) { OnWindowStateChanged(); }));
 
-      if (!visible && win->visible())
-        visible = true;
+      //if (!visible && win->visible())
+        //visible = true;
     }
   }
 
@@ -68,7 +69,7 @@ void StorageLauncherIcon::UpdateStorageWindows()
   SetQuirk(Quirk::URGENT, urgent);
 
   if (check_visibility)
-    SetQuirk(Quirk::VISIBLE, visible);
+    SetQuirk(Quirk::VISIBLE, visible || IsSticky());
 
   EnsureWindowsLocation();
 }
@@ -83,7 +84,7 @@ void StorageLauncherIcon::OnWindowStateChanged()
   bool active = false;
   bool urgent = false;
   bool check_visibility = (GetIconType() == IconType::APPLICATION);
-  bool visible = IsSticky();
+  bool visible = false;
 
   for (auto const& win : managed_windows_)
   {
@@ -93,7 +94,7 @@ void StorageLauncherIcon::OnWindowStateChanged()
     if (!urgent && win->urgent())
       urgent = true;
 
-    if (check_visibility && !visible && win->visible())
+    if (check_visibility && !visible)
       visible = true;
   }
 
@@ -101,7 +102,7 @@ void StorageLauncherIcon::OnWindowStateChanged()
   SetQuirk(Quirk::URGENT, urgent);
 
   if (check_visibility)
-    SetQuirk(Quirk::VISIBLE, visible);
+    SetQuirk(Quirk::VISIBLE, visible || IsSticky());
 }
 
 bool StorageLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
