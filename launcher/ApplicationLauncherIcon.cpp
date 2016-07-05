@@ -42,6 +42,7 @@ namespace
 DECLARE_LOGGER(logger, "unity.launcher.icon.application");
 
 // We use the "application-" prefix since the manager is protected, to avoid name clash
+const std::string ICON_REMOVE_TIMEOUT = "application-icon-remove";
 const std::string DEFAULT_ICON = "application-default-icon";
 
 enum MenuItemType
@@ -103,19 +104,23 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   SetupApplicationSignalsConnections();
 
   // Let's update the icon properties to match the new application ones
-  app_->title.changed.emit(app_->title());
-  app_->icon.changed.emit(app_->icon());
-  app_->visible.changed.emit(app_->visible());
-  app_->active.changed.emit(app_->active());
-  app_->running.changed.emit(app_->running());
-  app_->desktop_file.changed.emit(app_->desktop_file());
+  _source_manager.AddTimeout(0, [this, was_sticky] () {
+    app_->title.changed.emit(app_->title());
+    app_->icon.changed.emit(app_->icon());
+    app_->visible.changed.emit(app_->visible());
+    app_->active.changed.emit(app_->active());
+    app_->running.changed.emit(app_->running());
+    app_->desktop_file.changed.emit(app_->desktop_file());
 
-  // Make sure we set the LauncherIcon stick bit too...
-  if (app_->sticky() || was_sticky)
-    Stick(false); // don't emit the signal
+    // Make sure we set the LauncherIcon stick bit too...
+    if (app_->sticky() || was_sticky)
+      Stick(false); // don't emit the signal
 
-  if (app_->starting())
-    SetQuirk(Quirk::STARTING, true);
+    if (app_->starting())
+      SetQuirk(Quirk::STARTING, true);
+
+    return false;
+  });
 }
 
 void ApplicationLauncherIcon::UnsetApplication()
