@@ -54,6 +54,9 @@ public:
   void UnStick() override;
 
 protected:
+  // This must be defined here as it's used both in ApplicationLauncherIcon and in FileManagerLauncherIcon.
+  static constexpr const char* ICON_REMOVE_TIMEOUT = "application-icon-remove";
+
   void SetApplication(ApplicationPtr const& app);
   ApplicationPtr GetApplication() const;
 
