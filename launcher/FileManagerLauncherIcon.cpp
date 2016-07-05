@@ -120,7 +120,7 @@ WindowList FileManagerLauncherIcon::GetStorageWindows() const
 
   for (auto const& app_win : ApplicationLauncherIcon::GetManagedWindows())
   {
-    if (IsLocationManaged(file_manager_->LocationForWindow(app_win)))
+    if (WindowManager::Default().IsWindowMapped(app_win->window_id()) && IsLocationManaged(file_manager_->LocationForWindow(app_win)))
       fm_windows.push_back(app_win);
   }
 
