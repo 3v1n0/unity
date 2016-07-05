@@ -72,6 +72,22 @@ const std::vector<std::string> ALLOWED_XF86_KEYS = {
   "XF86Touchpad",
 };
 
+bool IsSettingKeyAvailable(glib::Object<GSettings> const& settings, std::string const& key)
+{
+  bool available = false;
+  GSettingsSchema* schema;
+
+  g_object_get(glib::object_cast<GObject>(settings), "settings-schema", &schema, nullptr);
+
+  if (schema)
+  {
+    available = g_settings_schema_has_key(schema, key.c_str());
+    g_settings_schema_unref(schema);
+  }
+
+  return available;
+}
+
 bool IsKeyBindingAllowed(std::string const& key)
 {
   if (std::find(begin(ALLOWED_XF86_KEYS), end(ALLOWED_XF86_KEYS), key) != end(ALLOWED_XF86_KEYS))
@@ -82,6 +98,9 @@ bool IsKeyBindingAllowed(std::string const& key)
 
   for (auto const& setting : ALLOWED_MEDIA_KEYS)
   {
+    if (!IsSettingKeyAvailable(media_settings, setting))
+      continue;
+
     Accelerator media_key(glib::String(g_settings_get_string(media_settings, setting.c_str())).Str());
     if (media_key == key_accelerator)
       return true;
@@ -91,6 +110,9 @@ bool IsKeyBindingAllowed(std::string const& key)
 
   for (auto const& setting : ALLOWED_WM_KEYS)
   {
+    if (!IsSettingKeyAvailable(wm_settings, setting))
+      continue;
+
     glib::Variant accels(g_settings_get_value(wm_settings, setting.c_str()), glib::StealRef());
     auto children = g_variant_n_children(accels);
 
