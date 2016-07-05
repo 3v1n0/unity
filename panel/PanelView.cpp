@@ -64,7 +64,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   auto& wm = WindowManager::Default();
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelView::Resize));
-  Settings::Instance().low_gfx_changed.connect(sigc::mem_fun(this, &PanelView::OnLowGfxChanged));
+  Settings::Instance().low_gfx.changed.connect(sigc::hide(sigc::mem_fun(this, &PanelView::OnLowGfxChanged)));
 
   wm.average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
   wm.initiate_spread.connect(sigc::mem_fun(this, &PanelView::OnSpreadInitiate));
@@ -76,7 +76,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   rop.Blend = true;
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
 
-  if (!Settings::Instance().GetLowGfxMode())
+  if (!Settings::Instance().low_gfx())
   {
     rop.SrcBlend = GL_ZERO;
     rop.DstBlend = GL_SRC_COLOR;
@@ -258,7 +258,7 @@ void PanelView::OnSpreadTerminate()
 
 void PanelView::OnLowGfxChanged()
 {
-  if (!Settings::Instance().GetLowGfxMode())
+  if (!Settings::Instance().low_gfx())
   {
     nux::ROPConfig rop;
 
@@ -367,7 +367,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (overlay_mode && !Settings::Instance().GetLowGfxMode())
+    if (overlay_mode && !Settings::Instance().low_gfx())
     {
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_darken_layer_.get());
 
@@ -461,7 +461,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (overlay_mode)
     {
-      if (Settings::Instance().GetLowGfxMode())
+      if (Settings::Instance().low_gfx())
       {
         rop.Blend = false;
         auto const& bg_color = WindowManager::Default().average_color();
@@ -480,7 +480,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       refine_geo.x = refine_x_pos;
       refine_geo.width = bg_refine_tex_->GetWidth();
 
-      if (!Settings::Instance().GetLowGfxMode())
+      if (!Settings::Instance().low_gfx())
       {
         nux::GetPainter().PushLayer(GfxContext, refine_geo, bg_refine_layer_.get());
         bgs++;
@@ -496,7 +496,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (!overlay_mode || !GfxContext.UsingGLSLCodePath())
     gPainter.PushLayer(GfxContext, geo, bg_layer_.get());
 
-  if (overlay_mode && !Settings::Instance().GetLowGfxMode())
+  if (overlay_mode && !Settings::Instance().low_gfx())
   {
     // apply the shine
     nux::TexCoordXForm texxform;

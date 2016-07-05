@@ -72,6 +72,7 @@ const int ANIM_DURATION_SHORT = 125;
 const int ANIM_DURATION_SHORT_SHORT = 100;
 const int ANIM_DURATION = 200;
 const int ANIM_DURATION_LONG = 350;
+const int ANIM_DURATION_DASH_SHOWING = 90;
 const int START_DRAGICON_DURATION = 250;
 
 const RawPixel DEFAULT_ICON_SIZE       = 48_em;
@@ -137,14 +138,14 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , drag_action_(nux::DNDACTION_NONE)
   , bg_effect_helper_(this)
   , launcher_position_(unity::Settings::Instance().launcher_position())
-  , auto_hide_animation_(ANIM_DURATION_SHORT)
-  , hover_animation_(ANIM_DURATION)
-  , drag_over_animation_(ANIM_DURATION_LONG)
-  , drag_out_animation_(ANIM_DURATION_SHORT)
-  , drag_icon_animation_(ANIM_DURATION_SHORT)
-  , dnd_hide_animation_(ANIM_DURATION * 3)
-  , dash_showing_animation_(90)
-  , cv_(unity::Settings::Instance().em(monitor))
+  , auto_hide_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_SHORT)
+  , hover_animation_(Settings::Instance().low_gfx ? ANIM_DURATION_SHORT_SHORT : ANIM_DURATION)
+  , drag_over_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_LONG)
+  , drag_out_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_SHORT)
+  , drag_icon_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_SHORT)
+  , dnd_hide_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION * 3)
+  , dash_showing_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_DASH_SHOWING)
+  , cv_(Settings::Instance().em(monitor))
 {
   icon_renderer_->monitor = monitor();
   icon_renderer_->scale = cv_->DPIScale();
@@ -197,7 +198,17 @@ Launcher::Launcher(MockableBaseWindow* parent,
     QueueDraw();
   });
 
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Launcher::OnDPIChanged));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Launcher::OnDPIChanged));
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    auto_hide_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
+    hover_animation_.SetDuration(low_gfx ? ANIM_DURATION_SHORT_SHORT : ANIM_DURATION);
+    drag_over_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_LONG);
+    drag_out_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
+    drag_icon_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
+    dnd_hide_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION * 3);
+    dash_showing_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_DASH_SHOWING);
+    QueueDraw();
+  }, *this));
 
   auto_hide_animation_.updated.connect(redraw_cb);
   hover_animation_.updated.connect(redraw_cb);
@@ -1847,7 +1858,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
   gPainter.PushDrawColorLayer(GfxContext, base, clear_colour, true, ROP);
 
-  if (Settings::Instance().GetLowGfxMode() == false)
+  if (Settings::Instance().low_gfx() == false)
   {
     GfxContext.GetRenderStates().SetBlend(true);
     GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -1899,7 +1910,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                         pressure_color);
   }
 
-  if (!Settings::Instance().GetLowGfxMode())
+  if (!Settings::Instance().low_gfx())
   {
     if (IsOverlayOpen() && bg_effect_helper_.enabled)
     {

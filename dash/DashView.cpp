@@ -313,13 +313,15 @@ void DashView::StartPreviewAnimation()
   preview_animation_.reset();
   preview_container_animation_.reset();
 
+  double anim_length = Settings::Instance().low_gfx() ? 0 : PREVIEW_ANIMATION_LENGTH;
+
   // Dash Split Open Animation
   split_animation_.reset(new na::AnimateValue<float>());
-  split_animation_->SetDuration((1.0f - animate_split_value_) * PREVIEW_ANIMATION_LENGTH);
+  split_animation_->SetDuration((1.0f - animate_split_value_) * anim_length);
   split_animation_->SetStartValue(animate_split_value_);
   split_animation_->SetFinishValue(1.0f);
   split_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-  split_animation_->updated.connect([this](float const& linear_split_animate_value)
+  split_animation_->updated.connect([this, anim_length](float const& linear_split_animate_value)
   {
     static na::EasingCurve split_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -331,11 +333,11 @@ void DashView::StartPreviewAnimation()
     {
       // Preview Container Close Animation
       preview_container_animation_.reset(new na::AnimateValue<float>());
-      preview_container_animation_->SetDuration((1.0f - animate_preview_container_value_) * PREVIEW_ANIMATION_LENGTH);
+      preview_container_animation_->SetDuration((1.0f - animate_preview_container_value_) * anim_length);
       preview_container_animation_->SetStartValue(animate_preview_container_value_);
       preview_container_animation_->SetFinishValue(1.0f);
       preview_container_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-      preview_container_animation_->updated.connect([this](float const& linear_preview_container_animate_value)
+      preview_container_animation_->updated.connect([this, anim_length](float const& linear_preview_container_animate_value)
       {
         static na::EasingCurve preview_container_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -347,7 +349,7 @@ void DashView::StartPreviewAnimation()
         {
           // Preview Close Animation
           preview_animation_.reset(new na::AnimateValue<float>());
-          preview_animation_->SetDuration((1.0f - animate_preview_value_) * PREVIEW_ANIMATION_LENGTH);
+          preview_animation_->SetDuration((1.0f - animate_preview_value_) * anim_length);
           preview_animation_->SetStartValue(animate_preview_value_);
           preview_animation_->SetFinishValue(1.0f);
           preview_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
@@ -382,13 +384,15 @@ void DashView::EndPreviewAnimation()
   split_animation_.reset();
   preview_container_animation_.reset();
 
+  double anim_length = Settings::Instance().low_gfx() ? 0 : PREVIEW_ANIMATION_LENGTH;
+
   // Preview Close Animation
   preview_animation_.reset(new na::AnimateValue<float>());
-  preview_animation_->SetDuration(animate_preview_value_ * PREVIEW_ANIMATION_LENGTH);
+  preview_animation_->SetDuration(animate_preview_value_ * anim_length);
   preview_animation_->SetStartValue(1.0f - animate_preview_value_);
   preview_animation_->SetFinishValue(1.0f);
   preview_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-  preview_animation_->updated.connect([this](float const& preview_value)
+  preview_animation_->updated.connect([this, anim_length](float const& preview_value)
   {
     animate_preview_value_ = 1.0f - preview_value;
     QueueDraw();
@@ -398,11 +402,11 @@ void DashView::EndPreviewAnimation()
     {
       // Preview Container Close Animation
       preview_container_animation_.reset(new na::AnimateValue<float>());
-      preview_container_animation_->SetDuration(animate_preview_container_value_ * PREVIEW_ANIMATION_LENGTH);
+      preview_container_animation_->SetDuration(animate_preview_container_value_ * anim_length);
       preview_container_animation_->SetStartValue(1.0f - animate_preview_container_value_);
       preview_container_animation_->SetFinishValue(1.0f);
       preview_container_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-      preview_container_animation_->updated.connect([this](float const& linear_preview_container_animate_value)
+      preview_container_animation_->updated.connect([this, anim_length](float const& linear_preview_container_animate_value)
       {
         static na::EasingCurve preview_container_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -413,7 +417,7 @@ void DashView::EndPreviewAnimation()
         {
           // Dash Split Close Animation
           split_animation_.reset(new na::AnimateValue<float>());
-          split_animation_->SetDuration(animate_split_value_ * PREVIEW_ANIMATION_LENGTH);
+          split_animation_->SetDuration(animate_split_value_ * anim_length);
           split_animation_->SetStartValue(1.0f - animate_split_value_);
           split_animation_->SetFinishValue(1.0f);
           split_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));

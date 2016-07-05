@@ -100,7 +100,7 @@ void ShowdesktopHandler::FadeOut()
     return;
 
   state_ = ShowdesktopHandler::StateFadeOut;
-  progress_ = unity::Settings::Instance().GetLowGfxMode() ? 1.0f : 0.0f;
+  progress_ = Settings::Instance().low_gfx() ? 1.0f : 0.0f;
 
   was_hidden_ = showdesktop_handler_window_interface_->Hidden();
 
@@ -144,7 +144,7 @@ ShowdesktopHandlerWindowInterface::PostPaintAction ShowdesktopHandler::Animate (
 
   if (state_ == ShowdesktopHandler::StateFadeOut)
   {
-    progress_ = unity::Settings::Instance().GetLowGfxMode() ? 1.0f : progress_ + inc;
+    progress_ = Settings::Instance().low_gfx() ? 1.0f : progress_ + inc;
     if (progress_ >= 1.0f)
     {
       progress_ = 1.0f;
@@ -153,7 +153,7 @@ ShowdesktopHandlerWindowInterface::PostPaintAction ShowdesktopHandler::Animate (
   }
   else if (state_ == StateFadeIn)
   {
-    progress_ = unity::Settings::Instance().GetLowGfxMode() ? 0.0f : progress_ - inc;
+    progress_ = Settings::Instance().low_gfx() ? 0.0f : progress_ - inc;
     if (progress_ <= 0.0f)
     {
       progress_ = 0.0f;

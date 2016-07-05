@@ -30,7 +30,7 @@ namespace colors {
 
 namespace unity
 {
-  class BGHash
+  class BGHash : public sigc::trackable
   {
   public:
     BGHash();

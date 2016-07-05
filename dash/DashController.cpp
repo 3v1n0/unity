@@ -43,7 +43,8 @@ const char* window_title = "unity-dash";
 
 namespace
 {
-unsigned const PRELOAD_TIMEOUT_LENGTH = 40;
+const unsigned PRELOAD_TIMEOUT_LENGTH = 40;
+const unsigned FADE_DURATION = 90;
 
 namespace dbus
 {
@@ -68,7 +69,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , visible_(false)
   , dbus_server_(dbus::BUS_NAME)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
-  , timeline_animator_(90)
+  , timeline_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   RegisterUBusInterests();
 
@@ -91,6 +92,9 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   SetupWindow();
   UScreen::GetDefault()->changed.connect(sigc::mem_fun(this, &Controller::OnMonitorChanged));
   Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::Relayout)));
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    timeline_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
 
   form_factor_changed_ = Settings::Instance().form_factor.changed.connect([this] (FormFactor)
   {

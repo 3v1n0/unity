@@ -49,7 +49,7 @@ std::string casefold_copy(std::string const& str)
 }
 
 Filter::Filter()
-  : fade_animator_(FADE_DURATION)
+  : fade_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   auto& wm = WindowManager::Default();
   auto& settings = Settings::Instance();
@@ -109,6 +109,10 @@ Filter::Filter()
       search_bar_->SetSearchFinished();
     }
   });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
 
   ApplicationManager::Default().window_opened.connect(sigc::hide(sigc::mem_fun(this, &Filter::OnWindowChanged)));
 }

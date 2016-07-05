@@ -301,12 +301,12 @@ UnityScreen::UnityScreen(CompScreen* screen)
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1) ||
        optionGetLowGraphicsMode())
     {
-      unity_settings_.SetLowGfxMode(true);
+      unity_settings_.low_gfx = true;
     }
 
   if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
   {
-    unity_settings_.SetLowGfxMode(false);
+    unity_settings_.low_gfx = false;
   }
 #endif
 
@@ -3727,7 +3727,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       else
           BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
 
-      unity::Settings::Instance().SetLowGfxMode(optionGetLowGraphicsMode());
+      unity::Settings::Instance().low_gfx = optionGetLowGraphicsMode();
       break;
     case UnityshellOptions::DecayRate:
       launcher_options->edge_decay_rate = optionGetDecayRate() * 100;
