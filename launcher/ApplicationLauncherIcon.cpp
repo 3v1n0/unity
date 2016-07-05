@@ -115,7 +115,7 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
 
   // Make sure we set the LauncherIcon stick bit too...
   if (app_->sticky() || was_sticky)
-  Stick(false); // don't emit the signal
+    Stick(false); // don't emit the signal
 }
 
 void ApplicationLauncherIcon::UnsetApplication()
