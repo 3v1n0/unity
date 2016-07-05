@@ -21,6 +21,7 @@
 
 #include <glib.h>
 #include "UnityShowdesktopHandler.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -99,7 +100,7 @@ void ShowdesktopHandler::FadeOut()
     return;
 
   state_ = ShowdesktopHandler::StateFadeOut;
-  progress_ = 0.0f;
+  progress_ = unity::Settings::Instance().GetLowGfxMode() ? 1.0f : 0.0f;
 
   was_hidden_ = showdesktop_handler_window_interface_->Hidden();
 
@@ -143,7 +144,7 @@ ShowdesktopHandlerWindowInterface::PostPaintAction ShowdesktopHandler::Animate (
 
   if (state_ == ShowdesktopHandler::StateFadeOut)
   {
-    progress_ += inc;
+    progress_ = unity::Settings::Instance().GetLowGfxMode() ? 1.0f : progress_ + inc;
     if (progress_ >= 1.0f)
     {
       progress_ = 1.0f;
@@ -152,7 +153,7 @@ ShowdesktopHandlerWindowInterface::PostPaintAction ShowdesktopHandler::Animate (
   }
   else if (state_ == StateFadeIn)
   {
-    progress_ -= inc;
+    progress_ = unity::Settings::Instance().GetLowGfxMode() ? 0.0f : progress_ - inc;
     if (progress_ <= 0.0f)
     {
       progress_ = 0.0f;
