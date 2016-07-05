@@ -55,13 +55,7 @@ void StorageLauncherIcon::UpdateStorageWindows()
       urgent = true;
 
     if (check_visibility && !visible)
-    {
       visible = true;
-      //windows_connections_.Add(win->visible.changed.connect([this] (bool) { OnWindowStateChanged(); }));
-
-      //if (!visible && win->visible())
-        //visible = true;
-    }
   }
 
   SetQuirk(Quirk::RUNNING, !managed_windows_.empty());
@@ -78,6 +72,26 @@ WindowList StorageLauncherIcon::GetManagedWindows() const
 {
   return managed_windows_;
 }
+
+WindowList StorageLauncherIcon::WindowsOnViewport()
+{
+  WindowFilterMask filter = 0;
+  filter |= WindowFilter::MAPPED;
+  filter |= WindowFilter::ON_CURRENT_DESKTOP;
+  filter |= WindowFilter::ON_ALL_MONITORS;
+
+  return WindowedLauncherIcon::GetWindows(filter);
+}
+
+WindowList StorageLauncherIcon::WindowsForMonitor(int monitor)
+{
+  WindowFilterMask filter = 0;
+  filter |= WindowFilter::MAPPED;
+  filter |= WindowFilter::ON_CURRENT_DESKTOP;
+
+  return WindowedLauncherIcon::GetWindows(filter, monitor);
+}
+
 
 void StorageLauncherIcon::OnWindowStateChanged()
 {

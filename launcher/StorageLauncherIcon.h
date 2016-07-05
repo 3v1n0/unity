@@ -38,6 +38,9 @@ protected:
   WindowList GetManagedWindows() const override;
   virtual WindowList GetStorageWindows() const = 0;
 
+  WindowList WindowsOnViewport() override;
+  WindowList WindowsForMonitor(int monitor) override;
+
   bool OnShouldHighlightOnDrag(DndData const& dnd_data) override;
 
 private:
