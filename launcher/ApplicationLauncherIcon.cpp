@@ -104,22 +104,18 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   SetupApplicationSignalsConnections();
 
   // Let's update the icon properties to match the new application ones
-  _source_manager.AddTimeout(0, [this, was_sticky] () {
-    app_->title.changed.emit(app_->title());
-    app_->icon.changed.emit(app_->icon());
-    app_->visible.changed.emit(app_->visible());
-    app_->active.changed.emit(app_->active());
-    app_->running.changed.emit(app_->running());
-    app_->urgent.changed.emit(app_->urgent());
-    app_->starting.changed.emit(app_->starting() || GetQuirk(Quirk::STARTING));
-    app_->desktop_file.changed.emit(app_->desktop_file());
+  app_->title.changed.emit(app_->title());
+  app_->icon.changed.emit(app_->icon());
+  app_->visible.changed.emit(app_->visible());
+  app_->active.changed.emit(app_->active());
+  app_->running.changed.emit(app_->running());
+  app_->urgent.changed.emit(app_->urgent());
+  app_->starting.changed.emit(app_->starting() || GetQuirk(Quirk::STARTING));
+  app_->desktop_file.changed.emit(app_->desktop_file());
 
-    // Make sure we set the LauncherIcon stick bit too...
-    if (app_->sticky() || was_sticky)
-      Stick(false); // don't emit the signal
-
-    return false;
-  });
+  // Make sure we set the LauncherIcon stick bit too...
+  if (app_->sticky() || was_sticky)
+  Stick(false); // don't emit the signal
 }
 
 void ApplicationLauncherIcon::UnsetApplication()
