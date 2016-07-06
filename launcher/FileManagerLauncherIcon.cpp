@@ -49,6 +49,11 @@ FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, Devi
   SetQuirk(Quirk::VISIBLE, false);
   SkipQuirkAnimation(Quirk::VISIBLE);
 
+  signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindowPtr const& win) {
+    signals_conn_.Add(win->monitor.changed.connect([this] (int) { UpdateStorageWindows(); }));
+    UpdateStorageWindows();
+  }));
+
   signals_conn_.Add(app_->desktop_file.changed.connect([this](std::string const& desktop_file) {
     LOG_DEBUG(logger) << tooltip_text() << " desktop_file now " << desktop_file;
     UpdateDesktopFile();
@@ -133,6 +138,31 @@ bool FileManagerLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
   return StorageLauncherIcon::OnShouldHighlightOnDrag(dnd_data);
 }
+
+bool FileManagerLauncherIcon::IsUserVisible() const
+{
+  return WindowedLauncherIcon::IsUserVisible();
+}
+
+WindowList FileManagerLauncherIcon::WindowsOnViewport()
+{
+  WindowFilterMask filter = 0;
+  filter |= WindowFilter::MAPPED;
+  filter |= WindowFilter::ON_CURRENT_DESKTOP;
+  filter |= WindowFilter::ON_ALL_MONITORS;
+
+  return WindowedLauncherIcon::GetWindows(filter);
+}
+
+WindowList FileManagerLauncherIcon::WindowsForMonitor(int monitor)
+{
+  WindowFilterMask filter = 0;
+  filter |= WindowFilter::MAPPED;
+  filter |= WindowFilter::ON_CURRENT_DESKTOP;
+
+  return WindowedLauncherIcon::GetWindows(filter, monitor);
+}
+
 
 } // namespace launcher
 } // namespace unity

@@ -34,6 +34,12 @@ class FileManagerLauncherIcon : public ApplicationLauncherIcon, public StorageLa
 public:
   FileManagerLauncherIcon(ApplicationPtr const&, DeviceLauncherSection::Ptr const&, FileManager::Ptr const& = nullptr);
 
+  bool IsUserVisible() const override;
+
+protected:
+  WindowList WindowsOnViewport() override;
+  WindowList WindowsForMonitor(int monitor) override;
+
 private:
   WindowList GetManagedWindows() const override;
   WindowList GetStorageWindows() const override;
