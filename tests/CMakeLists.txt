@@ -224,6 +224,7 @@ if (ENABLE_X_SUPPORT)
                  test_error_preview.cpp
                  test_edge_barrier_controller.cpp
                  test_expo_launcher_icon.cpp
+                 test_file_manager_launcher_icon.cpp
                  test_filter_widgets.cpp
                  test_glib_dbus_server.cpp
                  test_gnome_session_manager.cpp

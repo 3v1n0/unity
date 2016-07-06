@@ -32,6 +32,8 @@ namespace launcher
 class FileManagerLauncherIcon : public ApplicationLauncherIcon, public StorageLauncherIcon
 {
 public:
+  typedef nux::ObjectPtr<FileManagerLauncherIcon> Ptr;
+
   FileManagerLauncherIcon(ApplicationPtr const&, DeviceLauncherSection::Ptr const&, FileManager::Ptr const& = nullptr);
 
   bool IsUserVisible() const override;
