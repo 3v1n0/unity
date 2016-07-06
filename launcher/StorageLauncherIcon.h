@@ -37,6 +37,7 @@ protected:
   void UpdateStorageWindows();
   WindowList GetManagedWindows() const override;
   virtual WindowList GetStorageWindows() const = 0;
+
   bool OnShouldHighlightOnDrag(DndData const& dnd_data) override;
 
 private:
