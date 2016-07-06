@@ -1,3 +1,32 @@
+unity (7.5.0+16.10.20160705.4-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add missing header to fix compilation error with -Duse_pch=OFF.
+  * Filter out fullscreen window in show desktop mode to decide if unity
+    must be displayed. (LP: #1597706)
+  * Make sure file manager icon is not removed when unpinned. (LP:
+    #1578792)
+  * Properly calculate the intersection geometry in PanelView::Draw.
+    This is needed to properly call SyncGeometries and to avoid problems
+    such as lp:1595698. (LP: #1595698)
+
+  [ Eleni Maria Stea ]
+  * speeds up the showdesktop plugin in lowgfx mode
+  * UnityScreen: only redraw parts of the screen visible in each output
+    (LP: #1598770)
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenAcceleratorController: check if a setting key is available
+    instead of crashing
+  * ApplicationLauncherIcon: ensure quirks are properly set on icon
+    initialization
+  * Views: Toggle animators durations based on low-gfx setting (LP:
+    #1598770)
+  * unity7.conf: use different compiz profile based on
+    unity_support_test result (LP: #1598770)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 05 Jul 2016 10:24:14 +0000
+
 unity (7.5.0+16.10.20160628.1-0ubuntu1) yakkety; urgency=medium
 
   [ Andrea Azzarone ]

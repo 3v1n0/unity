@@ -156,14 +156,10 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
 
   WindowManager& wm = WindowManager::Default();
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
-#if SIGCXX_MAJOR_VERSION >= 2 && SIGCXX_MINOR_VERSION >= 5
   wm.viewport_layout_changed.connect(sigc::track_obj([this] (int w, int h) { UpdateNumWorkspaces(w * h); }, *this));
-#else
-  wm.viewport_layout_changed.connect(sigc::group(sigc::mem_fun(this, &Controller::Impl::UpdateNumWorkspaces), sigc::_1 * sigc::_2));
-#endif
-  average_color_connection_ = wm.average_color.changed.connect([this] (nux::Color const& color) {
+  wm.average_color.changed.connect(sigc::track_obj([this] (nux::Color const& color) {
     parent_->options()->background_color = color;
-  });
+  }, *this));
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [this](GVariant * args) {
     reactivate_index = model_->SelectionIndex();

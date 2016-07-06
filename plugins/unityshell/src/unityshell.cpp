@@ -301,12 +301,12 @@ UnityScreen::UnityScreen(CompScreen* screen)
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1) ||
        optionGetLowGraphicsMode())
     {
-      unity_settings_.SetLowGfxMode(true);
+      unity_settings_.low_gfx = true;
     }
 
   if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
   {
-    unity_settings_.SetLowGfxMode(false);
+    unity_settings_.low_gfx = false;
   }
 #endif
 
@@ -863,7 +863,7 @@ void UnityScreen::DamageBlurUpdateRegion(nux::Geometry const& blur_update)
   cScreen->damageRegion(CompRegionFromNuxGeo(blur_update));
 }
 
-void UnityScreen::paintDisplay()
+void UnityScreen::paintOutput()
 {
   CompOutput *output = last_output_;
 
@@ -884,7 +884,7 @@ void UnityScreen::paintDisplay()
   current_draw_binding = old_read_binding;
 #endif
 
-  BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
+  BackgroundEffectHelper::monitor_rect_.Set(0, 0, output->width(), output->height());
 
   // If we have dirty helpers re-copy the backbuffer into a texture
   if (dirty_helpers_on_this_frame_)
@@ -909,10 +909,10 @@ void UnityScreen::paintDisplay()
 
     for (CompRect const& rect : blur_region.rects())
     {
-      int x = nux::Clamp<int>(rect.x(), 0, screen->width());
-      int y = nux::Clamp<int>(screen->height() - rect.y2(), 0, screen->height());
-      int width = std::min<int>(screen->width() - rect.x(), rect.width());
-      int height = std::min<int>(screen->height() - y, rect.height());
+      int x = nux::Clamp<int>(rect.x(), 0, output->width());
+      int y = nux::Clamp<int>(output->height() - rect.y2(), 0, output->height());
+      int width = std::min<int>(output->width() - rect.x(), rect.width());
+      int height = std::min<int>(output->height() - y, rect.height());
 
       CHECKGL(glCopyTexSubImage2D(surface_target, 0, x, y, x, y, width, height));
     }
@@ -1504,7 +1504,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     doShellRepaint = false;
 
   if (doShellRepaint)
-    paintDisplay();
+    paintOutput();
 
   return ret;
 }
@@ -2986,7 +2986,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
         uScreen->windows_for_monitor_[monitor] = 1;
 
       if (!(mask & nonOcclusionBits) &&
-          (window->state() & CompWindowStateFullscreenMask && !window->minimized()) &&
+          (window->state() & CompWindowStateFullscreenMask && !window->minimized() && !window->inShowDesktopMode()) &&
           uScreen->windows_for_monitor_[monitor] == 1)
           // And I've been advised to test other things, but they don't work:
           // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
@@ -3094,18 +3094,18 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   if (uScreen->doShellRepaint && window == uScreen->onboard_)
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
   else if (uScreen->doShellRepaint &&
            window == uScreen->firstWindowAboveShell &&
            !uScreen->forcePaintOnTop() &&
            !uScreen->fullscreenRegion.contains(window->geometry()))
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
   else if (locked && CanBypassLockScreen())
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
 
   enum class DrawPanelShadow
@@ -3727,7 +3727,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       else
           BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
 
-      unity::Settings::Instance().SetLowGfxMode(optionGetLowGraphicsMode());
+      unity::Settings::Instance().low_gfx = optionGetLowGraphicsMode();
       break;
     case UnityshellOptions::DecayRate:
       launcher_options->edge_decay_rate = optionGetDecayRate() * 100;

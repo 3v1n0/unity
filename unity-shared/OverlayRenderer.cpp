@@ -119,7 +119,7 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
   parent->scale = Settings::Instance().em()->DPIScale();
   parent->scale.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
   parent->owner_type.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
-  Settings::Instance().low_gfx_changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::UpdateTextures));
+  Settings::Instance().low_gfx.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::UpdateTextures)));
   Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures)));
   dash::Style::Instance().textures_changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::UpdateTextures));
   dash::Style::Instance().textures_changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::LoadScaledTextures));
@@ -157,7 +157,7 @@ void OverlayRendererImpl::OnBgColorChanged(nux::Color const& new_color)
   bg_layer_->SetColor(new_color);
 
   //When we are in low gfx mode then our darken layer will act as a background.
-  if (Settings::Instance().GetLowGfxMode())
+  if (Settings::Instance().low_gfx())
   {
     bg_darken_layer_->SetColor(new_color);
   }
@@ -172,7 +172,7 @@ void OverlayRendererImpl::UpdateTextures()
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  if (Settings::Instance().GetLowGfxMode() || !nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
+  if (Settings::Instance().low_gfx() || !nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     auto& avg_color = WindowManager::Default().average_color;
     bg_layer_ = std::make_shared<nux::ColorLayer>(avg_color(), true, rop);
@@ -185,7 +185,7 @@ void OverlayRendererImpl::UpdateTextures()
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
 
   //When we are in low gfx mode then our darken layer will act as a background.
-  if (Settings::Instance().GetLowGfxMode())
+  if (Settings::Instance().low_gfx())
   {
     rop.Blend = false;
     rop.SrcBlend = GL_ONE;
@@ -565,7 +565,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   bg_darken_layer_->SetGeometry(larger_content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_.get());
 
-  if (!settings.GetLowGfxMode())
+  if (!settings.low_gfx())
   {
 #ifndef NUX_OPENGLES_20
     if (!gfx_context.UsingGLSLCodePath())
@@ -984,7 +984,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   bgs++;
 
   //Only apply shine if we aren't in low gfx mode.
-  if (!Settings::Instance().GetLowGfxMode())
+  if (!Settings::Instance().low_gfx())
   {
 #ifndef NUX_OPENGLES_20
     if (!gfx_context.UsingGLSLCodePath())

@@ -22,6 +22,7 @@
 
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
@@ -42,7 +43,7 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
   , base_window_raiser_(base_window_raiser)
   , visible_(false)
   , enabled_(true)
-  , fade_animator_(FADE_DURATION)
+  , fade_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [this] (GVariant*)
                                  { SetEnabled(false); });
@@ -57,6 +58,11 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
       view_window_->ShowWindow(false);
   });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
+
   modeller_->model_changed.connect(sigc::mem_fun(this, &Controller::OnModelUpdated));
 }
 

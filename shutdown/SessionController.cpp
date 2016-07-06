@@ -20,9 +20,10 @@
 #include "SessionController.h"
 
 #include "unity-shared/AnimationUtils.h"
-#include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/UnitySettings.h"
+#include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
 namespace na = nux::animation;
@@ -38,7 +39,7 @@ const unsigned int FADE_DURATION = 100;
 
 Controller::Controller(session::Manager::Ptr const& manager)
   : manager_(manager)
-  , fade_animator_(FADE_DURATION)
+  , fade_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   manager_->reboot_requested.connect([this] (bool inhibitors) {
     Show(View::Mode::SHUTDOWN, inhibitors);
@@ -61,6 +62,10 @@ Controller::Controller(session::Manager::Ptr const& manager)
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
       CloseWindow();
   });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
 }
 
 void Controller::OnBackgroundUpdate(nux::Color const& new_color)

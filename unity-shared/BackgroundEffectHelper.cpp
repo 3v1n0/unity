@@ -51,7 +51,7 @@ BackgroundEffectHelper::BackgroundEffectHelper(nux::View* view)
   TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &BackgroundEffectHelper::LoadTextures));
   LoadTextures();
 
-  if (Settings::Instance().GetLowGfxMode())
+  if (Settings::Instance().low_gfx())
     blur_type = BLUR_NONE;
 }
 

@@ -25,6 +25,7 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/IconRenderer.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 
 #include "SwitcherController.h"
@@ -270,7 +271,7 @@ Controller::Impl::Impl(Controller* obj,
   ,  create_window_(create_window)
   ,  icon_renderer_(std::make_shared<ui::IconRenderer>())
   ,  main_layout_(nullptr)
-  ,  fade_animator_(FADE_DURATION)
+  ,  fade_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &Impl::OnBackgroundUpdate));
 
@@ -291,6 +292,10 @@ Controller::Impl::Impl(Controller* obj,
         HideWindow();
     }
   });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
 }
 
 void Controller::Impl::OnBackgroundUpdate(nux::Color const& new_color)

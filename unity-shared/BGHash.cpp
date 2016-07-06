@@ -20,6 +20,7 @@
 #include "BGHash.h"
 #include <gdk/gdkx.h>
 #include <NuxCore/Logger.h>
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
 #ifndef XA_STRING
@@ -38,13 +39,17 @@ namespace
 }
 
 BGHash::BGHash()
-  : transition_animator_(TRANSITION_DURATION)
+  : transition_animator_(Settings::Instance().low_gfx() ? 0 : TRANSITION_DURATION)
   , override_color_(nux::color::Transparent)
 {
   COLORS_ATOM = gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
   transition_animator_.updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
   WindowManager::Default().average_color = unity::colors::Aubergine;
   RefreshColor(/* skip_animation */ true);
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    transition_animator_.SetDuration(low_gfx ? 0 : TRANSITION_DURATION);
+  }, *this));
 }
 
 uint64_t BGHash::ColorAtomId() const

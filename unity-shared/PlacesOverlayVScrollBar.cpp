@@ -23,6 +23,7 @@
 #include "AnimationUtils.h"
 #include "DashStyle.h"
 #include "PlacesOverlayVScrollBar.h"
+#include "UnitySettings.h"
 
 namespace unity
 {
@@ -124,7 +125,7 @@ void PlacesOverlayVScrollBar::UpdateScrollbarSize()
 
 void PlacesOverlayVScrollBar::PerformPageNavigation(ScrollDir dir)
 {
-  StartScrollAnimation(dir, _slider->GetBaseHeight(), PAGE_SCROLL_ANIMATION);
+  StartScrollAnimation(dir, _slider->GetBaseHeight(), Settings::Instance().low_gfx() ? 0 : PAGE_SCROLL_ANIMATION);
 }
 
 void PlacesOverlayVScrollBar::StartScrollAnimation(ScrollDir dir, int stop, unsigned duration)

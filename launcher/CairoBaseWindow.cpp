@@ -44,12 +44,16 @@ NUX_IMPLEMENT_OBJECT_TYPE(CairoBaseWindow);
 
 CairoBaseWindow::CairoBaseWindow(int monitor)
   : cv_(Settings::Instance().em(monitor))
-  , use_blurred_background_(!Settings::Instance().GetLowGfxMode())
+  , use_blurred_background_(!Settings::Instance().low_gfx())
   , compute_blur_bkg_(use_blurred_background_)
-  , fade_animator_(FADE_DURATION)
+  , fade_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   SetWindowSizeMatchLayout(true);
   sigVisible.connect([this] (BaseWindow*) { compute_blur_bkg_ = true; });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
 
   fade_animator_.updated.connect(sigc::mem_fun(this, &BaseWindow::SetOpacity));
   fade_animator_.finished.connect([this] {

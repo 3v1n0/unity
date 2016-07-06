@@ -93,6 +93,7 @@ int main(int argc, char **argv)
 {
   gtk_init (&argc, &argv);
 
+  unity::Settings settings;
   unity::BGHash bghash;
   unity::FontSettings font_settings;
 
@@ -100,7 +101,6 @@ int main(int argc, char **argv)
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   // The instances for the pseudo-singletons.
   unity::ThumbnailGenerator thumb_generator;
-  unity::Settings settings;
   unity::dash::Style dash_style;
   unity::panel::Style panel_style;
 

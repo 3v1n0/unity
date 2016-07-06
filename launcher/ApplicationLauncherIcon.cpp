@@ -108,14 +108,13 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   app_->visible.changed.emit(app_->visible());
   app_->active.changed.emit(app_->active());
   app_->running.changed.emit(app_->running());
+  app_->urgent.changed.emit(app_->urgent());
+  app_->starting.changed.emit(app_->starting() || GetQuirk(Quirk::STARTING));
   app_->desktop_file.changed.emit(app_->desktop_file());
 
   // Make sure we set the LauncherIcon stick bit too...
   if (app_->sticky() || was_sticky)
     Stick(false); // don't emit the signal
-
-  if (app_->starting())
-    SetQuirk(Quirk::STARTING, true);
 }
 
 void ApplicationLauncherIcon::UnsetApplication()
