@@ -75,7 +75,8 @@ const int DEFAULT_LAUNCHER_SIZE = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
 const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
 const double DEFAULT_DPI = 96.0f;
-const double DPI_SCALE_LIMIT = 140.0f;
+const double DPI_SCALING_LIMIT = 140.0f;
+const int DPI_SCALING_STEP = 8;
 }
 
 //
@@ -321,22 +322,25 @@ public:
   {
     auto const& geo = uscreen->GetMonitorGeometry(monitor);
     auto const& size = uscreen->GetMonitorPhysicalSize(monitor);
-    int scale = 8;
+    auto scale = DPI_SCALING_STEP;
       
     if ((size.width == 160 && size.height == 90) ||
-      (size.width == 160 && size.height == 100) ||
-      (size.width == 16 && size.height == 9) ||
-      (size.width == 16 && size.height == 10)) 
-        return scale;
+        (size.width == 160 && size.height == 100) ||
+        (size.width == 16 && size.height == 9) ||
+        (size.width == 16 && size.height == 10))
+    {
+      return scale;
+    }
 
-    if (size.width > 0 && size.height > 0) {
+    if (size.width > 0 && size.height > 0)
+    {
       const double dpi_x = static_cast<double>(geo.width) / (size.width / 25.4);  
       const double dpi_y = static_cast<double>(geo.height) / (size.height / 25.4);
 
       const auto dpi = std::max(dpi_x, dpi_y);
 
-      if (dpi > DPI_SCALE_LIMIT)
-        scale = static_cast<int>(std::lround(scale * dpi / DPI_SCALE_LIMIT));
+      if (dpi > DPI_SCALING_LIMIT)
+        scale = static_cast<int>(std::lround(scale * dpi / DPI_SCALING_LIMIT));
     }
 
     return scale;
@@ -372,12 +376,12 @@ public:
         if (g_variant_lookup(dict, monitor_name.c_str(), "i", &value))
         {
           if (value > 0)
-            ui_scale = static_cast<double>(value)/8.0f;
+            ui_scale = static_cast<double>(value)/DPI_SCALING_STEP;
         }
         else 
         {
           value = FindOptimalScale(uscreen, monitor);
-          ui_scale = static_cast<double>(value)/8.0f;
+          ui_scale = static_cast<double>(value)/DPI_SCALING_STEP;
           dict_changed = true;
         }
         g_variant_builder_add(&builder, "{si}", monitor_name.c_str(), value);
