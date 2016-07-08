@@ -141,7 +141,7 @@ bool FileManagerLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 
 bool FileManagerLauncherIcon::IsUserVisible() const
 {
-  return WindowedLauncherIcon::IsUserVisible();
+  return ApplicationLauncherIcon::IsUserVisible();
 }
 
 WindowList FileManagerLauncherIcon::WindowsOnViewport()
