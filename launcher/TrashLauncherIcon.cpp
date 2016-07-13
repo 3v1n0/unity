@@ -55,7 +55,7 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
   SkipQuirkAnimation(Quirk::VISIBLE);
   SetShortcut('t');
 
-  sources_.AddIdle([this]{
+  _source_manager.AddIdle([this]{
     glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
 
     glib::Error err;
