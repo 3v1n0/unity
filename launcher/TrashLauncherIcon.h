@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibSource.h>
 #include <UnityCore/ConnectionManager.h>
 
 #include "DndData.h"
@@ -58,6 +59,7 @@ private:
   bool empty_;
   glib::Cancellable cancellable_;
   glib::Object<GFileMonitor> trash_monitor_;
+  glib::SourceManager sources_;
 };
 
 }
