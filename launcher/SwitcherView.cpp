@@ -215,6 +215,7 @@ void SwitcherView::OnScaleChanged(double scale)
 
 void SwitcherView::StartAnimation()
 {
+  animation_.SetDuration(Settings::Instance().low_gfx() ? 0 : animation_length);
   animation::Start(animation_, animation::Direction::FORWARD);
 }
 
@@ -249,7 +250,6 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
     render_targets_.clear();
   }
 
-  animation_.SetDuration(Settings::Instance().low_gfx() ? 0 : animation_length);
   SaveLast();
 }
 
@@ -260,7 +260,6 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
 
   delta_tracker_.ResetState();
 
-  animation_.SetDuration(animation_length);
   SaveLast();
 }
 
