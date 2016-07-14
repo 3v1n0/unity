@@ -104,7 +104,6 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   , scale(1.0)
   , bg_layer_(new nux::ColorLayer(nux::Color(0xff595853), true))
   , caps_lock_on(false)
-  , num_lock_on(false)
   , last_width_(-1)
   , last_height_(-1)
 {
@@ -146,9 +145,8 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
 
   // Caps lock warning
   warning_ = new IconTexture(LoadWarningIcon(DEFAULT_ICON_SIZE.CP(scale)));
-  warning_->SetVisible(caps_lock_on() || num_lock_on());
+  warning_->SetVisible(caps_lock_on());
   layout_->AddView(warning_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  num_lock_on.changed.connect(sigc::mem_fun(this, &TextInput::OnLockStateChanged));
   caps_lock_on.changed.connect(sigc::mem_fun(this, &TextInput::OnLockStateChanged));
 
   show_lock_warnings.changed.connect(sigc::hide(sigc::mem_fun(this, &TextInput::CheckLocks)));
@@ -249,7 +247,6 @@ void TextInput::CheckLocks()
 {
   GdkKeymap* keymap = gdk_keymap_get_default();
   caps_lock_on = gdk_keymap_get_caps_lock_state(keymap) ? true : false;
-  num_lock_on = gdk_keymap_get_num_lock_state(keymap) ? true : false;
 }
 
 void TextInput::OnLockStateChanged(bool)
@@ -260,8 +257,8 @@ void TextInput::OnLockStateChanged(bool)
     return;
   }
 
-  warning_->SetVisible(caps_lock_on() || num_lock_on());
-  warning_->SetOpacity((num_lock_on() && !caps_lock_on()) ? 0.3 : 1.0);
+  warning_->SetVisible(caps_lock_on());
+  warning_->SetOpacity(1.0);
   warning_tooltip_.Release();
   QueueRelayout();
   QueueDraw();
@@ -345,17 +342,9 @@ void TextInput::LoadWarningTooltip()
 
   pango_layout_set_height(layout, -1); //avoid wrap lines
 
-  if (caps_lock_on() && num_lock_on())
-  {
-    pango_layout_set_text(layout, _("Caps lock and Num lock are on"), -1);
-  }
-  else if (caps_lock_on())
+  if (caps_lock_on())
   {
     pango_layout_set_text(layout, _("Caps lock is on"), -1);
-  }
-  else if (num_lock_on())
-  {
-    pango_layout_set_text(layout, _("Num lock is on"), -1);
   }
 
   nux::Size extents;

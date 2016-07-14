@@ -124,7 +124,6 @@ private:
   SearchBarSpinner* spinner_;
 
   nux::Property<bool> caps_lock_on;
-  nux::Property<bool> num_lock_on;
   int last_width_;
   int last_height_;
 
