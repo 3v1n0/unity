@@ -1,3 +1,19 @@
+unity (7.5.0+16.10.20160714-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * FileManagerLauncherIcon: Don't trust the Quirk::VISIBLE in the ctor.
+    (LP: #1599133)
+  * [TrashLauncherIcon] Create GFileMonitor in an idle to avoid blocking
+    calls. (LP: #1602720)
+
+  [ Marco Trevisan (Treviño) ]
+  * Unity script: use result from unity_support_test to check the right
+    COMPIZ_CONFIG_PROFILE to use (LP: #1602377)
+  * SwitcherView: always disable animations when in lowgfx mode (LP:
+    #1602784)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 14 Jul 2016 10:06:29 +0000
+
 unity (7.5.0+16.10.20160705.4-0ubuntu1) yakkety; urgency=medium
 
   [ Andrea Azzarone ]
