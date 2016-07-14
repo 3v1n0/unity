@@ -37,6 +37,7 @@ public:
   std::string UserName() const;
   std::string HostName() const;
   void UserIconFile(std::function<void(std::string const&)> const&) const;
+  bool GetAutomaticLogin() const;
 
   void ScreenSaverActivate();
   void ScreenSaverDeactivate();
