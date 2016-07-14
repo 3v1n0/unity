@@ -59,6 +59,12 @@ def set_unity_env ():
 
     os.environ['COMPIZ_CONFIG_PROFILE'] = 'ubuntu'
 
+    try:
+      if subprocess.call('/usr/lib/nux/unity_support_test -f'.split()) > 0:
+        os.environ['COMPIZ_CONFIG_PROFILE'] = 'ubuntu-lowgfx'
+    except:
+      pass
+
     if not 'DISPLAY' in os.environ:
         # take an optimistic chance and warn about it :)
         print("WARNING: no DISPLAY variable set, setting it to :0")
