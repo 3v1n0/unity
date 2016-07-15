@@ -179,7 +179,7 @@ private:
   void nuxEpilogue();
 
   /* nux draw wrapper */
-  void paintOutput();
+  void paintDisplay();
   void paintPanelShadow(CompRegion const& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
   void updateBlurDamage();
