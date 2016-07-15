@@ -1,3 +1,11 @@
+unity (7.5.0+16.10.20160715-0ubuntu1) yakkety; urgency=medium
+
+  [ Eleni Maria Stea ]
+  * Reverts fix for multimonitor because of problems in nvidia cards
+    (see bug: #1602901) (LP: #1602901)
+
+ -- iain@orangesquash.org.uk <iain@orangesquash.org.uk>  Fri, 15 Jul 2016 15:13:28 +0000
+
 unity (7.5.0+16.10.20160714-0ubuntu1) yakkety; urgency=medium
 
   [ Andrea Azzarone ]
