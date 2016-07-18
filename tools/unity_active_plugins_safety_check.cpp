@@ -19,6 +19,7 @@
 #include <ccs.h>
 #include <gio/gio.h>
 
+#include <iostream>
 #include <string>
 
 extern const CCSInterfaceTable ccsDefaultInterfaceTable;
@@ -43,7 +44,10 @@ void PluginSetActiveWithDeps(CCSContext* context, std::string const& plugin_name
     }
   }
 
-  ccsPluginSetActive(plugin, true);
+  if (!ccsPluginIsActive(context, plugin_name.c_str())) {
+    std::cout << "Setting plugin '" << plugin_name << "' to active" << std::endl;
+    ccsPluginSetActive(plugin, true);
+  }
 
   auto conflicts = ccsPluginGetConflictPlugins(plugin);
   for (auto con = conflicts; con; con = con->next)
@@ -52,7 +56,12 @@ void PluginSetActiveWithDeps(CCSContext* context, std::string const& plugin_name
     {
       std::string name = con->data->value;
       auto plugin = ccsFindPlugin(context, name.c_str());
-      ccsPluginSetActive(plugin, false);
+
+      if (ccsPluginIsActive(context, name.c_str()))
+      {
+        std::cout << "Setting plugin '" << name << "' to non-active" << std::endl;
+        ccsPluginSetActive(plugin, false);
+      }
     }
   }
 }
@@ -66,7 +75,7 @@ int main()
 
   PluginSetActiveWithDeps(context, "unityshell");
 
-  ccsWriteSettings(context);
+  ccsWriteChangedSettings(context);
   g_settings_sync();
   ccsFreeContext(context);
 
