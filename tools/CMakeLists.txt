@@ -8,7 +8,7 @@ install(FILES ${CMAKE_BINARY_DIR}/bin/unity PERMISSIONS OWNER_READ OWNER_WRITE O
 GROUP_EXECUTE WORLD_READ WORLD_EXECUTE DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 #
-#
+# unity-active-plugins-safety-check
 #
 pkg_check_modules(UAPSC_DEPS REQUIRED libcompizconfig)
 
