@@ -52,6 +52,7 @@ Build-Depends: cmake,
                python3 (>= 3.4),
                python-setuptools,
                quilt,
+               systemd,
                xserver-xorg-video-dummy,
                xsltproc,
 Standards-Version: 3.9.5
@@ -127,6 +128,7 @@ Package: unity-schemas
 Architecture: all
 Multi-Arch: foreign
 Depends: ${misc:Depends},
+         indicator-common,
 Replaces: libunity-core-6.0-9 (<< 7.3.0),
 Breaks: libunity-core-6.0-9 (<< 7.3.0),
 Description: Interface designed for efficiency of space and interaction.

@@ -1,0 +1,11 @@
+[Unit]
+Description=Unity Shell v7
+Requires=unity-settings-daemon.service unity-panel-service.service bamfdaemon.service
+Wants=unity-gtk-module.service
+After=unity-settings-daemon.service
+PartOf=graphical-session.target
+
+[Service]
+Environment=COMPIZ_CONFIG_PROFILE=ubuntu
+ExecStart=/usr/bin/compiz
+Restart=on-failure
