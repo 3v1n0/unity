@@ -58,3 +58,34 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.conf DESTINATION $
 
 configure_file(unity-panel-service-lockscreen.conf.in ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service-lockscreen.conf)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service-lockscreen.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/upstart/sessions)
+
+##
+##  Systemd Unit Files
+##
+
+# where to install
+# Uncomment when we drop Vivid
+# pkg_get_variable(SYSTEMD_USER_DIR systemd systemduserunitdir)
+set (SYSTEMD_USER_DIR "/usr/lib/systemd/user")
+message (STATUS "${SYSTEMD_USER_DIR} is the systemd user unit file install dir")
+
+configure_file (unity-panel-service.service.in "${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.service")
+configure_file (unity-panel-service-lockscreen.service.in "${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service-lockscreen.service")
+
+install( FILES
+         "${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.service"
+         "${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service-lockscreen.service"
+         "${CMAKE_CURRENT_BINARY_DIR}/unity-screen-locked.target"
+         DESTINATION "${SYSTEMD_USER_DIR}")
+
+##
+##  Upstart systemd override Job File
+##
+
+set (UPSTART_SYSTEMD_OVERRIDE_DIR "${CMAKE_INSTALL_FULL_DATADIR}/upstart/systemd-session/upstart")
+message (STATUS "${UPSTART_SYSTEMD_OVERRIDE_DIR} is the Upstart override Job File for systemd dir")
+
+install (FILES 
+		 unity-panel-service.override
+		 unity-panel-service-lockscreen.override
+         DESTINATION "${UPSTART_SYSTEMD_OVERRIDE_DIR}")
