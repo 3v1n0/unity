@@ -7,5 +7,5 @@ PartOf=graphical-session.target
 
 [Service]
 ExecStart=/usr/bin/compiz
-ExecStart.Pre=/usr/lib/unity/unity-compiz-profile
+ExecStart.Pre=/usr/share/unity/unity-compiz-profile
 Restart=on-failure

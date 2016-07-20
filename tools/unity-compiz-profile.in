@@ -22,4 +22,4 @@ initctl set-env -g COMPIZ_CONFIG_PROFILE="$compiz_profile"
 systemctl set-environment --user COMPIZ_CONFIG_PROFILE="$compiz_profile"
 
 export COMPIZ_CONFIG_PROFILE="$compiz_profile"
-exec /usr/lib/unity/unity-active-plugins-safety-check
+exec @CMAKE_INSTALL_LIBDIR@/unity/unity-active-plugins-safety-check
