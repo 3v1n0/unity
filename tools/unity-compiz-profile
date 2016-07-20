@@ -1,3 +1,25 @@
 #!/bin/bash
 
-echo "This is the world"
+set -e
+
+# If gnome-session is going to start compiz,
+# we don't want to be the ones doing it.
+
+if grep -q compiz /usr/share/gnome-session/sessions/ubuntu.session ; then
+  echo "GNOME Session is starting Compiz"
+  stop ; exit 0
+fi
+
+compiz_profile="ubuntu"
+
+if ! /usr/lib/nux/unity_support_test -p; then
+  compiz_profile="ubuntu-lowgfx"
+fi
+
+echo "Using compiz profile '$compiz_profile'"
+
+initctl set-env -g COMPIZ_CONFIG_PROFILE="$compiz_profile"
+systemctl set-environment --user COMPIZ_CONFIG_PROFILE="$compiz_profile"
+
+export COMPIZ_CONFIG_PROFILE="$compiz_profile"
+exec /usr/lib/unity/unity-active-plugins-safety-check

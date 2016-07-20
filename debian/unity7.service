@@ -6,6 +6,6 @@ After=unity-settings-daemon.service
 PartOf=graphical-session.target
 
 [Service]
-Environment=COMPIZ_CONFIG_PROFILE=ubuntu
 ExecStart=/usr/bin/compiz
+ExecStart.Pre=/usr/lib/unity/unity-compiz-profile
 Restart=on-failure
