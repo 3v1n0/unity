@@ -75,7 +75,7 @@ configure_file (unity-panel-service-lockscreen.service.in "${CMAKE_CURRENT_BINAR
 install( FILES
          "${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.service"
          "${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service-lockscreen.service"
-         "${CMAKE_CURRENT_BINARY_DIR}/unity-screen-locked.target"
+         "${CMAKE_CURRENT_SOURCE_DIR}/unity-screen-locked.target"
          DESTINATION "${SYSTEMD_USER_DIR}")
 
 ##
