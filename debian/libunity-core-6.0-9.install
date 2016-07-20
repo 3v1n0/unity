@@ -2,7 +2,8 @@ usr/lib/*/libunity-core*.so.*
 usr/lib/*/unity/*.py
 usr/share/ccsm
 usr/share/gnome-control-center/
-usr/share/unity
+usr/share/unity/icons
+usr/share/unity/themes
 debian/unity-crashdb.conf etc/apport/crashdb.conf.d/
 debian/source_unity.py usr/share/apport/package-hooks
 tools/convert-files/* usr/lib/compiz/migration/
