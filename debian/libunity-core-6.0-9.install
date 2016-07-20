@@ -5,7 +5,4 @@ usr/share/gnome-control-center/
 usr/share/unity
 debian/unity-crashdb.conf etc/apport/crashdb.conf.d/
 debian/source_unity.py usr/share/apport/package-hooks
-debian/unity7.conf usr/share/upstart/sessions
-debian/unity7.service usr/lib/systemd/user
-debian/unity7.override usr/share/upstart/systemd-session/upstart
 tools/convert-files/* usr/lib/compiz/migration/

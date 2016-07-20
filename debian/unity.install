@@ -2,7 +2,10 @@ etc/pam.d
 usr/bin
 usr/lib/*/compiz/libunity*.so
 usr/lib/*/unity
-usr/share/unity
+usr/share/unity/unity-compiz-profile
 usr/share/man/*/unity.1
 usr/share/compiz
 usr/share/locale
+debian/unity7.conf usr/share/upstart/sessions
+debian/unity7.service usr/lib/systemd/user
+debian/unity7.override usr/share/upstart/systemd-session/upstart
