@@ -39,6 +39,8 @@
                 <plugin>compiztoolbox</plugin>
                 <plugin>scale</plugin>
                 <plugin>expo</plugin>
+                <plugin>move</plugin>
+                <plugin>resize</plugin>
             </requirement>
             <conflict>
                 <plugin>decor</plugin>
