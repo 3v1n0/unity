@@ -31,7 +31,7 @@ namespace unity
 class SystemdWrapper::Impl
 {
 public:
-  Impl();
+  Impl(bool test);
 
   void Start(std::string const& name);
   void Stop(std::string const& name);
@@ -40,10 +40,10 @@ private:
   glib::DBusProxy::Ptr systemd_proxy_;
 };
 
-SystemdWrapper::Impl::Impl()
+SystemdWrapper::Impl::Impl(bool test)
 {
   std::string busname = "org.freedesktop.systemd1";
-  if (g_getenv("UNITY_TEST_SYSTEMD)")) {
+  if (test) {
     busname = "com.canonical.Unity.Test.Systemd";
   }
 
@@ -65,11 +65,11 @@ void SystemdWrapper::Impl::Stop(std::string const& name)
 //
 
 SystemdWrapper::SystemdWrapper()
-  : pimpl_(new Impl)
+  : pimpl_(new Impl(false))
 {}
 
 SystemdWrapper::SystemdWrapper(SystemdWrapper::TestMode const& tm)
-  : pimpl_(new Impl)
+  : pimpl_(new Impl(true))
 {}
 
 SystemdWrapper::~SystemdWrapper()
