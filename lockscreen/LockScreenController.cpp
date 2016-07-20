@@ -56,6 +56,7 @@ DECLARE_LOGGER(logger, "unity.lockscreen");
 Controller::Controller(DBusManager::Ptr const& dbus_manager,
                        session::Manager::Ptr const& session_manager,
                        key::Grabber::Ptr const& key_grabber,
+                       SystemdWrapper::Ptr const& systemd_wrapper,
                        UpstartWrapper::Ptr const& upstart_wrapper,
                        ShieldFactoryInterface::Ptr const& shield_factory,
                        bool test_mode)
@@ -63,6 +64,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , dbus_manager_(dbus_manager)
   , session_manager_(session_manager)
   , key_grabber_(key_grabber)
+  , systemd_wrapper_(systemd_wrapper)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , suspend_inhibitor_manager_(std::make_shared<SuspendInhibitorManager>())
@@ -129,6 +131,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       shields_.clear();
 
       upstart_wrapper_->Emit("desktop-unlock");
+      systemd_wrapper_->Stop("unity-screen-locked.target");
       accelerator_controller_.reset();
       indicators_.reset();
     }
@@ -464,6 +467,7 @@ void Controller::LockScreen()
 {
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
+  systemd_wrapper_->Stop("unity-screen-locked.target");
 
   accelerator_controller_ = std::make_shared<AcceleratorController>(key_grabber_);
   auto activate_key = WindowManager::Default().activate_indicators_key();

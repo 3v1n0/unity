@@ -83,9 +83,10 @@ struct TestLockScreenController : Test
     , session_manager(std::make_shared<NiceMock<session::MockManager>>())
     , key_grabber(std::make_shared<key::MockGrabber::Nice>())
     , dbus_manager(std::make_shared<DBusManager>(session_manager))
+    , systemd_wrapper(std::make_shared<SystemdWrapper>())
     , upstart_wrapper(std::make_shared<UpstartWrapper>())
     , shield_factory(std::make_shared<ShieldFactoryMock>())
-    , controller(dbus_manager, session_manager, key_grabber, upstart_wrapper, shield_factory)
+    , controller(dbus_manager, session_manager, key_grabber, systemd_wrapper, upstart_wrapper, shield_factory)
   {}
 
   struct ControllerWrap : Controller
@@ -93,9 +94,10 @@ struct TestLockScreenController : Test
     ControllerWrap(DBusManager::Ptr const& dbus_manager,
                    session::Manager::Ptr const& session_manager,
                    key::Grabber::Ptr const& key_grabber,
+                   SystemdWrapper::Ptr const& systemd_wrapper,
                    UpstartWrapper::Ptr const& upstart_wrapper,
                    ShieldFactoryInterface::Ptr const& shield_factory)
-      : Controller(dbus_manager, session_manager, key_grabber, upstart_wrapper, shield_factory, /* test_mode */ true)
+      : Controller(dbus_manager, session_manager, key_grabber, systemd_wrapper, upstart_wrapper, shield_factory, /* test_mode */ true)
     {}
 
     using Controller::shields_;
@@ -112,6 +114,7 @@ struct TestLockScreenController : Test
   session::MockManager::Ptr session_manager;
   key::MockGrabber::Ptr key_grabber;
   DBusManager::Ptr dbus_manager;
+  unity::SystemdWrapper::Ptr systemd_wrapper;
   unity::UpstartWrapper::Ptr upstart_wrapper;
 
   ShieldFactoryMock::Ptr shield_factory;
