@@ -82,12 +82,18 @@ TEST_F(TestUnityWindowView, Closable)
   view.closable = true;
   ASSERT_NE(view.close_button_, nullptr);
 
+  auto weak_ptr = nux::ObjectWeakPtr<IconTexture>(view.close_button_);
+  ASSERT_TRUE(weak_ptr.IsValid());
+
   EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(view.scale, WindowTextureType::CLOSE_ICON));
   EXPECT_EQ(view.close_button_->GetParentObject(), &view);
 
   int padding = view.style()->GetCloseButtonPadding().CP(view.scale);
   EXPECT_EQ(view.close_button_->GetBaseX(), padding);
   EXPECT_EQ(view.close_button_->GetBaseY(), padding);
+
+  view.closable = false;
+  ASSERT_FALSE(weak_ptr.IsValid());
 }
 
 TEST_F(TestUnityWindowView, CloseButtonStates)
