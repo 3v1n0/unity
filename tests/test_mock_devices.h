@@ -101,7 +101,7 @@ struct MockDeviceNotificationDisplay : DeviceNotificationDisplay
   typedef std::shared_ptr<MockDeviceNotificationDisplay> Ptr;
   typedef testing::NiceMock<MockDeviceNotificationDisplay> Nice;
 
-  MOCK_METHOD2(Display, void(std::string const& icon_name, std::string const& volume_name));
+  MOCK_METHOD1(Display, void(std::string const& volume_name));
 };
 
 } // anonymous namespace

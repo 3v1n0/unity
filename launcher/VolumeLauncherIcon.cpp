@@ -108,7 +108,7 @@ public:
 
     auto conn = std::make_shared<sigc::connection>();
     *conn = volume_->ejected.connect([this, conn] {
-      notification_->Display(volume_->GetIconName(), volume_->GetName());
+      notification_->Display(volume_->GetName());
       conn->disconnect();
     });
     connections_.Add(*conn);
