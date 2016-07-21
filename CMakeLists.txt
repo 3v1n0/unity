@@ -425,3 +425,9 @@ if (DOXYGEN_FOUND STREQUAL "YES")
          ADDITIONAL_MAKE_CLEAN_FILES api-doc)
 
 endif (DOXYGEN_FOUND STREQUAL "YES")
+
+#
+# Upstart
+#
+configure_file(unity7.conf.in ${CMAKE_CURRENT_BINARY_DIR}/unity7.conf)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity7.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/upstart/sessions)

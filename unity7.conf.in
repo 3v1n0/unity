@@ -23,7 +23,7 @@ pre-start script
   initctl set-env -g COMPIZ_CONFIG_PROFILE="$compiz_profile"
   export COMPIZ_CONFIG_PROFILE="$compiz_profile"
 
-  /usr/lib/unity/unity-active-plugins-safety-check
+  ${CMAKE_INSTALL_FULL_LIBDIR}/unity/unity-active-plugins-safety-check
 end script
 
 respawn
