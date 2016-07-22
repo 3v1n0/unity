@@ -128,7 +128,7 @@ Description: Services for the Unity interface
 Package: unity-schemas
 Architecture: all
 Multi-Arch: foreign
-Depends: ${misc:Depends}
+Depends: ${misc:Depends},
 Replaces: libunity-core-6.0-9 (<< 7.3.0),
 Breaks: libunity-core-6.0-9 (<< 7.3.0),
 Description: Interface designed for efficiency of space and interaction.
