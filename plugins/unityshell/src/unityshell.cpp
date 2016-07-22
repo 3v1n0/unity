@@ -884,7 +884,7 @@ void UnityScreen::paintOutput()
   current_draw_binding = old_read_binding;
 #endif
 
-  BackgroundEffectHelper::monitor_rect_.Set(0, 0, output->width(), output->height());
+  BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
 
   // If we have dirty helpers re-copy the backbuffer into a texture
   if (dirty_helpers_on_this_frame_)
@@ -909,10 +909,10 @@ void UnityScreen::paintOutput()
 
     for (CompRect const& rect : blur_region.rects())
     {
-      int x = nux::Clamp<int>(rect.x(), 0, output->width());
-      int y = nux::Clamp<int>(output->height() - rect.y2(), 0, output->height());
-      int width = std::min<int>(output->width() - rect.x(), rect.width());
-      int height = std::min<int>(output->height() - y, rect.height());
+      int x = nux::Clamp<int>(rect.x(), 0, screen->width());
+      int y = nux::Clamp<int>(screen->height() - rect.y2(), 0, screen->height());
+      int width = std::min<int>(screen->width() - rect.x(), rect.width());
+      int height = std::min<int>(screen->height() - y, rect.height());
 
       CHECKGL(glCopyTexSubImage2D(surface_target, 0, x, y, x, y, width, height));
     }

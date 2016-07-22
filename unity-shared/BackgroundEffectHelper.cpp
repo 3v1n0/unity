@@ -157,7 +157,7 @@ void BackgroundEffectHelper::UpdateBlurGeometries()
      * monitor geometry, but that is done at paint time */
     auto const& blur_geo = bg_effect_helper->requested_blur_geometry_;
 
-    if (!blur_geo.IsNull())
+    if (!blur_geo.IsNull() && blur_type != BLUR_NONE)
       blur_geometries_.push_back(blur_geo.GetExpand(radius, radius));
   }
 }
