@@ -81,21 +81,10 @@ Depends: ${shlibs:Depends},
          libxfixes3 (>= 1:5.0.1-1),
          libxi6 (>= 2:1.7.1.901),
 	 unity-scope-home,
-Provides: indicator-renderer
 Recommends: unity-control-center,
             ${unity-default-masterscopes}
             nautilus,
             gnome-disk-utility,
-            indicator-appmenu (>= 15.02.0),
-            indicator-application,
-            indicator-sound,
-            indicator-bluetooth,
-            indicator-datetime,
-            indicator-keyboard,
-            indicator-messages,
-            indicator-printers,
-            indicator-power,
-            indicator-session,
             hud,
             session-shortcuts,
 Breaks: unity-lens-applications (<< 5.12.0-0ubuntu2),
@@ -114,6 +103,18 @@ Package: unity-services
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+         indicator-common,
+Provides: indicator-renderer
+Recommends: indicator-appmenu (>= 15.02.0),
+            indicator-application,
+            indicator-sound,
+            indicator-bluetooth,
+            indicator-datetime,
+            indicator-keyboard,
+            indicator-messages,
+            indicator-printers,
+            indicator-power,
+            indicator-session,
 Description: Services for the Unity interface
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
@@ -127,8 +128,7 @@ Description: Services for the Unity interface
 Package: unity-schemas
 Architecture: all
 Multi-Arch: foreign
-Depends: ${misc:Depends},
-         indicator-common,
+Depends: ${misc:Depends}
 Replaces: libunity-core-6.0-9 (<< 7.3.0),
 Breaks: libunity-core-6.0-9 (<< 7.3.0),
 Description: Interface designed for efficiency of space and interaction.
