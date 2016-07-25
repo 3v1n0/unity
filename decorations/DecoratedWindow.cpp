@@ -724,8 +724,6 @@ void Window::Impl::ComputeShapedShadowQuad()
 
   // Ideally it would be shape.getWidth + radius * 2 but Cairographics::BlurSurface
   // isn't bounded by the radius and we need to compensate by using a larger texture.
-  int x = border.x() + shadow_offset.x - radius * 2 + shape.XOffset();
-  int y = border.y() + shadow_offset.y - radius * 2 + shape.YOffset();
   int width = shape.Width() + radius * 2 * SHADOW_BLUR_MARGIN_FACTOR;
   int height = shape.Height() + radius * 2 * SHADOW_BLUR_MARGIN_FACTOR;
 
@@ -736,6 +734,9 @@ void Window::Impl::ComputeShapedShadowQuad()
 
   if (!texture || !texture->width() || !texture->height())
     return;
+
+  int x = border.x() + shadow_offset.x - radius * 2 + shape.XOffset();
+  int y = border.y() + shadow_offset.y - radius * 2 + shape.YOffset();
 
   auto* quad = &shadow_quads_[Quads::Pos(0)];
   quad->box.setGeometry(x, y, width, height);
