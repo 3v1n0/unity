@@ -708,7 +708,8 @@ void Window::Impl::ComputeShapedShadowQuad()
   int width = shape.Width() + radius * 2 * blur_margin_factor;
   int height = shape.Height() + radius * 2 * blur_margin_factor;
 
-  shaped_shadow_pixmap_ = manager_->impl_->BuildShapedShadowTexture(radius, color, shape);
+  if (width != last_shadow_rect_.width() || height != last_shadow_rect_.height())
+    shaped_shadow_pixmap_ = manager_->impl_->BuildShapedShadowTexture(radius, color, shape);
 
   const auto* texture = shaped_shadow_pixmap_->texture();
 
