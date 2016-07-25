@@ -21,9 +21,9 @@
 #define UNITY_LOCKSCREEN_BASE_SHIELD_H
 
 #include <NuxCore/Property.h>
-#include <UnityCore/SessionManager.h>
-#include <UnityCore/Indicators.h>
-#include <UnityCore/GLibSource.h>
+#include "UnityCore/SessionManager.h"
+#include "UnityCore/Indicators.h"
+#include "UnityCore/GLibSource.h"
 #include "unity-shared/MockableBaseWindow.h"
 
 #include "LockScreenAccelerators.h"

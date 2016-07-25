@@ -1,3 +1,203 @@
+unity (7.5.0+16.10.20160715-0ubuntu1) yakkety; urgency=medium
+
+  [ Eleni Maria Stea ]
+  * Reverts fix for multimonitor because of problems in nvidia cards
+    (see bug: #1602901) (LP: #1602901)
+
+ -- iain@orangesquash.org.uk <iain@orangesquash.org.uk>  Fri, 15 Jul 2016 15:13:28 +0000
+
+unity (7.5.0+16.10.20160714-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * FileManagerLauncherIcon: Don't trust the Quirk::VISIBLE in the ctor.
+    (LP: #1599133)
+  * [TrashLauncherIcon] Create GFileMonitor in an idle to avoid blocking
+    calls. (LP: #1602720)
+
+  [ Marco Trevisan (Treviño) ]
+  * Unity script: use result from unity_support_test to check the right
+    COMPIZ_CONFIG_PROFILE to use (LP: #1602377)
+  * SwitcherView: always disable animations when in lowgfx mode (LP:
+    #1602784)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 14 Jul 2016 10:06:29 +0000
+
+unity (7.5.0+16.10.20160705.4-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add missing header to fix compilation error with -Duse_pch=OFF.
+  * Filter out fullscreen window in show desktop mode to decide if unity
+    must be displayed. (LP: #1597706)
+  * Make sure file manager icon is not removed when unpinned. (LP:
+    #1578792)
+  * Properly calculate the intersection geometry in PanelView::Draw.
+    This is needed to properly call SyncGeometries and to avoid problems
+    such as lp:1595698. (LP: #1595698)
+
+  [ Eleni Maria Stea ]
+  * speeds up the showdesktop plugin in lowgfx mode
+  * UnityScreen: only redraw parts of the screen visible in each output
+    (LP: #1598770)
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenAcceleratorController: check if a setting key is available
+    instead of crashing
+  * ApplicationLauncherIcon: ensure quirks are properly set on icon
+    initialization
+  * Views: Toggle animators durations based on low-gfx setting (LP:
+    #1598770)
+  * unity7.conf: use different compiz profile based on
+    unity_support_test result (LP: #1598770)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 05 Jul 2016 10:24:14 +0000
+
+unity (7.5.0+16.10.20160628.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * UnitySettings: Add an option to enable/disable pam account checking.
+    (LP: #1460649)
+  * Lockscreen: Make sure warning and errors are properly shown to the
+    user (LP: #1593696)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 28 Jun 2016 16:23:47 +0000
+
+unity (7.5.0+16.10.20160621.1-0ubuntu1) yakkety; urgency=medium
+
+  * LockScreenAcceleratorController: use key::Grabber to handle allowed
+    bindings (LP: #1438754)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 21 Jun 2016 14:44:22 +0000
+
+unity (7.5.0+16.10.20160606.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Alberto Milone ]
+  * UnitySettings: Add dconf keys for disabling multitouch gestures (LP:
+    #1589520)
+
+  [ Andrea Azzarone ]
+  * Do not trigger screensaver on session inactive. (LP: #1587507)
+  * Use SwitcherController::SetDetail instead of detail=... (LP:
+    #1587618)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 06 Jun 2016 14:29:04 +0000
+
+unity (7.5.0+16.10.20160602-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add whitelist for auto-repated keys. (LP: #1586491)
+  * Fix scale window activation if in show desktop mode. (LP: #1582056)
+  * Order matters in the rendering. Draw launcher shadow after the
+    background in all cases. (LP: #1586374)
+  * Fallback to volume name if no other identifier is available. (LP:
+    #1103593)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 02 Jun 2016 01:02:19 +0000
+
+unity (7.5.0+16.10.20160525-0ubuntu1) yakkety; urgency=medium
+
+  [ Eleni Maria Stea ]
+  * PanelView: Don't draw it if the geo doesn't intersect the monitor
+    geo (as in ezoom)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 25 May 2016 14:22:42 +0000
+
+unity (7.5.0+16.10.20160517-0ubuntu1) yakkety; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Bumping version to 7.5.0, as per 7.4 release
+
+  [ Andrea Azzarone ]
+  * Do not reset the shortcut for icons that have their own shortcut.
+    (LP: #1562847)
+  * Fallback to "background" class in case no background is specified
+    for title bars and top panel. (LP: #1575527)
+  * GnomeKeyGrabber: do not activate an action if it's a repeated one.
+    (LP: #1572241)
+  * Properly calculate array indexes to avoid crashes. (LP: #1570843)
+  * Properly remove SoftwareCenterLauncherIcon in case of failure. (LP:
+    #1553165)
+  * Update ExpoLauncherIcon in case the quicklist is used to switch vp.
+    (LP: #1525685)
+
+  [ Marco Trevisan (Treviño) ]
+  * DashStyle: ensure LazyLoadTexture disconnects from signals on
+    destruction (LP: #1580212)
+  * Releasing Unity 7.4.0
+  * SwitcherController: don't try to get a window from empty selections
+    (LP: #1580211)
+  * SwitcherView: close the mouse-selected application on middle-click
+    (LP: #1574689)
+  * UnityScreen, UnityWindow: cleanup a little the code, and ensure
+    overridden CompositeWindow functions get actually called
+
+  [ handsome_feng ]
+  * Change the x_offset of expo when launcher position changed. (LP:
+    #1573897, #1562348)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 17 May 2016 02:56:22 +0000
+
+unity (7.4.0+16.04.20160415-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Do not use pointers to LazyLoadTextures. (LP: #1569100)
+  * Fix unity script crash. (LP: #1566565)
+  * LockscreenController: Don't use SetActivate(False) for gnome-
+    screensaver to prevent unlocking on tty switch. It will not only
+    deactivate the screensaver but also unlock the screen. (LP:
+    #1552537)
+  * unityshell.xml: Fix typo (LP: #1559427)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 15 Apr 2016 05:33:08 +0000
+
+unity (7.4.0+16.04.20160401.1-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Improve the "lock on suspend" logic to always keep in sync the
+    inhibitor with the lockscreen.
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: Just send estimated extents on
+    _NET_REQUEST_FRAME_EXTENTS (LP: #1368118)
+  * TextureCache: add support for loading themed textures (LP: #903179,
+    #1208790)
+  * Unity: stop unity7 upstart instance if needed and restart it if not
+    clearly requested (LP: #1555633)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 01 Apr 2016 23:11:47 +0000
+
+unity (7.4.0+16.04.20160322-0ubuntu1) xenial; urgency=medium
+
+  * ForceQuitDialog: set client leader
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 22 Mar 2016 15:36:52 +0000
+
+unity (7.4.0+16.04.20160321-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * ApplicationLauncherIcon: use the starting property to show an icon
+    when launched (LP: #676457)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 21 Mar 2016 15:38:22 +0000
+
+unity (7.4.0+16.04.20160318-0ubuntu1) xenial; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * UserPromptView: don't hide local scale property (LP: #1551820)
+
+  [ Sebastien Bacher ]
+  * set the gettext domain directly in CMakeLists rather than using
+    refering to the project name, the translation template is updated
+    during the build by dh_translations which is not clever enough to
+    understand the variable (LP: #1557081)
+
+  [ handsome_feng ]
+  * Dash: move it down when the launcher is positioned at the bottom.
+    (LP: #1552630)
+  * Launcher: add Bottom mode, so that the launcher can be positioned
+    horisontally (LP: #1552630)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 18 Mar 2016 10:10:42 +0000
+
 unity (7.4.0+16.04.20160310-0ubuntu1) xenial; urgency=medium
 
   [ Andrea Azzarone ]

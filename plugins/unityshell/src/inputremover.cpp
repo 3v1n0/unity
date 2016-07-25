@@ -354,7 +354,7 @@ compiz::WindowInputRemover::writeProperty (XRectangle *input,
 
   for (int i = 0; i < nInput; ++i)
   {
-    const unsigned int position = dataSize + (i * 4);
+    const unsigned int position = headerSize + (i * 4);
 
     data[position + 0] = input[i].x;
     data[position + 1] = input[i].y;

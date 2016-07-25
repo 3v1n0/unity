@@ -85,6 +85,7 @@ Style::Style()
   gtk_widget_path_iter_set_name(widget_path.get(), -1, PANEL_STYLE_CSS_NAME.c_str());
 
   gtk_style_context_set_path(style_context_, widget_path.get());
+  gtk_style_context_add_class(style_context_, "background");
   gtk_style_context_add_class(style_context_, "gnome-panel-menu-bar");
   gtk_style_context_add_class(style_context_, "unity-panel");
 
@@ -118,12 +119,16 @@ void Style::OnThemeChanged(std::string const&)
   auto& settings = Settings::Instance();
 
   for (unsigned monitor = 0; monitor < monitors::MAX; ++monitor)
+  {
     for (unsigned button = 0; button < unsigned(WindowButtonType::Size); ++button)
+    {
       for (unsigned state = 0; state < unsigned(WindowState::Size); ++state)
       {
         cache.Invalidate(win_button_id(settings.em(monitor)->DPIScale(), WindowButtonType(button), WindowState(state)));
         cache.Invalidate(dash_button_id(settings.em(monitor)->DPIScale(), WindowButtonType(button), WindowState(state)));
       }
+    }
+  }
 
   RefreshContext();
 }
@@ -255,10 +260,9 @@ nux::BaseTexture* ButtonFactory(std::string const& file, WindowButtonType type, 
 
 BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state, int monitor)
 {
-  auto const& file = decoration::Style::Get()->WindowButtonFile(type, state);
   double scale = Settings::Instance().em(monitor)->DPIScale();
-
-  auto texture_factory = [this, &file, type, state, monitor, scale] (std::string const&, int, int) {
+  auto texture_factory = [this, type, state, scale, monitor] (std::string const&, int, int) {
+    auto const& file = decoration::Style::Get()->WindowButtonFile(type, state);
     return ButtonFactory(file, type, state, monitor, scale);
   };
 
@@ -268,18 +272,18 @@ BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state, 
 
 BaseTexturePtr Style::GetDashWindowButton(WindowButtonType type, WindowState state, int monitor)
 {
-  static const std::array<std::string, 4> names = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
-  static const std::array<std::string, 4> states = { "", "_prelight", "_pressed", "_disabled" };
-
-  auto base_filename = names[unsigned(type)] + states[unsigned(state)];
-  auto const& file = decoration::Style::Get()->ThemedFilePath(base_filename, {PKGDATADIR});
-
-  if (file.empty())
-    return BaseTexturePtr();
-
   double scale = Settings::Instance().em(monitor)->DPIScale();
 
-  auto texture_factory = [this, &file, type, state, monitor, scale] (std::string const&, int, int) {
+  auto texture_factory = [this, type, state, monitor, scale] (std::string const&, int, int) {
+    static const std::array<std::string, 4> names = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
+    static const std::array<std::string, 4> states = { "", "_prelight", "_pressed", "_disabled" };
+
+    auto base_filename = names[unsigned(type)] + states[unsigned(state)];
+    auto const& file = decoration::Style::Get()->ThemedFilePath(base_filename, {PKGDATADIR});
+
+    if (file.empty())
+      return static_cast<nux::BaseTexture*>(nullptr);
+
     return ButtonFactory(file, type, state, monitor, scale);
   };
 

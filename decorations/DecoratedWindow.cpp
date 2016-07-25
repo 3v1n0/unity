@@ -17,6 +17,9 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include <core/atoms.h>
+#include <X11/Xatom.h>
+
 #include "DecorationsPriv.h"
 #include "DecorationsForceQuitDialog.h"
 #include "DecorationsEdgeBorders.h"
@@ -157,13 +160,8 @@ void Window::Impl::UnsetExtents()
     win_->setWindowFrameExtents(&empty, &empty);
 }
 
-void Window::Impl::SetupExtents()
+void Window::Impl::ComputeBorderExtent(CompWindowExtents& border)
 {
-  if (win_->hasUnmapReference())
-    return;
-
-  CompWindowExtents border;
-
   if (deco_elements_ & cu::DecorationElement::BORDER)
   {
     auto const& sb = Style::Get()->Border();
@@ -172,6 +170,15 @@ void Window::Impl::SetupExtents()
     border.top = cv_->CP(sb.top);
     border.bottom = cv_->CP(sb.bottom);
   }
+}
+
+void Window::Impl::SetupExtents()
+{
+  if (win_->hasUnmapReference())
+    return;
+
+  CompWindowExtents border;
+  ComputeBorderExtent(border);
 
   CompWindowExtents input(border);
 
@@ -191,8 +198,19 @@ void Window::Impl::SetupExtents()
 void Window::Impl::SendFrameExtents()
 {
   UpdateElements(cu::WindowFilter::UNMAPPED);
-  SetupExtents();
-  win_->setWindowFrameExtents(&win_->border(), &win_->input());
+
+  CompWindowExtents border;
+  ComputeBorderExtent(border);
+
+  std::vector<unsigned long> extents(4);
+  extents.push_back(border.left);
+  extents.push_back(border.right);
+  extents.push_back(border.top);
+  extents.push_back(border.bottom);
+
+  XChangeProperty(screen->dpy(), win_->id(), Atoms::frameExtents, XA_CARDINAL, 32,
+                  PropModeReplace, reinterpret_cast<unsigned char *>(extents.data()),
+                  extents.size());
 }
 
 void Window::Impl::UnsetFrame()

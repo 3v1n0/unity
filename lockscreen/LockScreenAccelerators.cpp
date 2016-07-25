@@ -417,6 +417,11 @@ Accelerators::Accelerators()
 {
 }
 
+Accelerators::Vector Accelerators::GetAccelerators() const
+{
+  return accelerators_;
+}
+
 void Accelerators::Clear()
 {
   accelerators_.clear();

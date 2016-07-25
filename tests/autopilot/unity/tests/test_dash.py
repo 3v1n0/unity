@@ -148,10 +148,10 @@ class DashRevealTests(DashTestCase):
 
         self.unity.dash.ensure_visible()
 
-        # Click bottom right of the screen, but take into account the non-maximized window -
+        # Click right of the screen, but take into account the non-maximized window -
         # we do not want to click on it as it focuses the wrong window
         w = self.display.get_screen_width() - 1
-        h = self.display.get_screen_height() - 1
+        h = self.display.get_screen_height() / 2
 
         # If the mouse is over the non-maximized window, move it away from it.
         (calc_x, calc_y, calc_w, calc_h) = calc_win.get_windows()[0].geometry
@@ -689,8 +689,10 @@ class DashVisualTests(DashTestCase):
 
         self.unity.dash.ensure_visible()
 
-        self.assertThat(self.unity.dash.view.x, Eventually(Equals(launcher.geometry.x + launcher.geometry.width - 1)))
-
+        if launcher.geometry.width < launcher.geometry.height:
+            self.assertThat(self.unity.dash.view.x, Eventually(Equals(launcher.geometry.x + launcher.geometry.width - 1)))
+        else:
+            self.assertThat(self.unity.dash.view.x, Eventually(Equals(0)))
 
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned

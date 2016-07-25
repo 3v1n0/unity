@@ -249,14 +249,11 @@ struct IconRenderer::LocalTextures
 {
   LocalTextures(IconRenderer* parent)
     : parent_(parent)
+    , textures_loaded_(false)
   {
-    connections_.Add(theme::Settings::Get()->theme.changed.connect([this] (std::string const&) {
-      auto& cache = TextureCache::GetDefault();
-
-      for (auto const& tex_data : texture_files_)
-        cache.Invalidate(tex_data.name, tex_data.size, tex_data.size);
-
-      ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
+    connections_.Add(TextureCache::GetDefault().themed_invalidated.connect([this] {
+      if (textures_loaded_)
+        ReloadIconSizedTextures(parent_->icon_size, parent_->image_size);
     }));
 
     auto clear_labels = sigc::hide(sigc::mem_fun(this, &LocalTextures::ClearLabels));
@@ -276,7 +273,8 @@ struct IconRenderer::LocalTextures
     int marker_size = std::round(icon_size * (MARKER_SIZES[tex_size] / static_cast<double>(TILE_SIZES[tex_size])));
     auto const& marker_sufix = std::to_string(MARKER_SIZES[tex_size]);
 
-    texture_files_ = {
+    struct TextureData { BaseTexturePtr* tex_ptr; std::string name; int size; };
+    std::vector<TextureData> texture_files = {
       {&icon_background, "launcher_icon_back_"+tile_sufix, icon_size},
       {&icon_selected_background, "launcher_icon_selected_back_"+tile_sufix, icon_size},
       {&icon_edge, "launcher_icon_edge_"+tile_sufix, icon_size},
@@ -285,22 +283,21 @@ struct IconRenderer::LocalTextures
       {&icon_shine, "launcher_icon_shine_"+tile_sufix, icon_size},
       {&arrow_ltr, "launcher_arrow_ltr_"+marker_sufix, marker_size},
       {&arrow_rtl, "launcher_arrow_rtl_"+marker_sufix, marker_size},
+      {&arrow_btt, "launcher_arrow_btt_"+marker_sufix, marker_size},
+      {&arrow_ttb, "launcher_arrow_ttb_"+marker_sufix, marker_size},
       {&arrow_empty_ltr, "launcher_arrow_outline_ltr_"+marker_sufix, marker_size},
+      {&arrow_empty_btt, "launcher_arrow_outline_btt_"+marker_sufix, marker_size},
       {&pip_ltr, "launcher_pip_ltr_"+marker_sufix, marker_size},
+      {&pip_btt, "launcher_pip_btt_"+marker_sufix, marker_size},
       {&progress_bar_trough, "progress_bar_trough", icon_size},
       {&progress_bar_fill, "progress_bar_fill", image_size - (icon_size - image_size)},
     };
 
-    auto texture_loader = [] (std::string const& basename, int w, int h)
-    {
-      int size = std::max(w, h);
-      auto const& file = theme::Settings::Get()->ThemedFilePath(basename, {PKGDATADIR});
-      return nux::CreateTexture2DFromFile(file.c_str(), (size <= 0 ? -1 : size), true);
-    };
-
     auto& cache = TextureCache::GetDefault();
-    for (auto const& tex_data : texture_files_)
-      *tex_data.tex_ptr = cache.FindTexture(tex_data.name, tex_data.size, tex_data.size, texture_loader);
+    for (auto const& tex_data : texture_files)
+      *tex_data.tex_ptr = cache.FindTexture(tex_data.name, tex_data.size, tex_data.size);
+
+    textures_loaded_ = true;
   }
 
   nux::BaseTexture* RenderLabelTexture(char label, int icon_size, nux::Color const&);
@@ -327,15 +324,18 @@ struct IconRenderer::LocalTextures
   BaseTexturePtr icon_shine;
   BaseTexturePtr arrow_ltr;
   BaseTexturePtr arrow_rtl;
+  BaseTexturePtr arrow_btt;
+  BaseTexturePtr arrow_ttb;
   BaseTexturePtr arrow_empty_ltr;
+  BaseTexturePtr arrow_empty_btt;
   BaseTexturePtr pip_ltr;
+  BaseTexturePtr pip_btt;
   BaseTexturePtr progress_bar_trough;
   BaseTexturePtr progress_bar_fill;
 
 private:
   IconRenderer* parent_;
-  struct TextureData { BaseTexturePtr* tex_ptr; std::string name; int size; };
-  std::vector<TextureData> texture_files_;
+  bool textures_loaded_;
   std::vector<BaseTexturePtr> labels_;
   connection::Manager connections_;
 };
@@ -439,10 +439,20 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     UpdateIconTransform(launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, ui::IconTextureSource::TRANSFORM_GLOW);
 
-    w = geo.width + 2;
-    h = icon_size + spacing;
-    if (i == (int) args.size() - 1)
-      h += 4;
+    if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    {
+      w = geo.width + 2;
+      h = icon_size + spacing;
+      if (i == (int) args.size() - 1)
+        h += 4;
+    }
+    else
+    {
+      h = geo.height + 2;
+      w = icon_size + spacing;
+      if (i == (int) args.size() - 1)
+        w += 4;
+    }
     x = it->logical_center.x - w / 2.0f;
     y = it->logical_center.y - h / 2.0f;
     z = it->logical_center.z;
@@ -1023,23 +1033,38 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
                                     float alpha,
                                     nux::Geometry const& geo)
 {
-  int markerCenter = (int) arg.render_center.y;
-  markerCenter -= (int)(arg.rotation.x / (2 * M_PI) * icon_size);
+  int markerCenter = 0;
+  bool switcher_mode = (pip_style != OUTSIDE_TILE);
+  bool left_markers = (switcher_mode || Settings::Instance().launcher_position() == LauncherPosition::LEFT);
+
+  if (left_markers)
+  {
+    markerCenter = (int) arg.render_center.y;
+    markerCenter -= (int)(arg.rotation.x / (2 * M_PI) * icon_size);
+  }
+  else
+  {
+    markerCenter = (int) arg.render_center.x;
+
+    if (pip_style == OUTSIDE_TILE)
+      markerCenter += (int)(arg.rotation.y / (2 * M_PI) * icon_size);
+  }
 
   if (running > 0)
   {
-    int markerX;
-
-    if (pip_style == OUTSIDE_TILE)
+    int markerX = 0;
+    if (left_markers)
     {
-      markerX = geo.x;
+      if (pip_style == OUTSIDE_TILE)
+      {
+        markerX = geo.x;
+      }
+      else
+      {
+        auto const& bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
+        markerX = bounds[0].x + 1;
+      }
     }
-    else
-    {
-      auto const& bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
-      markerX = bounds[0].x + 1;
-    }
-
     nux::TexCoordXForm texxform;
     nux::Color color = nux::color::LightGrey;
 
@@ -1059,31 +1084,72 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     if (!arg.running_on_viewport)
     {
       markers[0] = markerCenter;
-      texture = local_textures_->arrow_empty_ltr;
+      if (left_markers)
+        texture = local_textures_->arrow_empty_ltr;
+      else
+        texture = local_textures_->arrow_empty_btt;
     }
     else if (running == 1)
     {
       markers[0] = markerCenter;
-      texture = local_textures_->arrow_ltr;
+      if (left_markers)
+        texture = local_textures_->arrow_ltr;
+      else
+        texture = local_textures_->arrow_btt;
     }
     else if (running == 2)
     {
-      texture = local_textures_->pip_ltr;
+      int texture_size = 0;
+      if (left_markers)
+      {
+        texture = local_textures_->pip_ltr;
+        texture_size = texture->GetHeight();
+      }
+      else
+      {
+        texture = local_textures_->pip_btt;
+        texture_size = texture->GetWidth();
+      }
 
-      double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
-      int offset = std::max(1.0, std::round(2.0 * texture->GetHeight() / default_tex_height));
+      double default_tex_size = local::MARKER_SIZES[local::IconSize::SMALL];
+      int offset = std::max(1.0, std::round(2.0 * texture_size / default_tex_size));
       markers[0] = markerCenter - offset;
       markers[1] = markerCenter + offset;
     }
     else
     {
-      texture = local_textures_->pip_ltr;
+      int texture_size = 0;
+      if (left_markers)
+      {
+        texture = local_textures_->pip_ltr;
+        texture_size = texture->GetHeight();
+      }
+      else
+      {
+        texture = local_textures_->pip_btt;
+        texture_size = texture->GetWidth();
+      }
 
-      double default_tex_height = local::MARKER_SIZES[local::IconSize::SMALL];
-      int offset = std::max(1.0, std::round(4.0 * texture->GetHeight() / default_tex_height));
+      double default_tex_size = local::MARKER_SIZES[local::IconSize::SMALL];
+      int offset = std::max(1.0, std::round(4.0 * texture_size / default_tex_size));
       markers[0] = markerCenter - offset;
       markers[1] = markerCenter;
       markers[2] = markerCenter + offset;
+    }
+
+    int markerY = 0;
+    if (!left_markers)
+    {
+      if (pip_style == OUTSIDE_TILE)
+      {
+        markerY = (geo.y + geo.height) - texture->GetHeight();
+      }
+      else
+      {
+        auto const& bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
+
+        markerY = (bounds[2].y - (texture->GetHeight()*scale));
+      }
     }
 
     for (int i = 0; i < 3; i++)
@@ -1092,8 +1158,13 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
       if (center == -100)
         break;
 
+      if (left_markers)
+        markerY = center - std::round(texture->GetHeight() / 2.0f);
+      else
+        markerX = center - std::round(texture->GetWidth() / 2.0f);
+
       GfxContext.QRP_1Tex(markerX,
-                          center - std::round(texture->GetHeight() / 2.0f),
+                          markerY,
                           texture->GetWidth(),
                           texture->GetHeight(),
                           texture->GetDeviceTexture(),
@@ -1106,15 +1177,29 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
-    auto const& arrow_rtl = local_textures_->arrow_rtl;
     nux::Color color = nux::color::LightGrey * alpha;
-    GfxContext.QRP_1Tex((geo.x + geo.width) - arrow_rtl->GetWidth(),
-                        markerCenter - std::round(arrow_rtl->GetHeight() / 2.0f),
-                        arrow_rtl->GetWidth(),
-                        arrow_rtl->GetHeight(),
-                        arrow_rtl->GetDeviceTexture(),
-                        texxform,
-                        color);
+    if (left_markers)
+    {
+      auto const& arrow_rtl = local_textures_->arrow_rtl;
+      GfxContext.QRP_1Tex((geo.x + geo.width) - arrow_rtl->GetWidth(),
+                          markerCenter - std::round(arrow_rtl->GetHeight() / 2.0f),
+                          arrow_rtl->GetWidth(),
+                          arrow_rtl->GetHeight(),
+                          arrow_rtl->GetDeviceTexture(),
+                          texxform,
+                          color);
+    }
+    else
+    {
+      auto const& arrow_ttb = local_textures_->arrow_ttb;
+      GfxContext.QRP_1Tex(markerCenter - std::round(arrow_ttb->GetWidth() / 2.0f),
+                          geo.y,
+                          arrow_ttb->GetWidth(),
+                          arrow_ttb->GetHeight(),
+                          arrow_ttb->GetDeviceTexture(),
+                          texxform,
+                          color);
+    }
   }
 }
 
@@ -1267,8 +1352,12 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
   float y_cs = -CameraToScreenDistance * tanf(0.5f * Fovy/* *M_PI/180.0f*/);
   float x_cs = y_cs * AspectRatio;
 
-  ViewMatrix = nux::Matrix4::TRANSLATE(-x_cs, y_cs, CameraToScreenDistance) *
-               nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * 3 * y_cs / ViewportHeight /* or -2.0f * x_cs/ViewportWidth*/);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    ViewMatrix = nux::Matrix4::TRANSLATE(-x_cs, y_cs, CameraToScreenDistance) *
+                 nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * 3 * y_cs / ViewportHeight /* or -2.0f * x_cs/ViewportWidth*/);
+  else
+    ViewMatrix = nux::Matrix4::TRANSLATE(-x_cs, y_cs, CameraToScreenDistance) *
+                 nux::Matrix4::SCALE(2.0f * x_cs / ViewportWidth, -2.0f * y_cs / ViewportHeight, -2.0f * x_cs / ViewportWidth);
 
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
 }

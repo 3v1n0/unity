@@ -27,7 +27,7 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/SessionManager.h"
 
 #include "UserAuthenticatorPam.h"
 #include "unity-shared/IMTextEntry.h"
@@ -50,6 +50,7 @@ class AbstractUserPromptView : public nux::View
 public:
   AbstractUserPromptView(session::Manager::Ptr const& session_manager)
     : nux::View(NUX_TRACKER_LOCATION)
+    , scale(1.0)
     , session_manager_(session_manager)
   {}
 

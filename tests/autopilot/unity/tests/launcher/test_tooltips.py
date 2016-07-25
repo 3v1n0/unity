@@ -18,7 +18,7 @@ class LauncherTooltipTests(LauncherTestCase):
     def setUp(self):
         super(LauncherTooltipTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', 0)
-        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.launcher_instance.move_mouse_beside_launcher()
         self.icons = self.unity.launcher.model.get_launcher_icons(visible_only=True)
 
     def test_launcher_tooltip_show(self):
@@ -49,7 +49,7 @@ class LauncherTooltipTests(LauncherTestCase):
         b -= 1
 
         # leaving launcher clears tooltips, and instant reveal
-        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.launcher_instance.move_mouse_beside_launcher()
         self.assertEqual(self.get_reveal_behavior(self.icons[b]), self.DELAYED)
 
     def test_launcher_tooltip_disabling(self):

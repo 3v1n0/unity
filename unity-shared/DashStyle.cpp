@@ -95,13 +95,14 @@ inline void get_actual_cairo_size(cairo_t* cr, T* width, T* height)
   *height = cairo_image_surface_get_height(surface) / h_scale;
 }
 
-class LazyLoadTexture
+class LazyLoadTexture : public sigc::trackable
 {
 public:
   LazyLoadTexture(std::string const& filename, int size = -1);
   BaseTexturePtr const& texture();
 private:
   void LoadTexture();
+  void UnloadTexture();
 private:
   std::string filename_;
   int size_;
@@ -173,7 +174,8 @@ struct Style::Impl : sigc::trackable
   BaseTexturePtr LoadScaledTexture(std::string const& name, double scale)
   {
     int w, h;
-    gdk_pixbuf_get_file_info((PKGDATADIR"/" + name).c_str(), &w, &h);
+    auto const& path = theme::Settings::Get()->ThemedFilePath(name, {PKGDATADIR});
+    gdk_pixbuf_get_file_info(path.c_str(), &w, &h);
     return TextureCache::GetDefault().FindTexture(name, RawPixel(w).CP(scale), RawPixel(h).CP(scale));
   }
 
@@ -249,17 +251,17 @@ Style::Impl::Impl(Style* owner)
   , text_color_(nux::color::White)
   , text_width_(0)
   , text_height_(0)
-  , category_texture_("/category_gradient.png")
-  , category_texture_no_filters_("/category_gradient_no_refine.png")
-  , dash_shine_("/dash_sheen.png")
-  , information_texture_("/information_icon.svg")
-  , refine_gradient_corner_("/refine_gradient_corner.png")
-  , refine_gradient_dash_("/refine_gradient_dash.png")
-  , group_unexpand_texture_("/dash_group_unexpand.png")
-  , group_expand_texture_("/dash_group_expand.png")
-  , star_deselected_texture_("/star_deselected.png")
-  , star_selected_texture_("/star_selected.png")
-  , star_highlight_texture_("/star_highlight.png")
+  , category_texture_("category_gradient")
+  , category_texture_no_filters_("category_gradient_no_refine")
+  , dash_shine_("dash_sheen")
+  , information_texture_("information_icon")
+  , refine_gradient_corner_("refine_gradient_corner")
+  , refine_gradient_dash_("refine_gradient_dash")
+  , group_unexpand_texture_("dash_group_unexpand")
+  , group_expand_texture_("dash_group_expand")
+  , star_deselected_texture_("star_deselected")
+  , star_selected_texture_("star_selected")
+  , star_highlight_texture_("star_highlight")
 {
   auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Impl::Refresh));
 
@@ -270,6 +272,8 @@ Style::Impl::Impl(Style* owner)
   auto& settings = Settings::Instance();
   settings.font_scaling.changed.connect(refresh_cb);
   settings.form_factor.changed.connect(sigc::mem_fun(this, &Impl::UpdateFormFactor));
+
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(&owner_->textures_changed, &decltype(owner_->textures_changed)::emit));
 
   Refresh();
   UpdateFormFactor(settings.form_factor());
@@ -1668,6 +1672,41 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
   return true;
 }
 
+bool Style::LockScreenButton(cairo_t* cr, std::string const& label,
+                             int font_px_size)
+{
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+
+  cairo_set_line_width(cr, 1);
+
+  double radius = 5.0;
+  RoundedRect(cr, 1.0, 0.5, 0.5, radius, w - 1.0, h - 1.0);
+
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
+  cairo_fill_preserve(cr);
+
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
+  cairo_stroke(cr);
+
+  static double internal_padding = 10.0f;
+
+  pimpl->Text(cr,
+              nux::color::White,
+              label,
+              font_px_size,
+              internal_padding,
+              dash::Alignment::LEFT);
+
+  return true;
+}
+
 nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
 {
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
@@ -2082,86 +2121,135 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
-BaseTexturePtr Style::GetDashBottomTile(double scale) const
+BaseTexturePtr Style::GetDashHorizontalTile(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_bottom_border_tile.png", scale);
+  std::string horizontal_tile;
+  if (dash_position == Position::BOTTOM)
+    horizontal_tile = "dash_top_border_tile";
+  else
+    horizontal_tile = "dash_bottom_border_tile";
+  return pimpl->LoadScaledTexture(horizontal_tile, scale);
 }
 
-BaseTexturePtr Style::GetDashBottomTileMask(double scale) const
+BaseTexturePtr Style::GetDashHorizontalTileMask(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_bottom_border_tile_mask.png", scale);
+  std::string horizontal_tile_mask;
+  if (dash_position == Position::BOTTOM)
+    horizontal_tile_mask = "dash_top_border_tile_mask";
+  else
+    horizontal_tile_mask = "dash_bottom_border_tile_mask";
+  return pimpl->LoadScaledTexture(horizontal_tile_mask, scale);
 }
 
 BaseTexturePtr Style::GetDashRightTile(double scale) const
 {
-  return pimpl->LoadScaledTexture("dash_right_border_tile.png", scale);
+  return pimpl->LoadScaledTexture("dash_right_border_tile", scale);
 }
 
 BaseTexturePtr Style::GetDashRightTileMask(double scale) const
 {
-  return pimpl->LoadScaledTexture("dash_right_border_tile_mask.png", scale);
+  return pimpl->LoadScaledTexture("dash_right_border_tile_mask", scale);
 }
 
 BaseTexturePtr Style::GetDashLeftTile(double scale) const
 {
-  return pimpl->LoadScaledTexture("dash_left_tile.png", scale);
+  return pimpl->LoadScaledTexture("dash_left_tile", scale);
 }
 
-BaseTexturePtr Style::GetDashTopTile(double scale) const
+BaseTexturePtr Style::GetDashTopOrBottomTile(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_top_tile.png", scale);
+  std::string top_bottom_tile;
+  if (dash_position == Position::BOTTOM)
+    top_bottom_tile = "dash_bottom_tile";
+  else
+    top_bottom_tile = "dash_top_tile";
+  return pimpl->LoadScaledTexture(top_bottom_tile, scale);
 }
 
-BaseTexturePtr Style::GetDashCorner(double scale) const
+BaseTexturePtr Style::GetDashCorner(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_bottom_right_corner.png", scale);
+  std::string corner;
+  if (dash_position == Position::BOTTOM)
+    corner = "dash_top_right_corner_rotated";
+  else
+    corner = "dash_bottom_right_corner";
+  return pimpl->LoadScaledTexture(corner, scale);
 }
 
-BaseTexturePtr Style::GetDashCornerMask(double scale) const
+BaseTexturePtr Style::GetDashCornerMask(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_bottom_right_corner_mask.png", scale);
+  std::string corner_mask;
+  if (dash_position == Position::BOTTOM)
+    corner_mask = "dash_top_right_corner_rotated_mask";
+  else
+    corner_mask = "dash_bottom_right_corner_mask";
+  return pimpl->LoadScaledTexture(corner_mask, scale);
 }
 
-BaseTexturePtr Style::GetDashLeftCorner(double scale) const
+BaseTexturePtr Style::GetDashLeftCorner(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_bottom_left_corner.png", scale);
+  std::string left_corner;
+  if (dash_position == Position::BOTTOM)
+    left_corner = "dash_top_left_corner";
+  else
+    left_corner = "dash_bottom_left_corner";
+  return pimpl->LoadScaledTexture(left_corner, scale);
 }
 
-BaseTexturePtr Style::GetDashLeftCornerMask(double scale) const
+BaseTexturePtr Style::GetDashLeftCornerMask(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_bottom_left_corner_mask.png", scale);
+  std::string left_corner_mask;
+  if (dash_position == Position::BOTTOM)
+    left_corner_mask = "dash_top_left_corner_mask";
+  else
+    left_corner_mask = "dash_bottom_left_corner_mask";
+  return pimpl->LoadScaledTexture(left_corner_mask, scale);
 }
 
-BaseTexturePtr Style::GetDashTopCorner(double scale) const
+BaseTexturePtr Style::GetDashRightCorner(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_top_right_corner.png", scale);
+  std::string right_corner;
+  if (dash_position == Position::BOTTOM)
+    right_corner = "dash_bottom_right_corner_rotated";
+  else
+    right_corner = "dash_top_right_corner";
+  return pimpl->LoadScaledTexture(right_corner, scale);
 }
 
-BaseTexturePtr Style::GetDashTopCornerMask(double scale) const
+BaseTexturePtr Style::GetDashRightCornerMask(double scale, Position dash_position) const
 {
-  return pimpl->LoadScaledTexture("dash_top_right_corner_mask.png", scale);
+  std::string right_corner_mask;
+  if (dash_position == Position::BOTTOM)
+    right_corner_mask = "dash_bottom_right_corner_rotated_mask";
+  else
+    right_corner_mask = "dash_top_right_corner_mask";
+  return pimpl->LoadScaledTexture(right_corner_mask, scale);
 }
 
 BaseTexturePtr Style::GetSearchMagnifyIcon(double scale) const
 {
-  return pimpl->LoadScaledTexture("search_magnify.svg", scale);
+  return pimpl->LoadScaledTexture("search_magnify", scale);
 }
 
 BaseTexturePtr Style::GetSearchCircleIcon(double scale) const
 {
-  return pimpl->LoadScaledTexture("search_circle.svg", scale);
+  return pimpl->LoadScaledTexture("search_circle", scale);
 }
 
 BaseTexturePtr Style::GetSearchCloseIcon(double scale) const
 {
-  return pimpl->LoadScaledTexture("search_close.svg", scale);
+  return pimpl->LoadScaledTexture("search_close", scale);
 }
 
 BaseTexturePtr Style::GetSearchSpinIcon(double scale) const
 {
-  return pimpl->LoadScaledTexture("search_spin.svg", scale);
+  return pimpl->LoadScaledTexture("search_spin", scale);
 }
 
+BaseTexturePtr Style::GetLockScreenActivator(double scale) const
+{
+  return pimpl->LoadScaledTexture("arrow_right", scale);
+}
 
 RawPixel Style::GetButtonGarnishSize() const
 {
@@ -2480,6 +2568,7 @@ LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
   : filename_(filename)
   , size_(size)
 {
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &LazyLoadTexture::UnloadTexture));
 }
 
 BaseTexturePtr const& LazyLoadTexture::texture()
@@ -2493,6 +2582,11 @@ void LazyLoadTexture::LoadTexture()
 {
   TextureCache& cache = TextureCache::GetDefault();
   texture_ = cache.FindTexture(filename_, size_, size_);
+}
+
+void LazyLoadTexture::UnloadTexture()
+{
+  texture_ = nullptr;
 }
 
 } // anon namespace

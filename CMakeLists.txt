@@ -10,7 +10,7 @@ include (GNUInstallDirs)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
-set (UNITY_MINOR 4)
+set (UNITY_MINOR 5)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
@@ -134,8 +134,8 @@ add_custom_target (distcheck
        && mkdir ${ARCHIVE_NAME}/build
        && cd ${ARCHIVE_NAME}/build
        && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
-       && make -j4
-       && make -j4 install
+       && make
+       && make install
        && make check-headless
   )
 add_dependencies(distcheck dist)
@@ -165,7 +165,9 @@ set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 set (LOCALE_DIR "${CMAKE_INSTALL_FULL_LOCALEDIR}")
-set (GETTEXT_PACKAGE "${PROJECT_NAME}")
+# specify the domain directly rather than refering to a variable 
+# like ${PROJECT_NAME} to no confuse dh_translations
+set (GETTEXT_PACKAGE "unity")
 
 find_package (PkgConfig)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} gtk+-3.0 --variable prefix OUTPUT_VARIABLE GTK_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -241,7 +243,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     gtk+-3.0>=3.1
     indicator3-0.4>=0.4.90
     json-glib-1.0
-    libbamf3>=0.5.2
+    libbamf3>=0.5.3
     gnome-desktop-3.0
     libnotify
     libstartup-notification-1.0

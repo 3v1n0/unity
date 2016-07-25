@@ -114,6 +114,11 @@ bool View::GetUrgent() const
   return bamf_view_is_urgent(bamf_view_);
 }
 
+bool View::GetStarting() const
+{
+  return bamf_view_is_starting(bamf_view_);
+}
+
 
 WindowBase::WindowBase(ApplicationManager const& manager,
                        glib::Object<BamfView> const& window)
@@ -303,6 +308,8 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
   active.SetGetterFunction(std::bind(&View::GetActive, this));
   running.SetGetterFunction(std::bind(&View::GetRunning, this));
   urgent.SetGetterFunction(std::bind(&View::GetUrgent, this));
+  starting.SetGetterFunction(std::bind(&View::GetStarting, this));
+
 
   signals_.Add<void, BamfApplication*, const char*>(bamf_app_, "desktop-file-updated",
   [this] (BamfApplication*, const char* new_desktop_file) {
@@ -326,6 +333,13 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
     LOG_TRACE(logger) << "active-changed " << visible;
     this->active.changed.emit(active);
   });
+
+  signals_.Add<void, BamfView*, gboolean>(bamf_view_, "starting-changed",
+  [this] (BamfView*, gboolean starting) {
+    LOG_TRACE(logger) << "starting " << starting;
+    this->starting.changed.emit(starting);
+  });
+
   signals_.Add<void, BamfView*, gboolean>(bamf_view_, "running-changed",
   [this] (BamfView*, gboolean running) {
     LOG_TRACE(logger) << "running " << visible;

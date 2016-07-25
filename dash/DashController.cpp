@@ -43,7 +43,8 @@ const char* window_title = "unity-dash";
 
 namespace
 {
-unsigned const PRELOAD_TIMEOUT_LENGTH = 40;
+const unsigned PRELOAD_TIMEOUT_LENGTH = 40;
+const unsigned FADE_DURATION = 90;
 
 namespace dbus
 {
@@ -68,7 +69,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , visible_(false)
   , dbus_server_(dbus::BUS_NAME)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
-  , timeline_animator_(90)
+  , timeline_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   RegisterUBusInterests();
 
@@ -90,6 +91,10 @@ Controller::Controller(Controller::WindowCreator const& create_window)
 
   SetupWindow();
   UScreen::GetDefault()->changed.connect(sigc::mem_fun(this, &Controller::OnMonitorChanged));
+  Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::Relayout)));
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    timeline_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
 
   form_factor_changed_ = Settings::Instance().form_factor.changed.connect([this] (FormFactor)
   {
@@ -231,14 +236,21 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
-  int launcher_width = unity::Settings::Instance().LauncherWidth(monitor_);
+  int launcher_size = unity::Settings::Instance().LauncherSize(monitor_);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
-  return nux::Geometry (monitor_geo.x + launcher_width,
-                        monitor_geo.y,
-                        monitor_geo.width - launcher_width,
-                        monitor_geo.height);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    monitor_geo.x += launcher_size;
+    monitor_geo.width -= launcher_size;
+  }
+  else
+  {
+    monitor_geo.height -= launcher_size;
+  }
+
+  return monitor_geo;
 }
 
 void Controller::OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors)
@@ -262,8 +274,22 @@ void Controller::Relayout()
 
 void Controller::UpdateDashPosition()
 {
+  auto launcher_position = Settings::Instance().launcher_position();
+  int left_offset = 0;
   int top_offset = panel::Style::Instance().PanelHeight(monitor_);
-  int left_offset = unity::Settings::Instance().LauncherWidth(monitor_);
+  int launcher_size = unity::Settings::Instance().LauncherSize(monitor_);
+
+  if (launcher_position == LauncherPosition::LEFT)
+  {
+    left_offset = launcher_size;
+  }
+  else if (launcher_position == LauncherPosition::BOTTOM &&
+           Settings::Instance().form_factor() == FormFactor::DESKTOP)
+  {
+    auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
+    top_offset = monitor_geo.height - view_->GetContentGeometry().height - launcher_size;
+  }
+
   view_->SetMonitorOffset(left_offset, top_offset);
 }
 
@@ -474,6 +500,8 @@ bool Controller::IsCommandLensOpen() const
 nux::Geometry Controller::GetInputWindowGeometry()
 {
   EnsureDash();
+  int launcher_size = Settings::Instance().LauncherSize(monitor_);
+  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor_);
   dash::Style& style = dash::Style::Instance();
   nux::Geometry const& window_geo(window_->GetGeometry());
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
@@ -484,6 +512,15 @@ nux::Geometry Controller::GetInputWindowGeometry()
   {
     geo.width += style.GetDashVerticalBorderWidth().CP(view_->scale());
     geo.height += style.GetDashHorizontalBorderHeight().CP(view_->scale());
+
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      geo.y = monitor_geo.height - view_content_geo.height - launcher_size - style.GetDashHorizontalBorderHeight().CP(view_->scale());
+  }
+  else if (Settings::Instance().form_factor() == FormFactor::NETBOOK)
+  {
+    geo.height = monitor_geo.height;
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      geo.height -= launcher_size;
   }
 
   return geo;

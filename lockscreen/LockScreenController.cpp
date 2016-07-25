@@ -28,6 +28,7 @@
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
 #include "unity-shared/AnimationUtils.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
@@ -54,16 +55,18 @@ DECLARE_LOGGER(logger, "unity.lockscreen");
 
 Controller::Controller(DBusManager::Ptr const& dbus_manager,
                        session::Manager::Ptr const& session_manager,
+                       key::Grabber::Ptr const& key_grabber,
                        UpstartWrapper::Ptr const& upstart_wrapper,
                        ShieldFactoryInterface::Ptr const& shield_factory,
                        bool test_mode)
   : opacity([this] { return fade_animator_.GetCurrentValue(); })
   , dbus_manager_(dbus_manager)
   , session_manager_(session_manager)
+  , key_grabber_(key_grabber)
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
-  , suspend_notifier_(std::make_shared<SuspendNotifier>())
-  , fade_animator_(LOCK_FADE_DURATION)
+  , suspend_inhibitor_manager_(std::make_shared<SuspendInhibitorManager>())
+  , fade_animator_(unity::Settings::Instance().low_gfx() ? 0 : LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
   , prompt_activation_(false)
@@ -81,10 +84,17 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
   hidden_window_connection_->block();
 
-  suspend_notifier_->RegisterInterest([this](){
+  suspend_inhibitor_manager_->connected.connect(sigc::mem_fun(this, &Controller::SyncInhibitor));
+  suspend_inhibitor_manager_->about_to_suspend.connect([this] () {
     if (Settings::Instance().lock_on_suspend())
       session_manager_->PromptLockScreen();
   });
+
+  Settings::Instance().lock_on_suspend.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
+  Settings::Instance().use_legacy.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
+  unity::Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : LOCK_FADE_DURATION);
+  }, *this));
 
   dbus_manager_->simulate_activity.connect(sigc::mem_fun(this, &Controller::SimulateActivity));
   session_manager_->screensaver_requested.connect(sigc::mem_fun(this, &Controller::OnScreenSaverActivationRequest));
@@ -92,6 +102,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   session_manager_->prompt_lock_requested.connect(sigc::bind(sigc::mem_fun(this, &Controller::OnLockRequested), true));
   session_manager_->unlock_requested.connect(sigc::mem_fun(this, &Controller::OnUnlockRequested));
   session_manager_->presence_status_changed.connect(sigc::mem_fun(this, &Controller::OnPresenceStatusChanged));
+  session_manager_->is_session_active.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
 
   fade_animator_.updated.connect([this](double value) {
     std::for_each(shields_.begin(), shields_.end(), [value](nux::ObjectPtr<Shield> const& shield) {
@@ -102,6 +113,8 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   });
 
   fade_animator_.finished.connect([this] {
+    SyncInhibitor();
+
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
     {
       primary_shield_connections_.Clear();
@@ -149,6 +162,8 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       }));
     }
   });
+
+  SyncInhibitor();
 }
 
 void Controller::ActivatePanel()
@@ -417,8 +432,12 @@ void Controller::OnScreenSaverActivationRequest(bool activate)
 {
   if (Settings::Instance().use_legacy())
   {
-    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-    proxy->CallBegin("SetActive", g_variant_new("(b)", activate != FALSE), [proxy] (GVariant*, glib::Error const&) {});
+    // SetActive(FALSE) will unlock the screen. This used to cause security issues (see lp:1552537).
+    if (activate)
+    {
+      auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+      proxy->CallBegin("SetActive", g_variant_new("(b)", TRUE), [proxy] (GVariant*, glib::Error const&) {});
+    }
     return;
   }
 
@@ -446,12 +465,7 @@ void Controller::LockScreen()
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
 
-  shutdown_notifier_ = std::make_shared<ShutdownNotifier>();
-  shutdown_notifier_->RegisterInterest([](){
-    WindowManager::Default().UnmapAllNoNuxWindowsSync();
-  });
-
-  accelerator_controller_ = std::make_shared<AcceleratorController>(session_manager_);
+  accelerator_controller_ = std::make_shared<AcceleratorController>(key_grabber_);
   auto activate_key = WindowManager::Default().activate_indicators_key();
   auto accelerator = std::make_shared<Accelerator>(activate_key.second, 0, activate_key.first);
   accelerator->activated.connect(std::bind(std::mem_fn(&Controller::ActivatePanel), this));
@@ -489,8 +503,6 @@ void Controller::SimulateActivity()
 
 void Controller::OnUnlockRequested()
 {
-  shutdown_notifier_.reset();
-
   lockscreen_timeout_.reset();
   screensaver_post_lock_timeout_.reset();
 
@@ -522,6 +534,20 @@ bool Controller::IsLocked() const
 bool Controller::HasOpenMenu() const
 {
   return primary_shield_.IsValid() ? primary_shield_->IsIndicatorOpen() : false;
+}
+
+void Controller::SyncInhibitor()
+{
+  bool locked = IsLocked() && primary_shield_.IsValid() && primary_shield_->GetOpacity() == 1.0f;
+  bool inhibit = session_manager_->is_session_active() &&
+                 !locked &&
+                 Settings::Instance().lock_on_suspend() &&
+                 !Settings::Instance().use_legacy();
+
+  if (inhibit)
+    suspend_inhibitor_manager_->Inhibit("Unity needs to lock the screen");
+  else
+    suspend_inhibitor_manager_->Uninhibit();
 }
 
 } // lockscreen

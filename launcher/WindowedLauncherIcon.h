@@ -40,6 +40,7 @@ public:
   WindowList WindowsForMonitor(int monitor) override;
 
   virtual bool IsActive() const;
+  virtual bool IsStarting() const;
   virtual bool IsRunning() const;
   virtual bool IsUrgent() const;
   virtual bool IsUserVisible() const;

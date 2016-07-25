@@ -26,6 +26,7 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
+#include <NuxCore/Animation.h>
 #include <UnityCore/Preview.h>
 #include "Preview.h"
 #include "unity-shared/Introspectable.h"
@@ -57,7 +58,6 @@ public:
   NUX_DECLARE_OBJECT_TYPE(PreviewContainer, nux::View);
 
   PreviewContainer(NUX_FILE_LINE_PROTO);
-  virtual ~PreviewContainer();
 
   void Preview(dash::Preview::Ptr preview_model, Navigation direction);
 
@@ -98,10 +98,8 @@ protected:
 private:
   void SetupViews();
 
-  bool AnimationInProgress();
-  float GetSwipeAnimationProgress(struct timespec const& current) const;
-
-  bool QueueAnimation();
+  void QueueAnimation(double progress);
+  double GetSwipeAnimationProgress(struct timespec const& current) const;
 
 private:
   void UpdateScale(double scale);
@@ -114,11 +112,8 @@ private:
   Navigation nav_disabled_;
 
   // Animation
-  struct timespec  last_progress_time_;
-  float navigation_progress_speed_;
-  int navigation_count_;
+  nux::animation::AnimateValue<double> animation_;
 
-  glib::Source::UniquePtr animation_timer_;
   friend class PreviewContent;
 };
 

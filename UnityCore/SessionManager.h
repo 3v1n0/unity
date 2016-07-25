@@ -40,6 +40,7 @@ public:
 
   nux::ROProperty<bool> have_other_open_sessions;
   nux::Property<bool> is_locked;
+  nux::ROProperty<bool> is_session_active;
 
   virtual std::string RealName() const = 0;
   virtual std::string UserName() const = 0;

@@ -80,31 +80,45 @@ struct Settings::Impl
 
     for (auto const& extension : extensions)
     {
-      auto filename = base_filename + '.' + extension;
+      auto filename = base_filename + (extension.empty() ? "" : '.' + extension);
       glib::String subpath(g_build_filename(theme.c_str(), "unity", filename.c_str(), nullptr));
       glib::String local_file(g_build_filename(data_dir.c_str(), "themes", subpath.Value(), nullptr));
 
       if (g_file_test(local_file, G_FILE_TEST_EXISTS))
+      {
+        LOG_INFO(logger) << "'" << base_filename << "': '" << local_file << "'";
         return local_file.Str();
+      }
 
       glib::String home_file(g_build_filename(home_dir.c_str(), ".themes", subpath.Value(), nullptr));
 
       if (g_file_test(home_file, G_FILE_TEST_EXISTS))
+      {
+        LOG_INFO(logger) << "'" << base_filename << "': '" << home_file << "'";
         return home_file.Str();
+      }
 
       glib::String theme_file(g_build_filename(gtk_prefix, "share", "themes", subpath.Value(), nullptr));
 
       if (g_file_test(theme_file, G_FILE_TEST_EXISTS))
+      {
+        LOG_INFO(logger) << "'" << base_filename << "': '" << theme_file << "'";
         return theme_file.Str();
+      }
 
       for (auto const& folder : extra_folders)
       {
         glib::String path(g_build_filename(folder.c_str(), filename.c_str(), nullptr));
 
         if (g_file_test(path, G_FILE_TEST_EXISTS))
+        {
+          LOG_INFO(logger) << "'" << base_filename << "': '" << path << "'";
           return path.Str();
+        }
       }
     }
+
+    LOG_WARN(logger) << "No valid file found for '"<< base_filename << "'";
 
     return std::string();
   }

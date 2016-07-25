@@ -28,6 +28,7 @@
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibDBusNameWatcher.h>
+#include <UnityCore/GLibSignal.h>
 
 namespace unity
 {
@@ -36,7 +37,7 @@ namespace key
 
 struct GnomeGrabber::Impl
 {
-  Impl(bool test_mode = false);
+  Impl(Grabber*, bool test_mode = false);
   ~Impl();
 
   uint32_t NextActionID();
@@ -54,11 +55,17 @@ struct GnomeGrabber::Impl
   void ActivateDBusAction(CompAction const& action, uint32_t id, uint32_t device, uint32_t timestamp) const;
 
   bool IsActionPostponed(CompAction const& action) const;
+  void UpdateWhitelist();
 
+  Grabber* parent_;
   CompScreen* screen_;
 
   glib::DBusServer shell_server_;
   glib::DBusObject::Ptr shell_object_;
+
+  glib::Object<GSettings> settings_;
+  glib::Signal<void, GSettings*, gchar*> whitelist_changed_signal_;
+  std::list<std::string> whitelist_;
 
   uint32_t current_action_id_;
   std::vector<uint32_t> actions_ids_;

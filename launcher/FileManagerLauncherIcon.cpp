@@ -46,6 +46,9 @@ FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, Devi
   // We disconnect from ApplicationLauncherIcon app signals, as we manage them manually
   signals_conn_.Clear();
 
+  SetQuirk(Quirk::VISIBLE, false);
+  SkipQuirkAnimation(Quirk::VISIBLE);
+
   signals_conn_.Add(app_->desktop_file.changed.connect([this](std::string const& desktop_file) {
     LOG_DEBUG(logger) << tooltip_text() << " desktop_file now " << desktop_file;
     UpdateDesktopFile();
@@ -65,6 +68,13 @@ FileManagerLauncherIcon::FileManagerLauncherIcon(ApplicationPtr const& app, Devi
   signals_conn_.Add(app_->icon.changed.connect([this](std::string const& icon) {
     LOG_DEBUG(logger) << tooltip_text() << " icon now " << icon;
     icon_name = (icon.empty() ? DEFAULT_ICON : icon);
+  }));
+
+  signals_conn_.Add(app_->running.changed.connect([this](bool running) {
+    LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
+
+    if (running)
+      _source_manager.Remove(ICON_REMOVE_TIMEOUT);
   }));
 
   UpdateStorageWindows();
@@ -112,7 +122,7 @@ WindowList FileManagerLauncherIcon::GetStorageWindows() const
 
   for (auto const& app_win : ApplicationLauncherIcon::GetManagedWindows())
   {
-    if (IsLocationManaged(file_manager_->LocationForWindow(app_win)))
+    if (WindowManager::Default().IsWindowMapped(app_win->window_id()) && IsLocationManaged(file_manager_->LocationForWindow(app_win)))
       fm_windows.push_back(app_win);
   }
 

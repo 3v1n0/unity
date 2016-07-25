@@ -630,7 +630,7 @@ bool PluginAdapter::IsWindowMapped(Window window_id) const
   CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     return window->mapNum () > 0;
-  return true;
+  return false;
 }
 
 bool PluginAdapter::IsWindowVisible(Window window_id) const
@@ -1512,26 +1512,6 @@ void PluginAdapter::OnWindowClosed(CompWindow *w)
 Cursor PluginAdapter::GetCachedCursor(unsigned int cursor_name) const
 {
   return screen->cursorCache(cursor_name);
-}
-
-void PluginAdapter::UnmapAllNoNuxWindowsSync()
-{
-  for (auto const& window : m_Screen->windows())
-  {
-    if (!IsNuxWindow(window) && (window->isMapped() || window->isViewable()))
-    {
-      if (window->overrideRedirect())
-      {
-        XUnmapWindow(m_Screen->dpy(), window->id());
-      }
-      else
-      {
-        window->hide();
-      }
-    }
-  }
-
-  XSync(m_Screen->dpy(), False);
 }
 
 bool PluginAdapter::IsNuxWindow(CompWindow* value)

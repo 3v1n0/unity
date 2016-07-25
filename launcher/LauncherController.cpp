@@ -34,13 +34,11 @@
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "FileManagerLauncherIcon.h"
-#include "HudLauncherIcon.h"
 #include "LauncherController.h"
 #include "LauncherControllerPrivate.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "ExpoLauncherIcon.h"
 #include "TrashLauncherIcon.h"
-#include "BFBLauncherIcon.h"
 #include "unity-shared/AppStreamApplication.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/UScreen.h"
@@ -107,6 +105,8 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   , model_(std::make_shared<LauncherModel>())
   , xdnd_manager_(xdnd_manager)
   , device_section_(std::make_shared<DeviceLauncherSection>())
+  , bfb_icon_(new BFBLauncherIcon())
+  , hud_icon_(new HudLauncherIcon())
   , expo_icon_(new ExpoLauncherIcon())
   , desktop_icon_(new DesktopLauncherIcon())
   , edge_barriers_(edge_barriers)
@@ -130,32 +130,36 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  LauncherHideMode hide_mode = parent_->options()->hide_mode;
-  BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
-  RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
+  auto hide_mode = parent_->options()->hide_mode();
+  bfb_icon_->SetHideMode(hide_mode);
+  RegisterIcon(AbstractLauncherIcon::Ptr(bfb_icon_));
 
-  HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
-  RegisterIcon(AbstractLauncherIcon::Ptr(hud));
-  hud_icon_ = hud;
+  hud_icon_->SetHideMode(hide_mode);
+  RegisterIcon(AbstractLauncherIcon::Ptr(hud_icon_));
 
   TrashLauncherIcon* trash = new TrashLauncherIcon();
   RegisterIcon(AbstractLauncherIcon::Ptr(trash));
 
-  parent_->options()->hide_mode.changed.connect([bfb, hud](LauncherHideMode mode) {
-    bfb->SetHideMode(mode);
-    hud->SetHideMode(mode);
+  parent_->options()->hide_mode.changed.connect([this] (LauncherHideMode mode) {
+    bfb_icon_->SetHideMode(mode);
+    hud_icon_->SetHideMode(mode);
+  });
+
+  parent_->multiple_launchers.changed.connect([this] (bool value) {
+    UScreen* uscreen = UScreen::GetDefault();
+    auto monitors = uscreen->GetMonitors();
+    int primary = uscreen->GetPrimaryMonitor();
+    EnsureLaunchers(primary, monitors);
+    parent_->options()->show_for_all = !value;
+    hud_icon_->SetSingleLauncher(!value, primary);
   });
 
   WindowManager& wm = WindowManager::Default();
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
-#if SIGCXX_MAJOR_VERSION >= 2 && SIGCXX_MINOR_VERSION >= 5
   wm.viewport_layout_changed.connect(sigc::track_obj([this] (int w, int h) { UpdateNumWorkspaces(w * h); }, *this));
-#else
-  wm.viewport_layout_changed.connect(sigc::group(sigc::mem_fun(this, &Controller::Impl::UpdateNumWorkspaces), sigc::_1 * sigc::_2));
-#endif
-  average_color_connection_ = wm.average_color.changed.connect([this] (nux::Color const& color) {
+  wm.average_color.changed.connect(sigc::track_obj([this] (nux::Color const& color) {
     parent_->options()->background_color = color;
-  });
+  }, *this));
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [this](GVariant * args) {
     reactivate_index = model_->SelectionIndex();
@@ -170,6 +174,18 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
     {
       ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED, glib::Variant(selected->tooltip_text()));
     }
+  });
+
+  ubus.RegisterInterest(UBUS_LAUNCHER_NEXT_KEY_NAV, [this] (GVariant*) {
+    parent_->KeyNavNext();
+  });
+
+  ubus.RegisterInterest(UBUS_LAUNCHER_PREV_KEY_NAV, [this] (GVariant*) {
+    parent_->KeyNavPrevious();
+  });
+
+  ubus.RegisterInterest(UBUS_LAUNCHER_OPEN_QUICKLIST, [this] (GVariant*) {
+    OpenQuicklist();
   });
 
   parent_->AddChild(model_.get());
@@ -535,7 +551,7 @@ void Controller::Impl::SortAndUpdate()
       icon->SetShortcut(std::to_string(shortcut % 10)[0]);
       ++shortcut;
     }
-    else
+    else if (isdigit(icon->GetShortcut()))
     {
       // reset shortcut
       icon->SetShortcut(0);
@@ -1049,16 +1065,7 @@ Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierCont
  : options(std::make_shared<Options>())
  , multiple_launchers(true)
  , pimpl(new Impl(this, xdnd_manager, edge_barriers))
-{
-  multiple_launchers.changed.connect([this] (bool value) {
-    UScreen* uscreen = UScreen::GetDefault();
-    auto monitors = uscreen->GetMonitors();
-    int primary = uscreen->GetPrimaryMonitor();
-    pimpl->EnsureLaunchers(primary, monitors);
-    options()->show_for_all = !value;
-    pimpl->hud_icon_->SetSingleLauncher(!value, primary);
-  });
-}
+{}
 
 Controller::~Controller()
 {}
@@ -1446,35 +1453,60 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
 
   switch (keysym)
   {
-      // up (move selection up or go to global-menu if at top-most icon)
+      // up
     case NUX_VK_UP:
     case NUX_KP_UP:
-      parent_->KeyNavPrevious();
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        // move selection up or go to global-menu if at top-most icon
+        parent_->KeyNavPrevious();
+      else
+        OpenQuicklist();
       break;
 
-      // down (move selection down and unfold launcher if needed)
+      // down
     case NUX_VK_DOWN:
     case NUX_KP_DOWN:
-      parent_->KeyNavNext();
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        // move selection down and unfold launcher if needed
+        parent_->KeyNavNext();
+      else
+        // exit launcher key-focus
+        parent_->KeyNavTerminate(false);
       break;
 
-      // super/control/esc/left (close quicklist or exit laucher key-focus)
+      // left
+    case NUX_VK_LEFT:
+    case NUX_KP_LEFT:
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        parent_->KeyNavTerminate(false);
+      else
+        // move selection left or go to global-menu if at top-most icon or close quicklist
+        parent_->KeyNavPrevious();
+      break;
+
+      // right
+    case NUX_VK_RIGHT:
+    case NUX_KP_RIGHT:
+      if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+        OpenQuicklist();
+      else
+        // move selection right and unfold launcher if needed
+        parent_->KeyNavNext();
+      break;
+
+      // super/control/esc (close quicklist or exit laucher key-focus)
     case NUX_VK_LWIN:
     case NUX_VK_RWIN:
     case NUX_VK_CONTROL:
-    case NUX_VK_LEFT:
-    case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
       // hide again
       parent_->KeyNavTerminate(false);
       break;
 
-      // right/shift-f10 (open quicklist of currently selected icon)
+      // shift-f10 (open quicklist of currently selected icon)
     case XK_F10:
       if (!(state & nux::NUX_STATE_SHIFT))
         break;
-    case NUX_VK_RIGHT:
-    case NUX_KP_RIGHT:
     case XK_Menu:
       OpenQuicklist();
       break;

@@ -25,7 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/SessionManager.h"
 
 #include "LockScreenAbstractPromptView.h"
 #include "UserAuthenticatorPam.h"
@@ -50,10 +50,9 @@ class UserPromptView : public AbstractUserPromptView
 public:
   UserPromptView(session::Manager::Ptr const& session_manager);
 
-  nux::Property<double> scale;
-
   nux::View* focus_view();
 
+  void AddButton(std::string const& text, std::function<void()> const& cb);
   void AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const&);
   void AddMessage(std::string const& message, nux::Color const& color);
   void AuthenticationCb(bool authenticated);
@@ -61,13 +60,16 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) override;
+  bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character) override;
 
 private:
   void ResetLayout();
   void UpdateSize();
   void EnsureBGLayer();
 
-  bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
+  void ShowAuthenticated(bool successful);
+  void StartAuthentication();
+  void DoUnlock();
 
   session::Manager::Ptr session_manager_;
   UserAuthenticatorPam user_authenticator_;
@@ -75,9 +77,13 @@ private:
   StaticCairoText* username_;
   nux::VLayout* msg_layout_;
   nux::VLayout* prompt_layout_;
+  nux::VLayout* button_layout_;
   std::deque<TextInput*> focus_queue_;
 
   nux::Geometry cached_focused_geo_;
+
+  bool prompted_;
+  bool unacknowledged_messages_;
 };
 
 }

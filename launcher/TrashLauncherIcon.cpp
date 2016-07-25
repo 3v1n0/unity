@@ -55,23 +55,27 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
   SkipQuirkAnimation(Quirk::VISIBLE);
   SetShortcut('t');
 
-  glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
+  _source_manager.AddIdle([this]{
+    glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
 
-  glib::Error err;
-  trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, cancellable_, &err);
-  g_file_monitor_set_rate_limit(trash_monitor_, 1000);
+    glib::Error err;
+    trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, cancellable_, &err);
+    g_file_monitor_set_rate_limit(trash_monitor_, 1000);
 
-  if (err)
-  {
-    LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err;
-  }
-  else
-  {
-    glib_signals_.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(trash_monitor_, "changed",
-    [this] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent) {
-      UpdateTrashIcon();
-    });
-  }
+    if (err)
+    {
+      LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err;
+    }
+    else
+    {
+      glib_signals_.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(trash_monitor_, "changed",
+      [this] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent) {
+        UpdateTrashIcon();
+      });
+    }
+
+    return false;
+  });
 
   UpdateTrashIcon();
   UpdateStorageWindows();

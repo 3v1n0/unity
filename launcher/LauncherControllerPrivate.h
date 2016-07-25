@@ -36,10 +36,11 @@
 #include "LauncherEntryRemote.h"
 #include "LauncherEntryRemoteModel.h"
 #include "LauncherModel.h"
+#include "BFBLauncherIcon.h"
+#include "HudLauncherIcon.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "unity-shared/UBusWrapper.h"
 #include "XdndManager.h"
-#include "HudLauncherIcon.h"
 
 namespace unity
 {
@@ -124,9 +125,10 @@ public:
   XdndManager::Ptr xdnd_manager_;
   DeviceLauncherSection::Ptr device_section_;
   LauncherEntryRemoteModel remote_model_;
+  BFBLauncherIcon* bfb_icon_;
+  HudLauncherIcon* hud_icon_;
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;
-  HudLauncherIcon* hud_icon_;
 
 #ifdef USE_X11
   ui::EdgeBarrierController::Ptr edge_barriers_;
@@ -148,8 +150,7 @@ public:
 
   connection::Wrapper launcher_key_press_connection_;
   connection::Wrapper launcher_event_outside_connection_;
-  connection::Wrapper launcher_key_nav_terminate_; 
-  connection::Wrapper average_color_connection_;
+  connection::Wrapper launcher_key_nav_terminate_;
 };
 
 } // launcher namespace

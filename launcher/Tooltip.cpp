@@ -25,6 +25,7 @@
 #include <unity-shared/CairoTexture.h>
 #include <unity-shared/RawPixel.h>
 #include <unity-shared/UnitySettings.h>
+#include <unity-shared/UScreen.h>
 #include "unity-shared/DecorationStyle.h"
 
 #include "Tooltip.h"
@@ -33,11 +34,14 @@ namespace unity
 {
 namespace
 {
-  const RawPixel ANCHOR_WIDTH       =  14_em;
-  const RawPixel ANCHOR_HEIGHT      =  18_em;
-  const RawPixel CORNER_RADIUS      =   4_em;
-  const RawPixel TEXT_PADDING       =   8_em;
-  const RawPixel MINIMUM_TEXT_WIDTH = 100_em;
+  const RawPixel ANCHOR_WIDTH          =  14_em;
+  const RawPixel ANCHOR_HEIGHT         =  18_em;
+  const RawPixel ROTATED_ANCHOR_WIDTH  =  18_em;
+  const RawPixel ROTATED_ANCHOR_HEIGHT =  10_em;
+  const RawPixel CORNER_RADIUS         =   4_em;
+  const RawPixel LEFT_SIZE             =   4_em;
+  const RawPixel TEXT_PADDING          =   8_em;
+  const RawPixel MINIMUM_TEXT_WIDTH    = 100_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
@@ -45,17 +49,30 @@ Tooltip::Tooltip(int monitor) :
   CairoBaseWindow(monitor),
   _anchorX(0),
   _anchorY(0),
+  _left_size(LEFT_SIZE),
   _padding(decoration::Style::Get()->ActiveShadowRadius()),
   _cairo_text_has_changed(true)
 {
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  _left_space = new nux::SpaceLayout(_padding.CP(cv_) + ANCHOR_WIDTH.CP(cv_), _padding.CP(cv_) + ANCHOR_WIDTH.CP(cv_), 1, 1000);
+  int left_space_width = 0;
+  int bottom_space_height = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    left_space_width = _padding.CP(cv_) + ANCHOR_WIDTH.CP(cv_);
+    bottom_space_height = _padding.CP(cv_);
+  }
+  else
+  {
+    left_space_width = _padding.CP(cv_);
+    bottom_space_height = _padding.CP(cv_) + ROTATED_ANCHOR_HEIGHT.CP(cv_);
+  }
+  _left_space = new nux::SpaceLayout(left_space_width, left_space_width, 1, 1000);
   _right_space = new nux::SpaceLayout(_padding.CP(cv_) + CORNER_RADIUS.CP(cv_), _padding.CP(cv_) + CORNER_RADIUS.CP(cv_), 1, 1000);
 
   _top_space = new nux::SpaceLayout(1, 1000, _padding.CP(cv_), _padding.CP(cv_));
-  _bottom_space = new nux::SpaceLayout(1, 1000, _padding.CP(cv_), _padding.CP(cv_));
+  _bottom_space = new nux::SpaceLayout(1, 1000, bottom_space_height, bottom_space_height);
 
   _vlayout->AddLayout(_top_space, 0);
 
@@ -96,6 +113,44 @@ Tooltip::Tooltip(int monitor) :
   SetLayout(_hlayout);
 }
 
+int Tooltip::CalculateX() const
+{
+  int x = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    x = _anchorX - _padding.CP(cv_);
+  }
+  else
+  {
+    int size = 0;
+    int max = GetBaseWidth() - ROTATED_ANCHOR_WIDTH.CP(cv_) - 2 * CORNER_RADIUS.CP(cv_) - 2 * _padding.CP(cv_);
+    if (_left_size.CP(cv_) > max)
+    {
+      size = max;
+    }
+    else if (_left_size.CP(cv_) > 0)
+    {
+      size = _left_size.CP(cv_);
+    }
+    x = _anchorX - (ROTATED_ANCHOR_WIDTH.CP(cv_) / 2) - size - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  }
+  return x;
+}
+
+int Tooltip::CalculateY() const
+{
+  int y = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    y = _anchorY - ANCHOR_HEIGHT.CP(cv_) / 2 - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  }
+  else
+  {
+    y = _anchorY - GetBaseHeight() + _padding.CP(cv_);
+  }
+  return y;
+}
+
 nux::Area* Tooltip::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   // No area under mouse to allow click through to entities below
@@ -107,10 +162,25 @@ void Tooltip::SetTooltipPosition(int tip_x, int tip_y)
   _anchorX = tip_x;
   _anchorY = tip_y;
 
-  int x = _anchorX - _padding.CP(cv_);
-  int y = _anchorY - ANCHOR_HEIGHT.CP(cv_) / 2 - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+  {
+    auto* us = UScreen::GetDefault();
+    int monitor = us->GetMonitorAtPosition(_anchorX, _anchorY);
+    auto const& monitor_geo = us->GetMonitorGeometry(monitor);
+    int offscreen_size_right = _anchorX + GetBaseWidth()/2 - (monitor_geo.x + monitor_geo.width);
+    int offscreen_size_left = monitor_geo.x - (_anchorX - GetBaseWidth()/2);
+    int half_size = (GetBaseWidth() / 2) - _padding.CP(cv_) - CORNER_RADIUS.CP(cv_) - (ROTATED_ANCHOR_WIDTH.CP(cv_) / 2);
 
-  SetBaseXY(x, y);
+    if (offscreen_size_left > 0)
+      _left_size = half_size - offscreen_size_left;
+    else if (offscreen_size_right > 0)
+      _left_size = half_size + offscreen_size_right;
+    else
+      _left_size = half_size;
+    _cairo_text_has_changed = true;
+  }
+
+  SetBaseXY(CalculateX(), CalculateY());
 }
 
 void Tooltip::ShowTooltipWithTipAt(int x, int y)
@@ -149,7 +219,10 @@ void Tooltip::PreLayoutManagement()
     space_height += (ANCHOR_HEIGHT.CP(cv_) - text_height) / 2;
 
   _top_space->SetMinMaxSize(1, space_height);
-  _bottom_space->SetMinMaxSize(1, space_height + 1);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    _bottom_space->SetMinMaxSize(1, space_height + 1);
+  else
+    _bottom_space->SetMinMaxSize(1, space_height + ROTATED_ANCHOR_HEIGHT + 1);
 
   CairoBaseWindow::PreLayoutManagement();
 }
@@ -250,51 +323,120 @@ void _compute_full_mask_path(cairo_t* cr,
                              gfloat   anchor_height,
                              gfloat   width,
                              gfloat   height,
-                             gint     upper_size,
+                             gint     left_size,
                              gfloat   radius,
                              guint    pad)
 {
 
-  //     0            1 2
-  //     +------------+-+
-  //    /               + 3
-  //   /                |
-  //  + 8               |
-  //   \                |
-  //    \               + 4
-  //     +------------+-+
-  //     7            6 5
+  //  On the right of the icon:              On the top of the icon:
+  //     0                  1 2                 0 1                2 3
+  //     +------------------+-+                 +-+----------------+-+
+  //    /                     + 3            14 +                    + 4
+  //   /                      |                 |                    |
+  //  + 8                     |                 |                    |
+  //   \                      |                 |                    |
+  //    \                     + 4            13 +    10   8          + 5
+  //     +------------------+-+                 +-+---+   +--------+-+
+  //     7                  6 5                12 11   \ /         7 6
+  //                                                    + 9
 
   gfloat padding = pad;
 
   cairo_translate(cr, -0.5f, -0.5f);
 
   // create path
-  cairo_move_to(cr, padding + anchor_width, padding); // Point 0
-  cairo_line_to(cr, width - padding - radius, padding); // Point 1
-  cairo_arc(cr,
-            width  - padding - radius,
-            padding + radius,
-            radius,
-            -90.0f * G_PI / 180.0f,
-            0.0f * G_PI / 180.0f); // Point 3
-  cairo_line_to(cr,
-                (gdouble) width - padding,
-                (gdouble) height - radius - padding); // Point 4
-  cairo_arc(cr,
-            (gdouble) width - padding - radius,
-            (gdouble) height - padding - radius,
-            radius,
-            0.0f * G_PI / 180.0f,
-            90.0f * G_PI / 180.0f); // Point 6
-  cairo_line_to(cr,
-                anchor_width + padding,
-                (gdouble) height - padding); // Point 7
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    cairo_move_to(cr, padding + anchor_width, padding); // Point 0
+    cairo_line_to(cr, width - padding - radius, padding); // Point 1
+    cairo_arc(cr,
+              width  - padding - radius,
+              padding + radius,
+              radius,
+              -90.0f * G_PI / 180.0f,
+              0.0f * G_PI / 180.0f); // Point 3
+    cairo_line_to(cr,
+                  (gdouble) width - padding,
+                  (gdouble) height - radius - padding); // Point 4
+    cairo_arc(cr,
+              (gdouble) width - padding - radius,
+              (gdouble) height - padding - radius,
+              radius,
+              0.0f * G_PI / 180.0f,
+              90.0f * G_PI / 180.0f); // Point 6
+    cairo_line_to(cr,
+                  anchor_width + padding,
+                  (gdouble) height - padding); // Point 7
 
-  cairo_line_to(cr,
-                padding,
-                (gdouble) height / 2.0f); // Point 8
+    cairo_line_to(cr,
+                  padding,
+                  (gdouble) height / 2.0f); // Point 8
+  }
+  else
+  {
+    gfloat WidthToAnchor = ((gfloat) width - 2.0f * radius - anchor_width - 2 * padding) / 2.0f;
+    if (WidthToAnchor < 0.0f)
+    {
+      g_warning("Anchor-width and corner-radius a wider than whole texture!");
+      return;
+    }
 
+    if (left_size > width - 2.0f * radius - anchor_width - 2 * padding)
+    {
+      WidthToAnchor = 0;
+    }
+    else if (left_size < 0)
+    {
+      WidthToAnchor = width - 2.0f * radius - anchor_width - 2 * padding;
+    }
+    else
+    {
+      WidthToAnchor = width - 2.0f * radius - anchor_width - 2 * padding - left_size;
+    }
+
+    cairo_move_to(cr, padding + radius, padding);  // Point 1
+    cairo_line_to(cr, width - padding - radius, padding);    // Point 2
+    cairo_arc(cr,
+              width  - padding - radius,
+              padding + radius,
+              radius,
+              -90.0f * G_PI / 180.0f,
+              0.0f * G_PI / 180.0f);   // Point 4
+    cairo_line_to(cr,
+                  (gdouble) width - padding,
+                  (gdouble) height - radius - anchor_height - padding); // Point 5
+    cairo_arc(cr,
+              (gdouble) width - padding - radius,
+              (gdouble) height - padding - anchor_height - radius,
+              radius,
+              0.0f * G_PI / 180.0f,
+              90.0f * G_PI / 180.0f);  // Point 7
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - WidthToAnchor,
+                  height - padding - anchor_height);   // Point 8
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - WidthToAnchor - anchor_width / 2.0f,
+                  height - padding); // Point 9
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - WidthToAnchor - anchor_width,
+                  height - padding - anchor_height);  // Point 10
+    cairo_arc(cr,
+              padding + radius,
+              (gdouble) height - padding - anchor_height - radius,
+              radius,
+              90.0f * G_PI / 180.0f,
+              180.0f * G_PI / 180.0f); // Point 11
+    cairo_line_to(cr,
+                  padding,
+                  (gdouble) height - padding -anchor_height - radius); // Point 13
+    cairo_line_to(cr, padding, padding + radius);   // Point 14
+    cairo_arc(cr,
+              padding + radius,
+              padding + radius,
+              radius,
+              180.0f * G_PI / 180.0f,
+              270.0f * G_PI / 180.0f);
+  }
   cairo_close_path(cr);
 }
 
@@ -388,7 +530,7 @@ compute_full_outline_shadow(
   gfloat  height,
   gfloat  anchor_width,
   gfloat  anchor_height,
-  gint    upper_size,
+  gint    left_size,
   gfloat  corner_radius,
   guint   blur_coeff,
   nux::Color const& shadow_color,
@@ -402,7 +544,7 @@ compute_full_outline_shadow(
                           anchor_height,
                           width,
                           height,
-                          upper_size,
+                          left_size,
                           corner_radius,
                           padding_size);
 
@@ -421,7 +563,7 @@ void compute_full_mask(
   gfloat   radius,
   gfloat   anchor_width,
   gfloat   anchor_height,
-  gint     upper_size,
+  gint     left_size,
   gboolean negative,
   gboolean outline,
   gfloat   line_width,
@@ -434,7 +576,7 @@ void compute_full_mask(
                           anchor_height,
                           width,
                           height,
-                          upper_size,
+                          left_size,
                           radius,
                           padding_size);
   _finalize(&cr, outline, line_width, color, negative, outline);
@@ -445,12 +587,22 @@ void Tooltip::UpdateTexture()
   if (_cairo_text_has_changed == false)
     return;
 
+  SetTooltipPosition(_anchorX, _anchorY);
+
   int width = GetBaseWidth();
   int height = GetBaseHeight();
-
-  int x = _anchorX - _padding.CP(cv_);
-  int y = _anchorY - height / 2;
-  SetXY(x, y);
+  int anchor_width = 0;
+  int anchor_height = 0;
+  if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
+  {
+    anchor_width = ANCHOR_WIDTH;
+    anchor_height = ANCHOR_HEIGHT;
+  }
+  else
+  {
+    anchor_width = ROTATED_ANCHOR_WIDTH;
+    anchor_height = ROTATED_ANCHOR_HEIGHT;
+  }
 
   auto const& deco_style = decoration::Style::Get();
   float dpi_scale = cv_->DPIScale();
@@ -499,9 +651,9 @@ void Tooltip::UpdateTexture()
     cairo_outline.GetSurface(),
     width / dpi_scale,
     height / dpi_scale,
-    ANCHOR_WIDTH,
-    ANCHOR_HEIGHT,
-    -1,
+    anchor_width,
+    anchor_height,
+    _left_size,
     CORNER_RADIUS,
     blur_coef,
     shadow_color,
@@ -515,9 +667,9 @@ void Tooltip::UpdateTexture()
     width / dpi_scale,
     height / dpi_scale,
     CORNER_RADIUS,         // radius,
-    ANCHOR_WIDTH,          // anchor_width,
-    ANCHOR_HEIGHT,         // anchor_height,
-    -1,                    // upper_size,
+    anchor_width,          // anchor_width,
+    anchor_height,         // anchor_height,
+    _left_size,            // left_size,
     true,                  // negative,
     false,                 // outline,
     1.0,                   // line_width,

@@ -58,6 +58,7 @@ public:
   Handle LoadFromIconName(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromGIconString(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromThemedFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
   Handle LoadFromURI(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
 
   void DisconnectHandle(Handle);
@@ -627,24 +628,24 @@ private:
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_APPLICATION:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_apps.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_apps", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_books.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_books", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_MUSIC:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_music.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_music", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_MOVIE:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_video.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_video", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_CLOTHES:
           case UNITY_PROTOCOL_CATEGORY_TYPE_SHOES:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_clothes.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_clothes", -1, cat_size, helper_slot);
             break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_GAMES:
           case UNITY_PROTOCOL_CATEGORY_TYPE_ELECTRONICS:
@@ -667,7 +668,7 @@ private:
           case UNITY_PROTOCOL_CATEGORY_TYPE_CAR:
           default:
             helper_handle =
-              impl->LoadFromFilename(PKGDATADIR"/emblem_others.svg", -1, cat_size, helper_slot);
+              impl->LoadFromThemedFilename("emblem_others", -1, cat_size, helper_slot);
             break;
         }
       }
@@ -889,6 +890,11 @@ IconLoader::Handle IconLoader::Impl::LoadFromFilename(std::string const& filenam
   return LoadFromURI(uri.Str(), max_width, max_height, slot);
 }
 
+IconLoader::Handle IconLoader::Impl::LoadFromThemedFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
+{
+  return LoadFromFilename(theme::Settings::Get()->ThemedFilePath(filename, {PKGDATADIR}), max_width, max_height, slot);
+}
+
 IconLoader::Handle IconLoader::Impl::LoadFromURI(std::string const& uri, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || uri.empty() || !slot ||
@@ -1103,6 +1109,11 @@ IconLoader::Handle IconLoader::LoadFromGIconString(std::string const& gicon_stri
 IconLoader::Handle IconLoader::LoadFromFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromFilename(filename, max_width, max_height, slot);
+}
+
+IconLoader::Handle IconLoader::LoadFromThemedFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
+{
+  return pimpl->LoadFromThemedFilename(filename, max_width, max_height, slot);
 }
 
 IconLoader::Handle IconLoader::LoadFromURI(std::string const& uri, int max_width, int max_height, IconLoaderCallback const& slot)

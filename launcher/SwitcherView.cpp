@@ -23,6 +23,7 @@
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/XKeyboardUtil.h"
 
@@ -214,6 +215,7 @@ void SwitcherView::OnScaleChanged(double scale)
 
 void SwitcherView::StartAnimation()
 {
+  animation_.SetDuration(Settings::Instance().low_gfx() ? 0 : animation_length);
   animation::Start(animation_, animation::Direction::FORWARD);
 }
 
@@ -381,8 +383,6 @@ void SwitcherView::HandleDetailMouseDown(int x, int y, int button)
   int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
 
   last_detail_icon_selected_ = detail_icon_index;
-
-  switcher_mouse_down.emit(detail_icon_index, button);
 }
 
 void SwitcherView::HandleMouseDown(int x, int y, int button)
@@ -390,8 +390,6 @@ void SwitcherView::HandleMouseDown(int x, int y, int button)
   int icon_index = IconIndexAt(x,y);
 
   last_icon_selected_ = icon_index;
-
-  switcher_mouse_down.emit(icon_index, button);
 }
 
 void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
@@ -412,8 +410,6 @@ void SwitcherView::HandleDetailMouseUp(int x, int y, int button)
 {
   nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
   int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
-
-  switcher_mouse_up.emit(detail_icon_index, button);
 
   if (button == 1)
   {
@@ -437,14 +433,18 @@ void SwitcherView::HandleMouseUp(int x, int y, int button)
 {
   int icon_index = IconIndexAt(x,y);
 
-  switcher_mouse_up.emit(icon_index, button);
-
-  if (button == 1)
+  if (button == 1 || button == 2 || button == 3)
   {
     if (icon_index >= 0 && icon_index == last_icon_selected_)
     {
       model_->Select(icon_index);
-      hide_request.emit(true);
+
+      if (button == 1)
+        hide_request.emit(true);
+      else if (button == 2)
+        switcher_close_current.emit();
+      else if (button == 3)
+        switcher_start_detail.emit();
     }
   }
 }

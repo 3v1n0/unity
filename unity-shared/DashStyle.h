@@ -85,6 +85,10 @@ enum class Arrow {
   NONE
 };
 
+enum class Position {
+  LEFT,
+  BOTTOM
+};
 
 class Style : public StyleInterface
 {
@@ -93,6 +97,9 @@ public:
   ~Style ();
 
   static Style& Instance();
+
+  virtual bool LockScreenButton(cairo_t* cr, std::string const& label,
+                                int font_px_size);
 
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
                       std::string const& label, int font_px_size=-1,
@@ -168,19 +175,19 @@ public:
   BaseTexturePtr const& GetCategoryBackground() const;
   BaseTexturePtr const& GetCategoryBackgroundNoFilters() const;
 
-  BaseTexturePtr GetDashBottomTile(double scale) const;
-  BaseTexturePtr GetDashBottomTileMask(double scale) const;
+  BaseTexturePtr GetDashHorizontalTile(double scale, Position) const;
+  BaseTexturePtr GetDashHorizontalTileMask(double scale, Position) const;
   BaseTexturePtr GetDashRightTile(double scale) const;
   BaseTexturePtr GetDashRightTileMask(double scale) const;
   BaseTexturePtr GetDashLeftTile(double scale) const;
-  BaseTexturePtr GetDashTopTile(double scale) const;
+  BaseTexturePtr GetDashTopOrBottomTile(double scale, Position) const;
 
-  BaseTexturePtr GetDashCorner(double scale) const;
-  BaseTexturePtr GetDashCornerMask(double scale) const;
-  BaseTexturePtr GetDashLeftCorner(double scale) const;
-  BaseTexturePtr GetDashLeftCornerMask(double scale) const;
-  BaseTexturePtr GetDashTopCorner(double scale) const;
-  BaseTexturePtr GetDashTopCornerMask(double scale) const;
+  BaseTexturePtr GetDashCorner(double scale, Position) const;
+  BaseTexturePtr GetDashCornerMask(double scale, Position) const;
+  BaseTexturePtr GetDashLeftCorner(double scale, Position) const;
+  BaseTexturePtr GetDashLeftCornerMask(double scale, Position) const;
+  BaseTexturePtr GetDashRightCorner(double scale, Position) const;
+  BaseTexturePtr GetDashRightCornerMask(double scale, Position) const;
 
   RawPixel GetDashHorizontalBorderHeight() const;
   RawPixel GetDashVerticalBorderWidth() const;
@@ -191,6 +198,8 @@ public:
   BaseTexturePtr GetSearchCircleIcon(double scale) const;
   BaseTexturePtr GetSearchCloseIcon(double scale) const;
   BaseTexturePtr GetSearchSpinIcon(double scale) const;
+
+  BaseTexturePtr GetLockScreenActivator(double scale) const;
 
   BaseTexturePtr const& GetGroupUnexpandIcon() const;
   BaseTexturePtr const& GetGroupExpandIcon() const;
@@ -257,6 +266,7 @@ public:
   RawPixel GetCategorySeparatorRightPadding() const;
 
   sigc::signal<void> changed;
+  sigc::signal<void> textures_changed;
 
   nux::Property<int> columns_number;
   nux::Property<bool> always_maximised;

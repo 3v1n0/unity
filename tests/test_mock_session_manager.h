@@ -18,7 +18,7 @@
  */
 
 #include <gmock/gmock.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/SessionManager.h"
 
 namespace unity
 {

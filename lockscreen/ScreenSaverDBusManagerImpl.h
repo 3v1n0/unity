@@ -20,8 +20,8 @@
 #ifndef UNITYSHELL_SCREENSAVER_DBUS_MANAGER_IMPL_H
 #define UNITYSHELL_SCREENSAVER_DBUS_MANAGER_IMPL_H
 
-#include <UnityCore/GLibDBusServer.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/GLibDBusServer.h"
+#include "UnityCore/SessionManager.h"
 
 namespace unity
 {

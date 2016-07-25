@@ -9,6 +9,10 @@
     <value nick="Not Expanded" value="0" />
     <value nick="Expanded" value="1" />
   </enum>
+  <enum id="launcher-position-enum">
+    <value nick="Left" value="0" />
+    <value nick="Bottom" value="1" />
+  </enum>
   <enum id="desktop-type-enum">
     <value nick="Ubuntu" value="0" />
     <value nick="UbuntuKylin" value="1" />
@@ -76,6 +80,25 @@
         shown (on the window decoration or in the unity panel, depending whether
         integrated menus are enabled), otherwise they will be shown only when
         the mouse cursor is over the relative mouse area.</description>
+    </key>
+    <key type="as" name="whitelist-repeated-keys">
+      <default>[
+        'XF86KbdBrightnessUp',
+        'XF86KbdBrightnessDown',
+        'XF86MonBrightnessUp',
+        'XF86MonBrightnessDown',
+        'XF86AudioRaiseVolume',
+        'XF86AudioLowerVolume'
+        ]</default>
+      <summary>List of keycodes that should be processed even if auto-repated.</summary>
+      <description>These keycodes are processed even if they are auto-repeated.</description>
+    </key>
+    <key type="b" name="pam-check-account-type">
+      <default>false</default>
+      <summary>Enable/Disable PAM account checking</summary>
+      <description>Whether PAM should check the result of account modules
+        when authenticating.  Only do this if you have account
+        configured properly on your system.</description>
     </key>
   </schema>
   <schema path="/com/canonical/unity/interface/" id="com.canonical.Unity.Interface" gettext-domain="unity">
@@ -145,6 +168,11 @@
       <summary>Version of last migration done</summary>
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
     </key>
+    <key enum="launcher-position-enum"  name="launcher-position">
+      <default>"Left"</default>
+      <summary>The position of launcher.</summary>
+      <description>The position of launcher.</description>
+    </key>
   </schema>
   <schema path="/com/canonical/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
     <key type="as" name="blacklist">
@@ -197,6 +225,25 @@
       <summary>Whether to pop-up a menu when clicking over unfocused windows entries</summary>
       <description>By disabling this setting you can make unity to only focus a window
         when clicking over unfocused menu entries</description>
+    </key>
+  </schema>
+  <schema path="/com/canonical/unity/gestures/" id="com.canonical.Unity.Gestures" gettext-domain="unity">
+    <key type="b" name="launcher-drag">
+      <default>true</default>
+      <summary>Multi-touch gesture to reveal the launcher.</summary>
+      <description>When this is enabled, a 4 finger swipe from left to right will reveal launcher,
+        provided that the launcher is set to auto-hide.</description>
+    </key>
+    <key type="b" name="dash-tap">
+      <default>true</default>
+      <summary>Multi-touch gesture to open the dash.</summary>
+      <description>When this is enabled, a 4 finger tap will open the dash.</description>
+    </key>
+    <key type="b" name="windows-drag-pinch">
+      <default>true</default>
+      <summary>Multi-touch gestures to manage the windows.</summary>
+      <description>When this is enabled, 3 finger gestures such as drag, and pinch, will
+        help manage the windows.</description>
     </key>
   </schema>
 </schemalist>

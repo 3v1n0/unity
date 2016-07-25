@@ -138,6 +138,7 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
 
   Atom WM_PID = gdk_x11_get_xatom_by_name("_NET_WM_PID");
   Atom WM_CLIENT_MACHINE = gdk_x11_get_xatom_by_name("WM_CLIENT_MACHINE");
+  Atom WM_CLIENT_LEADER = gdk_x11_get_xatom_by_name("WM_CLIENT_LEADER");
 
   gdk_error_trap_push();
   auto& wm = WindowManager::Default();
@@ -196,6 +197,8 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
                   (unsigned char *) parent_hostname.c_str(), parent_hostname.size());
   XChangeProperty(dpy, xid, WM_PID, XA_CARDINAL, 32, PropModeReplace,
                   (unsigned char *) &parent_pid, 1);
+  XChangeProperty(dpy, xid, WM_CLIENT_LEADER, XA_WINDOW, 32, PropModeReplace,
+                  (unsigned char *) &parent_xid, 1);
   XSync(dpy, False);
 
   return GTK_WIDGET(self);
@@ -459,8 +462,18 @@ struct ForceQuitDialog::Impl : sigc::trackable
 
   void UpdateWindowTime(Time time)
   {
-    gdk_x11_window_set_user_time(gtk_widget_get_window(dialog_), time);
+    auto gwindow = gtk_widget_get_window(dialog_);
+    gdk_x11_window_set_user_time(gwindow, time);
     gtk_widget_show_all(dialog_);
+
+    auto* dpy = gdk_x11_get_default_xdisplay();
+    auto xid = gdk_x11_window_get_xid(gwindow);
+    if (XWMHints *wmhints = XGetWMHints(dpy, xid))
+    {
+      wmhints->window_group = win_->id();
+      XSetWMHints(dpy, xid, wmhints);
+      XFree(wmhints);
+    }
   }
 
   void UpdateDialogPosition()

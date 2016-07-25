@@ -59,19 +59,33 @@ R"(<node>
 </node>)";
 }
 
+namespace
+{
+const std::string SETTINGS_NAME = "com.canonical.Unity";
+const std::string WHITELIST_KEY = "whitelist-repeated-keys";
+}
+
 namespace testing
 {
 std::string const DBUS_NAME = "com.canonical.Unity.Test.GnomeKeyGrabber";
 }
 
-GnomeGrabber::Impl::Impl(bool test_mode)
-  : screen_(screen)
+GnomeGrabber::Impl::Impl(Grabber* parent, bool test_mode)
+  : parent_(parent)
+  , screen_(screen)
   , shell_server_(test_mode ? testing::DBUS_NAME : shell::DBUS_NAME)
+  , settings_(g_settings_new(SETTINGS_NAME.c_str()))
   , current_action_id_(0)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandlerFull(sigc::mem_fun(this, &Impl::OnShellMethodCall));
+
+  whitelist_changed_signal_.Connect(settings_, "changed::" + WHITELIST_KEY, [this] (GSettings*, gchar*) {
+    UpdateWhitelist();
+  });
+
+  UpdateWhitelist();
 }
 
 GnomeGrabber::Impl::~Impl()
@@ -110,6 +124,7 @@ bool GnomeGrabber::Impl::AddAction(CompAction const& action, uint32_t& action_id
     actions_ids_.push_back(action_id);
     actions_.push_back(action);
     actions_customers_.push_back(1);
+    parent_->action_added.emit(action);
     return true;
   }
 
@@ -165,6 +180,7 @@ bool GnomeGrabber::Impl::RemoveActionByIndex(size_t index)
   LOG_DEBUG(logger) << "RemoveAction (\"" << action->keyToString() << "\")";
 
   screen_->removeAction(action);
+  parent_->action_removed.emit(*action);
   actions_.erase(actions_.begin() + index);
   actions_ids_.erase(actions_ids_.begin() + index);
   actions_customers_.erase(actions_customers_.begin() + index);
@@ -232,8 +248,12 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& owner, std::
   {
     action.setState(CompAction::StateInitKey);
     action.setInitiate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
-      LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
-      ActivateDBusAction(*action, action_id, 0, CompOption::getIntOptionNamed(options, "time"));
+      bool is_whitelisted = std::find(whitelist_.begin(), whitelist_.end(), action->keyToString()) != whitelist_.end();
+      if (is_whitelisted || !CompOption::getBoolOptionNamed(options, "is_repeated"))
+      {
+        LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
+        ActivateDBusAction(*action, action_id, 0, CompOption::getIntOptionNamed(options, "time"));
+      }
       return true;
     });
   }
@@ -242,7 +262,6 @@ uint32_t GnomeGrabber::Impl::GrabDBusAccelerator(std::string const& owner, std::
     action.setState(CompAction::StateInitKey | CompAction::StateTermKey);
     action.setTerminate([this, action_id](CompAction* action, CompAction::State state, CompOption::Vector& options) {
       auto key = action->keyToString();
-
       LOG_DEBUG(logger) << "released \"" << key << "\"";
 
       if (state & CompAction::StateTermTapped)
@@ -323,14 +342,24 @@ bool GnomeGrabber::Impl::IsActionPostponed(CompAction const& action) const
   return keycode == 0 || modHandler->keycodeToModifiers(keycode) != 0;
 }
 
+void GnomeGrabber::Impl::UpdateWhitelist()
+{
+  std::shared_ptr<gchar*> whitelist(g_settings_get_strv(settings_, WHITELIST_KEY.c_str()), g_strfreev);
+  auto whitelist_raw = whitelist.get();
+
+  whitelist_.clear();
+  for (int i = 0; whitelist_raw[i]; ++i)
+    whitelist_.push_back(whitelist_raw[i]);
+}
+
 // Public implementation
 
 GnomeGrabber::GnomeGrabber()
-  : impl_(new Impl())
+  : impl_(new Impl(this))
 {}
 
 GnomeGrabber::GnomeGrabber(TestMode const& dummy)
-  : impl_(new Impl(true))
+  : impl_(new Impl(this, true))
 {}
 
 GnomeGrabber::~GnomeGrabber()

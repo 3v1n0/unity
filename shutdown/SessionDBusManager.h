@@ -20,9 +20,9 @@
 #ifndef UNITYSHELL_SESSION_DBUS_MANAGER_H
 #define UNITYSHELL_SESSION_DBUS_MANAGER_H
 
-#include <UnityCore/ConnectionManager.h>
-#include <UnityCore/GLibDBusServer.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/ConnectionManager.h"
+#include "UnityCore/GLibDBusServer.h"
+#include "UnityCore/SessionManager.h"
 
 namespace unity
 {

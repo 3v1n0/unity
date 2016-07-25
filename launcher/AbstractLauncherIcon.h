@@ -144,6 +144,7 @@ public:
 
   virtual void ShowTooltip() = 0;
   virtual void HideTooltip() = 0;
+  virtual void PromptHideTooltip() = 0;
 
   virtual void    SetShortcut(guint64 shortcut) = 0;
 

@@ -70,6 +70,7 @@ public:
   void RecvMouseClick(int button, int monitor, unsigned long key_flags = 0);
 
   void HideTooltip();
+  void PromptHideTooltip();
 
   void ShowTooltip();
 

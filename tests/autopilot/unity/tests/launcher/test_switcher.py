@@ -152,7 +152,7 @@ class LauncherSwitcherTests(LauncherTestCase):
 
         self.start_switcher_with_cleanup_cancel()
 
-        self.launcher_instance.keyboard_select_icon(tooltip_text=calc.name)
+        self.launcher_instance.keyboard_select_icon(self.launcher_position, tooltip_text=calc.name)
         self.launcher_instance.switcher_activate()
 
         self.assertThat(lambda: calc.is_active, Eventually(Equals(True)))
