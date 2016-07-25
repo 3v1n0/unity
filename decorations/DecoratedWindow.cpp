@@ -31,9 +31,6 @@
 #include "WindowManager.h"
 #include "UnitySettings.h"
 
-#include <NuxGraphics/CairoGraphics.h>
-#include <X11/extensions/shape.h>
-
 namespace unity
 {
 namespace decoration

@@ -23,11 +23,13 @@
 #include <unordered_map>
 #include <NuxCore/NuxCore.h>
 #include <NuxCore/Rect.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/Indicators.h>
 #include <core/core.h>
 #include <opengl/opengl.h>
 #include <composite/composite.h>
+#include <X11/extensions/shape.h>
 
 #include "DecorationsShape.h"
 #include "DecorationsDataPool.h"
