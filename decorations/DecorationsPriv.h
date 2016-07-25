@@ -127,6 +127,7 @@ private:
   void UpdateWindowEdgesGeo();
   void UpdateForceQuitDialogPosition();
   void RenderDecorationTexture(Side, nux::Geometry const&);
+  cu::PixmapTexture::Ptr BuildShapedShadowTexture(nux::Size const&, unsigned radius, nux::Color const&, Shape const&);
   void Paint(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
@@ -192,7 +193,6 @@ private:
   void BuildActiveShadowTexture();
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
-  cu::PixmapTexture::Ptr BuildShapedShadowTexture(unsigned int radius, nux::Color const&, Shape const&);
   void OnShadowOptionsChanged(bool active);
   void OnWindowFrameChanged(bool, ::Window, std::weak_ptr<decoration::Window> const&);
   bool OnMenuKeyActivated(std::string const&);

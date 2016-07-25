@@ -31,6 +31,7 @@
 #include "WindowManager.h"
 #include "UnitySettings.h"
 
+#include <NuxGraphics/CairoGraphics.h>
 #include <X11/extensions/shape.h>
 
 namespace unity
@@ -40,6 +41,7 @@ namespace decoration
 namespace
 {
 const std::string MENUS_PANEL_NAME = "WindowLIM";
+const int SHADOW_BLUR_MARGIN_FACTOR = 2;
 }
 
 Window::Impl::Impl(Window* parent, CompWindow* win)
@@ -683,6 +685,26 @@ void Window::Impl::ComputeShadowQuads()
   }
 }
 
+cu::PixmapTexture::Ptr Window::Impl::BuildShapedShadowTexture(nux::Size const& size, unsigned radius, nux::Color const& color, Shape const& shape) {
+  nux::CairoGraphics img(CAIRO_FORMAT_ARGB32, size.width, size.height);
+  auto* img_ctx = img.GetInternalContext();
+
+  for (auto const& rect : shape.GetRectangles())
+  {
+    cairo_rectangle(img_ctx, rect.x + radius * SHADOW_BLUR_MARGIN_FACTOR - shape.XOffset(), rect.y + radius * SHADOW_BLUR_MARGIN_FACTOR - shape.YOffset(), rect.width, rect.height);
+    cairo_set_source_rgba(img_ctx, color.red, color.green, color.blue, color.alpha);
+    cairo_fill(img_ctx);
+  }
+
+  img.BlurSurface(radius);
+
+  cu::CairoContext shadow_ctx(size.width, size.height);
+  cairo_set_source_surface(shadow_ctx, img.GetSurface(), 0, 0);
+  cairo_paint(shadow_ctx);
+
+  return shadow_ctx;
+}
+
 void Window::Impl::ComputeShapedShadowQuad()
 {
   if (!(deco_elements_ & cu::DecorationElement::SHADOW))
@@ -700,16 +722,15 @@ void Window::Impl::ComputeShapedShadowQuad()
   auto const& border = win_->borderRect();
   auto const& shadow_offset = manager_->shadow_offset();
 
-  // ideally it would be -radius for the *2 part see comment in
-  // Manager::Impl::BuildShapedShadowTexture. Make sure to keep these factors in sync.
-  int blur_margin_factor = 2;
+  // Ideally it would be shape.getWidth + radius * 2 but Cairographics::BlurSurface
+  // isn't bounded by the radius and we need to compensate by using a larger texture.
   int x = border.x() + shadow_offset.x - radius * 2 + shape.XOffset();
   int y = border.y() + shadow_offset.y - radius * 2 + shape.YOffset();
-  int width = shape.Width() + radius * 2 * blur_margin_factor;
-  int height = shape.Height() + radius * 2 * blur_margin_factor;
+  int width = shape.Width() + radius * 2 * SHADOW_BLUR_MARGIN_FACTOR;
+  int height = shape.Height() + radius * 2 * SHADOW_BLUR_MARGIN_FACTOR;
 
   if (width != last_shadow_rect_.width() || height != last_shadow_rect_.height())
-    shaped_shadow_pixmap_ = manager_->impl_->BuildShapedShadowTexture(radius, color, shape);
+    shaped_shadow_pixmap_ = BuildShapedShadowTexture({width, height}, radius, color, shape);
 
   const auto* texture = shaped_shadow_pixmap_->texture();
 

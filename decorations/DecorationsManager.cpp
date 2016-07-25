@@ -82,32 +82,6 @@ cu::PixmapTexture::Ptr Manager::Impl::BuildShadowTexture(unsigned radius, nux::C
   return shadow_ctx;
 }
 
-cu::PixmapTexture::Ptr Manager::Impl::BuildShapedShadowTexture(unsigned int radius, nux::Color const& color, Shape const& shape) {
-  //Ideally it would be shape.getWidth + radius * 2 but Cairographics::BlurSurface isn't bounded by the radius
-  //and we need to compensate by using a larger texture. Make sure to modify Window::Impl::ComputeShapedShadowQuad in
-  //DecoratedWindow.cpp if you change the factor.
-  int blur_margin_factor = 2;
-  int img_width = shape.Width() + radius * 2 * blur_margin_factor;
-  int img_height = shape.Height() + radius * 2 * blur_margin_factor;
-  nux::CairoGraphics img(CAIRO_FORMAT_ARGB32, img_width, img_height);
-  auto* img_ctx = img.GetInternalContext();
-
-  for (auto const& rect : shape.GetRectangles())
-  {
-    cairo_rectangle(img_ctx, rect.x + radius * blur_margin_factor - shape.XOffset(), rect.y + radius * blur_margin_factor - shape.YOffset(), rect.width, rect.height);
-    cairo_set_source_rgba(img_ctx, color.red, color.green, color.blue, color.alpha);
-    cairo_fill(img_ctx);
-  }
-
-  img.BlurSurface(radius);
-
-  cu::CairoContext shadow_ctx(img_width, img_height);
-  cairo_set_source_surface(shadow_ctx, img.GetSurface(), 0, 0);
-  cairo_paint(shadow_ctx);
-
-  return shadow_ctx;
-}
-
 void Manager::Impl::BuildActiveShadowTexture()
 {
   active_shadow_pixmap_ = BuildShadowTexture(manager_->active_shadow_radius(), manager_->active_shadow_color());
