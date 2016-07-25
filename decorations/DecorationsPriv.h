@@ -116,6 +116,7 @@ private:
   void SyncXShapeWithFrameRegion();
   void SyncMenusGeometries() const;
   bool ShouldBeDecorated() const;
+  bool IsRectangular() const;
   GLTexture* ShadowTexture() const;
   unsigned ShadowRadius() const;
   std::string const& GetMenusPanelID() const;

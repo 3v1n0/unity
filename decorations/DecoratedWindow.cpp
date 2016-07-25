@@ -504,13 +504,18 @@ bool Window::Impl::ShouldBeDecorated() const
   return (win_->frame() || win_->hasUnmapReference()) && FullyDecorated();
 }
 
+bool Window::Impl::IsRectangular() const
+{
+  return win_->region().numRects() == 1;
+}
+
 GLTexture* Window::Impl::ShadowTexture() const
 {
   auto const& mi = manager_->impl_;
   if (active() || parent_->scaled())
-    return win_->region().numRects() > 1 ? shaped_shadow_pixmap_->texture() : mi->active_shadow_pixmap_->texture();
+    return IsRectangular() ? mi->active_shadow_pixmap_->texture() : shaped_shadow_pixmap_->texture();
 
-  return win_->region().numRects() > 1 ? shaped_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
+  return IsRectangular() ? mi->inactive_shadow_pixmap_->texture() : shaped_shadow_pixmap_->texture();
 }
 
 unsigned Window::Impl::ShadowRadius() const
@@ -690,22 +695,25 @@ void Window::Impl::ComputeShapedShadowQuad()
 
   nux::Color color = active() ? manager_->active_shadow_color() : manager_->inactive_shadow_color();
   unsigned int radius = active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
+
   Shape shape(win_->id());
+  auto const& border = win_->borderRect();
+  auto const& shadow_offset = manager_->shadow_offset();
+
+  // ideally it would be -radius for the *2 part see comment in
+  // Manager::Impl::BuildShapedShadowTexture. Make sure to keep these factors in sync.
+  int blur_margin_factor = 2;
+  int x = border.x() + shadow_offset.x - radius * 2 + shape.XOffset();
+  int y = border.y() + shadow_offset.y - radius * 2 + shape.YOffset();
+  int width = shape.Width() + radius * 2 * blur_margin_factor;
+  int height = shape.Height() + radius * 2 * blur_margin_factor;
+
   shaped_shadow_pixmap_ = manager_->impl_->BuildShapedShadowTexture(radius, color, shape);
 
-  const auto* texture = ShadowTexture();
+  const auto* texture = shaped_shadow_pixmap_->texture();
 
   if (!texture || !texture->width() || !texture->height())
     return;
-
-  CompRect border = win_->borderRect();
-  nux::Point2D<int> shadow_offset = manager_->shadow_offset();
-// ideally it would be -radius for the *2 part see comment in Manager::Impl::BuildShapedShadowTexture
-// in DecorationsManager.cpp Make sure to keep these factors in sync.
-  int x = border.x() + shadow_offset.x - radius * 2 + shape.XOffset();
-  int y = border.y() + shadow_offset.y - radius * 2 + shape.YOffset();
-  int width = texture->width();
-  int height = texture->height();
 
   auto* quad = &shadow_quads_[Quads::Pos(0)];
   quad->box.setGeometry(x, y, width, height);
@@ -722,7 +730,6 @@ void Window::Impl::ComputeShapedShadowQuad()
     last_shadow_rect_ = shaped_shadow_rect;
     win_->updateWindowOutputExtents();
   }
-  cwin_->addDamage(true);
 }
 
 void Window::Impl::Paint(GLMatrix const& transformation,
@@ -763,11 +770,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   glwin_->vertexBuffer()->begin();
 
-  // numRects is != 1 when the window is shaped
-  unsigned int num_quads = shadow_quads_.size();
-  if (win_->region().numRects() != 1)
-    num_quads = 1;
-
+  unsigned int num_quads = IsRectangular() ? shadow_quads_.size() : 1;
   for (unsigned int i = 0; i < num_quads; ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
@@ -1003,10 +1006,7 @@ void Window::Undecorate()
 void Window::UpdateDecorationPosition()
 {
   impl_->UpdateMonitor();
-  if (impl_->win_->region().numRects() > 1)
-    impl_->ComputeShapedShadowQuad();
-  else
-      impl_->ComputeShadowQuads();
+  impl_->IsRectangular() ? impl_->ComputeShadowQuads() : impl_->ComputeShapedShadowQuad();
   impl_->UpdateWindowEdgesGeo();
   impl_->UpdateDecorationTextures();
   impl_->UpdateForceQuitDialogPosition();
