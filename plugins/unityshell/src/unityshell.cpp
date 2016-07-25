@@ -3189,7 +3189,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
 bool UnityWindow::damageRect(bool initial, CompRect const& rect)
 {
-  if (!CanBypassLockScreen() && uScreen->lockscreen_controller_->IsLocked())
+  if (uScreen->lockscreen_controller_->IsLocked() && !CanBypassLockScreen())
     return true;
 
   if (initial)
