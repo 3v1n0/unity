@@ -510,11 +510,14 @@ bool Window::Impl::IsRectangular() const
 
 GLTexture* Window::Impl::ShadowTexture() const
 {
+  if (!IsRectangular())
+    return shaped_shadow_pixmap_->texture();
+
   auto const& mi = manager_->impl_;
   if (active() || parent_->scaled())
-    return IsRectangular() ? mi->active_shadow_pixmap_->texture() : shaped_shadow_pixmap_->texture();
+    return mi->active_shadow_pixmap_->texture();
 
-  return IsRectangular() ? mi->inactive_shadow_pixmap_->texture() : shaped_shadow_pixmap_->texture();
+  return mi->inactive_shadow_pixmap_->texture();
 }
 
 unsigned Window::Impl::ShadowRadius() const
@@ -798,7 +801,10 @@ void Window::Impl::Draw(GLMatrix const& transformation,
   }
 
   if (glwin_->vertexBuffer()->end())
-    glwin_->glDrawTexture(ShadowTexture(), transformation, attrib, mask);
+  {
+    if (GLTexture* texture = ShadowTexture())
+      glwin_->glDrawTexture(texture, transformation, attrib, mask);
+  }
 
   for (auto const& dtex : bg_textures_)
   {
