@@ -29,5 +29,5 @@ add_executable(unity-active-plugins-safety-check unity_active_plugins_safety_che
 target_link_libraries(unity-active-plugins-safety-check ${LIBS})
 install(TARGETS unity-active-plugins-safety-check DESTINATION ${CMAKE_INSTALL_LIBDIR}/unity/)
 
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity-compiz-profile.in ${CMAKE_CURRENT_BINARY_DIR}/unity-compiz-profile @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-compiz-profile DESTINATION ${CMAKE_INSTALL_DATADIR}/unity/)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity-compiz-profile-select.in ${CMAKE_CURRENT_BINARY_DIR}/unity-compiz-profile-select @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-compiz-profile-select DESTINATION ${CMAKE_INSTALL_LIBDIR}/unity/)
