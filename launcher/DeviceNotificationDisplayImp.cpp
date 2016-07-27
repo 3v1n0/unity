@@ -20,21 +20,14 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <libnotify/notify.h>
-#include <sigc++/sigc++.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "DeviceNotificationDisplayImp.h"
-#include "unity-shared/IconLoader.h"
 
 namespace unity
 {
 namespace launcher
 {
-
-namespace
-{
-const unsigned icon_size = 48;
-}
 
 //
 // Start private implementation
@@ -42,27 +35,12 @@ const unsigned icon_size = 48;
 class DeviceNotificationDisplayImp::Impl
 {
 public:
-  void Show(std::string const& icon_name, std::string const& volume_name)
-  {
-    IconLoader::GetDefault().LoadFromGIconString(icon_name, -1, icon_size,
-                                                 sigc::bind(sigc::mem_fun(this, &Impl::ShowNotificationWhenIconIsReady), volume_name));
-  }
-
-  void ShowNotificationWhenIconIsReady(std::string const& icon_name,
-                                       int max_width,
-                                       int max_height,
-                                       glib::Object<GdkPixbuf> const& pixbuf,
-                                       std::string const& volume_name)
+  void Show(std::string const& volume_name)
   {
     glib::Object<NotifyNotification> notification(notify_notification_new(volume_name.c_str(),
                                                                          _("The drive has been successfully ejected"),
-                                                                          nullptr));
-
+                                                                          "notification-device-eject"));
     notify_notification_set_hint(notification, "x-canonical-private-synchronous", g_variant_new_boolean(TRUE));
-
-    if (pixbuf)
-      notify_notification_set_image_from_pixbuf(notification, pixbuf);
-
     notify_notification_show(notification, nullptr);
   }
 };
@@ -78,9 +56,9 @@ DeviceNotificationDisplayImp::DeviceNotificationDisplayImp()
 DeviceNotificationDisplayImp::~DeviceNotificationDisplayImp()
 {}
 
-void DeviceNotificationDisplayImp::Display(std::string const& icon_name, std::string const& volume_name)
+void DeviceNotificationDisplayImp::Display(std::string const& volume_name)
 {
-  pimpl->Show(icon_name, volume_name);
+  pimpl->Show(volume_name);
 }
 
 }

@@ -33,7 +33,7 @@ public:
   DeviceNotificationDisplayImp();
   virtual ~DeviceNotificationDisplayImp();
 
-  virtual void Display(std::string const& icon_name, std::string const& volume_name);
+  virtual void Display(std::string const& volume_name);
 
 private:
   class Impl;
