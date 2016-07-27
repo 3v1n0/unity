@@ -829,6 +829,9 @@ void Window::Impl::Damage()
 
 void Window::Impl::RedrawDecorations()
 {
+  if (!win_->isMapped())
+    return;
+
   dirty_geo_ = true;
   cwin_->damageOutputExtents();
 }
