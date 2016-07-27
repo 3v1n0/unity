@@ -211,11 +211,7 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter wf)
     }
   }
 
-  if (region.boundingRect() != win->geometry()) // Shaped windows
-    return elements;
-
-  if (rectangular)
-    elements |= DecorationElement::SHADOW;
+  elements |= DecorationElement::SHADOW;
 
   if (!win->overrideRedirect() &&
       (win->type() & DECORABLE_WINDOW_TYPES) &&

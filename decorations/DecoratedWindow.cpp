@@ -31,6 +31,8 @@
 #include "WindowManager.h"
 #include "UnitySettings.h"
 
+#include <X11/extensions/shape.h>
+
 namespace unity
 {
 namespace decoration
@@ -506,9 +508,9 @@ GLTexture* Window::Impl::ShadowTexture() const
 {
   auto const& mi = manager_->impl_;
   if (active() || parent_->scaled())
-    return mi->active_shadow_pixmap_->texture();
+    return win_->region().numRects() > 1 ? shaped_shadow_pixmap_->texture() : mi->active_shadow_pixmap_->texture();
 
-  return mi->inactive_shadow_pixmap_->texture();
+  return win_->region().numRects() > 1 ? shaped_shadow_pixmap_->texture() : mi->inactive_shadow_pixmap_->texture();
 }
 
 unsigned Window::Impl::ShadowRadius() const
@@ -676,6 +678,53 @@ void Window::Impl::ComputeShadowQuads()
   }
 }
 
+void Window::Impl::ComputeShapedShadowQuad()
+{
+  if (!(deco_elements_ & cu::DecorationElement::SHADOW))
+  {
+    if (!last_shadow_rect_.isEmpty())
+      last_shadow_rect_.setGeometry(0, 0, 0, 0);
+
+    return;
+  }
+
+  nux::Color color = active() ? manager_->active_shadow_color() : manager_->inactive_shadow_color();
+  unsigned int radius = active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
+  DecorationsShape shape;
+  shape.initShape(win_->id());
+  shaped_shadow_pixmap_ = manager_->impl_->BuildShapedShadowTexture(radius, color, shape);
+
+  const auto* texture = ShadowTexture();
+
+  if (!texture || !texture->width() || !texture->height())
+    return;
+
+  CompRect border = win_->borderRect();
+  nux::Point2D<int> shadow_offset = manager_->shadow_offset();
+// ideally it would be -radius for the *2 part see comment in Manager::Impl::BuildShapedShadowTexture
+// in DecorationsManager.cpp Make sure to keep these factors in sync.
+  int x = border.x() + shadow_offset.x - radius * 2 + shape.getXoffs();
+  int y = border.y() + shadow_offset.y - radius * 2 + shape.getYoffs();
+  int width = texture->width();
+  int height = texture->height();
+
+  auto* quad = &shadow_quads_[Quads::Pos(0)];
+  quad->box.setGeometry(x, y, width, height);
+  quad->matrix = texture->matrix();
+  quad->matrix.x0 = -COMP_TEX_COORD_X(quad->matrix, quad->box.x1());
+  quad->matrix.y0 = -COMP_TEX_COORD_Y(quad->matrix, quad->box.y1());
+
+  CompRect shaped_shadow_rect(x, y, width, height);
+  if (shaped_shadow_rect != last_shadow_rect_) {
+    auto const& win_region = win_->region();
+    quad->region = CompRegion(quad->box) - win_region;
+
+    last_shadow_rect_ = shaped_shadow_rect;
+    win_->updateWindowOutputExtents();
+  }
+  cwin_->addDamage(true);
+}
+
 void Window::Impl::Paint(GLMatrix const& transformation,
                          GLWindowPaintAttrib const& attrib,
                          CompRegion const& region, unsigned mask)
@@ -714,7 +763,12 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   glwin_->vertexBuffer()->begin();
 
-  for (unsigned i = 0; i < shadow_quads_.size(); ++i)
+  // numRects is != 1 when the window is shaped
+  unsigned int num_quads = shadow_quads_.size();
+  if (win_->region().numRects() != 1)
+    num_quads = 1;
+
+  for (unsigned int i = 0; i < num_quads; ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
     glwin_->glAddGeometry(quad.matrices, quad.region, clip_region);
@@ -949,7 +1003,10 @@ void Window::Undecorate()
 void Window::UpdateDecorationPosition()
 {
   impl_->UpdateMonitor();
-  impl_->ComputeShadowQuads();
+  if (impl_->win_->region().numRects() > 1)
+    impl_->ComputeShapedShadowQuad();
+  else
+      impl_->ComputeShadowQuads();
   impl_->UpdateWindowEdgesGeo();
   impl_->UpdateDecorationTextures();
   impl_->UpdateForceQuitDialogPosition();

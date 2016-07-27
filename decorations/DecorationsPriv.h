@@ -28,8 +28,8 @@
 #include <core/core.h>
 #include <opengl/opengl.h>
 #include <composite/composite.h>
-#include <X11/extensions/shape.h>
 
+#include "DecorationsShape.h"
 #include "DecorationsDataPool.h"
 #include "DecorationsManager.h"
 #include "DecorationsInputMixer.h"
@@ -121,6 +121,7 @@ private:
   std::string const& GetMenusPanelID() const;
 
   void ComputeShadowQuads();
+  void ComputeShapedShadowQuad();
   void UpdateDecorationTextures();
   void UpdateWindowEdgesGeo();
   void UpdateForceQuitDialogPosition();
@@ -165,6 +166,8 @@ private:
   Item::Ptr edge_borders_;
 
   EMConverter::Ptr cv_;
+
+  cu::PixmapTexture::Ptr shaped_shadow_pixmap_;
 };
 
 struct Manager::Impl : sigc::trackable
@@ -189,6 +192,7 @@ private:
   void BuildActiveShadowTexture();
   void BuildInactiveShadowTexture();
   cu::PixmapTexture::Ptr BuildShadowTexture(unsigned radius, nux::Color const&);
+  cu::PixmapTexture::Ptr BuildShapedShadowTexture(unsigned int radius, nux::Color const& color, DecorationsShape const& shape);
   void OnShadowOptionsChanged(bool active);
   void OnWindowFrameChanged(bool, ::Window, std::weak_ptr<decoration::Window> const&);
   bool OnMenuKeyActivated(std::string const&);
