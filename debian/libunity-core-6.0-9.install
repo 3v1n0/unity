@@ -3,7 +3,7 @@ usr/lib/*/unity/*.py
 usr/share/ccsm
 usr/share/gnome-control-center/
 usr/share/unity
+usr/share/upstart/sessions/unity7.conf
 debian/unity-crashdb.conf etc/apport/crashdb.conf.d/
 debian/source_unity.py usr/share/apport/package-hooks
-debian/unity7.conf usr/share/upstart/sessions
 tools/convert-files/* usr/lib/compiz/migration/

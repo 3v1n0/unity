@@ -1,3 +1,3 @@
 usr/lib/*/unity/*service
-usr/share/upstart
+usr/share/upstart/sessions/unity-panel-service*.conf
 usr/share/man/*/unity-panel-service.1
