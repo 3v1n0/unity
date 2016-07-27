@@ -20,24 +20,35 @@
 #ifndef DECORATIONS_SHAPE_H_
 #define DECORATIONS_SHAPE_H_
 
-#include "WindowManager.h"
-#include "DecoratedWindow.h"
+#include <X11/Xlib.h>
+#include <vector>
 
-class DecorationsShape
+namespace unity
 {
-private:
-  std::vector<XRectangle> rects;
-  int width, height;
-  int xoffs, yoffs;
-
+namespace decoration
+{
+class Shape
+{
 public:
-  bool initShape(XID win);
-  const XRectangle& getRectangle(int idx) const;
-  int getRectangleCount() const;
-  int getWidth() const;
-  int getHeight() const;
-  int getXoffs() const;
-  int getYoffs() const;
-  void clear();
+  Shape(Window);
+
+  int Width() const;
+  int Height() const;
+  int XOffset() const;
+  int YOffset() const;
+
+  std::vector<XRectangle> const& GetRectangles() const;
+
+private:
+  int width_;
+  int height_;
+  int xoffs_;
+  int yoffs_;
+
+  std::vector<XRectangle> rectangles_;
 };
+
+} // decoration namespace
+} // unity namespace
+
 #endif //DECORATIONS_SHAPE_H_

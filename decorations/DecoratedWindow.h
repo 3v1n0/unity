@@ -21,6 +21,7 @@
 #define UNITY_DECORATED_WINDOW
 
 #include "Introspectable.h"
+#include <NuxCore/Property.h>
 #include <memory>
 
 class CompRegion;
