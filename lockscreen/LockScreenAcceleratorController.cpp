@@ -193,10 +193,10 @@ void AcceleratorController::OnActionActivated(CompAction& action)
 
   CompOption::Vector options;
 
-  if (action.state() & CompAction::StateInitKey)
+  if (action.initiate() && action.state() & CompAction::StateInitKey)
     action.initiate()(&action, 0, options);
 
-  if (action.state() & CompAction::StateTermKey)
+  if (action.terminate() && action.state() & CompAction::StateTermKey)
     action.terminate()(&action, CompAction::StateTermTapped, options);
 }
 
