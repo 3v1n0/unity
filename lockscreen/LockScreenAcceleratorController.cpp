@@ -193,11 +193,21 @@ void AcceleratorController::OnActionActivated(CompAction& action)
 
   CompOption::Vector options;
 
-  if (action.initiate() && action.state() & CompAction::StateInitKey)
-    action.initiate()(&action, 0, options);
+  if (action.state() & CompAction::StateInitKey)
+  {
+    auto const& initiate_cb = action.initiate();
 
-  if (action.terminate() && action.state() & CompAction::StateTermKey)
-    action.terminate()(&action, CompAction::StateTermTapped, options);
+    if (!initiate_cb.empty())
+      initiate_cb(&action, 0, options);
+  }
+
+  if (action.state() & CompAction::StateTermKey)
+  {
+    auto const& terminate_cb = action.terminate();
+
+    if (!terminate_cb.empty())
+      terminate_cb(&action, CompAction::StateTermTapped, options);
+  }
 }
 
 Accelerators::Ptr const& AcceleratorController::GetAccelerators() const
