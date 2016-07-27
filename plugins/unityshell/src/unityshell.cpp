@@ -3357,6 +3357,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       PluginAdapter::Default().UpdateShowDesktopState();
       break;
     case CompWindowNotifyBeforeDestroy:
+      deco_win_->Undecorate();
       being_destroyed.emit();
       break;
     case CompWindowNotifyMinimize:
