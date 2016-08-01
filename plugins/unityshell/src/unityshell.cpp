@@ -3013,9 +3013,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       wAttrib.opacity = 0.0;
       int old_index = gWindow->glPaintGetCurrentIndex();
       gWindow->glPaintSetCurrentIndex(MAXSHORT);
+      deco_win_->Paint(matrix, wAttrib, region, mask);
       bool ret = gWindow->glPaint(wAttrib, matrix, region, mask);
       gWindow->glPaintSetCurrentIndex(old_index);
-      deco_win_->Paint(matrix, wAttrib, region, mask);
       return ret;
     }
   }
@@ -3189,6 +3189,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
 bool UnityWindow::damageRect(bool initial, CompRect const& rect)
 {
+  if (uScreen->lockscreen_controller_->IsLocked() && !CanBypassLockScreen())
+    return true;
+
   if (initial)
     deco_win_->Update();
 
@@ -3357,6 +3360,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       PluginAdapter::Default().UpdateShowDesktopState();
       break;
     case CompWindowNotifyBeforeDestroy:
+      deco_win_->Undecorate();
       being_destroyed.emit();
       break;
     case CompWindowNotifyMinimize:

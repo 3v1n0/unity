@@ -1,3 +1,31 @@
+unity (7.5.0+16.10.20160727-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * [LockSceen] Remove numlock warning. (LP: #1526322)
+  * Make sure initiate and terminate callbacks are not empty before
+    calling them. (LP: #1605012)
+  * Properly destroy close_button_ to properly disconnect lambda. (LP:
+    #1605010)
+  * Use the standard notification-device-eject in the "device eject"
+    notification. This allows us to scale it properly on high-dpi
+    setups. (LP: #1605231)
+  * Add tools to enforce unityshell plugin for the current profile and
+    add "move" and "resize" plugins as requirements. (LP: #1506023,
+    #1605007)
+  * When locked discard damages from windows below lockscreen. (LP:
+    #1605180)
+
+  [ Eleni Maria Stea ]
+  * DecoratedWindow: Added shadows for shaped windows
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenAcceleratorController: ensure callbacks are valid before
+    calling them (LP: #1605012)
+  * DecoratedWindow: Cleanup shadows for shaped windows, reduce
+    recomputation
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 27 Jul 2016 10:25:54 +0000
+
 unity (7.5.0+16.10.20160715-0ubuntu1) yakkety; urgency=medium
 
   [ Eleni Maria Stea ]

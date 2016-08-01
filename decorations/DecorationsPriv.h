@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <NuxCore/NuxCore.h>
 #include <NuxCore/Rect.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/Indicators.h>
 #include <core/core.h>
@@ -30,6 +31,7 @@
 #include <composite/composite.h>
 #include <X11/extensions/shape.h>
 
+#include "DecorationsShape.h"
 #include "DecorationsDataPool.h"
 #include "DecorationsManager.h"
 #include "DecorationsInputMixer.h"
@@ -116,15 +118,18 @@ private:
   void SyncXShapeWithFrameRegion();
   void SyncMenusGeometries() const;
   bool ShouldBeDecorated() const;
+  bool IsRectangular() const;
   GLTexture* ShadowTexture() const;
   unsigned ShadowRadius() const;
   std::string const& GetMenusPanelID() const;
 
   void ComputeShadowQuads();
+  void ComputeShapedShadowQuad();
   void UpdateDecorationTextures();
   void UpdateWindowEdgesGeo();
   void UpdateForceQuitDialogPosition();
   void RenderDecorationTexture(Side, nux::Geometry const&);
+  cu::PixmapTexture::Ptr BuildShapedShadowTexture(nux::Size const&, unsigned radius, nux::Color const&, Shape const&);
   void Paint(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
@@ -155,6 +160,7 @@ private:
   std::string last_title_;
   std::string panel_id_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
+  cu::PixmapTexture::Ptr shaped_shadow_pixmap_;
   std::shared_ptr<ForceQuitDialog> force_quit_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;

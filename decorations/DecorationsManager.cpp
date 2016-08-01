@@ -20,9 +20,9 @@
 #include "DecorationsPriv.h"
 
 #include <core/atoms.h>
-#include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/DBusIndicators.h>
 #include <X11/Xatom.h>
+
 #include "WindowManager.h"
 
 namespace unity

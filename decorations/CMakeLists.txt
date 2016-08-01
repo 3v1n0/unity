@@ -35,6 +35,7 @@ set (DECORATION_SOURCES
      DecorationsMenuDropdown.cpp
      DecorationsForceQuitDialog.cpp
      DecorationsDataPool.cpp
+     DecorationsShape.cpp
      )
 
 add_library (decorations-lib STATIC ${DECORATION_SOURCES})

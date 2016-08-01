@@ -36,7 +36,7 @@ public:
 
   virtual ~DeviceNotificationDisplay() {}
 
-  virtual void Display(std::string const& icon_name, std::string const& volume_name) = 0;
+  virtual void Display(std::string const& volume_name) = 0;
 };
 
 }

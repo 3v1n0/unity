@@ -481,7 +481,7 @@ TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem)
   auto menuitem = GetMenuItemAtIndex(5);
 
   EXPECT_CALL(*volume_, Eject());
-  EXPECT_CALL(*notifications_, Display(volume_->GetIconName(), volume_->GetName()));
+  EXPECT_CALL(*notifications_, Display(volume_->GetName()));
 
   ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Eject");
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
@@ -573,7 +573,7 @@ TEST_F(TestVolumeLauncherIcon, TestEject)
     .WillRepeatedly(Return(true));
 
   EXPECT_CALL(*volume_, Eject());
-  EXPECT_CALL(*notifications_, Display(volume_->GetIconName(), volume_->GetName()));
+  EXPECT_CALL(*notifications_, Display(volume_->GetName()));
   icon_->EjectAndShowNotification();
 }
 

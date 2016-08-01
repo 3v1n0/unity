@@ -38,6 +38,7 @@ namespace decoration
 namespace
 {
 const std::string MENUS_PANEL_NAME = "WindowLIM";
+const int SHADOW_BLUR_MARGIN_FACTOR = 2;
 }
 
 Window::Impl::Impl(Window* parent, CompWindow* win)
@@ -502,8 +503,16 @@ bool Window::Impl::ShouldBeDecorated() const
   return (win_->frame() || win_->hasUnmapReference()) && FullyDecorated();
 }
 
+bool Window::Impl::IsRectangular() const
+{
+  return win_->region().numRects() == 1;
+}
+
 GLTexture* Window::Impl::ShadowTexture() const
 {
+  if (!IsRectangular())
+    return shaped_shadow_pixmap_->texture();
+
   auto const& mi = manager_->impl_;
   if (active() || parent_->scaled())
     return mi->active_shadow_pixmap_->texture();
@@ -676,6 +685,76 @@ void Window::Impl::ComputeShadowQuads()
   }
 }
 
+cu::PixmapTexture::Ptr Window::Impl::BuildShapedShadowTexture(nux::Size const& size, unsigned radius, nux::Color const& color, Shape const& shape) {
+  nux::CairoGraphics img(CAIRO_FORMAT_ARGB32, size.width, size.height);
+  auto* img_ctx = img.GetInternalContext();
+
+  for (auto const& rect : shape.GetRectangles())
+  {
+    cairo_rectangle(img_ctx, rect.x + radius * SHADOW_BLUR_MARGIN_FACTOR - shape.XOffset(), rect.y + radius * SHADOW_BLUR_MARGIN_FACTOR - shape.YOffset(), rect.width, rect.height);
+    cairo_set_source_rgba(img_ctx, color.red, color.green, color.blue, color.alpha);
+    cairo_fill(img_ctx);
+  }
+
+  img.BlurSurface(radius);
+
+  cu::CairoContext shadow_ctx(size.width, size.height);
+  cairo_set_source_surface(shadow_ctx, img.GetSurface(), 0, 0);
+  cairo_paint(shadow_ctx);
+
+  return shadow_ctx;
+}
+
+void Window::Impl::ComputeShapedShadowQuad()
+{
+  if (!(deco_elements_ & cu::DecorationElement::SHADOW))
+  {
+    if (!last_shadow_rect_.isEmpty())
+      last_shadow_rect_.setGeometry(0, 0, 0, 0);
+
+    return;
+  }
+
+  nux::Color color = active() ? manager_->active_shadow_color() : manager_->inactive_shadow_color();
+  unsigned int radius = active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
+
+  Shape shape(win_->id());
+  auto const& border = win_->borderRect();
+  auto const& shadow_offset = manager_->shadow_offset();
+
+  // Ideally it would be shape.getWidth + radius * 2 but Cairographics::BlurSurface
+  // isn't bounded by the radius and we need to compensate by using a larger texture.
+  int width = shape.Width() + radius * 2 * SHADOW_BLUR_MARGIN_FACTOR;
+  int height = shape.Height() + radius * 2 * SHADOW_BLUR_MARGIN_FACTOR;
+
+  if (width != last_shadow_rect_.width() || height != last_shadow_rect_.height())
+    shaped_shadow_pixmap_ = BuildShapedShadowTexture({width, height}, radius, color, shape);
+
+  const auto* texture = shaped_shadow_pixmap_->texture();
+
+  if (!texture || !texture->width() || !texture->height())
+    return;
+
+  int x = border.x() + shadow_offset.x - radius * 2 + shape.XOffset();
+  int y = border.y() + shadow_offset.y - radius * 2 + shape.YOffset();
+
+  auto* quad = &shadow_quads_[Quads::Pos(0)];
+  quad->box.setGeometry(x, y, width, height);
+  quad->matrix = texture->matrix();
+  quad->matrix.x0 = -COMP_TEX_COORD_X(quad->matrix, quad->box.x1());
+  quad->matrix.y0 = -COMP_TEX_COORD_Y(quad->matrix, quad->box.y1());
+
+  CompRect shaped_shadow_rect(x, y, width, height);
+  if (shaped_shadow_rect != last_shadow_rect_)
+  {
+    auto const& win_region = win_->region();
+    quad->region = CompRegion(quad->box) - win_region;
+
+    last_shadow_rect_ = shaped_shadow_rect;
+    win_->updateWindowOutputExtents();
+  }
+}
+
 void Window::Impl::Paint(GLMatrix const& transformation,
                          GLWindowPaintAttrib const& attrib,
                          CompRegion const& region, unsigned mask)
@@ -714,14 +793,18 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   glwin_->vertexBuffer()->begin();
 
-  for (unsigned i = 0; i < shadow_quads_.size(); ++i)
+  unsigned int num_quads = IsRectangular() ? shadow_quads_.size() : 1;
+  for (unsigned int i = 0; i < num_quads; ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
     glwin_->glAddGeometry(quad.matrices, quad.region, clip_region);
   }
 
   if (glwin_->vertexBuffer()->end())
-    glwin_->glDrawTexture(ShadowTexture(), transformation, attrib, mask);
+  {
+    if (GLTexture* texture = ShadowTexture())
+      glwin_->glDrawTexture(texture, transformation, attrib, mask);
+  }
 
   for (auto const& dtex : bg_textures_)
   {
@@ -746,6 +829,9 @@ void Window::Impl::Damage()
 
 void Window::Impl::RedrawDecorations()
 {
+  if (!win_->isMapped())
+    return;
+
   dirty_geo_ = true;
   cwin_->damageOutputExtents();
 }
@@ -949,7 +1035,7 @@ void Window::Undecorate()
 void Window::UpdateDecorationPosition()
 {
   impl_->UpdateMonitor();
-  impl_->ComputeShadowQuads();
+  impl_->IsRectangular() ? impl_->ComputeShadowQuads() : impl_->ComputeShapedShadowQuad();
   impl_->UpdateWindowEdgesGeo();
   impl_->UpdateDecorationTextures();
   impl_->UpdateForceQuitDialogPosition();
