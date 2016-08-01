@@ -510,9 +510,14 @@ bool Window::Impl::IsRectangular() const
 
 GLTexture* Window::Impl::ShadowTexture() const
 {
-  if (!IsRectangular())
+  if (shaped_shadow_pixmap_)
     return shaped_shadow_pixmap_->texture();
 
+  return SharedShadowTexture();
+}
+
+GLTexture* Window::Impl::SharedShadowTexture() const
+{
   auto const& mi = manager_->impl_;
   if (active() || parent_->scaled())
     return mi->active_shadow_pixmap_->texture();
@@ -581,7 +586,7 @@ void Window::Impl::ComputeShadowQuads()
     return;
   }
 
-  const auto* texture = ShadowTexture();
+  const auto* texture = SharedShadowTexture();
 
   if (!texture || !texture->width() || !texture->height())
     return;
@@ -712,6 +717,7 @@ void Window::Impl::ComputeShapedShadowQuad()
     if (!last_shadow_rect_.isEmpty())
       last_shadow_rect_.setGeometry(0, 0, 0, 0);
 
+    shaped_shadow_pixmap_ = nullptr;
     return;
   }
 

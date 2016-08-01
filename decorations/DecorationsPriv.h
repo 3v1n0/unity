@@ -120,6 +120,7 @@ private:
   bool ShouldBeDecorated() const;
   bool IsRectangular() const;
   GLTexture* ShadowTexture() const;
+  GLTexture* SharedShadowTexture() const;
   unsigned ShadowRadius() const;
   std::string const& GetMenusPanelID() const;
 
