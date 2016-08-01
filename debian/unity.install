@@ -5,6 +5,5 @@ usr/lib/*/unity
 usr/share/man/*/unity.1
 usr/share/compiz
 usr/share/locale
-usr/share/upstart/sessions/unity7.conf
 usr/lib/systemd/user/unity7.service
 usr/share/upstart/systemd-session/upstart/unity7.override
