@@ -133,7 +133,8 @@ enum
   NONE = 0,
   EDGE = (1 << 0),
   SHADOW = (1 << 1),
-  BORDER = (1 << 2),
+  SHAPED = (1 << 2),
+  BORDER = (1 << 3),
   FULL = EDGE|SHADOW|BORDER
 };
 }
