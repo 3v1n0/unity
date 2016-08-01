@@ -118,6 +118,10 @@ void Window::Impl::Update()
   else
     Undecorate();
 
+  auto const& maximize_button = maximize_button_.lock();
+  if (maximize_button)
+    maximize_button->UpdateTexture();
+
   last_mwm_decor_ = win_->mwmDecor();
   last_actions_ = win_->actions();
 }
@@ -410,7 +414,11 @@ void Window::Impl::SetupWindowControls()
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MINIMIZE));
 
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
-    top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE));
+  {
+    auto maximize_button = std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE);
+    maximize_button_ = maximize_button;
+    top_layout_->Append(maximize_button);
+  }
 
   auto title = std::make_shared<Title>();
   title->text = last_title_.empty() ? WindowManager::Default().GetWindowName(win_->id()) : last_title_;

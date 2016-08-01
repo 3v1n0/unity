@@ -34,6 +34,7 @@ public:
   WindowButton(CompWindow*, WindowButtonType type);
 
   WidgetState GetCurrentState() const;
+  void UpdateTexture();
 
 protected:
   void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
@@ -44,8 +45,6 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
 private:
-  void UpdateTexture();
-
   WindowButtonType type_;
   bool pressed_;
   bool was_pressed_;

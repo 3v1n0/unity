@@ -44,7 +44,14 @@ WindowButton::WindowButton(CompWindow* win, WindowButtonType type)
 
 void WindowButton::UpdateTexture()
 {
-  SetTexture(DataPool::Get()->ButtonTexture(scale(), type_, GetCurrentState()));
+  auto type = type_;
+
+  if (type == WindowButtonType::MAXIMIZE && 
+      (win_->state() & CompWindowStateMaximizedVertMask || 
+       win_->state() & CompWindowStateMaximizedHorzMask))
+    type = WindowButtonType::UNMAXIMIZE;
+
+  SetTexture(DataPool::Get()->ButtonTexture(scale(), type, GetCurrentState()));
 }
 
 WidgetState WindowButton::GetCurrentState() const
