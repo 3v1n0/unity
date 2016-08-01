@@ -90,6 +90,7 @@ struct Window::Impl
   bool IsMaximized() const;
   bool FullyDecorated() const;
   bool ShadowDecorated() const;
+  bool ShapedShadowDecorated() const;
   void RedrawDecorations();
   void Damage();
   void SetupAppMenu();
@@ -118,13 +119,13 @@ private:
   void SyncXShapeWithFrameRegion();
   void SyncMenusGeometries() const;
   bool ShouldBeDecorated() const;
-  bool IsRectangular() const;
   GLTexture* ShadowTexture() const;
   GLTexture* SharedShadowTexture() const;
   unsigned ShadowRadius() const;
   std::string const& GetMenusPanelID() const;
 
   void ComputeShadowQuads();
+  void ComputeGenericShadowQuads();
   void ComputeShapedShadowQuad();
   void UpdateDecorationTextures();
   void UpdateWindowEdgesGeo();

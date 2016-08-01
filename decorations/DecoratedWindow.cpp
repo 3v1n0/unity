@@ -493,6 +493,12 @@ bool Window::Impl::ShadowDecorated() const
   return deco_elements_ & cu::DecorationElement::SHADOW;
 }
 
+bool Window::Impl::ShapedShadowDecorated() const
+{
+  return deco_elements_ & cu::DecorationElement::SHADOW &&
+         deco_elements_ & cu::DecorationElement::SHAPED;
+}
+
 bool Window::Impl::FullyDecorated() const
 {
   return deco_elements_ & cu::DecorationElement::BORDER;
@@ -501,11 +507,6 @@ bool Window::Impl::FullyDecorated() const
 bool Window::Impl::ShouldBeDecorated() const
 {
   return (win_->frame() || win_->hasUnmapReference()) && FullyDecorated();
-}
-
-bool Window::Impl::IsRectangular() const
-{
-  return win_->region().numRects() == 1;
 }
 
 GLTexture* Window::Impl::ShadowTexture() const
@@ -583,9 +584,21 @@ void Window::Impl::ComputeShadowQuads()
     if (!last_shadow_rect_.isEmpty())
       last_shadow_rect_.setGeometry(0, 0, 0, 0);
 
-    return;
+    shaped_shadow_pixmap_.reset();
   }
+  else if (deco_elements_ & cu::DecorationElement::SHAPED)
+  {
+    ComputeShapedShadowQuad();
+  }
+  else
+  {
+    shaped_shadow_pixmap_.reset();
+    ComputeGenericShadowQuads();
+  }
+}
 
+void Window::Impl::ComputeGenericShadowQuads()
+{
   const auto* texture = SharedShadowTexture();
 
   if (!texture || !texture->width() || !texture->height())
@@ -712,15 +725,6 @@ cu::PixmapTexture::Ptr Window::Impl::BuildShapedShadowTexture(nux::Size const& s
 
 void Window::Impl::ComputeShapedShadowQuad()
 {
-  if (!(deco_elements_ & cu::DecorationElement::SHADOW))
-  {
-    if (!last_shadow_rect_.isEmpty())
-      last_shadow_rect_.setGeometry(0, 0, 0, 0);
-
-    shaped_shadow_pixmap_ = nullptr;
-    return;
-  }
-
   nux::Color color = active() ? manager_->active_shadow_color() : manager_->inactive_shadow_color();
   unsigned int radius = active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
 
@@ -799,7 +803,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   glwin_->vertexBuffer()->begin();
 
-  unsigned int num_quads = IsRectangular() ? shadow_quads_.size() : 1;
+  unsigned int num_quads = ShapedShadowDecorated() ? 1 : shadow_quads_.size();
   for (unsigned int i = 0; i < num_quads; ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
@@ -1041,7 +1045,7 @@ void Window::Undecorate()
 void Window::UpdateDecorationPosition()
 {
   impl_->UpdateMonitor();
-  impl_->IsRectangular() ? impl_->ComputeShadowQuads() : impl_->ComputeShapedShadowQuad();
+  impl_->ComputeShadowQuads();
   impl_->UpdateWindowEdgesGeo();
   impl_->UpdateDecorationTextures();
   impl_->UpdateForceQuitDialogPosition();
