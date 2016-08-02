@@ -33,8 +33,9 @@ class WindowButton : public TexturedItem
 public:
   WindowButton(CompWindow*, WindowButtonType type);
 
+  nux::Property<WindowButtonType> type;
+
   WidgetState GetCurrentState() const;
-  void UpdateTexture();
 
 protected:
   void ButtonDownEvent(CompPoint const&, unsigned button, Time) override;
@@ -45,7 +46,8 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
 private:
-  WindowButtonType type_;
+  void UpdateTexture();
+
   bool pressed_;
   bool was_pressed_;
   CompWindow* win_;
