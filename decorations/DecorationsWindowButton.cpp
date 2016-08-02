@@ -110,36 +110,53 @@ void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button, Time times
           win_->minimize();
         break;
       case WindowButtonType::MAXIMIZE:
-      case WindowButtonType::UNMAXIMIZE:
         switch (button)
         {
           case Button1:
-            if ((win_->state() & CompWindowStateMaximizedVertMask) ||
-                (win_->state() & CompWindowStateMaximizedHorzMask))
-              win_->maximize(0);
-            else if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
+            if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
               win_->maximize(MAXIMIZE_STATE);
             break;
           case Button2:
             if (win_->actions() & CompWindowActionMaximizeVertMask)
             {
               if (!(win_->state() & CompWindowStateMaximizedVertMask))
-                win_->maximize(CompWindowStateMaximizedVertMask);
-              else
-                win_->maximize(0);
+                win_->maximize(win_->state() | CompWindowStateMaximizedVertMask);
             }
             break;
           case Button3:
             if (win_->actions() & CompWindowActionMaximizeHorzMask)
             {
               if (!(win_->state() & CompWindowStateMaximizedHorzMask))
-                win_->maximize(CompWindowStateMaximizedHorzMask);
-              else
-                win_->maximize(0);
+                win_->maximize(win_->state() | CompWindowStateMaximizedHorzMask);
             }
             break;
         }
         break;
+      case WindowButtonType::UNMAXIMIZE:
+        switch (button)
+        {
+          case Button1:
+              win_->maximize(0);
+            break;
+          case Button2:
+            if (win_->actions() & CompWindowActionMaximizeVertMask)
+            {
+              if (!(win_->state() & CompWindowStateMaximizedVertMask))
+                win_->maximize(win_->state() | CompWindowStateMaximizedVertMask);
+              else
+                win_->maximize(win_->state() & ~CompWindowStateMaximizedVertMask);
+            }
+            break;
+          case Button3:
+            if (win_->actions() & CompWindowActionMaximizeHorzMask)
+            {
+              if (!(win_->state() & CompWindowStateMaximizedHorzMask))
+                win_->maximize(win_->state() | CompWindowStateMaximizedHorzMask);
+              else
+                win_->maximize(win_->state() & ~CompWindowStateMaximizedHorzMask);
+            }
+            break;
+        }
       default:
         break;
     }
