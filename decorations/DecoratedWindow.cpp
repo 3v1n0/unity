@@ -118,20 +118,6 @@ void Window::Impl::Update()
   else
     Undecorate();
 
-  if (maximize_button_)
-  {
-    auto const& maximize_button = maximize_button_.lock();
-
-    if (win_->state() & (CompWindowStateMaximizedVertMask|CompWindowStateMaximizedHorzMask))
-    {
-      maximize_button->type = WindowButtonType::UNMAXIMIZE;
-    }
-    else
-    {
-      maximize_button->type = WindowButtonType::MAXIMIZE;
-    }
-  }
-
   last_mwm_decor_ = win_->mwmDecor();
   last_actions_ = win_->actions();
 }
@@ -160,6 +146,23 @@ void Window::Impl::Undecorate()
   CleanupWindowControls();
   CleanupWindowEdges();
   bg_textures_.clear();
+}
+
+void Window::Impl::UpdateWindowState(unsigned old_state)
+{
+  Update();
+
+  if (state_change_button_)
+  {
+    if (win_->state() & (CompWindowStateMaximizedVertMask|CompWindowStateMaximizedHorzMask))
+    {
+      state_change_button_->type = WindowButtonType::UNMAXIMIZE;
+    }
+    else
+    {
+      state_change_button_->type = WindowButtonType::MAXIMIZE;
+    }
+  }
 }
 
 void Window::Impl::UnsetExtents()
@@ -425,9 +428,9 @@ void Window::Impl::SetupWindowControls()
 
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
   {
-    auto maximize_button = std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE);
-    maximize_button_ = maximize_button;
-    top_layout_->Append(maximize_button);
+    auto state_change_button = std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE);
+    top_layout_->Append(state_change_button);
+    state_change_button_ = state_change_button;
   }
 
   auto title = std::make_shared<Title>();
@@ -1009,6 +1012,11 @@ CompWindow* Window::GetCompWindow()
 void Window::Update()
 {
   impl_->Update();
+}
+
+void Window::UpdateWindowState(unsigned old_state)
+{
+  impl_->UpdateWindowState(old_state);
 }
 
 void Window::UpdateFrameRegion(CompRegion& r)

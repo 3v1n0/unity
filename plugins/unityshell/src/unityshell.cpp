@@ -3421,7 +3421,7 @@ void UnityWindow::stateChangeNotify(unsigned int lastState)
     uScreen->fullscreen_windows_.remove(window);
   }
 
-  deco_win_->Update();
+  deco_win_->UpdateWindowState(lastState);
   PluginAdapter::Default().NotifyStateChange(window, window->state(), lastState);
   window->stateChangeNotify(lastState);
 }
