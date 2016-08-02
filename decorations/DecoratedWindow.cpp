@@ -428,7 +428,9 @@ void Window::Impl::SetupWindowControls()
 
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
   {
-    auto state_change_button = std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE);
+    auto type = (win_->state() & (CompWindowStateMaximizedVertMask|CompWindowStateMaximizedHorzMask)) ?
+                 WindowButtonType::UNMAXIMIZE : WindowButtonType::MAXIMIZE;
+    auto state_change_button = std::make_shared<WindowButton>(win_, type);
     top_layout_->Append(state_change_button);
     state_change_button_ = state_change_button;
   }
