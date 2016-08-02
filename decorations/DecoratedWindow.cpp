@@ -118,9 +118,19 @@ void Window::Impl::Update()
   else
     Undecorate();
 
-  auto const& maximize_button = maximize_button_.lock();
-  if (maximize_button)
-    maximize_button->UpdateTexture();
+  if (maximize_button_)
+  {
+    auto const& maximize_button = maximize_button_.lock();
+
+    if (win_->state() & (CompWindowStateMaximizedVertMask|CompWindowStateMaximizedHorzMask))
+    {
+      maximize_button->type = WindowButtonType::UNMAXIMIZE;
+    }
+    else
+    {
+      maximize_button->type = WindowButtonType::MAXIMIZE;
+    }
+  }
 
   last_mwm_decor_ = win_->mwmDecor();
   last_actions_ = win_->actions();
