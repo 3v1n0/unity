@@ -136,7 +136,7 @@ void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button, Time times
         switch (button)
         {
           case Button1:
-              win_->maximize(0);
+            win_->maximize(0);
             break;
           case Button2:
             if (win_->actions() & CompWindowActionMaximizeVertMask)
