@@ -145,8 +145,12 @@ void UnityWindowView::OnClosableChanged(bool closable)
 {
   if (!closable)
   {
-    close_button_->UnParentObject();
-    close_button_ = nullptr;
+    if (close_button_)
+    {
+      close_button_->UnParentObject();
+      close_button_ = nullptr;
+    }
+
     return;
   }
 
