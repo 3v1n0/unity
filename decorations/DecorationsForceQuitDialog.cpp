@@ -279,7 +279,7 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
   int decoration_radius = std::max({radius.top, radius.left, radius.right, radius.bottom});
 
   gtk_css_provider_load_from_data(style, (R"(
-  * {
+  SheetStyleDialog, sheet-style-dialog {
     background-color: #f7f6f5;
     color: #4a4a4a;
     border-radius: )"+std::to_string(decoration_radius)+R"(px;
@@ -291,7 +291,7 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
                            std::to_string(int(color.alpha))+'.'+std::to_string(int(color.alpha*10000.0))+')'+R"(;
   }
 
-  *:backdrop {
+  SheetStyleDialog:backdrop, sheet-style-dialog:backdrop {
     background-color: shade(#f7f6f5, 1.2);
     color: shade(#4a4a4a, 1.5);
     border-radius: )"+std::to_string(decoration_radius)+R"(px;
@@ -374,6 +374,10 @@ static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
     gtk_render_background(gtk_widget_get_style_context(self), cr, 0, 0, a.width, a.height);
     return GTK_WIDGET_CLASS(sheet_style_dialog_parent_class)->draw(self, cr);
   };
+
+#if GTK_CHECK_VERSION(3, 20, 0)
+  gtk_widget_class_set_css_name(GTK_WIDGET_CLASS(klass), "sheet-style-dialog");
+#endif
 }
 
 // Close button
