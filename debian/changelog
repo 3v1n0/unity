@@ -1,3 +1,17 @@
+unity (7.5.0+16.10.20160806-0ubuntu1) yakkety; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: avoid deferencing an invalid shadow texture ptr,
+    and split functions (LP: #1608464)
+  * UnityWindowView: don't try to deference close_button_ if its' null
+  * DecorationsForceQuitDialog: make CSS selectors work with gtk 3.20
+
+  [ Andrea Azzarone, Marco Trevisan (Treviño) ]
+  * DecoratedWindow: display unmaximize button if the window is
+    vertically or horizontally maximized (LP: #1608480)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Sat, 06 Aug 2016 16:25:58 +0000
+
 unity (7.5.0+16.10.20160727-0ubuntu1) yakkety; urgency=medium
 
   [ Andrea Azzarone ]
