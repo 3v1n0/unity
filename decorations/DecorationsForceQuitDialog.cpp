@@ -384,7 +384,6 @@ GtkWidget* close_button_new()
 {
   auto* self = GTK_WIDGET(g_object_new(close_button_get_type(), nullptr));
   gtk_button_set_relief(GTK_BUTTON(self), GTK_RELIEF_NONE);
-  gtk_button_set_focus_on_click(GTK_BUTTON(self), FALSE);
   gtk_widget_set_can_focus(self, FALSE);
   gtk_widget_set_halign(self, GTK_ALIGN_START);
 
