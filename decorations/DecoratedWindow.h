@@ -53,6 +53,7 @@ public:
   void UpdateDecorationPositionDelayed();
   void UpdateFrameRegion(CompRegion&);
   void UpdateOutputExtents(compiz::window::extents::Extents&);
+  void UpdateWindowState(unsigned old_state);
   void Paint(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 

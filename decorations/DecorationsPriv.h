@@ -49,6 +49,7 @@ class Title;
 class MenuLayout;
 class SlidingLayout;
 class ForceQuitDialog;
+class WindowButton;
 
 namespace cu = compiz_utils;
 
@@ -103,6 +104,7 @@ private:
   void SetupExtents();
   void ComputeBorderExtent(CompWindowExtents &border);
   void UpdateElements(cu::WindowFilter wf = cu::WindowFilter::NONE);
+  void UpdateWindowState(unsigned old_state);
   void UpdateClientDecorationsState();
   void UpdateMonitor();
   void UpdateFrame();
@@ -166,6 +168,7 @@ private:
   std::shared_ptr<ForceQuitDialog> force_quit_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
+  uweak_ptr<WindowButton> state_change_button_;
   uweak_ptr<MenuLayout> menus_;
   uweak_ptr<Title> title_;
   uweak_ptr<SlidingLayout> sliding_layout_;

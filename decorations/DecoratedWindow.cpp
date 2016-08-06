@@ -148,6 +148,23 @@ void Window::Impl::Undecorate()
   bg_textures_.clear();
 }
 
+void Window::Impl::UpdateWindowState(unsigned old_state)
+{
+  Update();
+
+  if (state_change_button_)
+  {
+    if (win_->state() & (CompWindowStateMaximizedVertMask|CompWindowStateMaximizedHorzMask))
+    {
+      state_change_button_->type = WindowButtonType::UNMAXIMIZE;
+    }
+    else
+    {
+      state_change_button_->type = WindowButtonType::MAXIMIZE;
+    }
+  }
+}
+
 void Window::Impl::UnsetExtents()
 {
   if (win_->hasUnmapReference())
@@ -410,7 +427,13 @@ void Window::Impl::SetupWindowControls()
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MINIMIZE));
 
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
-    top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE));
+  {
+    auto type = (win_->state() & (CompWindowStateMaximizedVertMask|CompWindowStateMaximizedHorzMask)) ?
+                 WindowButtonType::UNMAXIMIZE : WindowButtonType::MAXIMIZE;
+    auto state_change_button = std::make_shared<WindowButton>(win_, type);
+    top_layout_->Append(state_change_button);
+    state_change_button_ = state_change_button;
+  }
 
   auto title = std::make_shared<Title>();
   title->text = last_title_.empty() ? WindowManager::Default().GetWindowName(win_->id()) : last_title_;
@@ -1001,6 +1024,11 @@ CompWindow* Window::GetCompWindow()
 void Window::Update()
 {
   impl_->Update();
+}
+
+void Window::UpdateWindowState(unsigned old_state)
+{
+  impl_->UpdateWindowState(old_state);
 }
 
 void Window::UpdateFrameRegion(CompRegion& r)
