@@ -3,7 +3,6 @@ Description=Backing Service for the Unity Panel
 After=unity7.service
 PartOf=graphical-session.target
 BindsTo=indicators-pre.target
-Wants=indicator-application.service indicator-bluetooth.service indicator-datetime.service indicator-keyboard.service indicator-messages.service indicator-power.service indicator-session.service indicator-sound.service
 
 [Service]
 ExecStart=${CMAKE_INSTALL_FULL_LIBDIR}/unity/unity-panel-service
