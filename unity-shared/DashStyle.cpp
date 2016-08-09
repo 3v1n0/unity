@@ -2151,6 +2151,11 @@ BaseTexturePtr Style::GetDashRightTileMask(double scale) const
   return pimpl->LoadScaledTexture("dash_right_border_tile_mask", scale);
 }
 
+BaseTexturePtr Style::GetDashTopLeftTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("overlay_top_left_tile", scale);
+}
+
 BaseTexturePtr Style::GetDashLeftTile(double scale) const
 {
   return pimpl->LoadScaledTexture("dash_left_tile", scale);

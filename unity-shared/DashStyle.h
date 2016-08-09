@@ -179,6 +179,7 @@ public:
   BaseTexturePtr GetDashHorizontalTileMask(double scale, Position) const;
   BaseTexturePtr GetDashRightTile(double scale) const;
   BaseTexturePtr GetDashRightTileMask(double scale) const;
+  BaseTexturePtr GetDashTopLeftTile(double scale) const;
   BaseTexturePtr GetDashLeftTile(double scale) const;
   BaseTexturePtr GetDashTopOrBottomTile(double scale, Position) const;
 
