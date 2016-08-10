@@ -39,8 +39,9 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
   first_prompt_ = true;
   username_ = username;
   authenticate_cb_ = authenticate_cb;
+  pam_handle_ = nullptr;
 
-  if (!InitPam())
+  if (!InitPam() || !pam_handle_)
     return false;
 
   glib::Object<GTask> task(g_task_new(nullptr, cancellable_, [] (GObject*, GAsyncResult*, gpointer data) {
@@ -66,7 +67,7 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
       if (unity::Settings::Instance().pam_check_account_type())
         self->status_ = status2;
 
-      pam_setcred (self->pam_handle_, PAM_REINITIALIZE_CRED);
+      pam_setcred(self->pam_handle_, PAM_REINITIALIZE_CRED);
     }
   });
 
