@@ -710,7 +710,6 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       {
         // Horizontal repeated texture
         int real_width = geo.width - (left_corner_size.width - left_corner_offset) - corner_size.width;
-        int offset = real_width % horizontal->GetWidth();
         int horizontal_y = geo.y + (geo.height - horizontal->GetHeight());
 
         if (dash_position == OverlayPosition::BOTTOM)
@@ -720,9 +719,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
         // Selectively erase blur region in the curbe
-        gfx_context.QRP_ColorModTexAlpha(left_corner_size.width - left_corner_offset - offset,
+        gfx_context.QRP_ColorModTexAlpha(left_corner_size.width - left_corner_offset,
                                          horizontal_y,
-                                         real_width + offset,
+                                         real_width,
                                          horizontal->GetHeight(),
                                          horizontal_mask->GetDeviceTexture(),
                                          texxform,
@@ -731,9 +730,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Write correct alpha
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
-        RenderInverseMask(gfx_context, left_corner_size.width - left_corner_offset - offset,
+        RenderInverseMask(gfx_context, left_corner_size.width - left_corner_offset,
                              horizontal_y,
-                             real_width + offset,
+                             real_width,
                              horizontal->GetHeight(),
                              horizontal_mask->GetDeviceTexture(),
                              texxform,
@@ -743,9 +742,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
         gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
 
-        gfx_context.QRP_1Tex(left_corner_size.width - left_corner_offset - offset,
+        gfx_context.QRP_1Tex(left_corner_size.width - left_corner_offset,
                              horizontal_y,
-                             real_width + offset,
+                             real_width,
                              horizontal->GetHeight(),
                              horizontal->GetDeviceTexture(),
                              texxform,
