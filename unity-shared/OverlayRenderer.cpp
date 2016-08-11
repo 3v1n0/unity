@@ -614,8 +614,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
   if (settings.form_factor() != FormFactor::NETBOOK || force_edges)
   {
-    int monitor = unity::UScreen::GetDefault()->GetMonitorAtPosition(parent->x_offset, parent->y_offset);
-    nux::Geometry const& monitor_geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
+    int monitor = UScreen::GetDefault()->GetMonitorAtPosition(absolute_geo.x, absolute_geo.y);
+    auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
     int launcher_size = Settings::Instance().LauncherSize(monitor);
     int panel_height = panel::Style::Instance().PanelHeight(monitor);
 
@@ -798,7 +798,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
         if (dash_position == dash::Position::BOTTOM)
         {
-          left_texture_y = monitor_geo.y + panel_height + top_left_texture_->GetHeight();
+          left_texture_y = panel_height + top_left_texture_->GetHeight();
           real_height = monitor_geo.height - launcher_size - content_geo.height - left_corner->GetHeight() - panel_height + top_corner_offset - top_left_texture_->GetHeight();
         }
         else if (settings.launcher_position() == LauncherPosition::BOTTOM)
@@ -923,8 +923,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
           texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
           gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-          gfx_context.QRP_1Tex(monitor_geo.x,
-                               monitor_geo.y + panel_height,
+          gfx_context.QRP_1Tex(0,
+                               panel_height,
                                top_left_texture_->GetWidth(),
                                top_left_texture_->GetHeight(),
                                top_left_texture_->GetDeviceTexture(),
@@ -934,8 +934,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
           texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
           texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
           gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-          gfx_context.QRP_1Tex(monitor_geo.x + top_left_texture_->GetWidth(),
-                               monitor_geo.y + panel_height - top_corner_offset,
+          gfx_context.QRP_1Tex(top_left_texture_->GetWidth(),
+                               panel_height - top_corner_offset,
                                monitor_geo.width - top_left_texture_->GetWidth(),
                                top_texture_->GetHeight(),
                                top_texture_->GetDeviceTexture(),
@@ -944,7 +944,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         }
         else if (settings.launcher_position() == LauncherPosition::BOTTOM)
         {
-          int above_launcher_y = monitor_geo.y + monitor_geo.height - panel_height - launcher_size;
+          int above_launcher_y = monitor_geo.height - panel_height - launcher_size;
 
           // Bottom Left edge
           texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -952,7 +952,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
           texxform.flip_v_coord = true;
 
           gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-          gfx_context.QRP_1Tex(monitor_geo.x,
+          gfx_context.QRP_1Tex(0,
                                above_launcher_y - top_left_texture_->GetWidth(),
                                top_left_texture_->GetWidth(),
                                top_left_texture_->GetHeight(),
@@ -966,7 +966,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
           texxform.flip_v_coord = false;
 
           gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-          gfx_context.QRP_1Tex(monitor_geo.x + top_left_texture_->GetHeight(),
+          gfx_context.QRP_1Tex(top_left_texture_->GetHeight(),
                                above_launcher_y + top_corner_offset - bottom_texture_->GetHeight(),
                                monitor_geo.width - top_left_texture_->GetHeight(),
                                bottom_texture_->GetHeight(),
