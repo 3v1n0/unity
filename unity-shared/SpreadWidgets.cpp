@@ -154,7 +154,7 @@ public:
     }
   }
 
-  int scale_;
+  double scale_;
   dash::BaseTexturePtr corner_tex_;
   dash::BaseTexturePtr left_edge_tex_;
   dash::BaseTexturePtr horizontal_tex_;
