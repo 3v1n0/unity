@@ -164,10 +164,26 @@ public:
 Widgets::Widgets()
   : filter_(std::make_shared<Filter>())
 {
-  auto monitors = UScreen::GetDefault()->GetPluggedMonitorsNumber();
+  auto const& uscreen = UScreen::GetDefault();
+  auto num_monitors = uscreen->GetPluggedMonitorsNumber();
 
-  for (auto i = 0; i < monitors; ++i)
+  for (auto i = 0; i < num_monitors; ++i)
     decos_.push_back(std::make_shared<Decorations>(i));
+
+  uscreen->changed.connect(sigc::track_obj([this] (int, std::vector<nux::Geometry> const& monitors) {
+    auto num_monitors = monitors.size();
+    decos_.reserve(num_monitors);
+
+    while (decos_.size() < num_monitors)
+      decos_.emplace_back(std::make_shared<Decorations>(decos_.size()-1));
+
+    decos_.resize(num_monitors);
+    for (auto i = 0u; i < num_monitors; ++i)
+    {
+      decos_[i]->monitor = i;
+      decos_[i]->monitor.changed.emit(i);
+    }
+  }, *this));
 }
 
 Filter::Ptr Widgets::GetFilter() const

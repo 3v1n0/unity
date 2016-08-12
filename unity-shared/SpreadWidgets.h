@@ -28,7 +28,7 @@ namespace spread
 {
 class Decorations;
 
-class Widgets
+class Widgets : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Widgets> Ptr;
