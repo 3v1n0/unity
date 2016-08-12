@@ -58,6 +58,7 @@ set (UNITY_SHARED_SOURCES
      SearchBar.cpp
      SearchBarSpinner.cpp
      SpreadFilter.cpp
+     SpreadWidgets.cpp
      StaticCairoText.cpp
      TextureCache.cpp
      TextInput.cpp
