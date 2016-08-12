@@ -89,67 +89,64 @@ public:
   {
     auto const& geo = GetGeometry();
     auto launcher_position = Settings::Instance().launcher_position();
+    int x_offset = 0;
 
-    // Corner
     nux::TexCoordXForm texxform;
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-    gfx_context.QRP_1Tex(0,
-                         0,
-                         corner_tex_->GetWidth(),
-                         corner_tex_->GetHeight(),
-                         corner_tex_->GetDeviceTexture(),
-                         texxform,
-                         nux::color::White);
-
-    // Top Edge
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-    gfx_context.QRP_1Tex(corner_tex_->GetWidth(),
-                         -LEFT_CORNER_OFFSET.CP(scale_),
-                         geo.width - corner_tex_->GetWidth(),
-                         horizontal_tex_->GetHeight(),
-                         horizontal_tex_->GetDeviceTexture(),
-                         texxform,
-                         nux::color::White);
-
-    // Left edge
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-    gfx_context.QRP_1Tex(-LEFT_CORNER_OFFSET.CP(scale_),
-                         corner_tex_->GetHeight(),
-                         left_edge_tex_->GetWidth(),
-                         geo.height,
-                         left_edge_tex_->GetDeviceTexture(),
-                         texxform,
-                         nux::color::White);
-
-    if (launcher_position == LauncherPosition::BOTTOM)
+    if (launcher_position == LauncherPosition::LEFT)
     {
-      texxform.flip_v_coord = true;
-
       // Corner
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
       texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
       gfx_context.QRP_1Tex(0,
-                           geo.height - corner_tex_->GetHeight(),
+                           0,
                            corner_tex_->GetWidth(),
                            corner_tex_->GetHeight(),
                            corner_tex_->GetDeviceTexture(),
                            texxform,
                            nux::color::White);
 
+      x_offset = corner_tex_->GetWidth();
+    }
+
+    // Top Edge
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+    gfx_context.QRP_1Tex(x_offset,
+                         -LEFT_CORNER_OFFSET.CP(scale_),
+                         geo.width - x_offset,
+                         horizontal_tex_->GetHeight(),
+                         horizontal_tex_->GetDeviceTexture(),
+                         texxform,
+                         nux::color::White);
+
+    if (launcher_position == LauncherPosition::LEFT)
+    {
+      // Left edge
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+      gfx_context.QRP_1Tex(-LEFT_CORNER_OFFSET.CP(scale_),
+                           corner_tex_->GetHeight(),
+                           left_edge_tex_->GetWidth(),
+                           geo.height,
+                           left_edge_tex_->GetDeviceTexture(),
+                           texxform,
+                           nux::color::White);
+    }
+    else if (launcher_position == LauncherPosition::BOTTOM)
+    {
+      texxform.flip_v_coord = true;
+
       // Bottom Edge
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
       texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
-      gfx_context.QRP_1Tex(corner_tex_->GetWidth(),
+      gfx_context.QRP_1Tex(0,
                            geo.height - horizontal_tex_->GetHeight() + LEFT_CORNER_OFFSET.CP(scale_),
-                           geo.width - corner_tex_->GetWidth(),
+                           geo.width,
                            horizontal_tex_->GetHeight(),
                            horizontal_tex_->GetDeviceTexture(),
                            texxform,
