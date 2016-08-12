@@ -35,6 +35,7 @@ public:
 
   void Start(std::string const& name);
   void Stop(std::string const& name);
+  bool IsConnected();
 
 private:
   glib::DBusProxy::Ptr systemd_proxy_;
@@ -52,16 +53,21 @@ SystemdWrapper::Impl::Impl(bool test)
 
 void SystemdWrapper::Impl::Start(std::string const& name)
 {
-  if (systemd_proxy_->IsConnected()) {
+  if (IsConnected()) {
     systemd_proxy_->Call("StartUnit", g_variant_new("(ss)", name.c_str(), "replace"));
   }
 }
 
 void SystemdWrapper::Impl::Stop(std::string const& name)
 {
-  if (systemd_proxy_->IsConnected()) {
+  if (IsConnected()) {
     systemd_proxy_->Call("StopUnit", g_variant_new("(ss)", name.c_str(), "replace"));
   }
+}
+
+bool SystemdWrapper::Impl::IsConnected()
+{
+  return systemd_proxy_->IsConnected();
 }
 
 //
@@ -87,6 +93,11 @@ void SystemdWrapper::Start(std::string const& name)
 void SystemdWrapper::Stop(std::string const& name)
 {
   pimpl_->Stop(name);
+}
+
+bool SystemdWrapper::IsConnected()
+{
+  return pimpl_->IsConnected();
 }
 
 }

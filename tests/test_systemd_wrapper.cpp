@@ -60,6 +60,7 @@ struct TestSystemdWrapper : public Test
     systemd_server_->AddObjects(SYSTEMD, "/org/freedesktop/systemd1");
 
     Utils::WaitUntilMSec([this] { return systemd_server_->IsConnected(); });
+    Utils::WaitUntilMSec([this] { return systemd_wrapper_.IsConnected(); });
   }
 
   unity::glib::DBusServer::Ptr systemd_server_;
