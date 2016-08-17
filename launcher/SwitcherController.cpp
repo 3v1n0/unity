@@ -45,7 +45,7 @@ const std::string SHOW_TIMEOUT = "show-timeout";
 const std::string DETAIL_TIMEOUT = "detail-timeout";
 const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
 const unsigned FADE_DURATION = 80;
-const int XY_OFFSET = 100;
+const RawPixel XY_OFFSET = 100_em;
 }
 
 namespace switcher
@@ -441,7 +441,8 @@ nux::Geometry GetSwitcherViewsGeometry()
   int monitor      = uscreen->GetMonitorWithMouse();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
 
-  monitor_geo.Expand(-XY_OFFSET, -XY_OFFSET);
+  auto em = Settings::Instance().em(monitor);
+  monitor_geo.Expand(-XY_OFFSET.CP(em), -XY_OFFSET.CP(em));
 
   return monitor_geo;
 }
