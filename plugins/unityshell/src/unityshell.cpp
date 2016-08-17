@@ -570,8 +570,8 @@ void UnityScreen::InitAltTabNextWindow()
 void UnityScreen::OnInitiateSpread()
 {
   scale_just_activated_ = super_keypressed_;
-  spread_filter_ = std::make_shared<spread::Filter>();
-  spread_filter_->text.changed.connect([this] (std::string const& filter) {
+  spread_widgets_ = std::make_shared<spread::Widgets>();
+  spread_widgets_->GetFilter()->text.changed.connect([this] (std::string const& filter) {
     if (filter.empty())
     {
       sScreen->relayoutSlots(CompMatch::emptyMatch);
@@ -579,7 +579,7 @@ void UnityScreen::OnInitiateSpread()
     else
     {
       CompMatch windows_match;
-      auto const& filtered_windows = spread_filter_->FilteredWindows();
+      auto const& filtered_windows = spread_widgets_->GetFilter()->FilteredWindows();
 
       for (auto const& swin : sScreen->getWindows())
       {
@@ -610,7 +610,7 @@ void UnityScreen::OnInitiateSpread()
 
 void UnityScreen::OnTerminateSpread()
 {
-  spread_filter_.reset();
+  spread_widgets_.reset();
 
   for (auto const& swin : sScreen->getWindows())
     UnityWindow::get(swin->window)->OnTerminateSpread();
@@ -1745,7 +1745,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     auto const& geo = NuxGeometryFromCompRect(r);
     wt->PresentWindowsIntersectingGeometryOnThisFrame(geo);
   }
-  
+
   auto const& launchers = launcher_controller_->launchers();
 
   for (auto const& launcher : launchers)
@@ -1857,8 +1857,13 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       if (wm.IsScaleActive())
       {
-        if (spread_filter_ && spread_filter_->Visible())
-          skip_other_plugins = spread_filter_->GetAbsoluteGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root);
+        if (spread_widgets_)
+        {
+          auto const& spread_filter = spread_widgets_->GetFilter();
+
+          if (spread_filter && spread_filter->Visible())
+            skip_other_plugins = spread_filter->GetAbsoluteGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root);
+        }
 
         if (!skip_other_plugins)
         {
@@ -1941,8 +1946,13 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       else if (wm.IsScaleActive())
       {
-        if (spread_filter_ && spread_filter_->Visible())
-          skip_other_plugins = spread_filter_->GetAbsoluteGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root);
+        if (spread_widgets_)
+        {
+          auto const& spread_filter = spread_widgets_->GetFilter();
+
+          if (spread_filter && spread_filter->Visible())
+            skip_other_plugins = spread_filter->GetAbsoluteGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root);
+        }
 
         if (!skip_other_plugins)
         {
@@ -2018,12 +2028,12 @@ void UnityScreen::handleEvent(XEvent* event)
         }
       }
 
-      if (spread_filter_ && spread_filter_->Visible())
+      if (spread_widgets_ && spread_widgets_->GetFilter()->Visible())
       {
         if (key_sym == XK_Escape)
         {
           skip_other_plugins = true;
-          spread_filter_->text = "";
+          spread_widgets_->GetFilter()->text = "";
         }
       }
 
@@ -2072,7 +2082,7 @@ void UnityScreen::handleEvent(XEvent* event)
     skip_other_plugins = true;
   }
 
-  if (spread_filter_ && spread_filter_->Visible())
+  if (spread_widgets_ && spread_widgets_->GetFilter() && spread_widgets_->GetFilter()->Visible())
     skip_other_plugins = false;
 
   if (!skip_other_plugins &&
@@ -4777,7 +4787,7 @@ void ScreenIntrospection::AddProperties(debug::IntrospectionData& introspection)
 
 Introspectable::IntrospectableList ScreenIntrospection::GetIntrospectableChildren()
 {
-  IntrospectableList children({uScreen->spread_filter_.get()});
+  IntrospectableList children({uScreen->spread_widgets_ ? uScreen->spread_widgets_->GetFilter().get() : nullptr});
 
   for (auto const& win : screen_->windows())
     children.push_back(UnityWindow::get(win));
