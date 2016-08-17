@@ -40,11 +40,13 @@ public:
   DBusObject(std::string const& introspection_xml, std::string const& interface_name);
   virtual ~DBusObject();
 
-  typedef std::function<GVariant*(std::string const&, GVariant*)> MethodCallback;
-  typedef std::function<GVariant*(std::string const&)> PropertyGetterCallback;
-  typedef std::function<bool(std::string const&, GVariant*)> PropertySetterCallback;
+  typedef std::function<GVariant*(std::string const& /*method*/, GVariant* /*parameters*/)> MethodCallback;
+  typedef std::function<GVariant*(std::string const& /*method*/, GVariant* /*parameters*/, std::string const& /*sender*/, std::string const& /*object_path*/)> MethodCallbackFull;
+  typedef std::function<GVariant*(std::string const& /*name*/)> PropertyGetterCallback;
+  typedef std::function<bool(std::string const& /*name*/, GVariant* /*value*/)> PropertySetterCallback;
 
   void SetMethodsCallsHandler(MethodCallback const&);
+  void SetMethodsCallsHandlerFull(MethodCallbackFull const&);
   void SetPropertyGetter(PropertyGetterCallback const&);
   void SetPropertySetter(PropertySetterCallback const&);
 
@@ -53,7 +55,7 @@ public:
   bool Register(glib::Object<GDBusConnection> const&, std::string const& path);
   void UnRegister(std::string const& path = "");
 
-  void EmitSignal(std::string const& signal, GVariant* parameters = nullptr, std::string const& path = "");
+  void EmitSignal(std::string const& signal, GVariant* parameters = nullptr, std::string const& dest = "", std::string const& path = "");
   void EmitPropertyChanged(std::string const& property, std::string const& path = "");
 
   sigc::signal<void, std::string const&> registered;
@@ -91,7 +93,7 @@ public:
   std::list<DBusObject::Ptr> GetObjects() const;
   DBusObject::Ptr GetObject(std::string const& interface) const;
 
-  void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters = nullptr);
+  void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters = nullptr, std::string const& dest = "");
 
   bool IsConnected() const;
   std::string const& Name() const;

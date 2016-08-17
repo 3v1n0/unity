@@ -82,7 +82,9 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
   indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Panel::OnEntryActivateRequest));
 
   monitor.changed.connect([this, hostname] (int monitor) {
-    hostname->SetScale(unity::Settings::Instance().em(monitor)->DPIScale());
+    double scale = unity::Settings::Instance().em(monitor)->DPIScale();
+    hostname->SetScale(scale);
+    static_cast<nux::HLayout*>(GetLayout())->SetLeftAndRightPadding(PADDING.CP(scale), 0);
     indicators_view_->SetMonitor(monitor);
     BuildTexture();
     QueueRelayout();
@@ -108,12 +110,39 @@ void Panel::AddIndicator(Indicator::Ptr const& indicator)
     return;
 
   indicators_view_->AddIndicator(indicator);
+
+  if (!active)
+  {
+    for (auto const& entry : indicator->GetEntries())
+    {
+      if (entry->active())
+      {
+        active = true;
+        indicators_view_->ActivateEntry(entry);
+        OnEntryActivated(GetPanelName(), entry->id(), entry->geometry());
+        break;
+      }
+    }
+  }
+
   QueueRelayout();
   QueueDraw();
 }
 
 void Panel::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
 {
+  if (active)
+  {
+    for (auto const& entry : indicator->GetEntries())
+    {
+      if (entry->active())
+      {
+        active = false;
+        break;
+      }
+    }
+  }
+
   indicators_view_->RemoveIndicator(indicator);
   QueueRelayout();
   QueueDraw();
@@ -121,7 +150,7 @@ void Panel::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
 
 std::string Panel::GetPanelName() const
 {
-  return "LockScreenPanel" + std::to_string(monitor);
+  return "LockScreenPanel";
 }
 
 void Panel::OnIndicatorViewUpdated()
@@ -136,10 +165,12 @@ void Panel::OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, in
   if (!GetInputEventSensitivity())
     return;
 
-  // This is ugly... But Nux fault!
-  WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
-
-  active = true;
+  if (!active)
+  {
+    // This is ugly... But Nux fault!
+    WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
+    active = true;
+  }
 }
 
 void Panel::OnEntryActivateRequest(std::string const& entry_id)

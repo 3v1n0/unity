@@ -110,10 +110,11 @@ public:
     UNFOLDED,
     STARTING,
     SHIMMER,
-    CENTER_SAVED,
-    PROGRESS,
     DESAT,
+    GLOW,
+    PROGRESS,
     PULSE_ONCE,
+    CENTER_SAVED,
 
     LAST
   };
@@ -143,6 +144,7 @@ public:
 
   virtual void ShowTooltip() = 0;
   virtual void HideTooltip() = 0;
+  virtual void PromptHideTooltip() = 0;
 
   virtual void    SetShortcut(guint64 shortcut) = 0;
 
@@ -150,7 +152,7 @@ public:
 
   virtual void SetSortPriority(int priority) = 0;
 
-  virtual bool OpenQuicklist(bool select_first_item = false, int monitor = -1) = 0;
+  virtual bool OpenQuicklist(bool select_first_item = false, int monitor = -1, bool restore_input_focus = false) = 0;
   virtual void CloseQuicklist() = 0;
 
   virtual void SetCenter(nux::Point3 const& center, int monitor) = 0;
@@ -173,13 +175,17 @@ public:
 
   virtual WindowList Windows() = 0;
 
-  virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
+  virtual WindowList WindowsForMonitor(int monitor) = 0;
 
-  virtual std::vector<Window> WindowsOnViewport() = 0;
+  virtual WindowList WindowsOnViewport() = 0;
 
-  virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
+  virtual bool WindowVisibleOnMonitor(int monitor) const = 0;
 
-  virtual const bool WindowVisibleOnViewport() = 0;
+  virtual bool WindowVisibleOnViewport() const = 0;
+
+  virtual size_t WindowsVisibleOnMonitor(int monitor) const = 0;
+
+  virtual size_t WindowsVisibleOnViewport() const = 0;
 
   virtual float PresentUrgency() = 0;
 
@@ -252,6 +258,8 @@ public:
   sigc::signal<void, AbstractLauncherIcon::Ptr const&> remove;
   sigc::signal<void, nux::ObjectPtr<nux::View>> tooltip_visible;
   sigc::signal<void, int> visibility_changed;
+  sigc::signal<void, int> windows_changed;
+  sigc::signal<void, Quirk, int> quirks_changed;
   sigc::signal<void> position_saved;
   sigc::signal<void> position_forgot;
   sigc::signal<void, std::string const&> uri_changed;

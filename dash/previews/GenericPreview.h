@@ -23,8 +23,9 @@
 #ifndef GENERICPREVIEW_H
 #define GENERICPREVIEW_H
 
-#include "Preview.h"
 #include <UnityCore/GenericPreview.h>
+#include "Preview.h"
+#include "unity-shared/OverlayScrollView.h"
 
 namespace unity
 {
@@ -52,6 +53,13 @@ protected:
   virtual void PreLayoutManagement();
 
   virtual void SetupViews();
+  virtual void UpdateScale(double scale);
+
+  nux::HLayout* image_data_layout_;
+  nux::VLayout* preview_info_layout_;
+  ScrollView* preview_info_scroll_;
+  nux::VLayout* preview_data_layout_;
+  nux::Layout* actions_layout_;
 };
 
 }

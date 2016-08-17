@@ -53,6 +53,8 @@
 
 namespace unity
 {
+enum class LauncherPosition;
+
 namespace launcher
 {
 extern const char* window_title;
@@ -144,6 +146,7 @@ public:
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
   sigc::signal<void> sc_launcher_icon_animation;
+  sigc::signal<void> key_nav_terminate_request;
 
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
@@ -200,7 +203,7 @@ private:
 #endif
 
 #ifdef USE_X11
-  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper::Ptr const& owner, ui::BarrierEvent::Ptr event);
 #endif
 
   void OnExpoChanged();
@@ -264,7 +267,7 @@ private:
                      float animation_neg_rads);
 
   void RenderArgs(std::list<ui::RenderArg> &launcher_args,
-                  nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo);
+                  nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo, bool& force_show_window);
 
   void OnIconAdded(AbstractLauncherIcon::Ptr const& icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr const& icon);
@@ -309,6 +312,7 @@ private:
   bool DndIsSpecialRequest(std::string const& uri) const;
 
   void OnDPIChanged();
+  void LoadTextures();
 
   LauncherModel::Ptr model_;
   MockableBaseWindow* parent_;
@@ -344,6 +348,7 @@ private:
   int launcher_drag_delta_;
   int launcher_drag_delta_max_;
   int launcher_drag_delta_min_;
+  int enter_x_;
   int enter_y_;
   int last_button_press_;
   int drag_icon_position_;
@@ -365,6 +370,9 @@ private:
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
   BackgroundEffectHelper bg_effect_helper_;
+
+  LauncherPosition launcher_position_;
+  connection::Wrapper launcher_position_changed_;
 
   nux::animation::AnimateValue<float> auto_hide_animation_;
   nux::animation::AnimateValue<float> hover_animation_;

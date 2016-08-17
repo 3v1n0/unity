@@ -97,6 +97,20 @@ GtkWidget* close_button_new();
 static void close_button_init(CloseButton*);
 static void close_button_class_init(CloseButtonClass*);
 
+bool gdk_error_trap_pop_with_output(std::string const& prefix)
+{
+  if (int error_code = gdk_error_trap_pop())
+  {
+    gchar tmp[1024];
+    XGetErrorText(gdk_x11_get_default_xdisplay(), error_code, tmp, sizeof(tmp) - 1);
+    tmp[sizeof(tmp) - 1] = '\0';
+    LOG_ERROR(logger) << (prefix.empty() ? "X error: " : prefix+": ") << tmp;
+    return true;
+  }
+
+  return false;
+}
+
 // Window implementation
 GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xid)
 {
@@ -112,15 +126,21 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
   gtk_window_set_deletable(self, FALSE);
   gtk_window_set_title(self, "Force Quit Dialog");
 
+  gdk_error_trap_push();
   XClassHint parent_class = {nullptr, nullptr};
   XGetClassHint(dpy, parent_xid, &parent_class);
-  gtk_window_set_wmclass(self, parent_class.res_name, parent_class.res_class);
+
+  if (!gdk_error_trap_pop_with_output("Impossible to get window class"))
+    gtk_window_set_wmclass(self, parent_class.res_name, parent_class.res_class);
+
   XFree(parent_class.res_class);
   XFree(parent_class.res_name);
 
   Atom WM_PID = gdk_x11_get_xatom_by_name("_NET_WM_PID");
   Atom WM_CLIENT_MACHINE = gdk_x11_get_xatom_by_name("WM_CLIENT_MACHINE");
+  Atom WM_CLIENT_LEADER = gdk_x11_get_xatom_by_name("WM_CLIENT_LEADER");
 
+  gdk_error_trap_push();
   auto& wm = WindowManager::Default();
   auto parent_hostname = wm.GetStringProperty(parent_xid, WM_CLIENT_MACHINE);
   long parent_pid = 0;
@@ -139,15 +159,24 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
     }
   }
 
+  gdk_error_trap_pop_with_output("Impossible to get window client machine and PID");
+
   auto const& deco_style = decoration::Style::Get();
   auto const& offset = deco_style->ShadowOffset();
-  int max_offset = std::max(std::abs(offset.x), std::abs(offset.y));
+  int max_offset = std::max(std::abs(offset.x * 4), std::abs(offset.y * 4));
   gtk_container_set_border_width(GTK_CONTAINER(self), deco_style->ActiveShadowRadius()+max_offset);
 
   auto* screen = gtk_window_get_screen(self);
   gtk_widget_set_visual(GTK_WIDGET(self), gdk_screen_get_rgba_visual(screen));
   gtk_widget_realize(GTK_WIDGET(self));
-  gtk_widget_override_background_color(GTK_WIDGET(self), GTK_STATE_FLAG_NORMAL, nullptr);
+
+  glib::Object<GtkCssProvider> style(gtk_css_provider_new());
+  gtk_css_provider_load_from_data(style, R"(
+    * { background-color: transparent; }
+  )", -1, nullptr);
+
+  auto* style_ctx = gtk_widget_get_style_context(GTK_WIDGET(self));
+  gtk_style_context_add_provider(style_ctx, glib::object_cast<GtkStyleProvider>(style), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
   gtk_container_add(GTK_CONTAINER(self), sheet_style_dialog_new(main_dialog, parent_xid, parent_pid));
 
@@ -162,19 +191,14 @@ GtkWidget* sheet_style_window_new(ForceQuitDialog* main_dialog, Window parent_xi
   auto xid = gdk_x11_window_get_xid(gwindow);
   XSetTransientForHint(dpy, xid, parent_xid);
   XSync(dpy, False);
-
-  if (int error_code = gdk_error_trap_pop())
-  {
-    gchar tmp[1024];
-    XGetErrorText(dpy, error_code, tmp, sizeof(tmp) - 1);
-    tmp[sizeof(tmp) - 1] = '\0';
-    LOG_ERROR(logger) << "Impossible to reparent dialog: " << tmp;
-  }
+  gdk_error_trap_pop_with_output("Impossible to reparent dialog");
 
   XChangeProperty(dpy, xid, WM_CLIENT_MACHINE, XA_STRING, 8, PropModeReplace,
                   (unsigned char *) parent_hostname.c_str(), parent_hostname.size());
   XChangeProperty(dpy, xid, WM_PID, XA_CARDINAL, 32, PropModeReplace,
                   (unsigned char *) &parent_pid, 1);
+  XChangeProperty(dpy, xid, WM_CLIENT_LEADER, XA_WINDOW, 32, PropModeReplace,
+                  (unsigned char *) &parent_xid, 1);
   XSync(dpy, False);
 
   return GTK_WIDGET(self);
@@ -227,17 +251,9 @@ void on_force_quit_clicked(GtkButton *button, gint64* kill_data)
 
   gdk_error_trap_push();
   XSync(dpy, False);
-
-  if (int error_code = gdk_error_trap_pop())
-  {
-    gchar tmp[1024];
-    XGetErrorText(dpy, error_code, tmp, sizeof(tmp) - 1);
-    tmp[sizeof(tmp) - 1] = '\0';
-    LOG_ERROR(logger) << "Impossible to kill window " << parent_xid << ": " << tmp;
-  }
-
   XKillClient(dpy, parent_xid);
   XSync(dpy, False);
+  gdk_error_trap_pop_with_output("Impossible to kill window "+std::to_string(parent_xid));
 
   if (parent_pid > 0)
     kill(parent_pid, 9);
@@ -259,18 +275,32 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
   auto const& radius = deco_style->CornerRadius();
   auto const& offset = deco_style->ShadowOffset();
   auto const& color = deco_style->ActiveShadowColor();
+  auto const& backcolor = deco_style->InactiveShadowColor();
   int decoration_radius = std::max({radius.top, radius.left, radius.right, radius.bottom});
 
-  gtk_css_provider_load_from_data(style, (R"(SheetStyleDialog {
+  gtk_css_provider_load_from_data(style, (R"(
+  SheetStyleDialog, sheet-style-dialog {
     background-color: #f7f6f5;
     color: #4a4a4a;
     border-radius: )"+std::to_string(decoration_radius)+R"(px;
-    box-shadow: )"+std::to_string(offset.x)+"px "+std::to_string(offset.y)+"px "+
+    box-shadow: )"+std::to_string(2 * offset.x)+"px "+std::to_string(2 * offset.y)+"px "+
                    std::to_string(deco_style->ActiveShadowRadius())+"px "+
                    "rgba("+std::to_string(int(color.red * 255.0))+", "+
                            std::to_string(int(color.green * 255.0))+", "+
                            std::to_string(int(color.blue * 255.0))+", "+
                            std::to_string(int(color.alpha))+'.'+std::to_string(int(color.alpha*10000.0))+')'+R"(;
+  }
+
+  SheetStyleDialog:backdrop, sheet-style-dialog:backdrop {
+    background-color: shade(#f7f6f5, 1.2);
+    color: shade(#4a4a4a, 1.5);
+    border-radius: )"+std::to_string(decoration_radius)+R"(px;
+    box-shadow: )"+std::to_string(2 * offset.x)+"px "+std::to_string(2 * offset.y)+"px "+
+                   std::to_string(deco_style->InactiveShadowRadius())+"px "+
+                   "rgba("+std::to_string(int(backcolor.red * 255.0))+", "+
+                           std::to_string(int(backcolor.green * 255.0))+", "+
+                           std::to_string(int(backcolor.blue * 255.0))+", "+
+                           std::to_string(int(backcolor.alpha))+'.'+std::to_string(int(backcolor.alpha*10000.0))+')'+R"(;
   })").c_str(), -1, nullptr);
 
   auto* style_ctx = gtk_widget_get_style_context(self);
@@ -286,14 +316,22 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
 
   auto* content_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
   gtk_container_set_border_width(GTK_CONTAINER(content_box), 10);
+#if GTK_CHECK_VERSION(3, 11, 0)
+  gtk_widget_set_margin_start(content_box, 20);
+  gtk_widget_set_margin_end(content_box, 20);
+#else
   gtk_widget_set_margin_left(content_box, 20);
   gtk_widget_set_margin_right(content_box, 20);
+#endif
   gtk_container_add(GTK_CONTAINER(main_box), content_box);
 
   auto* title = gtk_label_new(_("This window is not responding"));
-  auto* font_desc = pango_font_description_from_string("Ubuntu 17");
-  gtk_widget_override_font(title, font_desc);
-  pango_font_description_free(font_desc);
+  glib::Object<GtkCssProvider> title_style(gtk_css_provider_new());
+  gtk_css_provider_load_from_data(title_style, (R"(* { font-size: 17px; })"), -1, nullptr);
+  style_ctx = gtk_widget_get_style_context(title);
+  gtk_style_context_add_provider(style_ctx, glib::object_cast<GtkStyleProvider>(title_style), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  gtk_style_context_add_class(style_ctx, "unity-force-quit");
+
   gtk_widget_set_halign(title, GTK_ALIGN_START);
   gtk_box_pack_start(GTK_BOX(content_box), title, FALSE, FALSE, 0);
 
@@ -305,6 +343,9 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
   gtk_box_set_spacing(GTK_BOX(buttons_box), 15);
   gtk_container_set_border_width(GTK_CONTAINER(buttons_box), 5);
   gtk_button_box_set_layout(GTK_BUTTON_BOX(buttons_box), GTK_BUTTONBOX_END);
+  gtk_widget_set_halign(GTK_WIDGET(buttons_box), GTK_ALIGN_END);
+  gtk_widget_set_valign(GTK_WIDGET(buttons_box), GTK_ALIGN_END);
+  gtk_widget_set_margin_top(GTK_WIDGET(buttons_box), 20);
 
   auto* wait_button = gtk_button_new_with_mnemonic(_("_Wait"));
   gtk_container_add(GTK_CONTAINER(buttons_box), wait_button);
@@ -319,11 +360,7 @@ GtkWidget* sheet_style_dialog_new(ForceQuitDialog* main_dialog, Window parent_xi
                         kill_data, [] (gpointer data, GClosure*) { g_free(data); },
                         static_cast<GConnectFlags>(0));
 
-  auto* buttons_aligment = gtk_alignment_new(1, 1, 0, 0);
-  gtk_alignment_set_padding(GTK_ALIGNMENT(buttons_aligment), 20, 0, 0, 0);
-  gtk_container_add(GTK_CONTAINER(buttons_aligment), buttons_box);
-  gtk_container_add(GTK_CONTAINER(content_box), buttons_aligment);
-
+  gtk_container_add(GTK_CONTAINER(content_box), buttons_box);
   gtk_container_add(GTK_CONTAINER(self), main_box);
 
   return self;
@@ -337,6 +374,10 @@ static void sheet_style_dialog_class_init(SheetStyleDialogClass* klass)
     gtk_render_background(gtk_widget_get_style_context(self), cr, 0, 0, a.width, a.height);
     return GTK_WIDGET_CLASS(sheet_style_dialog_parent_class)->draw(self, cr);
   };
+
+#if GTK_CHECK_VERSION(3, 20, 0)
+  gtk_widget_class_set_css_name(GTK_WIDGET_CLASS(klass), "sheet-style-dialog");
+#endif
 }
 
 // Close button
@@ -344,11 +385,10 @@ GtkWidget* close_button_new()
 {
   auto* self = GTK_WIDGET(g_object_new(close_button_get_type(), nullptr));
   gtk_button_set_relief(GTK_BUTTON(self), GTK_RELIEF_NONE);
-  gtk_button_set_focus_on_click(GTK_BUTTON(self), FALSE);
   gtk_widget_set_can_focus(self, FALSE);
   gtk_widget_set_halign(self, GTK_ALIGN_START);
 
-  auto const& file = decoration::Style::Get()->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
+  auto const& file = decoration::Style::Get()->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR});
   auto* img = gtk_image_new_from_file(file.c_str());
   gtk_container_add(GTK_CONTAINER(self), img);
   CLOSE_BUTTON(self)->priv->img = GTK_IMAGE(img);
@@ -382,13 +422,13 @@ static void close_button_class_init(CloseButtonClass* klass)
 
     auto new_flags = gtk_widget_get_state_flags(self);
     auto const& deco_style = decoration::Style::Get();
-    auto file = deco_style->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR"/"});
+    auto file = deco_style->ThemedFilePath(CLOSE_BUTTON_INACTIVE_FILE, {PKGDATADIR});
 
     if (((new_flags & GTK_STATE_FLAG_PRELIGHT) && !gtk_widget_get_can_focus(self)) ||
         (new_flags & GTK_STATE_FLAG_FOCUSED))
     {
       auto const& basename = (new_flags & GTK_STATE_FLAG_ACTIVE) ? CLOSE_BUTTON_ACTIVE_FILE : CLOSE_BUTTON_FOCUSED_FILE;
-      file = deco_style->ThemedFilePath(basename, {PKGDATADIR"/"});
+      file = deco_style->ThemedFilePath(basename, {PKGDATADIR});
     }
 
     gtk_image_set_from_file(img, file.c_str());
@@ -422,8 +462,18 @@ struct ForceQuitDialog::Impl : sigc::trackable
 
   void UpdateWindowTime(Time time)
   {
-    gdk_x11_window_set_user_time(gtk_widget_get_window(dialog_), time);
+    auto gwindow = gtk_widget_get_window(dialog_);
+    gdk_x11_window_set_user_time(gwindow, time);
     gtk_widget_show_all(dialog_);
+
+    auto* dpy = gdk_x11_get_default_xdisplay();
+    auto xid = gdk_x11_window_get_xid(gwindow);
+    if (XWMHints *wmhints = XGetWMHints(dpy, xid))
+    {
+      wmhints->window_group = win_->id();
+      XSetWMHints(dpy, xid, wmhints);
+      XFree(wmhints);
+    }
   }
 
   void UpdateDialogPosition()

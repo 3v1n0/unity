@@ -36,7 +36,6 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/PreviewStyle.h"
-#include "unity-shared/RawPixel.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
@@ -57,8 +56,10 @@ const int DASH_DEFAULT_CATEGORY_COUNT = 3;
 
 const RawPixel DASH_RESULT_RIGHT_PAD = 35_em;
 const RawPixel PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET = 10_em;
+const RawPixel PREVIEW_CONTAINER_TRIANGLE_WIDTH = 14_em;
+const RawPixel PREVIEW_CONTAINER_TRIANGLE_HEIGHT = 12_em;
 
-const int MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT = 1000;
+const int MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT = 300;
 }
 
 // This is so we can access some protected members in nux::VLayout and
@@ -112,13 +113,13 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
 DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& application_starter)
   : nux::View(NUX_TRACKER_LOCATION)
+  , scale(Settings::Instance().em()->DPIScale())
   , scopes_(scopes)
   , application_starter_(application_starter)
   , preview_container_(nullptr)
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
   , last_activated_timestamp_(0)
-  , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
   , opening_column_x_(-1)
@@ -129,22 +130,19 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   , animate_preview_container_value_(0.0)
   , animate_preview_value_(0.0)
   , overlay_window_buttons_(new OverlayWindowButtons())
-  , cv_(Settings::Instance().em())
   , monitor_(0)
 {
   renderer_.SetOwner(this);
+  renderer_.owner_type = OverlayOwner::Dash;
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
 
   SetupViews();
   SetupUBusConnections();
-
   AddChild(overlay_window_buttons_.GetPointer());
 
-  mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
-  Relayout();
 
   if (scopes_)
   {
@@ -159,6 +157,8 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   });
 
   unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &DashView::OnDPIChanged));
+  scale.changed.connect(sigc::mem_fun(this, &DashView::UpdateScale));
+  UpdateScale(scale());
 }
 
 DashView::~DashView()
@@ -166,6 +166,15 @@ DashView::~DashView()
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the scope models
   RemoveLayout();
+}
+
+void DashView::SetMonitor(int monitor)
+{
+  if (monitor_== monitor)
+    return;
+
+  monitor_ = monitor;
+  scale = Settings::Instance().em(monitor_)->DPIScale();
 }
 
 void DashView::SetMonitorOffset(int x, int y)
@@ -232,13 +241,13 @@ void DashView::BuildPreview(Preview::Ptr model)
 
     if (!preview_container_)
     {
-      preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+      preview_container_ = new previews::PreviewContainer();
       preview_container_->SetRedirectRenderingToTexture(true);
       AddChild(preview_container_.GetPointer());
       preview_container_->SetParentObject(this);
     }
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-
+    preview_container_->scale = scale();
     preview_container_->SetGeometry(scopes_layout_->GetGeometry());
     preview_displaying_ = true;
 
@@ -265,6 +274,7 @@ void DashView::BuildPreview(Preview::Ptr model)
   {
     // got a new preview whilst already displaying, we probably clicked a navigation button.
     preview_container_->Preview(model, preview_navigation_mode_); // TODO
+    preview_container_->scale = scale();
   }
 
   if (G_LIKELY(preview_state_machine_.left_results() > 0 && preview_state_machine_.right_results() > 0))
@@ -303,13 +313,15 @@ void DashView::StartPreviewAnimation()
   preview_animation_.reset();
   preview_container_animation_.reset();
 
+  double anim_length = Settings::Instance().low_gfx() ? 0 : PREVIEW_ANIMATION_LENGTH;
+
   // Dash Split Open Animation
   split_animation_.reset(new na::AnimateValue<float>());
-  split_animation_->SetDuration((1.0f - animate_split_value_) * PREVIEW_ANIMATION_LENGTH);
+  split_animation_->SetDuration((1.0f - animate_split_value_) * anim_length);
   split_animation_->SetStartValue(animate_split_value_);
   split_animation_->SetFinishValue(1.0f);
   split_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-  split_animation_->updated.connect([this](float const& linear_split_animate_value)
+  split_animation_->updated.connect([this, anim_length](float const& linear_split_animate_value)
   {
     static na::EasingCurve split_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -321,11 +333,11 @@ void DashView::StartPreviewAnimation()
     {
       // Preview Container Close Animation
       preview_container_animation_.reset(new na::AnimateValue<float>());
-      preview_container_animation_->SetDuration((1.0f - animate_preview_container_value_) * PREVIEW_ANIMATION_LENGTH);
+      preview_container_animation_->SetDuration((1.0f - animate_preview_container_value_) * anim_length);
       preview_container_animation_->SetStartValue(animate_preview_container_value_);
       preview_container_animation_->SetFinishValue(1.0f);
       preview_container_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-      preview_container_animation_->updated.connect([this](float const& linear_preview_container_animate_value)
+      preview_container_animation_->updated.connect([this, anim_length](float const& linear_preview_container_animate_value)
       {
         static na::EasingCurve preview_container_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -337,7 +349,7 @@ void DashView::StartPreviewAnimation()
         {
           // Preview Close Animation
           preview_animation_.reset(new na::AnimateValue<float>());
-          preview_animation_->SetDuration((1.0f - animate_preview_value_) * PREVIEW_ANIMATION_LENGTH);
+          preview_animation_->SetDuration((1.0f - animate_preview_value_) * anim_length);
           preview_animation_->SetStartValue(animate_preview_value_);
           preview_animation_->SetFinishValue(1.0f);
           preview_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
@@ -372,13 +384,15 @@ void DashView::EndPreviewAnimation()
   split_animation_.reset();
   preview_container_animation_.reset();
 
+  double anim_length = Settings::Instance().low_gfx() ? 0 : PREVIEW_ANIMATION_LENGTH;
+
   // Preview Close Animation
   preview_animation_.reset(new na::AnimateValue<float>());
-  preview_animation_->SetDuration(animate_preview_value_ * PREVIEW_ANIMATION_LENGTH);
+  preview_animation_->SetDuration(animate_preview_value_ * anim_length);
   preview_animation_->SetStartValue(1.0f - animate_preview_value_);
   preview_animation_->SetFinishValue(1.0f);
   preview_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-  preview_animation_->updated.connect([this](float const& preview_value)
+  preview_animation_->updated.connect([this, anim_length](float const& preview_value)
   {
     animate_preview_value_ = 1.0f - preview_value;
     QueueDraw();
@@ -388,11 +402,11 @@ void DashView::EndPreviewAnimation()
     {
       // Preview Container Close Animation
       preview_container_animation_.reset(new na::AnimateValue<float>());
-      preview_container_animation_->SetDuration(animate_preview_container_value_ * PREVIEW_ANIMATION_LENGTH);
+      preview_container_animation_->SetDuration(animate_preview_container_value_ * anim_length);
       preview_container_animation_->SetStartValue(1.0f - animate_preview_container_value_);
       preview_container_animation_->SetFinishValue(1.0f);
       preview_container_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-      preview_container_animation_->updated.connect([this](float const& linear_preview_container_animate_value)
+      preview_container_animation_->updated.connect([this, anim_length](float const& linear_preview_container_animate_value)
       {
         static na::EasingCurve preview_container_animation_curve(na::EasingCurve::Type::InQuad);
 
@@ -403,7 +417,7 @@ void DashView::EndPreviewAnimation()
         {
           // Dash Split Close Animation
           split_animation_.reset(new na::AnimateValue<float>());
-          split_animation_->SetDuration(animate_split_value_ * PREVIEW_ANIMATION_LENGTH);
+          split_animation_->SetDuration(animate_split_value_ * anim_length);
           split_animation_->SetStartValue(1.0f - animate_split_value_);
           split_animation_->SetFinishValue(1.0f);
           split_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
@@ -458,19 +472,10 @@ void DashView::OnPreviewAnimationFinished()
   content_view_->SetPresentRedirectedView(true);
 }
 
-void DashView::AboutToShow(int monitor)
+void DashView::AboutToShow()
 {
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
-
-  if (monitor_ != monitor)
-  {
-    monitor_ = monitor;
-    cv_ = Settings::Instance().em(monitor_);
-
-    OnDPIChanged();
-    Relayout();
-  }
 
   /* Give the scopes a chance to prep data before we map them  */
   if (active_scope_view_)
@@ -482,6 +487,7 @@ void DashView::AboutToShow(int monitor)
 
     // this will make sure the spinner animates if the search takes a while
     search_bar_->ForceLiveSearch();
+    search_bar_->search_hint = active_scope_view_->scope()->search_hint;
   }
 
   // if a preview is open, close it
@@ -492,6 +498,7 @@ void DashView::AboutToShow(int monitor)
 
   overlay_window_buttons_->Show();
 
+  renderer_.scale = scale();
   renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
   renderer_.AboutToShow();
 }
@@ -499,7 +506,7 @@ void DashView::AboutToShow(int monitor)
 void DashView::AboutToHide()
 {
   if (BackgroundEffectHelper::blur_type == BLUR_STATIC)
-  { 
+  {
     content_geo_ = {0, 0, 0, 0};
     renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
   }
@@ -547,7 +554,7 @@ void DashView::SetupViews()
   content_layout_->AddLayout(search_bar_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   search_bar_ = new SearchBar(true);
-  search_bar_->scale = cv_->DPIScale();
+  search_bar_->scale = scale();
   AddChild(search_bar_);
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
@@ -576,8 +583,11 @@ void DashView::SetupViews()
 
 void DashView::OnDPIChanged()
 {
-  double scale = cv_->DPIScale();
+  scale = Settings::Instance().em(monitor_)->DPIScale();
+}
 
+void DashView::UpdateScale(double scale)
+{
   UpdateDashViewSize();
 
   for (auto& scope : scope_views_)
@@ -585,27 +595,23 @@ void DashView::OnDPIChanged()
 
   search_bar_->scale = scale;
   scope_bar_->scale = scale;
+  renderer_.scale = scale;
+
+  if (preview_container_)
+    preview_container_->scale = scale;
+
+  Relayout();
 }
 
 void DashView::UpdateDashViewSize()
 {
   dash::Style const& style = dash::Style::Instance();
 
-  RawPixel const v_separator_size = style.GetVSeparatorSize();
-  RawPixel const h_separator_size = style.GetHSeparatorSize();
-  RawPixel const view_top_padding = style.GetDashViewTopPadding();
+  layout_->SetLeftAndRightPadding(style.GetVSeparatorSize().CP(scale), 0);
+  layout_->SetTopAndBottomPadding(style.GetHSeparatorSize().CP(scale), 0);
 
-  RawPixel const search_bar_left_padding = style.GetSearchBarLeftPadding();
-  RawPixel const search_bar_height       = style.GetSearchBarHeight();
-
-  layout_->SetLeftAndRightPadding(v_separator_size.CP(cv_), 0);
-  layout_->SetTopAndBottomPadding(h_separator_size.CP(cv_), 0);
-
-  content_layout_->SetTopAndBottomPadding(view_top_padding.CP(cv_), 0);
-
-  search_bar_layout_->SetLeftAndRightPadding(search_bar_left_padding.CP(cv_), 0);
-  search_bar_->SetMinimumHeight(search_bar_height.CP(cv_));
-  search_bar_->SetMaximumHeight(search_bar_height.CP(cv_));
+  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding().CP(scale), 0);
+  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding().CP(scale), 0);
 }
 
 void DashView::SetupUBusConnections()
@@ -614,7 +620,7 @@ void DashView::SetupUBusConnections()
       sigc::mem_fun(this, &DashView::OnActivateRequest));
 }
 
-long DashView::PostLayoutManagement (long LayoutResult)
+long DashView::PostLayoutManagement(long LayoutResult)
 {
   Relayout();
   return LayoutResult;
@@ -626,7 +632,7 @@ void DashView::Relayout()
   content_geo_ = GetBestFitGeometry(geo);
   dash::Style& style = dash::Style::Instance();
 
-  RawPixel const top_padding = style.GetDashViewTopPadding();
+  int top_padding = style.GetDashViewTopPadding().CP(scale);
 
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
@@ -634,23 +640,35 @@ void DashView::Relayout()
   scopes_layout_->SetMaximumHeight (std::max(0, content_geo_.height -
                                                 search_bar_->GetGeometry().height -
                                                 scope_bar_->GetGeometry().height -
-                                                top_padding.CP(cv_)));
+                                                top_padding));
 
   scopes_layout_->SetMinimumHeight (std::max(0, content_geo_.height -
                                                 search_bar_->GetGeometry().height -
                                                 scope_bar_->GetGeometry().height -
-                                                top_padding.CP(cv_)));
+                                                top_padding));
 
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.y + content_geo_.height);
 
   // Minus the padding that gets added to the left
-  RawPixel const tile_width = style.GetTileWidth();
-  style.SetDefaultNColumns(floorf((content_geo_.width - cv_->CP(32)) / tile_width.CP(cv_)));
+  style.columns_number = floorf((content_geo_.width - (32_em).CP(scale)) / style.GetTileWidth().CP(scale));
 
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
   if (preview_displaying_)
-    preview_container_->SetGeometry(layout_->GetGeometry());
+  {
+    if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    {
+      auto preview_geo = content_geo_;
+      int padding = style.GetDashHorizontalBorderHeight().CP(scale());
+      preview_geo.y += padding;
+      preview_geo.height -= padding;
+      preview_container_->SetGeometry(preview_geo);
+    }
+    else
+    {
+      preview_container_->SetGeometry(layout_->GetGeometry());
+    }
+  }
 
   renderer_.UpdateBlurBackgroundSize(content_geo_, GetRenderAbsoluteGeometry(), false);
 
@@ -663,50 +681,41 @@ void DashView::Relayout()
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
   dash::Style& style = dash::Style::Instance();
-  int panel_height = renderer_.y_offset;
+  int vertical_offset = renderer_.y_offset;
+
+  if (style.always_maximised)
+  {
+    return nux::Geometry(0, vertical_offset, for_geo.width, for_geo.height - vertical_offset);
+  }
 
   int width = 0, height = 0;
-  RawPixel const tile_width  = style.GetTileWidth();
-  RawPixel const tile_height = style.GetTileHeight();
-  RawPixel const group_top_space    = style.GetPlacesGroupTopSpace();
-  RawPixel const category_icon_size = style.GetCategoryIconSize();
-  RawPixel const group_top_padding  = style.GetPlacesGroupResultTopPadding();
+  int tile_width = style.GetTileWidth().CP(scale);
 
-  int category_height = (group_top_space.CP(cv_) + category_icon_size.CP(cv_) +
-                         group_top_padding.CP(cv_) + tile_height.CP(cv_));
+  int category_height = (style.GetPlacesGroupTopSpace().CP(scale) +
+                         style.GetCategoryIconSize().CP(scale) +
+                         style.GetPlacesGroupResultTopPadding().CP(scale) +
+                         style.GetTileHeight().CP(scale));
 
   int half = for_geo.width / 2;
 
   // if default dash size is bigger than half a screens worth of items, go for that.
-  while ((width += tile_width.CP(cv_)) < half)
-    ;
+  while ((width += tile_width) < half);
 
-  RawPixel const v_separator_size   = style.GetVSeparatorSize();
-  RawPixel const group_left_padding = style.GetPlacesGroupResultLeftPadding();
+  width = std::max(width, tile_width * DASH_TILE_HORIZONTAL_COUNT);
+  width += style.GetVSeparatorSize().CP(scale);
+  width += style.GetPlacesGroupResultLeftPadding().CP(scale) + DASH_RESULT_RIGHT_PAD.CP(scale);
 
-  width = std::max(width, tile_width.CP(cv_) * DASH_TILE_HORIZONTAL_COUNT);
-  width += v_separator_size.CP(cv_);
-  width += group_left_padding.CP(cv_) + DASH_RESULT_RIGHT_PAD.CP(cv_);
-
-  RawPixel const h_separator_size = style.GetHSeparatorSize();
-  RawPixel const top_padding      = style.GetDashViewTopPadding();
-
-  height = h_separator_size.CP(cv_);
-  height += top_padding.CP(cv_);
+  height = style.GetHSeparatorSize().CP(scale);
+  height += style.GetDashViewTopPadding().CP(scale);
   height += search_bar_->GetGeometry().height;
   height += category_height * DASH_DEFAULT_CATEGORY_COUNT; // adding three categories
   height += scope_bar_->GetGeometry().height;
 
   // width/height shouldn't be bigger than the geo available.
   width = std::min(width, for_geo.width); // launcher width is taken into account in for_geo.
-  height = std::min(height, for_geo.height - panel_height); // panel height is not taken into account in for_geo.
+  height = std::min(height, for_geo.height - vertical_offset); // panel height is not taken into account in for_geo.
 
-  if (style.always_maximised)
-  {
-    width = std::max(0, for_geo.width);
-    height = std::max(0, for_geo.height - panel_height);
-  }
-  return nux::Geometry(0, panel_height, width, height);
+  return nux::Geometry(0, vertical_offset, width, height);
 }
 
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -738,6 +747,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   // See lp bug: 1125346 (The sharp white line between dash and launcher is missing)
   nux::Geometry clip_geo = geo_layout;
   clip_geo.x += 1;
+  if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    clip_geo.y += renderer_y_offset;
   graphics_engine.PushClippingRectangle(clip_geo);
 
   if (IsFullRedraw())
@@ -806,7 +817,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
     texxform.voffset = (scope_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
     int start_y = scope_bar_->GetY();
-    int final_y = geo_layout.y + geo_layout.height + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET.CP(cv_);
+    int final_y = geo_layout.y + geo_layout.height + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET.CP(scale);
 
     int scope_y = (1.0f - animate_split_value_) * start_y + (animate_split_value_ * final_y);
 
@@ -830,7 +841,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
       start_y = search_bar_->GetY();
-      final_y = geo_layout.y - search_bar_->GetHeight() - PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET.CP(cv_);
+      final_y = geo_layout.y - search_bar_->GetHeight() - PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET.CP(scale);
 
       graphics_engine.QRP_1Tex
       (
@@ -848,7 +859,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
       int start_x = active_scope_view_->filter_bar()->GetX();
-      int final_x = content_view_->GetX() + content_view_->GetWidth() + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET.CP(cv_);
+      int final_x = content_view_->GetX() + content_view_->GetWidth() + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET.CP(scale);
 
       int filter_x = (1.0f - animate_split_value_) * start_x + (animate_split_value_ * final_x);
 
@@ -872,7 +883,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
       int start_y = search_bar_->GetY();
-      int final_y = geo_layout.y - search_bar_->GetHeight() - PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET.CP(cv_);
+      int final_y = geo_layout.y - search_bar_->GetHeight() - PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET.CP(scale);
 
       graphics_engine.QRP_1Tex
       (
@@ -906,8 +917,8 @@ void DashView::DrawPreviewContainer(nux::GraphicsEngine& graphics_engine)
   // Triangle pointed at preview item
   if (opening_column_x_ != -1)
   {
-    int final_width  = cv_->CP(14);
-    int final_height = cv_->CP(12);
+    int final_width  = PREVIEW_CONTAINER_TRIANGLE_WIDTH.CP(scale);
+    int final_height = PREVIEW_CONTAINER_TRIANGLE_HEIGHT.CP(scale);
 
     int x_center = geo_content.x + (opening_column_x_ - geo_abs.x) + opening_column_width_ / 2;
     int start_y = geo_abs_preview.y - geo_abs.y;
@@ -1129,21 +1140,6 @@ void DashView::DrawPreview(nux::GraphicsEngine& graphics_engine, bool force_draw
   }
 }
 
-void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
-{
-  nux::Geometry geo(content_geo_);
-
-  if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
-  {
-    dash::Style& style = dash::Style::Instance();
-    RawPixel const right_title_width  = style.GetDashRightTileWidth();
-    RawPixel const bottom_title_width = style.GetDashBottomTileHeight();
-
-    geo.width  += right_title_width.CP(cv_);
-    geo.height += bottom_title_width.CP(cv_);
-  }
-}
-
 void DashView::OnActivateRequest(GVariant* args)
 {
   glib::String uri;
@@ -1187,7 +1183,9 @@ std::string DashView::AnalyseScopeURI(std::string const& uri)
 
   if (!filter.filters.empty())
   {
-    scope_views_[filter.id]->filters_expanded = true;
+    if (scope_views_.find(filter.id) != std::end(scope_views_))
+      scope_views_[filter.id]->filters_expanded = true;
+
     // update the scope for each filter
     for (auto p : filter.filters) {
       UpdateScopeFilter(filter.id, p.first, p.second);
@@ -1232,21 +1230,27 @@ void DashView::UpdateScopeFilterValue(Filter::Ptr filter, std::string value)
 
 void DashView::OnSearchChanged(std::string const& search_string)
 {
-  search_in_progress_ = true;
+  activate_on_finish_ = false;
 }
 
 void DashView::OnLiveSearchReached(std::string const& search_string)
 {
-  // reset and set it again once we're sure a search is happening
-  search_in_progress_ = false;
-
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
-  if (active_scope_view_)
+  if (!active_scope_view_.IsValid())
+    return;
+
+  if (active_scope_view_->PerformSearch(search_string, sigc::mem_fun(this, &DashView::OnScopeSearchFinished)))
   {
-    if (active_scope_view_->PerformSearch(search_string, sigc::mem_fun(this, &DashView::OnScopeSearchFinished)))
-    {
-      search_in_progress_ = true;
-    }
+    activate_delay_.reset(new glib::Timeout(MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT, [this] {
+      if (activate_on_finish_)
+      {
+        activate_on_finish_ = false;
+        active_scope_view_->ActivateFirst();
+      }
+
+      activate_delay_.reset();
+      return false;
+    }));
   }
 }
 
@@ -1265,12 +1269,15 @@ void DashView::OnScopeSearchFinished(std::string const& scope_id, std::string co
       LOG_DEBUG(logger) << "Search completed: " << search_string;
 
     search_bar_->SetSearchFinished();
-    search_in_progress_ = false;
 
-    activate_timeout_.reset();
-    if (activate_on_finish_ && !err)
-      OnEntryActivated();
-    activate_on_finish_= false;
+    if (activate_on_finish_)
+    {
+      activate_on_finish_ = false;
+      activate_delay_.reset();
+
+      if (!err)
+        active_scope_view_->ActivateFirst();
+    }
   }
 }
 
@@ -1282,7 +1289,7 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
 
   nux::ObjectPtr<ScopeView> view(new ScopeView(scope, search_bar_->show_filters()));
   AddChild(view.GetPointer());
-  view->scale = cv_->DPIScale();
+  view->scale = scale();
   view->SetVisible(false);
   view->result_activated.connect(sigc::mem_fun(this, &DashView::OnResultActivated));
 
@@ -1418,20 +1425,12 @@ void DashView::DisableBlur()
 }
 void DashView::OnEntryActivated()
 {
-  if (active_scope_view_.IsValid() && !search_in_progress_)
+  if (active_scope_view_.IsValid())
   {
-    active_scope_view_->ActivateFirst();
-  }
-  // delay the activation until we get the SearchFinished signal
-  activate_on_finish_ = search_in_progress_;
-
-  if (activate_on_finish_)
-  {
-    activate_timeout_.reset(new glib::Timeout(MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT, [this] {
-      activate_on_finish_ = false;
+    if (!activate_delay_ && !search_bar_->in_live_search())
       active_scope_view_->ActivateFirst();
-      return FALSE;
-    }));
+    else
+      activate_on_finish_ = true;
   }
 }
 
@@ -1500,9 +1499,6 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
   int num_rows = 1; // The search bar
   std::vector<bool> button_on_monitor;
 
-  RawPixel const right_title_width  = style.GetDashRightTileWidth();
-  RawPixel const bottom_title_width = style.GetDashBottomTileHeight();
-
   if (active_scope_view_.IsValid())
     num_rows += active_scope_view_->GetNumRows();
 
@@ -1521,8 +1517,8 @@ void DashView::AddProperties(debug::IntrospectionData& introspection)
   introspection.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height))
                .add("num_rows", num_rows)
                .add("form_factor", form_factor)
-               .add("right-border-width", right_title_width.CP(cv_))
-               .add("bottom-border-height", bottom_title_width.CP(cv_))
+               .add("vertical-border-width", style.GetDashVerticalBorderWidth().CP(scale))
+               .add("horizontal-border-height", style.GetDashHorizontalBorderHeight().CP(scale))
                .add("preview_displaying", preview_displaying_)
                .add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_)
                .add("dash_maximized", style.always_maximised())
@@ -1560,6 +1556,32 @@ void DashView::ProcessDndEnter()
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
+nux::Area* DashView::SkipUnexpandableHeaderKeyNav()
+{
+  PlacesGroup::Ptr prev_view;
+  auto category_views = active_scope_view_->GetOrderedCategoryViews();
+
+  for (auto category : category_views)
+  {
+    if (category->GetLayout() != nullptr)
+    {
+      auto header = category->GetHeaderFocusableView();
+      if (header && header->HasKeyFocus() && !category->IsExpandable())
+      {
+        if (prev_view)
+          return prev_view->GetChildView();
+        else
+          return search_bar_->text_entry();
+      }
+
+      if (category->IsVisible())
+        prev_view = category;
+    }
+  }
+
+  return nullptr;
+}
+
 nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state)
@@ -1590,17 +1612,23 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     direction = KEY_NAV_RIGHT;
     break;
   case NUX_VK_LEFT_TAB:
-  case NUX_VK_PAGE_UP:
     direction = KEY_NAV_TAB_PREVIOUS;
     break;
   case NUX_VK_TAB:
-  case NUX_VK_PAGE_DOWN:
     direction = KEY_NAV_TAB_NEXT;
     break;
   case NUX_VK_ENTER:
   case NUX_KP_ENTER:
     // Not sure if Enter should be a navigation key
     direction = KEY_NAV_ENTER;
+    break;
+  case NUX_VK_PAGE_UP:
+  case NUX_VK_PAGE_DOWN:
+    if (!preview_displaying_)
+    {
+      active_scope_view_->PerformPageNavigation((x11_key_code == NUX_VK_PAGE_UP) ? ScrollDir::UP : ScrollDir::DOWN);
+      return nux::GetWindowCompositor().GetKeyFocusArea();
+    }
     break;
   default:
     auto const& close_key = WindowManager::Default().close_window_key();
@@ -1702,6 +1730,14 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
         for (auto tab : tabs)
           return tab;
       }
+    }
+  }
+
+  if (direction == KEY_NAV_UP)
+  {
+    if (auto skip_view = SkipUnexpandableHeaderKeyNav())
+    {
+      return skip_view;
     }
   }
 

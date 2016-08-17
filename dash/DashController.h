@@ -21,7 +21,6 @@
 
 #include <memory>
 
-#include <gdk/gdk.h>
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibSignal.h>
@@ -83,7 +82,9 @@ private:
 
   nux::Geometry GetIdealWindowGeometry();
   int GetIdealMonitor();
-  void Relayout(bool check_monitor =false);
+  void OnMonitorChanged(int primary, std::vector<nux::Geometry> const&);
+  void UpdateDashPosition();
+  void Relayout();
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);
   void OnExternalShowDash(GVariant* variant);

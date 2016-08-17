@@ -37,10 +37,13 @@ public:
 
 protected:
   void ActivateLauncherIcon(ActionArg arg);
+  uint64_t SwitcherPriority() override;
   std::string GetName() const;
   std::string GetRemoteUri() const;
 
 private:
+  void UpdateTooltipText();
+
   bool show_in_switcher_;
 };
 

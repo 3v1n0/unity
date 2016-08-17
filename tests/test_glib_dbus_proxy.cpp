@@ -88,73 +88,85 @@ TEST_F(TestGDBusProxy, TestMethodReturn)
 
   Utils::WaitUntilMSec(got_result_return);
   Utils::WaitUntilMSec(got_signal_return);
- 
+
   EXPECT_EQ(returned_result, expected_return);
   EXPECT_EQ(returned_signal, expected_return);
 }
 
-TEST_F(TestGDBusProxy, TestCancelling)
+TEST_F(TestGDBusProxy, TestCancellingBeforeConnecting)
 {
-  std::string call_return;
   // method callback
-  auto method_connection = [&](GVariant *variant)
+  auto method_connection = [this](GVariant *variant, glib::Error const& e)
   {
-    if (variant != nullptr)
-    {
-      call_return = g_variant_get_string(g_variant_get_child_value(variant, 0), NULL);
-    }
+    got_result_return = true;
+  };
 
+  Utils::WaitUntilMSec(sigc::mem_fun(proxy, &glib::DBusProxy::IsConnected));
+
+  glib::Cancellable cancellable;
+  proxy.CallBegin("TestMethod", g_variant_new("(s)", "TestStringTestString"),
+                  method_connection, cancellable);
+
+  cancellable.Cancel();
+
+  Utils::WaitPendingEvents();
+  EXPECT_FALSE(got_result_return);
+}
+
+TEST_F(TestGDBusProxy, TestCancellingAfterConnecting)
+{
+  // method callback
+  auto method_connection = [this](GVariant *variant, glib::Error const& e)
+  {
     got_result_return = true;
   };
 
   EXPECT_FALSE(proxy.IsConnected()); // we shouldn't be connected yet
-  glib::Cancellable cancellable;
-  // but this has to work eitherway
-  proxy.Call("TestMethod", g_variant_new("(s)", "TestStringTestString"),
-             method_connection, cancellable);
 
-  // this could mostly cause the next test to fail
+  glib::Cancellable cancellable;
+  proxy.CallBegin("TestMethod", g_variant_new("(s)", "TestStringTestString"),
+                  method_connection, cancellable);
+
+  Utils::WaitUntilMSec(sigc::mem_fun(proxy, &glib::DBusProxy::IsConnected));
   cancellable.Cancel();
+
+  Utils::WaitPendingEvents();
   EXPECT_FALSE(got_result_return);
 }
 
-TEST_F(TestGDBusProxy, TestAcquiring)
+TEST_F(TestGDBusProxy, TestMultipleCalls)
 {
   const int NUM_REQUESTS = 10;
   int completed = 0;
   std::string call_return;
   // method callback
-  auto method_connection = [&](GVariant* variant, glib::Error const& err)
+  auto method_connection = [&](GVariant* variant)
   {
-    if (variant != nullptr)
-    {
-      call_return = g_variant_get_string(g_variant_get_child_value(variant, 0), NULL);
-    }
-
     if (++completed >= NUM_REQUESTS) got_result_return = true;
   };
 
   EXPECT_FALSE(proxy.IsConnected()); // we shouldn't be connected yet
   for (int i = 0; i < NUM_REQUESTS; i++)
-  {
-    proxy.CallBegin("TestMethod", g_variant_new("(s)", "TestStringTestString"),
-                    method_connection, nullptr);
-    Utils::WaitForTimeoutMSec(150);
-  }
-  Utils::WaitUntilMSec(got_result_return, 2);
+    proxy.Call("TestMethod", g_variant_new("(s)", "TestStringTestString"), method_connection, nullptr);
+
+  Utils::WaitPendingEvents();
+  Utils::WaitUntilMSec(got_result_return, 150, G_STRLOC);
+  EXPECT_EQ(completed, NUM_REQUESTS);
 }
 
 TEST_F(TestGDBusProxyInvalidService, TestTimeouting)
 {
   std::string call_return;
+  bool error;
   // method callback
-  auto method_connection = [&](GVariant* variant, glib::Error const& err)
+  auto method_connection = [&](GVariant* variant, glib::Error const& e)
   {
     if (variant != nullptr)
     {
       call_return = g_variant_get_string(g_variant_get_child_value(variant, 0), NULL);
     }
 
+    error = e;
     got_result_return = true;
   };
 
@@ -168,6 +180,7 @@ TEST_F(TestGDBusProxyInvalidService, TestTimeouting)
 
   Utils::WaitUntilMSec(got_result_return);
   EXPECT_EQ(call_return, "");
+  EXPECT_TRUE(error);
 }
 
 TEST_F(TestGDBusProxy, TestMethodCall)
@@ -190,7 +203,7 @@ TEST_F(TestGDBusProxy, TestMethodCall)
              method_connection);
 
   Utils::WaitUntilMSec(got_result_return);
- 
+
   EXPECT_TRUE(proxy.IsConnected());
   EXPECT_EQ("TestStringTestString", call_return);
 }

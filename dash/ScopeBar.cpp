@@ -18,7 +18,6 @@
 
 #include <glib/gstdio.h>
 #include "ScopeBar.h"
-#include <NuxCore/Logger.h>
 #include "config.h"
 #include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
@@ -27,14 +26,12 @@
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/RawPixel.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.scopebar");
 namespace
 {
 // according to Q design the inner area of the scopebar should be 40px
@@ -71,6 +68,9 @@ void ScopeBar::UpdateScale(double scale)
 
   for (auto icon : icons_)
     icon->scale = scale;
+
+  QueueDraw();
+  QueueRelayout();
 }
 
 void ScopeBar::SetupLayout()
@@ -85,7 +85,7 @@ void ScopeBar::SetupLayout()
 
 void ScopeBar::AddScope(Scope::Ptr const& scope)
 {
-  ScopeBarIcon* icon = new ScopeBarIcon(scope->id, scope->icon_hint);
+  ScopeBarIcon* icon = new ScopeBarIcon(scope->id, scope->icon_hint, scope->name);
 
   icon->SetVisible(scope->visible);
   icon->scale = scale();

@@ -14,6 +14,7 @@ from time import sleep
 
 from autopilot.input import Mouse
 from autopilot.keybindings import KeybindingsHelper
+from autopilot.introspection.types import Rectangle
 
 from unity.emulators import UnityIntrospectionObject
 logger = logging.getLogger(__name__)
@@ -107,30 +108,18 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
     def move_mouse_over_grab_area(self):
         """Move the mouse over the grab area for this panel."""
-        (x, y, w, h) = self.grab_area.geometry
-        target_x = x + w / 2
-        target_y = y + h / 2
-
         logger.debug("Moving mouse to center of grab area.")
-        self._mouse.move(target_x, target_y)
+        self._mouse.move_to_object(self.grab_area)
 
     def move_mouse_over_window_buttons(self):
         """Move the mouse over the center of the window buttons area for this panel."""
-        (x, y, w, h) = self.window_buttons.geometry
-        target_x = x + w / 2
-        target_y = y + h / 2
-
         logger.debug("Moving mouse to center of the window buttons.")
-        self._mouse.move(target_x, target_y)
+        self._mouse.move_to_object(self.window_buttons)
 
     def move_mouse_over_indicators(self):
         """Move the mouse over the center of the indicators area for this panel."""
-        (x, y, w, h) = self.indicators.geometry
-        target_x = x + w / 2
-        target_y = y + h / 2
-
         logger.debug("Moving mouse to center of the indicators area.")
-        self._mouse.move(target_x, target_y)
+        self._mouse.move_to_object(self.indicators)
 
     def get_indicator_entries(self, visible_only=True, include_hidden_menus=False):
         """Returns a list of entries for this panel including both menus and indicators"""
@@ -157,6 +146,10 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
     @property
     def title(self):
         return self.menus.panel_title
+
+    @property
+    def focused(self):
+        return self.menus.focused
 
     @property
     def desktop_is_active(self):
@@ -188,8 +181,8 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current panel."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current panel."""
+        return self.globalRect
 
 
 class MenuView(UnityIntrospectionObject):
@@ -211,8 +204,8 @@ class MenuView(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current menu view."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current menu view."""
+        return self.globalRect
 
 
 class WindowButtons(UnityIntrospectionObject):
@@ -252,8 +245,8 @@ class WindowButtons(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the current panel."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the current panel."""
+        return self.globalRect
 
 
 class WindowButton(UnityIntrospectionObject):
@@ -264,20 +257,25 @@ class WindowButton(UnityIntrospectionObject):
         self._mouse = Mouse.create()
 
     def mouse_move_to(self):
-        target_x = self.x + self.width / 2
-        target_y = self.y + self.height / 2
-        self._mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+        self._mouse.move_to_object(self)
 
     def mouse_click(self):
-        self.mouse_move_to()
-        sleep(.2)
-        self._mouse.click(press_duration=.1)
+        # Ignore buttons that are placed at 0x0, as they're invisible yet
+        if not self.x and not self.y and not self.visible:
+            return
+
+        self._mouse.click_object(self)
         sleep(.01)
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the window button."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the window button."""
+        return self.globalRect
+
+    def __repr__(self):
+        with self.no_automatic_refreshing():
+            details = "type={0.type} state={0.visual_state} sensitive={0.sensitive}".format(self)
+            return self._repr_string(details)
 
 
 class GrabArea(UnityIntrospectionObject):
@@ -285,8 +283,8 @@ class GrabArea(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the grab area."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the grab area."""
+        return self.globalRect
 
 
 class Indicators(UnityIntrospectionObject):
@@ -310,8 +308,8 @@ class Indicators(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the indicators area."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the indicators area."""
+        return self.globalRect
 
 
 class IndicatorEntry(UnityIntrospectionObject):
@@ -322,30 +320,26 @@ class IndicatorEntry(UnityIntrospectionObject):
         self._mouse = Mouse.create()
 
     def mouse_move_to(self):
-        target_x = self.x + self.width / 2
-        target_y = self.y + self.height / 2
-        self._mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+        self._mouse.move_to_object(self)
 
     def mouse_click(self, button=1):
-        self.mouse_move_to()
-        sleep(.2)
-        assert(self.visible)
-        self._mouse.click(press_duration=.1)
+        self._mouse.click_object(self, button=button)
         sleep(.01)
 
     @property
     def geometry(self):
-        """Returns a tuple of (x,y,w,h) for the indicator entry."""
-        return (self.x, self.y, self.width, self.height)
+        """Returns a Rectangle (x,y,w,h) for the indicator entry."""
+        return self.globalRect
 
     @property
     def menu_geometry(self):
-        """Returns a tuple of (x,y,w,h) for the opened menu geometry."""
-        return (self.menu_x, self.menu_y, self.menu_width, self.menu_height)
+        """Returns a Rectangle (x,y,w,h) for the opened menu geometry."""
+        return Rectangle(self.menu_x, self.menu_y, self.menu_width, self.menu_height)
 
     def __repr__(self):
         with self.no_automatic_refreshing():
-            return "<IndicatorEntry 0x%x (%s)>" % (id(self), self.label)
+            details = "label={0.label}".format(self)
+            return self._repr_string(details)
 
 
 class Tray(UnityIntrospectionObject):

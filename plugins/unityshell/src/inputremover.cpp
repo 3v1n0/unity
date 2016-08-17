@@ -19,12 +19,12 @@
  * Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
-#include <cstdlib>
-#include <boost/scoped_array.hpp>
 #include "inputremover.h"
+#include <cstdlib>
 #include <X11/Xregion.h>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 namespace
 {
@@ -88,6 +88,7 @@ compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
                                                 Window shapeWindow,
                                                 Window propWindow) :
   mDpy (dpy),
+  mProperty (XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", False)),
   mShapeWindow (shapeWindow),
   mPropWindow (propWindow),
   mShapeMask (0),
@@ -328,7 +329,6 @@ compiz::WindowInputRemover::writeProperty (XRectangle *input,
                                            int nInput,
                                            int inputOrdering)
 {
-  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
   Atom type = XA_CARDINAL;
   int  fmt  = 32;
 
@@ -347,15 +347,14 @@ compiz::WindowInputRemover::writeProperty (XRectangle *input,
    */
   const size_t dataSize = headerSize + (nInput * 4);
 
-  boost::scoped_array<unsigned long> data(new unsigned long[dataSize]);
-
+  std::vector<unsigned long> data(dataSize);
   data[0] = propVersion;
   data[1] = nInput;
   data[2] = inputOrdering;
 
   for (int i = 0; i < nInput; ++i)
   {
-    const unsigned int position = dataSize + (i * 4);
+    const unsigned int position = headerSize + (i * 4);
 
     data[position + 0] = input[i].x;
     data[position + 1] = input[i].y;
@@ -366,11 +365,11 @@ compiz::WindowInputRemover::writeProperty (XRectangle *input,
   /* No need to check return code, always returns 0 */
   XChangeProperty(mDpy,
                   mPropWindow,
-                  prop,
+                  mProperty,
                   type,
                   fmt,
                   PropModeReplace,
-                  reinterpret_cast<unsigned char*>(data.get()),
+                  reinterpret_cast<unsigned char*>(data.data()),
                   dataSize);
 
   return true;
@@ -382,7 +381,6 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
                                           int *inputOrdering)
 
 {
-  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
   Atom type = XA_CARDINAL;
   int  fmt  = 32;
 
@@ -400,7 +398,7 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
    * long the rest of the property is going to be */
   if (!XGetWindowProperty(mDpy,
                           mPropWindow,
-                          prop,
+                          mProperty,
                           0L,
                           headerLength,
                           FALSE,
@@ -439,7 +437,7 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
 
   if (!XGetWindowProperty(mDpy,
                           mPropWindow,
-                          prop,
+                          mProperty,
                           0L,
                           fullLength,
                           FALSE,
@@ -487,9 +485,7 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
 void
 compiz::WindowInputRemover::clearProperty()
 {
-  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
-
-  XDeleteProperty(mDpy, mPropWindow, prop);
+  XDeleteProperty(mDpy, mPropWindow, mProperty);
 }
 
 bool

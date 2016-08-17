@@ -1,3 +1,1196 @@
+unity (7.5.0+16.10.20160806-0ubuntu1) yakkety; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: avoid deferencing an invalid shadow texture ptr,
+    and split functions (LP: #1608464)
+  * UnityWindowView: don't try to deference close_button_ if its' null
+  * DecorationsForceQuitDialog: make CSS selectors work with gtk 3.20
+
+  [ Andrea Azzarone, Marco Trevisan (Treviño) ]
+  * DecoratedWindow: display unmaximize button if the window is
+    vertically or horizontally maximized (LP: #1608480)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Sat, 06 Aug 2016 16:25:58 +0000
+
+unity (7.5.0+16.10.20160727-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * [LockSceen] Remove numlock warning. (LP: #1526322)
+  * Make sure initiate and terminate callbacks are not empty before
+    calling them. (LP: #1605012)
+  * Properly destroy close_button_ to properly disconnect lambda. (LP:
+    #1605010)
+  * Use the standard notification-device-eject in the "device eject"
+    notification. This allows us to scale it properly on high-dpi
+    setups. (LP: #1605231)
+  * Add tools to enforce unityshell plugin for the current profile and
+    add "move" and "resize" plugins as requirements. (LP: #1506023,
+    #1605007)
+  * When locked discard damages from windows below lockscreen. (LP:
+    #1605180)
+
+  [ Eleni Maria Stea ]
+  * DecoratedWindow: Added shadows for shaped windows
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenAcceleratorController: ensure callbacks are valid before
+    calling them (LP: #1605012)
+  * DecoratedWindow: Cleanup shadows for shaped windows, reduce
+    recomputation
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 27 Jul 2016 10:25:54 +0000
+
+unity (7.5.0+16.10.20160715-0ubuntu1) yakkety; urgency=medium
+
+  [ Eleni Maria Stea ]
+  * Reverts fix for multimonitor because of problems in nvidia cards
+    (see bug: #1602901) (LP: #1602901)
+
+ -- iain@orangesquash.org.uk <iain@orangesquash.org.uk>  Fri, 15 Jul 2016 15:13:28 +0000
+
+unity (7.5.0+16.10.20160714-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * FileManagerLauncherIcon: Don't trust the Quirk::VISIBLE in the ctor.
+    (LP: #1599133)
+  * [TrashLauncherIcon] Create GFileMonitor in an idle to avoid blocking
+    calls. (LP: #1602720)
+
+  [ Marco Trevisan (Treviño) ]
+  * Unity script: use result from unity_support_test to check the right
+    COMPIZ_CONFIG_PROFILE to use (LP: #1602377)
+  * SwitcherView: always disable animations when in lowgfx mode (LP:
+    #1602784)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 14 Jul 2016 10:06:29 +0000
+
+unity (7.5.0+16.10.20160705.4-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add missing header to fix compilation error with -Duse_pch=OFF.
+  * Filter out fullscreen window in show desktop mode to decide if unity
+    must be displayed. (LP: #1597706)
+  * Make sure file manager icon is not removed when unpinned. (LP:
+    #1578792)
+  * Properly calculate the intersection geometry in PanelView::Draw.
+    This is needed to properly call SyncGeometries and to avoid problems
+    such as lp:1595698. (LP: #1595698)
+
+  [ Eleni Maria Stea ]
+  * speeds up the showdesktop plugin in lowgfx mode
+  * UnityScreen: only redraw parts of the screen visible in each output
+    (LP: #1598770)
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenAcceleratorController: check if a setting key is available
+    instead of crashing
+  * ApplicationLauncherIcon: ensure quirks are properly set on icon
+    initialization
+  * Views: Toggle animators durations based on low-gfx setting (LP:
+    #1598770)
+  * unity7.conf: use different compiz profile based on
+    unity_support_test result (LP: #1598770)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 05 Jul 2016 10:24:14 +0000
+
+unity (7.5.0+16.10.20160628.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * UnitySettings: Add an option to enable/disable pam account checking.
+    (LP: #1460649)
+  * Lockscreen: Make sure warning and errors are properly shown to the
+    user (LP: #1593696)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 28 Jun 2016 16:23:47 +0000
+
+unity (7.5.0+16.10.20160621.1-0ubuntu1) yakkety; urgency=medium
+
+  * LockScreenAcceleratorController: use key::Grabber to handle allowed
+    bindings (LP: #1438754)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 21 Jun 2016 14:44:22 +0000
+
+unity (7.5.0+16.10.20160606.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Alberto Milone ]
+  * UnitySettings: Add dconf keys for disabling multitouch gestures (LP:
+    #1589520)
+
+  [ Andrea Azzarone ]
+  * Do not trigger screensaver on session inactive. (LP: #1587507)
+  * Use SwitcherController::SetDetail instead of detail=... (LP:
+    #1587618)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 06 Jun 2016 14:29:04 +0000
+
+unity (7.5.0+16.10.20160602-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add whitelist for auto-repated keys. (LP: #1586491)
+  * Fix scale window activation if in show desktop mode. (LP: #1582056)
+  * Order matters in the rendering. Draw launcher shadow after the
+    background in all cases. (LP: #1586374)
+  * Fallback to volume name if no other identifier is available. (LP:
+    #1103593)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 02 Jun 2016 01:02:19 +0000
+
+unity (7.5.0+16.10.20160525-0ubuntu1) yakkety; urgency=medium
+
+  [ Eleni Maria Stea ]
+  * PanelView: Don't draw it if the geo doesn't intersect the monitor
+    geo (as in ezoom)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 25 May 2016 14:22:42 +0000
+
+unity (7.5.0+16.10.20160517-0ubuntu1) yakkety; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Bumping version to 7.5.0, as per 7.4 release
+
+  [ Andrea Azzarone ]
+  * Do not reset the shortcut for icons that have their own shortcut.
+    (LP: #1562847)
+  * Fallback to "background" class in case no background is specified
+    for title bars and top panel. (LP: #1575527)
+  * GnomeKeyGrabber: do not activate an action if it's a repeated one.
+    (LP: #1572241)
+  * Properly calculate array indexes to avoid crashes. (LP: #1570843)
+  * Properly remove SoftwareCenterLauncherIcon in case of failure. (LP:
+    #1553165)
+  * Update ExpoLauncherIcon in case the quicklist is used to switch vp.
+    (LP: #1525685)
+
+  [ Marco Trevisan (Treviño) ]
+  * DashStyle: ensure LazyLoadTexture disconnects from signals on
+    destruction (LP: #1580212)
+  * Releasing Unity 7.4.0
+  * SwitcherController: don't try to get a window from empty selections
+    (LP: #1580211)
+  * SwitcherView: close the mouse-selected application on middle-click
+    (LP: #1574689)
+  * UnityScreen, UnityWindow: cleanup a little the code, and ensure
+    overridden CompositeWindow functions get actually called
+
+  [ handsome_feng ]
+  * Change the x_offset of expo when launcher position changed. (LP:
+    #1573897, #1562348)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 17 May 2016 02:56:22 +0000
+
+unity (7.4.0+16.04.20160415-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Do not use pointers to LazyLoadTextures. (LP: #1569100)
+  * Fix unity script crash. (LP: #1566565)
+  * LockscreenController: Don't use SetActivate(False) for gnome-
+    screensaver to prevent unlocking on tty switch. It will not only
+    deactivate the screensaver but also unlock the screen. (LP:
+    #1552537)
+  * unityshell.xml: Fix typo (LP: #1559427)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 15 Apr 2016 05:33:08 +0000
+
+unity (7.4.0+16.04.20160401.1-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Improve the "lock on suspend" logic to always keep in sync the
+    inhibitor with the lockscreen.
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: Just send estimated extents on
+    _NET_REQUEST_FRAME_EXTENTS (LP: #1368118)
+  * TextureCache: add support for loading themed textures (LP: #903179,
+    #1208790)
+  * Unity: stop unity7 upstart instance if needed and restart it if not
+    clearly requested (LP: #1555633)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 01 Apr 2016 23:11:47 +0000
+
+unity (7.4.0+16.04.20160322-0ubuntu1) xenial; urgency=medium
+
+  * ForceQuitDialog: set client leader
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 22 Mar 2016 15:36:52 +0000
+
+unity (7.4.0+16.04.20160321-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * ApplicationLauncherIcon: use the starting property to show an icon
+    when launched (LP: #676457)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 21 Mar 2016 15:38:22 +0000
+
+unity (7.4.0+16.04.20160318-0ubuntu1) xenial; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * UserPromptView: don't hide local scale property (LP: #1551820)
+
+  [ Sebastien Bacher ]
+  * set the gettext domain directly in CMakeLists rather than using
+    refering to the project name, the translation template is updated
+    during the build by dh_translations which is not clever enough to
+    understand the variable (LP: #1557081)
+
+  [ handsome_feng ]
+  * Dash: move it down when the launcher is positioned at the bottom.
+    (LP: #1552630)
+  * Launcher: add Bottom mode, so that the launcher can be positioned
+    horisontally (LP: #1552630)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 18 Mar 2016 10:10:42 +0000
+
+unity (7.4.0+16.04.20160310-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Add a "Format..." option to volume icons. (LP: #1057008)
+
+  [ Marco Trevisan (Treviño) ]
+  * DashView: ensure that we update scaling when monitor changes (LP:
+    #1546690)
+  * DecoratedWindow: move the shadow under the window if we've a client-
+    side decorated window with corners (LP: #1516403)
+  * LauncherController: add overlay shortcut to all the
+    WindowedLauncherIcon's we have
+  * ThemeSettings: add small class for reading gtk settings for theming
+    (LP: #1543757, #1288998)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 10 Mar 2016 10:09:34 +0000
+
+unity (7.4.0+16.04.20160223.1-0ubuntu1) xenial; urgency=medium
+
+  [ Andrea Azzarone, Didier Roche ]
+  * Gnome-software launcher integration.
+
+  [ Marco Trevisan (Treviño) ]
+  * GnomeFileManager: use *WithTimestamp file operations instead of
+    using Activate workaround (LP: #1445595)
+  * unity.migrations: add 04_unity_update_software_center_desktop_file
+
+  [ Robert Ancell ]
+  * Drop unused build-dependency on libgee-dev.
+  * Switch from Ubuntu Software Center to GNOME Software. (LP: #1547129)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 23 Feb 2016 22:39:18 +0000
+
+unity (7.4.0+16.04.20160209.3-0ubuntu1) xenial; urgency=medium
+
+  [ Didier Roche ]
+  * debian: Recommends session-shortcuts, prodiving easy way to
+    shutdown, reboot and logout from dash
+
+  [ Marco Trevisan (Treviño) ]
+  * CMake: use GNUInstallDirs with native multi-arch support (LP:
+    #1508635, #1485668)
+  * Launcher: add FileManager, Trash and Volume icons integration (LP:
+    #1524721, #1161323, #1063838, #1063823)
+  * SwitcherModel: avoid to access to invalid selection or to divide by
+    zero (LP: #1537524)
+
+  [ handsome_feng ]
+  * Extend the lockscreen theme for kylin.
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 09 Feb 2016 12:21:15 +0000
+
+unity (7.4.0+16.04.20151218-0ubuntu2) xenial; urgency=medium
+
+  * Multiarchify the library packages.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 28 Jan 2016 17:38:52 +0100
+
+unity (7.4.0+16.04.20151218-0ubuntu1) xenial; urgency=medium
+
+  [ Aneesh Madhavan ]
+  * resources: optimize png images (LP: #1023745)
+
+  [ Evan McIntire ]
+  * ShortcutHint: Add key shortcut hints for Screenshot and Window
+    Screenshot (LP: #1050195)
+
+  [ Marco Trevisan (Treviño) ]
+  * CompizShortcutModeller: show menus keybinding can be read from
+    settings
+  * GnomeKeyGrabber: refcount the actions and remove them only when
+    nobody needs (LP: #1525308)
+  * LayoutSystem: add ComputeDecorationHeight method to LayoutWindow
+    (LP: #1526386)
+  * PanelMenuView: ensure that the maximized window is computed when
+    setting the monitor (LP: #1526835)
+  * SwitcherModel: don't reiterate over windows all the time, keep a
+    list and update it (LP: #1526434)
+  * TextInput: reduce opacity to warning if only num_lock is enabled
+  * Unity: compile a byte regex in order to get proper matching with
+    byte cmdline (LP: #1526455)
+  * a11y: don't spam the log with warnings when a quicklist is opened
+  * a11y: move accessibility stuff to its own directory, adding a
+    private lib for building
+
+  [ Michael Vogt ]
+  * Display "image-missing" icon in the panel if for some reason a icon
+    can not be loaded. (LP: #1525186)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 18 Dec 2015 00:01:39 +0000
+
+unity (7.4.0+16.04.20151211-0ubuntu2) xenial; urgency=medium
+
+  * rebuild against latest libunity to update the list of recommends
+    (LP: #1521208)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 15 Dec 2015 09:29:52 +0100
+
+unity (7.4.0+16.04.20151211-0ubuntu1) xenial; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * unity: ensure we use python3 for the launch script and
+    python2.7 for autopilot (LP: #1512909)
+
+  [ Andrea Azzarone ]
+  * Places(Overlay)VScrollBar: impelement gtk-like overlay scrollbars
+    (LP: #1481706)
+  * Properly hide shortcut overlay window to avoid unnecessary redraws.
+
+  [ Bryan Quigley ]
+  * debian/control: Remove telepathy from recommends
+
+  [ Eleni Maria Stea ]
+  * Replaced deprecated calls in tests to get rid of compiler warnings
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: if a new window opens while spreading,
+    spread again with proper match (LP: #1517455)
+  * ExpoLauncherIcon: add Quicklist to switch workspace and see the
+    selected one (LP: #750497)
+  * PanelIndicatorEntryView: Activate menus on click, by drawing them as
+    active (LP: #1513523)
+  * PanelMenuView: ignore leave events when triggered by feeding nux
+    manually (LP: #1513496)
+  * Places(Overlay)VScrollBar: impelement gtk-like overlay scrollbars
+    (LP: #1481706)
+  * SwitcherModel: allow to add/remove icons dynamically and update them
+    when they require it (LP: #1512349)
+  * SwitcherView: Add support to Alt+Key-right-to-tab to close the
+    selected app/window
+  * Switcher{View,Controller}: close active selection on Alt+q (LP:
+    #1468820)
+  * TextInput: show warning also when num lock is enabled
+  * XKeyboardUtil: add ability to get keycodes from any relative
+    position
+  * debian/rules: enable unit tests on arm64 again (LP: #1514538)
+
+  [ Sebastien Bacher ]
+  * Updated apport hook to include: the compiz and xorg details, not
+    only after asking users if the issue is a graphical one (which is
+    weird question) the upstart logs for unity/ups/lockscreen some
+    gsettings configurations (LP: #1508974)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 11 Dec 2015 12:46:16 +0000
+
+unity (7.4.0+16.04.20151102-0ubuntu2) xenial; urgency=medium
+
+  * No-change rebuild against libglew1.13
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 11 Nov 2015 19:49:37 +0000
+
+unity (7.4.0+16.04.20151102-0ubuntu1) xenial; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Bumping version to 7.4.0
+  * Fix building in xenial
+
+  [ Didier Roche ]
+  * Remove unity2d transitional packages. We are post trusty LTS, they
+    are not needed anymore
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: if an app is not running and has no desktop
+    file, add QL item to add to dash
+  * PanelService: unset the idle ID before removal on callback (LP:
+    #1501289)
+  * Unity: use compiz cursorCache to get properly updated cursors (LP:
+    #1359211)
+  * UnityScreen: add SpreadAppWindows option and trigger it on
+    Super+Ctrl+[Shift]+W
+
+  [ Stephen M. Webb ]
+  * changed the wording of the help message and warning message for the
+    --reset option (LP: #1486498)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 02 Nov 2015 13:29:58 +0000
+
+unity (7.3.3-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Releasing Unity 7.3.3
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Mon, 26 Oct 2015 15:37:22 +0100
+
+unity (7.3.2+15.10.20151016-0ubuntu1) wily; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * Sync changelog with proposed
+
+  [ Andrea Azzarone ]
+  * Avoid test failures on jenkins.
+
+  [ CI Train Bot ]
+  * UnityScreen: close the session dialog in case it's open and we're
+    requested to lock (LP: #1505234)
+
+  [ Marco Trevisan (Treviño) ]
+  * LauncherIcon: force lookup icon by scaling it at the requested size
+    (LP: #1446081, #1501973)
+  * PanelService: ensure that we free the "fake" IndicatorEntry's we
+    create for dropdowns (LP: #1503348)
+  * ResultRendererTile: consider global scaling when scaling a not-
+    squared icon (LP: #1499286)
+  * TestDash: Use local results in PreviewNavigateTests instead of
+    online ones
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 16 Oct 2015 08:46:34 +0000
+
+unity (7.3.2+15.10.20151002.2-0ubuntu1) wily; urgency=medium
+
+  * GnomeKeyGrabber: Don't allow an action to be grabbed multiple times
+    (LP: #1459571)
+  * PanelService, DBusIndicators: drop support for EntryShowNowChanged
+    signal
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 02 Oct 2015 14:02:10 +0000
+
+unity (7.3.2+15.10.20150921-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Avoid to open adjacent menu when moving from an indicator icon to
+    its dropdown menu. (LP: #552920)
+  * Make sure to restore the state before the call to
+    glDisable(GL_SCISSOR_TEST). (LP: #1485727)
+
+  [ Iain Lane ]
+  * launcher: Always make sure we check the right file when seeing if
+    .desktop files have been deleted. Fixes disappearing launcher icons
+    when applications are upgraded when we are using glib > 2.44. (LP:
+    #1498106)
+
+  [ Lars Uebernickel ]
+  * DevicesSettingsImp: dont't feed garbage to gsettings (LP: #1495173)
+
+  [ Luke Yelavich ]
+  * Make a copy of a quicklist menu item plain text label
+  * Make a copy of a quicklist menu item plain text label
+
+  [ Marco Trevisan (Treviño) ]
+  * MenuManager: add a new setting to control the show-now delay (LP:
+    #1497915)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 21 Sep 2015 17:44:10 +0000
+
+unity (7.3.2+15.10.20150910.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Add unit tests for unity::lockscreen::DBusManager.
+  * Add/Update tests for gnome session manager.
+  * Do not allow shutdown when screen is locked. (LP: #1460626)
+  * Make sure we update the maximized window when "show
+    desktop"/"restore desktop". (LP: #1485559)
+  * Merge patch from https://launchpadlibrarian.net/216192448/llvm-
+    fix.patch (LP: #1491555)
+  * Merge patch from https://launchpadlibrarian.net/216276242/low-gfx-
+    override.patch (LP: #1491913)
+
+  [ Andrea Azzarone azzaronea@gmail.com ]
+  * Properly hide decorations when on "Show Desktop" mode. (LP:
+    #1485073)
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: force shell to be on top when there's a window
+    fullscreen and we've a menu open. (LP: #591189)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 10 Sep 2015 15:37:46 +0000
+
+unity (7.3.2+15.10.20150825-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Do not handle events coming from viewports not actually containing
+    the window. (LP: #1449654)
+
+  [ Chris Townsend ]
+  * Also use the Compiz show() method when forcing an unmapped window to
+    be visible when clicking on it's active Launcher icon. (LP: #989588)
+  * When using keyboard navigation in the Dash, skip category headers
+    that are not expandable. Also, do not highlight the category header
+    when the mouse cursor is over it. (LP: #1045933)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: rely on windows monitor property changes for
+    updating Pips (LP: #1027191)
+  * Autopilot: modernize some tests, use stronger methods to ensure
+    false positive
+  * DecorationsForceQuitDialog: override the background of the window
+    with transparent color (LP: #1470292)
+  * Launcher: Always unfold an active icon (LP: #1472339)
+  * PanelMenuView: ensure that we connect to window signals as soon as
+    the AppManager knows it (LP: #1472326)
+  * PlacesGroup: connect to view changes using a function instead of a
+    lambda (LP: #1470298)
+  * SessionButton: set button opacity to 75% when pressed (LP: #1301655)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 25 Aug 2015 08:15:56 +0000
+
+unity (7.3.2+15.10.20150819-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Do not handle events coming from viewports not actually containing
+    the window. (LP: #1449654)
+
+  [ Chris Townsend ]
+  * Also use the Compiz show() method when forcing an unmapped window to
+    be visible when clicking on it's active Launcher icon. (LP: #989588)
+  * When using keyboard navigation in the Dash, skip category headers
+    that are not expandable. Also, do not highlight the category header
+    when the mouse cursor is over it. (LP: #1045933)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: rely on windows monitor property changes for
+    updating Pips (LP: #1027191)
+  * Autopilot: modernize some tests, use stronger methods to ensure
+    false positive
+  * DecorationsForceQuitDialog: override the background of the window
+    with transparent color (LP: #1470292)
+  * Launcher: Always unfold an active icon (LP: #1472339)
+  * PanelMenuView: ensure that we connect to window signals as soon as
+    the AppManager knows it (LP: #1472326)
+  * PlacesGroup: connect to view changes using a function instead of a
+    lambda (LP: #1470298)
+  * SessionButton: set button opacity to 75% when pressed (LP: #1301655)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 19 Aug 2015 14:45:18 +0000
+
+unity (7.3.2+15.10.20150803.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Enable building unity form source with gcc5.
+  * Fixes that enable building unity from sources with cmake3 (wily).
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Stephen M. Webb ]
+  * unity-shared/DebugDBusInterface.cpp: include <iostream> to fix a
+    FTBFS
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 03 Aug 2015 12:35:24 +0000
+
+unity (7.3.2+15.10.20150627.1-0ubuntu1) wily; urgency=medium
+
+  [ Andrea Azzarone andrea.azzarone@canonical.com ]
+  * Fix a regression with urgent icons not showing up if launcher is
+    hidden. (LP: #1450991)
+  * Make sure new icons are added to the model before calling
+    SortAndUpdate. (LP: #1458950)
+  * This likely could fix
+    https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1451613. At
+    least the backtraces posted there suggest this. But I think that
+    those backtraces are just leftovers of old crashes-on-unloading.
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Chris Townsend ]
+  * Allow mouse clicks that are not in the visible area of the Quicklist
+    to pass through down to the Launcher icon. Fixes a failing AP test.
+    (LP: #1456245)
+
+  [ Luke Yelavich ]
+  * Implement filter results controls accessibility (LP: #1457071)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: add missing features, keep a copy of views
+    around
+  * DecorationsForceQuitDialog: remove deprecated override style
+    functions, use CSS
+  * GnomeSessionManager: Request ScreenSaver (de)activation on VT
+    changes (LP: #1405349)
+  * OverlayWindowButtons: trigger a queuedraw also when a child requires
+    a redraw (LP: #1461618)
+  * PanelMenuView: connect to target window / application title changes
+    (LP: #1418449)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Sat, 27 Jun 2015 04:44:56 +0000
+
+unity (7.3.2+15.10.20150522-0ubuntu1) wily; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Chris Townsend ]
+  * Add necessary signaling to set the BFB icon's tooltip and the Home
+    Scope's default search string to accurately reflect if searching
+    online is enabled or disabled in unity-system-settings. (LP:
+    #1202160, #1101662)
+  * Enable real page up/page down key navigation in the Dash. When using
+    these keys the view scrolls the length of the visible view. (LP:
+    #913612)
+  * If Spread/Expo is active, then terminate it when entering Launcher
+    keynav mode. (LP: #1447810)
+  * If dragging an application:// uri type from the Dash to the desktop,
+    change it to a file:// uri type so Nautilus can understand the type
+    a make a copy of it on the desktop. (LP: #1241972)
+  * Wait on Spread to be terminated before showing the Quicklist. (LP:
+    #1441626)
+
+  [ Luke Yelavich ]
+  * Implement scope bar icon accessibility (LP: #1457073)
+
+  [ Marco Trevisan (Treviño) ]
+  * ResultViewGrid: wait for double-click event only if the relative
+    result needs the Preview (LP: #1447372, #1291950)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 22 May 2015 13:21:14 +0000
+
+unity (7.3.2+15.10.20150512-0ubuntu1) wily; urgency=medium
+
+  [ Chris Townsend ]
+  * Add new signal to tell the Launcher to terminate keynav mode and use
+    that signal when a BFB quicklist item is chosen. (LP: #1052024,
+    #1444643)
+  * Add option to enable and disable Unity low graphics mode on the fly
+    in ccsm or via gsettings. (LP: #1412937)
+  * Remove code that is no longer needed and broke opening application
+    spread while in Launcher keynav mode. (LP: #1445082)
+  * Save the active window when showing the Dash so the correct window
+    is focused when hiding the Dash. Fixes issue when "Always on Top"
+    windows are present. (LP: #1446634)
+  * Save the active window when showing the Hud so the correct window is
+    focused when hiding the Hud. Fixes issue when "Always on Top"
+    windows are present. (LP: #1366583)
+  * Send signal to ensure the Dash will show when entering keynav mode
+    since the first icon always highlighted is the BFB. (LP: #1444113)
+  * When looking for the top-most valid window in a VP, also check if
+    the window is focused if the window is set to Always on Top. This
+    allows Launcher icon spread to work properly when a window is
+    minimized an Always on Top exists in the group. (LP: #1131385)
+  * When using the left arrow to exit a Quicklist, Launcher keynav is
+    implied and should be active regardless of how the Quicklist was
+    opened. (LP: #1444626)
+
+  [ Eleni Maria Stea ]
+  * The skydome rendering of the cube plugin was wrong with unity
+    because transformation matrices set by the unityshell plugin were
+    left in the opengl matrix stacks affecting other compiz plugins.
+    Saving the compiz state at the beginning of the unityshell plugin
+    rendering functions and restoring it at the end of them fixes the
+    problem. (LP: #1446165)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 12 May 2015 13:10:15 +0000
+
+unity (7.3.2+15.04.20150420-0ubuntu1) vivid; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * MenuManager, settings: go back to Global Menus as default (LP:
+    #1446256)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 20 Apr 2015 17:02:13 +0000
+
+unity (7.3.2+15.04.20150410.1-0ubuntu1) vivid; urgency=medium
+
+  [ Brandon Schaefer ]
+  * When we get a launcher key press (ie. super key). We check if the
+    command lens is open. If it is then just switch the lens to the home
+    lens. This way we dont close the dash. (LP: #1108956)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Gerry Boland ]
+  * SwitcherController: add first selection mode property, to decide
+    what to select at first (LP: #998285)
+
+  [ Marco Trevisan (Treviño) ]
+  * SwitcherController: add first selection mode property, to decide
+    what to select at first (LP: #998285)
+  * UnityScreen: terminate spread if active when initiating Switcher
+    (LP: #1412001)
+
+  [ Stephen M. Webb ]
+  * (Ubuntu packaging) move the session migration scripts to Python3
+    (LP: #1440560)
+  * fixed the Panel title string expected by Launcher keynav AP tests
+    (LP: #1435830)
+  * test_wm_keybindings: fix AP failures caused by upstream Compiz
+    change (LP: #1294864)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 10 Apr 2015 21:59:12 +0000
+
+unity (7.3.2+15.04.20150330-0ubuntu1) vivid; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Do not restore focus if a quicklist is opened during launcher key
+    navigation. (LP: #932486)
+  * Forward first key event that happens on top of the blank window to
+    the lockscreen. (LP: #1308265)
+  * Hide launcher to avoid damaging window when not needed. Also make
+    sure that pressure effect works fine (previous fix has been reverted
+    because of this!). (LP: #1301394)
+  * Make sure scope_views_[filter.id] exists before using operator[] on
+    it. (LP: #926979)
+  * Make sure that signals are auto-desconnected when
+    XdndStartStopNotifierImp is destroyed. (LP: #1432231)
+  * Release pointer barrier if launcher is in lock_hide state. (LP:
+    #1029114)
+
+  [ Sebastien Bacher ]
+  * use the new nautilus .desktop name (LP: #1436297)
+
+  [ Stephen M. Webb ]
+  * AP tests: accounted for arbitrarily-raised exceptions in checking
+    scaled windows (LP: #1436095)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 30 Mar 2015 15:48:47 +0000
+
+unity (7.3.2+15.04.20150324.1-0ubuntu1) vivid; urgency=medium
+
+  [ Stephen M. Webb ]
+  * Upstream release 7.3.2.
+  * fix AP test failure due to new parameter added to key grabbing (LP:
+    #1433648)
+  * silenced GCC 5 warnings (LP: #1430784)
+  * uses the new upstream .desktop file for D-Bus activated Nautilus
+    instances (LP: #1428837)
+
+  [ Brandon Schaefer ]
+  * When we quit the quicklist it would check if the mouse was over the
+    launcher, if it wasn't it would fold the launcher. We don't need to
+    check this if we are in keynav as we want all the icons to be
+    unfolded. (LP: #1246891)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Chris Townsend ]
+  * Use a 2 second delay before showing the first run shortcut hints to
+    workaround a race condition on input handling. (LP: #1313597)
+
+  [ Marco Trevisan (Treviño) ]
+  * GnomeKeyGrabber: add timestamp support to accelerators (LP:
+    #1433648)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 24 Mar 2015 16:09:14 +0000
+
+unity (7.3.1+15.04.20150227-0ubuntu1) vivid; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Draw osk above unity shell. (LP: #1413165)
+  * Remove FontSettings.*. Add the possibility to specify the font size
+    and the font weight without chaning the default font name. Fix lp
+    886478. (LP: #886478)
+  * Remove unitydialog plugin.
+
+  [ Luke Yelavich ]
+  * Explore children when a view or layout is added (LP: #1066157)
+  * Move the unity a11y present environment call
+  * Set focus to FALSE on window deactivation (LP: #1066157)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 27 Feb 2015 15:38:19 +0000
+
+unity (7.3.1+15.04.20150219.2-0ubuntu1) vivid; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Marco Trevisan (Treviño) ]
+  * Decorations, Panel: add menus for unfocused windows as well
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 19 Feb 2015 19:33:42 +0000
+
+unity (7.3.1+15.04.20150205-0ubuntu1) vivid; urgency=medium
+
+  [ Brandon Schaefer ]
+  * Try to set the folder permission otherwise Handle permission error.
+    (LP: #1418255)
+
+  [ Andrea Azzarone ]
+  * Actually connect to changed::* signal in MenuManager.cpp. (LP:
+    #1411620)
+  * Actually connect to changed::* signal in UnitySettings.cpp. (LP:
+    #1408212)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 05 Feb 2015 17:27:47 +0000
+
+unity (7.3.1+15.04.20150126-0ubuntu1) vivid; urgency=low
+
+  [ Andrea Azzarone ]
+  * Force icon size (new gtk requires it). (LP: #1404730)
+  * Disable markup accel for VolumeLauncherIcon quicklist menu items.
+    (LP: #1413411)
+  * Make sure dragged icons are not rendered behind the dash. (LP:
+    #1413773)
+  * Make unity unlockable if user is in nopsswdlogin group. On super+l
+    the screensaver is activated. (LP: #1413790)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 26 Jan 2015 22:42:26 +0000
+
+unity (7.3.1+15.04.20150115-0ubuntu1) vivid; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Andrea Azzarone ]
+  * Disable Pointer Barriers during lockscreen. (LP: #1401911)
+  * Use std::weak_ptr to avoid referencing an invalid barrier. (LP:
+    #1238063)
+  * Enable dash and hud if there is a fullscreen window. (LP: #1159249,
+    #860970)
+  * Show session dialog over fullscreen windows. (LP: #1404486)
+  * Avoid running pontentially dangerous code paths when the screen is
+    locked. (LP: #1410582)
+
+  [ Marco Trevisan (Treviño) ]
+  * MenuManager: make sure menus are always shown when mouse is over
+    them or when the always-show-menus option is on (LP: #955193,
+    #1390562, #1374942, #1312137)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 15 Jan 2015 15:03:31 +0000
+
+unity (7.3.1+15.04.20150112-0ubuntu1) vivid; urgency=low
+
+  [ Brandon Schaefer ]
+  * Remove deprecated code that is no longer supported:
+    https://mail.gnome.org/archives/commits-list/2014-July/msg00351.html
+    (LP: #1404326)
+
+  [ Andrea Azzarone ]
+  * Remove unsed StartupNotifyService.*
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Jan 2015 20:21:23 +0000
+
+unity (7.3.1+15.04.20141216-0ubuntu1) vivid; urgency=low
+
+  [ Stephen M. Webb ]
+  * replace the use of static glib with gi glib in AP test cases (LP:
+    #1397006)
+  * fix AP test failures due to upstream FileRoller .desktop file rename
+    (LP: #1402707)
+
+  [ Andrea Azzarone ]
+  * Set the correct size for the lockscreen message. (LP: #1384242)
+  * Ungrab the shoutdown dialog as soon as possible. (LP: #1398287)
+  * skipped the animation of BGHash on startup to prevent unwanted fade-
+    in (LP: #1241757)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 16 Dec 2014 13:25:57 +0000
+
+unity (7.3.1+15.04.20141128-0ubuntu1) vivid; urgency=low
+
+  [ Andrea Azzarone ]
+  * Unmap all windows during shutdown. (LP: #1370017, #1375271)
+  * Make sure GetScreenGeometry returns the correct value. (LP:
+    #1374785)
+
+  [ Marco Trevisan (Treviño) ]
+  * Decorated Window: still paint decorations if on transformated
+    windows in different workspaces (LP: #1383468)
+  * DecoratedWindow: make sure we always set a _NET_FRAME_EXTENTS for
+    windows that requested it
+  * UnityScreen: when filtering out windows in spread, make sure we
+    unscale them (LP: #1316265)
+  * PanelMenuView: ensure that proper window tiles and buttons are shown
+    at the right place (LP: #1384958, #1384910, #1385285)
+  * PanelService: inject special key events back to the root window when
+    a menu is opened
+  * PanelService: use gdbus to notfy upstart of service start/stop
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 28 Nov 2014 12:56:28 +0000
+
+unity (7.3.1+14.10.20141016-0ubuntu1) utopic; urgency=low
+
+  [ Eleni Maria Stea ]
+  * LayoutSystem: make sure the exposed open windows are displayed in
+    the "correct" order
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: make edges independent from borders and properly
+    update them on actions changed
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 16 Oct 2014 15:10:30 +0000
+
+unity (7.3.1+14.10.20141015-0ubuntu1) utopic; urgency=low
+
+  [ Iain Lane ]
+  * When grabbing keys, try prefixing "XF86" if the key isn't found.
+    GNOME gives us unprefixed keys sometimes. (LP: #1302885)
+
+  [ Brandon Schaefer ]
+  * Remove bad tests that randomly fail
+
+  [ handsome_feng<445865575@qq.com> ]
+  * added support for getting the distro name from /etc/os-release (LP:
+    #1329584)
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenController: wait the primary shield to get the grab before
+    setting the session locked
+  * GLibSignal: don't call callback function if the object_ value is not
+    matching the CB (LP: #1366351)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 15 Oct 2014 12:56:50 +0000
+
+unity (7.3.1+14.10.20140915-0ubuntu1) utopic; urgency=low
+
+  [ Michael Zanetti ]
+  * add "items" key to Launcher schema to be used by unity8 (LP:
+    #1300650)
+
+  [ Andrea Azzarone ]
+  * Use COMPIZ_METAKEY where needed. (LP: #1363534)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 15 Sep 2014 12:35:45 +0000
+
+unity (7.3.1+14.10.20140904-0ubuntu1) utopic; urgency=low
+
+  [ Martin Pitt ]
+  * Adjust upstart dependency to upstart-bin. (LP: #1351306)
+
+  [ Brandon Schaefer ]
+  * When Show Desktop is active, it will set the tooltip icon as
+    "Restore Windows". This is per workspace. So each time show_destop
+    bool is updated in PluginAdapter, the Show Desktop icon will update
+    its tooltip if needed. (LP: #1237132)
+  * Use CONFIG instead of CACHE to store the first_run.stamp
+
+  [ Stephen M. Webb ]
+  * update the unity manpage (LP: #1059275)
+
+  [ Andrea Azzarone ]
+  * Share lockscreen password entry between screens. (LP: #1308540)
+
+  [ Marco Trevisan (Treviño) ]
+  * IconRenderer: draw count texture at proper scaling, built by
+    LauncherIcon (LP: #1353070)
+  * LauncherIcon: make the Icon count width depending on the text value
+    width (LP: #796527)
+  * Lockscreen: scale the UI elements based on current monitor scaling
+    (LP: #1292218)
+  * SwitcherView: set progress on icon render args (LP: #1361679)
+  * SearchBar, ActionButtons, IconRenderer: include the font scaling
+    when scaling textual items
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 04 Sep 2014 22:12:54 +0000
+
+unity (7.3.1+14.10.20140811-0ubuntu1) utopic; urgency=medium
+
+  [ Michal Hruby ]
+  * Split out dconf schemas into separate package
+
+  [ Brandon Schaefer ]
+  * Make sure we check if the Quicklist or Alt+F1 key nav is open (so we
+    can close them) Bore checking if something as a WM grab. As we cant
+    open the hud is in Quicklist or KeyNav anymore. (LP: #1353167)
+
+  [ Stephen M. Webb ]
+  * Changed log message on failure to open xpathselect library from an
+    error to a warning. The xpathselect library is used for
+    introspection during automated test runs. It is not an error for
+    this library to be unavailable in normal successful operating
+    conditions. (LP: #1345296)
+
+  [ Andrea Azzarone ]
+  * Add an arrow activator in the lockscreen. (LP: #1332509)
+  * Allow a distinct pam config file for greeter and for lock-screen.
+    (LP: #1305440)
+
+  [ Marco Trevisan (Treviño) ]
+  * Autopilot, Switcher: use correct right/left scroll buttons for
+    next/prev mouse selection (LP: #1353383)
+  * UScreen, PanelService: get monitor at position, ignoring pre-
+    multipled Gdk scale factor Get monitor position based on absolute
+    coordinates, ignoring the pre-multipled scaling factor that Gdk
+    applies to all the monitor sizes. In this way we get the proper
+    monitor index for absolute coordinates, independently from the
+    scaling factor. (LP: #1351591)
+  * ApplicationLauncherIcon: make sure we close the dash if DnD is
+    accepted And we're about to focus the application window(s) (LP:
+    #1350331)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 11 Aug 2014 12:31:11 +0000
+
+unity (7.3.0+14.10.20140731.1-0ubuntu1) utopic; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Brandon Schaefer ]
+  * Fixes FTBFS caused by gcc 4.9. Mostly unused functions. (LP:
+    #1350052)
+
+  [ Andrea Azzarone ]
+  * == Problem == Lockscreen capslock detection doesn't work well with
+    remapped capslocks == Fix == Use gdk keymap to get the state of the
+    caps lock. (LP: #1347735)
+
+  [ Marco Trevisan (Treviño) ]
+  * PlacesOverlayVScrollBar and VScrollBarOverlayWindow: add support for
+    scaling Add a new ScrollView class to create ScrollViews with an
+    OverlayScrollbar and with scaling support. Using them in dash Scopes
+    and Previews. (LP: #1340996)
+  * LockScreenShield: Add GrabScreen function and retry to make sure we
+    really get grab It might happen that the grab is not possible
+    because the PluginAdapter::IsScreenGrabbed request has still not
+    being fully processed, and thus nux is not able to grab the
+    pointer/keyboard. By doing this we instead try to grab the screen,
+    and if this is not happening, we wait a little until we don't get
+    the ungrab event. In this way, if we eventually get the grab, all
+    will work as expected. Otherwise, we cancel the lock request (very
+    unlikely to happen). (LP: #1349128)
+  * PlacesOverlayVScrollBar: redirect the mouse wheel scroll events
+    coming from the thumb to the scrollview This will make the
+    scrollview to handle then and perform the same scrolling action it
+    would do otherwise. (LP: #1340992)
+  * This has a "soft" dependency on lp:~3v1n0/nux/horizontal-scroll-
+    delta/+merge/227070, this means that this code would just work as it
+    used to do (except for the SwitcerView fix) if that nux branch is
+    not used, while it will support correctly horizontal scroll events
+    when both the branches are used. (LP: #1342208)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 31 Jul 2014 18:40:00 +0000
+
+unity (7.3.0+14.10.20140711-0ubuntu1) utopic; urgency=low
+
+  [ Eleni Maria Stea ]
+  * Previews: scale the dash preview contents to match current monitor
+    scaling Improved also the scaling of search-bar, spinner, categories
+    and many other components. (LP: #1339629)
+
+  [ Marco Trevisan (Treviño) ]
+  * Previews: scale the dash preview contents to match current monitor
+    scaling Improved also the scaling of search-bar, spinner, categories
+    and many other components. (LP: #1339629)
+  * DashStyle: return RawPixel's instead of integers for sizes, and
+    avoid duplication in code
+  * FilterWidgets: add support for scaling (LP: #1340171)
+  * OverlayRendering: correctly scale the overlays borders and edges to
+    match settings DashStyle has been modified to return smart pointers
+    of textures that are loaded depending on the scale level. The cache
+    will make sure that we don't duplicate the textures and that they
+    get removed when not needed anymore. Also thanks to this the
+    SearchBarSpinner textures (and the other spinners as well) uses the
+    SVGs scaled at the proper size (I desgined a new SVG for the
+    magnifier, as we only had a PNG). (LP: #1283415)
+  * Hud: scale to match current DPI settings for monitor (LP: #1340477)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Jul 2014 19:59:35 +0000
+
+unity (7.3.0+14.10.20140708-0ubuntu1) utopic; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Stephen M. Webb ]
+  * reduce the scope of the kill command when restarting compiz (LP:
+    #1324114)
+
+  [ Eleni Maria Stea ]
+  * Changed the PreviewStyle.h/cpp to use em sizes (RawPixel).
+  * Added scale factor to Preview (base class), preview container and to
+    the components they contain.
+  * Scaled the ApplicationPreview and the containing widgets and
+    components.
+  * Scaled GenericPreview and its widgets.
+  * scaled ErrorPreview
+  * Scaled MoviePreview and widgets
+
+  [ Pawel Szubert ]
+  * reduce the scope of the kill command when restarting compiz (LP:
+    #1324114)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 08 Jul 2014 14:35:37 +0000
+
+unity (7.3.0+14.10.20140619-0ubuntu1) utopic; urgency=low
+
+  [ Stephen M. Webb ]
+  * bump upstream to 7.3.0
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Andrea Azzarone ]
+  * Remove cross fade effect during lock/unlocking. A simple fading
+    works just fine. (LP: #1312107)
+  * Manually emit nux::Area::geometry_changed beucase nux can fail to
+    emit it. (LP: #1292391)
+
+  [ Marco Trevisan (Treviño) ]
+  * {Panel,Decoration}Style: don't call deprecated
+    gtk_style_context_invalidate function in gtk >= 3.11
+  * PluginAdapter: pass the state to compiz plugins activations Fixes
+    Scale triggering on DnD (LP: #1328615)
+  * LockScreenAcceleratorController: do ther configured action on power
+    special keys press We finally can suspend, shutdown, hibernate or
+    start the screensaver when the screen is locked, using the Suspend,
+    Sleep, Hibernate and PowerOff hardware keys. Also the Shutdown
+    dialog doesn't allow now to lock the session if it is not allowed by
+    settings. (LP: #1306211)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 19 Jun 2014 18:41:55 +0000
+
+unity (7.2.0+14.10.20140607-0ubuntu1) utopic; urgency=low
+
+  [ Chris Townsend ]
+  * Fix issue where the number of Launcher icon pips are not always
+    properly updated when a new window of an already running application
+    is opened. (LP: #1283775)
+  * Fix issue where the Panel shadow would get drawn over drop down
+    windows in full screen windows. (LP: #1316005)
+
+  [ Andrea Azzarone ]
+  * Clear the clipboard when locking the screen. (LP: #1308911)
+  * Disable switcher gestures if screen is locked. Fixed a regression.
+    (LP: #1321043)
+  * Pass the correct options to showLauncherKeyTerminate in
+    UnityScreen::OnLockScreen (LP: #1320438)
+  * Fix skype indicator blinking. (LP: #1310200)
+
+  [ Marco Trevisan (Treviño) ]
+  * PluginAdapter: try to grab the screen to make sure that the screen
+    is not grabbed FocusIn event with NotifyGrab mode is not always
+    triggered by X when a window takes the grab, then we need to ensure
+    that there's no grab by trying to get one. We only care about
+    keyboard here, since pointer grabs don't affect us in general. (LP:
+    #741869)
+  * ShortcutView: use RawPixel's for the size values and convert them to
+    match current scaling Plus dinamically allocate horizontal space,
+    not to cut the text. (LP: #924840)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 07 Jun 2014 16:27:46 +0000
+
+unity (7.2.0+14.10.20140606.1-0ubuntu1) utopic; urgency=low
+
+  [ Alfred Neumayer ]
+  * Restore the launcher position by reversing the animation and
+    unsetting the DND_PUSHED_OFF quirk. (LP: #1304882)
+
+  [ Brandon Schaefer ]
+  * TextInput: move the warning icon inside the input field, render it
+    white (LP: #1307738)
+  * ShutdownView: Scale up the Buttons and Text plus Borders of the
+    UnityWindowView. (LP: #1308323)
+  * Lockscreen warning icon needs a tooltip to say what the warning is
+    about! (LP: #1308288)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: Focus and, in case, Spread the windows on
+    DnD After 1 second that an user is over an icon, that icon should
+    focus the relative application and Spread its windows if it has more
+    than one opened. Correctly handle the DnD scale in launcher, and
+    apply glow to the icon under pointer. (LP: #607796)
+  * SwitcherView: use RawPixel's for the size values and convert them to
+    match current scaling (LP: #1317348)
+
+  [ Chris Townsend ]
+  * Fix issue where scaling the edge illumination up and down with the
+    size of the Launcher icons would cause the illumination border to be
+    offset and smaller than the icon. (LP: #1309739)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 06 Jun 2014 13:55:32 +0000
+
 unity (7.2.0+14.10.20140512.4-0ubuntu1) utopic; urgency=low
 
   [ Stephen M. Webb ]
@@ -2025,7 +3218,6 @@ unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 3317 (ubuntu-unity/next)
-
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   [ Sebastien Bacher ]

@@ -21,27 +21,24 @@ class WindowManagerKeybindings(UnityTestCase):
 
     def open_panel_menu(self):
         panel = self.unity.panels.get_panel_for_monitor(0)
-        self.assertThat(lambda: len(panel.menus.get_entries()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(panel.get_indicator_entries()), Eventually(GreaterThan(0)))
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.keybinding("panel/open_first_menu")
         self.assertThat(self.unity.panels.get_active_indicator, Eventually(NotEquals(None)))
 
     def test_dash_shows_on_menus_opened(self):
-        self.process_manager.start_app_window("Calculator")
         self.open_panel_menu()
         self.addCleanup(self.unity.dash.ensure_hidden)
         self.unity.dash.ensure_visible()
         self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
 
     def test_hud_shows_on_menus_opened(self):
-        self.process_manager.start_app_window("Calculator")
         self.open_panel_menu()
         self.addCleanup(self.unity.hud.ensure_hidden)
         self.unity.hud.ensure_visible()
         self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
 
     def test_switcher_shows_on_menus_opened(self):
-        self.process_manager.start_app_window("Calculator")
         self.open_panel_menu()
         self.addCleanup(self.unity.switcher.terminate)
         self.unity.switcher.initiate()
@@ -49,7 +46,6 @@ class WindowManagerKeybindings(UnityTestCase):
         self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
 
     def test_shortcut_hints_shows_on_menus_opened(self):
-        self.process_manager.start_app_window("Calculator")
         self.open_panel_menu()
         self.addCleanup(self.unity.shortcut_hint.ensure_hidden)
         self.unity.shortcut_hint.show()
@@ -57,7 +53,6 @@ class WindowManagerKeybindings(UnityTestCase):
         self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
 
     def test_spread_shows_on_menus_opened(self):
-        self.process_manager.start_app_window("Calculator")
         self.open_panel_menu()
         self.addCleanup(self.unity.window_manager.terminate_spread)
         self.unity.window_manager.initiate_spread()
@@ -104,10 +99,16 @@ class WindowManagerKeybindingsForWindowHandling(UnityTestCase):
         monitor = self.bamf_win.monitor
         monitor_geo = self.display.get_screen_geometry(monitor)
         launcher = self.unity.launcher.get_launcher_for_monitor(monitor)
-        launcher_w = 0 if launcher.hidemode else launcher.geometry[2]
+        # When launcher at left, do not use launcher_h, otherwise, do not use launcher_w
+        if launcher.geometry[2] < launcher.geometry[3]:
+            launcher_h = 0
+            launcher_w = 0 if launcher.hidemode else launcher.geometry[2]
+        else:
+            launcher_h = 0 if launcher.hidemode else launcher.geometry[3]
+            launcher_w = 0
         panel_h = self.unity.panels.get_panel_for_monitor(monitor).geometry[3]
         return (monitor_geo[0] + launcher_w, monitor_geo[1] + panel_h,
-                monitor_geo[2] - launcher_w, monitor_geo[3] - panel_h)
+                monitor_geo[2] - launcher_w, monitor_geo[3] - panel_h - launcher_h)
 
     def test_maximize_window(self):
         if self.start_restored:
@@ -155,7 +156,7 @@ class WindowManagerKeybindingsForWindowHandling(UnityTestCase):
         workarea_geo = self.get_window_workarea()
         self.assertThat(self.screen_win.x, Eventually(Equals(workarea_geo[0])))
         self.assertThat(self.screen_win.y, Eventually(Equals(workarea_geo[1])))
-        self.assertThat(self.screen_win.width, Eventually(Equals(workarea_geo[2]/2)))
+        self.assertThat(self.screen_win.width, Eventually(Equals(int(workarea_geo[2]/2.0 + 0.5))))
         self.assertThat(self.screen_win.height, Eventually(Equals(workarea_geo[3])))
 
     def test_right_maximize(self):
@@ -167,5 +168,5 @@ class WindowManagerKeybindingsForWindowHandling(UnityTestCase):
         workarea_geo = self.get_window_workarea()
         self.assertThat(self.screen_win.x, Eventually(Equals(workarea_geo[0]+workarea_geo[2]/2)))
         self.assertThat(self.screen_win.y, Eventually(Equals(workarea_geo[1])))
-        self.assertThat(self.screen_win.width, Eventually(Equals(workarea_geo[2]/2)))
+        self.assertThat(self.screen_win.width, Eventually(Equals(int(workarea_geo[2]/2.0 + 0.5))))
         self.assertThat(self.screen_win.height, Eventually(Equals(workarea_geo[3])))

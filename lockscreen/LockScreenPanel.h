@@ -22,9 +22,9 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <UnityCore/Indicators.h>
-#include <UnityCore/GLibSource.h>
-#include <UnityCore/SessionManager.h>
+#include "UnityCore/Indicators.h"
+#include "UnityCore/GLibSource.h"
+#include "UnityCore/SessionManager.h"
 
 namespace unity
 {

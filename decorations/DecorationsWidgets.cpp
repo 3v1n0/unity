@@ -192,15 +192,10 @@ BasicContainer::Ptr Item::GetParent() const
 
 BasicContainer::Ptr Item::GetTopParent() const
 {
-  BasicContainer::Ptr parent = GetParent();
+  BasicContainer::Ptr parent = parent_;
 
-  while (parent)
-  {
-    if (!parent->parent_)
-      return parent;
-
-    parent = parent->GetParent();
-  }
+  while (parent && parent->parent_)
+    parent = parent->parent_;
 
   return parent;
 }
@@ -225,6 +220,12 @@ void Item::AddProperties(debug::IntrospectionData& data)
 }
 
 //
+
+TexturedItem::TexturedItem()
+  : dirty_region_(false)
+{
+  geo_parameters_changed.connect([this] { dirty_region_ = true; });
+}
 
 void TexturedItem::SetTexture(cu::SimpleTexture::Ptr const& tex)
 {
@@ -254,8 +255,14 @@ void TexturedItem::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowP
   if (!visible || Geometry().isEmpty() || !texture_)
     return;
 
+  if (dirty_region_)
+  {
+    texture_.quad.region = texture_.quad.box;
+    dirty_region_ = false;
+  }
+
   ctx->vertexBuffer()->begin();
-  ctx->glAddGeometry({texture_.quad.matrix}, texture_.quad.box, clip);
+  ctx->glAddGeometry(texture_.quad.matrices, texture_.quad.region, clip);
 
   if (ctx->vertexBuffer()->end())
     ctx->glDrawTexture(texture_, transformation, attrib, mask);

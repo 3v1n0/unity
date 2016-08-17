@@ -24,6 +24,7 @@
 #define MUSICPREVIEW_H
 
 #include "Preview.h"
+#include "unity-shared/OverlayScrollView.h"
 #include "unity-shared/IconTexture.h"
 
 namespace unity
@@ -53,6 +54,7 @@ protected:
   virtual void PreLayoutManagement();
 
   virtual void SetupViews();
+  virtual void UpdateScale(double scale);
 
   virtual void OnNavigateOut();
 
@@ -64,6 +66,10 @@ protected:
   nux::ObjectPtr<IconTexture> warning_texture_;
   std::string no_credentials_message_;
 
+  nux::Layout* actions_layout_;
+  nux::HLayout* image_data_layout_;
+  nux::VLayout* icon_layout_;
+  nux::VLayout* album_data_layout_;
  };
 
 }

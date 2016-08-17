@@ -21,7 +21,6 @@
 #include "PanelController.h"
 
 #include <vector>
-#include <NuxCore/Logger.h>
 #include <Nux/BaseWindow.h>
 
 #include "unity-shared/UScreen.h"
@@ -31,7 +30,6 @@ namespace unity
 {
 namespace panel
 {
-DECLARE_LOGGER(logger, "unity.panel.controller");
 
 const char* window_title = "unity-panel";
 

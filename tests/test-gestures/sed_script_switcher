@@ -19,8 +19,10 @@ s|\<InputArea\>|InputAreaMock|g
 s|\<Nux/Nux\.h\>|NuxMock.h|g
 s|\<CompTimer\>|CompTimerMock|g
 s|\<LauncherController\>|LauncherControllerMock|g
+s|\<LockScreenController\>|LockControllerMock|g
 s|\<SwitcherController\>|SwitcherControllerMock|g
 s|\<switcher\:\:Controller\>|switcher\:\:ControllerMock|g
+s|\<lockscreen\:\:Controller\>|lockscreen\:\:ControllerMock|g
 s|\<launcher\:\:Controller\>|launcher\:\:ControllerMock|g
 /SwitcherView\.h/d
 s|\<SwitcherView\>|SwitcherViewMock|g

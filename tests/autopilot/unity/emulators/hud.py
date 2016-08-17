@@ -105,7 +105,7 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def geometry(self):
-        return (self.x, self.y, self.width, self.height)
+        return self.globalRect
 
     @property
     def selected_button(self):
@@ -156,7 +156,7 @@ class HudView(UnityIntrospectionObject):
 
     @property
     def geometry(self):
-        return (self.x, self.y, self.width, self.height)
+        return self.globalRect
 
 
 class HudButton(UnityIntrospectionObject):

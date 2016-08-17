@@ -41,7 +41,6 @@ class BackgroundSettings
 {
 public:
   BackgroundSettings();
-  ~BackgroundSettings();
 
   BaseTexturePtr GetBackgroundTexture(int monitor);
 

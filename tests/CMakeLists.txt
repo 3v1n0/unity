@@ -8,7 +8,7 @@ file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_BINARY_DIR}/test
 #
 # Unit tests
 #
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;libupstart;libnih;libnih-dbus;dbus-1")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;libupstart;")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 string (REPLACE ";" " " TEST_UNIT_DEPS_CFLAGS_OTHER "${TEST_UNIT_CFLAGS_OTHER}")
@@ -80,6 +80,7 @@ if (GMOCK_LIB AND
   set (GTEST_SLOW_SOURCES
        test_main.cpp
        logger_helper.cpp
+       mock-application.cpp
        test_switcher_controller_slow.cpp
        test_switcher_controller_class.cpp
        test_tooltip_manager.cpp
@@ -131,7 +132,6 @@ if (GMOCK_LIB AND
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
        test_launcher_entry_remote.cpp
-       test_launcher_model.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
        test_model_iterator.cpp
@@ -196,7 +196,7 @@ if (GMOCK_LIB AND
                  test_results.cpp
                  test_scope.cpp
                  test_scope_filter.cpp
-                 test_scope_proxy.cpp
+                 #test_scope_proxy.cpp
                  test_tracks.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
@@ -227,7 +227,7 @@ if (ENABLE_X_SUPPORT)
                  test_filter_widgets.cpp
                  test_glib_dbus_server.cpp
                  test_gnome_session_manager.cpp
-                 test_gtk_wrapper.cpp
+                 test_gtk_icon_info.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
@@ -242,6 +242,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
+                 test_launcher_model.cpp
                  test_launcher_tooltip.cpp
                  test_lockscreen_controller.cpp
                  test_panel_controller.cpp
@@ -261,7 +262,6 @@ if (ENABLE_X_SUPPORT)
                  test_previews_music_payment.cpp
                  test_previews_payment.cpp
                  test_previews_social.cpp
-                 test_overlay_scrollbar.cpp
                  test_quicklist_manager.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
@@ -269,6 +269,7 @@ if (ENABLE_X_SUPPORT)
                  test_resultviewgrid.cpp
                  test_scope_bar.cpp
                  test_scope_view.cpp
+                 test_screensaver_dbus_manager.cpp
                  test_searchbar.cpp
                  test_session_button.cpp
                  test_session_controller.cpp
@@ -354,7 +355,7 @@ if (ENABLE_X_SUPPORT)
 endif (ENABLE_X_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest-xless.xml)
 set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
-set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --max-wait=300 --task ./test-gtest-service --task-name test-service --task=./test-gtest-dbus --task-name=test-dbus --wait-for=com.canonical.Unity.Test.Scope --parameter=--gtest_output=xml:./test-gtest-dbus.xml --parameter=--gtest_filter=-TestCategoriesChanging*)
+set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --max-wait=300 --task ./test-gtest-service --task-name test-service --task=./test-gtest-dbus --task-name=test-gtest-dbus --wait-for=com.canonical.Unity.Test --parameter=--gtest_output=xml:./test-gtest-dbus.xml --parameter=--gtest_filter=-TestCategoriesChanging*)
 
 set (TEST_COMMAND_XLESS
      ${GTEST_TEST_COMMAND_XLESS}
@@ -387,5 +388,5 @@ endif (GTEST_ROOT_DIR)
 # make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
 # Rules to install autopilot files and executable script:
-install(CODE "execute_process(COMMAND python setup.py install --prefix ${CMAKE_INSTALL_PREFIX} WORKING_DIRECTORY ${AUTOPILOTDIR})")
+install(CODE "execute_process(COMMAND python2.7 setup.py install --prefix ${CMAKE_INSTALL_PREFIX} WORKING_DIRECTORY ${AUTOPILOTDIR})")
 add_custom_target (autopilot COMMAND cd ${AUTOPILOTDIR} && make check)

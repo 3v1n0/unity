@@ -22,8 +22,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <NuxGraphics/GraphicsEngine.h>
-#include <Nux/TextureArea.h>
 #include <NuxCore/Math/Matrix4.h>
 #include <UnityCore/GLibSource.h>
 #include "unity-shared/Introspectable.h"
@@ -44,6 +42,8 @@ class SearchBarSpinner : public unity::debug::Introspectable, public nux::View
 public:
   SearchBarSpinner();
 
+  nux::Property<double> scale;
+
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -62,13 +62,14 @@ protected:
 
 private:
   bool OnFrameTimeout();
+  void UpdateScale(double);
 
   SpinnerState state_;
 
-  nux::BaseTexture* magnify_;
-  nux::BaseTexture* circle_;
-  nux::BaseTexture* close_;
-  nux::BaseTexture* spin_;
+  nux::ObjectPtr<nux::BaseTexture> magnify_;
+  nux::ObjectPtr<nux::BaseTexture> circle_;
+  nux::ObjectPtr<nux::BaseTexture> close_;
+  nux::ObjectPtr<nux::BaseTexture> spin_;
 
   glib::Source::UniquePtr spinner_timeout_;
   glib::Source::UniquePtr frame_timeout_;

@@ -26,14 +26,13 @@ using namespace unity::switcher;
 using namespace std::chrono;
 
 FakeApplicationWindow::FakeApplicationWindow(Window xid, uint64_t active_number)
-  : xid_(xid)
+  : MockApplicationWindow::Nice(xid)
 {
-  auto standalone_window = std::make_shared<StandaloneWindow>(xid_);
+  SetMonitor(-1);
+  auto standalone_window = std::make_shared<StandaloneWindow>(window_id());
   standalone_window->active_number = active_number;
   testwrapper::StandaloneWM::Get()->AddStandaloneWindow(standalone_window);
-
-  title.SetGetterFunction([this] { return "FakeApplicationWindow"; });
-  icon.SetGetterFunction([this] { return ""; });
+  ON_CALL(*this, Quit()).WillByDefault(Invoke([this] { WindowManager::Default().Close(window_id()); }));
 }
 
 FakeApplicationWindow::~FakeApplicationWindow()
@@ -41,27 +40,24 @@ FakeApplicationWindow::~FakeApplicationWindow()
   testwrapper::StandaloneWM::Get()->Close(xid_);
 }
 
-std::string FakeApplicationWindow::type() const { return "mock"; }
-
-Window FakeApplicationWindow::window_id() const { return xid_; }
-int FakeApplicationWindow::monitor() const { return -1; }
-ApplicationPtr FakeApplicationWindow::application() const { return ApplicationPtr(); }
-bool FakeApplicationWindow::Focus() const { return false; }
-void FakeApplicationWindow::Quit() const { WindowManager::Default().Close(xid_); }
-
 FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, uint64_t priority)
-  : launcher::SimpleLauncherIcon(IconType::APPLICATION)
+  : launcher::WindowedLauncherIcon(IconType::APPLICATION)
   , allow_detail_view_(allow_detail_view)
   , priority_(priority)
-  , window_list{ std::make_shared<FakeApplicationWindow>(priority_ | 0x0001, SwitcherPriority()),
-                 std::make_shared<FakeApplicationWindow>(priority_ | 0x0002, priority_) }
+  , window_list{ std::make_shared<FakeApplicationWindow::Nice>(priority_ | 0x0001, SwitcherPriority()),
+                 std::make_shared<FakeApplicationWindow::Nice>(priority_ | 0x0002, priority_) }
 {
   tooltip_text = app_name;
 }
 
-WindowList FakeLauncherIcon::Windows()
+WindowList FakeLauncherIcon::GetManagedWindows() const
 {
   return window_list;
+}
+
+bool FakeLauncherIcon::ShowInSwitcher(bool)
+{
+  return true;
 }
 
 bool FakeLauncherIcon::AllowDetailViewInSwitcher() const
@@ -80,7 +76,7 @@ uint64_t FakeLauncherIcon::SwitcherPriority()
 //class TestSwitcherController : public testing::Test
 TestSwitcherController::TestSwitcherController()
   : animation_controller_(tick_source_)
-  , mock_window_(new NiceMock<testmocks::MockBaseWindow>())
+  , mock_window_(new NiceMock<unity::testmocks::MockBaseWindow>())
   , controller_(std::make_shared<Controller>([this] { return mock_window_; }))
 {
   controller_->timeout_length = 0;

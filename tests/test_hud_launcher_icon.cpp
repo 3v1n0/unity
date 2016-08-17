@@ -32,7 +32,7 @@ class MockHudLauncherIcon : public HudLauncherIcon
 {
 public:
   MockHudLauncherIcon()
-    : HudLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
+    : HudLauncherIcon()
   {}
 };
 

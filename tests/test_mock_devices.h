@@ -78,11 +78,13 @@ struct MockVolume : Volume
   typedef std::shared_ptr<MockVolume> Ptr;
   typedef testing::NiceMock<MockVolume> Nice;
 
+  MOCK_CONST_METHOD0(CanBeFormatted, bool(void));
   MOCK_CONST_METHOD0(CanBeRemoved, bool(void));
   MOCK_CONST_METHOD0(CanBeStopped, bool(void));
   MOCK_CONST_METHOD0(GetName, std::string(void));
   MOCK_CONST_METHOD0(GetIconName, std::string(void));
   MOCK_CONST_METHOD0(GetIdentifier, std::string(void));
+  MOCK_CONST_METHOD0(GetUnixDevicePath, std::string(void));
   MOCK_CONST_METHOD0(GetUri, std::string(void));
   MOCK_CONST_METHOD0(HasSiblings, bool(void));
   MOCK_CONST_METHOD0(CanBeEjected, bool(void));
@@ -99,7 +101,7 @@ struct MockDeviceNotificationDisplay : DeviceNotificationDisplay
   typedef std::shared_ptr<MockDeviceNotificationDisplay> Ptr;
   typedef testing::NiceMock<MockDeviceNotificationDisplay> Nice;
 
-  MOCK_METHOD2(Display, void(std::string const& icon_name, std::string const& volume_name));
+  MOCK_METHOD1(Display, void(std::string const& volume_name));
 };
 
 } // anonymous namespace

@@ -44,8 +44,6 @@ public:
 
   void SetTargetSize(int tile_size, int image_size, int spacing);
 
-  static void DestroyShortcutTextures();
-
 protected:
   void RenderElement(nux::GraphicsEngine& GfxContext,
                      RenderArg const& arg,

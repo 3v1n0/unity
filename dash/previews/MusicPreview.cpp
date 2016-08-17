@@ -42,14 +42,27 @@ namespace dash
 {
 namespace previews
 {
+
+namespace
+{
+  const RawPixel CHILDREN_SPACE = 16_em;
+  const RawPixel ICON_LEFT_RIGHT_PADDING = 10_em;
+  const RawPixel WARNING_MIN_HEIGHT = 50_em;
+  const RawPixel WARNING_MAX_WIDTH = 300_em;
+}
+
 DECLARE_LOGGER(logger, "unity.dash.preview.music");
 
 NUX_IMPLEMENT_OBJECT_TYPE(MusicPreview);
 
 MusicPreview::MusicPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, actions_layout_(nullptr)
+, image_data_layout_(nullptr)
+, icon_layout_(nullptr)
 {
   SetupViews();
+  UpdateScale(scale);
 }
 
 MusicPreview::~MusicPreview()
@@ -130,13 +143,13 @@ void MusicPreview::SetupViews()
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
 
-  nux::HLayout* image_data_layout = new nux::HLayout();
-  image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
+  image_data_layout_ = new nux::HLayout();
+  image_data_layout_->SetSpaceBetweenChildren(style.GetPanelSplitWidth().CP(scale));
 
   /////////////////////
   // Image
   image_ = new CoverArt();
-  
+  image_->scale = scale();
   AddChild(image_.GetPointer());
   UpdateCoverArtImage(image_.GetPointer());
   /////////////////////
@@ -144,20 +157,21 @@ void MusicPreview::SetupViews()
     /////////////////////
     // App Data Panel
     full_data_layout_ = new nux::VLayout();
-    full_data_layout_->SetPadding(style.GetDetailsTopMargin(), 0, style.GetDetailsBottomMargin(), style.GetDetailsLeftMargin());
-    full_data_layout_->SetSpaceBetweenChildren(16);
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
+    full_data_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
       /////////////////////
       // Music Info
-      nux::VLayout* album_data_layout = new nux::VLayout();
-      album_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
+      album_data_layout_ = new nux::VLayout();
+      album_data_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
 
       title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       AddChild(title_.GetPointer());
       title_->SetFont(style.title_font().c_str());
       title_->SetLines(-1);
+      title_->SetScale(scale);
       title_->mouse_click.connect(on_mouse_down);
-      album_data_layout->AddView(title_.GetPointer(), 1);
+      album_data_layout_->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
@@ -165,8 +179,9 @@ void MusicPreview::SetupViews()
         AddChild(subtitle_.GetPointer());
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         subtitle_->SetLines(-1);
+        subtitle_->SetScale(scale);
         subtitle_->mouse_click.connect(on_mouse_down);
-        album_data_layout->AddView(subtitle_.GetPointer(), 1);
+        album_data_layout_->AddView(subtitle_.GetPointer(), 1);
       }
 
       /////////////////////
@@ -177,6 +192,7 @@ void MusicPreview::SetupViews()
       if (tracks_model)
       {
         tracks_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
+        tracks_->scale = scale();
         AddChild(tracks_.GetPointer());
         tracks_->mouse_click.connect(on_mouse_down);
       }
@@ -187,7 +203,7 @@ void MusicPreview::SetupViews()
       /////////////////////
       // Hints && Actions
       nux::VLayout* hints_layout = NULL;
-      nux::Layout* actions_layout = NULL;
+      actions_layout_ = NULL;
       bool has_u1_creds = HasUbuntuOneCredentials();
 
       if (has_u1_creds)
@@ -197,70 +213,72 @@ void MusicPreview::SetupViews()
           hints_layout = new nux::VLayout();
           hints_layout->SetSpaceBetweenChildren(0);
           hints_layout->AddSpace(0, 1);
-          preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+          preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth().CP(scale));
+          preview_info_hints_->scale = scale();
           AddChild(preview_info_hints_.GetPointer());
           preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
           hints_layout->AddView(preview_info_hints_.GetPointer(), 0);
 
           // If there are actions, we use a vertical layout
           action_buttons_.clear();
-          actions_layout = BuildVerticalActionsLayout(preview_model_->GetActions(), action_buttons_);
-          actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+          actions_layout_ = BuildVerticalActionsLayout(preview_model_->GetActions(), action_buttons_);
+          actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
         }
         else // otherwise we add a grid layout.
         {
           action_buttons_.clear();
-          actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
+          actions_layout_ = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
           if (action_buttons_.size() < 2)
             hint_actions_layout->AddSpace(0, 1);
-          actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+          actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
         }
       }
       else
       {
         // let the user know he needs to connect
         previews::Style& style = dash::previews::Style::Instance();
-	actions_layout = new nux::HLayout();
-	nux::VLayout* icon_layout = new nux::VLayout();
-  	icon_layout->SetLeftAndRightPadding(10);
+        nux::HLayout* actions_layout = new nux::HLayout();
+        icon_layout_ = new nux::VLayout();
+        icon_layout_->SetLeftAndRightPadding(ICON_LEFT_RIGHT_PADDING.CP(scale));
 
         warning_texture_ = new IconTexture(style.GetWarningIcon());
-        icon_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
+        icon_layout_->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
-        actions_layout->AddLayout(icon_layout, 0, nux::MINOR_POSITION_CENTER);
+        actions_layout->AddLayout(icon_layout_, 0, nux::MINOR_POSITION_CENTER);
 
         warning_msg_ = new StaticCairoText(
                      no_credentials_message_, true,
                      NUX_TRACKER_LOCATION);
-  	AddChild(warning_msg_.GetPointer());
+        AddChild(warning_msg_.GetPointer());
         warning_msg_->SetFont(style.u1_warning_font().c_str());
         warning_msg_->SetLines(-2);
-        warning_msg_->SetMinimumHeight(50);
-        warning_msg_->SetMaximumWidth(300);
+        warning_msg_->SetScale(scale);
+        warning_msg_->SetMinimumHeight(WARNING_MIN_HEIGHT.CP(scale));
+        warning_msg_->SetMaximumWidth(WARNING_MAX_WIDTH.CP(scale));
 
         actions_layout->AddView(warning_msg_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
 
       }
-     
+
         /////////////////////
 
       if (hints_layout) hint_actions_layout->AddView(hints_layout, 1);
-      hint_actions_layout->AddView(actions_layout, 0);
+      hint_actions_layout->AddView(actions_layout_, 0);
 
-    full_data_layout_->AddLayout(album_data_layout, 0);
+    full_data_layout_->AddLayout(album_data_layout_, 0);
     if (tracks_)
     {
       full_data_layout_->AddView(tracks_.GetPointer(), 1);
     }
     full_data_layout_->AddLayout(hint_actions_layout, 0);
     /////////////////////
-  
-  image_data_layout->AddView(image_.GetPointer(), 0);
-  image_data_layout->AddLayout(full_data_layout_, 1);
+
+  image_data_layout_->AddView(image_.GetPointer(), 0);
+  image_data_layout_->AddLayout(full_data_layout_, 1);
 
   mouse_click.connect(on_mouse_down);
 
-  SetLayout(image_data_layout);
+  SetLayout(image_data_layout_);
 }
 
 void MusicPreview::PreLayoutManagement()
@@ -272,23 +290,23 @@ void MusicPreview::PreLayoutManagement()
 
   nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
-  if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
-    geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+  int content_width = geo.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale);
+  if (content_width - geo_art.width < style.GetDetailsPanelMinimumWidth().CP(scale))
+    geo_art.width = MAX(0, content_width - style.GetDetailsPanelMinimumWidth().CP(scale));
   image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
-  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int details_width = MAX(0, content_width - geo_art.width);
 
   if (title_) { title_->SetMaximumWidth(details_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    int action_width = CLAMP((details_width - style.GetSpaceBetweenActions()) /
-      2, 0, style.GetActionButtonMaximumWidth());
+    int action_width = CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale));
     // do not use SetMinMax because width has to be able to grow
     button->SetMinimumWidth(action_width);
-    button->SetMinimumHeight(style.GetActionButtonHeight());
-    button->SetMaximumHeight(style.GetActionButtonHeight());
+    button->SetMinimumHeight(style.GetActionButtonHeight().CP(scale));
+    button->SetMaximumHeight(style.GetActionButtonHeight().CP(scale));
   }
 
   Preview::PreLayoutManagement();
@@ -298,6 +316,47 @@ void MusicPreview::OnNavigateOut()
 {
   PreviewPlayer player;
   player.Stop();
+}
+
+void MusicPreview::UpdateScale(double scale)
+{
+  Preview::UpdateScale(scale);
+
+  if (tracks_)
+    tracks_->scale = scale;
+
+  if (preview_info_hints_)
+    preview_info_hints_->scale = scale;
+
+  if (icon_layout_)
+    icon_layout_->SetLeftAndRightPadding(ICON_LEFT_RIGHT_PADDING.CP(scale));
+
+  if (warning_msg_)
+  {
+    warning_msg_->SetScale(scale);
+    warning_msg_->SetMinimumHeight(WARNING_MIN_HEIGHT.CP(scale));
+    warning_msg_->SetMaximumWidth(WARNING_MAX_WIDTH.CP(scale));
+  }
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  if (image_data_layout_)
+    image_data_layout_->SetSpaceBetweenChildren(style.GetPanelSplitWidth().CP(scale));
+
+  if (full_data_layout_)
+  {
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
+    full_data_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+  }
+
+  if (album_data_layout_)
+    album_data_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle().CP(scale));
+
+  if (actions_layout_)
+    actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
+
+  if (icon_layout_)
+    icon_layout_->SetLeftAndRightPadding(ICON_LEFT_RIGHT_PADDING.CP(scale));
 }
 
 } // namespace previews

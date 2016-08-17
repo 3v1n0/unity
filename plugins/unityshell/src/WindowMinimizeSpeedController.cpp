@@ -19,6 +19,7 @@
  * not be able to re-use it if you want to use a different licence.
  */
 
+#include <cmath>
 #include <gio/gio.h>
 #include <NuxCore/Logger.h>
 

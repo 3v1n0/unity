@@ -23,7 +23,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <glib/gi18n-lib.h>
 
-#include <unity-shared/RawPixel.h>
+#include "unity-shared/RawPixel.h"
 
 namespace unity
 {
@@ -91,39 +91,42 @@ View::View(Manager::Ptr const& manager)
     return false;
   });
 
-  mode.changed.connect([this] (Mode m) {
-    UpdateText();
-    Populate();
-  });
+  mode.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateContents)));
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateViewSize)));
+  UpdateContents();
+}
 
-  monitor.changed.connect([this] (int monitor) {
-    UpdateViewSize();
-  });
-
-  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &View::UpdateViewSize));
-
-  UpdateViewSize();
+void View::UpdateContents()
+{
+  SetVisible(true);
+  PopulateButtons();
   UpdateText();
-  Populate();
+  UpdateViewSize();
 }
 
 void View::UpdateViewSize()
 {
-  main_layout_->SetTopAndBottomPadding(cv_->CP(style::TOP_PADDING), cv_->CP(style::BOTTOM_PADDING));
-  main_layout_->SetLeftAndRightPadding(cv_->CP(style::LEFT_RIGHT_PADDING));
-  main_layout_->SetSpaceBetweenChildren(cv_->CP(style::MAIN_SPACE));
+  main_layout_->SetTopAndBottomPadding(style::TOP_PADDING.CP(scale()), style::BOTTOM_PADDING.CP(scale()));
+  main_layout_->SetLeftAndRightPadding(style::LEFT_RIGHT_PADDING.CP(scale()));
+  main_layout_->SetSpaceBetweenChildren(style::MAIN_SPACE.CP(scale()));
 
-  title_->SetScale(cv_->DPIScale());
-  subtitle_->SetScale(cv_->DPIScale());
+  title_->SetScale(scale());
+  subtitle_->SetScale(scale());
 
   ReloadCloseButtonTexture();
 
-  buttons_layout_->SetSpaceBetweenChildren(cv_->CP(style::BUTTONS_SPACE));
+  buttons_layout_->SetSpaceBetweenChildren(style::BUTTONS_SPACE.CP(scale()));
+  auto const& buttons = buttons_layout_->GetChildren();
 
-  for (auto* area : buttons_layout_->GetChildren())
+  for (auto* area : buttons)
+    static_cast<Button*>(area)->scale = scale();
+
+  if (buttons.size() == 1)
   {
-    auto* button = static_cast<Button*>(area);
-    button->scale = cv_->DPIScale();
+    auto* button = buttons.front();
+    button->ComputeContentSize();
+    int padding = button->GetWidth()/2 + style::MAIN_SPACE.CP(scale())/2;
+    buttons_layout_->SetLeftAndRightPadding(padding, padding);
   }
 }
 
@@ -205,20 +208,26 @@ void View::UpdateText()
   subtitle_->SetText(glib::String(g_strdup_printf(message.c_str(), name.c_str())).Str());
 }
 
-void View::Populate()
+void View::PopulateButtons()
 {
   debug::Introspectable::RemoveAllChildren();
   buttons_layout_->Clear();
+  buttons_layout_->SetLeftAndRightPadding(0, 0);
   key_focus_area_ = this;
 
   if (mode() == Mode::LOGOUT)
   {
-    auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
-    button->scale = cv_->DPIScale();
-    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
-    AddButton(button);
+    if (manager_->is_locked())
+      return;
 
-    button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
+    if (manager_->CanLock())
+    {
+      auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
+      AddButton(button);
+    }
+
+    auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
     key_focus_area_ = button;
     AddButton(button);
@@ -227,23 +236,23 @@ void View::Populate()
   {
     if (mode() == Mode::FULL)
     {
-      auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
-      button->scale = cv_->DPIScale();
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
-      AddButton(button);
+      if (manager_->CanLock() && !manager_->is_locked())
+      {
+        auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
+        button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
+        AddButton(button);
+      }
 
       if (manager_->CanSuspend())
       {
-        button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
-        button->scale = cv_->DPIScale();
+        auto* button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
         AddButton(button);
       }
 
       if (manager_->CanHibernate())
       {
-        button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
-        button->scale = cv_->DPIScale();
+        auto* button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
         AddButton(button);
       }
@@ -252,28 +261,34 @@ void View::Populate()
     if (manager_->CanShutdown())
     {
       auto *button = new Button(Button::Action::REBOOT, NUX_TRACKER_LOCATION);
-      button->scale = cv_->DPIScale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
       AddButton(button);
 
       button = new Button(Button::Action::SHUTDOWN, NUX_TRACKER_LOCATION);
-      button->scale = cv_->DPIScale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
       key_focus_area_ = (mode() == Mode::SHUTDOWN) ? button : key_focus_area_;
       AddButton(button);
     }
-    else if (mode() == Mode::FULL)
+    else if (mode() == Mode::FULL && !manager_->is_locked())
     {
       auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
-      button->scale = cv_->DPIScale();
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
       AddButton(button);
     }
+  }
+
+  cancel_idle_.reset();
+  if (buttons_layout_->GetChildren().empty())
+  {
+    // There's nothing to show here, let's cancel the action and hide
+    SetVisible(false);
+    cancel_idle_.reset(new glib::Idle([this] { request_close.emit(); return false; }));
   }
 }
 
 void View::AddButton(Button* button)
 {
+  button->scale = scale();
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
   debug::Introspectable::AddChild(button);

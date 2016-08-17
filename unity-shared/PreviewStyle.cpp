@@ -20,14 +20,13 @@
  *
  */
 
+#include "config.h"
+
 #include "PreviewStyle.h"
 #include <NuxCore/Logger.h>
-
-#include <NuxGraphics/GLTextureResourceManager.h>
 #include <Nux/PaintLayer.h>
 
-#include <UnityCore/GLibWrapper.h>
-#include "config.h"
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
@@ -40,50 +39,41 @@ namespace
 {
 Style* style_instance = nullptr;
 
-const int preview_width = 770;
-const int preview_height = 380;
+const RawPixel preview_width = 770_em;
+const RawPixel preview_height = 380_em;
 
 typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-template <int default_size = 1>
+template <int default_size = -1>
 class LazyLoadTexture
 {
 public:
-  LazyLoadTexture(std::string const& filename)
-  : filename_(filename) {}
+  LazyLoadTexture(std::string const& texture_name)
+    : texture_name_(texture_name)
+  {}
 
-  nux::BaseTexture* texture(int size = default_size)
+  nux::BaseTexture* texture()
   {
-    auto tex_iter = textures_.find(size);
-    if (tex_iter != textures_.end())
-      return tex_iter->second.GetPointer();
+    if (texture_)
+      return texture_.GetPointer();
 
-    return LoadTexture(size).GetPointer();
+    return LoadTexture().GetPointer();
   }
 
 private:
-  BaseTexturePtr LoadTexture(int size)
+  BaseTexturePtr LoadTexture()
   {
-    BaseTexturePtr texture;
-    std::string full_path = PKGDATADIR + filename_;
-    glib::Object<GdkPixbuf> pixbuf;
-    glib::Error error;
+    auto const& texture_path = theme::Settings::Get()->ThemedFilePath(texture_name_, {PKGDATADIR});
+    texture_.Release();
 
-    pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size, size, &error);
-    if (error)
-    {
-      LOG_WARN(logger) << "Unable to texture " << full_path << " at size '" << size << "' : " << error;
-    }
-    else
-    {
-      texture.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-    }
-    textures_[size] = texture;
-    return texture;
+    if (!texture_path.empty())
+      texture_.Adopt(nux::CreateTexture2DFromFile(texture_path.c_str(), default_size, true));
+
+    return texture_;
   }
-private:
-  std::string filename_;
-  std::map<int, BaseTexturePtr> textures_;
+
+  std::string texture_name_;
+  BaseTexturePtr texture_;
 };
 
 } // namespace
@@ -94,15 +84,13 @@ class Style::Impl
 public:
   Impl(Style* owner)
   : owner_(owner)
-  , preview_nav_left_texture_("/preview_previous.svg")
-  , preview_nav_right_texture_("/preview_next.svg")
-  , preview_play_texture_("/preview_play.svg")
-  , preview_pause_texture_("/preview_pause.svg")
-  , preview_spin_texture_("/search_spin.svg")
-  , warning_icon_texture_("/warning_icon.png")
-  {
-  }
-  ~Impl() {}
+  , preview_nav_left_texture_("preview_previous")
+  , preview_nav_right_texture_("preview_next")
+  , preview_play_texture_("preview_play")
+  , preview_pause_texture_("preview_pause")
+  , warning_icon_texture_("warning_icon")
+  , lock_icon_("lock_icon")
+  {}
 
   Style* owner_;
 
@@ -110,8 +98,8 @@ public:
   LazyLoadTexture<32> preview_nav_right_texture_;
   LazyLoadTexture<32> preview_play_texture_;
   LazyLoadTexture<32> preview_pause_texture_;
-  LazyLoadTexture<32> preview_spin_texture_;
   LazyLoadTexture<22> warning_icon_texture_;
+  LazyLoadTexture<-1> lock_icon_;
 };
 
 
@@ -153,100 +141,99 @@ nux::AbstractPaintLayer* Style::GetBackgroundLayer() const
   return new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.1f), true, rop);
 }
 
-int Style::GetNavigatorWidth() const
+RawPixel Style::GetNavigatorWidth() const
 {
-  return 42;
+  return 42_em;
 }
 
-int Style::GetNavigatorIconSize() const
+RawPixel Style::GetNavigatorIconSize() const
 {
-  return 24;  
+  return 24_em;
 }
 
-int Style::GetPreviewWidth() const
+RawPixel Style::GetPreviewWidth() const
 {
   return preview_width;
 }
 
-int Style::GetPreviewHeight() const
+RawPixel Style::GetPreviewHeight() const
 {
   return preview_height;
 }
 
-
-int Style::GetPreviewTopPadding() const
+RawPixel Style::GetPreviewTopPadding() const
 {
-  return 100;
+  return 100_em;
 }
 
-int Style::GetDetailsTopMargin() const
+RawPixel Style::GetDetailsTopMargin() const
 {
-  return 5;
+  return 5_em;
 }
 
-int Style::GetDetailsBottomMargin() const
+RawPixel Style::GetDetailsBottomMargin() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetDetailsRightMargin() const
+RawPixel Style::GetDetailsRightMargin() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetDetailsLeftMargin() const
+RawPixel Style::GetDetailsLeftMargin() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetPanelSplitWidth() const
+RawPixel Style::GetPanelSplitWidth() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetAppIconAreaWidth() const
+RawPixel Style::GetAppIconAreaWidth() const
 {
-  return 105;
+  return 105_em;
 }
 
-int Style::GetSpaceBetweenTitleAndSubtitle() const
+RawPixel Style::GetSpaceBetweenTitleAndSubtitle() const
 {
-  return 6;
+  return 6_em;
 }
 
-int Style::GetSpaceBetweenIconAndDetails() const
+RawPixel Style::GetSpaceBetweenIconAndDetails() const
 {
-  return 18;
+  return 18_em;
 }
 
-int Style::GetTrackHeight() const
+RawPixel Style::GetTrackHeight() const
 {
-  return 28;
+  return 28_em;
 }
 
-int Style::GetMusicDurationWidth() const
+RawPixel Style::GetMusicDurationWidth() const
 {
-  return 40;
+  return 40_em;
 }
 
-int Style::GetActionButtonHeight() const
+RawPixel Style::GetActionButtonHeight() const
 {
-  return 34;
+  return 34_em;
 }
 
-int Style::GetActionButtonMaximumWidth() const
+RawPixel Style::GetActionButtonMaximumWidth() const
 {
-  return 175;
+  return 175_em;
 }
 
-int Style::GetSpaceBetweenActions() const
+RawPixel Style::GetSpaceBetweenActions() const
 {
-  return 10;
+  return 10_em;
 }
 
-int Style::GetTrackBarHeight() const
+RawPixel Style::GetTrackBarHeight() const
 {
-  return 25;
+  return 25_em;
 }
 
 float Style::GetAppImageAspectRatio() const
@@ -254,24 +241,24 @@ float Style::GetAppImageAspectRatio() const
   return 1.0;
 }
 
-int Style::GetDetailsPanelMinimumWidth() const
+RawPixel Style::GetDetailsPanelMinimumWidth() const
 {
-  return 300;
+  return 300_em;
 }
 
-int Style::GetInfoHintIconSizeWidth() const
+RawPixel Style::GetInfoHintIconSizeWidth() const
 {
-  return 24;
+  return 24_em;
 }
 
-int Style::GetInfoHintNameMinimumWidth() const
+RawPixel Style::GetInfoHintNameMinimumWidth() const
 {
-  return 100;
+  return 100_em;
 }
 
-int Style::GetInfoHintNameMaximumWidth() const
+RawPixel Style::GetInfoHintNameMaximumWidth() const
 {
-  return 160;
+  return 160_em;
 }
 
 float Style::GetDescriptionLineSpacing() const
@@ -279,19 +266,19 @@ float Style::GetDescriptionLineSpacing() const
   return 2.0;
 }
 
-int Style::GetDescriptionLineCount() const
+RawPixel Style::GetDescriptionLineCount() const
 {
-  return 20;
+  return 20_em;
 }
 
-int Style::GetRatingWidgetHeight() const
+RawPixel Style::GetRatingWidgetHeight() const
 {
-  return 36;
+  return 36_em;
 }
 
-int Style::GetStatusIconSize() const
+RawPixel Style::GetStatusIconSize() const
 {
-  return 12;
+  return 10_em;
 }
 
 std::string Style::payment_title_font() const
@@ -344,39 +331,39 @@ nux::Color Style::payment_error_color() const
   return nux::Color(255, 0, 0);
 }
 
-int Style::GetPaymentIconAreaWidth() const
+RawPixel Style::GetPaymentIconAreaWidth() const
 {
-  return 64;
+  return 64_em;
 }
 
-int Style::GetPaymentTextInputHeight() const
+RawPixel Style::GetPaymentTextInputHeight() const
 {
-  return 40;
+  return 40_em;
 }
 
-int Style::GetPaymentLockWidth() const
+RawPixel Style::GetPaymentLockWidth() const
 {
-  return 22;
+  return 22_em;
 }
 
-int Style::GetPaymentLockHeight() const
+RawPixel Style::GetPaymentLockHeight() const
 {
-  return 22;
+  return 22_em;
 }
 
-int Style::GetPaymentHeaderWidth() const
+RawPixel Style::GetPaymentHeaderWidth() const
 {
-  return 850;
+  return 850_em;
 }
 
-int Style::GetPaymentHeaderSpace() const
+RawPixel Style::GetPaymentHeaderSpace() const
 {
-  return 0;
+  return 0_em;
 }
 
-int Style::GetPaymentFormSpace() const
+RawPixel Style::GetPaymentFormSpace() const
 {
-  return 5;
+  return 5_em;
 }
 
 std::string Style::u1_warning_font() const
@@ -389,19 +376,19 @@ float Style::GetVideoImageAspectRatio() const
   return float(540)/380;
 }
 
-int Style::GetAvatarAreaWidth() const
+RawPixel Style::GetAvatarAreaWidth() const
 {
-  return 100;
+  return 100_em;
 }
 
-int Style::GetAvatarAreaHeight() const
+RawPixel Style::GetAvatarAreaHeight() const
 {
-  return 100;  
+  return 100_em;
 }
 
 std::string Style::content_font() const
 {
-  return "Ubuntu Light 12";  
+  return "Ubuntu Light 12";
 }
 
 std::string Style::title_font() const
@@ -425,7 +412,7 @@ std::string Style::action_font() const
 }
 std::string Style::action_extra_font() const
 {
-  return "Ubuntu Bold 11";  
+  return "Ubuntu Bold 11";
 }
 
 std::string Style::app_license_font() const
@@ -495,18 +482,12 @@ nux::BaseTexture* Style::GetPauseIcon()
 
 nux::BaseTexture* Style::GetLockIcon()
 {
-  return nux::CreateTexture2DFromFile(
-              PKGDATADIR"/lock_icon.png", -1, true);
+  return pimpl->lock_icon_.texture();
 }
 
 nux::BaseTexture* Style::GetWarningIcon()
 {
   return pimpl->warning_icon_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchSpinIcon(int size)
-{
-  return pimpl->preview_spin_texture_.texture(size);
 }
 
 

@@ -70,10 +70,11 @@ public:
   void RecvMouseClick(int button, int monitor, unsigned long key_flags = 0);
 
   void HideTooltip();
+  void PromptHideTooltip();
 
   void ShowTooltip();
 
-  bool OpenQuicklist(bool select_first_item = false, int monitor = -1);
+  bool OpenQuicklist(bool select_first_item = false, int monitor = -1, bool restore_input_focus = false);
   void CloseQuicklist();
 
   void SetCenter(nux::Point3 const& center, int parent_monitor);
@@ -82,7 +83,7 @@ public:
 
   nux::Point3 GetCenter(int monitor);
 
-  virtual void Activate(ActionArg arg);
+  void Activate(ActionArg arg);
 
   void OpenInstance(ActionArg arg);
 
@@ -94,15 +95,19 @@ public:
 
   void SetOrder(int order);
 
-  virtual WindowList Windows() { return WindowList(); }
+  WindowList Windows() { return WindowList(); }
 
-  virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
+  WindowList WindowsOnViewport() { return WindowList(); }
 
-  virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
+  WindowList WindowsForMonitor(int monitor) { return WindowList(); }
 
-  const bool WindowVisibleOnMonitor(int monitor);
+  bool WindowVisibleOnMonitor(int monitor) const;
 
-  const bool WindowVisibleOnViewport();
+  bool WindowVisibleOnViewport() const;
+
+  size_t WindowsVisibleOnMonitor(int monitor) const;
+
+  size_t WindowsVisibleOnViewport() const;
 
   float PresentUrgency();
 
@@ -139,9 +144,6 @@ public:
 
   void SkipQuirkAnimation(Quirk quirk, int monitor = -1);
 
-  sigc::signal<void> QuirksChanged;
-  sigc::signal<void> WindowsChanged;
-
   IconType GetIconType() const;
 
   virtual nux::Color BackgroundColor() const;
@@ -154,14 +156,15 @@ public:
   }
 
   nux::BaseTexture* TextureForSize(int size);
-
-  nux::BaseTexture* Emblem();
+  nux::BaseTexture* Emblem() const override;
+  nux::BaseTexture* CountTexture(double scale) override;
 
   MenuItemsVector Menus();
+  unsigned Count() const;
 
-  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
-
-  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote);
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const&);
+  void SelectEntryRemote(LauncherEntryRemote::Ptr const&);
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const&);
 
   nux::DndAction QueryAcceptDrop(DndData const& dnd_data)
   {
@@ -226,7 +229,7 @@ protected:
 
   void SetProgress(float progress);
 
-  void SetWindowVisibleOnMonitor(bool val, int monitor);
+  void SetNumberOfWindowsVisibleOnMonitor(int number_of_windows, int monitor);
 
   void Present(float urgency, int length, int monitor = -1);
 
@@ -267,15 +270,13 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
+  BaseTexturePtr TextureFromPixbuf(GdkPixbuf *pixbuf, int size, bool update_glow_colors = true);
+
   BaseTexturePtr TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
   BaseTexturePtr TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
 
   BaseTexturePtr TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
-
-  static bool        IsMonoDefaultTheme();
-
-  GtkIconTheme*      GetUnityTheme();
 
   void OnRemoteEmblemChanged(LauncherEntryRemote* remote);
 
@@ -305,9 +306,6 @@ protected:
     return *_quirk_animations[monitor][unsigned(quirk)];
   }
 
-  // This looks like a case for boost::logical::tribool
-  static int _current_theme_is_mono;
-
 private:
   IconType _icon_type;
 
@@ -323,9 +321,10 @@ private:
   void LoadQuicklist();
 
   void OnTooltipEnabledChanged(bool value);
+  void CleanCountTextures();
+  BaseTexturePtr DrawCountTexture(unsigned count, double scale);
 
   bool _sticky;
-  bool _remote_urgent;
   float _present_urgency;
   float _progress;
   int _sort_priority;
@@ -338,6 +337,7 @@ private:
 
   std::vector<nux::Point3> _center;
   std::bitset<monitors::MAX> _has_visible_window;
+  std::vector<int> _number_of_visible_windows;
   std::vector<std::bitset<std::size_t(Quirk::LAST)>> _quirks;
   std::vector<std::vector<std::shared_ptr<Animation>>> _quirk_animations;
   std::vector<nux::Point3> _last_stable;
@@ -345,11 +345,11 @@ private:
   time::Spec _last_action;
 
   BaseTexturePtr _emblem;
+  std::unordered_map<double, BaseTexturePtr> _counts;
 
-  std::list<LauncherEntryRemote::Ptr> _entry_list;
+  std::vector<LauncherEntryRemote::Ptr> _remote_entries;
+  connection::Manager _remote_connections;
   glib::Object<DbusmenuClient> _remote_menus;
-
-  static glib::Object<GtkIconTheme> _unity_theme;
 
 protected:
   glib::SourceManager _source_manager;

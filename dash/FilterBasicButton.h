@@ -39,15 +39,17 @@ public:
   FilterBasicButton(std::string const& label, NUX_FILE_LINE_PROTO);
   FilterBasicButton(std::string const& label, nux::TextureArea* image, NUX_FILE_LINE_PROTO);
   FilterBasicButton(NUX_FILE_LINE_PROTO);
-  virtual ~FilterBasicButton();
 
-  void SetClearBeforeDraw(bool clear_before_draw);
+  nux::Property<double> scale;
+
+  std::string const& GetLabel() const;
+
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void Init();
   void InitTheme();
+  void SetClearBeforeDraw(bool clear_before_draw);
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
   void RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr);
 
@@ -61,6 +63,8 @@ protected:
   nux::Geometry cached_geometry_;
 
 private:
+  void UpdateScale(double);
+
   std::string label_;
   bool clear_before_draw_;
 };

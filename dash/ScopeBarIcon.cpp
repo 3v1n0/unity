@@ -17,7 +17,6 @@
  */
 
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/RawPixel.h"
 #include "ScopeBarIcon.h"
 
 #include "config.h"
@@ -38,9 +37,10 @@ double const DEFAULT_SCALE          = 1.0;
 
 NUX_IMPLEMENT_OBJECT_TYPE(ScopeBarIcon);
 
-ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
+ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint, std::string name_)
   : IconTexture(icon_hint, TEXTURE_SIZE)
   , id(id_)
+  , name(name_)
   , active(false)
   , scale(DEFAULT_SCALE)
   , inactive_opacity_(0.4f)

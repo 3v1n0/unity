@@ -22,6 +22,8 @@
 #include <NuxCore/Logger.h>
 #include "Variant.h"
 
+#include <grp.h>
+
 namespace unity
 {
 namespace session
@@ -91,13 +93,19 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
+  manager_->is_locked = false;
+  manager_->is_locked.changed.connect([this] (bool locked) {
+    locked ? manager_->locked.emit() : manager_->unlocked.emit();
+  });
+
   {
     const char* session_id = test_mode_ ? "id0" : g_getenv("XDG_SESSION_ID");
 
     login_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
                                                      "/org/freedesktop/login1/session/" + glib::gchar_to_string(session_id),
                                                      "org.freedesktop.login1.Session",
-                                                     test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
+                                                     test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM,
+                                                     G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES);
 
     login_proxy_->Connect("Lock", [this](GVariant*){
       manager_->PromptLockScreen();
@@ -106,10 +114,21 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     login_proxy_->Connect("Unlock", [this](GVariant*){
       manager_->unlock_requested.emit();
     });
+
+    login_proxy_->ConnectProperty("Active", [this] (GVariant* variant) {
+      bool active = glib::Variant(variant).GetBool();
+      manager_->is_session_active.changed.emit(active);
+      if (active)
+        manager_->screensaver_requested.emit(false);
+    });
+
+    manager_->is_session_active.SetGetterFunction([this] {
+      return login_proxy_->GetProperty("Active").GetBool();
+    });
   }
 
   {
-    presence_proxy_ = std::make_shared<glib::DBusProxy>("org.gnome.SessionManager",
+    presence_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.gnome.SessionManager",
                                                         "/org/gnome/SessionManager/Presence",
                                                         "org.gnome.SessionManager.Presence");
 
@@ -141,6 +160,13 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
     manager_->have_other_open_sessions.SetGetterFunction([this]() {
       return open_sessions_ > 1;
     });
+  }
+
+  {
+    dm_seat_proxy_ = std::make_shared<glib::DBusProxy>("org.freedesktop.Accounts",
+                                                       ("/org/freedesktop/Accounts/User" + std::to_string(getuid())).c_str(),
+                                                       "org.freedesktop.Accounts.User",
+                                                       G_BUS_TYPE_SYSTEM);
   }
 
   CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant, glib::Error const& err) {
@@ -417,21 +443,28 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
   });
 }
 
+void GnomeManager::Impl::CallDisplayManagerSeatMethod(std::string const& method, GVariant* parameters)
+{
+  const char* xdg_seat_path = test_mode_ ? "/org/freedesktop/DisplayManager/Seat0" : g_getenv("XDG_SEAT_PATH");
+
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.DisplayManager",
+                                                 glib::gchar_to_string(xdg_seat_path),
+                                                 "org.freedesktop.DisplayManager.Seat",
+                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
+  proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
+    if (e)
+    {
+      LOG_ERROR(logger) << "DisplayManager Seat call failed: " << e.Message();
+    }
+  });
+}
+
 void GnomeManager::Impl::LockScreen(bool prompt)
 {
   EnsureCancelPendingAction();
 
-  // FIXME (andy) we should ask gnome-session to emit the logind signal
-  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
-
-  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()))
+  if (!manager_->CanLock())
   {
-    manager_->ScreenSaverActivate();
-    return;
-  }
-  else if (manager_->UserName().find("guest-") == 0)
-  {
-    LOG_INFO(logger) << "Impossible to lock a guest session";
     manager_->ScreenSaverActivate();
     return;
   }
@@ -452,6 +485,58 @@ void GnomeManager::Impl::UpdateHaveOtherOpenSessions()
         manager_->have_other_open_sessions.changed.emit(open_sessions_);
       }
   });
+}
+
+bool GnomeManager::Impl::HasInhibitors()
+{
+  glib::Error error;
+  glib::Object<GDBusConnection> bus(g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the session bus, to fetch the inhibitors: " << error;
+    return false;
+  }
+
+  enum class Inhibited : unsigned
+  {
+    LOGOUT = 1,
+    USER_SWITCH = 2,
+    SUSPEND = 4,
+    IDLE_SET = 8
+  };
+
+  glib::Variant inhibitors(g_dbus_connection_call_sync(bus, test_mode_ ? testing::DBUS_NAME.c_str() : "org.gnome.SessionManager",
+                                                       "/org/gnome/SessionManager", "org.gnome.SessionManager",
+                                                       "IsInhibited", g_variant_new("(u)", Inhibited::LOGOUT), nullptr,
+                                                       G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the inhibitors: " << error;
+    return false;
+  }
+
+  return inhibitors.GetBool();
+}
+
+void GnomeManager::Impl::UserIconFile(std::function<void(std::string const&)> const& callback)
+{
+  dm_seat_proxy_->GetProperty("IconFile", [this, callback] (GVariant *value) {
+    callback(glib::Variant(value).GetString());
+  });
+}
+
+bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string const& group_name)
+{
+  auto group = getgrnam(group_name.c_str());
+
+  if (group && group->gr_mem)
+    for (int i = 0; group->gr_mem[i]; ++i)
+      if (g_strcmp0(group->gr_mem[i], user_name.c_str()) == 0)
+        return true;
+
+  return false;
 }
 
 // Public implementation
@@ -487,6 +572,11 @@ std::string GnomeManager::HostName() const
   return glib::gchar_to_string(g_get_host_name());
 }
 
+void GnomeManager::UserIconFile(std::function<void(std::string const&)> const& callback) const
+{
+  impl_->UserIconFile(callback);
+}
+
 void GnomeManager::ScreenSaverActivate()
 {
   screensaver_requested.emit(true);
@@ -499,12 +589,12 @@ void GnomeManager::ScreenSaverDeactivate()
 
 void GnomeManager::LockScreen()
 {
-  impl_->LockScreen(false);
+  impl_->LockScreen(/* prompt */ false);
 }
 
 void GnomeManager::PromptLockScreen()
 {
-  impl_->LockScreen(true);
+  impl_->LockScreen(/* prompt */ true);
 }
 
 void GnomeManager::Logout()
@@ -617,9 +707,31 @@ void GnomeManager::Hibernate()
   });
 }
 
+void GnomeManager::SwitchToGreeter()
+{
+  impl_->CallDisplayManagerSeatMethod("SwitchToGreeter");
+}
+
+bool GnomeManager::CanLock() const
+{
+  if (is_locked())
+    return true;
+
+  glib::Object<GSettings> lockdown_settings(g_settings_new(GNOME_LOCKDOWN_OPTIONS.c_str()));
+
+  if (g_settings_get_boolean(lockdown_settings, DISABLE_LOCKSCREEN_KEY.c_str()) ||
+      UserName().find("guest-") == 0 ||
+      impl_->IsUserInGroup(UserName(), "nopasswdlogin"))
+  {
+    return false;
+  }
+
+  return true;
+}
+
 bool GnomeManager::CanShutdown() const
 {
-  return impl_->can_shutdown_;
+  return !is_locked() && impl_->can_shutdown_;
 }
 
 bool GnomeManager::CanSuspend() const
@@ -630,6 +742,11 @@ bool GnomeManager::CanSuspend() const
 bool GnomeManager::CanHibernate() const
 {
   return impl_->can_hibernate_;
+}
+
+bool GnomeManager::HasInhibitors() const
+{
+  return impl_->HasInhibitors();
 }
 
 void GnomeManager::CancelAction()

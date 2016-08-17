@@ -37,9 +37,10 @@ class ScopeBarIcon : public IconTexture
 {
   NUX_DECLARE_OBJECT_TYPE(ScopeBarIcon, IconTexture);
 public:
-  ScopeBarIcon(std::string id, std::string icon_hint);
+  ScopeBarIcon(std::string id, std::string icon_hint, std::string name);
 
   nux::Property<std::string> id;
+  nux::Property<std::string> name;
   nux::Property<bool> active;
   nux::Property<double> scale;
 

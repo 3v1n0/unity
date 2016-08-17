@@ -39,6 +39,8 @@
                 <plugin>compiztoolbox</plugin>
                 <plugin>scale</plugin>
                 <plugin>expo</plugin>
+                <plugin>move</plugin>
+                <plugin>resize</plugin>
             </requirement>
             <conflict>
                 <plugin>decor</plugin>
@@ -85,6 +87,18 @@
                     <_short>Key to open the first panel menu</_short>
                     <_long>Opens the first indicator menu of the Panel, allowing keyboard navigation thereafter.</_long>
                     <default>&lt;Alt&gt;F10</default>
+                </option>
+
+                <option name="spread_app_windows" type="key">
+                    <_short>Key to spread the current application windows</_short>
+                    <_long>Initiate the window Spread for the current application windows.</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;w</default>
+                </option>
+
+                <option name="spread_app_windows_anywhere" type="key">
+                    <_short>Key to spread the current application windows in any workspace</_short>
+                    <_long>Initiate the window Spread for the current application windows, for all the windows.</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;&lt;Shift&gt;w</default>
                 </option>
 
                 <option name="panel_opacity" type="float">
@@ -145,6 +159,12 @@
                   <_short>Enable Shortcut Hints Overlay</_short>
                   <_long>Enables possibility to display an overlay showing available mouse and keyboard shortcuts.</_long>
                   <default>true</default>
+                </option>
+
+                <option name="low_graphics_mode"  type="bool">
+                  <_short>Enable Low Graphics Mode</_short>
+                  <_long>Enables low graphics mode regardless of hardware in the system</_long>
+                  <default>false</default>
                 </option>
             </group>
 
@@ -563,6 +583,12 @@
                     <_short>Key to flip through windows in the Switcher backwards</_short>
                     <_long>Flips through all the windows present in the Switcher, in reverse order.</_long>
                     <passive_grab>false</passive_grab>
+                </option>
+
+                <option name="switch_strictly_between_applications" type="bool">
+                    <_short>Switcher strictly changes between applications</_short>
+                    <_long>Disables the last focused window being the first entry in the Switcher, so Switcher strictly switches between applications</_long>
+                    <default>false</default>
                 </option>
 
                 <option name="show_minimized_windows" type="bool">

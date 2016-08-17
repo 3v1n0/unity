@@ -20,12 +20,7 @@
 #ifndef PLACES_VSCROLLBAR_H
 #define PLACES_VSCROLLBAR_H
 
-#include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <Nux/ScrollView.h>
-#include <Nux/BaseWindow.h>
 #include <Nux/VScrollBar.h>
-#include <NuxGraphics/CairoGraphics.h>
 
 namespace unity
 {
@@ -36,23 +31,20 @@ class PlacesVScrollBar : public nux::VScrollBar
 {
 public:
   PlacesVScrollBar(NUX_FILE_LINE_PROTO);
-  virtual ~PlacesVScrollBar();
+
+  nux::Property<double> scale;
+  nux::Property<bool> hovering;
 
 protected:
-  virtual void PreLayoutManagement();
-  virtual long PostLayoutManagement(long LayoutResult);
-
-  void Draw(nux::GraphicsEngine& gfxContext,
-            bool                 forceDraw);
-  void DrawContent(nux::GraphicsEngine& gfxContext,
-            bool                 forceDraw);
+  void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
+  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
 private:
-  void UpdateTexture();
-  void DrawScrollbar(nux::GraphicsEngine& graphics_engine);
+  void UpdateTexture(nux::Geometry const&);
+  void OnStyleChanged();
 
 private:
-  nux::BaseTexture* _slider_texture;
+  nux::ObjectPtr<nux::BaseTexture> slider_texture_;
 };
 
 } // namespace dash

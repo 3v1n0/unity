@@ -27,19 +27,29 @@
 #include "GLibSource.h"
 #include "Variant.h"
 #include "DBusIndicators.h"
+#include "services/panel-service-private.h"
 
 namespace unity
 {
 namespace indicator
 {
-DECLARE_LOGGER(logger, "unity.indicator.dbus");
 
 namespace
 {
-const std::string SERVICE_NAME_DESKTOP("com.canonical.Unity.Panel.Service.Desktop");
-const std::string SERVICE_NAME_LOCKSCREEN("com.canonical.Unity.Panel.Service.LockScreen");
-const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
-const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
+DECLARE_LOGGER(logger, "unity.indicator.dbus");
+
+inline bool verify_variant_type(GVariant* value, const gchar* type)
+{
+  if (!g_variant_is_of_type (value, G_VARIANT_TYPE(type)))
+  {
+    LOG_ERROR(logger) << "Got invalid variant type: '"
+                      << g_variant_get_type_string(value) << "' ('"
+                      << type << "' was expected)";
+    return false;
+  }
+
+  return true;
+}
 } // anonymous namespace
 
 
@@ -55,6 +65,7 @@ struct DBusIndicators::Impl
   void Sync(GVariant* args, glib::Error const&);
   void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
   void ShowEntriesDropdown(Indicator::Entries const&, Entry::Ptr const&, unsigned xid, int x, int y);
+  void CloseActiveEntry();
 
   void OnConnected();
   void OnDisconnected();
@@ -63,7 +74,6 @@ struct DBusIndicators::Impl
   void OnIconsPathChanged(GVariant* parameters);
   void OnEntryActivated(GVariant* parameters);
   void OnEntryActivatedRequest(GVariant* parameters);
-  void OnEntryShowNowChanged(GVariant* parameters);
 
   void OnEntryScroll(std::string const& entry_id, int delta);
   void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y, unsigned int button);
@@ -77,21 +87,20 @@ struct DBusIndicators::Impl
   glib::Source::UniquePtr show_entry_idle_;
   glib::Source::UniquePtr show_appmenu_idle_;
   std::vector<std::string> icon_paths_;
-  std::map<std::string, EntryLocationMap> cached_locations_;
+  std::unordered_map<std::string, EntryLocationMap> cached_locations_;
 };
 
 
 // Public Methods
 DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
   : owner_(owner)
-  , gproxy_(dbus_name, SERVICE_PATH, SERVICE_IFACE,
-            G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
+  , gproxy_(dbus_name, UPS_PATH, UPS_IFACE, G_BUS_TYPE_SESSION,
+            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
   gproxy_.Connect("ReSync", sigc::mem_fun(this, &DBusIndicators::Impl::OnReSync));
   gproxy_.Connect("IconPathsChanged", sigc::mem_fun(this, &DBusIndicators::Impl::OnIconsPathChanged));
   gproxy_.Connect("EntryActivated", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryActivated));
   gproxy_.Connect("EntryActivateRequest", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryActivatedRequest));
-  gproxy_.Connect("EntryShowNowChanged", sigc::mem_fun(this, &DBusIndicators::Impl::OnEntryShowNowChanged));
 
   gproxy_.connected.connect(sigc::mem_fun(this, &DBusIndicators::Impl::OnConnected));
   gproxy_.disconnected.connect(sigc::mem_fun(this, &DBusIndicators::Impl::OnDisconnected));
@@ -114,7 +123,7 @@ void DBusIndicators::Impl::CheckLocalService()
 
     // This is obviously hackish, but this part of the code is mostly hackish...
     // Let's attempt to run it from where we expect it to be
-    std::string cmd = PREFIXDIR + std::string("/lib/unity/unity-panel-service");
+    std::string cmd = UNITYLIBDIR"/" + std::string("unity-panel-service");
     LOG_WARN(logger) << "Couldn't load panel from installed services, "
                      << "so trying to load panel from known location: " << cmd;
 
@@ -207,6 +216,9 @@ void DBusIndicators::Impl::OnIconsPathChanged(GVariant*)
 
 void DBusIndicators::Impl::OnEntryActivated(GVariant* parameters)
 {
+  if (!verify_variant_type(parameters, "(ss(iiuu))"))
+    return;
+
   glib::String panel;
   glib::String entry_id;
   nux::Rect geo;
@@ -218,21 +230,14 @@ void DBusIndicators::Impl::OnEntryActivated(GVariant* parameters)
 
 void DBusIndicators::Impl::OnEntryActivatedRequest(GVariant* parameters)
 {
+  if (!verify_variant_type(parameters, "(s)"))
+    return;
+
   glib::String entry_name;
   g_variant_get(parameters, "(s)", &entry_name);
 
   if (entry_name)
     owner_->on_entry_activate_request.emit(entry_name);
-}
-
-void DBusIndicators::Impl::OnEntryShowNowChanged(GVariant* parameters)
-{
-  glib::String entry_name;
-  gboolean show_now;
-  g_variant_get(parameters, "(sb)", &entry_name, &show_now);
-
-  if (entry_name)
-    owner_->SetEntryShowNow(entry_name, show_now);
 }
 
 void DBusIndicators::Impl::RequestSyncAll()
@@ -313,15 +318,21 @@ void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
   gproxy_.Call("ScrollEntry", g_variant_new("(si)", entry_id.c_str(), delta));
 }
 
+void DBusIndicators::Impl::CloseActiveEntry()
+{
+  gproxy_.Call("CloseActiveEntry");
+}
+
 void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
 {
   if (!args || error)
     return;
 
   GVariantIter* iter            = nullptr;
-  gchar*        name_hint       = nullptr;
   gchar*        indicator_id    = nullptr;
   gchar*        entry_id        = nullptr;
+  gchar*        name_hint       = nullptr;
+  guint32       parent_window   = 0;
   gchar*        label           = nullptr;
   gboolean      label_sensitive = false;
   gboolean      label_visible   = false;
@@ -331,15 +342,17 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
   gboolean      image_visible   = false;
   gint32        priority        = -1;
 
-  std::map<Indicator::Ptr, Indicator::Entries> indicators;
-  int wanted_idx = 0;
-  bool any_different_idx = false;
+  if (!verify_variant_type(args, "(" ENTRY_ARRAY_SIGNATURE ")"))
+    return;
 
-  g_variant_get(args, "(a(ssssbbusbbi))", &iter);
-  while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
+  std::unordered_map<Indicator::Ptr, Indicator::Entries> indicators;
+
+  g_variant_get(args, "(" ENTRY_ARRAY_SIGNATURE ")", &iter);
+  while (g_variant_iter_loop(iter, ENTRY_SIGNATURE,
                              &indicator_id,
                              &entry_id,
                              &name_hint,
+                             &parent_window,
                              &label,
                              &label_sensitive,
                              &label_visible,
@@ -363,27 +376,20 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
     // Empty entries are empty indicators.
     if (!entry.empty())
     {
-      Entry::Ptr e;
-      if (!any_different_idx)
-      {
-        // Indicators can only add or remove entries, so if
-        // there is a index change we can't reuse the existing ones
-        // after that index
-        if (indicator->EntryIndex(entry_id) == wanted_idx)
-        {
-          e = indicator->GetEntry(entry_id);
-        }
-        else
-        {
-          any_different_idx = true;
-        }
-      }
+      Entry::Ptr e = indicator->GetEntry(entry_id);
+      int old_priority = e ? e->priority() : -1;
+
+      // Indicators can only add or remove entries, so if
+      // there is a priority change we can't reuse the existing ones
+      if (old_priority != priority)
+        e.reset();
 
       if (!e)
       {
-        e = std::make_shared<Entry>(entry, name_hint, label, label_sensitive,
-                                    label_visible, image_type, image_data,
-                                    image_sensitive, image_visible, priority);
+        e = std::make_shared<Entry>(entry, name_hint, parent_window,
+                                    label, label_sensitive, label_visible,
+                                    image_type, image_data, image_sensitive, image_visible,
+                                    priority);
       }
       else
       {
@@ -393,15 +399,12 @@ void DBusIndicators::Impl::Sync(GVariant* args, glib::Error const& error)
       }
 
       entries.push_back(e);
-      ++wanted_idx;
     }
   }
   g_variant_iter_free(iter);
 
-  for (auto i = indicators.begin(), end = indicators.end(); i != end; ++i)
-  {
-    i->first->Sync(indicators[i->first]);
-  }
+  for (auto const& i : indicators)
+    i.first->Sync(i.second);
 }
 
 void DBusIndicators::Impl::SyncGeometries(std::string const& name,
@@ -457,7 +460,7 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
 }
 
 DBusIndicators::DBusIndicators()
-  : pimpl(new Impl(SERVICE_NAME_DESKTOP, this))
+  : pimpl(new Impl(UPS_NAME_DESKTOP, this))
 {}
 
 DBusIndicators::DBusIndicators(std::string const& dbus_name)
@@ -465,7 +468,7 @@ DBusIndicators::DBusIndicators(std::string const& dbus_name)
 {}
 
 LockScreenDBusIndicators::LockScreenDBusIndicators()
-  : DBusIndicators(SERVICE_NAME_LOCKSCREEN)
+  : DBusIndicators(UPS_NAME_LOCKSCREEN)
 {}
 
 DBusIndicators::~DBusIndicators()
@@ -487,6 +490,11 @@ void DBusIndicators::ShowEntriesDropdown(Indicator::Entries const& entries,
                                          unsigned xid, int x, int y)
 {
   pimpl->ShowEntriesDropdown(entries, selected, xid, x, y);
+}
+
+void DBusIndicators::CloseActiveEntry()
+{
+  pimpl->CloseActiveEntry();
 }
 
 void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)

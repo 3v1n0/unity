@@ -37,17 +37,13 @@ enum ItemRole
 SlidingLayout::SlidingLayout()
   : fadein(100)
   , fadeout(120)
+  , override_main_item(false)
   , fade_animator_(fadein())
 {
   items_.resize(2);
   fade_animator_.updated.connect(sigc::hide(sigc::mem_fun(this, &SlidingLayout::Damage)));
-  mouse_owner.changed.connect([this] (bool owner) {
-    if (items_[ItemRole::INPUT])
-    {
-      fade_animator_.SetDuration(owner ? fadein() : fadeout());
-      animation::StartOrReverseIf(fade_animator_, owner);
-    }
-  });
+  mouse_owner.changed.connect(sigc::hide(sigc::mem_fun(this, &SlidingLayout::StartAnimation)));
+  override_main_item.changed.connect(sigc::hide(sigc::mem_fun(this, &SlidingLayout::StartAnimation)));
 }
 
 void SlidingLayout::SetMainItem(Item::Ptr const& main)
@@ -126,12 +122,22 @@ void SlidingLayout::DoRelayout()
   rect_.setHeight(contents.height);
 }
 
+void SlidingLayout::StartAnimation()
+{
+  if (items_[ItemRole::INPUT])
+  {
+    bool show_input = (mouse_owner() || override_main_item());
+    fade_animator_.SetDuration(show_input ? fadein() : fadeout());
+    animation::StartOrReverseIf(fade_animator_, show_input);
+  }
+}
+
 void SlidingLayout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindowPaintAttrib const& attrib, CompRegion const& clip, unsigned mask)
 {
   auto& main_item_ = items_[ItemRole::MAIN];
   auto& input_item_ = items_[ItemRole::INPUT];
 
-  if (!input_item_)
+  if (!input_item_ || !input_item_->visible())
   {
     if (main_item_)
       main_item_->Draw(ctx, transformation, attrib, clip, mask);
@@ -152,7 +158,7 @@ void SlidingLayout::Draw(GLWindow* ctx, GLMatrix const& transformation, GLWindow
   }
   else
   {
-    auto const& draw_area = mouse_owner() ? input_item_ : main_item_;
+    auto const& draw_area = (mouse_owner() || override_main_item()) ? input_item_ : main_item_;
     draw_area->Draw(ctx, transformation, attrib, clip, mask);
   }
 }

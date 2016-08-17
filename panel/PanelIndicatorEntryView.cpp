@@ -21,7 +21,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/ConnectionManager.h>
-#include <UnityCore/GTKWrapper.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
@@ -32,6 +32,7 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity
@@ -40,6 +41,7 @@ namespace
 {
 DECLARE_LOGGER(logger, "unity.panel.indicator.entry");
 const int DEFAULT_SPACING = 3;
+const std::string IMAGE_MISSING = "image-missing";
 }
 
 using namespace indicator;
@@ -59,6 +61,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , cv_(unity::Settings::Instance().em(monitor_))
 {
   proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnActiveChanged));
+  proxy_->show_now_changed.connect(sigc::mem_fun(&show_now_changed, &sigc::signal<void, bool>::emit));
   proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
 
   InputArea::mouse_down.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseDown));
@@ -70,23 +73,14 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
     InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
   }
 
-  if (type_ != MENU)
-  {
-    icon_theme_changed_.Connect(gtk_icon_theme_get_default(), "changed", [this] (GtkIconTheme*) {
-      if (proxy_->image_type() && proxy_->image_visible())
-        Refresh();
-    });
-  }
+  auto refresh_cb = sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh);
+  panel::Style::Instance().changed.connect(refresh_cb);
+  unity::Settings::Instance().dpi_changed.connect(refresh_cb);
 
-  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
-  unity::Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
+  if (type_ != MENU)
+    theme::Settings::Get()->icons_changed.connect(refresh_cb);
 
   Refresh();
-}
-
-PanelIndicatorEntryView::~PanelIndicatorEntryView()
-{
-  // Nothing to do...
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -102,23 +96,6 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 
 void PanelIndicatorEntryView::ShowMenu(int button)
 {
-  WindowManager& wm = WindowManager::Default();
-
-  if (wm.IsExpoActive())
-  {
-    // Delay the activation until expo is closed
-    auto conn = std::make_shared<connection::Wrapper>();
-    *conn = wm.terminate_expo.connect([this, conn, button] {
-      ShowMenu(button);
-      (*conn)->disconnect();
-    });
-
-    wm.TerminateExpo();
-  }
-
-  if (wm.IsScaleActive())
-    wm.TerminateScale();
-
   auto const& abs_geo = GetAbsoluteGeometry();
   proxy_->ShowMenu(abs_geo.x, abs_geo.y + abs_geo.height, button);
 }
@@ -140,8 +117,30 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
     }
     else
     {
-      ShowMenu(button);
-      Refresh();
+      WindowManager& wm = WindowManager::Default();
+
+      if (wm.IsExpoActive())
+      {
+        // Delay the activation until expo is closed
+        auto conn = std::make_shared<connection::Wrapper>();
+        *conn = wm.terminate_expo.connect([this, conn, button] {
+          Activate(button);
+          (*conn)->disconnect();
+        });
+
+        wm.TerminateExpo();
+        return;
+      }
+
+      if (wm.IsScaleActive())
+      {
+        if (type_ == MENU)
+          return;
+
+        wm.TerminateScale();
+      }
+
+      Activate(button);
     }
   }
 }
@@ -202,8 +201,12 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 {
   glib::Object<GdkPixbuf> pixbuf;
-  auto image_type = proxy_->image_type();
 
+  // see if we need to do anything
+  if (!proxy_->image_visible() || proxy_->image_data().empty())
+    return pixbuf;
+
+  auto image_type = proxy_->image_type();
   switch (image_type)
   {
     case GTK_IMAGE_PIXBUF:
@@ -222,13 +225,20 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
     case GTK_IMAGE_GICON:
     {
       GtkIconTheme* theme = gtk_icon_theme_get_default();
-      auto flags = static_cast<GtkIconLookupFlags>(0);
-      gtk::IconInfo info;
+      auto flags = GTK_ICON_LOOKUP_FORCE_SIZE;
+      glib::Object<GtkIconInfo> info;
 
       if (image_type == GTK_IMAGE_GICON)
       {
         glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
         info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
+
+        if (!info)
+        {
+          // Maybe the icon was just added to the theme, see if a rescan helps.
+          gtk_icon_theme_rescan_if_needed(theme);
+          info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
+        }
       }
       else
       {
@@ -239,6 +249,11 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
       {
         auto* filename = gtk_icon_info_get_filename(info);
         pixbuf = gdk_pixbuf_new_from_file_at_size(filename, -1, size, nullptr);
+        // if that failed, whine and load fallback
+        if (!pixbuf)
+        {
+          LOG_WARN(logger) << "failed to load: " << filename;
+        }
       }
       else if (image_type == GTK_IMAGE_ICON_NAME)
       {
@@ -247,6 +262,14 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf(int size)
 
       break;
     }
+  }
+
+  // have a generic fallback pixbuf if for whatever reason icon loading
+  // failed (see LP: #1525186)
+  if (!pixbuf)
+  {
+    GtkIconTheme* theme = gtk_icon_theme_get_default();
+    pixbuf = gtk_icon_theme_load_icon(theme, IMAGE_MISSING.c_str(), size, GTK_ICON_LOOKUP_FORCE_SIZE, nullptr);
   }
 
   return pixbuf;
@@ -419,7 +442,7 @@ void PanelIndicatorEntryView::Refresh()
       }
     }
 
-    glib::Object<PangoContext> context(gdk_pango_context_get_for_screen(gdk_screen_get_default()));
+    glib::Object<PangoContext> context(gdk_pango_context_get());
     std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
     pango_context_set_font_description(context, desc.get());
     pango_context_set_language(context, gtk_get_default_language());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 Canonical Ltd.
+ * Copyright 2012,2013,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -95,6 +95,9 @@ std::vector<AbstractLauncherIcon::Quirk> GetQuirks()
 
   return quirks;
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 struct Quirks : TestLauncherIcon, WithParamInterface<AbstractLauncherIcon::Quirk> {};
 INSTANTIATE_TEST_CASE_P(TestLauncherIcon, Quirks, ValuesIn(GetQuirks()));
@@ -284,6 +287,8 @@ TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkDurationAllMonitors)
     ASSERT_EQ(duration, mock_icon->GetQuirkAnimation(GetParam(), i).Duration());
   }
 }
+
+#pragma GCC diagnostic pop
 
 TEST_F(TestLauncherIcon, NeedRedrawInvisibleAllMonitors)
 {

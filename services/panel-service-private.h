@@ -21,8 +21,26 @@
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+#define UPS_NAME_DESKTOP "com.canonical.Unity.Panel.Service.Desktop"
+#define UPS_NAME_LOCKSCREEN "com.canonical.Unity.Panel.Service.LockScreen"
+#define UPS_PATH  "/com/canonical/Unity/Panel/Service"
+#define UPS_IFACE "com.canonical.Unity.Panel.Service"
+
+#define APPMENU_INDICATOR_NAME "libappmenu.so"
+
+#define ENTRY_SIGNATURE "(sssusbbusbbi)"
+#define ENTRY_ARRAY_SIGNATURE "a" ENTRY_SIGNATURE ""
+
+#define AltMask Mod1Mask
+#define SuperMask Mod4Mask
 
 typedef struct _KeyBinding
 {
@@ -31,10 +49,11 @@ typedef struct _KeyBinding
   guint32 modifiers;
 } KeyBinding;
 
-#define AltMask Mod1Mask
-#define SuperMask Mod4Mask
-
 void parse_string_keybinding (const char *, KeyBinding *);
+
+#ifdef  __cplusplus
+}
+#endif
 
 G_END_DECLS
 

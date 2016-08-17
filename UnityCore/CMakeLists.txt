@@ -25,6 +25,7 @@ set (CORE_HEADERS
      Filter.h
      Filters.h
      GenericPreview.h
+     GLibDBusNameWatcher.h
      GLibDBusProxy.h
      GLibDBusServer.h
      GLibSignal.h
@@ -80,6 +81,7 @@ set (CORE_SOURCES
      Filter.cpp
      Filters.cpp
      GenericPreview.cpp
+     GLibDBusNameWatcher.cpp
      GLibDBusProxy.cpp
      GLibDBusServer.cpp
      GLibSignal.cpp
@@ -117,6 +119,7 @@ set (CORE_SOURCES
 #
 include_directories(${CORE_DEPS_INCLUDE_DIRS})
 include_directories(${CMAKE_BINARY_DIR})
+include_directories(..)
 
 set (LIBS ${CORE_DEPS_LDFLAGS} ${PRIVATE_CORE_DEPS_LDFLAGS})
 
@@ -146,22 +149,22 @@ set_target_properties(${CORE_LIB_NAME} PROPERTIES
 add_pch(pch/unitycore_pch.hh ${CORE_LIB_NAME})
 
 install (TARGETS ${CORE_LIB_NAME}
-         RUNTIME DESTINATION bin
-         ARCHIVE DESTINATION lib
-         LIBRARY DESTINATION lib
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
 
 #
 # Headers
 #
-install (FILES ${CORE_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Unity-${UNITY_API_VERSION}/UnityCore)
+install (FILES ${CORE_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Unity-${UNITY_API_VERSION}/UnityCore)
 
 #
 # PkgConfig file
 #
-set (EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set (LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
-set (INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
+set (EXEC_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}")
+set (LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+set (INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
 
 configure_file (unity-core.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc @ONLY)
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
+install (FILES ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

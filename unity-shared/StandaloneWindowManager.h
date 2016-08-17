@@ -51,6 +51,7 @@ public:
   nux::RWProperty<bool> maximized;
   nux::Property<bool> v_maximized;
   nux::Property<bool> h_maximized;
+  nux::Property<bool> fullscreen;
   nux::Property<bool> minimized;
   nux::Property<bool> shaded;
   nux::Property<bool> decorated;
@@ -78,6 +79,7 @@ public:
   virtual bool IsWindowMaximized(Window window_id) const;
   virtual bool IsWindowVerticallyMaximized(Window window_id) const;
   virtual bool IsWindowHorizontallyMaximized(Window window_id) const;
+  virtual bool IsWindowFullscreen(Window window_id) const;
   virtual bool IsWindowDecorated(Window window_id) const;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const;
   virtual bool IsWindowObscured(Window window_id) const;
@@ -151,6 +153,7 @@ public:
 
   virtual int WorkspaceCount() const;
 
+  void SetCurrentViewport(nux::Point const&) override;
   nux::Point GetCurrentViewport() const override;
   void SetViewportSize(int horizontal, int vertical);
   int GetViewportHSize() const override;
@@ -160,6 +163,7 @@ public:
   virtual bool RestoreInputFocus();
 
   virtual std::string GetWindowName(Window window_id) const;
+  virtual bool IsOnscreenKeyboard(Window window_id) const;
   virtual std::string GetStringProperty(Window window_id, Atom) const;
   virtual void SetCardinalProperty(Window window_id, Atom, std::vector<long> const&);
   virtual std::vector<long> GetCardinalProperty(Window window_id, Atom) const;
@@ -174,8 +178,9 @@ public:
   void SetExpoActive(bool expo_active);
   void SetCurrentDesktop(unsigned desktop_id);
 
-  void SetCurrentViewport(nux::Point const& vp);
   void SetWorkareaGeometry(nux::Geometry const& geo);
+
+  Cursor GetCachedCursor(unsigned int cursor_name) const;
 
   void ResetStatus();
 

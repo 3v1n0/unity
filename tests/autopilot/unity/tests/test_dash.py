@@ -148,10 +148,10 @@ class DashRevealTests(DashTestCase):
 
         self.unity.dash.ensure_visible()
 
-        # Click bottom right of the screen, but take into account the non-maximized window -
+        # Click right of the screen, but take into account the non-maximized window -
         # we do not want to click on it as it focuses the wrong window
         w = self.display.get_screen_width() - 1
-        h = self.display.get_screen_height() - 1
+        h = self.display.get_screen_height() / 2
 
         # If the mouse is over the non-maximized window, move it away from it.
         (calc_x, calc_y, calc_w, calc_h) = calc_win.get_windows()[0].geometry
@@ -164,7 +164,7 @@ class DashRevealTests(DashTestCase):
 
         self.assertProperty(char_win, is_active=True)
 
-    def test_dash_does_not_open_when_fullscreen_window(self):
+    def test_dash_opens_when_fullscreen_window(self):
         """ The Dash must not open if a window is fullscreen. """
         gedit = self.process_manager.start_app("Text Editor")
         self.keyboard.press_and_release('F11')
@@ -175,7 +175,7 @@ class DashRevealTests(DashTestCase):
         self.keybinding("dash/reveal")
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
 
 
 class DashRevealWithSpreadTests(DashTestCase):
@@ -400,10 +400,11 @@ class DashKeyNavTests(DashTestCase):
 
         # Test that tab cycles through the categories.
         # + 1 is the filter bar
-        for i in range(scope.get_num_visible_categories()):
+        for category in scope.get_categories(only_visible=True):
             self.keyboard.press_and_release('Tab')
-            category = scope.get_focused_category()
-            self.assertIsNot(category, None)
+            selected = scope.get_focused_category()
+            expected = category if category.expand_label_is_visible else None
+            self.assertEqual(selected, expected)
 
     def test_tab_with_filter_bar(self):
         """ This test makes sure that Tab works well with the filter bara."""
@@ -544,10 +545,7 @@ class DashClipboardTests(DashTestCase):
 
         self.unity.dash.ensure_visible()
 
-        self.mouse.move(self.unity.dash.searchbar.x + self.unity.dash.searchbar.width / 2,
-                       self.unity.dash.searchbar.y + self.unity.dash.searchbar.height / 2)
-
-        self.mouse.click(button=2)
+        self.mouse.click_object(self.unity.dash.searchbar, button=2)
 
         self.assertThat(self.unity.dash.search_string, Eventually(Equals('ThirdButtonPaste')))
 
@@ -691,8 +689,10 @@ class DashVisualTests(DashTestCase):
 
         self.unity.dash.ensure_visible()
 
-        self.assertThat(self.unity.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
-
+        if launcher.geometry.width < launcher.geometry.height:
+            self.assertThat(self.unity.dash.view.x, Eventually(Equals(launcher.geometry.x + launcher.geometry.width - 1)))
+        else:
+            self.assertThat(self.unity.dash.view.x, Eventually(Equals(0)))
 
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned
@@ -701,11 +701,9 @@ class DashVisualTests(DashTestCase):
         self.unity.dash.reveal_application_scope()
 
         scope = self.unity.dash.get_current_scope()
-        self.assertThat(lambda: len(scope.get_groups()), Eventually(GreaterThan(0), timeout=20))
+        self.assertThat(lambda: len(scope.get_categories()), Eventually(GreaterThan(0), timeout=20))
 
-        groups = scope.get_groups()
-
-        for group in groups:
+        for group in scope.get_categories():
             if (group.is_visible and group.expand_label_is_visible):
                 expand_label_y = group.expand_label_y + group.expand_label_baseline
                 name_label_y = group.name_label_y + group.name_label_baseline
@@ -725,10 +723,7 @@ class DashScopeBarTests(DashTestCase):
         the rectangle outside of the icon.
         """
         app_icon = self.scopebar.get_icon_by_name(u'applications.scope')
-
-        self.mouse.move(app_icon.x + (app_icon.width / 2),
-                        app_icon.y + (app_icon.height / 2))
-        self.mouse.click()
+        self.mouse.click_object(app_icon)
 
         self.assertThat(self.scopebar.active_scope, Eventually(Equals('applications.scope')))
 
@@ -747,7 +742,7 @@ class DashBorderTests(DashTestCase):
         if (self.unity.dash.view.form_factor != "desktop"):
             self.skip("Not in desktop form-factor.")
 
-        x = self.unity.dash.view.x + self.unity.dash.view.width + self.unity.dash.view.right_border_width / 2
+        x = self.unity.dash.view.x + self.unity.dash.view.width + self.unity.dash.view.vertical_border_width / 2
         y = self.unity.dash.view.y + self.unity.dash.view.height / 2
 
         self.mouse.move(x, y)
@@ -763,7 +758,7 @@ class DashBorderTests(DashTestCase):
             self.skip("Not in desktop form-factor.")
 
         x = self.unity.dash.view.x + self.unity.dash.view.width / 2
-        y = self.unity.dash.view.y + self.unity.dash.view.height + self.unity.dash.view.bottom_border_height / 2
+        y = self.unity.dash.view.y + self.unity.dash.view.height + self.unity.dash.view.horizontal_border_height / 2
 
         self.mouse.move(x, y)
         self.mouse.click()
@@ -990,8 +985,8 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        # wait for "More suggestions" category
-        category = self.wait_for_category(scope, _("More suggestions"))
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
 
         # wait for results
         self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
@@ -1013,15 +1008,15 @@ class PreviewNavigateTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        # wait for "More suggestions" category
-        category = self.wait_for_category(scope, _("More suggestions"))
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
 
         # wait for results (we need 4 results to perorm the multi-navigation tests)
         self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(4), timeout=20))
 
         results = category.get_results()
-        result = results[2] # 2 so we can navigate left
-        result.preview()
+        result = results[3] # 3 so we can navigate left multiple times
+        result.preview(button=3)
         self.assertThat(self.unity.dash.view.preview_displaying, Eventually(Equals(True)))
         self.assertThat(self.unity.dash.view.get_preview_container, Eventually(NotEquals(None)))
 
@@ -1119,10 +1114,7 @@ class PreviewNavigateTests(DashTestCase):
         cover_art = self.get_current_preview().cover_art[0]
 
         # click the cover-art (this will set focus)
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click()
+        self.mouse.click_object(cover_art)
 
         self.keyboard.press_and_release("Escape")
 
@@ -1138,13 +1130,21 @@ class PreviewNavigateTests(DashTestCase):
 class PreviewClickCancelTests(DashTestCase):
     """Tests that the preview closes when left, middle, and right clicking in the preview"""
 
+    scenarios = [('Left button', {'clicked_button': 1}),
+                 ('Middle button', {'clicked_button': 2}),
+                 ('Right button', {'clicked_button': 3})]
+
     def setUp(self):
         super(PreviewClickCancelTests, self).setUp()
         gettext.install("unity-scope-applications")
-        scope = self.unity.dash.reveal_application_scope()
+        scope = self.unity.dash.reveal_application_scope(clear_search=False)
         self.addCleanup(self.unity.dash.ensure_hidden)
         # Only testing an application preview for this test.
-        self.keyboard.type("Software Updater")
+
+        search_string = "Software Updater"
+        if self.unity.dash.search_string != search_string:
+            self.unity.dash.clear_search()
+            self.keyboard.type(search_string)
 
         # wait for "Installed" category
         category = self.wait_for_category(scope, _("Installed"))
@@ -1159,183 +1159,43 @@ class PreviewClickCancelTests(DashTestCase):
 
         self.preview_container = self.unity.dash.view.get_preview_container()
 
-    def test_left_click_on_preview_icon_cancel_preview(self):
-        """Left click on preview icon must close preview."""
+    def test_click_on_preview_icon_cancel_preview(self):
+        """Clicking with any button on preview icon must close preview."""
         icon = self.get_current_preview().icon[0]
         self.assertThat(icon, NotEquals(None))
 
-        tx = icon.x + icon.width
-        ty = icon.y + (icon.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=1)
-
+        self.mouse.click_object(icon, button=self.clicked_button)
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_middle_click_on_preview_icon_cancel_preview(self):
-        """Middle click on preview icon must close preview."""
-        icon = self.get_current_preview().icon[0]
-        self.assertThat(icon, NotEquals(None))
-
-        tx = icon.x + icon.width
-        ty = icon.y + (icon.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=2)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_right_click_on_preview_icon_cancel_preview(self):
-        """Right click on preview icon must close preview."""
-        icon = self.get_current_preview().icon[0]
-        self.assertThat(icon, NotEquals(None))
-
-        tx = icon.x + icon.width
-        ty = icon.y + (icon.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=3)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_left_click_on_preview_image_cancel_preview(self):
-        """Left click on preview image must cancel the preview."""
+    def test_click_on_preview_image_cancel_preview(self):
+        """Clicking with any button on preview image must cancel the preview."""
         cover_art = self.get_current_preview().cover_art[0]
         self.assertThat(cover_art, NotEquals(None))
 
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=1)
-
+        self.mouse.click_object(cover_art, button=self.clicked_button)
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_middle_click_on_preview_image_cancel_preview(self):
-        """Middle click on preview image must cancel the preview."""
-        cover_art = self.get_current_preview().cover_art[0]
-        self.assertThat(cover_art, NotEquals(None))
-
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=2)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_right_click_on_preview_image_cancel_preview(self):
-        """Right click on preview image must cancel the preview."""
-        cover_art = self.get_current_preview().cover_art[0]
-        self.assertThat(cover_art, NotEquals(None))
-
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=3)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_left_click_on_preview_text_cancel_preview(self):
-        """Left click on some preview text must cancel the preview."""
+    def test_click_on_preview_text_cancel_preview(self):
+        """Clicking with any button on some preview text must cancel the preview."""
         text = self.get_current_preview().text_boxes[0]
         self.assertThat(text, NotEquals(None))
-
-        tx = text.x + (text.width / 2)
-        ty = text.y + (text.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=1)
+        self.mouse.click_object(text, button=self.clicked_button)
 
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_middle_click_on_preview_text_cancel_preview(self):
-        """Middle click on some preview text must cancel the preview."""
-        text = self.get_current_preview().text_boxes[0]
-        self.assertThat(text, NotEquals(None))
-
-        tx = text.x + (text.width / 2)
-        ty = text.y + (text.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=2)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_right_click_on_preview_text_cancel_preview(self):
-        """Right click on some preview text must cancel the preview."""
-        text = self.get_current_preview().text_boxes[0]
-        self.assertThat(text, NotEquals(None))
-
-        tx = text.x + (text.width / 2)
-        ty = text.y + (text.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=3)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_left_click_on_preview_ratings_widget_cancel_preview(self):
-        """Left click on the ratings widget must cancel the preview."""
+    def test_click_on_preview_ratings_widget_cancel_preview(self):
+        """Clicking with any button on the ratings widget must cancel the preview."""
         ratings_widget = self.get_current_preview().ratings_widget[0]
         self.assertThat(ratings_widget, NotEquals(None))
-
-        tx = ratings_widget.x + (ratings_widget.width / 2)
-        ty = ratings_widget.y + (ratings_widget.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=1)
+        self.mouse.click_object(ratings_widget, button=self.clicked_button)
 
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_middle_click_on_preview_ratings_widget_cancel_preview(self):
-        """Middle click on the ratings widget must cancel the preview."""
-        ratings_widget = self.get_current_preview().ratings_widget[0]
-        self.assertThat(ratings_widget, NotEquals(None))
-
-        tx = ratings_widget.x + (ratings_widget.width / 2)
-        ty = ratings_widget.y + (ratings_widget.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=2)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_right_click_on_preview_ratings_widget_cancel_preview(self):
-        """Right click on the ratings widget must cancel the preview."""
-        ratings_widget = self.get_current_preview().ratings_widget[0]
-        self.assertThat(ratings_widget, NotEquals(None))
-
-        tx = ratings_widget.x + (ratings_widget.width / 2)
-        ty = ratings_widget.y + (ratings_widget.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=3)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_left_click_on_preview_info_hint_cancel_preview(self):
-        """Left click on the info hint must cancel the preview."""
+    def test_click_on_preview_info_hint_cancel_preview(self):
+        """Clicking with any button on the info hint must cancel the preview."""
         info_hint = self.get_current_preview().info_hint_widget[0]
         self.assertThat(info_hint, NotEquals(None))
-
-        tx = info_hint.x + (info_hint.width / 2)
-        ty = info_hint.y + (info_hint.height / 8)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=1)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_middle_click_on_preview_info_hint_cancel_preview(self):
-        """Middle click on the info hint must cancel the preview."""
-        info_hint = self.get_current_preview().info_hint_widget[0]
-        self.assertThat(info_hint, NotEquals(None))
-
-        tx = info_hint.x + (info_hint.width / 2)
-        ty = info_hint.y + (info_hint.height / 8)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=2)
-
-        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
-
-    def test_right_click_on_preview_info_hint_cancel_preview(self):
-        """Right click on the info hint must cancel the preview."""
-        info_hint = self.get_current_preview().info_hint_widget[0]
-        self.assertThat(info_hint, NotEquals(None))
-
-        tx = info_hint.x + (info_hint.width / 2)
-        ty = info_hint.y + (info_hint.height / 8)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=3)
+        self.mouse.click_object(info_hint, button=self.clicked_button)
 
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
@@ -1401,3 +1261,4 @@ class DashCrossMonitorsTests(DashTestCase):
         self.addCleanup(self.unity.dash.ensure_hidden)
 
         self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
+

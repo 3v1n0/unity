@@ -20,28 +20,29 @@
 #ifndef SEARCH_BAR_H
 #define SEARCH_BAR_H
 
-#include <gtk/gtk.h>
-#include <NuxCore/Property.h>
-#include <Nux/LayeredLayout.h>
-#include <Nux/VLayout.h>
 #include <Nux/TextEntry.h>
+#include <NuxCore/Property.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
 
-#include "SearchBarSpinner.h"
-#include "unity-shared/IconTexture.h"
-#include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
-#include "unity-shared/StaticCairoText.h"
+#include "unity-shared/ExpanderView.h"
 
 namespace nux
 {
 class AbstractPaintLayer;
+class LayeredLayout;
 class LinearLayout;
+class SpaceLayout;
+class VLayout;
 }
 
 namespace unity
 {
+class IconTexture;
+class IMTextEntry;
+class SearchBarSpinner;
+class StaticCairoText;
 
 class SearchBar : public unity::debug::Introspectable, public nux::View
 {
@@ -63,6 +64,7 @@ public:
   nux::Property<bool> can_refine_search;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
+  nux::ROProperty<bool> in_live_search;
   nux::Property<unsigned> live_search_wait;
   nux::Property<double> scale;
 
@@ -71,7 +73,7 @@ public:
   sigc::signal<void, std::string const&> live_search_reached;
 
 private:
-  void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+  void UpdateFont();
   void OnSearchHintChanged();
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -88,10 +90,7 @@ private:
   bool OnLiveSearchTimeout();
   bool OnSpinnerStartCb();
 
-  std::string get_search_string() const;
   bool set_search_string(std::string const& string);
-  bool get_im_active() const;
-  bool get_im_preedit() const;
   bool show_filter_hint_;
 
   std::string GetName() const;
@@ -110,7 +109,7 @@ private:
   StaticCairoText* hint_;
   nux::LinearLayout* expander_layout_;
   IMTextEntry* pango_entry_;
-  nux::View* expander_view_;
+  ExpanderView* expander_view_;
   nux::HLayout* filter_layout_;
   StaticCairoText* show_filters_;
   nux::VLayout* arrow_layout_;

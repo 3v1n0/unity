@@ -22,8 +22,7 @@
 
 #include "SimpleLauncherIcon.h"
 
-#include <NuxCore/Logger.h>
-
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -31,19 +30,14 @@ namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon");
-
 NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
 
 SimpleLauncherIcon::SimpleLauncherIcon(IconType type)
   : LauncherIcon(type)
   , icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
+  , icon_pixbuf(glib::Object<GdkPixbuf>(), sigc::mem_fun(this, &SimpleLauncherIcon::SetIconPixbuf))
 {
-  auto* theme = gtk_icon_theme_get_default();
-  theme_changed_signal_.Connect(theme, "changed", [this] (GtkIconTheme *) {
-    _current_theme_is_mono = -1;
-    ReloadIcon();
-  });
+  theme::Settings::Get()->icons_changed.connect(sigc::mem_fun(this, &SimpleLauncherIcon::ReloadIcon));
 }
 
 void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
@@ -57,17 +51,24 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
   if (it != texture_map_.end())
     return it->second.GetPointer();
 
-  std::string const& icon_string = icon_name();
-
-  if (icon_string.empty())
-    return nullptr;
-
   BaseTexturePtr texture;
 
-  if (icon_string[0] == '/')
-    texture = TextureFromPath(icon_string, size);
+  if (icon_pixbuf())
+  {
+    texture = TextureFromPixbuf(icon_pixbuf(), size);
+  }
   else
-    texture = TextureFromGtkTheme(icon_string, size);
+  {
+    std::string const& icon_string = icon_name();
+
+    if (icon_string.empty())
+      return nullptr;
+
+    if (icon_string[0] == '/')
+      texture = TextureFromPath(icon_string, size);
+    else
+      texture = TextureFromGtkTheme(icon_string, size);
+  }
 
   if (!texture)
     return nullptr;
@@ -77,6 +78,17 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
 }
 
 bool SimpleLauncherIcon::SetIconName(std::string& target, std::string const& value)
+{
+  if (target == value)
+    return false;
+
+  target = value;
+  ReloadIcon();
+
+  return true;
+}
+
+bool SimpleLauncherIcon::SetIconPixbuf(glib::Object<GdkPixbuf>& target, glib::Object<GdkPixbuf> const& value)
 {
   if (target == value)
     return false;

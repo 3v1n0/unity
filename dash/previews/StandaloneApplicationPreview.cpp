@@ -17,13 +17,16 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
-#include <gtk/gtk.h>
+
+#include "config.h"
 
 #include "Nux/Nux.h"
+#include "Nux/NuxTimerTickSource.h"
 #include "Nux/VLayout.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
 #include <Nux/Layout.h>
+#include <NuxCore/AnimationController.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/ApplicationPreview.h>
@@ -39,11 +42,13 @@
 #include "PreviewContainer.h"
 
 
-#define WIDTH 972
-#define HEIGHT 452
+const unity::RawPixel WIDTH(1000);
+const unity::RawPixel HEIGHT(600);
 
 using namespace unity;
 using namespace unity::dash;
+
+static double scale = 1.0;
 
 class DummyView : public nux::View
 {
@@ -146,6 +151,7 @@ void TestRunner::Init ()
   container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
   container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
   container_->request_close.connect([this]() { exit(0); });
+  container_->scale = scale;
 
   DummyView* dummyView = new DummyView(container_.GetPointer());
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -162,23 +168,23 @@ void TestRunner::Init ()
     description << "Application description " << i << std::endl;
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string(PKGDATADIR"/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string(PKGDATADIR"/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
-  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string(PKGDATADIR "/launcher_bfb.png", NULL));
   unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
   unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
   unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.5);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 17);
 
-  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
+  unity_protocol_preview_set_image_source_uri(proto_obj, "file://" PKGDATADIR "/launcher_bfb.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description.str().c_str());
@@ -207,23 +213,24 @@ void TestRunner::NavRight()
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string(PKGDATADIR"/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string(PKGDATADIR"/lens-nav-people.svg", NULL));
+  glib::Object<GIcon> iconHint4(g_icon_new_for_string(PKGDATADIR"/lens-nav-people.svg", NULL));
 
   GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
-  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string(PKGDATADIR "/launcher_bfb.png", NULL));
   unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
   unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
   unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.25);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 5);
 
-  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
+  unity_protocol_preview_set_image_source_uri(proto_obj, "file://" PKGDATADIR "/launcher_bfb.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
@@ -232,6 +239,9 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("d", 12.1));
+
+  if (nav_iter % 2 == 0)
+    unity_protocol_preview_add_info_hint(proto_obj, "desc", "Very long long description", iconHint4, g_variant_new("s", "So looong description that does not fit into"));
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
               glib::StealRef());
@@ -255,9 +265,9 @@ void TestRunner::NavLeft()
   The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
    // creates a generic preview object
-    glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-    glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-    glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+    glib::Object<GIcon> iconHint1(g_icon_new_for_string(PKGDATADIR"/lens-nav-music.svg", NULL));
+    glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
+    glib::Object<GIcon> iconHint3(g_icon_new_for_string(PKGDATADIR"/lens-nav-people.svg", NULL));
 
     GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
   g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
@@ -265,14 +275,14 @@ void TestRunner::NavLeft()
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
 
-    unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
+    unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string(PKGDATADIR"/launcher_bfb.png", NULL));
     unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
     unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
     unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
     unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.8);
     unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 1223);
 
-    unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
+    unity_protocol_preview_set_image_source_uri(proto_obj, "file://" PKGDATADIR "/launcher_bfb.png");
     unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
     unity_protocol_preview_set_subtitle(proto_obj, subtitle);
     unity_protocol_preview_set_description(proto_obj, description);
@@ -313,13 +323,28 @@ int main(int argc, char **argv)
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
   unity::ThumbnailGenerator thumbnail_generator;
+  unity::glib::Error err;
+
+  GOptionEntry args_parsed[] =
+  {
+    { "scaling-factor", 's', 0, G_OPTION_ARG_DOUBLE, &scale, "The dash scaling factor", "F" },
+    { NULL }
+  };
+
+  std::shared_ptr<GOptionContext> ctx(g_option_context_new("Unity Preview"), g_option_context_free);
+  g_option_context_add_main_entries(ctx.get(), args_parsed, NULL);
+  if (!g_option_context_parse(ctx.get(), &argc, &argv, &err))
+    std::cerr << "Got error when parsing arguments: " << err << std::endl;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),
-                            WIDTH, HEIGHT,
+                            WIDTH.CP(scale), HEIGHT.CP(scale),
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
+
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller(tick_source);
 
   wt->Run (NULL);
   delete wt;

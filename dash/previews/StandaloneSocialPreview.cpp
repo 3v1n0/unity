@@ -17,13 +17,15 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
-#include <gtk/gtk.h>
+#include "config.h"
 
 #include "Nux/Nux.h"
+#include "Nux/NuxTimerTickSource.h"
 #include "Nux/VLayout.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
 #include <Nux/Layout.h>
+#include <NuxCore/AnimationController.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/SocialPreview.h>
@@ -38,9 +40,10 @@
 #include "Preview.h"
 #include "PreviewContainer.h"
 
+const unity::RawPixel WIDTH(1000);
+const unity::RawPixel HEIGHT(600);
 
-#define WIDTH 910 
-#define HEIGHT 400
+static double scale = 1.0;
 
 using namespace unity;
 using namespace unity::dash;
@@ -146,6 +149,7 @@ void TestRunner::Init ()
   container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
   container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
   container_->request_close.connect([this]() { exit(0); });
+  container_->scale = scale;
 
   DummyView* dummyView = new DummyView(container_.GetPointer());
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -157,7 +161,8 @@ void TestRunner::Init ()
   const char* description = "Lorem ipsum dolor sit amet, id eruditi referrentur cum, et est enim persequeris. Munere docendi intellegebat pro id, nam no delenit facilisis similique, ut usu eros aliquando. Electram postulant accusamus ut ius, cum ad impedit facilis mediocrem. At cum tamquam.";
 
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/sunflower.jpg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/icons/unity-icon-theme/places/svg/service-twitter.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
@@ -169,7 +174,7 @@ void TestRunner::Init ()
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_add_action(proto_obj, "view", "View", iconHint2, 0);
-  unity_protocol_preview_add_action(proto_obj, "retweet", "Retweet", nullptr, 0);
+  unity_protocol_preview_add_action(proto_obj, "retweet", "Retweet", iconHint3, 0);
   unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Stacy", "Lorem ipsum dolor sit amet, id eruditi referrentur cum, et est enim persequeris. Munere docendi intellegebat pro id, nam no delenit facilisis similique, ut usu eros aliquando. Electram postulant accusamus ut ius, cum ad impedit facilis mediocrem. At cum tamquam.", "13 minutes ago");
   unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Jeremy", "This is a comment", "4 hours ago");
   unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Stacy", "This is a comment", "4 hours ago");
@@ -180,7 +185,6 @@ void TestRunner::Init ()
 
   dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
   container_->Preview(preview_model, previews::Navigation::RIGHT);
-
 }
 
 void TestRunner::NavRight()
@@ -191,7 +195,7 @@ void TestRunner::NavRight()
 
  // creates a generic preview object
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/astronaut.jpg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
@@ -226,7 +230,7 @@ void TestRunner::NavLeft()
   const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
 
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/soccerball.png", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string(PKGDATADIR"/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
@@ -269,13 +273,28 @@ int main(int argc, char **argv)
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
   unity::ThumbnailGenerator thumbnail_generator;
+  unity::glib::Error err;
+
+  GOptionEntry args_parsed[] =
+  {
+    { "scaling-factor", 's', 0, G_OPTION_ARG_DOUBLE, &scale, "The dash scaling factor", "F" },
+    { NULL }
+  };
+
+  std::shared_ptr<GOptionContext> ctx(g_option_context_new("Unity Preview"), g_option_context_free);
+  g_option_context_add_main_entries(ctx.get(), args_parsed, NULL);
+  if (!g_option_context_parse(ctx.get(), &argc, &argv, &err))
+    std::cerr << "Got error when parsing arguments: " << err << std::endl;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),
-                            WIDTH, HEIGHT,
+                            WIDTH.CP(scale), HEIGHT.CP(scale),
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
+
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller(tick_source);
 
   wt->Run (NULL);
   delete wt;

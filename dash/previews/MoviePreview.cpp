@@ -23,7 +23,6 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/MoviePreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -41,23 +40,23 @@ namespace dash
 {
 namespace previews
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.movie");
 
-class DetailsScrollView : public nux::ScrollView
+namespace
 {
-public:
-  DetailsScrollView(NUX_FILE_LINE_PROTO)
-  : ScrollView(NUX_FILE_LINE_PARAM)
-  {
-    SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
-  }
+  const RawPixel CHILDREN_SPACE = 16_em;
+  const RawPixel PREVIEW_INFO_CHILDREN_SPACE = 12_em;
+}
 
-};
+DECLARE_LOGGER(logger, "unity.dash.preview.movie");
 
 NUX_IMPLEMENT_OBJECT_TYPE(MoviePreview);
 
 MoviePreview::MoviePreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, image_data_layout_(nullptr)
+, preview_info_layout_(nullptr)
+, preview_info_scroll_(nullptr)
+, actions_layout_(nullptr)
 {
   SetupViews();
 }
@@ -123,8 +122,8 @@ void MoviePreview::SetupViews()
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
 
-  nux::HLayout* image_data_layout = new nux::HLayout();
-  image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
+  image_data_layout_ = new nux::HLayout();
+  image_data_layout_->SetSpaceBetweenChildren(style.GetPanelSplitWidth().CP(scale));
 
   /////////////////////
   // Image
@@ -136,8 +135,8 @@ void MoviePreview::SetupViews()
     /////////////////////
     // Data Panel
     full_data_layout_ = new nux::VLayout();
-    full_data_layout_->SetPadding(style.GetDetailsTopMargin(), 0, style.GetDetailsBottomMargin(), style.GetDetailsLeftMargin());
-    full_data_layout_->SetSpaceBetweenChildren(16);
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
+    full_data_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
       /////////////////////
       // Data
@@ -148,6 +147,7 @@ void MoviePreview::SetupViews()
       title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       AddChild(title_.GetPointer());
       title_->SetLines(-1);
+      title_->SetScale(scale);
       title_->SetFont(style.title_font().c_str());
       title_->mouse_click.connect(on_mouse_down);
       app_data_layout->AddView(title_.GetPointer(), 1);
@@ -157,6 +157,7 @@ void MoviePreview::SetupViews()
         subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         AddChild(subtitle_.GetPointer());
         subtitle_->SetLines(-1);
+        subtitle_->SetScale(scale);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         subtitle_->mouse_click.connect(on_mouse_down);
         app_data_layout->AddView(subtitle_.GetPointer(), 1);
@@ -166,8 +167,8 @@ void MoviePreview::SetupViews()
       if (movie_preview_model->rating >= 0) {
         rating_ = new PreviewRatingsWidget();
         AddChild(rating_.GetPointer());
-        rating_->SetMaximumHeight(style.GetRatingWidgetHeight());
-        rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
+        rating_->SetMaximumHeight(style.GetRatingWidgetHeight().CP(scale));
+        rating_->SetMinimumHeight(style.GetRatingWidgetHeight().CP(scale));
         rating_->SetRating(movie_preview_model->rating);
         rating_->SetReviews(movie_preview_model->num_ratings);
         rating_->request_close().connect([this]() { preview_container_->request_close.emit(); });
@@ -175,20 +176,23 @@ void MoviePreview::SetupViews()
 
       /////////////////////
       // Description
-      nux::ScrollView* preview_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
+      auto* preview_info = new ScrollView(NUX_TRACKER_LOCATION);
+      preview_info_scroll_ = preview_info;
+      preview_info->scale = scale();
       preview_info->EnableHorizontalScrollBar(false);
       preview_info->mouse_click.connect(on_mouse_down);
 
-      nux::VLayout* preview_info_layout = new nux::VLayout();
-      preview_info_layout->SetSpaceBetweenChildren(12);
-      preview_info->SetLayout(preview_info_layout);
+      preview_info_layout_ = new nux::VLayout();
+      preview_info_layout_->SetSpaceBetweenChildren(PREVIEW_INFO_CHILDREN_SPACE.CP(scale));
+      preview_info->SetLayout(preview_info_layout_);
 
       if (!preview_model_->GetInfoHints().empty())
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        preview_info_hints_->scale = scale();
         AddChild(preview_info_hints_.GetPointer());
         preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
-        preview_info_layout->AddView(preview_info_hints_.GetPointer(), 0);
+        preview_info_layout_->AddView(preview_info_hints_.GetPointer(), 0);
       }
 
       if (!preview_model_->description.Get().empty())
@@ -196,34 +200,35 @@ void MoviePreview::SetupViews()
         description_ = new StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
         AddChild(description_.GetPointer());
         description_->SetFont(style.description_font().c_str());
+        description_->SetScale(scale);
         description_->SetTextAlignment(StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
         description_->mouse_click.connect(on_mouse_down);
-        preview_info_layout->AddView(description_.GetPointer());
+        preview_info_layout_->AddView(description_.GetPointer());
       }
       /////////////////////
 
       /////////////////////
       // Actions
       action_buttons_.clear();
-      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
-      actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+      actions_layout_ = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
+      actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
       ///////////////////
 
     full_data_layout_->AddLayout(app_data_layout, 0);
     if (rating_ != NULL)
       full_data_layout_->AddView(rating_.GetPointer(), 0);
     full_data_layout_->AddView(preview_info, 1);
-    full_data_layout_->AddView(actions_layout, 0);
+    full_data_layout_->AddView(actions_layout_, 0);
     /////////////////////
   
-  image_data_layout->AddView(image_.GetPointer(), 0);
-  image_data_layout->AddLayout(full_data_layout_, 1);
+  image_data_layout_->AddView(image_.GetPointer(), 0);
+  image_data_layout_->AddLayout(full_data_layout_, 1);
 
   mouse_click.connect(on_mouse_down);
 
-  SetLayout(image_data_layout);
+  SetLayout(image_data_layout_);
 }
 
 
@@ -235,11 +240,13 @@ void MoviePreview::PreLayoutManagement()
 
   nux::Geometry geo_art(geo.x, geo.y, style.GetVideoImageAspectRatio() * geo.height, geo.height);
 
-  if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
-    geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+  int content_width = geo.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale);
+  if (content_width - geo_art.width  < style.GetDetailsPanelMinimumWidth().CP(scale))
+    geo_art.width = std::max(0, content_width - style.GetDetailsPanelMinimumWidth().CP(scale));
+
   image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
-  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int details_width = std::max(0, geo.width - geo_art.width - style.GetPanelSplitWidth().CP(scale) - style.GetDetailsLeftMargin().CP(scale) - style.GetDetailsRightMargin().CP(scale));
 
   if (title_) { title_->SetMaximumWidth(details_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
@@ -247,10 +254,47 @@ void MoviePreview::PreLayoutManagement()
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions().CP(scale)) / 2, 0, style.GetActionButtonMaximumWidth().CP(scale)), style.GetActionButtonHeight().CP(scale));
   }
 
   Preview::PreLayoutManagement();
+}
+
+void MoviePreview::UpdateScale(double scale)
+{
+  Preview::UpdateScale(scale);
+
+  if (image_)
+    image_->scale = scale;
+
+  if (preview_info_hints_)
+    preview_info_hints_->scale = scale;
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  if (full_data_layout_)
+  {
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin().CP(scale), 0, style.GetDetailsBottomMargin().CP(scale), style.GetDetailsLeftMargin().CP(scale));
+    full_data_layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+  }
+
+  if (image_data_layout_)
+    image_data_layout_->SetSpaceBetweenChildren(style.GetPanelSplitWidth().CP(scale));
+
+  if (rating_)
+  {
+    rating_->SetMaximumHeight(style.GetRatingWidgetHeight().CP(scale));
+    rating_->SetMinimumHeight(style.GetRatingWidgetHeight().CP(scale));
+  }
+
+  if (preview_info_scroll_)
+    preview_info_scroll_->scale = scale;
+
+  if (preview_info_layout_)
+    preview_info_layout_->SetSpaceBetweenChildren(PREVIEW_INFO_CHILDREN_SPACE);
+
+  if (actions_layout_)
+    actions_layout_->SetLeftAndRightPadding(0, style.GetDetailsRightMargin().CP(scale));
 }
 
 } // namespace previews

@@ -22,6 +22,7 @@
 
 #include <Nux/VLayout.h>
 #include <glib/gi18n-lib.h>
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
@@ -31,9 +32,7 @@ namespace session
 namespace style
 {
   std::string const FONT = "Ubuntu Light 12";
-
-  RawPixel const BUTTON_SPACE         =   9_em;
-  RawPixel const DEFAULT_TEXTURE_SIZE = 168_em;
+  RawPixel const BUTTON_SPACE = 9_em;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Button);
@@ -42,6 +41,7 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , scale(1.0)
   , highlighted(false)
+  , pressed(false)
   , action([this] { return action_; })
   , label([this] { return label_view_->GetText(); })
   , action_(action)
@@ -49,33 +49,33 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
-  std::string texture_prefix = PKGDATADIR"/";
+  std::string texture_prefix;
   std::string label;
 
   switch (action_)
   {
     case Action::LOCK:
-      texture_prefix += "lockscreen";
+      texture_prefix = "lockscreen";
       label = _("Lock");
       break;
     case Action::LOGOUT:
-      texture_prefix += "logout";
+      texture_prefix = "logout";
       label = _("Log Out");
       break;
     case Action::SUSPEND:
-      texture_prefix += "suspend";
+      texture_prefix = "suspend";
       label = _("Suspend");
       break;
     case Action::HIBERNATE:
-      texture_prefix += "hibernate";
+      texture_prefix = "hibernate";
       label = _("Hibernate");
       break;
     case Action::SHUTDOWN:
-      texture_prefix += "shutdown";
+      texture_prefix = "shutdown";
       label = _("Shut Down");
       break;
     case Action::REBOOT:
-      texture_prefix += "restart";
+      texture_prefix = "restart";
       label = _("Restart");
       break;
   }
@@ -95,6 +95,8 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
     image_view_->SetTexture(highlighted ? highlight_tex_ : normal_tex_);
   });
 
+  theme::Settings::Get()->theme.changed.connect(sigc::hide(sigc::bind(sigc::mem_fun(this, &Button::UpdateTextures), texture_prefix)));
+
   image_view_ = new IconTexture(normal_tex_);
   image_view_->SetInputEventSensitivity(false);
   main_layout->AddView(image_view_, 1, nux::MINOR_POSITION_CENTER);
@@ -109,6 +111,8 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   mouse_enter.connect([this] (int, int, unsigned long, unsigned long) { highlighted = true; });
   mouse_leave.connect([this] (int, int, unsigned long, unsigned long) { highlighted = false; });
   mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
+  mouse_down.connect([this] (int, int, unsigned long, unsigned long) { pressed = true; });
+  mouse_up.connect([this] (int, int, unsigned long, unsigned long) { pressed = false; });
 
   begin_key_focus.connect([this] { highlighted = true; });
   end_key_focus.connect([this] { highlighted = false; });
@@ -118,22 +122,29 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
     image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
     label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
   });
+
+  pressed.changed.connect([this] (bool value) {
+    image_view_->SetOpacity(value ? 0.75 : 1.0);
+  });
 }
 
 void Button::UpdateTextures(std::string const& texture_prefix)
 {
-  RawPixel const texture_size = GetDefaultMaxTextureSize(texture_prefix);
+  auto const& theme = theme::Settings::Get();
+  auto texture_path = theme->ThemedFilePath(texture_prefix, {PKGDATADIR});
+  RawPixel const texture_size = GetDefaultMaxTextureSize(texture_path);
+  normal_tex_.Adopt(nux::CreateTexture2DFromFile(texture_path.c_str(), texture_size.CP(scale), true));
 
-  normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), texture_size.CP(scale), true));
-  highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), texture_size.CP(scale), true));
+  auto texture_highlight_path = theme->ThemedFilePath(texture_prefix + "_highlight", {PKGDATADIR});
+  RawPixel const texture_highlight_size = GetDefaultMaxTextureSize(texture_path);
+  highlight_tex_.Adopt(nux::CreateTexture2DFromFile(texture_highlight_path.c_str(), texture_highlight_size.CP(scale), true));
 }
 
-RawPixel Button::GetDefaultMaxTextureSize(std::string const& texture_prefix) const
+RawPixel Button::GetDefaultMaxTextureSize(std::string const& texture_path) const
 {
   nux::Size size;
-  auto const& texture_name = (texture_prefix + ".png");
-  gdk_pixbuf_get_file_info(texture_name.c_str(), &size.width, &size.height);
-  RawPixel max_size = std::max(std::round(size.width * scale), std::round(size.height * scale));
+  gdk_pixbuf_get_file_info(texture_path.c_str(), &size.width, &size.height);
+  RawPixel max_size = std::max(size.width, size.height);
 
   return max_size;
 }

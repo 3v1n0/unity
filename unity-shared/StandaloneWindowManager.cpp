@@ -24,13 +24,10 @@
 #include "StandaloneWindowManager.h"
 #include "UScreen.h"
 
-#include <NuxCore/Logger.h>
-
 // Entirely stubs for now, unless we need this functionality at some point
 
 namespace unity
 {
-DECLARE_LOGGER(logger, "unity.wm");
 
 StandaloneWindow::StandaloneWindow(Window xid)
   : xid(xid)
@@ -131,7 +128,7 @@ std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
 
   return ret;
 }
-  
+
 int StandaloneWindowManager::MonitorGeometryIn(nux::Geometry const& geo) const
 {
   // TODO
@@ -167,6 +164,15 @@ bool StandaloneWindowManager::IsWindowHorizontallyMaximized(Window window_id) co
   auto window = GetWindowByXid(window_id);
   if (window)
     return window->h_maximized;
+
+  return false;
+}
+
+bool StandaloneWindowManager::IsWindowFullscreen(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->fullscreen;
 
   return false;
 }
@@ -569,12 +575,17 @@ int StandaloneWindowManager::WorkspaceCount() const
   return viewport_size_.width * viewport_size_.height;
 }
 
+void StandaloneWindowManager::SetCurrentViewport(nux::Point const& vp)
+{
+  current_vp_ = vp;
+}
+
 nux::Point StandaloneWindowManager::GetCurrentViewport() const
 {
   return current_vp_;
 }
 
- int StandaloneWindowManager::GetViewportHSize() const
+int StandaloneWindowManager::GetViewportHSize() const
 {
   return viewport_size_.width;
 }
@@ -601,6 +612,11 @@ std::string StandaloneWindowManager::GetWindowName(Window window_id) const
     return window->name;
 
   return "";
+}
+
+bool StandaloneWindowManager::IsOnscreenKeyboard(Window window_id) const
+{
+  return false;
 }
 
 std::string StandaloneWindowManager::GetStringProperty(Window, Atom) const
@@ -709,6 +725,8 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
   window->visible.changed.connect([this, xid] (bool v) {v ? window_shown(xid) : window_hidden(xid);});
   window->maximized.changed.connect([this, xid] (bool v) {v ? window_maximized(xid) : window_restored(xid);});
   window->minimized.changed.connect([this, xid] (bool v) {v ? window_minimized(xid) : window_unminimized(xid);});
+  window->fullscreen.changed.connect([this, xid] (bool v) {v ? window_fullscreen(xid) : window_unfullscreen(xid);});
+  window->geo.changed.connect([this, xid] (nux::Geometry const&) { window_resized(xid); window_moved(xid); });
   window->resized.connect([this, xid] { window_resized(xid); });
   window->moved.connect([this, xid] { window_moved(xid); });
 
@@ -732,9 +750,9 @@ std::list<StandaloneWindow::Ptr> StandaloneWindowManager::GetStandaloneWindows()
   return standalone_windows_;
 }
 
-void StandaloneWindowManager::SetCurrentViewport(nux::Point const& vp)
+Cursor StandaloneWindowManager::GetCachedCursor(unsigned int cursor_name) const
 {
-  current_vp_ = vp;
+  return 0;
 }
 
 void StandaloneWindowManager::AddProperties(debug::IntrospectionData& wrapper)

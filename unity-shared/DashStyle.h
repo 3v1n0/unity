@@ -37,6 +37,7 @@ namespace unity
 {
 namespace dash
 {
+typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
 enum class StockIcon {
   CHECKMARK,
@@ -84,6 +85,10 @@ enum class Arrow {
   NONE
 };
 
+enum class Position {
+  LEFT,
+  BOTTOM
+};
 
 class Style : public StyleInterface
 {
@@ -92,6 +97,9 @@ public:
   ~Style ();
 
   static Style& Instance();
+
+  virtual bool LockScreenButton(cairo_t* cr, std::string const& label,
+                                int font_px_size);
 
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
                       std::string const& label, int font_px_size=-1,
@@ -135,11 +143,9 @@ public:
 
   virtual bool SeparatorHoriz(cairo_t* cr);
 
-  virtual int GetButtonGarnishSize();
+  RawPixel GetButtonGarnishSize() const;
 
-  virtual int GetSeparatorGarnishSize();
-
-  virtual int GetScrollbarGarnishSize();
+  RawPixel GetSeparatorGarnishSize() const;
 
   void Blur(cairo_t* cr, int size);
 
@@ -153,111 +159,116 @@ public:
 
   nux::Color const& GetTextColor() const;
 
-  // TODO nux::Property<int>
-  int  GetDefaultNColumns() const;
-  void SetDefaultNColumns(int n_cols);
-  sigc::signal<void> columns_changed;
+  RawPixel GetTileGIconSize() const;
+  RawPixel GetTileImageSize() const;
+  RawPixel GetTileWidth() const;
+  RawPixel GetTileHeight() const;
+  RawPixel GetTileIconHightlightHeight() const;
+  RawPixel GetTileIconHightlightWidth() const;
 
-  int GetTileGIconSize() const;
-  int GetTileImageSize() const;
-  int GetTileWidth() const;
-  int GetTileHeight() const;
-  int GetTileIconHightlightHeight() const;
-  int GetTileIconHightlightWidth() const;
+  RawPixel GetHomeTileIconSize() const;
+  RawPixel GetHomeTileWidth() const;
+  RawPixel GetHomeTileHeight() const;
 
-  int GetHomeTileIconSize() const;
-  int GetHomeTileWidth() const;
-  int GetHomeTileHeight() const;
+  RawPixel GetTextLineHeight() const;
 
-  int GetTextLineHeight() const;
+  BaseTexturePtr const& GetCategoryBackground() const;
+  BaseTexturePtr const& GetCategoryBackgroundNoFilters() const;
 
-  nux::BaseTexture* GetCategoryBackground();
-  nux::BaseTexture* GetCategoryBackgroundNoFilters();
-  nux::BaseTexture* GetDashBottomTile();
-  nux::BaseTexture* GetDashBottomTileMask();
-  nux::BaseTexture* GetDashRightTile();
-  nux::BaseTexture* GetDashRightTileMask();
-  nux::BaseTexture* GetDashCorner();
-  nux::BaseTexture* GetDashCornerMask();
-  nux::BaseTexture* GetDashFullscreenIcon();
-  nux::BaseTexture* GetDashLeftEdge();
-  nux::BaseTexture* GetDashLeftCorner();
-  nux::BaseTexture* GetDashLeftCornerMask();
-  nux::BaseTexture* GetDashLeftTile();
-  nux::BaseTexture* GetDashTopCorner();
-  nux::BaseTexture* GetDashTopCornerMask();
-  nux::BaseTexture* GetDashTopTile();
+  BaseTexturePtr GetDashHorizontalTile(double scale, Position) const;
+  BaseTexturePtr GetDashHorizontalTileMask(double scale, Position) const;
+  BaseTexturePtr GetDashRightTile(double scale) const;
+  BaseTexturePtr GetDashRightTileMask(double scale) const;
+  BaseTexturePtr GetDashLeftTile(double scale) const;
+  BaseTexturePtr GetDashTopOrBottomTile(double scale, Position) const;
 
-  int GetDashBottomTileHeight() const;
-  int GetDashRightTileWidth() const;
+  BaseTexturePtr GetDashCorner(double scale, Position) const;
+  BaseTexturePtr GetDashCornerMask(double scale, Position) const;
+  BaseTexturePtr GetDashLeftCorner(double scale, Position) const;
+  BaseTexturePtr GetDashLeftCornerMask(double scale, Position) const;
+  BaseTexturePtr GetDashRightCorner(double scale, Position) const;
+  BaseTexturePtr GetDashRightCornerMask(double scale, Position) const;
 
-  nux::BaseTexture* GetDashShine();
+  RawPixel GetDashHorizontalBorderHeight() const;
+  RawPixel GetDashVerticalBorderWidth() const;
 
-  nux::BaseTexture* GetSearchMagnifyIcon();
-  nux::BaseTexture* GetSearchCircleIcon();
-  nux::BaseTexture* GetSearchCloseIcon();
-  nux::BaseTexture* GetSearchSpinIcon();
+  BaseTexturePtr const& GetDashShine() const;
 
-  nux::BaseTexture* GetGroupUnexpandIcon();
-  nux::BaseTexture* GetGroupExpandIcon();
+  BaseTexturePtr GetSearchMagnifyIcon(double scale) const;
+  BaseTexturePtr GetSearchCircleIcon(double scale) const;
+  BaseTexturePtr GetSearchCloseIcon(double scale) const;
+  BaseTexturePtr GetSearchSpinIcon(double scale) const;
 
-  nux::BaseTexture* GetStarDeselectedIcon();
-  nux::BaseTexture* GetStarSelectedIcon();
-  nux::BaseTexture* GetStarHighlightIcon();
- 
-  nux::BaseTexture* GetInformationTexture();
+  BaseTexturePtr GetLockScreenActivator(double scale) const;
 
-  nux::BaseTexture* GetRefineTextureCorner();
-  nux::BaseTexture* GetRefineTextureDash();
-  
+  BaseTexturePtr const& GetGroupUnexpandIcon() const;
+  BaseTexturePtr const& GetGroupExpandIcon() const;
+
+  BaseTexturePtr const& GetStarDeselectedIcon() const;
+  BaseTexturePtr const& GetStarSelectedIcon() const;
+  BaseTexturePtr const& GetStarHighlightIcon() const;
+
+  BaseTexturePtr const& GetInformationTexture() const;
+
+  BaseTexturePtr const& GetRefineTextureCorner() const;
+  BaseTexturePtr const& GetRefineTextureDash() const;
+
   // Returns the width of the separator between the dash and the launcher.
-  int GetVSeparatorSize() const;
+  RawPixel GetVSeparatorSize() const;
 
   // Returns the height of the separator between the dash and the top panel.
-  int GetHSeparatorSize() const;
+  RawPixel GetHSeparatorSize() const;
 
   // Practically it is the space between the top border of the dash and the searchbar.
-  int GetDashViewTopPadding() const;
+  RawPixel GetDashViewTopPadding() const;
 
-  
+
   // Search bar
-  int GetSearchBarLeftPadding() const;
-  int GetSearchBarRightPadding() const;
-  int GetSearchBarHeight() const;
-  int GetFilterResultsHighlightRightPadding() const;
-  int GetFilterResultsHighlightLeftPadding() const;
+  RawPixel GetSearchBarLeftPadding() const;
+  RawPixel GetSearchBarRightPadding() const;
+  RawPixel GetSearchBarHeight() const;
 
   // Filter bar
-  int GetFilterBarTopPadding() const;
-  int GetFilterHighlightPadding() const;
-  int GetSpaceBetweenFilterWidgets() const;
-  int GetAllButtonHeight() const;
-  int GetFilterBarLeftPadding() const;
-  int GetFilterBarRightPadding() const;
-  int GetFilterBarWidth() const;
-  int GetFilterButtonHeight() const;
-  int GetFilterViewRightPadding() const;
+  RawPixel GetFilterResultsHighlightRightPadding() const;
+  RawPixel GetFilterResultsHighlightLeftPadding() const;
+  RawPixel GetFilterBarTopPadding() const;
+  RawPixel GetFilterHighlightPadding() const;
+  RawPixel GetSpaceBetweenFilterWidgets() const;
+  RawPixel GetAllButtonHeight() const;
+  RawPixel GetFilterBarLeftPadding() const;
+  RawPixel GetFilterBarRightPadding() const;
+  RawPixel GetFilterBarWidth() const;
+  RawPixel GetFilterButtonHeight() const;
+  RawPixel GetFilterViewRightPadding() const;
 
-  int GetSpaceBetweenScopeAndFilters() const;
+  RawPixel GetSpaceBetweenScopeAndFilters() const;
 
   // Scrollbars
-  int GetScrollbarWidth() const;
+  RawPixel GetOverlayScrollbarSize() const;
+  RawPixel GetScrollbarSize() const;
+  RawPixel GetScrollbarButtonsSize() const;
+
+  RawPixel GetOverlayScrollbarCornerRadius() const;
+  RawPixel GetScrollbarCornerRadius() const;
+
+  nux::Color GetOverlayScrollbarColor() const;
+  nux::Color GetScrollbarColor() const;
+  nux::Color GetScrollbarTrackColor() const;
 
   // Places Group
-  int GetCategoryIconSize() const;
-  int GetCategoryHighlightHeight() const;
-  int GetPlacesGroupTopSpace() const;
-  int GetPlacesGroupResultTopPadding() const;
-  int GetPlacesGroupResultLeftPadding() const;  
-  int GetCategoryHeaderLeftPadding() const;
-  int GetCategorySeparatorLeftPadding() const;
-  int GetCategorySeparatorRightPadding() const;
-  
-  bool GetUseBlur() const;
-
+  RawPixel GetCategoryIconSize() const;
+  RawPixel GetCategoryHighlightHeight() const;
+  RawPixel GetPlacesGroupTopSpace() const;
+  RawPixel GetPlacesGroupResultTopPadding() const;
+  RawPixel GetPlacesGroupResultLeftPadding() const;
+  RawPixel GetCategoryHeaderLeftPadding() const;
+  RawPixel GetCategorySeparatorLeftPadding() const;
+  RawPixel GetCategorySeparatorRightPadding() const;
 
   sigc::signal<void> changed;
+  sigc::signal<void> textures_changed;
 
+  nux::Property<int> columns_number;
   nux::Property<bool> always_maximised;
   nux::Property<bool> preview_mode;
 

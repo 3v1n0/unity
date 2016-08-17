@@ -42,11 +42,12 @@ struct EdgeBarrierController::Impl : public sigc::trackable
   void SetupBarriers(std::vector<nux::Geometry> const& layout);
 
   void OnUScreenChanged(int primary, std::vector<nux::Geometry> const& layout);
+  void OnForceDisableChanged(bool value);
   void OnOptionsChanged();
 
-  void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event);
-  void BarrierPush(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event);
-  void BarrierRelease(PointerBarrierWrapper* owner, int event);
+  void OnPointerBarrierEvent(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr const& event);
+  void BarrierPush(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr const& event);
+  void BarrierRelease(PointerBarrierWrapper::Ptr const& owner, int event);
   void BarrierReset();
 
   bool EventIsInsideYBreakZone(BarrierEvent::Ptr const& event);

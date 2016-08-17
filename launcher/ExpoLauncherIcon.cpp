@@ -99,6 +99,45 @@ void ExpoLauncherIcon::Stick(bool save)
   SetQuirk(Quirk::VISIBLE, (WindowManager::Default().WorkspaceCount() > 1));
 }
 
+AbstractLauncherIcon::MenuItemsVector ExpoLauncherIcon::GetMenus()
+{
+  MenuItemsVector result;
+  glib::Object<DbusmenuMenuitem> menu_item;
+  typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
+
+  auto& wm = WindowManager::Default();
+  int h_size = wm.GetViewportHSize();
+  int v_size = wm.GetViewportVSize();
+  auto const& current_vp = wm.GetCurrentViewport();
+
+  for (int h = 0; h < h_size; ++h)
+  {
+    for (int v = 0; v < v_size; ++v)
+    {
+      menu_item = dbusmenu_menuitem_new();
+      glib::String label((v_size < 2) ? g_strdup_printf(_("Workspace %d"), (h+1)) :
+                                        g_strdup_printf(_("Workspace %dx%d"), (h+1), (v+1)));
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, label);
+      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+      if (current_vp.x == h && current_vp.y == v)
+      {
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
+        dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+      }
+
+      signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this, h, v] (DbusmenuMenuitem*, int) {
+        WindowManager::Default().SetCurrentViewport({h, v});
+        UpdateIcon();
+      }));
+      result.push_back(menu_item);
+    }
+  }
+
+  return result;
+}
+
 std::string ExpoLauncherIcon::GetName() const
 {
   return "ExpoLauncherIcon";

@@ -7,11 +7,11 @@
 # by the Free Software Foundation.
 
 import dbus
-import glib
 import unity
 import logging
 
 from autopilot.matchers import *
+from gi.repository import GLib
 from testtools.matchers import *
 
 log = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         self.activated = [False]
         self.active = True
 
-        def accelerator_activated(action, device):
+        def accelerator_activated(action, device, timestamp):
             if self.active and action in self.activatable:
                 log.info('%d activated' % action)
                 self.activated[0] = True
@@ -64,13 +64,13 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
         log.info("pressing '%s'" % accelerator.shortcut)
         self.keyboard.press_and_release(accelerator.shortcut)
 
-        loop = glib.MainLoop()
+        loop = GLib.MainLoop()
 
         def wait():
             loop.quit()
             return False
 
-        glib.timeout_add_seconds(1, wait)
+        GLib.timeout_add_seconds(1, wait)
         loop.run()
 
         return self.activated[0]
@@ -154,20 +154,12 @@ class GnomeKeyGrabberTests(unity.tests.UnityTestCase):
 
         self.addCleanup(clean_up_test_grab_same_accelerator)
 
-        for accelerator in accelerators:
-            # Check that accelerator works
-            self.assertTrue(self.press_accelerator(accelerator))
+        # Check that accelerator works
+        self.assertTrue(self.press_accelerator(accelerator))
 
-            # Remove accelerator
-            log.info('ungrabbing %s' % accelerator)
-            self.assertTrue(self.interface.UngrabAccelerator(accelerator.action))
+        # Remove accelerator
+        log.info('ungrabbing %s' % accelerator)
+        self.assertTrue(self.interface.UngrabAccelerator(accelerator.action))
 
-            # This accelerator cannot activate any more
-            self.activatable.remove(accelerator.action)
-
-        # Add them all again for one final check
-        for accelerator in accelerators:
-            self.activatable.add(accelerator.action)
-
-        # Check that signal was not emitted
-        self.assertFalse(self.press_accelerator(accelerators[0]))
+        for accelerator in accelerators[1:]:
+            self.assertFalse(self.press_accelerator(accelerator))

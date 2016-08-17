@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010, 2011 Canonical Ltd
+ * Copyright (C) 2010-2016 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,17 +16,36 @@
  *
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *             Tim Penhey <tim.penhey@canonical.com>
+ *             Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include "config.h"
 #include "TextureCache.h"
 
-#include <sstream>
-#include <NuxCore/Logger.h>
-#include "config.h"
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
-DECLARE_LOGGER(logger, "unity.internal.texturecache");
+namespace
+{
+// Stolen from boost
+template <class T>
+inline std::size_t hash_combine(std::size_t seed, T const& v)
+{
+  return seed ^ (std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+}
+
+inline std::size_t Hash(std::string const& id, int width, int height)
+{
+  return hash_combine(hash_combine(std::hash<std::string>()(id), width), height);
+}
+
+inline nux::BaseTexture* create_2d_texture(std::string const& name, int w, int h)
+{
+  int size = std::max(w, h);
+  return nux::CreateTexture2DFromFile(name.c_str(), (size <= 0 ? -1 : size), true);
+}
+}
 
 TextureCache& TextureCache::GetDefault()
 {
@@ -34,17 +53,31 @@ TextureCache& TextureCache::GetDefault()
   return instance;
 }
 
-nux::BaseTexture* TextureCache::DefaultTexturesLoader(std::string const& name, int w, int h)
+TextureCache::TextureCache()
 {
-  int size = std::max(w, h);
-  return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name).c_str(), (size <= 0 ? -1 : size), true);
+  theme::Settings::Get()->theme.changed.connect(sigc::mem_fun(this, &TextureCache::OnThemeChanged));
 }
 
-std::size_t TextureCache::Hash(std::string const& id, int width, int height)
+nux::BaseTexture* TextureCache::LocalLoader(std::string const& name, int w, int h)
 {
-  return ((std::hash<std::string>()(id)
-          ^ (std::hash<int>()(width) << 1)) >> 1)
-          ^ (std::hash<int>()(height) << 1);
+  return create_2d_texture(PKGDATADIR"/" + name, w, h);
+}
+
+nux::BaseTexture* TextureCache::ThemedLoader(std::string const& name, int w, int h)
+{
+  auto& cache = GetDefault();
+  cache.themed_files_.push_back(Hash(name, w, h));
+  auto const& themed_file = theme::Settings::Get()->ThemedFilePath(name, {PKGDATADIR}, {""});
+  return themed_file.empty() ? LocalLoader(name, w, h) : create_2d_texture(themed_file, w, h);
+}
+
+void TextureCache::OnThemeChanged(std::string const&)
+{
+  for (auto texture_key : themed_files_)
+    cache_.erase(texture_key);
+
+  themed_files_.clear();
+  themed_invalidated.emit();
 }
 
 TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,

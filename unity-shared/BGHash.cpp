@@ -20,6 +20,7 @@
 #include "BGHash.h"
 #include <gdk/gdkx.h>
 #include <NuxCore/Logger.h>
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
 #ifndef XA_STRING
@@ -38,13 +39,17 @@ namespace
 }
 
 BGHash::BGHash()
-  : transition_animator_(TRANSITION_DURATION)
+  : transition_animator_(Settings::Instance().low_gfx() ? 0 : TRANSITION_DURATION)
   , override_color_(nux::color::Transparent)
 {
   COLORS_ATOM = gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
   transition_animator_.updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
   WindowManager::Default().average_color = unity::colors::Aubergine;
-  RefreshColor();
+  RefreshColor(/* skip_animation */ true);
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    transition_animator_.SetDuration(low_gfx ? 0 : TRANSITION_DURATION);
+  }, *this));
 }
 
 uint64_t BGHash::ColorAtomId() const
@@ -58,11 +63,11 @@ void BGHash::OverrideColor(nux::Color const& color)
   RefreshColor();
 }
 
-void BGHash::RefreshColor()
+void BGHash::RefreshColor(bool skip_animation)
 {
   if (override_color_.alpha > 0.0f)
   {
-    TransitionToNewColor(override_color_);
+    TransitionToNewColor(override_color_, skip_animation);
     return;
   }
 
@@ -99,19 +104,28 @@ void BGHash::RefreshColor()
   {
     gdk_rgba_parse(&color_gdk, colors);
     nux::Color new_color(color_gdk.red, color_gdk.green, color_gdk.blue, 1.0f);
-    TransitionToNewColor(MatchColor(new_color));
+    TransitionToNewColor(MatchColor(new_color), skip_animation);
   }
 
   XFree(colors);
 }
 
-void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
+void BGHash::TransitionToNewColor(nux::color::Color const& new_color, bool skip_animation)
 {
   auto const& current_color = WindowManager::Default().average_color();
   LOG_DEBUG(logger) << "transitioning from: " << current_color.red << " to " << new_color.red;
 
   transition_animator_.Stop();
-  transition_animator_.SetStartValue(current_color).SetFinishValue(new_color).Start();
+  transition_animator_.SetStartValue(current_color)
+                      .SetFinishValue(new_color)
+                      .SetDuration(skip_animation ? 0 : TRANSITION_DURATION)
+                      .Start();
+
+  if (nux::WindowThread* wt = nux::GetWindowThread())
+  {
+    // This will make sure that the animation starts even if the screen is idle.
+    wt->RequestRedraw();
+  }
 }
 
 void BGHash::OnTransitionUpdated(nux::Color const& new_color)

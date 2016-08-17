@@ -38,6 +38,7 @@
 #include "MusicPaymentPreview.h"
 #include "SocialPreview.h"
 #include "PreviewInfoHintWidget.h"
+#include "ActionButton.h"
 
 namespace unity
 {
@@ -100,14 +101,16 @@ NUX_IMPLEMENT_OBJECT_TYPE(Preview);
 
 Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
+  , scale(1.0f)
   , preview_model_(preview_model)
   , tab_iterator_(new TabIterator())
   , full_data_layout_(nullptr)
   , image_(nullptr)
   , title_(nullptr)
   , subtitle_(nullptr)
+  , preview_container_(new PreviewContainer)
 {
-  preview_container_ = new PreviewContainer;
+  scale.changed.connect(sigc::mem_fun(this, &Preview::UpdateScale));
 }
 
 Preview::~Preview()
@@ -138,13 +141,13 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
   previews::Style& style = dash::previews::Style::Instance();
 
   nux::VLayout* actions_layout_v = new nux::VLayout();
-  actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+  actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions().CP(scale));
   uint rows = actions.size() / 2 + ((actions.size() % 2 > 0) ? 1 : 0);
   uint action_iter = 0;
   for (uint i = 0; i < rows; i++)
   {
     nux::HLayout* actions_layout_h = new TabIteratorHLayout(tab_iterator_);
-    actions_layout_h->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+    actions_layout_h->SetSpaceBetweenChildren(style.GetSpaceBetweenActions().CP(scale));
 
     for (uint j = 0; j < 2 && action_iter < actions.size(); j++, action_iter++)
     {
@@ -172,7 +175,7 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
   previews::Style& style = dash::previews::Style::Instance();
 
   nux::VLayout* actions_layout_v = new TabIteratorVLayout(tab_iterator_);
-  actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+  actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions().CP(scale));
 
   uint action_iter = 0;
   for (uint i = 0; i < actions.size(); i++)
@@ -215,7 +218,7 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
   else
     cover_art->SetNoImageAvailable();
   cover_art->SetFont(style.no_preview_image_font());
-  
+
   cover_art->mouse_click.connect(on_mouse_down);
 }
 
@@ -279,6 +282,37 @@ sigc::signal<void> Preview::request_close() const
   return preview_container_->request_close;
 }
 
+void Preview::UpdateScale(double scale)
+{
+  if (image_)
+    image_->scale = scale;
+
+  if (title_)
+    title_->SetScale(scale);
+  if (subtitle_)
+    subtitle_->SetScale(scale);
+  if (description_)
+    description_->SetScale(scale);
+
+  if (preview_container_)
+    preview_container_->scale = scale;
+
+  if (preview_info_hints_)
+    preview_info_hints_->scale = scale;
+
+  for (nux::AbstractButton* button : action_buttons_)
+  {
+    if (ActionButton* bn = dynamic_cast<ActionButton*>(button))
+      bn->scale = scale;
+
+    if (ActionLink* link = dynamic_cast<ActionLink*>(button))
+      link->scale = scale;
+  }
+
+  QueueRelayout();
+  QueueDraw();
 }
-}
-}
+
+} // preview
+} // dash
+} // unity

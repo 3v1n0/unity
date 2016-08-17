@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -36,10 +36,15 @@ namespace panel
 
 struct TestPanelMenuView : public testing::Test
 {
+  TestPanelMenuView()
+    : menu_manager(std::make_shared<menu::MockManager>())
+    , menu_view(menu_manager)
+  {}
+
   struct MockPanelMenuView : public PanelMenuView
   {
-    MockPanelMenuView()
-      : PanelMenuView(std::make_shared<menu::MockManager>())
+    MockPanelMenuView(menu::Manager::Ptr const& menu_manager)
+      : PanelMenuView(menu_manager)
     {}
 
     MOCK_METHOD0(QueueDraw, void());
@@ -53,6 +58,7 @@ struct TestPanelMenuView : public testing::Test
     using PanelMenuView::titlebar_grab_area_;
     using PanelMenuView::we_control_active_;
     using PanelMenuView::spread_showing_;
+    using PanelMenuView::maximized_wins_;
   };
 
   nux::ObjectPtr<nux::BaseWindow> AddPanelToWindow(int monitor)
@@ -79,6 +85,7 @@ protected:
   MockUScreen uscreen;
   panel::Style panelStyle;
   testwrapper::StandaloneWM WM;
+  menu::MockManager::Ptr menu_manager;
   testing::NiceMock<MockPanelMenuView> menu_view;
 };
 
@@ -91,6 +98,7 @@ TEST_F(TestPanelMenuView, Construction)
 
 TEST_F(TestPanelMenuView, Escaping)
 {
+  menu_manager->integrated_menus = false;
   ON_CALL(menu_view, GetActiveViewName(testing::_)).WillByDefault(Return("<>'"));
   auto escapedText = "Panel d'Inici";
   ASSERT_TRUE(menu_view.GetCurrentTitle().empty());
@@ -130,12 +138,16 @@ TEST_F(TestPanelMenuView, ShouldDrawMenusOnSpread)
   EXPECT_FALSE(menu_view.ShouldDrawMenus());
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 struct ProgressTester : TestPanelMenuView, WithParamInterface<double> {};
 INSTANTIATE_TEST_CASE_P(TestPanelMenuView, ProgressTester, Range(0.0, 1.0, 0.1));
 
 TEST_P(ProgressTester, RestoreOnGrabInBiggerWorkArea)
 {
   uscreen.SetupFakeMultiMonitor();
+  connection::Manager conn;
   unsigned monitor = uscreen.GetMonitors().size() - 1;
   auto const& monitor_geo = uscreen.GetMonitorGeometry(monitor);
   WM->SetWorkareaGeometry(monitor_geo);
@@ -168,6 +180,8 @@ TEST_P(ProgressTester, RestoreOnGrabInBiggerWorkArea)
   EXPECT_FALSE(max_window->maximized());
   EXPECT_EQ(max_window->geo(), expected_geo);
 }
+
+#pragma GCC diagnostic pop
 
 } // panel namespace
 } // unity namespace

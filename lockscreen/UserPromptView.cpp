@@ -19,14 +19,15 @@
 
 #include "UserPromptView.h"
 
+#include "config.h"
+#include <glib/gi18n-lib.h>
+
 #include <boost/algorithm/string/trim.hpp>
 #include <Nux/VLayout.h>
-#include <X11/XKBlib.h>
 
 #include "LockScreenSettings.h"
+#include "LockScreenButton.h"
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/DashStyle.h"
-#include "unity-shared/PreviewStyle.h"
 #include "unity-shared/TextInput.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/RawPixel.h"
@@ -40,13 +41,14 @@ namespace
 const RawPixel PADDING              = 10_em;
 const RawPixel LAYOUT_MARGIN        = 10_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
-const RawPixel PROMPT_LAYOUT_MARGIN = 5_em;
+const RawPixel PROMPT_LAYOUT_MARGIN =  5_em;
+const RawPixel BUTTON_LAYOUT_MARGIN =  5_em;
+const int PROMPT_FONT_SIZE = 13;
 
-const int PROMPT_FONT_SIZE     = 13;
-
-nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
+nux::AbstractPaintLayer* CrateBackgroundLayer(double width, double height, double scale)
 {
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
   cairo_t* cr = cg.GetInternalContext();
 
   cairo_set_source_rgba(cr, 0.1, 0.1, 0.1, 0.4);
@@ -55,12 +57,12 @@ nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
                           1.0,
                           0, 0,
                           Settings::GRID_SIZE * 0.3,
-                          width, height);
+                          width/scale, height/scale);
 
   cairo_fill_preserve(cr);
 
-  cairo_set_source_rgba (cr, 0.4, 0.4, 0.4, 0.4);
-  cairo_set_line_width (cr, 1);
+  cairo_set_source_rgba(cr, 0.4, 0.4, 0.4, 0.4);
+  cairo_set_line_width(cr, 1);
   cairo_stroke (cr);
 
   // Create the texture layer
@@ -72,28 +74,6 @@ nux::AbstractPaintLayer* CrateBackgroundLayer(int width, int height)
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   return (new nux::TextureLayer(texture_ptr_from_cairo_graphics(cg)->GetDeviceTexture(),
-                                texxform,
-                                nux::color::White,
-                                true,
-                                rop));
-}
-
-nux::AbstractPaintLayer* CreateWarningLayer(nux::BaseTexture* texture)
-{
-  // Create the texture layer
-  nux::TexCoordXForm texxform;
-
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  texxform.min_filter = nux::TEXFILTER_LINEAR;
-  texxform.mag_filter = nux::TEXFILTER_LINEAR;
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-  return (new nux::TextureLayer(texture->GetDeviceTexture(),
                                 texxform,
                                 nux::color::White,
                                 true,
@@ -122,23 +102,34 @@ std::string SanitizeMessage(std::string const& message)
 }
 
 UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
-  : nux::View(NUX_TRACKER_LOCATION)
+  : AbstractUserPromptView(session_manager)
   , session_manager_(session_manager)
-  , caps_lock_on_(false)
+  , username_(nullptr)
+  , msg_layout_(nullptr)
+  , prompt_layout_(nullptr)
+  , button_layout_(nullptr)
+  , prompted_(false)
+  , unacknowledged_messages_(false)
 {
   user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
+    prompted_ = true;
+    unacknowledged_messages_ = false;
     AddPrompt(message, /* visible */ true, promise);
   });
 
   user_authenticator_.echo_off_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
+    prompted_ = true;
+    unacknowledged_messages_ = false;
     AddPrompt(message, /* visible */ false, promise);
   });
 
   user_authenticator_.message_requested.connect([this](std::string const& message){
+    unacknowledged_messages_ = true;
     AddMessage(message, nux::color::White);
   });
 
   user_authenticator_.error_requested.connect([this](std::string const& message){
+    unacknowledged_messages_ = true;
     AddMessage(message, nux::color::Red);
   });
 
@@ -146,32 +137,75 @@ UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
     ResetLayout();
   });
 
-  dash::previews::Style& preview_style = dash::previews::Style::Instance();
+  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &UserPromptView::UpdateSize)));
 
-  warning_ = preview_style.GetWarningIcon();
+  UpdateSize();
   ResetLayout();
 
-  user_authenticator_.AuthenticateStart(session_manager_->UserName(),
-                                        sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
-
-  // When we get to HiDPI changes here, we will need to update this width
-  dash::Style& style = dash::Style::Instance();
-  spin_icon_width_ = style.GetSearchSpinIcon()->GetWidth();
-
-  CheckIfCapsLockOn();
+  StartAuthentication();
 }
 
-void UserPromptView::CheckIfCapsLockOn()
+void UserPromptView::UpdateSize()
 {
-  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
-  unsigned int state = 0;
-  XkbGetIndicatorState(dpy, XkbUseCoreKbd, &state);
+  auto width = 8 * Settings::GRID_SIZE.CP(scale);
+  auto height = 3 * Settings::GRID_SIZE.CP(scale);
 
-  // Caps is on 0x1, couldn't find any #define in /usr/include/X11
-  if ((state & 0x1) == 1)
-    caps_lock_on_ = true;
-  else
-    caps_lock_on_ = false;
+  SetMinimumWidth(width);
+  SetMaximumWidth(width);
+  SetMinimumHeight(height);
+
+  if (nux::Layout* layout = GetLayout())
+  {
+    layout->SetLeftAndRightPadding(PADDING.CP(scale));
+    layout->SetTopAndBottomPadding(PADDING.CP(scale));
+    static_cast<nux::VLayout*>(layout)->SetVerticalInternalMargin(LAYOUT_MARGIN.CP(scale));
+  }
+
+  if (username_)
+    username_->SetScale(scale);
+
+  if (msg_layout_)
+  {
+    msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN.CP(scale));
+
+    for (auto* area : msg_layout_->GetChildren())
+    {
+      area->SetMaximumWidth(width);
+      static_cast<StaticCairoText*>(area)->SetScale(scale);
+    }
+  }
+
+  if (prompt_layout_)
+  {
+    prompt_layout_->SetVerticalInternalMargin(PROMPT_LAYOUT_MARGIN.CP(scale));
+
+    for (auto* area : prompt_layout_->GetChildren())
+    {
+      auto* text_input = static_cast<TextInput*>(area);
+      text_input->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
+      text_input->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+      text_input->scale = scale();
+    }
+  }
+
+  if (button_layout_)
+  {
+    button_layout_->SetVerticalInternalMargin(BUTTON_LAYOUT_MARGIN.CP(scale));
+
+    for (auto* area : button_layout_->GetChildren())
+    {
+      auto* button = static_cast<LockScreenButton*>(area);
+      button->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
+      button->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
+      button->scale = scale();
+    }
+  }
+
+  bg_layer_.reset();
+
+  ComputeContentSize();
+  QueueRelayout();
+  QueueDraw();
 }
 
 bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character)
@@ -179,7 +213,7 @@ bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sy
   if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
   {
     if (!focus_queue_.empty())
-      focus_queue_.front()->SetText("");
+      focus_queue_.front()->text_entry()->SetText("");
 
     return true;
   }
@@ -189,50 +223,91 @@ bool UserPromptView::InspectKeyEvent(unsigned int eventType, unsigned int key_sy
 
 void UserPromptView::ResetLayout()
 {
+  bool keep_msg_layout = msg_layout_ && (!prompted_ || unacknowledged_messages_);
+
   focus_queue_.clear();
+
+  if (keep_msg_layout)
+    msg_layout_->Reference();
 
   SetLayout(new nux::VLayout());
 
-  GetLayout()->SetLeftAndRightPadding(PADDING);
-  GetLayout()->SetTopAndBottomPadding(PADDING);
-  static_cast<nux::VLayout*>(GetLayout())->SetVerticalInternalMargin(LAYOUT_MARGIN);
+  GetLayout()->SetLeftAndRightPadding(PADDING.CP(scale));
+  GetLayout()->SetTopAndBottomPadding(PADDING.CP(scale));
+  static_cast<nux::VLayout*>(GetLayout())->SetVerticalInternalMargin(LAYOUT_MARGIN.CP(scale));
 
   auto const& real_name = session_manager_->RealName();
   auto const& name = (real_name.empty() ? session_manager_->UserName() : real_name);
 
-  unity::StaticCairoText* username = new unity::StaticCairoText(name);
-  username->SetFont("Ubuntu "+std::to_string(PROMPT_FONT_SIZE));
-  GetLayout()->AddView(username);
+  username_ = new unity::StaticCairoText(name);
+  username_->SetScale(scale);
+  username_->SetFont("Ubuntu "+std::to_string(PROMPT_FONT_SIZE));
+  GetLayout()->AddView(username_);
 
-  msg_layout_ = new nux::VLayout();
-  msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN);
-  msg_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
+  if (!keep_msg_layout)
+  {
+    msg_layout_ = new nux::VLayout();
+    msg_layout_->SetVerticalInternalMargin(MSG_LAYOUT_MARGIN.CP(scale));
+    msg_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
+  }
+
   GetLayout()->AddLayout(msg_layout_);
 
+  if (keep_msg_layout)
+    msg_layout_->UnReference();
+
   prompt_layout_ = new nux::VLayout();
-  prompt_layout_->SetVerticalInternalMargin(PROMPT_LAYOUT_MARGIN);
+  prompt_layout_->SetVerticalInternalMargin(PROMPT_LAYOUT_MARGIN.CP(scale));
   prompt_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
   GetLayout()->AddLayout(prompt_layout_);
+
+  button_layout_ = new nux::VLayout();
+  button_layout_->SetVerticalInternalMargin(BUTTON_LAYOUT_MARGIN.CP(scale));
+  button_layout_->SetReconfigureParentLayoutOnGeometryChange(true);
 
   QueueRelayout();
   QueueDraw();
 }
 
-void UserPromptView::AuthenticationCb(bool authenticated)
+void UserPromptView::AuthenticationCb(bool is_authenticated)
 {
   ResetLayout();
 
-  if (authenticated)
+  if (is_authenticated)
   {
-    session_manager_->unlock_requested.emit();
+    if (prompted_ && !unacknowledged_messages_)
+      DoUnlock();
+    else
+      ShowAuthenticated(true);
   }
   else
   {
-    AddMessage(_("Invalid password, please try again"), nux::color::Red);
-
-    user_authenticator_.AuthenticateStart(session_manager_->UserName(),
-                                          sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+    if (prompted_)
+    {
+      AddMessage(_("Invalid password, please try again"), nux::color::Red);
+      StartAuthentication();
+    }
+    else
+    {
+      AddMessage(_("Failed to authenticate"), nux::color::Red);
+      ShowAuthenticated(false);
+    }
   }
+}
+
+void UserPromptView::EnsureBGLayer()
+{
+  auto const& geo = GetGeometry();
+
+  if (bg_layer_)
+  {
+    auto const& layer_geo = bg_layer_->GetGeometry();
+
+    if (layer_geo.width == geo.width && layer_geo.height == geo.height)
+      return;
+  }
+
+  bg_layer_.reset(CrateBackgroundLayer(geo.width, geo.height, scale));
 }
 
 void UserPromptView::Draw(nux::GraphicsEngine& graphics_engine, bool /* force_draw */)
@@ -242,7 +317,7 @@ void UserPromptView::Draw(nux::GraphicsEngine& graphics_engine, bool /* force_dr
   graphics_engine.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(graphics_engine, geo);
 
-  bg_layer_.reset(CrateBackgroundLayer(geo.width, geo.height));
+  EnsureBGLayer();
   nux::GetPainter().PushDrawLayer(graphics_engine, geo, bg_layer_.get());
 
   nux::GetPainter().PopBackground();
@@ -256,17 +331,8 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
 
   if (!IsFullRedraw())
   {
-    bg_layer_.reset(CrateBackgroundLayer(geo.width, geo.height));
+    EnsureBGLayer();
     nux::GetPainter().PushLayer(graphics_engine, geo, bg_layer_.get());
-  }
-
-  if (caps_lock_on_)
-  {
-    for (auto const& text_entry : focus_queue_)
-      PaintWarningIcon(graphics_engine, text_entry->GetGeometry());
-
-    if (focus_queue_.empty())
-      PaintWarningIcon(graphics_engine, cached_focused_geo_);
   }
 
   if (GetLayout())
@@ -278,49 +344,25 @@ void UserPromptView::DrawContent(nux::GraphicsEngine& graphics_engine, bool forc
   graphics_engine.PopClippingRectangle();
 }
 
-void UserPromptView::PaintWarningIcon(nux::GraphicsEngine& graphics_engine, nux::Geometry const& geo)
-{
-  nux::Geometry warning_geo = {geo.x + geo.width - GetWarningIconOffset(),
-                               geo.y, warning_->GetWidth(), warning_->GetHeight()};
-
-  nux::GetPainter().PushLayer(graphics_engine, warning_geo, CreateWarningLayer(warning_));
-}
-
-int UserPromptView::GetWarningIconOffset()
-{
-  return warning_->GetWidth() + spin_icon_width_;
-}
-
 nux::View* UserPromptView::focus_view()
 {
   if (focus_queue_.empty())
-    return nullptr;
+  {
+    if (button_layout_ && button_layout_->GetChildren().size() > 0)
+    {
+      return static_cast<nux::View*>(button_layout_->GetChildren().front());
+    }
+    else
+    {
+      return nullptr;
+    }
+  }
 
   for (auto* view : focus_queue_)
-    if (view->HasKeyboardFocus())
+    if (view->text_entry()->HasKeyboardFocus())
       return view;
 
-  return focus_queue_.front();
-}
-
-void UserPromptView::ToggleCapsLockBool()
-{
-  caps_lock_on_ = !caps_lock_on_;
-  QueueDraw();
-}
-
-void UserPromptView::RecvKeyUp(unsigned keysym,
-                               unsigned long keycode,
-                               unsigned long state)
-{
-  if (!caps_lock_on_ && keysym == NUX_VK_CAPITAL)
-  {
-    ToggleCapsLockBool();
-  }
-  else if (caps_lock_on_ && keysym == NUX_VK_CAPITAL)
-  {
-    ToggleCapsLockBool();
-  }
+  return focus_queue_.front()->text_entry();
 }
 
 void UserPromptView::AddPrompt(std::string const& message, bool visible, PromiseAuthCodePtr const& promise)
@@ -328,20 +370,20 @@ void UserPromptView::AddPrompt(std::string const& message, bool visible, Promise
   auto* text_input = new unity::TextInput();
   auto* text_entry = text_input->text_entry();
 
+  text_input->scale = scale();
   text_input->input_hint = SanitizeMessage(message);
   text_input->hint_font_size = PROMPT_FONT_SIZE;
+  text_input->show_lock_warnings = true;
+  text_input->show_activator = true;
   text_entry->SetPasswordMode(!visible);
   text_entry->SetPasswordChar("•");
   text_entry->SetToggleCursorVisibilityOnKeyFocus(true);
+  text_entry->clipboard_enabled = false;
 
-  text_entry->key_up.connect(sigc::mem_fun(this, &UserPromptView::RecvKeyUp));
-
-  text_input->SetMinimumHeight(Settings::GRID_SIZE);
-  text_input->SetMaximumHeight(Settings::GRID_SIZE);
+  text_input->SetMinimumHeight(Settings::GRID_SIZE.CP(scale));
+  text_input->SetMaximumHeight(Settings::GRID_SIZE.CP(scale));
   prompt_layout_->AddView(text_input, 1);
-  focus_queue_.push_back(text_entry);
-
-  CheckIfCapsLockOn();
+  focus_queue_.push_back(text_input);
 
   // Don't remove it, it helps with a11y.
   if (focus_queue_.size() == 1)
@@ -380,17 +422,60 @@ void UserPromptView::AddMessage(std::string const& message, nux::Color const& co
 {
   nux::Geometry const& geo = GetGeometry();
   auto* view = new unity::StaticCairoText("");
+  view->SetScale(scale);
   view->SetFont(Settings::Instance().font_name());
   view->SetTextColor(color);
   view->SetText(message);
-  view->SetMaximumWidth(geo.width);
-
+  view->SetMaximumWidth(geo.width - PADDING.CP(scale)*2);
   msg_layout_->AddView(view);
 
   GetLayout()->ComputeContentPosition(0, 0);
   ComputeContentSize();
   QueueRelayout();
   QueueDraw();
+}
+
+void UserPromptView::AddButton(std::string const& text, std::function<void()> const& cb)
+{
+  auto* button = new LockScreenButton (text, NUX_TRACKER_LOCATION);
+  button->scale = scale();
+  button_layout_->AddView(button, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
+
+  button->state_change.connect ([cb] (nux::View*) {
+    cb();
+  });
+
+  GetLayout()->ComputeContentPosition(0, 0);
+  ComputeContentSize();
+  QueueRelayout();
+  QueueDraw();
+}
+
+void UserPromptView::ShowAuthenticated(bool successful)
+{
+  prompted_ = true;
+  unacknowledged_messages_ = false;
+
+  if (successful)
+    AddButton(_("Unlock"), sigc::mem_fun(this, &UserPromptView::DoUnlock));
+  else
+    AddButton(_("Retry"), sigc::mem_fun(this, &UserPromptView::StartAuthentication));
+
+  GetLayout()->AddLayout(button_layout_);
+}
+
+void UserPromptView::StartAuthentication()
+{
+  prompted_ = false;
+  unacknowledged_messages_ = false;
+
+  user_authenticator_.AuthenticateStart(session_manager_->UserName(),
+                                        sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+}
+
+void UserPromptView::DoUnlock()
+{
+  session_manager_->unlock_requested.emit();
 }
 
 }

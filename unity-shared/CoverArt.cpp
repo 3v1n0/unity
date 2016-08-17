@@ -42,7 +42,8 @@ DECLARE_LOGGER(logger, "unity.dash.previews.coverart");
 
 namespace
 {
-const int ICON_SIZE = 256;
+const RawPixel ICON_SIZE = 256_em;
+const RawPixel THUMBNAIL_SIZE = 512_em;
 const int IMAGE_TIMEOUT = 30;
 }
 
@@ -50,6 +51,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
 
 CoverArt::CoverArt()
   : View(NUX_TRACKER_LOCATION)
+  , scale(1.0)
   , overlay_text_(nullptr)
   , thumb_handle_(0)
   , slot_handle_(0)
@@ -58,6 +60,7 @@ CoverArt::CoverArt()
   , rotation_(0.0)
 {
   SetupViews();
+  scale.changed.connect(sigc::mem_fun(this, &CoverArt::UpdateScale));
 }
 
 CoverArt::~CoverArt()
@@ -118,12 +121,12 @@ void CoverArt::SetImage(std::string const& image_hint)
     if (icon.IsType(G_TYPE_ICON))
     {
       StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
+      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE.CP(scale), ICON_SIZE.CP(scale), sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
     else
     {
       StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
+      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, ICON_SIZE.CP(scale), ICON_SIZE.CP(scale), sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
   }
   else
@@ -134,7 +137,7 @@ void CoverArt::SetImage(std::string const& image_hint)
 
 void CoverArt::GenerateImage(std::string const& uri)
 {
-  notifier_ = ThumbnailGenerator::Instance().GetThumbnail(uri, 512);
+  notifier_ = ThumbnailGenerator::Instance().GetThumbnail(uri, THUMBNAIL_SIZE.CP(scale));
   if (notifier_)
   {
     StartWaiting();
@@ -144,7 +147,7 @@ void CoverArt::GenerateImage(std::string const& uri)
   else
   {
     StopWaiting();
-    SetNoImageAvailable();    
+    SetNoImageAvailable();
   }
 }
 
@@ -168,7 +171,7 @@ void CoverArt::StartWaiting()
     SetNoImageAvailable();
     return false;
   }));
-  
+
   QueueDraw();
 }
 
@@ -186,7 +189,7 @@ void CoverArt::SetNoImageAvailable()
     GetLayout()->RemoveChildObject(overlay_text_);
     GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));
     ComputeContentSize();
-    
+
     QueueDraw();
   }
 }
@@ -221,7 +224,7 @@ void CoverArt::IconLoaded(std::string const& texid,
     GetLayout()->RemoveChildObject(overlay_text_);
 
   if (pixbuf_width == pixbuf_height)
-  {    
+  {
     // quick path for square icons
     texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
@@ -257,14 +260,16 @@ void CoverArt::IconLoaded(std::string const& texid,
       return;
     }
 
-    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, pixbuf_width, pixbuf_height);
+    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, RawPixel(pixbuf_width).CP(scale), RawPixel(pixbuf_height).CP(scale));
+    cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
+
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
-    float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
-    cairo_scale(cr, scale, scale);
+    float size_ratio = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
+    cairo_scale(cr, size_ratio, size_ratio);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
     gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
@@ -349,7 +354,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
       if (image_aspect > base_apsect)
       {
         imageDest.SetHeight(float(imageDest.GetWidth()) / image_aspect);
-      } 
+      }
       if (image_aspect < base_apsect)
       {
         imageDest.SetWidth(image_aspect * imageDest.GetHeight());
@@ -360,15 +365,9 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
       imageDest = nux::Geometry(0, 0, texture_screenshot_->GetWidth(), texture_screenshot_->GetHeight());
     }
 
-
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
     texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
-
-    texxform.u0 = 0;
-    texxform.v0 = 0;
-    texxform.u1 = imageDest.width;
-    texxform.v1 = imageDest.height;
 
     gfx_engine.QRP_1Tex(base.x + (float(base.GetWidth() - imageDest.GetWidth()) / 2),
                         base.y + (float(base.GetHeight() - imageDest.GetHeight()) / 2),
@@ -384,14 +383,14 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
     {
       nux::TexCoordXForm texxform;
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-      texxform.min_filter = nux::TEXFILTER_LINEAR;
-      texxform.mag_filter = nux::TEXFILTER_LINEAR;
+      texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+      texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
-      nux::Geometry spin_geo(base.x + ((base.width - spin_->GetWidth()) / 2),
-                             base.y + ((base.height - spin_->GetHeight()) / 2),
-                             spin_->GetWidth(),
-                             spin_->GetHeight());
+      nux::Size spin_size(spin_->GetWidth(), spin_->GetHeight());
+      nux::Geometry spin_geo(base.x + ((base.width - spin_size.width) / 2),
+                             base.y + ((base.height - spin_size.height) / 2),
+                             spin_size.width,
+                             spin_size.height);
       // Geometry (== Rect) uses integers which were rounded above,
       // hence an extra 0.5 offset for odd sizes is needed
       // because pure floating point is not being used.
@@ -425,7 +424,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
       }
     }
   }
-  
+
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
   if (GetLayout())
@@ -449,10 +448,11 @@ void CoverArt::SetupViews()
   overlay_text_->SetTextAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   overlay_text_->SetFont("Ubuntu 14");
   overlay_text_->SetLines(-3);
+  overlay_text_->SetScale(scale);
   overlay_text_->SetText(_("No Image Available"));
+  overlay_text_->SetInputEventSensitivity(false);
 
-  dash::Style& style = dash::Style::Instance();
-  spin_ = style.GetSearchSpinIcon();
+  spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
 
   rotate_matrix_.Identity();
   rotate_matrix_.Rotate_z(0.0);
@@ -494,6 +494,16 @@ bool CoverArt::OnFrameTimeout()
 
   frame_timeout_.reset();
   return false;
+}
+
+void CoverArt::UpdateScale(double scale)
+{
+  if (overlay_text_)
+    overlay_text_->SetScale(scale);
+
+  spin_ = dash::Style::Instance().GetSearchSpinIcon(scale);
+
+  QueueDraw();
 }
 
 }

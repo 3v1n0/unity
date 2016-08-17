@@ -22,7 +22,6 @@
 #include <functional>
 #include <memory>
 
-#include <gdk/gdk.h>
 #include <UnityCore/Hud.h>
 #include <UnityCore/GLibSignal.h>
 
@@ -32,6 +31,7 @@
 #include <Nux/Nux.h>
 
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/RawPixel.h"
 #include "unity-shared/ResizingBaseWindow.h"
 #include "HudView.h"
 
@@ -53,8 +53,8 @@ public:
   nux::ObjectPtr<AbstractView> HudView() const;
   nux::BaseWindow* window() const;
 
-  nux::Property<int> icon_size;
-  nux::Property<int> tile_size;
+  nux::Property<RawPixel> icon_size;
+  nux::Property<RawPixel> tile_size;
   nux::Property<bool> launcher_locked_out;
   nux::Property<bool> multiple_launchers;
 
@@ -88,6 +88,7 @@ private:
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);
   void OnScreenUngrabbed();
+  void OnDPIChanged();
   void OnExternalShowHud(GVariant* variant);
   void OnExternalHideHud(GVariant* variant);
   void OnActivateRequest(GVariant* variant);

@@ -1,0 +1,38 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2014-2015 Canonical
+#
+# Authors:
+#  Brandon Schaefer <brandon.schaefer@canonical.com>
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; version 3.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUTa
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+from gi.repository import GLib
+from os import path, rename, makedirs
+
+old_first_run_path = GLib.get_user_cache_dir()  + "/unity/first_run.stamp"
+new_first_run_path = GLib.get_user_config_dir() + "/unity"
+
+# If we have the old first_run.stamp file, we must move it to the new location
+if path.isfile(old_first_run_path):
+
+  try:
+    # make sure the new dir exists before attempting to move
+    if not path.isdir(new_first_run_path):
+      makedirs(new_first_run_path, 0o700)
+
+    new_first_run_path += "/first_run.stamp"
+    rename(old_first_run_path, new_first_run_path)
+  except OSError:
+    pass

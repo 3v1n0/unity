@@ -75,13 +75,22 @@ QuicklistView::QuicklistView(int monitor)
   , _padding(decoration::Style::Get()->ActiveShadowRadius())
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
+  , _restore_input_focus(false)
   , _cairo_text_has_changed(true)
   , _current_item_index(-1)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
 
-  _left_space = new nux::SpaceLayout(RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
-                                     RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
+  int width = 0;
+  int height = 0;
+  // when launcher is on the left, the anchor is on the left of the menuitem, and
+  // when launcher is on the bottom, the anchor is on the bottom of the menuitem.
+  if (Settings::Instance().launcher_position == LauncherPosition::LEFT)
+    width = ANCHOR_WIDTH;
+  else
+    height = ANCHOR_WIDTH;
+  _left_space = new nux::SpaceLayout(RawPixel(_padding + width + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
+                                     RawPixel(_padding + width + CORNER_RADIUS + LEFT_PADDING_CORRECTION).CP(cv_),
                                      1, MAX_HEIGHT.CP(cv_));
 
   _right_space = new nux::SpaceLayout(_padding.CP(cv_) + CORNER_RADIUS.CP(cv_),
@@ -93,8 +102,8 @@ QuicklistView::QuicklistView(int monitor)
                                     _padding.CP(cv_) + CORNER_RADIUS.CP(cv_));
 
   _bottom_space = new nux::SpaceLayout(1, MAX_WIDTH.CP(cv_),
-                                       _padding.CP(cv_) + CORNER_RADIUS.CP(cv_),
-                                       _padding.CP(cv_) + CORNER_RADIUS.CP(cv_));
+                                       _padding.CP(cv_) + height + CORNER_RADIUS.CP(cv_),
+                                       _padding.CP(cv_) + height + CORNER_RADIUS.CP(cv_));
 
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_top_space, 0);
@@ -128,12 +137,35 @@ QuicklistView::QuicklistView(int monitor)
 
 int QuicklistView::CalculateX() const
 {
-  return _anchorX - _padding.CP(cv_);
+  int x = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    x = _anchorX - _padding.CP(cv_);
+  else
+  {
+    int size = 0;
+    int max = GetBaseWidth() - ANCHOR_HEIGHT.CP(cv_) - 2 * CORNER_RADIUS.CP(cv_) - 2 * _padding.CP(cv_);
+    if (_top_size.CP(cv_) > max)
+    {
+      size = max;
+    }
+    else if (_top_size.CP(cv_) > 0)
+    {
+      size = _top_size.CP(cv_);
+    }
+    x = _anchorX - (ANCHOR_HEIGHT.CP(cv_) / 2) - size - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  }
+
+  return x;
 }
 
 int QuicklistView::CalculateY() const
 {
-  return _anchorY - (ANCHOR_HEIGHT.CP(cv_) / 2) - _top_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  int y = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    y = _anchorY - (ANCHOR_HEIGHT.CP(cv_) / 2) - _top_size.CP(cv_) - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
+  else
+    y = _anchorY - GetBaseHeight() + _padding.CP(cv_);
+  return y;
 }
 
 void
@@ -293,14 +325,39 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
       // left (close quicklist, go back to laucher key-nav)
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
-      HideAndEndQuicklistNav();
+
+      if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      {
+        PromptHide();
+        UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
+        UBusManager::SendMessage(UBUS_LAUNCHER_PREV_KEY_NAV);
+        UBusManager::SendMessage(UBUS_LAUNCHER_OPEN_QUICKLIST);
+      }
+      else
+      {
+        HideAndEndQuicklistNav();
+      }
+
+      break;
+
+      // right (close quicklist, go back to launcher key-nav)
+    case NUX_VK_RIGHT:
+    case NUX_KP_RIGHT:
+      if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+      {
+        PromptHide();
+        UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
+        UBusManager::SendMessage(UBUS_LAUNCHER_NEXT_KEY_NAV);
+        UBusManager::SendMessage(UBUS_LAUNCHER_OPEN_QUICKLIST);
+      }
+
       break;
 
       // esc (close quicklist, exit key-nav)
     case NUX_VK_ESCAPE:
       Hide();
       // inform UnityScreen we leave key-nav completely
-      UBusManager::SendMessage(UBUS_LAUNCHER_END_KEY_NAV);
+      UBusManager::SendMessage(UBUS_LAUNCHER_END_KEY_NAV, glib::Variant(_restore_input_focus));
       break;
 
       // <SPACE>, <RETURN> (activate selected menu-item)
@@ -337,12 +394,29 @@ void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
       auto* us = UScreen::GetDefault();
       int ql_monitor = us->GetMonitorAtPosition(_anchorX, _anchorY);
       auto const& ql_monitor_geo = us->GetMonitorGeometry(ql_monitor);
-      int offscreen_size = GetBaseY() + GetBaseHeight() - (ql_monitor_geo.y + ql_monitor_geo.height);
+      auto launcher_position = Settings::Instance().launcher_position();
 
-      if (offscreen_size > 0)
-        _top_size = offscreen_size + TOP_SIZE;
+      if (launcher_position == LauncherPosition::LEFT)
+      {
+        int offscreen_size = GetBaseY() + GetBaseHeight() - (ql_monitor_geo.y + ql_monitor_geo.height);
+        if (offscreen_size > 0)
+          _top_size = offscreen_size + TOP_SIZE;
+        else
+          _top_size = TOP_SIZE;
+      }
       else
-        _top_size = TOP_SIZE;
+      {
+        int offscreen_size_left = ql_monitor_geo.x - (_anchorX - GetBaseWidth() / 2);
+        int offscreen_size_right = _anchorX + GetBaseWidth()/2 - (ql_monitor_geo.x + ql_monitor_geo.width);
+        int half_size = (GetBaseWidth() / 2) - _padding.CP(cv_) - CORNER_RADIUS.CP(cv_) - (ANCHOR_HEIGHT.CP(cv_) / 2);
+
+        if (offscreen_size_left > 0)
+          _top_size = half_size - offscreen_size_left;
+        else if (offscreen_size_right > 0)
+          _top_size = half_size + offscreen_size_right;
+        else
+          _top_size = half_size;
+      }
 
       SetXY(CalculateX(), CalculateY());
     }
@@ -354,16 +428,17 @@ void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
   }
 }
 
-void QuicklistView::ShowQuicklistWithTipAt(int x, int y)
+void QuicklistView::ShowQuicklistWithTipAt(int x, int y, bool restore_input_focus)
 {
   SetQuicklistPosition(x, y);
-  Show();
+  Show(restore_input_focus);
 }
 
-void QuicklistView::Show()
+void QuicklistView::Show(bool restore_input_focus)
 {
   if (!IsVisible())
   {
+    _restore_input_focus = restore_input_focus;
     CairoBaseWindow::Show();
     GrabPointer();
     GrabKeyboard();
@@ -440,10 +515,14 @@ void QuicklistView::PreLayoutManagement()
     TotalItemHeight += text_extents.height;
   }
 
+  int rotated_anchor_height = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::BOTTOM)
+    rotated_anchor_height = ANCHOR_WIDTH;
+
   if (TotalItemHeight < ANCHOR_HEIGHT.CP(cv_))
   {
-    int b = (ANCHOR_HEIGHT.CP(cv_) - TotalItemHeight) / 2 + _padding.CP(cv_) + CORNER_RADIUS.CP(cv_);
-    int t = b + OFFSET_CORRECTION.CP(cv_);
+    int b = (ANCHOR_HEIGHT.CP(cv_) - TotalItemHeight) / 2 + _padding.CP(cv_) + CORNER_RADIUS.CP(cv_) + rotated_anchor_height;
+    int t = b + OFFSET_CORRECTION.CP(cv_) - rotated_anchor_height;
 
     _top_space->SetMinimumHeight(t);
     _top_space->SetMaximumHeight(t);
@@ -453,8 +532,8 @@ void QuicklistView::PreLayoutManagement()
   }
   else
   {
-    int b = _padding.CP(cv_) + CORNER_RADIUS.CP(cv_);
-    int t = b + OFFSET_CORRECTION.CP(cv_);
+    int b = _padding.CP(cv_) + CORNER_RADIUS.CP(cv_) + rotated_anchor_height;
+    int t = b + OFFSET_CORRECTION.CP(cv_) - rotated_anchor_height;
 
     _top_space->SetMinimumHeight(t);
     _top_space->SetMaximumHeight(t);
@@ -474,7 +553,10 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
 
   UpdateTexture();
 
-  int x = RawPixel(_padding + ANCHOR_WIDTH + CORNER_RADIUS + OFFSET_CORRECTION).CP(cv_);
+  int width = 0;
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+    width = ANCHOR_WIDTH;
+  int x = RawPixel(_padding + width + CORNER_RADIUS + OFFSET_CORRECTION).CP(cv_);
   int y = _top_space->GetMinimumHeight();
 
   for (auto const& item : _item_list)
@@ -649,6 +731,18 @@ void QuicklistView::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long bu
 void QuicklistView::RecvMouseDownOutsideOfQuicklist(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   Hide();
+}
+
+nux::Area* QuicklistView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+  auto launcher_position = Settings::Instance().launcher_position();
+  if ((launcher_position == LauncherPosition::LEFT && (mouse_position.x > _anchorX)) ||
+      (launcher_position == LauncherPosition::BOTTOM && (mouse_position.y < _anchorY)))
+  {
+    return (CairoBaseWindow::FindAreaUnderMouse(mouse_position, event_type));
+  }
+
+  return nullptr;
 }
 
 void QuicklistView::RemoveAllMenuItem()
@@ -852,109 +946,164 @@ void ql_compute_full_mask_path(cairo_t* cr,
                                gfloat   radius,
                                guint    pad)
 {
-  //     0  1        2  3
-  //     +--+--------+--+
-  //     |              |
-  //     + 14           + 4
-  //     |              |
-  //     |              |
-  //     |              |
-  //     + 13           |
-  //    /               |
-  //   /                |
-  //  + 12              |
-  //   \                |
-  //    \               |
-  //  11 +              |
-  //     |              |
-  //     |              |
-  //     |              |
-  //  10 +              + 5
-  //     |              |
-  //     +--+--------+--+ 6
-  //     9  8        7
+  //  On the right of the icon:   On the top of the icon:
+  //     0  1        2  3            0  1           2  3
+  //     +--+--------+--+            +--+-----------+--+
+  //     |              |            |                 |
+  //     + 14           + 4       14 +                 + 4
+  //     |              |            |                 |
+  //     |              |            |                 |
+  //     |              |            |                 |
+  //     + 13           |            |                 |
+  //    /               |            |                 |
+  //   /                |            |                 |
+  //  + 12              |            |                 |
+  //   \                |            |                 |
+  //    \               |            |                 |
+  //  11 +              |            |                 |
+  //     |              |         13 +                 + 5
+  //     |              |            |     10    8     |
+  //     |              |         12 +--+--+     +--+--+ 6
+  //  10 +              + 5             11  \   /   7
+  //     |              |                    \ /
+  //     +--+--------+--+ 6                   +
+  //     9  8        7                        9
 
 
   gfloat padding  = pad;
   int ZEROPOINT5 = 0.0f;
+  auto launcher_position = Settings::Instance().launcher_position();
 
-  gfloat HeightToAnchor = ((gfloat) height - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
+  //gint dynamic_size = height - 2*radius - 2*padding - anchor_height;
+  //gint upper_dynamic_size = upper_size;
+  //gint lower_dynamic_size = dynamic_size - upper_dynamic_size;
+
+  int size = 0;
+  if (launcher_position == LauncherPosition::LEFT)
+    size = height;
+  else
+    size = width;
+
+  gfloat HeightToAnchor = ((gfloat) size - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
   if (HeightToAnchor < 0.0f)
   {
     g_warning("Anchor-height and corner-radius a higher than whole texture!");
     return;
   }
 
-  //gint dynamic_size = height - 2*radius - 2*padding - anchor_height;
-  //gint upper_dynamic_size = upper_size;
-  //gint lower_dynamic_size = dynamic_size - upper_dynamic_size;
-
   if (upper_size >= 0)
   {
-    if (upper_size > height - 2.0f * radius - anchor_height - 2 * padding)
+    if (upper_size > size - 2.0f * radius - anchor_height - 2 * padding)
     {
       //g_warning ("[_compute_full_mask_path] incorrect upper_size value");
       HeightToAnchor = 0;
     }
     else
     {
-      HeightToAnchor = height - 2.0f * radius - anchor_height - 2 * padding - upper_size;
+      HeightToAnchor = size - 2.0f * radius - anchor_height - 2 * padding - upper_size;
     }
   }
   else
   {
-    HeightToAnchor = (height - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
+    if (launcher_position == LauncherPosition::LEFT)
+      HeightToAnchor = (size - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
+    else
+      HeightToAnchor = size - 2.0f * radius - anchor_height - 2 * padding;
   }
 
   cairo_translate(cr, -0.5f, -0.5f);
 
   // create path
-  cairo_move_to(cr, padding + anchor_width + radius + ZEROPOINT5, padding + ZEROPOINT5);  // Point 1
-  cairo_line_to(cr, width - padding - radius, padding + ZEROPOINT5);    // Point 2
-  cairo_arc(cr,
-            width  - padding - radius + ZEROPOINT5,
-            padding + radius + ZEROPOINT5,
-            radius,
-            -90.0f * G_PI / 180.0f,
-            0.0f * G_PI / 180.0f);   // Point 4
-  cairo_line_to(cr,
-                (gdouble) width - padding + ZEROPOINT5,
-                (gdouble) height - radius - padding + ZEROPOINT5); // Point 5
-  cairo_arc(cr,
-            (gdouble) width - padding - radius + ZEROPOINT5,
-            (gdouble) height - padding - radius + ZEROPOINT5,
-            radius,
-            0.0f * G_PI / 180.0f,
-            90.0f * G_PI / 180.0f);  // Point 7
-  cairo_line_to(cr,
-                anchor_width + padding + radius + ZEROPOINT5,
-                (gdouble) height - padding + ZEROPOINT5); // Point 8
-
-  cairo_arc(cr,
-            anchor_width + padding + radius + ZEROPOINT5,
-            (gdouble) height - padding - radius,
-            radius,
-            90.0f * G_PI / 180.0f,
-            180.0f * G_PI / 180.0f); // Point 10
-
-  cairo_line_to(cr,
-                padding + anchor_width + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor + ZEROPOINT5);   // Point 11
-  cairo_line_to(cr,
-                padding + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor - anchor_height / 2.0f + ZEROPOINT5); // Point 12
-  cairo_line_to(cr,
-                padding + anchor_width + ZEROPOINT5,
-                (gdouble) height - padding - radius - HeightToAnchor - anchor_height + ZEROPOINT5);  // Point 13
-
-  cairo_line_to(cr, padding + anchor_width + ZEROPOINT5, padding + radius  + ZEROPOINT5);   // Point 14
-  cairo_arc(cr,
-            padding + anchor_width + radius + ZEROPOINT5,
-            padding + radius + ZEROPOINT5,
-            radius,
-            180.0f * G_PI / 180.0f,
-            270.0f * G_PI / 180.0f);
-
+  if (launcher_position == LauncherPosition::LEFT)
+  {
+    cairo_move_to(cr, padding + anchor_width + radius + ZEROPOINT5, padding + ZEROPOINT5);  // Point 1
+    cairo_line_to(cr, width - padding - radius, padding + ZEROPOINT5);    // Point 2
+    cairo_arc(cr,
+              width  - padding - radius + ZEROPOINT5,
+              padding + radius + ZEROPOINT5,
+              radius,
+              -90.0f * G_PI / 180.0f,
+              0.0f * G_PI / 180.0f);   // Point 4
+    cairo_line_to(cr,
+                  (gdouble) width - padding + ZEROPOINT5,
+                  (gdouble) height - radius - padding + ZEROPOINT5); // Point 5
+    cairo_arc(cr,
+              (gdouble) width - padding - radius + ZEROPOINT5,
+              (gdouble) height - padding - radius + ZEROPOINT5,
+              radius,
+              0.0f * G_PI / 180.0f,
+              90.0f * G_PI / 180.0f);  // Point 7
+    cairo_line_to(cr,
+                  anchor_width + padding + radius + ZEROPOINT5,
+                  (gdouble) height - padding + ZEROPOINT5); // Point 8
+    cairo_arc(cr,
+              anchor_width + padding + radius + ZEROPOINT5,
+              (gdouble) height - padding - radius,
+              radius,
+              90.0f * G_PI / 180.0f,
+              180.0f * G_PI / 180.0f); // Point 10
+    cairo_line_to(cr,
+                  padding + anchor_width + ZEROPOINT5,
+                  (gdouble) height - padding - radius - HeightToAnchor + ZEROPOINT5);   // Point 11
+    cairo_line_to(cr,
+                  padding + ZEROPOINT5,
+                  (gdouble) height - padding - radius - HeightToAnchor - anchor_height / 2.0f + ZEROPOINT5); // Point 12
+    cairo_line_to(cr,
+                  padding + anchor_width + ZEROPOINT5,
+                  (gdouble) height - padding - radius - HeightToAnchor - anchor_height + ZEROPOINT5);  // Point 13
+    cairo_line_to(cr, padding + anchor_width + ZEROPOINT5, padding + radius  + ZEROPOINT5);   // Point 14
+    cairo_arc(cr,
+              padding + anchor_width + radius + ZEROPOINT5,
+              padding + radius + ZEROPOINT5,
+              radius,
+              180.0f * G_PI / 180.0f,
+              270.0f * G_PI / 180.0f);
+  }
+  else
+  {
+    cairo_move_to(cr, padding + radius + ZEROPOINT5, padding + ZEROPOINT5);  // Point 1
+    cairo_line_to(cr, width - padding - radius, padding + ZEROPOINT5);    // Point 2
+    cairo_arc(cr,
+              width  - padding - radius + ZEROPOINT5,
+              padding + radius + ZEROPOINT5,
+              radius,
+              -90.0f * G_PI / 180.0f,
+              0.0f * G_PI / 180.0f);   // Point 4
+    cairo_line_to(cr,
+                  (gdouble) width - padding + ZEROPOINT5,
+                  (gdouble) height - radius - anchor_width - padding + ZEROPOINT5); // Point 5
+    cairo_arc(cr,
+              (gdouble) width - padding - radius + ZEROPOINT5,
+              (gdouble) height - padding - anchor_width - radius + ZEROPOINT5,
+              radius,
+              0.0f * G_PI / 180.0f,
+              90.0f * G_PI / 180.0f);  // Point 7
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - HeightToAnchor + ZEROPOINT5,
+                  height - padding - anchor_width + ZEROPOINT5);   // Point 8
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - HeightToAnchor - anchor_height / 2.0f + ZEROPOINT5,
+                  height - padding + ZEROPOINT5); // Point 9
+    cairo_line_to(cr,
+                  (gdouble) width - padding - radius - HeightToAnchor - anchor_height + ZEROPOINT5,
+                  height - padding - anchor_width + ZEROPOINT5);  // Point 10
+    cairo_arc(cr,
+              padding + radius + ZEROPOINT5,
+              (gdouble) height - padding - anchor_width - radius,
+              radius,
+              90.0f * G_PI / 180.0f,
+              180.0f * G_PI / 180.0f); // Point 11
+    cairo_line_to(cr,
+                  padding + ZEROPOINT5,
+                  (gdouble) height - padding -anchor_width - radius + ZEROPOINT5); // Point 13
+    cairo_line_to(cr, padding + ZEROPOINT5, padding + radius  + ZEROPOINT5);   // Point 14
+    cairo_arc(cr,
+              padding + radius + ZEROPOINT5,
+              padding + radius + ZEROPOINT5,
+              radius,
+              180.0f * G_PI / 180.0f,
+              270.0f * G_PI / 180.0f);
+  }
   cairo_close_path(cr);
 }
 

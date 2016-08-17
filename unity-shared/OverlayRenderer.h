@@ -26,8 +26,14 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 
-namespace unity 
+namespace unity
 {
+
+enum class OverlayOwner
+{
+  Dash = 0,
+  Hud
+};
 
 class OverlayRendererImpl;
 class OverlayRenderer
@@ -39,6 +45,8 @@ public:
 
   nux::Property<int> x_offset;
   nux::Property<int> y_offset;
+  nux::Property<double> scale;
+  nux::Property<OverlayOwner> owner_type;
   
   OverlayRenderer();
   ~OverlayRenderer();

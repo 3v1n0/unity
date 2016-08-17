@@ -18,6 +18,7 @@ int main(int argc, char** argv)
   const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data:/usr/share";
   g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR.c_str(), TRUE);
   g_setenv("LC_ALL", "C", TRUE);
+  g_unsetenv("UPSTART_SESSION");
   Utils::init_gsettings_test_environment();
 
   gtk_init(&argc, &argv);

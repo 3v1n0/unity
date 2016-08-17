@@ -13,9 +13,6 @@ set(UNITY_PANEL_SERVICE_DEPS
     x11
     libido3-0.1>=13.0.0
     libupstart
-    libnih
-    libnih-dbus
-    dbus-1
 )
 
 pkg_check_modules(SERVICE_DEPS REQUIRED ${UNITY_PANEL_SERVICE_DEPS})
@@ -54,10 +51,10 @@ link_directories(${LIB_PATHS})
 
 add_executable(unity-panel-service ${PANEL_SOURCES})
 target_link_libraries(unity-panel-service ${LIBS})
-install(TARGETS unity-panel-service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/unity/)
+install(TARGETS unity-panel-service DESTINATION ${CMAKE_INSTALL_LIBDIR}/unity/)
 
 configure_file(unity-panel-service.conf.in ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.conf)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.conf DESTINATION ${CMAKE_INSTALL_PREFIX}/share/upstart/sessions)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/upstart/sessions)
 
 configure_file(unity-panel-service-lockscreen.conf.in ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service-lockscreen.conf)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service-lockscreen.conf DESTINATION ${CMAKE_INSTALL_PREFIX}/share/upstart/sessions)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service-lockscreen.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/upstart/sessions)

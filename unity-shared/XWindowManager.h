@@ -34,6 +34,7 @@ public:
   void UnGrabMousePointer(Time, int button, int x, int y);
 
   std::string GetWindowName(Window window_id) const;
+  bool IsOnscreenKeyboard(Window window_id) const;
   std::string GetStringProperty(Window window_id, Atom atom) const;
   void SetCardinalProperty(Window, Atom, std::vector<long> const&);
   std::vector<long> GetCardinalProperty(Window, Atom) const;

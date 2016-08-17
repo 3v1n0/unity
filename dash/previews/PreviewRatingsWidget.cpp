@@ -29,6 +29,7 @@
 #include "unity-shared/RatingsButton.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/DashStyle.h"
 #include "PreviewRatingsWidget.h"
 
 namespace unity
@@ -38,35 +39,44 @@ namespace dash
 namespace previews
 {
 
+namespace
+{
+  const RawPixel CHILDREN_SPACE = 3_em;
+  const int RATINGS_SIZE = 18;
+  const int RATINGS_GAP = 2;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewRatingsWidget);
 
 PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
 {
-  nux::VLayout* layout = new nux::VLayout();
-  layout->SetSpaceBetweenChildren(3);
+  layout_ = new nux::VLayout();
+  layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
 
   previews::Style& style = previews::Style::Instance();
 
   auto on_mouse_down = [this](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
 
-  ratings_ = new RatingsButton(18,2);
+  ratings_ = new RatingsButton(RATINGS_SIZE, RATINGS_GAP);
   ratings_->SetEditable(false);
   ratings_->mouse_click.connect(on_mouse_down);
-  layout->AddView(ratings_);
-  
+  ratings_->scale = scale();
+  layout_->AddView(ratings_);
+
   reviews_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   reviews_->SetFont(style.user_rating_font());
+  reviews_->SetScale(scale);
   reviews_->mouse_click.connect(on_mouse_down);
-  layout->AddView(reviews_);
+  layout_->AddView(reviews_);
 
   mouse_click.connect(on_mouse_down);
 
-  SetLayout(layout);
-}
+  SetLayout(layout_);
 
-PreviewRatingsWidget::~PreviewRatingsWidget()
-{
+  UpdateScale(scale);
+  scale.changed.connect(sigc::mem_fun(this, &PreviewRatingsWidget::UpdateScale));
 }
 
 void PreviewRatingsWidget::SetRating(float rating)
@@ -112,6 +122,17 @@ void PreviewRatingsWidget::AddProperties(debug::IntrospectionData& introspection
 {
   introspection
     .add(GetAbsoluteGeometry());
+}
+
+void PreviewRatingsWidget::UpdateScale(double scale)
+{
+  reviews_->SetScale(scale);
+  ratings_->scale = scale;
+  preview_container_.scale = scale;
+  layout_->SetSpaceBetweenChildren(CHILDREN_SPACE.CP(scale));
+
+  QueueRelayout();
+  QueueDraw();
 }
 
 } // namespace previews

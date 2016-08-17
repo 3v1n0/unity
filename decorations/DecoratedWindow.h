@@ -21,6 +21,7 @@
 #define UNITY_DECORATED_WINDOW
 
 #include "Introspectable.h"
+#include <NuxCore/Property.h>
 #include <memory>
 
 class CompRegion;
@@ -45,12 +46,14 @@ public:
   nux::Property<bool> scaled;
   nux::ROProperty<double> dpi_scale;
 
+  CompWindow* GetCompWindow();
   void Update();
   void Undecorate();
   void UpdateDecorationPosition();
   void UpdateDecorationPositionDelayed();
   void UpdateFrameRegion(CompRegion&);
   void UpdateOutputExtents(compiz::window::extents::Extents&);
+  void UpdateWindowState(unsigned old_state);
   void Paint(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
   void Draw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 

@@ -26,10 +26,11 @@
 
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
+enum class FormFactor;
+
 class WindowButtons : public nux::HLayout, public debug::Introspectable
 {
   // These are the [close][minimize][restore] buttons on the panel when there

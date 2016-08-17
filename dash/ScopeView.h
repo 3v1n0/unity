@@ -35,8 +35,9 @@
 #include "unity-shared/Introspectable.h"
 #include "PlacesGroup.h"
 #include "ResultViewGrid.h"
+#include "unity-shared/NuxObjectPtrHash.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/PlacesVScrollBar.h"
+#include "unity-shared/PlacesOverlayVScrollBar.h"
 
 namespace unity
 {
@@ -49,7 +50,7 @@ class ScopeView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(ScopeView, nux::View);
   typedef std::vector<PlacesGroup::Ptr> CategoryGroups;
-  typedef std::map<PlacesGroup::Ptr, unsigned int> ResultCounts;
+  typedef std::unordered_map<PlacesGroup::Ptr, unsigned int> ResultCounts;
 
 public:
   ScopeView(Scope::Ptr const& scope, nux::Area* show_filters);
@@ -62,6 +63,7 @@ public:
   int GetNumRows();
   void AboutToShow();
   void JumpToTop();
+  void PerformPageNavigation(ScrollDir dir);
 
   virtual void ActivateFirst();
 
@@ -140,8 +142,6 @@ private:
   virtual void AddProperties(debug::IntrospectionData&);
 
   void OnCompositorKeyNavFocusChanged(nux::Area*, bool, nux::KeyNavDirection);
-
-  std::string get_search_string() const;
 
   CategoryGroups category_views_;
 

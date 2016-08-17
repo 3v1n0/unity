@@ -1,4 +1,5 @@
 #include "test_service_panel.h"
+#include "panel-service-private.h"
 
 namespace unity
 {
@@ -9,11 +10,15 @@ namespace
 static const char * panel_interface =
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<node name=\"/\">\n"
-"    <interface name=\"com.canonical.Unity.Panel.Service\">\n"
+"    <interface name=\"" UPS_IFACE "\">\n"
 "\n"
 "<!-- Begin of real methods/signals -->\n"
 "    <method name='Sync'>"
-"      <arg type='a(ssssbbusbbi)' name='state' direction='out'/>"
+"      <arg type='" ENTRY_ARRAY_SIGNATURE "' name='state' direction='out'/>"
+"    </method>"
+"\n"
+"    <method name='GetIconPaths'>"
+"      <arg type='as' name='paths' direction='out'/>"
 "    </method>"
 "\n"
 "    <signal name='ReSync'>"
@@ -32,12 +37,13 @@ static const char * panel_interface =
 "</node>\n"
 ;
 
-void add_entry_id(GVariantBuilder *b)
+void add_entry_id(GVariantBuilder *b, gint priority)
 {
-  g_variant_builder_add (b, "(ssssbbusbbi)",
+  g_variant_builder_add (b, ENTRY_SIGNATURE,
                          "test_indicator_id",
                          "test_entry_id",
                          "test_entry_name_hint",
+                         0, /* parent window */
                          "test_entry_label",
                          TRUE, /* label sensitive */
                          TRUE, /* label visible */
@@ -45,15 +51,16 @@ void add_entry_id(GVariantBuilder *b)
                          "", /* image_data */
                          TRUE, /* image sensitive */
                          TRUE, /* image visible */
-                         1 /* priority  */);
+                         priority);
 }
 
-void add_entry_id_2(GVariantBuilder *b)
+void add_entry_id_2(GVariantBuilder *b, gint priority)
 {
-  g_variant_builder_add (b, "(ssssbbusbbi)",
+  g_variant_builder_add (b, ENTRY_SIGNATURE,
                          "test_indicator_id",
                          "test_entry_id2",
                          "test_entry_name_hint2",
+                         12345, /* parent window */
                          "test_entry_label2",
                          TRUE, /* label sensitive */
                          TRUE, /* label visible */
@@ -61,7 +68,7 @@ void add_entry_id_2(GVariantBuilder *b)
                          "", /* image_data */
                          TRUE, /* image sensitive */
                          TRUE, /* image visible */
-                         1 /* priority  */);
+                         priority);
 }
 }
 
@@ -73,7 +80,7 @@ Panel::Panel()
   auto object = glib::DBusObjectBuilder::GetObjectsForIntrospection(panel_interface).front();
   object->SetMethodsCallsHandler(sigc::mem_fun(this, &Panel::OnMethodCall));
 
-  server_.AddObject(object, "/com/canonical/Unity/Panel/Service");
+  server_.AddObject(object, UPS_PATH);
 }
 
 GVariant* Panel::OnMethodCall(std::string const& method, GVariant *parameters)
@@ -82,18 +89,18 @@ GVariant* Panel::OnMethodCall(std::string const& method, GVariant *parameters)
   {
     GVariantBuilder b;
 
-    g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
-    g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
+    g_variant_builder_init (&b, G_VARIANT_TYPE ("(" ENTRY_ARRAY_SIGNATURE ")"));
+    g_variant_builder_open (&b, G_VARIANT_TYPE (ENTRY_ARRAY_SIGNATURE));
 
     if (sync_return_mode_ == 0)
     {
-      add_entry_id(&b);
-      add_entry_id_2(&b);
+      add_entry_id(&b, 1);
+      add_entry_id_2(&b, 2);
     }
     else if (sync_return_mode_ == 1)
     {
-      add_entry_id_2(&b);
-      add_entry_id(&b);
+      add_entry_id_2(&b, 1);
+      add_entry_id(&b, 2);
     }
 
     if (sync_return_mode_ == 1)
@@ -114,6 +121,10 @@ GVariant* Panel::OnMethodCall(std::string const& method, GVariant *parameters)
   else if (method == "TriggerResync1Sent")
   {
     return g_variant_new("(b)", trigger_resync1_sent_ ? TRUE : FALSE);
+  }
+  else if (method == "GetIconPaths")
+  {
+    return g_variant_new("(as)", nullptr);
   }
 
   return nullptr;

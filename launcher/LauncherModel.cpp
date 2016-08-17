@@ -43,19 +43,21 @@ void LauncherModel::AddProperties(debug::IntrospectionData& introspection)
   .add("selection", selection_);
 }
 
-unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectableChildren()
+debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectableChildren()
 {
   int order = 0;
-  introspection_results_.clear();
+  std::list<unity::debug::Introspectable*> children;
 
-  for (auto icon : _inner)
+  for (auto const& icon : _inner)
+  {
     if (!icon->removed)
     {
       icon->SetOrder(++order);
-      introspection_results_.push_back(icon.GetPointer());
+      children.push_back(icon.GetPointer());
     }
+  }
 
-  return introspection_results_;
+  return children;
 }
 
 bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr const& icon) const

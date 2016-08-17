@@ -56,14 +56,6 @@ struct _PanelService
 struct _PanelServiceClass
 {
   GObjectClass   parent_class;
-
-  /*< private >*/
-  void (*_view_padding1) (void);
-  void (*_view_padding2) (void);
-  void (*_view_padding3) (void);
-  void (*_view_padding4) (void);
-  void (*_view_padding5) (void);
-  void (*_view_padding6) (void);
 };
 
 GType             panel_service_get_type      (void) G_GNUC_CONST;
@@ -121,6 +113,8 @@ void              panel_service_secondary_activate_entry (PanelService *self,
 void              panel_service_scroll_entry   (PanelService *self,
                                                 const gchar  *entry_id,
                                                 gint32       delta);
+
+void              panel_service_close_active_entry (PanelService *self);
 
 G_END_DECLS
 

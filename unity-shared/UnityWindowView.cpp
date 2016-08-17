@@ -20,6 +20,7 @@
 
 #include "UnityWindowView.h"
 #include <Nux/VLayout.h>
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
@@ -33,7 +34,7 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   , style(UnityWindowStyle::Get())
   , closable(false)
   , monitor(0)
-  , cv_(Settings::Instance().em())
+  , scale(Settings::Instance().em()->DPIScale())
   , internal_layout_(nullptr)
   , bg_helper_(this)
 {
@@ -47,12 +48,21 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
     return false;
   });
 
-  monitor.changed.connect([this] (int new_monitor){
-    cv_ = Settings::Instance().em(new_monitor);
-  });
-
   live_background = false;
 
+  scale.changed.connect([this] (double scale) {
+    closable.changed.emit(closable());
+
+    if (internal_layout_)
+    {
+      int offset = style()->GetInternalOffset().CP(scale);
+      view_layout_->SetPadding(offset, offset);
+    }
+  });
+
+  theme::Settings::Get()->theme.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnThemeChanged));
+  Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged));
+  monitor.changed.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::OnDPIChanged)));
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
   background_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
 }
@@ -64,6 +74,17 @@ UnityWindowView::~UnityWindowView()
 
   if (bounding_area_)
     bounding_area_->UnParentObject();
+}
+
+void UnityWindowView::OnDPIChanged()
+{
+  scale = Settings::Instance().em(monitor())->DPIScale();
+}
+
+void UnityWindowView::OnThemeChanged(std::string const&)
+{
+  closable.changed.emit(closable());
+  QueueDraw();
 }
 
 void UnityWindowView::SetBackgroundHelperGeometryGetter(BackgroundEffectHelper::GeometryGetterFunc const& func)
@@ -124,13 +145,17 @@ void UnityWindowView::OnClosableChanged(bool closable)
 {
   if (!closable)
   {
-    close_button_ = nullptr;
+    if (close_button_)
+    {
+      close_button_->UnParentObject();
+      close_button_ = nullptr;
+    }
+
     return;
   }
 
-  auto const& texture = style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON);
-  int padding_raw = style()->GetCloseButtonPadding();
-  int padding = cv_->CP(padding_raw);
+  auto const& texture = style()->GetTexture(scale, WindowTextureType::CLOSE_ICON);
+  int padding = style()->GetCloseButtonPadding().CP(scale);
 
   close_button_ = new IconTexture(texture);
   close_button_->SetBaseXY(padding, padding);
@@ -138,29 +163,29 @@ void UnityWindowView::OnClosableChanged(bool closable)
 
   close_button_->mouse_enter.connect([this](int, int, unsigned long, unsigned long) {
     if (close_button_->IsMouseOwner())
-      close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON_PRESSED));
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_PRESSED));
     else
-      close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
   });
 
   close_button_->mouse_leave.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON));
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
   });
 
   close_button_->mouse_down.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON_PRESSED));
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_PRESSED));
   });
 
   close_button_->mouse_up.connect([this](int, int, unsigned long, unsigned long) {
     bool inside = close_button_->IsMouseInside();
     if (inside)
-      close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
     else
-      close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON));
+      close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
   });
 
   close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
-    close_button_->SetTexture(style()->GetTexture(cv_->DPIScale(), WindowTextureType::CLOSE_ICON));
+    close_button_->SetTexture(style()->GetTexture(scale, WindowTextureType::CLOSE_ICON));
     request_close.emit();
   });
 
@@ -171,8 +196,7 @@ bool UnityWindowView::SetLayout(nux::Layout* layout)
 {
   if (layout && layout->IsLayout())
   {
-    int offset_raw = style()->GetInternalOffset();
-    int offset = cv_->CP(offset_raw);
+    int offset = style()->GetInternalOffset().CP(scale);
 
     // We wrap the internal layout adding some padding, so that inherited classes
     // can ignore the offsets we define here.
@@ -197,8 +221,7 @@ nux::Layout* UnityWindowView::GetLayout()
 
 nux::Geometry UnityWindowView::GetInternalBackground()
 {
-  int offset_raw = style()->GetInternalOffset();
-  int offset = cv_->CP(offset_raw);
+  int offset = style()->GetInternalOffset().CP(scale);
 
   return GetBackgroundGeometry().GetExpand(-offset, -offset);
 }
@@ -264,7 +287,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       auto temp_background_color = background_color();
       auto blend_mode = nux::LAYER_BLEND_MODE_OVERLAY;
 
-      if (Settings::Instance().GetLowGfxMode() || BackgroundEffectHelper::blur_type == BLUR_NONE)
+      if (Settings::Instance().low_gfx() || BackgroundEffectHelper::blur_type == BLUR_NONE)
       {
         temp_background_color.alpha = 1.0f;
         blend_mode = nux::LAYER_BLEND_MODE_NORMAL;
@@ -349,11 +372,8 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
 {
-  int border_raw = style()->GetBorderSize();
-  int border = cv_->CP(border_raw);
-  float scale = cv_->DPIScale();
-
-  auto background_corner_textrue = style()->GetTexture(scale, WindowTextureType::BACKGROUND_CORNER)->GetDeviceTexture();
+  int border = style()->GetBorderSize().CP(scale);
+  auto background_corner_textrue = style()->GetTexture(scale, WindowTextureType::BORDER_CORNER)->GetDeviceTexture();
 
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -399,11 +419,9 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + geo.height - border,
                        border, border, background_corner_textrue, texxform, nux::color::White);
 
-  auto background_top = style()->GetTexture(scale, WindowTextureType::BACKGROUND_TOP);
-  int top_width_raw  = background_top->GetWidth();
-  int top_height_raw = background_top->GetHeight();
-  int top_width  = cv_->CP(top_width_raw);
-  int top_height = cv_->CP(top_height_raw);
+  auto background_top = style()->GetTexture(scale, WindowTextureType::BORDER_TOP);
+  int top_width  = background_top->GetWidth();
+  int top_height = background_top->GetHeight();
 
   // Draw TOP BORDER
   texxform.u0 = 0;
@@ -423,11 +441,9 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_v_coord = true;
   GfxContext.QRP_1Tex (geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, background_top->GetDeviceTexture(), texxform, nux::color::White);
 
-  auto background_left = style()->GetTexture(scale, WindowTextureType::BACKGROUND_LEFT);
-  int left_width_raw  = background_left->GetWidth();
-  int left_height_raw = background_left->GetHeight();
-  int left_width  = cv_->CP(left_width_raw);
-  int left_height = cv_->CP(left_height_raw);
+  auto background_left = style()->GetTexture(scale, WindowTextureType::BORDER_LEFT);
+  int left_width  = background_left->GetWidth();
+  int left_height = background_left->GetHeight();
 
   // Draw LEFT BORDER
   texxform.u0 = 0;

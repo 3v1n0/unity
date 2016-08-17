@@ -37,7 +37,6 @@ public:
   virtual nux::Color BackgroundColor() const;
   virtual nux::BaseTexture* TextureForSize(int size);
   virtual nux::Color GlowColor();
-  virtual nux::BaseTexture* Emblem();
   void ColorForIcon(GdkPixbuf* pixbuf);
   
 private:

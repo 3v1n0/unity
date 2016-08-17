@@ -24,10 +24,13 @@
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSource.h>
 
+#include "LockScreenBaseShield.h"
 #include "LockScreenShieldFactory.h"
 #include "LockScreenAcceleratorController.h"
+#include "SuspendInhibitorManager.h"
 #include "ScreenSaverDBusManager.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/KeyGrabber.h"
 #include "unity-shared/UpstartWrapper.h"
 
 namespace unity
@@ -35,10 +38,14 @@ namespace unity
 namespace lockscreen
 {
 
+class AbstractUserPromptView;
+
 class Controller : public sigc::trackable
 {
 public:
-  Controller(DBusManager::Ptr const&, session::Manager::Ptr const&,
+  typedef std::shared_ptr<Controller> Ptr;
+
+  Controller(DBusManager::Ptr const&, session::Manager::Ptr const&, key::Grabber::Ptr const&,
              UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
@@ -61,7 +68,9 @@ private:
   void BlankWindowGrabEnable(bool grab);
   void SimulateActivity();
   void ResetPostLockScreenSaver();
+  void SetupPrimaryShieldConnections();
   void ActivatePanel();
+  void SyncInhibitor();
 
   void OnLockRequested(bool prompt);
   void OnUnlockRequested();
@@ -69,16 +78,19 @@ private:
   void OnScreenSaverActivationRequest(bool activate);
   void OnPrimaryShieldMotion(int x, int y);
 
-  std::vector<nux::ObjectPtr<AbstractShield>> shields_;
-  nux::ObjectWeakPtr<AbstractShield> primary_shield_;
+  std::vector<nux::ObjectPtr<BaseShield>> shields_;
+  nux::ObjectWeakPtr<BaseShield> primary_shield_;
+  nux::ObjectWeakPtr<AbstractUserPromptView> prompt_view_;
   nux::ObjectPtr<nux::BaseWindow> blank_window_;
 
   DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
+  key::Grabber::Ptr key_grabber_;
   indicator::Indicators::Ptr indicators_;
   AcceleratorController::Ptr accelerator_controller_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
+  SuspendInhibitorManager::Ptr suspend_inhibitor_manager_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
@@ -88,10 +100,8 @@ private:
   BlurType old_blur_type_;
 
   connection::Wrapper uscreen_connection_;
-  connection::Wrapper suspend_connection_;
   connection::Wrapper hidden_window_connection_;
-  connection::Wrapper motion_connection_;
-  connection::Wrapper key_connection_;
+  connection::Manager primary_shield_connections_;
 
   glib::Source::UniquePtr lockscreen_timeout_;
   glib::Source::UniquePtr lockscreen_delay_timeout_;

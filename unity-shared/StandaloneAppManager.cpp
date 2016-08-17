@@ -31,9 +31,71 @@
 using namespace std;
 using namespace unity;
 
-DECLARE_LOGGER(logger, "unity.appmanager.test");
-
 GMainLoop *loop;
+
+std::ostream& operator<<(std::ostream &os, AppType at)
+{
+  switch (at)
+  {
+    case AppType::NORMAL:
+      return os << "NORMAL";
+    case AppType::WEBAPP:
+      return os << "WEBAPP";
+    case AppType::MOCK:
+      return os << "MOCK";
+    case AppType::UNKNOWN:
+      return os << "UNKNOWN";
+  }
+
+  return os;
+}
+
+std::ostream& operator<<(std::ostream &os, WindowType wt)
+{
+  switch (wt)
+  {
+    case WindowType::NORMAL:
+      return os << "NORMAL";
+    case WindowType::DESKTOP:
+      return os << "DESKTOP";
+    case WindowType::DOCK:
+      return os << "DOCK";
+    case WindowType::DIALOG:
+      return os << "DIALOG";
+    case WindowType::TOOLBAR:
+      return os << "TOOLBAR";
+    case WindowType::MENU:
+      return os << "MENU";
+    case WindowType::UTILITY:
+      return os << "UTILITY";
+    case WindowType::SPLASHSCREEN:
+      return os << "SPLASHSCREEN";
+    case WindowType::TAB:
+      return os << "TAB";
+    case WindowType::MOCK:
+      return os << "MOCK";
+    case WindowType::UNKNOWN:
+      return os << "UNKNOWN";
+  }
+
+  return os;
+}
+
+void connect_window_events(ApplicationWindowPtr const& win)
+{
+  win->title.changed.connect([win] (std::string const& t) {
+    std::cout << "Window "<< win->window_id()<< " title changed to "<< t << endl;
+  });
+  win->maximized.changed.connect([win] (bool m) {
+    std::cout << "Window "<< win->window_id()<< " maximized changed to "<< m << endl;
+  });
+  win->monitor.changed.connect([win] (int m) {
+    std::cout << "Window "<< win->window_id()<< " monitor changed to "<< m << endl;
+  });
+  win->active.changed.connect([win] (bool a) {
+    std::cout << "Window "<< win->window_id()<< " active changed to "<< a << endl;
+  });
+}
 
 void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
 {
@@ -57,6 +119,7 @@ void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
       std::cout << "  Window: " << win->title()
                 << ", window_id: " << win->window_id()
                 << ", monitor: " << win->monitor()
+                << ", maximized: " << win->maximized()
                 << ", type: " << win->type()
                 << endl;
     }
@@ -67,6 +130,8 @@ void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
   }
 }
 
+std::vector<std::string> names;
+
 void connect_events(ApplicationPtr const& app)
 {
   if (app->seen())
@@ -74,44 +139,49 @@ void connect_events(ApplicationPtr const& app)
     cout << "Already seen " << app->title() << ", skipping event connection.\n";
     return;
   }
-  std::string app_name = app->title();
-  app->title.changed.connect([&app_name](std::string const& value) {
-    cout << app_name << " changed name to: " << value << endl;
-    app_name = value;
+
+  auto idx = names.empty() ? 0 : names.size()-1;
+  names.push_back(app->title());
+  app->title.changed.connect([idx](std::string const& value) {
+    cout << names[idx] << " changed name to: " << value << endl;
+    names[idx] = value;
   });
-  app->icon.changed.connect([&app_name](std::string const& value) {
-    cout << app_name << " icon changed: " << value << endl;
+  app->icon.changed.connect([idx](std::string const& value) {
+    cout << names[idx] << " icon changed: " << value << endl;
   });
-  app->desktop_file.changed.connect([&app_name](std::string const& value) {
-    cout << app_name << " desktop file changed: " << value << endl;
+  app->desktop_file.changed.connect([idx](std::string const& value) {
+    cout << names[idx] << " desktop file changed: " << value << endl;
   });
-  app->visible.changed.connect([&app_name](bool value) {
-    cout << app_name << " visibility changed: " << (value ? "yes" : "no") << endl;
+  app->visible.changed.connect([idx](bool value) {
+    cout << names[idx] << " visibility changed: " << (value ? "yes" : "no") << endl;
   });
-  app->running.changed.connect([&app_name](bool value) {
-    cout << app_name << " running changed: " << (value ? "yes" : "no") << endl;
+  app->running.changed.connect([idx](bool value) {
+    cout << names[idx] << " running changed: " << (value ? "yes" : "no") << endl;
   });
-  app->active.changed.connect([&app_name](bool value) {
-    cout << app_name << " active changed: " << (value ? "yes" : "no") << endl;
+  app->active.changed.connect([idx](bool value) {
+    cout << names[idx] << " active changed: " << (value ? "yes" : "no") << endl;
   });
-  app->urgent.changed.connect([&app_name](bool value) {
-    cout << app_name << " urgent changed: " << (value ? "yes" : "no") << endl;
+  app->urgent.changed.connect([idx](bool value) {
+    cout << names[idx] << " urgent changed: " << (value ? "yes" : "no") << endl;
   });
-  app->closed.connect([&app_name]() {
-    cout << app_name << " closed." << endl;
+  app->closed.connect([idx]() {
+    cout << names[idx] << " closed." << endl;
   });
-  app->window_opened.connect([&app_name](ApplicationWindow const& window) {
-    cout << "** " << app_name << " window opened: " << window.title() << endl;
+  app->window_opened.connect([idx](ApplicationWindowPtr const& window) {
+    cout << "** " << names[idx] << " window opened: " << window->title() << endl;
+    connect_window_events(window);
   });
-  app->window_closed.connect([&app_name]() {
-    cout << "** " << app_name << " window closed" << endl;
+  app->window_closed.connect([idx](ApplicationWindowPtr const& window) {
+    cout << "** " << names[idx] << " window closed: " << window->title() << endl;
   });
-  app->window_moved.connect([&app_name](ApplicationWindow const& window) {
-    cout << "** " << app_name << " window moved: " << window.title() << endl;
+  app->window_moved.connect([idx](ApplicationWindowPtr const& window) {
+    cout << "** " << names[idx] << " window moved: " << window->title() << endl;
   });
   app->seen = true;
-}
 
+  for (auto win : app->GetWindows())
+    connect_window_events(win);
+}
 
 
 nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)

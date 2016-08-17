@@ -34,21 +34,17 @@
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/ImageSurface.h>
 #include <NuxGraphics/CairoGraphics.h>
-
 #include <Nux/PaintLayer.h>
-
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "CairoTexture.h"
 #include "JSONParser.h"
 #include "TextureCache.h"
+#include "ThemeSettings.h"
 #include "UnitySettings.h"
 #include "config.h"
 
-#define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
-
-typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+#define DASH_WIDGETS_FILE UNITYDATADIR"/themes/dash-widgets.json"
 
 namespace unity
 {
@@ -60,9 +56,6 @@ namespace
 Style* style_instance = nullptr;
 
 const int STATES = 5;
-
-const double BUTTON_CORNER_RADIUS = 7.0;
-
 
 // These cairo overrides may also be reused somewhere...
 void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
@@ -92,13 +85,24 @@ inline double _align(double val, bool odd=true)
   }
 }
 
-class LazyLoadTexture
+template <typename T>
+inline void get_actual_cairo_size(cairo_t* cr, T* width, T* height)
+{
+  double w_scale, h_scale;
+  auto* surface = cairo_get_target(cr);
+  cairo_surface_get_device_scale(surface, &w_scale, &h_scale);
+  *width = cairo_image_surface_get_width(surface) / w_scale;
+  *height = cairo_image_surface_get_height(surface) / h_scale;
+}
+
+class LazyLoadTexture : public sigc::trackable
 {
 public:
   LazyLoadTexture(std::string const& filename, int size = -1);
-  nux::BaseTexture* texture();
+  BaseTexturePtr const& texture();
 private:
   void LoadTexture();
+  void UnloadTexture();
 private:
   std::string filename_;
   int size_;
@@ -115,6 +119,7 @@ struct Style::Impl : sigc::trackable
 
   void Blur(cairo_t* cr, int size);
 
+  void LoadStyleFile();
   void SetDefaultValues();
 
   void GetTextExtents(int& width,
@@ -165,7 +170,14 @@ struct Style::Impl : sigc::trackable
 
   void Refresh();
   void UpdateFormFactor(FormFactor);
-  void OnFontChanged(GtkSettings* object, GParamSpec* pspec);
+
+  BaseTexturePtr LoadScaledTexture(std::string const& name, double scale)
+  {
+    int w, h;
+    auto const& path = theme::Settings::Get()->ThemedFilePath(name, {PKGDATADIR});
+    gdk_pixbuf_get_file_info(path.c_str(), &w, &h);
+    return TextureCache::GetDefault().FindTexture(name, RawPixel(w).CP(scale), RawPixel(h).CP(scale));
+  }
 
   // Members
   Style* owner_;
@@ -174,6 +186,7 @@ struct Style::Impl : sigc::trackable
 
   std::vector<nux::Color> button_label_border_color_;
   std::vector<double>     button_label_border_size_;
+  double                  button_label_border_radius_;
   double                  button_label_text_size_;
 
   std::vector<nux::Color> button_label_text_color_;
@@ -194,44 +207,24 @@ struct Style::Impl : sigc::trackable
   BlendMode             separator_overlay_mode_;
   int                   separator_blur_size_;
 
-  nux::Color            scrollbar_color_;
-  double                scrollbar_overlay_opacity_;
-  BlendMode             scrollbar_overlay_mode_;
-  int                   scrollbar_blur_size_;
   int                   scrollbar_size_;
+  int                   scrollbar_overlay_size_;
+  int                   scrollbar_buttons_size_;
+  nux::Color            scrollbar_color_;
+  nux::Color            scrollbar_overlay_color_;
+  nux::Color            scrollbar_track_color_;
   double                scrollbar_corner_radius_;
-
-  glib::SignalManager signal_manager_;
+  double                scrollbar_overlay_corner_radius_;
 
   nux::Color text_color_;
 
   int text_width_;
   int text_height_;
-  int number_of_columns_;
 
   LazyLoadTexture category_texture_;
   LazyLoadTexture category_texture_no_filters_;
-  LazyLoadTexture dash_bottom_texture_;
-  LazyLoadTexture dash_bottom_texture_mask_;
-  LazyLoadTexture dash_right_texture_;
-  LazyLoadTexture dash_right_texture_mask_;
-  LazyLoadTexture dash_corner_texture_;
-  LazyLoadTexture dash_corner_texture_mask_;
-  LazyLoadTexture dash_fullscreen_icon_;
-  LazyLoadTexture dash_left_edge_;
-  LazyLoadTexture dash_left_corner_;
-  LazyLoadTexture dash_left_corner_mask_;
-  LazyLoadTexture dash_left_tile_;
-  LazyLoadTexture dash_top_corner_;
-  LazyLoadTexture dash_top_corner_mask_;
-  LazyLoadTexture dash_top_tile_;
 
   LazyLoadTexture dash_shine_;
-
-  LazyLoadTexture search_magnify_texture_;
-  LazyLoadTexture search_circle_texture_;
-  LazyLoadTexture search_close_texture_;
-  LazyLoadTexture search_spin_texture_;
 
   LazyLoadTexture information_texture_;
 
@@ -258,45 +251,29 @@ Style::Impl::Impl(Style* owner)
   , text_color_(nux::color::White)
   , text_width_(0)
   , text_height_(0)
-  , number_of_columns_(6)
-  , category_texture_("/category_gradient.png")
-  , category_texture_no_filters_("/category_gradient_no_refine.png")
-  , dash_bottom_texture_("/dash_bottom_border_tile.png")
-  , dash_bottom_texture_mask_("/dash_bottom_border_tile_mask.png")
-  , dash_right_texture_("/dash_right_border_tile.png")
-  , dash_right_texture_mask_("/dash_right_border_tile_mask.png")
-  , dash_corner_texture_("/dash_bottom_right_corner.png")
-  , dash_corner_texture_mask_("/dash_bottom_right_corner_mask.png")
-  , dash_fullscreen_icon_("/dash_fullscreen_icon.png")
-  , dash_left_edge_("/dash_left_edge.png")
-  , dash_left_corner_("/dash_bottom_left_corner.png")
-  , dash_left_corner_mask_("/dash_bottom_left_corner_mask.png")
-  , dash_left_tile_("/dash_left_tile.png")
-  , dash_top_corner_("/dash_top_right_corner.png")
-  , dash_top_corner_mask_("/dash_top_right_corner_mask.png")
-  , dash_top_tile_("/dash_top_tile.png")
-  , dash_shine_("/dash_sheen.png")
-  , search_magnify_texture_("/search_magnify.png")
-  , search_circle_texture_("/search_circle.svg", 32)
-  , search_close_texture_("/search_close.svg", 32)
-  , search_spin_texture_("/search_spin.svg", 32)
-  , information_texture_("/information_icon.svg")
-  , refine_gradient_corner_("/refine_gradient_corner.png")
-  , refine_gradient_dash_("/refine_gradient_dash.png")
-  , group_unexpand_texture_("/dash_group_unexpand.png")
-  , group_expand_texture_("/dash_group_expand.png")
-  , star_deselected_texture_("/star_deselected.png")
-  , star_selected_texture_("/star_selected.png")
-  , star_highlight_texture_("/star_highlight.png")
+  , category_texture_("category_gradient")
+  , category_texture_no_filters_("category_gradient_no_refine")
+  , dash_shine_("dash_sheen")
+  , information_texture_("information_icon")
+  , refine_gradient_corner_("refine_gradient_corner")
+  , refine_gradient_dash_("refine_gradient_dash")
+  , group_unexpand_texture_("dash_group_unexpand")
+  , group_expand_texture_("dash_group_expand")
+  , star_deselected_texture_("star_deselected")
+  , star_selected_texture_("star_selected")
+  , star_highlight_texture_("star_highlight")
 {
-  signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
-                      (gtk_settings_get_default(),
-                       "notify::gtk-font-name",
-                       sigc::mem_fun(this, &Impl::OnFontChanged)));
+  auto refresh_cb = sigc::hide(sigc::mem_fun(this, &Impl::Refresh));
+
+  auto theme_settings = theme::Settings::Get();
+  theme_settings->font.changed.connect(refresh_cb);
+  theme_settings->theme.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::LoadStyleFile)));
 
   auto& settings = Settings::Instance();
-  settings.font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::Refresh)));
+  settings.font_scaling.changed.connect(refresh_cb);
   settings.form_factor.changed.connect(sigc::mem_fun(this, &Impl::UpdateFormFactor));
+
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(&owner_->textures_changed, &decltype(owner_->textures_changed)::emit));
 
   Refresh();
   UpdateFormFactor(settings.form_factor());
@@ -315,17 +292,28 @@ Style::Impl::Impl(Style* owner)
                                         CAIRO_HINT_METRICS_ON);
   }
 
+  LoadStyleFile();
+}
+
+void Style::Impl::LoadStyleFile()
+{
   json::Parser parser;
+
   // Since the parser skips values if they are not found, make sure everything
   // is initialised.
   SetDefaultValues();
-  if (!parser.Open(DASH_WIDGETS_FILE))
+
+  if (!parser.Open(theme::Settings::Get()->ThemedFilePath("dash-widgets", {UNITYDATADIR"/themes"}, {"json"})))
+  {
+    LOG_ERROR(logger) << "Impossible to find a dash-widgets.json in theme paths";
     return;
+  }
 
   // button-label
   parser.ReadColors("button-label", "border-color", "border-opacity",
                     button_label_border_color_);
   parser.ReadDoubles("button-label", "border-size", button_label_border_size_);
+  parser.ReadDouble("button-label", "border-radius", button_label_border_radius_);
   parser.ReadDouble("button-label", "text-size", button_label_text_size_);
   parser.ReadColors("button-label", "text-color", "text-opacity",
                     button_label_text_color_);
@@ -366,13 +354,16 @@ Style::Impl::Impl(Style* owner)
   parser.ReadInt("separator", "blur-size", separator_blur_size_);
 
   // scrollbar
-  parser.ReadColor("scrollbar", "color", "opacity", scrollbar_color_);
-  parser.ReadDouble("scrollbar", "overlay-opacity", scrollbar_overlay_opacity_);
-  parser.ReadMappedString("scrollbar", "overlay-mode", blend_mode_map,
-                          scrollbar_overlay_mode_);
-  parser.ReadInt("scrollbar", "blur-size", scrollbar_blur_size_);
   parser.ReadInt("scrollbar", "size", scrollbar_size_);
+  parser.ReadInt("scrollbar-overlay", "size", scrollbar_overlay_size_);
+  parser.ReadInt("scrollbar", "buttons-size", scrollbar_buttons_size_);
+  parser.ReadColor("scrollbar", "color", "opacity", scrollbar_color_);
+  parser.ReadColor("scrollbar-overlay", "color", "opacity", scrollbar_overlay_color_);
+  parser.ReadColor("scrollbar-track", "color", "opacity", scrollbar_track_color_);
   parser.ReadDouble("scrollbar", "corner-radius", scrollbar_corner_radius_);
+  parser.ReadDouble("scrollbar-overlay", "corner-radius", scrollbar_overlay_corner_radius_);
+
+  owner_->changed.emit();
 }
 
 Style::Impl::~Impl()
@@ -384,14 +375,12 @@ Style::Impl::~Impl()
 void Style::Impl::Refresh()
 {
   const char* const SAMPLE_MAX_TEXT = "Chromium Web Browser";
-  GtkSettings* settings = ::gtk_settings_get_default();
 
   nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
   cairo_t* cr = util_cg.GetInternalContext();
 
-  glib::String font_description;
-  ::g_object_get(settings, "gtk-font-name", &font_description, nullptr);
-  PangoFontDescription* desc = ::pango_font_description_from_string(font_description);
+  auto const& font = theme::Settings::Get()->font();
+  PangoFontDescription* desc = ::pango_font_description_from_string(font.c_str());
   ::pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
   ::pango_font_description_set_size(desc, 9 * PANGO_SCALE);
 
@@ -407,18 +396,13 @@ void Style::Impl::Refresh()
   ::pango_layout_context_changed(layout);
 
   PangoRectangle log_rect;
-  ::pango_layout_get_extents(layout, NULL, &log_rect);
-  text_width_ = log_rect.width / PANGO_SCALE;
-  text_height_ = log_rect.height / PANGO_SCALE;
+  ::pango_layout_get_pixel_extents(layout, NULL, &log_rect);
+  text_width_ = log_rect.width;
+  text_height_ = log_rect.height;
 
   owner_->changed.emit();
 
   pango_font_description_free(desc);
-}
-
-void Style::Impl::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
-{
-  Refresh();
 }
 
 void Style::Impl::UpdateFormFactor(FormFactor form_factor)
@@ -427,7 +411,8 @@ void Style::Impl::UpdateFormFactor(FormFactor form_factor)
 }
 
 Style::Style()
-  : always_maximised(false)
+  : columns_number(6)
+  , always_maximised(false)
   , pimpl(new Impl(this))
 {
   if (style_instance)
@@ -682,9 +667,8 @@ void Style::Impl::Blur(cairo_t* cr, int size)
   cairo_surface_flush(surface);
 
   pixels = cairo_image_surface_get_data(surface);
-  width  = cairo_image_surface_get_width(surface);
-  height = cairo_image_surface_get_height(surface);
   format = cairo_image_surface_get_format(surface);
+  get_actual_cairo_size(cr, &width, &height);
 
   switch (format)
   {
@@ -724,6 +708,7 @@ void Style::Impl::SetDefaultValues()
   //button_label_border_size_[nux::NUX_STATE_SELECTED]        = 0.5;
   //button_label_border_size_[nux::NUX_STATE_INSENSITIVE]     = 0.5;
 
+  button_label_border_radius_                               = 4.0;
   button_label_text_size_                                   = 1.0;
 
   button_label_text_color_[nux::VISUAL_STATE_NORMAL] = nux::color::White;
@@ -770,20 +755,22 @@ void Style::Impl::SetDefaultValues()
   separator_blur_size_       = 6;
 
   // scrollbar
-  scrollbar_color_ = nux::color::White;
-  scrollbar_overlay_opacity_ = 0.3;
-  scrollbar_overlay_mode_    = BlendMode::NORMAL;
-  scrollbar_blur_size_       = 5;
-  scrollbar_size_           = 3;
-  scrollbar_corner_radius_   = 1.5;
+  scrollbar_size_                  = 8;
+  scrollbar_overlay_size_          = 3;
+  scrollbar_buttons_size_          = 0;
+  scrollbar_color_                 = nux::color::White;
+  scrollbar_overlay_color_         = nux::color::White;
+  scrollbar_track_color_           = nux::color::White * 0.4;
+  scrollbar_corner_radius_         = 3;
+  scrollbar_overlay_corner_radius_ = 1.5;
 }
 
 void Style::Impl::ArrowPath(cairo_t* cr, Arrow arrow)
 {
   double x  = 0.0;
   double y  = 0.0;
-  double w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h  = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   /*double xt = 0.0;
     double yt = 0.0;*/
 
@@ -830,8 +817,11 @@ void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
 {
   double x  = 2.0;
   double y  = 2.0;
-  double w  = cairo_image_surface_get_width(cairo_get_target(cr)) - 4.0;
-  double h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  w -= 4.0;
+  h -= 4.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -1212,8 +1202,10 @@ void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
 {
   double   x  = 0.0;
   double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -1375,9 +1367,7 @@ void Style::Impl::GetTextExtents(int& width,
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
   PangoRectangle        inkRect  = {0, 0, 0, 0};
-  char*                 fontName = NULL;
   GdkScreen*            screen   = gdk_screen_get_default();  // is not ref'ed
-  GtkSettings*          settings = gtk_settings_get_default();// is not ref'ed
 
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create(surface);
@@ -1385,16 +1375,9 @@ void Style::Impl::GetTextExtents(int& width,
     cairo_set_font_options(cr, default_font_options_);
   else
     cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  layout = pango_cairo_create_layout(cr);
 
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  if (!fontName)
-    desc = pango_font_description_from_string("Sans 10");
-  else
-  {
-    desc = pango_font_description_from_string(fontName);
-    g_free(fontName);
-  }
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
@@ -1415,10 +1398,10 @@ void Style::Impl::GetTextExtents(int& width,
 
   pango_cairo_context_set_resolution(pangoCtx, 96.0 * Settings::Instance().font_scaling());
   pango_layout_context_changed(layout);
-  pango_layout_get_extents(layout, &inkRect, NULL);
+  pango_layout_get_pixel_extents(layout, &inkRect, NULL);
 
-  width  = inkRect.width / PANGO_SCALE;
-  height = inkRect.height / PANGO_SCALE;
+  width  = inkRect.width;
+  height = inkRect.height;
 
   // clean up
   pango_font_description_free(desc);
@@ -1442,34 +1425,23 @@ void Style::Impl::Text(cairo_t*    cr,
   PangoFontDescription* desc        = NULL;
   PangoContext*         pangoCtx    = NULL;
   GdkScreen*            screen      = gdk_screen_get_default();   // not ref'ed
-  GtkSettings*          settings    = gtk_settings_get_default(); // not ref'ed
   gchar*                fontName    = NULL;
-  //double                horizMargin = 10.0;
 
-  w = cairo_image_surface_get_width(cairo_get_target(cr));
-  h = cairo_image_surface_get_height(cairo_get_target(cr));
-
+  get_actual_cairo_size(cr, &w, &h);
   w -= 2 * horizMargin;
 
   if (!screen)
     cairo_set_font_options(cr, default_font_options_);
   else
     cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  layout = pango_cairo_create_layout(cr);
 
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  if (!fontName)
-    desc = pango_font_description_from_string("Ubuntu 10");
-  else
-    desc = pango_font_description_from_string(fontName);
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(theme::Settings::Get()->font().c_str());
 
   if (text_size > 0)
   {
-    pango_font_description_set_absolute_size(desc, text_size * PANGO_SCALE);
-  }
-  else if (desc)
-  {
-    text_size = pango_font_description_get_size(desc) / PANGO_SCALE;
+    text_size = pango_units_from_double(Settings::Instance().font_scaling() * text_size);
+    pango_font_description_set_absolute_size(desc, text_size);
   }
 
   PangoWeight weight;
@@ -1577,6 +1549,8 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   const unsigned char* data       = NULL;
   int                  width      = 0;
   int                  height     = 0;
+  double               w_scale    = 0;
+  double               h_scale    = 0;
   int                  stride     = 0;
   unsigned char*       buffer     = NULL;
   cairo_surface_t*     surface    = NULL;
@@ -1586,9 +1560,9 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   // aquire info about image-surface
   target = cairo_get_target(cr);
   data   = cairo_image_surface_get_data(target);
-  width  = cairo_image_surface_get_width(target);
-  height = cairo_image_surface_get_height(target);
   stride = cairo_image_surface_get_stride(target);
+  get_actual_cairo_size(cr, &width, &height);
+  cairo_surface_get_device_scale(target, &w_scale, &h_scale);
   cairo_format_t format = cairo_image_surface_get_format(target);
 
   // get buffer
@@ -1621,6 +1595,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   }
 
   // blur and blend overlay onto initial image-surface
+  cairo_surface_set_device_scale(surface, w_scale, h_scale);
   Blur(blurred_cr, blurSize);
   cairo_set_source_surface(cr, surface, 0.0, 0.0);
   old = SetBlendMode(cr, mode);
@@ -1649,8 +1624,8 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
    garnish = GetButtonGarnishSize();
 
   //ButtonOutlinePath(cr, true);
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
 
@@ -1659,7 +1634,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 1.0,
                 (double) (garnish) + 1.0,
                 (double) (garnish) + 1.0,
-                BUTTON_CORNER_RADIUS,
+                pimpl->button_label_border_radius_,
                 w - (double) (2 * garnish) - 2.0,
                 h - (double) (2 * garnish) - 2.0);
   else
@@ -1667,7 +1642,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 1.0,
                 (double) (garnish) + 0.5,
                 (double) (garnish) + 0.5,
-                BUTTON_CORNER_RADIUS,
+                pimpl->button_label_border_radius_,
                 w - (double) (2 * garnish) - 1.0,
                 h - (double) (2 * garnish) - 1.0);
 
@@ -1693,6 +1668,41 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
               font_px_size,
               internal_padding,
               alignment);
+
+  return true;
+}
+
+bool Style::LockScreenButton(cairo_t* cr, std::string const& label,
+                             int font_px_size)
+{
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+
+  cairo_set_line_width(cr, 1);
+
+  double radius = 5.0;
+  RoundedRect(cr, 1.0, 0.5, 0.5, radius, w - 1.0, h - 1.0);
+
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
+  cairo_fill_preserve(cr);
+
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
+  cairo_stroke(cr);
+
+  static double internal_padding = 10.0f;
+
+  pimpl->Text(cr,
+              nux::color::White,
+              label,
+              font_px_size,
+              internal_padding,
+              dash::Alignment::LEFT);
 
   return true;
 }
@@ -1743,8 +1753,8 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   if (zeromargin == false)
     garnish = GetButtonGarnishSize();
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   double x = garnish;
   double y = garnish;
@@ -1760,7 +1770,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     cairo_move_to(cr, _align(x + width, odd), y);
     if (curve_bottom)
     {
-      double radius = BUTTON_CORNER_RADIUS;
+      double radius = pimpl->button_label_border_radius_;
       LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
       // line to bottom-right corner
       cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
@@ -1854,8 +1864,8 @@ bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
 
   nux::Color color(nux::color::White);
   color.alpha = alpha;
@@ -1865,7 +1875,7 @@ bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
               1.0,
               (double) 0.5,
               (double) 0.5,
-              BUTTON_CORNER_RADIUS,
+              pimpl->button_label_border_radius_,
               w - 1.0,
               h - 1.0);
 
@@ -1891,10 +1901,11 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
     return false;
 
   //ButtonOutlinePathSegment(cr, segment);
-  double   x  = 0.0;
-  double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  double x  = 0.0;
+  double y  = 2.0;
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
 	if (segment == Segment::LEFT)
 	{
@@ -1913,7 +1924,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                             1.0,
                             x,
                             y,
-                            BUTTON_CORNER_RADIUS,
+                            pimpl->button_label_border_radius_,
                             w,
                             h,
                             segment);
@@ -1936,7 +1947,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                               1.0,
                               x,
                               y + line_width/2,
-                              BUTTON_CORNER_RADIUS,
+                              pimpl->button_label_border_radius_,
                               w,
                               h - line_width,
                               segment,
@@ -1969,8 +1980,9 @@ bool Style::MultiRangeFocusOverlay(cairo_t* cr,
 
   double   x  = 0.0;
   double   y  = 2.0;
-  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
-  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
+  h -= 4.0;
 
   if (segment == Segment::LEFT)
   {
@@ -2062,8 +2074,8 @@ bool Style::SeparatorVert(cairo_t* cr)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   double x = w / 2.0;
   double y = 2.0;
 
@@ -2090,8 +2102,8 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+  double w, h;
+  get_actual_cairo_size(cr, &w, &h);
   double x = 2.0;
   double y = h / 2.0;
 
@@ -2109,7 +2121,137 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
-int Style::GetButtonGarnishSize()
+BaseTexturePtr Style::GetDashHorizontalTile(double scale, Position dash_position) const
+{
+  std::string horizontal_tile;
+  if (dash_position == Position::BOTTOM)
+    horizontal_tile = "dash_top_border_tile";
+  else
+    horizontal_tile = "dash_bottom_border_tile";
+  return pimpl->LoadScaledTexture(horizontal_tile, scale);
+}
+
+BaseTexturePtr Style::GetDashHorizontalTileMask(double scale, Position dash_position) const
+{
+  std::string horizontal_tile_mask;
+  if (dash_position == Position::BOTTOM)
+    horizontal_tile_mask = "dash_top_border_tile_mask";
+  else
+    horizontal_tile_mask = "dash_bottom_border_tile_mask";
+  return pimpl->LoadScaledTexture(horizontal_tile_mask, scale);
+}
+
+BaseTexturePtr Style::GetDashRightTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_right_border_tile", scale);
+}
+
+BaseTexturePtr Style::GetDashRightTileMask(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_right_border_tile_mask", scale);
+}
+
+BaseTexturePtr Style::GetDashLeftTile(double scale) const
+{
+  return pimpl->LoadScaledTexture("dash_left_tile", scale);
+}
+
+BaseTexturePtr Style::GetDashTopOrBottomTile(double scale, Position dash_position) const
+{
+  std::string top_bottom_tile;
+  if (dash_position == Position::BOTTOM)
+    top_bottom_tile = "dash_bottom_tile";
+  else
+    top_bottom_tile = "dash_top_tile";
+  return pimpl->LoadScaledTexture(top_bottom_tile, scale);
+}
+
+BaseTexturePtr Style::GetDashCorner(double scale, Position dash_position) const
+{
+  std::string corner;
+  if (dash_position == Position::BOTTOM)
+    corner = "dash_top_right_corner_rotated";
+  else
+    corner = "dash_bottom_right_corner";
+  return pimpl->LoadScaledTexture(corner, scale);
+}
+
+BaseTexturePtr Style::GetDashCornerMask(double scale, Position dash_position) const
+{
+  std::string corner_mask;
+  if (dash_position == Position::BOTTOM)
+    corner_mask = "dash_top_right_corner_rotated_mask";
+  else
+    corner_mask = "dash_bottom_right_corner_mask";
+  return pimpl->LoadScaledTexture(corner_mask, scale);
+}
+
+BaseTexturePtr Style::GetDashLeftCorner(double scale, Position dash_position) const
+{
+  std::string left_corner;
+  if (dash_position == Position::BOTTOM)
+    left_corner = "dash_top_left_corner";
+  else
+    left_corner = "dash_bottom_left_corner";
+  return pimpl->LoadScaledTexture(left_corner, scale);
+}
+
+BaseTexturePtr Style::GetDashLeftCornerMask(double scale, Position dash_position) const
+{
+  std::string left_corner_mask;
+  if (dash_position == Position::BOTTOM)
+    left_corner_mask = "dash_top_left_corner_mask";
+  else
+    left_corner_mask = "dash_bottom_left_corner_mask";
+  return pimpl->LoadScaledTexture(left_corner_mask, scale);
+}
+
+BaseTexturePtr Style::GetDashRightCorner(double scale, Position dash_position) const
+{
+  std::string right_corner;
+  if (dash_position == Position::BOTTOM)
+    right_corner = "dash_bottom_right_corner_rotated";
+  else
+    right_corner = "dash_top_right_corner";
+  return pimpl->LoadScaledTexture(right_corner, scale);
+}
+
+BaseTexturePtr Style::GetDashRightCornerMask(double scale, Position dash_position) const
+{
+  std::string right_corner_mask;
+  if (dash_position == Position::BOTTOM)
+    right_corner_mask = "dash_bottom_right_corner_rotated_mask";
+  else
+    right_corner_mask = "dash_top_right_corner_mask";
+  return pimpl->LoadScaledTexture(right_corner_mask, scale);
+}
+
+BaseTexturePtr Style::GetSearchMagnifyIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_magnify", scale);
+}
+
+BaseTexturePtr Style::GetSearchCircleIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_circle", scale);
+}
+
+BaseTexturePtr Style::GetSearchCloseIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_close", scale);
+}
+
+BaseTexturePtr Style::GetSearchSpinIcon(double scale) const
+{
+  return pimpl->LoadScaledTexture("search_spin", scale);
+}
+
+BaseTexturePtr Style::GetLockScreenActivator(double scale) const
+{
+  return pimpl->LoadScaledTexture("arrow_right", scale);
+}
+
+RawPixel Style::GetButtonGarnishSize() const
 {
   int maxBlurSize = 0;
 
@@ -2122,14 +2264,9 @@ int Style::GetButtonGarnishSize()
   return 2 * maxBlurSize;
 }
 
-int Style::GetSeparatorGarnishSize()
+RawPixel Style::GetSeparatorGarnishSize() const
 {
   return pimpl->separator_blur_size_;
-}
-
-int Style::GetScrollbarGarnishSize()
-{
-  return pimpl->scrollbar_blur_size_;
 }
 
 nux::Color const& Style::GetTextColor() const
@@ -2137,361 +2274,289 @@ nux::Color const& Style::GetTextColor() const
   return pimpl->text_color_;
 }
 
-int  Style::GetDefaultNColumns() const
-{
-  return pimpl->number_of_columns_;
-}
-
-void Style::SetDefaultNColumns(int n_cols)
-{
-  if (pimpl->number_of_columns_ == n_cols)
-    return;
-
-  pimpl->number_of_columns_ = n_cols;
-
-  columns_changed.emit();
-}
-
-int Style::GetTileGIconSize() const
+RawPixel Style::GetTileGIconSize() const
 {
   return 64;
 }
 
-int Style::GetTileImageSize() const
+RawPixel Style::GetTileImageSize() const
 {
   return 96;
 }
 
-int Style::GetTileWidth() const
+RawPixel Style::GetTileWidth() const
 {
   return std::max(pimpl->text_width_, 150);
 }
 
-int Style::GetTileHeight() const
+RawPixel Style::GetTileHeight() const
 {
   return std::max(GetTileImageSize() + (pimpl->text_height_ * 2) + 15,
                   GetTileImageSize() + 32); // magic design numbers.
 }
 
-int Style::GetTileIconHightlightHeight() const
+RawPixel Style::GetTileIconHightlightHeight() const
 {
   return 106;
 }
 
-int Style::GetTileIconHightlightWidth() const
+RawPixel Style::GetTileIconHightlightWidth() const
 {
   return 106;
 }
 
-int Style::GetHomeTileIconSize() const
+RawPixel Style::GetHomeTileIconSize() const
 {
   return 104;
 }
 
-int Style::GetHomeTileWidth() const
+RawPixel Style::GetHomeTileWidth() const
 {
   return pimpl->text_width_ * 1.2;
 }
 
-int Style::GetHomeTileHeight() const
+RawPixel Style::GetHomeTileHeight() const
 {
   return GetHomeTileIconSize() + (pimpl->text_height_ * 5);
 }
 
-int Style::GetTextLineHeight() const
+RawPixel Style::GetTextLineHeight() const
 {
   return pimpl->text_height_;
 }
 
 
-nux::BaseTexture* Style::GetCategoryBackground()
+BaseTexturePtr const& Style::GetCategoryBackground() const
 {
   return pimpl->category_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetCategoryBackgroundNoFilters()
+BaseTexturePtr const& Style::GetCategoryBackgroundNoFilters() const
 {
   return pimpl->category_texture_no_filters_.texture(); 
 }
 
-nux::BaseTexture* Style::GetDashBottomTile()
-{
-  return pimpl->dash_bottom_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashBottomTileMask()
-{
-  return pimpl->dash_bottom_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashRightTile()
-{
-  return pimpl->dash_right_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashRightTileMask()
-{
-  return pimpl->dash_right_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashCorner()
-{
-  return pimpl->dash_corner_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetDashCornerMask()
-{
-  return pimpl->dash_corner_texture_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftEdge()
-{
-  return pimpl->dash_left_edge_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftCorner()
-{
-  return pimpl->dash_left_corner_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftCornerMask()
-{
-  return pimpl->dash_left_corner_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashLeftTile()
-{
-  return pimpl->dash_left_tile_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopCorner()
-{
-  return pimpl->dash_top_corner_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopCornerMask()
-{
-  return pimpl->dash_top_corner_mask_.texture();
-}
-
-nux::BaseTexture* Style::GetDashTopTile()
-{
-  return pimpl->dash_top_tile_.texture();
-}
-
-nux::BaseTexture* Style::GetDashFullscreenIcon()
-{
-  return pimpl->dash_fullscreen_icon_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchMagnifyIcon()
-{
-  return pimpl->search_magnify_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchCircleIcon()
-{
-  return pimpl->search_circle_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchCloseIcon()
-{
-  return pimpl->search_close_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchSpinIcon()
-{
-  return pimpl->search_spin_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetInformationTexture()
+BaseTexturePtr const& Style::GetInformationTexture() const
 {
   return pimpl->information_texture_.texture(); 
 }
 
-nux::BaseTexture* Style::GetRefineTextureCorner()
+BaseTexturePtr const& Style::GetRefineTextureCorner() const
 {
   return pimpl->refine_gradient_corner_.texture();
 }
 
-nux::BaseTexture* Style::GetRefineTextureDash()
+BaseTexturePtr const& Style::GetRefineTextureDash() const
 {
   return pimpl->refine_gradient_dash_.texture(); 
 }
 
-nux::BaseTexture* Style::GetGroupUnexpandIcon()
+BaseTexturePtr const& Style::GetGroupUnexpandIcon() const
 {
   return pimpl->group_unexpand_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetGroupExpandIcon()
+BaseTexturePtr const& Style::GetGroupExpandIcon() const
 {
   return pimpl->group_expand_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarDeselectedIcon()
+BaseTexturePtr const& Style::GetStarDeselectedIcon() const
 {
   return pimpl->star_deselected_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarSelectedIcon()
+BaseTexturePtr const& Style::GetStarSelectedIcon() const
 {
   return pimpl->star_selected_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetStarHighlightIcon()
+BaseTexturePtr const& Style::GetStarHighlightIcon() const
 {
   return pimpl->star_highlight_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetDashShine()
+BaseTexturePtr const& Style::GetDashShine() const
 {
   return pimpl->dash_shine_.texture();
 }
 
-int Style::GetDashBottomTileHeight() const
+RawPixel Style::GetDashHorizontalBorderHeight() const
 {
   return 30;
 }
 
-int Style::GetDashRightTileWidth() const
+RawPixel Style::GetDashVerticalBorderWidth() const
 {
   return 30;
 }
 
-int Style::GetVSeparatorSize() const
+RawPixel Style::GetVSeparatorSize() const
 {
   return 1;
 }
 
-int Style::GetHSeparatorSize() const
+RawPixel Style::GetHSeparatorSize() const
 {
   return 1;
-
 }
 
-int Style::GetFilterBarWidth() const
+RawPixel Style::GetFilterBarWidth() const
 {
   return 300;
 }
 
-
-int Style::GetFilterBarLeftPadding() const
+RawPixel Style::GetFilterBarLeftPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterBarRightPadding() const
+RawPixel Style::GetFilterBarRightPadding() const
 {
   return 5;
 }
 
-int Style::GetDashViewTopPadding() const
+RawPixel Style::GetDashViewTopPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarLeftPadding() const
+RawPixel Style::GetSearchBarLeftPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarRightPadding() const
+RawPixel Style::GetSearchBarRightPadding() const
 {
   return 10;
 }
 
-int Style::GetSearchBarHeight() const
+RawPixel Style::GetSearchBarHeight() const
 {
   return 42;
 }
 
-int Style::GetFilterResultsHighlightRightPadding() const
+RawPixel Style::GetFilterResultsHighlightRightPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterResultsHighlightLeftPadding() const
+RawPixel Style::GetFilterResultsHighlightLeftPadding() const
 {
   return 5;
 }
 
-int Style::GetFilterBarTopPadding() const
+RawPixel Style::GetFilterBarTopPadding() const
 {
   return 10;
 }
 
-int Style::GetFilterHighlightPadding() const
+RawPixel Style::GetFilterHighlightPadding() const
 {
   return 2;
 }
 
-int Style::GetSpaceBetweenFilterWidgets() const
+RawPixel Style::GetSpaceBetweenFilterWidgets() const
 {
   return 12;
 }
 
-int Style::GetAllButtonHeight() const
+RawPixel Style::GetAllButtonHeight() const
 {
   return 30;
 }
 
-int Style::GetFilterButtonHeight() const
+RawPixel Style::GetFilterButtonHeight() const
 {
   return 30;
 }
 
-int Style::GetSpaceBetweenScopeAndFilters() const
+RawPixel Style::GetSpaceBetweenScopeAndFilters() const
 {
   return 10;
 }
 
-int Style::GetFilterViewRightPadding() const
+RawPixel Style::GetFilterViewRightPadding() const
 {
   return 10;
 }
 
-int Style::GetScrollbarWidth() const
+RawPixel Style::GetOverlayScrollbarSize() const
 {
-  return 3;
+  return pimpl->scrollbar_overlay_size_;
 }
 
-int Style::GetCategoryIconSize() const
+RawPixel Style::GetScrollbarSize() const
+{
+  return pimpl->scrollbar_size_;
+}
+
+RawPixel Style::GetScrollbarButtonsSize() const
+{
+  return pimpl->scrollbar_buttons_size_;
+}
+
+RawPixel Style::GetOverlayScrollbarCornerRadius() const
+{
+  return pimpl->scrollbar_overlay_corner_radius_;
+}
+
+RawPixel Style::GetScrollbarCornerRadius() const
+{
+  return pimpl->scrollbar_corner_radius_;
+}
+
+nux::Color Style::GetOverlayScrollbarColor() const
+{
+  return pimpl->scrollbar_overlay_color_;
+}
+
+nux::Color Style::GetScrollbarColor() const
+{
+  return pimpl->scrollbar_color_;
+}
+
+nux::Color Style::GetScrollbarTrackColor() const
+{
+  return pimpl->scrollbar_track_color_;
+}
+
+RawPixel Style::GetCategoryIconSize() const
 {
   return 22;
 }
 
-int Style::GetCategoryHighlightHeight() const
+RawPixel Style::GetCategoryHighlightHeight() const
 {
   return 24;
 }
 
-int Style::GetPlacesGroupTopSpace() const
+RawPixel Style::GetPlacesGroupTopSpace() const
 {
   return 7;
 }
 
-int Style::GetPlacesGroupResultTopPadding() const
+RawPixel Style::GetPlacesGroupResultTopPadding() const
 {
   return 2;
 }
 
-int Style::GetPlacesGroupResultLeftPadding() const
+RawPixel Style::GetPlacesGroupResultLeftPadding() const
 {
   return 25;
 }
 
-int Style::GetCategoryHeaderLeftPadding() const
+RawPixel Style::GetCategoryHeaderLeftPadding() const
 {
   return 19;
 }
 
-int Style::GetCategorySeparatorLeftPadding() const
+RawPixel Style::GetCategorySeparatorLeftPadding() const
 {
   return 15;
 }
 
-int Style::GetCategorySeparatorRightPadding() const
+RawPixel Style::GetCategorySeparatorRightPadding() const
 {
   return 15;
 }
@@ -2503,19 +2568,25 @@ LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
   : filename_(filename)
   , size_(size)
 {
+  TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &LazyLoadTexture::UnloadTexture));
 }
 
-nux::BaseTexture* LazyLoadTexture::texture()
+BaseTexturePtr const& LazyLoadTexture::texture()
 {
   if (!texture_)
     LoadTexture();
-  return texture_.GetPointer();
+  return texture_;
 }
 
 void LazyLoadTexture::LoadTexture()
 {
   TextureCache& cache = TextureCache::GetDefault();
   texture_ = cache.FindTexture(filename_, size_, size_);
+}
+
+void LazyLoadTexture::UnloadTexture()
+{
+  texture_ = nullptr;
 }
 
 } // anon namespace

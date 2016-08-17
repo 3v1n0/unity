@@ -32,7 +32,6 @@ class WindowGestureTargetMock : public nux::GestureTarget
     CompWindowMock *window;
     std::list<nux::GestureEvent> events_received;
 
-    static Cursor fleur_cursor;
   private:
     virtual bool Equals(const nux::GestureTarget& other) const
     {

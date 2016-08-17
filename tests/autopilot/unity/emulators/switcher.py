@@ -93,11 +93,11 @@ class SwitcherController(UnityIntrospectionObject, KeybindingsHelper):
         """Returns the SwitcherMode that the switcher is currently in."""
         if not self.visible:
             return None
-        if self.model.detail_selection and not self.model.only_detail_on_viewport:
+        if self.model.detail_selection and not self.model.only_apps_on_viewport:
             return SwitcherMode.DETAIL, SwitcherMode.ALL
         elif self.model.detail_selection:
             return SwitcherMode.DETAIL
-        elif not self.model.only_detail_on_viewport:
+        elif not self.model.only_apps_on_viewport:
             return SwitcherMode.ALL
         else:
             return SwitcherMode.NORMAL
@@ -115,7 +115,7 @@ class SwitcherController(UnityIntrospectionObject, KeybindingsHelper):
         elif mode == SwitcherMode.ALL:
             logger.debug("Initiating switcher in 'all workspaces' mode. Ctrl+Alt+Tab")
             self.keybinding_hold_part_then_tap("switcher/reveal_all")
-            self.model.only_detail_on_viewport.wait_for(False)
+            self.model.only_apps_on_viewport.wait_for(False)
 
     def next_icon(self):
         """Move to the next icon."""
@@ -189,14 +189,14 @@ class SwitcherController(UnityIntrospectionObject, KeybindingsHelper):
     def next_via_mouse(self):
         """Move to the next icon using the mouse scroll wheel."""
         logger.debug("Selecting next item in switcher with mouse scroll wheel.")
-        self._mouse.press(6)
-        self._mouse.release(6)
+        self._mouse.press(7)
+        self._mouse.release(7)
 
     def previous_via_mouse(self):
         """Move to the previous icon using the mouse scroll wheel."""
         logger.debug("Selecting previous item in switcher with mouse scroll wheel.")
-        self._mouse.press(7)
-        self._mouse.release(7)
+        self._mouse.press(6)
+        self._mouse.release(6)
 
     @property
     def detail_selection_index(self):

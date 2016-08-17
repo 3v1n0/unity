@@ -21,46 +21,36 @@
 #define UNITY_LOCKSCREEN_SHIELD_H
 
 #include <UnityCore/ConnectionManager.h>
-#include "LockScreenAbstractShield.h"
+#include "LockScreenBaseShield.h"
 
 namespace unity
 {
 namespace lockscreen
 {
 
-class BackgroundSettings;
-class UserAuthenticator;
-class UserPromptView;
+class AbstractUserPromptView;
 class Panel;
 
-class Shield : public AbstractShield
+class Shield : public BaseShield
 {
 public:
-  Shield(session::Manager::Ptr const&, indicator::Indicators::Ptr const&, Accelerators::Ptr const&, int monitor, bool is_primary);
+  Shield(session::Manager::Ptr const&,
+         indicator::Indicators::Ptr const&,
+         Accelerators::Ptr const&,
+         nux::ObjectPtr<AbstractUserPromptView> const&,
+         int monitor, bool is_primary);
 
   bool IsIndicatorOpen() const override;
-  void CheckCapsLockPrompt() override;
   void ActivatePanel() override;
 
 protected:
-  bool AcceptKeyNavFocus() override;
   nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
-  nux::Area* FindAreaUnderMouse(nux::Point const&, nux::NuxEventType) override;
 
 private:
-  void UpdateBackgroundTexture();
-  void ShowPrimaryView();
-  void ShowSecondaryView();
+  void ShowPrimaryView() override;
   Panel* CreatePanel();
-  UserPromptView* CreatePromptView();
 
-  std::shared_ptr<BackgroundSettings> bg_settings_;
-  std::unique_ptr<nux::AbstractPaintLayer> background_layer_;
-  nux::ObjectPtr<nux::Layout> primary_layout_;
-  nux::ObjectPtr<nux::Layout> cof_layout_;
   connection::Wrapper panel_active_conn_;
-  connection::Wrapper regrab_conn_;
-  UserPromptView* prompt_view_;
   Panel* panel_view_;
 };
 

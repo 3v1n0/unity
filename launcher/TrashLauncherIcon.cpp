@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2013 Canonical Ltd
+ * Copyright (C) 2010-2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,6 +24,7 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/DesktopUtilities.h>
 #include <zeitgeist.h>
 
 #include "QuicklistMenuItemLabel.h"
@@ -39,48 +40,58 @@ namespace
   DECLARE_LOGGER(logger, "unity.launcher.icon.trash");
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
   const std::string TRASH_URI = "trash:";
+  const std::string TRASH_PATH = "file://" + DesktopUtilities::GetUserTrashDirectory();
 }
 
-TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
-  : SimpleLauncherIcon(IconType::TRASH)
+TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fm)
+  : WindowedLauncherIcon(IconType::TRASH)
+  , StorageLauncherIcon(GetIconType(), fm ? fm : GnomeFileManager::Get())
   , empty_(true)
-  , file_manager_(fmo ? fmo : GnomeFileManager::Get())
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
   position = Position::END;
   SetQuirk(Quirk::VISIBLE, true);
   SkipQuirkAnimation(Quirk::VISIBLE);
-
-  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
   SetShortcut('t');
 
-  glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
+  _source_manager.AddIdle([this]{
+    glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
 
-  glib::Error err;
-  trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, cancellable_, &err);
-  g_file_monitor_set_rate_limit(trash_monitor_, 1000);
+    glib::Error err;
+    trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, cancellable_, &err);
+    g_file_monitor_set_rate_limit(trash_monitor_, 1000);
 
-  if (err)
-  {
-    LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err;
-  }
-  else
-  {
-    trash_changed_signal_.Connect(trash_monitor_, "changed",
-    [this] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent) {
-      UpdateTrashIcon();
-    });
-  }
+    if (err)
+    {
+      LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err;
+    }
+    else
+    {
+      glib_signals_.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(trash_monitor_, "changed",
+      [this] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent) {
+        UpdateTrashIcon();
+      });
+    }
 
-  file_manager_->locations_changed.connect(sigc::mem_fun(this, &TrashLauncherIcon::OnOpenedLocationsChanged));
+    return false;
+  });
 
   UpdateTrashIcon();
+  UpdateStorageWindows();
 }
 
-void TrashLauncherIcon::OnOpenedLocationsChanged()
+WindowList TrashLauncherIcon::GetStorageWindows() const
 {
-  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
+  auto windows = file_manager_->WindowsForLocation(TRASH_URI);
+  auto const& path_wins = file_manager_->WindowsForLocation(TRASH_PATH);
+  windows.insert(end(windows), begin(path_wins), end(path_wins));
+  return windows;
+}
+
+void TrashLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
+{
+  file_manager_->OpenTrash(timestamp);
 }
 
 AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
@@ -92,20 +103,41 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash…"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-  empty_activated_signal_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
   [this] (DbusmenuMenuitem*, unsigned timestamp) {
     file_manager_->EmptyTrash(timestamp);
   });
 
   result.push_back(menu_item);
 
-  return result;
-}
+  if (IsRunning())
+  {
+    auto const& windows_items = GetWindowsMenuItems();
+    if (!windows_items.empty())
+    {
+      menu_item = dbusmenu_menuitem_new();
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+      result.push_back(menu_item);
 
-void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
-{
-  SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  file_manager_->OpenTrash(arg.timestamp);
+      result.insert(end(result), begin(windows_items), end(windows_items));
+    }
+
+    menu_item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+    result.push_back(menu_item);
+
+    menu_item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    result.push_back(menu_item);
+
+    glib_signals_.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+      Quit();
+    });
+  }
+
+  return result;
 }
 
 void TrashLauncherIcon::UpdateTrashIcon()
@@ -173,6 +205,7 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   }
 
   SetQuirk(LauncherIcon::Quirk::PULSE_ONCE, true);
+  FullyAnimateQuirkDelayed(100, LauncherIcon::Quirk::SHIMMER);
 }
 
 std::string TrashLauncherIcon::GetName() const

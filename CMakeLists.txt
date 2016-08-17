@@ -3,20 +3,21 @@ cmake_minimum_required(VERSION 2.8.9)
 
 include (cmake/Documentation.cmake)
 include (cmake/pch.cmake)
+include (GNUInstallDirs)
 
 #
 # Base bits
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
-set (UNITY_MINOR 2)
+set (UNITY_MINOR 5)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 set (UNITY_COMPONENTS_VERSION "6")
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
-set (CMAKE_CXX_FLAGS_DEBUG "-g3")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++11 -fno-permissive")
+set (CMAKE_CXX_FLAGS_DEBUG "-g3 -DUNITY_DEBUG_BUILD")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
 option(
@@ -25,11 +26,23 @@ option(
   ON
 )
 
+option(
+  ENABLE_UNIT_TESTS
+  "Enable Unity Unit Tests"
+  ON
+)
+
 # This is due to bug lp:668799 - qemu-arm segfaults executing msgmerge
 option(
   I18N_SUPPORT
   "Enable I18N, do the .po file thing."
   ON
+)
+
+option(
+  ENABLE_NETWORKAREAREGION_PLUGIN
+  "Enable Unity Network Area region Plugin"
+  OFF
 )
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
@@ -68,7 +81,7 @@ if (CMAKE_BUILD_TYPE MATCHES coverage)
       message(FATAL_ERROR "Cannot enable coverage targets because gcovr was not found.")
   else ()
       message (STATUS "Enabling XML coverage report")
-      add_custom_target (coverage-xml 
+      add_custom_target (coverage-xml
           COMMAND  "${GCOVR_EXECUTABLE}" --exclude="tests.*" --exclude="obj-.*" -x -r "${CMAKE_SOURCE_DIR}" -o "${COVERAGE_XML_FILE}")
   endif()
 
@@ -81,7 +94,7 @@ if (CMAKE_BUILD_TYPE MATCHES coverage)
 #      message(FATAL_ERROR "Cannot enable coverage targets because genhtml was not found.")
 #  else ()
 #      message (STATUS "Enabling HTML coverage report")
-#      add_custom_target (coverage-html 
+#      add_custom_target (coverage-html
 #          COMMAND "${LCOV_EXECUTABLE}" --directory "${CMAKE_BINARY_DIR}" --capture --output-file "${COVERAGE_INFO_FILE}"
 #          COMMAND "${GENHTML_EXECUTABLE}" --output-directory "${COVERAGE_HTML_DIR}" "${COVERAGE_INFO_FILE}")
 #  endif()
@@ -101,7 +114,7 @@ add_custom_target (pre-distcheck
        && echo "• Generating ChangeLog"
        && bzr log --gnu-changelog > ChangeLog
        && echo "• Generating AUTHORS"
-       && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
+       && bzr log --long --levels=0 | grep -e "^\\s*author:" | cut -d ":" -f 2 | sed "s/,/\n/g" | sed -r -f AUTHOR-glue | sort -u | uniq -i > AUTHORS
        && echo "• Running Distcheck"
   )
 
@@ -121,8 +134,8 @@ add_custom_target (distcheck
        && mkdir ${ARCHIVE_NAME}/build
        && cd ${ARCHIVE_NAME}/build
        && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
-       && make -j4
-       && make -j4 install
+       && make
+       && make install
        && make check-headless
   )
 add_dependencies(distcheck dist)
@@ -143,15 +156,18 @@ add_dependencies (release distcheck)
 #
 # config.h
 #
-set (PREFIXDIR "${CMAKE_INSTALL_PREFIX}")
-set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
-set (PKGDATADIR "${DATADIR}/unity/icons")
-set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
-set (GETTEXT_PACKAGE "unity")
-set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
+set (PREFIXPATH "${CMAKE_INSTALL_PREFIX}")
+set (UNITYLIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/${PROJECT_NAME}")
+set (UNITYDATADIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
+set (PKGDATADIR "${UNITYDATADIR}/icons")
+set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+set (LOCALE_DIR "${CMAKE_INSTALL_FULL_LOCALEDIR}")
+# specify the domain directly rather than refering to a variable 
+# like ${PROJECT_NAME} to no confuse dh_translations
+set (GETTEXT_PACKAGE "unity")
 
 find_package (PkgConfig)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} gtk+-3.0 --variable prefix OUTPUT_VARIABLE GTK_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -159,7 +175,7 @@ execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUT
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable indicatordir OUTPUT_VARIABLE INDICATORDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable iconsdir OUTPUT_VARIABLE INDICATORICONDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable prefix OUTPUT_VARIABLE INDICATORPREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
-set (INDICATOR_SERVICE_DIR "${INDICATORPREFIX}/share/unity/indicators")
+set (INDICATOR_SERVICE_DIR "${INDICATORPREFIX}/share/${PROJECT_NAME}/indicators")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
@@ -171,8 +187,8 @@ find_package (Gettext REQUIRED)
 
 set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
 
-add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/unity.pot
-		COMMAND xgettext -c --from-code=UTF-8 --files-from ${CMAKE_SOURCE_DIR}/po/POTFILES.in --keyword=_ -o ${CMAKE_SOURCE_DIR}/po/unity.pot --copyright-holder="Canonical Ltd" --msgid-bugs-address="ayatana-dev@lists.launchpad.net" --no-wrap --no-location
+add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/${PROJECT_NAME}.pot
+		COMMAND xgettext -c --from-code=UTF-8 --files-from ${CMAKE_SOURCE_DIR}/po/POTFILES.in --keyword=_ -o ${CMAKE_SOURCE_DIR}/po/${PROJECT_NAME}.pot --copyright-holder="Canonical Ltd" --msgid-bugs-address="ayatana-dev@lists.launchpad.net" --no-wrap --no-location
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		)
 
@@ -214,6 +230,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.1.0)
 set(UNITY_PLUGIN_SHARED_DEPS
     ${UNITY_PROTOCOL_PRIVATE_DEPS}
+    appstream-glib
     atk
     atk-bridge-2.0
     cairo>=1.13.1
@@ -226,7 +243,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     gtk+-3.0>=3.1
     indicator3-0.4>=0.4.90
     json-glib-1.0
-    libbamf3>=0.5.0
+    libbamf3>=0.5.3
     gnome-desktop-3.0
     libnotify
     libstartup-notification-1.0
@@ -256,81 +273,93 @@ pkg_check_modules (CACHED_UNITY_PRIVATE_DEPS REQUIRED ${UNITY_PROTOCOL_PRIVATE_D
 find_library (UNITY_PROTOCOL_PRIVATE_LIB unity-protocol-private ${CACHED_UNITY_PRIVATE_DEPS_LIBDIR} ${CACHED_UNITY_PRIVATE_DEPS_LIBRARY_DIRS})
 set(UNITY_STANDALONE_LADD ${UNITY_STANDALONE_LADD} ${UNITY_PROTOCOL_PRIVATE_LIB})
 
+add_subdirectory(a11y)
 add_subdirectory(unity-shared)
 add_subdirectory(dash)
 add_subdirectory(launcher)
+add_subdirectory(data)
+
 if (ENABLE_X_SUPPORT)
   add_subdirectory(hud)
   add_subdirectory(lockscreen)
   add_subdirectory(panel)
   add_subdirectory(decorations)
   add_subdirectory(plugins/unityshell)
-  add_subdirectory(plugins/networkarearegion)
-  add_subdirectory(plugins/unitydialog)
   add_subdirectory(plugins/unity-mt-grab-handles)
   add_subdirectory(shortcuts)
   add_subdirectory(shutdown)
   add_subdirectory(unity-standalone)
+
+  if (ENABLE_NETWORKAREAREGION_PLUGIN)
+    add_subdirectory(plugins/networkarearegion)
+  endif (ENABLE_NETWORKAREAREGION_PLUGIN)
+
 endif ()
 
-# subdirs
 add_subdirectory(doc)
-
-# Check for google test and build it locally
-set (
-  GMOCK_ROOT_DIR
-  "/usr/src/gmock"
-  CACHE
-  PATH
-  "Path to Google mock srcs"
-)
-
-set (
-  GMOCK_INCLUDE_DIR
-  "/usr/include/gmock/include"
-  CACHE
-  PATH
-  "Path to Google mock include"
-)
-
-set(
-  GTEST_ROOT_DIR
-  "${GMOCK_ROOT_DIR}/gtest" # Default value, adjustable by user with e.g., ccmake
-  CACHE
-  PATH
-  "Path to Google test srcs"
-)
-
-set(
-  GTEST_INCLUDE_DIR
-  "${GMOCK_ROOT_DIR}/gtest/include"
-  CACHE
-  PATH
-  "Path to Google tests include"
-)
-
-if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
-  include_directories (
-    ${GMOCK_INCLUDE_DIR}
-    ${GTEST_INCLUDE_DIR}
-  )
-  add_subdirectory(
-    ${GMOCK_ROOT_DIR}
-    "${CMAKE_CURRENT_BINARY_DIR}/gmock"
-  )
-elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
-  include_directories (
-    ${GTEST_INCLUDE_DIR}
-  )
-endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
-
 add_subdirectory(services)
-add_subdirectory(tests)
 add_subdirectory(tools)
 add_subdirectory(UnityCore)
 add_subdirectory(guides)
-
 add_subdirectory(gnome)
+
+if (ENABLE_UNIT_TESTS)
+  # Check for google test and build it locally
+  set (
+    GMOCK_ROOT_DIR
+    "/usr/src/gmock"
+    CACHE
+    PATH
+    "Path to Google mock srcs"
+  )
+
+  set (
+    GMOCK_INCLUDE_DIR
+    "/usr/include/gmock/include"
+    CACHE
+    PATH
+    "Path to Google mock include"
+  )
+
+  set(
+    GTEST_ROOT_DIR
+    "${GMOCK_ROOT_DIR}/gtest" # Default value, adjustable by user with e.g., ccmake
+    CACHE
+    PATH
+    "Path to Google test srcs"
+  )
+
+  set(
+    GTEST_INCLUDE_DIR
+    "${GMOCK_ROOT_DIR}/gtest/include"
+    CACHE
+    PATH
+    "Path to Google tests include"
+  )
+
+  if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
+    include_directories (
+      ${GMOCK_INCLUDE_DIR}
+      ${GTEST_INCLUDE_DIR}
+    )
+    add_subdirectory(
+      ${GMOCK_ROOT_DIR}
+      "${CMAKE_CURRENT_BINARY_DIR}/gmock"
+    )
+  elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
+    include_directories (
+      ${GTEST_INCLUDE_DIR}
+    )
+  endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
+
+  add_subdirectory(tests)
+
+else (ENABLE_UNIT_TESTS)
+  set (MISSING_TESTS_MSG "-- Tests disabled, compile with -DENABLE_UNIT_TESTS=ON")
+  add_custom_target (check COMMAND echo ${MISSING_TESTS_MSG})
+  add_custom_target (check-headless COMMAND echo ${MISSING_TESTS_MSG})
+  add_custom_target (gcheck COMMAND echo ${MISSING_TESTS_MSG})
+endif (ENABLE_UNIT_TESTS)
 
 #
 # GSettings Schema
@@ -341,7 +370,7 @@ SET (UNITY_TEST_SCHEMAS "external.gschema.xml")
 # Have an option to not install the schema into where GLib is
 option (GSETTINGS_LOCALINSTALL "Install GSettings Schemas locally instead of to the GLib prefix" OFF)
 if (GSETTINGS_LOCALINSTALL)
-    SET (GSETTINGS_DIR "${CMAKE_INSTALL_PREFIX}/share/glib-2.0/schemas/")
+    SET (GSETTINGS_DIR "${CMAKE_INSTALL_DATADIR}/glib-2.0/schemas/")
 else (GSETTINGS_LOCALINSTALL)
     execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} glib-2.0 --variable prefix  OUTPUT_VARIABLE _glib_prefix OUTPUT_STRIP_TRAILING_WHITESPACE)
     SET (GSETTINGS_DIR "${_glib_prefix}/share/glib-2.0/schemas/")
@@ -362,7 +391,7 @@ install (CODE "message (STATUS \"Compiling GSettings schemas\")")
 install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR})")
 
 # Resources
-install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/themes)
+install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/themes)
 file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
 install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
 
@@ -396,3 +425,9 @@ if (DOXYGEN_FOUND STREQUAL "YES")
          ADDITIONAL_MAKE_CLEAN_FILES api-doc)
 
 endif (DOXYGEN_FOUND STREQUAL "YES")
+
+#
+# Upstart
+#
+configure_file(unity7.conf.in ${CMAKE_CURRENT_BINARY_DIR}/unity7.conf)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity7.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/upstart/sessions)

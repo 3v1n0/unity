@@ -34,9 +34,9 @@ namespace ui
 
 enum class WindowTextureType : unsigned
 {
-  BACKGROUND_TOP,
-  BACKGROUND_LEFT,
-  BACKGROUND_CORNER,
+  BORDER_TOP,
+  BORDER_LEFT,
+  BORDER_CORNER,
   CLOSE_ICON,
   CLOSE_ICON_HIGHLIGHTED,
   CLOSE_ICON_PRESSED,
@@ -52,17 +52,21 @@ public:
   static UnityWindowStyle::Ptr const& Get();
 
   BaseTexturePtr GetTexture(double scale, WindowTextureType const& type);
-  int GetCloseButtonPadding() const;
-  int GetBorderSize() const;
-  int GetInternalOffset() const;
+  RawPixel GetCloseButtonPadding() const;
+  RawPixel GetBorderSize() const;
+  RawPixel GetInternalOffset() const;
 
 private:
   UnityWindowStyle();
 
   void ReloadIcons();
   void LoadAllTextureInScale(double scale);
-  nux::BaseTexture* LoadTexture(double scale, const char* const texture_name) const;
-  RawPixel GetDefaultMaxTextureSize(const char* const texture_name) const;
+  nux::BaseTexture* LoadTexture(std::string const& texture_name, double scale) const;
+  RawPixel GetDefaultMaxTextureSize(std::string const& texture_path) const;
+
+  void OnMonitorChanged(int primary, std::vector<nux::Geometry> const& monitors);
+  void OnThemeChanged(std::string const&);
+  void CleanUpUnusedTextures();
 
   typedef std::array<BaseTexturePtr, size_t(WindowTextureType::Size)> UnityWindowTextures;
   std::unordered_map<double, UnityWindowTextures> unity_window_textures_;

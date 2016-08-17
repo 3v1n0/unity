@@ -32,15 +32,18 @@ struct MockFileManager : FileManager
   typedef testing::NiceMock<MockFileManager> Nice;
 
   MOCK_METHOD2(Open, void(std::string const& uri, uint64_t time));
-  MOCK_METHOD2(OpenActiveChild, void(std::string const& uri, uint64_t time));
   MOCK_METHOD1(OpenTrash, void(uint64_t time));
   MOCK_METHOD1(TrashFile, bool(std::string const& uri));
   MOCK_METHOD1(EmptyTrash, void(uint64_t time));
   MOCK_METHOD3(CopyFiles, void(std::set<std::string> const& files, std::string const& dest, uint64_t time));
-  MOCK_CONST_METHOD0(OpenedLocations, std::vector<std::string>());
-  MOCK_CONST_METHOD1(IsPrefixOpened, bool(std::string const& uri));
-  MOCK_CONST_METHOD0(IsTrashOpened, bool());
-  MOCK_CONST_METHOD0(IsDeviceOpened, bool());
+  MOCK_CONST_METHOD1(WindowsForLocation, WindowList(std::string const&));
+  MOCK_CONST_METHOD1(LocationForWindow, std::string(ApplicationWindowPtr const&));
+
+  MockFileManager()
+  {
+    using namespace testing;
+    ON_CALL(*this, WindowsForLocation(_)).WillByDefault(Return(WindowList()));
+  }
 };
 
 }

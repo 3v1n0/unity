@@ -45,7 +45,7 @@ using namespace unity;
 IconTexture::IconTexture(BaseTexturePtr const& texture, unsigned width, unsigned height)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
-    _size(height),
+    _size(std::max(width, height)),
     _texture_cached(texture),
     _texture_size(width, height),
     _loading(false),
@@ -133,24 +133,25 @@ void IconTexture::LoadIcon()
     return;
 
   _loading = true;
+  int size = (_size == std::numeric_limits<unsigned>::max()) ? -1 : _size;
 
   glib::Object<GIcon> icon(g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
 
   if (icon.IsType(G_TYPE_ICON))
   {
     _handle = IconLoader::GetDefault().LoadFromGIconString(_icon_name.empty() ? DEFAULT_GICON : _icon_name.c_str(),
-                                                           -1, _size,
+                                                           -1, size,
                                                            sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
-  else if (_icon_name.find("http://") == 0)
+  else if (_icon_name.find("://") != std::string::npos)
   {
     _handle = IconLoader::GetDefault().LoadFromURI(_icon_name,
-                                                   -1, _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
+                                                   -1, size, sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else
   {
     _handle = IconLoader::GetDefault().LoadFromIconName(_icon_name,
-                                                        -1, _size,
+                                                        -1, size,
                                                         sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
 }
@@ -226,37 +227,27 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (_draw_mode == DrawMode::STRETCH_WITH_ASPECT)
     {
       nux::Geometry imageDest = geo;
-      
-      float geo_apsect = float(geo.GetWidth()) / geo.GetHeight();
+
+      float geo_apsect = float(geo.width) / geo.width;
       float image_aspect = float(_texture_cached->GetWidth()) / _texture_cached->GetHeight();
 
       if (image_aspect > geo_apsect)
       {
         imageDest.SetHeight(float(imageDest.GetWidth()) / image_aspect);
-      } 
+      }
       if (image_aspect < geo_apsect)
       {
         imageDest.SetWidth(image_aspect * imageDest.GetHeight());
-      }
-      else
-      {
-        imageDest = nux::Geometry(0, 0, _texture_cached->GetWidth(), _texture_cached->GetHeight());
       }
 
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
       texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
       texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
 
-      texxform.u0 = 0;
-      texxform.v0 = 0;
-      texxform.u1 = imageDest.width;
-      texxform.v1 = imageDest.height;
-
-      int border_width = 1;
-      GfxContext.QRP_1Tex(geo.x + (float(geo.GetWidth() - imageDest.GetWidth()) / 2) + border_width,
-                          geo.y + (float(geo.GetHeight() - imageDest.GetHeight()) / 2) + border_width,
-                          imageDest.width - (border_width * 2),
-                          imageDest.height - (border_width * 2),
+      GfxContext.QRP_1Tex(geo.x + (float(geo.GetWidth() - imageDest.GetWidth()) / 2),
+                          geo.y + (float(geo.GetHeight() - imageDest.GetHeight()) / 2),
+                          imageDest.width,
+                          imageDest.height,
                           _texture_cached.GetPointer()->GetDeviceTexture(),
                           texxform,
                           col);
@@ -291,8 +282,10 @@ void IconTexture::GetTextureSize(int* width, int* height)
 
 void IconTexture::SetOpacity(float opacity)
 {
-  _opacity = opacity;
+  if (_opacity == opacity)
+    return;
 
+  _opacity = opacity;
   QueueDraw();
 }
 
@@ -307,7 +300,6 @@ void IconTexture::SetTexture(BaseTexturePtr const& texture)
   {
     _texture_size.width = texture->GetWidth();
     _texture_size.height = texture->GetHeight();
-    _size = _texture_size.height;
     SetMinMaxSize(_texture_size.width, _texture_size.height);
   }
 

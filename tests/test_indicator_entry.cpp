@@ -36,11 +36,12 @@ struct SigReceiver : sigc::trackable
 TEST(TestIndicatorEntry, TestConstruction)
 {
 
-  Entry entry("id", "name_hint", "label", true, true, 1, "some icon", false, true, -1);
+  Entry entry("id", "name_hint", 12345, "label", true, true, 1, "some icon", false, true, -1);
 
   EXPECT_EQ(entry.id(), "id");
-  EXPECT_EQ(entry.label(), "label");
   EXPECT_EQ(entry.name_hint(), "name_hint");
+  EXPECT_EQ(entry.parent_window(), 12345);
+  EXPECT_EQ(entry.label(), "label");
   EXPECT_TRUE(entry.label_sensitive());
   EXPECT_TRUE(entry.label_visible());
   EXPECT_FALSE(entry.image_sensitive());
@@ -55,10 +56,11 @@ TEST(TestIndicatorEntry, TestConstruction)
 
 TEST(TestIndicatorEntry, TestConstructionEmpty)
 {
-  Entry entry("id", "name_hint");
+  Entry entry("id", "name_hint", 12345);
 
   EXPECT_EQ(entry.id(), "id");
   EXPECT_EQ(entry.name_hint(), "name_hint");
+  EXPECT_EQ(entry.parent_window(), 12345);
   EXPECT_TRUE(entry.label().empty());
   EXPECT_FALSE(entry.label_sensitive());
   EXPECT_FALSE(entry.label_visible());
@@ -74,8 +76,8 @@ TEST(TestIndicatorEntry, TestConstructionEmpty)
 
 TEST(TestIndicatorEntry, TestAssignment)
 {
-  Entry entry("id", "name_hint", "label", true, true, 0, "some icon", false, true, 10);
-  Entry other_entry("other_id", "other_name_hint", "other_label", false, false, 2, "other icon", true, false, 5);
+  Entry entry("id", "name_hint", 12345, "label", true, true, 0, "some icon", false, true, 10);
+  Entry other_entry("other_id", "other_name_hint", 54321, "other_label", false, false, 2, "other icon", true, false, 5);
 
   SigReceiver sig_receiver(entry);
   EXPECT_CALL(sig_receiver, Updated());
@@ -83,6 +85,7 @@ TEST(TestIndicatorEntry, TestAssignment)
 
   EXPECT_EQ(entry.id(), "other_id");
   EXPECT_EQ(entry.name_hint(), "other_name_hint");
+  EXPECT_EQ(entry.parent_window(), 54321);
   EXPECT_EQ(entry.label(), "other_label");
   EXPECT_FALSE(entry.label_sensitive());
   EXPECT_FALSE(entry.label_visible());
@@ -95,8 +98,8 @@ TEST(TestIndicatorEntry, TestAssignment)
 
 TEST(TestIndicatorEntry, TestShowNowEvents)
 {
-  Entry entry("id", "name_hint", "label", true, true,
-                         0, "some icon", false, true, -1);
+  Entry entry("id", "name_hint", 0, "label", true, true,
+              0, "some icon", false, true, -1);
   SigReceiver sig_receiver(entry);
 
   // Setting show_now to the same value doesn't emit any events.
@@ -116,7 +119,7 @@ TEST(TestIndicatorEntry, TestShowNowEvents)
 
 TEST(TestIndicatorEntry, TestActiveEvents)
 {
-  Entry entry("id", "name_hint", "label", true, true, 0, "some icon", false, true, -1);
+  Entry entry("id", "name_hint", 0, "label", true, true, 0, "some icon", false, true, -1);
 
   SigReceiver sig_receiver(entry);
 
@@ -137,7 +140,7 @@ TEST(TestIndicatorEntry, TestActiveEvents)
 
 TEST(TestIndicatorEntry, TestOnScroll)
 {
-  Entry entry("id", "name_hint", "label", true, true, 0, "some icon", false, true, -1);
+  Entry entry("id", "name_hint", 0, "label", true, true, 0, "some icon", false, true, -1);
   SigReceiver sig_receiver(entry);
 
   EXPECT_CALL(sig_receiver, OnScroll("id", 10));
@@ -149,16 +152,16 @@ TEST(TestIndicatorEntry, TestOnScroll)
 
 TEST(TestIndicatorEntry, TestOnShowMenu)
 {
-  Entry entry("id", "name_hint", "label", true, true, 0, "some icon", false, true, -1);
+  Entry entry("id", "name_hint", 123, "label", true, true, 0, "some icon", false, true, -1);
   SigReceiver sig_receiver(entry);
 
-  EXPECT_CALL(sig_receiver, OnShowMenu("id", 0, 10, 20, 1));
+  EXPECT_CALL(sig_receiver, OnShowMenu("id", 123, 10, 20, 1));
   entry.ShowMenu(10, 20, 1);
 }
 
 TEST(TestIndicatorEntry, TestOnShowMenuXid)
 {
-  Entry entry("xid", "name_hint", "label", true, true, 0, "some icon", false, true, -1);
+  Entry entry("xid", "name_hint", 0, "label", true, true, 0, "some icon", false, true, -1);
   SigReceiver sig_receiver(entry);
 
   EXPECT_CALL(sig_receiver, OnShowMenu("xid", 88492615, 15, 25, 2));
@@ -167,7 +170,7 @@ TEST(TestIndicatorEntry, TestOnShowMenuXid)
 
 TEST(TestIndicatorEntry, TestVisibility)
 {
-  Entry entry("id", "name_hint", "label", true, true, 0, "some icon", false, false, -1);
+  Entry entry("id", "name_hint", 0, "label", true, true, 0, "some icon", false, false, -1);
 
   EXPECT_TRUE(entry.visible());
 
@@ -208,7 +211,7 @@ TEST(TestIndicatorEntry, TestVisibility)
 
 TEST(TestIndicatorEntry, TestGeometry)
 {
-  Entry entry("id", "name_hint", "label", true, true, 0, "some icon", false, true, -1);
+  Entry entry("id", "name_hint", 0, "label", true, true, 0, "some icon", false, true, -1);
   SigReceiver sig_receiver(entry);
 
   // Setting to the same value doesn't emit any events.

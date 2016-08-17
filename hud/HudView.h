@@ -28,7 +28,6 @@
 #include "HudIcon.h"
 #include "HudButton.h"
 #include "HudAbstractView.h"
-#include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/OverlayRenderer.h"
 #include "unity-shared/OverlayWindowButtons.h"
 #include "unity-shared/SearchBar.h"
@@ -46,7 +45,6 @@ public:
   typedef nux::ObjectPtr<View> Ptr;
 
   View();
-  ~View();
 
   void ResetToDefault();
 
@@ -62,7 +60,7 @@ public:
   void AboutToHide();
 
   void SetMonitorOffset(int x, int y);
-  
+
   nux::Geometry GetContentGeometry();
 
 protected:
@@ -86,6 +84,7 @@ private:
 
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
   void UpdateLayoutGeometry();
+  void UpdateScale(double);
 
   void ProcessGrowShrink();
 
@@ -121,7 +120,6 @@ private:
   int last_known_height_;
   int current_height_;
   int selected_button_;
-  bool show_embedded_icon_;
   bool activated_signal_sent_;
   bool keyboard_stole_focus_;
 

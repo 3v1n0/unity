@@ -27,6 +27,8 @@ from testtools.matchers import MismatchError
 from time import sleep
 
 from unity.emulators.icons import HudLauncherIcon
+from unity.emulators.icons import BFBLauncherIcon
+from unity.emulators.launcher import LauncherPosition
 from unity.tests import UnityTestCase
 
 
@@ -471,10 +473,10 @@ class HudBehaviorTests(HudTestsBase):
 
         self.unity.hud.ensure_visible()
 
-        # Click bottom right of the screen, but take into account the non-maximized window -
+        # Click right of the screen, but take into account the non-maximized window -
         # we do not want to click on it as it focuses the wrong window
         w = self.display.get_screen_width() - 1
-        h = self.display.get_screen_height() - 1
+        h = (self.display.get_screen_height() - 1) / 2
 
         # If the mouse is over the non-maximized window, move it away from it.
         (calc_x, calc_y, calc_w, calc_h) = calc_win.get_windows()[0].geometry
@@ -512,7 +514,7 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("e")
         self.assertThat(self.unity.hud.view.selected_button, Eventually(Equals(1)))
 
-    def test_hud_does_not_open_when_fullscreen_window(self):
+    def test_hud_opens_when_fullscreen_window(self):
         """ The Hud must not open if a window is fullscreen. """
         gedit = self.process_manager.start_app("Text Editor")
         self.keyboard.press_and_release('F11')
@@ -523,7 +525,7 @@ class HudBehaviorTests(HudTestsBase):
         self.keybinding("hud/reveal")
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
 
 
 class HudLauncherInteractionsTests(HudTestsBase):
@@ -585,13 +587,20 @@ class HudLauncherInteractionsTests(HudTestsBase):
 
 class HudLockedLauncherInteractionsTests(HudTestsBase):
 
-    scenarios = _make_monitor_scenarios()
+    launcher_position = [('Launcher on the left', {'launcher_position': LauncherPosition.LEFT}),
+                         ('Launcher on the bottom', {'launcher_position': LauncherPosition.BOTTOM})]
+
+    scenarios = multiply_scenarios(_make_monitor_scenarios(), launcher_position)
 
     def setUp(self):
         super(HudLockedLauncherInteractionsTests, self).setUp()
         # Locked Launchers on all monitors
         self.set_unity_option('num_launchers', 0)
         self.set_unity_option('launcher_hide_mode', 0)
+
+        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity.Launcher', 'launcher-position')
+        self.call_gsettings_cmd('set', 'com.canonical.Unity.Launcher', 'launcher-position', '"%s"' % self.launcher_position)
+        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity.Launcher', 'launcher-position', old_pos)
 
         move_mouse_to_screen(self.hud_monitor)
         sleep(0.5)
@@ -608,8 +617,9 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
         self.unity.hud.ensure_visible()
 
-        self.assertTrue(hud_icon.monitors_visibility[self.hud_monitor])
-        self.assertTrue(hud_icon.is_on_monitor(self.hud_monitor))
+        if self.launcher_position == LauncherPosition.LEFT:
+            self.assertTrue(hud_icon.monitors_visibility[self.hud_monitor])
+            self.assertTrue(hud_icon.is_on_monitor(self.hud_monitor))
         # For some reason the BFB icon is always visible :-/
         #bfb_icon.visible, Eventually(Equals(False)
 
@@ -622,6 +632,8 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
             if isinstance(icon, HudLauncherIcon):
                 self.assertFalse(icon.monitors_desaturated[self.hud_monitor])
             else:
+                if isinstance(icon, BFBLauncherIcon) and self.launcher_position == LauncherPosition.BOTTOM:
+                    continue
                 self.assertTrue(icon.monitors_desaturated[self.hud_monitor])
 
     def test_hud_launcher_icon_click_hides_hud(self):
@@ -645,15 +657,24 @@ class HudVisualTests(HudTestsBase):
     launcher_screen = [('Launcher on all monitors', {'launcher_primary_only': False}),
                        ('Launcher on primary monitor', {'launcher_primary_only': True})]
 
-    scenarios = multiply_scenarios(_make_monitor_scenarios(), launcher_modes, launcher_screen)
+    launcher_position = [('Launcher on the left', {'launcher_position': LauncherPosition.LEFT}),
+                         ('Launcher on the bottom', {'launcher_position': LauncherPosition.BOTTOM})]
+
+    scenarios = multiply_scenarios(_make_monitor_scenarios(), launcher_modes, launcher_screen, launcher_position)
 
     def setUp(self):
         super(HudVisualTests, self).setUp()
         move_mouse_to_screen(self.hud_monitor)
         self.set_unity_option('launcher_hide_mode', int(self.launcher_autohide))
         self.set_unity_option('num_launchers', int(self.launcher_primary_only))
+
+        old_pos = self.call_gsettings_cmd('get', 'com.canonical.Unity.Launcher', 'launcher-position')
+        self.call_gsettings_cmd('set', 'com.canonical.Unity.Launcher', 'launcher-position', '"%s"' % self.launcher_position)
+        self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity.Launcher', 'launcher-position', old_pos)
+
         self.hud_monitor_is_primary = (self.display.get_primary_screen() == self.hud_monitor)
-        self.hud_locked = (not self.launcher_autohide and (not self.launcher_primary_only or self.hud_monitor_is_primary))
+        self.hud_locked = (not self.launcher_autohide and (not self.launcher_primary_only or self.hud_monitor_is_primary)
+                           and self.launcher_position != LauncherPosition.BOTTOM)
         sleep(0.5)
 
     def test_initially_hidden(self):
@@ -671,10 +692,11 @@ class HudVisualTests(HudTestsBase):
         monitor_geo = self.display.get_screen_geometry(self.hud_monitor)
         monitor_x = monitor_geo[0]
         monitor_w = monitor_geo[2]
+        launcher = self.unity.launcher.get_launcher_for_monitor(self.hud_monitor)
         hud_x = self.unity.hud.geometry[0]
         hud_w = self.unity.hud.geometry[2]
 
-        if self.hud_locked:
+        if self.hud_locked and launcher.geometry.w < launcher.geometry.h:
             self.assertThat(hud_x, GreaterThan(monitor_x))
             self.assertThat(hud_x, LessThan(monitor_x + monitor_w))
             self.assertThat(hud_w, Equals(monitor_x + monitor_w - hud_x))

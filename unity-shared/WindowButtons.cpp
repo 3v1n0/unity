@@ -27,6 +27,7 @@
 #include "WindowButtonPriv.h"
 
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity
@@ -64,6 +65,7 @@ void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
   if (new_state != visual_state_)
   {
     visual_state_ = new_state;
+    visual_state_change.emit(this);
     QueueDraw();
   }
 }
@@ -233,14 +235,14 @@ void WindowButton::AddProperties(debug::IntrospectionData& introspection)
   }
 
   introspection.add(GetAbsoluteGeometry())
-                                  .add("type", type_name)
-                                  .add("visible", IsVisible() && Parent()->opacity() != 0.0f)
-                                  .add("sensitive", Parent()->GetInputEventSensitivity())
-                                  .add("enabled", enabled())
-                                  .add("visual_state", state_name)
-                                  .add("opacity", Parent()->opacity())
-                                  .add("focused", Parent()->focused())
-                                  .add("overlay_mode", overlay_mode());
+               .add("type", type_name)
+               .add("visible", IsVisible() && Parent()->opacity() != 0.0f)
+               .add("sensitive", Parent()->GetInputEventSensitivity())
+               .add("enabled", enabled())
+               .add("visual_state", state_name)
+               .add("opacity", Parent()->opacity())
+               .add("focused", Parent()->focused())
+               .add("overlay_mode", overlay_mode());
 }
 } // Internal Namespace
 

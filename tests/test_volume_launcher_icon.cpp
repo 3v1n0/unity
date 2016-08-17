@@ -27,8 +27,11 @@ using namespace testing;
 #include "test_utils.h"
 #include "test_mock_devices.h"
 #include "test_mock_filemanager.h"
+#include "mock-application.h"
+
 using namespace unity;
 using namespace unity::launcher;
+using namespace testmocks;
 
 namespace
 {
@@ -43,7 +46,7 @@ struct TestVolumeLauncherIcon : public Test
   {
     SetupVolumeDefaultBehavior();
     SetupSettingsDefaultBehavior();
-    icon_ = new NiceMock<VolumeLauncherIcon>(volume_, settings_, notifications_, file_manager_);
+    icon_ = new VolumeLauncherIcon(volume_, settings_, notifications_, file_manager_);
   }
 
   void SetupSettingsDefaultBehavior()
@@ -53,11 +56,13 @@ struct TestVolumeLauncherIcon : public Test
 
   void SetupVolumeDefaultBehavior()
   {
+    ON_CALL(*volume_, CanBeFormatted()).WillByDefault(Return(false));
     ON_CALL(*volume_, CanBeRemoved()).WillByDefault(Return(false));
     ON_CALL(*volume_, CanBeStopped()).WillByDefault(Return(false));
     ON_CALL(*volume_, GetName()).WillByDefault(Return("Test Name"));
     ON_CALL(*volume_, GetIconName()).WillByDefault(Return("Test Icon Name"));
     ON_CALL(*volume_, GetIdentifier()).WillByDefault(Return("Test Identifier"));
+    ON_CALL(*volume_, GetUnixDevicePath()).WillByDefault(Return("/dev/sda1"));
     ON_CALL(*volume_, GetUri()).WillByDefault(Return("file:///media/user/device_uri"));
     ON_CALL(*volume_, HasSiblings()).WillByDefault(Return(false));
     ON_CALL(*volume_, CanBeEjected()).WillByDefault(Return(false));
@@ -94,7 +99,7 @@ struct TestVolumeLauncherIconDelayedConstruction : TestVolumeLauncherIcon
 
   void CreateIcon()
   {
-    icon_ = new NiceMock<VolumeLauncherIcon>(volume_, settings_, notifications_, file_manager_);
+    icon_ = new VolumeLauncherIcon(volume_, settings_, notifications_, file_manager_);
   }
 };
 
@@ -105,7 +110,7 @@ TEST_F(TestVolumeLauncherIcon, TestIconType)
 
 TEST_F(TestVolumeLauncherIconDelayedConstruction, TestRunningOnClosed)
 {
-  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(false));
+  ON_CALL(*file_manager_, WindowsForLocation(_)).WillByDefault(Return(WindowList()));
   CreateIcon();
 
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
@@ -113,7 +118,8 @@ TEST_F(TestVolumeLauncherIconDelayedConstruction, TestRunningOnClosed)
 
 TEST_F(TestVolumeLauncherIconDelayedConstruction, TestRunningOnOpened)
 {
-  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(true));
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
   CreateIcon();
 
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
@@ -128,16 +134,91 @@ TEST_F(TestVolumeLauncherIcon, FilemanagerSignalDisconnection)
 
 TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedClosed)
 {
-  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(false));
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList()));
   file_manager_->locations_changed.emit();
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
 
 TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedOpened)
 {
-  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(true));
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win1, win2})));
   file_manager_->locations_changed.emit();
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestVolumeLauncherIcon, RunningState)
+{
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win1, win2})));
+  file_manager_->locations_changed.emit();
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList()));
+  file_manager_->locations_changed.emit();
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestVolumeLauncherIcon, ActiveState)
+{
+  auto win1 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  auto win2 = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win1, win2})));
+  file_manager_->locations_changed.emit();
+  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+
+  win2->LocalFocus();
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList()));
+  file_manager_->locations_changed.emit();
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE));
+}
+
+TEST_F(TestVolumeLauncherIcon, WindowsCount)
+{
+  WindowList windows((g_random_int() % 10) + 5);
+  for (unsigned i = 0; i < windows.capacity(); ++i)
+    windows[i] = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(windows));
+  file_manager_->locations_changed.emit();
+  EXPECT_EQ(icon_->Windows().size(), windows.size());
+}
+
+TEST_F(TestVolumeLauncherIcon, WindowsPerMonitor)
+{
+  WindowList windows((g_random_int() % 10) + 5);
+  for (unsigned i = 0; i < windows.capacity(); ++i)
+  {
+    auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+    win->monitor_ = i % 2;
+    windows[i] = win;
+  }
+
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(windows));
+  file_manager_->locations_changed.emit();
+
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), (windows.size() / 2) + (windows.size() % 2));
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), windows.size() / 2);
+}
+
+TEST_F(TestVolumeLauncherIcon, WindowsOnMonitorChanges)
+{
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
+  file_manager_->locations_changed.emit();
+
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), 1);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), 0);
+
+  win->SetMonitor(1);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), 0);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), 1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestPosition)
@@ -240,6 +321,32 @@ TEST_F(TestVolumeLauncherIconDelayedConstruction, TestVisibilityAfterUnmount_Bla
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
+TEST_F(TestVolumeLauncherIcon, TestVisibilityWithWindows)
+{
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(false));
+  settings_->changed.emit();
+  ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
+  file_manager_->locations_changed.emit();
+
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestVisibilityWithWindows_Blacklisted)
+{
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(true));
+  settings_->changed.emit();
+  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+
+  auto win = std::make_shared<MockApplicationWindow::Nice>(g_random_int());
+  ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
+  file_manager_->locations_changed.emit();
+
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
 TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_VolumeWithoutIdentifier)
 {
   EXPECT_CALL(*volume_, GetIdentifier())
@@ -251,22 +358,22 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_VolumeWithoutIdent
 
 TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Success)
 {
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(false));
+  settings_->changed.emit();
+  ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
   auto menuitem = GetMenuItemAtIndex(4);
 
   ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  EXPECT_CALL(*settings_, TryToBlacklist(_))
-    .Times(1);
-
-  EXPECT_CALL(*settings_, IsABlacklistedDevice(_))
-    .WillRepeatedly(Return(true));
-
+  EXPECT_CALL(*settings_, TryToBlacklist(volume_->GetIdentifier())).Times(1);
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+
+  EXPECT_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillRepeatedly(Return(true));
   settings_->changed.emit(); // TryToBlacklist() works if DevicesSettings emits a changed signal.
 
-  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
 TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
@@ -277,12 +384,49 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  EXPECT_CALL(*settings_, TryToBlacklist(_))
-    .Times(1);
-
+  EXPECT_CALL(*settings_, TryToBlacklist(volume_->GetIdentifier())).Times(1);
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
 
-  ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestLockToLauncherMenuItem_Success)
+{
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(true));
+  settings_->changed.emit();
+  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+
+  auto menuitem = GetMenuItemAtIndex(4);
+
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Lock to Launcher");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(volume_->GetIdentifier())).Times(1);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+
+  EXPECT_CALL(*settings_, IsABlacklistedDevice(_)).WillRepeatedly(Return(false));
+  settings_->changed.emit(); // TryToBlacklist() works if DevicesSettings emits a changed signal.
+
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestLockToLauncherMenuItem_Failure)
+{
+  ON_CALL(*settings_, IsABlacklistedDevice(volume_->GetIdentifier())).WillByDefault(Return(true));
+  settings_->changed.emit();
+  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+
+  auto menuitem = GetMenuItemAtIndex(4);
+
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Lock to Launcher");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(volume_->GetIdentifier())).Times(1);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
 TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
@@ -298,7 +442,7 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
 
   InSequence seq;
   EXPECT_CALL(*volume_, Mount());
-  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  EXPECT_CALL(*file_manager_, Open(volume_->GetUri(), time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 }
@@ -311,13 +455,14 @@ TEST_F(TestVolumeLauncherIcon, TestNameMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
 
   uint64_t time = g_random_int();
   ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
 
   InSequence seq;
   EXPECT_CALL(*volume_, Mount());
-  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  EXPECT_CALL(*file_manager_, Open(volume_->GetUri(), time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 }
@@ -336,7 +481,7 @@ TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem)
   auto menuitem = GetMenuItemAtIndex(5);
 
   EXPECT_CALL(*volume_, Eject());
-  EXPECT_CALL(*notifications_, Display(volume_->GetIconName(), volume_->GetName()));
+  EXPECT_CALL(*notifications_, Display(volume_->GetName()));
 
   ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Eject");
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
@@ -428,7 +573,7 @@ TEST_F(TestVolumeLauncherIcon, TestEject)
     .WillRepeatedly(Return(true));
 
   EXPECT_CALL(*volume_, Eject());
-  EXPECT_CALL(*notifications_, Display(volume_->GetIconName(), volume_->GetName()));
+  EXPECT_CALL(*notifications_, Display(volume_->GetName()));
   icon_->EjectAndShowNotification();
 }
 
@@ -437,7 +582,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved)
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
   EXPECT_CALL(*settings_, TryToUnblacklist(_))
-    .Times(0);
+    .Times(1);
 
   volume_->removed.emit();
 }
@@ -450,7 +595,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovabledVolume)
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
   EXPECT_CALL(*settings_, TryToUnblacklist(_))
-    .Times(0);
+    .Times(1);
 
   volume_->removed.emit();
 }
@@ -515,7 +660,7 @@ TEST_F(TestVolumeLauncherIcon, ActivateMounted)
   uint64_t time = g_random_int();
   InSequence seq;
   EXPECT_CALL(*volume_, Mount()).Times(0);
-  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  EXPECT_CALL(*file_manager_, Open(volume_->GetUri(), time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 
@@ -525,7 +670,7 @@ TEST_F(TestVolumeLauncherIcon, ActivateUnmounted)
   ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
   InSequence seq;
   EXPECT_CALL(*volume_, Mount());
-  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  EXPECT_CALL(*file_manager_, Open(volume_->GetUri(), time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 

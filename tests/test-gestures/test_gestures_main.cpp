@@ -46,7 +46,6 @@ void nux::GestureEvent::Reject()
     g_gesture_event_reject_count[gesture_id_] + 1;
 }
 
-Cursor WindowGestureTargetMock::fleur_cursor = 0;
 std::set<WindowGestureTargetMock*> g_window_target_mocks;
 
 int main(int argc, char** argv)

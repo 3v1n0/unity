@@ -19,6 +19,7 @@
  */
 
 #include <glib.h>
+#include <glib-unix.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 #include <libido/libido.h>
@@ -26,20 +27,21 @@
 #include "config.h"
 #include "panel-a11y.h"
 #include "panel-service.h"
+#include "panel-service-private.h"
 
 static GDBusNodeInfo *introspection_data = NULL;
 
 static const gchar introspection_xml[] =
   "<node>"
-  "  <interface name='com.canonical.Unity.Panel.Service'>"
+  "  <interface name='"UPS_IFACE"'>"
   ""
   "    <method name='Sync'>"
-  "      <arg type='a(ssssbbusbbi)' name='state' direction='out'/>"
+  "      <arg type='"ENTRY_ARRAY_SIGNATURE"' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncOne'>"
   "      <arg type='s' name='indicator_id' direction='in'/>"
-  "      <arg type='a(ssssbbusbbi)' name='state' direction='out'/>"
+  "      <arg type='"ENTRY_ARRAY_SIGNATURE"' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncGeometries'>"
@@ -82,6 +84,9 @@ static const gchar introspection_xml[] =
   "      <arg type='i' name='delta' direction='in'/>"
   "    </method>"
   ""
+  ""
+  "    <method name='CloseActiveEntry' />"
+  ""
   "    <signal name='EntryActivated'>"
   "     <arg type='s' name='panel_id' />"
   "     <arg type='s' name='entry_id' />"
@@ -96,20 +101,11 @@ static const gchar introspection_xml[] =
   "     <arg type='s' name='entry_id' />"
   "    </signal>"
   ""
-  "    <signal name='EntryShowNowChanged'>"
-  "     <arg type='s' name='entry_id' />"
-  "     <arg type='b' name='show_now_state' />"
-  "    </signal>"
-  ""
   "    <signal name='IconPathsChanged' />"
   ""
   "  </interface>"
   "</node>";
 
-#define S_NAME_DESKTOP "com.canonical.Unity.Panel.Service.Desktop"
-#define S_NAME_LOCKSCREEN "com.canonical.Unity.Panel.Service.LockScreen"
-#define S_PATH  "/com/canonical/Unity/Panel/Service"
-#define S_IFACE "com.canonical.Unity.Panel.Service"
 
 /* Forwards */
 static void
@@ -254,6 +250,11 @@ handle_method_call (GDBusConnection       *connection,
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free(entry_id);
     }
+  else if (g_strcmp0 (method_name, "CloseActiveEntry") == 0)
+    {
+      panel_service_close_active_entry (service);
+      g_dbus_method_invocation_return_value (invocation, NULL);
+    }
 }
 
 static void
@@ -262,8 +263,8 @@ on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnec
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "ReSync",
                                  g_variant_new ("(s)", indicator_id),
                                  &error);
@@ -284,10 +285,13 @@ on_service_entry_activated (PanelService    *service,
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "EntryActivated",
-                                 g_variant_new ("(ss(iiuu))", panel_id, entry_id, x, y, w, h),
+                                 g_variant_new ("(ss(iiuu))",
+                                                panel_id ? panel_id : "",
+                                                entry_id ? entry_id : "",
+                                                x, y, w, h),
                                  &error);
 
   if (error)
@@ -307,8 +311,8 @@ on_service_entry_activate_request (PanelService    *service,
 
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "EntryActivateRequest",
                                  g_variant_new ("(s)", entry_id),
                                  &error);
@@ -321,35 +325,13 @@ on_service_entry_activate_request (PanelService    *service,
 }
 
 static void
-on_service_entry_show_now_changed (PanelService    *service,
-                                   const gchar     *entry_id,
-                                   gboolean         show_now_state,
-                                   GDBusConnection *connection)
-{
-  GError *error = NULL;
-  g_dbus_connection_emit_signal (connection,
-                                 NULL,
-                                 S_PATH,
-                                 S_IFACE,
-                                 "EntryShowNowChanged",
-                                 g_variant_new ("(sb)", entry_id, show_now_state),
-                                 &error);
-
-  if (error)
-    {
-      g_warning ("Unable to emit EntryShowNowChanged signal: %s", error->message);
-      g_error_free (error);
-    }
-}
-
-static void
 on_icon_theme_changed (GtkIconTheme* theme, GDBusConnection *connection)
 {
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
                                  NULL,
-                                 S_PATH,
-                                 S_IFACE,
+                                 UPS_PATH,
+                                 UPS_IFACE,
                                  "IconPathsChanged",
                                  NULL,
                                  &error);
@@ -370,7 +352,7 @@ on_bus_acquired (GDBusConnection *connection,
   guint         reg_id;
 
   reg_id = g_dbus_connection_register_object (connection,
-                                              S_PATH,
+                                              UPS_PATH,
                                               introspection_data->interfaces[0],
                                               &interface_vtable,
                                               service,
@@ -382,8 +364,6 @@ on_bus_acquired (GDBusConnection *connection,
                     G_CALLBACK (on_service_entry_activated), connection);
   g_signal_connect (service, "entry-activate-request",
                     G_CALLBACK (on_service_entry_activate_request), connection);
-  g_signal_connect (service, "entry-show-now-changed",
-                    G_CALLBACK (on_service_entry_show_now_changed), connection);
 
   g_signal_connect (gtk_icon_theme_get_default(), "changed",
                     G_CALLBACK (on_icon_theme_changed), connection);
@@ -414,19 +394,14 @@ on_name_lost (GDBusConnection *connection,
   gtk_main_quit ();
 }
 
-static void
-on_indicators_cleared (PanelService *service)
+static gboolean
+on_unix_signal (gpointer data)
 {
-  gtk_main_quit ();
-}
-
-static void
-on_signal (int sig)
-{
-  PanelService *service = panel_service_get_default ();
-  panel_service_clear_indicators (service);
+  PanelService *service = PANEL_SERVICE (data);
   g_signal_connect (service, "indicators-cleared",
-                    G_CALLBACK (on_indicators_cleared), NULL);
+                    G_CALLBACK (gtk_main_quit), NULL);
+  panel_service_clear_indicators (service);
+  return FALSE;
 }
 
 static void
@@ -481,7 +456,7 @@ main (gint argc, gchar **argv)
   service = panel_service_get_default ();
 
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
-                             !lockscreen_mode ? S_NAME_DESKTOP : S_NAME_LOCKSCREEN,
+                             !lockscreen_mode ? UPS_NAME_DESKTOP : UPS_NAME_LOCKSCREEN,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
                              on_bus_acquired,
                              on_name_acquired,
@@ -489,8 +464,8 @@ main (gint argc, gchar **argv)
                              service,
                              NULL);
 
-  signal (SIGINT, on_signal);
-  signal (SIGTERM, on_signal);
+  g_unix_signal_add (SIGINT, on_unix_signal, service);
+  g_unix_signal_add (SIGTERM, on_unix_signal, service);
 
   gtk_main ();
 

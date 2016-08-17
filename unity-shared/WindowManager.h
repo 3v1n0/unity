@@ -83,6 +83,7 @@ public:
   virtual bool IsWindowMaximized(Window window_id) const = 0;
   virtual bool IsWindowVerticallyMaximized(Window window_id) const = 0;
   virtual bool IsWindowHorizontallyMaximized(Window window_id) const = 0;
+  virtual bool IsWindowFullscreen(Window window_id) const = 0;
   virtual bool IsWindowDecorated(Window window_id) const = 0;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const = 0;
   virtual bool IsWindowObscured(Window window_id) const = 0;
@@ -152,11 +153,12 @@ public:
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
 
-  virtual void CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any) = 0;
+  virtual void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any) = 0;
 
   virtual int WorkspaceCount() const = 0;
 
   virtual nux::Point GetCurrentViewport() const = 0;
+  virtual void SetCurrentViewport(nux::Point const&) = 0;
   virtual void SetViewportSize(int horizontal, int vertical) = 0;
   virtual int GetViewportHSize() const = 0;
   virtual int GetViewportVSize() const = 0;
@@ -165,10 +167,13 @@ public:
   virtual bool RestoreInputFocus() = 0;
 
   virtual std::string GetWindowName(Window window_id) const = 0;
+  virtual bool IsOnscreenKeyboard(Window window_id) const = 0;
 
   virtual std::string GetStringProperty(Window, Atom) const = 0;
   virtual void SetCardinalProperty(Window, Atom, std::vector<long> const&) = 0;
   virtual std::vector<long> GetCardinalProperty(Window, Atom) const = 0;
+
+  virtual Cursor GetCachedCursor(unsigned int cursor_name) const = 0;
 
   // Nux Modifiers, Nux Keycode (= X11 KeySym)
   nux::Property<std::pair<unsigned, unsigned>> close_window_key;
@@ -182,6 +187,8 @@ public:
   sigc::signal<void, Window> window_restored;
   sigc::signal<void, Window> window_minimized;
   sigc::signal<void, Window> window_unminimized;
+  sigc::signal<void, Window> window_fullscreen;
+  sigc::signal<void, Window> window_unfullscreen;
   sigc::signal<void, Window> window_shaded;
   sigc::signal<void, Window> window_unshaded;
   sigc::signal<void, Window> window_shown;
@@ -189,6 +196,8 @@ public:
   sigc::signal<void, Window> window_resized;
   sigc::signal<void, Window> window_moved;
   sigc::signal<void, Window> window_focus_changed;
+
+  sigc::signal<void> show_desktop_changed;
 
   sigc::signal<void> initiate_spread;
   sigc::signal<void> terminate_spread;

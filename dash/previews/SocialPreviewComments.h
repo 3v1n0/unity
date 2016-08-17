@@ -46,12 +46,11 @@ public:
 
   SocialPreviewComments(dash::Preview::Ptr preview_model, NUX_FILE_LINE_PROTO);
 
-  virtual ~SocialPreviewComments();
+  nux::Property<double> scale;
 
   sigc::signal<void> request_close() const { return preview_container_.request_close; }
 
 protected:
-
   typedef nux::ObjectPtr<StaticCairoText> StaticCairoTextPtr;
   typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> Comment;
   std::list<Comment> comments_;
@@ -70,9 +69,6 @@ protected:
   virtual void AddProperties(debug::IntrospectionData&);
 
 private:
-
-  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
-
   PreviewContainer preview_container_;
 };
 

@@ -37,7 +37,6 @@
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/BGHash.h"
-#include "unity-shared/EMConverter.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/OverlayRenderer.h"
 #include "unity-shared/SearchBar.h"
@@ -57,17 +56,20 @@ class DashLayout;
 class DashView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
-  typedef std::map<std::string, nux::ObjectPtr<ScopeView>> ScopeViews;
+  typedef std::unordered_map<std::string, nux::ObjectPtr<ScopeView>> ScopeViews;
 
 public:
   DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& application_starter);
   ~DashView();
 
-  void AboutToShow(int monitor);
+  nux::Property<double> scale;
+
+  void AboutToShow();
   void AboutToHide();
   void Relayout();
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
+  void SetMonitor(int monitor);
   void SetMonitorOffset(int x, int y);
 
   bool IsCommandLensOpen() const;
@@ -107,7 +109,6 @@ private:
   void BuildPreview(Preview::Ptr model);
   void ClosePreview();
   void OnPreviewAnimationFinished();
-  void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
   void OnLiveSearchReached(std::string const& search_string);
@@ -131,9 +132,12 @@ private:
   nux::Geometry GetRenderAbsoluteGeometry() const;
 
   void UpdateDashViewSize();
+  void UpdateScale(double scale);
   void OnDPIChanged();
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+
+  nux::Area* SkipUnexpandableHeaderKeyNav();
 
   UBusManager ubus_manager_;
   Scopes::Ptr scopes_;
@@ -168,10 +172,8 @@ private:
 
   LocalResult last_activated_result_;
   guint64 last_activated_timestamp_;
-  bool search_in_progress_;
   bool activate_on_finish_;
-  glib::Source::UniquePtr activate_timeout_;
-
+  glib::Source::UniquePtr activate_delay_;
   bool visible_;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> dash_view_copy_;
@@ -195,7 +197,6 @@ private:
 
   nux::ObjectPtr<OverlayWindowButtons> overlay_window_buttons_;
 
-  EMConverter::Ptr cv_;
   int monitor_;
 
   friend class TestDashView;

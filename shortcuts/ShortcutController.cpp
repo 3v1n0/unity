@@ -22,6 +22,7 @@
 
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
@@ -42,7 +43,7 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
   , base_window_raiser_(base_window_raiser)
   , visible_(false)
   , enabled_(true)
-  , fade_animator_(FADE_DURATION)
+  , fade_animator_(Settings::Instance().low_gfx() ? 0 : FADE_DURATION)
 {
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [this] (GVariant*)
                                  { SetEnabled(false); });
@@ -53,6 +54,15 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
 
   WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
   fade_animator_.updated.connect(sigc::mem_fun(this, &Controller::SetOpacity));
+  fade_animator_.finished.connect([this] {
+    if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
+      view_window_->ShowWindow(false);
+  });
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    fade_animator_.SetDuration(low_gfx ? 0 : FADE_DURATION);
+  }, *this));
+
   modeller_->model_changed.connect(sigc::mem_fun(this, &Controller::OnModelUpdated));
 }
 
@@ -70,14 +80,12 @@ void Controller::OnModelUpdated(Model::Ptr const& model)
   if (!view_)
     return;
 
+  model->Fill();
   view_->SetModel(model);
 
   if (Visible())
   {
-    model->Fill();
-    auto uscreen = UScreen::GetDefault();
-    int monitor = uscreen->GetMonitorAtPosition(view_window_->GetX(), view_window_->GetX());
-    auto const& offset = GetOffsetPerMonitor(monitor);
+    auto const& offset = GetOffsetPerMonitor(view_->monitor());
 
     if (offset.x < 0 || offset.y < 0)
     {
@@ -110,8 +118,8 @@ bool Controller::OnShowTimer()
   modeller_->GetCurrentModel()->Fill();
   EnsureView();
 
-  int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
-  auto const& offset = GetOffsetPerMonitor(monitor);
+  view_->monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  auto const& offset = GetOffsetPerMonitor(view_->monitor());
 
   if (offset.x < 0 || offset.y < 0)
     return false;
@@ -122,6 +130,7 @@ bool Controller::OnShowTimer()
   if (visible_)
   {
     view_->live_background = true;
+    view_window_->ShowWindow(true);
     animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
   }
 
@@ -173,7 +182,7 @@ void Controller::ConstructView()
 
   main_layout_->AddView(view_.GetPointer());
 
-  view_window_->ShowWindow(true);
+  view_window_->ShowWindow(false);
   SetOpacity(0.0);
 }
 

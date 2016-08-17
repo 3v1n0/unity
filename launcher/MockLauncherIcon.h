@@ -32,9 +32,9 @@
 #include <sigc++/sigc++.h>
 
 #include <libdbusmenu-glib/menuitem.h>
+#include <UnityCore/GLibWrapper.h>
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/TimeUtil.h"
-#include <UnityCore/GTKWrapper.h>
 
 #include "AbstractLauncherIcon.h"
 #include "MultiMonitor.h"
@@ -52,7 +52,7 @@ public:
     icon.SetGetterFunction([this] { return ""; });
   }
 
-  virtual std::string type() const { return "mock"; }
+  virtual WindowType type() const { return WindowType::UNKNOWN; }
 
   virtual Window window_id() const { return xid_; }
   virtual int monitor() const { return -1; }
@@ -87,6 +87,7 @@ public:
 
   void ShowTooltip() { is_tooltip_visible_ = true; }
   void HideTooltip() { is_tooltip_visible_ = false; }
+  void PromptHideTooltip() { is_tooltip_visible_ = false; }
   bool IsTooltipVisible() { return is_tooltip_visible_; }
 
   void    SetShortcut(guint64 shortcut) {}
@@ -112,34 +113,34 @@ public:
     return result;
   }
 
-  std::vector<Window> WindowsOnViewport ()
+  WindowList WindowsOnViewport()
   {
-    std::vector<Window> result;
+    WindowList result;
 
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((500 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((200 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((600 << 16) + 200);
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((500 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((200 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((600 << 16) + 200));
 
     return result;
   }
 
-  std::vector<Window> WindowsForMonitor (int monitor)
+  WindowList WindowsForMonitor(int monitor)
   {
-    std::vector<Window> result;
+    WindowList result;
 
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((500 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((200 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((600 << 16) + 200);
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((500 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((200 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((600 << 16) + 200));
 
     return result;
   }
@@ -148,7 +149,7 @@ public:
 
   void SetOrder(int order) { order_ = order; }
 
-  bool OpenQuicklist(bool select_first_item = false, int monitor = -1)
+  bool OpenQuicklist(bool select_first_item = false, int monitor = -1, bool restore_input_focus = false)
   {
     return false;
   }
@@ -194,14 +195,24 @@ public:
     return 7;
   }
 
-  const bool WindowVisibleOnViewport()
+  bool WindowVisibleOnViewport() const
   {
     return false;
   }
 
-  const bool WindowVisibleOnMonitor(int monitor)
+  bool WindowVisibleOnMonitor(int monitor) const
   {
     return false;
+  }
+
+  size_t WindowsVisibleOnMonitor(int monitor) const
+  {
+    return 0;
+  }
+
+  size_t WindowsVisibleOnViewport() const
+  {
+    return 0;
   }
 
   void SetVisibleOnMonitor(int monitor, bool visible) {}
@@ -329,11 +340,6 @@ public:
     return icon_;
   }
 
-  nux::BaseTexture* Emblem()
-  {
-    return 0;
-  }
-
   MenuItemsVector Menus()
   {
     return MenuItemsVector ();
@@ -373,7 +379,7 @@ private:
   nux::BaseTexture* TextureFromGtkTheme(const char* icon_name, int size)
   {
     GdkPixbuf* pbuf;
-    gtk::IconInfo info;
+    glib::Object<GtkIconInfo> info;
     nux::BaseTexture* result = NULL;
     GError* error = NULL;
     GIcon* icon;
@@ -384,7 +390,7 @@ private:
 
     if (G_IS_ICON(icon))
     {
-      info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+      info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, GTK_ICON_LOOKUP_FORCE_SIZE);
       g_object_unref(icon);
     }
     else
@@ -392,7 +398,7 @@ private:
       info = gtk_icon_theme_lookup_icon(theme,
                                         icon_name,
                                         size,
-                                        (GtkIconLookupFlags) 0);
+                                        GTK_ICON_LOOKUP_FORCE_SIZE);
     }
 
     if (!info)

@@ -29,13 +29,13 @@ lockscreen/UserPromptView.cpp
 panel/PanelMenuView.cpp
 plugins/networkarearegion/networkarearegion.xml.in
 plugins/unity-mt-grab-handles/unitymtgrabhandles.xml.in
-plugins/unitydialog/unitydialog.xml.in
-plugins/unityshell/src/unity-dash-view-accessible.cpp
-plugins/unityshell/src/unity-launcher-accessible.cpp
-plugins/unityshell/src/unity-launcher-icon-accessible.cpp
-plugins/unityshell/src/unity-quicklist-menu-accessible.cpp
-plugins/unityshell/src/unity-search-bar-accessible.cpp
-plugins/unityshell/src/unity-switcher-accessible.cpp
+a11y/unity-dash-view-accessible.cpp
+a11y/unity-launcher-accessible.cpp
+a11y/unity-launcher-icon-accessible.cpp
+a11y/unity-quicklist-menu-accessible.cpp
+a11y/unity-scope-bar-icon-accessible.cpp
+a11y/unity-search-bar-accessible.cpp
+a11y/unity-switcher-accessible.cpp
 plugins/unityshell/src/unityshell.cpp
 plugins/unityshell/unityshell.xml.in
 shortcuts/ShortcutHintPrivate.cpp
@@ -48,5 +48,6 @@ unity-shared/CoverArt.cpp
 unity-shared/DashStyle.cpp
 unity-shared/PreviewStyle.cpp
 unity-shared/SearchBar.cpp
+unity-shared/TextInput.cpp
 unity-shared/UScreen.cpp
 gnome/50-unity-launchers.xml.in

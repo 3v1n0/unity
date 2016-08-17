@@ -20,36 +20,28 @@
 #ifndef TEXTINPUT_H
 #define TEXTINPUT_H
 
-#include "config.h"
-
-#include <glib/gi18n-lib.h>
-#include <gtk/gtk.h>
-
 #include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/LayeredLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/TextEntry.h>
-#include <NuxCore/Logger.h>
-#include <NuxCore/Property.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
 
-#include "CairoTexture.h"
-#include "unity-shared/IconTexture.h"
-#include "unity-shared/IMTextEntry.h"
-#include "unity-shared/Introspectable.h"
-#include "unity-shared/SearchBarSpinner.h"
-#include "unity-shared/StaticCairoText.h"
+#include "Introspectable.h"
+#include "IMTextEntry.h"
+#include "RawPixel.h"
+#include "SearchBarSpinner.h"
 
 namespace nux
 {
 class AbstractPaintLayer;
+class LayeredLayout;
 class LinearLayout;
+class HLayout;
 }
 
 namespace unity
 {
+class IconTexture;
+class StaticCairoText;
+class SearchBarSpinner;
 
 class TextInput : public unity::debug::Introspectable, public nux::View
 {
@@ -62,26 +54,50 @@ public:
   void SetSpinnerVisible(bool visible);
   void SetSpinnerState(SpinnerState spinner_state);
 
+  void EnableCapsLockWarning() const;
+
   IMTextEntry* text_entry() const;
 
+  nux::Property<std::string> activator_icon;
+  nux::Property<RawPixel> activator_icon_size;
+  nux::Property<nux::Color> background_color;
+  nux::Property<nux::Color> border_color;
+  nux::Property<int> border_radius;
   nux::RWProperty<std::string> input_string;
   nux::Property<std::string> input_hint;
   nux::Property<std::string> hint_font_name;
   nux::Property<int> hint_font_size;
+  nux::Property<nux::Color> hint_color;
   nux::ROProperty<bool> im_active;
   nux::ROProperty<bool> im_preedit;
+  nux::Property<bool> show_activator;
+  nux::Property<bool> show_lock_warnings;
+  nux::Property<double> scale;
 
 private:
-  void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+  void UpdateFont();
   void UpdateHintFont();
+  void UpdateHintColor();
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   void UpdateBackground(bool force);
+  void UpdateScale(double);
+  void UpdateSize();
+  void UpdateTextures();
 
   std::string GetName() const;
-
   void AddProperties(debug::IntrospectionData&);
+
   bool AcceptKeyNavFocus();
+  bool ShouldBeHighlighted();
+  void CheckLocks();
+  void OnLockStateChanged(bool);
+
+  nux::ObjectPtr<nux::BaseTexture> LoadActivatorIcon(std::string const& icon_file, int icon_size);
+  nux::ObjectPtr<nux::BaseTexture> LoadWarningIcon(int icon_size);
+  void LoadWarningTooltip();
+
+  void PaintWarningTooltip(nux::GraphicsEngine& graphics_engine);
 
 protected:
   void OnInputHintChanged();
@@ -100,20 +116,23 @@ protected:
   IMTextEntry* pango_entry_;
 
 private:
-
-  bool ShouldBeHighlighted();
-
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
+  nux::HLayout* hint_layout_;
   nux::LayeredLayout* layered_layout_;
   SearchBarSpinner* spinner_;
 
+  nux::Property<bool> caps_lock_on;
   int last_width_;
   int last_height_;
 
-  glib::SignalManager sig_manager_;
+  IconTexture* warning_;
+  IconTexture* activator_;
+  nux::ObjectPtr<nux::BaseTexture> warning_tooltip_;
 
+  glib::Source::UniquePtr tooltip_timeout_;
+  glib::SignalManager sig_manager_;
 };
 
 }

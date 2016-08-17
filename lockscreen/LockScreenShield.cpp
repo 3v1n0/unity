@@ -21,121 +21,72 @@
 
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
-#include <Nux/PaintLayer.h>
 
-#include "BackgroundSettings.h"
-#include "CofView.h"
 #include "LockScreenPanel.h"
 #include "LockScreenSettings.h"
-#include "UserPromptView.h"
-#include "unity-shared/UScreen.h"
-#include "unity-shared/WindowManager.h"
+#include "LockScreenAbstractPromptView.h"
 
 namespace unity
 {
 namespace lockscreen
 {
 
-Shield::Shield(session::Manager::Ptr const& session_manager, indicator::Indicators::Ptr const& indicators, Accelerators::Ptr const& accelerators, int monitor_num, bool is_primary)
-  : AbstractShield(session_manager, indicators, accelerators, monitor_num, is_primary)
-  , bg_settings_(std::make_shared<BackgroundSettings>())
-  , prompt_view_(nullptr)
+Shield::Shield(session::Manager::Ptr const& session_manager,
+               indicator::Indicators::Ptr const& indicators,
+               Accelerators::Ptr const& accelerators,
+               nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
+               int monitor_num, bool is_primary)
+  : BaseShield(session_manager, indicators, accelerators, prompt_view, monitor_num, is_primary)
   , panel_view_(nullptr)
 {
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
-
   EnableInputWindow(true);
-
-  geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdateBackgroundTexture();});
 
   monitor.changed.connect([this] (int monitor) {
     if (panel_view_)
       panel_view_->monitor = monitor;
-
-    UpdateBackgroundTexture();
   });
 
   primary.changed.connect([this] (bool is_primary) {
-    if (!is_primary)
-    {
-      UnGrabPointer();
-      UnGrabKeyboard();
-    }
-
-    is_primary ? ShowPrimaryView() : ShowSecondaryView();
     if (panel_view_) panel_view_->SetInputEventSensitivity(is_primary);
-    QueueRelayout();
-    QueueDraw();
   });
-
-  mouse_move.connect([this] (int x, int y, int, int, unsigned long, unsigned long) {
-    auto const& abs_geo = GetAbsoluteGeometry();
-    grab_motion.emit(abs_geo.x + x, abs_geo.y + y);
-  });
-}
-
-void Shield::UpdateBackgroundTexture()
-{
-  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
-
-  if (!background_layer_ || monitor_geo != background_layer_->GetGeometry())
-  {
-    auto background_texture = bg_settings_->GetBackgroundTexture(monitor);
-    background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
-    SetBackgroundLayer(background_layer_.get());
-  }
-}
-
-void Shield::CheckCapsLockPrompt()
-{
-  if (prompt_view_)
-    prompt_view_->CheckIfCapsLockOn();
 }
 
 void Shield::ShowPrimaryView()
 {
-  GrabPointer();
-  GrabKeyboard();
-
   if (primary_layout_)
   {
+    if (prompt_view_)
+    {
+      prompt_view_->scale = scale();
+      prompt_layout_->AddView(prompt_view_.GetPointer());
+    }
+
+    GrabScreen(false);
     SetLayout(primary_layout_.GetPointer());
     return;
   }
 
+  GrabScreen(true);
   nux::Layout* main_layout = new nux::VLayout();
   primary_layout_ = main_layout;
   SetLayout(primary_layout_.GetPointer());
 
   main_layout->AddView(CreatePanel());
 
-  nux::HLayout* prompt_layout = new nux::HLayout();
-  prompt_layout->SetLeftAndRightPadding(2 * Settings::GRID_SIZE);
+  prompt_layout_ = new nux::HLayout();
+  prompt_layout_->SetLeftAndRightPadding(2 * Settings::GRID_SIZE.CP(scale));
 
-  prompt_view_ = CreatePromptView();
-  prompt_layout->AddView(prompt_view_);
+  if (prompt_view_)
+  {
+    prompt_view_->scale = scale();
+    prompt_layout_->AddView(prompt_view_.GetPointer());
+  }
 
   // 10 is just a random number to center the prompt view.
   main_layout->AddSpace(0, 10);
-  main_layout->AddLayout(prompt_layout);
+  main_layout->AddLayout(prompt_layout_.GetPointer());
   main_layout->AddSpace(0, 10);
-}
-
-void Shield::ShowSecondaryView()
-{
-  if (cof_layout_)
-  {
-    SetLayout(cof_layout_.GetPointer());
-    return;
-  }
-
-  nux::Layout* main_layout = new nux::VLayout();
-  cof_layout_ = main_layout;
-  SetLayout(cof_layout_.GetPointer());
-
-  // The circle of friends
-  CofView* cof_view = new CofView();
-  main_layout->AddView(cof_view);
 }
 
 Panel* Shield::CreatePanel()
@@ -155,38 +106,12 @@ Panel* Shield::CreatePanel()
       }
       else
       {
-        auto& wc = nux::GetWindowCompositor();
-
-        if (!wc.GrabPointerAdd(this) || !wc.GrabKeyboardAdd(this))
-        {
-          regrab_conn_ = WindowManager::Default().screen_ungrabbed.connect([this] {
-            if (primary())
-            {
-              GrabPointer();
-              GrabKeyboard();
-            }
-            regrab_conn_->disconnect();
-          });
-        }
+        GrabScreen(false);
       }
     }
   });
 
   return panel_view_;
-}
-
-UserPromptView* Shield::CreatePromptView()
-{
-  auto* prompt_view = new UserPromptView(session_manager_);
-
-  auto width = 8 * Settings::GRID_SIZE;
-  auto height = 3 * Settings::GRID_SIZE;
-
-  prompt_view->SetMinimumWidth(width);
-  prompt_view->SetMaximumWidth(width);
-  prompt_view->SetMinimumHeight(height);
-
-  return prompt_view;
 }
 
 nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsigned long modifiers)
@@ -219,21 +144,6 @@ nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsign
   }
 
   return nullptr;
-}
-
-bool Shield::AcceptKeyNavFocus()
-{
-  return false;
-}
-
-nux::Area* Shield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType event_type)
-{
-  nux::Area* area = BaseWindow::FindAreaUnderMouse(mouse, event_type);
-
-  if (!area && primary)
-    return this;
-
-  return area;
 }
 
 bool Shield::IsIndicatorOpen() const

@@ -22,64 +22,24 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/RawPixel.h"
 #include "FilterExpanderLabel.h"
-
-namespace
-{
-
-const float EXPAND_DEFAULT_ICON_OPACITY = 1.0f;
-
-// expander_layout_
-const int EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN = 8;
-
-// font
-const char* const FONT_EXPANDER_LABEL = "Ubuntu 13"; // 17px = 13
-
-class ExpanderView : public nux::View
-{
-public:
-  ExpanderView(NUX_FILE_LINE_DECL)
-   : nux::View(NUX_FILE_LINE_PARAM)
-  {
-    SetAcceptKeyNavFocusOnMouseDown(false);
-    SetAcceptKeyNavFocusOnMouseEnter(true);
-  }
-
-protected:
-  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {};
-
-  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-    if (GetLayout())
-      GetLayout()->ProcessDraw(graphics_engine, force_draw);
-  }
-
-  bool AcceptKeyNavFocus()
-  {
-    return true;
-  }
-
-  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
-  {
-    if (event_type != nux::EVENT_MOUSE_WHEEL && TestMousePointerInclusion(mouse_position, event_type))
-      return this;
-    else
-      return nullptr;
-  }
-};
-
-}
 
 namespace unity
 {
 namespace dash
 {
-
 namespace
 {
-  double const DEFAULT_SCALE = 1.0;
+const double DEFAULT_SCALE = 1.0;
+const float EXPAND_DEFAULT_ICON_OPACITY = 1.0f;
+const RawPixel EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN = 8_em;
+const RawPixel ARROW_HORIZONTAL_PADDING = 2_em;
+const RawPixel ARROW_TOP_PADDING = 11_em;
+const RawPixel ARROW_BOTTOM_PADDING = 9_em;
+
+// font
+const char* const FONT_EXPANDER_LABEL = "Ubuntu 13"; // 17px = 13
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
@@ -94,8 +54,6 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , expander_layout_(nullptr)
   , right_hand_contents_(nullptr)
   , cairo_label_(nullptr)
-  , raw_label_(label)
-  , label_("label")
 {
   scale.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::UpdateScale));
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
@@ -104,14 +62,14 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
 
 void FilterExpanderLabel::SetLabel(std::string const& label)
 {
-  raw_label_ = label;
-
-  cairo_label_->SetText(label.c_str());
+  cairo_label_->SetText(label);
+  expander_view_->label = label;
 }
 
 void FilterExpanderLabel::UpdateScale(double scale)
 {
   cairo_label_->SetScale(scale);
+  UpdateLayoutSizes();
 }
 
 void FilterExpanderLabel::SetRightHandView(nux::View* view)
@@ -143,40 +101,29 @@ void FilterExpanderLabel::SetContents(nux::Layout* contents)
 
 void FilterExpanderLabel::BuildLayout()
 {
-  dash::Style& style = dash::Style::Instance();
-
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(style.GetFilterBarLeftPadding(), style.GetFilterBarRightPadding());
-
   top_bar_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  top_bar_layout_->SetTopAndBottomPadding(style.GetFilterHighlightPadding());
-
   expander_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  expander_layout_->SetSpaceBetweenChildren(EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN);
 
   expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
+  expander_view_->expanded = expanded();
+  expanded.changed.connect([this] (bool expanded) { expander_view_->expanded = expanded; });
   expander_view_->SetLayout(expander_layout_);
   top_bar_layout_->AddView(expander_view_, 1);
 
-  cairo_label_ = new StaticCairoText(label_.c_str(), NUX_TRACKER_LOCATION);
+  cairo_label_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   cairo_label_->SetFont(FONT_EXPANDER_LABEL);
+  cairo_label_->SetScale(scale);
   cairo_label_->SetTextColor(nux::color::White);
   cairo_label_->SetAcceptKeyboardEvent(false);
 
-  nux::BaseTexture* arrow;
-  arrow = dash::Style::Instance().GetGroupUnexpandIcon();
-  expand_icon_ = new IconTexture(arrow,
-                                 arrow->GetWidth(),
-                                 arrow->GetHeight());
+  expand_icon_ = new IconTexture(Style::Instance().GetGroupUnexpandIcon());
   expand_icon_->SetOpacity(EXPAND_DEFAULT_ICON_OPACITY);
-  expand_icon_->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
+  expand_icon_->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
   expand_icon_->SetVisible(true);
+
   arrow_layout_  = new nux::VLayout();
-  arrow_top_space_ = new nux::SpaceLayout(2, 2, 11, 11);
-  arrow_bottom_space_ = new nux::SpaceLayout(2, 2, 9, 9);
-  arrow_layout_->AddView(arrow_top_space_, 0, nux::MINOR_POSITION_CENTER);
   arrow_layout_->AddView(expand_icon_, 0, nux::MINOR_POSITION_CENTER);
-  arrow_layout_->AddView(arrow_bottom_space_, 0, nux::MINOR_POSITION_CENTER);
 
   expander_layout_->AddView(cairo_label_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   expander_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
@@ -209,8 +156,25 @@ void FilterExpanderLabel::BuildLayout()
   cairo_label_->mouse_click.connect(mouse_expand);
   expand_icon_->mouse_click.connect(mouse_expand);
 
+  UpdateLayoutSizes();
+}
+
+void FilterExpanderLabel::UpdateLayoutSizes()
+{
+  auto& style = dash::Style::Instance();
+
+  layout_->SetLeftAndRightPadding(style.GetFilterBarLeftPadding().CP(scale), style.GetFilterBarRightPadding().CP(scale));
+  top_bar_layout_->SetTopAndBottomPadding(style.GetFilterHighlightPadding().CP(scale));
+  expander_layout_->SetSpaceBetweenChildren(EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN.CP(scale));
+
+  auto const& tex = expand_icon_->texture();
+  expand_icon_->SetMinMaxSize(RawPixel(tex->GetWidth()).CP(scale), RawPixel(tex->GetHeight()).CP(scale));
+
+  arrow_layout_->SetLeftAndRightPadding(ARROW_HORIZONTAL_PADDING.CP(scale));
+  arrow_layout_->SetTopAndBottomPadding(ARROW_TOP_PADDING.CP(scale), ARROW_BOTTOM_PADDING.CP(scale));
+
   QueueRelayout();
-  NeedRedraw();
+  QueueDraw();
 }
 
 void FilterExpanderLabel::DoExpandChange(bool change)
@@ -220,6 +184,9 @@ void FilterExpanderLabel::DoExpandChange(bool change)
     expand_icon_->SetTexture(style.GetGroupUnexpandIcon());
   else
     expand_icon_->SetTexture(style.GetGroupExpandIcon());
+
+  auto const& tex = expand_icon_->texture();
+  expand_icon_->SetMinMaxSize(RawPixel(tex->GetWidth()).CP(scale), RawPixel(tex->GetHeight()).CP(scale));
 
   if (change and contents_ and !contents_->IsChildOf(layout_))
   {
@@ -278,7 +245,7 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& graphics_engine, bool
         graphics::ClearGeometry(right_hand_contents_->GetGeometry());
 
       if (expanded())
-        ClearRedirectedRenderChildArea();            
+        ClearRedirectedRenderChildArea();
     }
 
     if (focus_layer_ && ShouldBeHighlighted())
@@ -296,7 +263,7 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& graphics_engine, bool
 
   if (IsFullRedraw())
   {
-    nux::GetPainter().PopPaintLayerStack();      
+    nux::GetPainter().PopPaintLayerStack();
   }
   else if (pushed_paint_layers > 0)
   {

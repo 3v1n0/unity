@@ -21,7 +21,9 @@
 #include "UnityCore/GLibWrapper.h"
 #include <NuxCore/Logger.h>
 
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -32,16 +34,16 @@ namespace launcher
 {
 DECLARE_LOGGER(logger, "unity.launcher.icon.hud");
 
-HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
+HudLauncherIcon::HudLauncherIcon()
  : SingleMonitorLauncherIcon(IconType::HUD)
- , launcher_hide_mode_(hide_mode)
+ , launcher_hide_mode_(LAUNCHER_HIDE_NEVER)
  , overlay_monitor_(0)
  , single_launcher_(false)
  , launcher_monitor_(0)
 {
   tooltip_text = _("HUD");
   tooltip_enabled = false;
-  icon_name = PKGDATADIR"/launcher_bfb.png";
+  icon_name = theme::Settings::Get()->ThemedFilePath("launcher_bfb", {PKGDATADIR});
   position = Position::BEGIN;
   SetQuirk(Quirk::ACTIVE, true);
 
@@ -66,7 +68,7 @@ void HudLauncherIcon::OnHudIconChanged(GVariant *data)
   if (hud_icon_name != icon_name)
   {
     if (hud_icon_name.empty())
-      icon_name = PKGDATADIR"/launcher_bfb.png";
+      icon_name = theme::Settings::Get()->ThemedFilePath("launcher_bfb", {PKGDATADIR});
     else
       icon_name = hud_icon_name;
   }
@@ -90,7 +92,7 @@ void HudLauncherIcon::SetSingleLauncher(bool single_launcher, int launcher_monit
 {
   if (single_launcher_ == single_launcher && launcher_monitor_ == launcher_monitor)
     return;
-  
+
   single_launcher_ = single_launcher;
   launcher_monitor_ = launcher_monitor;
 
@@ -112,6 +114,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   // If the hud is open, we show the HUD button if we have a locked launcher
   if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER &&
+      Settings::Instance().launcher_position() == LauncherPosition::LEFT &&
       (!single_launcher_ || (single_launcher_ && launcher_monitor_ == overlay_monitor_)))
   {
     SetMonitor(visible ? overlay_monitor_ : -1);

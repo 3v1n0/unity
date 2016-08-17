@@ -20,6 +20,8 @@
 #ifndef EXPO_LAUNCHER_ICON_H
 #define EXPO_LAUNCHER_ICON_H
 
+#include <UnityCore/GLibSignal.h>
+
 #include "SimpleLauncherIcon.h"
 
 namespace unity
@@ -38,11 +40,13 @@ protected:
   void ActivateLauncherIcon(ActionArg arg);
   std::string GetName() const;
   std::string GetRemoteUri() const;
+  MenuItemsVector GetMenus();
 
 private:
   void OnViewportLayoutChanged(int hsize, int vsize);
   void UpdateIcon();
 
+  glib::SignalManager signals_;
   connection::Manager viewport_changes_connections_;
 };
 

@@ -13,6 +13,7 @@ from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, GreaterThan
 
+from unity.emulators.launcher import LauncherPosition
 from unity.tests.launcher import LauncherTestCase
 
 logger = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ class LauncherKeyNavTests(LauncherTestCase):
     def test_launcher_keynav_forward(self):
         """Must be able to move forwards while in keynav mode."""
         self.start_keynav_with_cleanup_cancel()
-        self.launcher_instance.key_nav_next()
+        self.launcher_instance.key_nav_next(self.launcher_position)
         # The launcher model has hidden items, so the keynav indexes do not
         # increase by 1 each time. This test was failing because the 2nd icon
         # had an index of 2, not 1 as expected. The best we can do here is to
@@ -80,9 +81,9 @@ class LauncherKeyNavTests(LauncherTestCase):
     def test_launcher_keynav_prev_works(self):
         """Must be able to move backwards while in keynav mode."""
         self.start_keynav_with_cleanup_cancel()
-        self.launcher_instance.key_nav_next()
+        self.launcher_instance.key_nav_next(self.launcher_position)
         self.assertThat(self.unity.launcher.key_nav_selection, Eventually(GreaterThan(0)))
-        self.launcher_instance.key_nav_prev()
+        self.launcher_instance.key_nav_prev(self.launcher_position)
         self.assertThat(self.unity.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_keynav_cycling_forward(self):
@@ -90,34 +91,36 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.start_keynav_with_cleanup_cancel()
         prev_icon = 0
         for icon in range(1, self.unity.launcher.model.num_launcher_icons()):
-            self.launcher_instance.key_nav_next()
+            self.launcher_instance.key_nav_next(self.launcher_position)
             # FIXME We can't directly check for selection/icon number equalty
             # since the launcher model also contains "hidden" icons that aren't
             # shown, so the selection index can increment by more than 1.
             self.assertThat(self.unity.launcher.key_nav_selection, Eventually(GreaterThan(prev_icon)))
             prev_icon = self.unity.launcher.key_nav_selection
 
-        self.launcher_instance.key_nav_next()
+        self.launcher_instance.key_nav_next(self.launcher_position)
         self.assertThat(self.unity.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_keynav_cycling_backward(self):
         """Launcher keynav must loop through icons when cycling backwards"""
         self.start_keynav_with_cleanup_cancel()
-        self.launcher_instance.key_nav_prev()
+        self.launcher_instance.key_nav_prev(self.launcher_position)
         # FIXME We can't directly check for self.unity.launcher.num_launcher_icons - 1
         self.assertThat(self.unity.launcher.key_nav_selection, Eventually(GreaterThan(1)))
 
     def test_launcher_keynav_can_open_and_close_quicklist(self):
         """Tests that we can open and close a quicklist from keynav mode."""
         self.start_keynav_with_cleanup_cancel()
-        self.launcher_instance.key_nav_next()
+        self.launcher_instance.key_nav_next(self.launcher_position)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        self.launcher_instance.key_nav_enter_quicklist()
+        self.launcher_instance.key_nav_enter_quicklist(self.launcher_position)
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
-        self.launcher_instance.key_nav_exit_quicklist()
-        self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(False)))
-        self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(True)))
-        self.assertThat(self.unity.launcher.key_nav_is_grabbed, Eventually(Equals(True)))
+        # We can't close a quicklist from keynav mode when launcher at bottom.
+        if self.launcher_position == LauncherPosition.LEFT:
+            self.launcher_instance.key_nav_exit_quicklist()
+            self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(False)))
+            self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(True)))
+            self.assertThat(self.unity.launcher.key_nav_is_grabbed, Eventually(Equals(True)))
 
     def test_launcher_keynav_mode_toggles(self):
         """Tests that keynav mode toggles with Alt+F1."""
@@ -135,7 +138,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
         self.start_keynav_with_cleanup_cancel()
 
-        self.launcher_instance.keyboard_select_icon(tooltip_text=calc.name)
+        self.launcher_instance.keyboard_select_icon(self.launcher_position, tooltip_text=calc.name)
         self.launcher_instance.key_nav_activate()
 
         self.assertTrue(calc.is_active)
@@ -148,7 +151,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
         self.start_keynav_with_cleanup_cancel()
 
-        self.launcher_instance.keyboard_select_icon(tooltip_text="Workspace Switcher")
+        self.launcher_instance.keyboard_select_icon(self.launcher_position, tooltip_text="Workspace Switcher")
         self.launcher_instance.key_nav_activate()
         self.addCleanup(self.keybinding, "expo/cancel")
 
@@ -160,7 +163,7 @@ class LauncherKeyNavTests(LauncherTestCase):
             self.skipTest("This test requires enabled more than one workspace.")
         self.start_keynav_with_cleanup_cancel()
 
-        self.launcher_instance.keyboard_select_icon(tooltip_text="Workspace Switcher")
+        self.launcher_instance.keyboard_select_icon(self.launcher_position, tooltip_text="Workspace Switcher")
         self.launcher_instance.key_nav_activate()
 
         self.keyboard.press_and_release("Escape")
@@ -209,7 +212,7 @@ class LauncherKeyNavTests(LauncherTestCase):
         """A single click outside of launcher must cancel keynav."""
         self.start_keynav_with_cleanup_cancel()
 
-        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.launcher_instance.move_mouse_beside_launcher()
         self.mouse.click()
 
         self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(False)))
@@ -229,7 +232,7 @@ class LauncherKeyNavTests(LauncherTestCase):
     def test_launcher_keynav_cancel_on_quicklist_activate(self):
         """A single click on a quicklist item must cancel keynav."""
         self.start_keynav_with_cleanup_cancel()
-        self.launcher_instance.key_nav_enter_quicklist()
+        self.launcher_instance.key_nav_enter_quicklist(self.launcher_position)
 
         bfb_icon = self.unity.launcher.model.get_bfb_icon()
         bfb_ql = bfb_icon.get_quicklist()
@@ -241,7 +244,12 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_changes_panel(self):
-      """The panel title must change when in key nav mode."""
+        """The panel title must change when in key nav mode
+           and LIM is not enabled.
+        """
 
-      self.start_keynav_with_cleanup_cancel()
-      self.assertThat(self.unity.panels.get_active_panel().title, Eventually(Equals("Search your computer and online sources")))
+        self.start_keynav_with_cleanup_cancel()
+        panel = self.unity.panels.get_active_panel()
+        expected_panel_title = ("" if panel.menus.integrated_menus
+                                else "Search your computer and online sources")
+        self.assertThat(panel.title, Eventually(Equals(expected_panel_title)))

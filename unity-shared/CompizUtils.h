@@ -31,8 +31,15 @@ namespace compiz_utils
 
 struct TextureQuad
 {
+  TextureQuad()
+  : matrices(1)
+  , matrix(matrices[0])
+  {}
+
   CompRect box;
-  GLTexture::Matrix matrix;
+  CompRegion region;
+  GLTexture::MatrixList matrices;
+  GLTexture::Matrix& matrix;
 };
 
 struct SimpleTexture
@@ -59,10 +66,12 @@ struct SimpleTextureQuad
 {
   SimpleTextureQuad();
   bool SetTexture(SimpleTexture::Ptr const&);
-  bool SetScale(float scale);
+  bool SetScale(double scale);
   bool SetCoords(int x, int y);
   bool SetX(int x);
   bool SetY(int y);
+
+  void UpdateMatrix();
 
   operator SimpleTexture::Ptr() const { return st; }
   operator bool() const { return st && st->texture(); }
@@ -73,8 +82,7 @@ struct SimpleTextureQuad
   TextureQuad quad;
 
 private:
-  void UpdateMatrix();
-  float scale;
+  double scale_;
 };
 
 struct PixmapTexture : SimpleTexture
@@ -111,9 +119,31 @@ private:
   cairo_t *cr_;
 };
 
+enum class WindowFilter
+{
+  NONE,
+  UNMAPPED,
+  CLIENTSIDE_DECORATED
+};
+
+namespace DecorationElement
+{
+enum
+{
+  NONE = 0,
+  EDGE = (1 << 0),
+  SHADOW = (1 << 1),
+  SHAPED = (1 << 2),
+  BORDER = (1 << 3),
+  FULL = EDGE|SHADOW|BORDER
+};
+}
+
+unsigned WindowDecorationElements(CompWindow*, WindowFilter wf = WindowFilter::NONE);
+
+bool IsWindowEdgeDecorable(CompWindow*);
 bool IsWindowShadowDecorable(CompWindow*);
 bool IsWindowFullyDecorable(CompWindow*);
-bool WindowHasMotifDecorations(CompWindow*);
 
 } // compiz_utils namespace
 } // unity namespace

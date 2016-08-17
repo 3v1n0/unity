@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 Canonical Ltd.
+ * Copyright 2012,2013,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -156,6 +156,9 @@ TEST_F(TestIMTextEntry, CtrlA)
   EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(selectall));
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 struct CtrlKeybindings : TestIMTextEntry, testing::WithParamInterface<unsigned long> {};
 INSTANTIATE_TEST_CASE_P(TestIMTextEntry, CtrlKeybindings, testing::Values(NUX_VK_a, NUX_VK_BACKSPACE,
                                                                           NUX_VK_LEFT, NUX_VK_RIGHT,
@@ -167,6 +170,8 @@ TEST_P(/*TestIMTextEntry*/CtrlKeybindings, Handling)
   TestEvent event(KEY_MODIFIER_CTRL, GetParam());
   EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
 }
+
+#pragma GCC diagnostic pop
 
 TEST_F(TestIMTextEntry, AltKeybindings)
 {

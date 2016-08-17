@@ -17,6 +17,7 @@ from time import sleep
 
 from unity.emulators.icons import ApplicationLauncherIcon, ExpoLauncherIcon
 from unity.emulators.launcher import IconDragType
+from unity.emulators.launcher import LauncherPosition
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
 from Xlib import Xutil
@@ -59,6 +60,11 @@ class LauncherIconsTests(LauncherTestCase):
         self.process_manager.close_all_app("Calculator")
         self.assertThat(lambda: self.process_manager.app_is_running("Calculator"), Eventually(Equals(False)))
         return calc_icon
+
+    def get_running_application_by_desktop_file(self, desktop_id):
+        get_app_fn = lambda: self.process_manager.get_running_applications_by_desktop_file(desktop_id)
+        self.assertThat(lambda: len(get_app_fn()), Eventually(Equals(1)))
+        return get_app_fn()[0]
 
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
         """Tests that the bfb tooltip disappear when the dash is opened."""
@@ -139,7 +145,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.process_manager.close_all_app, "Calculator")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
-        calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
+        calc_app = self.get_running_application_by_desktop_file(calc_icon.desktop_id)
         calc_window = calc_app.get_windows()[0]
 
         self.assertThat(lambda: self.get_startup_notification_timestamp(calc_window), Eventually(Equals(calc_icon.startup_notification_timestamp)))
@@ -175,7 +181,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
 
         nautilus_app = self.process_manager.get_app_instances("Nautilus")
-        nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="nautilus.desktop")
+        nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="org.gnome.Nautilus.desktop")
         self.launcher_instance.click_launcher_icon(nautilus_icon)
         self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(2)))
 
@@ -191,14 +197,15 @@ class LauncherIconsTests(LauncherTestCase):
         self.launcher_instance.drag_icon_to_position(
             calc_icon,
             IconDragType.AFTER,
-            bfb_icon)
+            bfb_icon,
+            launcher_position = self.launcher_position)
 
         self.launcher_instance.keyboard_reveal_launcher()
         self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
         self.keyboard.press_and_release("1");
 
-        calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
-        calc_window = calc_app.get_windows()[0]
+        calc_app = self.get_running_application_by_desktop_file(calc_icon.desktop_id)
+        [calc_window] = calc_app.get_windows()
 
         self.assertThat(lambda: calc_window.is_focused, Eventually(Equals(True)))
 
@@ -349,6 +356,10 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                    [
                                        ('inside', {'drag_type': IconDragType.INSIDE}),
                                        ('outside', {'drag_type': IconDragType.OUTSIDE}),
+                                   ],
+                                   [
+                                       ('left', {'launcher_position': LauncherPosition.LEFT}),
+                                       ('bottom', {'launcher_position': LauncherPosition.BOTTOM}),
                                    ])
 
     def setUp(self):
@@ -381,10 +392,11 @@ class LauncherDragIconsBehavior(LauncherTestCase):
             calc_icon,
             IconDragType.AFTER,
             bfb_icon,
-            self.drag_type)
+            self.drag_type,
+            self.launcher_position)
         moved_icon = self.unity.launcher.model.\
                      get_launcher_icons_for_monitor(self.launcher_monitor)[1]
-        self.assertThat(moved_icon.id, Equals(calc_icon.id))
+        self.assertThat(moved_icon, Equals(calc_icon))
 
     def test_can_drag_icon_below_window_switcher(self):
         """Application icons must be dragable to below the workspace switcher icon."""
@@ -401,17 +413,20 @@ class LauncherDragIconsBehavior(LauncherTestCase):
             calc_icon,
             IconDragType.AFTER,
             bfb_icon,
-            self.drag_type)
+            self.drag_type,
+            self.launcher_position)
 
         sleep(1)
         self.launcher_instance.drag_icon_to_position(
             calc_icon,
             IconDragType.BEFORE,
             trash_icon,
-            self.drag_type)
+            self.drag_type,
+            self.launcher_position)
 
         # Must be the last bamf icon - not necessarily the third-from-end icon.
-        refresh_fn = lambda: self.unity.launcher.model.get_launcher_icons()[-2].id
+        expected_pos = -2 if self.workspace.num_workspaces < 2 else -1
+        refresh_fn = lambda: self.unity.launcher.model.get_launcher_icons()[expected_pos].id
         self.assertThat(refresh_fn,
             Eventually(Equals(calc_icon.id)),
             "Launcher icons are: %r" % self.unity.launcher.model.get_launcher_icons())

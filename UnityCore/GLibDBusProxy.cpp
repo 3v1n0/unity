@@ -21,7 +21,7 @@
 
 #include "GLibDBusProxy.h"
 
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <NuxCore/Logger.h>
 #include <vector>
@@ -29,6 +29,8 @@
 #include "GLibWrapper.h"
 #include "GLibSignal.h"
 #include "GLibSource.h"
+
+#include <gio/gunixfdlist.h>
 
 namespace unity
 {
@@ -47,7 +49,7 @@ class DBusProxy::Impl
 {
 public:
   typedef std::vector<ReplyCallback> Callbacks;
-  typedef std::map<string, Callbacks> SignalHandlers;
+  typedef std::unordered_map<string, Callbacks> SignalHandlers;
 
   Impl(DBusProxy* owner,
        string const& name,
@@ -74,6 +76,12 @@ public:
             GCancellable *cancellable,
             GDBusCallFlags flags,
             int timeout_msec);
+  void CallWithUnixFdList(std::string const& method_name,
+                          GVariant* parameters,
+                          CallFinishedCallback const& callback,
+                          GCancellable *cancellable,
+                          GDBusCallFlags flags,
+                          int timeout_msec);
 
   void Connect(string const& signal_name, ReplyCallback const& callback);
   void DisconnectSignal(string const& signal_name);
@@ -81,10 +89,11 @@ public:
 
   void OnProxyNameOwnerChanged(GDBusProxy*, GParamSpec*);
   void OnProxySignal(GDBusProxy* proxy, const char*, const char*, GVariant*);
-  void OnPropertyChanged(GDBusProxy*, GVariant*, GStrv*);
+  void OnPropertyChanged(GDBusProxy*, GVariant*, GStrv);
 
   static void OnProxyConnectCallback(GObject* source, GAsyncResult* res, gpointer impl);
   static void OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data);
+  static void OnCallWithUnixFdListCallback(GObject* source, GAsyncResult* res, gpointer call_data);
 
   struct CallData
   {
@@ -105,7 +114,7 @@ public:
   unsigned reconnection_attempts_;
 
   glib::Signal<void, GDBusProxy*, const char*, const char*, GVariant*> g_signal_connection_;
-  glib::Signal<void, GDBusProxy*, GVariant*, GStrv*> g_property_signal_;
+  glib::Signal<void, GDBusProxy*, GVariant*, GStrv> g_property_signal_;
   glib::Signal<void, GDBusProxy*, GParamSpec*> name_owner_signal_;
   glib::Source::UniquePtr reconnect_timeout_;
   sigc::signal<void> proxy_acquired;
@@ -268,7 +277,7 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy, const char* sender_name, 
   }
 }
 
-void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_props, GStrv* invalidated)
+void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_props, GStrv invalidated)
 {
   LOG_DEBUG(logger) << "Properties changed for proxy (" << object_path_ << ")";
 
@@ -292,7 +301,20 @@ void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_pro
       }
     }
 
-    g_variant_iter_free (iter);
+    g_variant_iter_free(iter);
+  }
+
+  for (const gchar *property_name = *invalidated; property_name; property_name = *(++invalidated))
+  {
+    LOG_DEBUG(logger) << "Property: '" << property_name << "' invalidated";
+
+    auto handler_it = property_handlers_.find(property_name);
+
+    if (handler_it != property_handlers_.end())
+    {
+      for (ReplyCallback const& callback : handler_it->second)
+        callback(nullptr);
+    }
   }
 }
 
@@ -322,7 +344,8 @@ void DBusProxy::Impl::WaitForProxy(GCancellable* cancellable,
     // wait for the signal
     *con = proxy_acquired.connect([con, canc, timeout, callback] ()
     {
-      if (!g_cancellable_is_cancelled(canc)) callback(glib::Error());
+      if (!g_cancellable_is_cancelled(canc))
+        callback(glib::Error());
 
       timeout->Remove();
       con->disconnect();
@@ -368,12 +391,15 @@ void DBusProxy::Impl::Call(string const& method_name,
   if (!proxy_)
   {
     glib::Variant sinked_parameters(parameters);
-    glib::Object<GCancellable>canc(target_canc, glib::AddRef());
+    glib::Object<GCancellable> canc(target_canc, glib::AddRef());
+
     WaitForProxy(canc, timeout_msec, [this, method_name, sinked_parameters, callback, canc, flags, timeout_msec] (glib::Error const& err)
     {
       if (err)
       {
-        callback(glib::Variant(), err);
+        if (callback)
+          callback(glib::Variant(), err);
+
         LOG_WARNING(logger) << "Cannot call method " << method_name
                             << ": " << err;
       }
@@ -399,6 +425,50 @@ void DBusProxy::Impl::Call(string const& method_name,
                     data);
 }
 
+void DBusProxy::Impl::CallWithUnixFdList(string const& method_name,
+                                         GVariant* parameters,
+                                         CallFinishedCallback const& callback,
+                                         GCancellable* cancellable,
+                                         GDBusCallFlags flags,
+                                         int timeout_msec)
+{
+  GCancellable* target_canc = cancellable != NULL ? cancellable : cancellable_;
+
+  if (!proxy_)
+  {
+    glib::Variant sinked_parameters(parameters);
+    glib::Object<GCancellable> canc(target_canc, glib::AddRef());
+    WaitForProxy(canc, timeout_msec, [this, method_name, sinked_parameters, callback, canc, flags, timeout_msec] (glib::Error const& err)
+    {
+      if (err)
+      {
+        callback(glib::Variant(), err);
+        LOG_WARNING(logger) << "Cannot call method " << method_name
+                            << ": " << err;
+      }
+      else
+      {
+        CallWithUnixFdList(method_name, sinked_parameters, callback, canc, flags, timeout_msec);
+      }
+    });
+    return;
+  }
+
+  CallData* data = new CallData();
+  data->callback = callback;
+  data->method_name = method_name;
+
+  g_dbus_proxy_call_with_unix_fd_list(proxy_,
+                                      method_name.c_str(),
+                                      parameters,
+                                      flags,
+                                      timeout_msec,
+                                      nullptr,
+                                      target_canc,
+                                      DBusProxy::Impl::OnCallWithUnixFdListCallback,
+                                      data);
+}
+
 void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
 {
   glib::Error error;
@@ -407,7 +477,7 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
 
   if (error)
   {
-    if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
     {
       // silently ignore, don't even invoke callback, FIXME: really?
       return;
@@ -423,6 +493,39 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
 
   if (data->callback)
     data->callback(result, error);
+}
+
+void DBusProxy::Impl::OnCallWithUnixFdListCallback(GObject* source, GAsyncResult* res, gpointer call_data)
+{
+  glib::Object<GUnixFDList> fd_list;
+
+  glib::Error error;
+  std::unique_ptr<CallData> data(static_cast<CallData*>(call_data));
+  glib::Variant result(g_dbus_proxy_call_with_unix_fd_list_finish(G_DBUS_PROXY(source), &fd_list, res, &error), glib::StealRef());
+
+  if (error)
+  {
+    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      // silently ignore, don't even invoke callback, FIXME: really?
+      return;
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Calling method \"" << data->method_name
+        << "\" on object path: \""
+        << g_dbus_proxy_get_object_path(G_DBUS_PROXY(source))
+        << "\" failed: " << error;
+    }
+  }
+
+  if (data->callback)
+  {
+    gint idx;
+    g_variant_get(result, "(h)", &idx);
+    gint fd = g_unix_fd_list_get(fd_list, idx, nullptr);
+    data->callback(glib::Variant(fd), error);
+  }
 }
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback const& callback)
@@ -487,6 +590,17 @@ void DBusProxy::CallBegin(std::string const& method_name,
               timeout_msec);
 }
 
+void DBusProxy::CallWithUnixFdList(std::string const& method_name,
+                                   GVariant* parameters,
+                                   CallFinishedCallback const& callback,
+                                   GCancellable *cancellable,
+                                   GDBusCallFlags flags,
+                                   int timeout_msec)
+{
+  pimpl->CallWithUnixFdList(method_name, parameters, callback, cancellable,
+                            flags, timeout_msec);
+}
+
 glib::Variant DBusProxy::GetProperty(std::string const& name) const
 {
   if (IsConnected())
@@ -510,7 +624,7 @@ void DBusProxy::GetProperty(std::string const& name, ReplyCallback const& callba
                            [] (GObject *source, GAsyncResult *res, gpointer user_data) {
       glib::Error err;
       std::unique_ptr<ReplyCallback> callback(static_cast<ReplyCallback*>(user_data));
-      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err));
+      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err), StealRef());
 
       if (err)
       {
@@ -546,7 +660,7 @@ void DBusProxy::SetProperty(std::string const& name, GVariant* value)
                            nullptr, G_DBUS_CALL_FLAGS_NONE, -1, pimpl->cancellable_,
                            [] (GObject *source, GAsyncResult *res, gpointer user_data) {
       glib::Error err;
-      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err));
+      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err), StealRef());
       if (err)
       {
         LOG_ERROR(logger) << "Impossible to set property: " << err;

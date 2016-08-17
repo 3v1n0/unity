@@ -21,27 +21,27 @@
 
 #include "unity-shared/DashStyle.h"
 #include "ActionButton.h"
-#include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
-
-namespace
-{
-const int kMinButtonHeight = 34;
-const int kMinButtonWidth  = 48;
-
-const int icon_size  = 24;
-}
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
+namespace
+{
+const RawPixel MIN_BUTTON_HEIGHT = 34_em;
+const RawPixel MIN_BUTTON_WIDTH  = 48_em;
+
+const RawPixel icon_size  = 24_em;
+}
+
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.preview.action");
 
 ActionButton::ActionButton(std::string const& action_hint, std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , action_hint_(action_hint)
   , image_(nullptr)
 {
@@ -49,6 +49,8 @@ ActionButton::ActionButton(std::string const& action_hint, std::string const& la
   SetAcceptKeyNavFocusOnMouseEnter(true);
   Init();
   BuildLayout(label, icon_hint, "");
+  scale.changed.connect(sigc::mem_fun(this, &ActionButton::UpdateScale));
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &ActionButton::InitTheme)));
 }
 
 ActionButton::~ActionButton()
@@ -84,22 +86,20 @@ void ActionButton::Init()
 
 void ActionButton::InitTheme()
 {
-  if (!cr_active_)
-  {
-    nux::Geometry const& geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
-    cr_prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
-    cr_active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-    cr_focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
-  }
+  cr_prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+  cr_active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+  cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+  cr_focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
 
-  SetMinimumHeight(kMinButtonHeight);
-  SetMinimumWidth(kMinButtonWidth);
+  double font_scaling = Settings::Instance().font_scaling() * scale;
+  SetMinimumHeight(MIN_BUTTON_HEIGHT.CP(font_scaling));
+  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(font_scaling));
 }
 
 void ActionButton::SetExtraHint(std::string const& extra_hint, std::string const& font_hint)
-{  
+{
   extra_font_hint_= font_hint;
   if (extra_text_)
   {
@@ -123,13 +123,13 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
     if (!icon_hint_.empty())
     {
-      image_ = new IconTexture(icon_hint, icon_size);
+      image_ = new IconTexture(icon_hint, icon_size.CP(scale));
       image_->texture_updated.connect([this](nux::ObjectPtr<nux::BaseTexture> const&)
       {
         BuildLayout(label_, icon_hint_, extra_hint_);
       });
       image_->SetInputEventSensitivity(false);
-      image_->SetMinMaxSize(icon_size, icon_size);
+      image_->SetMinMaxSize(icon_size.CP(scale), icon_size.CP(scale));
     }
   }
 
@@ -192,11 +192,13 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
 void ActionButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   Style::Instance().Button(cr, faked_state, "", -1, Alignment::CENTER, true);
 }
 
 void ActionButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
 {
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   Style::Instance().ButtonFocusOverlay(cr, 0.20f);
 }
 
@@ -310,6 +312,28 @@ std::string ActionButton::GetExtraText() const
 {
   return extra_hint_;
 }
+
+void ActionButton::UpdateScale(double scale)
+{
+  InitTheme();
+
+  if (image_)
+  {
+    image_->SetSize(icon_size.CP(scale));
+    image_->SetMinMaxSize(icon_size.CP(scale), icon_size.CP(scale));
+    image_->ReLoadIcon();
+  }
+
+  if (static_text_)
+    static_text_->SetScale(scale);
+
+  if (extra_text_)
+    extra_text_->SetScale(scale);
+
+  QueueRelayout();
+  QueueDraw();
+}
+
 
 } // namespace dash
 } // namespace unity

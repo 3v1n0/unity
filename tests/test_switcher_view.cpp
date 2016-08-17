@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Canonical Ltd.
+ * Copyright 2013,2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -96,7 +96,7 @@ struct TestSwitcherView : testing::Test
 
       SwitcherModel::Applications apps;
       apps.push_back(AbstractLauncherIcon::Ptr(app));
-      switcher.SetModel(std::make_shared<SwitcherModel>(apps));
+      switcher.SetModel(std::make_shared<SwitcherModel>(apps, true));
 
       return apps[0];
     }
@@ -117,8 +117,7 @@ TEST_F(TestSwitcherView, Initiate)
   EXPECT_EQ(switcher.vertical_size, switcher.tile_size + VERTICAL_PADDING * 2);
   EXPECT_EQ(switcher.text_size, 15);
   EXPECT_EQ(switcher.animation_length, 250);
-  EXPECT_EQ(switcher.monitor, -1);
-  EXPECT_EQ(switcher.spread_size, 3.5f);
+  EXPECT_EQ(switcher.monitor, 0);
   ASSERT_NE(switcher.text_view_, nullptr);
   ASSERT_NE(switcher.icon_renderer_, nullptr);
   EXPECT_EQ(switcher.icon_renderer_->pip_style, ui::OVER_TILE);
@@ -131,7 +130,7 @@ TEST_F(TestSwitcherView, SetModel)
   apps.push_back(AbstractLauncherIcon::Ptr(new MockLauncherIcon()));
   apps.push_back(AbstractLauncherIcon::Ptr(new MockLauncherIcon()));
   apps.push_back(AbstractLauncherIcon::Ptr(new MockLauncherIcon()));
-  auto model = std::make_shared<SwitcherModel>(apps);
+  auto model = std::make_shared<SwitcherModel>(apps, false);
 
   switcher.SetModel(model);
   ASSERT_EQ(switcher.model_, model);
@@ -151,6 +150,8 @@ TEST_F(TestSwitcherView, SkipAnimation)
   EXPECT_DOUBLE_EQ(switcher.GetCurrentProgress(), 1.0f);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 struct AnimationProgress : TestSwitcherView, testing::WithParamInterface<float> {};
 INSTANTIATE_TEST_CASE_P(TestSwitcherView, AnimationProgress, testing::Range<float>(0.0, 1.0, 0.1));
@@ -216,6 +217,8 @@ TEST_P(AnimationProgress, ResizeRenderTargets)
     ASSERT_EQ(thumb_geo, expected_geo);
   }
 }
+
+#pragma GCC diagnostic pop
 
 }
 }

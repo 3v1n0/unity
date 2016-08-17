@@ -19,7 +19,9 @@
  */
 
 #include "IMTextEntry.h"
+#include "WindowManager.h"
 #include <gtk/gtk.h>
+#include <X11/cursorfont.h>
 
 namespace unity
 {
@@ -27,10 +29,37 @@ NUX_IMPLEMENT_OBJECT_TYPE(IMTextEntry);
 
 IMTextEntry::IMTextEntry()
   : TextEntry("", NUX_TRACKER_LOCATION)
-{}
+  , clipboard_enabled(true)
+{
+  // Let's override the nux RecvMouse{Enter,Leave} using the hard way
+  mouse_enter.clear();
+  mouse_leave.clear();
+
+  mouse_enter.connect([this] (int, int, unsigned long, unsigned long) {
+    auto dpy = nux::GetGraphicsDisplay()->GetX11Display();
+    auto window = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+
+    if (dpy && window)
+    {
+      auto cursor = WindowManager::Default().GetCachedCursor(XC_xterm);
+      XDefineCursor(dpy, window->GetInputWindowId(), cursor);
+    }
+  });
+
+  mouse_leave.connect([this] (int, int, unsigned long, unsigned long) {
+    auto dpy = nux::GetGraphicsDisplay()->GetX11Display();
+    auto window = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+
+    if (dpy && window)
+      XUndefineCursor(dpy, window->GetInputWindowId());
+  });
+}
 
 void IMTextEntry::CopyClipboard()
 {
+  if (!clipboard_enabled())
+    return;
+
   int start, end;
 
   if (GetSelectionBounds(&start, &end))
@@ -52,6 +81,9 @@ void IMTextEntry::PastePrimaryClipboard()
 
 void IMTextEntry::Paste(bool primary)
 {
+  if (!clipboard_enabled())
+    return;
+
   GdkAtom origin = primary ? GDK_SELECTION_PRIMARY : GDK_SELECTION_CLIPBOARD;
   GtkClipboard* clip = gtk_clipboard_get(origin);
 

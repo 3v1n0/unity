@@ -82,12 +82,18 @@ TEST_F(TestUnityWindowView, Closable)
   view.closable = true;
   ASSERT_NE(view.close_button_, nullptr);
 
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+  auto weak_ptr = nux::ObjectWeakPtr<IconTexture>(view.close_button_);
+  ASSERT_TRUE(weak_ptr.IsValid());
+
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(view.scale, WindowTextureType::CLOSE_ICON));
   EXPECT_EQ(view.close_button_->GetParentObject(), &view);
 
-  int padding = view.style()->GetCloseButtonPadding();
+  int padding = view.style()->GetCloseButtonPadding().CP(view.scale);
   EXPECT_EQ(view.close_button_->GetBaseX(), padding);
   EXPECT_EQ(view.close_button_->GetBaseY(), padding);
+
+  view.closable = false;
+  ASSERT_FALSE(weak_ptr.IsValid());
 }
 
 TEST_F(TestUnityWindowView, CloseButtonStates)
@@ -96,16 +102,16 @@ TEST_F(TestUnityWindowView, CloseButtonStates)
   ASSERT_NE(view.close_button_, nullptr);
 
   view.close_button_->mouse_enter.emit(0, 0, 0, 0);
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIconHighligted());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(view.scale, WindowTextureType::CLOSE_ICON_HIGHLIGHTED));
 
   view.close_button_->mouse_leave.emit(0, 0, 0, 0);
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(view.scale, WindowTextureType::CLOSE_ICON));
 
   view.close_button_->mouse_down.emit(0, 0, 0, 0);
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIconPressed());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(view.scale, WindowTextureType::CLOSE_ICON_PRESSED));
 
   view.close_button_->mouse_up.emit(0, 0, 0, 0);
-  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetTexture(view.scale, WindowTextureType::CLOSE_ICON));
 }
 
 TEST_F(TestUnityWindowView, CloseButtonClicksRequestsClose)
@@ -185,7 +191,7 @@ TEST_F(TestUnityWindowView, SetLayoutWrapsOriginalLayout)
   view.SetLayout(layout);
   view.ComputeContentSize();
 
-  int offset = view.style()->GetInternalOffset();
+  int offset = view.style()->GetInternalOffset().CP(view.scale);
   EXPECT_EQ(layout->GetBaseX(), offset);
   EXPECT_EQ(layout->GetBaseY(), offset);
 }
@@ -199,7 +205,7 @@ TEST_F(TestUnityWindowView, GetLayout)
 
 TEST_F(TestUnityWindowView, GetInternalBackground)
 {
-  int offset = view.style()->GetInternalOffset();
+  int offset = view.style()->GetInternalOffset().CP(view.scale);
   view.background_geo_.Set(g_random_int(), g_random_int(), g_random_int(), g_random_int());
   EXPECT_EQ(view.GetInternalBackground(), view.background_geo_.GetExpand(-offset, -offset));
 }

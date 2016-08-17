@@ -29,6 +29,7 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
+#include <functional>
 
 #include <boost/utility.hpp>
 #include <dee.h>

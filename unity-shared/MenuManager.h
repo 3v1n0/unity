@@ -22,6 +22,7 @@
 
 #include <NuxCore/Property.h>
 #include <UnityCore/Indicators.h>
+#include <UnityCore/AppmenuIndicator.h>
 #include "KeyGrabber.h"
 
 namespace unity
@@ -45,7 +46,11 @@ public:
   typedef std::shared_ptr<Manager> Ptr;
 
   nux::Property<bool> show_menus;
+  nux::Property<bool> menu_open;
+
+  nux::Property<bool> integrated_menus;
   nux::Property<unsigned> show_menus_wait;
+  nux::Property<bool> always_show_menus;
 
   nux::Property<unsigned> fadein;
   nux::Property<unsigned> fadeout;
@@ -58,7 +63,7 @@ public:
 
   bool HasAppMenu() const;
   indicator::Indicators::Ptr const& Indicators() const;
-  indicator::Indicator::Ptr const& AppMenu() const;
+  indicator::AppmenuIndicator::Ptr const& AppMenu() const;
 
   key::Grabber::Ptr const& KeyGrabber() const;
 

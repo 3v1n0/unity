@@ -20,10 +20,9 @@
 #include "DecorationsPriv.h"
 
 #include <core/atoms.h>
-#include <NuxCore/Logger.h>
-#include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/DBusIndicators.h>
 #include <X11/Xatom.h>
+
 #include "WindowManager.h"
 
 namespace unity
@@ -32,21 +31,15 @@ namespace decoration
 {
 Manager* manager_ = nullptr;
 
-namespace
-{
-DECLARE_LOGGER(logger, "unity.decoration.manager");
-
 namespace atom
 {
 Atom _NET_REQUEST_FRAME_EXTENTS = 0;
 Atom _NET_WM_VISIBLE_NAME = 0;
-}
+Atom _UNITY_GTK_BORDER_RADIUS = 0;
 }
 
 Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
-  : active_window_(0)
-  , enable_add_supported_atoms_(true)
-  , data_pool_(DataPool::Get())
+  : data_pool_(DataPool::Get())
   , menu_manager_(menu)
 {
   if (!manager_)
@@ -55,7 +48,7 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   Display* dpy = screen->dpy();
   atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(dpy, "_NET_REQUEST_FRAME_EXTENTS", False);
   atom::_NET_WM_VISIBLE_NAME = XInternAtom(dpy, "_NET_WM_VISIBLE_NAME", False);
-  screen->updateSupportedWmHints();
+  atom::_UNITY_GTK_BORDER_RADIUS = XInternAtom(dpy, "_UNITY_GTK_BORDER_RADIUS", False);
 
   auto rebuild_cb = sigc::mem_fun(this, &Impl::OnShadowOptionsChanged);
   manager_->active_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, true)));
@@ -63,17 +56,11 @@ Manager::Impl::Impl(decoration::Manager* parent, menu::Manager::Ptr const& menu)
   manager_->inactive_shadow_color.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->inactive_shadow_radius.changed.connect(sigc::hide(sigc::bind(rebuild_cb, false)));
   manager_->shadow_offset.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateWindowsExtents)));
-  Style::Get()->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIntegratedMenus)));
+  menu_manager_->integrated_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupIntegratedMenus)));
 
   BuildInactiveShadowTexture();
   BuildActiveShadowTexture();
   SetupIntegratedMenus();
-}
-
-Manager::Impl::~Impl()
-{
-  enable_add_supported_atoms_ = false;
-  screen->updateSupportedWmHints();
 }
 
 cu::PixmapTexture::Ptr Manager::Impl::BuildShadowTexture(unsigned radius, nux::Color const& color)
@@ -115,7 +102,7 @@ void Manager::Impl::OnShadowOptionsChanged(bool active)
 
 void Manager::Impl::SetupIntegratedMenus()
 {
-  if (!Style::Get()->integrated_menus())
+  if (!menu_manager_->integrated_menus())
   {
     UnsetAppMenu();
     menu_connections_.Clear();
@@ -125,6 +112,7 @@ void Manager::Impl::SetupIntegratedMenus()
   menu_connections_.Add(menu_manager_->appmenu_added.connect(sigc::mem_fun(this, &Impl::SetupAppMenu)));
   menu_connections_.Add(menu_manager_->appmenu_removed.connect(sigc::mem_fun(this, &Impl::UnsetAppMenu)));
   menu_connections_.Add(menu_manager_->key_activate_entry.connect(sigc::mem_fun(this, &Impl::OnMenuKeyActivated)));
+  menu_connections_.Add(menu_manager_->always_show_menus.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SetupAppMenu))));
 
   SetupAppMenu();
 }
@@ -145,25 +133,24 @@ void Manager::Impl::SetupAppMenu()
     return;
   }
 
-  auto setup_active_window = [this] {
-    if (Window::Ptr const& active_win = active_deco_win_.lock())
-      active_win->impl_->SetupAppMenu();
-  };
+  for (auto const& win : windows_)
+    win.second->impl_->SetupAppMenu();
 
   menu_connections_.Remove(appmenu_connection_);
-  appmenu_connection_ = menu_connections_.Add(appmenu->updated.connect(setup_active_window));
-  setup_active_window();
+  appmenu_connection_ = menu_connections_.Add(appmenu->updated_win.connect([this] (uint32_t xid) {
+    if (Window::Ptr const& win = GetWindowByXid(xid))
+      win->impl_->SetupAppMenu();
+  }));
 }
 
 void Manager::Impl::UnsetAppMenu()
 {
   menu_connections_.Remove(appmenu_connection_);
-  auto const& active_win = active_deco_win_.lock();
 
-  if (active_win)
+  for (auto const& win : windows_)
   {
-    active_win->impl_->UnsetAppMenu();
-    active_win->impl_->Damage();
+    win.second->impl_->UnsetAppMenu();
+    win.second->impl_->Damage();
   }
 }
 
@@ -177,7 +164,7 @@ bool Manager::Impl::UpdateWindow(::Window xid)
 {
   auto const& win = GetWindowByXid(xid);
 
-  if (win && !win->impl_->win_->hasUnmapReference())
+  if (win && !win->GetCompWindow()->hasUnmapReference())
   {
     win->Update();
     return true;
@@ -208,15 +195,13 @@ Window::Ptr Manager::Impl::GetWindowByFrame(::Window xid) const
 
 bool Manager::Impl::HandleEventBefore(XEvent* event)
 {
-  active_window_ = screen->activeWindow();
-
   switch (event->type)
   {
     case ClientMessage:
       if (event->xclient.message_type == atom::_NET_REQUEST_FRAME_EXTENTS)
       {
         if (Window::Ptr const& win = GetWindowByXid(event->xclient.window))
-          win->impl_->Decorate();
+          win->impl_->SendFrameExtents();
       }
       else if (event->xclient.message_type == Atoms::toolkitAction)
       {
@@ -254,31 +239,27 @@ bool Manager::Impl::HandleEventBefore(XEvent* event)
 
 bool Manager::Impl::HandleEventAfter(XEvent* event)
 {
-  if (screen->activeWindow() != active_window_)
-  {
-    // Do this when _NET_ACTIVE_WINDOW changes on root!
-    if (active_deco_win_)
-      active_deco_win_->impl_->active = false;
-
-    active_window_ = screen->activeWindow();
-    auto const& new_active = GetWindowByXid(active_window_);
-    active_deco_win_ = new_active;
-
-    if (new_active)
-      new_active->impl_->active = true;
-  }
-
   switch (event->type)
   {
     case PropertyNotify:
     {
-      if (event->xproperty.atom == Atoms::mwmHints)
+      if (event->xproperty.atom == Atoms::winActive)
+      {
+        if (active_deco_win_)
+          active_deco_win_->impl_->active = false;
+
+        auto active_xid = screen->activeWindow();
+        auto const& new_active = GetWindowByXid(active_xid);
+        active_deco_win_ = new_active;
+
+        if (new_active)
+          new_active->impl_->active = true;
+      }
+      else if (event->xproperty.atom == Atoms::mwmHints ||
+               event->xproperty.atom == Atoms::wmAllowedActions)
       {
         if (Window::Ptr const& win = GetWindowByXid(event->xproperty.window))
-        {
-          win->impl_->CleanupWindowControls();
-          win->Update();
-        }
+          win->impl_->UpdateFrameActions();
       }
       else if (event->xproperty.atom == XA_WM_NAME ||
                event->xproperty.atom == Atoms::wmName ||
@@ -289,6 +270,10 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
           auto& wm = WindowManager::Default();
           win->title = wm.GetStringProperty(event->xproperty.window, event->xproperty.atom);
         }
+      }
+      else if (event->xproperty.atom == atom::_UNITY_GTK_BORDER_RADIUS)
+      {
+        UpdateWindow(event->xproperty.window);
       }
       break;
     }
@@ -313,7 +298,14 @@ bool Manager::Impl::HandleEventAfter(XEvent* event)
 
 bool Manager::Impl::HandleFrameEvent(XEvent* event)
 {
+  if (WindowManager::Default().IsScaleActive())
+    return false;
+
   auto const& win = GetWindowByFrame(event->xany.window);
+  CompWindow* comp_window = win ? win->GetCompWindow() : nullptr;
+
+  if (comp_window && comp_window->defaultViewport() != screen->vp())
+    return false;
 
   // ButtonRelease events might happen also outside the frame window, in this
   // case we must unset the mouse owner, wherever the event happens.
@@ -404,8 +396,8 @@ Manager::~Manager()
 
 void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
 {
-  if (impl_->enable_add_supported_atoms_)
-    atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
+  atoms.push_back(atom::_UNITY_GTK_BORDER_RADIUS);
+  atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
 }
 
 bool Manager::HandleEventBefore(XEvent* xevent)
@@ -445,7 +437,7 @@ void Manager::AddProperties(debug::IntrospectionData& data)
   .add("active_shadow_radius", active_shadow_radius())
   .add("inactive_shadow_color", inactive_shadow_color())
   .add("inactive_shadow_radius", inactive_shadow_radius())
-  .add("active_window", impl_->active_window_);
+  .add("active_window", screen->activeWindow());
 }
 
 debug::Introspectable::IntrospectableList Manager::GetIntrospectableChildren()

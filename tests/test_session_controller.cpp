@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2013 Canonical Ltd
+ * Copyright (C) 2013,2015 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -41,6 +41,7 @@ struct TestSessionController : testing::Test
     , manager(std::make_shared<testing::NiceMock<MockManager>>())
     , controller(manager)
   {
+    ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(true));
     ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(true));
   }
 
@@ -71,6 +72,9 @@ TEST_F(TestSessionController, DisconnectWMSignalsOnDestruction)
   ASSERT_EQ(before, color_property.changed.size());
   color_property.changed.emit(nux::color::RandomColor());
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 struct ShowMode : TestSessionController, testing::WithParamInterface<View::Mode> {};
 INSTANTIATE_TEST_CASE_P(TestSessionController, ShowMode,
@@ -135,6 +139,8 @@ TEST_P(/*TestSessionController*/Inhibited, LogoutRequested)
   EXPECT_EQ(controller.view_->mode(), View::Mode::LOGOUT);
   EXPECT_EQ(controller.view_->have_inhibitors(), GetParam());
 }
+
+#pragma GCC diagnostic pop
 
 TEST_F(TestSessionController, CancelRequested)
 {

@@ -125,7 +125,7 @@ TEST_F(TestSwitcherController, StartDetailModeMovesNextRows)
   //  0, 1,
   //  2, 3
   EXPECT_TRUE(model->HasPrevDetailRow());
-  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 2);
+  EXPECT_EQ(model->detail_selection_index(), 2);
 }
 
 TEST_F(TestSwitcherController, StopDetailModeMovesPrevRows)
@@ -171,9 +171,7 @@ TEST_F(TestSwitcherController, ShowSwitcherNoShowDeskop)
 {
   EXPECT_CALL(*mock_window_, ShowWindow(true, _)).Times(AtLeast(1));
 
-  controller_->SetShowDesktopDisabled(true);
-  ASSERT_TRUE(controller_->IsShowDesktopDisabled());
-
+  controller_->show_desktop_disabled = true;
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   Utils::WaitUntilMSec([this] { return controller_->Visible(); });
   ASSERT_TRUE(controller_->StartIndex() == 0);
@@ -187,7 +185,7 @@ TEST_F(TestSwitcherController, ShowSwitcherNoShowDeskop)
 
 TEST_F(TestSwitcherController, ShowSwitcherNoResults)
 {
-  controller_->SetShowDesktopDisabled(true);
+  controller_->show_desktop_disabled = true;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
   EXPECT_CALL(*mock_window_, ShowWindow(true, _)).Times(0);
 
@@ -280,7 +278,7 @@ TEST_F(TestSwitcherController, ShowHideSwitcherFading)
   Mock::VerifyAndClearExpectations(mock_window_.GetPointer());
 }
 
-TEST_F(TestSwitcherController, TestRightClickedReceived)
+TEST_F(TestSwitcherController, TestDetailActivationRequest)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
 
@@ -289,8 +287,7 @@ TEST_F(TestSwitcherController, TestRightClickedReceived)
 
   ASSERT_FALSE(model->detail_selection());
 
-  view->switcher_mouse_up.emit(-1, 3);
-  view->switcher_mouse_down.emit(-1, 3);
+  view->switcher_start_detail.emit();
 
   ASSERT_TRUE(model->detail_selection());
 }

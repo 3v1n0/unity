@@ -19,6 +19,7 @@
 
 #include "DecorationsMenuDropdown.h"
 #include "DecorationStyle.h"
+#include "unity-shared/ThemeSettings.h"
 
 namespace unity
 {
@@ -33,12 +34,13 @@ const unsigned ICON_SIZE = 10;
 using namespace indicator;
 
 MenuDropdown::MenuDropdown(Indicators::Ptr const& indicators, CompWindow* win)
-  : MenuEntry(std::make_shared<Entry>("LIM-dropdown"), win)
+  : MenuEntry(std::make_shared<Entry>("LIM"+std::to_string(win->id())+"-dropdown"), win)
   , indicators_(indicators)
 {
   natural_.width = ICON_SIZE;
   natural_.height = ICON_SIZE;
   entry_->set_image(1, ICON_NAME, true, true);
+  theme::Settings::Get()->icons_changed.connect(sigc::mem_fun(this, &MenuDropdown::RenderTexture));
 }
 
 void MenuDropdown::ShowMenu(unsigned button)
@@ -53,7 +55,7 @@ void MenuDropdown::ShowMenu(unsigned button)
   for (auto const& child : children_)
     entries.push_back(child->GetEntry());
 
-  indicators_->ShowEntriesDropdown(entries, active_, 0, geo.x(), geo.y2());
+  indicators_->ShowEntriesDropdown(entries, active_, grab_.Window()->id(), geo.x(), geo.y2());
 }
 
 bool MenuDropdown::ActivateChild(MenuEntry::Ptr const& child)
@@ -118,7 +120,8 @@ bool MenuDropdown::Empty() const
 
 void MenuDropdown::RenderTexture()
 {
-  WidgetState state = active() ? WidgetState::PRELIGHT : WidgetState::NORMAL;
+  WidgetState normal_state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
+  WidgetState state = active() ? WidgetState::PRELIGHT : normal_state;
   cu::CairoContext icon_ctx(GetNaturalWidth(), GetNaturalHeight(), scale());
 
   if (state == WidgetState::PRELIGHT)

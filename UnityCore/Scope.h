@@ -31,21 +31,16 @@ namespace unity
 namespace dash
 {
 
-namespace
-{
 #define G_SCOPE_ERROR g_scope_error_quark ()
+
 typedef enum
 {
   G_SCOPE_ERROR_NO_ACTIVATION_HANDLER  = (1 << 0),
-  G_SCOPE_ERROR_INVALID_PREVIEW        = (2 << 0)
+  G_SCOPE_ERROR_INVALID_PREVIEW        = (1 << 1)
 } GScopeError;
 
 GQuark
-g_scope_error_quark (void)
-{
-  return g_quark_from_static_string ("g-scope-error-quark");
-}
-}
+g_scope_error_quark (void);
 
 class Scope : public sigc::trackable, boost::noncopyable
 {

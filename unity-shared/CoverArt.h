@@ -58,10 +58,12 @@ public:
 
   void SetFont(std::string const& font);
 
+  nux::Property<double> scale;
+
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupViews();
@@ -80,6 +82,8 @@ protected:
   virtual void AddProperties(debug::IntrospectionData&);
 
 private:
+  void UpdateScale(double scale);
+
   nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
   StaticCairoText* overlay_text_;
 
@@ -88,10 +92,10 @@ private:
   int slot_handle_;
   bool stretch_image_;
   ThumbnailNotifier::Ptr notifier_;
-  
+
   // Spinner
   bool waiting_;
-  nux::BaseTexture* spin_;
+  nux::ObjectPtr<nux::BaseTexture> spin_;
   glib::Source::UniquePtr spinner_timeout_;
   glib::Source::UniquePtr frame_timeout_;
   nux::Matrix4 rotate_matrix_;

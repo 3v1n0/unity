@@ -56,7 +56,7 @@ public:
     : handle_result_(result)
   {}
 
-  EdgeBarrierSubscriber::Result HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+  EdgeBarrierSubscriber::Result HandleBarrierEvent(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr event)
   {
     return handle_result_;
   }
@@ -89,7 +89,7 @@ public:
     }
   }
 
-  void ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+  void ProcessBarrierEvent(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr event)
   {
     GetPrivateImpl()->OnPointerBarrierEvent(owner, event);
   }
@@ -203,11 +203,11 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEventForVerticalSubscriber)
   TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.AddVerticalSubscriber(&handling_subscriber, monitor);
 
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(owner, breaking_barrier_event);
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
@@ -218,11 +218,11 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEventForHorizontalSubscriber)
   TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.AddHorizontalSubscriber(&handling_subscriber, monitor);
 
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(owner, breaking_barrier_event);
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
@@ -233,11 +233,11 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrierForVertica
   TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.AddVerticalSubscriber(&handling_subscriber, monitor);
 
-  MockPointerBarrierWrapper owner(monitor, true, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, true, VERTICAL);
   auto breaking_barrier_event = MakeBarrierEvent(5, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(5)).Times(1);
-  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(5)).Times(1);
+  ProcessBarrierEvent(owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrierForHorizontalSubscriber)
@@ -247,118 +247,118 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrierForHorizon
   TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.AddHorizontalSubscriber(&handling_subscriber, monitor);
 
-  MockPointerBarrierWrapper owner(monitor, true, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, true, HORIZONTAL);
   auto breaking_barrier_event = MakeBarrierEvent(5, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(5)).Times(1);
-  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(5)).Times(1);
+  ProcessBarrierEvent(owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierForVerticalSubscriber)
 {
   int monitor = 1;
 
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   int breaking_id = 12345;
   auto breaking_barrier_event = MakeBarrierEvent(breaking_id, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(breaking_id));
-  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(breaking_id));
+  ProcessBarrierEvent(owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierForHorizontalSubscriber)
 {
   int monitor = 1;
 
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   int breaking_id = 12345;
   auto breaking_barrier_event = MakeBarrierEvent(breaking_id, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(breaking_id));
-  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(breaking_id));
+  ProcessBarrierEvent(owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierOnMaxMonitorForVerticalSubscriber)
 {
   int monitor = monitors::MAX;
 
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_));
-  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(_));
+  ProcessBarrierEvent(owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierOnMaxMonitorForHorizontalSubscriber)
 {
   int monitor = monitors::MAX;
 
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_));
-  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(_));
+  ProcessBarrierEvent(owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrierForVerticalSubscriber)
 {
   int monitor = 2;
 
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   int not_breaking_id = 54321;
   auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id)).Times(0);
-  ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(not_breaking_id)).Times(0);
+  ProcessBarrierEvent(owner, not_breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrierForHorizontalSubscriber)
 {
   int monitor = 2;
 
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner =  std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   int not_breaking_id = 54321;
   auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id)).Times(0);
-  ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(not_breaking_id)).Times(0);
+  ProcessBarrierEvent(owner, not_breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrierForVerticalSubscriber)
 {
   int monitor = 2;
 
-  MockPointerBarrierWrapper owner(monitor, true, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, true, VERTICAL);
   int not_breaking_id = 345678;
   auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id));
-  ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(not_breaking_id));
+  ProcessBarrierEvent(owner, not_breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrierForHorizontalSubscriber)
 {
   int monitor = 2;
 
-  MockPointerBarrierWrapper owner(monitor, true, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, true, HORIZONTAL);
   int not_breaking_id = 345678;
   auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id));
-  ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+  EXPECT_CALL(*owner, ReleaseBarrier(not_breaking_id));
+  ProcessBarrierEvent(owner, not_breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessAlreadyHandledEventForVerticalSubscriber)
 {
   int monitor = g_random_int_range(0, monitors::MAX);
 
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   vertical_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::ALREADY_HANDLED;
 
   auto event = MakeBarrierEvent(g_random_int(), false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  ProcessBarrierEvent(&owner, event);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(owner, event);
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
 }
 
@@ -366,13 +366,13 @@ TEST_F(TestEdgeBarrierController, ProcessAlreadyHandledEventForHorizontalSubscri
 {
   int monitor = g_random_int_range(0, monitors::MAX);
 
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   horizontal_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::ALREADY_HANDLED;
 
   auto event = MakeBarrierEvent(g_random_int(), false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  ProcessBarrierEvent(&owner, event);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(owner, event);
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
 }
 
@@ -381,15 +381,15 @@ TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithStickyEdgesForVerticalS
   int monitor = g_random_int_range(0, monitors::MAX);
 
   bc.sticky_edges = true;
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   vertical_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
   auto event = MakeBarrierEvent(g_random_int(), false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  ProcessBarrierEvent(&owner, event);
-  EXPECT_FALSE(owner.released());
-  EXPECT_FALSE(owner.release_once());
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(owner, event);
+  EXPECT_FALSE(owner->released());
+  EXPECT_FALSE(owner->release_once());
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
 }
 
@@ -398,15 +398,15 @@ TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithStickyEdgesForHorizonta
   int monitor = g_random_int_range(0, monitors::MAX);
 
   bc.sticky_edges = true;
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   horizontal_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
   auto event = MakeBarrierEvent(g_random_int(), false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  ProcessBarrierEvent(&owner, event);
-  EXPECT_FALSE(owner.released());
-  EXPECT_FALSE(owner.release_once());
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(owner, event);
+  EXPECT_FALSE(owner->released());
+  EXPECT_FALSE(owner->release_once());
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
 }
 
@@ -415,15 +415,15 @@ TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithOutStickyEdgesForVertic
   int monitor = g_random_int_range(0, monitors::MAX);
 
   bc.sticky_edges = false;
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   vertical_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
   auto event = MakeBarrierEvent(g_random_int(), false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
-  ProcessBarrierEvent(&owner, event);
-  EXPECT_TRUE(owner.released());
-  EXPECT_TRUE(owner.release_once());
+  EXPECT_CALL(*owner, ReleaseBarrier(event->event_id));
+  ProcessBarrierEvent(owner, event);
+  EXPECT_TRUE(owner->released());
+  EXPECT_TRUE(owner->release_once());
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
@@ -432,15 +432,15 @@ TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithOutStickyEdgesForHorizi
   int monitor = g_random_int_range(0, monitors::MAX);
 
   bc.sticky_edges = false;
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   horizontal_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
   auto event = MakeBarrierEvent(g_random_int(), false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
-  ProcessBarrierEvent(&owner, event);
-  EXPECT_TRUE(owner.released());
-  EXPECT_TRUE(owner.release_once());
+  EXPECT_CALL(*owner, ReleaseBarrier(event->event_id));
+  ProcessBarrierEvent(owner, event);
+  EXPECT_TRUE(owner->released());
+  EXPECT_TRUE(owner->release_once());
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
@@ -448,13 +448,13 @@ TEST_F(TestEdgeBarrierController, ProcessNeedsReleaseEventForVerticalSubscriber)
 {
   int monitor = g_random_int_range(0, monitors::MAX);
 
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   vertical_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
 
   auto event = MakeBarrierEvent(g_random_int(), false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
-  ProcessBarrierEvent(&owner, event);
+  EXPECT_CALL(*owner, ReleaseBarrier(event->event_id));
+  ProcessBarrierEvent(owner, event);
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
@@ -462,100 +462,100 @@ TEST_F(TestEdgeBarrierController, ProcessNeedsReleaseEventForHorizontalSubscribe
 {
   int monitor = g_random_int_range(0, monitors::MAX);
 
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   horizontal_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
 
   auto event = MakeBarrierEvent(g_random_int(), false);
 
-  EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
-  ProcessBarrierEvent(&owner, event);
+  EXPECT_CALL(*owner, ReleaseBarrier(event->event_id));
+  ProcessBarrierEvent(owner, event);
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForVerticalSubscriber)
 {
   int monitor = g_random_int_range(0, monitors::MAX);
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
 
-  EXPECT_CALL(owner, ReleaseBarrier(1));
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(1, true));
-  ASSERT_TRUE(owner.released());
+  EXPECT_CALL(*owner, ReleaseBarrier(1));
+  ProcessBarrierEvent(owner, MakeBarrierEvent(1, true));
+  ASSERT_TRUE(owner->released());
 
   Utils::WaitForTimeoutMSec(bc.options()->edge_passed_disabled_ms);
-  EXPECT_FALSE(owner.released());
+  EXPECT_FALSE(owner->released());
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForHoriziontalSubscriber)
 {
   int monitor = g_random_int_range(0, monitors::MAX);
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
 
-  EXPECT_CALL(owner, ReleaseBarrier(1));
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(1, true));
-  ASSERT_TRUE(owner.released());
+  EXPECT_CALL(*owner, ReleaseBarrier(1));
+  ProcessBarrierEvent(owner, MakeBarrierEvent(1, true));
+  ASSERT_TRUE(owner->released());
 
   Utils::WaitForTimeoutMSec(bc.options()->edge_passed_disabled_ms);
-  EXPECT_FALSE(owner.released());
+  EXPECT_FALSE(owner->released());
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForNotHandledEventsForVerticalSubscriber)
 {
   int monitor = 0;
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   vertical_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
-  EXPECT_CALL(owner, ReleaseBarrier(5));
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
-  ASSERT_TRUE(owner.released());
+  EXPECT_CALL(*owner, ReleaseBarrier(5));
+  ProcessBarrierEvent(owner, MakeBarrierEvent(5, true));
+  ASSERT_TRUE(owner->released());
 
   vertical_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
-  EXPECT_CALL(owner, ReleaseBarrier(6));
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(6, false));
+  EXPECT_CALL(*owner, ReleaseBarrier(6));
+  ProcessBarrierEvent(owner, MakeBarrierEvent(6, false));
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForNotHandledEventsForHorizontalSubscriber)
 {
   int monitor = 0;
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   horizontal_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
-  EXPECT_CALL(owner, ReleaseBarrier(5));
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
-  ASSERT_TRUE(owner.released());
+  EXPECT_CALL(*owner, ReleaseBarrier(5));
+  ProcessBarrierEvent(owner, MakeBarrierEvent(5, true));
+  ASSERT_TRUE(owner->released());
 
   horizontal_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
-  EXPECT_CALL(owner, ReleaseBarrier(6));
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(6, false));
+  EXPECT_CALL(*owner, ReleaseBarrier(6));
+  ProcessBarrierEvent(owner, MakeBarrierEvent(6, false));
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForHandledEventsForVerticalSubscriber)
 {
   int monitor = 0;
-  MockPointerBarrierWrapper owner(monitor, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, VERTICAL);
   vertical_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
-  EXPECT_CALL(owner, ReleaseBarrier(5));
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
-  ASSERT_TRUE(owner.released());
+  EXPECT_CALL(*owner, ReleaseBarrier(5));
+  ProcessBarrierEvent(owner, MakeBarrierEvent(5, true));
+  ASSERT_TRUE(owner->released());
 
   vertical_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::HANDLED;
-  EXPECT_CALL(owner, ReleaseBarrier(6)).Times(1);
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(6, true));
+  EXPECT_CALL(*owner, ReleaseBarrier(6)).Times(1);
+  ProcessBarrierEvent(owner, MakeBarrierEvent(6, true));
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForHandledEventsForHoriziontalSubscriber)
 {
   int monitor = 0;
-  MockPointerBarrierWrapper owner(monitor, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitor, false, HORIZONTAL);
   horizontal_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
-  EXPECT_CALL(owner, ReleaseBarrier(5));
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
-  ASSERT_TRUE(owner.released());
+  EXPECT_CALL(*owner, ReleaseBarrier(5));
+  ProcessBarrierEvent(owner, MakeBarrierEvent(5, true));
+  ASSERT_TRUE(owner->released());
 
   horizontal_subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::HANDLED;
-  EXPECT_CALL(owner, ReleaseBarrier(6)).Times(1);
-  ProcessBarrierEvent(&owner, MakeBarrierEvent(6, true));
+  EXPECT_CALL(*owner, ReleaseBarrier(6)).Times(1);
+  ProcessBarrierEvent(owner, MakeBarrierEvent(6, true));
 }
 
 TEST_F(TestEdgeBarrierController, StickyEdgePropertyProxiesLauncherOption)
@@ -587,70 +587,85 @@ TEST_F(TestEdgeBarrierController, TestTheDirectionIsAlawysSetToUp)
 
 TEST_F(TestEdgeBarrierController, VerticalBarrierDoesNotBreakIfYEventToFarApart)
 {
-  MockPointerBarrierWrapper owner(0, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(0, false, VERTICAL);
 
   int velocity = bc.options()->edge_overcome_pressure() * bc.options()->edge_responsiveness();
   auto firstEvent = std::make_shared<BarrierEvent>(0, 50, velocity, 10);
   auto secondEvent = std::make_shared<BarrierEvent>(0, 150, velocity, 11);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  ProcessBarrierEvent(&owner, firstEvent);
-  ProcessBarrierEvent(&owner, secondEvent);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(owner, firstEvent);
+  ProcessBarrierEvent(owner, secondEvent);
 }
 
 TEST_F(TestEdgeBarrierController, HorizontalBarrierDoesNotBreakIfXEventToFarApart)
 {
-  MockPointerBarrierWrapper owner(0, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(0, false, HORIZONTAL);
 
   int velocity = bc.options()->edge_overcome_pressure() * bc.options()->edge_responsiveness();
   auto firstEvent = std::make_shared<BarrierEvent>(50, 0, velocity, 10);
   auto secondEvent = std::make_shared<BarrierEvent>(150, 0, velocity, 11);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  ProcessBarrierEvent(&owner, firstEvent);
-  ProcessBarrierEvent(&owner, secondEvent);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(owner, firstEvent);
+  ProcessBarrierEvent(owner, secondEvent);
 }
 
 TEST_F(TestEdgeBarrierController, VerticalBarrierBreaksInYBreakZone)
 {
-  MockPointerBarrierWrapper owner(0, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(0, false, VERTICAL);
 
   int velocity = bc.options()->edge_overcome_pressure() * bc.options()->edge_responsiveness();
   auto firstEvent = std::make_shared<BarrierEvent>(0, 50, velocity, 10);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(1);
-  ProcessBarrierEvent(&owner, firstEvent);
-  ProcessBarrierEvent(&owner, firstEvent);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(1);
+  ProcessBarrierEvent(owner, firstEvent);
+  ProcessBarrierEvent(owner, firstEvent);
 }
 
 TEST_F(TestEdgeBarrierController, HorizontalBarrierBreaksInXBreakZone)
 {
-  MockPointerBarrierWrapper owner(0, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(0, false, HORIZONTAL);
 
   int velocity = bc.options()->edge_overcome_pressure() * bc.options()->edge_responsiveness();
   auto firstEvent = std::make_shared<BarrierEvent>(50, 0, velocity, 10);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(1);
-  ProcessBarrierEvent(&owner, firstEvent);
-  ProcessBarrierEvent(&owner, firstEvent);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(1);
+  ProcessBarrierEvent(owner, firstEvent);
+  ProcessBarrierEvent(owner, firstEvent);
 }
 
 TEST_F(TestEdgeBarrierController, VerticalBarrierReleaseIfNoSubscriberForMonitor)
 {
-  MockPointerBarrierWrapper owner(monitors::MAX, false, VERTICAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitors::MAX, false, VERTICAL);
   auto firstEvent = std::make_shared<BarrierEvent>(0, 50, 1, 10);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(1);
-  ProcessBarrierEvent(&owner, firstEvent);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(1);
+  ProcessBarrierEvent(owner, firstEvent);
 }
 
 TEST_F(TestEdgeBarrierController, HorizontalBarrierReleaseIfNoSubscriberForMonitor)
 {
-  MockPointerBarrierWrapper owner(monitors::MAX, false, HORIZONTAL);
+  auto owner = std::make_shared<MockPointerBarrierWrapper>(monitors::MAX, false, HORIZONTAL);
   auto firstEvent = std::make_shared<BarrierEvent>(50, 0, 1, 10);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(1);
-  ProcessBarrierEvent(&owner, firstEvent);
+  EXPECT_CALL(*owner, ReleaseBarrier(_)).Times(1);
+  ProcessBarrierEvent(owner, firstEvent);
+}
+
+TEST_F(TestEdgeBarrierController, ForceDisable)
+{
+  ASSERT_FALSE(bc.force_disable);
+
+  bc.force_disable = true;
+
+  ASSERT_TRUE(GetPrivateImpl()->vertical_barriers_.empty());
+  ASSERT_TRUE(GetPrivateImpl()->horizontal_barriers_.empty());
+
+  bc.force_disable = false;
+
+  ASSERT_FALSE(GetPrivateImpl()->vertical_barriers_.empty());
+  ASSERT_FALSE(GetPrivateImpl()->horizontal_barriers_.empty());
 }
 
 }

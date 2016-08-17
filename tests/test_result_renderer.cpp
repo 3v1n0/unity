@@ -23,7 +23,7 @@
 #include <glib-object.h>
 
 #include "unity-shared/DashStyle.h"
-#include "UnityCore/GTKWrapper.h"
+#include "UnityCore/GLibWrapper.h"
 #include "UnityCore/Result.h"
 #include "dash/ResultRendererTile.h"
 
@@ -40,29 +40,6 @@ namespace
 {
 
 #define DEFAULT_GICON ". GThemedIcon cmake"
-
-GdkPixbuf* GetIconData(std::string icon_hint, int size)
-{
-  GdkPixbuf *pbuf;
-  GtkIconTheme *theme;
-  glib::Error error;
-
-  theme = gtk_icon_theme_get_default();
-  glib::Object<GIcon> icon(g_icon_new_for_string(icon_hint.c_str(), NULL));
-
-  if (icon.IsType(G_TYPE_ICON))
-  {
-    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0));
-    pbuf = gtk_icon_info_load_icon(info, &error);
-
-    if (error)
-    {
-      pbuf = NULL;
-    }
-  }
-
-  return pbuf;
-}
 
 } // namespace [anonymous]
 
@@ -102,7 +79,7 @@ public:
   }
 
 private:
-  std::auto_ptr<dash::TextureContainer> renderer_;
+  std::unique_ptr<dash::TextureContainer> renderer_;
 };
 
 TEST_F(TestResultRenderer, TestConstruction)

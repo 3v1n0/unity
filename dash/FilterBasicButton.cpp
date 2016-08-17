@@ -20,55 +20,39 @@
  */
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/UnitySettings.h"
 #include "FilterBasicButton.h"
-
-namespace
-{
-const int kMinButtonHeight = 30;
-const int kMinButtonWidth  = 48;
-const int kFontSizePx = 15; // 15px == 11pt
-}
 
 namespace unity
 {
 namespace dash
 {
-  
+namespace
+{
+const RawPixel BUTTON_HEIGHT = 30_em;
+const RawPixel MIN_BUTTON_WIDTH  = 48_em;
+const int FONT_SIZE_PX = 15; // 15px == 11pt
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(FilterBasicButton);
 
 FilterBasicButton::FilterBasicButton(nux::TextureArea* image, NUX_FILE_LINE_DECL)
-  : nux::ToggleButton(image, NUX_FILE_LINE_PARAM)
-{
-  Init();
-}
+  : FilterBasicButton(std::string(), image, NUX_FILE_LINE_PARAM)
+{}
+
+FilterBasicButton::FilterBasicButton(NUX_FILE_LINE_DECL)
+  : FilterBasicButton(std::string(), NUX_FILE_LINE_PARAM)
+{}
 
 FilterBasicButton::FilterBasicButton(std::string const& label, NUX_FILE_LINE_DECL)
-  : nux::ToggleButton(NUX_FILE_LINE_PARAM)
-  , label_(label)
-{
-  Init();
-}
+  : FilterBasicButton(label, nullptr, NUX_FILE_LINE_PARAM)
+{}
 
 FilterBasicButton::FilterBasicButton(std::string const& label, nux::TextureArea* image, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(image, NUX_FILE_LINE_PARAM)
+  , scale(1.0)
   , label_(label)
 {
-  Init();
-}
-
-FilterBasicButton::FilterBasicButton(NUX_FILE_LINE_DECL)
-  : nux::ToggleButton(NUX_FILE_LINE_PARAM)
-{
-  Init();
-}
-
-FilterBasicButton::~FilterBasicButton()
-{
-}
-
-void FilterBasicButton::Init()
-{
-
   InitTheme();
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
@@ -85,32 +69,45 @@ void FilterBasicButton::Init()
     if (GetInputEventSensitivity())
       Active() ? Deactivate() : Activate();
   });
+
+  scale.changed.connect(sigc::mem_fun(this, &FilterBasicButton::UpdateScale));
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &FilterBasicButton::InitTheme)));
+  Style::Instance().changed.connect(sigc::mem_fun(this, &FilterBasicButton::InitTheme));
 }
 
 void FilterBasicButton::InitTheme()
 {
-  if (!active_)
-  {
-    nux::Geometry const& geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
-    prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
-    active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-    focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &FilterBasicButton::RedrawFocusOverlay)));
-  }
+  prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+  active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+  normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &FilterBasicButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+  focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &FilterBasicButton::RedrawFocusOverlay)));
 
-  SetMinimumHeight(kMinButtonHeight);
-  SetMinimumWidth(kMinButtonWidth);
+  double font_scaling = Settings::Instance().font_scaling() * scale;
+  SetMinimumWidth(MIN_BUTTON_WIDTH.CP(font_scaling));
+  ApplyMinWidth();
+
+  SetMinimumHeight(BUTTON_HEIGHT.CP(font_scaling));
+  SetMaximumHeight(BUTTON_HEIGHT.CP(font_scaling));
 }
 
 void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  Style::Instance().Button(cr, faked_state, label_, kFontSizePx, Alignment::CENTER, true);
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
+  Style::Instance().Button(cr, faked_state, label_, FONT_SIZE_PX, Alignment::CENTER, true);
 }
 
 void FilterBasicButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
 {
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
   Style::Instance().ButtonFocusOverlay(cr);
+}
+
+void FilterBasicButton::UpdateScale(double scale)
+{
+  InitTheme();
+  QueueDraw();
 }
 
 long FilterBasicButton::ComputeContentSize()
@@ -190,6 +187,11 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& graphics_engine, bool force_dr
   graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
   graphics_engine.PopClippingRectangle();
+}
+
+std::string const& FilterBasicButton::GetLabel() const
+{
+  return label_;
 }
 
 } // namespace dash

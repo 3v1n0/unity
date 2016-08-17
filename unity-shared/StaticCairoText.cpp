@@ -30,12 +30,13 @@
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/CairoGraphics.h>
 
-#include <pango/pango.h>
 #include <pango/pangocairo.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include "CairoTexture.h"
+#include "ThemeSettings.h"
 #include "UnitySettings.h"
 
 using namespace nux;
@@ -45,7 +46,6 @@ namespace unity
 struct StaticCairoText::Impl : sigc::trackable
 {
   Impl(StaticCairoText* parent, std::string const& text);
-  ~Impl();
 
   PangoEllipsizeMode GetPangoEllipsizeMode() const;
   PangoAlignment GetPangoAlignment() const;
@@ -77,8 +77,6 @@ struct StaticCairoText::Impl : sigc::trackable
   void UpdateTexture();
   void OnFontChanged();
 
-  static void FontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
-
   StaticCairoText* parent_;
   bool accept_key_nav_focus_;
   mutable bool need_new_extent_cache_;
@@ -97,6 +95,8 @@ struct StaticCairoText::Impl : sigc::trackable
   UnderlineState underline_;
 
   std::string font_;
+  int font_size_ = -1;
+  PangoWeight font_weight_ = (PangoWeight) -1;
 
   std::list<BaseTexturePtr> textures2D_;
 
@@ -106,6 +106,8 @@ struct StaticCairoText::Impl : sigc::trackable
   int actual_lines_;
   float line_spacing_;
   double scale_;
+
+  connection::Wrapper font_changed_conn_;
 };
 
 StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
@@ -126,19 +128,9 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
   , line_spacing_(0.5)
   , scale_(1.0f)
 {
-  GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
-  g_signal_connect(settings, "notify::gtk-font-name",
-                   (GCallback)FontChanged, this);
-
-  Settings::Instance().font_scaling.changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::OnFontChanged)));
-}
-
-StaticCairoText::Impl::~Impl()
-{
-  GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
-  g_signal_handlers_disconnect_by_func(settings,
-                                       (void*)FontChanged,
-                                       this);
+  auto font_changed_cb = sigc::hide(sigc::mem_fun(this, &Impl::OnFontChanged));
+  font_changed_conn_ = theme::Settings::Get()->font.changed.connect(font_changed_cb);
+  Settings::Instance().font_scaling.changed.connect(font_changed_cb);
 }
 
 PangoEllipsizeMode StaticCairoText::Impl::GetPangoEllipsizeMode() const
@@ -420,7 +412,34 @@ void StaticCairoText::SetFont(std::string const& font)
 {
   if (pimpl->font_ != font)
   {
+    font.empty() ? pimpl->font_changed_conn_->unblock() : pimpl->font_changed_conn_->block();
     pimpl->font_ = font;
+    pimpl->need_new_extent_cache_ = true;
+    Size s = GetTextExtents();
+    SetMinimumHeight(s.height);
+    NeedRedraw();
+    sigFontChanged.emit(this);
+  }
+}
+
+void StaticCairoText::SetFontSize(int font_size)
+{
+  if (pimpl->font_size_ != font_size)
+  {
+    pimpl->font_size_ = font_size;
+    pimpl->need_new_extent_cache_ = true;
+    Size s = GetTextExtents();
+    SetMinimumHeight(s.height);
+    NeedRedraw();
+    sigFontChanged.emit(this);
+  }
+}
+
+void StaticCairoText::SetFontWeight(PangoWeight font_weight)
+{
+  if (pimpl->font_weight_ != font_weight)
+  {
+    pimpl->font_weight_ = font_weight;
     pimpl->need_new_extent_cache_ = true;
     Size s = GetTextExtents();
     SetMinimumHeight(s.height);
@@ -536,12 +555,7 @@ void StaticCairoText::AddProperties(debug::IntrospectionData& introspection)
 std::string StaticCairoText::Impl::GetEffectiveFont() const
 {
   if (font_.empty())
-  {
-    GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
-    glib::String font_name;
-    g_object_get(settings, "gtk-font-name", &font_name, NULL);
-    return font_name.Str();
-  }
+    return theme::Settings::Get()->font();
 
   return font_;
 }
@@ -561,7 +575,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
   }
 
   Size result;
-  std::string font = GetEffectiveFont();
+  std::string const& font = GetEffectiveFont();
   nux::Size layout_size(-1, lines_ < 0 ? lines_ : std::numeric_limits<int>::min());
 
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
@@ -570,6 +584,13 @@ Size StaticCairoText::Impl::GetTextExtents() const
 
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font.c_str());
+
+  if (font_size_ > 0)
+    pango_font_description_set_size(desc, font_size_ * PANGO_SCALE);
+
+  if (font_weight_ > 0)
+    pango_font_description_set_weight(desc, font_weight_);
+
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, GetPangoEllipsizeMode());
@@ -720,6 +741,13 @@ void StaticCairoText::Impl::DrawText(CacheTexture::Ptr const& texture)
 
 
   desc = pango_font_description_from_string(font.c_str());
+
+  if (font_size_ > 0)
+    pango_font_description_set_size(desc, font_size_ * PANGO_SCALE);
+
+  if (font_weight_ > 0)
+    pango_font_description_set_weight(desc, font_weight_);
+
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, GetPangoEllipsizeMode());
@@ -778,14 +806,6 @@ void StaticCairoText::Impl::UpdateTexture()
 
     textures2D_.push_back(texture_ptr_from_cairo_graphics(*texture->cr));
   }
-}
-
-void StaticCairoText::Impl::FontChanged(GObject* gobject,
-                                        GParamSpec* pspec,
-                                        gpointer data)
-{
-  StaticCairoText::Impl* self = static_cast<StaticCairoText::Impl*>(data);
-  self->OnFontChanged();
 }
 
 void StaticCairoText::Impl::OnFontChanged()

@@ -20,14 +20,8 @@
  */
 #include "config.h"
 
-#include <pango/pango.h>
-#include <pango/pangocairo.h>
-#include <gdk/gdk.h>
-#include <gtk/gtk.h>
-
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
-#include <NuxCore/Logger.h>
 #include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <UnityCore/GLibWrapper.h>
@@ -38,28 +32,31 @@
 #include "HudButton.h"
 #include "HudPrivate.h"
 
-DECLARE_LOGGER(logger, "unity.hud.button");
-namespace
-{
-const int hlayout_left_padding = 46;
-const char* const button_font = "Ubuntu 13"; // 17px = 13
-}
-
 namespace unity
 {
 namespace hud
 {
 
+namespace
+{
+const RawPixel HLAYOUT_LEFT_PADDING = 46_em;
+const RawPixel HEIGHT = 42_em;
+const char* const button_font = "Ubuntu 13"; // 17px = 13
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(HudButton);
 
 HudButton::HudButton(NUX_FILE_LINE_DECL)
   : nux::Button(NUX_FILE_LINE_PARAM)
+  , label([this] { return query_ ? query_->formatted_text : ""; })
   , is_rounded(false)
+  , fake_focused(false)
+  , scale(1.0)
   , is_focused_(false)
   , skip_draw_(true)
 {
   hlayout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  hlayout_->SetLeftAndRightPadding(hlayout_left_padding, -1);
+  hlayout_->SetLeftAndRightPadding(HLAYOUT_LEFT_PADDING.CP(scale), 0);
   SetLayout(hlayout_);
 
   InitTheme();
@@ -89,6 +86,12 @@ HudButton::HudButton(NUX_FILE_LINE_DECL)
   {
     fake_focused = false;
   });
+
+  scale.changed.connect([this] (double scale) {
+    hlayout_->SetLeftAndRightPadding(HLAYOUT_LEFT_PADDING.CP(scale), 0);
+    InitTheme();
+    SetQuery(query_);
+  });
 }
 
 void HudButton::InitTheme()
@@ -101,23 +104,20 @@ void HudButton::InitTheme()
     normal_->Invalidate(geo);
   });
 
-  SetMinimumHeight(42);
+  SetMinimumHeight(HEIGHT.CP(scale));
+  SetMaximumHeight(HEIGHT.CP(scale));
 
-  if (!active_)
-  {
-    nux::Geometry const& geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
-    prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
-    active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-  }
+  prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+  active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+  normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &HudButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
 }
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  dash::Style::Instance().SquareButton(cr, faked_state, "",
-                                       is_rounded, 17,
-                                       dash::Alignment::LEFT, true);
+  cairo_surface_set_device_scale(cairo_get_target(cr), scale, scale);
+  dash::Style::Instance().SquareButton(cr, faked_state, "", is_rounded, 17, dash::Alignment::LEFT, true);
 }
 
 bool HudButton::AcceptKeyNavFocus()
@@ -207,17 +207,23 @@ void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
 }
 
-void HudButton::SetQuery(Query::Ptr query)
+void HudButton::SetQuery(Query::Ptr const& query)
 {
   query_ = query;
-  label = query->formatted_text;
 
-  auto items(impl::RefactorText(label));
+  if (!query_)
+  {
+    hlayout_->Clear();
+    return;
+  }
+
+  auto items(impl::RefactorText(query_->formatted_text));
 
   hlayout_->Clear();
   for (auto item : items)
   {
     StaticCairoText* text = new StaticCairoText(item.first);
+    text->SetScale(scale);
     text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, item.second ? 1.0f : 0.5f));
     text->SetFont(button_font);
     text->SetInputEventSensitivity(false);
@@ -225,7 +231,7 @@ void HudButton::SetQuery(Query::Ptr query)
   }
 }
 
-Query::Ptr HudButton::GetQuery()
+Query::Ptr const& HudButton::GetQuery() const
 {
   return query_;
 }
@@ -234,7 +240,6 @@ void HudButton::SetSkipDraw(bool skip_draw)
 {
   skip_draw_ = skip_draw;
 }
-
 
 // Introspectable
 std::string HudButton::GetName() const

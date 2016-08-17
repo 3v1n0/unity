@@ -20,17 +20,27 @@
 
 #include <gtk/gtk.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DBusIndicators.h>
 #include <unordered_map>
 
 #include "MenuManager.h"
+#include "WindowManager.h"
 
 namespace unity
 {
 namespace menu
 {
+namespace
+{
 DECLARE_LOGGER(logger, "unity.menu.manager");
+
+const std::string SETTINGS_NAME = "com.canonical.Unity";
+const std::string LIM_KEY = "integrated-menus";
+const std::string SHOW_MENUS_NOW_DELAY = "show-menus-now-delay";
+const std::string ALWAYS_SHOW_MENUS_KEY = "always-show-menus";
+}
 
 using namespace indicator;
 
@@ -40,15 +50,36 @@ struct Manager::Impl : sigc::trackable
     : parent_(parent)
     , indicators_(indicators)
     , key_grabber_(grabber)
+    , show_now_window_(0)
+    , settings_(g_settings_new(SETTINGS_NAME.c_str()))
   {
     for (auto const& indicator : indicators_->GetIndicators())
       AddIndicator(indicator);
+
+    GrabMnemonicsForActiveWindow();
 
     parent_->show_menus.changed.connect(sigc::mem_fun(this, &Impl::ShowMenus));
     indicators_->on_object_added.connect(sigc::mem_fun(this, &Impl::AddIndicator));
     indicators_->on_object_removed.connect(sigc::mem_fun(this, &Impl::RemoveIndicator));
     indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Impl::ActivateRequest));
+    indicators_->on_entry_activated.connect(sigc::mem_fun(this, &Impl::EntryActivated));
     indicators_->icon_paths_changed.connect(sigc::mem_fun(this, &Impl::IconPathsChanged));
+    WindowManager::Default().window_focus_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::GrabMnemonicsForActiveWindow)));
+
+    signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
+      parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    });
+    signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + SHOW_MENUS_NOW_DELAY, [this] (GSettings*, const gchar*) {
+      parent_->show_menus_wait = g_settings_get_uint(settings_, SHOW_MENUS_NOW_DELAY.c_str());
+    });
+    signals_.Add<void, GSettings*, const gchar*>(settings_, "changed::" + ALWAYS_SHOW_MENUS_KEY, [this] (GSettings*, const gchar*) {
+      parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
+    });
+
+    parent_->integrated_menus = g_settings_get_boolean(settings_, LIM_KEY.c_str());
+    parent_->show_menus_wait = g_settings_get_uint(settings_, SHOW_MENUS_NOW_DELAY.c_str());
+    parent_->always_show_menus = g_settings_get_boolean(settings_, ALWAYS_SHOW_MENUS_KEY.c_str());
+    parent_->menu_open = indicators_->GetActiveEntry() != nullptr;
   }
 
   ~Impl()
@@ -63,7 +94,7 @@ struct Manager::Impl : sigc::trackable
       return;
 
     appmenu_connections_.Clear();
-    appmenu_ = indicator;
+    appmenu_ = std::static_pointer_cast<AppmenuIndicator>(indicator);
 
     for (auto const& entry : appmenu_->GetEntries())
       GrabEntryMnemonics(entry);
@@ -82,43 +113,67 @@ struct Manager::Impl : sigc::trackable
     appmenu_connections_.Clear();
 
     for (auto const& entry : appmenu_->GetEntries())
-      UngrabEntryMnemonics(entry->id());
+      UngrabEntryMnemonics(entry);
 
     appmenu_.reset();
     parent_->appmenu_removed();
   }
 
+  void GrabMnemonicsForActiveWindow()
+  {
+    if (!appmenu_)
+      return;
+
+    UngrabMnemonics();
+    auto active_window = WindowManager::Default().GetActiveWindow();
+
+    for (auto const& entry : appmenu_->GetEntriesForWindow(active_window))
+      GrabEntryMnemonics(entry);
+  }
+
   void GrabEntryMnemonics(indicator::Entry::Ptr const& entry)
   {
+    if (entry->parent_window() != WindowManager::Default().GetActiveWindow())
+      return;
+
     gunichar mnemonic;
 
     if (pango_parse_markup(entry->label().c_str(), -1, '_', nullptr, nullptr, &mnemonic, nullptr) && mnemonic)
     {
       auto key = gdk_keyval_to_lower(gdk_unicode_to_keyval(mnemonic));
       glib::String accelerator(gtk_accelerator_name(key, GDK_MOD1_MASK));
-      auto action = std::make_shared<CompAction>();
-      auto id = entry->id();
+      auto const& id = entry->id();
 
-      action->keyFromString(accelerator);
-      action->setState(CompAction::StateInitKey);
-      action->setInitiate([this, id] (CompAction* action, CompAction::State, CompOption::Vector&) {
+      CompAction action;
+      action.keyFromString(accelerator);
+      action.setState(CompAction::StateInitKey);
+      action.setInitiate([this, id] (CompAction* action, CompAction::State, CompOption::Vector&) {
         LOG_DEBUG(logger) << "pressed \"" << action->keyToString() << "\"";
         return parent_->key_activate_entry.emit(id);
       });
 
-      entry_actions_[id] = action;
-      key_grabber_->AddAction(*action);
+      if (uint32_t action_id = key_grabber_->AddAction(action))
+        entry_actions_.insert({entry, action_id});
     }
   }
 
-  void UngrabEntryMnemonics(std::string const& entry_id)
+  void UngrabEntryMnemonics(indicator::Entry::Ptr const& entry)
   {
-    auto it = entry_actions_.find(entry_id);
+    auto it = entry_actions_.find(entry);
 
     if (it != entry_actions_.end())
     {
-      key_grabber_->RemoveAction(*it->second);
+      key_grabber_->RemoveAction(it->second);
       entry_actions_.erase(it);
+    }
+  }
+
+  void UngrabMnemonics()
+  {
+    for (auto it = entry_actions_.begin(); it != entry_actions_.end();)
+    {
+      key_grabber_->RemoveAction(it->second);
+      it = entry_actions_.erase(it);
     }
   }
 
@@ -127,13 +182,42 @@ struct Manager::Impl : sigc::trackable
     parent_->key_activate_entry.emit(entry_id);
   }
 
+  void EntryActivated(std::string const&, std::string const&, nux::Rect const& geo)
+  {
+    parent_->menu_open = !geo.IsNull();
+  }
+
+  void SetShowNowForWindow(Window xid, bool show)
+  {
+    if (!appmenu_)
+      return;
+
+    show_now_window_ = show ? xid : 0;
+
+    for (auto const& entry : appmenu_->GetEntriesForWindow(xid))
+      entry->set_show_now(show);
+  }
+
   void ShowMenus(bool show)
   {
     if (!appmenu_)
       return;
 
-    for (auto const& entry : appmenu_->GetEntries())
-      entry->set_show_now(show);
+    auto& wm = WindowManager::Default();
+
+    if (show)
+    {
+      active_win_conn_ = wm.window_focus_changed.connect([this] (Window new_active) {
+        SetShowNowForWindow(show_now_window_, false);
+        SetShowNowForWindow(new_active, true);
+      });
+    }
+    else
+    {
+      active_win_conn_->disconnect();
+    }
+
+    SetShowNowForWindow(wm.GetActiveWindow(), show);
   }
 
   void IconPathsChanged()
@@ -149,14 +233,20 @@ struct Manager::Impl : sigc::trackable
 
   Manager* parent_;
   Indicators::Ptr indicators_;
-  Indicator::Ptr appmenu_;
+  AppmenuIndicator::Ptr appmenu_;
   key::Grabber::Ptr key_grabber_;
+  Window show_now_window_;
   connection::Manager appmenu_connections_;
-  std::unordered_map<std::string, std::shared_ptr<CompAction>> entry_actions_;
+  connection::Wrapper active_win_conn_;
+  glib::Object<GSettings> settings_;
+  glib::SignalManager signals_;
+  std::unordered_map<indicator::Entry::Ptr, uint32_t> entry_actions_;
 };
 
 Manager::Manager(Indicators::Ptr const& indicators, key::Grabber::Ptr const& grabber)
-  : show_menus_wait(180)
+  : integrated_menus(false)
+  , show_menus_wait(180)
+  , always_show_menus(false)
   , fadein(100)
   , fadeout(120)
   , discovery(2)
@@ -178,7 +268,7 @@ Indicators::Ptr const& Manager::Indicators() const
   return impl_->indicators_;
 }
 
-Indicator::Ptr const& Manager::AppMenu() const
+AppmenuIndicator::Ptr const& Manager::AppMenu() const
 {
   return impl_->appmenu_;
 }

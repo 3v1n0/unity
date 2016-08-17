@@ -21,7 +21,9 @@
 #include <glib/gi18n-lib.h>
 #include "CompizShortcutModeller.h"
 #include "ShortcutHint.h"
+#include "ShortcutHintPrivate.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/XKeyboardUtil.h"
 
 namespace unity
 {
@@ -68,6 +70,9 @@ namespace
   const std::string UNITYSHELL_OPTION_LAUNCHER_SWITCHER_FORWARD = "launcher_switcher_forward";
   const std::string UNITYSHELL_OPTION_SHOW_HUD = "show_hud";
   const std::string UNITYSHELL_OPTION_PANEL_FIRST_MENU = "panel_first_menu";
+  const std::string UNITYSHELL_OPTION_SHOW_MENUS = "show_menu_bar";
+  const std::string UNITYSHELL_OPTION_SPREAD_APP_WINDOWS = "spread_app_windows";
+  const std::string UNITYSHELL_OPTION_SPREAD_APP_WINDOWS_ANYWHERE = "spread_app_windows_anywhere";
   const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD = "alt_tab_forward";
   const std::string UNITYSHELL_OPTION_ALT_TAB_FORWARD_ALL = "alt_tab_forward_all";
   const std::string UNITYSHELL_OPTION_ALT_TAB_NEXT_WINDOW = "alt_tab_next_window";
@@ -225,8 +230,9 @@ void CompizModeller::AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints)
 
   hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Hold)"),
                                                    _("Reveals the application menu."),
-                                                   shortcut::OptionType::HARDCODED,
-                                                   "Alt"));
+                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   UNITYSHELL_PLUGIN_NAME,
+                                                   UNITYSHELL_OPTION_SHOW_MENUS));
 
   hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
                                                    _("Opens the indicator menu."),
@@ -238,17 +244,28 @@ void CompizModeller::AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints)
                                                    _("Moves focus between indicators."),
                                                    shortcut::OptionType::HARDCODED,
                                                    _("Cursor Left or Right")));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
+                                                   _("Take a screenshot."),
+                                                   shortcut::OptionType::GNOME,
+                                                   "screenshot"));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
+                                                   _("Take a screenshot of the current window."),
+                                                   shortcut::OptionType::GNOME,
+                                                   "window-screenshot"));
 }
 
 void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints, bool ws_enabled)
 {
   static const std::string switching(_("Switching"));
 
-  hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
-                                                   _("Switches between applications."),
-                                                   shortcut::OptionType::COMPIZ_KEY,
-                                                   UNITYSHELL_PLUGIN_NAME,
-                                                   UNITYSHELL_OPTION_ALT_TAB_FORWARD));
+  auto switcher_init = std::make_shared<shortcut::Hint>(switching, "", "",
+                                                        _("Switches between applications."),
+                                                        shortcut::OptionType::COMPIZ_KEY,
+                                                        UNITYSHELL_PLUGIN_NAME,
+                                                        UNITYSHELL_OPTION_ALT_TAB_FORWARD);
+  hints.push_back(switcher_init);
 
   if (ws_enabled)
   {
@@ -269,6 +286,30 @@ void CompizModeller::AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hi
                                                    _("Moves the focus."),
                                                    shortcut::OptionType::HARDCODED,
                                                    _("Cursor Left or Right")));
+
+  hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
+                                                   _("Enter / Exit from spread mode or Select windows."),
+                                                   shortcut::OptionType::HARDCODED,
+                                                   _("Cursor Up or Down")));
+
+  if (Display *dpy = nux::GetGraphicsDisplay()->GetX11Display())
+  {
+    if (const char* key = XKeysymToString(keyboard::get_key_right_to_key_symbol(dpy, XStringToKeysym("Tab"))))
+    {
+      std::string closekey = key;
+      switcher_init->Fill();
+      auto const& switcher_init_key = switcher_init->shortkey();
+      auto meta_separator = switcher_init_key.find("+");
+
+      if (meta_separator != std::string::npos)
+        closekey = switcher_init_key.substr(0, meta_separator-1) + " + " + closekey;
+
+      hints.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
+                                                       _("Closes the selected application / window."),
+                                                       shortcut::OptionType::HARDCODED,
+                                                       impl::ProperCase(closekey)));
+    }
+  }
 }
 
 void CompizModeller::AddWorkspaceHints(std::list<shortcut::AbstractHint::Ptr> &hints)
@@ -283,13 +324,13 @@ void CompizModeller::AddWorkspaceHints(std::list<shortcut::AbstractHint::Ptr> &h
 
   hints.push_back(std::make_shared<shortcut::Hint>(workspaces, "", _(" + Arrow Keys"),
                                                    _("Switches workspaces."),
-                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   shortcut::OptionType::COMPIZ_METAKEY,
                                                    WALL_PLUGIN_NAME,
                                                    WALL_OPTION_LEFT_KEY));
 
   hints.push_back(std::make_shared<shortcut::Hint>(workspaces, "", _(" + Arrow Keys"),
                                                    _("Moves focused window to another workspace."),
-                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   shortcut::OptionType::COMPIZ_METAKEY,
                                                    WALL_PLUGIN_NAME,
                                                    WALL_OPTION_LEFT_WINDOW_KEY));
 }
@@ -313,6 +354,23 @@ void CompizModeller::AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hin
                                                      shortcut::OptionType::COMPIZ_KEY,
                                                      SCALE_PLUGIN_NAME,
                                                      SCALE_OPTION_INITIATE_ALL_KEY));
+  }
+
+  hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
+                                                   (ws_enabled ?
+                                                    _("Spreads all windows of the focused application in the current workspace.") :
+                                                    _("Spreads all windows of the focused application.")),
+                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   UNITYSHELL_PLUGIN_NAME,
+                                                   UNITYSHELL_OPTION_SPREAD_APP_WINDOWS));
+
+  if (ws_enabled)
+  {
+    hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
+                                                     _("Spreads all windows of the focused application in all the workspaces."),
+                                                     shortcut::OptionType::COMPIZ_KEY,
+                                                     UNITYSHELL_PLUGIN_NAME,
+                                                     UNITYSHELL_OPTION_SPREAD_APP_WINDOWS_ANYWHERE));
   }
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", "",

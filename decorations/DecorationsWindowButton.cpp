@@ -29,8 +29,8 @@ namespace unity
 namespace decoration
 {
 
-WindowButton::WindowButton(CompWindow* win, WindowButtonType type)
-  : type_(type)
+WindowButton::WindowButton(CompWindow* win, WindowButtonType wbt)
+  : type(wbt)
   , pressed_(false)
   , was_pressed_(false)
   , win_(win)
@@ -39,12 +39,13 @@ WindowButton::WindowButton(CompWindow* win, WindowButtonType type)
   mouse_owner.changed.connect(cb);
   focused.changed.connect(cb);
   scale.changed.connect(cb);
+  type.changed.connect(cb);
   UpdateTexture();
 }
 
 void WindowButton::UpdateTexture()
 {
-  SetTexture(DataPool::Get()->ButtonTexture(scale(), type_, GetCurrentState()));
+  SetTexture(DataPool::Get()->ButtonTexture(scale(), type(), GetCurrentState()));
 }
 
 WidgetState WindowButton::GetCurrentState() const
@@ -98,7 +99,7 @@ void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button, Time times
     pressed_ = false;
     UpdateTexture();
 
-    switch (type_)
+    switch (type())
     {
       case WindowButtonType::CLOSE:
         if (win_->actions() & CompWindowActionCloseMask)
@@ -112,32 +113,50 @@ void WindowButton::ButtonUpEvent(CompPoint const& p, unsigned button, Time times
         switch (button)
         {
           case Button1:
-            if ((win_->state() & CompWindowStateMaximizedVertMask) ||
-                (win_->state() & CompWindowStateMaximizedHorzMask))
-              win_->maximize(0);
-            else if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
+            if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
               win_->maximize(MAXIMIZE_STATE);
             break;
           case Button2:
             if (win_->actions() & CompWindowActionMaximizeVertMask)
             {
               if (!(win_->state() & CompWindowStateMaximizedVertMask))
-                win_->maximize(CompWindowStateMaximizedVertMask);
-              else
-                win_->maximize(0);
+                win_->maximize(win_->state() | CompWindowStateMaximizedVertMask);
             }
             break;
           case Button3:
             if (win_->actions() & CompWindowActionMaximizeHorzMask)
             {
               if (!(win_->state() & CompWindowStateMaximizedHorzMask))
-                win_->maximize(CompWindowStateMaximizedHorzMask);
-              else
-                win_->maximize(0);
+                win_->maximize(win_->state() | CompWindowStateMaximizedHorzMask);
             }
             break;
         }
         break;
+      case WindowButtonType::UNMAXIMIZE:
+        switch (button)
+        {
+          case Button1:
+            win_->maximize(0);
+            break;
+          case Button2:
+            if (win_->actions() & CompWindowActionMaximizeVertMask)
+            {
+              if (!(win_->state() & CompWindowStateMaximizedVertMask))
+                win_->maximize(win_->state() | CompWindowStateMaximizedVertMask);
+              else
+                win_->maximize(win_->state() & ~CompWindowStateMaximizedVertMask);
+            }
+            break;
+          case Button3:
+            if (win_->actions() & CompWindowActionMaximizeHorzMask)
+            {
+              if (!(win_->state() & CompWindowStateMaximizedHorzMask))
+                win_->maximize(win_->state() | CompWindowStateMaximizedHorzMask);
+              else
+                win_->maximize(win_->state() & ~CompWindowStateMaximizedHorzMask);
+            }
+            break;
+        }
       default:
         break;
     }
@@ -168,7 +187,7 @@ void WindowButton::MotionEvent(CompPoint const& p, Time)
 
 std::string WindowButton::GetName() const
 {
-  switch (type_)
+  switch (type())
   {
     case WindowButtonType::CLOSE:
       return "CloseWindowButton";

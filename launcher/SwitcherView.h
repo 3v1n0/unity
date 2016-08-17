@@ -65,8 +65,6 @@ public:
   nux::Property<int> vertical_size;
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
-  nux::Property<int> monitor;
-  nux::Property<double> spread_size;
 
   void SkipAnimation();
 
@@ -74,10 +72,6 @@ public:
   // If there's no icon there, -1 is returned.
   int IconIndexAt(int x, int y) const;
   int DetailIconIdexAt(int x, int y) const;
-
-  /* void; int icon_index, int button*/
-  sigc::signal<void, int, int> switcher_mouse_down;
-  sigc::signal<void, int, int> switcher_mouse_up;
 
   /* void; int icon_index */
   sigc::signal<void, int> switcher_mouse_move;
@@ -87,6 +81,7 @@ public:
   sigc::signal<void> switcher_prev;
   sigc::signal<void> switcher_start_detail;
   sigc::signal<void> switcher_stop_detail;
+  sigc::signal<void> switcher_close_current;
 
   /* void; bool visible */
   sigc::signal<void, bool> hide_request;
@@ -135,8 +130,9 @@ private:
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);
 
-  void OnIconSizeChanged (int size);
-  void OnTileSizeChanged (int size);
+  void OnIconSizeChanged(int size);
+  void OnTileSizeChanged(int size);
+  void OnScaleChanged(double scale);
 
   nux::Geometry UpdateRenderTargets(float progress);
   void ResizeRenderTargets(nux::Geometry const& layout_geo, float progress);
@@ -158,7 +154,9 @@ private:
 
   int last_icon_selected_;
   int last_detail_icon_selected_;
+  uint64_t last_mouse_scroll_time_;
   bool check_mouse_first_time_;
+  KeySym key_right_to_tab_;
 
   DeltaTracker delta_tracker_;
 

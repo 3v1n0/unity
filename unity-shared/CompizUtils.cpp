@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2013 Canonical Ltd
+* Copyright (C) 2013-2014 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -30,6 +30,11 @@ namespace
 {
   const unsigned PIXMAP_DEPTH  = 32;
   const float    DEFAULT_SCALE = 1.0f;
+  const unsigned DECORABLE_WINDOW_TYPES = CompWindowTypeDialogMask |
+                                          CompWindowTypeModalDialogMask |
+                                          CompWindowTypeUtilMask |
+                                          CompWindowTypeMenuMask |
+                                          CompWindowTypeNormalMask;
 }
 
 SimpleTexture::SimpleTexture(GLTexture::List const& tex)
@@ -39,7 +44,7 @@ SimpleTexture::SimpleTexture(GLTexture::List const& tex)
 //
 
 SimpleTextureQuad::SimpleTextureQuad()
-  : scale(DEFAULT_SCALE)
+  : scale_(DEFAULT_SCALE)
 {}
 
 bool SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
@@ -52,24 +57,27 @@ bool SimpleTextureQuad::SetTexture(SimpleTexture::Ptr const& simple_texture)
   if (st && st->texture())
   {
     auto* tex = st->texture();
-    CompPoint old_coords(quad.box.x(), quad.box.y());
-    short invalid = std::numeric_limits<short>::min();
-    quad.box.setGeometry(invalid, invalid, tex->width() * scale, tex->height() * scale);
-    SetCoords(old_coords.x(), old_coords.y());
+    CompSize size(tex->width() * scale_, tex->height() * scale_);
+
+    if (quad.box.width() != size.width() || quad.box.height() != size.height())
+    {
+      quad.box.setSize(size);
+      UpdateMatrix();
+    }
   }
 
   return true;
 }
 
-bool SimpleTextureQuad::SetScale(float s)
+bool SimpleTextureQuad::SetScale(double s)
 {
-  if (!st || scale == s)
+  if (!st || scale_ == s)
     return false;
 
-  scale = s;
+  scale_ = s;
   auto* tex = st->texture();
-  quad.box.setWidth(tex->width() * scale);
-  quad.box.setHeight(tex->height() * scale);
+  quad.box.setWidth(tex->width() * scale_);
+  quad.box.setHeight(tex->height() * scale_);
   UpdateMatrix();
   return true;
 }
@@ -91,8 +99,8 @@ void SimpleTextureQuad::UpdateMatrix()
   int y = quad.box.y();
 
   quad.matrix = (st && st->texture()) ? st->texture()->matrix() : GLTexture::Matrix();
-  quad.matrix.xx /= scale;
-  quad.matrix.yy /= scale;
+  quad.matrix.xx /= scale_;
+  quad.matrix.yy /= scale_;
   quad.matrix.x0 = 0.0f - COMP_TEX_COORD_X(quad.matrix, x);
   quad.matrix.y0 = 0.0f - COMP_TEX_COORD_Y(quad.matrix, y);
 }
@@ -166,57 +174,78 @@ int CairoContext::height() const
   return cairo_xlib_surface_get_height(surface_);
 }
 
-bool IsWindowShadowDecorable(CompWindow* win)
-{
-  if (!win)
-    return false;
+//
+//
 
-  if (!win->isViewable())
-    return false;
+unsigned WindowDecorationElements(CompWindow* win, WindowFilter wf)
+{
+  unsigned elements = DecorationElement::NONE;
+
+  if (!win)
+    return elements;
+
+  if (!win->isViewable() && wf == WindowFilter::NONE)
+    return elements;
 
   if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
-    return false;
+    return elements;
 
-  if (win->region().numRects() != 1) // Non rectangular windows
-    return false;
+  auto const& region = win->region();
+  bool rectangular = (region.numRects() == 1);
+  bool alpha = win->alpha();
 
-  if (win->alpha())
-    return WindowHasMotifDecorations(win);
+  if (alpha)
+  {
+    if (wf == WindowFilter::CLIENTSIDE_DECORATED)
+    {
+      elements = DecorationElement::SHADOW;
 
-  return true;
+      if (win->actions() & CompWindowActionResizeMask)
+        elements |= DecorationElement::EDGE;
+
+      return elements;
+    }
+    else if (!rectangular) // Non-rectangular windows with alpha channel
+    {
+      return elements;
+    }
+  }
+
+  elements |= DecorationElement::SHADOW;
+
+  if (!rectangular)
+    elements |= DecorationElement::SHAPED;
+
+  if (!win->overrideRedirect() &&
+      (win->type() & DECORABLE_WINDOW_TYPES) &&
+      (win->frame() || win->hasUnmapReference() || wf == WindowFilter::UNMAPPED))
+  {
+    if (win->actions() & CompWindowActionResizeMask)
+      elements |= DecorationElement::EDGE;
+
+    if (rectangular && (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle)))
+      elements |= DecorationElement::BORDER;
+  }
+
+  if (alpha && !(elements & DecorationElement::BORDER) && !(win->mwmDecor() & MwmDecorBorder))
+    elements &= ~DecorationElement::SHADOW;
+
+  return elements;
+}
+
+bool IsWindowEdgeDecorable(CompWindow* win)
+{
+  return WindowDecorationElements(win) & DecorationElement::EDGE;
+}
+
+bool IsWindowShadowDecorable(CompWindow* win)
+{
+  return WindowDecorationElements(win) & DecorationElement::SHADOW;
 }
 
 bool IsWindowFullyDecorable(CompWindow* win)
 {
-  if (!win)
-    return false;
-
-  if (!IsWindowShadowDecorable(win))
-    return false;
-
-  return WindowHasMotifDecorations(win);
-}
-
-bool WindowHasMotifDecorations(CompWindow* win)
-{
-  if (!win)
-    return false;
-
-  if (win->overrideRedirect())
-    return false;
-
-  switch (win->type())
-  {
-    case CompWindowTypeDialogMask:
-    case CompWindowTypeModalDialogMask:
-    case CompWindowTypeUtilMask:
-    case CompWindowTypeMenuMask:
-    case CompWindowTypeNormalMask:
-      if (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle))
-        return true;
-  }
-
-  return false;
+  return WindowDecorationElements(win) & DecorationElement::BORDER;
 }
 
 } // compiz_utils namespace

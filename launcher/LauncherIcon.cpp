@@ -26,6 +26,7 @@
 #include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/ThemeSettings.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UScreen.h"
 
@@ -39,8 +40,9 @@
 #include "MultiMonitor.h"
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GTKWrapper.h>
 #include <UnityCore/Variant.h>
+
+#include <numeric>
 
 namespace unity
 {
@@ -53,23 +55,20 @@ namespace
 const int IGNORE_REPEAT_SHORTCUT_DURATION = 250;
 
 const std::string DEFAULT_ICON = "application-default-icon";
-const std::string MONO_TEST_ICON = "gnome-home";
-const std::string UNITY_THEME_NAME = "unity-icon-theme";
 
 const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
 const std::string PRESENT_TIMEOUT = "present-timeout";
 const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
+
+const int COUNT_FONT_SIZE = 11;
+const int COUNT_PADDING = 2;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
 
-int LauncherIcon::_current_theme_is_mono = -1;
-glib::Object<GtkIconTheme> LauncherIcon::_unity_theme;
-
 LauncherIcon::LauncherIcon(IconType type)
   : _icon_type(type)
   , _sticky(false)
-  , _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0.0f)
   , _sort_priority(DefaultPriority(type))
@@ -80,6 +79,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _shortcut(0)
   , _allow_quicklist_to_show(true)
   , _center(monitors::MAX)
+  , _number_of_visible_windows(monitors::MAX)
   , _quirks(monitors::MAX)
   , _quirk_animations(monitors::MAX, decltype(_quirk_animations)::value_type(unsigned(Quirk::LAST)))
   , _last_stable(monitors::MAX)
@@ -98,6 +98,11 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
+
+  auto const& count_rebuild_cb = sigc::mem_fun(this, &LauncherIcon::CleanCountTextures);
+  Settings::Instance().dpi_changed.connect(count_rebuild_cb);
+  Settings::Instance().font_scaling.changed.connect(sigc::hide(count_rebuild_cb));
+  icon_size.changed.connect(sigc::hide(count_rebuild_cb));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -143,14 +148,24 @@ void LauncherIcon::LoadQuicklist()
   QuicklistManager::Default()->RegisterQuicklist(_quicklist);
 }
 
-const bool LauncherIcon::WindowVisibleOnMonitor(int monitor)
+bool LauncherIcon::WindowVisibleOnMonitor(int monitor) const
 {
   return _has_visible_window[monitor];
 }
 
-const bool LauncherIcon::WindowVisibleOnViewport()
+bool LauncherIcon::WindowVisibleOnViewport() const
 {
   return _has_visible_window.any();
+}
+
+size_t LauncherIcon::WindowsVisibleOnMonitor(int monitor) const
+{
+  return _number_of_visible_windows[monitor];
+}
+
+size_t LauncherIcon::WindowsVisibleOnViewport() const
+{
+  return std::accumulate(begin(_number_of_visible_windows), end(_number_of_visible_windows), 0);
 }
 
 std::string
@@ -308,44 +323,18 @@ void LauncherIcon::ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::
   glow = nux::Color(nux::color::RedGreenBlue(hsv));
 }
 
-/*
- * FIXME, all this code (and below), should be put in a facility for IconLoader
- * to share between launcher and places the same Icon loading logic and not look
- * having etoomanyimplementationofsamethings.
- */
-/* static */
-bool LauncherIcon::IsMonoDefaultTheme()
+BaseTexturePtr LauncherIcon::TextureFromPixbuf(GdkPixbuf* pixbuf, int size, bool update_glow_colors)
 {
-  if (_current_theme_is_mono != -1)
-    return (bool)_current_theme_is_mono;
+  g_return_val_if_fail(GDK_IS_PIXBUF(pixbuf), BaseTexturePtr());
 
-  GtkIconTheme* default_theme;
-  gtk::IconInfo info;
-  default_theme = gtk_icon_theme_get_default();
+  glib::Object<GdkPixbuf> scaled_pixbuf(gdk_pixbuf_scale_simple(pixbuf, size, size,  GDK_INTERP_BILINEAR));
 
-  _current_theme_is_mono = (int)false;
-  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), icon_size(), (GtkIconLookupFlags)0);
+  if (update_glow_colors)
+    ColorForIcon(scaled_pixbuf, _background_color, _glow_color);
 
-  if (!info)
-    return (bool)_current_theme_is_mono;
-
-  // yeah, it's evil, but it's blessed upstream
-  if (g_strrstr(gtk_icon_info_get_filename(info), "ubuntu-mono") != NULL)
-    _current_theme_is_mono = (int)true;
-
-  return (bool)_current_theme_is_mono;
-}
-
-GtkIconTheme* LauncherIcon::GetUnityTheme()
-{
-  // The theme object is invalid as soon as you add a new icon to change the theme.
-  // invalidate the cache then and rebuild the theme the first time after a icon theme update.
-  if (!_unity_theme.IsType(GTK_TYPE_ICON_THEME))
-  {
-    _unity_theme = gtk_icon_theme_new();
-    gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
-  }
-  return _unity_theme;
+  BaseTexturePtr result;
+  result.Adopt(nux::CreateTexture2DFromPixbuf(scaled_pixbuf, true));
+  return result;
 }
 
 BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
@@ -360,7 +349,7 @@ BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size
   result = TextureFromSpecificGtkTheme(default_theme, icon_name, size, update_glow_colors);
 
   if (!result)
-    result = TextureFromSpecificGtkTheme(GetUnityTheme(), icon_name, size, update_glow_colors);
+    result = TextureFromSpecificGtkTheme(theme::Settings::Get()->UnityIconTheme(), icon_name, size, update_glow_colors);
 
   if (!result)
     result = TextureFromSpecificGtkTheme(default_theme, icon_name, size, update_glow_colors, true);
@@ -381,8 +370,8 @@ BaseTexturePtr LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
                                                          bool is_default_theme)
 {
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), nullptr));
-  gtk::IconInfo info;
-  auto flags = static_cast<GtkIconLookupFlags>(0);
+  glib::Object<GtkIconInfo> info;
+  auto flags = GTK_ICON_LOOKUP_FORCE_SIZE;
 
   if (icon.IsType(G_TYPE_ICON))
   {
@@ -478,7 +467,14 @@ guint64 LauncherIcon::GetShortcut()
 nux::Point LauncherIcon::GetTipPosition(int monitor) const
 {
   auto const& converter = Settings::Instance().em(monitor);
-  return nux::Point(_center[monitor].x + converter->CP(icon_size()) / 2 + 1, _center[monitor].y);
+  if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
+  {
+    return nux::Point(_center[monitor].x + converter->CP(icon_size()) / 2 + 1, _center[monitor].y);
+  }
+  else
+  {
+    return nux::Point(_center[monitor].x, _center[monitor].y - converter->CP(icon_size()) / 2 - 1);
+  }
 }
 
 void LauncherIcon::ShowTooltip()
@@ -510,7 +506,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
   _allow_quicklist_to_show = true;
 }
 
-bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
+bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor, bool restore_input_focus)
 {
   MenuItemsVector const& menus = Menus();
 
@@ -569,10 +565,6 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   }
 
   WindowManager& win_manager = WindowManager::Default();
-
-  if (win_manager.IsScaleActive())
-    win_manager.TerminateScale();
-
   auto const& pos = GetTipPosition(monitor);
 
   /* If the expo plugin is active, we need to wait it to be terminated, before
@@ -580,14 +572,23 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   if (win_manager.IsExpoActive())
   {
     auto conn = std::make_shared<sigc::connection>();
-    *conn = win_manager.terminate_expo.connect([this, conn, pos] {
-      QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y);
+    *conn = win_manager.terminate_expo.connect([this, conn, pos, restore_input_focus] {
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y, restore_input_focus);
       conn->disconnect();
     });
   }
+  else if (win_manager.IsScaleActive())
+  {
+    auto conn = std::make_shared<sigc::connection>();
+    *conn = win_manager.terminate_spread.connect([this, conn, pos, restore_input_focus] {
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y, restore_input_focus);
+      conn->disconnect();
+    });
+    win_manager.TerminateScale();
+  }
   else
   {
-    QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y);
+    QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y, restore_input_focus);
   }
 
   return true;
@@ -642,6 +643,14 @@ void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
     _tooltip->Hide();
+
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>());
+}
+
+void LauncherIcon::PromptHideTooltip()
+{
+  if (_tooltip)
+    _tooltip->PromptHide();
 
   tooltip_visible.emit(nux::ObjectPtr<nux::View>());
 }
@@ -732,12 +741,15 @@ std::pair<int, nux::Point3> LauncherIcon::GetCenterForMonitor(int monitor) const
   return {-1, nux::Point3()};
 }
 
-void LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
+void LauncherIcon::SetNumberOfWindowsVisibleOnMonitor(int number_of_windows, int monitor)
 {
-  if (_has_visible_window[monitor] == val)
+  if (_number_of_visible_windows[monitor] == number_of_windows)
     return;
 
-  _has_visible_window[monitor] = val;
+  _has_visible_window[monitor] = (number_of_windows > 0);
+  _number_of_visible_windows[monitor] = number_of_windows;
+
+  windows_changed.emit(monitor);
   EmitNeedsRedraw(monitor);
 }
 
@@ -880,7 +892,7 @@ void LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value, int monitor)
   if (quirk == Quirk::VISIBLE)
     visibility_changed.emit(monitor);
 
-  QuirksChanged.emit();
+  quirks_changed.emit(quirk, monitor);
 }
 
 void LauncherIcon::FullyAnimateQuirkDelayed(guint ms, LauncherIcon::Quirk quirk, int monitor)
@@ -962,14 +974,42 @@ AbstractLauncherIcon::MenuItemsVector LauncherIcon::GetMenus()
   return result;
 }
 
-nux::BaseTexture*
-LauncherIcon::Emblem()
+nux::BaseTexture* LauncherIcon::Emblem() const
 {
   return _emblem.GetPointer();
 }
 
-void
-LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
+nux::BaseTexture* LauncherIcon::CountTexture(double scale)
+{
+  int count = Count();
+
+  if (!count)
+    return nullptr;
+
+  auto it = _counts.find(scale);
+
+  if (it != _counts.end())
+    return it->second.GetPointer();
+
+  auto const& texture = DrawCountTexture(count, scale);
+  _counts[scale] = texture;
+  return texture.GetPointer();
+}
+
+unsigned LauncherIcon::Count() const
+{
+  if (!_remote_entries.empty())
+  {
+    auto const& remote = _remote_entries.front();
+
+    if (remote->CountVisible())
+      return remote->Count();
+  }
+
+  return 0;
+}
+
+void LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
 {
   _emblem = emblem;
   EmitNeedsRedraw();
@@ -990,55 +1030,41 @@ LauncherIcon::SetEmblemIconName(std::string const& name)
   emblem->UnReference();
 }
 
-void
-LauncherIcon::SetEmblemText(std::string const& text)
+void LauncherIcon::CleanCountTextures()
 {
-  PangoLayout*          layout     = NULL;
+  _counts.clear();
+  EmitNeedsRedraw();
+}
 
-  PangoContext*         pangoCtx   = NULL;
-  PangoFontDescription* desc       = NULL;
-  GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-  GtkSettings*          settings   = gtk_settings_get_default();  // not ref'ed
-  gchar*                fontName   = NULL;
+BaseTexturePtr LauncherIcon::DrawCountTexture(unsigned count, double scale)
+{
+  glib::Object<PangoContext> pango_ctx(gdk_pango_context_get());
+  glib::Object<PangoLayout> layout(pango_layout_new(pango_ctx));
 
-  int width = 32;
-  int height = 8 * 2;
-  int font_height = height - 5;
+  auto const& font = theme::Settings::Get()->font();
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font.c_str()), pango_font_description_free);
+  int font_size = pango_units_from_double(Settings::Instance().font_scaling() * COUNT_FONT_SIZE);
+  pango_font_description_set_absolute_size(desc.get(), font_size);
+  pango_layout_set_font_description(layout, desc.get());
 
+  pango_layout_set_width(layout, pango_units_from_double(icon_size() * 0.75));
+  pango_layout_set_height(layout, -1);
+  pango_layout_set_wrap(layout, PANGO_WRAP_CHAR);
+  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
+  pango_layout_set_text(layout, std::to_string(count).c_str(), -1);
 
-  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
-  cairo_t* cr = cg.GetInternalContext();
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cr);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-
-  layout = pango_cairo_create_layout(cr);
-
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  desc = pango_font_description_from_string(fontName);
-  pango_font_description_set_absolute_size(desc, pango_units_from_double(font_height));
-
-  pango_layout_set_font_description(layout, desc);
-  pango_font_description_free(desc);
-
-  pango_layout_set_width(layout, pango_units_from_double(width - 4.0f));
-  pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
-  pango_layout_set_markup_with_accel(layout, text.c_str(), -1, '_', NULL);
-
-  pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
-  pango_cairo_context_set_font_options(pangoCtx,
-                                       gdk_screen_get_font_options(screen));
-
-  PangoRectangle logical_rect, ink_rect;
-  pango_layout_get_extents(layout, &logical_rect, &ink_rect);
+  PangoRectangle ink_rect;
+  pango_layout_get_pixel_extents(layout, &ink_rect, nullptr);
 
   /* DRAW OUTLINE */
-  float radius = height / 2.0f - 1.0f;
-  float inset = radius + 1.0f;
+  const float height = ink_rect.height + COUNT_PADDING * 4;
+  const float inset = height / 2.0;
+  const float radius = inset - 1.0f;
+  const float width = ink_rect.width + inset + COUNT_PADDING * 2;
+
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, std::round(width * scale), std::round(height * scale));
+  cairo_surface_set_device_scale(cg.GetSurface(), scale, scale);
+  cairo_t* cr = cg.GetInternalContext();
 
   cairo_move_to(cr, inset, height - 1.0f);
   cairo_arc(cr, inset, inset, radius, 0.5 * M_PI, 1.5 * M_PI);
@@ -1055,16 +1081,11 @@ LauncherIcon::SetEmblemText(std::string const& text)
   cairo_set_line_width(cr, 1.0f);
 
   /* DRAW TEXT */
-  cairo_move_to(cr,
-                (int)((width - pango_units_to_double(logical_rect.width)) / 2.0f),
-                (int)((height - pango_units_to_double(logical_rect.height)) / 2.0f - pango_units_to_double(logical_rect.y)));
+  cairo_move_to(cr, (width - ink_rect.width) / 2.0 - ink_rect.x,
+                    (height - ink_rect.height) / 2.0 - ink_rect.y);
   pango_cairo_show_layout(cr, layout);
 
-  SetEmblem(texture_ptr_from_cairo_graphics(cg));
-
-  // clean up
-  g_object_unref(layout);
-  g_free(fontName);
+  return texture_ptr_from_cairo_graphics(cg);
 }
 
 void
@@ -1073,26 +1094,34 @@ LauncherIcon::DeleteEmblem()
   SetEmblem(BaseTexturePtr());
 }
 
-void
-LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
+void LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
-  if (std::find(_entry_list.begin(), _entry_list.end(), remote) != _entry_list.end())
+  if (!remote || std::find(_remote_entries.begin(), _remote_entries.end(), remote) != _remote_entries.end())
     return;
 
-  _entry_list.push_front(remote);
+  _remote_entries.push_back(remote);
   AddChild(remote.get());
+  SelectEntryRemote(remote);
+}
 
-  remote->emblem_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
-  remote->count_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged));
-  remote->progress_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressChanged));
-  remote->quicklist_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteQuicklistChanged));
+void LauncherIcon::SelectEntryRemote(LauncherEntryRemote::Ptr const& remote)
+{
+  if (!remote)
+    return;
 
-  remote->emblem_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged));
-  remote->count_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
-  remote->progress_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
+  auto& cm = _remote_connections;
+  cm.Clear();
 
-  remote->urgent_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteUrgentChanged));
+  cm.Add(remote->emblem_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged)));
+  cm.Add(remote->count_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged)));
+  cm.Add(remote->progress_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressChanged)));
+  cm.Add(remote->quicklist_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteQuicklistChanged)));
 
+  cm.Add(remote->emblem_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged)));
+  cm.Add(remote->count_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged)));
+  cm.Add(remote->progress_visible_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged)));
+
+  cm.Add(remote->urgent_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteUrgentChanged)));
 
   if (remote->EmblemVisible())
     OnRemoteEmblemVisibleChanged(remote.get());
@@ -1109,28 +1138,30 @@ LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
   OnRemoteQuicklistChanged(remote.get());
 }
 
-void
-LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
+void LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
-  if (std::find(_entry_list.begin(), _entry_list.end(), remote) == _entry_list.end())
+  auto remote_it = std::find(_remote_entries.begin(), _remote_entries.end(), remote);
+
+  if (remote_it == _remote_entries.end())
     return;
 
-  _entry_list.remove(remote);
-  RemoveChild(remote.get());
-
-  DeleteEmblem();
   SetQuirk(Quirk::PROGRESS, false);
 
-  if (_remote_urgent)
+  if (remote->Urgent())
     SetQuirk(Quirk::URGENT, false);
 
+  _remote_entries.erase(remote_it);
+  RemoveChild(remote.get());
+  DeleteEmblem();
   _remote_menus = nullptr;
+
+  if (!_remote_entries.empty())
+    SelectEntryRemote(_remote_entries.back());
 }
 
 void
 LauncherIcon::OnRemoteUrgentChanged(LauncherEntryRemote* remote)
 {
-  _remote_urgent = remote->Urgent();
   SetQuirk(Quirk::URGENT, remote->Urgent());
 }
 
@@ -1149,14 +1180,7 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (!remote->CountVisible())
     return;
 
-  if (remote->Count() / 10000 != 0)
-  {
-    SetEmblemText("****");
-  }
-  else
-  {
-    SetEmblemText(std::to_string(remote->Count()));
-  }
+  CleanCountTextures();
 }
 
 void
@@ -1186,14 +1210,7 @@ LauncherIcon::OnRemoteEmblemVisibleChanged(LauncherEntryRemote* remote)
 void
 LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
-  if (remote->CountVisible())
-  {
-    SetEmblemText(std::to_string(remote->Count()));
-  }
-  else
-  {
-    DeleteEmblem();
-  }
+  CleanCountTextures();
 }
 
 void

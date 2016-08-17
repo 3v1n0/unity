@@ -37,7 +37,7 @@ struct EdgeBarrierSubscriber
   };
 
   virtual ~EdgeBarrierSubscriber() {}
-  virtual Result HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) = 0;
+  virtual Result HandleBarrierEvent(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr event) = 0;
 };
 
 class EdgeBarrierController : public sigc::trackable
@@ -49,6 +49,7 @@ public:
   ~EdgeBarrierController();
 
   nux::RWProperty<bool> sticky_edges;
+  nux::Property<bool> force_disable;
   nux::Property<launcher::Options::Ptr> options;
 
   void AddHorizontalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor);

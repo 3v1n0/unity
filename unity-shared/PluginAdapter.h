@@ -23,6 +23,7 @@
 /* Compiz */
 #include <core/core.h>
 #include <core/atoms.h>
+#include <scale/scale.h>
 
 #include <NuxCore/Property.h>
 
@@ -50,7 +51,7 @@ private:
   CompAction* GetAction(std::string const& name) const;
 
   CompAction* primary_action_;
-  std::map<std::string, CompAction*> actions_;
+  std::unordered_map<std::string, CompAction*> actions_;
 };
 
 
@@ -60,7 +61,7 @@ public:
   // You shouldn't get the PluginAdapter if you really want a WindowManager.
   // The PluginAdapter::Default should really only be called from within unityshell plugin.
   static PluginAdapter& Default();
-  static void Initialize(CompScreen* screen);
+  static PluginAdapter& Initialize(CompScreen* screen);
 
   nux::Property<bool> bias_active_to_viewport;
 
@@ -122,6 +123,7 @@ public:
   bool IsWindowMaximized(Window window_id) const;
   bool IsWindowVerticallyMaximized(Window window_id) const;
   bool IsWindowHorizontallyMaximized(Window window_id) const;
+  bool IsWindowFullscreen(Window window_id) const;
   bool IsWindowDecorated(Window window_id) const;
   bool IsWindowOnCurrentDesktop(Window window_id) const;
   bool IsWindowObscured(Window window_id) const;
@@ -179,6 +181,7 @@ public:
 
   int WorkspaceCount() const;
 
+  void SetCurrentViewport(nux::Point const&) override;
   nux::Point GetCurrentViewport() const override;
   void SetViewportSize(int horizontal, int vertical) override;
   int GetViewportHSize() const override;
@@ -192,6 +195,10 @@ public:
   void MoveResizeWindow(Window window_id, nux::Geometry geometry);
 
   Window GetTopWindowAbove(Window xid) const;
+
+  Cursor GetCachedCursor(unsigned int) const;
+
+  static bool IsNuxWindow(CompWindow* value);
 
 protected:
   PluginAdapter(CompScreen* screen);
@@ -208,11 +215,13 @@ private:
   bool IsCurrentViewportEmpty() const;
 
   CompScreen* m_Screen;
+  ScaleScreen* _scale_screen;
   MultiActionList m_ExpoActionList;
   MultiActionList m_ScaleActionList;
 
   float _coverage_area_before_automaximize;
   bool _spread_state;
+  bool _spread_requested_state;
   bool _spread_windows_state;
   bool _expo_state;
   bool _vp_switch_started;

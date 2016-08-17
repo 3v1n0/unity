@@ -27,7 +27,7 @@ class LauncherScrollTests(LauncherTestCase):
         if "System Monitor" not in self.process_manager.KNOWN_APPS:
             self.process_manager.register_known_application("System Monitor", "gnome-system-monitor.desktop", "gnome-system-monitor")
         if "Archive Manager" not in self.process_manager.KNOWN_APPS:
-            self.process_manager.register_known_application("Archive Manager", "file-roller.desktop", "file-roller")
+            self.process_manager.register_known_application("Archive Manager", "org.gnome.FileRoller.desktop", "file-roller")
 
         apps = ("Calculator", "Mahjongg", "Text Editor", "Character Map", "Terminal", "Remmina", "System Monitor", "Archive Manager")
         
@@ -88,8 +88,9 @@ class LauncherScrollTests(LauncherTestCase):
         launcher_instance.move_mouse_to_icon(last_icon)
 
         # Make sure the first icon is off the screen or else there is no
-        # scrolling.
-        self.assertThat(first_icon.center.y, LessThan(y))
+        # scrolling when launcher at left
+        if w < h:
+            self.assertThat(first_icon.center.y, LessThan(y))
         
         # Autoscroll to the first icon
         launcher_instance.move_mouse_to_icon(first_icon, autoscroll_offset)

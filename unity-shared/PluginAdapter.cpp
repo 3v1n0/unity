@@ -55,16 +55,27 @@ PluginAdapter& PluginAdapter::Default()
 }
 
 /* static */
-void PluginAdapter::Initialize(CompScreen* screen)
+PluginAdapter& PluginAdapter::Initialize(CompScreen* screen)
 {
-  global_instance.reset(new PluginAdapter(screen));
+  if (!global_instance)
+  {
+    global_instance.reset(new PluginAdapter(screen));
+  }
+  else
+  {
+    LOG_ERROR(logger) << "Already Initialized!";
+  }
+
+  return *global_instance;
 }
 
 PluginAdapter::PluginAdapter(CompScreen* screen)
   : bias_active_to_viewport(false)
   , m_Screen(screen)
+  , _scale_screen(ScaleScreen::get(screen))
   , _coverage_area_before_automaximize(0.75)
   , _spread_state(false)
+  , _spread_requested_state(false)
   , _spread_windows_state(false)
   , _expo_state(false)
   , _vp_switch_started(false)
@@ -86,6 +97,7 @@ void PluginAdapter::OnScreenGrabbed()
   if (!_spread_state && screen->grabExist("scale"))
   {
     _spread_state = true;
+    _spread_requested_state = true;
     initiate_spread.emit();
   }
 
@@ -101,6 +113,7 @@ void PluginAdapter::OnScreenUngrabbed()
   if (_spread_state && !screen->grabExist("scale"))
   {
     _spread_state = false;
+    _spread_requested_state = false;
     _spread_windows_state = false;
     terminate_spread.emit();
   }
@@ -135,6 +148,16 @@ void PluginAdapter::NotifyStateChange(CompWindow* window, unsigned int state, un
            && !((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
     window_restored.emit(window->id());
+  }
+
+  if ((state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask)
+  {
+    window_fullscreen.emit(window->id());
+  }
+  else if (((last_state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask) &&
+           !((state & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask))
+  {
+    window_unfullscreen.emit(window->id());
   }
 }
 
@@ -190,15 +213,37 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
     _vp_switch_started = false;
     screen_viewport_switch_ended.emit();
   }
-  else if (IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
-           g_strcmp0(event, "activate") == 0)
+  else if (g_strcmp0(plugin, "scale") == 0 && g_strcmp0(event, "activate") == 0)
   {
-    // If the scale plugin is activated again while is already grabbing the screen
-    // it means that is switching the view (i.e. switching from a spread application
-    // to another), so we need to notify our clients that it has really terminated
-    // and initiated again.
-    terminate_spread.emit();
-    initiate_spread.emit();
+    bool new_state = CompOption::getBoolOptionNamed(option, "active");
+
+    if (_spread_state != new_state)
+    {
+      _spread_state = new_state;
+      _spread_requested_state = new_state;
+      _spread_state ? initiate_spread.emit() : terminate_spread.emit();
+
+      if (!_spread_state)
+        _spread_windows_state = false;
+    }
+    else if (_spread_state && new_state)
+    {
+      // If the scale plugin is activated again while is already grabbing the screen
+      // it means that is switching the view (i.e. switching from a spread application
+      // to another), so we need to notify our clients that it has really terminated
+      // and initiated again.
+
+      bool old_windows_state = _spread_windows_state;
+      _spread_state = false;
+      _spread_requested_state = false;
+      _spread_windows_state = false;
+      terminate_spread.emit();
+
+      _spread_state = true;
+      _spread_requested_state = true;
+      _spread_windows_state = old_windows_state;
+      initiate_spread.emit();
+    }
   }
 }
 
@@ -249,7 +294,7 @@ void MultiActionList::Initiate(std::string const& name, CompOption::Vector const
 
   /* Initiate the selected action with the arguments */
   if (CompAction::CallBack const& initiate_cb = primary_action_->initiate())
-    initiate_cb(action, 0, argument);
+    initiate_cb(action, state, argument);
 }
 
 void MultiActionList::InitiateAll(CompOption::Vector const& extra_args, int state) const
@@ -353,16 +398,26 @@ std::string PluginAdapter::MatchStringForXids(std::vector<Window> const& windows
 
 void PluginAdapter::InitiateScale(std::string const& match, int state)
 {
-  CompOption::Vector argument(1);
-  argument[0].setName("match", CompOption::TypeMatch);
-  argument[0].value().set(CompMatch(match));
-
-  m_ScaleActionList.InitiateAll(argument, state);
+  if (!_spread_requested_state || !_scale_screen)
+  {
+    _spread_requested_state = true;
+    CompOption::Vector argument(1);
+    argument[0].setName("match", CompOption::TypeMatch);
+    argument[0].value().set(CompMatch(match));
+    m_ScaleActionList.InitiateAll(argument, state);
+  }
+  else
+  {
+    terminate_spread.emit();
+    _scale_screen->relayoutSlots(CompMatch(match));
+    initiate_spread.emit();
+  }
 }
 
 void PluginAdapter::TerminateScale()
 {
   m_ScaleActionList.TerminateAll();
+  _spread_requested_state = false;
 }
 
 bool PluginAdapter::IsScaleActive() const
@@ -502,6 +557,14 @@ bool PluginAdapter::IsWindowHorizontallyMaximized(Window window_id) const
   return false;
 }
 
+bool PluginAdapter::IsWindowFullscreen(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return ((window->state() & CompWindowStateFullscreenMask) == CompWindowStateFullscreenMask);
+
+  return false;
+}
+
 bool PluginAdapter::HasWindowDecorations(Window window_id) const
 {
   return compiz_utils::IsWindowFullyDecorable(m_Screen->findWindow(window_id));
@@ -535,9 +598,10 @@ bool PluginAdapter::IsWindowOnCurrentDesktop(Window window_id) const
 
 bool PluginAdapter::IsWindowObscured(Window window_id) const
 {
-  CompWindow* window = m_Screen->findWindow(window_id);
+  if (_spread_state)
+    return false;
 
-  if (window)
+  if (CompWindow* window = m_Screen->findWindow(window_id))
   {
     if (window->inShowDesktopMode())
       return true;
@@ -566,7 +630,7 @@ bool PluginAdapter::IsWindowMapped(Window window_id) const
   CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     return window->mapNum () > 0;
-  return true;
+  return false;
 }
 
 bool PluginAdapter::IsWindowVisible(Window window_id) const
@@ -607,7 +671,7 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
     if (window->defaultViewport() == screen_vp &&
         window->isViewable() && window->isMapped() &&
         !window->minimized() && !window->inShowDesktopMode() &&
-        !(window->state() & CompWindowStateAboveMask) &&
+        !((window->state() & CompWindowStateAboveMask) && !window->focused()) &&
         !(window->type() & CompWindowTypeSplashMask) &&
         !(window->type() & CompWindowTypeDockMask) &&
         !window->overrideRedirect() &&
@@ -752,7 +816,10 @@ void PluginAdapter::UnMinimize(Window window_id)
 {
   CompWindow* window = m_Screen->findWindow(window_id);
   if (window && (window->actions() & CompWindowActionMinimizeMask))
+  {
     window->unminimize();
+    window->show();
+  }
 }
 
 void PluginAdapter::Shade(Window window_id)
@@ -933,6 +1000,7 @@ void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
       if (forced_unminimize)
         {
           top_window->unminimize();
+          top_window->show();
         }
 
       top_window->raise();
@@ -986,11 +1054,13 @@ bool PluginAdapter::InShowDesktop() const
 void PluginAdapter::OnShowDesktop()
 {
   _in_show_desktop = true;
+  show_desktop_changed.emit();
 }
 
 void PluginAdapter::OnLeaveDesktop()
 {
   _in_show_desktop = false;
+  show_desktop_changed.emit();
 }
 
 void PluginAdapter::UpdateShowDesktopState()
@@ -1190,6 +1260,12 @@ int PluginAdapter::WorkspaceCount() const
   return m_Screen->vpSize().width() * m_Screen->vpSize().height();
 }
 
+void PluginAdapter::SetCurrentViewport(nux::Point const& vp)
+{
+  auto const& current = GetCurrentViewport();
+  m_Screen->moveViewport(current.x - vp.x, current.y - vp.y, true);
+}
+
 nux::Point PluginAdapter::GetCurrentViewport() const
 {
   CompPoint const& vp = m_Screen->vp();
@@ -1235,6 +1311,7 @@ bool PluginAdapter::IsScreenGrabbed() const
   if (ret == GrabSuccess)
   {
     XUngrabKeyboard(dpy, CurrentTime);
+    XFlush(dpy);
 
     if (CompWindow* w = m_Screen->findWindow(m_Screen->activeWindow()))
       w->moveInputFocusTo();
@@ -1430,6 +1507,25 @@ void PluginAdapter::OnWindowClosed(CompWindow *w)
 {
   if (_last_focused_window == w)
     _last_focused_window = NULL;
+}
+
+Cursor PluginAdapter::GetCachedCursor(unsigned int cursor_name) const
+{
+  return screen->cursorCache(cursor_name);
+}
+
+bool PluginAdapter::IsNuxWindow(CompWindow* value)
+{
+  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+  auto id = value->id();
+
+  unsigned int size = xwns.size();
+  for (unsigned int i = 0; i < size; ++i)
+  {
+    if (xwns[i] == id)
+      return true;
+  }
+  return false;
 }
 
 void PluginAdapter::AddProperties(debug::IntrospectionData& wrapper)

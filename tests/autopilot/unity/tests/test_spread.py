@@ -59,13 +59,22 @@ class SpreadTests(UnityTestCase):
         self.assertThat(lambda: self.unity.screen.spread_filter, Eventually(NotEquals(None)))
         return self.unity.screen.spread_filter
 
-    def assertWindowIsScaledEquals(self, xid, scaled):
+    def assertWindowIsScaledEquals(self, xid, is_scaled):
         """Assert weather a window is scaled"""
-        # Add a short delay to ensure the Spread has finished.
-        sleep(0.5)
-
-        refresh_fn = lambda: xid in [w.xid for w in self.unity.screen.scaled_windows]
-        self.assertThat(refresh_fn, Eventually(Equals(scaled)))
+        def scaled_windows_for_screen_contains_xid():
+            """Predicates the window is in the list of scaled windows for the screen.
+               The DBus introspection object actually raises an exception if you try to look
+               at a window in the scaled_windows list and it's not a scaled window.  Buggzorz.
+            """
+            scaled_windows = self.unity.screen.scaled_windows
+            for w in scaled_windows:
+                try:
+                    if xid == w.xid:
+                        return True
+                except:
+                    pass
+            return False
+        self.assertThat(scaled_windows_for_screen_contains_xid, Eventually(Equals(is_scaled)))
 
     def assertWindowIsClosed(self, xid):
         """Assert that a window is not in the list of the open windows"""
@@ -105,11 +114,7 @@ class SpreadTests(UnityTestCase):
         target_xid = not_focused.x_id
         [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
 
-        (x, y, w, h) = target_win.geometry
-        self.mouse.move(x + w / 2, y + h / 2)
-        sleep(.5)
-        self.mouse.click()
-
+        self.mouse.click_object(target_win, button=1)
         self.assertThat(lambda: not_focused.is_focused, Eventually(Equals(True)))
 
     def test_scaled_window_closes_on_middle_click(self):
@@ -120,10 +125,8 @@ class SpreadTests(UnityTestCase):
         target_xid = win.x_id
         [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
 
-        (x, y, w, h) = target_win.geometry
-        self.mouse.move(x + w / 2, y + h / 2)
-        sleep(.5)
-        self.mouse.click(button=2)
+        sleep(1)
+        self.mouse.click_object(target_win, button=2)
 
         self.assertWindowIsScaledEquals(target_xid, False)
         self.assertWindowIsClosed(target_xid)
@@ -137,13 +140,8 @@ class SpreadTests(UnityTestCase):
         [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
 
         # Make sure mouse is over the test window
-        (x1, y1, w1, h1) = target_win.geometry
-        self.mouse.move(x1 + w1 / 2, y1 + h1 / 2)
-
-        (x, y, w, h) = target_win.scale_close_geometry
-        self.mouse.move(x + w / 2, y + h / 2)
-        sleep(.5)
-        self.mouse.click()
+        self.mouse.move_to_object(target_win)
+        self.mouse.click_object(target_win.scale_close_geometry)
 
         self.assertWindowIsScaledEquals(target_xid, False)
         self.assertWindowIsClosed(target_xid)
@@ -152,7 +150,7 @@ class SpreadTests(UnityTestCase):
         """Test that the screen spread desaturates the launcher icons"""
         self.start_test_application_windows("Calculator", 1)
         self.initiate_spread_for_screen()
-        self.launcher.move_mouse_to_right_of_launcher()
+        self.launcher.move_mouse_beside_launcher()
         self.assertLauncherIconsDesaturated()
 
     def test_spread_saturate_launcher_icons_on_mouse_over(self):

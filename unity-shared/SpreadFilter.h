@@ -25,6 +25,7 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Animation.h>
+#include <UnityCore/ConnectionManager.h>
 #include "Introspectable.h"
 
 namespace unity
@@ -40,7 +41,6 @@ public:
   typedef std::shared_ptr<Filter> Ptr;
 
   Filter();
-  virtual ~Filter();
 
   nux::RWProperty<std::string> text;
 
@@ -55,12 +55,14 @@ protected:
   void AddProperties(debug::IntrospectionData&);
 
 private:
+  void OnWindowChanged();
   void UpdateFilteredWindows();
 
   nux::ObjectPtr<SearchBar> search_bar_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::animation::AnimateValue<double> fade_animator_;
   std::set<uint64_t> filtered_windows_;
+  connection::Manager title_connections_;
 };
 
 } // namespace spread

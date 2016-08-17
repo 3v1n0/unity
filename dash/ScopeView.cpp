@@ -29,9 +29,8 @@
 #include "ResultRendererHorizontalTile.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/PlacesOverlayVScrollBar.h"
+#include "unity-shared/OverlayScrollView.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "unity-shared/RawPixel.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -52,16 +51,14 @@ const double DEFAULT_SCALE         = 1.0;
 }
 
 // This is so we can access some protected members in scrollview.
-class ScopeScrollView: public nux::ScrollView
+class ScopeScrollView: public dash::ScrollView
 {
 public:
-  ScopeScrollView(nux::VScrollBar* scroll_bar, NUX_FILE_LINE_DECL)
-    : nux::ScrollView(NUX_FILE_LINE_PARAM)
+  ScopeScrollView(NUX_FILE_LINE_DECL)
+    : ScrollView(NUX_FILE_LINE_PARAM)
     , right_area_(nullptr)
     , up_area_(nullptr)
   {
-    SetVScrollBar(scroll_bar);
-
     OnVisibleChanged.connect([this] (nux::Area* /*area*/, bool visible) {
       if (m_horizontal_scrollbar_enable)
         _hscrollbar->SetVisible(visible);
@@ -108,22 +105,14 @@ public:
     up_area_ = area;
   }
 
-  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-    if (RedirectedAncestor())
-    {
-      if (m_horizontal_scrollbar_enable && _hscrollbar->IsRedrawNeeded())
-        graphics::ClearGeometry(_hscrollbar->GetGeometry());
-      if (m_vertical_scrollbar_enable && _vscrollbar->IsRedrawNeeded())
-        graphics::ClearGeometry(_vscrollbar->GetGeometry());
-    }
-
-    ScrollView::DrawContent(graphics_engine, force_draw);
-  }
-
   void EnableScrolling(bool enable_scrolling)
   {
     _vscrollbar->SetInputEventSensitivity(enable_scrolling);
+  }
+
+  nux::VScrollBar* GetScrollbar() const
+  {
+    return _vscrollbar;
   }
 
 protected:
@@ -164,7 +153,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 {
   SetupViews(show_filters);
 
-  search_string.SetGetterFunction(sigc::mem_fun(this, &ScopeView::get_search_string));
+  search_string.SetGetterFunction([this] { return search_string_; });
   filters_expanded.changed.connect(sigc::mem_fun(this, &ScopeView::OnScopeFilterExpanded));
   view_type.changed.connect(sigc::mem_fun(this, &ScopeView::OnViewTypeChanged));
   scale.changed.connect(sigc::mem_fun(this, &ScopeView::UpdateScale));
@@ -237,8 +226,8 @@ void ScopeView::SetupViews(nux::Area* show_filters)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  scroll_view_ = new ScopeScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION),
-                                    NUX_TRACKER_LOCATION);
+  scroll_view_ = new ScopeScrollView(NUX_TRACKER_LOCATION);
+  scroll_view_->scale = scale();
   scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
@@ -246,13 +235,16 @@ void ScopeView::SetupViews(nux::Area* show_filters)
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
   scroll_view_->SetRightArea(show_filters);
+  scroll_view_->GetScrollbar()->queue_draw.connect(sigc::hide(sigc::mem_fun(scroll_layout_, &nux::VLayout::QueueDraw)));
 
   no_results_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   no_results_->SetTextColor(nux::color::White);
   no_results_->SetVisible(false);
+  no_results_->SetScale(scale);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
-  fscroll_view_ = new ScopeScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
+  fscroll_view_ = new ScopeScrollView(NUX_TRACKER_LOCATION);
+  fscroll_view_->scale = scale();
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
@@ -261,6 +253,7 @@ void ScopeView::SetupViews(nux::Area* show_filters)
 
   fscroll_layout_ = new nux::VLayout();
   fscroll_view_->SetLayout(fscroll_layout_);
+  fscroll_view_->GetScrollbar()->queue_draw.connect(sigc::hide(sigc::mem_fun(fscroll_layout_, &nux::VLayout::QueueDraw)));
 
   filter_bar_ = new FilterBar();
 
@@ -276,19 +269,17 @@ void ScopeView::UpdateScopeViewSize()
 {
   dash::Style const& style = dash::Style::Instance();
 
-  RawPixel const scope_filter_space = style.GetSpaceBetweenScopeAndFilters();
-  RawPixel const right_padding      = style.GetFilterViewRightPadding();
-  RawPixel const filter_width       = style.GetFilterBarWidth() +
-                                      style.GetFilterBarLeftPadding() +
-                                      style.GetFilterBarRightPadding();
+  int right_padding = style.GetFilterViewRightPadding().CP(scale);
+  int filter_width  = style.GetFilterBarWidth().CP(scale) +
+                      style.GetFilterBarLeftPadding().CP(scale) +
+                      style.GetFilterBarRightPadding().CP(scale);
 
-  double scale = this->scale();
-  layout_->SetSpaceBetweenChildren(scope_filter_space.CP(scale));
+  layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenScopeAndFilters().CP(scale));
 
-  fscroll_view_->SetMinimumWidth(filter_width.CP(scale) + right_padding.CP(scale));
-  fscroll_view_->SetMaximumWidth(filter_width.CP(scale) + right_padding.CP(scale));
-  filter_bar_->SetMinimumWidth(filter_width.CP(scale));
-  filter_bar_->SetMaximumWidth(filter_width.CP(scale));
+  fscroll_view_->SetMinimumWidth(filter_width + right_padding);
+  fscroll_view_->SetMaximumWidth(filter_width + right_padding);
+  filter_bar_->SetMinimumWidth(filter_width);
+  filter_bar_->SetMaximumWidth(filter_width);
 }
 
 void ScopeView::UpdateScale(double scale)
@@ -298,7 +289,10 @@ void ScopeView::UpdateScale(double scale)
   for (auto& group : category_views_)
     group->scale = scale;
 
+  scroll_view_->scale = scale;
+  fscroll_view_->scale = scale;
   filter_bar_->scale = scale;
+  no_results_->SetScale(scale);
 }
 
 void ScopeView::SetupCategories(Categories::Ptr const& categories)
@@ -481,47 +475,40 @@ void ScopeView::OnCategoryAdded(Category const& category)
   /* Reset result count */
   counts_[group] = 0;
 
-  ResultView* results_view = nullptr;
+  auto* results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
+
   if (category.GetContentType() == "social" && category.renderer_name == "default")
   {
-    results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-    static_cast<ResultViewGrid*> (results_view)->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale());
-    static_cast<ResultViewGrid*> (results_view)->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale());
+    results_view->horizontal_spacing = CARD_VIEW_GAP_HORIZ.CP(scale());
+    results_view->vertical_spacing   = CARD_VIEW_GAP_VERT.CP(scale());
   }
   else
   {
-    results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   }
 
   if (scope_)
   {
-    const std::string category_id = category.id();
-    std::string unique_id = category.name() + scope_->name();
-    results_view->unique_id = unique_id;
+    results_view->unique_id = name + scope_->name();
     results_view->expanded = false;
 
-    results_view->ResultActivated.connect([this, unique_id, category_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
+    if (scope_->id() == "applications.scope" ||
+        (scope_->id() == "home.scope" && category.id() == "applications.scope"))
     {
-      if (g_str_has_prefix(local_result.uri.c_str(), "x-unity-no-preview"))
-        type = ResultView::ActivateType::DIRECT;
+      results_view->default_click_activation = ResultView::ActivateType::DIRECT;
+    }
 
-      // Applications scope results should be activated on left-click (instead of preview). Note that app scope can still
-      // respond with preview for activation request (the case for uninstalled apps).
-      bool is_app_scope_result = (scope_->id() == "applications.scope" || (scope_->id() == "home.scope" && category_id == "applications.scope"));
+    results_view->ResultActivated.connect([this, results_view] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
+    {
+      result_activated.emit(type, local_result, data, results_view->unique_id());
 
-      if (is_app_scope_result && type == ResultView::ActivateType::PREVIEW_LEFT_BUTTON)
-        type = ResultView::ActivateType::DIRECT;
-
-      result_activated.emit(type, local_result, data, unique_id);
       switch (type)
       {
         case ResultView::ActivateType::DIRECT:
         {
           scope_->Activate(local_result, nullptr, cancellable_);
         } break;
-        case ResultView::ActivateType::PREVIEW_LEFT_BUTTON:
         case ResultView::ActivateType::PREVIEW:
         {
           scope_->Preview(local_result, nullptr, cancellable_);
@@ -883,11 +870,6 @@ bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback co
   return false;
 }
 
-std::string ScopeView::get_search_string() const
-{
-  return search_string_;
-}
-
 void ScopeView::OnGroupExpanded(PlacesGroup* group)
 {
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
@@ -1005,6 +987,11 @@ void ScopeView::AboutToShow()
 void ScopeView::JumpToTop()
 {
   scroll_view_->ScrollToPosition(nux::Geometry(0, 0, 0, 0));
+}
+
+void ScopeView::PerformPageNavigation(ScrollDir dir)
+{
+  scroll_view_->page_direction.emit(dir);
 }
 
 void ScopeView::ActivateFirst()

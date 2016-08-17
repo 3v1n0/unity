@@ -20,6 +20,7 @@
 
 #include <glib.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibSource.h>
 #include <UnityCore/Variant.h>
 
 #include "DecorationStyle.h"
@@ -37,11 +38,16 @@ Settings* settings_instance = nullptr;
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
-const std::string LIM_KEY = "integrated-menus";
+const std::string DESKTOP_TYPE = "desktop-type";
+const std::string PAM_CHECK_ACCOUNT_TYPE = "pam-check-account-type";
+
+const std::string LAUNCHER_SETTINGS = "com.canonical.Unity.Launcher";
+const std::string LAUNCHER_POSITION = "launcher-position";
 
 const std::string LIM_SETTINGS = "com.canonical.Unity.IntegratedMenus";
 const std::string CLICK_MOVEMENT_THRESHOLD = "click-movement-threshold";
 const std::string DOUBLE_CLICK_WAIT = "double-click-wait";
+const std::string UNFOCUSED_MENU_POPUP = "unfocused-windows-popup";
 
 const std::string UI_SETTINGS = "com.canonical.Unity.Interface";
 const std::string TEXT_SCALE_FACTOR = "text-scale-factor";
@@ -58,7 +64,17 @@ const std::string GNOME_CURSOR_SIZE = "cursor-size";
 const std::string GNOME_SCALE_FACTOR = "scaling-factor";
 const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
-const int DEFAULT_LAUNCHER_WIDTH = 64;
+const std::string REMOTE_CONTENT_SETTINGS = "com.canonical.Unity.Lenses";
+const std::string REMOTE_CONTENT_KEY = "remote-content-search";
+
+const std::string GESTURES_SETTINGS = "com.canonical.Unity.Gestures";
+const std::string LAUNCHER_DRAG = "launcher-drag";
+const std::string DASH_TAP = "dash-tap";
+const std::string WINDOWS_DRAG_PINCH = "windows-drag-pinch";
+
+const int DEFAULT_LAUNCHER_SIZE = 64;
+const int MINIMUM_DESKTOP_HEIGHT = 800;
+const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
 const double DEFAULT_DPI = 96.0f;
 }
 
@@ -71,35 +87,32 @@ public:
   Impl(Settings* owner)
     : parent_(owner)
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , launcher_settings_(g_settings_new(LAUNCHER_SETTINGS.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
+    , gestures_settings_(g_settings_new(GESTURES_SETTINGS.c_str()))
     , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , ubuntu_ui_settings_(g_settings_new(UBUNTU_UI_SETTINGS.c_str()))
     , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
-    , launcher_widths_(monitors::MAX, DEFAULT_LAUNCHER_WIDTH)
+    , remote_content_settings_(g_settings_new(REMOTE_CONTENT_SETTINGS.c_str()))
+    , launcher_sizes_(monitors::MAX, DEFAULT_LAUNCHER_SIZE)
+    , cached_launcher_position_(LauncherPosition::LEFT)
     , cached_form_factor_(FormFactor::DESKTOP)
     , cursor_scale_(1.0)
     , cached_double_click_activate_(true)
     , changing_gnome_settings_(false)
-    , lowGfx_(false)
+    , remote_content_enabled_(true)
   {
     parent_->form_factor.SetGetterFunction(sigc::mem_fun(this, &Impl::GetFormFactor));
     parent_->form_factor.SetSetterFunction(sigc::mem_fun(this, &Impl::SetFormFactor));
     parent_->double_click_activate.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDoubleClickActivate));
+    parent_->remote_content.SetGetterFunction(sigc::mem_fun(this, &Impl::GetRemoteContentEnabled));
+    parent_->launcher_position.SetGetterFunction(sigc::mem_fun(this, &Impl::GetLauncherPosition));
+    parent_->launcher_position.SetSetterFunction(sigc::mem_fun(this, &Impl::SetLauncherPosition));
+    parent_->desktop_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDesktopType));
+    parent_->pam_check_account_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetPamCheckAccountType));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
-
-    CacheFormFactor();
-    CacheDoubleClickActivate();
-
-    // The order is important here, DPI is the last thing to be updated
-    UpdateLimSetting();
-    UpdateTextScaleFactor();
-    UpdateCursorScaleFactor();
-    UpdateFontSize();
-    UpdateDPI();
-
-    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
@@ -110,8 +123,9 @@ public:
       parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LIM_KEY, [this] (GSettings*, const gchar*) {
-      UpdateLimSetting();
+    signals_.Add<void, GSettings*, const gchar*>(launcher_settings_, "changed::" + LAUNCHER_POSITION, [this] (GSettings*, const gchar*) {
+      CacheLauncherPosition();
+      parent_->launcher_position.changed.emit(cached_launcher_position_);
     });
 
     signals_.Add<void, GSettings*, const gchar*>(ubuntu_ui_settings_, "changed::" + SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
@@ -152,6 +166,29 @@ public:
     signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
       UpdateLimSetting();
     });
+
+    signals_.Add<void, GSettings*, const gchar*>(gestures_settings_, "changed", [this] (GSettings*, const gchar*) {
+      UpdateGesturesSetting();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(remote_content_settings_, "changed::" + REMOTE_CONTENT_KEY, [this] (GSettings*, const gchar* t) {
+      UpdateRemoteContentSearch();
+    });
+
+    UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
+
+    // The order is important here, DPI is the last thing to be updated
+    UpdateLimSetting();
+    UpdateGesturesSetting();
+    UpdateTextScaleFactor();
+    UpdateCursorScaleFactor();
+    UpdateFontSize();
+    UpdateDPI();
+
+    CacheFormFactor();
+    CacheDoubleClickActivate();
+    UpdateRemoteContentSearch();
+    CacheLauncherPosition();
   }
 
   void CacheFormFactor()
@@ -162,10 +199,11 @@ public:
     if (raw_from_factor == 0) //Automatic
     {
       auto uscreen = UScreen::GetDefault();
-      int primary_monitor = uscreen->GetMonitorWithMouse();
+      int primary_monitor = uscreen->GetPrimaryMonitor();
       auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
+      double monitor_scaling = em(primary_monitor)->DPIScale();
 
-      new_form_factor = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
+      new_form_factor = (geo.height * monitor_scaling) >= MINIMUM_DESKTOP_HEIGHT ? FormFactor::DESKTOP : FormFactor::NETBOOK;
     }
     else
     {
@@ -184,11 +222,24 @@ public:
     cached_double_click_activate_ = g_settings_get_boolean(usettings_, DOUBLE_CLICK_ACTIVATE.c_str());
   }
 
+  void CacheLauncherPosition()
+  {
+    cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(launcher_settings_, LAUNCHER_POSITION.c_str()));
+  }
+
   void UpdateLimSetting()
   {
-    decoration::Style::Get()->integrated_menus = g_settings_get_boolean(usettings_, LIM_KEY.c_str());
     parent_->lim_movement_thresold = g_settings_get_uint(lim_settings_, CLICK_MOVEMENT_THRESHOLD.c_str());
     parent_->lim_double_click_wait = g_settings_get_uint(lim_settings_, DOUBLE_CLICK_WAIT.c_str());
+    parent_->lim_unfocused_popup = g_settings_get_boolean(lim_settings_, UNFOCUSED_MENU_POPUP.c_str());
+  }
+
+  void UpdateGesturesSetting()
+  {
+    parent_->gestures_launcher_drag = g_settings_get_boolean(gestures_settings_, LAUNCHER_DRAG.c_str());
+    parent_->gestures_dash_tap = g_settings_get_boolean(gestures_settings_, DASH_TAP.c_str());
+    parent_->gestures_windows_drag_pinch = g_settings_get_boolean(gestures_settings_, WINDOWS_DRAG_PINCH.c_str());
+    parent_->gestures_changed.emit();
   }
 
   FormFactor GetFormFactor() const
@@ -205,6 +256,27 @@ public:
   bool GetDoubleClickActivate() const
   {
     return cached_double_click_activate_;
+  }
+
+  LauncherPosition GetLauncherPosition() const
+  {
+    return cached_launcher_position_;
+  }
+
+  bool SetLauncherPosition(LauncherPosition launcherPosition)
+  {
+    g_settings_set_enum(launcher_settings_, LAUNCHER_POSITION.c_str(), static_cast<int>(launcherPosition));
+    return false;
+  }
+
+  DesktopType GetDesktopType() const
+  {
+    return static_cast<DesktopType>(g_settings_get_enum(usettings_, DESKTOP_TYPE.c_str()));
+  }
+
+  bool GetPamCheckAccountType() const
+  {
+    return g_settings_get_boolean(usettings_, PAM_CHECK_ACCOUNT_TYPE.c_str());
   }
 
   int GetFontSize() const
@@ -237,6 +309,17 @@ public:
   void UpdateCursorScaleFactor()
   {
     cursor_scale_ = g_settings_get_double(ui_settings_, CURSOR_SCALE_FACTOR.c_str());
+  }
+
+  EMConverter::Ptr const& em(int monitor) const
+  {
+    if (monitor < 0 || monitor >= (int)monitors::MAX)
+    {
+      LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning index 0 monitor instead.";
+      return em_converters_[0];
+    }
+
+    return em_converters_[monitor];
   }
 
   void UpdateDPI()
@@ -289,6 +372,7 @@ public:
   void UpdateAppsScaling(double scale)
   {
     changing_gnome_settings_ = true;
+    changing_gnome_settings_timeout_.reset();
     unsigned integer_scaling = std::max<unsigned>(1, scale);
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
@@ -297,23 +381,49 @@ public:
     g_settings_set_int(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str(), cursor_size);
     g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
     g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
-    changing_gnome_settings_ = false;
+
+    changing_gnome_settings_timeout_.reset(new glib::TimeoutSeconds(GNOME_SETTINGS_CHANGED_WAIT_SECONDS, [this] {
+      changing_gnome_settings_ = false;
+      return false;
+    }, glib::Source::Priority::LOW));
+  }
+
+  void UpdateRemoteContentSearch()
+  {
+    glib::String remote_content(g_settings_get_string(remote_content_settings_, REMOTE_CONTENT_KEY.c_str()));
+    bool remote_content_enabled = ((remote_content.Str() == "all") ? true : false);
+
+    if (remote_content_enabled != remote_content_enabled_)
+    {
+      remote_content_enabled_ = remote_content_enabled;
+      parent_->remote_content.changed.emit(remote_content_enabled_);
+    }
+  }
+
+  bool GetRemoteContentEnabled() const
+  {
+    return remote_content_enabled_;
   }
 
   Settings* parent_;
   glib::Object<GSettings> usettings_;
+  glib::Object<GSettings> launcher_settings_;
   glib::Object<GSettings> lim_settings_;
+  glib::Object<GSettings> gestures_settings_;
   glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> ubuntu_ui_settings_;
   glib::Object<GSettings> gnome_ui_settings_;
+  glib::Object<GSettings> remote_content_settings_;
+  glib::Source::UniquePtr changing_gnome_settings_timeout_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
-  std::vector<int> launcher_widths_;
+  std::vector<int> launcher_sizes_;
+  LauncherPosition cached_launcher_position_;
   FormFactor cached_form_factor_;
   double cursor_scale_;
   bool cached_double_click_activate_;
   bool changing_gnome_settings_;
-  bool lowGfx_;
+  bool remote_content_enabled_;
 };
 
 //
@@ -321,7 +431,8 @@ public:
 //
 
 Settings::Settings()
-  : is_standalone(false)
+  : low_gfx(false)
+  , is_standalone(false)
   , pimpl(new Impl(this))
 {
   if (settings_instance)
@@ -349,40 +460,24 @@ Settings& Settings::Instance()
   return *settings_instance;
 }
 
-bool Settings::GetLowGfxMode() const
-{
-  return pimpl->lowGfx_;
-}
-
-void Settings::SetLowGfxMode(const bool low_gfx)
-{
-  pimpl->lowGfx_ = low_gfx;
-}
-
 EMConverter::Ptr const& Settings::em(int monitor) const
 {
-  if (monitor < 0 || monitor >= (int)monitors::MAX)
-  {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Returning index 0 monitor instead.";
-    return pimpl->em_converters_[0];
-  }
-
-  return pimpl->em_converters_[monitor];
+  return pimpl->em(monitor);
 }
 
-void Settings::SetLauncherWidth(int launcher_width, int monitor)
+void Settings::SetLauncherSize(int launcher_size, int monitor)
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
-    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating laucher width.";
+    LOG_ERROR(logger) << "Invalid monitor index: " << monitor << ". Not updating launcher size.";
   }
   else
   {
-    pimpl->launcher_widths_[monitor] = launcher_width;
+    pimpl->launcher_sizes_[monitor] = launcher_size;
   }
 }
 
-int Settings::LauncherWidth(int monitor) const
+int Settings::LauncherSize(int monitor) const
 {
   if (monitor < 0 || monitor >= (int)monitors::MAX)
   {
@@ -390,7 +485,7 @@ int Settings::LauncherWidth(int monitor) const
     return 0;
   }
 
-  return pimpl->launcher_widths_[monitor];
+  return pimpl->launcher_sizes_[monitor];
 }
 
 } // namespace unity

@@ -17,17 +17,12 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <NuxCore/Logger.h>
 #include "DecorationsInputMixer.h"
 
 namespace unity
 {
 namespace decoration
 {
-namespace
-{
-DECLARE_LOGGER(logger, "unity.decorations.inputmixer");
-}
 
 InputMixer::InputMixer()
   : mouse_down_(false)

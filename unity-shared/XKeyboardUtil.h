@@ -28,7 +28,9 @@ namespace keyboard
 {
 
 KeySym get_key_above_key_symbol(Display* display, KeySym key_symbol);
-
+KeySym get_key_below_key_symbol(Display* display, KeySym key_symbol);
+KeySym get_key_right_to_key_symbol(Display* display, KeySym key_symbol);
+KeySym get_key_left_to_key_symbol(Display* display, KeySym key_symbol);
 
 }
 }

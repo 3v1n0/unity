@@ -1,4 +1,4 @@
-.TH unity "1" "9 December 2010" "" "Linux User's Manual"
+.TH unity "1" "09 August 2014" "" "Linux User's Manual"
 
 .SH NAME
 unity \- wrapper for starting the unity shell and handling fallback
@@ -12,17 +12,42 @@ unity \- wrapper for starting the unity shell and handling fallback
 The \fBunity\fP program can be used to start the Unity shell as a compiz module, and to specify how to handle logging, debugging, as well as how to deal with the user's profile.
 
 .SH OPTIONS
-.IP \fB\-\-advanced\-debug\fP
-Runs unity under debugging (using GDB or another debugger tool) to help tracking issues. Should only be used on request from a developper following a bug report.
+.TP
+.BR \-\-advanced\-debug
+Runs unity under debugging (using \fBgdb\fR or another debugger tool) to help tracking issues. Should only be used on request from a developer following a bug report.
 
-.IP \fB\-\-log\fP\ \fIfilename\fP
+.TP
+.BR "-\-compiz-path \fICOMPIZ_PATH\fR"
+Runs the compositor from a non-standard location.
+
+.TP
+.BR \-\-debug
+Runs Unity under
+.B gdb
+and prints a stack trace on crash.
+
+.TP
+.BR \-h ", " \-\-help
+Prints a usage message and exits.
+
+.TP
+.BR "\-\-log \fIfilename\fR"
 This parameter, followed by a path or filename, tells the Unity shell to store logs in the specified file.
 
-.IP \fB\-\-reset\fP
-This option allows the user to reset profile parameters in compiz and restart the Unity shell with default settings.
+.TP
+.BR \-\-replace
+Deprecated option for backwards compatibility.  Has no effect.
 
-.IP \fB\-\-verbose\fP
-This option turns on displaying additional debugging output for the Unity shell. It can be used by the user to debug configuration issues. This option is often used along with the \fB\-\-log\fP option to save output to a file.
+.TP
+.BR \-\-reset\-icons
+Resets the default Launcher icons.
+
+.TP
+.BR \-v ", " \-\-version
+Shows the program version number and exits.
+
+.TP
+.BR \-\-verbose
 
 .SH "SEE ALSO"
 .B unity-panel-service

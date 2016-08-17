@@ -37,12 +37,18 @@ MenuEntry::MenuEntry(Entry::Ptr const& entry, CompWindow* win)
   , in_dropdown(false)
   , entry_(entry)
   , grab_(win, true)
+  , show_menu_enabled_(true)
 {
   entry_->updated.connect(sigc::mem_fun(this, &MenuEntry::EntryUpdated));
-  horizontal_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
-  vertical_padding.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
-  scale.changed.connect(sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture)));
   in_dropdown.changed.connect([this] (bool in) { visible = entry_->visible() && !in; });
+
+  auto render_texture_cb = sigc::hide(sigc::mem_fun(this, &MenuEntry::RenderTexture));
+  horizontal_padding.changed.connect(render_texture_cb);
+  vertical_padding.changed.connect(render_texture_cb);
+  scale.changed.connect(render_texture_cb);
+  focused.changed.connect(render_texture_cb);
+  Style::Get()->font.changed.connect(render_texture_cb);
+
   EntryUpdated();
 }
 
@@ -63,7 +69,7 @@ void MenuEntry::EntryUpdated()
 
 void MenuEntry::RenderTexture()
 {
-  WidgetState state = WidgetState::NORMAL;
+  WidgetState state = focused() ? WidgetState::NORMAL : WidgetState::BACKDROP;
 
   if (show_now())
     state = WidgetState::PRESSED;
@@ -120,10 +126,17 @@ void MenuEntry::ButtonDownEvent(CompPoint const& p, unsigned button, Time timest
 {
   button_up_timer_.reset();
   grab_.ButtonDownEvent(p, button, timestamp);
+  show_menu_enabled_ = (focused() || Settings::Instance().lim_unfocused_popup());
 }
 
 void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button, Time timestamp)
 {
+  if (!show_menu_enabled_)
+  {
+    grab_.ButtonUpEvent(p, button, timestamp);
+    return;
+  }
+
   if (button == 1 && !grab_.IsGrabbed())
   {
     unsigned double_click_wait = Settings::Instance().lim_double_click_wait();
@@ -143,7 +156,8 @@ void MenuEntry::ButtonUpEvent(CompPoint const& p, unsigned button, Time timestam
 
   if (button == 2 || button == 3)
   {
-    ShowMenu(button);
+    if (Style::Get()->WindowManagerAction(WMEvent(button)) == WMAction::NONE)
+      ShowMenu(button);
   }
 
   grab_.ButtonUpEvent(p, button, timestamp);

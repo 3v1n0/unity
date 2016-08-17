@@ -51,8 +51,10 @@ struct GnomeManager::Impl
   void ConfirmShutdown();
   void CancelAction();
   void ClosedDialog();
+  bool HasInhibitors();
   void EnsureCancelPendingAction();
   void LockScreen(bool prompt);
+  void UserIconFile(std::function<void(std::string const&)> const& callback);
 
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
@@ -60,8 +62,11 @@ struct GnomeManager::Impl
   void CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb = nullptr);
   void CallLogindMethod(std::string const& method, GVariant* parameters = nullptr, glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
   void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
+  void CallDisplayManagerSeatMethod(std::string const& method, GVariant* parameters = nullptr);
   bool InteractiveMode();
   void UpdateHaveOtherOpenSessions();
+
+  bool IsUserInGroup(std::string const& user_name, std::string const& group_name);
 
   GnomeManager* manager_;
   bool test_mode_;
@@ -75,6 +80,7 @@ struct GnomeManager::Impl
   glib::DBusProxy::Ptr login_proxy_;
   glib::DBusProxy::Ptr presence_proxy_;
   glib::DBusProxy::Ptr dm_proxy_;
+  glib::DBusProxy::Ptr dm_seat_proxy_;
 
   int open_sessions_;
 };

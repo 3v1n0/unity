@@ -30,19 +30,19 @@ namespace colors {
 
 namespace unity
 {
-  class BGHash
+  class BGHash : public sigc::trackable
   {
   public:
     BGHash();
 
     nux::Color CurrentColor() const;
     uint64_t ColorAtomId() const;
-    void RefreshColor();
+    void RefreshColor(bool skip_animation = false);
     void OverrideColor(nux::Color const& color);
 
   private:
     void OnTransitionUpdated(nux::Color const& new_color);
-    void TransitionToNewColor(nux::Color const& new_color);
+    void TransitionToNewColor(nux::Color const& new_color, bool skip_animation = false);
     nux::Color MatchColor(nux::Color const& base_color) const;
 
   private:
