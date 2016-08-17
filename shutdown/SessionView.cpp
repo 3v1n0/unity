@@ -356,14 +356,6 @@ nux::Area* View::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsign
       }
     }
   }
-  else if (key_code == NUX_VK_ESCAPE)
-  {
-    nux::InputArea* focused = nux::GetWindowCompositor().GetKeyFocusArea();
-
-    // Let's reset the focused area if we're in keyboard-navigation mode.
-    if (focused && focused->IsChildOf(buttons_layout_) && !focused->IsMouseInside())
-      return this;
-  }
 
   return UnityWindowView::FindKeyFocusArea(etype, key_code, modifiers);
 }
