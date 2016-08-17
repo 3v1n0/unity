@@ -4787,7 +4787,7 @@ void ScreenIntrospection::AddProperties(debug::IntrospectionData& introspection)
 
 Introspectable::IntrospectableList ScreenIntrospection::GetIntrospectableChildren()
 {
-  IntrospectableList children({uScreen->spread_widgets_->GetFilter().get()});
+  IntrospectableList children({uScreen->spread_widgets_ ? uScreen->spread_widgets_->GetFilter().get() : nullptr});
 
   for (auto const& win : screen_->windows())
     children.push_back(UnityWindow::get(win));
