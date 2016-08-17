@@ -2121,24 +2121,14 @@ bool Style::SeparatorHoriz(cairo_t* cr)
   return true;
 }
 
-BaseTexturePtr Style::GetDashHorizontalTile(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashHorizontalTile(double scale) const
 {
-  std::string horizontal_tile;
-  if (dash_position == Position::BOTTOM)
-    horizontal_tile = "dash_top_border_tile";
-  else
-    horizontal_tile = "dash_bottom_border_tile";
-  return pimpl->LoadScaledTexture(horizontal_tile, scale);
+  return pimpl->LoadScaledTexture("dash_bottom_border_tile", scale);
 }
 
-BaseTexturePtr Style::GetDashHorizontalTileMask(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashHorizontalTileMask(double scale) const
 {
-  std::string horizontal_tile_mask;
-  if (dash_position == Position::BOTTOM)
-    horizontal_tile_mask = "dash_top_border_tile_mask";
-  else
-    horizontal_tile_mask = "dash_bottom_border_tile_mask";
-  return pimpl->LoadScaledTexture(horizontal_tile_mask, scale);
+  return pimpl->LoadScaledTexture("dash_bottom_border_tile_mask", scale);
 }
 
 BaseTexturePtr Style::GetDashRightTile(double scale) const
@@ -2161,74 +2151,39 @@ BaseTexturePtr Style::GetDashLeftTile(double scale) const
   return pimpl->LoadScaledTexture("dash_left_tile", scale);
 }
 
-BaseTexturePtr Style::GetDashTopOrBottomTile(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashTopTile(double scale) const
 {
-  std::string top_bottom_tile;
-  if (dash_position == Position::BOTTOM)
-    top_bottom_tile = "dash_bottom_tile";
-  else
-    top_bottom_tile = "dash_top_tile";
-  return pimpl->LoadScaledTexture(top_bottom_tile, scale);
+  return pimpl->LoadScaledTexture("dash_top_tile", scale);
 }
 
-BaseTexturePtr Style::GetDashCorner(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashCorner(double scale) const
 {
-  std::string corner;
-  if (dash_position == Position::BOTTOM)
-    corner = "dash_top_right_corner_rotated";
-  else
-    corner = "dash_bottom_right_corner";
-  return pimpl->LoadScaledTexture(corner, scale);
+  return pimpl->LoadScaledTexture("dash_bottom_right_corner", scale);
 }
 
-BaseTexturePtr Style::GetDashCornerMask(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashCornerMask(double scale) const
 {
-  std::string corner_mask;
-  if (dash_position == Position::BOTTOM)
-    corner_mask = "dash_top_right_corner_rotated_mask";
-  else
-    corner_mask = "dash_bottom_right_corner_mask";
-  return pimpl->LoadScaledTexture(corner_mask, scale);
+  return pimpl->LoadScaledTexture("dash_bottom_right_corner_mask", scale);
 }
 
-BaseTexturePtr Style::GetDashLeftCorner(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashLeftCorner(double scale) const
 {
-  std::string left_corner;
-  if (dash_position == Position::BOTTOM)
-    left_corner = "dash_top_left_corner";
-  else
-    left_corner = "dash_bottom_left_corner";
-  return pimpl->LoadScaledTexture(left_corner, scale);
+  return pimpl->LoadScaledTexture("dash_bottom_left_corner", scale);
 }
 
-BaseTexturePtr Style::GetDashLeftCornerMask(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashLeftCornerMask(double scale) const
 {
-  std::string left_corner_mask;
-  if (dash_position == Position::BOTTOM)
-    left_corner_mask = "dash_top_left_corner_mask";
-  else
-    left_corner_mask = "dash_bottom_left_corner_mask";
-  return pimpl->LoadScaledTexture(left_corner_mask, scale);
+  return pimpl->LoadScaledTexture("dash_bottom_left_corner_mask", scale);
 }
 
-BaseTexturePtr Style::GetDashRightCorner(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashRightCorner(double scale) const
 {
-  std::string right_corner;
-  if (dash_position == Position::BOTTOM)
-    right_corner = "dash_bottom_right_corner_rotated";
-  else
-    right_corner = "dash_top_right_corner";
-  return pimpl->LoadScaledTexture(right_corner, scale);
+  return pimpl->LoadScaledTexture("dash_top_right_corner", scale);
 }
 
-BaseTexturePtr Style::GetDashRightCornerMask(double scale, Position dash_position) const
+BaseTexturePtr Style::GetDashRightCornerMask(double scale) const
 {
-  std::string right_corner_mask;
-  if (dash_position == Position::BOTTOM)
-    right_corner_mask = "dash_bottom_right_corner_rotated_mask";
-  else
-    right_corner_mask = "dash_top_right_corner_mask";
-  return pimpl->LoadScaledTexture(right_corner_mask, scale);
+  return pimpl->LoadScaledTexture("dash_top_right_corner_mask", scale);
 }
 
 BaseTexturePtr Style::GetSearchMagnifyIcon(double scale) const
