@@ -69,6 +69,7 @@ public:
   nux::Property<bool> expanded;
 
 protected:
+  nux::Area* FindAreaUnderMouse(const nux::Point&, nux::NuxEventType) override;
   virtual bool AcceptKeyNavFocus();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);

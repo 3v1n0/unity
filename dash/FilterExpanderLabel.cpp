@@ -273,6 +273,14 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& graphics_engine, bool
   graphics_engine.PopClippingRectangle();
 }
 
+nux::Area* FilterExpanderLabel::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+  if (event_type == nux::EVENT_MOUSE_WHEEL)
+    return nullptr;
+  else
+    return nux::View::FindAreaUnderMouse(mouse_position, event_type);
+}
+
 //
 // Key navigation
 //
