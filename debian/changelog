@@ -1,3 +1,12 @@
+unity (7.5.0+16.10.20160819-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Use compiz::Window::serverNext instead of compiz::Window::next in
+    IsWindowObscured as the latter can be outdated just after
+    scale/spread terminates. (LP: #1614116)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 19 Aug 2016 13:15:09 +0000
+
 unity (7.5.0+16.10.20160817.1-0ubuntu1) yakkety; urgency=medium
 
   [ Andrea Azzarone ]
