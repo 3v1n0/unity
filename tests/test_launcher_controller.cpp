@@ -25,6 +25,7 @@
 #include "ExpoLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
 #include "DesktopUtilities.h"
+#include "InputMonitor.h"
 #include "MockableBaseWindow.h"
 #include "MockLauncherIcon.h"
 #include "BFBLauncherIcon.h"
@@ -286,6 +287,7 @@ protected:
   std::shared_ptr<helper::CaptureLogOutput> logger_output_;
   MockUScreen uscreen;
   panel::Style panel_style;
+  input::Monitor im_;
   MockFavoriteStore favorite_store;
   MockXdndManager::Ptr xdnd_manager_;
   ui::EdgeBarrierController::Ptr edge_barriers_;
