@@ -45,7 +45,7 @@ public:
   static Monitor& Get();
 
   Monitor();
-  virtual ~Monitor();
+  ~Monitor();
 
   bool RegisterClient(Events, EventCallback const&);
   bool UnregisterClient(EventCallback const&);
