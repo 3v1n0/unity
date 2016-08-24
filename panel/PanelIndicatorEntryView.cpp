@@ -140,6 +140,10 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
         wm.TerminateScale();
       }
 
+      // This is ugly... But Nux fault!
+      guint64 timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+      WindowManager::Default().UnGrabMousePointer(timestamp, button, x, y);
+
       Activate(button);
     }
   }

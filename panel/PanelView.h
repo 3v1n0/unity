@@ -88,7 +88,6 @@ protected:
   void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
   void OnIndicatorViewUpdated();
   void OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& geo);
-  void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
 
 private:
   std::string GetPanelName() const;

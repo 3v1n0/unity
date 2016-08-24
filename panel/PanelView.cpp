@@ -117,7 +117,6 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   remote_->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
-  remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
   menus->key_activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
   menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
 
@@ -736,18 +735,6 @@ void PanelView::OnEntryActivated(std::string const& panel, std::string const& en
   {
     input::Monitor::Get().UnregisterClient(activation_cb);
     menu_view_->NotifyAllMenusClosed();
-  }
-}
-
-void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
-                                int x, int y, unsigned button)
-{
-  if (menu_geo_.IsNull())
-  {
-    // This is ugly... But Nux fault!
-    menu_view_->IgnoreLeaveEvents(true);
-    WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
-    menu_view_->IgnoreLeaveEvents(false);
   }
 }
 
