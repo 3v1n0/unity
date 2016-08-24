@@ -424,9 +424,12 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
 
     wm.Raise(to_restore);
     wm.Activate(to_restore);
-    wm.Restore(to_restore);
 
-    if (button == nux::NUX_MOUSE_BUTTON2)
+    if (button == nux::NUX_MOUSE_BUTTON1)
+    {
+      wm.Restore(to_restore);
+    }
+    else if (button == nux::NUX_MOUSE_BUTTON2)
     {
       wm.VerticallyMaximize(to_restore);
     }
