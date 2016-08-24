@@ -60,12 +60,11 @@ private:
   void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryEvent(XEvent const&);
 
-  void BuildTexture();
+  void UpdateSize();
   std::string GetPanelName() const;
 
   indicator::Indicators::Ptr indicators_;
   panel::PanelIndicatorsView* indicators_view_;
-  nux::ObjectPtr<nux::BaseTexture> bg_texture_;
   bool needs_geo_sync_;
 };
 

@@ -24,7 +24,6 @@
 
 #include "LockScreenSettings.h"
 #include "panel/PanelIndicatorsView.h"
-#include "unity-shared/CairoTexture.h"
 #include "unity-shared/InputMonitor.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PanelStyle.h"
@@ -39,6 +38,7 @@ namespace lockscreen
 namespace
 {
 const RawPixel PADDING = 5_em;
+const nux::Color BG_COLOR(0.1, 0.1, 0.1, 0.4);
 }
 
 using namespace indicator;
@@ -55,8 +55,7 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
   auto* layout = new nux::HLayout();
   layout->SetLeftAndRightPadding(PADDING.CP(scale), 0);
   SetLayout(layout);
-
-  BuildTexture();
+  UpdateSize();
 
   // Add setting
   auto *hostname = new StaticCairoText(session_manager->HostName());
@@ -87,20 +86,14 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
     hostname->SetScale(scale);
     static_cast<nux::HLayout*>(GetLayout())->SetLeftAndRightPadding(PADDING.CP(scale), 0);
     indicators_view_->SetMonitor(monitor);
-    BuildTexture();
+    UpdateSize();
     QueueRelayout();
   });
 }
 
-void Panel::BuildTexture()
+void Panel::UpdateSize()
 {
   int height = panel::Style::Instance().PanelHeight(monitor);
-  nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, 1, height);
-  auto* cr = context.GetInternalContext();
-  cairo_set_source_rgb(cr, 0.1, 0.1, 0.1);
-  cairo_paint_with_alpha(cr, 0.4);
-  bg_texture_ = texture_ptr_from_cairo_graphics(context);
-
   view_layout_->SetMinimumHeight(height);
   view_layout_->SetMaximumHeight(height);
 }
@@ -225,12 +218,7 @@ void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(graphics_engine, geo);
 
-  nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
-  graphics_engine.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                           bg_texture_->GetDeviceTexture(), texxform,
-                           nux::color::White);
-
+  graphics_engine.QRP_Color(geo.x, geo.y, geo.width, geo.height, BG_COLOR);
   view_layout_->ProcessDraw(graphics_engine, force_draw);
 
   graphics_engine.PopClippingRectangle();
