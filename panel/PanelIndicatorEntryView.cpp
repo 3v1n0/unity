@@ -141,8 +141,9 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
       }
 
       // This is ugly... But Nux fault!
+      auto const& abs_geo = GetAbsoluteGeometry();
       guint64 timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
-      WindowManager::Default().UnGrabMousePointer(timestamp, button, x, y);
+      WindowManager::Default().UnGrabMousePointer(timestamp, button, abs_geo.x, abs_geo.y);
 
       Activate(button);
     }
