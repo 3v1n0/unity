@@ -33,6 +33,8 @@
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/ThemeSettings.h"
+#include "unity-shared/UBusWrapper.h"
+#include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity
@@ -117,6 +119,9 @@ void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long 
     }
     else
     {
+      if (overlay_showing_)
+        UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
+
       WindowManager& wm = WindowManager::Default();
 
       if (wm.IsExpoActive())

@@ -727,9 +727,6 @@ void PanelView::OnEntryActivated(std::string const& panel, std::string const& en
       last_pointer_time_ = 0;
       ActivateEntry(entry_id);
     }
-
-    if (overlay_is_open_)
-      ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
   else
   {
