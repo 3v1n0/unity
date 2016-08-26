@@ -46,6 +46,12 @@ bool operator&(Events l, Events r)
   return static_cast<ut>(static_cast<ut>(l) & static_cast<ut>(r));
 }
 
+Events& operator|=(Events& l, Events r)
+{
+  typedef std::underlying_type<Events>::type ut;
+  return l = static_cast<Events>(static_cast<ut>(l) | static_cast<ut>(r));
+}
+
 template <typename EVENT>
 void initialize_event_common(EVENT* ev, XIDeviceEvent* xiev)
 {
@@ -192,6 +198,22 @@ struct Monitor::Impl
       UpdateEventMonitor();
 
     return removed;
+  }
+
+  Events RegisteredEvents(EventCallback const& cb) const
+  {
+    Events events = Events::NONE;
+
+    if (pointer_callbacks_.find(cb) != end(pointer_callbacks_))
+      events |= Events::POINTER;
+
+    if (key_callbacks_.find(cb) != end(key_callbacks_))
+      events |= Events::KEYS;
+
+    if (barrier_callbacks_.find(cb) != end(barrier_callbacks_))
+      events |= Events::BARRIER;
+
+    return events;
   }
 
   void UpdateEventMonitor()
@@ -374,6 +396,11 @@ bool Monitor::RegisterClient(Events events, EventCallback const& cb)
 bool Monitor::UnregisterClient(EventCallback const& cb)
 {
   return impl_->UnregisterClient(cb);
+}
+
+Events Monitor::RegisteredEvents(EventCallback const& cb) const
+{
+  return impl_->RegisteredEvents(cb);
 }
 
 } // input namespace

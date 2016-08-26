@@ -30,6 +30,7 @@ namespace input
 {
 enum class Events : unsigned
 {
+  NONE = 0,
   POINTER = (1 << 0),
   KEYS = (1 << 1),
   BARRIER = (1 << 2),
@@ -49,6 +50,8 @@ public:
 
   bool RegisterClient(Events, EventCallback const&);
   bool UnregisterClient(EventCallback const&);
+
+  Events RegisteredEvents(EventCallback const&) const;
 
 private:
   Monitor(Monitor const&) = delete;
