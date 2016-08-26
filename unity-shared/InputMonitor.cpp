@@ -18,6 +18,7 @@
  */
 
 #include "InputMonitor.h"
+#include "SigcSlotHash.h"
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
