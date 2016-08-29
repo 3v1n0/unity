@@ -26,6 +26,10 @@
 #include <unordered_map>
 
 #include "MenuManager.h"
+#include "InputMonitor.h"
+#include "RawPixel.h"
+#include "UnitySettings.h"
+#include "UScreen.h"
 #include "WindowManager.h"
 
 namespace unity
@@ -40,6 +44,9 @@ const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string LIM_KEY = "integrated-menus";
 const std::string SHOW_MENUS_NOW_DELAY = "show-menus-now-delay";
 const std::string ALWAYS_SHOW_MENUS_KEY = "always-show-menus";
+
+const RawPixel TRIANGLE_THRESHOLD = 5_em;
+const double SCRUB_VELOCITY_THRESHOLD = 0.05;
 }
 
 using namespace indicator;
@@ -51,6 +58,7 @@ struct Manager::Impl : sigc::trackable
     , indicators_(indicators)
     , key_grabber_(grabber)
     , show_now_window_(0)
+    , last_pointer_time_(0)
     , settings_(g_settings_new(SETTINGS_NAME.c_str()))
   {
     for (auto const& indicator : indicators_->GetIndicators())
@@ -182,9 +190,25 @@ struct Manager::Impl : sigc::trackable
     parent_->key_activate_entry.emit(entry_id);
   }
 
-  void EntryActivated(std::string const&, std::string const&, nux::Rect const& geo)
+  void EntryActivated(std::string const& menubar, std::string const&, nux::Rect const& geo)
   {
     parent_->menu_open = !geo.IsNull();
+
+    auto it = position_trackers_.find(menubar);
+    active_tracker_ = (it != end(position_trackers_)) ? it->second : PositionTracker();
+
+    if (active_tracker_)
+    {
+      if (input::Monitor::Get().RegisterClient(input::Events::POINTER, sigc::mem_fun(this, &Impl::OnActiveEntryEvent)))
+        last_pointer_time_ = 0;
+    }
+    else
+    {
+      input::Monitor::Get().UnregisterClient(sigc::mem_fun(this, &Impl::OnActiveEntryEvent));
+
+      if (it != end(position_trackers_))
+        position_trackers_.erase(it);
+    }
   }
 
   void SetShowNowForWindow(Window xid, bool show)
@@ -231,15 +255,111 @@ struct Manager::Impl : sigc::trackable
     gtk_icon_theme_set_search_path(gtk_icon_theme_get_default(), gicon_paths.data(), gicon_paths.size());
   }
 
+  bool PointInTriangle(nux::Point const& p, nux::Point const& t0, nux::Point const& t1, nux::Point const& t2)
+  {
+    int s = t0.y * t2.x - t0.x * t2.y + (t2.y - t0.y) * p.x + (t0.x - t2.x) * p.y;
+    int t = t0.x * t1.y - t0.y * t1.x + (t0.y - t1.y) * p.x + (t1.x - t0.x) * p.y;
+
+    if ((s < 0) != (t < 0))
+      return false;
+
+    int A = -t1.y * t2.x + t0.y * (t2.x - t1.x) + t0.x * (t1.y - t2.y) + t1.x * t2.y;
+    if (A < 0)
+    {
+      s = -s;
+      t = -t;
+      A = -A;
+    }
+
+    return s > 0 && t > 0 && (s + t) < A;
+  }
+
+  double GetMouseVelocity(nux::Point const& p0, nux::Point const& p1, Time time_delta)
+  {
+    int dx, dy;
+    double speed;
+
+    if (time_delta == 0)
+      return 1;
+
+    dx = p0.x - p1.x;
+    dy = p0.y - p1.y;
+
+    speed = sqrt(dx * dx + dy * dy) / time_delta;
+
+    return speed;
+  }
+
+  void OnActiveEntryEvent(XEvent const& e)
+  {
+    if (e.type != MotionNotify)
+      return;
+
+    auto const& active_entry = indicators_->GetActiveEntry();
+
+    if (!active_entry)
+      return;
+
+    nux::Point mouse(e.xmotion.x_root, e.xmotion.y_root);
+    auto monitor = UScreen::GetDefault()->GetMonitorAtPosition(mouse.x, mouse.y);
+    double scale = Settings::Instance().em(monitor)->DPIScale();
+    double speed = GetMouseVelocity(mouse, tracked_pointer_pos_, e.xmotion.time - last_pointer_time_);
+    auto menu_geo = active_entry->geometry();
+
+    tracked_pointer_pos_ = mouse;
+    last_pointer_time_ = e.xmotion.time;
+
+    if (speed > SCRUB_VELOCITY_THRESHOLD &&
+        PointInTriangle(mouse, {mouse.x, std::max(mouse.y - TRIANGLE_THRESHOLD.CP(scale), 0)},
+                        menu_geo.GetPosition(), {menu_geo.x + menu_geo.width, menu_geo.y}))
+    {
+      return;
+    }
+
+    if (active_tracker_)
+      active_tracker_(mouse.x, mouse.y, speed);
+  }
+
+  bool RegisterTracker(std::string const& menubar, PositionTracker const& cb)
+  {
+    auto it = position_trackers_.find(menubar);
+
+    if (it != end(position_trackers_))
+      return false;
+
+    position_trackers_.insert({menubar, cb});
+    return true;
+  }
+
+  bool UnregisterTracker(std::string const& menubar, PositionTracker const& cb)
+  {
+    auto it = position_trackers_.find(menubar);
+
+    if (it == end(position_trackers_))
+      return false;
+
+    if (!cb || (cb && it->second == cb))
+    {
+      position_trackers_.erase(it);
+      return true;
+    }
+
+    return false;
+  }
+
   Manager* parent_;
   Indicators::Ptr indicators_;
   AppmenuIndicator::Ptr appmenu_;
   key::Grabber::Ptr key_grabber_;
   Window show_now_window_;
+  PositionTracker active_tracker_;
+  nux::Point tracked_pointer_pos_;
+  Time last_pointer_time_;
   connection::Manager appmenu_connections_;
   connection::Wrapper active_win_conn_;
   glib::Object<GSettings> settings_;
   glib::SignalManager signals_;
+  std::unordered_map<std::string, PositionTracker> position_trackers_;
   std::unordered_map<indicator::Entry::Ptr, uint32_t> entry_actions_;
 };
 
@@ -277,6 +397,17 @@ key::Grabber::Ptr const& Manager::KeyGrabber() const
 {
   return impl_->key_grabber_;
 }
+
+bool Manager::RegisterTracker(std::string const& menubar, PositionTracker const& cb)
+{
+  return impl_->RegisterTracker(menubar, cb);
+}
+
+bool Manager::UnregisterTracker(std::string const& menubar, PositionTracker const& cb)
+{
+  return impl_->UnregisterTracker(menubar, cb);
+}
+
 
 } // menu namespace
 } // unity namespace
