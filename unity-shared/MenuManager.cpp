@@ -194,20 +194,10 @@ struct Manager::Impl : sigc::trackable
   {
     parent_->menu_open = !geo.IsNull();
 
-    auto it = position_trackers_.find(menubar);
-    active_tracker_ = (it != end(position_trackers_)) ? it->second : PositionTracker();
-
-    if (active_tracker_)
+    if (active_menubar_ != menubar)
     {
-      if (input::Monitor::Get().RegisterClient(input::Events::POINTER, sigc::mem_fun(this, &Impl::OnActiveEntryEvent)))
-        last_pointer_time_ = 0;
-    }
-    else
-    {
-      input::Monitor::Get().UnregisterClient(sigc::mem_fun(this, &Impl::OnActiveEntryEvent));
-
-      if (it != end(position_trackers_))
-        position_trackers_.erase(it);
+      active_menubar_ = menubar;
+      UpdateActiveTracker();
     }
   }
 
@@ -328,6 +318,10 @@ struct Manager::Impl : sigc::trackable
       return false;
 
     position_trackers_.insert({menubar, cb});
+
+    if (active_menubar_ == menubar)
+      UpdateActiveTracker();
+
     return true;
   }
 
@@ -347,11 +341,31 @@ struct Manager::Impl : sigc::trackable
     return false;
   }
 
+  void UpdateActiveTracker()
+  {
+    auto it = position_trackers_.find(active_menubar_);
+    active_tracker_ = (it != end(position_trackers_)) ? it->second : PositionTracker();
+
+    if (active_tracker_)
+    {
+      if (input::Monitor::Get().RegisterClient(input::Events::POINTER, sigc::mem_fun(this, &Impl::OnActiveEntryEvent)))
+        last_pointer_time_ = 0;
+    }
+    else
+    {
+      input::Monitor::Get().UnregisterClient(sigc::mem_fun(this, &Impl::OnActiveEntryEvent));
+
+      if (it != end(position_trackers_))
+        position_trackers_.erase(it);
+    }
+  }
+
   Manager* parent_;
   Indicators::Ptr indicators_;
   AppmenuIndicator::Ptr appmenu_;
   key::Grabber::Ptr key_grabber_;
   Window show_now_window_;
+  std::string active_menubar_;
   PositionTracker active_tracker_;
   nux::Point tracked_pointer_pos_;
   Time last_pointer_time_;
