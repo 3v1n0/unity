@@ -20,7 +20,6 @@
 #include "DecorationsMenuLayout.h"
 #include "DecorationsMenuEntry.h"
 #include "DecorationsMenuDropdown.h"
-#include "InputMonitor.h"
 
 namespace unity
 {

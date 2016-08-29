@@ -73,6 +73,10 @@ Panel::Panel(int monitor_, menu::Manager::Ptr const& menu_manager, session::Mana
   layout->AddView(indicators_view_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   auto indicators = menu_manager_->Indicators();
+  menu_manager_->RegisterTracker(GetPanelName(), (sigc::track_obj([this] (int x, int y, double speed) {
+    indicators_view_->ActivateEntryAt(x, y);
+  }, *this)));
+
   for (auto const& indicator : indicators->GetIndicators())
     AddIndicator(indicator);
 
@@ -174,33 +178,16 @@ void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_
   if (!GetInputEventSensitivity() || (!panel.empty() && panel != GetPanelName()))
     return;
 
-  bool active = !entry_id.empty();
+  bool valid_entry = !entry_id.empty();
 
-  if (active && !WindowManager::Default().IsScreenGrabbed())
+  if (valid_entry && !WindowManager::Default().IsScreenGrabbed())
   {
     // The menu didn't grab the keyboard, let's take it back.
     nux::GetWindowCompositor().GrabKeyboardAdd(static_cast<nux::BaseWindow*>(GetTopLevelViewWindow()));
   }
 
-  auto& im = input::Monitor::Get();
-  auto const& event_cb = sigc::mem_fun(this, &Panel::OnEntryEvent);
-
-  if (active)
-  {
-    if (im.RegisterClient(input::Events::POINTER, event_cb))
-      indicators_view_->ActivateEntry(entry_id);
-  }
-  else
-  {
-    im.UnregisterClient(event_cb);
-    this->active = active;
-  }
-}
-
-void Panel::OnEntryEvent(XEvent const& e)
-{
-  if (e.type == MotionNotify && GetAbsoluteGeometry().IsPointInside(e.xmotion.x, e.xmotion.y))
-    indicators_view_->ActivateEntryAt(e.xmotion.x, e.xmotion.y);
+  if (!valid_entry)
+    active = valid_entry;
 }
 
 void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)

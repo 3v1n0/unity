@@ -23,7 +23,6 @@
 
 #include <UnityCore/GLibWrapper.h>
 
-#include "unity-shared/InputMonitor.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/RawPixel.h"
 #include "unity-shared/TextureCache.h"
