@@ -87,7 +87,6 @@ protected:
   void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
   void OnObjectRemoved(indicator::Indicator::Ptr const& proxy);
   void OnIndicatorViewUpdated();
-  void OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& geo);
 
 private:
   std::string GetPanelName() const;
@@ -97,7 +96,7 @@ private:
   void OnSpreadInitiate();
   void OnSpreadTerminate();
   void OnLowGfxChanged();
-  void OnMenuPointerMoved(int x, int y);
+  void OnMenuPointerMoved(int x, int y, double speed);
   void OnActiveEntryEvent(XEvent const&);
   void EnableOverlayMode(bool);
   void LoadTextures();
@@ -131,10 +130,6 @@ private:
   BaseTexturePtr bg_refine_single_column_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
 
-  std::string active_overlay_;
-  nux::Point  tracked_pointer_pos_;
-  Time last_pointer_time_;
-
   bool is_dirty_;
   bool opacity_maximized_toggle_;
   bool needs_geo_sync_;
@@ -142,8 +137,7 @@ private:
   float opacity_;
   int monitor_;
   int stored_dash_width_;
-
-  nux::Geometry menu_geo_;
+  std::string active_overlay_;
 
   connection::Manager on_indicator_updated_connections_;
   connection::Manager maximized_opacity_toggle_connections_;

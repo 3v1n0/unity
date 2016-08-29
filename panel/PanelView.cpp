@@ -54,7 +54,6 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
   : View(NUX_FILE_LINE_PARAM)
   , parent_(parent)
   , remote_(menus->Indicators())
-  , last_pointer_time_(0)
   , is_dirty_(true)
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
@@ -116,9 +115,9 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 
   remote_->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
-  remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   menus->key_activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
   menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
+  menus->RegisterTracker(GetPanelName(), sigc::mem_fun(this, &PanelView::OnMenuPointerMoved));
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
@@ -629,7 +628,7 @@ void PanelView::OnIndicatorViewUpdated()
   QueueDraw();
 }
 
-void PanelView::OnMenuPointerMoved(int x, int y)
+void PanelView::OnMenuPointerMoved(int x, int y, double speed)
 {
   nux::Geometry const& geo = GetAbsoluteGeometry();
 
@@ -647,91 +646,6 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   else
   {
     menu_view_->SetMousePosition(-1, -1);
-  }
-}
-
-namespace
-{
-bool PointInTriangle(nux::Point const& p, nux::Point const& t0, nux::Point const& t1, nux::Point const& t2)
-{
-  int s = t0.y * t2.x - t0.x * t2.y + (t2.y - t0.y) * p.x + (t0.x - t2.x) * p.y;
-  int t = t0.x * t1.y - t0.y * t1.x + (t0.y - t1.y) * p.x + (t1.x - t0.x) * p.y;
-
-  if ((s < 0) != (t < 0))
-    return false;
-
-  int A = -t1.y * t2.x + t0.y * (t2.x - t1.x) + t0.x * (t1.y - t2.y) + t1.x * t2.y;
-  if (A < 0)
-  {
-    s = -s;
-    t = -t;
-    A = -A;
-  }
-
-  return s > 0 && t > 0 && (s + t) < A;
-}
-
-double GetMouseVelocity(nux::Point const& p0, nux::Point const& p1, Time time_delta)
-{
-  int dx, dy;
-  double speed;
-
-  if (time_delta == 0)
-    return 1;
-
-  dx = p0.x - p1.x;
-  dy = p0.y - p1.y;
-
-  speed = sqrt(dx * dx + dy * dy) / time_delta;
-
-  return speed;
-}
-} // anonymous namespace
-
-void PanelView::OnActiveEntryEvent(XEvent const& e)
-{
-  if (e.type != MotionNotify)
-    return;
-
-  double scale = Settings::Instance().em(monitor_)->DPIScale();
-  nux::Point mouse(e.xmotion.x_root, e.xmotion.y_root);
-  double speed = GetMouseVelocity(mouse, tracked_pointer_pos_, e.xmotion.time - last_pointer_time_);
-
-  tracked_pointer_pos_ = mouse;
-  last_pointer_time_ = e.xmotion.time;
-
-  if (speed > SCRUB_VELOCITY_THRESHOLD &&
-      PointInTriangle(mouse, {mouse.x, std::max(mouse.y - TRIANGLE_THRESHOLD.CP(scale), 0)},
-                      menu_geo_.GetPosition(), {menu_geo_.x + menu_geo_.width, menu_geo_.y}))
-  {
-    return;
-  }
-
-  OnMenuPointerMoved(mouse.x, mouse.y);
-}
-
-void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& menu_geo)
-{
-  if (!panel.empty() && panel != GetPanelName())
-    return;
-
-  bool active = !entry_id.empty();
-  auto const& activation_cb = sigc::mem_fun(this, &PanelView::OnActiveEntryEvent);
-  menu_geo_ = menu_geo;
-
-  if (active)
-  {
-    auto& im = input::Monitor::Get();
-    if (im.RegisterClient(input::Events::POINTER, activation_cb))
-    {
-      last_pointer_time_ = 0;
-      ActivateEntry(entry_id);
-    }
-  }
-  else
-  {
-    input::Monitor::Get().UnregisterClient(activation_cb);
-    menu_view_->NotifyAllMenusClosed();
   }
 }
 
