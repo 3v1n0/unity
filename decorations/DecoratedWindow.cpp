@@ -37,7 +37,6 @@ namespace decoration
 {
 namespace
 {
-const std::string MENUS_PANEL_NAME = "WindowLIM";
 const int SHADOW_BLUR_MARGIN_FACTOR = 2;
 }
 
@@ -55,7 +54,6 @@ Window::Impl::Impl(Window* parent, CompWindow* win)
   , deco_elements_(cu::DecorationElement::NONE)
   , last_mwm_decor_(win_->mwmDecor())
   , last_actions_(win_->actions())
-  , panel_id_(MENUS_PANEL_NAME + std::to_string(win_->id()))
   , cv_(Settings::Instance().em())
 {
   active.changed.connect([this] (bool active) {
@@ -932,18 +930,13 @@ void Window::Impl::UpdateAppMenuVisibility()
     sliding_layout->mouse_owner = grab_edge_->mouse_owner();
 }
 
-inline std::string const& Window::Impl::GetMenusPanelID() const
-{
-  return panel_id_;
-}
-
 void Window::Impl::UnsetAppMenu()
 {
   if (!menus_)
     return;
 
   auto const& indicators = manager_->impl_->menu_manager_->Indicators();
-  indicators->SyncGeometries(GetMenusPanelID(), indicator::EntryLocationMap());
+  indicators->SyncGeometries(menus_->MenubarId(), indicator::EntryLocationMap());
   sliding_layout_->SetInputItem(nullptr);
   grab_mouse_changed_->disconnect();
 }
@@ -956,7 +949,7 @@ void Window::Impl::SyncMenusGeometries() const
   auto const& indicators = manager_->impl_->menu_manager_->Indicators();
   indicator::EntryLocationMap map;
   menus_->ChildrenGeometries(map);
-  indicators->SyncGeometries(GetMenusPanelID(), map);
+  indicators->SyncGeometries(menus_->MenubarId(), map);
 }
 
 bool Window::Impl::ActivateMenu(std::string const& entry_id)

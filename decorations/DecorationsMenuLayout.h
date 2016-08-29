@@ -44,6 +44,7 @@ public:
   bool ActivateMenu(std::string const& entry_id);
   bool ActivateMenu(CompPoint const&);
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
+  std::string const& MenubarId() const;
 
 protected:
   void DoRelayout() override;
@@ -53,12 +54,12 @@ private:
   void OnEntryMouseOwnershipChanged(bool);
   void OnEntryActiveChanged(bool);
   void OnEntryShowNowChanged(bool);
-  void OnEntryInputEvent(XEvent const&);
 
   menu::Manager::Ptr menu_manager_;
   CompWindow* win_;
   glib::Source::UniquePtr show_now_timeout_;
   std::shared_ptr<MenuDropdown> dropdown_;
+  std::string menubar_id_;
 };
 
 } // decoration namespace

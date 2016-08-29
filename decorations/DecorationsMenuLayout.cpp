@@ -26,6 +26,10 @@ namespace unity
 {
 namespace decoration
 {
+namespace
+{
+const std::string MENUS_PANEL_NAME = "WindowLIM";
+}
 
 using namespace indicator;
 
@@ -35,6 +39,7 @@ MenuLayout::MenuLayout(menu::Manager::Ptr const& menu, CompWindow* win)
   , menu_manager_(menu)
   , win_(win)
   , dropdown_(std::make_shared<MenuDropdown>(menu_manager_->Indicators(), win))
+  , menubar_id_(MENUS_PANEL_NAME + std::to_string(win_->id()))
 {
   visible = false;
 }
@@ -89,6 +94,11 @@ void MenuLayout::Setup()
 
   if (!items_.empty())
     Relayout();
+}
+
+std::string const& MenuLayout::MenubarId() const
+{
+  return menubar_id_;
 }
 
 bool MenuLayout::ActivateMenu(std::string const& entry_id)
@@ -169,19 +179,14 @@ void MenuLayout::OnEntryActiveChanged(bool actived)
 
   if (active && items_.size() > 1)
   {
-    auto const& event_cb = sigc::mem_fun(this, &MenuLayout::OnEntryInputEvent);
-    input::Monitor::Get().RegisterClient(input::Events::POINTER, event_cb);
+    menu_manager_->RegisterTracker(menubar_id_, (sigc::track_obj([this] (int x, int y, double speed) {
+      ActivateMenu(CompPoint(x, y));
+    }, *this)));
   }
   else if (!active)
   {
-    input::Monitor::Get().UnregisterClient(sigc::mem_fun(this, &MenuLayout::OnEntryInputEvent));
+    menu_manager_->UnregisterTracker(menubar_id_);
   }
-}
-
-void MenuLayout::OnEntryInputEvent(XEvent const& e)
-{
-  if (e.type == MotionNotify)
-    ActivateMenu(CompPoint(e.xmotion.x_root, e.xmotion.y_root));
 }
 
 void MenuLayout::ChildrenGeometries(EntryLocationMap& map) const
