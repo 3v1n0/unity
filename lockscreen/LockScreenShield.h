@@ -20,8 +20,9 @@
 #ifndef UNITY_LOCKSCREEN_SHIELD_H
 #define UNITY_LOCKSCREEN_SHIELD_H
 
-#include <UnityCore/ConnectionManager.h>
 #include "LockScreenBaseShield.h"
+#include "unity-shared/MenuManager.h"
+
 
 namespace unity
 {
@@ -35,7 +36,7 @@ class Shield : public BaseShield
 {
 public:
   Shield(session::Manager::Ptr const&,
-         indicator::Indicators::Ptr const&,
+         menu::Manager::Ptr const&,
          Accelerators::Ptr const&,
          nux::ObjectPtr<AbstractUserPromptView> const&,
          int monitor, bool is_primary);
@@ -50,7 +51,7 @@ private:
   void ShowPrimaryView() override;
   Panel* CreatePanel();
 
-  connection::Wrapper panel_active_conn_;
+  menu::Manager::Ptr menu_manager_;
   Panel* panel_view_;
 };
 
