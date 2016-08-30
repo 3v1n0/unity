@@ -31,6 +31,7 @@ using namespace testing;
 #include "lockscreen/LockScreenSettings.h"
 #include "lockscreen/ScreenSaverDBusManager.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/InputMonitor.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UScreen.h"
 #include "mock_key_grabber.h"
@@ -108,6 +109,7 @@ struct TestLockScreenController : Test
   nux::animation::AnimationController animation_controller;
 
   MockUScreen uscreen;
+  unity::input::Monitor im;
   unity::dash::Style dash_style;
   unity::panel::Style panel_style;
   unity::lockscreen::Settings lockscreen_settings;
