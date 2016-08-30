@@ -347,6 +347,7 @@ struct Manager::Impl : sigc::trackable
     if (!cb || (cb && it->second == cb))
     {
       position_trackers_.erase(it);
+      UpdateActiveTracker();
       return true;
     }
 
