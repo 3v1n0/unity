@@ -77,21 +77,5 @@ void KylinShield::ShowPrimaryView()
   main_layout->AddSpace(0, 10);
 }
 
-nux::Area* KylinShield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsigned long modifiers)
-{
-  if (primary)
-  {
-    if (prompt_view_)
-    {
-      auto* focus_view = prompt_view_->focus_view();
-
-      if (focus_view && focus_view->GetInputEventSensitivity())
-        return focus_view;
-    }
-  }
-
-  return nullptr;
-}
-
 }
 }

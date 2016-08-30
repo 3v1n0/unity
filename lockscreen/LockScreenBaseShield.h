@@ -60,6 +60,7 @@ protected:
   virtual void ShowPrimaryView() = 0;
   virtual void ShowSecondaryView();
 
+  nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
   nux::Area* FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType event_type) override;
 
   void GrabScreen(bool cancel_on_failure);
