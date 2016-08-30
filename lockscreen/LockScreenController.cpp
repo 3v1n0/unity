@@ -121,8 +121,6 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
     {
       primary_shield_connections_.Clear();
-      auto events_cb = sigc::mem_fun(this, &Controller::OnLockScreenInputEvent);
-      input::Monitor::Get().UnregisterClient(events_cb);
       uscreen_connection_->block();
       hidden_window_connection_->block();
       session_manager_->is_locked = false;
@@ -226,8 +224,9 @@ void Controller::SetupPrimaryShieldConnections()
 
   primary_shield_connections_.Clear();
 
-  auto events_cb = sigc::mem_fun(this, &Controller::OnLockScreenInputEvent);
+  input::Monitor::EventCallback events_cb(sigc::mem_fun(this, &Controller::OnLockScreenInputEvent));
   input::Monitor::Get().RegisterClient(input::Events::INPUT, events_cb);
+  primary_shield_connections_.Add(sigc::connection(events_cb));
 
   if (!session_manager_->is_locked())
   {
