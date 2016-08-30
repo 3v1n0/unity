@@ -224,9 +224,8 @@ void Controller::SetupPrimaryShieldConnections()
 
   primary_shield_connections_.Clear();
 
-  input::Monitor::EventCallback events_cb(sigc::mem_fun(this, &Controller::OnLockScreenInputEvent));
+  auto events_cb = sigc::track_obj(sigc::mem_fun(this, &Controller::OnLockScreenInputEvent), *primary_shield_);
   input::Monitor::Get().RegisterClient(input::Events::INPUT, events_cb);
-  primary_shield_connections_.Add(sigc::connection(events_cb));
 
   if (!session_manager_->is_locked())
   {
