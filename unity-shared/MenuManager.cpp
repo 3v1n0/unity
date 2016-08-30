@@ -29,6 +29,7 @@
 #include "MenuManager.h"
 #include "InputMonitor.h"
 #include "RawPixel.h"
+#include "SigcSlotHash.h"
 #include "UnitySettings.h"
 #include "UScreen.h"
 #include "WindowManager.h"

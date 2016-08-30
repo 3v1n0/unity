@@ -22,6 +22,22 @@
 
 #include <sigc++/slot.h>
 
+namespace sigc
+{
+inline bool operator==(slot_base const& lhs, slot_base const& rhs)
+{
+  if (!lhs.rep_ || !rhs.rep_)
+    return (lhs.rep_ == rhs.rep_);
+
+  return (lhs.rep_->call_ == rhs.rep_->call_);
+}
+
+inline bool operator!=(slot_base const& lhs, slot_base const& rhs)
+{
+  return !(lhs == rhs);
+}
+} // sigc namespace
+
 namespace std
 {
 
@@ -37,18 +53,7 @@ struct hash<sigc::slot_base>
   }
 };
 
-template<>
-struct equal_to<sigc::slot_base>
-{
-  bool operator()(sigc::slot_base const& lhs, sigc::slot_base const& rhs) const
-  {
-    if (!lhs.rep_ || !rhs.rep_)
-      return (lhs.rep_ == rhs.rep_);
-
-    return (lhs.rep_->call_ == rhs.rep_->call_);
-  }
-};
-
+#if __GNUC__ < 6
 template<class T>
 struct hash
 {
@@ -58,6 +63,7 @@ struct hash
     return hash<sigc::slot_base>()(cb);
   }
 };
+#endif
 
 } // std namespace
 
