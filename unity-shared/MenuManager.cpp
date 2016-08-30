@@ -21,6 +21,7 @@
 #include <gtk/gtk.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibSource.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DBusIndicators.h>
 #include <unordered_map>
@@ -47,6 +48,7 @@ const std::string ALWAYS_SHOW_MENUS_KEY = "always-show-menus";
 
 const RawPixel TRIANGLE_THRESHOLD = 5_em;
 const double SCRUB_VELOCITY_THRESHOLD = 0.05;
+const unsigned MENU_OPEN_MOUSE_WAIT = 150;
 }
 
 using namespace indicator;
@@ -303,11 +305,21 @@ struct Manager::Impl : sigc::trackable
         PointInTriangle(mouse, {mouse.x, std::max(mouse.y - TRIANGLE_THRESHOLD.CP(scale), 0)},
                         menu_geo.GetPosition(), {menu_geo.x + menu_geo.width, menu_geo.y}))
     {
+      pointer_movement_timeout_ = std::make_shared<glib::Timeout>(MENU_OPEN_MOUSE_WAIT, [this, mouse, speed] {
+        if (active_tracker_)
+          active_tracker_(mouse.x, mouse.y, speed);
+
+        return false;
+      });
+
       return;
     }
 
     if (active_tracker_)
+    {
+      pointer_movement_timeout_.reset();
       active_tracker_(mouse.x, mouse.y, speed);
+    }
   }
 
   bool RegisterTracker(std::string const& menubar, PositionTracker const& cb)
@@ -345,6 +357,7 @@ struct Manager::Impl : sigc::trackable
   {
     auto it = position_trackers_.find(active_menubar_);
     active_tracker_ = (it != end(position_trackers_)) ? it->second : PositionTracker();
+    pointer_movement_timeout_.reset();
 
     if (active_tracker_)
     {
@@ -369,6 +382,7 @@ struct Manager::Impl : sigc::trackable
   PositionTracker active_tracker_;
   nux::Point tracked_pointer_pos_;
   Time last_pointer_time_;
+  glib::Source::Ptr pointer_movement_timeout_;
   connection::Manager appmenu_connections_;
   connection::Wrapper active_win_conn_;
   glib::Object<GSettings> settings_;
