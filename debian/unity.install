@@ -1,7 +1,8 @@
 etc/pam.d
 usr/bin
 usr/lib/*/compiz/libunity*.so
-usr/lib/*/unity
+usr/lib/*/unity/unity-active-plugins-safety-check
+usr/lib/*/unity/unity-compiz-profile-select
 usr/share/man/*/unity.1
 usr/share/compiz
 usr/share/locale
