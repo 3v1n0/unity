@@ -30,6 +30,7 @@
 #include "SuspendInhibitorManager.h"
 #include "ScreenSaverDBusManager.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/SystemdWrapper.h"
 #include "unity-shared/UpstartWrapper.h"
 
 namespace unity
@@ -45,6 +46,7 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
 
   Controller(DBusManager::Ptr const&, session::Manager::Ptr const&, key::Grabber::Ptr const&,
+             SystemdWrapper::Ptr const& systemd_wrapper = std::make_shared<SystemdWrapper>(),
              UpstartWrapper::Ptr const& upstart_wrapper = std::make_shared<UpstartWrapper>(),
              ShieldFactoryInterface::Ptr const& shield_factory = std::make_shared<ShieldFactory>(),
              bool test_mode = false);
@@ -87,6 +89,7 @@ private:
   menu::Manager::Ptr menu_manager_;
   key::Grabber::Ptr key_grabber_;
   AcceleratorController::Ptr accelerator_controller_;
+  SystemdWrapper::Ptr systemd_wrapper_;
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
   SuspendInhibitorManager::Ptr suspend_inhibitor_manager_;

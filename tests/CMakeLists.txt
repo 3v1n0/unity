@@ -286,6 +286,7 @@ if (ENABLE_X_SUPPORT)
                  test_switcher_controller_class.cpp
                  test_switcher_model.cpp
                  test_switcher_view.cpp
+                 test_systemd_wrapper.cpp
                  test_tabiterator.cpp
                  test_texture_cache.cpp
                  test_text_input.cpp

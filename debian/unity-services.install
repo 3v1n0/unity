@@ -1,3 +1,6 @@
 usr/lib/*/unity/*service
-usr/share/upstart/sessions/unity-panel-service*.conf
+usr/share/upstart/sessions/unity-panel*
+usr/share/upstart/systemd-session/upstart/unity-panel*
+usr/lib/systemd/user/unity-panel*
+usr/lib/systemd/user/unity-screen-locked.target
 usr/share/man/*/unity-panel-service.1
