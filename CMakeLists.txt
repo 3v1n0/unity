@@ -166,7 +166,7 @@ set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 set (LOCALE_DIR "${CMAKE_INSTALL_FULL_LOCALEDIR}")
-# specify the domain directly rather than refering to a variable 
+# specify the domain directly rather than refering to a variable
 # like ${PROJECT_NAME} to no confuse dh_translations
 set (GETTEXT_PACKAGE "unity")
 
@@ -187,7 +187,6 @@ SET (UNITY_TEST_SCHEMAS "external.gschema.xml")
 #
 # i18n
 #
-
 find_package (Gettext REQUIRED)
 
 set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
@@ -208,7 +207,7 @@ endif()
 
 #
 # Enable or disable boot logging
-# 
+#
 option (BOOT_LOGGER "Enable startup performance logging" OFF)
 if (BOOT_LOGGER)
     SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
@@ -253,7 +252,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     libnotify
     libstartup-notification-1.0
     nux-4.0>=4.0.5
-    sigc++-2.0
+    sigc++-2.0>=2.4.0
     unity-misc>=0.4.0
     xpathselect=1.4
     zeitgeist-2.0
@@ -264,7 +263,7 @@ set(UNITY_PLUGIN_DEPS ${UNITY_PLUGIN_SHARED_DEPS})
 if(ENABLE_X_SUPPORT)
   set(UNITY_PLUGIN_DEPS
       ${UNITY_PLUGIN_DEPS}
-      compiz>=0.9.9
+      compiz>=0.9.11
       libgeis
       x11
       xfixes
