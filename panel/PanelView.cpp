@@ -867,6 +867,9 @@ void PanelView::SetMonitor(int monitor)
   menu_view_->SetMonitor(monitor);
   indicators_->SetMonitor(monitor);
   Resize();
+
+  if (WindowManager::Default().IsScaleActive())
+    EnableOverlayMode(true);
 }
 
 void PanelView::Resize()

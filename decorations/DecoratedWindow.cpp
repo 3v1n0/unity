@@ -148,6 +148,23 @@ void Window::Impl::Undecorate()
   bg_textures_.clear();
 }
 
+void Window::Impl::UpdateWindowState(unsigned old_state)
+{
+  Update();
+
+  if (state_change_button_)
+  {
+    if (win_->state() & (CompWindowStateMaximizedVertMask|CompWindowStateMaximizedHorzMask))
+    {
+      state_change_button_->type = WindowButtonType::UNMAXIMIZE;
+    }
+    else
+    {
+      state_change_button_->type = WindowButtonType::MAXIMIZE;
+    }
+  }
+}
+
 void Window::Impl::UnsetExtents()
 {
   if (win_->hasUnmapReference())
@@ -410,7 +427,13 @@ void Window::Impl::SetupWindowControls()
     top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MINIMIZE));
 
   if (win_->actions() & (CompWindowActionMaximizeHorzMask|CompWindowActionMaximizeVertMask))
-    top_layout_->Append(std::make_shared<WindowButton>(win_, WindowButtonType::MAXIMIZE));
+  {
+    auto type = (win_->state() & (CompWindowStateMaximizedVertMask|CompWindowStateMaximizedHorzMask)) ?
+                 WindowButtonType::UNMAXIMIZE : WindowButtonType::MAXIMIZE;
+    auto state_change_button = std::make_shared<WindowButton>(win_, type);
+    top_layout_->Append(state_change_button);
+    state_change_button_ = state_change_button;
+  }
 
   auto title = std::make_shared<Title>();
   title->text = last_title_.empty() ? WindowManager::Default().GetWindowName(win_->id()) : last_title_;
@@ -493,6 +516,12 @@ bool Window::Impl::ShadowDecorated() const
   return deco_elements_ & cu::DecorationElement::SHADOW;
 }
 
+bool Window::Impl::ShapedShadowDecorated() const
+{
+  return deco_elements_ & cu::DecorationElement::SHADOW &&
+         deco_elements_ & cu::DecorationElement::SHAPED;
+}
+
 bool Window::Impl::FullyDecorated() const
 {
   return deco_elements_ & cu::DecorationElement::BORDER;
@@ -503,16 +532,16 @@ bool Window::Impl::ShouldBeDecorated() const
   return (win_->frame() || win_->hasUnmapReference()) && FullyDecorated();
 }
 
-bool Window::Impl::IsRectangular() const
-{
-  return win_->region().numRects() == 1;
-}
-
 GLTexture* Window::Impl::ShadowTexture() const
 {
-  if (!IsRectangular())
+  if (shaped_shadow_pixmap_)
     return shaped_shadow_pixmap_->texture();
 
+  return SharedShadowTexture();
+}
+
+GLTexture* Window::Impl::SharedShadowTexture() const
+{
   auto const& mi = manager_->impl_;
   if (active() || parent_->scaled())
     return mi->active_shadow_pixmap_->texture();
@@ -578,10 +607,22 @@ void Window::Impl::ComputeShadowQuads()
     if (!last_shadow_rect_.isEmpty())
       last_shadow_rect_.setGeometry(0, 0, 0, 0);
 
-    return;
+    shaped_shadow_pixmap_.reset();
   }
+  else if (deco_elements_ & cu::DecorationElement::SHAPED)
+  {
+    ComputeShapedShadowQuad();
+  }
+  else
+  {
+    shaped_shadow_pixmap_.reset();
+    ComputeGenericShadowQuads();
+  }
+}
 
-  const auto* texture = ShadowTexture();
+void Window::Impl::ComputeGenericShadowQuads()
+{
+  const auto* texture = SharedShadowTexture();
 
   if (!texture || !texture->width() || !texture->height())
     return;
@@ -707,14 +748,6 @@ cu::PixmapTexture::Ptr Window::Impl::BuildShapedShadowTexture(nux::Size const& s
 
 void Window::Impl::ComputeShapedShadowQuad()
 {
-  if (!(deco_elements_ & cu::DecorationElement::SHADOW))
-  {
-    if (!last_shadow_rect_.isEmpty())
-      last_shadow_rect_.setGeometry(0, 0, 0, 0);
-
-    return;
-  }
-
   nux::Color color = active() ? manager_->active_shadow_color() : manager_->inactive_shadow_color();
   unsigned int radius = active() ? manager_->active_shadow_radius() : manager_->inactive_shadow_radius();
 
@@ -793,7 +826,7 @@ void Window::Impl::Draw(GLMatrix const& transformation,
 
   glwin_->vertexBuffer()->begin();
 
-  unsigned int num_quads = IsRectangular() ? shadow_quads_.size() : 1;
+  unsigned int num_quads = ShapedShadowDecorated() ? 1 : shadow_quads_.size();
   for (unsigned int i = 0; i < num_quads; ++i)
   {
     auto& quad = shadow_quads_[Quads::Pos(i)];
@@ -993,6 +1026,11 @@ void Window::Update()
   impl_->Update();
 }
 
+void Window::UpdateWindowState(unsigned old_state)
+{
+  impl_->UpdateWindowState(old_state);
+}
+
 void Window::UpdateFrameRegion(CompRegion& r)
 {
   if (impl_->frame_region_.isEmpty())
@@ -1035,7 +1073,7 @@ void Window::Undecorate()
 void Window::UpdateDecorationPosition()
 {
   impl_->UpdateMonitor();
-  impl_->IsRectangular() ? impl_->ComputeShadowQuads() : impl_->ComputeShapedShadowQuad();
+  impl_->ComputeShadowQuads();
   impl_->UpdateWindowEdgesGeo();
   impl_->UpdateDecorationTextures();
   impl_->UpdateForceQuitDialogPosition();

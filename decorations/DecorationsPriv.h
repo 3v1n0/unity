@@ -49,6 +49,7 @@ class Title;
 class MenuLayout;
 class SlidingLayout;
 class ForceQuitDialog;
+class WindowButton;
 
 namespace cu = compiz_utils;
 
@@ -90,6 +91,7 @@ struct Window::Impl
   bool IsMaximized() const;
   bool FullyDecorated() const;
   bool ShadowDecorated() const;
+  bool ShapedShadowDecorated() const;
   void RedrawDecorations();
   void Damage();
   void SetupAppMenu();
@@ -102,6 +104,7 @@ private:
   void SetupExtents();
   void ComputeBorderExtent(CompWindowExtents &border);
   void UpdateElements(cu::WindowFilter wf = cu::WindowFilter::NONE);
+  void UpdateWindowState(unsigned old_state);
   void UpdateClientDecorationsState();
   void UpdateMonitor();
   void UpdateFrame();
@@ -118,12 +121,13 @@ private:
   void SyncXShapeWithFrameRegion();
   void SyncMenusGeometries() const;
   bool ShouldBeDecorated() const;
-  bool IsRectangular() const;
   GLTexture* ShadowTexture() const;
+  GLTexture* SharedShadowTexture() const;
   unsigned ShadowRadius() const;
   std::string const& GetMenusPanelID() const;
 
   void ComputeShadowQuads();
+  void ComputeGenericShadowQuads();
   void ComputeShapedShadowQuad();
   void UpdateDecorationTextures();
   void UpdateWindowEdgesGeo();
@@ -164,6 +168,7 @@ private:
   std::shared_ptr<ForceQuitDialog> force_quit_;
   InputMixer::Ptr input_mixer_;
   Layout::Ptr top_layout_;
+  uweak_ptr<WindowButton> state_change_button_;
   uweak_ptr<MenuLayout> menus_;
   uweak_ptr<Title> title_;
   uweak_ptr<SlidingLayout> sliding_layout_;

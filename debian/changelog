@@ -1,3 +1,39 @@
+unity (7.5.0+16.10.20160817.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Make sure the switcher detail view is properly scaled. Also scale
+    the xy_offset to make sure the switcher and launcher do not overlap.
+    (LP: #1605256)
+  * Close session dialog on first ESC. (LP: #1521116)
+  * Filter out scrolling envents for FilterExpanderLabel. (LP: #1604632)
+
+  [ Marco Trevisan (Treviño) ]
+  * OverlayRenderer: properly decorate launcher/panel when the launcher
+    is at the bottom (LP: #1611694)
+  * UserAuthenticatorPam: ensure pam_handle_ is null initialized and
+    don't proceed if not set (LP: #1611668)
+  * OverlayRenderer: don't use rotated textures, just rotate them at
+    rendering time
+  * DecorationStyle: set css name for Gtk 3.20
+  * SpreadWidgets: add container for spread filter and new spread
+    decorations (LP: #1283314)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 17 Aug 2016 14:03:22 +0000
+
+unity (7.5.0+16.10.20160806-0ubuntu1) yakkety; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * DecoratedWindow: avoid deferencing an invalid shadow texture ptr,
+    and split functions (LP: #1608464)
+  * UnityWindowView: don't try to deference close_button_ if its' null
+  * DecorationsForceQuitDialog: make CSS selectors work with gtk 3.20
+
+  [ Andrea Azzarone, Marco Trevisan (Treviño) ]
+  * DecoratedWindow: display unmaximize button if the window is
+    vertically or horizontally maximized (LP: #1608480)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Sat, 06 Aug 2016 16:25:58 +0000
+
 unity (7.5.0+16.10.20160727-0ubuntu1) yakkety; urgency=medium
 
   [ Andrea Azzarone ]

@@ -69,7 +69,7 @@
 #include "SwitcherController.h"
 #include "SessionController.h"
 #include "SessionDBusManager.h"
-#include "SpreadFilter.h"
+#include "SpreadWidgets.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
@@ -340,7 +340,7 @@ private:
   ui::EdgeBarrierController::Ptr edge_barriers_;
   debug::DebugDBusInterface debugger_;
   std::unique_ptr<BGHash>   bghash_;
-  spread::Filter::Ptr       spread_filter_;
+  spread::Widgets::Ptr      spread_widgets_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;

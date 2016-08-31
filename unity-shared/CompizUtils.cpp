@@ -190,7 +190,11 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter wf)
   if (win->wmType() & (CompWindowTypeDockMask | CompWindowTypeDesktopMask))
     return elements;
 
-  if (win->alpha())
+  auto const& region = win->region();
+  bool rectangular = (region.numRects() == 1);
+  bool alpha = win->alpha();
+
+  if (alpha)
   {
     if (wf == WindowFilter::CLIENTSIDE_DECORATED)
     {
@@ -201,13 +205,16 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter wf)
 
       return elements;
     }
-    else if (win->region().numRects() != 1) // Non-rectangular windows with alpha channel
+    else if (!rectangular) // Non-rectangular windows with alpha channel
     {
       return elements;
     }
   }
 
   elements |= DecorationElement::SHADOW;
+
+  if (!rectangular)
+    elements |= DecorationElement::SHAPED;
 
   if (!win->overrideRedirect() &&
       (win->type() & DECORABLE_WINDOW_TYPES) &&
@@ -216,14 +223,11 @@ unsigned WindowDecorationElements(CompWindow* win, WindowFilter wf)
     if (win->actions() & CompWindowActionResizeMask)
       elements |= DecorationElement::EDGE;
 
-    auto const& region = win->region();
-    bool rectangular = (region.numRects() == 1);
-
     if (rectangular && (win->mwmDecor() & (MwmDecorAll | MwmDecorTitle)))
       elements |= DecorationElement::BORDER;
   }
 
-  if (win->alpha() && !(elements & DecorationElement::BORDER) && !(win->mwmDecor() & MwmDecorBorder))
+  if (alpha && !(elements & DecorationElement::BORDER) && !(win->mwmDecor() & MwmDecorBorder))
     elements &= ~DecorationElement::SHADOW;
 
   return elements;
