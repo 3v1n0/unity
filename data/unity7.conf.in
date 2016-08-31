@@ -4,7 +4,7 @@ author "Ted Gould <ted@ubuntu.com>, Marco Trevisan <marco@ubuntu.com>"
 start on xsession SESSION=ubuntu and started unity-settings-daemon
 stop on desktop-end
 
-pre-start exec @CMAKE_INSTALL_FULL_LIBDIR@/unity-compiz-profile-select
+pre-start exec @UNITY_LIBDIR@/unity-compiz-profile-select
 
 respawn
 exec compiz

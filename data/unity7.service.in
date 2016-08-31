@@ -7,5 +7,5 @@ PartOf=graphical-session.target
 
 [Service]
 ExecStart=/usr/bin/compiz
-ExecStartPre=@CMAKE_INSTALL_FULL_LIBDIR@/unity-compiz-profile-select
+ExecStartPre=@UNITYLIBDIR@/unity-compiz-profile-select
 Restart=on-failure
