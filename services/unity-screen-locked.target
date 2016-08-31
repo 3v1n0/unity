@@ -1,4 +1,4 @@
 [Unit]
 Description=A target that, when running, represents the screen being locked
-Wants=ubuntu-panel-service-lock.service
+Wants=unity-panel-service-lockscreen.service
 PartOf=graphical-session.target
