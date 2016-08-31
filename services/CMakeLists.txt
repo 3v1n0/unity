@@ -51,7 +51,7 @@ link_directories(${LIB_PATHS})
 
 add_executable(unity-panel-service ${PANEL_SOURCES})
 target_link_libraries(unity-panel-service ${LIBS})
-install(TARGETS unity-panel-service DESTINATION ${CMAKE_INSTALL_LIBDIR}/unity/)
+install(TARGETS unity-panel-service DESTINATION ${UNITY_INSTALL_LIBDIR})
 
 configure_file(unity-panel-service.conf.in ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.conf)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity-panel-service.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/upstart/sessions)
