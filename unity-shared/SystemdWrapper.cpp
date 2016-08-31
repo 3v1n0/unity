@@ -53,16 +53,14 @@ SystemdWrapper::Impl::Impl(bool test)
 
 void SystemdWrapper::Impl::Start(std::string const& name)
 {
-  if (IsConnected()) {
+  if (IsConnected())
     systemd_proxy_->Call("StartUnit", g_variant_new("(ss)", name.c_str(), "replace"));
-  }
 }
 
 void SystemdWrapper::Impl::Stop(std::string const& name)
 {
-  if (IsConnected()) {
+  if (IsConnected())
     systemd_proxy_->Call("StopUnit", g_variant_new("(ss)", name.c_str(), "replace"));
-  }
 }
 
 bool SystemdWrapper::Impl::IsConnected()
