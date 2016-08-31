@@ -7,5 +7,8 @@ PartOf=graphical-session.target
 
 [Service]
 ExecStart=/usr/bin/compiz
-ExecStartPre=@UNITYLIBDIR@/unity-compiz-profile-select
+ExecStartPre=@UNITY_LIBDIR@/unity-compiz-profile-select
 Restart=on-failure
+
+[Install]
+RequiredBy=ubuntu-session.target
