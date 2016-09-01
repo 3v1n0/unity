@@ -35,7 +35,6 @@ public:
 
   void Start(std::string const& name);
   void Stop(std::string const& name);
-  bool IsConnected();
 
 protected:
   struct TestMode {};

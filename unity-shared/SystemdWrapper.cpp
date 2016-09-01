@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 3 -*-
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
 * Copyright © 2016 Canonical Ltd
 *
@@ -44,24 +44,21 @@ private:
 SystemdWrapper::Impl::Impl(bool test)
 {
   auto const& busname = test ? "com.canonical.Unity.Test.Systemd" : "org.freedesktop.systemd1";
-  systemd_proxy_ = std::make_shared<unity::glib::DBusProxy>(busname, "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager");
+  auto flags = static_cast<GDBusProxyFlags>(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
+                                            G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS);
+  systemd_proxy_ = std::make_shared<unity::glib::DBusProxy>(busname, "/org/freedesktop/systemd1",
+                                                            "org.freedesktop.systemd1.Manager",
+                                                            G_BUS_TYPE_SESSION, flags);
 }
 
 void SystemdWrapper::Impl::Start(std::string const& name)
 {
-  if (IsConnected())
-    systemd_proxy_->Call("StartUnit", g_variant_new("(ss)", name.c_str(), "replace"));
+  systemd_proxy_->Call("StartUnit", g_variant_new("(ss)", name.c_str(), "replace"));
 }
 
 void SystemdWrapper::Impl::Stop(std::string const& name)
 {
-  if (IsConnected())
-    systemd_proxy_->Call("StopUnit", g_variant_new("(ss)", name.c_str(), "replace"));
-}
-
-bool SystemdWrapper::Impl::IsConnected()
-{
-  return systemd_proxy_->IsConnected();
+  systemd_proxy_->Call("StopUnit", g_variant_new("(ss)", name.c_str(), "replace"));
 }
 
 //
@@ -87,11 +84,6 @@ void SystemdWrapper::Start(std::string const& name)
 void SystemdWrapper::Stop(std::string const& name)
 {
   pimpl_->Stop(name);
-}
-
-bool SystemdWrapper::IsConnected()
-{
-  return pimpl_->IsConnected();
 }
 
 }

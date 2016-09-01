@@ -42,14 +42,17 @@ private:
 
 UpstartWrapper::Impl::Impl(bool test_mode)
 {
+  auto flags = static_cast<GDBusProxyFlags>(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
+                                            G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS);
+
   upstart_proxy_ = std::make_shared<unity::glib::DBusProxy>(test_mode ?  "com.canonical.Unity.Test.Upstart" : DBUS_SERVICE_UPSTART,
-                                                            DBUS_PATH_UPSTART, DBUS_INTERFACE_UPSTART);
+                                                            DBUS_PATH_UPSTART, DBUS_INTERFACE_UPSTART,
+                                                            G_BUS_TYPE_SESSION, flags);
 }
 
 void UpstartWrapper::Impl::Emit(std::string const& name)
 {
-  if (upstart_proxy_->IsConnected())
-    upstart_proxy_->Call("EmitEvent", g_variant_new("(sasb)", name.c_str(), nullptr, 0));
+  upstart_proxy_->Call("EmitEvent", g_variant_new("(sasb)", name.c_str(), nullptr, 0));
 }
 
 //
