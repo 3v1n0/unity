@@ -48,7 +48,8 @@ UpstartWrapper::Impl::Impl(bool test_mode)
 
 void UpstartWrapper::Impl::Emit(std::string const& name)
 {
-  upstart_proxy_->Call("EmitEvent", g_variant_new("(sasb)", name.c_str(), nullptr, 0));
+  if (upstart_proxy_->IsConnected())
+    upstart_proxy_->Call("EmitEvent", g_variant_new("(sasb)", name.c_str(), nullptr, 0));
 }
 
 //
