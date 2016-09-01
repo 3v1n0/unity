@@ -35,30 +35,37 @@ public:
 
   void Start(std::string const& name);
   void Stop(std::string const& name);
-  bool IsConnected();
+  void CallMethod(std::string const& method, std::string const& unit);
 
 private:
+  bool test_mode_;
   glib::DBusProxy::Ptr systemd_proxy_;
 };
 
 SystemdWrapper::Impl::Impl(bool test)
+  : test_mode_(test)
+{}
+
+void SystemdWrapper::Impl::CallMethod(std::string const& method, std::string const& unit)
 {
-  auto const& busname = test ? "com.canonical.Unity.Test.Systemd" : "org.freedesktop.systemd1";
+  auto const& busname = test_mode_ ? "com.canonical.Unity.Test.Systemd" : "org.freedesktop.systemd1";
   auto flags = static_cast<GDBusProxyFlags>(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
                                             G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS);
-  systemd_proxy_ = std::make_shared<unity::glib::DBusProxy>(busname, "/org/freedesktop/systemd1",
-                                                            "org.freedesktop.systemd1.Manager",
-                                                            G_BUS_TYPE_SESSION, flags);
+  auto proxy = std::make_shared<glib::DBusProxy>(busname, "/org/freedesktop/systemd1",
+                                                 "org.freedesktop.systemd1.Manager",
+                                                 G_BUS_TYPE_SESSION, flags);
+
+  proxy->CallBegin(method, g_variant_new("(ss)", unit.c_str(), "replace"), [proxy] (GVariant*, glib::Error const& e) {});
 }
 
 void SystemdWrapper::Impl::Start(std::string const& name)
 {
-  systemd_proxy_->Call("StartUnit", g_variant_new("(ss)", name.c_str(), "replace"));
+  CallMethod("StartUnit", name);
 }
 
 void SystemdWrapper::Impl::Stop(std::string const& name)
 {
-  systemd_proxy_->Call("StopUnit", g_variant_new("(ss)", name.c_str(), "replace"));
+  CallMethod("StopUnit", name);
 }
 
 //
