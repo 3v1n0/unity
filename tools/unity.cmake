@@ -27,6 +27,7 @@ import signal
 import subprocess
 import sys
 import time
+import xdg.BaseDirectory
 
 DEFAULT_COMMAND = "compiz --replace"
 home_dir = os.path.expanduser("~%s" % os.getenv("SUDO_USER"))
@@ -74,8 +75,40 @@ def reset_launcher_icons ():
     '''Reset the default launcher icon and restart it.'''
     subprocess.Popen(["gsettings", "reset" ,"com.canonical.Unity.Launcher" , "favorites"])
 
+def call_silently(cmd):
+    return subprocess.call(cmd.split(), stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT) == 0
+
+def session_manager_command(service, what):
+    if is_systemd_session() and not is_running_in_upstart(service):
+        return "systemctl --user {} {}.service".format(what, service)
+    elif is_upstart_session():
+        return "{} {}".format(what, service)
+
 def is_upstart_session():
-  return 'UPSTART_SESSION' in os.environ.keys() and len(os.environ['UPSTART_SESSION'])
+    return 'UPSTART_SESSION' in os.environ.keys() and len(os.environ['UPSTART_SESSION'])
+
+def is_running_in_upstart(service):
+    return is_upstart_session() and b'start/running' in subprocess.check_output("status {}".format(service).split())
+
+def is_unity_running_in_upstart():
+    return is_running_in_upstart("unity7")
+
+def is_systemd_session():
+    try:
+        return os.path.exists(os.path.join(xdg.BaseDirectory.get_runtime_dir(), "systemd"))
+    except:
+        return False
+
+def is_unity_running_in_systemd():
+    return is_systemd_session() and not is_unity_running_in_upstart() and call_silently(session_manager_command("unity7", "is-active"))
+
+def start_with_session_manager():
+    return subprocess.Popen(session_manager_command("unity7", "start").split())
+
+def stop_with_session_manager():
+    if is_unity_running_in_systemd() or is_unity_running_in_upstart():
+        return call_silently(session_manager_command("unity7", "stop"))
+    return False
 
 def process_and_start_unity (compiz_args):
     '''launch unity under compiz (replace the current shell in any case)'''
@@ -108,9 +141,7 @@ def process_and_start_unity (compiz_args):
     if options.log:
         cli.extend(['2>&1', '|', 'tee', options.log])
 
-    if is_upstart_session():
-      if b'start/running' in subprocess.check_output("status unity7".split()):
-        subprocess.call("stop unity7".split())
+    stop_with_session_manager()
 
     # kill a previous compiz if was there (this is a hack as compiz can
     # sometimes get stuck and not exit on --replace)
@@ -130,13 +161,13 @@ def process_and_start_unity (compiz_args):
 
     run_command = " ".join(cli)
 
-    if is_upstart_session() and run_command == DEFAULT_COMMAND and not options.ignore_upstart:
-      return subprocess.Popen("start unity7".split())
+    if run_command == DEFAULT_COMMAND and (is_upstart_session() or is_systemd_session()) and not options.ignore_session_manager:
+        return start_with_session_manager()
     else:
-      # shell = True as it's the simpest way to | tee.
-      # In this case, we need a string and not a list
-      # FIXME: still some bug with 2>&1 not showing everything before wait()
-      return subprocess.Popen(" ".join(cli), env=dict(os.environ), shell=True)
+        # shell = True as it's the simpest way to | tee.
+        # In this case, we need a string and not a list
+        # FIXME: still some bug with 2>&1 not showing everything before wait()
+        return subprocess.Popen(" ".join(cli), env=dict(os.environ), shell=True)
 
 
 def run_unity (compiz_args):
@@ -144,9 +175,9 @@ def run_unity (compiz_args):
 
     try:
         options.debug_mode = 2 if options.advanced_debug else 1 if options.debug else 0
-        if is_upstart_session(): subprocess.call(["stop", "unity-panel-service"])
+        session_manager_command("unity-panel-service", "stop")
         unity_instance = process_and_start_unity (compiz_args)
-        if is_upstart_session(): subprocess.call(["start", "unity-panel-service"])
+        session_manager_command("unity-panel-service", "start")
         unity_instance.wait()
     except KeyboardInterrupt as e:
         try:
@@ -199,8 +230,12 @@ if __name__ == '__main__':
                       help="Store log under filename.")
     parser.add_option("--replace", action="store_true",
                       help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
-    parser.add_option("--ignore-upstart", action="store_true",
-                      help="Run unity without upstart support")
+    if is_systemd_session() and not is_unity_running_in_upstart():
+        parser.add_option("--ignore-systemd", action="store_true", dest="ignore_session_manager",
+                          help="Run unity without systemd support")
+    elif is_upstart_session():
+        parser.add_option("--ignore-upstart", action="store_true", dest="ignore_session_manager",
+                          help="Run unity without upstart support")
     parser.add_option("--reset", action="store_true",
                       help="(deprecated: provided for backwards compatibility)")
     parser.add_option("--reset-icons", action="store_true",
