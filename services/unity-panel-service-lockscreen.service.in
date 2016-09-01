@@ -1,0 +1,7 @@
+[Unit]
+Description=Backing Service for the Unity Panel in Lockscreen mode
+PartOf=unity-screen-locked.target
+
+[Service]
+ExecStart=${UNITY_LIBDIR}/unity-panel-service --lockscreen-mode
+Restart=on-failure

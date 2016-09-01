@@ -44,7 +44,7 @@
 #include "UnitySettings.h"
 #include "config.h"
 
-#define DASH_WIDGETS_FILE UNITYDATADIR"/themes/dash-widgets.json"
+#define DASH_WIDGETS_FILE UNITY_DATADIR"/themes/dash-widgets.json"
 
 namespace unity
 {
@@ -303,7 +303,7 @@ void Style::Impl::LoadStyleFile()
   // is initialised.
   SetDefaultValues();
 
-  if (!parser.Open(theme::Settings::Get()->ThemedFilePath("dash-widgets", {UNITYDATADIR"/themes"}, {"json"})))
+  if (!parser.Open(theme::Settings::Get()->ThemedFilePath("dash-widgets", {UNITY_DATADIR"/themes"}, {"json"})))
   {
     LOG_ERROR(logger) << "Impossible to find a dash-widgets.json in theme paths";
     return;

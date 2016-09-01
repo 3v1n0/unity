@@ -1,7 +1,7 @@
 #
 # Some unity tools
 #
-install(FILES makebootchart.py PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE DESTINATION ${CMAKE_INSTALL_LIBDIR}/unity)
+install(FILES makebootchart.py PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE DESTINATION ${UNITY_INSTALL_LIBDIR})
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity.cmake ${CMAKE_BINARY_DIR}/bin/unity)
 install(FILES ${CMAKE_BINARY_DIR}/bin/unity PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
@@ -27,4 +27,4 @@ link_directories(${LIB_PATHS})
 
 add_executable(unity-active-plugins-safety-check unity_active_plugins_safety_check.cpp)
 target_link_libraries(unity-active-plugins-safety-check ${LIBS})
-install(TARGETS unity-active-plugins-safety-check DESTINATION ${CMAKE_INSTALL_LIBDIR}/unity/)
+install(TARGETS unity-active-plugins-safety-check DESTINATION ${UNITY_INSTALL_LIBDIR})
