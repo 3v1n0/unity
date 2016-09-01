@@ -3,5 +3,6 @@ Description=Backing Service for the Unity Panel in Lockscreen mode
 PartOf=unity-screen-locked.target
 
 [Service]
+ExecStartPre=/bin/sh -ec 'initctl status unity7 &> /dev/stdout | grep -vq "start/running"'
 ExecStart=@UNITY_LIBDIR@/unity-panel-service --lockscreen-mode
 Restart=on-failure
