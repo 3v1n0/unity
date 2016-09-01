@@ -467,7 +467,7 @@ void Controller::LockScreen()
 {
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
-  systemd_wrapper_->Stop("unity-screen-locked.target");
+  systemd_wrapper_->Start("unity-screen-locked.target");
 
   accelerator_controller_ = std::make_shared<AcceleratorController>(key_grabber_);
   auto activate_key = WindowManager::Default().activate_indicators_key();
