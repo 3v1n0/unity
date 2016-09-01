@@ -180,10 +180,6 @@ set (INDICATOR_SERVICE_DIR "${INDICATORPREFIX}/share/${PROJECT_NAME}/indicators"
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
-# GSettings Schema
-SET (UNITY_SCHEMAS "com.canonical.Unity.gschema.xml")
-SET (UNITY_TEST_SCHEMAS "external.gschema.xml")
-
 #
 # i18n
 #
@@ -369,11 +365,6 @@ endif (ENABLE_UNIT_TESTS)
 install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/themes)
 file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
 install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
-
-# Settings for testing
-configure_file (${CMAKE_SOURCE_DIR}/data/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})
-configure_file (${CMAKE_SOURCE_DIR}/tests/data/${UNITY_TEST_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_TEST_SCHEMAS})
-execute_process (COMMAND ${_glib_comple_schemas} ${CMAKE_BINARY_DIR}/settings)
 
 #
 # docs
