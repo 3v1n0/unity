@@ -43,7 +43,7 @@ namespace
 {
 const RawPixel TRIANGLE_THRESHOLD = 5_em;
 const double SCRUB_VELOCITY_THRESHOLD = 0.05;
-const int refine_gradient_midpoint = 959;
+const RawPixel REFINE_GRADIENT_MIDPOINT = 959;
 }
 
 
@@ -374,7 +374,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       nux::TexCoordXForm refine_texxform;
 
-      int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
+      int refine_x_pos = geo.x + (stored_dash_width_ - REFINE_GRADIENT_MIDPOINT.CP(Settings::Instance().em(monitor_)));
 
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
         refine_x_pos += unity::Settings::Instance().LauncherSize(monitor_);
@@ -473,7 +473,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       nux::Geometry refine_geo = geo;
 
-      int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
+      int refine_x_pos = geo.x + (stored_dash_width_ - REFINE_GRADIENT_MIDPOINT.CP(Settings::Instance().em(monitor_)));
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
         refine_x_pos += unity::Settings::Instance().LauncherSize(monitor_);
 
