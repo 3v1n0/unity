@@ -45,7 +45,7 @@ struct GnomeFileManager::Impl
 {
   Impl(GnomeFileManager* parent)
     : parent_(parent)
-    , filemanager_proxy_("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1")
+    , filemanager_proxy_("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1", G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS)
   {
     auto callback = sigc::mem_fun(this, &Impl::OnOpenLocationsXidsUpdated);
     filemanager_proxy_.GetProperty("XUbuntuOpenLocationsXids", callback);
@@ -54,8 +54,10 @@ struct GnomeFileManager::Impl
 
   glib::DBusProxy::Ptr NautilusOperationsProxy() const
   {
+    auto flags = static_cast<GDBusProxyFlags>(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES|G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS);
     return std::make_shared<glib::DBusProxy>(NAUTILUS_NAME, NAUTILUS_PATH,
-                                             "org.gnome.Nautilus.FileOperations");
+                                             "org.gnome.Nautilus.FileOperations",
+                                             G_BUS_TYPE_SESSION, flags);
   }
 
   void OnOpenLocationsXidsUpdated(GVariant* value)
