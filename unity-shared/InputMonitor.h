@@ -30,6 +30,7 @@ namespace input
 {
 enum class Events : unsigned
 {
+  NONE = 0,
   POINTER = (1 << 0),
   KEYS = (1 << 1),
   BARRIER = (1 << 2),
@@ -50,6 +51,8 @@ public:
   bool RegisterClient(Events, EventCallback const&);
   bool UnregisterClient(EventCallback const&);
 
+  Events RegisteredEvents(EventCallback const&) const;
+
 private:
   Monitor(Monitor const&) = delete;
   Monitor& operator=(Monitor const&) = delete;
@@ -60,32 +63,5 @@ private:
 
 } // input namespace
 } // unity namespace
-
-namespace std
-{
-template<>
-struct hash<unity::input::Monitor::EventCallback>
-{
-  size_t operator()(unity::input::Monitor::EventCallback const& cb) const
-  {
-    if (cb.rep_)
-      return std::hash<size_t>()(reinterpret_cast<size_t>(cb.rep_->call_));
-
-    return std::hash<size_t>()(reinterpret_cast<size_t>(cb.rep_));
-  }
-};
-
-template<>
-struct equal_to<unity::input::Monitor::EventCallback>
-{
-  bool operator()(unity::input::Monitor::EventCallback const& lhs, unity::input::Monitor::EventCallback const& rhs) const
-  {
-    if (!lhs.rep_ || !rhs.rep_)
-      return (lhs.rep_ == rhs.rep_);
-
-    return (lhs.rep_->call_ == rhs.rep_->call_);
-  }
-};
-} // std namespace
 
 #endif // __UNITY_INPUT_MONITOR__

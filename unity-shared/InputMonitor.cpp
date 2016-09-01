@@ -18,6 +18,7 @@
  */
 
 #include "InputMonitor.h"
+#include "SigcSlotHash.h"
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
@@ -44,6 +45,12 @@ bool operator&(Events l, Events r)
 {
   typedef std::underlying_type<Events>::type ut;
   return static_cast<ut>(static_cast<ut>(l) & static_cast<ut>(r));
+}
+
+Events& operator|=(Events& l, Events r)
+{
+  typedef std::underlying_type<Events>::type ut;
+  return l = static_cast<Events>(static_cast<ut>(l) | static_cast<ut>(r));
 }
 
 template <typename EVENT>
@@ -118,6 +125,12 @@ void initialize_event<XGenericEventCookie>(XEvent* ev, XIBarrierEvent* xiev)
 
 struct Monitor::Impl
 {
+#if __GNUC__ < 6
+  using EventCallbackSet = std::unordered_set<EventCallback>;
+#else
+  using EventCallbackSet = std::unordered_set<EventCallback, std::hash<sigc::slot_base>>;
+#endif
+
   Impl()
     : xi_opcode_(0)
     , event_filter_set_(false)
@@ -192,6 +205,22 @@ struct Monitor::Impl
       UpdateEventMonitor();
 
     return removed;
+  }
+
+  Events RegisteredEvents(EventCallback const& cb) const
+  {
+    Events events = Events::NONE;
+
+    if (pointer_callbacks_.find(cb) != end(pointer_callbacks_))
+      events |= Events::POINTER;
+
+    if (key_callbacks_.find(cb) != end(key_callbacks_))
+      events |= Events::KEYS;
+
+    if (barrier_callbacks_.find(cb) != end(barrier_callbacks_))
+      events |= Events::BARRIER;
+
+    return events;
   }
 
   void UpdateEventMonitor()
@@ -282,7 +311,7 @@ struct Monitor::Impl
   }
 
   template <typename EVENT_TYPE, typename NATIVE_TYPE = XIDeviceEvent>
-  bool InvokeCallbacks(std::unordered_set<EventCallback>& callbacks, XEvent& xiev)
+  bool InvokeCallbacks(EventCallbackSet& callbacks, XEvent& xiev)
   {
     XGenericEventCookie *cookie = &xiev.xcookie;
 
@@ -338,10 +367,10 @@ struct Monitor::Impl
   bool event_filter_set_;
   bool invoking_callbacks_;
   glib::Source::UniquePtr idle_removal_;
-  std::unordered_set<EventCallback> pointer_callbacks_;
-  std::unordered_set<EventCallback> key_callbacks_;
-  std::unordered_set<EventCallback> barrier_callbacks_;
-  std::unordered_set<EventCallback> removal_queue_;
+  EventCallbackSet pointer_callbacks_;
+  EventCallbackSet key_callbacks_;
+  EventCallbackSet barrier_callbacks_;
+  EventCallbackSet removal_queue_;
 };
 
 Monitor::Monitor()
@@ -380,6 +409,11 @@ bool Monitor::RegisterClient(Events events, EventCallback const& cb)
 bool Monitor::UnregisterClient(EventCallback const& cb)
 {
   return impl_->UnregisterClient(cb);
+}
+
+Events Monitor::RegisteredEvents(EventCallback const& cb) const
+{
+  return impl_->RegisteredEvents(cb);
 }
 
 } // input namespace

@@ -56,7 +56,6 @@ public:
   bool HasKeyActivableMenus() const;
 
   void NotifyAllMenusClosed();
-  void IgnoreLeaveEvents(bool);
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
 
@@ -192,7 +191,6 @@ private:
   bool ignore_menu_visibility_;
   bool integrated_menus_;
   bool always_show_menus_;
-  bool ignore_leave_events_;
 
   nux::Geometry monitor_geo_;
   const std::string desktop_name_;

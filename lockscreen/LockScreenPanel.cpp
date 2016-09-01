@@ -44,11 +44,11 @@ const nux::Color BG_COLOR(0.1, 0.1, 0.1, 0.4);
 using namespace indicator;
 using namespace panel;
 
-Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::Ptr const& session_manager)
+Panel::Panel(int monitor_, menu::Manager::Ptr const& menu_manager, session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
   , active(false)
   , monitor(monitor_)
-  , indicators_(indicators)
+  , menu_manager_(menu_manager)
   , needs_geo_sync_(true)
 {
   double scale = unity::Settings::Instance().em(monitor)->DPIScale();
@@ -72,14 +72,19 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
   indicators_view_->on_indicator_updated.connect(sigc::mem_fun(this, &Panel::OnIndicatorViewUpdated));
   layout->AddView(indicators_view_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  for (auto const& indicator : indicators_->GetIndicators())
+  auto indicators = menu_manager_->Indicators();
+  menu_manager_->RegisterTracker(GetPanelName(), (sigc::track_obj([this] (int x, int y, double speed) {
+    indicators_view_->ActivateEntryAt(x, y);
+  }, *this)));
+
+  for (auto const& indicator : indicators->GetIndicators())
     AddIndicator(indicator);
 
-  indicators_->on_object_added.connect(sigc::mem_fun(this, &Panel::AddIndicator));
-  indicators_->on_object_removed.connect(sigc::mem_fun(this, &Panel::RemoveIndicator));
-  indicators_->on_entry_show_menu.connect(sigc::mem_fun(this, &Panel::OnEntryShowMenu));
-  indicators_->on_entry_activated.connect(sigc::mem_fun(this, &Panel::OnEntryActivated));
-  indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Panel::OnEntryActivateRequest));
+  indicators->on_object_added.connect(sigc::mem_fun(this, &Panel::AddIndicator));
+  indicators->on_object_removed.connect(sigc::mem_fun(this, &Panel::RemoveIndicator));
+  indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Panel::OnEntryShowMenu));
+  indicators->on_entry_activated.connect(sigc::mem_fun(this, &Panel::OnEntryActivated));
+  indicators->on_entry_activate_request.connect(sigc::mem_fun(this, &Panel::OnEntryActivateRequest));
 
   monitor.changed.connect([this, hostname] (int monitor) {
     double scale = unity::Settings::Instance().em(monitor)->DPIScale();
@@ -159,12 +164,7 @@ void Panel::OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, in
   if (!GetInputEventSensitivity())
     return;
 
-  if (!active)
-  {
-    // This is ugly... But Nux fault!
-    WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
-    active = true;
-  }
+  active = true;
 }
 
 void Panel::OnEntryActivateRequest(std::string const& entry_id)
@@ -178,33 +178,16 @@ void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_
   if (!GetInputEventSensitivity() || (!panel.empty() && panel != GetPanelName()))
     return;
 
-  bool active = !entry_id.empty();
+  bool valid_entry = !entry_id.empty();
 
-  if (active && !WindowManager::Default().IsScreenGrabbed())
+  if (valid_entry && !WindowManager::Default().IsScreenGrabbed())
   {
     // The menu didn't grab the keyboard, let's take it back.
     nux::GetWindowCompositor().GrabKeyboardAdd(static_cast<nux::BaseWindow*>(GetTopLevelViewWindow()));
   }
 
-  auto& im = input::Monitor::Get();
-  auto const& event_cb = sigc::mem_fun(this, &Panel::OnEntryEvent);
-
-  if (active)
-  {
-    if (im.RegisterClient(input::Events::POINTER, event_cb))
-      indicators_view_->ActivateEntry(entry_id);
-  }
-  else
-  {
-    im.UnregisterClient(event_cb);
-    this->active = active;
-  }
-}
-
-void Panel::OnEntryEvent(XEvent const& e)
-{
-  if (e.type == MotionNotify && GetAbsoluteGeometry().IsPointInside(e.xmotion.x, e.xmotion.y))
-    indicators_view_->ActivateEntryAt(e.xmotion.x, e.xmotion.y);
+  if (!valid_entry)
+    active = valid_entry;
 }
 
 void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -228,7 +211,7 @@ void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
     EntryLocationMap locations;
     indicators_view_->GetGeometryForSync(locations);
-    indicators_->SyncGeometries(GetPanelName(), locations);
+    menu_manager_->Indicators()->SyncGeometries(GetPanelName(), locations);
     needs_geo_sync_ = false;
   }
 }

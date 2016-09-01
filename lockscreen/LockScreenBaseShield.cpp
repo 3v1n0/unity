@@ -38,7 +38,6 @@ const unsigned MAX_GRAB_WAIT = 100;
 }
 
 BaseShield::BaseShield(session::Manager::Ptr const& session,
-                       indicator::Indicators::Ptr const& indicators,
                        Accelerators::Ptr const& accelerators,
                        nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                        int monitor_num, bool is_primary)
@@ -47,7 +46,6 @@ BaseShield::BaseShield(session::Manager::Ptr const& session,
   , monitor(monitor_num)
   , scale(1.0)
   , session_manager_(session)
-  , indicators_(indicators)
   , accelerators_(accelerators)
   , prompt_view_(prompt_view)
   , bg_settings_(std::make_shared<BackgroundSettings>())

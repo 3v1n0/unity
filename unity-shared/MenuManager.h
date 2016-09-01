@@ -67,6 +67,10 @@ public:
 
   key::Grabber::Ptr const& KeyGrabber() const;
 
+  typedef sigc::slot<void, int /*x*/, int /*y*/, double /*speed*/> PositionTracker;
+  bool RegisterTracker(std::string const& menubar, PositionTracker const&);
+  bool UnregisterTracker(std::string const& menubar, PositionTracker const& = PositionTracker());
+
   sigc::signal<void> appmenu_added;
   sigc::signal<void> appmenu_removed;
   sigc::signal<bool>::accumulated<any_true> open_first;

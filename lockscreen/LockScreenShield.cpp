@@ -32,11 +32,12 @@ namespace lockscreen
 {
 
 Shield::Shield(session::Manager::Ptr const& session_manager,
-               indicator::Indicators::Ptr const& indicators,
+               menu::Manager::Ptr const& menu_manager,
                Accelerators::Ptr const& accelerators,
                nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                int monitor_num, bool is_primary)
-  : BaseShield(session_manager, indicators, accelerators, prompt_view, monitor_num, is_primary)
+  : BaseShield(session_manager, accelerators, prompt_view, monitor_num, is_primary)
+  , menu_manager_(menu_manager)
   , panel_view_(nullptr)
 {
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
@@ -91,11 +92,11 @@ void Shield::ShowPrimaryView()
 
 Panel* Shield::CreatePanel()
 {
-  if (!indicators_ || !session_manager_)
+  if (!menu_manager_ || !session_manager_)
     return nullptr;
 
-  panel_view_ = new Panel(monitor, indicators_, session_manager_);
-  panel_active_conn_ = panel_view_->active.changed.connect([this] (bool active) {
+  panel_view_ = new Panel(monitor, menu_manager_, session_manager_);
+  panel_view_->active.changed.connect(sigc::track_obj([this] (bool active) {
     if (primary())
     {
       if (active)
@@ -109,7 +110,7 @@ Panel* Shield::CreatePanel()
         GrabScreen(false);
       }
     }
-  });
+  }, *this));
 
   return panel_view_;
 }

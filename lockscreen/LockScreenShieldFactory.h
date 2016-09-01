@@ -22,7 +22,7 @@
 
 #include <NuxCore/NuxCore.h>
 #include "UnityCore/SessionManager.h"
-#include "UnityCore/Indicators.h"
+#include "unity-shared/MenuManager.h"
 #include "LockScreenAccelerators.h"
 
 namespace unity
@@ -41,7 +41,7 @@ struct ShieldFactoryInterface
   virtual ~ShieldFactoryInterface() = default;
 
   virtual nux::ObjectPtr<BaseShield> CreateShield(session::Manager::Ptr const&,
-                                                  indicator::Indicators::Ptr const&,
+                                                  menu::Manager::Ptr const&,
                                                   Accelerators::Ptr const&,
                                                   nux::ObjectPtr<AbstractUserPromptView> const&,
                                                   int monitor, bool is_primary) = 0;
@@ -50,7 +50,7 @@ struct ShieldFactoryInterface
 struct ShieldFactory : ShieldFactoryInterface
 {
   nux::ObjectPtr<BaseShield> CreateShield(session::Manager::Ptr const&,
-                                          indicator::Indicators::Ptr const&,
+                                          menu::Manager::Ptr const&,
                                           Accelerators::Ptr const&,
                                           nux::ObjectPtr<AbstractUserPromptView> const&,
                                           int monitor, bool is_primary) override;

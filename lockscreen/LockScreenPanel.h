@@ -22,9 +22,9 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include "UnityCore/Indicators.h"
 #include "UnityCore/GLibSource.h"
 #include "UnityCore/SessionManager.h"
+#include "unity-shared/MenuManager.h"
 
 namespace unity
 {
@@ -39,7 +39,7 @@ namespace lockscreen
 class Panel : public nux::View
 {
 public:
-  Panel(int monitor, indicator::Indicators::Ptr const&, session::Manager::Ptr const&);
+  Panel(int monitor, menu::Manager::Ptr const&, session::Manager::Ptr const&);
 
   nux::Property<bool> active;
   nux::Property<int> monitor;
@@ -55,15 +55,14 @@ private:
   void AddIndicator(indicator::Indicator::Ptr const&);
   void RemoveIndicator(indicator::Indicator::Ptr const&);
   void OnIndicatorViewUpdated();
-  void OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& geo);
+  void OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const&);
   void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
   void OnEntryActivateRequest(std::string const& entry_id);
-  void OnEntryEvent(XEvent const&);
 
   void UpdateSize();
   std::string GetPanelName() const;
 
-  indicator::Indicators::Ptr indicators_;
+  menu::Manager::Ptr menu_manager_;
   panel::PanelIndicatorsView* indicators_view_;
   bool needs_geo_sync_;
 };
