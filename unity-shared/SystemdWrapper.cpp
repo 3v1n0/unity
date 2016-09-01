@@ -43,7 +43,7 @@ private:
 
 SystemdWrapper::Impl::Impl(bool test)
 {
-  auto const& busname = test ? "org.freedesktop.systemd1" : "com.canonical.Unity.Test.Systemd";
+  auto const& busname = test ? "com.canonical.Unity.Test.Systemd" : "org.freedesktop.systemd1";
   systemd_proxy_ = std::make_shared<unity::glib::DBusProxy>(busname, "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager");
 }
 
