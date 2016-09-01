@@ -53,7 +53,7 @@ void UpstartWrapper::Impl::Emit(std::string const& name)
                                                         DBUS_PATH_UPSTART, DBUS_INTERFACE_UPSTART,
                                                         G_BUS_TYPE_SESSION, flags);
 
-  proxy->Call("EmitEvent", g_variant_new("(sasb)", name.c_str(), nullptr, 0), [proxy] (GVariant*) {});
+  proxy->CallBegin("EmitEvent", g_variant_new("(sasb)", name.c_str(), nullptr, 0), [proxy] (GVariant*, glib::Error const&) {});
 }
 
 //
