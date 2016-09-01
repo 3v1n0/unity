@@ -82,6 +82,7 @@ if(ENABLE_X_SUPPORT)
   set (UNITY_SHARED_SOURCES
     XKeyboardUtil.cpp
     XWindowManager.cpp
+    InputMonitor.cpp
     ${UNITY_SHARED_SOURCES}
     )
 else()

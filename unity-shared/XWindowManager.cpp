@@ -123,6 +123,12 @@ std::string XWindowManager::GetStringProperty(Window window_id, Atom atom) const
   return std::string(val, n_items);
 }
 
+void XWindowManager::SetCardinalProperty(Window window_id, Atom atom, std::vector<long> const& values)
+{
+  XChangeProperty(screen->dpy(), window_id, atom, XA_CARDINAL, 32, PropModeReplace,
+                  (unsigned char *) values.data(), values.size());
+}
+
 std::vector<long> XWindowManager::GetCardinalProperty(Window window_id, Atom atom) const
 {
   Atom type;

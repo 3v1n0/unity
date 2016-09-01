@@ -295,7 +295,7 @@ void EdgeBarrierController::Impl::AddEventFilter()
   nux::GetGraphicsDisplay()->AddEventFilter(event_filter);
 }
 
-bool EdgeBarrierController::Impl::HandleEvent(XEvent xevent)
+bool EdgeBarrierController::Impl::HandleEvent(XEvent& xevent)
 {
   Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
   XGenericEventCookie *cookie = &xevent.xcookie;

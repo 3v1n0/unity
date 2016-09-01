@@ -58,7 +58,7 @@ struct EdgeBarrierController::Impl : public sigc::trackable
   PointerBarrierWrapper::Ptr FindBarrierEventOwner(XIBarrierEvent* barrier_event);
 
   static bool HandleEventCB(XEvent event, void* data);
-  bool HandleEvent(XEvent event);
+  bool HandleEvent(XEvent& event);
 
   std::vector<PointerBarrierWrapper::Ptr> vertical_barriers_;
   std::vector<PointerBarrierWrapper::Ptr> horizontal_barriers_;

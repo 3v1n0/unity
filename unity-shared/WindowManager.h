@@ -170,6 +170,7 @@ public:
   virtual bool IsOnscreenKeyboard(Window window_id) const = 0;
 
   virtual std::string GetStringProperty(Window, Atom) const = 0;
+  virtual void SetCardinalProperty(Window, Atom, std::vector<long> const&) = 0;
   virtual std::vector<long> GetCardinalProperty(Window, Atom) const = 0;
 
   virtual Cursor GetCachedCursor(unsigned int cursor_name) const = 0;
