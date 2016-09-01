@@ -100,13 +100,22 @@ def is_systemd_session():
         return False
 
 def is_unity_running_in_systemd():
-    return is_systemd_session() and not is_unity_running_in_upstart() and call_silently(session_manager_command("unity7", "is-active"))
+    return is_systemd_session() and not is_unity_running_in_upstart() and \
+           call_silently(session_manager_command("unity7", "is-active"))
+
+def is_unity_running_in_session_manager():
+    return is_unity_running_in_systemd() or is_unity_running_in_upstart()
 
 def start_with_session_manager():
     return subprocess.Popen(session_manager_command("unity7", "start").split())
 
+def restart_with_session_manager():
+    if is_unity_running_in_session_manager():
+        return subprocess.Popen(session_manager_command("unity7", "restart").split())
+    return start_with_session_manager()
+
 def stop_with_session_manager():
-    if is_unity_running_in_systemd() or is_unity_running_in_upstart():
+    if is_unity_running_in_session_manager():
         return call_silently(session_manager_command("unity7", "stop"))
     return False
 
@@ -141,7 +150,14 @@ def process_and_start_unity (compiz_args):
     if options.log:
         cli.extend(['2>&1', '|', 'tee', options.log])
 
-    stop_with_session_manager()
+    run_command = " ".join(cli)
+
+    if run_command == DEFAULT_COMMAND and not options.ignore_session_manager and \
+       (is_upstart_session() or is_systemd_session()):
+        return restart_with_session_manager()
+
+    if is_unity_running_in_upstart():
+        stop_with_session_manager()
 
     # kill a previous compiz if was there (this is a hack as compiz can
     # sometimes get stuck and not exit on --replace)
@@ -159,15 +175,10 @@ def process_and_start_unity (compiz_args):
         except IOError:
             continue
 
-    run_command = " ".join(cli)
-
-    if run_command == DEFAULT_COMMAND and (is_upstart_session() or is_systemd_session()) and not options.ignore_session_manager:
-        return start_with_session_manager()
-    else:
-        # shell = True as it's the simpest way to | tee.
-        # In this case, we need a string and not a list
-        # FIXME: still some bug with 2>&1 not showing everything before wait()
-        return subprocess.Popen(" ".join(cli), env=dict(os.environ), shell=True)
+    # shell = True as it's the simpest way to | tee.
+    # In this case, we need a string and not a list
+    # FIXME: still some bug with 2>&1 not showing everything before wait()
+    return subprocess.Popen(run_command, env=dict(os.environ), shell=True)
 
 
 def run_unity (compiz_args):
