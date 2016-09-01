@@ -724,7 +724,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
 
     if (new_application_ && !is_inside_)
     {
-      if (opacity() != 1.0f)
+      if (opacity() != 1.0f && menu_manager_->discovery() > 0)
         StartFadeIn(menu_manager_->discovery_fadein());
     }
     else
