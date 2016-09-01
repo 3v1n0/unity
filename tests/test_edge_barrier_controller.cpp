@@ -25,6 +25,7 @@
 
 #include "EdgeBarrierController.h"
 #include "EdgeBarrierControllerPrivate.h"
+#include "InputMonitor.h"
 
 using namespace unity;
 using namespace unity::ui;
@@ -108,6 +109,7 @@ public:
 
   TestBarrierSubscriber horizontal_subscribers_[monitors::MAX];
   TestBarrierSubscriber vertical_subscribers_[monitors::MAX];
+  input::Monitor im;
   MockUScreen uscreen;
   EdgeBarrierController bc;
 };
