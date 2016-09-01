@@ -80,6 +80,7 @@ struct _PanelServicePrivate
   gint     last_right;
   gint     last_bottom;
   guint32  last_menu_button;
+  guint64  last_open_time;
 
   GSettings *gsettings;
   KeyBinding menu_toggle;
@@ -92,6 +93,7 @@ struct _PanelServicePrivate
 
 /* Globals */
 static gboolean suppress_signals = FALSE;
+static void (*default_menu_shell_deactivate) (GtkMenuShell *menu_shell);
 
 enum
 {
@@ -138,6 +140,7 @@ static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
 static void update_keybinding (GSettings *, const gchar *, gpointer);
 static void emit_upstart_event (const gchar *);
+static void menu_shell_deactivate_override (GtkMenuShell *menu_shell);
 static gchar * get_indicator_entry_id_by_entry (IndicatorObjectEntry *entry);
 static IndicatorObjectEntry * get_indicator_entry_by_id (PanelService *self, const gchar *entry_id);
 static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
@@ -161,7 +164,7 @@ panel_service_class_dispose (GObject *self)
   if (GTK_IS_WIDGET (priv->last_menu) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->last_menu)))
     {
-      gtk_menu_popdown (GTK_MENU (priv->last_menu));
+      panel_service_close_active_entry (PANEL_SERVICE (self));
       g_signal_handlers_disconnect_by_data (priv->last_menu, self);
       priv->last_menu = NULL;
     }
@@ -435,6 +438,25 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
   return entry;
 }
 
+static const gchar *
+get_indicator_entry_id_by_menu (PanelService *self, GtkMenu *menu)
+{
+  GHashTableIter iter;
+  IndicatorObjectEntry* entry;
+  gchar *id;
+
+  g_hash_table_iter_init (&iter, self->priv->id2entry_hash);
+  while (g_hash_table_iter_next (&iter, (gpointer*) &id, (gpointer*) &entry))
+    {
+      if (entry && entry->menu == menu)
+        {
+          return id;
+        }
+    }
+
+  return NULL;
+}
+
 static void
 ensure_entry_menu_is_closed (PanelService *self,
                              const gchar *panel_id,
@@ -446,7 +468,9 @@ ensure_entry_menu_is_closed (PanelService *self,
   if (GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
     {
       if (!priv->last_panel || !panel_id || g_strcmp0 (priv->last_panel, panel_id) == 0)
-        gtk_menu_popdown (entry->menu);
+      {
+        panel_service_close_active_entry (self);
+      }
     }
 }
 
@@ -590,17 +614,15 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
               event_matches_keybinding (event->mods.base, keysym, &priv->show_dash) ||
               event_matches_keybinding (event->mods.base, keysym, &priv->show_hud))
             {
-              if (GTK_IS_MENU (priv->last_menu))
-                gtk_menu_popdown (GTK_MENU (priv->last_menu));
-
+              panel_service_close_active_entry (self);
               ret = GDK_FILTER_REMOVE;
             }
           else if (event->mods.base != GDK_CONTROL_MASK)
             {
               if (!IsModifierKey (keysym) && (event->mods.base != 0 || is_allowed_keysym (keysym)))
                 {
-                  if (GTK_IS_MENU (priv->last_menu) && !is_control_keysym (keysym))
-                    gtk_menu_popdown (GTK_MENU (priv->last_menu));
+                  if (!is_control_keysym (keysym))
+                    panel_service_close_active_entry (self);
 
                   reinject_key_event_to_root_window (event);
                   ret = GDK_FILTER_REMOVE;
@@ -1370,9 +1392,7 @@ on_indicator_menu_show (IndicatorObject      *object,
 
   if (!entry)
     {
-      if (GTK_IS_MENU (self->priv->last_menu))
-        gtk_menu_popdown (GTK_MENU (self->priv->last_menu));
-
+      panel_service_close_active_entry (self);
       return;
     }
 
@@ -1840,7 +1860,15 @@ static void
 on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 {
   PanelServicePrivate *priv = self->priv;
+  GtkMenuShellClass *menu_shell_class = GTK_MENU_SHELL_GET_CLASS (priv->last_menu);
+
   g_signal_handlers_disconnect_by_data (priv->last_menu, self);
+
+  if (menu_shell_class && default_menu_shell_deactivate &&
+      menu_shell_class->deactivate != default_menu_shell_deactivate)
+    {
+      menu_shell_class->deactivate = default_menu_shell_deactivate;
+    }
 
   priv->last_x = 0;
   priv->last_y = 0;
@@ -1853,6 +1881,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_right = 0;
   priv->last_top = 0;
   priv->last_bottom = 0;
+  priv->last_open_time = 0;
 
   priv->use_event = FALSE;
   priv->pressed_entry = NULL;
@@ -2270,6 +2299,34 @@ menuitem_activated (GtkWidget *menuitem, IndicatorObjectEntry *entry)
 }
 
 static void
+menu_shell_deactivate_override (GtkMenuShell *menu_shell)
+{
+  PanelService *self = panel_service_get_default ();
+  const gchar *entry_id;
+
+  if (gtk_get_current_event () && GTK_MENU (menu_shell) == self->priv->last_menu)
+  {
+    guint64 ms_open = (g_get_monotonic_time () - self->priv->last_open_time) / 1000;
+
+    if (ms_open < 50)
+      {
+        /* If the menu shell deactivation was requested by an event, we ensure this
+         * didn't happen too early to activation, or there could be a race causing
+         * no menu to appear. Also since the item is now marked as inactive, we should
+         * manually highlight it. */
+        entry_id = get_indicator_entry_id_by_menu (self, self->priv->last_menu);
+
+        if (entry_id)
+          g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
+
+        return;
+      }
+  }
+
+  default_menu_shell_deactivate (menu_shell);
+}
+
+static void
 panel_service_show_entry_common (PanelService *self,
                                  IndicatorObject *object,
                                  IndicatorObjectEntry *entry,
@@ -2281,6 +2338,7 @@ panel_service_show_entry_common (PanelService *self,
 {
   PanelServicePrivate *priv;
   GtkWidget           *last_menu;
+  GtkMenuShellClass   *menu_shell_class;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (INDICATOR_IS_OBJECT (object));
@@ -2350,6 +2408,14 @@ panel_service_show_entry_common (PanelService *self,
       g_signal_connect_after (priv->last_menu, "move-current",
                               G_CALLBACK (on_active_menu_move_current), self);
 
+      /* Override the menu deactivation in order to prevent it to close too early */
+      menu_shell_class = GTK_MENU_SHELL_GET_CLASS (priv->last_menu);
+      if (menu_shell_class && menu_shell_class->deactivate != menu_shell_deactivate_override)
+        {
+          default_menu_shell_deactivate = menu_shell_class->deactivate;
+          menu_shell_class->deactivate = menu_shell_deactivate_override;
+        }
+
       gtk_menu_shell_set_take_focus (GTK_MENU_SHELL (priv->last_menu), TRUE);
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, button, CurrentTime);
       gboolean visible = gtk_widget_is_visible (GTK_WIDGET (priv->last_menu));
@@ -2382,6 +2448,7 @@ panel_service_show_entry_common (PanelService *self,
           priv->last_right = left + width -1;
           priv->last_top = top;
           priv->last_bottom = top + height -1;
+          priv->last_open_time = g_get_monotonic_time ();
         }
       else
         {
@@ -2626,6 +2693,7 @@ panel_service_close_active_entry (PanelService *self)
 
   if (GTK_IS_MENU (self->priv->last_menu))
     {
+      self->priv->last_open_time = 0;
       gtk_menu_popdown (GTK_MENU (self->priv->last_menu));
     }
 }
