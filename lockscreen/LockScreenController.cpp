@@ -41,6 +41,7 @@ namespace
 const unsigned int IDLE_FADE_DURATION = 10000;
 const unsigned int LOCK_FADE_DURATION = 400;
 const unsigned int POST_LOCK_SCREENSAVER_WAIT = 2;
+const std::string SYSTEMD_LOCK_TARGET = "unity-screen-locked.target";
 
 class BlankWindow : public nux::BaseWindow
 {
@@ -131,7 +132,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       shields_.clear();
 
       upstart_wrapper_->Emit("desktop-unlock");
-      systemd_wrapper_->Stop("unity-screen-locked.target");
+      systemd_wrapper_->Stop(SYSTEMD_LOCK_TARGET);
       accelerator_controller_.reset();
       indicators_.reset();
     }
@@ -467,7 +468,7 @@ void Controller::LockScreen()
 {
   indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
   upstart_wrapper_->Emit("desktop-lock");
-  systemd_wrapper_->Start("unity-screen-locked.target");
+  systemd_wrapper_->Start(SYSTEMD_LOCK_TARGET);
 
   accelerator_controller_ = std::make_shared<AcceleratorController>(key_grabber_);
   auto activate_key = WindowManager::Default().activate_indicators_key();
