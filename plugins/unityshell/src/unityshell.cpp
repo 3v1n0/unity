@@ -3473,6 +3473,7 @@ void UnityWindow::moveNotify(int x, int y, bool immediate)
 void UnityWindow::resizeNotify(int x, int y, int w, int h)
 {
   deco_win_->UpdateDecorationPositionDelayed();
+  CleanupCachedTextures();
   PluginAdapter::Default().NotifyResized(window, x, y, w, h);
   window->resizeNotify(x, y, w, h);
 }

@@ -1,3 +1,41 @@
+unity (7.5.0+16.10.20160901.2-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Disable menu discovery animation if MenusDiscoveryDuration is 0.
+    (LP: #942962)
+  * Redraw fake decorations on window resize. (LP: #940470)
+
+  [ Marco Trevisan (Treviño) ]
+  * InputMonitor: add an unity class that monitors XInput2 events and
+    converts them to XEvent
+  * EdgeBarrierController: use InputMonitor to get the barrier events
+    instead of relying on its implementation
+  * DecorationsMenuLayout: use input monitor for menu scrubbing (LP:
+    #1614597)
+  * PanelView: use InputMonitor to track menu events
+  * LockScreenPanel: use InputMonitor events instead of mouse polling
+    for menu scrubbing
+  * MenuManager: add support for mouse trackers with triangle algorithm
+    support (LP: #1618405)
+  * PanelView: scale gradient refinement properly
+  * PanelService: don't allow to deactivate menus if they've been opened
+    too shortly
+  * WindowButton: properly partially unmaximize a window when
+    middle/left clicking in the restore button (LP: #1616136)
+  * CMake: move data and setting files in proper folder, define shared
+    libdir variables
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Thu, 01 Sep 2016 23:59:15 +0000
+
+unity (7.5.0+16.10.20160819-0ubuntu1) yakkety; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Use compiz::Window::serverNext instead of compiz::Window::next in
+    IsWindowObscured as the latter can be outdated just after
+    scale/spread terminates. (LP: #1614116)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 19 Aug 2016 13:15:09 +0000
+
 unity (7.5.0+16.10.20160817.1-0ubuntu1) yakkety; urgency=medium
 
   [ Andrea Azzarone ]

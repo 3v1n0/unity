@@ -162,7 +162,6 @@ private:
   connection::Wrapper dpi_changed_;
   connection::Wrapper grab_mouse_changed_;
   std::string last_title_;
-  std::string panel_id_;
   std::vector<cu::SimpleTextureQuad> bg_textures_;
   cu::PixmapTexture::Ptr shaped_shadow_pixmap_;
   std::shared_ptr<ForceQuitDialog> force_quit_;

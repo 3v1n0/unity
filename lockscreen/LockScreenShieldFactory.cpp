@@ -28,7 +28,7 @@ namespace lockscreen
 {
 
 nux::ObjectPtr<BaseShield> ShieldFactory::CreateShield(session::Manager::Ptr const& session_manager,
-                                                       indicator::Indicators::Ptr const& indicators,
+                                                       menu::Manager::Ptr const& menu_manager,
                                                        Accelerators::Ptr const& accelerators,
                                                        nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                                                        int monitor, bool is_primary)
@@ -38,7 +38,7 @@ nux::ObjectPtr<BaseShield> ShieldFactory::CreateShield(session::Manager::Ptr con
   if (Settings::Instance().desktop_type() == DesktopType::UBUNTUKYLIN)
     shield = new KylinShield(session_manager, accelerators, prompt_view, monitor, is_primary);
   else
-    shield = new Shield(session_manager, indicators, accelerators, prompt_view,  monitor, is_primary);
+    shield = new Shield(session_manager, menu_manager, accelerators, prompt_view,  monitor, is_primary);
 
   return shield;
 }

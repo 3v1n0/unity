@@ -25,6 +25,10 @@ namespace unity
 {
 namespace decoration
 {
+namespace
+{
+const std::string MENUS_PANEL_NAME = "WindowLIM";
+}
 
 using namespace indicator;
 
@@ -33,8 +37,8 @@ MenuLayout::MenuLayout(menu::Manager::Ptr const& menu, CompWindow* win)
   , show_now(false)
   , menu_manager_(menu)
   , win_(win)
-  , last_pointer_(-1, -1)
   , dropdown_(std::make_shared<MenuDropdown>(menu_manager_->Indicators(), win))
+  , menubar_id_(MENUS_PANEL_NAME + std::to_string(win_->id()))
 {
   visible = false;
 }
@@ -91,6 +95,11 @@ void MenuLayout::Setup()
     Relayout();
 }
 
+std::string const& MenuLayout::MenubarId() const
+{
+  return menubar_id_;
+}
+
 bool MenuLayout::ActivateMenu(std::string const& entry_id)
 {
   MenuEntry::Ptr target;
@@ -117,14 +126,27 @@ bool MenuLayout::ActivateMenu(std::string const& entry_id)
   if (!activated)
     activated = dropdown_->ActivateChild(target);
 
-  if (activated)
+  return activated;
+}
+
+bool MenuLayout::ActivateMenu(CompPoint const& pos)
+{
+  if (!Geometry().contains(pos))
+    return false;
+
+  for (auto const& item : items_)
   {
-    // Since this generally happens on keyboard activation we need to avoid that
-    // the mouse position would interfere with this
-    last_pointer_.set(pointerX, pointerY);
+    if (!item->visible() || !item->sensitive())
+      continue;
+
+    if (item->Geometry().contains(pos))
+    {
+      std::static_pointer_cast<MenuEntry>(item)->ShowMenu(1);
+      return true;
+    }
   }
 
-  return activated;
+  return false;
 }
 
 void MenuLayout::OnEntryMouseOwnershipChanged(bool owner)
@@ -154,39 +176,15 @@ void MenuLayout::OnEntryActiveChanged(bool actived)
 {
   active = actived;
 
-  if (active && !pointer_tracker_ && items_.size() > 1)
+  if (active && items_.size() > 1)
   {
-    pointer_tracker_.reset(new glib::Timeout(16));
-    pointer_tracker_->Run([this] {
-      Window win;
-      int i, x, y;
-      unsigned int ui;
-
-      XQueryPointer(screen->dpy(), screen->root(), &win, &win, &x, &y, &i, &i, &ui);
-
-      if (last_pointer_.x() != x || last_pointer_.y() != y)
-      {
-        last_pointer_.set(x, y);
-
-        for (auto const& item : items_)
-        {
-          if (!item->visible() || !item->sensitive())
-            continue;
-
-          if (item->Geometry().contains(last_pointer_))
-          {
-            std::static_pointer_cast<MenuEntry>(item)->ShowMenu(1);
-            break;
-          }
-        }
-      }
-
-      return true;
-    });
+    menu_manager_->RegisterTracker(menubar_id_, (sigc::track_obj([this] (int x, int y, double speed) {
+      ActivateMenu(CompPoint(x, y));
+    }, *this)));
   }
   else if (!active)
   {
-    pointer_tracker_.reset();
+    menu_manager_->UnregisterTracker(menubar_id_);
   }
 }
 

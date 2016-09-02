@@ -30,7 +30,6 @@
 #include "SuspendInhibitorManager.h"
 #include "ScreenSaverDBusManager.h"
 #include "unity-shared/BackgroundEffectHelper.h"
-#include "unity-shared/KeyGrabber.h"
 #include "unity-shared/SystemdWrapper.h"
 #include "unity-shared/UpstartWrapper.h"
 
@@ -87,8 +86,8 @@ private:
 
   DBusManager::Ptr dbus_manager_;
   session::Manager::Ptr session_manager_;
+  menu::Manager::Ptr menu_manager_;
   key::Grabber::Ptr key_grabber_;
-  indicator::Indicators::Ptr indicators_;
   AcceleratorController::Ptr accelerator_controller_;
   SystemdWrapper::Ptr systemd_wrapper_;
   UpstartWrapper::Ptr upstart_wrapper_;

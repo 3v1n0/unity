@@ -420,10 +420,23 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
   {
     WindowManager& wm = WindowManager::Default();
     Window to_restore = controlled_window();
+    int button = nux::GetGraphicsDisplay()->GetCurrentEvent().GetEventButton();
 
     wm.Raise(to_restore);
     wm.Activate(to_restore);
-    wm.Restore(to_restore);
+
+    if (button == nux::NUX_MOUSE_BUTTON1)
+    {
+      wm.Restore(to_restore);
+    }
+    else if (button == nux::NUX_MOUSE_BUTTON2)
+    {
+      wm.VerticallyMaximize(to_restore);
+    }
+    else if (button == nux::NUX_MOUSE_BUTTON3)
+    {
+      wm.HorizontallyMaximize(to_restore);
+    }
   }
 
   restore_clicked.emit();

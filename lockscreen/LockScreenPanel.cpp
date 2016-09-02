@@ -24,7 +24,7 @@
 
 #include "LockScreenSettings.h"
 #include "panel/PanelIndicatorsView.h"
-#include "unity-shared/CairoTexture.h"
+#include "unity-shared/InputMonitor.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/RawPixel.h"
@@ -38,24 +38,24 @@ namespace lockscreen
 namespace
 {
 const RawPixel PADDING = 5_em;
+const nux::Color BG_COLOR(0.1, 0.1, 0.1, 0.4);
 }
 
 using namespace indicator;
 using namespace panel;
 
-Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::Ptr const& session_manager)
+Panel::Panel(int monitor_, menu::Manager::Ptr const& menu_manager, session::Manager::Ptr const& session_manager)
   : nux::View(NUX_TRACKER_LOCATION)
   , active(false)
   , monitor(monitor_)
-  , indicators_(indicators)
+  , menu_manager_(menu_manager)
   , needs_geo_sync_(true)
 {
   double scale = unity::Settings::Instance().em(monitor)->DPIScale();
   auto* layout = new nux::HLayout();
   layout->SetLeftAndRightPadding(PADDING.CP(scale), 0);
   SetLayout(layout);
-
-  BuildTexture();
+  UpdateSize();
 
   // Add setting
   auto *hostname = new StaticCairoText(session_manager->HostName());
@@ -72,34 +72,33 @@ Panel::Panel(int monitor_, Indicators::Ptr const& indicators, session::Manager::
   indicators_view_->on_indicator_updated.connect(sigc::mem_fun(this, &Panel::OnIndicatorViewUpdated));
   layout->AddView(indicators_view_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  for (auto const& indicator : indicators_->GetIndicators())
+  auto indicators = menu_manager_->Indicators();
+  menu_manager_->RegisterTracker(GetPanelName(), (sigc::track_obj([this] (int x, int y, double speed) {
+    indicators_view_->ActivateEntryAt(x, y);
+  }, *this)));
+
+  for (auto const& indicator : indicators->GetIndicators())
     AddIndicator(indicator);
 
-  indicators_->on_object_added.connect(sigc::mem_fun(this, &Panel::AddIndicator));
-  indicators_->on_object_removed.connect(sigc::mem_fun(this, &Panel::RemoveIndicator));
-  indicators_->on_entry_show_menu.connect(sigc::mem_fun(this, &Panel::OnEntryShowMenu));
-  indicators_->on_entry_activated.connect(sigc::mem_fun(this, &Panel::OnEntryActivated));
-  indicators_->on_entry_activate_request.connect(sigc::mem_fun(this, &Panel::OnEntryActivateRequest));
+  indicators->on_object_added.connect(sigc::mem_fun(this, &Panel::AddIndicator));
+  indicators->on_object_removed.connect(sigc::mem_fun(this, &Panel::RemoveIndicator));
+  indicators->on_entry_show_menu.connect(sigc::mem_fun(this, &Panel::OnEntryShowMenu));
+  indicators->on_entry_activated.connect(sigc::mem_fun(this, &Panel::OnEntryActivated));
+  indicators->on_entry_activate_request.connect(sigc::mem_fun(this, &Panel::OnEntryActivateRequest));
 
   monitor.changed.connect([this, hostname] (int monitor) {
     double scale = unity::Settings::Instance().em(monitor)->DPIScale();
     hostname->SetScale(scale);
     static_cast<nux::HLayout*>(GetLayout())->SetLeftAndRightPadding(PADDING.CP(scale), 0);
     indicators_view_->SetMonitor(monitor);
-    BuildTexture();
+    UpdateSize();
     QueueRelayout();
   });
 }
 
-void Panel::BuildTexture()
+void Panel::UpdateSize()
 {
   int height = panel::Style::Instance().PanelHeight(monitor);
-  nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, 1, height);
-  auto* cr = context.GetInternalContext();
-  cairo_set_source_rgb(cr, 0.1, 0.1, 0.1);
-  cairo_paint_with_alpha(cr, 0.4);
-  bg_texture_ = texture_ptr_from_cairo_graphics(context);
-
   view_layout_->SetMinimumHeight(height);
   view_layout_->SetMaximumHeight(height);
 }
@@ -165,12 +164,7 @@ void Panel::OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, in
   if (!GetInputEventSensitivity())
     return;
 
-  if (!active)
-  {
-    // This is ugly... But Nux fault!
-    WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
-    active = true;
-  }
+  active = true;
 }
 
 void Panel::OnEntryActivateRequest(std::string const& entry_id)
@@ -184,36 +178,16 @@ void Panel::OnEntryActivated(std::string const& panel, std::string const& entry_
   if (!GetInputEventSensitivity() || (!panel.empty() && panel != GetPanelName()))
     return;
 
-  bool active = !entry_id.empty();
+  bool valid_entry = !entry_id.empty();
 
-  if (active && !WindowManager::Default().IsScreenGrabbed())
+  if (valid_entry && !WindowManager::Default().IsScreenGrabbed())
   {
     // The menu didn't grab the keyboard, let's take it back.
     nux::GetWindowCompositor().GrabKeyboardAdd(static_cast<nux::BaseWindow*>(GetTopLevelViewWindow()));
   }
 
-  if (active && !track_menu_pointer_timeout_)
-  {
-    track_menu_pointer_timeout_.reset(new glib::Timeout(16));
-    track_menu_pointer_timeout_->Run([this] {
-      nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-      if (tracked_pointer_pos_ != mouse)
-      {
-        if (GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y))
-          indicators_view_->ActivateEntryAt(mouse.x, mouse.y);
-
-        tracked_pointer_pos_ = mouse;
-      }
-
-      return true;
-    });
-  }
-  else if (!active)
-  {
-    track_menu_pointer_timeout_.reset();
-    tracked_pointer_pos_ = {-1, -1};
-    this->active = false;
-  }
+  if (!valid_entry)
+    active = valid_entry;
 }
 
 void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -227,12 +201,7 @@ void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(graphics_engine, geo);
 
-  nux::TexCoordXForm texxform;
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
-  graphics_engine.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                           bg_texture_->GetDeviceTexture(), texxform,
-                           nux::color::White);
-
+  graphics_engine.QRP_Color(geo.x, geo.y, geo.width, geo.height, BG_COLOR);
   view_layout_->ProcessDraw(graphics_engine, force_draw);
 
   graphics_engine.PopClippingRectangle();
@@ -242,7 +211,7 @@ void Panel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
     EntryLocationMap locations;
     indicators_view_->GetGeometryForSync(locations);
-    indicators_->SyncGeometries(GetPanelName(), locations);
+    menu_manager_->Indicators()->SyncGeometries(GetPanelName(), locations);
     needs_geo_sync_ = false;
   }
 }

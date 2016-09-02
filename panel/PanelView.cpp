@@ -42,7 +42,8 @@ namespace panel
 namespace
 {
 const RawPixel TRIANGLE_THRESHOLD = 5_em;
-const int refine_gradient_midpoint = 959;
+const double SCRUB_VELOCITY_THRESHOLD = 0.05;
+const RawPixel REFINE_GRADIENT_MIDPOINT = 959;
 }
 
 
@@ -113,10 +114,9 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 
   remote_->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
-  remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
-  remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
   menus->key_activate_entry.connect(sigc::mem_fun(this, &PanelView::ActivateEntry));
   menus->open_first.connect(sigc::mem_fun(this, &PanelView::ActivateFirstSensitive));
+  menus->RegisterTracker(GetPanelName(), sigc::mem_fun(this, &PanelView::OnMenuPointerMoved));
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
@@ -374,7 +374,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       nux::TexCoordXForm refine_texxform;
 
-      int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
+      int refine_x_pos = geo.x + (stored_dash_width_ - REFINE_GRADIENT_MIDPOINT.CP(Settings::Instance().em(monitor_)));
 
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
         refine_x_pos += unity::Settings::Instance().LauncherSize(monitor_);
@@ -473,7 +473,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       nux::Geometry refine_geo = geo;
 
-      int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
+      int refine_x_pos = geo.x + (stored_dash_width_ - REFINE_GRADIENT_MIDPOINT.CP(Settings::Instance().em(monitor_)));
       if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
         refine_x_pos += unity::Settings::Instance().LauncherSize(monitor_);
 
@@ -627,7 +627,7 @@ void PanelView::OnIndicatorViewUpdated()
   QueueDraw();
 }
 
-void PanelView::OnMenuPointerMoved(int x, int y)
+void PanelView::OnMenuPointerMoved(int x, int y, double speed)
 {
   nux::Geometry const& geo = GetAbsoluteGeometry();
 
@@ -648,116 +648,6 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   }
 }
 
-static bool PointInTriangle(nux::Point const& p, nux::Point const& t0, nux::Point const& t1, nux::Point const& t2)
-{
-  int s = t0.y * t2.x - t0.x * t2.y + (t2.y - t0.y) * p.x + (t0.x - t2.x) * p.y;
-  int t = t0.x * t1.y - t0.y * t1.x + (t0.y - t1.y) * p.x + (t1.x - t0.x) * p.y;
-
-  if ((s < 0) != (t < 0))
-    return false;
-
-  int A = -t1.y * t2.x + t0.y * (t2.x - t1.x) + t0.x * (t1.y - t2.y) + t1.x * t2.y;
-  if (A < 0)
-  {
-    s = -s;
-    t = -t;
-    A = -A;
-  }
-
-  return s > 0 && t > 0 && (s + t) < A;
-}
-
-static double GetMouseVelocity(nux::Point const& p0, nux::Point const& p1, util::Timer &timer)
-{
-  int dx, dy;
-  double speed;
-  auto millis = timer.ElapsedMicroSeconds();
-
-  if (millis == 0)
-    return 1;
-
-  dx = p0.x - p1.x;
-  dy = p0.y - p1.y;
-
-  speed = sqrt(dx * dx + dy * dy) / millis * 1000;
-
-  return speed;
-}
-
-bool PanelView::TrackMenuPointer()
-{
-  nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-  double speed = GetMouseVelocity(mouse, tracked_pointer_pos_, mouse_tracker_timer_);
-
-  mouse_tracker_timer_.Reset();
-  tracked_pointer_pos_ = mouse;
-
-  double scale = Settings::Instance().em(monitor_)->DPIScale();
-  if (speed > 0 && PointInTriangle(mouse,
-                                   nux::Point(triangle_top_corner_.x, std::max(triangle_top_corner_.y - TRIANGLE_THRESHOLD.CP(scale), 0)),
-                                   nux::Point(menu_geo_.x, menu_geo_.y),
-                                   nux::Point(menu_geo_.x + menu_geo_.width, menu_geo_.y)))
-  {
-    return true;
-  }
-
-  if (mouse != triangle_top_corner_)
-  {
-    triangle_top_corner_ = mouse;
-    OnMenuPointerMoved(mouse.x, mouse.y);
-  }
-
-  return true;
-}
-
-void PanelView::OnEntryActivated(std::string const& panel, std::string const& entry_id, nux::Rect const& menu_geo)
-{
-  if (!panel.empty() && panel != GetPanelName())
-    return;
-
-  menu_geo_ = menu_geo;
-
-  bool active = !entry_id.empty();
-  if (active && !track_menu_pointer_timeout_)
-  {
-    //
-    // Track menus being scrubbed at 60Hz (about every 16 millisec)
-    // It might sound ugly, but it's far nicer (and more responsive) than the
-    // code it replaces which used to capture motion events in another process
-    // (unity-panel-service) and send them to us over dbus.
-    // NOTE: The reason why we have to use a timer instead of tracking motion
-    // events is because the motion events will never be delivered to this
-    // process. All the motion events will go to unity-panel-service while
-    // scrubbing because the active panel menu has (needs) the pointer grab.
-    //
-    mouse_tracker_timer_.Reset();
-    triangle_top_corner_ = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    track_menu_pointer_timeout_.reset(new glib::Timeout(16));
-    track_menu_pointer_timeout_->Run(sigc::mem_fun(this, &PanelView::TrackMenuPointer));
-  }
-  else if (!active)
-  {
-    track_menu_pointer_timeout_.reset();
-    menu_view_->NotifyAllMenusClosed();
-    tracked_pointer_pos_ = {-1, -1};
-  }
-
-  if (overlay_is_open_)
-    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
-}
-
-void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
-                                int x, int y, unsigned button)
-{
-  if (!track_menu_pointer_timeout_)
-  {
-    // This is ugly... But Nux fault!
-    menu_view_->IgnoreLeaveEvents(true);
-    WindowManager::Default().UnGrabMousePointer(CurrentTime, button, x, y);
-    menu_view_->IgnoreLeaveEvents(false);
-  }
-}
-
 bool PanelView::ActivateFirstSensitive()
 {
   if (!IsActive())
@@ -768,7 +658,6 @@ bool PanelView::ActivateFirstSensitive()
   {
     // Since this only happens on keyboard events, we need to prevent that the
     // pointer tracker would select another entry.
-    tracked_pointer_pos_ = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     return true;
   }
 
@@ -785,7 +674,6 @@ bool PanelView::ActivateEntry(std::string const& entry_id)
   {
     // Since this only happens on keyboard events, we need to prevent that the
     // pointer tracker would select another entry.
-    tracked_pointer_pos_ = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     return true;
   }
 

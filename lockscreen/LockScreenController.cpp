@@ -134,7 +134,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
       upstart_wrapper_->Emit("desktop-unlock");
       systemd_wrapper_->Stop(SYSTEMD_LOCK_TARGET);
       accelerator_controller_.reset();
-      indicators_.reset();
+      menu_manager_.reset();
     }
     else if (!prompt_activation_)
     {
@@ -256,7 +256,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
     if (i >= shields_size)
     {
-      shield = shield_factory_->CreateShield(session_manager_, indicators_, accelerator_controller_->GetAccelerators(), prompt_view, i, i == primary);
+      shield = shield_factory_->CreateShield(session_manager_, menu_manager_, accelerator_controller_->GetAccelerators(), prompt_view, i, i == primary);
       is_new = true;
     }
 
@@ -466,7 +466,7 @@ void Controller::OnScreenSaverActivationRequest(bool activate)
 
 void Controller::LockScreen()
 {
-  indicators_ = std::make_shared<indicator::LockScreenDBusIndicators>();
+  menu_manager_ = std::make_shared<menu::Manager>(std::make_shared<indicator::LockScreenDBusIndicators>(), key_grabber_);
   upstart_wrapper_->Emit("desktop-lock");
   systemd_wrapper_->Start(SYSTEMD_LOCK_TARGET);
 

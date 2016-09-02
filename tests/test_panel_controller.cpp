@@ -19,6 +19,7 @@
 
 #include <gmock/gmock.h>
 
+#include "InputMonitor.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "PanelView.h"
@@ -46,6 +47,7 @@ struct TestPanelController : public testing::Test
   menu::MockManager::Ptr menus;
   ui::EdgeBarrierController::Ptr edge_barriers;
   launcher::Options::Ptr options;
+  input::Monitor im;
 };
 
 TEST_F(TestPanelController, Construction)

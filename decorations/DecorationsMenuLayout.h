@@ -42,7 +42,9 @@ public:
 
   void Setup();
   bool ActivateMenu(std::string const& entry_id);
+  bool ActivateMenu(CompPoint const&);
   void ChildrenGeometries(indicator::EntryLocationMap&) const;
+  std::string const& MenubarId() const;
 
 protected:
   void DoRelayout() override;
@@ -55,10 +57,9 @@ private:
 
   menu::Manager::Ptr menu_manager_;
   CompWindow* win_;
-  CompPoint last_pointer_;
-  glib::Source::UniquePtr pointer_tracker_;
   glib::Source::UniquePtr show_now_timeout_;
   std::shared_ptr<MenuDropdown> dropdown_;
+  std::string menubar_id_;
 };
 
 } // decoration namespace

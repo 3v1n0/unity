@@ -37,7 +37,7 @@ KylinShield::KylinShield(session::Manager::Ptr const& session_manager,
                Accelerators::Ptr const& accelerators,
                nux::ObjectPtr<AbstractUserPromptView> const& prompt_view,
                int monitor_num, bool is_primary)
-  : BaseShield(session_manager, nullptr, accelerators, prompt_view, monitor_num, is_primary)
+  : BaseShield(session_manager, accelerators, prompt_view, monitor_num, is_primary)
 {
   is_primary ? ShowPrimaryView() : ShowSecondaryView();
   EnableInputWindow(true);

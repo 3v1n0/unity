@@ -102,7 +102,6 @@ PanelMenuView::PanelMenuView(menu::Manager::Ptr const& menus)
   , ignore_menu_visibility_(false)
   , integrated_menus_(menu_manager_->integrated_menus())
   , always_show_menus_(menu_manager_->always_show_menus())
-  , ignore_leave_events_(false)
   , desktop_name_(get_current_desktop())
 {
   if (ApplicationWindowPtr const& win = ApplicationManager::Default().GetActiveWindow())
@@ -724,7 +723,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
 
     if (new_application_ && !is_inside_)
     {
-      if (opacity() != 1.0f)
+      if (opacity() != 1.0f && menu_manager_->discovery() > 0)
         StartFadeIn(menu_manager_->discovery_fadein());
     }
     else
@@ -1814,14 +1813,9 @@ void PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_butt
   }
 }
 
-void PanelMenuView::IgnoreLeaveEvents(bool ignore)
-{
-  ignore_leave_events_ = ignore;
-}
-
 void PanelMenuView::OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
 {
-  if (always_show_menus_ || ignore_leave_events_)
+  if (always_show_menus_)
     return;
 
   if (is_inside_)

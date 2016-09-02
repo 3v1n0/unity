@@ -25,6 +25,7 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
+ #include "InputMonitor.h"
 
 #include "mock_menu_manager.h"
 #include "test_standalone_wm.h"
@@ -43,6 +44,7 @@ public:
   nux::ObjectPtr<MockableBaseWindow> window_;
   nux::ObjectPtr<PanelView> panel_view_;
   testwrapper::StandaloneWM WM;
+  input::Monitor im;
 
   TestPanelView()
     : window_(new MockableBaseWindow())
