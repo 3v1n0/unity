@@ -4,7 +4,8 @@ PartOf=unity-screen-locked.target
 
 [Service]
 ExecStartPre=/bin/sh -ec '\
-  status=$(initctl status unity7) || true;\
-  echo "$status" | grep -vq "start/running" || echo "Unity is managed by Upstart"'
+  status=$(initctl status unity7) || true; \
+  echo "$status" | grep -vq "start/running" || \
+  (ret=$?; echo "Unity is managed by Upstart"; exit $ret)'
 ExecStart=@UNITY_LIBDIR@/unity-panel-service --lockscreen-mode
 Restart=on-failure
