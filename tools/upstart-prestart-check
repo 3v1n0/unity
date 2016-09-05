@@ -8,7 +8,7 @@ if grep -q compiz /usr/share/gnome-session/sessions/ubuntu.session ; then
   exit 1
 fi
 
-if (systemctl --user is-active unity7); then
+if (systemctl --user is-active unity7 &> /dev/null); then
   echo "Unity instance is managed by Systemd, ignoring request..."
   stop
   exit 1
