@@ -7,7 +7,7 @@ this_unit=$(sed -n "s,.*:name=systemd:.*/\([^/]\+.service\)[/\b]\?.*,\1,p" /proc
 if grep -q compiz /usr/share/gnome-session/sessions/ubuntu.session ; then
   echo "GNOME Session is starting Compiz"
 
-  if [ -n "$this_unit" ] && [[ $string != "unity"* ]]; then
+  if [ -n "$this_unit" ] && [[ $this_unit == "unity"* ]]; then
     systemctl --user stop $this_unit
   fi
   exit 1
@@ -22,7 +22,7 @@ upstart_status=$(initctl status unity7) || true
 if (echo "$upstart_status" | grep -q "start/running"); then
   echo "Unity is managed by Upstart"
 
-  if [ -n "$this_unit" ] && [[ $string != "unity"* ]]; then
+  if [ -n "$this_unit" ] && [[ $this_unit == "unity"* ]]; then
     systemctl --user stop $this_unit
   fi
 
