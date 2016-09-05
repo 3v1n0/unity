@@ -6,8 +6,9 @@ After=unity-settings-daemon.service
 PartOf=graphical-session.target
 
 [Service]
+ExecStartPre=@UNITY_LIBDIR@/systemd-prestart-check
+ExecStartPre=@UNITY_LIBDIR@/compiz-profile-selector
 ExecStart=/usr/bin/compiz
-ExecStartPre=@UNITY_LIBDIR@/unity-compiz-profile-select
 Restart=on-failure
 
 [Install]

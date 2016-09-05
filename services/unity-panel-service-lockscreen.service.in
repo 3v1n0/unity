@@ -3,9 +3,6 @@ Description=Backing Service for the Unity Panel in Lockscreen mode
 PartOf=unity-screen-locked.target
 
 [Service]
-ExecStartPre=/bin/sh -ec '\
-  status=$(initctl status unity7) || true; \
-  echo "$status" | grep -vq "start/running" || \
-  (ret=$?; echo "Unity is managed by Upstart"; exit $ret)'
+ExecStartPre=@UNITY_LIBDIR@/systemd-prestart-check
 ExecStart=@UNITY_LIBDIR@/unity-panel-service --lockscreen-mode
 Restart=on-failure
