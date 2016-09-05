@@ -2,9 +2,10 @@ etc/pam.d
 usr/bin
 usr/lib/*/compiz/libunity*.so
 usr/lib/*/unity/unity-active-plugins-safety-check
-usr/lib/*/unity/unity-compiz-profile-select
+usr/lib/*/unity/compiz-profile-selector
+usr/lib/*/unity/*-prestart-check
+usr/lib/systemd/user/unity7.service
 usr/share/man/*/unity.1
 usr/share/compiz
 usr/share/locale
-usr/lib/systemd/user/unity7.service
 usr/share/upstart/systemd-session/upstart/unity7.override
