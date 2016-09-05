@@ -7,11 +7,13 @@ set -e
 if grep -q compiz /usr/share/gnome-session/sessions/ubuntu.session ; then
   echo "GNOME Session is starting Compiz"
   stop
-  exit 0
+  exit 1
 fi
 
 if (systemctl --user is-active unity7); then
   echo "Unity instance is managed by Systemd, ignoring request..."
   stop
-  exit 0
+  exit 1
 fi
+
+exit 0
