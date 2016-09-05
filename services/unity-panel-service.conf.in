@@ -11,16 +11,10 @@ author "Ted Gould <ted@ubuntu.com>"
 start on desktop-start DESKTOP_SESSION=ubuntu
 stop on desktop-end
 
+pre-start exec @UNITY_LIBDIR@/upstart-prestart-check
+
 emits indicator-services-start
 emits indicator-services-end
-
-pre-start script
-  if (systemctl --user is-active unity7); then
-    echo "Unity instance is managed by Systemd, ignoring request..."
-    stop
-    exit 0
-  fi
-end script
 
 respawn
 exec @UNITY_LIBDIR@/unity-panel-service

@@ -4,7 +4,10 @@ author "Ted Gould <ted@ubuntu.com>, Marco Trevisan <marco@ubuntu.com>"
 start on xsession SESSION=ubuntu and started unity-settings-daemon
 stop on desktop-end
 
-pre-start exec @UNITY_LIBDIR@/unity-compiz-profile-select
+pre-start script
+  @UNITY_LIBDIR@/upstart-prestart-check
+  @UNITY_LIBDIR@/compiz-profile-selector
+end script
 
 respawn
 exec compiz

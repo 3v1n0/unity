@@ -4,13 +4,7 @@ author "Andrea Azzarone <andrea.azzarone@canonical.com>"
 start on desktop-lock
 stop on desktop-unlock
 
-pre-start script
-  if (systemctl --user is-active unity7); then
-    echo "Unity instance is managed by Systemd, ignoring request..."
-    stop
-    exit 0
-  fi
-end script
+pre-start exec @UNITY_LIBDIR@/upstart-prestart-check
 
 respawn
 exec @UNITY_LIBDIR@/unity-panel-service --lockscreen-mode
