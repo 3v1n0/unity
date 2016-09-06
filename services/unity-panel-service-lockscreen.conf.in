@@ -4,5 +4,7 @@ author "Andrea Azzarone <andrea.azzarone@canonical.com>"
 start on desktop-lock
 stop on desktop-unlock
 
+pre-start exec @UNITY_LIBDIR@/upstart-prestart-check
+
 respawn
-exec ${UNITY_LIBDIR}/unity-panel-service --lockscreen-mode
+exec @UNITY_LIBDIR@/unity-panel-service --lockscreen-mode

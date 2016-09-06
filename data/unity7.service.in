@@ -1,0 +1,15 @@
+[Unit]
+Description=Unity Shell v7
+Requires=unity-settings-daemon.service unity-panel-service.service bamfdaemon.service
+Wants=unity-gtk-module.service
+After=unity-settings-daemon.service
+PartOf=graphical-session.target
+
+[Service]
+ExecStartPre=@UNITY_LIBDIR@/systemd-prestart-check
+ExecStartPre=@UNITY_LIBDIR@/compiz-profile-selector
+ExecStart=/usr/bin/compiz
+Restart=on-failure
+
+[Install]
+RequiredBy=ubuntu-session.target

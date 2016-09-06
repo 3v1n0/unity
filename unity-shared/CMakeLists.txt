@@ -60,6 +60,7 @@ set (UNITY_SHARED_SOURCES
      SpreadFilter.cpp
      SpreadWidgets.cpp
      StaticCairoText.cpp
+     SystemdWrapper.cpp
      TextureCache.cpp
      TextInput.cpp
      TextureThumbnailProvider.cpp

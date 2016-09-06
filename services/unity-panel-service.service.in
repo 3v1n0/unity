@@ -1,0 +1,10 @@
+[Unit]
+Description=Backing Service for the Unity Panel
+After=unity7.service
+PartOf=graphical-session.target
+BindsTo=indicators-pre.target
+
+[Service]
+ExecStartPre=@UNITY_LIBDIR@/systemd-prestart-check
+ExecStart=@UNITY_LIBDIR@/unity-panel-service
+Restart=on-failure

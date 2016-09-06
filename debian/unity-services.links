@@ -1,0 +1,13 @@
+/usr/lib/systemd/user/indicator-application.service /usr/lib/systemd/user/unity-panel-service.service.wants/indicator-application.service
+/usr/lib/systemd/user/indicator-bluetooth.service /usr/lib/systemd/user/unity-panel-service.service.wants/indicator-bluetooth.service
+/usr/lib/systemd/user/indicator-datetime.service /usr/lib/systemd/user/unity-panel-service.service.wants/indicator-datetime.service
+/usr/lib/systemd/user/indicator-keyboard.service /usr/lib/systemd/user/unity-panel-service.service.wants/indicator-keyboard.service
+/usr/lib/systemd/user/indicator-messages.service /usr/lib/systemd/user/unity-panel-service.service.wants/indicator-messages.service
+/usr/lib/systemd/user/indicator-power.service /usr/lib/systemd/user/unity-panel-service.service.wants/indicator-power.service
+/usr/lib/systemd/user/indicator-session.service /usr/lib/systemd/user/unity-panel-service.service.wants/indicator-session.service
+/usr/lib/systemd/user/indicator-sound.service /usr/lib/systemd/user/unity-panel-service.service.wants/indicator-sound.service
+/usr/lib/systemd/user/indicator-datetime.service /usr/lib/systemd/user/unity-panel-service-lockscreen.service.wants/indicator-datetime.service
+/usr/lib/systemd/user/indicator-keyboard.service /usr/lib/systemd/user/unity-panel-service-lockscreen.service.wants/indicator-keyboard.service
+/usr/lib/systemd/user/indicator-power.service /usr/lib/systemd/user/unity-panel-service-lockscreen.service.wants/indicator-power.service
+/usr/lib/systemd/user/indicator-session.service /usr/lib/systemd/user/unity-panel-service-lockscreen.service.wants/indicator-session.service
+/usr/lib/systemd/user/indicator-sound.service /usr/lib/systemd/user/unity-panel-service-lockscreen.service.wants/indicator-sound.service

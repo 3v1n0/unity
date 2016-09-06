@@ -28,3 +28,9 @@ link_directories(${LIB_PATHS})
 add_executable(unity-active-plugins-safety-check unity_active_plugins_safety_check.cpp)
 target_link_libraries(unity-active-plugins-safety-check ${LIBS})
 install(TARGETS unity-active-plugins-safety-check DESTINATION ${UNITY_INSTALL_LIBDIR})
+
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/compiz-profile-selector.in ${CMAKE_CURRENT_BINARY_DIR}/compiz-profile-selector @ONLY)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/compiz-profile-selector DESTINATION ${UNITY_INSTALL_LIBDIR})
+
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/systemd-prestart-check DESTINATION ${UNITY_INSTALL_LIBDIR})
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/upstart-prestart-check DESTINATION ${UNITY_INSTALL_LIBDIR})
