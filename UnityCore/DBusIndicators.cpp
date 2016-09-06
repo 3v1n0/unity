@@ -123,7 +123,7 @@ void DBusIndicators::Impl::CheckLocalService()
 
     // This is obviously hackish, but this part of the code is mostly hackish...
     // Let's attempt to run it from where we expect it to be
-    std::string cmd = UNITYLIBDIR"/" + std::string("unity-panel-service");
+    std::string cmd = UNITY_LIBDIR"/" + std::string("unity-panel-service");
     LOG_WARN(logger) << "Couldn't load panel from installed services, "
                      << "so trying to load panel from known location: " << cmd;
 

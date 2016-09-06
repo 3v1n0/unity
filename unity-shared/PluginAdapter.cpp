@@ -608,7 +608,7 @@ bool PluginAdapter::IsWindowObscured(Window window_id) const
 
     CompPoint window_vp = window->defaultViewport();
     // Check if any windows above this one are blocking it
-    for (CompWindow* sibling = window->next; sibling != NULL; sibling = sibling->next)
+    for (CompWindow* sibling = window->serverNext; sibling != NULL; sibling = sibling->serverNext)
     {
       if (sibling->defaultViewport() == window_vp
           && !sibling->minimized()

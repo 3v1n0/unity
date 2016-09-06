@@ -158,14 +158,15 @@ add_dependencies (release distcheck)
 #
 set (VERSION "${UNITY_VERSION}")
 set (PREFIXPATH "${CMAKE_INSTALL_PREFIX}")
-set (UNITYLIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/${PROJECT_NAME}")
-set (UNITYDATADIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
-set (PKGDATADIR "${UNITYDATADIR}/icons")
+set (UNITY_LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}/${PROJECT_NAME}")
+set (UNITY_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}")
+set (UNITY_INSTALL_LIBDIR "${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}")
+set (PKGDATADIR "${UNITY_DATADIR}/icons")
 set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 set (LOCALE_DIR "${CMAKE_INSTALL_FULL_LOCALEDIR}")
-# specify the domain directly rather than refering to a variable 
+# specify the domain directly rather than refering to a variable
 # like ${PROJECT_NAME} to no confuse dh_translations
 set (GETTEXT_PACKAGE "unity")
 
@@ -182,7 +183,6 @@ configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 #
 # i18n
 #
-
 find_package (Gettext REQUIRED)
 
 set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
@@ -203,7 +203,7 @@ endif()
 
 #
 # Enable or disable boot logging
-# 
+#
 option (BOOT_LOGGER "Enable startup performance logging" OFF)
 if (BOOT_LOGGER)
     SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
@@ -248,7 +248,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     libnotify
     libstartup-notification-1.0
     nux-4.0>=4.0.5
-    sigc++-2.0
+    sigc++-2.0>=2.4.0
     unity-misc>=0.4.0
     xpathselect=1.4
     zeitgeist-2.0
@@ -259,7 +259,7 @@ set(UNITY_PLUGIN_DEPS ${UNITY_PLUGIN_SHARED_DEPS})
 if(ENABLE_X_SUPPORT)
   set(UNITY_PLUGIN_DEPS
       ${UNITY_PLUGIN_DEPS}
-      compiz>=0.9.9
+      compiz>=0.9.11
       libgeis
       x11
       xfixes
@@ -361,45 +361,10 @@ else (ENABLE_UNIT_TESTS)
   add_custom_target (gcheck COMMAND echo ${MISSING_TESTS_MSG})
 endif (ENABLE_UNIT_TESTS)
 
-#
-# GSettings Schema
-#
-SET (UNITY_SCHEMAS "com.canonical.Unity.gschema.xml")
-SET (UNITY_TEST_SCHEMAS "external.gschema.xml")
-
-# Have an option to not install the schema into where GLib is
-option (GSETTINGS_LOCALINSTALL "Install GSettings Schemas locally instead of to the GLib prefix" OFF)
-if (GSETTINGS_LOCALINSTALL)
-    SET (GSETTINGS_DIR "${CMAKE_INSTALL_DATADIR}/glib-2.0/schemas/")
-else (GSETTINGS_LOCALINSTALL)
-    execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} glib-2.0 --variable prefix  OUTPUT_VARIABLE _glib_prefix OUTPUT_STRIP_TRAILING_WHITESPACE)
-    SET (GSETTINGS_DIR "${_glib_prefix}/share/glib-2.0/schemas/")
-endif (GSETTINGS_LOCALINSTALL)
-
-# Run the validator and error if it fails
-execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} gio-2.0 --variable glib_compile_schemas  OUTPUT_VARIABLE _glib_comple_schemas OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process (COMMAND ${_glib_comple_schemas} --dry-run --schema-file=${CMAKE_CURRENT_SOURCE_DIR}/${UNITY_SCHEMAS} ERROR_VARIABLE _schemas_invalid OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-if (_schemas_invalid)
-  message (SEND_ERROR "Schema validation error: ${_schemas_invalid}")
-endif (_schemas_invalid)
-
-# Actually install and recomple schemas
-message (STATUS "GSettings schemas will be installed into ${GSETTINGS_DIR}")
-install (FILES ${UNITY_SCHEMAS} DESTINATION ${GSETTINGS_DIR} OPTIONAL)
-install (CODE "message (STATUS \"Compiling GSettings schemas\")")
-install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR})")
-
 # Resources
 install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/themes)
 file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
 install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
-
-
-# For testing
-configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})
-configure_file (${CMAKE_SOURCE_DIR}/tests/data/${UNITY_TEST_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_TEST_SCHEMAS})
-execute_process (COMMAND ${_glib_comple_schemas} ${CMAKE_BINARY_DIR}/settings)
 
 #
 # docs
@@ -425,19 +390,3 @@ if (DOXYGEN_FOUND STREQUAL "YES")
          ADDITIONAL_MAKE_CLEAN_FILES api-doc)
 
 endif (DOXYGEN_FOUND STREQUAL "YES")
-
-#
-# Upstart
-#
-
-configure_file(unity7.conf.in ${CMAKE_CURRENT_BINARY_DIR}/unity7.conf @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity7.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/upstart/sessions)
-
-#
-# Systemd
-#
-
-configure_file(unity7.service.in ${CMAKE_CURRENT_BINARY_DIR}/unity7.service @ONLY)
-pkg_get_variable(SYSTEMD_USER_DIR systemd systemduserunitdir)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/unity7.service DESTINATION ${SYSTEMD_USER_DIR})
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/unity7.override DESTINATION ${CMAKE_INSTALL_DATADIR}/upstart/systemd-session/upstart)

@@ -124,6 +124,10 @@ static void unity_decoration_class_init(UnityDecorationClass* klass)
 
   param = g_param_spec_boxed("glow-color", "Selected Window Glow Color", "", GDK_TYPE_RGBA, G_PARAM_READABLE);
   gtk_widget_class_install_style_property(GTK_WIDGET_CLASS(klass), param);
+
+#if GTK_CHECK_VERSION(3, 20, 0)
+  gtk_widget_class_set_css_name(GTK_WIDGET_CLASS(klass), "UnityDecoration");
+#endif
 }
 
 Border BorderFromGtkBorder(GtkBorder* b, Border const& fallback = Border())
@@ -369,6 +373,7 @@ struct Style::Impl
   void AddContextClasses(Side s, WidgetState ws, GtkStyleContext* ctx = nullptr)
   {
     ctx = ctx ? ctx : ctx_;
+    gtk_style_context_add_class(ctx, "unity-decoration");
     gtk_style_context_add_class(ctx, "background");
     gtk_style_context_add_class(ctx, "gnome-panel-menu-bar");
     if (s == Side::TOP) { gtk_style_context_add_class(ctx, "header-bar"); }

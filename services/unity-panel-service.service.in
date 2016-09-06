@@ -5,5 +5,6 @@ PartOf=graphical-session.target
 BindsTo=indicators-pre.target
 
 [Service]
-ExecStart=${CMAKE_INSTALL_FULL_LIBDIR}/unity/unity-panel-service
+ExecStartPre=@UNITY_LIBDIR@/systemd-prestart-check
+ExecStart=@UNITY_LIBDIR@/unity-panel-service
 Restart=on-failure

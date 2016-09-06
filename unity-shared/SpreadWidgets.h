@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright © 2016 Canonical Ltd
+* Copyright (C) 2016 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -14,41 +14,35 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Ted Gould <ted@canonical.com>
+* Authored by: Marco Trevisan <marco@ubuntu.com>
 */
 
-#ifndef UNITY_SYSTEMD_WRAPPER
-#define UNITY_SYSTEMD_WRAPPER
+#ifndef UNITYSHELL_SPREAD_WIDGETS_H
+#define UNITYSHELL_SPREAD_WIDGETS_H
 
-#include <memory>
+#include "SpreadFilter.h"
 
 namespace unity
 {
+namespace spread
+{
+class Decorations;
 
-class SystemdWrapper
+class Widgets : public sigc::trackable
 {
 public:
-  typedef std::shared_ptr<SystemdWrapper> Ptr;
+  typedef std::shared_ptr<Widgets> Ptr;
 
-  SystemdWrapper();
-  ~SystemdWrapper();
+  Widgets();
 
-  void Start(std::string const& name);
-  void Stop(std::string const& name);
-
-protected:
-  struct TestMode {};
-  SystemdWrapper(TestMode const&);
+  Filter::Ptr GetFilter() const;
 
 private:
-  // Noncopyable
-  SystemdWrapper(SystemdWrapper const&) = delete;
-  SystemdWrapper& operator=(SystemdWrapper const&) = delete;
-
-  class Impl;
-  std::unique_ptr<Impl> pimpl_;
+  Filter::Ptr filter_;
+  std::vector<std::shared_ptr<Decorations>> decos_;
 };
 
-}
+} // namespace spread
+} // namespace unity
 
 #endif

@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 3 -*-
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
 * Copyright © 2016 Canonical Ltd
 *
@@ -35,39 +35,37 @@ public:
 
   void Start(std::string const& name);
   void Stop(std::string const& name);
-  bool IsConnected();
+  void CallMethod(std::string const& method, std::string const& unit);
 
 private:
+  bool test_mode_;
   glib::DBusProxy::Ptr systemd_proxy_;
 };
 
 SystemdWrapper::Impl::Impl(bool test)
-{
-  std::string busname = "org.freedesktop.systemd1";
-  if (test) {
-    busname = "com.canonical.Unity.Test.Systemd";
-  }
+  : test_mode_(test)
+{}
 
-  systemd_proxy_ = std::make_shared<unity::glib::DBusProxy>(busname, "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager");
+void SystemdWrapper::Impl::CallMethod(std::string const& method, std::string const& unit)
+{
+  auto const& busname = test_mode_ ? "com.canonical.Unity.Test.Systemd" : "org.freedesktop.systemd1";
+  auto flags = static_cast<GDBusProxyFlags>(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
+                                            G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS);
+  auto proxy = std::make_shared<glib::DBusProxy>(busname, "/org/freedesktop/systemd1",
+                                                 "org.freedesktop.systemd1.Manager",
+                                                 G_BUS_TYPE_SESSION, flags);
+
+  proxy->CallBegin(method, g_variant_new("(ss)", unit.c_str(), "replace"), [proxy] (GVariant*, glib::Error const& e) {});
 }
 
 void SystemdWrapper::Impl::Start(std::string const& name)
 {
-  if (IsConnected()) {
-    systemd_proxy_->Call("StartUnit", g_variant_new("(ss)", name.c_str(), "replace"));
-  }
+  CallMethod("StartUnit", name);
 }
 
 void SystemdWrapper::Impl::Stop(std::string const& name)
 {
-  if (IsConnected()) {
-    systemd_proxy_->Call("StopUnit", g_variant_new("(ss)", name.c_str(), "replace"));
-  }
-}
-
-bool SystemdWrapper::Impl::IsConnected()
-{
-  return systemd_proxy_->IsConnected();
+  CallMethod("StopUnit", name);
 }
 
 //
@@ -93,11 +91,6 @@ void SystemdWrapper::Start(std::string const& name)
 void SystemdWrapper::Stop(std::string const& name)
 {
   pimpl_->Stop(name);
-}
-
-bool SystemdWrapper::IsConnected()
-{
-  return pimpl_->IsConnected();
 }
 
 }

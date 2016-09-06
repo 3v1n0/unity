@@ -3,5 +3,6 @@ Description=Backing Service for the Unity Panel in Lockscreen mode
 PartOf=unity-screen-locked.target
 
 [Service]
-ExecStart=${CMAKE_INSTALL_FULL_LIBDIR}/unity/unity-panel-service --lockscreen-mode
+ExecStartPre=@UNITY_LIBDIR@/systemd-prestart-check
+ExecStart=@UNITY_LIBDIR@/unity-panel-service --lockscreen-mode
 Restart=on-failure

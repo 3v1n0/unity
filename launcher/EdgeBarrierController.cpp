@@ -39,8 +39,6 @@ namespace
   int const X_BREAK_BUFFER = 20;
 }
 
-DECLARE_LOGGER(logger, "unity.edge_barrier_controller");
-
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   : edge_overcome_pressure_(0)
   , parent_(parent)

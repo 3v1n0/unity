@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+compiz_profile="ubuntu"
+
+if ! /usr/lib/nux/unity_support_test -p; then
+  compiz_profile="ubuntu-lowgfx"
+fi
+
+echo "Using compiz profile '$compiz_profile'"
+
+if [ -n "$UPSTART_SESSION" ]; then
+  initctl set-env -g COMPIZ_CONFIG_PROFILE="$compiz_profile"
+fi
+
+dbus-update-activation-environment --verbose --systemd COMPIZ_CONFIG_PROFILE="$compiz_profile"
+
+export COMPIZ_CONFIG_PROFILE="$compiz_profile"
+exec @UNITY_LIBDIR@/unity-active-plugins-safety-check

@@ -257,6 +257,10 @@ struct Monitor::Impl
     XISelectEvents(dpy, root, selected, G_N_ELEMENTS(selected));
     XSync(dpy, False);
 
+    LOG_DEBUG(logger) << "Pointer clients: " << pointer_callbacks_.size() << ", "
+                      << "Key clients: " << key_callbacks_.size() << ", "
+                      << "Barrier clients: " << barrier_callbacks_.size();
+
     if (!pointer_callbacks_.empty() || !key_callbacks_.empty() || !barrier_callbacks_.empty())
     {
       if (!event_filter_set_)
@@ -266,12 +270,14 @@ struct Monitor::Impl
         }, this});
 
         event_filter_set_ = true;
+        LOG_DEBUG(logger) << "Event filter enabled";
       }
     }
     else if (event_filter_set_)
     {
       nux::GetGraphicsDisplay()->RemoveEventFilter(this);
       event_filter_set_ = false;
+      LOG_DEBUG(logger) << "Event filter disabled";
     }
   }
 

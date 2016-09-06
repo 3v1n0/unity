@@ -1,0 +1,29 @@
+#!/bin/bash
+
+this_unit=$(sed -n "s,.*:name=systemd:.*/\([^/]\+\.service\)/\?.*,\1,p" /proc/self/cgroup)
+
+if [ -n "$this_unit" ] && [[ $this_unit == "unity"* ]]; then
+  this_job=$(systemctl --user list-jobs $this_unit | sed -n "s,\([0-9]\+\)\s\+${this_unit//./\\.}.*,\1,p")
+fi
+
+# If gnome-session is going to start compiz,
+# we don't want to be the ones doing it.
+if grep -q compiz /usr/share/gnome-session/sessions/ubuntu.session; then
+  echo "GNOME Session is starting Compiz"
+  [ -n "$this_job" ] && systemctl --user cancel $this_job
+  exit 1
+fi
+
+if [ -z "$UPSTART_SESSION" ]; then
+  exit 0
+fi
+
+upstart_status=$(initctl status unity7) || true
+
+if (echo "$upstart_status" | grep -q "start/running"); then
+  echo "Unity is managed by Upstart"
+  [ -n "$this_job" ] && systemctl --user cancel $this_job
+  exit 1
+fi
+
+exit 0

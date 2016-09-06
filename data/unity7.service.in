@@ -6,6 +6,10 @@ After=unity-settings-daemon.service
 PartOf=graphical-session.target
 
 [Service]
+ExecStartPre=@UNITY_LIBDIR@/systemd-prestart-check
+ExecStartPre=@UNITY_LIBDIR@/compiz-profile-selector
 ExecStart=/usr/bin/compiz
-ExecStart.Pre=@CMAKE_INSTALL_LIBDIR@/unity/unity-compiz-profile-select
 Restart=on-failure
+
+[Install]
+RequiredBy=ubuntu-session.target
