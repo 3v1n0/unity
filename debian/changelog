@@ -1,3 +1,11 @@
+unity (7.5.0+16.10.20160906.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Marco Trevisan (Treviño), Ted Gould ]
+  * Unity: add systemd units for the shell and related services, mark
+    unity7 a requirement for ubuntu-session
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 06 Sep 2016 14:19:15 +0000
+
 unity (7.5.0+16.10.20160901.2-0ubuntu1) yakkety; urgency=medium
 
   [ Andrea Azzarone ]
