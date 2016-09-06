@@ -1,6 +1,6 @@
 [Unit]
 Description=Backing Service for the Unity Panel
-Before=unity7.service
+After=unity7.service
 PartOf=graphical-session.target
 BindsTo=indicators-pre.target
 
