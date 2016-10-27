@@ -1,3 +1,16 @@
+unity (7.5.0+17.04.20161027-0ubuntu1) zesty; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * TestXdndStartStopNotifierImp: enable some unstable tests by adding
+    XTest support
+
+  [ Martin Pitt ]
+  * Add indicator-printers Wants to unity-panel-service.service
+  * Disable fatal deprecation warnings to build with zesty's GTK 3.22
+    without breaking backportability.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Thu, 27 Oct 2016 08:41:53 +0000
+
 unity (7.5.0+16.10.20160906.1-0ubuntu1) yakkety; urgency=medium
 
   [ Marco Trevisan (Treviño), Ted Gould ]
