@@ -478,7 +478,8 @@ struct ForceQuitDialog::Impl : sigc::trackable
 
   void UpdateDialogPosition()
   {
-    auto scale = gtk_widget_get_scale_factor(dialog_);
+    gint scale = gtk_widget_get_scale_factor(dialog_);
+    scale = std::max<gint>(1, scale);
     auto const& win_geo = win_->inputRect();
     nux::Size walloc(gtk_widget_get_allocated_width(dialog_) * scale, gtk_widget_get_allocated_height(dialog_) * scale);
     gtk_window_move(GTK_WINDOW(dialog_), (win_geo.centerX() - walloc.width/2) / scale, (win_geo.centerY() - walloc.height/2) / scale);
