@@ -46,6 +46,8 @@ struct GnomeManager::Impl
   Impl(GnomeManager* parent, bool test_mode = false);
   ~Impl();
 
+  void SetupLogin1Proxy(std::string const& session_path);
+
   void ConfirmLogout();
   void ConfirmReboot();
   void ConfirmShutdown();
