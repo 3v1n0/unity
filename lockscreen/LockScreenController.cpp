@@ -467,6 +467,7 @@ void Controller::OnScreenSaverActivationRequest(bool activate)
 void Controller::LockScreen()
 {
   menu_manager_ = std::make_shared<menu::Manager>(std::make_shared<indicator::LockScreenDBusIndicators>(), key_grabber_);
+  menu_manager_->Indicators()->icon_paths_changed.clear();
   upstart_wrapper_->Emit("desktop-lock");
   systemd_wrapper_->Start(SYSTEMD_LOCK_TARGET);
 
