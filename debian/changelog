@@ -1,3 +1,20 @@
+unity (7.5.0+17.04.20161107.2-0ubuntu1) zesty; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Properly handle the file manager copy dialog in
+    FileManagerLauncherIcon and in StorageLauncherIcon. (LP: #1575452,
+    #1609845)
+  * Correctly position the force quit dialog when scaling is different
+    than 1.0 (LP: #1637991)
+  * GnomeSession: Retrieve the session id using dbus if $XDG_SESSION_ID
+    is not set
+
+  [ Marco Trevisan (Treviño) ]
+  * LockScreenController: ignore icon_paths_changed signal in
+    menumanager for Lockscreen (LP: #1635625)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 07 Nov 2016 23:31:33 +0000
+
 unity (7.5.0+17.04.20161107-0ubuntu1) zesty; urgency=medium
 
   * No-change rebuild against latest nux
