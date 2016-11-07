@@ -70,6 +70,9 @@ R"(<node>
 const std::string LOGIND_MANAGER =
 R"(<node>
   <interface name="org.freedesktop.login1.Manager">
+    <method name="GetSession">
+      <arg type="s" name="result" direction="out"/>
+    </method>
     <method name="CanSuspend">
       <arg type="s" name="result" direction="out"/>
     </method>
@@ -186,7 +189,11 @@ struct TestGnomeSessionManager : testing::Test
     logind_->AddObjects(introspection::LOGIND_MANAGER, LOGIND_MANAGER_PATH);
     logind_->AddObjects(introspection::LOGIND_SESSION, LOGIND_SESSION_PATH);
     logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
-      if (method == "CanSuspend")
+      if (method == "GetSession")
+      {
+        return g_variant_new("(o)", "id0");
+      }
+      else if (method == "CanSuspend")
       {
         suspend_called = true;
         return g_variant_new("(s)", can_suspend_ ? "yes" : "no");

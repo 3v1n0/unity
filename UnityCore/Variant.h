@@ -68,6 +68,7 @@ public:
   ~Variant();
 
   std::string GetString() const;
+  std::string GetObjectPath() const;
   unsigned char GetByte() const;
   int16_t GetInt16() const;
   uint16_t GetUInt16() const;

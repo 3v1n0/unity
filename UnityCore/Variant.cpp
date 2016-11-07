@@ -174,6 +174,36 @@ std::string Variant::GetString() const
   return result ? result : "";
 }
 
+std::string Variant::GetObjectPath() const
+{
+  const gchar *result = nullptr;
+
+  if (!variant_)
+    return "";
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_OBJECT_PATH))
+  {
+    // g_variant_get_string doesn't duplicate the string
+    result = g_variant_get_string(variant_, nullptr);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(o)")))
+  {
+    // As we're using the '&' prefix we don't need to free the string!
+    g_variant_get(variant_, "(&o)", &result);
+  }
+  else
+  {
+    auto const& variant = get_variant(variant_);
+    if (variant)
+      return variant.GetObjectPath();
+
+    LOG_ERROR(logger) << "You're trying to extract a 'o' from a variant which is of type '"
+                      << g_variant_type_peek_string(g_variant_get_type(variant_)) << "'";
+  }
+
+  return result ? result : "";
+}
+
 template <typename TYPE, typename GTYPE>
 TYPE get_numeric_value(GVariant *variant_, const char *type_str, const char *fallback_type_str)
 {

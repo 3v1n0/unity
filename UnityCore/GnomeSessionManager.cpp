@@ -101,32 +101,37 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   });
 
   {
-    const char* session_id = test_mode_ ? "id0" : g_getenv("XDG_SESSION_ID");
+    std::string session_id = test_mode_ ? "id0" : glib::gchar_to_string(g_getenv("XDG_SESSION_ID"));
 
-    login_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
-                                                     "/org/freedesktop/login1/session/" + glib::gchar_to_string(session_id),
-                                                     "org.freedesktop.login1.Session",
-                                                     test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM,
-                                                     G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES);
+    if (!session_id.empty())
+    {
+      CallLogindMethod("GetSession", g_variant_new("(s)", session_id.c_str()), [this, session_id] (GVariant* variant, glib::Error const& err) {
+        std::string session_path;
 
-    login_proxy_->Connect("Lock", [this](GVariant*){
-      manager_->PromptLockScreen();
-    });
+        if (!err && variant)
+          session_path = glib::Variant(variant).GetObjectPath();
 
-    login_proxy_->Connect("Unlock", [this](GVariant*){
-      manager_->unlock_requested.emit();
-    });
+        if (session_path.empty())
+          session_path = "/org/freedesktop/login1/session/" + session_id;
 
-    login_proxy_->ConnectProperty("Active", [this] (GVariant* variant) {
-      bool active = glib::Variant(variant).GetBool();
-      manager_->is_session_active.changed.emit(active);
-      if (active)
-        manager_->screensaver_requested.emit(false);
-    });
+        SetupLogin1Proxy(session_path);
+      });
+    }
+    else
+    {
+      auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.login1",
+                                                     "/org/freedesktop/login1/user/self",
+                                                     "org.freedesktop.login1.User",
+                                                     G_BUS_TYPE_SYSTEM);
 
-    manager_->is_session_active.SetGetterFunction([this] {
-      return login_proxy_->GetProperty("Active").GetBool();
-    });
+      proxy->GetProperty("Display", [this, proxy] (GVariant *variant) {
+        if (!variant || g_variant_n_children(variant) < 2)
+          return;
+
+        glib::Variant tmp(g_variant_get_child_value(variant, 1), glib::StealRef());
+        SetupLogin1Proxy(tmp.GetObjectPath());
+      });
+    }
   }
 
   {
@@ -219,6 +224,34 @@ GnomeManager::Impl::~Impl()
 {
   CancelAction();
   ClosedDialog();
+}
+
+void GnomeManager::Impl::SetupLogin1Proxy(std::string const& session_path)
+{
+  login_proxy_ = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
+                                                   session_path,
+                                                   "org.freedesktop.login1.Session",
+                                                   test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM,
+                                                   G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES);
+
+  login_proxy_->Connect("Lock", [this](GVariant*){
+    manager_->PromptLockScreen();
+  });
+
+  login_proxy_->Connect("Unlock", [this](GVariant*){
+    manager_->unlock_requested.emit();
+  });
+
+  login_proxy_->ConnectProperty("Active", [this] (GVariant* variant) {
+    bool active = glib::Variant(variant).GetBool();
+    manager_->is_session_active.changed.emit(active);
+    if (active)
+      manager_->screensaver_requested.emit(false);
+  });
+
+  manager_->is_session_active.SetGetterFunction([this] {
+    return login_proxy_->GetProperty("Active").GetBool();
+  });
 }
 
 bool GnomeManager::Impl::InteractiveMode()
