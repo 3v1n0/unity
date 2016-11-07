@@ -1,3 +1,9 @@
+unity (7.5.0+17.04.20161107-0ubuntu1) zesty; urgency=medium
+
+  * No-change rebuild against latest nux
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Mon, 07 Nov 2016 02:22:22 +0000
+
 unity (7.5.0+17.04.20161027-0ubuntu1) zesty; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
