@@ -119,8 +119,6 @@ nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsign
 {
   if (primary)
   {
-    grab_key.emit(modifiers, keysym);
-
     if (accelerators_)
     {
       if (etype == nux::EVENT_KEY_DOWN)
@@ -134,17 +132,9 @@ nux::Area* Shield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsign
           return panel_view_;
       }
     }
-
-    if (prompt_view_)
-    {
-      auto* focus_view = prompt_view_->focus_view();
-
-      if (focus_view && focus_view->GetInputEventSensitivity())
-        return focus_view;
-    }
   }
 
-  return nullptr;
+  return BaseShield::FindKeyFocusArea(etype, keysym, modifiers);
 }
 
 bool Shield::IsIndicatorOpen() const

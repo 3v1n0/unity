@@ -121,6 +121,8 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
 
     if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
     {
+      auto events_cb = sigc::track_obj(sigc::mem_fun(this, &Controller::OnLockScreenInputEvent), *primary_shield_);
+      input::Monitor::Get().UnregisterClient(events_cb);
       primary_shield_connections_.Clear();
       uscreen_connection_->block();
       hidden_window_connection_->block();
@@ -200,6 +202,20 @@ void Controller::OnPrimaryShieldMotion(int x, int y)
       break;
     }
   }
+}
+
+void Controller::OnLockScreenInputEvent(XEvent const& event)
+{
+  switch (event.type)
+  {
+    case MotionNotify:
+    case ButtonPress:
+      if (primary_shield_->IsIndicatorOpen())
+        break;
+    case ButtonRelease:
+      OnPrimaryShieldMotion(event.xmotion.x_root, event.xmotion.y_root);
+      break;
+  }
 
   ResetPostLockScreenSaver();
 }
@@ -211,11 +227,8 @@ void Controller::SetupPrimaryShieldConnections()
 
   primary_shield_connections_.Clear();
 
-  auto move_cb = sigc::mem_fun(this, &Controller::OnPrimaryShieldMotion);
-  primary_shield_connections_.Add(primary_shield_->grab_motion.connect(move_cb));
-
-  auto key_cb = sigc::hide(sigc::hide(sigc::mem_fun(this, &Controller::ResetPostLockScreenSaver)));
-  primary_shield_connections_.Add(primary_shield_->grab_key.connect(key_cb));
+  auto events_cb = sigc::track_obj(sigc::mem_fun(this, &Controller::OnLockScreenInputEvent), *primary_shield_);
+  input::Monitor::Get().RegisterClient(input::Events::INPUT, events_cb);
 
   if (!session_manager_->is_locked())
   {

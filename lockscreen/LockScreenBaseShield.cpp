@@ -81,17 +81,25 @@ BaseShield::BaseShield(session::Manager::Ptr const& session,
     background_layer_.reset();
     UpdateBackgroundTexture();
   });
-
-  mouse_move.connect([this] (int x, int y, int, int, unsigned long, unsigned long) {
-    auto const& abs_geo = GetAbsoluteGeometry();
-    grab_motion.emit(abs_geo.x + x, abs_geo.y + y);
-  });
 }
 
 bool BaseShield::HasGrab() const
 {
   auto& wc = nux::GetWindowCompositor();
   return (wc.GetPointerGrabArea() == this && wc.GetKeyboardGrabArea() == this);
+}
+
+nux::Area* BaseShield::FindKeyFocusArea(unsigned etype, unsigned long keysym, unsigned long modifiers)
+{
+  if (primary && prompt_view_)
+  {
+    auto* focus_view = prompt_view_->focus_view();
+
+    if (focus_view && focus_view->GetInputEventSensitivity())
+      return focus_view;
+  }
+
+  return nullptr;
 }
 
 nux::Area* BaseShield::FindAreaUnderMouse(nux::Point const& mouse, nux::NuxEventType event_type)

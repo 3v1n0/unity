@@ -41,9 +41,6 @@ public:
          nux::ObjectPtr<AbstractUserPromptView> const&,
          int monitor, bool is_primary);
 
-protected:
-  nux::Area* FindKeyFocusArea(unsigned int, unsigned long, unsigned long) override;
-
 private:
   void ShowPrimaryView() override;
 };
