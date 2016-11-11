@@ -49,31 +49,31 @@ Options::Options()
   , scroll_inactive_icons(false)
   , minimize_window_on_click(false)
 {
-  auto changed_lambda = [this] {
+  auto changed_cb = sigc::track_obj(sigc::hide([this] {
     changed_idle_.reset(new glib::Idle(glib::Source::Priority::HIGH));
     changed_idle_->Run([this] { option_changed.emit(); return false; });
-  };
+  }), *this);
 
-  auto_hide_animation.changed.connect(sigc::hide(changed_lambda));
-  background_alpha.changed.connect(sigc::hide(changed_lambda));
-  background_color.changed.connect(sigc::hide(changed_lambda));
-  backlight_mode.changed.connect(sigc::hide(changed_lambda));
-  edge_decay_rate.changed.connect(sigc::hide(changed_lambda));
-  edge_overcome_pressure.changed.connect(sigc::hide(changed_lambda));
-  edge_responsiveness.changed.connect(sigc::hide(changed_lambda));
-  edge_reveal_pressure.changed.connect(sigc::hide(changed_lambda));
-  edge_stop_velocity.changed.connect(sigc::hide(changed_lambda));
-  edge_passed_disabled_ms.changed.connect(sigc::hide(changed_lambda));
-  hide_mode.changed.connect(sigc::hide(changed_lambda));
-  icon_size.changed.connect(sigc::hide(changed_lambda));
-  launch_animation.changed.connect(sigc::hide(changed_lambda));
-  reveal_trigger.changed.connect(sigc::hide(changed_lambda));
-  tile_size.changed.connect(sigc::hide(changed_lambda));
-  super_tap_duration.changed.connect(sigc::hide(changed_lambda));
-  urgent_animation.changed.connect(sigc::hide(changed_lambda));
-  edge_resist.changed.connect(sigc::hide(changed_lambda));
-  scroll_inactive_icons.changed.connect(sigc::hide(changed_lambda));
-  minimize_window_on_click.changed.connect(sigc::hide(changed_lambda));
+  auto_hide_animation.changed.connect(changed_cb);
+  background_alpha.changed.connect(changed_cb);
+  background_color.changed.connect(changed_cb);
+  backlight_mode.changed.connect(changed_cb);
+  edge_decay_rate.changed.connect(changed_cb);
+  edge_overcome_pressure.changed.connect(changed_cb);
+  edge_responsiveness.changed.connect(changed_cb);
+  edge_reveal_pressure.changed.connect(changed_cb);
+  edge_stop_velocity.changed.connect(changed_cb);
+  edge_passed_disabled_ms.changed.connect(changed_cb);
+  hide_mode.changed.connect(changed_cb);
+  icon_size.changed.connect(changed_cb);
+  launch_animation.changed.connect(changed_cb);
+  reveal_trigger.changed.connect(changed_cb);
+  tile_size.changed.connect(changed_cb);
+  super_tap_duration.changed.connect(changed_cb);
+  urgent_animation.changed.connect(changed_cb);
+  edge_resist.changed.connect(changed_cb);
+  scroll_inactive_icons.changed.connect(changed_cb);
+  minimize_window_on_click.changed.connect(changed_cb);
 }
 
 }
