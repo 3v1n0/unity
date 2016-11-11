@@ -1,3 +1,14 @@
+unity (7.5.0+17.04.20161111.1-0ubuntu1) zesty; urgency=medium
+
+  * LockScreenController: use InputMonitor to get all the events and
+    hide the Blank Window (LP: #1321075)
+  * LockScreenController: use input monitor to get the events to switch
+    monitor (LP: #1316862)
+  * LauncherOptions: use track_obj to manage option changes (LP:
+    #1622995)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 11 Nov 2016 16:01:53 +0000
+
 unity (7.5.0+17.04.20161107.2-0ubuntu1) zesty; urgency=medium
 
   [ Andrea Azzarone ]
