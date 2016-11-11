@@ -260,7 +260,7 @@ TEST_F(TestLockScreenController, ShieldHasGrabAfterBlank)
   tick_source.tick(BLANK_ANIMATION_DURATION);
 
   ASSERT_TRUE(controller.blank_window_->GetOpacity() == 1.0);
-  ASSERT_TRUE(controller.blank_window_->OwnsPointerGrab());
+  ASSERT_FALSE(controller.blank_window_->OwnsPointerGrab());
 
   // Wake the screen
   dbus_manager->simulate_activity.emit();
