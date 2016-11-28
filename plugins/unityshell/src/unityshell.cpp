@@ -3983,6 +3983,8 @@ void UnityScreen::OnScreenLocked()
 
   // We disable the edge barriers, to avoid blocking the mouse pointer during lockscreen
   edge_barriers_->force_disable = true;
+
+  UpdateGesturesSupport();
 }
 
 void UnityScreen::OnScreenUnlocked()
@@ -3999,6 +4001,8 @@ void UnityScreen::OnScreenUnlocked()
     screen->addAction(&action);
 
   edge_barriers_->force_disable = false;
+
+  UpdateGesturesSupport();
 }
 
 void UnityScreen::SaveLockStamp(bool save)
@@ -4207,9 +4211,11 @@ lockscreen::Controller::Ptr UnityScreen::lockscreen_controller()
 
 void UnityScreen::UpdateGesturesSupport()
 {
-  Settings::Instance().gestures_launcher_drag() ? gestures_sub_launcher_->Activate() : gestures_sub_launcher_->Deactivate();
-  Settings::Instance().gestures_dash_tap() ? gestures_sub_dash_->Activate() : gestures_sub_dash_->Deactivate();
-  Settings::Instance().gestures_windows_drag_pinch() ? gestures_sub_windows_->Activate() : gestures_sub_windows_->Deactivate();
+  auto& s = Settings::Instance();
+  bool locked = lockscreen_controller_ && lockscreen_controller_->IsLocked();
+  (!locked && s.gestures_launcher_drag()) ? gestures_sub_launcher_->Activate() : gestures_sub_launcher_->Deactivate();
+  (!locked && s.gestures_dash_tap()) ? gestures_sub_dash_->Activate() : gestures_sub_dash_->Deactivate();
+  (!locked && s.gestures_windows_drag_pinch()) ? gestures_sub_windows_->Activate() : gestures_sub_windows_->Deactivate();
 }
 
 void UnityScreen::InitGesturesSupport()
