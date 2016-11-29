@@ -213,12 +213,12 @@ TEST_F(TestVolumeLauncherIcon, WindowsOnMonitorChanges)
   ON_CALL(*file_manager_, WindowsForLocation(volume_->GetUri())).WillByDefault(Return(WindowList({win})));
   file_manager_->locations_changed.emit();
 
-  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), 1);
-  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), 0);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), 1u);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), 0u);
 
   win->SetMonitor(1);
-  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), 0);
-  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), 1);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(0), 0u);
+  EXPECT_EQ(icon_->WindowsVisibleOnMonitor(1), 1u);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestPosition)

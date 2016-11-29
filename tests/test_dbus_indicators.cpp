@@ -76,8 +76,8 @@ TEST_F(TestDBusIndicators, TestSync)
   // wait until the dbus indicator gets any indicator from the panel service
   Utils::WaitUntil(sigc::mem_fun(*dbus_indicators, &DBusIndicatorsTest::HasIndicators), true, 5);
 
-  EXPECT_EQ(dbus_indicators->GetIndicators().size(), 1);
-  EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2);
+  EXPECT_EQ(dbus_indicators->GetIndicators().size(), 1u);
+  EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2u);
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().front()->id(), "test_entry_id");
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().back()->id(), "test_entry_id2");
 
@@ -89,8 +89,8 @@ TEST_F(TestDBusIndicators, TestSync)
   // so do one interation of the main loop more
   g_main_context_iteration(NULL, TRUE);
 
-  EXPECT_EQ(dbus_indicators->GetIndicators().size(), 1);
-  EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2);
+  EXPECT_EQ(dbus_indicators->GetIndicators().size(), 1u);
+  EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2u);
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().front()->id(), "test_entry_id2");
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().back()->id(), "test_entry_id");
 }

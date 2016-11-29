@@ -76,7 +76,7 @@ struct TestIndicators : Test
 
     // Sync the indicator, adding 3 entries
     test_indicator_1->Sync(sync_data);
-    EXPECT_EQ(test_indicator_1->GetEntries().size(), 3);
+    EXPECT_EQ(test_indicator_1->GetEntries().size(), 3u);
 
 
     // Adding another indicator filled with entries into the TestMockIndicators
@@ -93,9 +93,9 @@ struct TestIndicators : Test
 
     // Sync the indicator, adding 2 entries
     test_indicator_2->Sync(sync_data);
-    EXPECT_EQ(test_indicator_2->GetEntries().size(), 2);
+    EXPECT_EQ(test_indicator_2->GetEntries().size(), 2u);
 
-    ASSERT_THAT(indicators.GetIndicators().size(), 2);
+    ASSERT_THAT(indicators.GetIndicators().size(), 2u);
   }
 
   MockIndicators::Nice indicators;
@@ -135,7 +135,7 @@ TEST_F(TestIndicators, IndicatorsHandling)
   EXPECT_EQ(indicators.GetIndicator("indicator-test-1"), test_indicator_1);
 
   indicators_list = indicators.GetIndicators();
-  EXPECT_EQ(indicators_list.size(), 1);
+  EXPECT_EQ(indicators_list.size(), 1u);
   EXPECT_NE(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_1), indicators_list.end());
 
   EXPECT_CALL(sig_receiver, OnObjectAdded(_));
@@ -145,7 +145,7 @@ TEST_F(TestIndicators, IndicatorsHandling)
   EXPECT_EQ(indicators.GetIndicator("indicator-test-2"), test_indicator_2);
 
   indicators_list = indicators.GetIndicators();
-  EXPECT_EQ(indicators_list.size(), 2);
+  EXPECT_EQ(indicators_list.size(), 2u);
   EXPECT_NE(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_2), indicators_list.end());
 
   EXPECT_CALL(sig_receiver, OnObjectAdded(_));
@@ -155,14 +155,14 @@ TEST_F(TestIndicators, IndicatorsHandling)
   EXPECT_EQ(indicators.GetIndicator("indicator-test-3"), test_indicator_3);
 
   indicators_list = indicators.GetIndicators();
-  EXPECT_EQ(indicators_list.size(), 3);
+  EXPECT_EQ(indicators_list.size(), 3u);
   EXPECT_NE(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_3), indicators_list.end());
 
   EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
   EXPECT_CALL(sig_receiver, OnObjectRemoved(_)).Times(0);
 
   ASSERT_THAT(indicators.GetIndicator("invalid-indicator-test-4"), IsNull());
-  EXPECT_EQ(indicators.GetIndicators().size(), 3);
+  EXPECT_EQ(indicators.GetIndicators().size(), 3u);
 
   // Readding an indicator already there should do nothing
   EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
@@ -170,7 +170,7 @@ TEST_F(TestIndicators, IndicatorsHandling)
 
   Indicator::Ptr test_indicator_3_duplicate(indicators.AddIndicator("indicator-test-3"));
   EXPECT_EQ(indicators.GetIndicator("indicator-test-3"), test_indicator_3);
-  EXPECT_EQ(indicators.GetIndicators().size(), 3);
+  EXPECT_EQ(indicators.GetIndicators().size(), 3u);
   EXPECT_EQ(test_indicator_3, test_indicator_3_duplicate);
 
   // Removing the indicators...
@@ -181,7 +181,7 @@ TEST_F(TestIndicators, IndicatorsHandling)
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), IsNull());
 
   indicators_list = indicators.GetIndicators();
-  EXPECT_EQ(indicators_list.size(), 2);
+  EXPECT_EQ(indicators_list.size(), 2u);
   EXPECT_EQ(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_2), indicators_list.end());
 
   EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
@@ -191,7 +191,7 @@ TEST_F(TestIndicators, IndicatorsHandling)
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), IsNull());
 
   indicators_list = indicators.GetIndicators();
-  EXPECT_EQ(indicators_list.size(), 1);
+  EXPECT_EQ(indicators_list.size(), 1u);
   EXPECT_EQ(std::find(indicators_list.begin(), indicators_list.end(), test_indicator_1), indicators_list.end());
 
   EXPECT_CALL(sig_receiver, OnObjectAdded(_)).Times(0);
@@ -353,7 +353,7 @@ TEST_F(TestIndicators, ShowAppMenu)
     ASSERT_TRUE(appmenu_indicator->IsAppmenu());
   }
 
-  ASSERT_EQ(indicators.GetIndicators().size(), 1);
+  ASSERT_EQ(indicators.GetIndicators().size(), 1u);
 
   {
     Indicator::Ptr indicator = indicators.GetIndicator("libappmenu.so");

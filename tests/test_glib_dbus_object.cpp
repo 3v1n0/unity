@@ -112,14 +112,14 @@ TEST(TestGLibDBusObject, InitializeWithNoObject)
 TEST(TestGLibDBusObjectBuilder, GetObjectsForIntrospectionWithOneObject)
 {
   auto const& objs = DBusObjectBuilder::GetObjectsForIntrospection(introspection::SINGLE_OJBECT);
-  ASSERT_EQ(objs.size(), 1);
+  ASSERT_EQ(objs.size(), 1u);
   EXPECT_EQ(objs.front()->InterfaceName(), "com.canonical.Unity.ObjectTest");
 }
 
 TEST(TestGLibDBusObjectBuilder, GetObjectsForIntrospectionWithMultipleObjects)
 {
   auto const& objs = DBusObjectBuilder::GetObjectsForIntrospection(introspection::MULTIPLE_OJBECTS);
-  ASSERT_EQ(objs.size(), 3);
+  ASSERT_EQ(objs.size(), 3u);
   EXPECT_EQ((*std::next(objs.begin(), 0))->InterfaceName(), "com.canonical.Unity.ObjectTest1");
   EXPECT_EQ((*std::next(objs.begin(), 1))->InterfaceName(), "com.canonical.Unity.ObjectTest2");
   EXPECT_EQ((*std::next(objs.begin(), 2))->InterfaceName(), "com.canonical.Unity.ObjectTest3");

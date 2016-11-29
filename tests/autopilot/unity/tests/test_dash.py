@@ -1136,18 +1136,18 @@ class PreviewClickCancelTests(DashTestCase):
 
     def setUp(self):
         super(PreviewClickCancelTests, self).setUp()
-        gettext.install("unity-scope-applications")
-        scope = self.unity.dash.reveal_application_scope(clear_search=False)
+        gettext.install("unity-scope-files")
+        scope = self.unity.dash.reveal_file_scope(clear_search=False)
         self.addCleanup(self.unity.dash.ensure_hidden)
         # Only testing an application preview for this test.
 
-        search_string = "Software Updater"
+        search_string = "Videos"
         if self.unity.dash.search_string != search_string:
             self.unity.dash.clear_search()
             self.keyboard.type(search_string)
 
         # wait for "Installed" category
-        category = self.wait_for_category(scope, _("Installed"))
+        category = self.wait_for_category(scope, _("Folders"))
 
         # wait for results
         self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))

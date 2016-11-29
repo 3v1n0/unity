@@ -40,7 +40,7 @@ TEST(TestIndicatorEntry, TestConstruction)
 
   EXPECT_EQ(entry.id(), "id");
   EXPECT_EQ(entry.name_hint(), "name_hint");
-  EXPECT_EQ(entry.parent_window(), 12345);
+  EXPECT_EQ(entry.parent_window(), 12345u);
   EXPECT_EQ(entry.label(), "label");
   EXPECT_TRUE(entry.label_sensitive());
   EXPECT_TRUE(entry.label_visible());
@@ -60,7 +60,7 @@ TEST(TestIndicatorEntry, TestConstructionEmpty)
 
   EXPECT_EQ(entry.id(), "id");
   EXPECT_EQ(entry.name_hint(), "name_hint");
-  EXPECT_EQ(entry.parent_window(), 12345);
+  EXPECT_EQ(entry.parent_window(), 12345u);
   EXPECT_TRUE(entry.label().empty());
   EXPECT_FALSE(entry.label_sensitive());
   EXPECT_FALSE(entry.label_visible());
@@ -85,7 +85,7 @@ TEST(TestIndicatorEntry, TestAssignment)
 
   EXPECT_EQ(entry.id(), "other_id");
   EXPECT_EQ(entry.name_hint(), "other_name_hint");
-  EXPECT_EQ(entry.parent_window(), 54321);
+  EXPECT_EQ(entry.parent_window(), 54321u);
   EXPECT_EQ(entry.label(), "other_label");
   EXPECT_FALSE(entry.label_sensitive());
   EXPECT_FALSE(entry.label_visible());

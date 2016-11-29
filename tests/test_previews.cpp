@@ -106,7 +106,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   auto actions = preview->GetActions();
   auto info_hints = preview->GetInfoHints();
 
-  EXPECT_EQ(actions.size(), 2);
+  EXPECT_EQ(actions.size(), 2u);
 
   auto action1 = actions[0];
   EXPECT_EQ(action1->id, "action1");
@@ -121,7 +121,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(action2->icon_hint, "");
   EXPECT_EQ(action2->extra_text, "Foo");
 
-  EXPECT_EQ(info_hints.size(), 2);
+  EXPECT_EQ(info_hints.size(), 2u);
   auto hint1 = info_hints[0];
   EXPECT_EQ(hint1->id, "hint1");
   EXPECT_EQ(hint1->display_name, "Hint 1");

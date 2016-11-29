@@ -72,9 +72,9 @@ public:
     });
   }
 
-  int scope_added;
-  int scope_removed;
-  int scopes_reordered;
+  unsigned scope_added;
+  unsigned scope_removed;
+  unsigned scopes_reordered;
 };
 
 TEST_F(TestGSettingsScopes, TestAdded)
@@ -83,13 +83,13 @@ TEST_F(TestGSettingsScopes, TestAdded)
   ConnectScope(&scopes);
 
   scopes.InsertScope("testscope1.scope", 0);
-  EXPECT_EQ(scopes.count, (unsigned int)1);
-  EXPECT_EQ(scopes_reordered, (unsigned int)0);
+  EXPECT_EQ(scopes.count, 1u);
+  EXPECT_EQ(scopes_reordered, 0u);
 
   // add another
   scopes.InsertScope("testscope2.scope", 1);
-  EXPECT_EQ(scopes.count, (unsigned int)2);
-  EXPECT_EQ(scopes_reordered, (unsigned int)0);
+  EXPECT_EQ(scopes.count, 2u);
+  EXPECT_EQ(scopes_reordered, 0u);
 
   int position = -1;
   EXPECT_TRUE(scopes.GetScope("testscope1.scope", &position) && position == 0);
@@ -105,12 +105,12 @@ TEST_F(TestGSettingsScopes, TestReorderBefore)
   scopes.InsertScope("testscope2.scope", 1);
   scopes.InsertScope("testscope3.scope", 2);
   scopes.InsertScope("testscope4.scope", 3);
-  EXPECT_EQ(scopes.count, (unsigned int)4);
-  EXPECT_EQ(scopes_reordered, (unsigned int)0);
+  EXPECT_EQ(scopes.count, 4u);
+  EXPECT_EQ(scopes_reordered, 0u);
 
   // change position
   scopes.InsertScope("testscope3.scope", 0);
-  EXPECT_EQ(scopes_reordered, (unsigned int)1);
+  EXPECT_EQ(scopes_reordered, 1u);
 
   int position = -1;
   EXPECT_TRUE(scopes.GetScope("testscope3.scope", &position) && position == 0);
@@ -128,12 +128,12 @@ TEST_F(TestGSettingsScopes, TestReorderAfter)
   scopes.InsertScope("testscope2.scope", 1);
   scopes.InsertScope("testscope3.scope", 2);
   scopes.InsertScope("testscope4.scope", 3);
-  EXPECT_EQ(scopes.count, (unsigned int)4);
-  EXPECT_EQ(scopes_reordered, (unsigned int)0);
+  EXPECT_EQ(scopes.count, 4u);
+  EXPECT_EQ(scopes_reordered, 0u);
 
   // change position
   scopes.InsertScope("testscope2.scope", 3);
-  EXPECT_EQ(scopes_reordered, (unsigned int)1);
+  EXPECT_EQ(scopes_reordered, 1u);
 
   int position = -1;
   EXPECT_TRUE(scopes.GetScope("testscope1.scope", &position) && position == 0);
@@ -149,8 +149,8 @@ TEST_F(TestGSettingsScopes, TestAddNonExists)
   ConnectScope(&scopes);
 
   scopes.InsertScope("non-existing.scope", 0);
-  EXPECT_EQ(scope_added, (unsigned int)0);
-  EXPECT_EQ(scopes.count, (unsigned int)0);
+  EXPECT_EQ(scope_added, 0u);
+  EXPECT_EQ(scopes.count, 0u);
 }
 
 TEST_F(TestGSettingsScopes, TestAddSame)
@@ -159,15 +159,15 @@ TEST_F(TestGSettingsScopes, TestAddSame)
   ConnectScope(&scopes);
 
   scopes.InsertScope("testscope1.scope", 0);
-  EXPECT_EQ(scope_added, (unsigned int)1);
-  EXPECT_EQ(scopes.count, (unsigned int)1);
+  EXPECT_EQ(scope_added, 1u);
+  EXPECT_EQ(scopes.count, 1u);
 
   // shouldnt add another
   scopes.InsertScope("testscope1.scope", 1);
 
-  EXPECT_EQ(scope_added, (unsigned int)1);
-  EXPECT_EQ(scopes.count, (unsigned int)1);
-  EXPECT_EQ(scopes_reordered, (unsigned int)0);
+  EXPECT_EQ(scope_added, 1u);
+  EXPECT_EQ(scopes.count, 1u);
+  EXPECT_EQ(scopes_reordered, 0u);
 }
 
 TEST_F(TestGSettingsScopes, TestAddRemove)
@@ -176,12 +176,12 @@ TEST_F(TestGSettingsScopes, TestAddRemove)
   ConnectScope(&scopes);
 
   scopes.InsertScope("testscope1.scope", 0);
-  EXPECT_EQ(scope_added, (unsigned int)1);
-  EXPECT_EQ(scopes.count, (unsigned int)1);
+  EXPECT_EQ(scope_added, 1u);
+  EXPECT_EQ(scopes.count, 1u);
 
   scopes.RemoveScope("testscope1.scope");
-  EXPECT_EQ(scope_removed, (unsigned int)1);
-  EXPECT_EQ(scopes.count, (unsigned int)0);
+  EXPECT_EQ(scope_removed, 1u);
+  EXPECT_EQ(scopes.count, 0u);
 }
 
 TEST_F(TestGSettingsScopes, TestRemoveNonExists)
@@ -190,8 +190,8 @@ TEST_F(TestGSettingsScopes, TestRemoveNonExists)
   ConnectScope(&scopes);
 
   scopes.RemoveScope("non-existing.scope");
-  EXPECT_EQ(scope_removed, (unsigned int)0);
-  EXPECT_EQ(scopes.count, (unsigned int)0);
+  EXPECT_EQ(scope_removed, 0u);
+  EXPECT_EQ(scopes.count, 0u);
 }
 
 TEST_F(TestGSettingsScopes, TestLoad)
@@ -200,7 +200,7 @@ TEST_F(TestGSettingsScopes, TestLoad)
   ConnectScope(&scopes);
 
   scopes.LoadScopes();
-  EXPECT_EQ(scope_added, (unsigned int)4);
+  EXPECT_EQ(scope_added, 4u);
 
   int position = -1;
   EXPECT_TRUE(scopes.GetScope("testscope1.scope", &position) && position == 0);
@@ -215,15 +215,15 @@ TEST_F(TestGSettingsScopes, TestLoadUpdateGSettings)
   ConnectScope(&scopes);
   
   scopes.LoadScopes();
-  EXPECT_EQ(scope_added, (unsigned int)2);
-  EXPECT_EQ(scopes.count, (unsigned int)2);
+  EXPECT_EQ(scope_added, 2u);
+  EXPECT_EQ(scopes.count, 2u);
 
   scopes.UpdateScopes(scopes_updated);
   Utils::WaitUntilMSec([this] { return scope_removed > 0; }, true, 2000);
 
-  EXPECT_EQ(scope_added, (unsigned int)4);
-  EXPECT_EQ(scope_removed, (unsigned int)1);
-  EXPECT_EQ(scopes.count, (unsigned int)3);
+  EXPECT_EQ(scope_added, 4u);
+  EXPECT_EQ(scope_removed, 1u);
+  EXPECT_EQ(scopes.count, 3u);
 }
 
 

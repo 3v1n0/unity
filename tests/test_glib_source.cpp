@@ -56,7 +56,7 @@ bool OnSourceCallbackContinue()
 TEST(TestGLibSource, ID)
 {
   Idle source;
-  EXPECT_EQ(source.Id(), 0);
+  EXPECT_EQ(source.Id(), 0u);
 }
 
 TEST(TestGLibSource, Running)
@@ -91,7 +91,7 @@ TEST(TestGLibSource, Priority)
 TEST(TestGLibTimeout, Construction)
 {
   Timeout timeout(1000, &OnSourceCallbackContinue);
-  EXPECT_NE(timeout.Id(), 0);
+  EXPECT_NE(timeout.Id(), 0u);
   EXPECT_TRUE(timeout.IsRunning());
   EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
 }
@@ -99,7 +99,7 @@ TEST(TestGLibTimeout, Construction)
 TEST(TestGLibTimeout, ConstructionEmptyCallback)
 {
   Timeout timeout(1000, Source::Callback());
-  EXPECT_NE(timeout.Id(), 0);
+  EXPECT_NE(timeout.Id(), 0u);
   EXPECT_TRUE(timeout.IsRunning());
   EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
 }
@@ -107,7 +107,7 @@ TEST(TestGLibTimeout, ConstructionEmptyCallback)
 TEST(TestGLibTimeout, DelayedRunConstruction)
 {
   Timeout timeout(1000);
-  EXPECT_EQ(timeout.Id(), 0);
+  EXPECT_EQ(timeout.Id(), 0u);
   EXPECT_FALSE(timeout.IsRunning());
   EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
 }
@@ -124,7 +124,7 @@ TEST(TestGLibTimeout, Destroy)
   }
 
   EXPECT_TRUE(removed_called);
-  EXPECT_EQ(callback_call_count, 0);
+  EXPECT_EQ(callback_call_count, 0u);
 }
 
 TEST(TestGLibTimeout, OneShotRun)
@@ -138,7 +138,7 @@ TEST(TestGLibTimeout, OneShotRun)
 
   Utils::WaitUntilMSec([&timeout] {return timeout.IsRunning();}, false, 500);
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
   EXPECT_TRUE(removed_called);
 }
 
@@ -157,7 +157,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   }
 
   EXPECT_TRUE(callback_called);
-  EXPECT_GT(callback_call_count, 1);
+  EXPECT_GT(callback_call_count, 1u);
   EXPECT_TRUE(removed_called);
 }
 
@@ -185,10 +185,10 @@ TEST(TestGLibTimeout, Removal)
 
   Utils::WaitUntilMSec([&timeout] {return timeout.IsRunning();}, false, 300);
 
-  EXPECT_NE(timeout.Id(), 0);
+  EXPECT_NE(timeout.Id(), 0u);
   EXPECT_TRUE(removed_called);
   EXPECT_FALSE(callback_called);
-  EXPECT_EQ(callback_call_count, 0);
+  EXPECT_EQ(callback_call_count, 0u);
 }
 
 TEST(TestGLibTimeout, Running)
@@ -204,7 +204,7 @@ TEST(TestGLibTimeout, Running)
 
   Utils::WaitUntilMSec([&timeout] {return timeout.IsRunning();}, false, 500);
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
 }
 
 TEST(TestGLibTimeout, RemoveOnCallback)
@@ -225,7 +225,7 @@ TEST(TestGLibTimeout, RemoveOnCallback)
 
   ASSERT_EQ(timeout.IsRunning(), false);
   EXPECT_EQ(local_callback_called, true);
-  EXPECT_EQ(local_callback_call_count, 1);
+  EXPECT_EQ(local_callback_call_count, 1u);
 }
 
 TEST(TestGLibTimeout, RemovePtrOnCallback)
@@ -249,7 +249,7 @@ TEST(TestGLibTimeout, RemovePtrOnCallback)
 
   ASSERT_EQ(timeout, nullptr);
   EXPECT_EQ(local_callback_called, true);
-  EXPECT_EQ(local_callback_call_count, 1);
+  EXPECT_EQ(local_callback_call_count, 1u);
 }
 
 TEST(TestGLibTimeout, AutoRemoveSourceOnCallback)
@@ -270,7 +270,7 @@ TEST(TestGLibTimeout, AutoRemoveSourceOnCallback)
 
   timeout.reset();
   EXPECT_EQ(local_callback_called, true);
-  EXPECT_EQ(local_callback_call_count, 1);
+  EXPECT_EQ(local_callback_call_count, 1u);
 
   // source should be removed by now.
   EXPECT_TRUE(g_main_context_find_source_by_id(NULL, id) == nullptr);
@@ -282,7 +282,7 @@ TEST(TestGLibTimeout, AutoRemoveSourceOnCallback)
 TEST(TestGLibTimeoutSeconds, Construction)
 {
   TimeoutSeconds timeout(1, &OnSourceCallbackContinue);
-  EXPECT_NE(timeout.Id(), 0);
+  EXPECT_NE(timeout.Id(), 0u);
   EXPECT_TRUE(timeout.IsRunning());
   EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
 }
@@ -290,7 +290,7 @@ TEST(TestGLibTimeoutSeconds, Construction)
 TEST(TestGLibTimeoutSeconds, DelayedRunConstruction)
 {
   TimeoutSeconds timeout(1);
-  EXPECT_EQ(timeout.Id(), 0);
+  EXPECT_EQ(timeout.Id(), 0u);
   EXPECT_FALSE(timeout.IsRunning());
   EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
 }
@@ -307,7 +307,7 @@ TEST(TestGLibTimeoutSeconds, Destroy)
   }
 
   EXPECT_TRUE(removed_called);
-  EXPECT_EQ(callback_call_count, 0);
+  EXPECT_EQ(callback_call_count, 0u);
 }
 
 TEST(TestGLibTimeoutSeconds, OneShotRun)
@@ -321,7 +321,7 @@ TEST(TestGLibTimeoutSeconds, OneShotRun)
 
   Utils::WaitUntil([&timeout] {return timeout.IsRunning();}, false, 2);
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
   EXPECT_TRUE(removed_called);
 }
 
@@ -340,7 +340,7 @@ TEST(TestGLibTimeoutSeconds, MultipleShotsRun)
   }
 
   EXPECT_TRUE(callback_called);
-  EXPECT_GT(callback_call_count, 1);
+  EXPECT_GT(callback_call_count, 1u);
   EXPECT_TRUE(removed_called);
 }
 
@@ -349,7 +349,7 @@ TEST(TestGLibTimeoutSeconds, MultipleShotsRun)
 TEST(TestGLibIdle, Construction)
 {
   Idle idle(&OnSourceCallbackStop);
-  EXPECT_NE(idle.Id(), 0);
+  EXPECT_NE(idle.Id(), 0u);
   EXPECT_EQ(idle.GetPriority(), Source::Priority::DEFAULT_IDLE);
 }
 
@@ -365,7 +365,7 @@ TEST(TestGLibIdle, Destroy)
   }
 
   EXPECT_TRUE(removed_called);
-  EXPECT_EQ(callback_call_count, 0);
+  EXPECT_EQ(callback_call_count, 0u);
 }
 
 TEST(TestGLibIdle, OneShotRun)
@@ -382,7 +382,7 @@ TEST(TestGLibIdle, OneShotRun)
   Utils::WaitUntilMSec([&idle] {return idle.IsRunning();}, false, 100);
   EXPECT_FALSE(idle.IsRunning());
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
   EXPECT_LE(pre, post);
 }
 
@@ -402,7 +402,7 @@ TEST(TestGLibIdle, MultipleShotsRun)
   }
 
   EXPECT_TRUE(callback_called);
-  EXPECT_GT(callback_call_count, 1);
+  EXPECT_GT(callback_call_count, 1u);
   DeltaTime time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 100);
   EXPECT_LT(time_delta, 200);
@@ -420,10 +420,10 @@ TEST(TestGLibIdle, Removal)
 
   Utils::WaitUntilMSec([&idle] {return idle.IsRunning();}, false, 300);
 
-  EXPECT_NE(idle.Id(), 0);
+  EXPECT_NE(idle.Id(), 0u);
   EXPECT_TRUE(removed_called);
   EXPECT_FALSE(callback_called);
-  EXPECT_EQ(callback_call_count, 0);
+  EXPECT_EQ(callback_call_count, 0u);
 }
 
 TEST(TestGLibIdle, Running)
@@ -439,7 +439,7 @@ TEST(TestGLibIdle, Running)
 
   Utils::WaitUntilMSec([&idle] {return idle.IsRunning();}, false, 20000);
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
 }
 
 TEST(TestGLibIdle, RemoveOnCallback)
@@ -460,7 +460,7 @@ TEST(TestGLibIdle, RemoveOnCallback)
 
   ASSERT_EQ(idle.IsRunning(), false);
   EXPECT_EQ(local_callback_called, true);
-  EXPECT_EQ(local_callback_call_count, 1);
+  EXPECT_EQ(local_callback_call_count, 1u);
 }
 
 TEST(TestGLibIdle, RemovePtrOnCallback)
@@ -481,7 +481,7 @@ TEST(TestGLibIdle, RemovePtrOnCallback)
 
   ASSERT_EQ(idle, nullptr);
   EXPECT_EQ(local_callback_called, true);
-  EXPECT_EQ(local_callback_call_count, 1);
+  EXPECT_EQ(local_callback_call_count, 1u);
 }
 
 // Test GLibSource Manager
@@ -509,7 +509,7 @@ TEST(TestGLibSourceManager, AddingAnonymousSources)
   manager.Add(new Idle());
   manager.Add(new Idle(&OnSourceCallbackContinue));
 
-  EXPECT_EQ(manager.GetSources().size(), 4);
+  EXPECT_EQ(manager.GetSources().size(), 4u);
 }
 
 TEST(TestGLibSourceManager, AddingNamedSources)
@@ -532,7 +532,7 @@ TEST(TestGLibSourceManager, AddingNamedSources)
   manager.Add(idle_2, "idle-2");
   ASSERT_EQ(manager.GetSource("idle-2").get(), idle_2);
 
-  EXPECT_EQ(manager.GetSources().size(), 4);
+  EXPECT_EQ(manager.GetSources().size(), 4u);
 }
 
 TEST(TestGLibSourceManager, AddingDuplicatedSources)
@@ -550,7 +550,7 @@ TEST(TestGLibSourceManager, AddingDuplicatedSources)
   EXPECT_EQ(manager.GetSource(timeout->Id()), timeout);
   EXPECT_EQ(ret, false);
 
-  EXPECT_EQ(manager.GetSources().size(), 1);
+  EXPECT_EQ(manager.GetSources().size(), 1u);
 }
 
 TEST(TestGLibSourceManager, AddingDuplicatedNamedSources)
@@ -570,7 +570,7 @@ TEST(TestGLibSourceManager, AddingDuplicatedNamedSources)
   EXPECT_EQ(ret, true);
 
   EXPECT_FALSE(timeout_1->IsRunning());
-  EXPECT_EQ(manager.GetSources().size(), 1);
+  EXPECT_EQ(manager.GetSources().size(), 1u);
 }
 
 TEST(TestGLibSourceManager, AddingTimeouts)
@@ -580,7 +580,7 @@ TEST(TestGLibSourceManager, AddingTimeouts)
   auto timeout1 = manager.AddTimeout(1);
   auto timeout2 = manager.AddTimeout(1, &OnSourceCallbackContinue);
 
-  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_EQ(manager.GetSources().size(), 2u);
   EXPECT_FALSE(timeout1->IsRunning());
   EXPECT_TRUE(timeout2->IsRunning());
 }
@@ -592,7 +592,7 @@ TEST(TestGLibSourceManager, AddingIdles)
   auto idle1 = manager.AddIdle();
   auto idle2 = manager.AddIdle(&OnSourceCallbackContinue);
 
-  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_EQ(manager.GetSources().size(), 2u);
   EXPECT_FALSE(idle1->IsRunning());
   EXPECT_TRUE(idle2->IsRunning());
 }
@@ -613,21 +613,21 @@ TEST(TestGLibSourceManager, RemovingSourcesById)
 
   manager.Remove(timeout1->Id());
   EXPECT_FALSE(timeout1->IsRunning());
-  EXPECT_EQ(manager.GetSources().size(), 3);
+  EXPECT_EQ(manager.GetSources().size(), 3u);
 
   manager.Remove(timeout2->Id());
   EXPECT_FALSE(timeout2->IsRunning());
   EXPECT_EQ(manager.GetSource(timeout2->Id()), nullptr);
-  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_EQ(manager.GetSources().size(), 2u);
 
   manager.Remove(idle1->Id());
   EXPECT_FALSE(idle1->IsRunning());
-  EXPECT_EQ(manager.GetSources().size(), 1);
+  EXPECT_EQ(manager.GetSources().size(), 1u);
 
   manager.Remove(idle2->Id());
   EXPECT_FALSE(idle2->IsRunning());
   EXPECT_EQ(manager.GetSource(idle2->Id()), nullptr);
-  EXPECT_EQ(manager.GetSources().size(), 0);
+  EXPECT_EQ(manager.GetSources().size(), 0u);
 }
 
 TEST(TestGLibSourceManager, RemovingSourcesByNick)
@@ -647,22 +647,22 @@ TEST(TestGLibSourceManager, RemovingSourcesByNick)
   manager.Remove("timeout-1");
   EXPECT_FALSE(timeout1->IsRunning());
   EXPECT_EQ(manager.GetSource("timeout-1"), nullptr);
-  EXPECT_EQ(manager.GetSources().size(), 3);
+  EXPECT_EQ(manager.GetSources().size(), 3u);
 
   manager.Remove("timeout-2");
   EXPECT_FALSE(timeout2->IsRunning());
   EXPECT_EQ(manager.GetSource("timeout-2"), nullptr);
-  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_EQ(manager.GetSources().size(), 2u);
 
   manager.Remove("idle-1");
   EXPECT_FALSE(idle1->IsRunning());
   EXPECT_EQ(manager.GetSource("idle-1"), nullptr);
-  EXPECT_EQ(manager.GetSources().size(), 1);
+  EXPECT_EQ(manager.GetSources().size(), 1u);
 
   manager.Remove("idle-2");
   EXPECT_FALSE(idle2->IsRunning());
   EXPECT_EQ(manager.GetSource("idle-2"), nullptr);
-  EXPECT_EQ(manager.GetSources().size(), 0);
+  EXPECT_EQ(manager.GetSources().size(), 0u);
 }
 
 TEST(TestGLibSourceManager, RemovesOnDisconnection)
@@ -675,16 +675,16 @@ TEST(TestGLibSourceManager, RemovesOnDisconnection)
   manager.Add(timeout);
   manager.Add(idle);
 
-  ASSERT_EQ(manager.GetSources().size(), 2);
+  ASSERT_EQ(manager.GetSources().size(), 2u);
   EXPECT_EQ(timeout, manager.GetSource(timeout->Id()));
   EXPECT_EQ(idle, manager.GetSource(idle->Id()));
 
   timeout->Remove();
-  EXPECT_EQ(manager.GetSources().size(), 1);
+  EXPECT_EQ(manager.GetSources().size(), 1u);
   EXPECT_EQ(manager.GetSource(timeout->Id()), nullptr);
 
   idle->Remove();
-  EXPECT_EQ(manager.GetSources().size(), 0);
+  EXPECT_EQ(manager.GetSources().size(), 0u);
   EXPECT_EQ(manager.GetSource(idle->Id()), nullptr);
 }
 
@@ -742,7 +742,7 @@ TEST(TestGLibSourceManager, RemoveSourceOnCallback)
 
   ASSERT_FALSE(idle->IsRunning());
   EXPECT_TRUE(local_callback_called);
-  EXPECT_EQ(1, local_callback_call_count);
+  EXPECT_EQ(1u, local_callback_call_count);
 }
 
 }

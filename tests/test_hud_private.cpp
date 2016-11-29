@@ -32,20 +32,20 @@ TEST(TestHudPrivate, RefactorTextEmpty)
   std::vector<std::pair<std::string, bool>> temp;
 
   temp = impl::RefactorText("");
-  ASSERT_EQ(temp.size(), 0);
+  ASSERT_EQ(temp.size(), 0u);
 
   temp = impl::RefactorText("Test");
-  ASSERT_EQ(temp.size(), 1);
+  ASSERT_EQ(temp.size(), 1u);
   EXPECT_EQ(temp[0].first, "Test");
   EXPECT_EQ(temp[0].second, false); // True means "Full opacity", false "Half opacity"
 
   temp = impl::RefactorText("<b>Test</b>");
-  ASSERT_EQ(temp.size(), 1);
+  ASSERT_EQ(temp.size(), 1u);
   EXPECT_EQ(temp[0].first, "Test");
   EXPECT_EQ(temp[0].second, true);
 
   temp = impl::RefactorText("Hello > <b>Test</b> World");
-  ASSERT_EQ(temp.size(), 3);
+  ASSERT_EQ(temp.size(), 3u);
   EXPECT_EQ(temp[0].first, "Hello > ");
   EXPECT_EQ(temp[0].second, false);
   EXPECT_EQ(temp[1].first, "Test");
@@ -54,7 +54,7 @@ TEST(TestHudPrivate, RefactorTextEmpty)
   EXPECT_EQ(temp[2].second, false);
 
   temp = impl::RefactorText("Open <b>Fi</b>le <b>Wit</b>h");
-  ASSERT_EQ(temp.size(), 5);
+  ASSERT_EQ(temp.size(), 5u);
   EXPECT_EQ(temp[0].first, "Open ");
   EXPECT_EQ(temp[0].second, false);
   EXPECT_EQ(temp[1].first, "Fi");
@@ -67,7 +67,7 @@ TEST(TestHudPrivate, RefactorTextEmpty)
   EXPECT_EQ(temp[4].second, false);
 
   temp = impl::RefactorText("Open <b>File With");
-  ASSERT_EQ(temp.size(), 2);
+  ASSERT_EQ(temp.size(), 2u);
   EXPECT_EQ(temp[0].first, "Open ");
   EXPECT_EQ(temp[0].second, false);
   EXPECT_EQ(temp[1].first, "File With");

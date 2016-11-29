@@ -54,9 +54,9 @@ TEST(TestIntrospectionData, AddBool)
   data.add("Bool", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Bool", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value, g_variant_get_boolean(get_variant_child(variant, 1)));
 }
 
@@ -68,9 +68,9 @@ TEST(TestIntrospectionData, AddConstChar)
   auto tmp = data.Get();
   GVariant* variant = g_variant_lookup_value(tmp, "ConstChar", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_STREQ(value, g_variant_get_string(get_variant_child(variant, 1), nullptr));
 }
 
@@ -81,9 +81,9 @@ TEST(TestIntrospectionData, AddString)
   data.add("String", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "String", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value, g_variant_get_string(get_variant_child(variant, 1), nullptr));
 }
 
@@ -94,9 +94,9 @@ TEST(TestIntrospectionData, AddInt16)
   data.add("Int16", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Int16", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value, g_variant_get_int16(get_variant_child(variant, 1)));
 }
 
@@ -107,9 +107,9 @@ TEST(TestIntrospectionData, AddInt32)
   data.add("Int32", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Int32", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value, g_variant_get_int32(get_variant_child(variant, 1)));
 }
 
@@ -120,9 +120,9 @@ TEST(TestIntrospectionData, AddInt64)
   data.add("Int64", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Int64", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value, g_variant_get_int64(get_variant_child(variant, 1)));
 }
 
@@ -133,9 +133,9 @@ TEST(TestIntrospectionData, AddUInt16)
   data.add("Uint16", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Uint16", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value, g_variant_get_uint16(get_variant_child(variant, 1)));
 }
 
@@ -146,9 +146,9 @@ TEST(TestIntrospectionData, AddUInt32)
   data.add("Uint32", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Uint32", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value, g_variant_get_uint32(get_variant_child(variant, 1)));
 }
 
@@ -159,9 +159,9 @@ TEST(TestIntrospectionData, AddUInt64)
   data.add("Uint64", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Uint64", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value, g_variant_get_uint64(get_variant_child(variant, 1)));
 }
 
@@ -172,9 +172,9 @@ TEST(TestIntrospectionData, AddFloat)
   data.add("Float", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Float", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_FLOAT_EQ(value, g_variant_get_double(get_variant_child(variant, 1)));
 }
 
@@ -185,9 +185,9 @@ TEST(TestIntrospectionData, AddDouble)
   data.add("Double", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Double", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_DOUBLE_EQ(value, g_variant_get_double(get_variant_child(variant, 1)));
 }
 
@@ -198,9 +198,9 @@ TEST(TestIntrospectionData, AddVariant)
   data.add("Variant", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Variant", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_TRUE(g_variant_equal(value, get_variant_child(variant, 1)));
 }
 
@@ -211,9 +211,9 @@ TEST(TestIntrospectionData, AddGlibVariant)
   data.add("GLibVariant", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "GLibVariant", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(2, g_variant_n_children(variant));
+  ASSERT_EQ(2u, g_variant_n_children(variant));
 
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_TRUE(g_variant_equal(value, get_variant_child(variant, 1)));
 }
 
@@ -224,9 +224,9 @@ TEST(TestIntrospectionData, AddRect)
   data.add("Rect", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Rect", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(5, g_variant_n_children(variant));
+  ASSERT_EQ(5u, g_variant_n_children(variant));
 
-  EXPECT_EQ(1, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(1u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value.x, g_variant_get_int32(get_variant_child(variant, 1)));
   EXPECT_EQ(value.y, g_variant_get_int32(get_variant_child(variant, 2)));
   EXPECT_EQ(value.width, g_variant_get_int32(get_variant_child(variant, 3)));
@@ -241,9 +241,9 @@ TEST(TestIntrospectionData, AddRectDefault)
   GVariant* data_variant = data.Get();
   GVariant* variant = g_variant_lookup_value(data_variant, "globalRect", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(5, g_variant_n_children(variant));
+  ASSERT_EQ(5u, g_variant_n_children(variant));
 
-  EXPECT_EQ(1, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(1u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value.x, g_variant_get_int32(get_variant_child(variant, 1)));
   EXPECT_EQ(value.y, g_variant_get_int32(get_variant_child(variant, 2)));
   EXPECT_EQ(value.width, g_variant_get_int32(get_variant_child(variant, 3)));
@@ -251,22 +251,22 @@ TEST(TestIntrospectionData, AddRectDefault)
 
   variant = g_variant_lookup_value(data_variant, "x", nullptr);
   ASSERT_THAT(variant, NotNull());
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value.x, g_variant_get_int32(get_variant_child(variant, 1)));
 
   variant = g_variant_lookup_value(data_variant, "y", nullptr);
   ASSERT_THAT(variant, NotNull());
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value.y, g_variant_get_int32(get_variant_child(variant, 1)));
 
   variant = g_variant_lookup_value(data_variant, "width", nullptr);
   ASSERT_THAT(variant, NotNull());
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value.width, g_variant_get_int32(get_variant_child(variant, 1)));
 
   variant = g_variant_lookup_value(data_variant, "height", nullptr);
   ASSERT_THAT(variant, NotNull());
-  EXPECT_EQ(0, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(0u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value.height, g_variant_get_int32(get_variant_child(variant, 1)));
 }
 
@@ -277,9 +277,9 @@ TEST(TestIntrospectionData, AddPoint)
   data.add("Point", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Point", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(3, g_variant_n_children(variant));
+  ASSERT_EQ(3u, g_variant_n_children(variant));
 
-  EXPECT_EQ(2, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(2u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value.x, g_variant_get_int32(get_variant_child(variant, 1)));
   EXPECT_EQ(value.y, g_variant_get_int32(get_variant_child(variant, 2)));
 }
@@ -291,9 +291,9 @@ TEST(TestIntrospectionData, AddSize)
   data.add("Size", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Size", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(3, g_variant_n_children(variant));
+  ASSERT_EQ(3u, g_variant_n_children(variant));
 
-  EXPECT_EQ(3, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(3u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(value.width, g_variant_get_int32(get_variant_child(variant, 1)));
   EXPECT_EQ(value.height, g_variant_get_int32(get_variant_child(variant, 2)));
 }
@@ -305,9 +305,9 @@ TEST(TestIntrospectionData, AddColor)
   data.add("Color", value);
   GVariant* variant = g_variant_lookup_value(data.Get(), "Color", nullptr);
   ASSERT_THAT(variant, NotNull());
-  ASSERT_EQ(5, g_variant_n_children(variant));
+  ASSERT_EQ(5u, g_variant_n_children(variant));
 
-  EXPECT_EQ(4, g_variant_get_uint32(get_variant_child(variant, 0)));
+  EXPECT_EQ(4u, g_variant_get_uint32(get_variant_child(variant, 0)));
   EXPECT_EQ(static_cast<int32_t>(value.red * 255.), g_variant_get_int32(get_variant_child(variant, 1)));
   EXPECT_EQ(static_cast<int32_t>(value.green * 255.), g_variant_get_int32(get_variant_child(variant, 2)));
   EXPECT_EQ(static_cast<int32_t>(value.blue * 255.), g_variant_get_int32(get_variant_child(variant, 3)));

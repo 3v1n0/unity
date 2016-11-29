@@ -85,7 +85,7 @@ TEST_F(TestShortcutView, SettingModelAddsColumns)
   model->categories_per_column = 1;
   view.SetModel(model);
 
-  EXPECT_EQ(view.columns_layout_->GetChildren().size(), 2);
+  EXPECT_EQ(view.columns_layout_->GetChildren().size(), 2u);
 }
 
 TEST_F(TestShortcutView, SettingModelRebuildsColumns)
@@ -93,12 +93,12 @@ TEST_F(TestShortcutView, SettingModelRebuildsColumns)
   auto model1 = GetMockModel({"Cat1", "Cat2"}, 1);
   model1->categories_per_column = 1;
   view.SetModel(model1);
-  ASSERT_EQ(view.columns_layout_->GetChildren().size(), 2);
+  ASSERT_EQ(view.columns_layout_->GetChildren().size(), 2u);
 
   auto model2 = GetMockModel({"Cat1"}, 1);
   model2->categories_per_column = 1;
   view.SetModel(model2);
-  EXPECT_EQ(view.columns_layout_->GetChildren().size(), 1);
+  EXPECT_EQ(view.columns_layout_->GetChildren().size(), 1u);
 }
 
 TEST_F(TestShortcutView, ChangingModelParametersRebuildsColumns)

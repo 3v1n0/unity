@@ -114,7 +114,7 @@ TEST_F(TestUBusServer, SingleDispatch)
   ProcessMessages();
 
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
 }
 
 TEST_F(TestUBusServer, SingleDispatchWithData)
@@ -125,7 +125,7 @@ TEST_F(TestUBusServer, SingleDispatchWithData)
   ProcessMessages();
 
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
   EXPECT_EQ(last_msg_variant.GetString(), "UserData");
 }
 
@@ -137,7 +137,7 @@ TEST_F(TestUBusServer, SingleDispatchUnicode)
   ProcessMessages();
 
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
 }
 
 TEST_F(TestUBusServer, SendUnregisteredMessage)
@@ -166,7 +166,7 @@ TEST_F(TestUBusServer, MultipleDispatches)
 
   ProcessMessages();
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 3);
+  EXPECT_EQ(callback_call_count, 3u);
 }
 
 TEST_F(TestUBusServer, MultipleDispatchesWithData)
@@ -253,7 +253,7 @@ TEST_F(TestUBusManager, RegisterAndSend)
 
   ProcessMessages();
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
 }
 
 TEST_F(TestUBusManager, Unregister)
@@ -301,7 +301,7 @@ TEST_F(TestUBusManager, UnregisterInsideCallback)
 
   ProcessMessages();
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 1);
+  EXPECT_EQ(callback_call_count, 1u);
 }
 
 TEST_F(TestUBusManager, DispatchWithPriority)

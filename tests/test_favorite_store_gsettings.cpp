@@ -44,7 +44,7 @@ const char* base_store_favs[] = { BUILDDIR"/tests/data/applications/ubuntuone-in
                                   "device://uuid",
                                   NULL
                                 };
-const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
+const unsigned n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
 
 const std::string other_desktop = "application://" BUILDDIR "/tests/data/applications/bzr-handle-patch.desktop";
 
@@ -322,7 +322,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteRemoved)
   favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
-  ASSERT_EQ(paths_removed.size(), 3);
+  ASSERT_EQ(paths_removed.size(), 3u);
   EXPECT_EQ(paths_removed[0], base_store_favs[4]);
   EXPECT_EQ(paths_removed[1], base_store_favs[1]);
   EXPECT_EQ(paths_removed[2], base_store_favs[3]);
@@ -457,7 +457,7 @@ TEST_F(TestFavoriteStoreGSettings, TestIsFavorite)
 {
   EXPECT_TRUE(favorite_store->IsFavorite(FavoriteStore::URI_PREFIX_APP+base_store_favs[0]));
 
-  for (int i = 1; i < n_base_store_favs; i++)
+  for (unsigned i = 1; i < n_base_store_favs; i++)
   {
     ASSERT_TRUE(favorite_store->IsFavorite(base_store_favs[i]));
   }
@@ -469,9 +469,9 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoritePosition)
 {
   EXPECT_EQ(favorite_store->FavoritePosition(FavoriteStore::URI_PREFIX_APP+base_store_favs[0]), 0);
 
-  for (int i = 1; i < n_base_store_favs; i++)
+  for (unsigned i = 1; i < n_base_store_favs; i++)
   {
-    ASSERT_EQ(favorite_store->FavoritePosition(base_store_favs[i]), i);
+    ASSERT_EQ(favorite_store->FavoritePosition(base_store_favs[i]), static_cast<int>(i));
   }
 
   EXPECT_EQ(favorite_store->FavoritePosition("unity://invalid-favorite"), -1);

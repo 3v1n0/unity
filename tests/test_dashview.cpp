@@ -91,7 +91,7 @@ TEST_F(TestDashView, TestConstruct)
   Scopes::Ptr scopes(new MockGSettingsScopes(scopes_default));
   nux::ObjectPtr<MockDashView> view(new MockDashView(scopes, application_starter_));
 
-  EXPECT_EQ(view->scope_views_.size(), 5) << "Error: Incorrect number of scope views (" << view->scope_views_.size() << " != 5)";
+  EXPECT_EQ(view->scope_views_.size(), 5u) << "Error: Incorrect number of scope views (" << view->scope_views_.size() << " != 5)";
 }
 
 

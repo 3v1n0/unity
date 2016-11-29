@@ -126,11 +126,11 @@ TEST(TestTextureCache, Invalidate)
   TextureCache& cache = TextureCache::GetDefault();
   nux::ObjectPtr<nux::BaseTexture> t1 = cache.FindTexture("foo", 5, 7, callback);
   cache.Invalidate("foo", 5, 7);
-  ASSERT_EQ(0, cache.Size());
+  ASSERT_EQ(0u, cache.Size());
 
   nux::ObjectPtr<nux::BaseTexture> t2 = cache.FindTexture("foo", 5, 7, callback);
   EXPECT_NE(t1, t2);
-  EXPECT_EQ(1, cache.Size());
+  EXPECT_EQ(1u, cache.Size());
   EXPECT_EQ(2, counter.count);
 }
 

@@ -55,7 +55,7 @@ TEST_F(TestLayoutWindow, InitializationNormalWindow)
   LayoutWindow lwin(xid);
   EXPECT_EQ(lwin.xid, xid);
   EXPECT_EQ(lwin.geo, fake_window->geo);
-  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.decoration_height, 0u);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_FLOAT_EQ(lwin.scale, 1.0f);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
@@ -70,7 +70,7 @@ TEST_F(TestLayoutWindow, InitializationMinimizedNormalWindow)
   LayoutWindow lwin(xid);
   EXPECT_EQ(lwin.xid, xid);
   EXPECT_EQ(lwin.geo, fake_window->geo);
-  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.decoration_height, 0u);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
@@ -84,7 +84,7 @@ TEST_F(TestLayoutWindow, InitializationMaximizedWindow)
   LayoutWindow lwin(xid);
   EXPECT_EQ(lwin.xid, xid);
   EXPECT_EQ(lwin.geo, fake_window->geo);
-  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.decoration_height, 0u);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
@@ -99,7 +99,7 @@ TEST_F(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
   LayoutWindow lwin(xid);
   EXPECT_EQ(lwin.xid, xid);
   EXPECT_EQ(lwin.geo, fake_window->geo);
-  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.decoration_height, 0u);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
@@ -113,7 +113,7 @@ TEST_F(TestLayoutWindow, DecorationHeightNormalWindow)
   lwin.ComputeDecorationHeight();
   EXPECT_EQ(lwin.xid, xid);
   EXPECT_EQ(lwin.geo, fake_window->geo);
-  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.decoration_height, 0u);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_FLOAT_EQ(lwin.scale, 1.0f);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
@@ -129,7 +129,7 @@ TEST_F(TestLayoutWindow, DecorationHeightMinimizedNormalWindow)
   lwin.ComputeDecorationHeight();
   EXPECT_EQ(lwin.xid, xid);
   EXPECT_EQ(lwin.geo, fake_window->geo);
-  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.decoration_height, 0u);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
@@ -163,7 +163,7 @@ TEST_F(TestLayoutWindow, DecorationHeightMinimizedMaximizedWindow)
   LayoutWindow lwin(xid);
   EXPECT_EQ(lwin.xid, xid);
   EXPECT_EQ(lwin.geo, fake_window->geo);
-  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.decoration_height, 0u);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
@@ -234,7 +234,7 @@ TEST_F(TestLayoutSystem, GetRowSizesEven)
   ls.LayoutWindows(lwindows, max_bounds, final_bounds);
 
   std::vector<int> const& row_sizes = ls.GetRowSizes(lwindows, max_bounds);
-  EXPECT_EQ(row_sizes.size(), 2);
+  EXPECT_EQ(row_sizes.size(), 2u);
   EXPECT_EQ(row_sizes[0], 2);
   EXPECT_EQ(row_sizes[1], 2);
 }
@@ -259,7 +259,7 @@ TEST_F(TestLayoutSystem, GetRowSizesUnEven)
   ls.LayoutWindows(lwindows, max_bounds, final_bounds);
 
   std::vector<int> const& row_sizes = ls.GetRowSizes(lwindows, max_bounds);
-  EXPECT_EQ(row_sizes.size(), 2);
+  EXPECT_EQ(row_sizes.size(), 2u);
   EXPECT_EQ(row_sizes[0], 2);
   EXPECT_EQ(row_sizes[1], 3);
 }

@@ -108,7 +108,7 @@ TEST(TestAppmenuIndicator, Syncing)
 
   // Sync the indicator removing an entry
   sync_data.erase(std::remove(sync_data.begin(), sync_data.end(), entry2), sync_data.end());
-  ASSERT_EQ(sync_data.size(), 2);
+  ASSERT_EQ(sync_data.size(), 2u);
   EXPECT_CALL(sig_receiver, Updated());
   EXPECT_CALL(sig_receiver, UpdatedWin(parent_window1));
   EXPECT_CALL(sig_receiver, UpdatedWin(parent_window2)).Times(0);
@@ -116,7 +116,7 @@ TEST(TestAppmenuIndicator, Syncing)
   EXPECT_CALL(sig_receiver, EntryRemoved(entry2));
 
   indicator.Sync(sync_data);
-  EXPECT_EQ(indicator.GetEntries().size(), 2);
+  EXPECT_EQ(indicator.GetEntries().size(), 2u);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), nullptr);
   EXPECT_EQ(indicator.GetEntriesForWindow(parent_window1), Indicator::Entries({entry1}));
 
@@ -124,7 +124,7 @@ TEST(TestAppmenuIndicator, Syncing)
   auto entry4 = std::make_shared<Entry>("test-entry-4", "name-hint", parent_window2, "label", true, true, 0, "icon", true, true, -1);
   sync_data.push_back(entry4);
   sync_data.erase(std::remove(sync_data.begin(), sync_data.end(), entry3), sync_data.end());
-  EXPECT_EQ(sync_data.size(), 2);
+  EXPECT_EQ(sync_data.size(), 2u);
 
   EXPECT_CALL(sig_receiver, EntryAdded(entry4));
   EXPECT_CALL(sig_receiver, EntryRemoved(entry3));

@@ -49,7 +49,7 @@ TEST_F(TestCategories, TestSignalProxyAdded)
   Category cat(nullptr, nullptr, nullptr);
 
   bool added = false;
-  ASSERT_EQ(model.row_added.size(), 1);
+  ASSERT_EQ(model.row_added.size(), 1u);
   model.category_added.connect([&added] (Category const&) { added = true; });
   model.row_added.emit(cat);
   EXPECT_TRUE(added);
@@ -60,7 +60,7 @@ TEST_F(TestCategories, TestSignalProxyChanged)
   Category cat(nullptr, nullptr, nullptr);
 
   bool changed = false;
-  ASSERT_EQ(model.row_changed.size(), 1);
+  ASSERT_EQ(model.row_changed.size(), 1u);
   model.category_changed.connect([&changed] (Category const&) { changed = true; });
   model.row_changed.emit(cat);
   EXPECT_TRUE(changed);
@@ -71,7 +71,7 @@ TEST_F(TestCategories, TestSignalProxyRemoved)
   Category cat(nullptr, nullptr, nullptr);
 
   bool removed = false;
-  ASSERT_EQ(model.row_removed.size(), 1);
+  ASSERT_EQ(model.row_removed.size(), 1u);
   model.category_removed.connect([&removed] (Category const&) { removed = true; });
   model.row_removed.emit(cat);
   EXPECT_TRUE(removed);

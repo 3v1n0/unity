@@ -65,13 +65,13 @@ TEST_F(TestTrashLauncherIcon, Activate)
 TEST_F(TestTrashLauncherIcon, Quicklist)
 {
   auto const& menus = icon.Menus();
-  EXPECT_EQ(menus.size(), 1);
+  EXPECT_EQ(menus.size(), 1u);
 }
 
 TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
 {
   auto const& menus = icon.Menus();
-  ASSERT_EQ(menus.size(), 1);
+  ASSERT_EQ(menus.size(), 1u);
 
   auto const& empty_trash_menu = menus.front();
 
@@ -145,12 +145,12 @@ TEST_F(TestTrashLauncherIcon, WindowsOnMonitorChanges)
   ON_CALL(*fm_, WindowsForLocation(TRASH_URI)).WillByDefault(Return(WindowList({win})));
   fm_->locations_changed.emit();
 
-  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), 1);
-  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), 0);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), 1u);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), 0u);
 
   win->SetMonitor(1);
-  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), 0);
-  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), 1);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(0), 0u);
+  EXPECT_EQ(icon.WindowsVisibleOnMonitor(1), 1u);
 }
 
 TEST_F(TestTrashLauncherIcon, FilemanagerSignalDisconnection)

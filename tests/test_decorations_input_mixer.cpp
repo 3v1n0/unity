@@ -53,13 +53,13 @@ TEST_F(TestDecorationInputMixer, PushToFrontItem)
   mixer.PushToFront(item3);
 
   auto const& items = mixer.Items();
-  ASSERT_EQ(3, items.size());
+  ASSERT_EQ(3u, items.size());
   EXPECT_EQ(item3, *std::next(items.begin(), 0));
   EXPECT_EQ(item2, *std::next(items.begin(), 1));
   EXPECT_EQ(item1, *std::next(items.begin(), 2));
 
   mixer.PushToFront(item2);
-  ASSERT_EQ(3, mixer.Items().size());
+  ASSERT_EQ(3u, mixer.Items().size());
   EXPECT_EQ(item2, *std::next(items.begin(), 0));
   EXPECT_EQ(item3, *std::next(items.begin(), 1));
   EXPECT_EQ(item1, *std::next(items.begin(), 2));
@@ -77,13 +77,13 @@ TEST_F(TestDecorationInputMixer, PushToBackItem)
   mixer.PushToBack(item3);
 
   auto const& items = mixer.Items();
-  ASSERT_EQ(3, items.size());
+  ASSERT_EQ(3u, items.size());
   EXPECT_EQ(item1, *std::next(items.begin(), 0));
   EXPECT_EQ(item2, *std::next(items.begin(), 1));
   EXPECT_EQ(item3, *std::next(items.begin(), 2));
 
   mixer.PushToBack(item2);
-  ASSERT_EQ(3, items.size());
+  ASSERT_EQ(3u, items.size());
   EXPECT_EQ(item1, *std::next(items.begin(), 0));
   EXPECT_EQ(item3, *std::next(items.begin(), 1));
   EXPECT_EQ(item2, *std::next(items.begin(), 2));
@@ -101,15 +101,15 @@ TEST_F(TestDecorationInputMixer, RemoveItem)
   mixer.PushToFront(item3);
 
   auto const& items = mixer.Items();
-  ASSERT_EQ(3, items.size());
+  ASSERT_EQ(3u, items.size());
 
   mixer.Remove(item2);
-  ASSERT_EQ(2, items.size());
+  ASSERT_EQ(2u, items.size());
   EXPECT_EQ(item3, *std::next(items.begin(), 0));
   EXPECT_EQ(item1, *std::next(items.begin(), 1));
 
   mixer.Remove(item1);
-  ASSERT_EQ(1, items.size());
+  ASSERT_EQ(1u, items.size());
   EXPECT_EQ(item3, *std::next(items.begin(), 0));
 
   mixer.EnterEvent(CompPoint(item3->Geometry().x2(), item3->Geometry().y1()));

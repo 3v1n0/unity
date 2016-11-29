@@ -116,7 +116,7 @@ TEST_F(TestPreviewMovie, TestUIValues)
   EXPECT_EQ(preview_view->description_->GetText(), "Movie Desctiption &lt; special char");
 
   EXPECT_EQ(preview_view->rating_->GetRating(), 0.8f);
-  EXPECT_EQ(preview_view->action_buttons_.size(), 2);
+  EXPECT_EQ(preview_view->action_buttons_.size(), 2u);
 
   if (preview_view->action_buttons_.size() >= 2)
   {

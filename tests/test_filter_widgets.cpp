@@ -123,7 +123,7 @@ TEST_F(TestFilterMultiRangeWidget, TestConstruction)
   MultiRangeFilter::Ptr filter(new MultiRangeFilter(model_, AddMultiRangeFilterOptions(model_)));
   SetFilter(filter);
 
-  ASSERT_EQ(filter_widget_->buttons_.size(), 6);
+  ASSERT_EQ(filter_widget_->buttons_.size(), 6u);
 }
 
 TEST_F(TestFilterMultiRangeWidget, TestClick)

@@ -105,7 +105,7 @@ TEST_F(TestPreviewGeneric, TestUIValues)
   EXPECT_EQ(preview_view->subtitle_->GetText(), "Generic Subtitle &gt; special char");
   EXPECT_EQ(preview_view->description_->GetText(), "Generic Desctiption &lt; special char");
 
-  EXPECT_EQ(preview_view->action_buttons_.size(), 2);
+  EXPECT_EQ(preview_view->action_buttons_.size(), 2u);
 
   if (preview_view->action_buttons_.size() >= 2)
   {

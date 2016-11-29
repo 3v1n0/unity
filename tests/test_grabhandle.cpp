@@ -168,7 +168,7 @@ TEST_F(UnityMTGrabHandleTest, TestLayoutMasks) {
   EXPECT_EQ (handlesMask, MiddleHandle);
 
   handlesMask = unity::MT::getLayoutForMask (MaximizedHorzMask | MaximizedVertMask, ResizeMask);
-  EXPECT_EQ (handlesMask, 0);
+  EXPECT_EQ (handlesMask, 0u);
 
   handlesMask = unity::MT::getLayoutForMask (MaximizedHorzMask, ResizeMask);
   EXPECT_EQ (handlesMask, BottomHandle | TopHandle);
@@ -193,7 +193,7 @@ TEST_F(UnityMTGrabHandleTest, TestLayoutMasks) {
   EXPECT_EQ (handlesMask, MiddleHandle);
 
   handlesMask = unity::MT::getLayoutForMask (0, 0);
-  EXPECT_EQ (handlesMask, 0);
+  EXPECT_EQ (handlesMask, 0u);
 }
 
 TEST_F(UnityMTGrabHandleTest, TestLayouts)

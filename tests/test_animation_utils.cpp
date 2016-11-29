@@ -60,8 +60,8 @@ TYPED_TEST(TestAnimationUtilsFloating, StartValueForDirection)
 
 TYPED_TEST(TestAnimationUtilsIntegers, StartValueForDirection)
 {
-  EXPECT_EQ(0, StartValueForDirection<TypeParam>(Direction::FORWARD));
-  EXPECT_EQ(100, StartValueForDirection<TypeParam>(Direction::BACKWARD));
+  EXPECT_EQ(static_cast<TypeParam>(0), StartValueForDirection<TypeParam>(Direction::FORWARD));
+  EXPECT_EQ(static_cast<TypeParam>(100), StartValueForDirection<TypeParam>(Direction::BACKWARD));
 }
 
 TYPED_TEST(TestAnimationUtilsFloating, FinishValueForDirection)
@@ -72,8 +72,8 @@ TYPED_TEST(TestAnimationUtilsFloating, FinishValueForDirection)
 
 TYPED_TEST(TestAnimationUtilsIntegers, FinishValueForDirection)
 {
-  EXPECT_EQ(100, FinishValueForDirection<TypeParam>(Direction::FORWARD));
-  EXPECT_EQ(0, FinishValueForDirection<TypeParam>(Direction::BACKWARD));
+  EXPECT_EQ(static_cast<TypeParam>(100), FinishValueForDirection<TypeParam>(Direction::FORWARD));
+  EXPECT_EQ(static_cast<TypeParam>(0), FinishValueForDirection<TypeParam>(Direction::BACKWARD));
 }
 
 TYPED_TEST(TestAnimationUtils, StartNotRunning)
