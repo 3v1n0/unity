@@ -31,6 +31,11 @@ elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
   include_directories (${GTEST_INCLUDE_DIR})
 endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
 
+if (GMOCK_SOURCE_DIR)
+  set(GMOCK_LIB gmock)
+  set(GMOCK_MAIN_LIB gmock_main)
+endif (GMOCK_SOURCE_DIR)
+
 #
 # Unit tests
 #
@@ -70,8 +75,6 @@ add_subdirectory (test-get-transients)
 #
 
 enable_testing()
-set(GMOCK_LIB gmock)
-set(GMOCK_MAIN_LIB gmock_main)
 
 if (GMOCK_LIB AND
     GMOCK_MAIN_LIB)
@@ -401,7 +404,7 @@ set (TEST_COMMAND_HEADLESS
   && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW}
   && ${TEST_COMMAND_XLESS})
 
-if (GTEST_ROOT_DIR)
+if (GMOCK_SOURCE_DIR)
   if (ENABLE_X_SUPPORT)
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
@@ -412,7 +415,7 @@ if (GTEST_ROOT_DIR)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
   endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-endif (GTEST_ROOT_DIR)
+endif (GMOCK_SOURCE_DIR)
 # make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
 # Rules to install autopilot files and executable script:
