@@ -1,3 +1,15 @@
+unity (7.5.0+17.04.20161130-0ubuntu1) zesty; urgency=medium
+
+  [ Kai-Heng Feng ]
+  * UnitySettings: If scale-factor is not set, find and set right scale
+    for HiDPI displays.
+
+  [ Marco Trevisan (Treviño) ]
+  * CMakeLists.txt: add support to compile with GTest 1.8 (LP: #1644062)
+  * UnityScreen: toggle gestures recognition on lock (LP: #1645507)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 30 Nov 2016 11:06:58 +0000
+
 unity (7.5.0+17.04.20161111.1-0ubuntu1) zesty; urgency=medium
 
   * LockScreenController: use InputMonitor to get all the events and
