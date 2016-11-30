@@ -34,10 +34,10 @@ TEST(TestUnityWindowStyle, Get)
   auto style_copy = UnityWindowStyle::Get();
   ASSERT_EQ(style, style_copy);
 
-  EXPECT_EQ(style.use_count(), 2);
+  EXPECT_EQ(style.use_count(), 2u);
   }
 
-  EXPECT_EQ(style.use_count(), 1);
+  EXPECT_EQ(style.use_count(), 1u);
 }
 
 }

@@ -92,7 +92,7 @@ TEST_F(TestFileManagerLauncherIcon, NoManagedWindow_TrashPath)
 TEST_F(TestFileManagerLauncherIcon, NoManagedWindow_Device)
 {
   auto const& device_icons = dev_->GetIcons();
-  ASSERT_EQ(2, device_icons.size());
+  ASSERT_EQ(2u, device_icons.size());
 
   device_icons.at(0)->Activate(ActionArg());
 
@@ -164,7 +164,7 @@ TEST_F(TestFileManagerLauncherIcon, ManagedWindows_CopyDialogAndManagedWindow)
 
   EXPECT_TRUE(icon_->IsVisible());
   EXPECT_TRUE(icon_->IsRunning());
-  EXPECT_EQ(2, icon_->WindowsVisibleOnMonitor(0));
+  EXPECT_EQ(2u, icon_->WindowsVisibleOnMonitor(0));
 }
 
 TEST_F(TestFileManagerLauncherIcon, ManagedWindows_CopyDialogAndNoManagedWindow)
@@ -196,7 +196,7 @@ TEST_F(TestFileManagerLauncherIcon, ManagedWindows_CopyDialogAndNoManagedWindow)
 
   EXPECT_TRUE(icon_->IsVisible());
   EXPECT_TRUE(icon_->IsRunning());
-  EXPECT_EQ(1, icon_->WindowsVisibleOnMonitor(0));
+  EXPECT_EQ(1u, icon_->WindowsVisibleOnMonitor(0));
 }
 
 }

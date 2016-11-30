@@ -107,7 +107,7 @@ TEST_F(TestPreviewMusic, TestUIValues)
   EXPECT_EQ(preview_view->title_->GetText(), "Music Title &amp; special char");
   EXPECT_EQ(preview_view->subtitle_->GetText(), "Music Subtitle &gt; special char");
 
-  EXPECT_EQ(preview_view->action_buttons_.size(), 4);
+  EXPECT_EQ(preview_view->action_buttons_.size(), 4u);
 
   if (preview_view->action_buttons_.size() >= 2)
   {

@@ -39,7 +39,7 @@ TEST_F(TestSwitcherController, InitialDetailTimeout)
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   Selection selection = controller_->GetCurrentSelection();
   EXPECT_EQ(selection.application_->tooltip_text(), "Second");
-  EXPECT_EQ(selection.window_, 0);
+  EXPECT_EQ(selection.window_, 0u);
 
   Utils::WaitForTimeoutMSec(initial_details_timeout * 1.1);
   selection = controller_->GetCurrentSelection();
@@ -65,22 +65,22 @@ TEST_F(TestSwitcherController, DetailTimeoutRemoval)
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   Selection selection = controller_->GetCurrentSelection();
   EXPECT_EQ(selection.application_->tooltip_text(), "Second");
-  EXPECT_EQ(selection.window_, 0);
+  EXPECT_EQ(selection.window_, 0u);
 
   controller_->Next();
   selection = controller_->GetCurrentSelection();
   ASSERT_EQ(selection.application_->tooltip_text(), "Third");
-  EXPECT_EQ(selection.window_, 0);
+  EXPECT_EQ(selection.window_, 0u);
 
   controller_->Next();
   selection = controller_->GetCurrentSelection();
   ASSERT_EQ(selection.application_->tooltip_text(), "Show Desktop");
-  EXPECT_EQ(selection.window_, 0);
+  EXPECT_EQ(selection.window_, 0u);
 
   controller_->Next();
   selection = controller_->GetCurrentSelection();
   ASSERT_EQ(selection.application_->tooltip_text(), "First");
-  EXPECT_EQ(selection.window_, 0);
+  EXPECT_EQ(selection.window_, 0u);
 
   Utils::WaitForTimeoutMSec(details_timeout * 1.1);
   selection = controller_->GetCurrentSelection();

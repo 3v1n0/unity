@@ -241,9 +241,9 @@ TEST(TestGLibVariant, ConstructHintsMap)
   EXPECT_EQ("charstring-value", Variant(g_variant_lookup_value(v, "charstring-key", nullptr)).GetString());
   EXPECT_EQ("string-value", Variant(g_variant_lookup_value(v, "string-key", nullptr)).GetString());
   EXPECT_EQ(-1, Variant(g_variant_lookup_value(v, "gint32-key", nullptr)).GetInt32());
-  EXPECT_EQ(2, Variant(g_variant_lookup_value(v, "guint32-key", nullptr)).GetUInt32());
+  EXPECT_EQ(2u, Variant(g_variant_lookup_value(v, "guint32-key", nullptr)).GetUInt32());
   EXPECT_EQ(-3, Variant(g_variant_lookup_value(v, "gint64-key", nullptr)).GetInt64());
-  EXPECT_EQ(4, Variant(g_variant_lookup_value(v, "guint64-key", nullptr)).GetUInt64());
+  EXPECT_EQ(4u, Variant(g_variant_lookup_value(v, "guint64-key", nullptr)).GetUInt64());
   EXPECT_FLOAT_EQ(1.1, Variant(g_variant_lookup_value(v, "float-key", nullptr)).GetFloat());
   EXPECT_DOUBLE_EQ(2.2, Variant(g_variant_lookup_value(v, "double-key", nullptr)).GetDouble());
   EXPECT_EQ(true, Variant(g_variant_lookup_value(v, "bool-key", nullptr)).GetBool());
@@ -387,9 +387,9 @@ TEST(TestGLibVariant, AssignHintsMap)
   EXPECT_EQ("charstring-value", Variant(g_variant_lookup_value(v, "charstring-key", nullptr)).GetString());
   EXPECT_EQ("string-value", Variant(g_variant_lookup_value(v, "string-key", nullptr)).GetString());
   EXPECT_EQ(-1, Variant(g_variant_lookup_value(v, "gint32-key", nullptr)).GetInt32());
-  EXPECT_EQ(2, Variant(g_variant_lookup_value(v, "guint32-key", nullptr)).GetUInt32());
+  EXPECT_EQ(2u, Variant(g_variant_lookup_value(v, "guint32-key", nullptr)).GetUInt32());
   EXPECT_EQ(-3, Variant(g_variant_lookup_value(v, "gint64-key", nullptr)).GetInt64());
-  EXPECT_EQ(4, Variant(g_variant_lookup_value(v, "guint64-key", nullptr)).GetUInt64());
+  EXPECT_EQ(4u, Variant(g_variant_lookup_value(v, "guint64-key", nullptr)).GetUInt64());
   EXPECT_FLOAT_EQ(1.1, Variant(g_variant_lookup_value(v, "float-key", nullptr)).GetFloat());
   EXPECT_DOUBLE_EQ(2.2, Variant(g_variant_lookup_value(v, "double-key", nullptr)).GetDouble());
   EXPECT_EQ(true, Variant(g_variant_lookup_value(v, "bool-key", nullptr)).GetBool());
@@ -590,10 +590,10 @@ TEST(TestGLibVariant, GetUInt32)
   EXPECT_EQ(v2.GetUInt32(), value);
 
   Variant v3(g_variant_new("(ui)", value, G_MAXUINT32));
-  EXPECT_EQ(v3.GetUInt32(), 0);
+  EXPECT_EQ(v3.GetUInt32(), 0u);
 
   Variant v4;
-  EXPECT_EQ(v4.GetUInt32(), 0);
+  EXPECT_EQ(v4.GetUInt32(), 0u);
 
   value = g_random_int();
   Variant v5(g_variant_new_variant(g_variant_new_uint32(value)));
@@ -632,10 +632,10 @@ TEST(TestGLibVariant, GetUInt64)
   EXPECT_EQ(v2.GetUInt64(), value);
 
   Variant v3(g_variant_new("(ti)", value, G_MAXINT64));
-  EXPECT_EQ(v3.GetUInt64(), 0);
+  EXPECT_EQ(v3.GetUInt64(), 0u);
 
   Variant v4;
-  EXPECT_EQ(v4.GetUInt64(), 0);
+  EXPECT_EQ(v4.GetUInt64(), 0u);
 
   value = g_random_int();
   Variant v5(g_variant_new_variant(g_variant_new_uint64(value)));
@@ -702,7 +702,7 @@ TEST(TestGLibVariant, FromVectorEmpty)
 
   auto const& variant = Variant::FromVector(empty);
   ASSERT_TRUE(g_variant_is_container(variant));
-  ASSERT_EQ(0, g_variant_n_children(variant));
+  ASSERT_EQ(0u, g_variant_n_children(variant));
   EXPECT_TRUE(g_variant_is_of_type(variant, G_VARIANT_TYPE_ARRAY));
 }
 

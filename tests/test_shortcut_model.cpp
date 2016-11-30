@@ -40,10 +40,10 @@ TEST(TestShortcutModel, TestConstruction)
   Model model(hints);
 
   EXPECT_EQ(model.categories_per_column(), 3);
-  EXPECT_EQ(model.categories().size(), 3);
-  EXPECT_EQ(model.hints().at("Launcher").size(), 2);
-  EXPECT_EQ(model.hints().at("Dash").size(), 1);
-  EXPECT_EQ(model.hints().at("Menu Bar").size(), 1);
+  EXPECT_EQ(model.categories().size(), 3u);
+  EXPECT_EQ(model.hints().at("Launcher").size(), 2u);
+  EXPECT_EQ(model.hints().at("Dash").size(), 1u);
+  EXPECT_EQ(model.hints().at("Menu Bar").size(), 1u);
   EXPECT_EQ(model.hints().find("Unity"), model.hints().end());
 }
 

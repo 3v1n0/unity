@@ -57,7 +57,7 @@ TEST_F(TestPanelController, Construction)
   {
     Controller pc(menus, edge_barriers);
 
-    ASSERT_EQ(pc.panels().size(), 1);
+    ASSERT_EQ(pc.panels().size(), 1u);
     EXPECT_EQ(pc.panels()[0]->GetMonitor(), 0);
     panel_ptr = pc.panels()[0];
   }
@@ -98,7 +98,7 @@ TEST_F(TestPanelController, MultimonitorSwitchToSingleMonitor)
     ASSERT_EQ(pc.panels().size(), monitors::MAX);
 
     uscreen.Reset();
-    EXPECT_EQ(pc.panels().size(), 1);
+    EXPECT_EQ(pc.panels().size(), 1u);
     EXPECT_EQ(pc.panels()[0]->GetMonitor(), 0);
   }
 }
@@ -127,7 +127,7 @@ TEST_F(TestPanelController, SingleMonitorSwitchToMultimonitor)
   {
     Controller pc(menus, edge_barriers);
 
-    ASSERT_EQ(pc.panels().size(), 1);
+    ASSERT_EQ(pc.panels().size(), 1u);
 
     uscreen.SetupFakeMultiMonitor();
     EXPECT_EQ(pc.panels().size(), monitors::MAX);

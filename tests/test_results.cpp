@@ -41,7 +41,7 @@ TEST_F(TestResults, TestSignalProxyAdded)
   Result res(nullptr, nullptr, nullptr);
 
   bool added = false;
-  ASSERT_EQ(model.row_added.size(), 1);
+  ASSERT_EQ(model.row_added.size(), 1u);
   model.result_added.connect([&added] (Result const&) { added = true; });
   model.row_added.emit(res);
   EXPECT_TRUE(added);
@@ -52,7 +52,7 @@ TEST_F(TestResults, TestSignalProxyChanged)
   Result res(nullptr, nullptr, nullptr);
 
   bool changed = false;
-  ASSERT_EQ(model.row_changed.size(), 1);
+  ASSERT_EQ(model.row_changed.size(), 1u);
   model.result_changed.connect([&changed] (Result const&) { changed = true; });
   model.row_changed.emit(res);
   EXPECT_TRUE(changed);
@@ -63,7 +63,7 @@ TEST_F(TestResults, TestSignalProxyRemoved)
   Result res(nullptr, nullptr, nullptr);
 
   bool removed = false;
-  ASSERT_EQ(model.row_removed.size(), 1);
+  ASSERT_EQ(model.row_removed.size(), 1u);
   model.result_removed.connect([&removed] (Result const&) { removed = true; });
   model.row_removed.emit(res);
   EXPECT_TRUE(removed);
@@ -83,15 +83,15 @@ TEST_F(TestResults, TestFilterValid)
 
   dee_filter_new_for_any_column(2, g_variant_new_uint32(1), &filter);
   glib::Object<DeeModel> filter_model(dee_filter_model_new(model.model(), &filter));
-  
+
   unsigned int i = 0;
   for (ResultIterator iter(filter_model);  !iter.IsLast(); ++iter)
   {
-    EXPECT_EQ((*iter).category_index(), 1);
+    EXPECT_EQ((*iter).category_index(), 1u);
     i++;
   }
 
-  EXPECT_EQ(i, 50);
+  EXPECT_EQ(i, 50u);
 }
 
 TEST_F(TestResults, TestRowsValid)
@@ -108,7 +108,7 @@ TEST_F(TestResults, TestRowsValid)
     EXPECT_EQ(result.uri(), value);
     EXPECT_EQ(result.icon_hint(), value);
     EXPECT_EQ(result.category_index(), (i / 50));
-    EXPECT_EQ(result.result_type(), 0);
+    EXPECT_EQ(result.result_type(), 0u);
     EXPECT_EQ(result.mimetype(), value);
     EXPECT_EQ(result.name(), value);
     EXPECT_EQ(result.comment(), value);
@@ -287,8 +287,8 @@ TEST_F(TestResults, LocalResult_FromToVariant)
 
   EXPECT_EQ(local_result_2.uri, "uri");
   EXPECT_EQ(local_result_2.icon_hint, "icon_hint");
-  EXPECT_EQ(local_result_2.category_index, 1);
-  EXPECT_EQ(local_result_2.result_type, 2);
+  EXPECT_EQ(local_result_2.category_index, 1u);
+  EXPECT_EQ(local_result_2.result_type, 2u);
   EXPECT_EQ(local_result_2.mimetype, "mimetype");
   EXPECT_EQ(local_result_2.name, "name");
   EXPECT_EQ(local_result_2.comment, "comment");
@@ -315,7 +315,7 @@ TEST_F(TestResults, LocalResult_FromToVariant)
 TEST_F(TestResults, LocalResult_Variants)
 {
   LocalResult local_result;
-  EXPECT_EQ(local_result.Variants().size(), 9);
+  EXPECT_EQ(local_result.Variants().size(), 9u);
 }
 
 }

@@ -258,9 +258,9 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
   ASSERT_THAT(category_model1, NotNull());
   ASSERT_THAT(category_model2, NotNull());
 
-  EXPECT_EQ(category_model0->count(), 5) << "Category 0 result count not as expected (" << category_model0->count() << " != 5)";
-  EXPECT_EQ(category_model1->count(), 4) << "Category 1 result count not as expected (" << category_model1->count() << " != 4)";
-  EXPECT_EQ(category_model2->count(), 4) << "Category 2 result count not as expected (" << category_model2->count() << " != 4)";
+  EXPECT_EQ(category_model0->count(), 5u) << "Category 0 result count not as expected (" << category_model0->count() << " != 5)";
+  EXPECT_EQ(category_model1->count(), 4u) << "Category 1 result count not as expected (" << category_model1->count() << " != 4)";
+  EXPECT_EQ(category_model2->count(), 4u) << "Category 2 result count not as expected (" << category_model2->count() << " != 4)";
 
   // 2. Update the filter.
   CheckOptionFilter::Ptr type_filter = std::static_pointer_cast<CheckOptionFilter>(WaitForFilter("categories"));
@@ -287,9 +287,9 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
   category_model1 = scope_->GetResultsForCategory(1);
   category_model2 = scope_->GetResultsForCategory(2);
 
-  EXPECT_EQ(category_model0->count(), 0) << "Category 0 result count not as expected (" << category_model0->count() << " != 0)";
-  EXPECT_EQ(category_model1->count(), 4) << "Category 1 result count not as expected (" << category_model1->count() << " != 4)";
-  EXPECT_EQ(category_model2->count(), 0) << "Category 2 result count not as expected (" << category_model2->count() << " != 0)";
+  EXPECT_EQ(category_model0->count(), 0u) << "Category 0 result count not as expected (" << category_model0->count() << " != 0)";
+  EXPECT_EQ(category_model1->count(), 4u) << "Category 1 result count not as expected (" << category_model1->count() << " != 4)";
+  EXPECT_EQ(category_model2->count(), 0u) << "Category 2 result count not as expected (" << category_model2->count() << " != 0)";
 }
 
 } // namespace dash

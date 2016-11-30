@@ -122,7 +122,7 @@ TEST_F(TestPreviewApplication, TestUIValues)
   EXPECT_EQ(preview_view->copywrite_->GetText(), "Copywrite &amp; special char");
 
   EXPECT_EQ(preview_view->app_rating_->GetRating(), 0.8f);
-  EXPECT_EQ(preview_view->action_buttons_.size(), 2);
+  EXPECT_EQ(preview_view->action_buttons_.size(), 2u);
 
   if (preview_view->action_buttons_.size() >= 2)
   {

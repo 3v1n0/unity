@@ -41,13 +41,13 @@ TEST(TestHudButton, TestLabelOpacity)
   nux::Layout* layout = button->GetLayout();
 
   ASSERT_NE(layout, nullptr);
-  ASSERT_EQ(layout->GetChildren().size(), 0);
+  ASSERT_EQ(layout->GetChildren().size(), 0u);
 
   hud::Query::Ptr query(new hud::Query("<b>Op</b> Fi<b>le</b>", "","", "", "", NULL));
   button->SetQuery(query);
 
   auto children(layout->GetChildren());
-  ASSERT_EQ(children.size(), 3);
+  ASSERT_EQ(children.size(), 3u);
 
   auto it = children.begin();
   StaticCairoText* label = dynamic_cast<StaticCairoText*>(*it);

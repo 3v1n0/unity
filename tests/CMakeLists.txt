@@ -6,6 +6,37 @@ set(UNITY_SRC ../plugins/unityshell/src)
 file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_BINARY_DIR}/tests)
 
 #
+# Google Tests
+#
+
+# Check for google test and build it locally
+set (GTEST_PREFIX "/usr/src/googletest")
+
+if (EXISTS "${GTEST_PREFIX}")
+  # As of version 1.8.0
+  set (GMOCK_SOURCE_DIR "${GTEST_PREFIX}/googlemock" CACHE PATH "gmock source directory")
+  set (GMOCK_INCLUDE_DIR "${GMOCK_SOURCE_DIR}/include" CACHE PATH "gmock source include directory")
+  set (GTEST_INCLUDE_DIR "${GTEST_PREFIX}/googletest/include" CACHE PATH "gtest source include directory")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
+else()
+  set (GMOCK_SOURCE_DIR "/usr/src/gmock" CACHE PATH "gmock source directory")
+  set (GMOCK_INCLUDE_DIR "/usr/include/gmock/include" CACHE PATH "gmock source include directory")
+  set (GTEST_INCLUDE_DIR "${GMOCK_SOURCE_DIR}/gtest/include" CACHE PATH "gtest source include directory")
+endif()
+
+if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
+  include_directories (${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
+  add_subdirectory(${GMOCK_SOURCE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/gmock")
+elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
+  include_directories (${GTEST_INCLUDE_DIR})
+endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
+
+if (GMOCK_SOURCE_DIR)
+  set(GMOCK_LIB gmock)
+  set(GMOCK_MAIN_LIB gmock_main)
+endif (GMOCK_SOURCE_DIR)
+
+#
 # Unit tests
 #
 set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;libupstart;xtst")
@@ -44,8 +75,6 @@ add_subdirectory (test-get-transients)
 #
 
 enable_testing()
-set(GMOCK_LIB gmock)
-set(GMOCK_MAIN_LIB gmock_main)
 
 if (GMOCK_LIB AND
     GMOCK_MAIN_LIB)
@@ -375,7 +404,7 @@ set (TEST_COMMAND_HEADLESS
   && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW}
   && ${TEST_COMMAND_XLESS})
 
-if (GTEST_ROOT_DIR)
+if (GMOCK_SOURCE_DIR)
   if (ENABLE_X_SUPPORT)
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
@@ -386,9 +415,10 @@ if (GTEST_ROOT_DIR)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
   endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-endif (GTEST_ROOT_DIR)
+endif (GMOCK_SOURCE_DIR)
 # make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
 # Rules to install autopilot files and executable script:
 install(CODE "execute_process(COMMAND python2.7 setup.py install --prefix ${CMAKE_INSTALL_PREFIX} WORKING_DIRECTORY ${AUTOPILOTDIR})")
 add_custom_target (autopilot COMMAND cd ${AUTOPILOTDIR} && make check)
+

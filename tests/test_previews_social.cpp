@@ -101,7 +101,7 @@ TEST_F(TestPreviewSocial, TestUIValues)
 
   EXPECT_EQ(preview_view->title_->GetText(), "Social Title &amp; special char");
   EXPECT_EQ(preview_view->subtitle_->GetText(), "Social Subtitle &gt; special char");
-  EXPECT_EQ(preview_view->action_buttons_.size(), 2);
+  EXPECT_EQ(preview_view->action_buttons_.size(), 2u);
 }
 
 }

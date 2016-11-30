@@ -304,56 +304,7 @@ add_subdirectory(guides)
 add_subdirectory(gnome)
 
 if (ENABLE_UNIT_TESTS)
-  # Check for google test and build it locally
-  set (
-    GMOCK_ROOT_DIR
-    "/usr/src/gmock"
-    CACHE
-    PATH
-    "Path to Google mock srcs"
-  )
-
-  set (
-    GMOCK_INCLUDE_DIR
-    "/usr/include/gmock/include"
-    CACHE
-    PATH
-    "Path to Google mock include"
-  )
-
-  set(
-    GTEST_ROOT_DIR
-    "${GMOCK_ROOT_DIR}/gtest" # Default value, adjustable by user with e.g., ccmake
-    CACHE
-    PATH
-    "Path to Google test srcs"
-  )
-
-  set(
-    GTEST_INCLUDE_DIR
-    "${GMOCK_ROOT_DIR}/gtest/include"
-    CACHE
-    PATH
-    "Path to Google tests include"
-  )
-
-  if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
-    include_directories (
-      ${GMOCK_INCLUDE_DIR}
-      ${GTEST_INCLUDE_DIR}
-    )
-    add_subdirectory(
-      ${GMOCK_ROOT_DIR}
-      "${CMAKE_CURRENT_BINARY_DIR}/gmock"
-    )
-  elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
-    include_directories (
-      ${GTEST_INCLUDE_DIR}
-    )
-  endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
-
   add_subdirectory(tests)
-
 else (ENABLE_UNIT_TESTS)
   set (MISSING_TESTS_MSG "-- Tests disabled, compile with -DENABLE_UNIT_TESTS=ON")
   add_custom_target (check COMMAND echo ${MISSING_TESTS_MSG})
@@ -390,3 +341,4 @@ if (DOXYGEN_FOUND STREQUAL "YES")
          ADDITIONAL_MAKE_CLEAN_FILES api-doc)
 
 endif (DOXYGEN_FOUND STREQUAL "YES")
+

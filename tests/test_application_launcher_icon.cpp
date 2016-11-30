@@ -725,11 +725,11 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollInitiallyUnfocusedWindow)
   mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
 
   EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1, 8));
-  ASSERT_EQ(WM->GetActiveWindow(), 8);
+  ASSERT_EQ(WM->GetActiveWindow(), 8u);
 
   mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 200);
   EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 8, 1));
-  ASSERT_EQ(WM->GetActiveWindow(), 1);
+  ASSERT_EQ(WM->GetActiveWindow(), 1u);
 }
 
 TEST_F(TestApplicationLauncherIcon, PerformScrollSingleUnfocusedWindow)
@@ -741,12 +741,12 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollSingleUnfocusedWindow)
   mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
 
   EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(1, 2));
-  ASSERT_EQ(WM->GetActiveWindow(), 2);
+  ASSERT_EQ(WM->GetActiveWindow(), 2u);
 
   mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 200);
 
   EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(2, 1));
-  ASSERT_EQ(WM->GetActiveWindow(), 1);
+  ASSERT_EQ(WM->GetActiveWindow(), 1u);
 }
 
 TEST_F(TestApplicationLauncherIcon, ActiveQuirkWMCrossCheck)

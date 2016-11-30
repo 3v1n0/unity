@@ -66,6 +66,8 @@ TEST(TestKeyboardUtil, AboveKeySymbol)
   ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("x")), NoSymbol);
   ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("y")), NoSymbol);
   ASSERT_NE(keyboard::get_key_above_key_symbol(x_display, XStringToKeysym("z")), NoSymbol);
+
+  XCloseDisplay(x_display);
 }
 
 TEST(TestKeyboardUtil, BelowKeySymbol)
@@ -97,6 +99,8 @@ TEST(TestKeyboardUtil, BelowKeySymbol)
   ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("w")), NoSymbol);
   ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("x")), NoSymbol);
   ASSERT_NE(keyboard::get_key_below_key_symbol(x_display, XStringToKeysym("y")), NoSymbol);
+
+  XCloseDisplay(x_display);
 }
 
 TEST(TestKeyboardUtil, RightToKeySymbol)
@@ -134,6 +138,8 @@ TEST(TestKeyboardUtil, RightToKeySymbol)
   ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("x")), NoSymbol);
   ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("y")), NoSymbol);
   ASSERT_NE(keyboard::get_key_right_to_key_symbol(x_display, XStringToKeysym("z")), NoSymbol);
+
+  XCloseDisplay(x_display);
 }
 
 TEST(TestKeyboardUtil, LeftToKeySymbol)
@@ -172,6 +178,8 @@ TEST(TestKeyboardUtil, LeftToKeySymbol)
   ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("x")), NoSymbol);
   ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("y")), NoSymbol);
   ASSERT_NE(keyboard::get_key_left_to_key_symbol(x_display, XStringToKeysym("z")), NoSymbol);
+
+  XCloseDisplay(x_display);
 }
 
 TEST(TestKeyboardUtil, PrintableKeySymbols)

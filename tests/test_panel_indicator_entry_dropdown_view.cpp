@@ -97,12 +97,12 @@ TEST_F(TestPanelIndicatorEntryDropdownView, Push)
 
   dropdown.Push(first_entry);
   EXPECT_FALSE(dropdown.Empty());
-  EXPECT_EQ(1, dropdown.Size());
+  EXPECT_EQ(1u, dropdown.Size());
   EXPECT_TRUE(dropdown.IsVisible());
   EXPECT_THAT(dropdown.Children(), Contains(first_entry));
   EXPECT_EQ(first_entry, dropdown.Top());
 
-  EXPECT_EQ(1, first_entry->GetEntry()->parents().size());
+  EXPECT_EQ(1u, first_entry->GetEntry()->parents().size());
   EXPECT_THAT(first_entry->GetEntry()->parents(), Contains(dropdown.GetEntry()));
 
   auto second_entry = BuildEntry("SecondEntry");
@@ -110,12 +110,12 @@ TEST_F(TestPanelIndicatorEntryDropdownView, Push)
 
   dropdown.Push(second_entry);
   EXPECT_FALSE(dropdown.Empty());
-  EXPECT_EQ(2, dropdown.Size());
+  EXPECT_EQ(2u, dropdown.Size());
   EXPECT_TRUE(dropdown.IsVisible());
   EXPECT_THAT(dropdown.Children(), Contains(second_entry));
   EXPECT_EQ(first_entry, dropdown.Top());
 
-  EXPECT_EQ(1, second_entry->GetEntry()->parents().size());
+  EXPECT_EQ(1u, second_entry->GetEntry()->parents().size());
   EXPECT_THAT(second_entry->GetEntry()->parents(), Contains(dropdown.GetEntry()));
 }
 
@@ -127,12 +127,12 @@ TEST_F(TestPanelIndicatorEntryDropdownView, Insert)
 
   dropdown.Insert(first_entry);
   EXPECT_FALSE(dropdown.Empty());
-  EXPECT_EQ(1, dropdown.Size());
+  EXPECT_EQ(1u, dropdown.Size());
   EXPECT_TRUE(dropdown.IsVisible());
   EXPECT_THAT(dropdown.Children(), Contains(first_entry));
   EXPECT_EQ(first_entry, dropdown.Top());
 
-  EXPECT_EQ(1, first_entry->GetEntry()->parents().size());
+  EXPECT_EQ(1u, first_entry->GetEntry()->parents().size());
   EXPECT_THAT(first_entry->GetEntry()->parents(), Contains(dropdown.GetEntry()));
 
   auto second_entry = BuildEntry("SecondEntry");
@@ -141,12 +141,12 @@ TEST_F(TestPanelIndicatorEntryDropdownView, Insert)
 
   dropdown.Insert(second_entry);
   EXPECT_FALSE(dropdown.Empty());
-  EXPECT_EQ(2, dropdown.Size());
+  EXPECT_EQ(2u, dropdown.Size());
   EXPECT_TRUE(dropdown.IsVisible());
   EXPECT_THAT(dropdown.Children(), Contains(second_entry));
   EXPECT_EQ(second_entry, dropdown.Top());
 
-  EXPECT_EQ(1, second_entry->GetEntry()->parents().size());
+  EXPECT_EQ(1u, second_entry->GetEntry()->parents().size());
   EXPECT_THAT(second_entry->GetEntry()->parents(), Contains(dropdown.GetEntry()));
 }
 
@@ -161,7 +161,7 @@ TEST_F(TestPanelIndicatorEntryDropdownView, Remove)
   EXPECT_CALL(sig_receiver, Refreshed(&dropdown)).Times(0);
   dropdown.Remove(second_entry);
 
-  EXPECT_EQ(1, dropdown.Size());
+  EXPECT_EQ(1u, dropdown.Size());
   EXPECT_TRUE(dropdown.IsVisible());
   EXPECT_THAT(dropdown.Children(), Not(Contains(second_entry)));
   EXPECT_THAT(second_entry->GetEntry()->parents(), Not(Contains(dropdown.GetEntry())));
@@ -193,7 +193,7 @@ TEST_F(TestPanelIndicatorEntryDropdownView, Pop)
   EXPECT_CALL(sig_receiver, Refreshed(&dropdown)).Times(0);
   EXPECT_EQ(first_entry, dropdown.Pop());
 
-  EXPECT_EQ(1, dropdown.Size());
+  EXPECT_EQ(1u, dropdown.Size());
   EXPECT_TRUE(dropdown.IsVisible());
   EXPECT_THAT(dropdown.Children(), Not(Contains(first_entry)));
   EXPECT_THAT(first_entry->GetEntry()->parents(), Not(Contains(dropdown.GetEntry())));

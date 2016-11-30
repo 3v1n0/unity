@@ -94,7 +94,7 @@ TEST(TestPointerBarrier, HandleHitNotifyEvents)
       EXPECT_EQ(bev->x, ev.root_x);
       EXPECT_EQ(bev->y, ev.root_y);
       EXPECT_EQ(bev->velocity, 600 * pb->max_velocity_multiplier);
-      EXPECT_EQ(bev->event_id, ev.eventid);
+      EXPECT_EQ(bev->event_id, static_cast<int>(ev.eventid));
      }
   });
 
@@ -120,7 +120,7 @@ TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
     EXPECT_EQ(bev->x, ev.root_x);
     EXPECT_EQ(bev->y, ev.root_y);
     EXPECT_GT(bev->velocity, 0);
-    EXPECT_EQ(bev->event_id, ev.eventid);
+    EXPECT_EQ(bev->event_id, static_cast<int>(ev.eventid));
   });
 
   pb->released = true;

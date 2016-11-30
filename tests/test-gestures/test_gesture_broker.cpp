@@ -111,11 +111,11 @@ TEST_F(GestureBrokerTest, ThreeFingersTouchHitsCorrectWindow)
   // Gesture shouldn't be accepted as constructions hasn't finished
   ASSERT_EQ(0, g_gesture_event_accept_count[0]);
   ASSERT_EQ(0, g_gesture_event_reject_count[0]);
-  ASSERT_EQ(1, g_window_target_mocks.size());
+  ASSERT_EQ(1u, g_window_target_mocks.size());
   WindowGestureTargetMock *target_mock = *g_window_target_mocks.begin();
   ASSERT_TRUE(target_mock->window == middle_window);
   // No events yet as the broker didn't accept the gesture yet
-  ASSERT_EQ(0, target_mock->events_received.size());
+  ASSERT_EQ(0u, target_mock->events_received.size());
 
   fake_event.type = nux::EVENT_GESTURE_UPDATE;
   fake_event.touches.push_back(nux::TouchPoint(4, 132.0f, 142.0f));
@@ -128,5 +128,5 @@ TEST_F(GestureBrokerTest, ThreeFingersTouchHitsCorrectWindow)
   // Check that this gesture target is still valid
   ASSERT_EQ(1, g_window_target_mocks.count(target_mock));
   // Gesture events should have been sent to the target by now
-  ASSERT_EQ(2, target_mock->events_received.size());
+  ASSERT_EQ(2u, target_mock->events_received.size());
 }

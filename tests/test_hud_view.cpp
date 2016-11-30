@@ -50,7 +50,7 @@ TEST(TestHudView, TestSetQueries)
   queries.push_back(hud::Query::Ptr(new hud::Query("4", "","", "", "", NULL)));
   view->SetQueries(queries);
 
-  ASSERT_EQ(view->buttons().size(), 4);
+  ASSERT_EQ(view->buttons().size(), 4u);
 
   auto it = view->buttons().begin();
   EXPECT_EQ((*it)->label, "4");

@@ -179,7 +179,7 @@ TEST_F(TestGLibDBusServer, AddsObjectsWhenOwingName)
   unsigned objects_registered = 0;
 
   server.AddObjects(introspection::MULTIPLE_OJBECTS, TEST_OBJECT_PATH);
-  ASSERT_EQ(server.GetObjects().size(), 3);
+  ASSERT_EQ(server.GetObjects().size(), 3u);
 
   for (auto const& obj : server.GetObjects())
   {
@@ -193,7 +193,7 @@ TEST_F(TestGLibDBusServer, AddsObjectsWhenOwingName)
 
   Utils::WaitUntilMSec([this] { return server.OwnsName(); });
 
-  EXPECT_EQ(objects_registered, 3);
+  EXPECT_EQ(objects_registered, 3u);
 }
 
 TEST_F(TestGLibDBusServer, RemovingObjectWontRegisterIt)
@@ -201,10 +201,10 @@ TEST_F(TestGLibDBusServer, RemovingObjectWontRegisterIt)
   unsigned objects_registered = 0;
 
   server.AddObjects(introspection::MULTIPLE_OJBECTS, TEST_OBJECT_PATH);
-  ASSERT_EQ(server.GetObjects().size(), 3);
+  ASSERT_EQ(server.GetObjects().size(), 3u);
 
   server.RemoveObject(server.GetObjects().front());
-  ASSERT_EQ(server.GetObjects().size(), 2);
+  ASSERT_EQ(server.GetObjects().size(), 2u);
 
   for (auto const& obj : server.GetObjects())
   {
@@ -216,13 +216,13 @@ TEST_F(TestGLibDBusServer, RemovingObjectWontRegisterIt)
 
   Utils::WaitUntilMSec([this] { return server.OwnsName(); });
 
-  EXPECT_EQ(objects_registered, 2);
+  EXPECT_EQ(objects_registered, 2u);
 }
 
 TEST_F(TestGLibDBusServer, RemovingObjectsUnregistersThem)
 {
   server.AddObjects(introspection::MULTIPLE_OJBECTS, TEST_OBJECT_PATH);
-  ASSERT_EQ(server.GetObjects().size(), 3);
+  ASSERT_EQ(server.GetObjects().size(), 3u);
 
   Utils::WaitUntilMSec([this] { return server.OwnsName(); });
 
@@ -236,16 +236,16 @@ TEST_F(TestGLibDBusServer, RemovingObjectsUnregistersThem)
   }
 
   server.RemoveObject(server.GetObjects().front());
-  ASSERT_EQ(server.GetObjects().size(), 2);
-  EXPECT_EQ(objects_unregistered, 1);
+  ASSERT_EQ(server.GetObjects().size(), 2u);
+  EXPECT_EQ(objects_unregistered, 1u);
 
   server.RemoveObject(server.GetObjects().front());
-  ASSERT_EQ(server.GetObjects().size(), 1);
-  EXPECT_EQ(objects_unregistered, 2);
+  ASSERT_EQ(server.GetObjects().size(), 1u);
+  EXPECT_EQ(objects_unregistered, 2u);
 
   server.RemoveObject(server.GetObjects().front());
-  ASSERT_EQ(server.GetObjects().size(), 0);
-  EXPECT_EQ(objects_unregistered, 3);
+  ASSERT_EQ(server.GetObjects().size(), 0u);
+  EXPECT_EQ(objects_unregistered, 3u);
 }
 
 ///
@@ -269,7 +269,7 @@ struct TestGLibDBusServerInteractions : testing::Test
     ASSERT_TRUE(proxy->IsConnected());
 
     auto const& objects = server->GetObjects();
-    ASSERT_EQ(objects.size(), 1);
+    ASSERT_EQ(objects.size(), 1u);
     object = objects.front();
     ASSERT_NE(object, nullptr);
   }

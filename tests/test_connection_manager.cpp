@@ -163,7 +163,7 @@ TEST(TestConnectionManager, Initialization)
 {
   connection::Manager manager;
   EXPECT_TRUE(manager.Empty());
-  EXPECT_EQ(manager.Size(), 0);
+  EXPECT_EQ(manager.Size(), 0u);
 }
 
 TEST(TestConnectionManager, AddEmpty)
@@ -176,7 +176,7 @@ TEST(TestConnectionManager, AddEmpty)
 
   EXPECT_EQ(handle, global_handle);
   EXPECT_TRUE(manager.Empty());
-  EXPECT_EQ(manager.Size(), 0);
+  EXPECT_EQ(manager.Size(), 0u);
 }
 
 TEST(TestConnectionManager, AddSignal)
@@ -192,7 +192,7 @@ TEST(TestConnectionManager, AddSignal)
   ++global_handle;
   EXPECT_EQ(handle, global_handle);
   EXPECT_FALSE(manager.Empty());
-  EXPECT_EQ(manager.Size(), 1);
+  EXPECT_EQ(manager.Size(), 1u);
 }
 
 TEST(TestConnectionManager, AddMultipleSignals)
@@ -200,7 +200,7 @@ TEST(TestConnectionManager, AddMultipleSignals)
   connection::Manager manager;
   SignalerObject signaler;
 
-  for (int i = 1; i <= 10; ++i)
+  for (unsigned i = 1; i <= 10u; ++i)
   {
     auto const& conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
     auto handle = manager.Add(conn);
@@ -237,7 +237,7 @@ TEST(TestConnectionManager, RemoveAndClearAvailable)
   EXPECT_TRUE(manager.RemoveAndClear(&handle));
   EXPECT_FALSE(conn.connected());
   EXPECT_TRUE(manager.Empty());
-  EXPECT_EQ(handle, 0);
+  EXPECT_EQ(handle, 0u);
 }
 
 TEST(TestConnectionManager, RemoveUnavailable)
@@ -247,7 +247,7 @@ TEST(TestConnectionManager, RemoveUnavailable)
   connection::handle handle = 5;
   EXPECT_FALSE(manager.RemoveAndClear(&handle));
   EXPECT_TRUE(manager.Empty());
-  EXPECT_EQ(handle, 5);
+  EXPECT_EQ(handle, 5u);
 }
 
 TEST(TestConnectionManager, ReplaceOnEmpty)
@@ -256,7 +256,7 @@ TEST(TestConnectionManager, ReplaceOnEmpty)
   SignalerObject signaler;
 
   auto const& conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
-  EXPECT_GT(manager.Replace(0, conn), 0);
+  EXPECT_GT(manager.Replace(0, conn), 0u);
   EXPECT_FALSE(manager.Empty());
 }
 
@@ -269,8 +269,8 @@ TEST(TestConnectionManager, ReplaceUnavailable)
   manager.Add(conn);
   ASSERT_FALSE(manager.Empty());
 
-  EXPECT_GT(manager.Replace(0, conn), 0);
-  EXPECT_EQ(manager.Size(), 2);
+  EXPECT_GT(manager.Replace(0, conn), 0u);
+  EXPECT_EQ(manager.Size(), 2u);
 }
 
 TEST(TestConnectionManager, ReplaceAvailable)
@@ -284,7 +284,7 @@ TEST(TestConnectionManager, ReplaceAvailable)
 
   sigc::connection second_conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
   auto second_handle = manager.Replace(first_handle, second_conn);
-  EXPECT_EQ(manager.Size(), 1);
+  EXPECT_EQ(manager.Size(), 1u);
   EXPECT_EQ(first_handle, second_handle);
 
   EXPECT_FALSE(first_conn.connected());

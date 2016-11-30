@@ -94,19 +94,19 @@ TEST(TestIndicator, Syncing)
   }
 
   indicator.Sync(sync_data);
-  EXPECT_EQ(indicator.GetEntries().size(), 3);
+  EXPECT_EQ(indicator.GetEntries().size(), 3u);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), entry2);
   // Mock::VerifyAndClearExpectations(&sig_receiver);
 
   // Sync the indicator removing an entry
   sync_data.erase(std::remove(sync_data.begin(), sync_data.end(), entry2), sync_data.end());
-  EXPECT_EQ(sync_data.size(), 2);
+  EXPECT_EQ(sync_data.size(), 2u);
   EXPECT_CALL(sig_receiver, Updated());
   EXPECT_CALL(sig_receiver, EntryAdded(_)).Times(0);
   EXPECT_CALL(sig_receiver, EntryRemoved(entry2));
 
   indicator.Sync(sync_data);
-  EXPECT_EQ(indicator.GetEntries().size(), 2);
+  EXPECT_EQ(indicator.GetEntries().size(), 2u);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), nullptr);
 
   // Sync the indicator removing an entry and adding a new one
@@ -115,13 +115,13 @@ TEST(TestIndicator, Syncing)
   Entry::Ptr entry4(entry);
   sync_data.push_back(entry4);
   sync_data.erase(std::remove(sync_data.begin(), sync_data.end(), entry3), sync_data.end());
-  EXPECT_EQ(sync_data.size(), 2);
+  EXPECT_EQ(sync_data.size(), 2u);
 
   EXPECT_CALL(sig_receiver, EntryAdded(entry4));
   EXPECT_CALL(sig_receiver, EntryRemoved(entry3));
   EXPECT_CALL(sig_receiver, Updated());
   indicator.Sync(sync_data);
-  EXPECT_EQ(indicator.GetEntries().size(), 2);
+  EXPECT_EQ(indicator.GetEntries().size(), 2u);
 
   // Remove all the indicators
 
@@ -132,7 +132,7 @@ TEST(TestIndicator, Syncing)
 
   sync_data.clear();
   indicator.Sync(sync_data);
-  EXPECT_EQ(indicator.GetEntries().size(), 0);
+  EXPECT_EQ(indicator.GetEntries().size(), 0u);
 }
 
 TEST(TestIndicator, Updated)

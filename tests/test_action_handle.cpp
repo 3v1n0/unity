@@ -29,7 +29,7 @@ namespace
 TEST(TestActionHandle, Initialization)
 {
   action::handle handle;
-  EXPECT_EQ(handle, 0);
+  EXPECT_EQ(handle, 0u);
 
   uint64_t val = g_random_int();
   action::handle random = val;
@@ -39,7 +39,7 @@ TEST(TestActionHandle, Initialization)
 TEST(TestActionHandle, Assignment)
 {
   action::handle handle;
-  ASSERT_EQ(handle, 0);
+  ASSERT_EQ(handle, 0u);
 
   uint64_t val = g_random_int();
   handle = val;
@@ -49,21 +49,21 @@ TEST(TestActionHandle, Assignment)
 TEST(TestActionHandle, CastToScalarType)
 {
   action::handle handle = 5;
-  ASSERT_EQ(handle, 5);
+  ASSERT_EQ(handle, 5u);
 
   int int_handle = handle;
   EXPECT_EQ(int_handle, 5);
 
   unsigned uint_handle = handle;
-  EXPECT_EQ(uint_handle, 5);
+  EXPECT_EQ(uint_handle, 5u);
 }
 
 TEST(TestActionHandle, PrefixIncrementOperator)
 {
   action::handle handle;
-  ASSERT_EQ(handle, 0);
+  ASSERT_EQ(handle, 0u);
 
-  for (auto i = 1; i <= 10; ++i)
+  for (auto i = 1u; i <= 10u; ++i)
   {
     ASSERT_EQ(++handle, i);
     ASSERT_EQ(handle, i);
@@ -73,9 +73,9 @@ TEST(TestActionHandle, PrefixIncrementOperator)
 TEST(TestActionHandle, PostfixIncrementOperator)
 {
   action::handle handle;
-  ASSERT_EQ(handle, 0);
+  ASSERT_EQ(handle, 0u);
 
-  for (auto i = 1; i <= 10; ++i)
+  for (auto i = 1u; i <= 10u; ++i)
   {
     ASSERT_EQ(handle++, i-1);
     ASSERT_EQ(handle, i);
@@ -85,9 +85,9 @@ TEST(TestActionHandle, PostfixIncrementOperator)
 TEST(TestActionHandle, PrefixDecrementOperator)
 {
   action::handle handle(10);
-  ASSERT_EQ(handle, 10);
+  ASSERT_EQ(handle, 10u);
 
-  for (auto i = 10; i > 0; --i)
+  for (auto i = 10u; i > 0u; --i)
   {
     ASSERT_EQ(--handle, i-1);
     ASSERT_EQ(handle, i-1);
@@ -97,9 +97,9 @@ TEST(TestActionHandle, PrefixDecrementOperator)
 TEST(TestActionHandle, PostfixDecrementOperator)
 {
   action::handle handle(10);
-  ASSERT_EQ(handle, 10);
+  ASSERT_EQ(handle, 10u);
 
-  for (auto i = 10; i > 0; --i)
+  for (auto i = 10u; i > 0u; --i)
   {
     ASSERT_EQ(handle--, i);
     ASSERT_EQ(handle, i-1);

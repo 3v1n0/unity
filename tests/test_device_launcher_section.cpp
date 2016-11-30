@@ -80,7 +80,7 @@ TEST_F(TestDeviceLauncherSection, NoDuplicates)
 
 TEST_F(TestDeviceLauncherSection, GetIcons)
 {
-  EXPECT_EQ(section_.GetIcons().size(), 2);
+  EXPECT_EQ(section_.GetIcons().size(), 2u);
 }
 
 }

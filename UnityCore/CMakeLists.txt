@@ -145,7 +145,8 @@ target_link_libraries (${CORE_LIB_NAME} ${LIBS})
 set_target_properties(${CORE_LIB_NAME} PROPERTIES
                       VERSION ${CORE_LIB_LT_CURRENT}.${CORE_LIB_LT_REV}.${CORE_LIB_LT_AGE}
                       SOVERSION ${CORE_LIB_LT_CURRENT}
-                      INSTALL_RPATH "${PRIVATE_CORE_DEPS_LIBRARY_DIRS}")
+                      INSTALL_RPATH "${PRIVATE_CORE_DEPS_LIBRARY_DIRS}"
+                      BUILD_WITH_INSTALL_RPATH TRUE)
 add_pch(pch/unitycore_pch.hh ${CORE_LIB_NAME})
 
 install (TARGETS ${CORE_LIB_NAME}

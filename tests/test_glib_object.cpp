@@ -222,7 +222,7 @@ TEST(TestGLibObject, CastObject)
   EXPECT_EQ(cast_copy, gt_obj.RawPtr());
 
   Object<GObject> g_obj = glib::object_cast<GObject>(gt_obj);
-  EXPECT_EQ(g_obj->ref_count, 2);
+  EXPECT_EQ(G_OBJECT(g_obj.RawPtr())->ref_count, 2u);
 
   g_object_set_data(g_obj, "TestData", GINT_TO_POINTER(55));
   EXPECT_EQ(GPOINTER_TO_INT(g_object_get_data(g_obj, "TestData")), 55);
@@ -285,7 +285,7 @@ TEST(TestGLibObject, ReleaseObject)
   // Release() doesn't unref the object.
   g_obj.Release();
   EXPECT_EQ(g_obj, 0);
-  EXPECT_EQ(RefCount(t_obj), 1);
+  EXPECT_EQ(RefCount(t_obj), 1u);
 
   g_object_unref(t_obj);
 }
@@ -315,8 +315,8 @@ TEST(TestGLibObject, SwapObjects)
     EXPECT_EQ(g_obj1, t_obj1);
     EXPECT_EQ(g_obj2, t_obj2);
 
-    EXPECT_EQ(RefCount(g_obj1), 1);
-    EXPECT_EQ(RefCount(g_obj2), 1);
+    EXPECT_EQ(RefCount(g_obj1), 1u);
+    EXPECT_EQ(RefCount(g_obj2), 1u);
   }
 
   EXPECT_TRUE(IsObjectDestroyed(t_obj1));
@@ -336,29 +336,29 @@ TEST(TestGLibObject, ListOperations)
   TestObjectWrapper g_obj4;
   TestObjectWrapper g_obj5;
 
-  EXPECT_EQ(RefCount(g_obj1), 1);
+  EXPECT_EQ(RefCount(g_obj1), 1u);
 
   obj_list.push_back(g_obj1);
   obj_list.push_back(g_obj2);
   obj_list.push_back(g_obj3);
   obj_list.push_back(g_obj4);
   obj_list.push_back(g_obj5);
-  EXPECT_EQ(obj_list.size(), 5);
+  EXPECT_EQ(obj_list.size(), 5u);
 
-  EXPECT_EQ(RefCount(g_obj1), 2);
+  EXPECT_EQ(RefCount(g_obj1), 2u);
 
   obj_list.remove(g_obj2);
-  EXPECT_EQ(obj_list.size(), 4);
+  EXPECT_EQ(obj_list.size(), 4u);
 
   EXPECT_TRUE(std::find(obj_list.begin(), obj_list.end(), g_obj3) != obj_list.end());
   EXPECT_TRUE(std::find(obj_list.begin(), obj_list.end(), g_obj3.RawPtr()) != obj_list.end());
 
   obj_list.remove(TestObjectWrapper(t_obj1, AddRef()));
-  EXPECT_EQ(obj_list.size(), 3);
+  EXPECT_EQ(obj_list.size(), 3u);
 
   EXPECT_TRUE(std::find(obj_list.begin(), obj_list.end(), g_obj4) != obj_list.end());
   obj_list.remove(g_obj5);
-  EXPECT_EQ(obj_list.size(), 1);
+  EXPECT_EQ(obj_list.size(), 1u);
 }
 
 } // Namespace

@@ -40,7 +40,7 @@ TEST_F(TestDesktopLauncherIcon, Type)
 
 TEST_F(TestDesktopLauncherIcon, Shortcut)
 {
-  EXPECT_EQ(icon.GetShortcut(), 'd');
+  EXPECT_EQ(icon.GetShortcut(), static_cast<guint64>('d'));
 }
 
 TEST_F(TestDesktopLauncherIcon, Position)

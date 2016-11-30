@@ -38,7 +38,7 @@ public:
 
 TEST_F(TestDeltaTracker, TestDirectionEmptyOnStart)
 {
-  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 0);
+  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 0u);
 }
 
 TEST_F(TestDeltaTracker, TestCorrectDirections)
@@ -46,7 +46,7 @@ TEST_F(TestDeltaTracker, TestCorrectDirections)
   delta_tracker_.HandleNewMouseDelta(0, -1);
   delta_tracker_.HandleNewMouseDelta(1, 0);
 
-  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 2);
+  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 2u);
 }
 
 TEST_F(TestDeltaTracker, TestNoDuplicates)
@@ -54,7 +54,7 @@ TEST_F(TestDeltaTracker, TestNoDuplicates)
   delta_tracker_.HandleNewMouseDelta(0, -1);
   delta_tracker_.HandleNewMouseDelta(0, -1);
 
-  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 1);
+  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 1u);
 }
 
 TEST_F(TestDeltaTracker, TestAllDirections)
@@ -64,7 +64,7 @@ TEST_F(TestDeltaTracker, TestAllDirections)
   delta_tracker_.HandleNewMouseDelta(-1, 0);
   delta_tracker_.HandleNewMouseDelta(1, 0);
 
-  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 4);
+  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 4u);
 }
 
 TEST_F(TestDeltaTracker, TestResetStates)
@@ -74,10 +74,10 @@ TEST_F(TestDeltaTracker, TestResetStates)
   delta_tracker_.HandleNewMouseDelta(-1, 0);
   delta_tracker_.HandleNewMouseDelta(1, 0);
 
-  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 4);
+  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 4u);
 
   delta_tracker_.ResetState();
-  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 0);
+  ASSERT_EQ(delta_tracker_.AmountOfDirectionsChanged(), 0u);
 }
 
 }

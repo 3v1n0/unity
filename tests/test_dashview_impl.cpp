@@ -49,7 +49,7 @@ TEST(TestParseScopeFilter, TestSingleParameter)
   ScopeFilter filter = parse_scope_uri("uri?filter_param=test");
 
   EXPECT_THAT(filter.id, Eq("uri"));
-  EXPECT_THAT(filter.filters.size(), Eq(1));
+  EXPECT_THAT(filter.filters.size(), Eq(1u));
   EXPECT_THAT(filter.filters["param"], Eq("test"));
 }
 
@@ -66,7 +66,7 @@ TEST(TestParseScopeFilter, TestEmbeddedEquals)
   ScopeFilter filter = parse_scope_uri("uri?filter_param=a=b");
 
   EXPECT_THAT(filter.id, Eq("uri"));
-  EXPECT_THAT(filter.filters.size(), Eq(1));
+  EXPECT_THAT(filter.filters.size(), Eq(1u));
   EXPECT_THAT(filter.filters["param"], Eq("a=b"));
 }
 
@@ -75,7 +75,7 @@ TEST(TestParseScopeFilter, TestMultipleParameters)
   ScopeFilter filter = parse_scope_uri("uri?filter_param1=first&filter_param2=second");
 
   EXPECT_THAT(filter.id, Eq("uri"));
-  EXPECT_THAT(filter.filters.size(), Eq(2));
+  EXPECT_THAT(filter.filters.size(), Eq(2u));
   EXPECT_THAT(filter.filters["param1"], Eq("first"));
   EXPECT_THAT(filter.filters["param2"], Eq("second"));
 }

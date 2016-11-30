@@ -110,7 +110,7 @@ TEST_F(TestQuicklistView, AddItems)
 
   AddMenuItems(root);
 
-  ASSERT_EQ(quicklist->GetChildren().size(), 4);
+  ASSERT_EQ(quicklist->GetChildren().size(), 4u);
   ASSERT_EQ(quicklist->GetNumItems(), 4);
   EXPECT_EQ(quicklist->GetNthType(0), unity::QuicklistMenuItemType::LABEL);
   EXPECT_EQ(quicklist->GetNthType(1), unity::QuicklistMenuItemType::SEPARATOR);

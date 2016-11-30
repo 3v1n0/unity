@@ -87,14 +87,14 @@ TEST_F(TestScopeView, TestCategoryInsert)
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
   scope_->categories.changed.emit(categories);
   Utils::WaitUntilMSec([this] { return scope_view_->GetOrderedCategoryViews().size() == 2; });
-  ASSERT_EQ(scope_view_->GetOrderedCategoryViews().size(), 2);
+  ASSERT_EQ(scope_view_->GetOrderedCategoryViews().size(), 2u);
 }
 
 TEST_F(TestScopeView, TestFilterExpansion)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(4);
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 4);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 4u);
 
   scope_view_->filters_expanded = true;
   for (unsigned i = 0; i < scope_view_->fake_groups_.size(); ++i)
@@ -107,7 +107,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_EmptySearchString)
   scope_view_->search_string_ = "";
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 1);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 1u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
 }
@@ -118,7 +118,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_FilledSearchString)
   scope_view_->search_string_ = "Ubuntu";
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 1);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 1u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
 }
@@ -129,7 +129,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_EmptySearchString)
   scope_view_->search_string_ = "";
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 2);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 2u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -141,7 +141,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_FilledSearchString)
   scope_view_->search_string_ = "Ubuntu";
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 2);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 2u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -153,7 +153,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_EmptySearchString)
   scope_view_->search_string_ = "";
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 3);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 3u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -166,7 +166,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_FilledSearchString)
   scope_view_->search_string_ = "Ubuntu";
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 3);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 3u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -178,7 +178,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_EmptySearc
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 2);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 2u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -202,7 +202,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_FilledSear
   scope_view_->search_string_ = "Ubuntu";
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 2);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 2u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -225,7 +225,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySea
   MockCategories::Ptr categories = std::make_shared<MockCategories>(3);
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 3);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 3u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -257,7 +257,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_FilledSe
   scope_view_->search_string_ = "Ubuntu";
 
   scope_->categories.changed.emit(categories);
-  ASSERT_EQ(scope_view_->fake_groups_.size(), 3);
+  ASSERT_EQ(scope_view_->fake_groups_.size(), 3u);
   Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });

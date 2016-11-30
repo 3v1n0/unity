@@ -52,28 +52,28 @@ public:
 
 TEST_F(TestLauncherModel, Constructor)
 {
-  EXPECT_EQ(model.Size(), 0);
+  EXPECT_EQ(model.Size(), 0u);
 }
 
 TEST_F(TestLauncherModel, Add)
 {
   model.AddIcon(icon1);
-  EXPECT_EQ(model.Size(), 1);
+  EXPECT_EQ(model.Size(), 1u);
 
   model.AddIcon(icon1);
-  EXPECT_EQ(model.Size(), 1);
+  EXPECT_EQ(model.Size(), 1u);
 
   model.AddIcon(AbstractLauncherIcon::Ptr());
-  EXPECT_EQ(model.Size(), 1);
+  EXPECT_EQ(model.Size(), 1u);
 }
 
 TEST_F(TestLauncherModel, Remove)
 {
   model.AddIcon(icon1);
-  EXPECT_EQ(model.Size(), 1);
+  EXPECT_EQ(model.Size(), 1u);
 
   model.RemoveIcon(icon1);
-  EXPECT_EQ(model.Size(), 0);
+  EXPECT_EQ(model.Size(), 0u);
 }
 
 TEST_F(TestLauncherModel, AddSignal)

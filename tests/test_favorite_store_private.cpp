@@ -80,7 +80,7 @@ TEST(TestFavoriteStorePrivate, TestGetNewbies)
   
   result = internal::impl::GetNewbies(old, fresh);
   
-  EXPECT_EQ(result.size(), 2);
+  EXPECT_EQ(result.size(), 2u);
   EXPECT_EQ(result[0], "e");
   EXPECT_EQ(result[1], "f");
   
@@ -95,7 +95,7 @@ TEST(TestFavoriteStorePrivate, TestGetNewbies)
   
   result = internal::impl::GetNewbies(old, fresh);
   
-  EXPECT_EQ(result.size(), 2);
+  EXPECT_EQ(result.size(), 2u);
   EXPECT_EQ(result[0], "e");
   EXPECT_EQ(result[1], "f");
 }
@@ -212,7 +212,7 @@ TEST(TestFavoriteStorePrivate, TestGetRemoved)
   
   result = internal::impl::GetRemoved(old, fresh);
   
-  EXPECT_EQ(result.size(), 2);
+  EXPECT_EQ(result.size(), 2u);
   EXPECT_EQ(result[0], "a");
   EXPECT_EQ(result[1], "d");
   
@@ -227,7 +227,7 @@ TEST(TestFavoriteStorePrivate, TestGetRemoved)
   
   result = internal::impl::GetRemoved(old, fresh);
   
-  EXPECT_EQ(result.size(), 2);
+  EXPECT_EQ(result.size(), 2u);
   EXPECT_EQ(result[0], "b");
   EXPECT_EQ(result[1], "c");
 }

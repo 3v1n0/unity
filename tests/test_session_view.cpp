@@ -179,7 +179,7 @@ TEST_F(TestSessionView, ShutdownModeButtons)
   ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(true));
   view.mode = View::Mode::SHUTDOWN;
 
-  EXPECT_EQ(view.GetButtons().size(), 2);
+  EXPECT_EQ(view.GetButtons().size(), 2u);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::REBOOT), 0);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::SHUTDOWN), 1);
   EXPECT_EQ(view.key_focus_area(), view.GetButtonByAction(Button::Action::SHUTDOWN));
@@ -190,7 +190,7 @@ TEST_F(TestSessionView, LogoutModeButtons)
   ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(true));
   view.mode = View::Mode::LOGOUT;
 
-  EXPECT_EQ(view.GetButtons().size(), 2);
+  EXPECT_EQ(view.GetButtons().size(), 2u);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::LOCK), 0);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::LOGOUT), 1);
   EXPECT_EQ(view.key_focus_area(), view.GetButtonByAction(Button::Action::LOGOUT));
@@ -201,7 +201,7 @@ TEST_F(TestSessionView, LogoutLightModeButtons)
   ON_CALL(*manager, CanLock()).WillByDefault(testing::Return(false));
   view.mode = View::Mode::LOGOUT;
 
-  EXPECT_EQ(view.GetButtons().size(), 1);
+  EXPECT_EQ(view.GetButtons().size(), 1u);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::LOGOUT), 0);
   EXPECT_EQ(view.key_focus_area(), view.GetButtonByAction(Button::Action::LOGOUT));
 }

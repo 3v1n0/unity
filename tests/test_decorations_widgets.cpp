@@ -321,7 +321,7 @@ TEST_F(TestDecorationLayout, AppendUnlimited)
     ASSERT_EQ(layout->Geometry().y() + (layout->Geometry().height() - item_geo.height()) / 2, item_geo.y());
   }
 
-  EXPECT_EQ(100, layout->Items().size());
+  EXPECT_EQ(100u, layout->Items().size());
 }
 
 TEST_F(TestDecorationLayout, AppendParentsItem)
@@ -365,7 +365,7 @@ TEST_F(TestDecorationLayout, AppendInvisible)
     ASSERT_EQ(expected_geo, layout->Geometry());
   }
 
-  EXPECT_EQ(100, layout->Items().size());
+  EXPECT_EQ(100u, layout->Items().size());
   EXPECT_EQ(CompRect(), layout->Geometry());
 }
 
@@ -388,7 +388,7 @@ TEST_F(TestDecorationLayout, AppendUnlimitedInternalPadding)
     ASSERT_EQ(layout->Geometry().y() + (layout->Geometry().height() - item_geo.height()) / 2, item_geo.y());
   }
 
-  EXPECT_EQ(100, layout->Items().size());
+  EXPECT_EQ(100u, layout->Items().size());
 }
 
 TEST_F(TestDecorationLayout, AppendWithMaxWidth)
@@ -398,7 +398,7 @@ TEST_F(TestDecorationLayout, AppendWithMaxWidth)
   for (int i = 0; i < 100; ++i)
     layout->Append(RandomMockItem());
 
-  ASSERT_EQ(100, layout->Items().size());
+  ASSERT_EQ(100u, layout->Items().size());
 
   auto const& layout_geo = layout->Geometry();
   int new_width = layout_geo.width()/2;
@@ -430,7 +430,7 @@ TEST_F(TestDecorationLayout, ExpandWithMaxWidth)
   for (int i = 0; i < 100; ++i)
     layout->Append(RandomMockItem());
 
-  ASSERT_EQ(100, layout->Items().size());
+  ASSERT_EQ(100u, layout->Items().size());
 
   auto const& layout_geo = layout->Geometry();
   int full_width = layout_geo.width();
