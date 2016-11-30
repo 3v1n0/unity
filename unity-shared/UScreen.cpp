@@ -88,6 +88,11 @@ nux::Geometry const& UScreen::GetMonitorGeometry(int monitor) const
   return monitors_[monitor];
 }
 
+nux::Size const& UScreen::GetMonitorPhysicalSize(int monitor) const
+{
+  return physical_monitors_[monitor];
+}
+
 std::vector<nux::Geometry> const& UScreen::GetMonitors() const
 {
   return monitors_;
@@ -154,6 +159,7 @@ void UScreen::Refresh()
 
   nux::Geometry last_geo;
   monitors_.clear();
+  physical_monitors_.clear();
   primary_ = gdk_screen_get_primary_monitor(screen_);
   int monitors = gdk_screen_get_n_monitors(screen_);
 
@@ -164,6 +170,9 @@ void UScreen::Refresh()
 
     float scale = gdk_screen_get_monitor_scale_factor(screen_, i);
     nux::Geometry geo(rect.x, rect.y, rect.width, rect.height);
+    
+    nux::Size physical_size(gdk_screen_get_monitor_width_mm(screen_, i),
+      gdk_screen_get_monitor_height_mm(screen_, i));
 
     if (scale != 1.0)
       geo = geo * scale;
@@ -174,6 +183,7 @@ void UScreen::Refresh()
 
     last_geo = geo;
     monitors_.push_back(geo);
+    physical_monitors_.push_back(physical_size);
 
     LOG_DEBUG(logger) << "Monitor " << i << " has geometry " << geo.x << "x"
                       << geo.y << "x" << geo.width << "x" << geo.height;
