@@ -346,7 +346,7 @@ public:
       const auto dpi = std::max(dpi_x, dpi_y);
 
       if (dpi > DPI_SCALING_LIMIT)
-        scale = static_cast<int>(std::lround(scale * dpi / DPI_SCALING_LIMIT));
+        scale = static_cast<int>(scale * std::lround(dpi / DPI_SCALING_LIMIT));
     }
 
     return scale;
