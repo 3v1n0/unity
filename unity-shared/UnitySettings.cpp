@@ -423,7 +423,7 @@ public:
   {
     changing_gnome_settings_ = true;
     changing_gnome_settings_timeout_.reset();
-    unsigned integer_scaling = std::max<unsigned>(1, scale);
+    unsigned integer_scaling = std::max<unsigned>(1, std::lround(scale));
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
     glib::Variant default_cursor_size(g_settings_get_default_value(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str()), glib::StealRef());
