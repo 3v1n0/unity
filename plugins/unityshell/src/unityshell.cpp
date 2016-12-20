@@ -27,7 +27,6 @@
 
 #include <UnityCore/DBusIndicators.h>
 #include <UnityCore/DesktopUtilities.h>
-#include <UnityCore/GnomeSessionManager.h>
 #include <UnityCore/ScopeProxyInterface.h>
 
 #include "CompizUtils.h"
@@ -515,7 +514,10 @@ UnityScreen::~UnityScreen()
   unity_a11y_finalize();
   QuicklistManager::Destroy();
   decoration::DataPool::Reset();
-  SaveLockStamp(false);
+
+  if (!session_->GetAutomaticLogin())
+    SaveLockStamp(false);
+
   reset_glib_logging();
 
   screen->addSupportedAtomsSetEnabled(this, false);
@@ -4005,17 +4007,33 @@ void UnityScreen::OnScreenUnlocked()
   UpdateGesturesSupport();
 }
 
-void UnityScreen::SaveLockStamp(bool save)
+std::string UnityScreen::GetLockStampFile() const
 {
-  auto const& cache_dir = DesktopUtilities::GetUserRuntimeDirectory();
+  std::string user_name = session_->UserName();
+  std::string cache_dir;
+
+  if (session_->GetAutomaticLogin())
+    cache_dir = DesktopUtilities::GetUserConfigDirectory();
+  else
+    cache_dir = DesktopUtilities::GetUserRuntimeDirectory();
 
   if (cache_dir.empty())
+    return std::string();
+
+  return cache_dir+local::LOCKED_STAMP;
+}
+
+void UnityScreen::SaveLockStamp(bool save)
+{
+  std::string file_path = GetLockStampFile();
+
+  if (file_path.empty())
     return;
 
   if (save)
   {
     glib::Error error;
-    g_file_set_contents((cache_dir+local::LOCKED_STAMP).c_str(), "", 0, &error);
+    g_file_set_contents(file_path.c_str(), "", 0, &error);
 
     if (error)
     {
@@ -4024,7 +4042,7 @@ void UnityScreen::SaveLockStamp(bool save)
   }
   else
   {
-    if (g_unlink((cache_dir+local::LOCKED_STAMP).c_str()) < 0)
+    if (g_unlink(file_path.c_str()) < 0)
     {
       LOG_ERROR(logger) << "Impossible to delete the unity locked stamp file";
     }
@@ -4100,24 +4118,24 @@ void UnityScreen::InitUnityComponents()
   ShowFirstRunHints();
 
   // Setup Session Controller
-  auto session = std::make_shared<session::GnomeManager>();
-  session->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  session->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  session->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
-  session->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
-  session_dbus_manager_ = std::make_shared<session::DBusManager>(session);
-  session_controller_ = std::make_shared<session::Controller>(session);
+  session_ = std::make_shared<session::GnomeManager>();
+  session_->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  session_->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  session_->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
+  session_->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
+  session_dbus_manager_ = std::make_shared<session::DBusManager>(session_);
+  session_controller_ = std::make_shared<session::Controller>(session_);
   LOG_INFO(logger) << "InitUnityComponents-Session " << timer.ElapsedSeconds() << "s";
   Introspectable::AddChild(session_controller_.get());
 
   // Setup Lockscreen Controller
-  screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(session);
-  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, session, menus_->KeyGrabber());
+  screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(session_);
+  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, session_, menus_->KeyGrabber());
   UpdateActivateIndicatorsKey();
   LOG_INFO(logger) << "InitUnityComponents-Lockscreen " << timer.ElapsedSeconds() << "s";
 
-  if (g_file_test((DesktopUtilities::GetUserRuntimeDirectory()+local::LOCKED_STAMP).c_str(), G_FILE_TEST_EXISTS))
-    session->PromptLockScreen();
+  if (g_file_test(GetLockStampFile().c_str(), G_FILE_TEST_EXISTS))
+    session_->PromptLockScreen();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right/top margin

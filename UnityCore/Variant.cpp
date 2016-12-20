@@ -161,6 +161,11 @@ std::string Variant::GetString() const
     // As we're using the '&' prefix we don't need to free the string!
     g_variant_get(variant_, "(&s)", &result);
   }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(o)")))
+  {
+    // As we're using the '&' prefix we don't need to free the string!
+    g_variant_get(variant_, "(&o)", &result);
+  }
   else
   {
     auto const& variant = get_variant(variant_);

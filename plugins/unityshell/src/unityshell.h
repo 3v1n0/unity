@@ -76,6 +76,7 @@
 #include "UnityShowdesktopHandler.h"
 #include "ThumbnailGenerator.h"
 #include "MenuManager.h"
+#include "UnityCore/GnomeSessionManager.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -231,6 +232,7 @@ private:
   void OnScreenLocked();
   void OnScreenUnlocked();
   void SaveLockStamp(bool);
+  std::string GetLockStampFile() const;
 
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
 
@@ -343,6 +345,8 @@ private:
   debug::DebugDBusInterface debugger_;
   std::unique_ptr<BGHash>   bghash_;
   spread::Widgets::Ptr      spread_widgets_;
+
+  session::Manager::Ptr session_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
