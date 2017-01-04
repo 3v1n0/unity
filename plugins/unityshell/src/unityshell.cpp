@@ -4011,7 +4011,6 @@ void UnityScreen::OnScreenUnlocked()
 
 std::string UnityScreen::GetLockStampFile() const
 {
-  std::string user_name = session_->UserName();
   std::string cache_dir;
 
   if (session_->AutomaticLogin())
