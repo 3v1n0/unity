@@ -40,7 +40,7 @@ public:
   std::string UserName() const { return "marco"; }
   std::string HostName() const { return "tricky"; }
   void UserIconFile(std::function<void(std::string const&)> const&) const { std::cout << "UserIconFile" << std::endl; }
-  bool GetAutomaticLogin() const { return false; }
+  bool AutomaticLogin() const { return false; }
 
   void ScreenSaverActivate() { std::cout << "ScreenSaverActivate" << std::endl; }
   void ScreenSaverDeactivate() { std::cout << "ScreenSaverDeactivate" << std::endl; }

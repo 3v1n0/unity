@@ -515,7 +515,7 @@ UnityScreen::~UnityScreen()
   QuicklistManager::Destroy();
   decoration::DataPool::Reset();
 
-  if (!session_->GetAutomaticLogin())
+  if (!session_->AutomaticLogin())
     SaveLockStamp(false);
 
   reset_glib_logging();
@@ -4012,8 +4012,8 @@ std::string UnityScreen::GetLockStampFile() const
   std::string user_name = session_->UserName();
   std::string cache_dir;
 
-  if (session_->GetAutomaticLogin())
-    cache_dir = DesktopUtilities::GetUserConfigDirectory();
+  if (session_->AutomaticLogin())
+    cache_dir = DesktopUtilities::GetUserCacheDirectory();
   else
     cache_dir = DesktopUtilities::GetUserRuntimeDirectory();
 

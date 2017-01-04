@@ -69,7 +69,7 @@ struct GnomeManager::Impl
   void UpdateHaveOtherOpenSessions();
 
   bool IsUserInGroup(std::string const& user_name, std::string const& group_name);
-  bool GetAutomaticLogin();
+  bool AutomaticLogin();
 
   GnomeManager* manager_;
   bool test_mode_;

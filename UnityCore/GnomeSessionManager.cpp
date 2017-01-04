@@ -586,7 +586,7 @@ bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string
   return false;
 }
 
-bool GnomeManager::Impl::GetAutomaticLogin()
+bool GnomeManager::Impl::AutomaticLogin()
 {
   auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.Accounts",
                                                  "/org/freedesktop/Accounts",
@@ -614,7 +614,7 @@ bool GnomeManager::Impl::GetAutomaticLogin()
   }
 
   glib::Variant autologin(g_dbus_connection_call_sync(bus, "org.freedesktop.Accounts",
-                                                      user_path.GetString().c_str(), "org.freedesktop.DBus.Properties",
+                                                      user_path.GetObjectPath().c_str(), "org.freedesktop.DBus.Properties",
                                                       "Get", g_variant_new("(ss)", "org.freedesktop.Accounts.User", "AutomaticLogin"), nullptr,
                                                       G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
 
@@ -665,9 +665,9 @@ void GnomeManager::UserIconFile(std::function<void(std::string const&)> const& c
   impl_->UserIconFile(callback);
 }
 
-bool GnomeManager::GetAutomaticLogin() const
+bool GnomeManager::AutomaticLogin() const
 {
-  return impl_->GetAutomaticLogin();
+  return impl_->AutomaticLogin();
 }
 
 void GnomeManager::ScreenSaverActivate()
