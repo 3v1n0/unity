@@ -197,6 +197,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
   , deco_manager_(std::make_shared<decoration::Manager>(menus_))
   , debugger_(this)
+  , session_(std::make_shared<session::GnomeManager>())
   , needsRelayout(false)
   , super_keypressed_(false)
   , newFocusedWindow(nullptr)
@@ -4119,7 +4120,6 @@ void UnityScreen::InitUnityComponents()
   ShowFirstRunHints();
 
   // Setup Session Controller
-  session_ = std::make_shared<session::GnomeManager>();
   session_->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
   session_->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
   session_->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
