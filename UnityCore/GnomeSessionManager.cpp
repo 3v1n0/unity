@@ -588,17 +588,12 @@ bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string
 
 bool GnomeManager::Impl::AutomaticLogin()
 {
-  auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.Accounts",
-                                                 "/org/freedesktop/Accounts",
-                                                 "org.freedesktop.Accounts",
-                                                 G_BUS_TYPE_SYSTEM);
-
   glib::Error error;
   glib::Object<GDBusConnection> bus(g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, &error));
 
   if (error)
   {
-    LOG_ERROR(logger) << "Impossible to get the system bus, to know if auto-login is enabled: " << error;
+    LOG_ERROR(logger) << "Impossible to get the system bus to know if auto-login is enabled: " << error;
     return false;
   }
 

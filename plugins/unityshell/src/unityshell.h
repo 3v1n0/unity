@@ -76,7 +76,7 @@
 #include "UnityShowdesktopHandler.h"
 #include "ThumbnailGenerator.h"
 #include "MenuManager.h"
-#include "UnityCore/GnomeSessionManager.h"
+#include "UnityCore/SessionManager.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"

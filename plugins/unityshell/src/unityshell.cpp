@@ -27,6 +27,7 @@
 
 #include <UnityCore/DBusIndicators.h>
 #include <UnityCore/DesktopUtilities.h>
+#include <UnityCore/GnomeSessionManager.h>
 #include <UnityCore/ScopeProxyInterface.h>
 
 #include "CompizUtils.h"
