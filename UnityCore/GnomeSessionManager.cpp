@@ -575,11 +575,51 @@ bool GnomeManager::Impl::IsUserInGroup(std::string const& user_name, std::string
   auto group = getgrnam(group_name.c_str());
 
   if (group && group->gr_mem)
+  {
     for (int i = 0; group->gr_mem[i]; ++i)
+    {
       if (g_strcmp0(group->gr_mem[i], user_name.c_str()) == 0)
         return true;
+    }
+  }
 
   return false;
+}
+
+bool GnomeManager::Impl::AutomaticLogin()
+{
+  glib::Error error;
+  glib::Object<GDBusConnection> bus(g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the system bus to know if auto-login is enabled: " << error;
+    return false;
+  }
+
+  glib::Variant user_path(g_dbus_connection_call_sync(bus, "org.freedesktop.Accounts",
+                                                      "/org/freedesktop/Accounts", "org.freedesktop.Accounts",
+                                                      "FindUserByName", g_variant_new("(s)",g_get_user_name()), nullptr,
+                                                      G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the user path: " << error;
+    return false;
+  }
+
+  glib::Variant autologin(g_dbus_connection_call_sync(bus, "org.freedesktop.Accounts",
+                                                      user_path.GetObjectPath().c_str(), "org.freedesktop.DBus.Properties",
+                                                      "Get", g_variant_new("(ss)", "org.freedesktop.Accounts.User", "AutomaticLogin"), nullptr,
+                                                      G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
+
+  if (error)
+  {
+    LOG_ERROR(logger) << "Impossible to get the AutomaticLogin property: " << error;
+    return false;
+  }
+
+  return autologin.GetBool();
 }
 
 // Public implementation
@@ -618,6 +658,11 @@ std::string GnomeManager::HostName() const
 void GnomeManager::UserIconFile(std::function<void(std::string const&)> const& callback) const
 {
   impl_->UserIconFile(callback);
+}
+
+bool GnomeManager::AutomaticLogin() const
+{
+  return impl_->AutomaticLogin();
 }
 
 void GnomeManager::ScreenSaverActivate()
