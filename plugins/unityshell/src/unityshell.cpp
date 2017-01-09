@@ -863,7 +863,7 @@ void UnityScreen::DamageBlurUpdateRegion(nux::Geometry const& blur_update)
   cScreen->damageRegion(CompRegionFromNuxGeo(blur_update));
 }
 
-void UnityScreen::paintDisplay()
+void UnityScreen::paintOutput()
 {
   CompOutput *output = last_output_;
 
@@ -1504,7 +1504,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     doShellRepaint = false;
 
   if (doShellRepaint)
-    paintDisplay();
+    paintOutput();
 
   return ret;
 }
@@ -3104,18 +3104,18 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   if (uScreen->doShellRepaint && window == uScreen->onboard_)
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
   else if (uScreen->doShellRepaint &&
            window == uScreen->firstWindowAboveShell &&
            !uScreen->forcePaintOnTop() &&
            !uScreen->fullscreenRegion.contains(window->geometry()))
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
   else if (locked && CanBypassLockScreen())
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
 
   enum class DrawPanelShadow

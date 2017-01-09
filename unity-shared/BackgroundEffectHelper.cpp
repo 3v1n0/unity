@@ -147,6 +147,9 @@ bool BackgroundEffectHelper::UpdateOwnerGeometry()
 
 void BackgroundEffectHelper::UpdateBlurGeometries()
 {
+  if (blur_type == BLUR_NONE)
+      return;
+
   int radius = GetBlurRadius();
   blur_geometries_.clear();
   blur_geometries_.reserve(registered_list_.size());
