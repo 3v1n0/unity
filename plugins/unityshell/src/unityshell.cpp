@@ -292,22 +292,18 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   //In case of software rendering then enable lowgfx mode.
-  g_autoptr(GSettings) gs = g_settings_new("com.canonical.Unity");
-  bool enable_lowgfx = g_settings_get_boolean(gs, "lowgfx");
-
   std::string renderer = ANSI_TO_TCHAR(NUX_REINTERPRET_CAST(const char *, glGetString(GL_RENDERER)));
   if (renderer.find("Software Rasterizer") != std::string::npos ||
 	  renderer.find("Mesa X11") != std::string::npos ||
 	  renderer.find("llvmpipe") != std::string::npos ||
 	  renderer.find("softpipe") != std::string::npos ||
-	  (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1) ||
-	  enable_lowgfx
+	  (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1)
      )
   {
       unity_settings_.low_gfx = true;
   }
 
-  if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0 && (enable_lowgfx == false))
+  if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
   {
     unity_settings_.low_gfx = false;
   }

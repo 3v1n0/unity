@@ -59,7 +59,7 @@ public:
   void SetLauncherSize(int launcher_size, int monitor);
   int LauncherSize(int mointor) const;
 
-  nux::Property<bool> low_gfx;
+  nux::RWProperty<bool> low_gfx;
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
   nux::ROProperty<DesktopType> desktop_type;
