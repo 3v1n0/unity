@@ -7,6 +7,11 @@ if ! /usr/lib/nux/unity_support_test -p; then
   compiz_profile="ubuntu-lowgfx"
 fi
 
+if gsettings get com.canonical.Unity lowgfx
+then
+  compiz_profile="ubuntu-lowgfx"
+fi
+
 echo "Using compiz profile '$compiz_profile'"
 
 if [ -n "$UPSTART_SESSION" ]; then
