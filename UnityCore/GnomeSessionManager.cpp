@@ -130,7 +130,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
 
         glib::Variant tmp(g_variant_get_child_value(variant, 1), glib::StealRef());
         SetupLogin1Proxy(tmp.GetObjectPath());
-      });
+      }, cancellable_);
     }
   }
 
@@ -424,7 +424,7 @@ void GnomeManager::Impl::CallGnomeSessionMethod(std::string const& method, GVari
 
     if (cb)
       cb(ret, e);
-  });
+  }, cancellable_);
 }
 
 void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb)
@@ -443,7 +443,7 @@ void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusP
     {
       cb(ret);
     }
-  });
+  }, cancellable_);
 }
 
 void GnomeManager::Impl::CallLogindMethod(std::string const& method, GVariant* parameters, glib::DBusProxy::CallFinishedCallback const& cb)
@@ -465,7 +465,7 @@ void GnomeManager::Impl::CallLogindMethod(std::string const& method, GVariant* p
     {
       cb(ret, e);
     }
-  });
+  }, cancellable_);
 }
 
 void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVariant* parameters)
@@ -482,7 +482,7 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
     {
       LOG_ERROR(logger) << "Fallback call failed: " << e.Message();
     }
-  });
+  }, cancellable_);
 }
 
 void GnomeManager::Impl::CallDisplayManagerSeatMethod(std::string const& method, GVariant* parameters)
@@ -499,7 +499,7 @@ void GnomeManager::Impl::CallDisplayManagerSeatMethod(std::string const& method,
     {
       LOG_ERROR(logger) << "DisplayManager Seat call failed: " << e.Message();
     }
-  });
+  }, cancellable_);
 }
 
 void GnomeManager::Impl::LockScreen(bool prompt)
@@ -552,7 +552,7 @@ bool GnomeManager::Impl::HasInhibitors()
   glib::Variant inhibitors(g_dbus_connection_call_sync(bus, test_mode_ ? testing::DBUS_NAME.c_str() : "org.gnome.SessionManager",
                                                        "/org/gnome/SessionManager", "org.gnome.SessionManager",
                                                        "IsInhibited", g_variant_new("(u)", Inhibited::LOGOUT), nullptr,
-                                                       G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
+                                                       G_DBUS_CALL_FLAGS_NONE, 500, cancellable_, &error));
 
   if (error)
   {
@@ -600,7 +600,7 @@ bool GnomeManager::Impl::AutomaticLogin()
   glib::Variant user_path(g_dbus_connection_call_sync(bus, "org.freedesktop.Accounts",
                                                       "/org/freedesktop/Accounts", "org.freedesktop.Accounts",
                                                       "FindUserByName", g_variant_new("(s)",g_get_user_name()), nullptr,
-                                                      G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
+                                                      G_DBUS_CALL_FLAGS_NONE, 500, cancellable_, &error));
 
   if (error)
   {
@@ -611,7 +611,7 @@ bool GnomeManager::Impl::AutomaticLogin()
   glib::Variant autologin(g_dbus_connection_call_sync(bus, "org.freedesktop.Accounts",
                                                       user_path.GetObjectPath().c_str(), "org.freedesktop.DBus.Properties",
                                                       "Get", g_variant_new("(ss)", "org.freedesktop.Accounts.User", "AutomaticLogin"), nullptr,
-                                                      G_DBUS_CALL_FLAGS_NONE, 500, nullptr, &error));
+                                                      G_DBUS_CALL_FLAGS_NONE, 500, cancellable_, &error));
 
   if (error)
   {
