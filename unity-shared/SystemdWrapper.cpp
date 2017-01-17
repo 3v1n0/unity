@@ -39,7 +39,6 @@ public:
 
 private:
   bool test_mode_;
-  glib::DBusProxy::Ptr systemd_proxy_;
 };
 
 SystemdWrapper::Impl::Impl(bool test)
