@@ -1,3 +1,14 @@
+unity (7.5.0+17.04.20170125-0ubuntu1) zesty; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * GnomeSessionManager: add gcancellable to instance and use it for
+    calls with temporary proxies
+
+  [ Michał Sawicz ]
+  * Drop click scope from the default list of favourites
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 25 Jan 2017 16:55:08 +0000
+
 unity (7.5.0+17.04.20170109-0ubuntu1) zesty; urgency=medium
 
   [ Andrea Azzarone ]
