@@ -85,6 +85,7 @@ struct GnomeManager::Impl
   glib::DBusProxy::Ptr dm_proxy_;
   glib::DBusProxy::Ptr dm_seat_proxy_;
 
+  glib::Cancellable cancellable_;
   int open_sessions_;
 };
 

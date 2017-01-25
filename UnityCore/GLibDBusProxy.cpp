@@ -609,7 +609,7 @@ glib::Variant DBusProxy::GetProperty(std::string const& name) const
   return nullptr;
 }
 
-void DBusProxy::GetProperty(std::string const& name, ReplyCallback const& callback)
+void DBusProxy::GetProperty(std::string const& name, ReplyCallback const& callback, GCancellable *cancellable)
 {
   if (!callback)
     return;
@@ -620,7 +620,8 @@ void DBusProxy::GetProperty(std::string const& name, ReplyCallback const& callba
                            pimpl->name_.c_str(), pimpl->object_path_.c_str(),
                            "org.freedesktop.DBus.Properties",
                            "Get", g_variant_new ("(ss)", pimpl->interface_name_.c_str(), name.c_str()),
-                            G_VARIANT_TYPE("(v)"), G_DBUS_CALL_FLAGS_NONE, -1, pimpl->cancellable_,
+                            G_VARIANT_TYPE("(v)"), G_DBUS_CALL_FLAGS_NONE, -1,
+                            cancellable ? cancellable : pimpl->cancellable_,
                            [] (GObject *source, GAsyncResult *res, gpointer user_data) {
       glib::Error err;
       std::unique_ptr<ReplyCallback> callback(static_cast<ReplyCallback*>(user_data));
@@ -641,15 +642,16 @@ void DBusProxy::GetProperty(std::string const& name, ReplyCallback const& callba
   else
   {
     // This will get the property as soon as we have a connection
+    glib::Object<GCancellable> canc(cancellable, AddRef());
     auto conn = std::make_shared<sigc::connection>();
-    *conn = connected.connect([this, conn, name, callback] {
-      GetProperty(name, callback);
+    *conn = connected.connect([this, conn, name, callback, canc] {
+      GetProperty(name, callback, canc);
       conn->disconnect();
     });
   }
 }
 
-void DBusProxy::SetProperty(std::string const& name, GVariant* value)
+void DBusProxy::SetProperty(std::string const& name, GVariant* value, GCancellable *cancellable)
 {
   if (IsConnected())
   {
@@ -657,7 +659,8 @@ void DBusProxy::SetProperty(std::string const& name, GVariant* value)
                            pimpl->name_.c_str(), pimpl->object_path_.c_str(),
                            "org.freedesktop.DBus.Properties",
                            "Set", g_variant_new ("(ssv)", pimpl->interface_name_.c_str(), name.c_str(), value),
-                           nullptr, G_DBUS_CALL_FLAGS_NONE, -1, pimpl->cancellable_,
+                           nullptr, G_DBUS_CALL_FLAGS_NONE, -1,
+                           cancellable ? cancellable : pimpl->cancellable_,
                            [] (GObject *source, GAsyncResult *res, gpointer user_data) {
       glib::Error err;
       Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err), StealRef());
@@ -670,9 +673,10 @@ void DBusProxy::SetProperty(std::string const& name, GVariant* value)
   else
   {
     // This will set the property as soon as we have a connection
+    glib::Object<GCancellable> canc(cancellable, AddRef());
     auto conn = std::make_shared<sigc::connection>();
-    *conn = connected.connect([this, conn, name, value] {
-      SetProperty(name, value);
+    *conn = connected.connect([this, conn, name, value, canc] {
+      SetProperty(name, value, canc);
       conn->disconnect();
     });
   }
