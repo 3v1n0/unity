@@ -297,7 +297,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 	  renderer.find("Mesa X11") != std::string::npos ||
 	  renderer.find("llvmpipe") != std::string::npos ||
 	  renderer.find("softpipe") != std::string::npos ||
-	  (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1)
+    (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1)
      )
   {
       unity_settings_.low_gfx = true;

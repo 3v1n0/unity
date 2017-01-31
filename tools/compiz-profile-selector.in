@@ -1,5 +1,9 @@
 #!/bin/bash
-
+default_ini="$HOME/.config/compiz-1/compizconfig/Default.ini"
+if [ -f default_ini ]; then
+  rm default_ini
+fi
+  
 set -e
 compiz_profile="ubuntu"
 

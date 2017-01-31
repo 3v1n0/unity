@@ -118,6 +118,10 @@ public:
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LOWGFX, [this] (GSettings*, const gchar *) {
+       UpdateLowGfx();
+    });
+
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
     });
@@ -182,6 +186,7 @@ public:
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
     // The order is important here, DPI is the last thing to be updated
+    UpdateLowGfx();
     UpdateLimSetting();
     UpdateGesturesSetting();
     UpdateTextScaleFactor();
@@ -229,6 +234,11 @@ public:
   void CacheLauncherPosition()
   {
     cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(launcher_settings_, LAUNCHER_POSITION.c_str()));
+  }
+
+  void UpdateLowGfx()
+  {
+    parent_->low_gfx = GetLowGfx();
   }
 
   void UpdateLimSetting()
@@ -285,7 +295,10 @@ public:
 
   bool GetLowGfx() const
   {
-      return g_settings_get_boolean(usettings_, LOWGFX.c_str());
+    if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
+      return false;
+
+    return  g_settings_get_boolean(usettings_, LOWGFX.c_str());
   }
 
   int GetFontSize() const
