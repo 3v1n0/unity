@@ -53,23 +53,28 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
   auto& settings = Settings::Instance();
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
-  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
   cairo_t* c = cairo_graphics.GetInternalContext();
 
+  glib::Object<GnomeBG> gnome_bg;
   double s_width = geo.width / scale;
   double s_height = geo.height / scale;
   cairo_surface_t* bg_surface = nullptr;
 
   if (settings.use_user_background())
   {
-    bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), s_width, s_height, FALSE);
+    gnome_bg = gnome_bg_;
   }
   else if (!settings.background().empty())
   {
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_scale(settings.background().c_str(), s_width, s_height, FALSE, NULL));
+    gnome_bg = gnome_bg_new();
+    gnome_bg_set_filename(gnome_bg, settings.background().c_str());
+    gnome_bg_set_placement(gnome_bg, G_DESKTOP_BACKGROUND_STYLE_ZOOM);
+  }
 
-    if (pixbuf)
-      bg_surface = gdk_cairo_surface_create_from_pixbuf(pixbuf, 0, NULL);
+  if (gnome_bg)
+  {
+    auto *root_window = gdk_get_default_root_window();
+    bg_surface = gnome_bg_create_surface(gnome_bg, root_window, geo.width, geo.height, FALSE);
   }
 
   if (bg_surface)
@@ -84,6 +89,8 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
     cairo_set_source_rgb(c, bg_color.red, bg_color.green, bg_color.blue);
     cairo_paint(c);
   }
+
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
 
   if (!settings.logo().empty())
   {
