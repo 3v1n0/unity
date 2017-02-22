@@ -46,6 +46,16 @@ BackgroundSettings::BackgroundSettings()
   gnome_bg_load_from_preferences(gnome_bg_, settings);
 }
 
+void BackgroundSettings::SetBackgroundFilename(std::string const& filename)
+{
+  if (filename.empty())
+    return;
+
+  gnome_bg_set_filename(gnome_bg_, filename.c_str());
+  g_object_set_data(glib::object_cast<GObject>(gnome_bg_),
+                    "ignore-pending-change", GINT_TO_POINTER(TRUE));
+}
+
 BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
 {
   nux::Geometry const& geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
@@ -53,23 +63,24 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
   auto& settings = Settings::Instance();
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, geo.width, geo.height);
-  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
   cairo_t* c = cairo_graphics.GetInternalContext();
 
   double s_width = geo.width / scale;
   double s_height = geo.height / scale;
   cairo_surface_t* bg_surface = nullptr;
 
-  if (settings.use_user_background())
+  if (settings.use_user_background() || !settings.background().empty())
   {
-    bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), s_width, s_height, FALSE);
-  }
-  else if (!settings.background().empty())
-  {
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_scale(settings.background().c_str(), s_width, s_height, FALSE, NULL));
+    std::string old_bg;
+    if (!settings.use_user_background())
+    {
+      old_bg = glib::gchar_to_string(gnome_bg_get_filename(gnome_bg_));
+      SetBackgroundFilename(settings.background());
+    }
 
-    if (pixbuf)
-      bg_surface = gdk_cairo_surface_create_from_pixbuf(pixbuf, 0, NULL);
+    bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), geo.width, geo.height, FALSE);
+
+    SetBackgroundFilename(old_bg);
   }
 
   if (bg_surface)
@@ -84,6 +95,8 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
     cairo_set_source_rgb(c, bg_color.red, bg_color.green, bg_color.blue);
     cairo_paint(c);
   }
+
+  cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
 
   if (!settings.logo().empty())
   {
