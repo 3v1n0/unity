@@ -45,8 +45,6 @@ public:
   BaseTexturePtr GetBackgroundTexture(int monitor);
 
 private:
-  void SetBackgroundFilename(std::string const&);
-
   glib::Object<_GnomeBG> gnome_bg_;
 };
 

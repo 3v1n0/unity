@@ -46,16 +46,6 @@ BackgroundSettings::BackgroundSettings()
   gnome_bg_load_from_preferences(gnome_bg_, settings);
 }
 
-void BackgroundSettings::SetBackgroundFilename(std::string const& filename)
-{
-  if (filename.empty())
-    return;
-
-  gnome_bg_set_filename(gnome_bg_, filename.c_str());
-  g_object_set_data(glib::object_cast<GObject>(gnome_bg_),
-                    "ignore-pending-change", GINT_TO_POINTER(TRUE));
-}
-
 BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
 {
   nux::Geometry const& geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
@@ -69,18 +59,17 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
   double s_height = geo.height / scale;
   cairo_surface_t* bg_surface = nullptr;
 
-  if (settings.use_user_background() || !settings.background().empty())
+  if (settings.use_user_background())
   {
-    std::string old_bg;
-    if (!settings.use_user_background())
-    {
-      old_bg = glib::gchar_to_string(gnome_bg_get_filename(gnome_bg_));
-      SetBackgroundFilename(settings.background());
-    }
-
     bg_surface = gnome_bg_create_surface(gnome_bg_, gdk_get_default_root_window(), geo.width, geo.height, FALSE);
+  }
+  else if (!settings.background().empty())
+  {
+    double root_scale = gdk_window_get_scale_factor(gdk_get_default_root_window());
+    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_scale(settings.background().c_str(), geo.width * root_scale, geo.height * root_scale, FALSE, NULL));
 
-    SetBackgroundFilename(old_bg);
+    if (pixbuf)
+      bg_surface = gdk_cairo_surface_create_from_pixbuf(pixbuf, 0, NULL);
   }
 
   if (bg_surface)
