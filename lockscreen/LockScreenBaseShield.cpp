@@ -145,6 +145,7 @@ void BaseShield::UpdateBackgroundTexture()
   {
     auto background_texture = bg_settings_->GetBackgroundTexture(monitor);
     background_layer_.reset(new nux::TextureLayer(background_texture->GetDeviceTexture(), nux::TexCoordXForm(), nux::color::White, true));
+    background_layer_->SetGeometry(monitor_geo);
     SetBackgroundLayer(background_layer_.get());
   }
 }
