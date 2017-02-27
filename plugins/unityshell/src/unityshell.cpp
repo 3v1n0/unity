@@ -587,12 +587,14 @@ void UnityScreen::OnInitiateSpread()
 
       for (auto const& swin : sScreen->getWindows())
       {
-        if (filtered_windows.find(swin->window->id()) != filtered_windows.end())
+        if (!swin->window || filtered_windows.find(swin->window->id()) != filtered_windows.end())
           continue;
 
-        auto* uwin = UnityWindow::get(swin->window);
-        uwin->OnTerminateSpread();
-        fake_decorated_windows_.erase(uwin);
+        if (UnityWindow* uwin = UnityWindow::get(swin->window))
+        {
+          uwin->OnTerminateSpread();
+          fake_decorated_windows_.erase(uwin);
+        }
       }
 
       for (auto xid : filtered_windows)
@@ -606,6 +608,9 @@ void UnityScreen::OnInitiateSpread()
 
   for (auto const& swin : sScreen->getWindows())
   {
+    if (!swin->window)
+      continue;
+
     auto* uwin = UnityWindow::get(swin->window);
     fake_decorated_windows_.insert(uwin);
     uwin->OnInitiateSpread();
@@ -617,7 +622,13 @@ void UnityScreen::OnTerminateSpread()
   spread_widgets_.reset();
 
   for (auto const& swin : sScreen->getWindows())
-    UnityWindow::get(swin->window)->OnTerminateSpread();
+  {
+    if (!swin->window)
+      continue;
+
+    if (UnityWindow* uwin = UnityWindow::get(swin->window))
+      uwin->OnTerminateSpread();
+  }
 
   fake_decorated_windows_.clear();
 }
@@ -3859,7 +3870,7 @@ bool UnityScreen::layoutSlotsAndAssignWindows()
 
     for (ScaleWindow *sw : scaled_windows)
     {
-      if (sw->window->outputDevice() == static_cast<int>(output.id()))
+      if (sw->window && sw->window->outputDevice() == static_cast<int>(output.id()))
       {
         UnityWindow::get(sw->window)->deco_win_->scaled = true;
         layout_windows.emplace_back(std::make_shared<LayoutWindow>(sw->window->id()));
