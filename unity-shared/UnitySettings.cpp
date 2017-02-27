@@ -119,7 +119,7 @@ public:
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LOWGFX, [this] (GSettings*, const gchar *) {
-       UpdateLowGfx();
+       parent_->low_gfx.changed.emit(GetLowGfx());
     });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
@@ -295,9 +295,6 @@ public:
 
   bool GetLowGfx() const
   {
-    if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
-      return false;
-
     return  g_settings_get_boolean(usettings_, LOWGFX.c_str());
   }
 
