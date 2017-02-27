@@ -299,9 +299,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
       renderer.find("softpipe") != std::string::npos ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1)
      )
-  {
-    unity_settings_.low_gfx = true;
-  }
+    {
+      unity_settings_.low_gfx = true;
+    }
 
   if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
   {
