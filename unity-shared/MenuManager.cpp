@@ -325,17 +325,12 @@ struct Manager::Impl : sigc::trackable
 
   bool RegisterTracker(std::string const& menubar, PositionTracker const& cb)
   {
-    auto it = position_trackers_.find(menubar);
+    bool added = position_trackers_.insert({menubar, cb}).second;
 
-    if (it != end(position_trackers_))
-      return false;
-
-    position_trackers_.insert({menubar, cb});
-
-    if (active_menubar_ == menubar)
+    if (added && active_menubar_ == menubar)
       UpdateActiveTracker();
 
-    return true;
+    return added;
   }
 
   bool UnregisterTracker(std::string const& menubar, PositionTracker const& cb)

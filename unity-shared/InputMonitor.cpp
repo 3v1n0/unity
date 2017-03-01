@@ -225,7 +225,8 @@ struct Monitor::Impl
 
   void UpdateEventMonitor()
   {
-    auto* dpy = nux::GetGraphicsDisplay()->GetX11Display();
+    auto* nux_dpy = nux::GetGraphicsDisplay();
+    auto* dpy = nux_dpy ? nux_dpy->GetX11Display() : gdk_x11_get_default_xdisplay();
     Window root = DefaultRootWindow(dpy);
 
     unsigned char master_dev_bits[XIMaskLen(XI_LASTEVENT)] = { 0 };
@@ -263,9 +264,9 @@ struct Monitor::Impl
 
     if (!pointer_callbacks_.empty() || !key_callbacks_.empty() || !barrier_callbacks_.empty())
     {
-      if (!event_filter_set_)
+      if (!event_filter_set_ && nux_dpy)
       {
-        nux::GetGraphicsDisplay()->AddEventFilter({[] (XEvent event, void* data) {
+        nux_dpy->AddEventFilter({[] (XEvent event, void* data) {
           return static_cast<Impl*>(data)->HandleEvent(event);
         }, this});
 
@@ -275,7 +276,9 @@ struct Monitor::Impl
     }
     else if (event_filter_set_)
     {
-      nux::GetGraphicsDisplay()->RemoveEventFilter(this);
+      if (nux_dpy)
+        nux_dpy->RemoveEventFilter(this);
+
       event_filter_set_ = false;
       LOG_DEBUG(logger) << "Event filter disabled";
     }
