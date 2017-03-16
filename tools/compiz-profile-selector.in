@@ -7,17 +7,18 @@ if [ -z "$config_dir" ]; then
 fi
 
 default_ini="$config_dir/compiz-1/compizconfig/Default.ini"
-if [ -f default_ini ]; then
+
+if [ -f "$default_ini" ]; then
   rm "$default_ini"
 fi
-  
+
 compiz_profile="ubuntu"
 
 if ! /usr/lib/nux/unity_support_test -p; then
   compiz_profile="ubuntu-lowgfx"
 fi
 
-if [ "$(gsettings get com.canonical.Unity lowgfx)" == true ]; then
+if [ "$(gsettings get com.canonical.Unity lowgfx)" == "true" ]; then
   compiz_profile="ubuntu-lowgfx"
 fi
 
