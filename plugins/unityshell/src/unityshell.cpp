@@ -297,16 +297,22 @@ UnityScreen::UnityScreen(CompScreen* screen)
       renderer.find("Mesa X11") != std::string::npos ||
       renderer.find("llvmpipe") != std::string::npos ||
       renderer.find("softpipe") != std::string::npos ||
-      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1)
-     )
-    {
-      unity_settings_.low_gfx = true;
-    }
+      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
+  {
+    unity_settings_.low_gfx = true;
+  }
 
   if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
   {
     unity_settings_.low_gfx = false;
   }
+
+  if (unity_settings_.low_gfx())
+    BackgroundEffectHelper::blur_type = BLUR_NONE;
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    BackgroundEffectHelper::blur_type = low_gfx ? BLUR_NONE : (unity::BlurType) optionGetDashBlurExperimental();
+  }, *this));
 #endif
 
   if (!failed)
