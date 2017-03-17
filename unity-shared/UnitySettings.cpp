@@ -295,7 +295,7 @@ public:
 
   bool GetLowGfx() const
   {
-    return  g_settings_get_boolean(usettings_, LOWGFX.c_str());
+    return g_settings_get_boolean(usettings_, LOWGFX.c_str());
   }
 
   int GetFontSize() const
