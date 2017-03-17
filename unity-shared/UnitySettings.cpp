@@ -113,13 +113,12 @@ public:
     parent_->launcher_position.SetSetterFunction(sigc::mem_fun(this, &Impl::SetLauncherPosition));
     parent_->desktop_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDesktopType));
     parent_->pam_check_account_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetPamCheckAccountType));
-    parent_->low_gfx.SetGetterFunction(sigc::mem_fun(this, &Impl::GetLowGfx));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LOWGFX, [this] (GSettings*, const gchar *) {
-       parent_->low_gfx.changed.emit(GetLowGfx());
+      UpdateLowGfx();
     });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
@@ -346,7 +345,7 @@ public:
     auto const& geo = uscreen->GetMonitorGeometry(monitor);
     auto const& size = uscreen->GetMonitorPhysicalSize(monitor);
     auto scale = DPI_SCALING_STEP;
-      
+
     if ((size.width == 160 && size.height == 90) ||
         (size.width == 160 && size.height == 100) ||
         (size.width == 16 && size.height == 9) ||
@@ -357,7 +356,7 @@ public:
 
     if (size.width > 0 && size.height > 0)
     {
-      const double dpi_x = static_cast<double>(geo.width) / (size.width / 25.4);  
+      const double dpi_x = static_cast<double>(geo.width) / (size.width / 25.4);
       const double dpi_y = static_cast<double>(geo.height) / (size.height / 25.4);
 
       const auto dpi = std::max(dpi_x, dpi_y);

@@ -306,6 +306,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
   {
     unity_settings_.low_gfx = false;
   }
+
+  if (unity_settings_.low_gfx())
+    BackgroundEffectHelper::blur_type = BLUR_NONE;
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    BackgroundEffectHelper::blur_type = low_gfx ? BLUR_NONE : (unity::BlurType) optionGetDashBlurExperimental();
+  }, *this));
 #endif
 
   if (!failed)

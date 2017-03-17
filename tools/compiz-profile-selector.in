@@ -7,10 +7,11 @@ if [ -z "$config_dir" ]; then
 fi
 
 default_ini="$config_dir/compiz-1/compizconfig/Default.ini"
+
 if [ -f "$default_ini" ]; then
   rm "$default_ini"
 fi
-  
+
 compiz_profile="ubuntu"
 
 if ! /usr/lib/nux/unity_support_test -p; then
@@ -31,4 +32,3 @@ dbus-update-activation-environment --verbose --systemd COMPIZ_CONFIG_PROFILE="$c
 
 export COMPIZ_CONFIG_PROFILE="$compiz_profile"
 exec @UNITY_LIBDIR@/unity-active-plugins-safety-check
-
