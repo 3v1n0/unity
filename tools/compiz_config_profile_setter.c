@@ -131,14 +131,6 @@ set_compiz_profile (CCSContext *ccs_context, const gchar *profile_name)
 {
   CCSPluginList plugins;
   const char *ccs_backend;
-  const char *ccs_profile;
-
-  ccs_profile = ccsGetProfile (ccs_context);
-
-  if (g_strcmp0 (ccs_profile, profile_name) == 0)
-    {
-      return TRUE;
-    }
 
   ccs_backend = ccsGetBackend (ccs_context);
 
@@ -168,7 +160,7 @@ set_compiz_profile (CCSContext *ccs_context, const gchar *profile_name)
 int main(int argc, char *argv[])
 {
   CCSContext *context;
-  const gchar *profile, *ccs_profile_env;
+  const gchar *profile, *current_profile, *ccs_profile_env;
   gchar *session_manager_ccs_profile;
 
   if (argc < 2)
@@ -204,11 +196,22 @@ int main(int argc, char *argv[])
 
   context = ccsContextNew (0, &ccsDefaultInterfaceTable);
 
+  if (!context)
+    {
+      g_warning ("Impossible to get Compiz config context\n");
+      return -1;
+    }
+
   g_debug ("Setting profile to '%s' (for environment '%s')",
            profile, g_getenv (COMPIZ_CONFIG_PROFILE_ENV));
 
-  if (!context)
-    return -1;
+  current_profile = ccsGetProfile (context);
+
+  if (g_strcmp0 (current_profile, profile) == 0)
+    {
+      g_print("We're already using profile '%s', no need to switch\n", profile);
+      return 0;
+    }
 
   if (!set_compiz_profile (context, profile))
     {
@@ -216,6 +219,13 @@ int main(int argc, char *argv[])
       return 1;
     }
 
+  ccsFreeContext (context);
+
+  g_print ("Switched to profile '%s' (for environment '%s')\n",
+           profile, g_getenv (COMPIZ_CONFIG_PROFILE_ENV));
+
+  /* This is for printing debug informations */
+  context = ccsContextNew (0, &ccsDefaultInterfaceTable);
   ccsFreeContext (context);
 
   return 0;
