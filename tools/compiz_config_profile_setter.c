@@ -19,6 +19,9 @@
 #include <ccs.h>
 #include <gio/gio.h>
 
+#define COMPIZ_CONFIG_PROFILE_ENV "COMPIZ_CONFIG_PROFILE"
+#define COMPIZ_CONFIG_DEFAULT_PROFILE "ubuntu"
+
 extern const CCSInterfaceTable ccsDefaultInterfaceTable;
 
 static gboolean
@@ -83,12 +86,19 @@ set_compiz_profile (CCSContext *ccs_context, const gchar *profile_name)
 int main(int argc, char *argv[])
 {
   CCSContext *context;
-  const gchar *profile;
+  const gchar *profile, *ccs_profile_env;
 
   if (argc < 2)
     {
       g_warning ("You need to pass a valid profile as argument\n");
       return 1;
+    }
+
+  ccs_profile_env = g_getenv (COMPIZ_CONFIG_PROFILE_ENV);
+
+  if (!ccs_profile_env || ccs_profile_env[0] == '\0')
+    {
+      g_setenv (COMPIZ_CONFIG_PROFILE_ENV, COMPIZ_CONFIG_DEFAULT_PROFILE, TRUE);
     }
 
   context = ccsContextNew (0, &ccsDefaultInterfaceTable);
