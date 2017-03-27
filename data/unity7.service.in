@@ -1,7 +1,6 @@
 [Unit]
 Description=Unity Shell v7
-Requires=unity-settings-daemon.service unity-panel-service.service bamfdaemon.service
-Wants=unity-gtk-module.service
+Wants=unity-settings-daemon.service unity-gtk-module.service unity-panel-service.service bamfdaemon.service
 After=unity-settings-daemon.service
 PartOf=graphical-session.target
 

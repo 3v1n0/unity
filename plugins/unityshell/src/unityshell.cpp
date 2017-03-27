@@ -197,6 +197,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , menus_(std::make_shared<menu::Manager>(std::make_shared<indicator::DBusIndicators>(), std::make_shared<key::GnomeGrabber>()))
   , deco_manager_(std::make_shared<decoration::Manager>(menus_))
   , debugger_(this)
+  , session_(std::make_shared<session::GnomeManager>())
   , needsRelayout(false)
   , super_keypressed_(false)
   , newFocusedWindow(nullptr)
@@ -519,7 +520,10 @@ UnityScreen::~UnityScreen()
   unity_a11y_finalize();
   QuicklistManager::Destroy();
   decoration::DataPool::Reset();
-  SaveLockStamp(false);
+
+  if (!session_->AutomaticLogin())
+    SaveLockStamp(false);
+
   reset_glib_logging();
 
   screen->addSupportedAtomsSetEnabled(this, false);
@@ -867,7 +871,7 @@ void UnityScreen::DamageBlurUpdateRegion(nux::Geometry const& blur_update)
   cScreen->damageRegion(CompRegionFromNuxGeo(blur_update));
 }
 
-void UnityScreen::paintDisplay()
+void UnityScreen::paintOutput()
 {
   CompOutput *output = last_output_;
 
@@ -1508,7 +1512,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     doShellRepaint = false;
 
   if (doShellRepaint)
-    paintDisplay();
+    paintOutput();
 
   return ret;
 }
@@ -3108,18 +3112,18 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   if (uScreen->doShellRepaint && window == uScreen->onboard_)
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
   else if (uScreen->doShellRepaint &&
            window == uScreen->firstWindowAboveShell &&
            !uScreen->forcePaintOnTop() &&
            !uScreen->fullscreenRegion.contains(window->geometry()))
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
   else if (locked && CanBypassLockScreen())
   {
-    uScreen->paintDisplay();
+    uScreen->paintOutput();
   }
 
   enum class DrawPanelShadow
@@ -4001,17 +4005,32 @@ void UnityScreen::OnScreenUnlocked()
   UpdateGesturesSupport();
 }
 
-void UnityScreen::SaveLockStamp(bool save)
+std::string UnityScreen::GetLockStampFile() const
 {
-  auto const& cache_dir = DesktopUtilities::GetUserRuntimeDirectory();
+  std::string cache_dir;
+
+  if (session_->AutomaticLogin())
+    cache_dir = DesktopUtilities::GetUserCacheDirectory();
+  else
+    cache_dir = DesktopUtilities::GetUserRuntimeDirectory();
 
   if (cache_dir.empty())
+    return std::string();
+
+  return cache_dir+local::LOCKED_STAMP;
+}
+
+void UnityScreen::SaveLockStamp(bool save)
+{
+  std::string file_path = GetLockStampFile();
+
+  if (file_path.empty())
     return;
 
   if (save)
   {
     glib::Error error;
-    g_file_set_contents((cache_dir+local::LOCKED_STAMP).c_str(), "", 0, &error);
+    g_file_set_contents(file_path.c_str(), "", 0, &error);
 
     if (error)
     {
@@ -4020,7 +4039,7 @@ void UnityScreen::SaveLockStamp(bool save)
   }
   else
   {
-    if (g_unlink((cache_dir+local::LOCKED_STAMP).c_str()) < 0)
+    if (g_unlink(file_path.c_str()) < 0)
     {
       LOG_ERROR(logger) << "Impossible to delete the unity locked stamp file";
     }
@@ -4096,24 +4115,23 @@ void UnityScreen::InitUnityComponents()
   ShowFirstRunHints();
 
   // Setup Session Controller
-  auto session = std::make_shared<session::GnomeManager>();
-  session->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  session->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
-  session->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
-  session->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
-  session_dbus_manager_ = std::make_shared<session::DBusManager>(session);
-  session_controller_ = std::make_shared<session::Controller>(session);
+  session_->lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  session_->prompt_lock_requested.connect(sigc::mem_fun(this, &UnityScreen::OnLockScreenRequested));
+  session_->locked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenLocked));
+  session_->unlocked.connect(sigc::mem_fun(this, &UnityScreen::OnScreenUnlocked));
+  session_dbus_manager_ = std::make_shared<session::DBusManager>(session_);
+  session_controller_ = std::make_shared<session::Controller>(session_);
   LOG_INFO(logger) << "InitUnityComponents-Session " << timer.ElapsedSeconds() << "s";
   Introspectable::AddChild(session_controller_.get());
 
   // Setup Lockscreen Controller
-  screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(session);
-  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, session, menus_->KeyGrabber());
+  screensaver_dbus_manager_ = std::make_shared<lockscreen::DBusManager>(session_);
+  lockscreen_controller_ = std::make_shared<lockscreen::Controller>(screensaver_dbus_manager_, session_, menus_->KeyGrabber());
   UpdateActivateIndicatorsKey();
   LOG_INFO(logger) << "InitUnityComponents-Lockscreen " << timer.ElapsedSeconds() << "s";
 
-  if (g_file_test((DesktopUtilities::GetUserRuntimeDirectory()+local::LOCKED_STAMP).c_str(), G_FILE_TEST_EXISTS))
-    session->PromptLockScreen();
+  if (g_file_test(GetLockStampFile().c_str(), G_FILE_TEST_EXISTS))
+    session_->PromptLockScreen();
 
   auto on_launcher_size_changed = [this] (nux::Area* area, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right/top margin

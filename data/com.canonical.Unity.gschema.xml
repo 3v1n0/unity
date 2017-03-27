@@ -193,7 +193,7 @@
       <description>The scopes listed in the scope bar will be ordered according to this list.</description>
     </key>
     <key type="as" name="favorite-scopes">
-      <default>[ 'scope://clickscope', 'scope://musicaggregator', 'scope://videoaggregator' ]</default>
+      <default>[ 'scope://musicaggregator', 'scope://videoaggregator' ]</default>
       <summary>List of scope queries specifying what should be displayed in the dash.</summary>
       <description>List of favorite scopes displayed in the dash.</description>
     </key>
