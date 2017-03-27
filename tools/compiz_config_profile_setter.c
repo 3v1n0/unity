@@ -24,6 +24,88 @@
 
 extern const CCSInterfaceTable ccsDefaultInterfaceTable;
 
+static gchar *
+get_ccs_profile_env_from_env_list (const gchar **env_vars)
+{
+  gchar *var = NULL;
+
+  for (; env_vars && *env_vars; ++env_vars)
+    {
+      if (g_str_has_prefix (*env_vars, COMPIZ_CONFIG_PROFILE_ENV "="))
+        {
+          var = g_strdup (*env_vars + G_N_ELEMENTS (COMPIZ_CONFIG_PROFILE_ENV));
+          break;
+        }
+    }
+
+  return var;
+}
+
+static gchar *
+get_ccs_profile_env_from_session_manager ()
+{
+  GDBusConnection *bus;
+  GVariant *environment_prop, *environment_prop_list;
+  const gchar **env_vars;
+  gchar *profile;
+
+  profile = NULL;
+  bus = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, NULL);
+
+  environment_prop = g_dbus_connection_call_sync (bus,
+                                                  "org.freedesktop.systemd1",
+                                                  "/org/freedesktop/systemd1",
+                                                  "org.freedesktop.DBus.Properties",
+                                                  "Get",
+                                                  g_variant_new ("(ss)",
+                                                                  "org.freedesktop.systemd1.Manager",
+                                                                  "Environment"),
+                                                  G_VARIANT_TYPE ("(v)"),
+                                                  G_DBUS_CALL_FLAGS_NONE,
+                                                  -1,
+                                                  NULL,
+                                                  NULL);
+
+  if (!environment_prop)
+    goto out;
+
+  g_variant_get (environment_prop, "(v)", &environment_prop_list, NULL);
+  env_vars = g_variant_get_strv (environment_prop_list, NULL);
+  profile = get_ccs_profile_env_from_env_list (env_vars);
+
+  g_clear_pointer (&environment_prop, g_variant_unref);
+  g_clear_pointer (&environment_prop_list, g_variant_unref);
+
+  if (!profile && g_getenv ("UPSTART_SESSION"))
+    {
+      const gchar * const * empty_array[] = {0};
+      environment_prop_list = g_dbus_connection_call_sync (bus,
+                                                           "com.ubuntu.Upstart",
+                                                           "/com/ubuntu/Upstart",
+                                                           "com.ubuntu.Upstart0_6",
+                                                           "ListEnv",
+                                                           g_variant_new("(@as)",
+                                                             g_variant_new_strv (NULL, 0)),
+                                                           NULL,
+                                                           G_DBUS_CALL_FLAGS_NONE,
+                                                           -1,
+                                                           NULL,
+                                                           NULL);
+      if (!environment_prop_list)
+        goto out;
+
+      g_variant_get (environment_prop_list, "(^a&s)", &env_vars);
+      profile = get_ccs_profile_env_from_env_list (env_vars);
+
+      g_variant_unref (environment_prop_list);
+    }
+
+out:
+  g_object_unref (bus);
+
+  return profile;
+}
+
 static gboolean
 is_compiz_profile_available (const gchar *profile)
 {
@@ -60,12 +142,6 @@ set_compiz_profile (CCSContext *ccs_context, const gchar *profile_name)
       return FALSE;
     }
 
-  if (!is_compiz_profile_available (profile_name))
-    {
-      g_warning ("Compiz profile '%s' not found", profile_name);
-      return FALSE;
-    }
-
   ccsSetProfile (ccs_context, profile_name);
   ccsReadSettings (ccs_context);
   ccsWriteSettings (ccs_context);
@@ -87,6 +163,7 @@ int main(int argc, char *argv[])
 {
   CCSContext *context;
   const gchar *profile, *ccs_profile_env;
+  gchar *session_manager_ccs_profile;
 
   if (argc < 2)
     {
@@ -94,17 +171,36 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-  ccs_profile_env = g_getenv (COMPIZ_CONFIG_PROFILE_ENV);
+  session_manager_ccs_profile = get_ccs_profile_env_from_session_manager ();
 
-  if (!ccs_profile_env || ccs_profile_env[0] == '\0')
+  if (session_manager_ccs_profile)
     {
-      g_setenv (COMPIZ_CONFIG_PROFILE_ENV, COMPIZ_CONFIG_DEFAULT_PROFILE, TRUE);
+      g_setenv (COMPIZ_CONFIG_PROFILE_ENV, session_manager_ccs_profile, TRUE);
+      g_clear_pointer (&session_manager_ccs_profile, g_free);
+    }
+  else
+    {
+      ccs_profile_env = g_getenv (COMPIZ_CONFIG_PROFILE_ENV);
+
+      if (!ccs_profile_env || ccs_profile_env[0] == '\0')
+        {
+          g_setenv (COMPIZ_CONFIG_PROFILE_ENV, COMPIZ_CONFIG_DEFAULT_PROFILE, TRUE);
+        }
     }
 
-  context = ccsContextNew (0, &ccsDefaultInterfaceTable);
   profile = argv[1];
 
-  g_debug ("Setting profile to '%s'", profile);
+  if (!is_compiz_profile_available (profile))
+    {
+      g_warning ("Compiz profile '%s' not found", profile);
+      return 1;
+    }
+
+
+  context = ccsContextNew (0, &ccsDefaultInterfaceTable);
+
+  g_debug ("Setting profile to '%s' (for environment '%s')",
+           profile, g_getenv (COMPIZ_CONFIG_PROFILE_ENV));
 
   if (!context)
     return -1;
