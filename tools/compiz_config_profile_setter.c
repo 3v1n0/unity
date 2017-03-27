@@ -114,8 +114,14 @@ is_compiz_profile_available (const gchar *profile)
 
   profile_path = g_strdup_printf ("/etc/compizconfig/%s.ini", profile);
   is_available = g_file_test (profile_path, G_FILE_TEST_EXISTS);
-
   g_free (profile_path);
+
+  if (!is_available)
+    {
+      profile_path = g_strdup_printf ("%s/%s.ini", g_get_user_config_dir (), profile);
+      is_available = g_file_test (profile_path, G_FILE_TEST_EXISTS);
+      g_free (profile_path);
+    }
 
   return is_available;
 }
@@ -195,7 +201,6 @@ int main(int argc, char *argv[])
       g_warning ("Compiz profile '%s' not found", profile);
       return 1;
     }
-
 
   context = ccsContextNew (0, &ccsDefaultInterfaceTable);
 
