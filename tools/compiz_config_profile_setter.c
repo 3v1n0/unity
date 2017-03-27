@@ -135,17 +135,12 @@ set_compiz_profile (CCSContext *ccs_context, const gchar *profile_name)
 
   ccs_backend = ccsGetBackend (ccs_context);
 
-  if (g_strcmp0 (ccs_backend, "gsettings") != 0)
-    {
-      g_warning ("Compiz GSettings backends different from GSettings aren't supported");
-      return FALSE;
-    }
-
   ccsSetProfile (ccs_context, profile_name);
   ccsReadSettings (ccs_context);
   ccsWriteSettings (ccs_context);
 
-  g_settings_sync ();
+  if (g_strcmp0 (ccs_backend, "gsettings") == 0)
+    g_settings_sync ();
 
   plugins = ccsContextGetPlugins (ccs_context);
 
