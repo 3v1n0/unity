@@ -112,13 +112,14 @@ is_compiz_profile_available (const gchar *profile)
   gboolean is_available;
   gchar *profile_path;
 
-  profile_path = g_strdup_printf ("/etc/compizconfig/%s.ini", profile);
+  profile_path = g_strdup_printf ("%s/compiz-1/compizconfig/%s.ini",
+                                  g_get_user_config_dir (), profile);
   is_available = g_file_test (profile_path, G_FILE_TEST_EXISTS);
   g_free (profile_path);
 
   if (!is_available)
     {
-      profile_path = g_strdup_printf ("%s/%s.ini", g_get_user_config_dir (), profile);
+      profile_path = g_strdup_printf ("/etc/compizconfig/%s.ini", profile);
       is_available = g_file_test (profile_path, G_FILE_TEST_EXISTS);
       g_free (profile_path);
     }
