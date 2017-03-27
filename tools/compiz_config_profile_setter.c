@@ -18,6 +18,7 @@
 
 #include <ccs.h>
 #include <gio/gio.h>
+#include <upstart/upstart-dbus.h>
 
 #define COMPIZ_CONFIG_PROFILE_ENV "COMPIZ_CONFIG_PROFILE"
 #define COMPIZ_CONFIG_DEFAULT_PROFILE "ubuntu"
@@ -80,9 +81,9 @@ get_ccs_profile_env_from_session_manager ()
     {
       const gchar * const * empty_array[] = {0};
       environment_prop_list = g_dbus_connection_call_sync (bus,
-                                                           "com.ubuntu.Upstart",
-                                                           "/com/ubuntu/Upstart",
-                                                           "com.ubuntu.Upstart0_6",
+                                                           DBUS_SERVICE_UPSTART,
+                                                           DBUS_PATH_UPSTART,
+                                                           DBUS_INTERFACE_UPSTART,
                                                            "ListEnv",
                                                            g_variant_new("(@as)",
                                                              g_variant_new_strv (NULL, 0)),
