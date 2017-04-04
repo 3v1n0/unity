@@ -1,3 +1,20 @@
+unity (7.5.0+17.04.20170301-0ubuntu1) zesty; urgency=medium
+
+  * UnityWindow: safely check validity of UnityWindow from scaled one
+    (LP: #1659847)
+  * InputMonitor: don't try to deference an invalid Nux display (LP:
+    #1632656)
+  * unity7.service: set ups and BAMF as wanted, not required
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 01 Mar 2017 13:07:08 +0000
+
+unity (7.5.0+17.04.20170222-0ubuntu1) zesty; urgency=medium
+
+  * BackgroundSettings: use gnome-bg to generate textures with proper
+    scaling (LP: #1666359)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 22 Feb 2017 01:52:54 +0000
+
 unity (7.5.0+17.04.20170125-0ubuntu1) zesty; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
