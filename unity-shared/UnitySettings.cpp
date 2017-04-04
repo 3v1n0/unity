@@ -191,9 +191,11 @@ public:
 
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
-    // The order is important here, DPI is the last thing to be updated
     UpdateLowGfx();
+    UpdateCompizProfile(parent_->low_gfx());
     UpdateLimSetting();
+
+    // The order is important here, DPI is the last thing to be updated
     UpdateGesturesSetting();
     UpdateTextScaleFactor();
     UpdateCursorScaleFactor();
