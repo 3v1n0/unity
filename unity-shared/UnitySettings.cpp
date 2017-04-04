@@ -18,6 +18,8 @@
 *              Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
+#include "config.h"
+
 #include <glib.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibSource.h>
@@ -73,6 +75,10 @@ const std::string LAUNCHER_DRAG = "launcher-drag";
 const std::string DASH_TAP = "dash-tap";
 const std::string WINDOWS_DRAG_PINCH = "windows-drag-pinch";
 
+const std::string CCS_PROFILE_CHANGER_TOOL = "compiz-config-profile-setter";
+const std::string CCS_PROFILE_DEFAULT = "unity";
+const std::string CCS_PROFILE_LOWGFX = CCS_PROFILE_DEFAULT + "-lowgfx";
+
 const int DEFAULT_LAUNCHER_SIZE = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
 const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
@@ -113,6 +119,7 @@ public:
     parent_->launcher_position.SetSetterFunction(sigc::mem_fun(this, &Impl::SetLauncherPosition));
     parent_->desktop_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDesktopType));
     parent_->pam_check_account_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetPamCheckAccountType));
+    parent_->low_gfx.changed.connect(sigc::mem_fun(this, &Impl::UpdateCompizProfile));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
@@ -237,7 +244,21 @@ public:
 
   void UpdateLowGfx()
   {
-    parent_->low_gfx = GetLowGfx();
+    parent_->low_gfx = g_settings_get_boolean(usettings_, LOWGFX.c_str()) != FALSE;
+  }
+
+  void UpdateCompizProfile(bool lowgfx)
+  {
+    auto const& profile = lowgfx ? CCS_PROFILE_LOWGFX : CCS_PROFILE_DEFAULT;
+    auto profile_change_cmd = (std::string(UNITY_LIBDIR G_DIR_SEPARATOR_S) + CCS_PROFILE_CHANGER_TOOL + " " + profile);
+
+    glib::Error error;
+    g_spawn_command_line_async(profile_change_cmd.c_str(), &error);
+
+    if (error)
+    {
+      LOG_ERROR(logger) << "Failed to switch compiz profile: " << error;
+    }
   }
 
   void UpdateLimSetting()
@@ -290,11 +311,6 @@ public:
   bool GetPamCheckAccountType() const
   {
     return g_settings_get_boolean(usettings_, PAM_CHECK_ACCOUNT_TYPE.c_str());
-  }
-
-  bool GetLowGfx() const
-  {
-    return g_settings_get_boolean(usettings_, LOWGFX.c_str());
   }
 
   int GetFontSize() const
