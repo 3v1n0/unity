@@ -74,8 +74,8 @@ public:
   bool IsConnected() const;
 
   Variant GetProperty(std::string const& property_name) const;
-  void GetProperty(std::string const& property_name, ReplyCallback const&);
-  void SetProperty(std::string const& property_name, GVariant* value);
+  void GetProperty(std::string const& property_name, ReplyCallback const&, GCancellable *cancellable = nullptr);
+  void SetProperty(std::string const& property_name, GVariant* value, GCancellable *cancellable = nullptr);
 
   void Connect(std::string const& signal_name, ReplyCallback const& callback);
   void DisconnectSignal(std::string const& signal_name = "");

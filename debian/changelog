@@ -1,3 +1,43 @@
+unity (7.5.0+17.04.20170301-0ubuntu1) zesty; urgency=medium
+
+  * UnityWindow: safely check validity of UnityWindow from scaled one
+    (LP: #1659847)
+  * InputMonitor: don't try to deference an invalid Nux display (LP:
+    #1632656)
+  * unity7.service: set ups and BAMF as wanted, not required
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 01 Mar 2017 13:07:08 +0000
+
+unity (7.5.0+17.04.20170222-0ubuntu1) zesty; urgency=medium
+
+  * BackgroundSettings: use gnome-bg to generate textures with proper
+    scaling (LP: #1666359)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 22 Feb 2017 01:52:54 +0000
+
+unity (7.5.0+17.04.20170125-0ubuntu1) zesty; urgency=medium
+
+  [ Marco Trevisan (Treviño) ]
+  * GnomeSessionManager: add gcancellable to instance and use it for
+    calls with temporary proxies
+
+  [ Michał Sawicz ]
+  * Drop click scope from the default list of favourites
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 25 Jan 2017 16:55:08 +0000
+
+unity (7.5.0+17.04.20170109-0ubuntu1) zesty; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Round gtk scaling factor to closest integer. (LP: #1649736)
+  * Keep the screen locked if rebooting with autologin. (LP: #1600389)
+
+  [ Eleni Maria Stea ]
+  * shouldn't create blur rectangles when there's no blur, skips the
+    blur rects processing in low gfx.
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 09 Jan 2017 15:10:02 +0000
+
 unity (7.5.0+17.04.20161130-0ubuntu1) zesty; urgency=medium
 
   [ Kai-Heng Feng ]

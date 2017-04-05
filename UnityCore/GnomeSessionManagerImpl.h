@@ -69,6 +69,7 @@ struct GnomeManager::Impl
   void UpdateHaveOtherOpenSessions();
 
   bool IsUserInGroup(std::string const& user_name, std::string const& group_name);
+  bool AutomaticLogin();
 
   GnomeManager* manager_;
   bool test_mode_;
@@ -84,6 +85,7 @@ struct GnomeManager::Impl
   glib::DBusProxy::Ptr dm_proxy_;
   glib::DBusProxy::Ptr dm_seat_proxy_;
 
+  glib::Cancellable cancellable_;
   int open_sessions_;
 };
 
