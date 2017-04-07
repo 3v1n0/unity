@@ -175,6 +175,7 @@ private:
   bool activate_on_finish_;
   glib::Source::UniquePtr activate_delay_;
   bool visible_;
+  bool neko_mode_;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> dash_view_copy_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> search_view_copy_;
