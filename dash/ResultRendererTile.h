@@ -59,7 +59,7 @@ class ResultRendererTile : public ResultRenderer
 public:
   NUX_DECLARE_OBJECT_TYPE(ResultRendererTile, ResultRenderer);
 
-  ResultRendererTile(NUX_FILE_LINE_PROTO);
+  ResultRendererTile(NUX_FILE_LINE_PROTO, bool neko_mode = false);
   virtual ~ResultRendererTile() {}
 
   virtual void Render(nux::GraphicsEngine& GfxContext,
@@ -95,6 +95,8 @@ private:
                                   int width, int height);
 
   void UpdateWidthHeight();
+
+  bool neko_mode_;
 };
 
 }

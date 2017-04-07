@@ -143,6 +143,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 , filters_expanded(false)
 , can_refine_search(false)
 , scale(DEFAULT_SCALE)
+, neko_mode(false)
 , scope_(scope)
 , no_results_active_(false)
 , last_good_filter_model_(-1)
@@ -171,6 +172,8 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 
     conn_manager_.Add(scope_->filters.changed.connect(sigc::mem_fun(this, &ScopeView::SetupFilters)));
     SetupFilters(scope->filters);
+
+    neko_mode.changed.connect([this] (bool) { SetupCategories(scope_->categories); });
 
     scope_->connected.changed.connect([this](bool is_connected)
     {
@@ -485,7 +488,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
   }
   else
   {
-    results_view->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+    results_view->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION, neko_mode()));
   }
 
   if (scope_)

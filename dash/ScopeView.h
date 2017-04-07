@@ -72,6 +72,7 @@ public:
   nux::Property<ScopeViewType> view_type;
   nux::Property<bool> can_refine_search;
   nux::Property<double> scale;
+  nux::Property<bool> neko_mode;
 
   sigc::signal<void, ResultView::ActivateType, LocalResult const&, GVariant*, std::string const&> result_activated;
 
