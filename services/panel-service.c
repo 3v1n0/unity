@@ -195,6 +195,14 @@ panel_service_class_dispose (GObject *self)
   G_OBJECT_CLASS (panel_service_parent_class)->dispose (self);
 }
 
+void
+panel_service_clear_remote_data (PanelService *self)
+{
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  g_hash_table_remove_all (self->priv->panel2entries_hash);
+}
+
 static void
 panel_service_class_finalize (GObject *object)
 {
