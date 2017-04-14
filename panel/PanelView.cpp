@@ -52,7 +52,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , parent_(parent)
-  , remote_(menus->Indicators())
+  , menus_(menus)
+  , remote_(menus_->Indicators())
   , is_dirty_(true)
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
@@ -134,7 +135,7 @@ PanelView::PanelView(MockableBaseWindow* parent, menu::Manager::Ptr const& menus
 PanelView::~PanelView()
 {
   indicator::EntryLocationMap locations;
-  remote_->SyncGeometries(GetName() + std::to_string(monitor_), locations);
+  remote_->SyncGeometries(GetPanelName(), locations);
 }
 
 void PanelView::LoadTextures()
@@ -735,7 +736,7 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
 
 std::string PanelView::GetPanelName() const
 {
-  return GetName() + std::to_string(monitor_);
+  return GetName() + std::to_string(reinterpret_cast<uintptr_t>(this)) + '_' + std::to_string(monitor_);
 }
 
 void PanelView::SyncGeometries()
@@ -751,9 +752,13 @@ void PanelView::SyncGeometries()
 
 void PanelView::SetMonitor(int monitor)
 {
+  auto mouse_tracker_cb = sigc::mem_fun(this, &PanelView::OnMenuPointerMoved);
+  menus_->UnregisterTracker(GetPanelName(), mouse_tracker_cb);
+
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
   indicators_->SetMonitor(monitor);
+  menus_->RegisterTracker(GetPanelName(), mouse_tracker_cb);
   Resize();
 
   if (WindowManager::Default().IsScaleActive())

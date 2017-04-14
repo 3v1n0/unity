@@ -111,6 +111,7 @@ private:
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
   MockableBaseWindow* parent_;
+  menu::Manager::Ptr menus_;
   indicator::Indicators::Ptr remote_;
 
   // No ownership is taken for these views, that is done by the AddChild method.
