@@ -1447,6 +1447,7 @@ void DashView::OnEntryActivated()
         for (auto const& view : scope_views_)
           view.second->neko_mode = (i != 0);
 
+        search_bar_->search_string = "";
         return;
       }
     }
