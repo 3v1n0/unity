@@ -149,7 +149,7 @@ void Panel::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
 
 std::string Panel::GetPanelName() const
 {
-  return "LockScreenPanel";
+  return "LockScreenPanel" + std::to_string(reinterpret_cast<uintptr_t>(this));
 }
 
 void Panel::OnIndicatorViewUpdated()
