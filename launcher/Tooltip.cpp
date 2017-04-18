@@ -222,7 +222,7 @@ void Tooltip::PreLayoutManagement()
   if (Settings::Instance().launcher_position() == LauncherPosition::LEFT)
     _bottom_space->SetMinMaxSize(1, space_height + 1);
   else
-    _bottom_space->SetMinMaxSize(1, space_height + ROTATED_ANCHOR_HEIGHT + 1);
+    _bottom_space->SetMinMaxSize(1, space_height + ROTATED_ANCHOR_HEIGHT.CP(cv_) + 1);
 
   CairoBaseWindow::PreLayoutManagement();
 }
