@@ -58,7 +58,7 @@ struct LoadResult
   }
 };
 
-void CheckResults(std::vector<LoadResult> const& results, unsigned max_wait = 500)
+void CheckResults(std::vector<LoadResult> const& results, unsigned max_wait = 1500)
 {
   Utils::WaitUntilMSec([&results] {
     bool got_all = true;
@@ -149,7 +149,7 @@ TEST(TestThumbnailGenerator, TestGetManyFileThumbnail)
     results[i].cancelled = true;
   }
 
-  CheckResults(results, 15000);
+  CheckResults(results, 30000);
 }
 
 
@@ -206,7 +206,7 @@ TEST(TestThumbnailGenerator, TestGetManyGIcon)
     results[i].cancelled = true;
   }
 
-  CheckResults(results);
+  CheckResults(results, 3000);
 }
 
 
