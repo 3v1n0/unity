@@ -124,13 +124,13 @@ int Tooltip::CalculateX() const
   {
     int size = 0;
     int max = GetBaseWidth() - ROTATED_ANCHOR_WIDTH.CP(cv_) - 2 * CORNER_RADIUS.CP(cv_) - 2 * _padding.CP(cv_);
-    if (_left_size.CP(cv_) > max)
+    if (_left_size > max)
     {
       size = max;
     }
-    else if (_left_size.CP(cv_) > 0)
+    else if (_left_size > 0)
     {
-      size = _left_size.CP(cv_);
+      size = _left_size;
     }
     x = _anchorX - (ROTATED_ANCHOR_WIDTH.CP(cv_) / 2) - size - CORNER_RADIUS.CP(cv_) - _padding.CP(cv_);
   }
@@ -653,7 +653,7 @@ void Tooltip::UpdateTexture()
     height / dpi_scale,
     anchor_width,
     anchor_height,
-    _left_size,
+    _left_size / dpi_scale,
     CORNER_RADIUS,
     blur_coef,
     shadow_color,
@@ -669,7 +669,7 @@ void Tooltip::UpdateTexture()
     CORNER_RADIUS,         // radius,
     anchor_width,          // anchor_width,
     anchor_height,         // anchor_height,
-    _left_size,            // left_size,
+    _left_size / dpi_scale,    // left_size,
     true,                  // negative,
     false,                 // outline,
     1.0,                   // line_width,
