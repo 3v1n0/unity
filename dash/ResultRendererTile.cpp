@@ -282,8 +282,9 @@ void ResultRendererTile::LoadIcon(Result const& row)
     };
     gsize tmp0;
     int tmp1 = tile_size - (rand() % RawPixel(16).CP(scale));
-    glib::String tmp2((gchar*)g_base64_decode(pool[rand() % pool.size()], &tmp0));
-    icon_name = glib::String(g_strdup_printf(tmp2, tmp1, tmp1)).Str();
+    int tmp2 = tile_size - (rand() % RawPixel(16).CP(scale));
+    glib::String tmp3((gchar*)g_base64_decode(pool[rand() % pool.size()], &tmp0));
+    icon_name = glib::String(g_strdup_printf(tmp3, tmp1, tmp2)).Str();
   }
 
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), nullptr));

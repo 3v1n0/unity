@@ -170,9 +170,8 @@ void UScreen::Refresh()
 
     float scale = gdk_screen_get_monitor_scale_factor(screen_, i);
     nux::Geometry geo(rect.x, rect.y, rect.width, rect.height);
-    
     nux::Size physical_size(gdk_screen_get_monitor_width_mm(screen_, i),
-      gdk_screen_get_monitor_height_mm(screen_, i));
+                            gdk_screen_get_monitor_height_mm(screen_, i));
 
     if (scale != 1.0)
       geo = geo * scale;

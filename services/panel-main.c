@@ -343,6 +343,31 @@ on_icon_theme_changed (GtkIconTheme* theme, GDBusConnection *connection)
     }
 }
 
+void
+on_unity_dbus_name_owner_changed_cb (GDBusConnection *connection,
+                                     const gchar *sender_name,
+                                     const gchar *object_path,
+                                     const gchar *interface_name,
+                                     const gchar *signal_name,
+                                     GVariant *parameters,
+                                     gpointer user_data)
+{
+  PanelService *service;
+  const gchar *owner_name;
+  const gchar *old_address;
+  const gchar *new_address;
+
+  g_variant_get (parameters, "(&s&s&s)", &owner_name, &old_address, &new_address);
+  g_debug ("%s: %s, %s -> %s", G_STRFUNC, owner_name, old_address, new_address);
+
+  service = user_data;
+
+  if (!new_address || *new_address == '\0')
+    {
+      panel_service_clear_remote_data (service);
+    }
+}
+
 static void
 on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
@@ -367,6 +392,17 @@ on_bus_acquired (GDBusConnection *connection,
 
   g_signal_connect (gtk_icon_theme_get_default(), "changed",
                     G_CALLBACK (on_icon_theme_changed), connection);
+
+  g_dbus_connection_signal_subscribe (connection,
+                                      /*sender*/ NULL,
+                                      /*interface_name*/ "org.freedesktop.DBus",
+                                      /*member*/ "NameOwnerChanged",
+                                      /*object_path*/ "/org/freedesktop/DBus",
+                                      /*arg0*/ "com.canonical.Unity",
+                                      G_DBUS_SIGNAL_FLAGS_NONE,
+                                      on_unity_dbus_name_owner_changed_cb,
+                                      service,
+                                      NULL);
 
   g_debug ("%s", G_STRFUNC);
   g_assert (reg_id > 0);

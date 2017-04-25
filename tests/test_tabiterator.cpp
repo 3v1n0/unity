@@ -171,9 +171,6 @@ TEST_F(TestTabIterator, InsertBeforeMissing)
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
   tab_iterator.InsertBefore(second_entry.GetPointer(), first_entry.GetPointer());
 
-  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator.areas_.begin(),
-    tab_iterator.areas_.end(), second_entry.GetPointer());
-
   nux::InputArea* last = tab_iterator.areas_.back();
 
   EXPECT_EQ(second_entry.GetPointer(), last);
@@ -205,9 +202,6 @@ TEST_F(TestTabIterator, InsertAfterMissing)
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
   tab_iterator.InsertAfter(second_entry.GetPointer(), first_entry.GetPointer());
-
-  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator.areas_.begin(),
-    tab_iterator.areas_.end(), second_entry.GetPointer());
 
   nux::InputArea* last = tab_iterator.areas_.back();
 

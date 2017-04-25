@@ -76,6 +76,8 @@ void              panel_service_remove_indicator (PanelService *self, IndicatorO
 
 void              panel_service_clear_indicators (PanelService *self);
 
+void              panel_service_clear_remote_data (PanelService *self);
+
 GVariant        * panel_service_sync          (PanelService *self);
 
 GVariant        * panel_service_sync_one      (PanelService *self,
