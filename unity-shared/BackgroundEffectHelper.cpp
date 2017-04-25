@@ -21,7 +21,6 @@
 #include "BackgroundEffectHelper.h"
 
 #include "TextureCache.h"
-#include "UnitySettings.h"
 
 namespace
 {
@@ -50,9 +49,6 @@ BackgroundEffectHelper::BackgroundEffectHelper(nux::View* view)
   owner.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnOwnerChanged));
   TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &BackgroundEffectHelper::LoadTextures));
   LoadTextures();
-
-  if (Settings::Instance().low_gfx())
-    blur_type = BLUR_NONE;
 }
 
 BackgroundEffectHelper::BackgroundEffectHelper()

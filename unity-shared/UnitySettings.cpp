@@ -40,6 +40,7 @@ const std::string FORM_FACTOR = "form-factor";
 const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
 const std::string DESKTOP_TYPE = "desktop-type";
 const std::string PAM_CHECK_ACCOUNT_TYPE = "pam-check-account-type";
+const std::string LOWGFX = "lowgfx";
 
 const std::string LAUNCHER_SETTINGS = "com.canonical.Unity.Launcher";
 const std::string LAUNCHER_POSITION = "launcher-position";
@@ -116,6 +117,10 @@ public:
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LOWGFX, [this] (GSettings*, const gchar *) {
+      UpdateLowGfx();
+    });
+
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
       CacheFormFactor();
     });
@@ -180,6 +185,7 @@ public:
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
     // The order is important here, DPI is the last thing to be updated
+    UpdateLowGfx();
     UpdateLimSetting();
     UpdateGesturesSetting();
     UpdateTextScaleFactor();
@@ -227,6 +233,11 @@ public:
   void CacheLauncherPosition()
   {
     cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(launcher_settings_, LAUNCHER_POSITION.c_str()));
+  }
+
+  void UpdateLowGfx()
+  {
+    parent_->low_gfx = GetLowGfx();
   }
 
   void UpdateLimSetting()
@@ -281,6 +292,11 @@ public:
     return g_settings_get_boolean(usettings_, PAM_CHECK_ACCOUNT_TYPE.c_str());
   }
 
+  bool GetLowGfx() const
+  {
+    return g_settings_get_boolean(usettings_, LOWGFX.c_str());
+  }
+
   int GetFontSize() const
   {
     gint font_size;
@@ -329,7 +345,7 @@ public:
     auto const& geo = uscreen->GetMonitorGeometry(monitor);
     auto const& size = uscreen->GetMonitorPhysicalSize(monitor);
     auto scale = DPI_SCALING_STEP;
-      
+
     if ((size.width == 160 && size.height == 90) ||
         (size.width == 160 && size.height == 100) ||
         (size.width == 16 && size.height == 9) ||
@@ -340,7 +356,7 @@ public:
 
     if (size.width > 0 && size.height > 0)
     {
-      const double dpi_x = static_cast<double>(geo.width) / (size.width / 25.4);  
+      const double dpi_x = static_cast<double>(geo.width) / (size.width / 25.4);
       const double dpi_y = static_cast<double>(geo.height) / (size.height / 25.4);
 
       const auto dpi = std::max(dpi_x, dpi_y);
@@ -481,8 +497,7 @@ public:
 //
 
 Settings::Settings()
-  : low_gfx(false)
-  , is_standalone(false)
+  : is_standalone(false)
   , pimpl(new Impl(this))
 {
   if (settings_instance)

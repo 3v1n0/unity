@@ -160,12 +160,6 @@
                   <_long>Enables possibility to display an overlay showing available mouse and keyboard shortcuts.</_long>
                   <default>true</default>
                 </option>
-
-                <option name="low_graphics_mode"  type="bool">
-                  <_short>Enable Low Graphics Mode</_short>
-                  <_long>Enables low graphics mode regardless of hardware in the system</_long>
-                  <default>false</default>
-                </option>
             </group>
 
             <group>

@@ -292,23 +292,28 @@ UnityScreen::UnityScreen(CompScreen* screen)
     }
   }
 
-    //In case of software rendering then enable lowgfx mode.
+  //In case of software rendering then enable lowgfx mode.
   std::string renderer = ANSI_TO_TCHAR(NUX_REINTERPRET_CAST(const char *, glGetString(GL_RENDERER)));
-
   if (renderer.find("Software Rasterizer") != std::string::npos ||
       renderer.find("Mesa X11") != std::string::npos ||
       renderer.find("llvmpipe") != std::string::npos ||
       renderer.find("softpipe") != std::string::npos ||
-      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1) ||
-       optionGetLowGraphicsMode())
-    {
-      unity_settings_.low_gfx = true;
-    }
+      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
+  {
+    unity_settings_.low_gfx = true;
+  }
 
   if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
   {
     unity_settings_.low_gfx = false;
   }
+
+  if (unity_settings_.low_gfx())
+    BackgroundEffectHelper::blur_type = BLUR_NONE;
+
+  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
+    BackgroundEffectHelper::blur_type = low_gfx ? BLUR_NONE : (unity::BlurType) optionGetDashBlurExperimental();
+  }, *this));
 #endif
 
   if (!failed)
@@ -384,7 +389,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShortcutOverlayNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-     optionSetLowGraphicsModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
      optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
@@ -3750,14 +3754,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::ShortcutOverlay:
       shortcut_controller_->SetEnabled(optionGetShortcutOverlay());
-      break;
-    case UnityshellOptions::LowGraphicsMode:
-      if (optionGetLowGraphicsMode())
-          BackgroundEffectHelper::blur_type = BLUR_NONE;
-      else
-          BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
-
-      unity::Settings::Instance().low_gfx = optionGetLowGraphicsMode();
       break;
     case UnityshellOptions::DecayRate:
       launcher_options->edge_decay_rate = optionGetDecayRate() * 100;

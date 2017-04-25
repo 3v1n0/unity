@@ -100,6 +100,11 @@
         when authenticating.  Only do this if you have account
         configured properly on your system.</description>
     </key>
+    <key type="b" name="lowgfx">
+      <default>false</default>
+      <summary>Enable/Disable Low Graphics Mode</summary>
+      <description>Whether Unity runs in Low Graphics Mode.</description>
+    </key>
   </schema>
   <schema path="/com/canonical/unity/interface/" id="com.canonical.Unity.Interface" gettext-domain="unity">
     <key type="d" name="text-scale-factor">

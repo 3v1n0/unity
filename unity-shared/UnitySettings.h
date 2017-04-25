@@ -76,7 +76,6 @@ public:
   nux::Property<bool> gestures_windows_drag_pinch;
 
   sigc::signal<void> dpi_changed;
-  sigc::signal<void> low_gfx_changed;
   sigc::signal<void> gestures_changed;
 
 private:
