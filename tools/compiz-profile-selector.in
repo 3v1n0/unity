@@ -13,16 +13,17 @@ if [ -f "$default_ini" ]; then
 fi
 
 compiz_profile="ubuntu"
+settings_profile="unity"
 
 if ! /usr/lib/nux/unity_support_test -p; then
-  compiz_profile="ubuntu-lowgfx"
+  settings_profile="unity-lowgfx"
 fi
 
 if [ "$(gsettings get com.canonical.Unity lowgfx)" == "true" ]; then
-  compiz_profile="ubuntu-lowgfx"
+  settings_profile="unity-lowgfx"
 fi
 
-echo "Using compiz profile '$compiz_profile'"
+echo "Using compiz profile '$compiz_profile:$settings_profile'"
 
 if [ -n "$UPSTART_SESSION" ]; then
   initctl set-env -g COMPIZ_CONFIG_PROFILE="$compiz_profile"
@@ -31,4 +32,6 @@ fi
 dbus-update-activation-environment --verbose --systemd COMPIZ_CONFIG_PROFILE="$compiz_profile"
 
 export COMPIZ_CONFIG_PROFILE="$compiz_profile"
-exec @UNITY_LIBDIR@/unity-active-plugins-safety-check
+
+@UNITY_LIBDIR@/compiz-config-profile-setter $settings_profile
+@UNITY_LIBDIR@/unity-active-plugins-safety-check

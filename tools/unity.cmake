@@ -58,19 +58,26 @@ well_known_local_path = ("%s/share/locale/*/LC_MESSAGES/*unity*" % supported_pre
 def set_unity_env ():
     '''set variable environnement for unity to run'''
 
+    compiz_config_profile = 'unity'
     os.environ['COMPIZ_CONFIG_PROFILE'] = 'ubuntu'
 
     try:
-      if subprocess.call('/usr/lib/nux/unity_support_test -f'.split()) > 0:
-        os.environ['COMPIZ_CONFIG_PROFILE'] = 'ubuntu-lowgfx'
+        if subprocess.call('/usr/lib/nux/unity_support_test -f'.split()) > 0:
+            compiz_config_profile += '-lowgfx'
     except:
-      pass
+        pass
 
     try:
-      if subprocess.check_output('gsettings get com.canonical.Unity lowgfx'.split()) == b'true\n':
-        os.environ['COMPIZ_CONFIG_PROFILE'] = 'ubuntu-lowgfx'
+        if subprocess.check_output('gsettings get com.canonical.Unity lowgfx'.split()) == b'true\n':
+            compiz_config_profile += '-lowgfx'
     except:
-      pass
+        pass
+
+    try:
+        subprocess.call('@UNITY_LIBDIR@/compiz-config-profile-setter {}'.format(
+            compiz_config_profile).split())
+    except:
+        pass
 
     if not 'DISPLAY' in os.environ:
         # take an optimistic chance and warn about it :)
