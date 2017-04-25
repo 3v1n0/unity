@@ -1,3 +1,26 @@
+unity (7.5.0+17.10.20170425.1-0ubuntu1) artful; urgency=medium
+
+  [ Dimitri John Ledkov ]
+  * Drop libupstart-dev dependency, and simply include verbantim dbus
+    object paths.
+  * Do not use upstart-dbus.h in compiz_config_profile_setter either.
+
+  [ Eleni Maria Stea ]
+  * removes lowgfx option from ccsm, reads the "lowgfx" gsetting
+    (lp:~hikiko/unity-control-center/unity-control-center.lowgfx) (LP:
+    #1668950)
+
+  [ Marco Trevisan (Treviño) ]
+  * Panel: ensure the menu-manager tracker is updated to match monitor
+    (LP: #1671432)
+  * compiz-profile-setter: tool to update the current profile and use in
+    systemd and Unity settings (LP: #1668950)
+
+  [ Nick Dedekind ]
+  * Fixed tooltip scaling issues. (LP: #1673950)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Tue, 25 Apr 2017 17:59:20 +0000
+
 unity (7.5.0+17.04.20170407.1-0ubuntu1) zesty; urgency=medium
 
   * Dash: fix the neko regression we have since a couple of cycles (LP:
