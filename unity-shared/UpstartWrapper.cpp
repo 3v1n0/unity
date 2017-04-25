@@ -20,7 +20,6 @@
 #include "UpstartWrapper.h"
 
 #include <UnityCore/GLibDBusProxy.h>
-#include <upstart/upstart-dbus.h>
 
 namespace unity
 {
@@ -49,8 +48,8 @@ void UpstartWrapper::Impl::Emit(std::string const& name)
   auto flags = static_cast<GDBusProxyFlags>(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
                                             G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS);
 
-  auto proxy = std::make_shared<unity::glib::DBusProxy>(test_mode_ ?  "com.canonical.Unity.Test.Upstart" : DBUS_SERVICE_UPSTART,
-                                                        DBUS_PATH_UPSTART, DBUS_INTERFACE_UPSTART,
+  auto proxy = std::make_shared<unity::glib::DBusProxy>(test_mode_ ?  "com.canonical.Unity.Test.Upstart" : "com.ubuntu.Upstart",
+                                                        "/com/ubuntu/Upstart", "com.ubuntu.Upstart0_6",
                                                         G_BUS_TYPE_SESSION, flags);
 
   proxy->CallBegin("EmitEvent", g_variant_new("(sasb)", name.c_str(), nullptr, 0), [proxy] (GVariant*, glib::Error const&) {});

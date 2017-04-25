@@ -39,7 +39,7 @@ endif (GMOCK_SOURCE_DIR)
 #
 # Unit tests
 #
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;libupstart;xtst")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;xtst")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 string (REPLACE ";" " " TEST_UNIT_DEPS_CFLAGS_OTHER "${TEST_UNIT_CFLAGS_OTHER}")

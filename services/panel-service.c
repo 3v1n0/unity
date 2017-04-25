@@ -34,8 +34,6 @@
 #include <X11/XF86keysym.h>
 #include <X11/extensions/XInput2.h>
 
-#include <upstart/upstart-dbus.h>
-
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define GET_PRIVATE(o) \
@@ -851,9 +849,9 @@ emit_upstart_event (const gchar *event)
       return;
     }
 
-  GVariant *result = g_dbus_connection_call_sync (conn, DBUS_SERVICE_UPSTART,
-                                                  DBUS_PATH_UPSTART,
-                                                  DBUS_INTERFACE_UPSTART,
+  GVariant *result = g_dbus_connection_call_sync (conn, "com.ubuntu.Upstart",
+                                                  "/com/ubuntu/Upstart",
+                                                  "com.ubuntu.Upstart0_6",
                                                   "EmitEvent",
                                                   g_variant_new ("(sasb)", event, NULL, 0),
                                                   NULL, G_DBUS_CALL_FLAGS_NO_AUTO_START, -1,
