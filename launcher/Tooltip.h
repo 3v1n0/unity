@@ -78,7 +78,7 @@ private:
 
   int _anchorX;
   int _anchorY;
-  RawPixel _left_size; // size of the segment from point 10 to 11, used when launcher at bottom.
+  int _left_size; // size of the segment from point 10 to 11, used when launcher at bottom.
   RawPixel _padding;
 
   nux::HLayout* _hlayout;
@@ -94,4 +94,3 @@ private:
 }
 
 #endif // TOOLTIP_H
-
