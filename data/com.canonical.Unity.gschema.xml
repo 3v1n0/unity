@@ -146,7 +146,6 @@
         'application://libreoffice-calc.desktop',
         'application://libreoffice-impress.desktop',
         'application://org.gnome.Software.desktop',
-        'application://ubuntu-amazon-default.desktop',
         'application://unity-control-center.desktop',
         'unity://running-apps',
         'unity://expo-icon',
