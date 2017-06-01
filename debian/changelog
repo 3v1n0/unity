@@ -1,3 +1,11 @@
+unity (7.5.0+17.10.20170601-0ubuntu1) artful; urgency=medium
+
+  [ Iain Lane ]
+  * Drop the default amazon launcher - we're moving to an alternative
+    implementation in GNOME Shell.
+
+ -- iain@orangesquash.org.uk <iain@orangesquash.org.uk>  Thu, 01 Jun 2017 19:15:28 +0000
+
 unity (7.5.0+17.10.20170425.1-0ubuntu1) artful; urgency=medium
 
   [ Dimitri John Ledkov ]
