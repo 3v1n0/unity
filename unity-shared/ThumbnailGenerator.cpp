@@ -492,7 +492,7 @@ std::string Thumbnail::Generate(std::string& error_hint)
     return "";
   }
 
-  mkdir(get_preview_dir().c_str(), S_IRWXU);
+  g_mkdir_with_parents(get_preview_dir().c_str(), S_IRWXU);
 
   std::string file_type = g_file_info_get_attribute_string(file_info, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE);
 
