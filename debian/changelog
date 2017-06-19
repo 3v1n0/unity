@@ -6,6 +6,9 @@ unity (7.5.0+17.10.20170609-0ubuntu2) UNRELEASED; urgency=medium
       systemd target.
     - Breaks against older version of ubuntu-session, now that unity-session
       provides that new systemd target name.
+  * Recommends unity-session, as ubuntu-session can't be a transitional package
+    (it will be the Gnome Shell default ubuntu session), this is how we install
+    that new session package again.
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 19 Jun 2017 10:50:58 +0200
 
