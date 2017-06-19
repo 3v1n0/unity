@@ -11,4 +11,4 @@ ExecStart=/usr/bin/compiz
 Restart=on-failure
 
 [Install]
-RequiredBy=ubuntu-session.target
+RequiredBy=unity-session.target
