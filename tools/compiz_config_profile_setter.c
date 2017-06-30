@@ -130,7 +130,7 @@ is_compiz_profile_available (const gchar *profile)
 static gboolean
 set_compiz_profile (CCSContext *ccs_context, const gchar *profile_name)
 {
-  CCSPluginList plugins;
+  CCSPluginList plugins, p;
   const char *ccs_backend;
 
   ccs_backend = ccsGetBackend (ccs_context);
@@ -144,7 +144,7 @@ set_compiz_profile (CCSContext *ccs_context, const gchar *profile_name)
 
   plugins = ccsContextGetPlugins (ccs_context);
 
-  for (CCSPluginList p = plugins; p; p = p->next)
+  for (p = plugins; p; p = p->next)
     {
       CCSPlugin* plugin = p->data;
       ccsReadPluginSettings (plugin);
