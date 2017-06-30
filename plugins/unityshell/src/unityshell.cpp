@@ -2061,13 +2061,6 @@ void UnityScreen::handleEvent(XEvent* event)
     case MapRequest:
       ShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
       break;
-    case PropertyNotify:
-      if (bghash_ && event->xproperty.window == GDK_ROOT_WINDOW() &&
-          event->xproperty.atom == bghash_->ColorAtomId())
-      {
-        bghash_->RefreshColor();
-      }
-      break;
     default:
         if (screen->shapeEvent() + ShapeNotify == event->type)
         {
@@ -3854,6 +3847,12 @@ void UnityScreen::outputChangeNotify()
   ScheduleRelayout(500);
 }
 
+void UnityScreen::averageColorChangeNotify(const unsigned short *color)
+{
+  bghash_->UpdateColor(color, nux::animation::Animation::State::Running);
+  screen->averageColorChangeNotify (color);
+}
+
 bool UnityScreen::layoutSlotsAndAssignWindows()
 {
   auto const& scaled_windows = sScreen->getWindows();
@@ -4078,6 +4077,7 @@ void UnityScreen::InitUnityComponents()
   nux::GetWindowCompositor().sigHiddenViewWindow.connect(sigc::mem_fun(this, &UnityScreen::OnViewHidden));
 
   bghash_.reset(new BGHash());
+  bghash_->UpdateColor(screen->averageColor(), nux::animation::Animation::State::Stopped);
   LOG_INFO(logger) << "InitUnityComponents-BGHash " << timer.ElapsedSeconds() << "s";
 
   auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();

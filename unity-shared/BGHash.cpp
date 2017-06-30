@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2012 Canonical Ltd
+ * Copyright (C) 2011-2017 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.alott@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 
@@ -23,18 +24,13 @@
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/WindowManager.h"
 
-#ifndef XA_STRING
-#define XA_STRING ((Atom) 31)
-#endif
-
-DECLARE_LOGGER(logger, "unity.bghash");
+namespace na = nux::animation;
 
 namespace unity
 {
-
 namespace
 {
-  Atom COLORS_ATOM = 0;
+  DECLARE_LOGGER(logger, "unity.bghash");
   const unsigned TRANSITION_DURATION = 500;
 }
 
@@ -42,77 +38,44 @@ BGHash::BGHash()
   : transition_animator_(Settings::Instance().low_gfx() ? 0 : TRANSITION_DURATION)
   , override_color_(nux::color::Transparent)
 {
-  COLORS_ATOM = gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
   transition_animator_.updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
   WindowManager::Default().average_color = unity::colors::Aubergine;
-  RefreshColor(/* skip_animation */ true);
 
   Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
     transition_animator_.SetDuration(low_gfx ? 0 : TRANSITION_DURATION);
   }, *this));
 }
 
-uint64_t BGHash::ColorAtomId() const
-{
-  return COLORS_ATOM;
-}
-
 void BGHash::OverrideColor(nux::Color const& color)
 {
   override_color_ = color;
-  RefreshColor();
+  TransitionToNewColor(override_color_, nux::animation::Animation::State::Running);
 }
 
-void BGHash::RefreshColor(bool skip_animation)
+void BGHash::UpdateColor(const unsigned short *color, na::Animation::State animate)
 {
   if (override_color_.alpha > 0.0f)
   {
-    TransitionToNewColor(override_color_, skip_animation);
+    TransitionToNewColor(override_color_, animate);
     return;
   }
 
-  // XXX: move this part to PluginAdapter
-  Atom         real_type;
-  gint         result;
-  gint         real_format;
-  gulong       items_read;
-  gulong       items_left;
-  gchar*       colors;
-  Display*     display;
-  GdkRGBA      color_gdk;
+  if (!color)
+    return;
 
-  colors = nullptr;
-  display = gdk_x11_display_get_xdisplay(gdk_display_get_default());
+  nux::Color new_color;
+  const double MAX_USHORT = std::numeric_limits<unsigned short>::max ();
+  new_color.red = color[0] / MAX_USHORT;
+  new_color.green = color[1] / MAX_USHORT;
+  new_color.blue = color[2] / MAX_USHORT;
 
-  gdk_error_trap_push();
-  result = XGetWindowProperty (display,
-             GDK_ROOT_WINDOW(),
-             COLORS_ATOM,
-             0L,
-             G_MAXLONG,
-             False,
-             XA_STRING,
-             &real_type,
-             &real_format,
-             &items_read,
-             &items_left,
-             (guchar **) &colors);
-  gdk_flush ();
-  gdk_error_trap_pop_ignored ();
-
-  if (result == Success && items_read)
-  {
-    gdk_rgba_parse(&color_gdk, colors);
-    nux::Color new_color(color_gdk.red, color_gdk.green, color_gdk.blue, 1.0f);
-    TransitionToNewColor(MatchColor(new_color), skip_animation);
-  }
-
-  XFree(colors);
+  TransitionToNewColor(MatchColor(new_color), animate);
 }
 
-void BGHash::TransitionToNewColor(nux::color::Color const& new_color, bool skip_animation)
+void BGHash::TransitionToNewColor(nux::color::Color const& new_color, na::Animation::State animate)
 {
   auto const& current_color = WindowManager::Default().average_color();
+  bool skip_animation = (animate != na::Animation::State::Running);
   LOG_DEBUG(logger) << "transitioning from: " << current_color.red << " to " << new_color.red;
 
   transition_animator_.Stop();

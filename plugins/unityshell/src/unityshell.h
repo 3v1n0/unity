@@ -163,6 +163,7 @@ protected:
   bool initPluginForScreen(CompPlugin* p) override;
 
   void outputChangeNotify() override;
+  void averageColorChangeNotify(const unsigned short *color) override;
 
   CompAction::Vector& getActions() override;
 
