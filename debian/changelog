@@ -1,3 +1,9 @@
+unity (7.5.0+17.10.20170703.1-0ubuntu1) artful; urgency=medium
+
+  * BGHash, UnityScreen: get desktop averageColor from compiz
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 03 Jul 2017 15:39:06 +0000
+
 unity (7.5.0+17.10.20170619-0ubuntu1) artful; urgency=medium
 
   * Rename ubuntu-session systemd target to unity-session to inline with
