@@ -36,14 +36,13 @@ namespace unity
     BGHash();
 
     nux::Color CurrentColor() const;
-    uint64_t ColorAtomId() const;
-    void RefreshColor(bool skip_animation = false);
+    void UpdateColor(const unsigned short *compiz_color, nux::animation::Animation::State);
     void OverrideColor(nux::Color const& color);
 
   private:
-    void OnTransitionUpdated(nux::Color const& new_color);
-    void TransitionToNewColor(nux::Color const& new_color, bool skip_animation = false);
+    void TransitionToNewColor(nux::Color const& new_color, nux::animation::Animation::State);
     nux::Color MatchColor(nux::Color const& base_color) const;
+    void OnTransitionUpdated(nux::Color const& new_color);
 
   private:
     nux::animation::AnimateValue<nux::Color> transition_animator_;
