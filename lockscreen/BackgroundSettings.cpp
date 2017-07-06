@@ -77,17 +77,15 @@ BaseTexturePtr BackgroundSettings::GetBackgroundTexture(int monitor)
     bg_surface = gnome_bg_create_surface(gnome_bg, root_window, geo.width, geo.height, FALSE);
   }
 
+  auto const& bg_color = settings.background_color();
+  cairo_set_source_rgb(c, bg_color.red, bg_color.green, bg_color.blue);
+  cairo_paint(c);
+
   if (bg_surface)
   {
     cairo_set_source_surface(c, bg_surface, 0, 0);
     cairo_paint(c);
     cairo_surface_destroy(bg_surface);
-  }
-  else
-  {
-    auto const& bg_color = settings.background_color();
-    cairo_set_source_rgb(c, bg_color.red, bg_color.green, bg_color.blue);
-    cairo_paint(c);
   }
 
   cairo_surface_set_device_scale(cairo_graphics.GetSurface(), scale, scale);
