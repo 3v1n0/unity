@@ -1,3 +1,11 @@
+unity (7.5.0+17.10.20170707-0ubuntu1) artful; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Lockscreen: always draw the background-color in the lockscreen (LP:
+    #1702701)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 07 Jul 2017 01:03:47 +0000
+
 unity (7.5.0+17.10.20170703.1-0ubuntu1) artful; urgency=medium
 
   * BGHash, UnityScreen: get desktop averageColor from compiz
