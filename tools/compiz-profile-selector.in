@@ -27,9 +27,11 @@ echo "Using compiz profile '$compiz_profile:$settings_profile'"
 
 if [ -n "$UPSTART_SESSION" ]; then
   initctl set-env -g COMPIZ_CONFIG_PROFILE="$compiz_profile"
+else
+  systemctl --user set-environment COMPIZ_CONFIG_PROFILE="$compiz_profile"
 fi
 
-dbus-update-activation-environment --verbose --systemd COMPIZ_CONFIG_PROFILE="$compiz_profile"
+dbus-update-activation-environment --verbose COMPIZ_CONFIG_PROFILE="$compiz_profile"
 
 export COMPIZ_CONFIG_PROFILE="$compiz_profile"
 
