@@ -152,6 +152,20 @@ void SignalManager::OnObjectDestroyed(SignalManager* self, GObject* old_obj)
   self->ForeachMatchedSignal(nullptr, "", nullptr, /*erase_after*/ true);
 }
 
+bool SignalManager::Block(void* object, std::string const& signal_name)
+{
+  return ForeachMatchedSignal(object, signal_name, [this] (SignalBase::Ptr const& signal) {
+    signal->Block();
+  });
+}
+
+bool SignalManager::Unblock(void* object, std::string const& signal_name)
+{
+  return ForeachMatchedSignal(object, signal_name, [this] (SignalBase::Ptr const& signal) {
+    signal->Unblock();
+  });
+}
+
 bool SignalManager::Disconnect(void* object, std::string const& signal_name)
 {
   return ForeachMatchedSignal(object, signal_name, [this] (SignalBase::Ptr const& signal) {

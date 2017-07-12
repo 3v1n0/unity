@@ -94,6 +94,9 @@ public:
   template <typename R, typename G, typename... Ts>
   SignalBase::Ptr Add(G object, std::string const& signal_name, typename Signal<R, G, Ts...>::SignalCallback const&);
 
+  bool Block(void* object, std::string const& signal_name = "");
+  bool Unblock(void* object, std::string const& signal_name = "");
+
   bool Disconnect(void* object, std::string const& signal_name = "");
 
 private:
