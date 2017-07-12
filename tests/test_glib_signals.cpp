@@ -302,27 +302,62 @@ TEST_F(TestGLibSignals, TestManagerAddition)
 {
   MockSignalManager manager;
 
-  EXPECT_NE(nullptr, manager.Add(new Signal<void, TestSignals*>(test_signals_,
-                                                                "signal0",
-                                                                sigc::mem_fun(this, &TestGLibSignals::Signal0Callback))));
-  EXPECT_NE(nullptr, manager.Add(new Signal<void, TestSignals*, const char*>(test_signals_,
-                                                                            "signal1",
-                                                                            sigc::mem_fun(this, &TestGLibSignals::Signal1Callback))));
-  EXPECT_NE(nullptr, manager.Add(new Signal<void, TestSignals*, const char*, int>(test_signals_,
-                                                                                  "signal2",
-                                                                                  sigc::mem_fun(this, &TestGLibSignals::Signal2Callback))));
-  EXPECT_NE(nullptr, manager.Add(new Signal<void, TestSignals*, const char*, int, float>(test_signals_,
-                                                                                         "signal3",
-                                                                                         sigc::mem_fun(this, &TestGLibSignals::Signal3Callback))));
-  EXPECT_NE(nullptr, manager.Add(new Signal<void, TestSignals*, const char*, int, float, double>(test_signals_,
-                                                                                                 "signal4",
-                                                                                                 sigc::mem_fun(this, &TestGLibSignals::Signal4Callback))));
-  EXPECT_NE(nullptr, manager.Add(new Signal<void, TestSignals*, const char*, int, float, double, gboolean>(test_signals_,
-                                 "signal5",
-                                 sigc::mem_fun(this, &TestGLibSignals::Signal5Callback))));
-  EXPECT_NE(nullptr, manager.Add(new Signal<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>(test_signals_,
-                                "signal6",
-                                 sigc::mem_fun(this, &TestGLibSignals::Signal6Callback))));
+  auto signal0 = \
+    std::make_shared<Signal<void, TestSignals*>>(test_signals_,
+                                                 "signal0",
+                                                 sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  auto signal0_added = manager.Add(signal0);
+  ASSERT_NE(nullptr, signal0_added);
+  EXPECT_EQ(signal0, signal0_added);
+
+  auto signal1 = \
+    std::make_shared<Signal<void, TestSignals*, const char*>>(test_signals_,
+                                                              "signal1",
+                                                              sigc::mem_fun(this, &TestGLibSignals::Signal1Callback));
+  auto signal1_added = manager.Add(signal1);
+  ASSERT_NE(nullptr, signal1_added);
+  EXPECT_EQ(signal1, signal1_added);
+
+  auto signal2 = \
+    std::make_shared<Signal<void, TestSignals*, const char*, int>>(test_signals_,
+                                                                   "signal2",
+                                                                   sigc::mem_fun(this, &TestGLibSignals::Signal2Callback));
+  auto signal2_added = manager.Add(signal2);
+  ASSERT_NE(nullptr, signal2_added);
+  EXPECT_EQ(signal2, signal2_added);
+
+  auto signal3 = \
+    std::make_shared<Signal<void, TestSignals*, const char*, int, float>>(test_signals_,
+                                                                          "signal3",
+                                                                          sigc::mem_fun(this, &TestGLibSignals::Signal3Callback));
+  auto signal3_added = manager.Add(signal3);
+  ASSERT_NE(nullptr, signal3_added);
+  EXPECT_EQ(signal3, signal3_added);
+
+  auto signal4 = \
+    std::make_shared<Signal<void, TestSignals*, const char*, int, float, double>>(test_signals_,
+                                                                                  "signal4",
+                                                                                  sigc::mem_fun(this, &TestGLibSignals::Signal4Callback));
+  auto signal4_added = manager.Add(signal4);
+  ASSERT_NE(nullptr, signal4_added);
+  EXPECT_EQ(signal4, signal4_added);
+
+  auto signal5 = \
+    std::make_shared<Signal<void, TestSignals*, const char*, int, float, double, gboolean>>(test_signals_,
+                                                                                            "signal5",
+                                                                                            sigc::mem_fun(this, &TestGLibSignals::Signal5Callback));
+  auto signal5_added = manager.Add(signal5);
+  ASSERT_NE(nullptr, signal5_added);
+  EXPECT_EQ(signal5, signal5_added);
+
+  auto signal6 = \
+    std::make_shared<Signal<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>>(test_signals_,
+                                                                                                      "signal6",
+                                                                                                      sigc::mem_fun(this, &TestGLibSignals::Signal6Callback));
+  auto signal6_added = manager.Add(signal6);
+  ASSERT_NE(nullptr, signal6_added);
+  EXPECT_EQ(signal6, signal6_added);
+
 
   EXPECT_EQ(manager.GetConnections().size(), 7u);
 }
