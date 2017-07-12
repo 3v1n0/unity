@@ -35,16 +35,20 @@ SignalBase::~SignalBase()
   Disconnect();
 }
 
-void SignalBase::Disconnect()
+bool SignalBase::Disconnect()
 {
+  bool disconnected = false;
+
   if (connection_id_ && G_IS_OBJECT(object_))
   {
     g_signal_handler_disconnect(object_, connection_id_);
     g_object_remove_weak_pointer(object_, reinterpret_cast<gpointer*>(&object_));
+    disconnected = true;
   }
 
   object_ = nullptr;
   connection_id_ = 0;
+  return disconnected;
 }
 
 GObject* SignalBase::object() const
@@ -75,15 +79,16 @@ SignalManager::~SignalManager()
 // was too messy to try and write a copy constructor/operator that would steal
 // from "other" and make the new one the owner. Not only did it create
 // opportunity for random bugs, it also made the API bad.
-void SignalManager::Add(SignalBase* signal)
+SignalBase::Ptr SignalManager::Add(SignalBase* signal)
 {
-  Add(SignalBase::Ptr(signal));
+  return Add(SignalBase::Ptr(signal));
 }
 
-void SignalManager::Add(SignalBase::Ptr const& signal)
+SignalBase::Ptr SignalManager::Add(SignalBase::Ptr const& signal)
 {
   connections_.push_back(signal);
   g_object_weak_ref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
+  return signal;
 }
 
 void SignalManager::OnObjectDestroyed(SignalManager* self, GObject* old_obj)

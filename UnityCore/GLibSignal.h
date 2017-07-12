@@ -39,7 +39,7 @@ public:
 
   virtual ~SignalBase();
 
-  void Disconnect();
+  bool Disconnect();
 
   GObject* object() const;
   std::string const& name() const;
@@ -71,9 +71,9 @@ public:
 #endif
 
   inline Signal() {};
-  inline Signal(G object, std::string const& signal_name, SignalCallback const& callback);
+  inline Signal(G object, std::string const& signal_name, SignalCallback const&);
 
-  inline void Connect(G Object, std::string const& signal_name, SignalCallback const& callback);
+  inline bool Connect(G Object, std::string const& signal_name, SignalCallback const&);
 
 private:
   static R Callback(G Object, Ts... vs, Signal* self);
@@ -86,13 +86,10 @@ class SignalManager : boost::noncopyable
 public:
   SignalManager();
   ~SignalManager();
-  void Add(SignalBase* signal);
-  void Add(SignalBase::Ptr const& signal);
+  SignalBase::Ptr Add(SignalBase* signal);
+  SignalBase::Ptr Add(SignalBase::Ptr const& signal);
   template <typename R, typename G, typename... Ts>
-  void Add(G object, std::string const& signal_name, typename Signal<R, G, Ts...>::SignalCallback const& callback)
-  {
-    Add(std::make_shared<Signal<R, G, Ts...>>(object, signal_name, callback));
-  }
+  SignalBase::Ptr Add(G object, std::string const& signal_name, typename Signal<R, G, Ts...>::SignalCallback const&);
 
   void Disconnect(void* object, std::string const& signal_name = "");
 

@@ -34,11 +34,11 @@ Signal<R, G, Ts...>::Signal(G object, std::string const& signal_name,
 }
 
 template <typename R, typename G, typename... Ts>
-void Signal<R, G, Ts...>::Connect(G object, std::string const& signal_name,
+bool Signal<R, G, Ts...>::Connect(G object, std::string const& signal_name,
                                   SignalCallback const& callback)
 {
   if (!callback || !G_IS_OBJECT(object) || signal_name.empty())
-    return;
+    return false;
 
   Disconnect();
 
@@ -47,6 +47,8 @@ void Signal<R, G, Ts...>::Connect(G object, std::string const& signal_name,
   callback_ = callback;
   connection_id_ = g_signal_connect(object_, signal_name.c_str(), G_CALLBACK(Callback), this);
   g_object_add_weak_pointer(object_, reinterpret_cast<gpointer*>(&object_));
+
+  return true;
 }
 
 template <typename R, typename G, typename... Ts>
@@ -57,6 +59,12 @@ R Signal<R, G, Ts...>::Callback(G object, Ts... vs, Signal* self)
     return self->callback_(object, vs...);
 
   return R();
+}
+
+template <typename R, typename G, typename... Ts>
+SignalBase::Ptr SignalManager::Add(G object, std::string const& signal_name, typename Signal<R, G, Ts...>::SignalCallback const& callback)
+{
+  return Add(std::make_shared<Signal<R, G, Ts...>>(object, signal_name, callback));
 }
 
 }
