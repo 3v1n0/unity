@@ -117,30 +117,11 @@ SignalBase::Ptr SignalManager::Add(SignalBase::Ptr const& signal)
   return signal;
 }
 
-void SignalManager::OnObjectDestroyed(SignalManager* self, GObject* old_obj)
-{
-  for (auto it = self->connections_.begin(); it != self->connections_.end();)
-  {
-    auto const& signal = *it;
-
-    // When an object has been destroyed, the signal member is nullified,
-    // so at this point we can be sure that removing signal with a null object,
-    // means removing invalid signals.
-    if (!signal->object())
-    {
-      it = self->connections_.erase(it);
-    }
-    else
-    {
-      ++it;
-    }
-  }
-}
-
 // This uses void* to keep in line with the g_signal* functions
 // (it allows you to pass in a GObject without casting up).
-void SignalManager::Disconnect(void* object, std::string const& signal_name)
+bool SignalManager::ForeachMatchedSignal(void* object, std::string const& signal_name, std::function<void(SignalBase::Ptr const&)> action, bool erase_after)
 {
+  bool action_performed = false;
   bool all_signals = signal_name.empty();
 
   for (auto it = connections_.begin(); it != connections_.end();)
@@ -149,14 +130,33 @@ void SignalManager::Disconnect(void* object, std::string const& signal_name)
 
     if (signal->object() == object && (all_signals || signal->name() == signal_name))
     {
-      g_object_weak_unref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
-      it = connections_.erase(it);
+      if (action)
+      {
+        action_performed = true;
+        action(signal);
+      }
+
+      it = erase_after ? connections_.erase(it) : ++it;
     }
     else
     {
       ++it;
     }
   }
+
+  return action_performed;
+}
+
+void SignalManager::OnObjectDestroyed(SignalManager* self, GObject* old_obj)
+{
+  self->ForeachMatchedSignal(nullptr, "", nullptr, /*erase_after*/ true);
+}
+
+bool SignalManager::Disconnect(void* object, std::string const& signal_name)
+{
+  return ForeachMatchedSignal(object, signal_name, [this] (SignalBase::Ptr const& signal) {
+    g_object_weak_unref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
+  }, true);
 }
 
 }

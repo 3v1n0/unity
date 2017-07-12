@@ -94,9 +94,10 @@ public:
   template <typename R, typename G, typename... Ts>
   SignalBase::Ptr Add(G object, std::string const& signal_name, typename Signal<R, G, Ts...>::SignalCallback const&);
 
-  void Disconnect(void* object, std::string const& signal_name = "");
+  bool Disconnect(void* object, std::string const& signal_name = "");
 
 private:
+  bool ForeachMatchedSignal(void* object, std::string const& signal_name, std::function<void(SignalBase::Ptr const&)> action, bool erase_after = false);
   static void OnObjectDestroyed(SignalManager* self, GObject* old_obj);
 
 protected:
