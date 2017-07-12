@@ -108,7 +108,6 @@ public:
     , cached_form_factor_(FormFactor::DESKTOP)
     , cursor_scale_(1.0)
     , cached_double_click_activate_(true)
-    , changing_gnome_settings_(false)
     , remote_content_enabled_(true)
   {
     parent_->form_factor.SetGetterFunction(sigc::mem_fun(this, &Impl::GetFormFactor));
@@ -170,11 +169,8 @@ public:
     });
 
     signals_.Add<void, GSettings*, const gchar*>(gnome_ui_settings_, "changed::" + GNOME_TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
-      if (!changing_gnome_settings_)
-      {
-        double new_scale_factor = g_settings_get_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str());
-        g_settings_set_double(ui_settings_, TEXT_SCALE_FACTOR.c_str(), new_scale_factor);
-      }
+      double new_scale_factor = g_settings_get_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str());
+      g_settings_set_double(ui_settings_, TEXT_SCALE_FACTOR.c_str(), new_scale_factor);
     });
 
     signals_.Add<void, GSettings*, const gchar*>(lim_settings_, "changed", [this] (GSettings*, const gchar*) {
@@ -418,7 +414,7 @@ public:
           if (value > 0)
             ui_scale = static_cast<double>(value)/DPI_SCALING_STEP;
         }
-        else 
+        else
         {
           value = FindOptimalScale(uscreen, monitor);
           ui_scale = static_cast<double>(value)/DPI_SCALING_STEP;
@@ -455,8 +451,7 @@ public:
 
   void UpdateAppsScaling(double scale)
   {
-    changing_gnome_settings_ = true;
-    changing_gnome_settings_timeout_.reset();
+    signals_.Block(gnome_ui_settings_);
     unsigned integer_scaling = std::max<unsigned>(1, std::lround(scale));
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
@@ -467,7 +462,7 @@ public:
     g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
 
     changing_gnome_settings_timeout_.reset(new glib::TimeoutSeconds(GNOME_SETTINGS_CHANGED_WAIT_SECONDS, [this] {
-      changing_gnome_settings_ = false;
+      signals_.Unblock(gnome_ui_settings_);
       return false;
     }, glib::Source::Priority::LOW));
   }
@@ -506,7 +501,6 @@ public:
   FormFactor cached_form_factor_;
   double cursor_scale_;
   bool cached_double_click_activate_;
-  bool changing_gnome_settings_;
   bool remote_content_enabled_;
 };
 
