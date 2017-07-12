@@ -469,6 +469,23 @@ TEST_F(TestGLibSignals, TestManagerDisconnection)
   EXPECT_FALSE(signal0_received_);
 }
 
+TEST_F(TestGLibSignals, TestManagerBlock)
+{
+  SignalManager manager;
+
+  manager.Add<void, TestSignals*>(test_signals_,
+                                  "signal0",
+                                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  manager.Block(test_signals_, "signal0");
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_FALSE(signal0_received_);
+
+  manager.Unblock(test_signals_, "signal0");
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_TRUE(signal0_received_);
+}
+
 TEST_F(TestGLibSignals, TestManagerObjectDisconnection)
 {
   SignalManager manager;
