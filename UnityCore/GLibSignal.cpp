@@ -51,6 +51,32 @@ bool SignalBase::Disconnect()
   return disconnected;
 }
 
+bool SignalBase::Block() const
+{
+  bool blocked = false;
+
+  if (connection_id_ && G_IS_OBJECT(object_))
+  {
+    g_signal_handler_block(object_, connection_id_);
+    blocked = true;
+  }
+
+  return blocked;
+}
+
+bool SignalBase::Unblock() const
+{
+  bool unblocked = false;
+
+  if (connection_id_ && G_IS_OBJECT(object_))
+  {
+    g_signal_handler_unblock(object_, connection_id_);
+    unblocked = true;
+  }
+
+  return unblocked;
+}
+
 GObject* SignalBase::object() const
 {
   return object_;

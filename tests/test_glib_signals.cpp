@@ -243,6 +243,40 @@ TEST_F(TestGLibSignals, TestSignal6)
   EXPECT_EQ(ret, TRUE);
 }
 
+TEST_F(TestGLibSignals, TestBlock)
+{
+  Signal<void, TestSignals*> signal;
+  ASSERT_TRUE(signal.Connect(test_signals_, "signal0",
+                             sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
+  EXPECT_TRUE(signal.Block());
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_FALSE(signal0_received_);
+
+  signal0_received_ = false;
+  EXPECT_TRUE(signal.Unblock());
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_TRUE(signal0_received_);
+}
+
+TEST_F(TestGLibSignals, TestUnblock)
+{
+  Signal<void, TestSignals*> signal;
+  ASSERT_TRUE(signal.Connect(test_signals_, "signal0",
+                             sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
+  EXPECT_TRUE(signal.Unblock());
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_TRUE(signal0_received_);
+
+  signal0_received_ = false;
+  EXPECT_TRUE(signal.Block());
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_FALSE(signal0_received_);
+}
+
 TEST_F(TestGLibSignals, TestDisconnection)
 {
   Signal<void, TestSignals*> signal;

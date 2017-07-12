@@ -41,6 +41,9 @@ public:
 
   bool Disconnect();
 
+  bool Block() const;
+  bool Unblock() const;
+
   GObject* object() const;
   std::string const& name() const;
 
