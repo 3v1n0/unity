@@ -122,13 +122,14 @@ SignalBase::Ptr SignalManager::Add(SignalBase::Ptr const& signal)
 bool SignalManager::ForeachMatchedSignal(void* object, std::string const& signal_name, std::function<void(SignalBase::Ptr const&)> action, bool erase_after)
 {
   bool action_performed = false;
-  bool all_signals = signal_name.empty();
+  bool all_objects = (object == reinterpret_cast<void*>(std::numeric_limits<uintptr_t>::max()));
+  bool all_signals = all_objects || signal_name.empty();
 
   for (auto it = connections_.begin(); it != connections_.end();)
   {
     auto const& signal = *it;
 
-    if (signal->object() == object && (all_signals || signal->name() == signal_name))
+    if ((all_objects || signal->object() == object) && (all_signals || signal->name() == signal_name))
     {
       if (action)
       {

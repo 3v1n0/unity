@@ -34,7 +34,8 @@ public:
 
   virtual ~TestGLibSignals()
   {
-    g_object_unref(test_signals_);
+    if (test_signals_)
+      g_object_unref(test_signals_);
   }
 
   void Signal0Callback(TestSignals* signals)
@@ -504,6 +505,31 @@ TEST_F(TestGLibSignals, TestManagerBlockAll)
   EXPECT_FALSE(signal1_received_);
 
   EXPECT_TRUE(manager.Unblock(test_signals_));
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_TRUE(signal0_received_);
+  g_signal_emit_by_name(test_signals_, "signal1", "unblocked");
+  EXPECT_TRUE(signal1_received_);
+}
+
+TEST_F(TestGLibSignals, TestManagerBlockAllObjects)
+{
+  SignalManager manager;
+
+  manager.Add<void, TestSignals*>(test_signals_,
+                                  "signal0",
+                                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  manager.Add<void, TestSignals*, const char*>(test_signals_,
+                                               "signal1",
+                                               sigc::mem_fun(this, &TestGLibSignals::Signal1Callback));
+  EXPECT_TRUE(manager.Block());
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  g_signal_emit_by_name(test_signals_, "signal1", "blocked");
+  EXPECT_FALSE(signal0_received_);
+  EXPECT_FALSE(signal1_received_);
+
+  EXPECT_TRUE(manager.Unblock());
 
   g_signal_emit_by_name(test_signals_, "signal0");
   EXPECT_TRUE(signal0_received_);
