@@ -58,6 +58,9 @@ const std::string CURSOR_SCALE_FACTOR = "cursor-scale-factor";
 const std::string APP_SCALE_MONITOR = "app-scale-factor-monitor";
 const std::string APP_USE_MAX_SCALE = "app-fallback-to-maximum-scale-factor";
 
+const std::string COMPIZ_SETTINGS = "org.compiz";
+const std::string COMPIZ_PROFILE = "current-profile";
+
 const std::string UBUNTU_UI_SETTINGS = "com.ubuntu.user-interface";
 const std::string SCALE_FACTOR = "scale-factor";
 
@@ -96,6 +99,7 @@ public:
   Impl(Settings* owner)
     : parent_(owner)
     , usettings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , compiz_settings_(g_settings_new(COMPIZ_SETTINGS.c_str()))
     , launcher_settings_(g_settings_new(LAUNCHER_SETTINGS.c_str()))
     , lim_settings_(g_settings_new(LIM_SETTINGS.c_str()))
     , gestures_settings_(g_settings_new(GESTURES_SETTINGS.c_str()))
@@ -110,6 +114,8 @@ public:
     , cached_double_click_activate_(true)
     , remote_content_enabled_(true)
   {
+    InitializeLowGfx();
+
     parent_->form_factor.SetGetterFunction(sigc::mem_fun(this, &Impl::GetFormFactor));
     parent_->form_factor.SetSetterFunction(sigc::mem_fun(this, &Impl::SetFormFactor));
     parent_->double_click_activate.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDoubleClickActivate));
@@ -123,8 +129,13 @@ public:
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
-    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LOWGFX, [this] (GSettings*, const gchar *) {
+    signals_.Add<void, GSettings*, const gchar*>(compiz_settings_, "changed::" + COMPIZ_PROFILE, [this] (GSettings*, const gchar *) {
       UpdateLowGfx();
+    });
+
+    signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LOWGFX, [this] (GSettings*, const gchar *) {
+      if (glib::Variant const& lowgfx = GetUserLowGfxSetting())
+        UpdateCompizProfile(lowgfx.GetBool());
     });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
@@ -187,8 +198,6 @@ public:
 
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
-    UpdateLowGfx();
-    UpdateCompizProfile(parent_->low_gfx());
     UpdateLimSetting();
 
     // The order is important here, DPI is the last thing to be updated
@@ -240,14 +249,42 @@ public:
     cached_launcher_position_ = static_cast<LauncherPosition>(g_settings_get_enum(launcher_settings_, LAUNCHER_POSITION.c_str()));
   }
 
+  void InitializeLowGfx()
+  {
+    if (glib::Variant const& user_setting = GetUserLowGfxSetting())
+    {
+      parent_->low_gfx = user_setting.GetBool();
+    }
+    else
+    {
+      UpdateLowGfx();
+    }
+
+    UpdateCompizProfile(parent_->low_gfx());
+  }
+
+  std::string GetCurrentCompizProfile()
+  {
+    return glib::String(g_settings_get_string(compiz_settings_, COMPIZ_PROFILE.c_str())).Str();
+  }
+
+  glib::Variant GetUserLowGfxSetting()
+  {
+    return glib::Variant(g_settings_get_user_value(usettings_, LOWGFX.c_str()), glib::StealRef());
+  }
+
   void UpdateLowGfx()
   {
-    parent_->low_gfx = g_settings_get_boolean(usettings_, LOWGFX.c_str()) != FALSE;
+    parent_->low_gfx = (GetCurrentCompizProfile() == CCS_PROFILE_LOWGFX);
   }
 
   void UpdateCompizProfile(bool lowgfx)
   {
     auto const& profile = lowgfx ? CCS_PROFILE_LOWGFX : CCS_PROFILE_DEFAULT;
+
+    if (GetCurrentCompizProfile() == profile)
+      return;
+
     auto profile_change_cmd = (std::string(UNITY_LIBDIR G_DIR_SEPARATOR_S) + CCS_PROFILE_CHANGER_TOOL + " " + profile);
 
     glib::Error error;
@@ -486,6 +523,7 @@ public:
 
   Settings* parent_;
   glib::Object<GSettings> usettings_;
+  glib::Object<GSettings> compiz_settings_;
   glib::Object<GSettings> launcher_settings_;
   glib::Object<GSettings> lim_settings_;
   glib::Object<GSettings> gestures_settings_;
