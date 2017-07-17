@@ -14,26 +14,38 @@ fi
 
 compiz_profile="ubuntu"
 settings_profile="unity"
+supports_3d=true
 
 if ! /usr/lib/nux/unity_support_test -p; then
-  settings_profile="unity-lowgfx"
+  supports_3d=false
 fi
 
-if [ "$(gsettings get com.canonical.Unity lowgfx)" == "true" ]; then
-  settings_profile="unity-lowgfx"
+if [ "$UNITY_LOW_GFX_MODE" != 0 ]; then
+  if [ "$supports_3d" == false ] ||
+     [ "$(gsettings get com.canonical.Unity lowgfx)" == "true" ]; then
+    settings_profile="unity-lowgfx"
+  fi
 fi
 
 echo "Using compiz profile '$compiz_profile:$settings_profile'"
 
 if [ -n "$UPSTART_SESSION" ]; then
   initctl set-env -g COMPIZ_CONFIG_PROFILE="$compiz_profile"
+  initctl set-env -g UNITY_HAS_3D_SUPPORT="$supports_3d"
+  initctl set-env -g UNITY_DEFAULT_PROFILE="$settings_profile"
 else
   systemctl --user set-environment COMPIZ_CONFIG_PROFILE="$compiz_profile"
+  systemctl --user set-environment UNITY_HAS_3D_SUPPORT="$supports_3d"
+  systemctl --user set-environment UNITY_DEFAULT_PROFILE="$settings_profile"
 fi
 
 dbus-update-activation-environment --verbose COMPIZ_CONFIG_PROFILE="$compiz_profile"
+dbus-update-activation-environment --verbose UNITY_HAS_3D_SUPPORT="$supports_3d"
+dbus-update-activation-environment --verbose UNITY_DEFAULT_PROFILE="$settings_profile"
 
 export COMPIZ_CONFIG_PROFILE="$compiz_profile"
+export UNITY_HAS_3D_SUPPORT="$supports_3d"
+export UNITY_DEFAULT_PROFILE="$settings_profile"
 
 @UNITY_LIBDIR@/compiz-config-profile-setter $settings_profile
 @UNITY_LIBDIR@/unity-active-plugins-safety-check
