@@ -293,23 +293,17 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   //In case of software rendering then enable lowgfx mode.
+  std::string lowgfx_env = glib::gchar_to_string(getenv("UNITY_LOW_GFX_MODE"));
   std::string renderer = ANSI_TO_TCHAR(NUX_REINTERPRET_CAST(const char *, glGetString(GL_RENDERER)));
   if (renderer.find("Software Rasterizer") != std::string::npos ||
       renderer.find("Mesa X11") != std::string::npos ||
       renderer.find("llvmpipe") != std::string::npos ||
       renderer.find("softpipe") != std::string::npos ||
-      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
+      atoi(lowgfx_env.c_str()) == 1)
   {
-    unity_settings_.low_gfx = true;
+    if (lowgfx_env.empty() || atoi(lowgfx_env.c_str()) != 0)
+      unity_settings_.supports_3d = false;
   }
-
-  if (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 0)
-  {
-    unity_settings_.low_gfx = false;
-  }
-
-  if (unity_settings_.low_gfx())
-    BackgroundEffectHelper::blur_type = BLUR_NONE;
 
   Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
     BackgroundEffectHelper::blur_type = low_gfx ? BLUR_NONE : (unity::BlurType) optionGetDashBlurExperimental();
