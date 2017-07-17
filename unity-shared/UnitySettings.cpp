@@ -124,18 +124,18 @@ public:
     parent_->launcher_position.SetSetterFunction(sigc::mem_fun(this, &Impl::SetLauncherPosition));
     parent_->desktop_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetDesktopType));
     parent_->pam_check_account_type.SetGetterFunction(sigc::mem_fun(this, &Impl::GetPamCheckAccountType));
+    parent_->supports_3d.changed.connect(sigc::mem_fun(this, &Impl::OnSupports3DChanged));
     parent_->low_gfx.changed.connect(sigc::mem_fun(this, &Impl::UpdateCompizProfile));
 
     for (unsigned i = 0; i < monitors::MAX; ++i)
       em_converters_.emplace_back(std::make_shared<EMConverter>());
 
     signals_.Add<void, GSettings*, const gchar*>(compiz_settings_, "changed::" + COMPIZ_PROFILE, [this] (GSettings*, const gchar *) {
-      UpdateLowGfx();
+      parent_->low_gfx = (GetCurrentCompizProfile() == CCS_PROFILE_LOWGFX);
     });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + LOWGFX, [this] (GSettings*, const gchar *) {
-      if (glib::Variant const& lowgfx = GetUserLowGfxSetting())
-        UpdateCompizProfile(lowgfx.GetBool());
+      UpdateCompizProfile(GetLowGfxSetting());
     });
 
     signals_.Add<void, GSettings*, const gchar*>(usettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, const gchar*) {
@@ -198,9 +198,8 @@ public:
 
     UScreen::GetDefault()->changed.connect(sigc::hide(sigc::hide(sigc::mem_fun(this, &Impl::UpdateDPI))));
 
-    UpdateLimSetting();
-
     // The order is important here, DPI is the last thing to be updated
+    UpdateLimSetting();
     UpdateGesturesSetting();
     UpdateTextScaleFactor();
     UpdateCursorScaleFactor();
@@ -251,15 +250,7 @@ public:
 
   void InitializeLowGfx()
   {
-    if (glib::Variant const& user_setting = GetUserLowGfxSetting())
-    {
-      parent_->low_gfx = user_setting.GetBool();
-    }
-    else
-    {
-      UpdateLowGfx();
-    }
-
+    parent_->low_gfx = GetLowGfxSetting();
     UpdateCompizProfile(parent_->low_gfx());
   }
 
@@ -273,9 +264,29 @@ public:
     return glib::Variant(g_settings_get_user_value(usettings_, LOWGFX.c_str()), glib::StealRef());
   }
 
-  void UpdateLowGfx()
+  bool GetLowGfxSetting()
   {
-    parent_->low_gfx = (GetCurrentCompizProfile() == CCS_PROFILE_LOWGFX);
+    if (glib::Variant const& user_setting = GetUserLowGfxSetting())
+    {
+      return user_setting.GetBool();
+    }
+    else
+    {
+      auto default_profile = glib::gchar_to_string(g_getenv("UNITY_DEFAULT_PROFILE"));
+      if (!default_profile.empty())
+      {
+        return (default_profile == CCS_PROFILE_LOWGFX);
+      }
+      else if (!parent_->supports_3d() ||
+               glib::gchar_to_string(getenv("UNITY_HAS_3D_SUPPORT")) == "false")
+      {
+        return true;
+      }
+      else
+      {
+        return (GetCurrentCompizProfile() == CCS_PROFILE_LOWGFX);
+      }
+    }
   }
 
   void UpdateCompizProfile(bool lowgfx)
@@ -294,6 +305,12 @@ public:
     {
       LOG_ERROR(logger) << "Failed to switch compiz profile: " << error;
     }
+  }
+
+  void OnSupports3DChanged(bool supports_3d)
+  {
+    if (!GetUserLowGfxSetting())
+      parent_->low_gfx = !supports_3d;
   }
 
   void UpdateLimSetting()
@@ -547,7 +564,8 @@ public:
 //
 
 Settings::Settings()
-  : is_standalone(false)
+  : supports_3d(glib::gchar_to_string(getenv("UNITY_HAS_3D_SUPPORT")) != "false")
+  , is_standalone(false)
   , pimpl(new Impl(this))
 {
   if (settings_instance)
