@@ -30,6 +30,9 @@ import time
 import xdg.BaseDirectory
 
 DEFAULT_COMMAND = "compiz --replace"
+COMPIZ_CONFIG_PROFILE = "ubuntu"
+UNITY_DEFAULT_PROFILE = "unity"
+UNITY_LOWGFX_PROFILE = UNITY_DEFAULT_PROFILE + "-lowgfx"
 home_dir = os.path.expanduser("~%s" % os.getenv("SUDO_USER"))
 supported_prefix = "/usr/local"
 
@@ -58,18 +61,18 @@ well_known_local_path = ("%s/share/locale/*/LC_MESSAGES/*unity*" % supported_pre
 def set_unity_env ():
     '''set variable environnement for unity to run'''
 
-    compiz_config_profile = 'unity'
-    os.environ['COMPIZ_CONFIG_PROFILE'] = 'ubuntu'
+    compiz_config_profile = UNITY_DEFAULT_PROFILE
+    os.environ['COMPIZ_CONFIG_PROFILE'] = COMPIZ_CONFIG_PROFILE
 
     try:
         if subprocess.call('/usr/lib/nux/unity_support_test -f'.split()) > 0:
-            compiz_config_profile += '-lowgfx'
+            compiz_config_profile = UNITY_LOWGFX_PROFILE
     except:
         pass
 
     try:
         if subprocess.check_output('gsettings get com.canonical.Unity lowgfx'.split()) == b'true\n':
-            compiz_config_profile += '-lowgfx'
+            compiz_config_profile = UNITY_LOWGFX_PROFILE
     except:
         pass
 

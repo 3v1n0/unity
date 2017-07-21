@@ -8,6 +8,12 @@
     </key>
   </schema>
 
+  <schema id="org.compiz" path="/org/compiz/">
+    <key type="s" name="current-profile">
+      <default>'unity'</default>
+    </key>
+  </schema>
+
   <schema id="org.compiz.unityshell" gettext-domain="compiz">
     <key type="s" name="panel-first-menu">
       <default>'&lt;Alt&gt;F10'</default>
@@ -18,7 +24,7 @@
     <key type="s" name="show-hud">
       <default>'&lt;Alt&gt;'</default>
     </key>
-   </schema>
+  </schema>
 
   <enum id='com.canonical.desktop.interface.ScrollbarMode'>
     <value nick='normal' value='0'/>
