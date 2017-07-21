@@ -33,9 +33,8 @@ namespace panel
 
 const char* window_title = "unity-panel";
 
-class Controller::Impl
+struct Controller::Impl : sigc::trackable
 {
-public:
   Impl(Controller*, menu::Manager::Ptr const&, ui::EdgeBarrierController::Ptr const&);
   ~Impl();
 
