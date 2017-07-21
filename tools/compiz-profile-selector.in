@@ -34,9 +34,9 @@ export UNITY_HAS_3D_SUPPORT="$supports_3d"
 export UNITY_DEFAULT_PROFILE="$settings_profile"
 
 if [ -n "$UPSTART_SESSION" ]; then
-  initctl set-env -g COMPIZ_CONFIG_PROFILE
-  initctl set-env -g UNITY_HAS_3D_SUPPORT
-  initctl set-env -g UNITY_DEFAULT_PROFILE
+  initctl set-env -g COMPIZ_CONFIG_PROFILE=$COMPIZ_CONFIG_PROFILE
+  initctl set-env -g UNITY_HAS_3D_SUPPORT=$UNITY_HAS_3D_SUPPORT
+  initctl set-env -g UNITY_DEFAULT_PROFILE=$UNITY_DEFAULT_PROFILE
 else
   update_env_args="--systemd"
 fi
