@@ -35,16 +35,46 @@ SignalBase::~SignalBase()
   Disconnect();
 }
 
-void SignalBase::Disconnect()
+bool SignalBase::Disconnect()
 {
+  bool disconnected = false;
+
   if (connection_id_ && G_IS_OBJECT(object_))
   {
     g_signal_handler_disconnect(object_, connection_id_);
     g_object_remove_weak_pointer(object_, reinterpret_cast<gpointer*>(&object_));
+    disconnected = true;
   }
 
   object_ = nullptr;
   connection_id_ = 0;
+  return disconnected;
+}
+
+bool SignalBase::Block() const
+{
+  bool blocked = false;
+
+  if (connection_id_ && G_IS_OBJECT(object_))
+  {
+    g_signal_handler_block(object_, connection_id_);
+    blocked = true;
+  }
+
+  return blocked;
+}
+
+bool SignalBase::Unblock() const
+{
+  bool unblocked = false;
+
+  if (connection_id_ && G_IS_OBJECT(object_))
+  {
+    g_signal_handler_unblock(object_, connection_id_);
+    unblocked = true;
+  }
+
+  return unblocked;
 }
 
 GObject* SignalBase::object() const
@@ -75,57 +105,73 @@ SignalManager::~SignalManager()
 // was too messy to try and write a copy constructor/operator that would steal
 // from "other" and make the new one the owner. Not only did it create
 // opportunity for random bugs, it also made the API bad.
-void SignalManager::Add(SignalBase* signal)
+SignalBase::Ptr SignalManager::Add(SignalBase* signal)
 {
-  Add(SignalBase::Ptr(signal));
+  return Add(SignalBase::Ptr(signal));
 }
 
-void SignalManager::Add(SignalBase::Ptr const& signal)
+SignalBase::Ptr SignalManager::Add(SignalBase::Ptr const& signal)
 {
   connections_.push_back(signal);
   g_object_weak_ref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
-}
-
-void SignalManager::OnObjectDestroyed(SignalManager* self, GObject* old_obj)
-{
-  for (auto it = self->connections_.begin(); it != self->connections_.end();)
-  {
-    auto const& signal = *it;
-
-    // When an object has been destroyed, the signal member is nullified,
-    // so at this point we can be sure that removing signal with a null object,
-    // means removing invalid signals.
-    if (!signal->object())
-    {
-      it = self->connections_.erase(it);
-    }
-    else
-    {
-      ++it;
-    }
-  }
+  return signal;
 }
 
 // This uses void* to keep in line with the g_signal* functions
 // (it allows you to pass in a GObject without casting up).
-void SignalManager::Disconnect(void* object, std::string const& signal_name)
+bool SignalManager::ForeachMatchedSignal(void* object, std::string const& signal_name, std::function<void(SignalBase::Ptr const&)> action, bool erase_after)
 {
-  bool all_signals = signal_name.empty();
+  bool action_performed = false;
+  bool all_objects = (object == reinterpret_cast<void*>(std::numeric_limits<uintptr_t>::max()));
+  bool all_signals = all_objects || signal_name.empty();
 
   for (auto it = connections_.begin(); it != connections_.end();)
   {
     auto const& signal = *it;
 
-    if (signal->object() == object && (all_signals || signal->name() == signal_name))
+    if ((all_objects || signal->object() == object) && (all_signals || signal->name() == signal_name))
     {
-      g_object_weak_unref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
-      it = connections_.erase(it);
+      if (action)
+      {
+        action_performed = true;
+        action(signal);
+      }
+
+      it = erase_after ? connections_.erase(it) : ++it;
     }
     else
     {
       ++it;
     }
   }
+
+  return action_performed;
+}
+
+void SignalManager::OnObjectDestroyed(SignalManager* self, GObject* old_obj)
+{
+  self->ForeachMatchedSignal(nullptr, "", nullptr, /*erase_after*/ true);
+}
+
+bool SignalManager::Block(void* object, std::string const& signal_name)
+{
+  return ForeachMatchedSignal(object, signal_name, [this] (SignalBase::Ptr const& signal) {
+    signal->Block();
+  });
+}
+
+bool SignalManager::Unblock(void* object, std::string const& signal_name)
+{
+  return ForeachMatchedSignal(object, signal_name, [this] (SignalBase::Ptr const& signal) {
+    signal->Unblock();
+  });
+}
+
+bool SignalManager::Disconnect(void* object, std::string const& signal_name)
+{
+  return ForeachMatchedSignal(object, signal_name, [this] (SignalBase::Ptr const& signal) {
+    g_object_weak_unref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
+  }, true);
 }
 
 }
