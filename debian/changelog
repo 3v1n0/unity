@@ -1,3 +1,17 @@
+unity (7.5.0+17.10.20170721.1-0ubuntu1) artful; urgency=medium
+
+  * GLibSignal: allow to block, unblock signals
+  * UnitySettings: use glib::Signal blocking for ignoring setting
+    changes
+  * UnitySettings: listen to compiz profile status in order to set
+    low_gfx value
+  * Launcher: disable or reduce most icon effects on lowgfx (LP:
+    #1700859)
+  * PanelController: ensure we disconnect from signals on destruction
+    (LP: #1504870)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 21 Jul 2017 08:53:17 +0000
+
 unity (7.5.0+17.10.20170707-0ubuntu1) artful; urgency=medium
 
   [ Andrea Azzarone ]
