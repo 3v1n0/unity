@@ -138,13 +138,6 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , drag_action_(nux::DNDACTION_NONE)
   , bg_effect_helper_(this)
   , launcher_position_(unity::Settings::Instance().launcher_position())
-  , auto_hide_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_SHORT)
-  , hover_animation_(Settings::Instance().low_gfx ? ANIM_DURATION_SHORT_SHORT : ANIM_DURATION)
-  , drag_over_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_LONG)
-  , drag_out_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_SHORT)
-  , drag_icon_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_SHORT)
-  , dnd_hide_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION * 3)
-  , dash_showing_animation_(Settings::Instance().low_gfx ? 0 : ANIM_DURATION_DASH_SHOWING)
   , cv_(Settings::Instance().em(monitor))
 {
   icon_renderer_->monitor = monitor();
@@ -199,17 +192,9 @@ Launcher::Launcher(MockableBaseWindow* parent,
   });
 
   Settings::Instance().dpi_changed.connect(sigc::mem_fun(this, &Launcher::OnDPIChanged));
-  Settings::Instance().low_gfx.changed.connect(sigc::track_obj([this] (bool low_gfx) {
-    auto_hide_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
-    hover_animation_.SetDuration(low_gfx ? ANIM_DURATION_SHORT_SHORT : ANIM_DURATION);
-    drag_over_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_LONG);
-    drag_out_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
-    drag_icon_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
-    dnd_hide_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION * 3);
-    dash_showing_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_DASH_SHOWING);
-    QueueDraw();
-  }, *this));
+  Settings::Instance().low_gfx.changed.connect(sigc::hide(sigc::mem_fun(this, &Launcher::UpdateAnimations)));
 
+  UpdateAnimations();
   auto_hide_animation_.updated.connect(redraw_cb);
   hover_animation_.updated.connect(redraw_cb);
   drag_over_animation_.updated.connect(redraw_cb);
@@ -1356,13 +1341,29 @@ void Launcher::UpdateOptions(Options::Ptr options)
   SetLauncherMinimizeWindow(options->minimize_window_on_click);
   OnMonitorChanged(monitor);
 
+  UpdateAnimations();
+  ConfigureBarrier();
+  QueueDraw();
+}
+
+void Launcher::UpdateAnimations()
+{
+  bool low_gfx = Settings::Instance().low_gfx();
+
+  auto_hide_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
+  hover_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION);
+  drag_over_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_LONG);
+  drag_out_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
+  drag_icon_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_SHORT);
+  dnd_hide_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION * 3);
+  dash_showing_animation_.SetDuration(low_gfx ? 0 : ANIM_DURATION_DASH_SHOWING);
+
   if (model_)
   {
     for (auto const& icon : *model_)
       SetupIconAnimations(icon);
   }
 
-  ConfigureBarrier();
   QueueDraw();
 }
 
@@ -1739,23 +1740,26 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 
 void Launcher::SetupIconAnimations(AbstractLauncherIcon::Ptr const& icon)
 {
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::VISIBLE, ANIM_DURATION_SHORT, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::RUNNING, ANIM_DURATION_SHORT, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::ACTIVE, ANIM_DURATION_SHORT, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::STARTING, (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PULSE_ONCE, (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PRESENTED, ANIM_DURATION, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::UNFOLDED, ANIM_DURATION, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::SHIMMER, ANIM_DURATION_LONG, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::CENTER_SAVED, ANIM_DURATION, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PROGRESS, ANIM_DURATION, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::DESAT, ANIM_DURATION_SHORT_SHORT, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::GLOW, ANIM_DURATION_SHORT, monitor());
+  bool display = monitor();
+  bool low_gfx = Settings::Instance().low_gfx();
+
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::VISIBLE, low_gfx ? 0 : ANIM_DURATION_SHORT, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::RUNNING, low_gfx ? 0 : ANIM_DURATION_SHORT, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::ACTIVE, low_gfx ? 0 : ANIM_DURATION_SHORT, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::STARTING, (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PULSE_ONCE, (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PRESENTED, low_gfx ? 0 : ANIM_DURATION, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::UNFOLDED, low_gfx ? 0 : ANIM_DURATION, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::SHIMMER, low_gfx ? ANIM_DURATION_SHORT_SHORT : ANIM_DURATION_LONG, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::CENTER_SAVED, low_gfx ? ANIM_DURATION_SHORT_SHORT : ANIM_DURATION, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PROGRESS, low_gfx ? ANIM_DURATION_SHORT_SHORT : ANIM_DURATION, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::DESAT, low_gfx ? 0 : ANIM_DURATION_SHORT_SHORT, display);
+  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::GLOW, low_gfx ? 0 : ANIM_DURATION_SHORT, display);
 
   if (options()->urgent_animation() == URGENT_ANIMATION_WIGGLE)
-    icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::URGENT, (ANIM_DURATION_SHORT * WIGGLE_CYCLES), monitor());
+    icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::URGENT, (ANIM_DURATION_SHORT * WIGGLE_CYCLES), display);
   else
-    icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::URGENT, (ANIM_DURATION_LONG * URGENT_BLINKS * 2), monitor());
+    icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::URGENT, (ANIM_DURATION_LONG * URGENT_BLINKS * 2), display);
 }
 
 void Launcher::SetModel(LauncherModel::Ptr model)

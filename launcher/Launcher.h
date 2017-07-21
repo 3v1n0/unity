@@ -195,6 +195,7 @@ private:
   void OnOptionsChanged(Options::Ptr options);
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
+  void UpdateAnimations();
 
 #ifdef NUX_GESTURES_SUPPORT
   void OnDragStart(const nux::GestureEvent &event);
