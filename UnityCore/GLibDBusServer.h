@@ -20,6 +20,7 @@
 #ifndef UNITY_GLIB_DBUS_SERVER_H
 #define UNITY_GLIB_DBUS_SERVER_H
 
+#include <functional>
 #include <gio/gio.h>
 #include <memory>
 #include <sigc++/signal.h>

@@ -1059,7 +1059,9 @@ TEST_P(/*TestApplicationLauncherIcon*/QuitLabel, QuicklistMenuItemRemoteOverride
   ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
 
   if (GetParam() != "Quit")
+  {
     ASSERT_FALSE(HasMenuItemWithLabel(mock_icon, GetParam()));
+  }
 
   item = GetMenuItemWithLabel(mock_icon, "Quit");
   ASSERT_NE(item, nullptr);
