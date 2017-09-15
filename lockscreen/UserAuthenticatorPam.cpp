@@ -45,12 +45,12 @@ bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
   authenticate_cb_ = authenticate_cb;
 
   glib::Error error;
-  g_thread_try_new (nullptr, AuthenticationThread, this, &error);
+  g_thread_try_new(nullptr, AuthenticationThreadFunc, this, &error);
 
   return !error;
 }
 
-gpointer UserAuthenticatorPam::AuthenticationThread(gpointer data)
+gpointer UserAuthenticatorPam::AuthenticationThreadFunc(gpointer data)
 {
   auto self = static_cast<UserAuthenticatorPam*>(data);
 

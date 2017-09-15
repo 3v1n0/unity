@@ -44,7 +44,7 @@ private:
   UserAuthenticatorPam(UserAuthenticatorPam const&) = delete;
   UserAuthenticatorPam& operator=(UserAuthenticatorPam const&) = delete;
 
-  static gpointer AuthenticationThread(gpointer);
+  static gpointer AuthenticationThreadFunc(gpointer);
   bool InitPam();
 
   static int ConversationFunction(int num_msg,
