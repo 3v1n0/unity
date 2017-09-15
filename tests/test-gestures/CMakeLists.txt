@@ -75,5 +75,7 @@ if (GMOCK_SOURCE_DIR)
   add_test(UnityGTestGestures test-gestures)
   add_dependencies(test-gestures gtest unity-core-${UNITY_API_VERSION})
 
-  add_custom_target (check-gestures COMMAND ./test-gestures DEPENDS test-gestures)
+  add_custom_target (check-gestures COMMAND
+                     ./test-gestures --gtest_output=xml:${CMAKE_CURRENT_BINARY_DIR}/../test-gestures.xml
+                     DEPENDS test-gestures)
 endif (GMOCK_SOURCE_DIR)

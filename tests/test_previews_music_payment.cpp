@@ -125,8 +125,8 @@ class TestMusicPaymentPreview : public ::testing::Test
   UnityProtocolPreviewPaymentType preview_type;
 
   // needed for styles
+  previews::Style previews_style;
   dash::Style dash_style;
-
 };
 
 TEST_F(TestMusicPaymentPreview, TestContentLoading)

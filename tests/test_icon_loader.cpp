@@ -104,7 +104,7 @@ TEST_F(TestIconLoader, TestGetDefault)
   EXPECT_EQ(&icon_loader, &IconLoader::GetDefault());
 }
 
-TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetOneIcon))
+TEST_F(TestIconLoader, TestGetOneIcon)
 {
   LoadResult load_result;
 
@@ -118,11 +118,11 @@ TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetOneIcon))
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetAnnotatedIcon))
+TEST_F(TestIconLoader, TestGetAnnotatedIcon)
 {
   LoadResult load_result;
 
-  auto handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
+  auto handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'python'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
@@ -132,11 +132,11 @@ TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetAnnotatedIcon))
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetColorizedIcon))
+TEST_F(TestIconLoader, TestGetColorizedIcon)
 {
   LoadResult load_result;
 
-  auto handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'colorize-value':%20%3Cuint32%204278190335%3E%7D", -1, 48, sigc::mem_fun(load_result,
+  auto handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'python'%3E,%20'colorize-value':%20%3Cuint32%204278190335%3E%7D", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
@@ -146,7 +146,7 @@ TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetColorizedIcon))
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetOneIconManyTimes))
+TEST_F(TestIconLoader, TestGetOneIconManyTimes)
 {
   std::vector<LoadResult> results;
   std::vector<IconLoader::Handle> handles;
@@ -176,7 +176,7 @@ TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetOneIconManyTimes))
   CheckResults(results);
 }
 
-TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetManyIcons))
+TEST_F(TestIconLoader, TestGetManyIcons)
 {
   std::vector<LoadResult> results;
   int i = 0;
@@ -198,7 +198,7 @@ TEST_F(TestIconLoader, UNSTABLE_TEST(TestGetManyIcons))
   CheckResults(results);
 }
 
-TEST_F(TestIconLoader, UNSTABLE_TEST(TestCancelSome))
+TEST_F(TestIconLoader, TestCancelSome)
 {
   std::vector<LoadResult> results;
   std::vector<IconLoader::Handle> handles;

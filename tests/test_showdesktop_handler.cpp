@@ -405,7 +405,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationPostPaintActions)
   EXPECT_EQ (ShowdesktopHandler::animating_windows.size (), 1);
 }
 
-TEST_F(UnityShowdesktopHandlerTest, UNSTABLE_TEST(TestAnimationOpacity))
+TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 

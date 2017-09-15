@@ -1719,7 +1719,7 @@ TEST_F(TestLauncherController, UpdateNumWorkspacesEnable)
   EXPECT_TRUE(lc.Impl()->expo_icon_->IsVisible());
 }
 
-TEST_F(TestLauncherController, UpdateSelectionChanged)
+TEST_F(TestLauncherController, UNSTABLE_TEST(UpdateSelectionChanged))
 {
   UBusManager manager;
   std::string last_selection_change;

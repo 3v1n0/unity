@@ -145,6 +145,7 @@ class TestPaymentPreview : public ::testing::Test
   dash::Preview::Ptr preview_model;
 
   // needed for styles
+  previews::Style previews_style;
   dash::Style dash_style;
 };
 
