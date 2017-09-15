@@ -44,7 +44,8 @@ namespace lockscreen
 class KylinUserPromptView : public AbstractUserPromptView
 {
 public:
-  KylinUserPromptView(session::Manager::Ptr const& session_manager);
+  KylinUserPromptView(session::Manager::Ptr const& session_manager,
+                      UserAuthenticator::Ptr const& user_authenticator);
 
   nux::View* focus_view();
 
@@ -62,8 +63,6 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> LoadUserIcon(std::string const& icon_file, int icon_size);
 
 private:
-  session::Manager::Ptr session_manager_;
-  UserAuthenticatorPam user_authenticator_;
   StaticCairoText* username_;
   nux::VLayout* msg_layout_;
   nux::VLayout* prompt_layout_;

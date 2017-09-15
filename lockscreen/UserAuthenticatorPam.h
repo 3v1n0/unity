@@ -20,8 +20,6 @@
 #ifndef UNITY_USER_AUTHENTICATOR_PAM_H
 #define UNITY_USER_AUTHENTICATOR_PAM_H
 
-#include <boost/noncopyable.hpp>
-#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSource.h>
 
 #include "UserAuthenticator.h"
@@ -36,13 +34,17 @@ namespace unity
 namespace lockscreen
 {
 
-class UserAuthenticatorPam : public UserAuthenticator, private boost::noncopyable
+class UserAuthenticatorPam : public UserAuthenticator
 {
 public:
+  UserAuthenticatorPam() = default;
   bool AuthenticateStart(std::string const& username, AuthenticateEndCallback const&) override;
 
 private:
-  // TODO (andy) move to pimpl
+  UserAuthenticatorPam(UserAuthenticatorPam const&) = delete;
+  UserAuthenticatorPam& operator=(UserAuthenticatorPam const&) = delete;
+
+  static gpointer AuthenticationThread(gpointer);
   bool InitPam();
 
   static int ConversationFunction(int num_msg,
@@ -53,10 +55,9 @@ private:
   std::string username_;
   AuthenticateEndCallback authenticate_cb_;
 
-  int status_;
-  bool first_prompt_;
-  pam_handle* pam_handle_;
-  glib::Cancellable cancellable_;
+  int status_ = 0;
+  bool first_prompt_ = true;
+  pam_handle* pam_handle_ = nullptr;
   glib::SourceManager source_manager_;
 };
 

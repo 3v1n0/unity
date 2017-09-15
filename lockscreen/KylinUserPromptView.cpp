@@ -79,9 +79,9 @@ std::string SanitizeMessage(std::string const& message)
 
 }
 
-KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_manager)
-  : AbstractUserPromptView(session_manager)
-  , session_manager_(session_manager)
+KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_manager,
+                                         UserAuthenticator::Ptr const& user_authenticator)
+  : AbstractUserPromptView(session_manager, user_authenticator)
   , username_(nullptr)
   , msg_layout_(nullptr)
   , prompt_layout_(nullptr)
@@ -90,25 +90,25 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
   , avatar_(nullptr)
   , avatar_icon_file("")
 {
-    user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
+    user_authenticator_->echo_on_requested.connect(sigc::track_obj([this](std::string const& message, PromiseAuthCodePtr const& promise){
         AddPrompt(message, true, promise);
-    });
+    }, *this));
 
-    user_authenticator_.echo_off_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
+    user_authenticator_->echo_off_requested.connect(sigc::track_obj([this](std::string const& message, PromiseAuthCodePtr const& promise){
         AddPrompt(message, false, promise);
-    });
+    }, *this));
 
-    user_authenticator_.message_requested.connect([this](std::string const& message){
+    user_authenticator_->message_requested.connect(sigc::track_obj([this](std::string const& message){
         AddMessage(message, nux::color::White);
-    });
+    }, *this));
 
-    user_authenticator_.error_requested.connect([this](std::string const& message){
+    user_authenticator_->error_requested.connect(sigc::track_obj([this](std::string const& message){
         AddMessage(message, nux::color::Red);
-    });
+    }, *this));
 
-    user_authenticator_.clear_prompts.connect([this](){
+    user_authenticator_->clear_prompts.connect(sigc::track_obj([this](){
         ResetLayout();
-    });
+    }, *this));
 
     scale.changed.connect(sigc::hide(sigc::mem_fun(this, &KylinUserPromptView::UpdateSize)));
 
@@ -121,7 +121,7 @@ KylinUserPromptView::KylinUserPromptView(session::Manager::Ptr const& session_ma
     ResetLayout();
 
     TextureCache::GetDefault().themed_invalidated.connect(sigc::mem_fun(this, &KylinUserPromptView::ResetLayout));
-    user_authenticator_.AuthenticateStart(session_manager_->UserName(),
+    user_authenticator_->AuthenticateStart(session_manager_->UserName(),
                                           sigc::mem_fun(this, &KylinUserPromptView::AuthenticationCb));
 }
 
@@ -244,7 +244,7 @@ void KylinUserPromptView::AuthenticationCb(bool authenticated)
   {
     AddMessage(_("Invalid password, please try again"), nux::color::Red);
 
-    user_authenticator_.AuthenticateStart(session_manager_->UserName(),
+    user_authenticator_->AuthenticateStart(session_manager_->UserName(),
                                           sigc::mem_fun(this, &KylinUserPromptView::AuthenticationCb));
   }
 }

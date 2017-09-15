@@ -29,7 +29,7 @@
 #include <Nux/VLayout.h>
 #include "UnityCore/SessionManager.h"
 
-#include "UserAuthenticatorPam.h"
+#include "UserAuthenticator.h"
 #include "unity-shared/IMTextEntry.h"
 
 namespace nux
@@ -48,10 +48,12 @@ namespace lockscreen
 class AbstractUserPromptView : public nux::View
 {
 public:
-  AbstractUserPromptView(session::Manager::Ptr const& session_manager)
+  AbstractUserPromptView(session::Manager::Ptr const& session_manager,
+                         UserAuthenticator::Ptr const& user_authenticator)
     : nux::View(NUX_TRACKER_LOCATION)
     , scale(1.0)
     , session_manager_(session_manager)
+    , user_authenticator_(user_authenticator)
   {}
 
   nux::Property<double> scale;
@@ -64,7 +66,7 @@ public:
 
 protected:
   session::Manager::Ptr session_manager_;
-  UserAuthenticatorPam user_authenticator_;
+  UserAuthenticator::Ptr user_authenticator_;
   std::shared_ptr<nux::AbstractPaintLayer> bg_layer_;
   StaticCairoText* username_;
   nux::VLayout* msg_layout_;

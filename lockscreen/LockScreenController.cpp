@@ -27,6 +27,7 @@
 #include "LockScreenPromptFactory.h"
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
+#include "UserAuthenticatorPam.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/InputMonitor.h"
 #include "unity-shared/UnitySettings.h"
@@ -70,6 +71,7 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , suspend_inhibitor_manager_(std::make_shared<SuspendInhibitorManager>())
+  , user_authenticator_(std::make_shared<UserAuthenticatorPam>())
   , fade_animator_(unity::Settings::Instance().low_gfx() ? 0 : LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
@@ -259,7 +261,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
   if (!prompt_view)
   {
-    prompt_view = test_mode_ ? nux::ObjectPtr<AbstractUserPromptView>() : PromptFactory::CreatePrompt(session_manager_);
+    prompt_view = test_mode_ ? nux::ObjectPtr<AbstractUserPromptView>() : PromptFactory::CreatePrompt(session_manager_, user_authenticator_);
     prompt_view_ = prompt_view.GetPointer();
   }
 

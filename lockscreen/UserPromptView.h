@@ -25,10 +25,10 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include "UnityCore/GLibSource.h"
 #include "UnityCore/SessionManager.h"
 
 #include "LockScreenAbstractPromptView.h"
-#include "UserAuthenticatorPam.h"
 #include "unity-shared/IMTextEntry.h"
 
 namespace nux
@@ -48,7 +48,8 @@ namespace lockscreen
 class UserPromptView : public AbstractUserPromptView
 {
 public:
-  UserPromptView(session::Manager::Ptr const& session_manager);
+  UserPromptView(session::Manager::Ptr const& session_manager,
+                 UserAuthenticator::Ptr const& user_authenticator);
 
   nux::View* focus_view();
 
@@ -70,9 +71,8 @@ private:
   void ShowAuthenticated(bool successful);
   void StartAuthentication();
   void DoUnlock();
+  void HandleAuthenticationStartFailure();
 
-  session::Manager::Ptr session_manager_;
-  UserAuthenticatorPam user_authenticator_;
   std::shared_ptr<nux::AbstractPaintLayer> bg_layer_;
   StaticCairoText* username_;
   nux::VLayout* msg_layout_;
@@ -84,6 +84,9 @@ private:
 
   bool prompted_;
   bool unacknowledged_messages_;
+  int num_retry_auth_ = 0;
+
+  glib::SourceManager source_manager_;
 };
 
 }
