@@ -92,6 +92,7 @@ set (UNITY_TEST_DBUS_TARGETS "")
 set (UNITY_TEST_DBUS_TARGETS_HEADLESS "")
 
 set (DUMMY_XORG_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-xorg-test-runner.sh)
+find_program (DBUS_RUN_SESSION dbus-run-session)
 
 function (to_camel_case input output)
   string (REGEX MATCHALL "(^|[-_])([^-_]+)" matches ${input})
@@ -149,6 +150,7 @@ function (add_gtest basename namespace libs #[[extra_sources]])
     add_custom_target (${run_target}
                       COMMAND env NUX_FALLBACK_TEXTURE=TRUE
                               ${DUMMY_XORG_TEST_RUNNER}
+                              ${DBUS_RUN_SESSION}
                               ./${test_binary} --gtest_output=xml:${test_result}
                       DEPENDS ${test_binary})
     add_custom_target (clean-${test_binary}-headless-result COMMAND rm -f ${test_result})
