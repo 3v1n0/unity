@@ -146,7 +146,7 @@ function (add_gtest basename namespace libs #[[extra_sources]])
   set (run_target run-${test_binary}-headless)
   list (FIND ${VAR_PREFIX}_TARGETS ${run_target} _target_index)
   if (${_target_index} EQUAL -1)
-  set (test_result ${CMAKE_CURRENT_BINARY_DIR}/${test_binary}-headless.xml)
+    set (test_result ${CMAKE_CURRENT_BINARY_DIR}/${test_binary}-headless.xml)
     add_custom_target (${run_target}
                       COMMAND env NUX_FALLBACK_TEXTURE=TRUE
                               ${DUMMY_XORG_TEST_RUNNER}
@@ -568,4 +568,3 @@ set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
 # Rules to install autopilot files and executable script:
 install(CODE "execute_process(COMMAND python2.7 setup.py install --prefix ${CMAKE_INSTALL_PREFIX} WORKING_DIRECTORY ${AUTOPILOTDIR})")
 add_custom_target (autopilot COMMAND cd ${AUTOPILOTDIR} && make check)
-
