@@ -1496,6 +1496,13 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 CompOutput* output,
                                 unsigned int mask)
 {
+  if (G_UNLIKELY(lockscreen_controller_->IsPaintInhibited()))
+  {
+    CHECKGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+    CHECKGL(glClear(GL_COLOR_BUFFER_BIT));
+    return true;
+  }
+
   bool ret;
 
   /*
@@ -1692,6 +1699,11 @@ void UnityScreen::preparePaint(int ms)
 
 void UnityScreen::donePaint()
 {
+  if (G_UNLIKELY(lockscreen_controller_->IsPaintInhibited()))
+  {
+    lockscreen_controller_->MarkBufferHasCleared();
+  }
+
   /*
    * It's only safe to clear the draw list if drawing actually occurred
    * (i.e. the shell was not obscured behind a fullscreen window).
