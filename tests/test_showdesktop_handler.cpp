@@ -408,6 +408,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationPostPaintActions)
 TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
+  using namespace testing;
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOutFadeIn>));
   ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
@@ -431,12 +432,13 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
 
     mMockHandler.Animate (1);
 
-    if (i == 300)
+    if (i == ShowdesktopHandler::fade_time)
       EXPECT_EQ (opacity, std::numeric_limits <unsigned short>::max ());
     else
     {
       float rem = opacity - std::numeric_limits <unsigned short>::max () * (1.0f - i / static_cast <float> (ShowdesktopHandler::fade_time));
-      EXPECT_TRUE (rem <= 1.0f && rem >= -1.0f);
+      EXPECT_THAT(rem, AllOf(AnyOf(FloatEq(1.0f), Le(1.0f)),
+                             AnyOf(FloatEq(-1.0f), Ge(-1.0f))));
     }
   }
 
@@ -449,12 +451,13 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
 
     mMockHandler.Animate (1);
 
-    if (i == 300)
+    if (i == ShowdesktopHandler::fade_time)
       EXPECT_EQ (opacity, std::numeric_limits <unsigned short>::max ());
     else
     {
       float rem = opacity - std::numeric_limits <unsigned short>::max () * (i / static_cast <float> (ShowdesktopHandler::fade_time));
-      EXPECT_TRUE (rem <= 1.0f && rem >= -1.0f);
+      EXPECT_THAT(rem, AllOf(AnyOf(FloatEq(1.0f), Le(1.0f)),
+                             AnyOf(FloatEq(-1.0f), Ge(-1.0f))));
     }
   }
 
