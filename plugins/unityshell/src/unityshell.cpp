@@ -1498,7 +1498,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   if (G_UNLIKELY(lockscreen_controller_->IsPaintInhibited()))
   {
-    CHECKGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+    CHECKGL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
     CHECKGL(glClear(GL_COLOR_BUFFER_BIT));
     return true;
   }
