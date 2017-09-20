@@ -26,17 +26,42 @@
 namespace unity {
 namespace dash {
 
-struct MockResults : public Results
+struct MockResult : Result
+{
+  MockResult(std::size_t index)
+    : Result(nullptr, nullptr, nullptr)
+  {
+    uri.SetGetterFunction([index] { return "proto://result-" + std::to_string(index); });
+    icon_hint.SetGetterFunction([index] { return ""; });
+    category_index.SetGetterFunction([index] { return 0; });
+    result_type.SetGetterFunction([index] { return 0; });
+    mimetype.SetGetterFunction([index] { return "mime-type-" + std::to_string(index); });
+    name.SetGetterFunction([index] { return "MockResult " + std::to_string(index); });
+    comment.SetGetterFunction([index] { return "Just a pointless result " + std::to_string(index); });
+    dnd_uri.SetGetterFunction([index] { return "dnd://mock-result" + std::to_string(index); });
+    hints.SetGetterFunction([index] { return glib::HintsMap(); });
+  }
+};
+
+struct MockResults : Results
 {
   MockResults(unsigned int count_)
     : Results(LOCAL)
   {
     count.SetGetterFunction([count_] { return count_; });
   }
+
+  virtual const Result RowAtIndex(std::size_t index) const override
+  {
+    return MockResult(index);
+  }
 };
 
 // Template specialization for Result in tests
-template<> const Result Model<Result>::RowAtIndex(std::size_t index) const;
+template<> const Result Model<Result>::RowAtIndex(std::size_t index) const
+{
+  return MockResult(index);
+}
 
 }
 }
