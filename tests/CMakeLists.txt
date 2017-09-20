@@ -117,7 +117,7 @@ function (ensure_screaming_case input output)
 endfunction ()
 
 function (add_gtest basename)
-  set (options HAS_HEADLESS_TESTS)
+  set (options HAS_HEADLESS_TARGET HAS_CUSTOM_RUN_TARGETS)
   set (oneValueArgs NAMESPACE)
   set (multiValueArgs LIBS EXTRA_SOURCES)
   cmake_parse_arguments (ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -135,21 +135,17 @@ function (add_gtest basename)
   add_test ("${namespace_camel}${basename_camel}" ${test_binary})
   set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} ${test_binary} PARENT_SCOPE)
 
-  set (run_target run-${test_binary})
-  list (FIND ${VAR_PREFIX}_TARGETS ${run_target} _target_index)
-  if (${_target_index} EQUAL -1)
+  if (NOT ${ARGS_HAS_CUSTOM_RUN_TARGETS})
+    set (run_target run-${test_binary})
     set (test_result ${CMAKE_CURRENT_BINARY_DIR}/${test_binary}.xml)
     add_custom_target (${run_target}
                       COMMAND ./${test_binary} --gtest_output=xml:${test_result}
                       DEPENDS ${test_binary})
     add_custom_target (clean-${test_binary}-result COMMAND rm -f ${test_result})
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} ${run_target} PARENT_SCOPE)
-  endif ()
 
-  if (${ARGS_HAS_HEADLESS_TESTS})
-    set (run_target run-${test_binary}-headless)
-    list (FIND ${VAR_PREFIX}_TARGETS ${run_target} _target_index)
-    if (${_target_index} EQUAL -1)
+    if (${ARGS_HAS_HEADLESS_TARGET})
+      set (run_target run-${test_binary}-headless)
       set (test_result ${CMAKE_CURRENT_BINARY_DIR}/${test_binary}-headless.xml)
       add_custom_target (${run_target}
                         COMMAND env NUX_FALLBACK_TEXTURE=TRUE
@@ -159,8 +155,8 @@ function (add_gtest basename)
                         DEPENDS ${test_binary})
       add_custom_target (clean-${test_binary}-headless-result COMMAND rm -f ${test_result})
       set (${VAR_PREFIX}_TARGETS_HEADLESS ${${VAR_PREFIX}_TARGETS_HEADLESS} ${run_target} PARENT_SCOPE)
-    endif ()
-  endif (${ARGS_HAS_HEADLESS_TESTS})
+    endif (${ARGS_HAS_HEADLESS_TARGET})
+  endif (NOT ${ARGS_HAS_CUSTOM_RUN_TARGETS})
 
   # add_custom_command (OUTPUT ${test_result} COMMAND
                       # ./${test_binary} --gtest_output=xml:${test_result})
@@ -318,9 +314,10 @@ if (GMOCK_LIB AND
                        --wait-for=com.canonical.Unity.Test
                        --parameter=--gtest_output=xml:./${test_binary}.xml
                        DEPENDS ${test_binary} test-gtest-service)
+    add_custom_target (clean-${test_binary}-result COMMAND rm -f ${test_result})
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} run-${test_binary})
 
-    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" ${ARGN})
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" HAS_CUSTOM_RUN_TARGETS ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
@@ -367,7 +364,7 @@ if (ENABLE_X_SUPPORT)
          unity-shared-bamf
          unity-shared-standalone)
 
-    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" HAS_HEADLESS_TESTS ${ARGN})
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" HAS_HEADLESS_TARGET ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
@@ -485,7 +482,7 @@ if (ENABLE_X_SUPPORT)
          unity-shared-standalone
       )
 
-    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" HAS_HEADLESS_TESTS ${ARGN})
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" HAS_HEADLESS_TARGET ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
