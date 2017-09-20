@@ -32,7 +32,7 @@ struct MockResult : Result
     : Result(nullptr, nullptr, nullptr)
   {
     uri.SetGetterFunction([index] { return "proto://result-" + std::to_string(index); });
-    icon_hint.SetGetterFunction([index] { return ""; });
+    icon_hint.SetGetterFunction([index] { return "icon-result-" + std::to_string(index); });
     category_index.SetGetterFunction([index] { return 0; });
     result_type.SetGetterFunction([index] { return 0; });
     mimetype.SetGetterFunction([index] { return "mime-type-" + std::to_string(index); });
@@ -51,7 +51,7 @@ struct MockResults : Results
     count.SetGetterFunction([count_] { return count_; });
   }
 
-  virtual const Result RowAtIndex(std::size_t index) const override
+  const Result RowAtIndex(std::size_t index) const override
   {
     return MockResult(index);
   }
