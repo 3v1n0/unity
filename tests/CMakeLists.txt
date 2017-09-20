@@ -89,7 +89,6 @@ set (UNITY_TEST_SLOW_TARGETS_HEADLESS "")
 
 set (UNITY_TEST_DBUS_BINARIES "")
 set (UNITY_TEST_DBUS_TARGETS "")
-set (UNITY_TEST_DBUS_TARGETS_HEADLESS "")
 
 set (DUMMY_XORG_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-xorg-test-runner.sh)
 find_program (DBUS_RUN_SESSION dbus-run-session)
@@ -118,10 +117,10 @@ function (ensure_screaming_case input output)
 endfunction ()
 
 function (add_gtest basename)
-  set(options "")
-  set(oneValueArgs NAMESPACE)
-  set(multiValueArgs LIBS EXTRA_SOURCES)
-  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  set (options HAS_HEADLESS_TESTS)
+  set (oneValueArgs NAMESPACE)
+  set (multiValueArgs LIBS EXTRA_SOURCES)
+  cmake_parse_arguments (ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set (test_binary test-${basename})
   string (REPLACE "-" "_" test_source ${test_binary})
@@ -147,19 +146,21 @@ function (add_gtest basename)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} ${run_target} PARENT_SCOPE)
   endif ()
 
-  set (run_target run-${test_binary}-headless)
-  list (FIND ${VAR_PREFIX}_TARGETS ${run_target} _target_index)
-  if (${_target_index} EQUAL -1)
-    set (test_result ${CMAKE_CURRENT_BINARY_DIR}/${test_binary}-headless.xml)
-    add_custom_target (${run_target}
-                      COMMAND env NUX_FALLBACK_TEXTURE=TRUE
-                              ${DUMMY_XORG_TEST_RUNNER}
-                              ${DBUS_RUN_SESSION}
-                              ./${test_binary} --gtest_output=xml:${test_result}
-                      DEPENDS ${test_binary})
-    add_custom_target (clean-${test_binary}-headless-result COMMAND rm -f ${test_result})
-    set (${VAR_PREFIX}_TARGETS_HEADLESS ${${VAR_PREFIX}_TARGETS_HEADLESS} ${run_target} PARENT_SCOPE)
-  endif ()
+  if (${ARGS_HAS_HEADLESS_TESTS})
+    set (run_target run-${test_binary}-headless)
+    list (FIND ${VAR_PREFIX}_TARGETS ${run_target} _target_index)
+    if (${_target_index} EQUAL -1)
+      set (test_result ${CMAKE_CURRENT_BINARY_DIR}/${test_binary}-headless.xml)
+      add_custom_target (${run_target}
+                        COMMAND env NUX_FALLBACK_TEXTURE=TRUE
+                                ${DUMMY_XORG_TEST_RUNNER}
+                                ${DBUS_RUN_SESSION}
+                                ./${test_binary} --gtest_output=xml:${test_result}
+                        DEPENDS ${test_binary})
+      add_custom_target (clean-${test_binary}-headless-result COMMAND rm -f ${test_result})
+      set (${VAR_PREFIX}_TARGETS_HEADLESS ${${VAR_PREFIX}_TARGETS_HEADLESS} ${run_target} PARENT_SCOPE)
+    endif ()
+  endif (${ARGS_HAS_HEADLESS_TESTS})
 
   # add_custom_command (OUTPUT ${test_result} COMMAND
                       # ./${test_binary} --gtest_output=xml:${test_result})
@@ -366,7 +367,7 @@ if (ENABLE_X_SUPPORT)
          unity-shared-bamf
          unity-shared-standalone)
 
-    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" ${ARGN})
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" HAS_HEADLESS_TESTS ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
@@ -484,7 +485,7 @@ if (ENABLE_X_SUPPORT)
          unity-shared-standalone
       )
 
-    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" ${ARGN})
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" HAS_HEADLESS_TESTS ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
