@@ -117,17 +117,21 @@ function (ensure_screaming_case input output)
   set (${output} ${screaming} PARENT_SCOPE)
 endfunction ()
 
-function (add_gtest basename namespace libs #[[extra_sources]])
-  set (extra_sources ${ARGN})
+function (add_gtest basename)
+  set(options "")
+  set(oneValueArgs NAMESPACE)
+  set(multiValueArgs LIBS EXTRA_SOURCES)
+  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
   set (test_binary test-${basename})
   string (REPLACE "-" "_" test_source ${test_binary})
 
-  to_camel_case (${namespace} namespace_camel)
+  to_camel_case (${ARGS_NAMESPACE} namespace_camel)
   to_camel_case (${basename} basename_camel)
-  ensure_screaming_case (${namespace} VAR_PREFIX)
+  ensure_screaming_case (${ARGS_NAMESPACE} VAR_PREFIX)
 
-  add_executable (${test_binary} ${test_source}.cpp ${extra_sources})
-  target_link_libraries (${test_binary} ${libs})
+  add_executable (${test_binary} ${test_source}.cpp ${ARGS_EXTRA_SOURCES})
+  target_link_libraries (${test_binary} ${ARGS_LIBS})
 
   add_test ("${namespace_camel}${basename_camel}" ${test_binary})
   set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} ${test_binary} PARENT_SCOPE)
@@ -217,7 +221,7 @@ if (GMOCK_LIB AND
                logger_helper.cpp
               )
 
-  function (add_unity_test_xless basename #[[extra_sources]])
+  function (add_unity_test_xless basename)
     set (VAR_PREFIX "UNITY_TEST_XLESS")
     set (UNITY_TEST_XLESS_LIBS
          gtest
@@ -240,7 +244,7 @@ if (GMOCK_LIB AND
           )
     endif ()
 
-    add_gtest (${basename} ${VAR_PREFIX} "${${VAR_PREFIX}_LIBS}" ${ARGN})
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
@@ -259,11 +263,12 @@ if (GMOCK_LIB AND
   add_unity_test_xless (favorite-store-private)
   add_unity_test_xless (glib-cancellable)
   add_unity_test_xless (glib-dbus-object)
-  add_unity_test_xless (glib-object test_glib_object_utils.cpp)
-  add_unity_test_xless (glib-signals test_glib_signals_utils.cpp)
+  add_unity_test_xless (glib-object EXTRA_SOURCES test_glib_object_utils.cpp)
+  add_unity_test_xless (glib-signals EXTRA_SOURCES test_glib_signals_utils.cpp)
   add_unity_test_xless (glib-source)
   add_unity_test_xless (glib-variant)
   add_unity_test_xless (grabhandle
+                        EXTRA_SOURCES
                         ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                         ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
                         ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
@@ -284,7 +289,7 @@ if (GMOCK_LIB AND
   add_unity_test_xless (scope-data)
   add_unity_test_xless (time-util)
   add_unity_test_xless (ubus)
-  add_unity_test_xless (unityshell-private ${UNITY_SRC}/UnityshellPrivate.cpp)
+  add_unity_test_xless (unityshell-private EXTRA_SOURCES ${UNITY_SRC}/UnityshellPrivate.cpp)
   add_unity_test_xless (volume-imp)
 
   if (ENABLE_X_SUPPORT)
@@ -300,7 +305,7 @@ if (GMOCK_LIB AND
                logger_helper.cpp
               )
 
-  function (add_unity_test_dbus basename #[[extra_sources]])
+  function (add_unity_test_dbus basename)
     set (VAR_PREFIX "UNITY_TEST_DBUS")
     set (UNITY_TEST_DBUS_LIBS gtest unity-shared test-main-dbus-libs ${LIBS})
 
@@ -311,11 +316,10 @@ if (GMOCK_LIB AND
                        --task=./${test_binary} --task-name=${test_binary}
                        --wait-for=com.canonical.Unity.Test
                        --parameter=--gtest_output=xml:./${test_binary}.xml
-                       DEPENDS ${test_binary})
+                       DEPENDS ${test_binary} test-gtest-service)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} run-${test_binary})
 
-    add_gtest (${basename} ${VAR_PREFIX} "${${VAR_PREFIX}_LIBS}" ${ARGN})
-    add_dependencies (${test_binary} test-gtest-service) ##rename
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
@@ -362,7 +366,7 @@ if (ENABLE_X_SUPPORT)
          unity-shared-bamf
          unity-shared-standalone)
 
-    add_gtest (${basename} ${VAR_PREFIX} "${${VAR_PREFIX}_LIBS}" ${ARGN})
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
@@ -370,9 +374,8 @@ if (ENABLE_X_SUPPORT)
   endfunction ()
 
   add_unity_test (action-link)
-  add_unity_test (application-launcher-icon mock-application.cpp)
-  add_unity_test (bamf-application
-                  mock-application.cpp)
+  add_unity_test (application-launcher-icon EXTRA_SOURCES mock-application.cpp)
+  add_unity_test (bamf-application EXTRA_SOURCES mock-application.cpp)
   add_unity_test (bfb-launcher-icon)
   add_unity_test (decorations-input-mixer)
   add_unity_test (decorations-widgets)
@@ -396,13 +399,14 @@ if (ENABLE_X_SUPPORT)
   add_unity_test (icon-loader)
   add_unity_test (im-text-entry)
   add_unity_test (keyboard-util)
-  add_unity_test (launcher mock-application.cpp)
-  add_unity_test (launcher-controller mock-application.cpp)
+  add_unity_test (launcher EXTRA_SOURCES mock-application.cpp)
+  add_unity_test (launcher-controller EXTRA_SOURCES mock-application.cpp)
   add_unity_test (launcher-drag-window)
   add_unity_test (launcher-hide-machine)
   add_unity_test (launcher-hover-machine)
   add_unity_test (launcher-icon)
   add_unity_test (launcher-minimize-speed
+                  EXTRA_SOURCES
                   ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp)
   add_unity_test (launcher-model)
   add_unity_test (launcher-tooltip)
@@ -441,12 +445,12 @@ if (ENABLE_X_SUPPORT)
   add_unity_test (shortcut-view)
   add_unity_test (single-monitor-launcher-icon)
   add_unity_test (showdesktop-handler
-                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp)
-  add_unity_test (software-center-launcher-icon mock-application.cpp)
+                  EXTRA_SOURCES ${UNITY_SRC}/UnityShowdesktopHandler.cpp)
+  add_unity_test (software-center-launcher-icon EXTRA_SOURCES mock-application.cpp)
   add_unity_test (spread-filter)
   add_unity_test (static-cairo-text)
   add_unity_test (switcher-controller
-                  test_switcher_controller_class.cpp)
+                  EXTRA_SOURCES test_switcher_controller_class.cpp)
   add_unity_test (switcher-model)
   add_unity_test (switcher-view)
   add_unity_test (systemd-wrapper)
@@ -454,7 +458,7 @@ if (ENABLE_X_SUPPORT)
   add_unity_test (texture-cache)
   add_unity_test (text-input)
   add_unity_test (thumbnail-generator)
-  add_unity_test (trash-launcher-icon mock-application.cpp)
+  add_unity_test (trash-launcher-icon EXTRA_SOURCES mock-application.cpp)
   add_unity_test (unity-settings)
   add_unity_test (unity-window-style)
   add_unity_test (unity-window-view)
@@ -468,7 +472,7 @@ if (ENABLE_X_SUPPORT)
   #
   #  Slow tests
   #
-  function (add_unity_test_slow basename #[[extra_sources]])
+  function (add_unity_test_slow basename)
     set (VAR_PREFIX "UNITY_TEST_SLOW")
     set (UNITY_TEST_SLOW_LIBS
          test-main-libs
@@ -480,7 +484,7 @@ if (ENABLE_X_SUPPORT)
          unity-shared-standalone
       )
 
-    add_gtest (${basename} ${VAR_PREFIX} "${${VAR_PREFIX}_LIBS}" ${ARGN})
+    add_gtest (${basename} NAMESPACE ${VAR_PREFIX} LIBS "${${VAR_PREFIX}_LIBS}" ${ARGN})
 
     set (${VAR_PREFIX}_BINARIES ${${VAR_PREFIX}_BINARIES} PARENT_SCOPE)
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} PARENT_SCOPE)
@@ -488,6 +492,7 @@ if (ENABLE_X_SUPPORT)
   endfunction ()
 
   add_unity_test_slow (switcher-controller-slow
+                       EXTRA_SOURCES
                        test_switcher_controller_class.cpp
                        mock-application.cpp)
   add_unity_test_slow (tooltip-manager)
