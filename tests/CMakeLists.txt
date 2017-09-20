@@ -310,7 +310,8 @@ if (GMOCK_LIB AND
                        ./test-gtest-service --task-name test-service
                        --task=./${test_binary} --task-name=${test_binary}
                        --wait-for=com.canonical.Unity.Test
-                       --parameter=--gtest_output=xml:./${test_binary}.xml)
+                       --parameter=--gtest_output=xml:./${test_binary}.xml
+                       DEPENDS ${test_binary})
     set (${VAR_PREFIX}_TARGETS ${${VAR_PREFIX}_TARGETS} run-${test_binary})
 
     add_gtest (${basename} ${VAR_PREFIX} "${${VAR_PREFIX}_LIBS}" ${ARGN})
