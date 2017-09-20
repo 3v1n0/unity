@@ -28,12 +28,28 @@ namespace unity
 namespace dash
 {
 
-struct MockCategories : public Categories
+Category generate_mock_category(size_t index)
+{
+  Category mock_category(nullptr, nullptr, nullptr);
+  mock_category.id.SetGetterFunction([index] { return "mock-cat"+std::to_string(index); });
+  mock_category.name.SetGetterFunction([index] { return "MockCategory "+std::to_string(index); });
+  mock_category.icon_hint.SetGetterFunction([index] { return "mock-category-icon-"+std::to_string(index); });
+  mock_category.renderer_name.SetGetterFunction([] { return "grid"; });
+  mock_category.index.SetGetterFunction([index] { return index; });
+  return mock_category;
+}
+
+struct MockCategories : Categories
 {
   MockCategories(unsigned count_)
     : Categories(LOCAL)
   {
     count.SetGetterFunction([count_] { return count_; });
+  }
+
+  const Category RowAtIndex(std::size_t index) const override
+  {
+    return generate_mock_category(index);
   }
 };
 
@@ -41,13 +57,7 @@ struct MockCategories : public Categories
 template<>
 const Category Model<Category>::RowAtIndex(std::size_t index) const
 {
-  Category mock_category(nullptr, nullptr, nullptr);
-  mock_category.id.SetGetterFunction([index] { return "cat"+std::to_string(index); });
-  mock_category.name.SetGetterFunction([index] { return "Category "+std::to_string(index); });
-  mock_category.icon_hint.SetGetterFunction([] { return "cmake"; });
-  mock_category.renderer_name.SetGetterFunction([] { return "grid"; });
-  mock_category.index.SetGetterFunction([index] { return index; });
-  return mock_category;
+  return generate_mock_category(index);
 }
 
 }
