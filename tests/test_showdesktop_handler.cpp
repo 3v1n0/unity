@@ -13,6 +13,11 @@ using ::testing::InSequence;
 
 compiz::WindowInputRemoverInterface::~WindowInputRemoverInterface () {}
 
+namespace
+{
+const float MAX_FLOAT_DISTANCE = 0.001f;
+}
+
 class MockWindowInputRemover :
   public compiz::WindowInputRemoverInterface
 {
@@ -437,8 +442,8 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
     else
     {
       float rem = opacity - std::numeric_limits <unsigned short>::max () * (1.0f - i / static_cast <float> (ShowdesktopHandler::fade_time));
-      EXPECT_THAT(rem, AllOf(AnyOf(FloatEq(1.0f), Le(1.0f)),
-                             AnyOf(FloatEq(-1.0f), Ge(-1.0f))));
+      EXPECT_THAT(rem, AllOf(AnyOf(FloatNear(1.0f, MAX_FLOAT_DISTANCE), Lt(1.0f)),
+                             AnyOf(FloatNear(-1.0f, MAX_FLOAT_DISTANCE), Gt(-1.0f))));
     }
   }
 
@@ -456,8 +461,8 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
     else
     {
       float rem = opacity - std::numeric_limits <unsigned short>::max () * (i / static_cast <float> (ShowdesktopHandler::fade_time));
-      EXPECT_THAT(rem, AllOf(AnyOf(FloatEq(1.0f), Le(1.0f)),
-                             AnyOf(FloatEq(-1.0f), Ge(-1.0f))));
+      EXPECT_THAT(rem, AllOf(AnyOf(FloatNear(1.0f, MAX_FLOAT_DISTANCE), Lt(1.0f)),
+                             AnyOf(FloatNear(-1.0f, MAX_FLOAT_DISTANCE), Gt(-1.0f))));
     }
   }
 
