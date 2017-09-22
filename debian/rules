@@ -6,7 +6,7 @@
 DEB_HOST_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_HOST_GNU_TYPE := $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 gles2_architectures := armel armhf
-ignore_warnings_archs := armhf ppc64el
+ignore_warnings_archs := armhf ppc64el s390x
 
 DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
 
