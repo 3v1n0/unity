@@ -26,33 +26,18 @@ namespace unity
 {
 
 int const PIXEL_SIZE = 24;
-int const FONT_SIZE  = 13;
 double const DPI     = 96.0;
 
 class TestEMConverter : public Test
 {
 public:
   TestEMConverter()
-    : em_converter(FONT_SIZE, DPI)
+    : em_converter(DPI)
   {
   }
 
   EMConverter em_converter;
 };
-
-TEST_F(TestEMConverter, TestCtor)
-{
-  EXPECT_EQ(FONT_SIZE, em_converter.GetFontSize());
-  EXPECT_EQ(DPI, em_converter.GetDPI());
-}
-
-TEST_F(TestEMConverter, TestSetFontSize)
-{
-  int const font_size = 15;
-
-  em_converter.SetFontSize(font_size);
-  EXPECT_EQ(font_size, em_converter.GetFontSize());
-}
 
 TEST_F(TestEMConverter, TestSetDPI)
 {
@@ -79,10 +64,13 @@ TEST_F(TestEMConverter, TestDPIScale2)
   EXPECT_FLOAT_EQ(em_converter.DPIScale(), 2.0);
 }
 
-TEST_F(TestEMConverter, TestPtToPx)
+TEST_F(TestEMConverter, TestConvertPixelScaled)
 {
-  int pt = 12;
-  EXPECT_EQ(em_converter.PtToPx(pt), 16);
+  for (double scale : std::vector<double>({1.0, 1.25, 1.5, 1.75, 2}))
+  {
+    em_converter.SetDPI(DPI * scale);
+    EXPECT_EQ(std::round(PIXEL_SIZE * scale), em_converter.CP(PIXEL_SIZE));
+  }
 }
 
 } // namespace unity

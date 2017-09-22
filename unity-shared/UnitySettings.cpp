@@ -65,7 +65,6 @@ const std::string UBUNTU_UI_SETTINGS = "com.ubuntu.user-interface";
 const std::string SCALE_FACTOR = "scale-factor";
 
 const std::string GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
-const std::string GNOME_FONT_NAME = "font-name";
 const std::string GNOME_CURSOR_SIZE = "cursor-size";
 const std::string GNOME_SCALE_FACTOR = "scaling-factor";
 const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
@@ -174,11 +173,6 @@ public:
       UpdateDPI();
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(gnome_ui_settings_, "changed::" + GNOME_FONT_NAME, [this] (GSettings*, const gchar* t) {
-      UpdateFontSize();
-      UpdateDPI();
-    });
-
     signals_.Add<void, GSettings*, const gchar*>(gnome_ui_settings_, "changed::" + GNOME_TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
       double new_scale_factor = g_settings_get_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str());
       g_settings_set_double(ui_settings_, TEXT_SCALE_FACTOR.c_str(), new_scale_factor);
@@ -203,7 +197,6 @@ public:
     UpdateGesturesSetting();
     UpdateTextScaleFactor();
     UpdateCursorScaleFactor();
-    UpdateFontSize();
     UpdateDPI();
 
     CacheFormFactor();
@@ -363,27 +356,6 @@ public:
   bool GetPamCheckAccountType() const
   {
     return g_settings_get_boolean(usettings_, PAM_CHECK_ACCOUNT_TYPE.c_str());
-  }
-
-  int GetFontSize() const
-  {
-    gint font_size;
-    PangoFontDescription* desc;
-
-    glib::String font_name(g_settings_get_string(gnome_ui_settings_, GNOME_FONT_NAME.c_str()));
-    desc = pango_font_description_from_string(font_name);
-    font_size = pango_font_description_get_size(desc);
-    pango_font_description_free(desc);
-
-    return font_size / 1024;
-  }
-
-  void UpdateFontSize()
-  {
-    int font_size = GetFontSize();
-
-    for (auto const& em : em_converters_)
-      em->SetFontSize(font_size);
   }
 
   void UpdateTextScaleFactor()
