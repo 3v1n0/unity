@@ -62,12 +62,12 @@ const std::string COMPIZ_SETTINGS = "org.compiz";
 const std::string COMPIZ_PROFILE = "current-profile";
 
 const std::string UBUNTU_UI_SETTINGS = "com.ubuntu.user-interface";
+const std::string UBUNTU_DESKTOP_UI_SETTINGS = "com.ubuntu.user-interface.desktop";
 const std::string SCALE_FACTOR = "scale-factor";
 
-const std::string GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
-const std::string GNOME_CURSOR_SIZE = "cursor-size";
-const std::string GNOME_SCALE_FACTOR = "scaling-factor";
-const std::string GNOME_TEXT_SCALE_FACTOR = "text-scaling-factor";
+const std::string DESKTOP_CURSOR_SIZE = "cursor-size";
+const std::string DESKTOP_SCALE_FACTOR = "scaling-factor";
+const std::string DESKTOP_TEXT_SCALE_FACTOR = "text-scaling-factor";
 
 const std::string REMOTE_CONTENT_SETTINGS = "com.canonical.Unity.Lenses";
 const std::string REMOTE_CONTENT_KEY = "remote-content-search";
@@ -83,7 +83,7 @@ const std::string CCS_PROFILE_LOWGFX = CCS_PROFILE_DEFAULT + "-lowgfx";
 
 const int DEFAULT_LAUNCHER_SIZE = 64;
 const int MINIMUM_DESKTOP_HEIGHT = 800;
-const int GNOME_SETTINGS_CHANGED_WAIT_SECONDS = 1;
+const int DESKTOP_SETTINGS_CHANGED_WAIT_SECONDS = 1;
 const double DEFAULT_DPI = 96.0f;
 const double DPI_SCALING_LIMIT = 140.0f;
 const int DPI_SCALING_STEP = 8;
@@ -104,7 +104,7 @@ public:
     , gestures_settings_(g_settings_new(GESTURES_SETTINGS.c_str()))
     , ui_settings_(g_settings_new(UI_SETTINGS.c_str()))
     , ubuntu_ui_settings_(g_settings_new(UBUNTU_UI_SETTINGS.c_str()))
-    , gnome_ui_settings_(g_settings_new(GNOME_UI_SETTINGS.c_str()))
+    , desktop_ui_settings_(g_settings_new(UBUNTU_DESKTOP_UI_SETTINGS.c_str()))
     , remote_content_settings_(g_settings_new(REMOTE_CONTENT_SETTINGS.c_str()))
     , launcher_sizes_(monitors::MAX, DEFAULT_LAUNCHER_SIZE)
     , cached_launcher_position_(LauncherPosition::LEFT)
@@ -173,8 +173,8 @@ public:
       UpdateDPI();
     });
 
-    signals_.Add<void, GSettings*, const gchar*>(gnome_ui_settings_, "changed::" + GNOME_TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
-      double new_scale_factor = g_settings_get_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str());
+    signals_.Add<void, GSettings*, const gchar*>(desktop_ui_settings_, "changed::" + DESKTOP_TEXT_SCALE_FACTOR, [this] (GSettings*, const gchar* t) {
+      double new_scale_factor = g_settings_get_double(desktop_ui_settings_, DESKTOP_TEXT_SCALE_FACTOR.c_str());
       g_settings_set_double(ui_settings_, TEXT_SCALE_FACTOR.c_str(), new_scale_factor);
     });
 
@@ -477,18 +477,18 @@ public:
 
   void UpdateAppsScaling(double scale)
   {
-    signals_.Block(gnome_ui_settings_);
+    signals_.Block(desktop_ui_settings_);
     unsigned integer_scaling = std::max<unsigned>(1, std::lround(scale));
     double point_scaling = scale / static_cast<double>(integer_scaling);
     double text_scale_factor = parent_->font_scaling() * point_scaling;
-    glib::Variant default_cursor_size(g_settings_get_default_value(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str()), glib::StealRef());
+    glib::Variant default_cursor_size(g_settings_get_default_value(desktop_ui_settings_, DESKTOP_CURSOR_SIZE.c_str()), glib::StealRef());
     int cursor_size = std::round(default_cursor_size.GetInt32() * point_scaling * cursor_scale_);
-    g_settings_set_int(gnome_ui_settings_, GNOME_CURSOR_SIZE.c_str(), cursor_size);
-    g_settings_set_uint(gnome_ui_settings_, GNOME_SCALE_FACTOR.c_str(), integer_scaling);
-    g_settings_set_double(gnome_ui_settings_, GNOME_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
+    g_settings_set_int(desktop_ui_settings_, DESKTOP_CURSOR_SIZE.c_str(), cursor_size);
+    g_settings_set_uint(desktop_ui_settings_, DESKTOP_SCALE_FACTOR.c_str(), integer_scaling);
+    g_settings_set_double(desktop_ui_settings_, DESKTOP_TEXT_SCALE_FACTOR.c_str(), text_scale_factor);
 
-    changing_gnome_settings_timeout_.reset(new glib::TimeoutSeconds(GNOME_SETTINGS_CHANGED_WAIT_SECONDS, [this] {
-      signals_.Unblock(gnome_ui_settings_);
+    changing_desktop_settings_timeout_.reset(new glib::TimeoutSeconds(DESKTOP_SETTINGS_CHANGED_WAIT_SECONDS, [this] {
+      signals_.Unblock(desktop_ui_settings_);
       return false;
     }, glib::Source::Priority::LOW));
   }
@@ -518,9 +518,9 @@ public:
   glib::Object<GSettings> gestures_settings_;
   glib::Object<GSettings> ui_settings_;
   glib::Object<GSettings> ubuntu_ui_settings_;
-  glib::Object<GSettings> gnome_ui_settings_;
+  glib::Object<GSettings> desktop_ui_settings_;
   glib::Object<GSettings> remote_content_settings_;
-  glib::Source::UniquePtr changing_gnome_settings_timeout_;
+  glib::Source::UniquePtr changing_desktop_settings_timeout_;
   glib::SignalManager signals_;
   std::vector<EMConverter::Ptr> em_converters_;
   std::vector<int> launcher_sizes_;

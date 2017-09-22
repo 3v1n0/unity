@@ -74,6 +74,19 @@
     </key>
   </schema>
 
+  <schema path="/com/ubuntu/user-interface/desktop/" id="com.ubuntu.user-interface.desktop">
+    <key type="u" name="scaling-factor">
+      <default>0</default>
+    </key>
+    <key type="d" name="text-scaling-factor">
+      <range min="0.5" max="3.0"/>
+      <default>1.0</default>
+    </key>
+    <key type="i" name="cursor-size">
+      <default>24</default>
+    </key>
+  </schema>
+
   <schema id="com.canonical.unity-greeter" path="/com/canonical/unity-greeter/">
     <key type="s" name="logo">
       <default>'/usr/share/unity-greeter/logo.png'</default>
