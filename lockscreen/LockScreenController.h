@@ -29,6 +29,7 @@
 #include "LockScreenAcceleratorController.h"
 #include "SuspendInhibitorManager.h"
 #include "ScreenSaverDBusManager.h"
+#include "UserAuthenticator.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/SystemdWrapper.h"
 #include "unity-shared/UpstartWrapper.h"
@@ -95,6 +96,7 @@ private:
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
   SuspendInhibitorManager::Ptr suspend_inhibitor_manager_;
+  UserAuthenticator::Ptr user_authenticator_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;

@@ -36,6 +36,7 @@ typedef std::shared_ptr<std::promise<std::string>> PromiseAuthCodePtr;
 class UserAuthenticator
 {
 public:
+  typedef std::shared_ptr<UserAuthenticator> Ptr;
   typedef std::function<void(bool)> AuthenticateEndCallback;
 
   virtual ~UserAuthenticator() = default;
@@ -43,6 +44,7 @@ public:
   // Authenticate the user in a background thread.
   virtual bool AuthenticateStart(std::string const& username, AuthenticateEndCallback const&) = 0;
 
+  sigc::signal<void> start_failed;
   sigc::signal<void, std::string, PromiseAuthCodePtr const&> echo_on_requested;
   sigc::signal<void, std::string, PromiseAuthCodePtr const&> echo_off_requested;
   sigc::signal<void, std::string> message_requested;

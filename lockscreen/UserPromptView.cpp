@@ -23,6 +23,7 @@
 #include <glib/gi18n-lib.h>
 
 #include <boost/algorithm/string/trim.hpp>
+#include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 
 #include "LockScreenSettings.h"
@@ -38,6 +39,9 @@ namespace lockscreen
 {
 namespace
 {
+
+DECLARE_LOGGER(logger, "unity.lockscreen");
+
 const RawPixel PADDING              = 10_em;
 const RawPixel LAYOUT_MARGIN        = 10_em;
 const RawPixel MSG_LAYOUT_MARGIN    = 15_em;
@@ -101,41 +105,46 @@ std::string SanitizeMessage(std::string const& message)
 
 }
 
-UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager)
-  : AbstractUserPromptView(session_manager)
-  , session_manager_(session_manager)
+UserPromptView::UserPromptView(session::Manager::Ptr const& session_manager,
+                               UserAuthenticator::Ptr const& user_authenticator)
+  : AbstractUserPromptView(session_manager, user_authenticator)
   , username_(nullptr)
   , msg_layout_(nullptr)
   , prompt_layout_(nullptr)
   , button_layout_(nullptr)
   , prompted_(false)
   , unacknowledged_messages_(false)
+  , num_retry_auth_(0)
 {
-  user_authenticator_.echo_on_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
+  user_authenticator_->start_failed.connect(sigc::track_obj([this](){
+    HandleAuthenticationStartFailure();
+  }, *this));
+
+  user_authenticator_->echo_on_requested.connect(sigc::track_obj([this](std::string const& message, PromiseAuthCodePtr const& promise){
     prompted_ = true;
     unacknowledged_messages_ = false;
     AddPrompt(message, /* visible */ true, promise);
-  });
+  }, *this));
 
-  user_authenticator_.echo_off_requested.connect([this](std::string const& message, PromiseAuthCodePtr const& promise){
+  user_authenticator_->echo_off_requested.connect(sigc::track_obj([this](std::string const& message, PromiseAuthCodePtr const& promise){
     prompted_ = true;
     unacknowledged_messages_ = false;
     AddPrompt(message, /* visible */ false, promise);
-  });
+  }, *this));
 
-  user_authenticator_.message_requested.connect([this](std::string const& message){
+  user_authenticator_->message_requested.connect(sigc::track_obj([this](std::string const& message){
     unacknowledged_messages_ = true;
     AddMessage(message, nux::color::White);
-  });
+  }, *this));
 
-  user_authenticator_.error_requested.connect([this](std::string const& message){
+  user_authenticator_->error_requested.connect(sigc::track_obj([this](std::string const& message){
     unacknowledged_messages_ = true;
     AddMessage(message, nux::color::Red);
-  });
+  }, *this));
 
-  user_authenticator_.clear_prompts.connect([this](){
+  user_authenticator_->clear_prompts.connect(sigc::track_obj([this](){
     ResetLayout();
-  });
+  }, *this));
 
   scale.changed.connect(sigc::hide(sigc::mem_fun(this, &UserPromptView::UpdateSize)));
 
@@ -469,13 +478,40 @@ void UserPromptView::StartAuthentication()
   prompted_ = false;
   unacknowledged_messages_ = false;
 
-  user_authenticator_.AuthenticateStart(session_manager_->UserName(),
-                                        sigc::mem_fun(this, &UserPromptView::AuthenticationCb));
+  if(!user_authenticator_->AuthenticateStart(session_manager_->UserName(),
+                                             sigc::mem_fun(this, &UserPromptView::AuthenticationCb)))
+  {
+    HandleAuthenticationStartFailure();
+  }
 }
 
 void UserPromptView::DoUnlock()
 {
   session_manager_->unlock_requested.emit();
+}
+
+void UserPromptView::HandleAuthenticationStartFailure()
+{
+  ++num_retry_auth_;
+
+  if (num_retry_auth_ <= 5)
+  {
+    LOG_WARNING(logger) << "Failed to start the authentication process. Retrying for " << num_retry_auth_ << " time.";
+    source_manager_.AddTimeout(100, [this] {
+      StartAuthentication();
+      return false;
+    });
+  }
+  else
+  {
+    num_retry_auth_ = 0;
+
+    AddMessage(_("Authentication failure"), nux::color::Red);
+    AddButton(_("Switch to greeter…"), [this] {
+      session_manager_->SwitchToGreeter();
+    });
+    GetLayout()->AddLayout(button_layout_);
+  }
 }
 
 }
