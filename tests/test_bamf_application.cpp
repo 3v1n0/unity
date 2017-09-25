@@ -28,6 +28,31 @@
 
 #include <UnityCore/GLibWrapper.h>
 
+namespace unity
+{
+
+bool operator==(ApplicationPtr const& lhs, ApplicationPtr const& rhs)
+{
+  return (lhs.get() == rhs.get() || (lhs && rhs && *lhs == *rhs));
+}
+
+bool operator!=(ApplicationPtr const& lhs, ApplicationPtr const& rhs)
+{
+  return !(lhs == rhs);
+}
+
+bool operator==(ApplicationWindowPtr const& lhs, ApplicationWindowPtr const& rhs)
+{
+  return (lhs.get() == rhs.get() || (lhs && rhs && *lhs == *rhs));
+}
+
+bool operator!=(ApplicationWindowPtr const& lhs, ApplicationWindowPtr const& rhs)
+{
+  return !(lhs == rhs);
+}
+
+}
+
 namespace {
 
 unity::StandaloneWindow::Ptr AddFakeWindowToWM(Window xid, bool mapped)

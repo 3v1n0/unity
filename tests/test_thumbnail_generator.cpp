@@ -107,7 +107,7 @@ TEST(TestThumbnailGenerator, TestGetOneFileThumbnail)
   thumb->ready.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailReady));
   thumb->error.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailFailed));
 
-  Utils::WaitUntilMSec(load_result.got_callback);
+  Utils::WaitUntilMSec(load_result.got_callback, 1500);
 
   EXPECT_TRUE(load_result.succeeded);
   glib::Object<GIcon> icon(g_icon_new_for_string(load_result.return_string.c_str(), NULL));
@@ -164,7 +164,7 @@ TEST(TestThumbnailGenerator, TestGetOneGIcon)
   thumb->ready.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailReady));
   thumb->error.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailFailed));
 
-  Utils::WaitUntilMSec(load_result.got_callback);
+  Utils::WaitUntilMSec(load_result.got_callback, 1500);
 
   EXPECT_TRUE(load_result.succeeded);
   glib::Object<GIcon> icon(g_icon_new_for_string(load_result.return_string.c_str(), NULL));

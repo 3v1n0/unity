@@ -98,7 +98,7 @@ public:
   nux::ObjectPtr<nux::BaseWindow> parent_window_;
   dash::Preview::Ptr preview_model_;
 
-  previews::Style panel_style;
+  previews::Style previews_style;
   dash::Style dash_style;
   ThumbnailGenerator thumbnail_generator;
 };

@@ -13,6 +13,11 @@ using ::testing::InSequence;
 
 compiz::WindowInputRemoverInterface::~WindowInputRemoverInterface () {}
 
+namespace
+{
+const float MAX_FLOAT_DISTANCE = 0.001f;
+}
+
 class MockWindowInputRemover :
   public compiz::WindowInputRemoverInterface
 {
@@ -405,9 +410,10 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationPostPaintActions)
   EXPECT_EQ (ShowdesktopHandler::animating_windows.size (), 1);
 }
 
-TEST_F(UnityShowdesktopHandlerTest, UNSTABLE_TEST(TestAnimationOpacity))
+TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
+  using namespace testing;
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOutFadeIn>));
   ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
@@ -431,12 +437,13 @@ TEST_F(UnityShowdesktopHandlerTest, UNSTABLE_TEST(TestAnimationOpacity))
 
     mMockHandler.Animate (1);
 
-    if (i == 300)
+    if (i == ShowdesktopHandler::fade_time)
       EXPECT_EQ (opacity, std::numeric_limits <unsigned short>::max ());
     else
     {
       float rem = opacity - std::numeric_limits <unsigned short>::max () * (1.0f - i / static_cast <float> (ShowdesktopHandler::fade_time));
-      EXPECT_TRUE (rem <= 1.0f && rem >= -1.0f);
+      EXPECT_THAT(rem, AllOf(AnyOf(FloatNear(1.0f, MAX_FLOAT_DISTANCE), Lt(1.0f)),
+                             AnyOf(FloatNear(-1.0f, MAX_FLOAT_DISTANCE), Gt(-1.0f))));
     }
   }
 
@@ -449,12 +456,13 @@ TEST_F(UnityShowdesktopHandlerTest, UNSTABLE_TEST(TestAnimationOpacity))
 
     mMockHandler.Animate (1);
 
-    if (i == 300)
+    if (i == ShowdesktopHandler::fade_time)
       EXPECT_EQ (opacity, std::numeric_limits <unsigned short>::max ());
     else
     {
       float rem = opacity - std::numeric_limits <unsigned short>::max () * (i / static_cast <float> (ShowdesktopHandler::fade_time));
-      EXPECT_TRUE (rem <= 1.0f && rem >= -1.0f);
+      EXPECT_THAT(rem, AllOf(AnyOf(FloatNear(1.0f, MAX_FLOAT_DISTANCE), Lt(1.0f)),
+                             AnyOf(FloatNear(-1.0f, MAX_FLOAT_DISTANCE), Gt(-1.0f))));
     }
   }
 
