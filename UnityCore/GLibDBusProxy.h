@@ -23,6 +23,7 @@
 #define UNITY_DBUS_PROXY_H
 
 #include <boost/noncopyable.hpp>
+#include <functional>
 #include <gio/gio.h>
 #include <memory>
 #include <sigc++/signal.h>

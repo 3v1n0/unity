@@ -21,6 +21,7 @@
 #ifndef UNITY_GLIB_SIGNAL_H
 #define UNITY_GLIB_SIGNAL_H
 
+#include <functional>
 #include <limits>
 #include <string>
 #include <vector>
