@@ -42,6 +42,7 @@ public:
 
   sigc::signal<void> connected;
   sigc::signal<void> about_to_suspend;
+  sigc::signal<void> resumed;
 
 private:
   class Impl;
