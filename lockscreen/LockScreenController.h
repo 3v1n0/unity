@@ -29,6 +29,7 @@
 #include "LockScreenAcceleratorController.h"
 #include "SuspendInhibitorManager.h"
 #include "ScreenSaverDBusManager.h"
+#include "UserAuthenticator.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/SystemdWrapper.h"
 #include "unity-shared/UpstartWrapper.h"
@@ -55,6 +56,8 @@ public:
 
   bool IsLocked() const;
   bool HasOpenMenu() const;
+  bool IsPaintInhibited() const;
+  void MarkBufferHasCleared();
 
 private:
   friend class TestLockScreenController;
@@ -81,6 +84,9 @@ private:
   void OnLockScreenInputEvent(XEvent const&);
   void OnBlankWindowInputEvent(XEvent const&);
 
+  void InhibitPaint();
+  void UninhibitPaint();
+
   std::vector<nux::ObjectPtr<BaseShield>> shields_;
   nux::ObjectWeakPtr<BaseShield> primary_shield_;
   nux::ObjectWeakPtr<AbstractUserPromptView> prompt_view_;
@@ -95,6 +101,7 @@ private:
   UpstartWrapper::Ptr upstart_wrapper_;
   ShieldFactoryInterface::Ptr shield_factory_;
   SuspendInhibitorManager::Ptr suspend_inhibitor_manager_;
+  UserAuthenticator::Ptr user_authenticator_;
 
   nux::animation::AnimateValue<double> fade_animator_;
   nux::animation::AnimateValue<double> blank_window_animator_;
@@ -102,6 +109,8 @@ private:
   bool test_mode_;
   bool prompt_activation_;
   BlurType old_blur_type_;
+  bool is_paint_inhibited_;
+  bool buffer_cleared_;
 
   connection::Wrapper uscreen_connection_;
   connection::Wrapper hidden_window_connection_;

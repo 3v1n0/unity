@@ -22,6 +22,7 @@
 
 #include <NuxCore/NuxCore.h>
 #include "UnityCore/SessionManager.h"
+#include "UserAuthenticator.h"
 
 namespace unity
 {
@@ -33,7 +34,8 @@ class AbstractUserPromptView;
 
 struct PromptFactory
 {
-  static nux::ObjectPtr<AbstractUserPromptView> CreatePrompt(session::Manager::Ptr const&);
+  static nux::ObjectPtr<AbstractUserPromptView> CreatePrompt(session::Manager::Ptr const&,
+                                                             UserAuthenticator::Ptr const&);
 };
 
 }

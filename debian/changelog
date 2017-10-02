@@ -1,3 +1,19 @@
+unity (7.5.0+17.10.20170925.1-0ubuntu1) artful; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Fix build issues with gcc-7 and g++-7
+  * Refactor the way UserAuthenticator is created and passed around.
+    Handle failures to create new threads and fallback to a "Switch to
+    greeter..." button in case of failure. (LP: #1311316)
+  * Wait until the color buffer is cleared before suspending. (LP:
+    #1532508)
+
+  [ Marco Trevisan (Treviño) ]
+  * Tests: split unit tests in single binaries, enable unstable tests
+  * debian/rules: ignore warnings in armhf and ppc64el
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Mon, 25 Sep 2017 16:05:06 +0000
+
 unity (7.5.0+17.10.20170721.1-0ubuntu1) artful; urgency=medium
 
   * GLibSignal: allow to block, unblock signals

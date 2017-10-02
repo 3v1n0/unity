@@ -27,6 +27,7 @@
 #include "LockScreenPromptFactory.h"
 #include "LockScreenShield.h"
 #include "LockScreenSettings.h"
+#include "UserAuthenticatorPam.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/InputMonitor.h"
 #include "unity-shared/UnitySettings.h"
@@ -70,10 +71,13 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   , upstart_wrapper_(upstart_wrapper)
   , shield_factory_(shield_factory)
   , suspend_inhibitor_manager_(std::make_shared<SuspendInhibitorManager>())
+  , user_authenticator_(std::make_shared<UserAuthenticatorPam>())
   , fade_animator_(unity::Settings::Instance().low_gfx() ? 0 : LOCK_FADE_DURATION)
   , blank_window_animator_(IDLE_FADE_DURATION)
   , test_mode_(test_mode)
   , prompt_activation_(false)
+  , is_paint_inhibited_(false)
+  , buffer_cleared_(true)
 {
   auto* uscreen = UScreen::GetDefault();
   uscreen_connection_ = uscreen->changed.connect([this] (int, std::vector<nux::Geometry> const& monitors) {
@@ -91,7 +95,13 @@ Controller::Controller(DBusManager::Ptr const& dbus_manager,
   suspend_inhibitor_manager_->connected.connect(sigc::mem_fun(this, &Controller::SyncInhibitor));
   suspend_inhibitor_manager_->about_to_suspend.connect([this] () {
     if (Settings::Instance().lock_on_suspend())
+    {
+      InhibitPaint();
       session_manager_->PromptLockScreen();
+    }
+  });
+  suspend_inhibitor_manager_->resumed.connect([this] () {
+    UninhibitPaint();
   });
 
   Settings::Instance().lock_on_suspend.changed.connect(sigc::hide(sigc::mem_fun(this, &Controller::SyncInhibitor)));
@@ -259,7 +269,7 @@ void Controller::EnsureShields(std::vector<nux::Geometry> const& monitors)
 
   if (!prompt_view)
   {
-    prompt_view = test_mode_ ? nux::ObjectPtr<AbstractUserPromptView>() : PromptFactory::CreatePrompt(session_manager_);
+    prompt_view = test_mode_ ? nux::ObjectPtr<AbstractUserPromptView>() : PromptFactory::CreatePrompt(session_manager_, user_authenticator_);
     prompt_view_ = prompt_view.GetPointer();
   }
 
@@ -554,6 +564,36 @@ bool Controller::HasOpenMenu() const
   return primary_shield_.IsValid() ? primary_shield_->IsIndicatorOpen() : false;
 }
 
+void Controller::InhibitPaint()
+{
+  buffer_cleared_ = false;
+  is_paint_inhibited_ = true;
+}
+
+void Controller::UninhibitPaint()
+{
+  if (!is_paint_inhibited_)
+    return;
+
+  buffer_cleared_ = true;
+  is_paint_inhibited_ = false;
+  SyncInhibitor();
+}
+
+bool Controller::IsPaintInhibited() const
+{
+  return is_paint_inhibited_;
+}
+
+void Controller::MarkBufferHasCleared()
+{
+  if (buffer_cleared_)
+    return;
+
+  buffer_cleared_ = true;
+  SyncInhibitor();
+}
+
 void Controller::SyncInhibitor()
 {
   bool locked = IsLocked() && primary_shield_.IsValid() && primary_shield_->GetOpacity() == 1.0f;
@@ -564,7 +604,7 @@ void Controller::SyncInhibitor()
 
   if (inhibit)
     suspend_inhibitor_manager_->Inhibit("Unity needs to lock the screen");
-  else
+  else if (buffer_cleared_)
     suspend_inhibitor_manager_->Uninhibit();
 }
 

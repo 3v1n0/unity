@@ -60,6 +60,8 @@ SuspendInhibitorManager::Impl::Impl(SuspendInhibitorManager *parent)
   lm_proxy_->Connect("PrepareForSleep", [this] (GVariant* variant) {
     if (glib::Variant(variant).GetBool())
       parent_->about_to_suspend.emit();
+    else
+      parent_->resumed.emit();
   });
 
   lm_proxy_->connected.connect(sigc::mem_fun(&parent->connected, &decltype(parent->connected)::emit));

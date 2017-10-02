@@ -26,14 +26,15 @@ namespace unity
 {
 namespace lockscreen
 {
-nux::ObjectPtr<AbstractUserPromptView> PromptFactory::CreatePrompt(session::Manager::Ptr const& sm)
+nux::ObjectPtr<AbstractUserPromptView> PromptFactory::CreatePrompt(session::Manager::Ptr const& sm,
+                                                                   UserAuthenticator::Ptr const& ua)
 {
   nux::ObjectPtr<AbstractUserPromptView> prompt;
 
   if (unity::Settings::Instance().desktop_type() == DesktopType::UBUNTUKYLIN)
-    prompt = new KylinUserPromptView(sm);
+    prompt = new KylinUserPromptView(sm, ua);
   else
-    prompt = new UserPromptView(sm);
+    prompt = new UserPromptView(sm, ua);
 
   return prompt;
 }

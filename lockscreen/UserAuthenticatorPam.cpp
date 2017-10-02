@@ -23,6 +23,7 @@
 
 #include "UserAuthenticatorPam.h"
 #include "unity-shared/UnitySettings.h"
+#include "UnityCore/GLibWrapper.h"
 
 #include <cstring>
 #include <security/pam_appl.h>
@@ -36,42 +37,49 @@ namespace lockscreen
 bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
                                              AuthenticateEndCallback const& authenticate_cb)
 {
+  if (pam_handle_)
+    return false;
+
   first_prompt_ = true;
   username_ = username;
   authenticate_cb_ = authenticate_cb;
-  pam_handle_ = nullptr;
 
-  if (!InitPam() || !pam_handle_)
-    return false;
+  glib::Error error;
+  g_thread_try_new(nullptr, AuthenticationThreadFunc, this, &error);
 
-  glib::Object<GTask> task(g_task_new(nullptr, cancellable_, [] (GObject*, GAsyncResult*, gpointer data) {
-    auto self = static_cast<UserAuthenticatorPam*>(data);
-    pam_end(self->pam_handle_, self->status_);
-    self->authenticate_cb_(self->status_ == PAM_SUCCESS);
-  }, this));
+  return !error;
+}
 
-  g_task_set_task_data(task, this, nullptr);
+gpointer UserAuthenticatorPam::AuthenticationThreadFunc(gpointer data)
+{
+  auto self = static_cast<UserAuthenticatorPam*>(data);
 
-  g_task_run_in_thread(task, [] (GTask* task, gpointer, gpointer data, GCancellable*) {
-    auto self = static_cast<UserAuthenticatorPam*>(data);
+  if (!self->InitPam() || !self->pam_handle_)
+  {
+    self->pam_handle_ = nullptr;
+    self->source_manager_.AddTimeout(0, [self] { self->start_failed.emit(); return false; });
+    return nullptr;
+  }
 
-    self->status_ = pam_authenticate(self->pam_handle_, 0);
+  self->status_ = pam_authenticate(self->pam_handle_, 0);
 
-    if (self->status_ == PAM_SUCCESS)
-    {
-      int status2 = pam_acct_mgmt(self->pam_handle_, 0);
+  if (self->status_ == PAM_SUCCESS)
+  {
+    int status2 = pam_acct_mgmt(self->pam_handle_, 0);
 
-      if (status2 == PAM_NEW_AUTHTOK_REQD)
-        status2 = pam_chauthtok(self->pam_handle_, PAM_CHANGE_EXPIRED_AUTHTOK);
+    if (status2 == PAM_NEW_AUTHTOK_REQD)
+      status2 = pam_chauthtok(self->pam_handle_, PAM_CHANGE_EXPIRED_AUTHTOK);
 
-      if (unity::Settings::Instance().pam_check_account_type())
-        self->status_ = status2;
+    if (unity::Settings::Instance().pam_check_account_type())
+      self->status_ = status2;
 
-      pam_setcred(self->pam_handle_, PAM_REINITIALIZE_CRED);
-    }
-  });
+    pam_setcred(self->pam_handle_, PAM_REINITIALIZE_CRED);
+  }
 
-  return true;
+  pam_end(self->pam_handle_, self->status_);
+  self->pam_handle_ = nullptr;
+  self->source_manager_.AddTimeout(0, [self] {   self->authenticate_cb_(self->status_ == PAM_SUCCESS); return false; });
+  return nullptr;
 }
 
 bool UserAuthenticatorPam::InitPam()
