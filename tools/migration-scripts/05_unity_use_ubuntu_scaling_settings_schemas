@@ -23,7 +23,9 @@ import os,sys
 
 GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
 UBUNTU_UI_SETTINGS = "com.ubuntu.user-interface.desktop";
+UNITY_UI_SETTINGS = "com.canonical.Unity.Interface";
 
+KEYS_TO_TRANSLATE = { "text-scaling-factor": "text-scale-factor" }
 KEYS_TO_MIGRATE = [ "cursor-size", "scaling-factor", "text-scaling-factor" ]
 
 gnome_ui_schema = Gio.SettingsSchemaSource.get_default().lookup(GNOME_UI_SETTINGS, recursive=False)
@@ -45,9 +47,14 @@ for key in KEYS_TO_MIGRATE:
 
   # We reset the gnome values first
   if gnome_settings.is_writable(key):
-    gnome_settings.reset(key)
+    if key in KEYS_TO_TRANSLATE.keys():
+      unity_value = Gio.Settings.new(UNITY_UI_SETTINGS).get_value(KEYS_TO_TRANSLATE[key])
+      if unity_value != gnome_value:
+        gnome_settings.set_value(key, unity_value)
+    else:
+      gnome_settings.reset(key)
   else:
-    print("Can't reset key '{} {}': in read only.".format(GNOME_UI_SETTINGS, key))
+    print("Can't reset or migrate key '{} {}': in read only.".format(GNOME_UI_SETTINGS, key))
 
   # Then we migrate the settings, so that u-s-d proxy won't interfere
   if ubuntu_settings.is_writable(key):
