@@ -506,10 +506,14 @@ void UserPromptView::HandleAuthenticationStartFailure()
   {
     num_retry_auth_ = 0;
 
+    prompted_ = true;
+    unacknowledged_messages_ = false;
+
     AddMessage(_("Authentication failure"), nux::color::Red);
     AddButton(_("Switch to greeter…"), [this] {
       session_manager_->SwitchToGreeter();
     });
+
     GetLayout()->AddLayout(button_layout_);
   }
 }
