@@ -1,3 +1,10 @@
+unity (7.5.0+17.10.20171004-0ubuntu1) artful; urgency=medium
+
+  * UnitySettings: use the ubuntu-schemas path for scaling settings (LP:
+    #1721082)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 04 Oct 2017 18:50:43 +0000
+
 unity (7.5.0+17.10.20170925.1-0ubuntu1) artful; urgency=medium
 
   [ Andrea Azzarone ]
