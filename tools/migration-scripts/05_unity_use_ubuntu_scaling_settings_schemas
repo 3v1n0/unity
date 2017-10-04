@@ -1,0 +1,66 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2014-2017 Canonical
+#
+# Authors:
+#  Marco Trevisan <marco.trevisan@canonical.com>
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; version 3.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUTa
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+from gi.repository import Gio
+import os,sys
+
+GNOME_UI_SETTINGS = "org.gnome.desktop.interface";
+UBUNTU_UI_SETTINGS = "com.ubuntu.user-interface.desktop";
+UNITY_UI_SETTINGS = "com.canonical.Unity.Interface";
+
+KEYS_TO_TRANSLATE = { "text-scaling-factor": "text-scale-factor" }
+KEYS_TO_MIGRATE = [ "cursor-size", "scaling-factor", "text-scaling-factor" ]
+
+gnome_ui_schema = Gio.SettingsSchemaSource.get_default().lookup(GNOME_UI_SETTINGS, recursive=False)
+if not gnome_ui_schema:
+    print("No gnome desktop interface schemas found, no migration needed")
+    sys.exit(0)
+
+ubuntu_ui_schema = Gio.SettingsSchemaSource.get_default().lookup(UBUNTU_UI_SETTINGS, recursive=False)
+if not ubuntu_ui_schema:
+    print("No ubuntu desktop interface schemas found, no migration needed")
+    sys.exit(0)
+
+gnome_settings = Gio.Settings(settings_schema=gnome_ui_schema)
+ubuntu_settings = Gio.Settings(settings_schema=ubuntu_ui_schema)
+
+for key in KEYS_TO_MIGRATE:
+  gnome_value = gnome_settings.get_value(key)
+  ubuntu_value = ubuntu_settings.get_value(key)
+
+  # We reset the gnome values first
+  if gnome_settings.is_writable(key):
+    if key in KEYS_TO_TRANSLATE.keys():
+      unity_value = Gio.Settings.new(UNITY_UI_SETTINGS).get_value(KEYS_TO_TRANSLATE[key])
+      if unity_value != gnome_value:
+        gnome_settings.set_value(key, unity_value)
+    else:
+      gnome_settings.reset(key)
+  else:
+    print("Can't reset or migrate key '{} {}': in read only.".format(GNOME_UI_SETTINGS, key))
+
+  # Then we migrate the settings, so that u-s-d proxy won't interfere
+  if ubuntu_settings.is_writable(key):
+    if ubuntu_value != gnome_value:
+      ubuntu_settings.set_value(key, gnome_value)
+  else:
+    print("Can't migrate key '{} {}': in read only.".format(UBUNTU_UI_SETTINGS, key))
+
+Gio.Settings.sync()

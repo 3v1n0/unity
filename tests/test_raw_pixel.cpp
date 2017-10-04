@@ -25,14 +25,13 @@ using namespace testing;
 namespace unity
 {
 
-int const FONT_SIZE  = 13;
 double const DPI     = 96.0;
 
 class TestRawPixel : public Test
 {
 public:
   TestRawPixel()
-    : cv(std::make_shared<EMConverter>(FONT_SIZE, DPI))
+    : cv(std::make_shared<EMConverter>(DPI))
     , p_i(10_em)
     , p_f(10.0_em)
   {

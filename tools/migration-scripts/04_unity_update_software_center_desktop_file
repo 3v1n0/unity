@@ -21,16 +21,17 @@
 from gi.repository import Gio
 
 UNITY_LAUNCHER_SETTINGS = "com.canonical.Unity.Launcher";
-UNITY_LAUNCHER_SETTINGS_PATH = "/com/canonical/unity/launcher/"
 UNITY_LAUNCER_FAVORITES = "favorites";
 
-favorites = Gio.Settings(schema=UNITY_LAUNCHER_SETTINGS).get_strv(UNITY_LAUNCER_FAVORITES)
+launcher_settings = Gio.Settings.new(UNITY_LAUNCHER_SETTINGS)
+favorites = launcher_settings.get_strv(UNITY_LAUNCER_FAVORITES)
+replaced = False
 
 for i in range(len(favorites)):
   if 'ubuntu-software-center.desktop' in favorites[i]:
     favorites[i] = favorites[i].replace('ubuntu-software-center', 'org.gnome.Software')
+    replaced = True
 
-# gsettings doesn't work directly, the key is somewhat reverted. Work one level under then: dconf!
-from subprocess import Popen, PIPE, STDOUT
-p = Popen(("dconf load "+UNITY_LAUNCHER_SETTINGS_PATH).split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-p.communicate(input=bytes("[/]\n"+UNITY_LAUNCER_FAVORITES+"={}".format(favorites), 'utf-8'))
+if replaced:
+  launcher_settings.set_strv(UNITY_LAUNCER_FAVORITES, favorites)
+  Gio.Settings.sync()
