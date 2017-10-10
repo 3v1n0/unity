@@ -488,6 +488,7 @@ void UserPromptView::StartAuthentication()
 void UserPromptView::DoUnlock()
 {
   session_manager_->unlock_requested.emit();
+  num_retry_auth_ = 0;
 }
 
 void UserPromptView::HandleAuthenticationStartFailure()
@@ -504,12 +505,11 @@ void UserPromptView::HandleAuthenticationStartFailure()
   }
   else
   {
-    num_retry_auth_ = 0;
-
     AddMessage(_("Authentication failure"), nux::color::Red);
     AddButton(_("Switch to greeter…"), [this] {
       session_manager_->SwitchToGreeter();
     });
+
     GetLayout()->AddLayout(button_layout_);
   }
 }
