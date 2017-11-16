@@ -1,0 +1,95 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2017 Canonical
+#
+# Authors:
+#  Marco Trevisan <marco.trevisan@canonical.com>
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; version 3.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUTa
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+from gi.repository import Gio, GLib
+import sys
+
+COMPIZ_SCHEMA = "org.compiz"
+COMPIZ_PROFILE_PATH = "/org/compiz/profiles/unity-lowgfx/plugins/{}/"
+LOWGFX_OPTIONS = {
+    "ezoom": {"speed": 100.0},
+
+    "expo": {"expo-animation": 3},
+
+    "fade": {"fade-mode": 1,
+             "fade-time": 1},
+
+    "grid": {"animation-duration": 0,
+             "draw-stretched-window": False},
+
+    "move": {"mode": 2,
+             "lazy-positioning": True,
+             "increase-border-contrast": True},
+
+    "resize": {"mode": 2,
+               "increase-border-contrast": True},
+
+    "opengl": {"texture-filter": 0},
+
+    "scale": {"skip-animation": True},
+
+    "unityshell": {"dash-blur-experimental": 0,
+                   "override-decoration-theme": True,
+                   "shadow-x-offset": 1,
+                   "shadow-y-offset": 1,
+                   "active-shadow-radius": 3,
+                   "inactive-shadow-radius": 2,
+                   "menus-fadein": 0,
+                   "menus-fadeout": 0,
+                   "menus-discovery-fadein": 0,
+                   "menus-discovery-fadeout": 0,
+                   "autohide-animation": 1},
+
+    "wall": {"slide-duration": 0.0},
+
+    "showdesktop": {"skip-animation": True},
+}
+
+
+def get_variant_from_python(value):
+    if type(value) == str:
+        return GLib.Variant.new_string(value)
+    elif type(value) == bool:
+        return GLib.Variant.new_boolean(value)
+    elif type(value) == int:
+        return GLib.Variant.new_int32(value)
+    elif type(value) == float:
+        return GLib.Variant.new_double(value)
+
+
+if COMPIZ_SCHEMA not in Gio.Settings.list_schemas():
+    print("No compiz schemas found, no migration needed")
+    sys.exit(0)
+
+for plugin in LOWGFX_OPTIONS:
+    plugin_options = LOWGFX_OPTIONS[plugin]
+    plugin_path = COMPIZ_PROFILE_PATH.format(plugin)
+
+    try:
+      plugin_settings = Gio.Settings(
+          schema=COMPIZ_SCHEMA + ".{}".format(plugin), path=plugin_path)
+
+      for setting in plugin_options:
+          value = get_variant_from_python(plugin_options[setting])
+          plugin_settings.set_value(setting, value)
+    except:
+      print("Can't update settings for plugin '{}".format(plugin))
+
+Gio.Settings.sync()
