@@ -4194,13 +4194,13 @@ void UnityScreen::InitUnityComponents()
     }
   };
 
-  UScreen::GetDefault()->changed.connect([this, check_launchers_size] (int, std::vector<nux::Geometry> const&) {
+  UScreen::GetDefault()->changed.connect(sigc::track_obj([this, check_launchers_size] (int, std::vector<nux::Geometry> const&) {
     check_launchers_size();
-  });
+  }, *this));
 
-  Settings::Instance().launcher_position.changed.connect([this, check_launchers_size] (LauncherPosition const&) {
+  Settings::Instance().launcher_position.changed.connect(sigc::track_obj([this, check_launchers_size] (LauncherPosition const&) {
     check_launchers_size();
-  });
+  }, *this));
 
   check_launchers_size();
 
