@@ -48,16 +48,17 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   auto monitors = uscreen->GetMonitors();
   ResizeBarrierList(monitors);
 
-  /* FIXME: Back to c++11 lambda once we get sigc::track_obj.
-  uscreen->changed.connect(sigc::track_obj(([this](int primary, std::vector<nux::Geometry> const& layout) {
-    ResizeBarrierList(layout);
-    SetupBarriers(layout);
-  }));*/
+  uscreen->changed.connect(sigc::track_obj([this] (int primary, std::vector<nux::Geometry> const& layout) {
+    ResetBarriers();
+  }, *this));
 
-  uscreen->changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnUScreenChanged));
-  Settings::Instance().launcher_position.changed.connect(sigc::hide(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged)));
+  parent_->force_disable.changed.connect(sigc::track_obj([this] (bool) {
+    ResetBarriers();
+  }, *this));
 
-  parent_->force_disable.changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnForceDisableChanged));
+  Settings::Instance().launcher_position.changed.connect(sigc::track_obj([this] (LauncherPosition) {
+    ResetBarriers();
+  }, *this));
 
   parent_->sticky_edges.SetGetterFunction([this] {
     return parent_->options() ? parent_->options()->edge_resist() : false;
@@ -73,12 +74,11 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   });
 
   parent_->options.changed.connect([this](launcher::Options::Ptr options) {
-    /* FIXME: Back to c++11 lambda once we get sigc::track_obj.
-    options->option_changed.connect([this]() {
-      SetupBarriers(UScreen::GetDefault()->GetMonitors());
-    });*/
-    options->option_changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged));
-    SetupBarriers(UScreen::GetDefault()->GetMonitors());
+    options->option_changed.connect(sigc::track_obj([this] {
+      ResetBarriers();
+    }, *this));
+
+    ResetBarriers();
   });
 }
 
@@ -87,22 +87,11 @@ EdgeBarrierController::Impl::~Impl()
   nux::GetGraphicsDisplay()->RemoveEventFilter(this);
 }
 
-void EdgeBarrierController::Impl::OnUScreenChanged(int primary, std::vector<nux::Geometry> const& layout)
+void EdgeBarrierController::Impl::ResetBarriers()
 {
-  ResizeBarrierList(layout);
-  SetupBarriers(layout);
-}
-
-void EdgeBarrierController::Impl::OnForceDisableChanged(bool value)
-{
-  auto monitors = UScreen::GetDefault()->GetMonitors();
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
   ResizeBarrierList(monitors);
   SetupBarriers(monitors);
-}
-
-void EdgeBarrierController::Impl::OnOptionsChanged()
-{
-  SetupBarriers(UScreen::GetDefault()->GetMonitors());
 }
 
 void EdgeBarrierController::Impl::AddSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers)
@@ -110,10 +99,8 @@ void EdgeBarrierController::Impl::AddSubscriber(EdgeBarrierSubscriber* subscribe
   if (monitor >= subscribers.size())
     subscribers.resize(monitor + 1);
 
-  auto const& monitors = UScreen::GetDefault()->GetMonitors();
   subscribers[monitor] = subscriber;
-  ResizeBarrierList(monitors);
-  SetupBarriers(monitors);
+  ResetBarriers();
 }
 
 void EdgeBarrierController::Impl::RemoveSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers)
@@ -121,10 +108,8 @@ void EdgeBarrierController::Impl::RemoveSubscriber(EdgeBarrierSubscriber* subscr
   if (monitor >= subscribers.size() || subscribers[monitor] != subscriber)
     return;
 
-  auto const& monitors = UScreen::GetDefault()->GetMonitors();
   subscribers[monitor] = nullptr;
-  ResizeBarrierList(monitors);
-  SetupBarriers(monitors);
+  ResetBarriers();
 }
 
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)

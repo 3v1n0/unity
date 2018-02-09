@@ -40,10 +40,7 @@ struct EdgeBarrierController::Impl : public sigc::trackable
 
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
   void SetupBarriers(std::vector<nux::Geometry> const& layout);
-
-  void OnUScreenChanged(int primary, std::vector<nux::Geometry> const& layout);
-  void OnForceDisableChanged(bool value);
-  void OnOptionsChanged();
+  void ResetBarriers();
 
   void OnPointerBarrierEvent(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr const& event);
   void BarrierPush(PointerBarrierWrapper::Ptr const& owner, BarrierEvent::Ptr const& event);
