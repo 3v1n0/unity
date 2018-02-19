@@ -110,8 +110,14 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 
     nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer(base.x, base.y, base.width, base.height);
 
-    nux::TexCoordXForm texxform_bkg;
-    bg_blur_texture_ = gfxContext.QRP_GetBlurTexture(0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::color::White, 1.0f, 3);
+    if (bkg_texture.IsValid())
+    {
+      nux::TexCoordXForm texxform_bkg;
+      bg_blur_texture_ = gfxContext.QRP_GetBlurTexture(0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::color::White, 1.0f, 3);
+
+      if (bg_blur_texture_)
+        compute_blur_bkg_ = false;
+    }
 
     if (current_fbo.IsValid())
     {
@@ -124,7 +130,6 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
       gfxContext.Push2DWindow(gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
       gfxContext.ApplyClippingRectangle();
     }
-    compute_blur_bkg_ = false;
   }
 
   // the elements position inside the window are referenced to top-left window
