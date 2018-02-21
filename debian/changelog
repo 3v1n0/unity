@@ -1,3 +1,13 @@
+unity (7.5.0+18.04.20180221.1-0ubuntu1) bionic; urgency=medium
+
+  * Unity use track_obj to safely connect to UScreen and Settings
+    signals (LP: #1748330) (LP: #1748330)
+  * CairoBaseWindow: don't try to compute the blur of an invalid texture
+    (LP: #1290056)
+  * Unity: use new definition of infinite CompRegion's (LP: #1749957)
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 21 Feb 2018 15:27:45 +0000
+
 unity (7.5.0+18.04.20171116-0ubuntu1) bionic; urgency=medium
 
   * tools: add migration script to set the default values for unity-
