@@ -480,7 +480,7 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
         matl.push_back(mat);
 
         if (mask & PAINT_WINDOW_TRANSFORMED_MASK)
-          paintRegion = infiniteRegion;
+          paintRegion = CompRegion::infinite();
 
         /* Now allow plugins to mess with the geometry of our
          * dim (so we get a nice render for things like

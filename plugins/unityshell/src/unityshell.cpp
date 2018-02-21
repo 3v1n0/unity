@@ -979,7 +979,7 @@ void UnityScreen::paintOutput()
         /* force the use of the core functions */
         uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
         uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
-        uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
+        uTrayWindow->gWindow->glDraw (oTransform, attrib, CompRegion::infinite (),
                PAINT_WINDOW_TRANSFORMED_MASK |
                PAINT_WINDOW_BLEND_MASK |
                PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
