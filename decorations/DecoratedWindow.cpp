@@ -816,7 +816,9 @@ void Window::Impl::Draw(GLMatrix const& transformation,
     return;
   }
 
-  auto const& clip_region = (mask & PAINT_WINDOW_TRANSFORMED_MASK) ? infiniteRegion : region;
+  auto const& clip_region = (mask & PAINT_WINDOW_TRANSFORMED_MASK) ?
+                             CompRegion::infinite() : region;
+
   mask |= PAINT_WINDOW_BLEND_MASK;
 
   if (win_->alpha() || attrib.opacity != OPAQUE)
