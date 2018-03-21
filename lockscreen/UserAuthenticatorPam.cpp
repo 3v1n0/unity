@@ -25,6 +25,8 @@
 #include "unity-shared/UnitySettings.h"
 #include "UnityCore/GLibWrapper.h"
 
+#include <NuxCore/Logger.h>
+
 #include <cstring>
 #include <security/pam_appl.h>
 #include <vector>
@@ -33,19 +35,31 @@ namespace unity
 {
 namespace lockscreen
 {
+namespace
+{
+DECLARE_LOGGER(logger, "unity.lockscreen");
+}
 
 bool UserAuthenticatorPam::AuthenticateStart(std::string const& username,
                                              AuthenticateEndCallback const& authenticate_cb)
 {
   if (pam_handle_)
+  {
+    LOG_ERROR(logger) << "Unable to start authentication because another one has already been started";
     return false;
+  }
 
   first_prompt_ = true;
   username_ = username;
   authenticate_cb_ = authenticate_cb;
 
   glib::Error error;
-  g_thread_try_new(nullptr, AuthenticationThreadFunc, this, &error);
+  g_autoptr(GThread) thread = g_thread_try_new(nullptr, AuthenticationThreadFunc, this, &error);
+
+  if (!thread || error)
+  {
+    LOG_ERROR(logger) << "Unable to create a new thread for PAM authentication: " << error.Message();
+  }
 
   return !error;
 }
@@ -88,8 +102,16 @@ bool UserAuthenticatorPam::InitPam()
   conversation.conv = ConversationFunction;
   conversation.appdata_ptr = static_cast<void*>(this);
 
-  return pam_start("unity", username_.c_str(),
-                   &conversation, &pam_handle_) == PAM_SUCCESS;
+  int ret = pam_start("unity", username_.c_str(),
+                      &conversation, &pam_handle_);
+
+  if (ret != PAM_SUCCESS)
+  {
+    LOG_ERROR(logger) << "Unable to start pam: " << pam_strerror(pam_handle_, ret);
+    return false;
+  }
+
+  return true;
 }
 
 int UserAuthenticatorPam::ConversationFunction(int num_msg,
