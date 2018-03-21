@@ -1,3 +1,11 @@
+unity (7.5.0+18.04.20180321-0ubuntu1) bionic; urgency=medium
+
+  [ Andrea Azzarone ]
+  * Fix memory leak in UserAuthenticatorPam::AuthenticateStart and add
+    some debug messages.
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 21 Mar 2018 14:56:58 +0000
+
 unity (7.5.0+18.04.20180221.1-0ubuntu1) bionic; urgency=medium
 
   * Unity use track_obj to safely connect to UScreen and Settings
