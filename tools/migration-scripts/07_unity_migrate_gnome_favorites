@@ -1,0 +1,77 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2017 Canonical
+#
+# Authors:
+#  Marco Trevisan <marco.trevisan@canonical.com>
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; version 3.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUTa
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+from gi.repository import Gio
+import os
+
+UNITY_LAUNCHER_SETTINGS = "com.canonical.Unity.Launcher";
+UNITY_LAUNCHER_FAVORITES = "favorites";
+
+# This comes from gnome-shell/js/ui/appFavorites.js
+GNOME_RENAMED_DESKTOP_IDS = {
+    'baobab.desktop': 'org.gnome.baobab.desktop',
+    'cheese.desktop': 'org.gnome.Cheese.desktop',
+    'dconf-editor.desktop': 'ca.desrt.dconf-editor.desktop',
+    'empathy.desktop': 'org.gnome.Empathy.desktop',
+    'epiphany.desktop': 'org.gnome.Epiphany.desktop',
+    'file-roller.desktop': 'org.gnome.FileRoller.desktop',
+    'gcalctool.desktop': 'org.gnome.Calculator.desktop',
+    'geary.desktop': 'org.gnome.Geary.desktop',
+    'gedit.desktop': 'org.gnome.gedit.desktop',
+    'glchess.desktop': 'gnome-chess.desktop',
+    'glines.desktop': 'five-or-more.desktop',
+    'gnect.desktop': 'four-in-a-row.desktop',
+    'gnibbles.desktop': 'org.gnome.Nibbles.desktop',
+    'gnobots2.desktop': 'gnome-robots.desktop',
+    'gnome-boxes.desktop': 'org.gnome.Boxes.desktop',
+    'gnome-calculator.desktop': 'org.gnome.Calculator.desktop',
+    'gnome-clocks.desktop': 'org.gnome.clocks.desktop',
+    'gnome-contacts.desktop': 'org.gnome.Contacts.desktop',
+    'gnome-documents.desktop': 'org.gnome.Documents.desktop',
+    'gnome-font-viewer.desktop': 'org.gnome.font-viewer.desktop',
+    'gnome-nibbles.desktop': 'org.gnome.Nibbles.desktop',
+    'gnome-music.desktop': 'org.gnome.Music.desktop',
+    'gnome-photos.desktop': 'org.gnome.Photos.desktop',
+    'gnome-screenshot.desktop': 'org.gnome.Screenshot.desktop',
+    'gnome-software.desktop': 'org.gnome.Software.desktop',
+    'gnome-terminal.desktop': 'org.gnome.Terminal.desktop',
+    'gnome-weather.desktop': 'org.gnome.Weather.Application.desktop',
+    'gnomine.desktop': 'gnome-mines.desktop',
+    'gnotravex.desktop': 'gnome-tetravex.desktop',
+    'gnotski.desktop': 'gnome-klotski.desktop',
+    'gtali.desktop': 'tali.desktop',
+    'nautilus.desktop': 'org.gnome.Nautilus.desktop',
+    'polari.desktop': 'org.gnome.Polari.desktop',
+    'totem.desktop': 'org.gnome.Totem.desktop',
+}
+
+launcher_settings = Gio.Settings.new(UNITY_LAUNCHER_SETTINGS)
+favorites = launcher_settings.get_strv(UNITY_LAUNCHER_FAVORITES)
+replaced = False
+
+for i, fav in enumerate(favorites):
+  desktop_id = os.path.basename(fav)
+  if desktop_id in GNOME_RENAMED_DESKTOP_IDS.keys():
+    favorites[i] = fav.replace(desktop_id, GNOME_RENAMED_DESKTOP_IDS[desktop_id])
+    replaced = True
+
+if replaced:
+  launcher_settings.set_strv(UNITY_LAUNCHER_FAVORITES, favorites)
+  Gio.Settings.sync()
