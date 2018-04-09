@@ -1,6 +1,1 @@
-tools/migration-scripts/01_unity_change_dconf_path
-tools/migration-scripts/02_unity_setup_text_scale_factor
-tools/migration-scripts/03_unity_first_run_stamp_move
-tools/migration-scripts/04_unity_update_software_center_desktop_file
-tools/migration-scripts/05_unity_use_ubuntu_scaling_settings_schemas
-tools/migration-scripts/06_unity_set_lowgfx_mode_settings_v1
+tools/migration-scripts/*
