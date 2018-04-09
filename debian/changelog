@@ -1,3 +1,10 @@
+unity (7.5.0+18.04.20180404-0ubuntu2) bionic; urgency=medium
+
+  * Add "X-Ubuntu-Use-Langpack: yes" to debian/control now that this package is
+    in Universe (LP: #1760435).
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Sat, 07 Apr 2018 11:37:31 -0500
+
 unity (7.5.0+18.04.20180321-0ubuntu1) bionic; urgency=medium
 
   [ Andrea Azzarone ]

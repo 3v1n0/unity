@@ -62,6 +62,7 @@ Homepage: https://launchpad.net/unity
 # If you aren't a member of ~unity-team but need to upload packaging changes,
 # just go ahead.  ~unity-team will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/~unity-team/unity/trunk
+X-Ubuntu-Use-Langpack: yes
 
 Package: unity
 Architecture: any
