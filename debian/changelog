@@ -1,3 +1,9 @@
+unity (7.5.0+18.04.20180413-0ubuntu1) bionic; urgency=medium
+
+  * unity_migrate_gnome_favorites: add evolution and gnome-tweaks
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Fri, 13 Apr 2018 21:33:45 +0000
+
 unity (7.5.0+18.04.20180409-0ubuntu1) bionic; urgency=medium
 
   * unity.migrations: add migration script to rename GNOME desktop files
