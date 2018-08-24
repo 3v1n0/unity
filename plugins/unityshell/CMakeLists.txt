@@ -14,6 +14,7 @@ set (libdir ${CMAKE_INSTALL_LIBDIR})
 set (includedir ${CMAKE_INSTALL_INCLUDEDIR})
 set (libdir ${CMAKE_INSTALL_LIBDIR})
 set (datadir ${CMAKE_INSTALL_FULL_DATADIR})
+set (COMPIZ_PLUGIN_PACK_BUILD 1)
 
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}

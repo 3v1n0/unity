@@ -12,6 +12,7 @@ set (libdir ${CMAKE_INSTALL_LIBDIR})
 set (includedir ${CMAKE_INSTALL_INCLUDEDIR})
 set (libdir ${CMAKE_INSTALL_LIBDIR})
 set (datadir ${CMAKE_INSTALL_FULL_DATADIR})
+set (COMPIZ_PLUGIN_PACK_BUILD 1)
 
 compiz_plugin (unitymtgrabhandles PKGDEPS nux-4.0>=4.0.0 PLUGINDEPS composite opengl CFLAGSADD -std=c++0x)
 
