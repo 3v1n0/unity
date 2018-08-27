@@ -118,7 +118,7 @@ TEST_F(TestIconLoader, UNSTABLE_TEST (TestGetOneIcon))
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetAnnotatedIcon)
+TEST_F(TestIconLoader, UNSTABLE_TEST (TestGetAnnotatedIcon))
 {
   LoadResult load_result;
 
@@ -132,7 +132,7 @@ TEST_F(TestIconLoader, TestGetAnnotatedIcon)
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetColorizedIcon)
+TEST_F(TestIconLoader, UNSTABLE_TEST (TestGetColorizedIcon))
 {
   LoadResult load_result;
 
