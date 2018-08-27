@@ -255,7 +255,7 @@ Tab::Tab(ApplicationManager const& manager, glib::Object<BamfTab> const& tab)
 }
 
 Tab::Tab(ApplicationManager const& manager, glib::Object<BamfView> const& tab)
-  : Tab(manager_, glib::object_cast<BamfTab>(tab))
+  : Tab(manager, glib::object_cast<BamfTab>(tab))
 {}
 
 Window Tab::window_id() const
