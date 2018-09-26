@@ -60,6 +60,8 @@ GNOME_RENAMED_DESKTOP_IDS = {
     'gnotski.desktop': 'gnome-klotski.desktop',
     'gtali.desktop': 'tali.desktop',
     'nautilus.desktop': 'org.gnome.Nautilus.desktop',
+    'nautilus-home.desktop': 'org.gnome.Nautilus.desktop',
+    'nautilus-folder-handler.desktop': 'org.gnome.Nautilus.desktop',
     'polari.desktop': 'org.gnome.Polari.desktop',
     'totem.desktop': 'org.gnome.Totem.desktop',
 }
