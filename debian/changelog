@@ -1,3 +1,13 @@
+unity (7.5.0+18.10.20180926.2-0ubuntu1) cosmic; urgency=medium
+
+  [ Alexander Hale ]
+  * Update the Free Software Foundation address in license headers
+
+  [ Marco Trevisan (Treviño) ]
+  * Favorite migrations: add nautilus-home and nautilus-folder-handler
+
+ -- Marco Trevisan (Treviño) <mail@3v1n0.net>  Wed, 26 Sep 2018 10:29:04 +0000
+
 unity (7.5.0+18.10.20180827-0ubuntu1) cosmic; urgency=medium
 
   [ Alberts Muktupāvels ]
